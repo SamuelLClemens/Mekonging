@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Content Security Policy: execution and connections are locked to this origin.
+       The app is fully self-hosted and offline-first. The optional live-translate
+       feature (js/translate.js) calls a user-configured endpoint; enabling it
+       requires adding that origin to connect-src below (documented in Settings). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mekong — overland Southeast Asia companion</title>
+  <meta name="description" content="Mekong is a free, private, offline-first travel companion for Thailand, Vietnam, Cambodia, and Laos. Phrasebook, fair prices, places, and transport. No accounts, no tracking.">
+  <meta name="theme-color" content="#0E7C7B">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mekong">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <main class="splash">
+      <h1 class="splash-logo">Mekong</h1>
+      <p class="splash-sub">Loading your companion…</p>
+    </main>
+  </div>
+  <noscript>
+    <p style="text-align:center;font-family:sans-serif;padding:2rem">Mekong needs JavaScript to run. Please enable it and reload.</p>
+  </noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+// Thai phrasebook. Offline. script = Thai script, roman = approximate pronunciation.
+// Politeness: men end sentences with ครับ (khrap), women with ค่ะ (kha).
+export const PHRASEBOOK_TH = {
+  lang: 'th', label: 'Thai', locale: 'th-TH',
+  politenessNote: 'Add ครับ (khrap, men) or ค่ะ (kha, women) to the end of a sentence to be polite.',
+  categories: [
+    { id: 'basics', name: 'Greetings & basics', phrases: [
+      { en: 'Hello', script: 'สวัสดี', roman: 'sa-wat-dee' },
+      { en: 'Thank you', script: 'ขอบคุณ', roman: 'khop-khun' },
+      { en: 'Yes', script: 'ใช่', roman: 'chai' },
+      { en: 'No', script: 'ไม่ใช่', roman: 'mai chai' },
+      { en: 'Excuse me / Sorry', script: 'ขอโทษ', roman: 'kho-thot' },
+      { en: 'No problem / It is fine', script: 'ไม่เป็นไร', roman: 'mai pen rai' },
+      { en: 'I do not understand', script: 'ไม่เข้าใจ', roman: 'mai khao-jai' },
+      { en: 'Do you speak English?', script: 'พูดภาษาอังกฤษได้ไหม', roman: 'phuut pasa angkrit dai mai' },
+    ]},
+    { id: 'directions', name: 'Taxi & directions', phrases: [
+      { en: 'Please use the meter', script: 'เปิดมิเตอร์ด้วย', roman: 'pəət mi-ter duay', note: 'If they refuse, take another taxi or use Grab.' },
+      { en: 'Stop here, please', script: 'จอดตรงนี้', roman: 'jot trong nii' },
+      { en: 'Turn left', script: 'เลี้ยวซ้าย', roman: 'liao sai' },
+      { en: 'Turn right', script: 'เลี้ยวขวา', roman: 'liao khwa' },
+      { en: 'Go straight', script: 'ตรงไป', roman: 'trong pai' },
+      { en: 'Where is...?', script: '...อยู่ที่ไหน', roman: '...yu thi-nai' },
+      { en: 'Where is the toilet?', script: 'ห้องน้ำอยู่ที่ไหน', roman: 'hong-nam yu thi-nai' },
+    ]},
+    { id: 'food', name: 'Food & ordering', phrases: [
+      { en: 'Delicious', script: 'อร่อย', roman: 'a-roi' },
+      { en: 'Not spicy', script: 'ไม่เผ็ด', roman: 'mai phet' },
+      { en: 'A little spicy', script: 'เผ็ดนิดหน่อย', roman: 'phet nit-noi' },
+      { en: 'I am vegetarian', script: 'กินเจ / กินมังสวิรัติ', roman: 'kin jay / kin mang-sa-wi-rat' },
+      { en: 'Water', script: 'น้ำ', roman: 'nam' },
+      { en: 'The bill, please', script: 'เช็คบิล', roman: 'check bin' },
+      { en: 'No MSG, please', script: 'ไม่ใส่ผงชูรส', roman: 'mai sai phong-chu-rot' },
+    ]},
+    { id: 'market', name: 'Market & haggling', phrases: [
+      { en: 'How much?', script: 'เท่าไหร่', roman: 'thao-rai' },
+      { en: 'Too expensive', script: 'แพงไป', roman: 'phaeng pai' },
+      { en: 'Can you lower the price?', script: 'ลดได้ไหม', roman: 'lot dai mai' },
+      { en: 'Do you have a cheaper one?', script: 'มีถูกกว่านี้ไหม', roman: 'mii thuuk kwa nii mai' },
+      { en: 'I will take it', script: 'เอาอันนี้', roman: 'ao an nii' },
+      { en: 'Just looking', script: 'ดูเฉยๆ', roman: 'duu chəəi chəəi' },
+    ]},
+    { id: 'numbers', name: 'Numbers & money', phrases: [
+      { en: 'One', script: 'หนึ่ง', roman: 'neung' },
+      { en: 'Two', script: 'สอง', roman: 'song' },
+      { en: 'Three', script: 'สาม', roman: 'saam' },
+      { en: 'Four', script: 'สี่', roman: 'sii' },
+      { en: 'Five', script: 'ห้า', roman: 'haa' },
+      { en: 'Ten', script: 'สิบ', roman: 'sip' },
+      { en: 'One hundred', script: 'ร้อย', roman: 'roi' },
+      { en: 'One thousand', script: 'พัน', roman: 'phan' },
+    ]},
+    { id: 'emergency', name: 'Emergency & health', phrases: [
+      { en: 'Help!', script: 'ช่วยด้วย', roman: 'chuay duay' },
+      { en: 'Call the police', script: 'เรียกตำรวจ', roman: 'riak tam-ruat' },
+      { en: 'I need a doctor', script: 'ต้องการหมอ', roman: 'tong-kan mor' },
+      { en: 'Hospital', script: 'โรงพยาบาล', roman: 'rong-pha-ya-baan' },
+      { en: 'I am allergic to...', script: 'แพ้...', roman: 'phae...' },
+      { en: 'It hurts here', script: 'เจ็บตรงนี้', roman: 'jep trong nii' },
+    ]},
+  ],
+};

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mekong">
+  <rect width="512" height="512" rx="112" fill="#0E7C7B"/>
+  <!-- a winding river through the four-country region -->
+  <path d="M112 96 C 196 168, 132 236, 220 300 S 196 420, 300 432 C 372 440, 392 372, 420 320"
+        fill="none" stroke="#F4C95D" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="112" cy="96" r="26" fill="#F4C95D"/>
+  <circle cx="420" cy="320" r="22" fill="#EF8354"/>
+</svg>

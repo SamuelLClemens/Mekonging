@@ -1,0 +1,11 @@
+{
+  "name": "mekong",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first travel companion for Thailand, Vietnam, Cambodia, and Laos.",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "serve": "python3 scripts/serve.py"
+  }
+}
