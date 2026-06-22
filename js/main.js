@@ -148,7 +148,7 @@ function phrasebookScreen(lang) {
           h('div', { class: 'grow' }, [
             h('div', { class: 'en' }, p.en),
             h('div', { class: 'native' }, p.script),
-            h('div', { class: 'roman' }, p.roman),
+            h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman]),
             p.note ? h('div', { class: 'note' }, p.note) : null,
           ]),
           h('button', {

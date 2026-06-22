@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh service worker; no large binaries here, so there is
 // no separate runtime cache for immutable assets.
 
-const CACHE_VERSION = 'mk-v0.1.0';
+const CACHE_VERSION = 'mk-v0.2.0';
 
 const PRECACHE = [
   './',
@@ -21,6 +21,10 @@ const PRECACHE = [
   'js/data/phrasebook.vi.js',
   'js/data/phrasebook.km.js',
   'js/data/phrasebook.lo.js',
+  'js/data/phrasebook.zh.js',
+  'js/data/phrasebook.my.js',
+  'js/data/phrasebook.ms.js',
+  'js/data/phrasebook.hmn.js',
   'js/data/places.th.js',
   'js/data/prices.th.js',
   'js/data/routes.th.js',

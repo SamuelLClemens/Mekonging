@@ -15,7 +15,9 @@ const isYM = (s) => typeof s === 'string' && /^\d{4}-\d{2}$/.test(s);
 for (const [code, book] of Object.entries(LANGUAGES)) {
   ok(book.lang === code, `phrasebook ${code}: lang mismatch`);
   ok(typeof book.label === 'string' && book.label, `phrasebook ${code}: missing label`);
-  ok(/^[a-z]{2}-[A-Z]{2}$/.test(book.locale || ''), `phrasebook ${code}: bad locale "${book.locale}"`);
+  // Latin-orthography languages without a region locale (e.g. Hmong) carry an empty
+  // locale + noVoice flag; everything else must be a BCP-47 lang or lang-REGION tag.
+  ok(book.locale === '' || /^[a-z]{2}(-[A-Z]{2})?$/.test(book.locale || ''), `phrasebook ${code}: bad locale "${book.locale}"`);
   ok(Array.isArray(book.categories) && book.categories.length > 0, `phrasebook ${code}: no categories`);
   let phraseCount = 0;
   for (const cat of book.categories || []) {

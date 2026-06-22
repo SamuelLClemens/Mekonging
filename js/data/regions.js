@@ -11,6 +11,10 @@ import { PHRASEBOOK_TH } from './phrasebook.th.js';
 import { PHRASEBOOK_VI } from './phrasebook.vi.js';
 import { PHRASEBOOK_KM } from './phrasebook.km.js';
 import { PHRASEBOOK_LO } from './phrasebook.lo.js';
+import { PHRASEBOOK_ZH } from './phrasebook.zh.js';
+import { PHRASEBOOK_MY } from './phrasebook.my.js';
+import { PHRASEBOOK_MS } from './phrasebook.ms.js';
+import { PHRASEBOOK_HMN } from './phrasebook.hmn.js';
 import { PLACES_TH } from './places.th.js';
 import { PRICES_TH } from './prices.th.js';
 import { ROUTES_TH } from './routes.th.js';
@@ -21,6 +25,10 @@ export const LANGUAGES = {
   vi: PHRASEBOOK_VI,
   km: PHRASEBOOK_KM,
   lo: PHRASEBOOK_LO,
+  zh: PHRASEBOOK_ZH,
+  my: PHRASEBOOK_MY,
+  ms: PHRASEBOOK_MS,
+  hmn: PHRASEBOOK_HMN,
 };
 
 export const COUNTRIES = [
