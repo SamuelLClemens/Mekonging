@@ -1,12 +1,17 @@
 // Mekong app shell + hash router. Vanilla ES6, offline-first. Screens read all
 // content from js/data/regions.js so no destination is hard-coded here.
 
-import { store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion } from './state.js';
+import {
+  store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion,
+  createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
+  addPin, deletePin, getPin,
+} from './state.js';
 import { h, esc, money, range, mapsUrl } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import {
-  COUNTRIES, LANGUAGES, INTERESTS, getCountry, getLanguage, allPlaces, getPlace,
+  COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
+  getCountry, getLanguage, allPlaces, getPlace,
 } from './data/regions.js';
 
 // ---- service worker + theme -------------------------------------------------
@@ -27,8 +32,8 @@ const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
   { hash: '#phrasebook', label: 'Talk', ic: '💬' },
   { hash: '#places', label: 'Places', ic: '📍' },
-  { hash: '#prices', label: 'Prices', ic: '💵' },
-  { hash: '#settings', label: 'Settings', ic: '⚙️' },
+  { hash: '#map', label: 'Map', ic: '🗺️' },
+  { hash: '#saved', label: 'Saved', ic: '⭐' },
 ];
 
 function go(hash) {
@@ -73,10 +78,12 @@ function homeScreen() {
   const tiles = [
     { ic: '💬', t: 'Phrasebook', d: 'Speak the local language', hash: '#phrasebook' },
     { ic: '📍', t: 'Places for you', d: 'Filtered to your taste & budget', hash: '#places' },
+    { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
+    { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
     { ic: '💵', t: 'Fair prices', d: 'Avoid being overcharged', hash: '#prices' },
     { ic: '🚌', t: 'Getting around', d: 'Best way to the next place', hash: '#transport' },
     { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${activeCountry}` },
-    { ic: '⭐', t: 'Saved', d: 'Your shortlist', hash: '#saved' },
+    { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
   wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
     h('button', { class: 'tile', onclick: () => go(x.hash) }, [
@@ -250,58 +257,145 @@ function tierBadge(tier) {
   return h('span', { class: `tier ${tier}` }, lbl);
 }
 
+// Resolve a saved item id to a renderable place-like object: a curated place, or a
+// user pin normalised into the same shape.
+function resolveItem(id) {
+  if (typeof id === 'string' && id.startsWith('pin-')) {
+    const pin = getPin(id);
+    if (!pin) return null;
+    return {
+      id: pin.id, name: pin.name, city: 'Your pin', country: '', isPin: true,
+      categories: pin.tags || [], budgetTier: 'any', blurb: pin.note || 'A place you marked.',
+      priceRange: { low: null, high: null, currency: '' }, coords: pin.coords || null, mapQuery: pin.name,
+    };
+  }
+  return getPlace(id);
+}
+
 function placeCard(p) {
+  const cats = Array.isArray(p.categories) ? p.categories : [];
+  const hasPrice = p.priceRange && p.priceRange.currency;
+  const priceStr = hasPrice ? (range(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
+  const colls = collectionsForItem(p.id);
   return h('div', { class: 'card' }, [
     h('div', { class: 'place-head' }, [
-      h('h2', {}, p.name),
+      h('h2', {}, `${p.isPin ? '📌 ' : ''}${p.name}`),
       h('button', {
-        class: 'save-star', 'aria-label': 'Save', title: 'Save',
+        class: 'save-star', 'aria-label': 'Quick save to favourites', title: 'Quick save',
         onclick: (e) => { const on = toggleFavorite(p.id); e.currentTarget.textContent = on ? '★' : '☆'; },
       }, isFavorite(p.id) ? '★' : '☆'),
     ]),
+    (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
+      h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
+      (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+    ]) : null,
+    p.blurb ? h('p', {}, p.blurb) : null,
+    h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
+    colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
+      h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
     h('div', { class: 'row-between' }, [
-      h('div', { class: 'cats' }, p.categories.map((c) => h('span', { class: 'cat-tag' }, c))),
-      tierBadge(p.budgetTier),
+      h('button', { class: 'btn ghost', onclick: () => go(`#place-${p.id}`) }, 'Details'),
+      h('button', { class: 'btn ghost', onclick: () => saveSheet(p.id) }, '＋ Save'),
     ]),
-    h('p', {}, p.blurb),
-    h('p', { class: 'muted' }, `${p.city} · ${range(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}`),
-    h('button', { class: 'btn ghost', onclick: () => go(`#place-${p.id}`) }, 'Details'),
+  ]);
+}
+
+// Modal sheet: add an item to collections (and toggle favourite / create new).
+function saveSheet(itemId) {
+  const backdrop = h('div', { class: 'sheet-backdrop' });
+  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Save to collections' });
+  const close = () => backdrop.remove();
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+
+  const body = h('div', {});
+  function rebuild() {
+    body.innerHTML = '';
+    body.append(h('h3', {}, 'Save to'));
+    // favourite quick toggle
+    body.append(collRow('⭐', 'Favourites', store.favorites.includes(itemId),
+      () => { toggleFavorite(itemId); rebuild(); }));
+    // existing collections
+    for (const c of store.collections) {
+      body.append(collRow(c.emoji, `${c.name} (${c.itemIds.length})`, c.itemIds.includes(itemId),
+        () => { togglePlaceInCollection(c.id, itemId); rebuild(); }));
+    }
+    // create new
+    const input = h('input', { class: 'search', type: 'text', placeholder: 'New collection name…', style: 'margin-top:8px' });
+    const add = h('button', { class: 'btn', onclick: () => {
+      if (!input.value.trim()) return;
+      const c = createCollection(input.value.trim(), '⭐');
+      togglePlaceInCollection(c.id, itemId);
+      rebuild();
+    } }, 'Create & add');
+    body.append(input, add);
+    // preset quick-create
+    body.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Quick themes'));
+    body.append(h('div', { class: 'chips presets' }, COLLECTION_PRESETS
+      .filter((pr) => !store.collections.some((c) => c.name.toLowerCase() === pr.name.toLowerCase()))
+      .map((pr) => h('button', { class: 'chip', onclick: () => {
+        const c = createCollection(pr.name, pr.emoji);
+        togglePlaceInCollection(c.id, itemId);
+        rebuild();
+      } }, `${pr.emoji} ${pr.name}`))));
+    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:12px', onclick: close }, 'Done'));
+  }
+  rebuild();
+  sheet.append(body);
+  backdrop.append(sheet);
+  document.body.append(backdrop);
+}
+
+function collRow(emoji, label, checked, onToggle) {
+  return h('label', { class: 'coll-row' }, [
+    h('input', { type: 'checkbox', checked: checked ? '' : null, onchange: onToggle }),
+    h('span', {}, `${emoji} ${label}`),
   ]);
 }
 
 function placeScreen(id) {
-  const p = getPlace(id);
+  const p = resolveItem(id);
+  const backHash = p && p.isPin ? '#saved' : '#places';
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(p ? p.name : 'Place', '#places'));
-  if (!p) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, '#places'); return; }
+  wrap.append(topbar(p ? p.name : 'Place', backHash));
+  if (!p) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, backHash); return; }
 
+  const cats = Array.isArray(p.categories) ? p.categories : [];
+  const hasPrice = p.priceRange && p.priceRange.currency;
   const card = h('div', { class: 'card' }, [
-    h('div', { class: 'row-between' }, [
-      h('div', { class: 'cats' }, p.categories.map((c) => h('span', { class: 'cat-tag' }, c))),
-      tierBadge(p.budgetTier),
-    ]),
-    h('p', {}, p.blurb),
-    h('h3', {}, 'Why it fits you'),
-    h('p', {}, p.whyItFits),
-    h('h3', {}, 'Price'),
-    h('p', {}, `${range(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`),
-    p.hours ? h('p', { class: 'muted' }, `Hours: ${p.hours}`) : null,
-    p.bookHint ? h('p', { class: 'muted' }, `Booking: ${p.bookHint}`) : null,
+    (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
+      h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
+      (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+    ]) : null,
+    p.blurb ? h('p', {}, p.blurb) : null,
   ]);
+  if (p.whyItFits) { card.append(h('h3', {}, 'Why it fits you'), h('p', {}, p.whyItFits)); }
+  if (hasPrice) {
+    card.append(h('h3', {}, 'Price'));
+    card.append(h('p', {}, `${range(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`));
+  }
+  if (p.hours) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
+  if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
   if (p.tips && p.tips.length) { card.append(h('h3', {}, 'Tips')); p.tips.forEach((t) => card.append(h('div', { class: 'list-note' }, t))); }
   if (p.scamWarnings && p.scamWarnings.length) { card.append(h('h3', {}, 'Watch out')); p.scamWarnings.forEach((t) => card.append(h('div', { class: 'warn-note' }, t))); }
 
+  const colls = collectionsForItem(p.id);
+  const collStrip = colls.length
+    ? h('div', { class: 'cats', style: 'margin-top:8px' }, colls.map((c) => h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`)))
+    : null;
+
   const actions = h('div', { class: 'card' }, [
-    h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps'),
-    h('button', {
-      class: 'btn ghost block', style: 'margin-top:8px',
-      onclick: (e) => { const on = toggleFavorite(p.id); e.currentTarget.textContent = on ? '★ Saved' : '☆ Save'; },
-    }, isFavorite(p.id) ? '★ Saved' : '☆ Save'),
+    (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    collStrip,
+    p.isPin ? h('button', {
+      class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
+      onclick: () => { if (confirm('Delete this pin?')) { deletePin(p.id); go('#saved'); } },
+    }, 'Delete pin') : null,
   ]);
 
   wrap.append(card, actions);
   if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified));
-  mount(wrap, '#places');
+  mount(wrap, backHash);
 }
 
 function sourcesNote(sources, verified) {
@@ -413,14 +507,149 @@ function infoScreen(countryId) {
   mount(wrap, '#home');
 }
 
-// ---- SAVED ------------------------------------------------------------------
+// ---- SAVED / COLLECTIONS ----------------------------------------------------
 function savedScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Saved', '#home'));
-  const saved = store.favorites.map(getPlace).filter(Boolean);
-  if (!saved.length) wrap.append(h('p', { class: 'empty' }, 'No saved places yet. Tap ☆ on any place to add it here.'));
-  else saved.forEach((p) => wrap.append(placeCard(p)));
-  mount(wrap, '#home');
+  wrap.append(topbar('Saved & collections'));
+
+  // favourites + every collection as a tappable row
+  const hub = h('div', { class: 'card' });
+  hub.append(collectionLinkRow('⭐', 'Favourites', store.favorites.length, () => go('#collection-favorites')));
+  for (const c of store.collections) {
+    hub.append(collectionLinkRow(c.emoji, c.name, c.itemIds.length, () => go(`#collection-${c.id}`)));
+  }
+  if (!store.collections.length && !store.favorites.length) {
+    hub.append(h('p', { class: 'muted' }, 'No collections yet. Create one below, then tap “＋ Save” on any place.'));
+  }
+  wrap.append(hub);
+
+  // create new + presets
+  const create = h('div', { class: 'card' }, [h('h2', {}, 'New collection')]);
+  const input = h('input', { class: 'search', type: 'text', placeholder: 'Name your theme…' });
+  create.append(input, h('button', { class: 'btn', onclick: () => {
+    if (input.value.trim()) { createCollection(input.value.trim(), '⭐'); render(); }
+  } }, 'Create'));
+  create.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Or pick a quick theme'));
+  create.append(h('div', { class: 'chips' }, COLLECTION_PRESETS
+    .filter((pr) => !store.collections.some((c) => c.name.toLowerCase() === pr.name.toLowerCase()))
+    .map((pr) => h('button', { class: 'chip', onclick: () => { createCollection(pr.name, pr.emoji); render(); } }, `${pr.emoji} ${pr.name}`))));
+  wrap.append(create);
+
+  // your pins
+  const pinsCard = h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [h('h2', {}, 'Your pins'), h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place')]),
+  ]);
+  if (!store.pins.length) pinsCard.append(h('p', { class: 'muted' }, 'Mark places you find — from the map or by hand — and organise them into collections.'));
+  else store.pins.forEach((pin) => pinsCard.append(
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`)));
+  wrap.append(pinsCard);
+
+  mount(wrap, '#saved');
+}
+
+function collectionLinkRow(emoji, name, count, onClick) {
+  return h('button', { class: 'btn ghost block', style: 'margin-bottom:8px; justify-content:space-between', onclick: onClick }, [
+    h('span', {}, `${emoji} ${name}`), h('span', { class: 'muted' }, `${count}`),
+  ]);
+}
+
+function collectionScreen(id) {
+  const wrap = h('div', { class: 'screen' });
+  let title, emoji, itemIds, coll = null;
+  if (id === 'favorites') { title = 'Favourites'; emoji = '⭐'; itemIds = store.favorites; }
+  else {
+    coll = store.collections.find((c) => c.id === id);
+    if (!coll) { wrap.append(topbar('Collection', '#saved')); wrap.append(h('p', { class: 'empty' }, 'Collection not found.')); mount(wrap, '#saved'); return; }
+    title = coll.name; emoji = coll.emoji; itemIds = coll.itemIds;
+  }
+  wrap.append(topbar(`${emoji} ${title}`, '#saved'));
+  const items = itemIds.map(resolveItem).filter(Boolean);
+  if (!items.length) wrap.append(h('p', { class: 'empty' }, 'Nothing here yet. Tap “＋ Save” on a place to add it.'));
+  else items.forEach((p) => wrap.append(placeCard(p)));
+  if (coll) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('button', { class: 'btn ghost block', style: 'color:var(--warn); border-color:var(--warn)',
+        onclick: () => { if (confirm(`Delete the “${coll.name}” collection? Your places stay; only the grouping is removed.`)) { deleteCollection(coll.id); go('#saved'); } } }, 'Delete collection'),
+    ]));
+  }
+  mount(wrap, '#saved');
+}
+
+// ---- MAP (offline maps + GPS arrive next; pin management works now) ---------
+function mapScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Map'));
+  wrap.append(h('div', { class: 'banner' },
+    'Offline maps with live GPS (download-by-region) are being added. For now you can mark places as pins, capture your current GPS location, and organise everything into collections.'));
+
+  const gps = h('div', { class: 'card' }, [h('h2', {}, 'Your location'), h('p', { class: 'muted' }, 'Test GPS — works offline once a position fix is available.')]);
+  const out = h('p', {});
+  gps.append(h('button', { class: 'btn', onclick: () => {
+    out.textContent = 'Locating…';
+    if (!navigator.geolocation) { out.textContent = 'Geolocation is not available on this device.'; return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { out.textContent = `Latitude ${pos.coords.latitude.toFixed(5)}, longitude ${pos.coords.longitude.toFixed(5)} (±${Math.round(pos.coords.accuracy)} m).`; },
+      (err) => { out.textContent = `Could not get a location: ${err.message}`; },
+      { enableHighAccuracy: true, timeout: 10000 });
+  } }, 'Find me'), out);
+  wrap.append(gps);
+
+  wrap.append(h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [h('h2', {}, 'Your pins'), h('button', { class: 'btn', onclick: () => go('#addpin') }, '＋ Add a place')]),
+    ...(store.pins.length
+      ? store.pins.map((pin) => h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`))
+      : [h('p', { class: 'muted' }, 'No pins yet.')]),
+  ]));
+  mount(wrap, '#map');
+}
+
+function addPinScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Add a place', '#map'));
+  const state = { coords: null, colls: new Set() };
+
+  const card = h('div', { class: 'card' });
+  const name = h('input', { type: 'text', placeholder: 'Place name (e.g. “Great noodle stall”)' });
+  const note = h('input', { type: 'text', placeholder: 'A note (optional)' });
+  card.append(field('Name', name), field('Note', note));
+
+  const coordOut = h('p', { class: 'muted' }, 'No location attached.');
+  card.append(field('Location', h('div', {}, [
+    h('button', { class: 'btn ghost', onclick: () => {
+      coordOut.textContent = 'Locating…';
+      if (!navigator.geolocation) { coordOut.textContent = 'Geolocation unavailable.'; return; }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { state.coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; coordOut.textContent = `Attached: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`; },
+        (err) => { coordOut.textContent = `No location: ${err.message}`; },
+        { enableHighAccuracy: true, timeout: 10000 });
+    } }, 'Use my current location'),
+    coordOut,
+  ])));
+
+  // file it under any existing collections (create new themes from Saved or the Save sheet)
+  if (store.collections.length) {
+    card.append(field('Add to collections', h('div', { class: 'chips' },
+      store.collections.map((c) => collToggleChip(c.name, c.emoji, () => toggleSet(state.colls, c.id))))));
+  } else {
+    card.append(field('Add to collections', h('p', { class: 'muted' }, 'You have no collections yet. Save the pin, then tap “＋ Save” on it to file it under a theme.')));
+  }
+  wrap.append(card);
+
+  wrap.append(h('button', { class: 'btn block', onclick: () => {
+    if (!name.value.trim()) { alert('Give the place a name.'); return; }
+    const pin = addPin({ name: name.value.trim(), note: note.value.trim(), coords: state.coords });
+    state.colls.forEach((cid) => togglePlaceInCollection(cid, pin.id));
+    go('#saved');
+  } }, 'Save place'));
+  mount(wrap, '#map');
+}
+
+function toggleSet(set, v) { if (set.has(v)) set.delete(v); else set.add(v); }
+function collToggleChip(name, emoji, onToggle) {
+  return h('button', { class: 'chip', 'aria-pressed': 'false', onclick: (e) => {
+    const c = e.currentTarget; const on = c.getAttribute('aria-pressed') === 'true';
+    c.setAttribute('aria-pressed', on ? 'false' : 'true'); onToggle(c);
+  } }, `${emoji} ${name}`);
 }
 
 // ---- SETTINGS ---------------------------------------------------------------
@@ -512,6 +741,9 @@ function render() {
       case 'transport': return transportScreen(arg);
       case 'info': return infoScreen(arg);
       case 'saved': return savedScreen();
+      case 'collection': return collectionScreen(arg);
+      case 'map': return mapScreen();
+      case 'addpin': return addPinScreen();
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

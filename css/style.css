@@ -248,6 +248,24 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .tabbar button .ic { font-size: 1.3rem; }
 .tabbar button[aria-current="page"] { color: var(--orange); }
 
+/* --- save sheet (modal) --- */
+.sheet-backdrop {
+  position: fixed; inset: 0; z-index: 50; background: rgba(58,36,21,0.5);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.sheet {
+  width: 100%; max-width: 720px; max-height: 82vh; overflow-y: auto;
+  background: var(--card); border-radius: var(--r-lg) var(--r-lg) 0 0;
+  border-top: 4px solid transparent; border-image: var(--grad-sun) 1;
+  padding: var(--sp-5) var(--sp-4) var(--sp-6); box-shadow: var(--shadow);
+}
+.sheet h3 { font-family: var(--font-display); margin: 0 0 var(--sp-3); color: var(--orange); text-transform: uppercase; letter-spacing: 0.03em; }
+.coll-row {
+  display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0;
+  border-bottom: 1px dashed var(--line); cursor: pointer; font-weight: 600;
+}
+.coll-row input { width: 22px; height: 22px; accent-color: var(--orange); }
+
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }
 .disclaimer { font-size: var(--fs-sm); color: var(--ink-soft); font-style: italic; margin-top: var(--sp-3); }
 a { color: var(--teal-deep); }

@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh service worker; no large binaries here, so there is
 // no separate runtime cache for immutable assets.
 
-const CACHE_VERSION = 'mk-v0.2.0';
+const CACHE_VERSION = 'mk-v0.3.0';
 
 const PRECACHE = [
   './',

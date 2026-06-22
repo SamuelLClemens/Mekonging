@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 function defaults() {
   return {
@@ -26,7 +26,10 @@ function defaults() {
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
       seenWelcome: false,
     },
-    favorites: [],              // place ids the traveller has saved
+    favorites: [],              // item ids (curated place or pin) saved as a quick shortlist
+    // --- v2: organise-and-find-again ---
+    collections: [],            // { id, name, emoji, itemIds:[], createdAt } — named themes/tags
+    pins: [],                   // { id:'pin-…', name, note, tags:[], coords:{lat,lng}|null, createdAt } — user-marked places
     trip: {
       stops: [],                // { id, city, country, fromDate, toDate }
       budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note }
@@ -47,8 +50,12 @@ function migrate(data) {
     profile: { ...base.profile, ...(data.profile || {}),
                prefs: { ...base.profile.prefs, ...((data.profile || {}).prefs || {}) } },
     favorites: Array.isArray(data.favorites) ? data.favorites : base.favorites,
+    collections: Array.isArray(data.collections) ? data.collections : base.collections,
+    pins: Array.isArray(data.pins) ? data.pins : base.pins,
     trip: { ...base.trip, ...(data.trip || {}) },
   };
+  // v1 -> v2: collections[] and pins[] are new arrays; the guards above already
+  // default them. Nothing to backfill from v1 — favorites carries forward verbatim.
   return out;
 }
 
@@ -76,9 +83,64 @@ export function resetAll() {
   store.version = fresh.version;
   store.profile = fresh.profile;
   store.favorites = fresh.favorites;
+  store.collections = fresh.collections;
+  store.pins = fresh.pins;
   store.trip = fresh.trip;
   save();
 }
+
+// --- unique-id helper (no Math.random/Date.now reliance for determinism in tests) -
+let _seq = 0;
+function uid(prefix) {
+  _seq += 1;
+  const t = (typeof performance !== 'undefined' && performance.now) ? Math.floor(performance.now()) : _seq;
+  return `${prefix}-${t}-${_seq}`;
+}
+
+// --- collections (named themes / tags) ---------------------------------------
+export function createCollection(name, emoji = '⭐') {
+  const c = { id: uid('col'), name: String(name || 'Untitled').slice(0, 40), emoji, itemIds: [], createdAt: todayKey() };
+  store.collections.push(c); save(); return c;
+}
+export function renameCollection(id, name) {
+  const c = store.collections.find((x) => x.id === id);
+  if (c) { c.name = String(name || c.name).slice(0, 40); save(); }
+}
+export function deleteCollection(id) {
+  const i = store.collections.findIndex((x) => x.id === id);
+  if (i >= 0) { store.collections.splice(i, 1); save(); }
+}
+export function togglePlaceInCollection(collId, itemId) {
+  const c = store.collections.find((x) => x.id === collId);
+  if (!c) return false;
+  const i = c.itemIds.indexOf(itemId);
+  if (i >= 0) c.itemIds.splice(i, 1); else c.itemIds.push(itemId);
+  save();
+  return c.itemIds.includes(itemId);
+}
+export function collectionsForItem(itemId) {
+  return store.collections.filter((c) => c.itemIds.includes(itemId));
+}
+
+// --- pins (user-marked places, e.g. dropped on the map) ----------------------
+export function addPin({ name, note = '', tags = [], coords = null } = {}) {
+  const p = { id: uid('pin'), name: String(name || 'My place').slice(0, 80), note, tags, coords, createdAt: todayKey() };
+  store.pins.push(p); save(); return p;
+}
+export function updatePin(id, patch) {
+  const p = store.pins.find((x) => x.id === id);
+  if (p) { Object.assign(p, patch); save(); }
+  return p;
+}
+export function deletePin(id) {
+  const i = store.pins.findIndex((x) => x.id === id);
+  if (i >= 0) { store.pins.splice(i, 1); save(); }
+  // also remove from any collections + favorites
+  store.collections.forEach((c) => { const j = c.itemIds.indexOf(id); if (j >= 0) c.itemIds.splice(j, 1); });
+  const f = store.favorites.indexOf(id); if (f >= 0) store.favorites.splice(f, 1);
+  save();
+}
+export function getPin(id) { return store.pins.find((x) => x.id === id) || null; }
 
 // --- favorites helpers --------------------------------------------------------
 export function isFavorite(id) { return store.favorites.includes(id); }

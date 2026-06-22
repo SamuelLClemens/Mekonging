@@ -81,3 +81,26 @@ export const INTERESTS = [
   { id: 'nature', label: 'Nature & outdoors' },
   { id: 'nightlife', label: 'Nightlife & social' },
 ];
+
+// Suggested collections (themes/tags) the user can create with one tap. They can
+// also create their own with a custom name + emoji. Keep this list broad — the
+// point is the easiest possible way to organise places and find them again.
+export const COLLECTION_PRESETS = [
+  { name: 'Food', emoji: '🍜' },
+  { name: 'Street food', emoji: '🥢' },
+  { name: 'Restaurants', emoji: '🍽️' },
+  { name: 'Cafes', emoji: '☕' },
+  { name: 'Night markets', emoji: '🌙' },
+  { name: 'Street markets', emoji: '🛍️' },
+  { name: 'Nightlife', emoji: '🍸' },
+  { name: 'Temples', emoji: '🛕' },
+  { name: 'Museums', emoji: '🏛️' },
+  { name: 'Nature', emoji: '🌿' },
+  { name: 'Beaches', emoji: '🏖️' },
+  { name: 'Parks', emoji: '🌳' },
+  { name: 'Playgrounds', emoji: '🛝' },
+  { name: 'Viewpoints', emoji: '🌄' },
+  { name: 'Shopping', emoji: '🛒' },
+  { name: 'Wellness', emoji: '💆' },
+  { name: 'Fun & activities', emoji: '🎉' },
+];
