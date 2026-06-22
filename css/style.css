@@ -266,6 +266,15 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 }
 .coll-row input { width: 22px; height: 22px; accent-color: var(--orange); }
 
+/* --- map --- */
+#map-canvas {
+  width: 100%; height: 62vh; min-height: 360px; border-radius: var(--r-lg);
+  border: 2px solid var(--line); overflow: hidden; margin-bottom: var(--sp-3); background: var(--card);
+}
+.map-toolbar { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.map-hint { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0 0 var(--sp-2); }
+.maplibregl-ctrl-group { border-radius: var(--r-md) !important; }
+
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }
 .disclaimer { font-size: var(--fs-sm); color: var(--ink-soft); font-style: italic; margin-top: var(--sp-3); }
 a { color: var(--teal-deep); }

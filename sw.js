@@ -1,9 +1,16 @@
-// Offline support: precache the whole app on install, serve cache-first.
-// Bump CACHE_VERSION with every release so updates roll out cleanly.
-// Mirrors the Gardenoosh service worker; no large binaries here, so there is
-// no separate runtime cache for immutable assets.
+// Offline support: precache the app shell, serve cache-first. Bump CACHE_VERSION
+// per release. The map libraries (lib/maplibre-gl.*, lib/pmtiles.js) are NOT
+// precached — they are large and cache on first map use, so users who never open
+// the map never download them.
+//
+// TILE_CACHE holds the vector-tile byte ranges from the external tile source so the
+// map works offline once an area has been downloaded/viewed. The Cache API refuses
+// to store 206 (Partial Content), so each range is stored as a 200 with the original
+// status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.3.0';
+const CACHE_VERSION = 'mk-v0.4.0';
+const TILE_CACHE = 'mk-tiles-v1';
+const TILE_HOSTS = ['demo-bucket.protomaps.com'];
 
 const PRECACHE = [
   './',
@@ -16,6 +23,7 @@ const PRECACHE = [
   'js/tts.js',
   'js/translate.js',
   'js/util.js',
+  'js/map.js',
   'js/data/regions.js',
   'js/data/phrasebook.th.js',
   'js/data/phrasebook.vi.js',
@@ -33,7 +41,6 @@ const PRECACHE = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    // Atomic: every PRECACHE path must resolve or the whole install fails.
     caches.open(CACHE_VERSION).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()),
   );
 });
@@ -41,22 +48,24 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      // keep the current app-shell cache AND the tile cache (offline map packs)
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== TILE_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (TILE_HOSTS.includes(url.hostname)) { e.respondWith(handleTile(req)); return; }
+  if (url.origin !== self.location.origin) return;
+  // same-origin app shell: cache-first, then network (runtime-caches map libs too)
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       if (hit) return hit;
       return fetch(req).then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
-        }
+        if (res.ok) { const copy = res.clone(); caches.open(CACHE_VERSION).then((c) => c.put(req, copy)); }
         return res;
       }).catch(() => {
         if (req.mode === 'navigate') return caches.match('index.html');
@@ -65,3 +74,36 @@ self.addEventListener('fetch', (e) => {
     }),
   );
 });
+
+// Range-aware tile caching. Key by URL + range so each tile range is its own entry.
+async function handleTile(req) {
+  const range = req.headers.get('range') || 'full';
+  const cache = await caches.open(TILE_CACHE);
+  const keyUrl = req.url + (req.url.includes('?') ? '&' : '?') + '__r=' + encodeURIComponent(range);
+  const hit = await cache.match(keyUrl);
+  if (hit) return rebuildRanged(hit);
+  try {
+    const res = await fetch(req);
+    if (res.status === 200 || res.status === 206) {
+      const buf = await res.clone().arrayBuffer();
+      const stored = new Response(buf, { status: 200, headers: {
+        'Content-Type': res.headers.get('Content-Type') || 'application/octet-stream',
+        'x-orig-status': String(res.status),
+        'x-content-range': res.headers.get('Content-Range') || '',
+      } });
+      await cache.put(keyUrl, stored);
+    }
+    return res;
+  } catch (err) {
+    return new Response('', { status: 504, statusText: 'offline: tile not downloaded' });
+  }
+}
+
+async function rebuildRanged(stored) {
+  const buf = await stored.arrayBuffer();
+  const origStatus = Number(stored.headers.get('x-orig-status')) || 200;
+  const cr = stored.headers.get('x-content-range') || '';
+  const headers = { 'Content-Type': stored.headers.get('Content-Type') || 'application/octet-stream', 'Accept-Ranges': 'bytes' };
+  if (cr) headers['Content-Range'] = cr;
+  return new Response(buf, { status: origStatus === 206 ? 206 : 200, headers });
+}

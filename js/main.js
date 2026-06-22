@@ -27,6 +27,7 @@ function applyTheme() {
 
 // ---- UI state ---------------------------------------------------------------
 let activeCountry = 'th';   // current destination context (country id)
+let pendingPinCoords = null; // coords captured by tapping the map, consumed by #addpin
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -575,45 +576,92 @@ function collectionScreen(id) {
   mount(wrap, '#saved');
 }
 
-// ---- MAP (offline maps + GPS arrive next; pin management works now) ---------
+// ---- MAP (offline vector map + GPS + drop-a-pin) ----------------------------
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map'));
-  wrap.append(h('div', { class: 'banner' },
-    'Offline maps with live GPS (download-by-region) are being added. For now you can mark places as pins, capture your current GPS location, and organise everything into collections.'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Tap the map to drop a pin. Use the ⊕ locate button to find yourself (GPS works offline).'));
 
-  const gps = h('div', { class: 'card' }, [h('h2', {}, 'Your location'), h('p', { class: 'muted' }, 'Test GPS — works offline once a position fix is available.')]);
-  const out = h('p', {});
-  gps.append(h('button', { class: 'btn', onclick: () => {
-    out.textContent = 'Locating…';
-    if (!navigator.geolocation) { out.textContent = 'Geolocation is not available on this device.'; return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { out.textContent = `Latitude ${pos.coords.latitude.toFixed(5)}, longitude ${pos.coords.longitude.toFixed(5)} (±${Math.round(pos.coords.accuracy)} m).`; },
-      (err) => { out.textContent = `Could not get a location: ${err.message}`; },
-      { enableHighAccuracy: true, timeout: 10000 });
-  } }, 'Find me'), out);
-  wrap.append(gps);
+  const dlBtn = h('button', { class: 'btn', disabled: '' }, 'Download this area');
+  const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
+  const clearBtn = h('button', { class: 'btn ghost', onclick: async () => {
+    const m = await import('./map.js'); await m.clearTileCache(); showStorage();
+  } }, 'Clear map cache');
+  const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
+  const toolbar = h('div', { class: 'map-toolbar' }, [dlBtn, addBtn, storeBtn, clearBtn]);
+  const storageOut = h('p', { class: 'map-hint' }, '');
+  async function showStorage() {
+    const m = await import('./map.js'); const e = await m.storageEstimate();
+    storageOut.textContent = e ? `Stored on device: about ${e.usageMB.toFixed(1)} MB.` : '';
+  }
 
-  wrap.append(h('div', { class: 'card' }, [
-    h('div', { class: 'row-between' }, [h('h2', {}, 'Your pins'), h('button', { class: 'btn', onclick: () => go('#addpin') }, '＋ Add a place')]),
+  const canvas = h('div', { id: 'map-canvas' });
+  wrap.append(toolbar, storageOut, canvas);
+
+  // pins list (handy when offline / no GPS)
+  const pinsCard = h('div', { class: 'card' }, [
+    h('h2', {}, 'Your pins'),
     ...(store.pins.length
       ? store.pins.map((pin) => h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`))
-      : [h('p', { class: 'muted' }, 'No pins yet.')]),
-  ]));
+      : [h('p', { class: 'muted' }, 'No pins yet. Tap the map or use “＋ Add a place”.')]),
+  ]);
+  wrap.append(pinsCard);
   mount(wrap, '#map');
+
+  // lazy-init the heavy map libs; fall back to a simple GPS panel if they fail.
+  import('./map.js').then((m) => m.initMap(canvas, {
+    onMapClick: (coords) => { pendingPinCoords = coords; go('#addpin'); },
+    onOpen: (id) => go(`#place-${id}`),
+  })).then((ctrl) => {
+    dlBtn.removeAttribute('disabled');
+    dlBtn.onclick = async () => {
+      dlBtn.textContent = 'Downloading…';
+      try {
+        const r = await ctrl.downloadVisibleArea((d, t) => { dlBtn.textContent = `Downloading ${d}/${t}…`; });
+        dlBtn.textContent = `Saved ${r.tiles} tiles ✓`;
+        showStorage();
+        setTimeout(() => { dlBtn.textContent = 'Download this area'; }, 2500);
+      } catch (err) { dlBtn.textContent = 'Download failed'; }
+    };
+    showStorage();
+  }).catch(() => {
+    canvas.replaceWith(mapFallback());
+    dlBtn.remove(); storeBtn.remove(); clearBtn.remove();
+  });
+}
+
+// Shown if the map libraries cannot load (e.g. offline before first map use).
+function mapFallback() {
+  const card = h('div', { class: 'card' }, [
+    h('h2', {}, 'Map unavailable offline yet'),
+    h('p', { class: 'muted' }, 'The map could not load. Open it once while online so the map engine is cached, then it will work offline. You can still capture your location and manage pins.'),
+  ]);
+  const out = h('p', {});
+  card.append(h('button', { class: 'btn', onclick: () => {
+    out.textContent = 'Locating…';
+    if (!navigator.geolocation) { out.textContent = 'Geolocation unavailable.'; return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { out.textContent = `Latitude ${pos.coords.latitude.toFixed(5)}, longitude ${pos.coords.longitude.toFixed(5)}.`; },
+      (err) => { out.textContent = `No location: ${err.message}`; },
+      { enableHighAccuracy: true, timeout: 10000 });
+  } }, 'Find me'), out);
+  return card;
 }
 
 function addPinScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Add a place', '#map'));
-  const state = { coords: null, colls: new Set() };
+  const state = { coords: pendingPinCoords || null, colls: new Set() };
+  pendingPinCoords = null; // consume the tapped coordinate
 
   const card = h('div', { class: 'card' });
   const name = h('input', { type: 'text', placeholder: 'Place name (e.g. “Great noodle stall”)' });
   const note = h('input', { type: 'text', placeholder: 'A note (optional)' });
   card.append(field('Name', name), field('Note', note));
 
-  const coordOut = h('p', { class: 'muted' }, 'No location attached.');
+  const coordOut = h('p', { class: 'muted' }, state.coords
+    ? `Attached from map tap: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`
+    : 'No location attached.');
   card.append(field('Location', h('div', {}, [
     h('button', { class: 'btn ghost', onclick: () => {
       coordOut.textContent = 'Locating…';
