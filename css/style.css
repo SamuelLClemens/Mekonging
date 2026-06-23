@@ -110,13 +110,32 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .btn.ghost:hover { background: rgba(22,163,154,0.1); }
 .btn.block { display: flex; width: 100%; justify-content: center; }
 
-/* --- home hero w/ sunburst --- */
-.hero { text-align: center; padding: var(--sp-6) var(--sp-4) var(--sp-4); margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) var(--sp-4);
-  background: var(--sunburst); border-radius: 0 0 var(--r-lg) var(--r-lg); }
+/* --- home hero: psychedelic 60s/70s SE-Asia sunset --- */
+.hero {
+  position: relative; overflow: hidden; text-align: center; isolation: isolate;
+  padding: calc(var(--sp-6) + 30px) var(--sp-4) var(--sp-5);
+  margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) var(--sp-5);
+  border-radius: 0 0 34px 34px; box-shadow: var(--shadow-soft);
+  background:
+    radial-gradient(125% 100% at 50% -12%, rgba(242,169,59,0.55) 0%, rgba(232,99,42,0.34) 34%, rgba(214,51,108,0.20) 58%, rgba(106,76,147,0.10) 100%),
+    repeating-conic-gradient(from 0deg at 50% -2%, rgba(232,99,42,0.16) 0deg 7deg, rgba(242,169,59,0) 7deg 14deg),
+    var(--card);
+}
+/* warm glowing sun rising behind the wordmark */
+.hero::before {
+  content: ''; position: absolute; z-index: -1; top: -86px; left: 50%; transform: translateX(-50%);
+  width: 220px; height: 220px; border-radius: 50%;
+  background: radial-gradient(circle, #FFEFC2 0%, #F2A93B 42%, rgba(232,99,42,0) 70%); opacity: 0.85;
+}
+.hero .logo { width: min(74vw, 320px); }
 .hero h1 { font-family: var(--font-display); font-size: var(--fs-display); margin: 0 0 var(--sp-1);
   background: var(--grad-sun); -webkit-background-clip: text; background-clip: text; color: transparent;
   letter-spacing: 0.05em; }
-.hero p { color: var(--ink-soft); margin: 0; font-weight: 600; }
+.hero p { color: var(--ink); margin: var(--sp-2) 0 0; font-weight: 700; font-size: var(--fs-h3); opacity: 0.86; }
+
+.home-actions { display: flex; gap: var(--sp-2); justify-content: center; flex-wrap: wrap; margin-bottom: var(--sp-5); }
+.home-section { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em;
+  font-size: var(--fs-sm); color: var(--orange); margin: 0 0 var(--sp-2); font-weight: 800; }
 
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .tile {

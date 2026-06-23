@@ -118,9 +118,11 @@ function homeScreen() {
   ]));
   wrap.append(h('div', { class: 'home-actions' }, [
     h('button', { class: 'btn ghost', onclick: () => go('#search') }, '🔎 Search everything'),
-    h('button', { class: 'btn', style: 'background:var(--coral)', onclick: () => go('#sos') }, '🆘 Emergency'),
+    h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
   ]));
+  wrap.append(h('h2', { class: 'home-section' }, 'Where are you headed?'));
   wrap.append(regionPicker());
+  wrap.append(h('h2', { class: 'home-section' }, 'Everything you need'));
 
   const tiles = [
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
