@@ -1360,6 +1360,39 @@ function wxAgo(ts) {
   return `${Math.round(hr / 24)} d ago`;
 }
 function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return d; } }
+function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : '–'; } }
+
+// Unit preferences persist in the profile (default metric). Data is always stored
+// metric, so toggling converts on display without any re-fetch.
+function wxTempU() { return (store.profile && store.profile.wxTempUnit) || 'C'; }
+function wxWindU() { return (store.profile && store.profile.wxWindUnit) || 'kmh'; }
+function fmtTemp(c) { if (c == null) return '–'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
+function fmtWind(kmh) { if (kmh == null) return '–'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
+function fmtPrecip(mm) { if (mm == null) return '–'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
+
+// Split a day's hourly readings into parts of the day so the forecast can say, e.g.,
+// "rain in the afternoon". Code = the most significant (max WMO) hour in the window.
+const WX_SEGMENTS = [
+  { label: 'Morning', from: 6, to: 12 },
+  { label: 'Afternoon', from: 12, to: 18 },
+  { label: 'Evening', from: 18, to: 24 },
+  { label: 'Night', from: 0, to: 6 },
+];
+function daySegments(hourly, date) {
+  if (!Array.isArray(hourly)) return [];
+  const hrs = hourly.filter((h) => (h.t || '').slice(0, 10) === date);
+  return WX_SEGMENTS.map((seg) => {
+    const inSeg = hrs.filter((h) => { const hr = +(h.t || '').slice(11, 13); return hr >= seg.from && hr < seg.to; });
+    if (!inSeg.length) return null;
+    return {
+      label: seg.label,
+      code: Math.max(...inSeg.map((h) => h.code || 0)),
+      pp: Math.max(...inSeg.map((h) => (h.pp == null ? 0 : h.pp))),
+      tmin: Math.min(...inSeg.map((h) => h.temp)),
+      tmax: Math.max(...inSeg.map((h) => h.temp)),
+    };
+  }).filter(Boolean);
+}
 
 function weatherScreen(country) {
   const wrap = h('div', { class: 'screen' });
@@ -1367,6 +1400,17 @@ function weatherScreen(country) {
   if (country) weatherKey = spotKey(defaultSpot(country));
   if (!weatherKey) weatherKey = spotKey(defaultSpot(activeCountry || 'th'));
   const spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
+
+  // Unit toggles (°C/°F, km/h/mph) — persist in the profile and re-render.
+  const setTemp = (u) => { store.profile.wxTempUnit = u; save(); render(); };
+  const setWind = (u) => { store.profile.wxWindUnit = u; save(); render(); };
+  const unitChip = (label, active, onclick) => h('button', { class: 'chip', 'aria-pressed': active ? 'true' : 'false', onclick }, label);
+  wrap.append(h('div', { class: 'chips', style: 'margin-bottom:6px' }, [
+    unitChip('°C', wxTempU() === 'C', () => setTemp('C')),
+    unitChip('°F', wxTempU() === 'F', () => setTemp('F')),
+    unitChip('km/h', wxWindU() === 'kmh', () => setWind('kmh')),
+    unitChip('mph', wxWindU() === 'mph', () => setWind('mph')),
+  ]));
 
   const chips = h('div', { class: 'chips' }, WEATHER_SPOTS.map((s) => {
     const c = getCountry(s.country);
@@ -1391,21 +1435,49 @@ function weatherScreen(country) {
         h('div', { class: 'row-between' }, [
           h('span', { style: 'font-size:44px;line-height:1' }, cemoji),
           h('div', { style: 'text-align:right' }, [
-            h('div', { style: 'font-size:34px;font-weight:800' }, `${Math.round(rec.current.temp)}°C`),
+            h('div', { style: 'font-size:34px;font-weight:800' }, fmtTemp(rec.current.temp)),
             h('div', { class: 'muted' }, clabel),
           ]),
         ]),
-        h('div', { class: 'muted', style: 'margin-top:8px' }, `${spot.city} · Humidity ${rec.current.humidity}% · Wind ${Math.round(rec.current.wind)} km/h`),
+        h('div', { class: 'muted', style: 'margin-top:8px' },
+          `${spot.city} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
       ]));
-      const fc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '7-day forecast')]);
+      const fc = h('div', { class: 'card' }, [
+        h('h3', { style: 'margin-top:0' }, '7-day forecast'),
+        h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
+      ]);
       rec.daily.forEach((d) => {
         const [dl, de] = wmo(d.code);
-        fc.append(h('div', { class: 'row-between', style: 'padding:7px 0;border-top:1px solid rgba(0,0,0,0.07)' }, [
-          h('span', { style: 'min-width:40px;font-weight:700' }, wxDay(d.date)),
-          h('span', { style: 'font-size:20px' }, de),
-          h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rain != null ? ` · 💧${d.rain}%` : ''}`),
-          h('span', { style: 'font-weight:700' }, `${Math.round(d.tmin)}° / ${Math.round(d.tmax)}°`),
-        ]));
+        const detail = h('div', { style: 'display:none;margin-top:6px' });
+        detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
+          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : '–'} · UV ${d.uv != null ? Math.round(d.uv) : '–'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
+        const segs = daySegments(rec.hourly, d.date);
+        if (segs.length) {
+          segs.forEach((s) => {
+            const [sl, se] = wmo(s.code);
+            detail.append(h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
+              h('span', { style: 'min-width:78px;font-weight:600' }, s.label),
+              h('span', { style: 'font-size:18px' }, se),
+              h('span', { class: 'muted grow', style: 'margin:0 8px;text-align:left' }, `${sl} · 💧${s.pp}%`),
+              h('span', {}, `${fmtTemp(s.tmin)}/${fmtTemp(s.tmax)}`),
+            ]));
+          });
+        } else {
+          detail.append(h('p', { class: 'muted' }, 'Hourly breakdown unavailable — tap Refresh while online.'));
+        }
+        const head = h('button', {
+          style: 'display:block;width:100%;background:none;border:none;padding:6px 0;text-align:left;cursor:pointer;font:inherit;color:inherit;border-top:1px solid rgba(0,0,0,0.07)',
+          onclick: () => { detail.style.display = detail.style.display === 'none' ? 'block' : 'none'; },
+        }, [
+          h('div', { class: 'row-between' }, [
+            h('span', { style: 'min-width:38px;font-weight:700' }, wxDay(d.date)),
+            h('span', { style: 'font-size:20px' }, de),
+            h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}`),
+            h('span', { style: 'font-weight:700' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
+            h('span', { class: 'muted', style: 'margin-left:6px' }, '⌄'),
+          ]),
+        ]);
+        fc.append(head, detail);
       });
       body.append(fc);
       body.append(h('p', { class: 'muted', style: 'text-align:center' }, `Last updated ${wxAgo(rec.fetchedAt)}${navigator.onLine ? '' : ' · offline'}`));

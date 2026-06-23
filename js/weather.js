@@ -52,27 +52,42 @@ export function getCachedWeather(key) {
 }
 
 // Fetch + cache. Returns the fresh record, or the cached one when offline/blocked.
+// Always fetched in metric (°C, km/h, mm); the UI converts for display so the unit
+// toggle never needs a re-fetch. Hourly data lets the UI break each day into
+// morning / afternoon / evening / night.
 export async function refreshWeather(spot) {
   const key = spotKey(spot);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedWeather(key);
   const url = `${ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}`
-    + '&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m,is_day'
-    + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+    + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,is_day'
+    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,apparent_temperature'
+    + '&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,'
+    + 'precipitation_probability_max,precipitation_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
     + '&timezone=auto&forecast_days=7';
   try {
     const res = await fetch(url);
     const d = await res.json();
-    if (d && d.current && d.daily) {
+    if (d && d.current && d.daily && d.hourly) {
+      const H = d.hourly;
       const rec = {
         city: spot.city, country: spot.country, fetchedAt: Date.now(),
         current: {
-          temp: d.current.temperature_2m, code: d.current.weather_code,
-          humidity: d.current.relative_humidity_2m, wind: d.current.wind_speed_10m, isDay: d.current.is_day,
+          temp: d.current.temperature_2m, apparent: d.current.apparent_temperature, code: d.current.weather_code,
+          humidity: d.current.relative_humidity_2m, wind: d.current.wind_speed_10m,
+          precip: d.current.precipitation, isDay: d.current.is_day,
         },
         daily: d.daily.time.map((t, i) => ({
           date: t, code: d.daily.weather_code[i],
           tmax: d.daily.temperature_2m_max[i], tmin: d.daily.temperature_2m_min[i],
-          rain: d.daily.precipitation_probability_max[i],
+          appMax: d.daily.apparent_temperature_max[i], appMin: d.daily.apparent_temperature_min[i],
+          rainProb: d.daily.precipitation_probability_max[i], precip: d.daily.precipitation_sum[i],
+          uv: d.daily.uv_index_max[i], windMax: d.daily.wind_speed_10m_max[i],
+          sunrise: d.daily.sunrise[i], sunset: d.daily.sunset[i],
+        })),
+        hourly: H.time.map((t, i) => ({
+          t, temp: H.temperature_2m[i], code: H.weather_code[i],
+          pp: H.precipitation_probability[i], precip: H.precipitation[i],
+          wind: H.wind_speed_10m[i], hum: H.relative_humidity_2m[i], app: H.apparent_temperature[i],
         })),
       };
       try { localStorage.setItem(PREFIX + key, JSON.stringify(rec)); } catch { /* storage full */ }
