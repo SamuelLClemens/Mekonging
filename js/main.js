@@ -27,6 +27,7 @@ import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
   getEvents, allEvents, getEvent,
+  getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
@@ -116,6 +117,7 @@ function homeScreen() {
     { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
     { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
     { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
+    { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
@@ -187,6 +189,7 @@ function countryHubScreen(id) {
     { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
     { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
     { ic: '⛅', t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
+    { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
     { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
@@ -1235,6 +1238,116 @@ function calendarAddScreen() {
   mount(wrap, '#home');
 }
 
+// ---- FOOD / DISH IDENTIFIER -------------------------------------------------
+let foodCountry = '';
+let foodQuery = '';
+let foodCat = '';
+const foodAvoid = new Set();
+function spiceLabel(s) {
+  return s === 'hot' ? '🌶🌶🌶 Hot' : s === 'medium' ? '🌶🌶 Medium'
+    : s === 'mild' ? '🌶 Mild' : s === 'varies' ? '🌶 Varies' : 'Not spicy';
+}
+
+function foodCard(d) {
+  const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
+  return h('button', { class: 'card species-card', onclick: () => go(`#dish-${d.id}`) }, [
+    h('span', { class: 'species-emoji' }, cat ? cat.emoji : '🍽'),
+    h('span', { class: 'grow' }, [
+      h('div', { class: 'en' }, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
+      h('div', { class: 'sci' }, `${d.localName || ''}${d.roman ? ` · ${d.roman}` : ''}`),
+    ]),
+    h('span', { class: 'fair' }, d.price ? range(d.price.low, d.price.high, d.price.currency) : ''),
+  ]);
+}
+
+function foodScreen(country) {
+  if (country) foodCountry = country;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Identify food', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Use “Avoid” to hide dishes that contain an allergen.'));
+
+  const cFilters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
+  const cChips = h('div', { class: 'chips' }, cFilters.map((f) =>
+    h('button', { class: 'chip', 'aria-pressed': foodCountry === f.id ? 'true' : 'false', dataset: { c: f.id },
+      onclick: () => { foodCountry = f.id; cChips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.c === f.id ? 'true' : 'false')); renderList(); } },
+      `${f.flag} ${f.name}`)));
+  wrap.append(cChips);
+
+  const search = h('input', { class: 'search', type: 'search', placeholder: 'Search dishes or ingredients…', value: foodQuery,
+    oninput: debounce((e) => { foodQuery = e.target.value; renderList(); }, 120) });
+  wrap.append(search);
+
+  const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(FOOD_CATEGORIES);
+  const catChips = h('div', { class: 'chips' }, cats.map((g) =>
+    h('button', { class: 'chip', 'aria-pressed': foodCat === g.id ? 'true' : 'false', dataset: { g: g.id },
+      onclick: () => { foodCat = g.id; catChips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
+      `${g.emoji} ${g.label}`)));
+  wrap.append(catChips);
+
+  wrap.append(h('p', { class: 'muted', style: 'margin:10px 0 4px' }, 'Avoid (hides dishes that contain):'));
+  const avoidChips = h('div', { class: 'chips' }, FOOD_ALLERGENS.map((a) =>
+    h('button', { class: 'chip', 'aria-pressed': foodAvoid.has(a) ? 'true' : 'false',
+      onclick: (e) => { if (foodAvoid.has(a)) foodAvoid.delete(a); else foodAvoid.add(a); e.currentTarget.setAttribute('aria-pressed', foodAvoid.has(a) ? 'true' : 'false'); renderList(); } },
+      `🚫 ${a}`)));
+  wrap.append(avoidChips);
+
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderList() {
+    listEl.innerHTML = '';
+    let dishes = foodCountry
+      ? getFood(foodCountry).map((d) => { const c = getCountry(foodCountry); return { ...d, country: c.id, countryName: c.name, flag: c.flag }; })
+      : allFood();
+    const q = foodQuery.trim().toLowerCase();
+    if (q) dishes = dishes.filter((d) => d.name.toLowerCase().includes(q) || (d.roman || '').toLowerCase().includes(q)
+      || (d.localName || '').includes(foodQuery.trim()) || (d.ingredients || []).some((i) => i.toLowerCase().includes(q)));
+    if (foodCat) dishes = dishes.filter((d) => d.category === foodCat);
+    if (foodAvoid.size) dishes = dishes.filter((d) => !(d.allergens || []).some((a) => foodAvoid.has(a)));
+    if (!dishes.length) { listEl.append(h('p', { class: 'empty' }, 'No dishes match. Try clearing a filter.')); return; }
+    dishes.forEach((d) => listEl.append(foodCard(d)));
+  }
+  renderList();
+  mount(wrap, '#home');
+}
+
+function dishScreen(id) {
+  const d = getDish(id);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(d ? d.name : 'Dish', '#food'));
+  if (!d) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
+  const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
+  const tagRow = 'display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';
+  const card = h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('strong', {}, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
+      cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
+    ]),
+    d.localName ? h('div', { class: 'native' }, d.localName) : null,
+    d.roman ? h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), d.roman]) : null,
+    h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
+    d.description ? h('p', {}, d.description) : null,
+  ]);
+  if (d.price && (d.price.low != null || d.price.high != null)) {
+    card.append(h('p', {}, [h('strong', {}, 'Typical price: '), priceLine(d.price.low, d.price.high, d.price.currency)]));
+  }
+  if (d.ingredients && d.ingredients.length) {
+    card.append(h('h3', {}, 'Ingredients'));
+    card.append(h('div', { style: tagRow }, d.ingredients.map((i) => h('span', { class: 'cat-tag' }, i))));
+  }
+  card.append(h('h3', {}, 'Allergens'));
+  if (d.allergens && d.allergens.length) {
+    card.append(h('div', { style: tagRow }, d.allergens.map((a) => h('span', { class: 'tier high' }, a))));
+  } else {
+    card.append(h('p', { class: 'muted' }, 'No common allergens typically — always confirm at the stall.'));
+  }
+  if (d.veg) { card.append(h('h3', {}, 'Vegetarian / vegan')); card.append(h('p', {}, d.veg)); }
+  if (d.whereToFind) { card.append(h('h3', {}, 'Where to find it')); card.append(h('p', {}, d.whereToFind)); }
+  if (d.sources && d.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${d.sources.join('; ')}`));
+  wrap.append(card);
+  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${d.name} ${d.localName || ''} food`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
+  mount(wrap, '#home');
+}
+
 // ---- WEATHER + FORECAST -----------------------------------------------------
 let weatherKey = '';   // remembered city selection across renders
 function wxAgo(ts) {
@@ -1937,6 +2050,8 @@ function render() {
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
       case 'weather': return weatherScreen(arg);
+      case 'food': return foodScreen(arg);
+      case 'dish': return dishScreen(arg);
       case 'nature': return natureScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();

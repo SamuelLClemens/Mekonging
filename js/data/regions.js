@@ -46,6 +46,11 @@ import { EVENTS_TH } from './events.th.js';
 import { EVENTS_VI } from './events.vi.js';
 import { EVENTS_KH } from './events.kh.js';
 import { EVENTS_LA } from './events.la.js';
+// Dish identifier databases (ingredients, allergens, prices) per country.
+import { FOOD_TH } from './food.th.js';
+import { FOOD_VI } from './food.vi.js';
+import { FOOD_KH } from './food.kh.js';
+import { FOOD_LA } from './food.la.js';
 
 export const LANGUAGES = {
   th: PHRASEBOOK_TH,
@@ -62,22 +67,22 @@ export const COUNTRIES = [
   {
     id: 'th', name: 'Thailand', flag: '🇹🇭', currency: 'THB', lang: 'th',
     cities: ['Bangkok', 'Chiang Mai', 'Krabi', 'Koh Lanta', 'Pai'],
-    places: [...PLACES_TH, ...PLACES_TH_EXT], prices: PRICES_TH, routes: ROUTES_TH, info: INFO_TH, guide: GUIDE_TH, events: EVENTS_TH.events,
+    places: [...PLACES_TH, ...PLACES_TH_EXT], prices: PRICES_TH, routes: ROUTES_TH, info: INFO_TH, guide: GUIDE_TH, events: EVENTS_TH.events, food: FOOD_TH.dishes,
   },
   {
     id: 'vi', name: 'Vietnam', flag: '🇻🇳', currency: 'VND', lang: 'vi',
     cities: ['Hanoi', 'Ho Chi Minh City', 'Hoi An', 'Da Nang'],
-    places: [...PLACES_VI, ...PLACES_VI_EXT], prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI, guide: GUIDE_VI, events: EVENTS_VI.events,
+    places: [...PLACES_VI, ...PLACES_VI_EXT], prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI, guide: GUIDE_VI, events: EVENTS_VI.events, food: FOOD_VI.dishes,
   },
   {
     id: 'kh', name: 'Cambodia', flag: '🇰🇭', currency: 'KHR', lang: 'km',
     cities: ['Phnom Penh', 'Siem Reap'],
-    places: [...PLACES_KH, ...PLACES_KH_EXT], prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH, guide: GUIDE_KH, events: EVENTS_KH.events,
+    places: [...PLACES_KH, ...PLACES_KH_EXT], prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH, guide: GUIDE_KH, events: EVENTS_KH.events, food: FOOD_KH.dishes,
   },
   {
     id: 'la', name: 'Laos', flag: '🇱🇦', currency: 'LAK', lang: 'lo',
     cities: ['Vientiane', 'Luang Prabang'],
-    places: [...PLACES_LA, ...PLACES_LA_EXT], prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA, guide: GUIDE_LA, events: EVENTS_LA.events,
+    places: [...PLACES_LA, ...PLACES_LA_EXT], prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA, guide: GUIDE_LA, events: EVENTS_LA.events, food: FOOD_LA.dishes,
   },
 ];
 
@@ -116,6 +121,36 @@ export function allEvents() {
 export function getEvent(id) {
   return allEvents().find((e) => e.id === id) || null;
 }
+
+// Dishes. getFood(country) returns one country's list; allFood() flattens every
+// country and tags each dish with its country id, name and flag.
+export function getFood(id) {
+  const c = getCountry(id);
+  return c && Array.isArray(c.food) ? c.food : [];
+}
+export function allFood() {
+  return COUNTRIES.flatMap((c) => (Array.isArray(c.food) ? c.food : [])
+    .map((d) => ({ ...d, country: c.id, countryName: c.name, flag: c.flag })));
+}
+export function getDish(id) {
+  return allFood().find((d) => d.id === id) || null;
+}
+
+export const FOOD_CATEGORIES = [
+  { id: 'noodle', label: 'Noodles', emoji: '🍜' },
+  { id: 'rice', label: 'Rice dishes', emoji: '🍚' },
+  { id: 'soup', label: 'Soups', emoji: '🥣' },
+  { id: 'curry', label: 'Curries', emoji: '🍛' },
+  { id: 'grill', label: 'Grilled & BBQ', emoji: '🔥' },
+  { id: 'salad', label: 'Salads', emoji: '🥗' },
+  { id: 'snack', label: 'Snacks & rolls', emoji: '🥟' },
+  { id: 'street', label: 'Street food', emoji: '🥪' },
+  { id: 'breakfast', label: 'Breakfast', emoji: '🍳' },
+  { id: 'sweet', label: 'Sweets', emoji: '🍮' },
+  { id: 'drink', label: 'Drinks', emoji: '🥤' },
+];
+// Allergens used across the dish data, for the "hide dishes with…" filter.
+export const FOOD_ALLERGENS = ['peanut', 'tree nut', 'shellfish', 'fish', 'egg', 'soy', 'gluten', 'dairy', 'sesame'];
 
 export const INTERESTS = [
   { id: 'food', label: 'Food & markets' },
