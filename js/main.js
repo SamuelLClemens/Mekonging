@@ -13,6 +13,11 @@ import {
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { putBlob, getBlob, delBlob } from './idb.js';
+import {
+  available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
+  lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
+  listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
+} from './vault.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -109,6 +114,7 @@ function homeScreen() {
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
+    { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
     { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
   wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
@@ -382,7 +388,7 @@ function tierBadge(tier) {
   return h('span', { class: `tier ${tier}` }, lbl);
 }
 
-function starsStr(n) { const r = Math.round(n); return '★'.repeat(r) + '☆'.repeat(5 - r); }
+function starsStr(n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return '★'.repeat(r) + '☆'.repeat(5 - r); }
 
 // A unified, LAWFUL rating: a synthesised score from multiple cited public sources
 // (no scraping), plus a deep link to live Google reviews. The user's own rating
@@ -622,7 +628,7 @@ function transportScreen(countryId) {
   const routes = country && country.routes;
   if (!routes) {
     wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} routes are coming soon. Thailand is fully covered in this build.`));
-    mount(wrap, '#prices'); return;
+    mount(wrap, '#home'); return;
   }
   for (const r of routes) {
     const card = h('div', { class: 'card' }, [
@@ -648,7 +654,7 @@ function transportScreen(countryId) {
     wrap.append(card);
   }
   wrap.append(h('p', { class: 'disclaimer' }, 'Times and prices are guidance and change with season and operator. Confirm before travel.'));
-  mount(wrap, '#prices');
+  mount(wrap, '#home');
 }
 
 // ---- COUNTRY INFO -----------------------------------------------------------
@@ -1054,26 +1060,38 @@ function journeySVG(pts) {
     ${dots}${vehicle}</svg>`;
 }
 
-// ---- TRAVEL CALENDAR --------------------------------------------------------
-const CAL_ICON = { stay: '🛏', meal: '🍽', activity: '🎟' };
+// ---- TRAVEL CALENDAR + DAY PLANNER ------------------------------------------
+const CAL_ICON = { stay: '🛏', meal: '🍽', activity: '🎟', plan: '🗓' };
 function calendarDispatch(arg) { return arg === 'add' ? calendarAddScreen() : calendarScreen(); }
+
+// Order items by date, then by time-of-day (untimed entries fall to the end of the day).
+function calItems() {
+  return store.calendar.items.slice().sort((a, b) => {
+    const ka = `${a.date} ${a.time || '99:99'}`, kb = `${b.date} ${b.time || '99:99'}`;
+    return ka < kb ? -1 : (ka > kb ? 1 : 0);
+  });
+}
+function calDateLabel(d) {
+  try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }); }
+  catch { return d; }
+}
 
 function calendarScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Travel calendar', '#home'));
-  wrap.append(h('button', { class: 'btn block', onclick: () => go('#calendar-add') }, '＋ Add booking / meal'));
-  const items = store.calendar.items.slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'Log your booked stays and the meals you eat, with a rating. They appear here by date.')); mount(wrap, '#home'); return; }
+  wrap.append(topbar('Calendar & day planner', '#home'));
+  wrap.append(h('button', { class: 'btn block', onclick: () => go('#calendar-add') }, '＋ Add plan, booking or meal'));
+  const items = calItems();
+  if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'Plan your days and log your stays, meals and activities — add a time and they line up into a timeline for each day.')); mount(wrap, '#home'); return; }
   let lastDate = '';
   items.forEach((it) => {
-    if (it.date !== lastDate) { wrap.append(h('h2', { class: 'cat-title' }, it.date)); lastDate = it.date; }
+    if (it.date !== lastDate) { wrap.append(h('h2', { class: 'cat-title' }, calDateLabel(it.date))); lastDate = it.date; }
     const card = h('div', { class: 'card' }, [
       h('div', { class: 'row-between' }, [
-        h('strong', {}, `${CAL_ICON[it.type] || '•'} ${it.title}`),
+        h('strong', {}, `${it.time ? it.time + ' · ' : ''}${CAL_ICON[it.type] || '•'} ${it.title}`),
         h('span', { class: 'fair' }, it.cost ? `${it.cost} ${it.currency}` : ''),
       ]),
       it.place ? h('p', { class: 'muted' }, it.place) : null,
-      it.rating ? h('div', { class: 'stars-static' }, '★'.repeat(it.rating) + '☆'.repeat(5 - it.rating)) : null,
+      it.rating ? h('div', { class: 'stars-static' }, starsStr(it.rating)) : null,
       it.note ? h('p', {}, it.note) : null,
       h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); go('#calendar'); } } }, 'Delete'),
     ]);
@@ -1088,24 +1106,25 @@ function calendarAddScreen() {
   const c = getCountry(activeCountry);
   const st = { rating: 0 };
   const date = h('input', { type: 'date' });
-  const type = selectEl([['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity']], 'stay', () => {});
-  const title = h('input', { type: 'text', placeholder: 'e.g. Sla Boutique Hostel / Bun cha lunch' });
+  const time = h('input', { type: 'time' });
+  const type = selectEl([['plan', '🗓 Day plan'], ['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity']], 'plan', () => {});
+  const title = h('input', { type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch' });
   const place = h('input', { type: 'text', placeholder: 'Where' });
   const cost = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Cost' });
   const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP'], c ? c.currency : 'THB', () => {});
-  const note = h('textarea', { class: 'ta', placeholder: 'Review — how was it?' });
+  const note = h('textarea', { class: 'ta', placeholder: 'Plan details, or a review once you have been' });
   const stars = h('div', { class: 'stars' });
   const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
   for (let i = 1; i <= 5; i++) stars.append(h('button', { class: 'star', onclick: () => { st.rating = st.rating === i ? 0 : i; paint(st.rating); } }, '☆'));
   wrap.append(h('div', { class: 'card' }, [
-    field('Date', date), field('Type', type), field('Title', title), field('Place', place),
-    field('Cost', h('div', { class: 'row-between' }, [cost, cur])),
-    field('Rating', stars), field('Review / note', note),
+    field('Date', date), field('Time (optional)', time), field('Type', type), field('Title', title), field('Place', place),
+    field('Cost (optional)', h('div', { class: 'row-between' }, [cost, cur])),
+    field('Rating (optional)', stars), field('Plan / review', note),
   ]));
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!date.value) { alert('Pick a date.'); return; }
     if (!title.value.trim()) { alert('Add a title.'); return; }
-    addCalendarItem({ date: date.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() });
+    addCalendarItem({ date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() });
     go('#calendar');
   } }, 'Save'));
   mount(wrap, '#home');
@@ -1411,6 +1430,106 @@ function sosScreen() {
   mount(wrap, '#home');
 }
 
+// ---- SECURE DOCUMENT VAULT --------------------------------------------------
+// Passports and other documents, encrypted on-device (see js/vault.js). The UI
+// re-renders into `body` after every state change so it always reflects the vault.
+function vaultWarning() {
+  return h('div', { class: 'banner' },
+    'Documents are encrypted with your passcode and stored only on this device — never uploaded. If you forget the passcode they cannot be recovered, so keep a separate backup of anything critical.');
+}
+function docKind(type) {
+  if (!type) return 'File';
+  if (type.startsWith('image/')) return 'Image';
+  if (type === 'application/pdf') return 'PDF';
+  return type;
+}
+function vaultScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Secure documents', '#home'));
+  const body = h('div', {});
+  wrap.append(body);
+  mount(wrap, '#home');
+  if (!vaultAvailable()) {
+    body.append(h('div', { class: 'card' }, [
+      h('h2', {}, 'Secure storage unavailable'),
+      h('p', { class: 'muted' }, 'This browser does not expose the Web Crypto API in the current context. Open the app over HTTPS (or localhost) to use the encrypted vault.'),
+    ]));
+    return;
+  }
+  renderVault(body);
+}
+async function renderVault(body) {
+  body.innerHTML = '';
+  let inited = false;
+  try { inited = await vaultInitialised(); } catch { /* treat as not initialised */ }
+  if (!inited) { body.append(vaultSetupCard(body)); return; }
+  if (!vaultUnlocked()) { body.append(vaultUnlockCard(body)); return; }
+
+  body.append(vaultWarning());
+
+  const fileInput = h('input', { type: 'file', accept: 'image/*,application/pdf' });
+  body.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Add a document'),
+    h('p', { class: 'muted' }, 'Photograph or scan your passport, visa, insurance or tickets, then add the file. It is encrypted before it is saved.'),
+    field('File', fileInput),
+    h('button', { class: 'btn block', onclick: async () => {
+      const f = fileInput.files && fileInput.files[0];
+      if (!f) { alert('Choose a file first.'); return; }
+      try { await vaultAdd(f); renderVault(body); } catch (e) { alert(e.message); }
+    } }, 'Encrypt & save'),
+  ]));
+
+  const listCard = h('div', { class: 'card' }, [h('h2', {}, 'Your documents')]);
+  body.append(listCard);
+  let docs = [];
+  try { docs = await vaultList(); } catch (e) { listCard.append(h('p', { class: 'muted' }, e.message)); return; }
+  if (!docs.length) listCard.append(h('p', { class: 'muted' }, 'No documents yet.'));
+  docs.forEach((d) => listCard.append(h('div', { class: 'row-between price-item' }, [
+    h('div', { class: 'grow' }, [h('strong', {}, d.name || 'Document'), h('div', { class: 'muted' }, `${docKind(d.type)} · added ${d.createdAt}`)]),
+    h('div', { class: 'cats' }, [
+      h('button', { class: 'chip', onclick: async () => {
+        try { const doc = await vaultGet(d.id); const u = URL.createObjectURL(doc.blob); window.open(u, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+        catch (e) { alert(e.message); }
+      } }, 'View'),
+      h('button', { class: 'chip', onclick: async () => { if (confirm(`Delete “${d.name}” from the vault?`)) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
+    ]),
+  ])));
+
+  body.append(h('div', { class: 'card' }, [
+    h('button', { class: 'btn ghost block', onclick: () => { vaultLock(); renderVault(body); } }, '🔒 Lock vault'),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
+      onclick: async () => { if (confirm('Permanently erase the vault and every document in it? This cannot be undone.')) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
+  ]));
+}
+function vaultSetupCard(body) {
+  const p1 = h('input', { type: 'password', placeholder: 'Choose a passcode (min 4 characters)' });
+  const p2 = h('input', { type: 'password', placeholder: 'Confirm passcode' });
+  return h('div', { class: 'card' }, [
+    h('h2', {}, 'Set up your vault'),
+    vaultWarning(),
+    field('Passcode', p1), field('Confirm', p2),
+    h('button', { class: 'btn block', onclick: async () => {
+      if (p1.value !== p2.value) { alert('The passcodes do not match.'); return; }
+      try { await vaultSetup(p1.value); renderVault(body); } catch (e) { alert(e.message); }
+    } }, 'Create vault'),
+  ]);
+}
+function vaultUnlockCard(body) {
+  const pin = h('input', { type: 'password', placeholder: 'Passcode' });
+  const err = h('p', { class: 'warn-note', style: 'display:none' });
+  const submit = async () => {
+    try { await vaultUnlock(pin.value); renderVault(body); }
+    catch (e) { err.textContent = e.message; err.style.display = ''; }
+  };
+  pin.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  return h('div', { class: 'card' }, [
+    h('h2', {}, 'Unlock your vault'),
+    h('p', { class: 'muted' }, 'Enter your passcode to decrypt your documents on this device.'),
+    field('Passcode', pin), err,
+    h('button', { class: 'btn block', onclick: submit }, 'Unlock'),
+  ]);
+}
+
 // ---- SETTINGS ---------------------------------------------------------------
 function settingsScreen() {
   const p = store.profile;
@@ -1520,6 +1639,7 @@ function render() {
       case 'checklist': return checklistScreen(arg);
       case 'bestof': return bestofScreen(arg);
       case 'bestlist': return bestListScreen(arg);
+      case 'vault': return vaultScreen();
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

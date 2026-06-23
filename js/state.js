@@ -44,8 +44,9 @@ function defaults() {
     // --- v4: travel journal + travel calendar (all on-device) ---
     // journal entries get a date+time+location stamp and feed the journey-map animation.
     journal: { entries: [] },   // { id, ts(ISO), date, title, text, place, coords:{lat,lng}|null }
-    // booked stays / meals / activities with cost + rating.
-    calendar: { items: [] },    // { id, date, type:'stay'|'meal'|'activity', title, place, cost, currency, rating, note }
+    // booked stays / meals / activities / day-plans with cost + rating. `time` (HH:MM)
+    // is optional and powers the time-ordered day planner.
+    calendar: { items: [] },    // { id, date, time, type:'stay'|'meal'|'activity'|'plan', title, place, cost, currency, rating, note }
     // --- v5: pre-trip checklist progress (per item id) ---
     checklist: { checked: {} },
   };
@@ -161,12 +162,17 @@ export function deleteJournalEntry(id) {
 export function journalEntries() { return store.journal.entries.slice().sort((a, b) => (a.ts < b.ts ? -1 : 1)); }
 
 // --- travel calendar ---------------------------------------------------------
+// Order by date then time; undated-time items sort to the end of their day.
+function calKey(x) { return `${x.date} ${x.time || '99:99'}`; }
+export function calCompare(a, b) { const ka = calKey(a), kb = calKey(b); return ka < kb ? -1 : (ka > kb ? 1 : 0); }
 export function addCalendarItem(item) {
-  const it = { id: uid('cal'), date: item.date, type: item.type || 'stay',
+  // Clamp the rating to an integer 0–5 so star rendering (String.repeat) can never throw.
+  const rating = Math.max(0, Math.min(5, Math.round(Number(item.rating) || 0)));
+  const it = { id: uid('cal'), date: item.date, time: item.time || '', type: item.type || 'stay',
     title: String(item.title || '').slice(0, 120), place: item.place || '',
-    cost: item.cost || '', currency: item.currency || '', rating: item.rating || 0, note: item.note || '' };
+    cost: item.cost || '', currency: item.currency || '', rating, note: item.note || '' };
   store.calendar.items.push(it);
-  store.calendar.items.sort((a, b) => (a.date < b.date ? -1 : 1));
+  store.calendar.items.sort(calCompare);
   save(); return it;
 }
 export function deleteCalendarItem(id) {

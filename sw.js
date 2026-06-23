@@ -8,12 +8,15 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.12.0';
+const CACHE_VERSION = 'mk-v0.13.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['demo-bucket.protomaps.com'];
 
+// `index.html` is the navigation fallback and so must cache for offline install to
+// be meaningful; it is listed in CRITICAL. Everything else is best-effort: a single
+// 404 must not abort the whole install (see the resilient addAll below).
+const CRITICAL = ['index.html'];
 const PRECACHE = [
-  './',
   'index.html',
   'manifest.webmanifest',
   'css/style.css',
@@ -26,6 +29,7 @@ const PRECACHE = [
   'js/map.js',
   'js/currency.js',
   'js/idb.js',
+  'js/vault.js',
   'js/data/regions.js',
   'js/data/allergens.js',
   'js/data/nature.js',
@@ -67,7 +71,14 @@ const PRECACHE = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_VERSION).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()),
+    caches.open(CACHE_VERSION).then(async (c) => {
+      // Critical shell must cache for the install to be useful; fail the install if it cannot.
+      await c.addAll(CRITICAL);
+      // The rest is best-effort: cache each file independently so one missing/renamed
+      // asset cannot abort the entire offline install (the old atomic addAll did).
+      await Promise.all(PRECACHE.map((u) => c.add(u).catch(() => { /* skip this asset */ })));
+      await self.skipWaiting();
+    }),
   );
 });
 
