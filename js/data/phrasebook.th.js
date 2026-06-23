@@ -15,7 +15,7 @@ export const PHRASEBOOK_TH = {
       { en: 'Do you speak English?', script: 'พูดภาษาอังกฤษได้ไหม', roman: 'phuut pasa angkrit dai mai' },
     ]},
     { id: 'directions', name: 'Taxi & directions', phrases: [
-      { en: 'Please use the meter', script: 'เปิดมิเตอร์ด้วย', roman: 'pəət mi-ter duay', note: 'If they refuse, take another taxi or use Grab.' },
+      { en: 'Please use the meter', script: 'เปิดมิเตอร์ด้วย', roman: 'bert mi-ter duay', note: 'If they refuse, take another taxi or use Grab.' },
       { en: 'Stop here, please', script: 'จอดตรงนี้', roman: 'jot trong nii' },
       { en: 'Turn left', script: 'เลี้ยวซ้าย', roman: 'liao sai' },
       { en: 'Turn right', script: 'เลี้ยวขวา', roman: 'liao khwa' },
@@ -38,7 +38,7 @@ export const PHRASEBOOK_TH = {
       { en: 'Can you lower the price?', script: 'ลดได้ไหม', roman: 'lot dai mai' },
       { en: 'Do you have a cheaper one?', script: 'มีถูกกว่านี้ไหม', roman: 'mii thuuk kwa nii mai' },
       { en: 'I will take it', script: 'เอาอันนี้', roman: 'ao an nii' },
-      { en: 'Just looking', script: 'ดูเฉยๆ', roman: 'duu chəəi chəəi' },
+      { en: 'Just looking', script: 'ดูเฉยๆ', roman: 'doo chuhy chuhy' },
     ]},
     { id: 'numbers', name: 'Numbers & money', phrases: [
       { en: 'One', script: 'หนึ่ง', roman: 'neung' },

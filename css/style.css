@@ -247,6 +247,50 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .review-yours .rlabel { color: var(--orange); }
 html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 
+/* --- travel journal (antique book) --- */
+.book.closed {
+  display: block; width: 230px; height: 310px; margin: var(--sp-5) auto; cursor: pointer;
+  position: relative; border: none; padding: 0; border-radius: 6px 12px 12px 6px;
+  background: linear-gradient(135deg, #6B3415 0%, #46210C 60%, #2F1607 100%);
+  box-shadow: var(--shadow), inset 0 0 0 2px rgba(217,162,62,0.5), inset 0 0 0 8px rgba(217,162,62,0.12);
+  transition: transform var(--dur) var(--ease);
+}
+.book.closed:hover { transform: translateY(-3px) rotate(-0.5deg); }
+.book-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 14px; border-radius: 6px 0 0 6px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent); }
+.book-cover { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--sp-2); color: #F0CE84; text-align: center; padding: var(--sp-4); }
+.book-emboss { font-size: var(--fs-label); letter-spacing: 0.22em; opacity: 0.85; }
+.book-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; line-height: 1.15;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+.book-flour { color: #D9A23E; letter-spacing: 0.3em; }
+.book-count { margin-top: var(--sp-4); font-size: var(--fs-sm); opacity: 0.8; text-transform: uppercase; letter-spacing: 0.12em; }
+
+.book-open { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: var(--r-md); overflow: hidden;
+  box-shadow: var(--shadow); border: 2px solid var(--line); }
+@media (max-width: 520px) { .book-open { grid-template-columns: 1fr; } }
+.page { background:
+    repeating-linear-gradient(transparent, transparent 27px, rgba(120,90,50,0.12) 28px),
+    linear-gradient(180deg, #FBF1DA, #F4E6C8); color: #4A3520; padding: var(--sp-5) var(--sp-4); min-height: 260px; }
+.page-left { background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(120,90,50,0.12) 28px), linear-gradient(90deg, #EFDFBE, #FBF1DA); text-align: center; }
+.page-single { border: 2px solid var(--line); border-radius: var(--r-md); }
+.page-enter { animation: pageIn var(--dur) var(--ease); transform-origin: left center; }
+@keyframes pageIn { from { transform: rotateY(-14deg); opacity: 0.5; } to { transform: rotateY(0); opacity: 1; } }
+.page-head { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; color: #8A5A2A; font-size: var(--fs-sm); margin-bottom: var(--sp-2); }
+.page-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #5A3A18; }
+.toc { margin: 0; padding-left: var(--sp-5); }
+.toc li { margin: var(--sp-2) 0; }
+.toc-link { border: none; background: none; cursor: pointer; font-family: inherit; color: #5A3A18; text-align: left; font-size: var(--fs-body); padding: 0; }
+.toc-link:hover { text-decoration: underline; }
+.toc-date { font-size: var(--fs-label); color: #8A5A2A; }
+.stamp { display: flex; flex-wrap: wrap; gap: var(--sp-3); font-size: var(--fs-sm); color: #8A5A2A; border-bottom: 1px dashed rgba(120,90,50,0.4); padding-bottom: var(--sp-2); margin-bottom: var(--sp-3); letter-spacing: 0.02em; }
+.entry-title { font-family: var(--font-display); color: #5A3A18; margin: 0 0 var(--sp-2); }
+.entry-body p { margin: 0 0 var(--sp-3); }
+
+.journey-wrap { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
+.journey-svg { width: 100%; max-width: 360px; background: var(--sunburst), var(--card); border-radius: var(--r-lg); }
+.stars-static { color: var(--sun-deep); font-size: 1.1rem; letter-spacing: 1px; }
+
 /* --- bottom tab bar --- */
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: var(--tabbar-h);

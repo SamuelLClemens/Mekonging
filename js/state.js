@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 function defaults() {
   return {
@@ -40,6 +40,11 @@ function defaults() {
       budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note }
       notes: '',
     },
+    // --- v4: travel journal + travel calendar (all on-device) ---
+    // journal entries get a date+time+location stamp and feed the journey-map animation.
+    journal: { entries: [] },   // { id, ts(ISO), date, title, text, place, coords:{lat,lng}|null }
+    // booked stays / meals / activities with cost + rating.
+    calendar: { items: [] },    // { id, date, type:'stay'|'meal'|'activity', title, place, cost, currency, rating, note }
   };
 }
 
@@ -59,9 +64,11 @@ function migrate(data) {
     pins: Array.isArray(data.pins) ? data.pins : base.pins,
     placeData: (data.placeData && typeof data.placeData === 'object' && !Array.isArray(data.placeData)) ? data.placeData : base.placeData,
     trip: { ...base.trip, ...(data.trip || {}) },
+    journal: { entries: Array.isArray((data.journal || {}).entries) ? data.journal.entries : [] },
+    calendar: { items: Array.isArray((data.calendar || {}).items) ? data.calendar.items : [] },
   };
-  // v1 -> v2: collections[] and pins[] are new arrays (guarded above).
-  // v2 -> v3: placeData{} is a new map (guarded above). favorites carries forward.
+  // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
+  // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
   return out;
 }
 
@@ -93,7 +100,38 @@ export function resetAll() {
   store.pins = fresh.pins;
   store.placeData = fresh.placeData;
   store.trip = fresh.trip;
+  store.journal = fresh.journal;
+  store.calendar = fresh.calendar;
   save();
+}
+
+// --- travel journal ----------------------------------------------------------
+export function addJournalEntry({ title, text, place = '', coords = null, ts = null }) {
+  const when = ts || new Date().toISOString();
+  const e = { id: uid('jr'), ts: when, date: when.slice(0, 10),
+    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords };
+  store.journal.entries.push(e);
+  store.journal.entries.sort((a, b) => (a.ts < b.ts ? -1 : 1));
+  save(); return e;
+}
+export function deleteJournalEntry(id) {
+  const i = store.journal.entries.findIndex((x) => x.id === id);
+  if (i >= 0) { store.journal.entries.splice(i, 1); save(); }
+}
+export function journalEntries() { return store.journal.entries.slice().sort((a, b) => (a.ts < b.ts ? -1 : 1)); }
+
+// --- travel calendar ---------------------------------------------------------
+export function addCalendarItem(item) {
+  const it = { id: uid('cal'), date: item.date, type: item.type || 'stay',
+    title: String(item.title || '').slice(0, 120), place: item.place || '',
+    cost: item.cost || '', currency: item.currency || '', rating: item.rating || 0, note: item.note || '' };
+  store.calendar.items.push(it);
+  store.calendar.items.sort((a, b) => (a.date < b.date ? -1 : 1));
+  save(); return it;
+}
+export function deleteCalendarItem(id) {
+  const i = store.calendar.items.findIndex((x) => x.id === id);
+  if (i >= 0) { store.calendar.items.splice(i, 1); save(); }
 }
 
 // --- the user's own layer on a place (note, rating, review) ------------------

@@ -5,6 +5,8 @@ import {
   store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
   addPin, deletePin, getPin, getPlaceData, setPlaceField,
+  addJournalEntry, deleteJournalEntry, journalEntries,
+  addCalendarItem, deleteCalendarItem,
 } from './state.js';
 import { h, esc, money, range, mapsUrl } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
@@ -79,6 +81,8 @@ function homeScreen() {
   const tiles = [
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+    { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
+    { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
@@ -822,6 +826,215 @@ function collToggleChip(name, emoji, onToggle) {
   } }, `${emoji} ${name}`);
 }
 
+// ---- TRAVEL JOURNAL (antique book) ------------------------------------------
+function journalDispatch(arg) {
+  if (!arg) return journalCover();
+  if (arg === 'open') return journalTOC();
+  if (arg === 'add') return addJournalScreen();
+  if (arg.startsWith('entry-')) return journalEntryScreen(arg.slice(6));
+  return journalCover();
+}
+
+function regionTitle() {
+  const c = getCountry(activeCountry);
+  return c ? c.name : 'Southeast Asia';
+}
+
+function journalCover() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Journal', '#home'));
+  const n = journalEntries().length;
+  const book = h('button', { class: 'book closed', 'aria-label': 'Open journal', onclick: () => go('#journal-open') }, [
+    h('div', { class: 'book-spine' }),
+    h('div', { class: 'book-cover' }, [
+      h('div', { class: 'book-emboss' }, 'ADVENTURES IN'),
+      h('div', { class: 'book-title' }, regionTitle()),
+      h('div', { class: 'book-flour' }, '✦ ❧ ✦'),
+      h('div', { class: 'book-count' }, n ? `${n} ${n === 1 ? 'entry' : 'entries'}` : 'open me'),
+    ]),
+  ]);
+  wrap.append(book);
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top:16px', onclick: () => go('#journal-add') }, '✒ New entry'));
+  mount(wrap, '#home');
+}
+
+function journalTOC() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Adventures', '#journal'));
+  const entries = journalEntries();
+  const spread = h('div', { class: 'book-open page-enter' }, [
+    h('div', { class: 'page page-left' }, [
+      h('div', { class: 'page-head' }, 'Adventures in'),
+      h('div', { class: 'page-title' }, regionTitle()),
+      h('div', { class: 'book-flour' }, '✦ ❧ ✦'),
+      h('p', { class: 'muted' }, `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`),
+    ]),
+    h('div', { class: 'page page-right' }, [
+      h('div', { class: 'page-head' }, 'Contents'),
+      entries.length
+        ? h('ol', { class: 'toc' }, entries.map((e) => h('li', {}, [
+            h('button', { class: 'toc-link', onclick: () => go(`#journal-entry-${e.id}`) },
+              [h('span', { class: 'toc-date' }, e.date), ' ', e.title]),
+          ])))
+        : h('p', { class: 'muted' }, 'Your story starts here. Add your first entry.'),
+    ]),
+  ]);
+  wrap.append(spread);
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top:16px' }, [
+    h('button', { class: 'btn', onclick: () => go('#journal-add') }, '✒ New entry'),
+    h('button', { class: 'btn ghost', onclick: () => go('#journey') }, '🗺 Journey map'),
+  ]));
+  mount(wrap, '#home');
+}
+
+function journalEntryScreen(id) {
+  const entries = journalEntries();
+  const idx = entries.findIndex((e) => e.id === id);
+  const e = entries[idx];
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Journal', '#journal-open'));
+  if (!e) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
+  const when = new Date(e.ts);
+  const stamp = `${when.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} · ${when.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+  const loc = e.place || (e.coords ? `${e.coords.lat.toFixed(3)}, ${e.coords.lng.toFixed(3)}` : '');
+  const page = h('div', { class: 'page page-single page-enter' }, [
+    h('div', { class: 'stamp' }, [h('span', {}, stamp), loc ? h('span', { class: 'stamp-loc' }, `📍 ${loc}`) : null]),
+    h('h2', { class: 'entry-title' }, e.title),
+    h('div', { class: 'entry-body' }, (e.text || '').split('\n').map((p) => h('p', {}, p))),
+  ]);
+  wrap.append(page);
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top:14px' }, [
+    h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
+    h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
+    h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
+  ]));
+  mount(wrap, '#home');
+}
+
+function addJournalScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('New entry', '#journal-open'));
+  const st = { coords: null };
+  const title = h('input', { type: 'text', placeholder: 'A title for this memory' });
+  const text = h('textarea', { class: 'ta', placeholder: 'What happened? What did you see, eat, feel?' });
+  const place = h('input', { type: 'text', placeholder: 'Place (e.g. Hoi An old town)' });
+  const locOut = h('p', { class: 'muted' }, 'Entry is stamped with the current date and time automatically.');
+  const card = h('div', { class: 'card' }, [
+    field('Title', title), field('Your entry', text), field('Place', place),
+    field('Location', h('div', {}, [
+      h('button', { class: 'btn ghost', onclick: () => {
+        locOut.textContent = 'Locating…';
+        if (!navigator.geolocation) { locOut.textContent = 'Geolocation unavailable.'; return; }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => { st.coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; locOut.textContent = `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`; },
+          (err) => { locOut.textContent = `No location: ${err.message}`; }, { enableHighAccuracy: true, timeout: 10000 });
+      } }, '📍 Stamp my location'),
+      locOut,
+    ])),
+  ]);
+  wrap.append(card);
+  wrap.append(h('button', { class: 'btn block', onclick: () => {
+    if (!title.value.trim() && !text.value.trim()) { alert('Write something first.'); return; }
+    addJournalEntry({ title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords });
+    go('#journal-open');
+  } }, 'Save to journal'));
+  mount(wrap, '#home');
+}
+
+// ---- JOURNEY MAP (Indiana-Jones dotted line + moving vehicle) ----------------
+function journeyScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Your journey', '#journal-open'));
+  const pts = journalEntries().filter((e) => e.coords);
+  if (pts.length < 2) {
+    wrap.append(h('p', { class: 'empty' }, 'Add at least two journal entries with a stamped location to draw your journey line.'));
+    mount(wrap, '#home'); return;
+  }
+  const holder = h('div', { class: 'journey-wrap' });
+  holder.innerHTML = journeySVG(pts);
+  wrap.append(holder);
+  const list = h('div', { class: 'card' }, [h('h2', {}, 'Stops')]);
+  pts.forEach((e, i) => list.append(h('div', { class: 'list-note' }, `${i + 1}. ${e.place || e.title} — ${e.date}`)));
+  wrap.append(list);
+  mount(wrap, '#home');
+}
+
+function journeySVG(pts) {
+  const W = 320, H = 340, pad = 38;
+  const lats = pts.map((p) => p.coords.lat), lngs = pts.map((p) => p.coords.lng);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats), minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  const sx = (lng) => pad + (maxLng === minLng ? 0.5 : (lng - minLng) / (maxLng - minLng)) * (W - 2 * pad);
+  const sy = (lat) => (H - pad) - (maxLat === minLat ? 0.5 : (lat - minLat) / (maxLat - minLat)) * (H - 2 * pad);
+  const coords = pts.map((p) => [sx(p.coords.lng), sy(p.coords.lat)]);
+  const d = 'M' + coords.map((c) => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(' L');
+  const dots = coords.map((c) => `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="5" fill="#E8632A" stroke="#FFF6E2" stroke-width="2"/>`).join('');
+  const last = coords[coords.length - 1];
+  const vehicle = prefersReducedMotion()
+    ? `<text x="${last[0].toFixed(1)}" y="${last[1].toFixed(1)}" font-size="22" text-anchor="middle" dominant-baseline="middle">✈️</text>`
+    : `<text font-size="22" text-anchor="middle" dominant-baseline="middle">✈️<animateMotion dur="${Math.max(6, pts.length * 2.2).toFixed(0)}s" repeatCount="indefinite" rotate="auto" path="${d}"/></text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="journey-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Your journey route">
+    <rect x="2" y="2" width="${W - 4}" height="${H - 4}" rx="16" fill="none" stroke="#E7CFA6" stroke-width="2"/>
+    <path d="${d}" fill="none" stroke="#C0431A" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>
+    ${dots}${vehicle}</svg>`;
+}
+
+// ---- TRAVEL CALENDAR --------------------------------------------------------
+const CAL_ICON = { stay: '🛏', meal: '🍽', activity: '🎟' };
+function calendarDispatch(arg) { return arg === 'add' ? calendarAddScreen() : calendarScreen(); }
+
+function calendarScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Travel calendar', '#home'));
+  wrap.append(h('button', { class: 'btn block', onclick: () => go('#calendar-add') }, '＋ Add booking / meal'));
+  const items = store.calendar.items.slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'Log your booked stays and the meals you eat, with a rating. They appear here by date.')); mount(wrap, '#home'); return; }
+  let lastDate = '';
+  items.forEach((it) => {
+    if (it.date !== lastDate) { wrap.append(h('h2', { class: 'cat-title' }, it.date)); lastDate = it.date; }
+    const card = h('div', { class: 'card' }, [
+      h('div', { class: 'row-between' }, [
+        h('strong', {}, `${CAL_ICON[it.type] || '•'} ${it.title}`),
+        h('span', { class: 'fair' }, it.cost ? `${it.cost} ${it.currency}` : ''),
+      ]),
+      it.place ? h('p', { class: 'muted' }, it.place) : null,
+      it.rating ? h('div', { class: 'stars-static' }, '★'.repeat(it.rating) + '☆'.repeat(5 - it.rating)) : null,
+      it.note ? h('p', {}, it.note) : null,
+      h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); go('#calendar'); } } }, 'Delete'),
+    ]);
+    wrap.append(card);
+  });
+  mount(wrap, '#home');
+}
+
+function calendarAddScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Add to calendar', '#calendar'));
+  const c = getCountry(activeCountry);
+  const st = { rating: 0 };
+  const date = h('input', { type: 'date' });
+  const type = selectEl([['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity']], 'stay', () => {});
+  const title = h('input', { type: 'text', placeholder: 'e.g. Sla Boutique Hostel / Bun cha lunch' });
+  const place = h('input', { type: 'text', placeholder: 'Where' });
+  const cost = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Cost' });
+  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP'], c ? c.currency : 'THB', () => {});
+  const note = h('textarea', { class: 'ta', placeholder: 'Review — how was it?' });
+  const stars = h('div', { class: 'stars' });
+  const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
+  for (let i = 1; i <= 5; i++) stars.append(h('button', { class: 'star', onclick: () => { st.rating = st.rating === i ? 0 : i; paint(st.rating); } }, '☆'));
+  wrap.append(h('div', { class: 'card' }, [
+    field('Date', date), field('Type', type), field('Title', title), field('Place', place),
+    field('Cost', h('div', { class: 'row-between' }, [cost, cur])),
+    field('Rating', stars), field('Review / note', note),
+  ]));
+  wrap.append(h('button', { class: 'btn block', onclick: () => {
+    if (!date.value) { alert('Pick a date.'); return; }
+    if (!title.value.trim()) { alert('Add a title.'); return; }
+    addCalendarItem({ date: date.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() });
+    go('#calendar');
+  } }, 'Save'));
+  mount(wrap, '#home');
+}
+
 // ---- SETTINGS ---------------------------------------------------------------
 function settingsScreen() {
   const p = store.profile;
@@ -916,6 +1129,9 @@ function render() {
       case 'collection': return collectionScreen(arg);
       case 'map': return mapScreen();
       case 'addpin': return addPinScreen();
+      case 'journal': return journalDispatch(arg);
+      case 'journey': return journeyScreen();
+      case 'calendar': return calendarDispatch(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

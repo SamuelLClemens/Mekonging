@@ -8,7 +8,7 @@ export const PHRASEBOOK_HMN = {
   politenessNote: 'Hmong is tonal; final letters in the spelling indicate tone and are silent. The transliteration is approximate.',
   categories: [
     { id: 'basics', name: 'Greetings & basics', phrases: [
-      { en: 'Hello', script: 'Nyob zoo', roman: 'nyaw zhong' },
+      { en: 'Hello', script: 'Nyob zoo', roman: 'nyong jong' },
       { en: 'Thank you', script: 'Ua tsaug', roman: 'oo-a chaow' },
       { en: 'Yes', script: 'Yog', roman: 'yawg' },
       { en: 'No', script: 'Tsis yog', roman: 'tsee yawg' },
@@ -16,10 +16,10 @@ export const PHRASEBOOK_HMN = {
     ]},
     { id: 'essentials', name: 'Market, food & help', phrases: [
       { en: 'How much?', script: 'Pes tsawg nyiaj?', roman: 'peh tsaw nyia' },
-      { en: 'Too expensive', script: 'Kim heev', roman: 'kee heng' },
-      { en: 'Water', script: 'Dej', roman: 'deng' },
-      { en: 'Delicious', script: 'Qab', roman: 'gah' },
-      { en: 'Help!', script: 'Pab!', roman: 'pah' },
+      { en: 'Too expensive', script: 'Kim heev', roman: 'kee hen' },
+      { en: 'Water', script: 'Dej', roman: 'deh' },
+      { en: 'Delicious', script: 'Qab', roman: 'kah' },
+      { en: 'Help me!', script: 'Pab kuv!', roman: 'pah koo' },
     ]},
   ],
 };

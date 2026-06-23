@@ -10,14 +10,14 @@ export const PHRASEBOOK_LO = {
       { en: 'Hello', script: 'ສະບາຍດີ', roman: 'sa-bai-dee' },
       { en: 'Thank you', script: 'ຂອບໃຈ', roman: 'khop-jai' },
       { en: 'Yes', script: 'ແມ່ນ', roman: 'maen' },
-      { en: 'No', script: 'ບໍ່', roman: 'bor' },
+      { en: 'No', script: 'ບໍ່', roman: 'baw' },
       { en: 'Sorry / Excuse me', script: 'ຂໍໂທດ', roman: 'kho-thot' },
-      { en: 'I do not understand', script: 'ບໍ່ເຂົ້າໃຈ', roman: 'bor khao-jai' },
+      { en: 'I do not understand', script: 'ບໍ່ເຂົ້າໃຈ', roman: 'baw khao-jai' },
     ]},
     { id: 'market', name: 'Market & taxi', phrases: [
       { en: 'How much?', script: 'ເທົ່າໃດ', roman: 'thao-dai' },
       { en: 'Too expensive', script: 'ແພງເກີນໄປ', roman: 'phaeng kern pai' },
-      { en: 'Lower the price?', script: 'ຫຼຸດໄດ້ບໍ່?', roman: 'lut dai bor' },
+      { en: 'Lower the price?', script: 'ຫຼຸດໄດ້ບໍ່?', roman: 'lut dai baw' },
       { en: 'Stop here', script: 'ຈອດບ່ອນນີ້', roman: 'jot bon nii' },
     ]},
     { id: 'essentials', name: 'Food, water & help', phrases: [
