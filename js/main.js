@@ -131,20 +131,20 @@ function homeScreen() {
 // The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
 // four countries is a distinct colour and is tappable to enter its hub. No tiles, no
 // network — this always works. (The pannable street map with GPS lives on #map.)
-const REGION_COLORS = { th: '#E8632A', vi: '#C0392B', kh: '#2D6CDF', la: '#159E8C' };
-// Presentational nudges for labels that fall on a country's narrow part (Vietnam's
-// central waist) so the name sits on a wide, readable area of the shape.
-const REGION_LABEL_OVERRIDE = { vi: [398, 120] };
+// Retro-modern palette: terracotta, plum, marigold, sage — distinct from the teal sea
+// and from each other; white labels read on all four.
+const REGION_COLORS = { th: '#C25E3A', vi: '#9C5780', kh: '#E0A526', la: '#6E9A52' };
 
 function regionPicker() {
   const paths = COUNTRIES.map((c) => {
     if (!REGION_PATHS[c.id]) return '';
-    const [lx, ly] = REGION_LABEL_OVERRIDE[c.id] || REGION_LABELS[c.id];
+    // REGION_LABELS is each country's pole of inaccessibility — its true visual centre.
+    const [lx, ly] = REGION_LABELS[c.id];
     return `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
          <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
          <g class="ctry-label">
-           <text class="ctry-flag" x="${lx}" y="${ly}" text-anchor="middle">${c.flag}</text>
-           <text class="ctry-name" x="${lx}" y="${ly + 30}" text-anchor="middle">${esc(c.name)}</text>
+           <text class="ctry-flag" x="${lx}" y="${ly - 8}" text-anchor="middle">${c.flag}</text>
+           <text class="ctry-name" x="${lx}" y="${ly + 26}" text-anchor="middle">${esc(c.name)}</text>
          </g>
        </g>`;
   }).join('');
