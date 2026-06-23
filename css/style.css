@@ -339,8 +339,13 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
   position: relative; margin-bottom: var(--sp-4);
   border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
   box-shadow: var(--shadow-soft);
+  /* Sea fills the card; the SVG is transparent and the countries float on it, so the
+     letterboxing from the tall map blends seamlessly. */
+  background: radial-gradient(125% 95% at 50% 36%, #C7E9E4 0%, #7FC3BD 100%);
 }
-.region-svg { display: block; width: 100%; height: auto; }
+/* Capped, responsive height keeps the map compact on a phone instead of dominating
+   the screen; the map scales to fit and centres. */
+.region-svg { display: block; width: 100%; height: clamp(230px, 40vh, 380px); }
 .ctry-group { cursor: pointer; }
 .ctry {
   stroke: #FFFDF5; stroke-width: 2.5; stroke-linejoin: round;
@@ -355,10 +360,10 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .ctry-group:focus { outline: none; }
 .ctry-group:focus-visible .ctry { stroke-width: 4; }
 .ctry-label { pointer-events: none; }
-.ctry-flag { font-size: 42px; }
+.ctry-flag { font-size: 52px; }
 .ctry-name {
-  font-family: inherit; font-weight: 800; font-size: 27px; fill: #fff;
-  paint-order: stroke; stroke: rgba(0,0,0,0.38); stroke-width: 4px; stroke-linejoin: round;
+  font-family: inherit; font-weight: 800; font-size: 34px; fill: #fff;
+  paint-order: stroke; stroke: rgba(0,0,0,0.4); stroke-width: 5px; stroke-linejoin: round;
   letter-spacing: 0.02em;
 }
 .region-cap {

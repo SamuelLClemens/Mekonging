@@ -148,9 +148,7 @@ function regionPicker() {
          </g>
        </g>`;
   }).join('');
-  const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam" xmlns="http://www.w3.org/2000/svg">
-      <defs><radialGradient id="sea" cx="50%" cy="38%" r="80%"><stop offset="0" stop-color="#BFE6E1"/><stop offset="1" stop-color="#7FC3BD"/></radialGradient></defs>
-      <rect x="0" y="0" width="100%" height="100%" fill="url(#sea)"/>
+  const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam" xmlns="http://www.w3.org/2000/svg">
       ${paths}
     </svg>`;
   const box = h('div', { class: 'region-map', html: svg });
