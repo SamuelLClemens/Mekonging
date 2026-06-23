@@ -23,6 +23,7 @@ import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, defaultSpot, getCachedWeather, refreshWeather } from './weather.js';
+import { RATING_BANDS, ROUTE_LEGEND } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -908,6 +909,17 @@ function mapScreen() {
 
   const canvas = h('div', { id: 'map-canvas' });
   wrap.append(toolbar, storageOut, canvas);
+
+  // legend: what the pin colours and route lines mean
+  const dot = (c) => h('span', { style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:6px;vertical-align:middle` });
+  wrap.append(h('div', { class: 'card', style: 'padding:10px 12px' }, [
+    h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:5px' }, 'Pin colour = rating (your own rating wins)'),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px' },
+      RATING_BANDS.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
+    h('div', { class: 'muted', style: 'font-weight:700;margin:6px 0 5px' }, 'Route lines = transport mode'),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px' },
+      ROUTE_LEGEND.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
+  ]));
 
   // pins list (handy when offline / no GPS)
   const pinsCard = h('div', { class: 'card' }, [
