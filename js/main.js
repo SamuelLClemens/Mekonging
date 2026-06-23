@@ -1999,7 +1999,16 @@ function speciesScreen(id) {
   if (s.idTips) card.append(h('h3', {}, 'How to identify'), h('p', {}, s.idTips));
   if (s.habitat) card.append(h('h3', {}, 'Habitat'), h('p', {}, s.habitat));
   if (s.where) card.append(h('h3', {}, 'Where you might see it'), h('p', {}, s.where));
-  if (s.localNames && s.localNames.length) card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
+  const sLangs = [['th', '🇹🇭', 'th-TH'], ['vi', '🇻🇳', 'vi-VN'], ['km', '🇰🇭', 'km-KH'], ['lo', '🇱🇦', 'lo-LA']];
+  if (s.names && sLangs.some(([k]) => s.names[k])) {
+    card.append(h('h3', {}, 'Local names (tap 🔊 to hear)'));
+    card.append(h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0' },
+      sLangs.filter(([k]) => s.names[k]).map(([k, flag, loc]) => (canSay(loc)
+        ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(s.names[k], loc) }, `${flag} ${s.names[k]} 🔊`)
+        : h('span', { class: 'cat-tag' }, `${flag} ${s.names[k]}`)))));
+  } else if (s.localNames && s.localNames.length) {
+    card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
+  }
   wrap.append(card);
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
   mount(wrap, '#home');
