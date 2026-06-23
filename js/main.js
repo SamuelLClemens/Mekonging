@@ -23,7 +23,7 @@ import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, defaultSpot, getCachedWeather, refreshWeather } from './weather.js';
-import { RATING_BANDS, ROUTE_LEGEND } from './map.js';
+import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -126,6 +126,7 @@ function homeScreen() {
   wrap.append(h('h2', { class: 'home-section' }, 'Everything you need'));
 
   const tiles = [
+    { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
     { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
@@ -207,6 +208,7 @@ function countryHubScreen(id) {
     { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
     { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
     { ic: '⛅', t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
+    { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
     { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
@@ -1563,6 +1565,96 @@ function weatherScreen(country) {
   mount(wrap, '#home');
 }
 
+// ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
+let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
+function haversineKm(a, b) {
+  const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+function moodLine(m) {
+  return m === 'wet' ? 'a good day for indoor culture, markets and cafes.'
+    : m === 'hot' ? 'do outdoor sights early, then escape the midday heat indoors.'
+    : 'great for outdoor sights and nature.';
+}
+
+function daySuggestScreen(country) {
+  if (country && getCountry(country)) activeCountry = country;
+  const id = getCountry(activeCountry) ? activeCountry : 'th';
+  const c = getCountry(id);
+  const spot = defaultSpot(id);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Today’s plan', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, `Suggestions for ${c.name} today, weighing the weather and the highest-rated places (your own ratings count first).`));
+  const locBtn = h('button', { class: 'btn ghost block', onclick: async () => {
+    locBtn.textContent = 'Locating…'; locBtn.disabled = true;
+    try { const pos = await geolocate(); dayUserLoc = { lat: pos.lat, lng: pos.lng }; } catch { /* denied/offline */ }
+    locBtn.textContent = dayUserLoc ? '📍 Using your location' : '📍 Use my location for “near me”';
+    locBtn.disabled = false; paint(lastRec);
+  } }, dayUserLoc ? '📍 Using your location' : '📍 Use my location for “near me”');
+  wrap.append(locBtn);
+  const body = h('div', {});
+  wrap.append(body);
+
+  function paint(rec) {
+    body.innerHTML = '';
+    const today = rec && rec.daily && rec.daily[0];
+    let mood = 'clear';
+    if (today) { if (isWet(today.code) || (today.rainProb || 0) >= 60) mood = 'wet'; else if (today.tmax != null && today.tmax >= 34) mood = 'hot'; }
+    if (today) {
+      const [lbl, emo] = wmo(today.code);
+      body.append(h('div', { class: 'card' }, [
+        h('div', { class: 'row-between' }, [
+          h('strong', {}, `${emo} ${c.flag} ${spot.city} today`),
+          h('span', { style: 'font-weight:700' }, `${fmtTemp(today.tmin)} / ${fmtTemp(today.tmax)}`),
+        ]),
+        h('p', { class: 'muted', style: 'margin:6px 0 0' }, `${lbl} · rain ${today.rainProb != null ? today.rainProb + '%' : '–'} — ${moodLine(mood)}`),
+      ]));
+    } else {
+      body.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Connect once to load today’s weather for weather-aware picks; meanwhile, here are the top-rated places.')]));
+    }
+    const OUTDOOR = ['nature', 'waterfall', 'hike', 'park', 'beach', 'viewpoint', 'outdoors', 'island', 'dive', 'snorkel', 'garden'];
+    const isOutdoor = (p) => (p.categories || []).some((cat) => OUTDOOR.includes(cat));
+    const prefer = mood === 'wet' ? ['culture', 'food', 'market', 'museum', 'temple', 'cafe', 'nightlife', 'shopping', 'wellness']
+      : mood === 'hot' ? ['culture', 'food', 'nature', 'nightlife'] : ['nature', 'culture', 'food', 'nightlife'];
+    let scored = allPlaces({ country: id }).map((p) => {
+      const er = effectiveRating(p.id, p.rating || 0);
+      const catBonus = (p.categories || []).some((cat) => prefer.includes(cat)) ? 0.3 : 0;
+      const outdoorPenalty = (mood === 'wet' && isOutdoor(p)) ? 1.6 : 0;
+      const dist = (dayUserLoc && p.coords) ? haversineKm(dayUserLoc, p.coords) : null;
+      const score = er + catBonus - outdoorPenalty - (dist != null ? Math.min(dist, 200) / 500 : 0);
+      return { p, er, dist, score, outdoor: isOutdoor(p) };
+    }).filter((x) => x.er > 0 || x.p.coords);
+    if (mood === 'wet') {
+      const indoor = scored.filter((x) => !x.outdoor);
+      if (indoor.length >= 4) scored = indoor;   // hide outdoor picks entirely when enough indoor options exist
+    }
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored.slice(0, 8);
+    const secLabel = mood === 'wet' ? (dayUserLoc ? 'Indoor-friendly, near you' : 'Indoor-friendly picks for the rain')
+      : (dayUserLoc ? 'Highly rated near you' : 'Highly rated picks');
+    body.append(h('h2', { class: 'home-section' }, secLabel));
+    if (!top.length) { body.append(h('p', { class: 'empty' }, 'No places to suggest yet for this country.')); return; }
+    top.forEach(({ p, er, dist }) => {
+      body.append(h('button', { class: 'card species-card', onclick: () => go(`#place-${p.id}`) }, [
+        h('span', { class: 'species-emoji', style: `color:${ratingColor(er)}` }, '●'),
+        h('span', { class: 'grow' }, [
+          h('div', { class: 'en' }, p.name),
+          h('div', { class: 'sci' }, `${(p.categories || []).join(', ')}${dist != null ? ' · ' + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + ' km' : ''}`),
+        ]),
+        er ? h('span', { class: 'stars-static' }, starsStr(er)) : null,
+      ]));
+    });
+  }
+
+  let lastRec = getCachedWeather(spotKey(spot));
+  paint(lastRec);
+  if (navigator.onLine) {
+    refreshWeather(spot).then((r) => { if (r && (location.hash || '').startsWith('#today')) { lastRec = r; paint(r); } });
+  }
+  mount(wrap, '#home');
+}
+
 // ---- FESTIVALS & EVENTS -----------------------------------------------------
 function todayISO() { try { return new Date().toISOString().slice(0, 10); } catch { return '2026-01-01'; } }
 function addDaysISO(iso, n) {
@@ -2184,6 +2276,7 @@ function render() {
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
       case 'weather': return weatherScreen(arg);
+      case 'today': return daySuggestScreen(arg);
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);
       case 'nature': return natureScreen();
