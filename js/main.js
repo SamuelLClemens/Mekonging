@@ -28,6 +28,7 @@ import {
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
+import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
 if ('serviceWorker' in navigator) {
@@ -131,31 +132,25 @@ function homeScreen() {
 // four countries is a distinct colour and is tappable to enter its hub. No tiles, no
 // network — this always works. (The pannable street map with GPS lives on #map.)
 const REGION_COLORS = { th: '#E8632A', vi: '#C0392B', kh: '#2D6CDF', la: '#159E8C' };
-const REGION_PATHS = {
-  // Thailand: rounded northern body, eastern Isan point, long thin southern peninsula.
-  th: 'M150,140 C150,120 175,112 200,118 C230,126 250,150 262,182 C285,166 315,161 340,179 C372,197 372,233 352,263 C386,273 414,273 432,293 C420,315 384,313 350,311 C322,327 300,337 256,335 C242,357 232,367 228,393 C238,425 230,461 210,487 C218,515 236,541 224,561 C206,557 186,523 180,495 C168,457 172,421 180,395 C156,381 150,349 158,321 C136,303 126,273 128,241 C120,210 122,168 138,148 C142,143 146,141 150,140 Z',
-  // Laos: landlocked NE diagonal sliver.
-  la: 'M318,108 C354,110 388,126 406,150 C432,182 454,216 474,250 C492,274 508,294 518,314 C502,318 486,302 468,282 C436,246 404,212 379,188 C355,166 333,144 320,127 C315,121 314,114 318,108 Z',
-  // Cambodia: rounded block around the Tonle Sap, south-central.
-  kh: 'M338,320 C364,309 400,306 432,314 C458,321 474,338 473,364 C472,392 446,412 410,419 C384,424 359,421 340,408 C320,394 316,366 320,346 C324,333 330,325 338,320 Z',
-  // Vietnam: the long S-curve down the eastern coast to the Mekong delta.
-  vi: 'M438,44 C472,52 494,82 485,112 C477,138 458,152 463,174 C494,182 524,198 530,216 C558,238 588,252 602,270 C626,308 648,346 650,376 C644,400 600,410 558,416 C520,422 470,450 440,480 C452,453 483,439 517,423 C557,405 602,379 614,347 C604,304 578,268 550,238 C524,212 502,190 502,166 C514,132 504,92 474,70 C462,58 449,48 438,44 Z',
-};
-const REGION_LABELS = { th: [248, 250], la: [410, 206], kh: [396, 366], vi: [560, 332] };
+// Presentational nudges for labels that fall on a country's narrow part (Vietnam's
+// central waist) so the name sits on a wide, readable area of the shape.
+const REGION_LABEL_OVERRIDE = { vi: [398, 120] };
 
 function regionPicker() {
-  const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
-    ? `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
-         <path class="ctry" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
+  const paths = COUNTRIES.map((c) => {
+    if (!REGION_PATHS[c.id]) return '';
+    const [lx, ly] = REGION_LABEL_OVERRIDE[c.id] || REGION_LABELS[c.id];
+    return `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
+         <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
          <g class="ctry-label">
-           <text class="ctry-flag" x="${REGION_LABELS[c.id][0]}" y="${REGION_LABELS[c.id][1]}" text-anchor="middle">${c.flag}</text>
-           <text class="ctry-name" x="${REGION_LABELS[c.id][0]}" y="${REGION_LABELS[c.id][1] + 22}" text-anchor="middle">${esc(c.name)}</text>
+           <text class="ctry-flag" x="${lx}" y="${ly}" text-anchor="middle">${c.flag}</text>
+           <text class="ctry-name" x="${lx}" y="${ly + 30}" text-anchor="middle">${esc(c.name)}</text>
          </g>
-       </g>` : '').join('');
-  const svg = `<svg viewBox="0 0 700 600" class="region-svg" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam" xmlns="http://www.w3.org/2000/svg">
-      <defs><radialGradient id="sea" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#BFE6E1"/><stop offset="1" stop-color="#7FC3BD"/></radialGradient></defs>
-      <rect x="0" y="0" width="700" height="600" fill="url(#sea)"/>
-      <path d="M318,108 C360,150 360,210 410,270 C440,310 420,360 384,418" fill="none" stroke="#5FB0AA" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+       </g>`;
+  }).join('');
+  const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="sea" cx="50%" cy="38%" r="80%"><stop offset="0" stop-color="#BFE6E1"/><stop offset="1" stop-color="#7FC3BD"/></radialGradient></defs>
+      <rect x="0" y="0" width="100%" height="100%" fill="url(#sea)"/>
       ${paths}
     </svg>`;
   const box = h('div', { class: 'region-map', html: svg });
