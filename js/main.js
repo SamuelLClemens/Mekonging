@@ -9,6 +9,7 @@ import {
 import { h, esc, money, range, mapsUrl } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
+import { getRates, refreshRates, convert } from './currency.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -66,36 +67,122 @@ function mount(node, activeTab) {
   window.scrollTo(0, 0);
 }
 
-// ---- HOME -------------------------------------------------------------------
+// ---- HOME (open with a country-picker map) ----------------------------------
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
     h('h1', {}, 'Mekong'),
-    h('p', {}, 'Your overland companion for Thailand, Vietnam, Cambodia & Laos.'),
+    h('p', {}, 'Choose where you are headed.'),
   ]));
-
-  wrap.append(countryChips((id) => { activeCountry = id; render(); }));
+  wrap.append(regionPicker());
 
   const tiles = [
-    { ic: '💬', t: 'Phrasebook', d: 'Speak the local language', hash: '#phrasebook' },
-    { ic: '📍', t: 'Places for you', d: 'Filtered to your taste & budget', hash: '#places' },
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
-    { ic: '💵', t: 'Fair prices', d: 'Avoid being overcharged', hash: '#prices' },
-    { ic: '🚌', t: 'Getting around', d: 'Best way to the next place', hash: '#transport' },
-    { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${activeCountry}` },
+    { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
   wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
     h('button', { class: 'tile', onclick: () => go(x.hash) }, [
-      h('span', { class: 'ic' }, x.ic),
-      h('span', { class: 't' }, x.t),
-      h('span', { class: 'd' }, x.d),
+      h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
     ]))));
 
   wrap.append(h('p', { class: 'disclaimer' },
-    'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance; verify locally.'));
+    'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
   mount(wrap, '#home');
+}
+
+// A stylised map-flavoured selector: countries arranged roughly geographically.
+function regionPicker() {
+  const map = h('div', { class: 'region-map' });
+  COUNTRIES.forEach((c) => {
+    map.append(h('button', {
+      class: `region-pin r-${c.id}`, 'aria-pressed': c.id === activeCountry ? 'true' : 'false',
+      onclick: () => { activeCountry = c.id; go(`#country-${c.id}`); },
+    }, [h('span', { class: 'flag' }, c.flag), h('span', { class: 'rn' }, c.name)]));
+  });
+  map.append(h('span', { class: 'region-cap' }, 'Tap a country to begin'));
+  return map;
+}
+
+// Per-country hub reached after picking a country.
+function countryHubScreen(id) {
+  const c = getCountry(id);
+  if (c) activeCountry = id;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Country', '#home'));
+  if (!c) { wrap.append(h('p', { class: 'empty' }, 'Unknown country.')); mount(wrap, '#home'); return; }
+  const lang = getLanguage(c.lang);
+  wrap.append(h('div', { class: 'card' }, [
+    h('p', {}, `Your companion for ${c.name}. Local currency: ${c.currency}.`),
+    c.info ? null : h('p', { class: 'muted' }, 'Detailed guide expanding.'),
+  ]));
+  const tiles = [
+    { ic: '💬', t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
+    { ic: '📍', t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
+    { ic: '💵', t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
+    { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
+    { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
+    { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
+    { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
+    { ic: '⭐', t: 'Saved', d: 'Your collections', hash: '#saved' },
+  ];
+  wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
+    h('button', { class: 'tile', onclick: () => go(x.hash) }, [
+      h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+    ]))));
+  mount(wrap, '#home');
+}
+
+// ---- CURRENCY CONVERTER -----------------------------------------------------
+function currencyScreen() {
+  const c = getCountry(activeCountry);
+  const local = c ? c.currency : 'THB';
+  const home = store.profile.homeCurrency || 'USD';
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Currency', '#home'));
+  const rates = getRates();
+  wrap.append(h('div', { class: 'banner' }, rates.live
+    ? `Live mid-market rates as of ${rates.date}.`
+    : 'Approximate rates (offline baseline). Connect to the internet and refresh to update.'));
+
+  const amount = h('input', { type: 'number', value: '1', inputmode: 'decimal' });
+  const fromSel = currencySelect(home);
+  const toSel = currencySelect(local);
+  const out = h('p', { class: 'fx-result' }, '');
+  function recompute() {
+    const v = parseFloat(amount.value) || 0;
+    const r = convert(v, fromSel.value, toSel.value);
+    out.textContent = r == null ? 'Rate unavailable for this pair'
+      : `${v.toLocaleString()} ${fromSel.value} = ${r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 })} ${toSel.value}`;
+  }
+  amount.addEventListener('input', recompute);
+  fromSel.addEventListener('change', recompute);
+  toSel.addEventListener('change', recompute);
+  wrap.append(h('div', { class: 'card' }, [
+    field('Amount', amount), field('From', fromSel),
+    h('button', { class: 'btn ghost', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '⇅ Swap'),
+    field('To', toSel), out,
+  ]));
+
+  const quick = h('div', { class: 'card' }, [h('h2', {}, `Quick guide: ${home} → ${local}`)]);
+  [1, 5, 10, 20, 50, 100].forEach((n) => {
+    const r = convert(n, home, local);
+    quick.append(h('div', { class: 'price-item row-between' }, [
+      h('span', {}, `${n} ${home}`),
+      h('strong', { class: 'fair' }, r == null ? '—' : `${r.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${local}`),
+    ]));
+  });
+  wrap.append(quick);
+
+  wrap.append(h('button', { class: 'btn block', onclick: async () => { await refreshRates(); go('#currency'); } }, 'Refresh rates (needs internet)'));
+  wrap.append(h('p', { class: 'disclaimer' }, 'Indicative mid-market values for guidance; money changers and cards apply their own spread.'));
+  mount(wrap, '#home');
+  recompute();
+}
+
+function currencySelect(current) {
+  return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'THB', 'VND', 'KHR', 'LAK'], current, () => {});
 }
 
 function countryChips(onPick, selected = activeCountry) {
@@ -782,6 +869,8 @@ function render() {
   try {
     switch (head) {
       case '': case 'home': return homeScreen();
+      case 'country': return countryHubScreen(arg);
+      case 'currency': return currencyScreen();
       case 'phrasebook': return phrasebookScreen(arg);
       case 'places': return placesScreen(arg);
       case 'place': return placeScreen(arg);
@@ -814,3 +903,6 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   }); } catch { /* older API */ }
 }
 render();
+
+// Refresh exchange rates in the background when online; update the converter if open.
+refreshRates().then(() => { if ((location.hash || '').startsWith('#currency')) render(); }).catch(() => {});
