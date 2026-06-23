@@ -1,13 +1,13 @@
 {
-  "name": "Mekong — Southeast Asia travel companion",
-  "short_name": "Mekong",
-  "description": "Offline-first travel companion for Thailand, Vietnam, Cambodia, and Laos.",
+  "name": "Mekonging — Southeast Asia travel companion",
+  "short_name": "Mekonging",
+  "description": "Offline-first expert travel companion for Thailand, Vietnam, Cambodia, and Laos.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F6F2E9",
-  "theme_color": "#0E7C7B",
+  "background_color": "#F7EAD0",
+  "theme_color": "#E8632A",
   "icons": [
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }

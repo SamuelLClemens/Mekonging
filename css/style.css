@@ -70,10 +70,10 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
 
 /* --- splash --- */
 .splash { display: grid; place-content: center; min-height: 80vh; text-align: center; background: var(--sunburst); }
-.splash-logo { font-family: var(--font-display); font-size: var(--fs-display); margin: 0;
-  background: var(--grad-sun); -webkit-background-clip: text; background-clip: text; color: transparent;
-  letter-spacing: 0.04em; }
+.splash-logo-svg { width: min(80vw, 330px); height: auto; }
 .splash-sub { color: var(--ink-soft); }
+.logo-wrap { text-align: center; }
+.logo { width: min(72vw, 300px); height: auto; display: block; margin: 0 auto var(--sp-1); }
 
 /* --- top bar --- */
 .topbar {
@@ -401,6 +401,7 @@ html[data-text="l"] { font-size: 18.5px; }
 .ck-row.done strong { text-decoration: line-through; }
 
 /* trip planner + journal photo */
+.bestof-card { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
 .trip-stop { padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
 .entry-photo { width: 100%; border-radius: var(--r-md); margin: var(--sp-2) 0; display: block; border: 1px solid var(--line); }
 

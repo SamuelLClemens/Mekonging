@@ -11,6 +11,7 @@ import {
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
 } from './state.js';
 import { CHECKLIST } from './data/checklist.js';
+import { bestForCountry, getBestList } from './data/bestof.js';
 import { putBlob, getBlob, delBlob } from './idb.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
@@ -77,11 +78,19 @@ function mount(node, activeTab) {
 }
 
 // ---- HOME (open with a country-picker map) ----------------------------------
+function logoSVG() {
+  return `<svg class="logo" viewBox="0 0 360 122" role="img" aria-label="Mekonging" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="mkgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="0.5" stop-color="#E8632A"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>
+    <g transform="translate(150 6)"><circle cx="30" cy="30" r="18" fill="url(#mkgh)"/>
+      <g stroke="#F2A93B" stroke-width="3" stroke-linecap="round"><line x1="30" y1="2" x2="30" y2="9"/><line x1="30" y1="51" x2="30" y2="58"/><line x1="2" y1="30" x2="9" y2="30"/><line x1="51" y1="30" x2="58" y2="30"/><line x1="10" y1="10" x2="15" y2="15"/><line x1="45" y1="45" x2="50" y2="50"/><line x1="50" y1="10" x2="45" y2="15"/><line x1="15" y1="45" x2="10" y2="50"/></g></g>
+    <text x="180" y="94" text-anchor="middle" font-family="'Avenir Next','Trebuchet MS',system-ui,sans-serif" font-weight="800" font-size="40" fill="url(#mkgh)" letter-spacing="0.5">Mekonging</text>
+    <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" stroke="#16A39A" stroke-width="4" stroke-linecap="round"/></svg>`;
+}
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
-    h('h1', {}, 'Mekong'),
-    h('p', {}, 'Choose where you are headed.'),
+    h('div', { class: 'logo-wrap', html: logoSVG() }),
+    h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
   ]));
   wrap.append(h('div', { class: 'home-actions' }, [
     h('button', { class: 'btn ghost', onclick: () => go('#search') }, '🔎 Search everything'),
@@ -92,6 +101,7 @@ function homeScreen() {
   const tiles = [
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+    { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
     { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
     { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
     { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
@@ -142,6 +152,7 @@ function countryHubScreen(id) {
     { ic: '💵', t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
     { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
     { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
+    { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
     { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
@@ -1179,6 +1190,44 @@ function speciesScreen(id) {
   mount(wrap, '#home');
 }
 
+// ---- BEST OF / RECOMMENDATIONS ----------------------------------------------
+const FORWHO_EMOJI = { families: '👨‍👩‍👧', couples: '💑', everyone: '⭐', budget: '🪙', foodies: '🍜', adventure: '🧗', nightlife: '🍸', firsttimers: '🧭' };
+function bestofScreen(countryId) {
+  if (countryId) activeCountry = countryId;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Best of', '#home'));
+  wrap.append(countryChips((id) => go(`#bestof-${id}`)));
+  const lists = bestForCountry(activeCountry);
+  if (!lists.length) { wrap.append(h('p', { class: 'empty' }, 'Top picks are being prepared — reconnect once to download them.')); mount(wrap, '#home'); return; }
+  // family lists first
+  const ordered = lists.slice().sort((a, b) => (a.forWho === 'families' ? -1 : 0) - (b.forWho === 'families' ? -1 : 0));
+  ordered.forEach((l) => wrap.append(h('button', { class: 'card bestof-card', onclick: () => go(`#bestlist-${l.id}`) }, [
+    h('div', { class: 'place-head' }, [h('h2', {}, `${FORWHO_EMOJI[l.forWho] || '⭐'} ${l.title}`), h('span', { class: 'cat-tag' }, `${(l.items || []).length}`)]),
+    l.blurb ? h('p', { class: 'muted' }, l.blurb) : null,
+  ])));
+  mount(wrap, '#home');
+}
+
+function bestListScreen(id) {
+  const l = getBestList(id);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(l ? l.title : 'List', `#bestof-${l ? l.country : ''}`));
+  if (!l) { wrap.append(h('p', { class: 'empty' }, 'List not found.')); mount(wrap, '#home'); return; }
+  if (l.blurb) wrap.append(h('p', { class: 'map-hint' }, l.blurb));
+  (l.items || []).forEach((it, i) => {
+    const card = h('div', { class: 'card' }, [
+      h('div', { class: 'place-head' }, [h('h2', {}, `${i + 1}. ${it.name}`), it.rating ? h('span', { class: 'stars-static' }, `${starsStr(it.rating)} ${Number(it.rating).toFixed(1)}`) : null]),
+      it.city ? h('p', { class: 'muted' }, it.city) : null,
+      it.why ? h('p', {}, it.why) : null,
+    ]);
+    if (it.sources && it.sources.length) card.append(h('p', { class: 'disclaimer' }, `Sources: ${it.sources.map((s) => s.org || s).join(', ')}`));
+    card.append(h('a', { class: 'btn ghost', href: mapsUrl({ mapQuery: it.mapQuery || `${it.name} ${it.city || ''}` }), target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'));
+    wrap.append(card);
+  });
+  wrap.append(h('p', { class: 'disclaimer' }, 'Curated from multiple public sources; tap through for live reviews. Verify hours and prices locally.'));
+  mount(wrap, '#home');
+}
+
 // ---- TRIP PLANNER (itinerary + budget) --------------------------------------
 function tripScreen() {
   const wrap = h('div', { class: 'screen' });
@@ -1469,6 +1518,8 @@ function render() {
       case 'trip': return tripScreen();
       case 'bargain': return bargainScreen();
       case 'checklist': return checklistScreen(arg);
+      case 'bestof': return bestofScreen(arg);
+      case 'bestlist': return bestListScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

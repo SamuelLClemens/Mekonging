@@ -9,26 +9,43 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://demo-bucket.protomaps.com https://open.er-api.com; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Mekong — overland Southeast Asia companion</title>
-  <meta name="description" content="Mekong is a free, private, offline-first travel companion for Thailand, Vietnam, Cambodia, and Laos. Phrasebook, fair prices, places, and transport. No accounts, no tracking.">
-  <meta name="theme-color" content="#0E7C7B">
+  <title>Mekonging — travel Thailand, Vietnam, Cambodia & Laos like an expert</title>
+  <meta name="description" content="Mekonging is a free, private, offline-first travel companion for Thailand, Vietnam, Cambodia, and Laos: phrasebook, fair prices, places, transport, history, and best-of recommendations. No accounts, no tracking.">
+  <meta name="theme-color" content="#E8632A">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Mekong">
+  <meta name="apple-mobile-web-app-title" content="Mekonging">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="app">
     <main class="splash">
-      <h1 class="splash-logo">Mekong</h1>
+      <svg class="splash-logo-svg" viewBox="0 0 360 122" role="img" aria-label="Mekonging" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="mkg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#F2A93B"/><stop offset="0.5" stop-color="#E8632A"/><stop offset="1" stop-color="#D6336C"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(150 6)">
+          <circle cx="30" cy="30" r="18" fill="url(#mkg)"/>
+          <g stroke="#F2A93B" stroke-width="3" stroke-linecap="round">
+            <line x1="30" y1="2" x2="30" y2="9"/><line x1="30" y1="51" x2="30" y2="58"/>
+            <line x1="2" y1="30" x2="9" y2="30"/><line x1="51" y1="30" x2="58" y2="30"/>
+            <line x1="10" y1="10" x2="15" y2="15"/><line x1="45" y1="45" x2="50" y2="50"/>
+            <line x1="50" y1="10" x2="45" y2="15"/><line x1="15" y1="45" x2="10" y2="50"/>
+          </g>
+        </g>
+        <text x="180" y="94" text-anchor="middle" font-family="'Avenir Next','Trebuchet MS',system-ui,sans-serif" font-weight="800" font-size="40" fill="url(#mkg)" letter-spacing="0.5">Mekonging</text>
+        <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" stroke="#16A39A" stroke-width="4" stroke-linecap="round"/>
+      </svg>
       <p class="splash-sub">Loading your companion…</p>
     </main>
   </div>
   <noscript>
-    <p style="text-align:center;font-family:sans-serif;padding:2rem">Mekong needs JavaScript to run. Please enable it and reload.</p>
+    <p style="text-align:center;font-family:sans-serif;padding:2rem">Mekonging needs JavaScript to run. Please enable it and reload.</p>
   </noscript>
   <script type="module" src="js/main.js"></script>
 </body>

@@ -1,8 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mekong">
-  <rect width="512" height="512" rx="112" fill="#0E7C7B"/>
-  <!-- a winding river through the four-country region -->
-  <path d="M112 96 C 196 168, 132 236, 220 300 S 196 420, 300 432 C 372 440, 392 372, 420 320"
-        fill="none" stroke="#F4C95D" stroke-width="34" stroke-linecap="round"/>
-  <circle cx="112" cy="96" r="26" fill="#F4C95D"/>
-  <circle cx="420" cy="320" r="22" fill="#EF8354"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mekonging">
+  <defs>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2A93B"/><stop offset="0.55" stop-color="#E8632A"/><stop offset="1" stop-color="#D6336C"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#F7EAD0"/>
+  <!-- sun -->
+  <circle cx="256" cy="206" r="92" fill="url(#sun)"/>
+  <g stroke="#E07A1F" stroke-width="16" stroke-linecap="round" opacity="0.9">
+    <line x1="256" y1="70" x2="256" y2="96"/><line x1="392" y1="206" x2="366" y2="206"/>
+    <line x1="146" y1="206" x2="120" y2="206"/><line x1="352" y1="110" x2="334" y2="128"/>
+    <line x1="160" y1="110" x2="178" y2="128"/>
+  </g>
+  <!-- Mekong: three teal waves -->
+  <g fill="none" stroke="#16A39A" stroke-width="20" stroke-linecap="round">
+    <path d="M70 350 q47 -26 93 0 t93 0 t93 0"/>
+    <path d="M70 408 q47 -26 93 0 t93 0 t93 0" stroke="#0E7A73"/>
+  </g>
+  <!-- longtail boat -->
+  <path d="M196 318 q60 26 120 0 l-14 26 q-46 18 -92 0 z" fill="#5A3A18"/>
+  <line x1="300" y1="318" x2="346" y2="286" stroke="#5A3A18" stroke-width="9" stroke-linecap="round"/>
 </svg>
