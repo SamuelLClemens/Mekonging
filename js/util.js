@@ -26,12 +26,19 @@ export function h(tag, attrs = {}, children = []) {
   return el;
 }
 
+// Currencies whose everyday prices are quoted without minor units (and large sums
+// generally). Keeps "฿300" / "₫25,000" clean rather than "฿300.00".
+const NO_MINOR_UNITS = ['VND', 'KHR', 'LAK', 'JPY', 'THB'];
+
 // Currency formatting. Falls back gracefully for codes Intl does not know.
 export function money(amount, currency) {
   if (amount == null) return '';
+  const whole = NO_MINOR_UNITS.includes(currency) || amount >= 1000;
   try {
     return new Intl.NumberFormat(undefined, {
-      style: 'currency', currency, maximumFractionDigits: amount >= 1000 ? 0 : 2,
+      style: 'currency', currency,
+      minimumFractionDigits: whole ? 0 : undefined,
+      maximumFractionDigits: whole ? 0 : 2,
     }).format(amount);
   } catch {
     return `${amount} ${currency}`;

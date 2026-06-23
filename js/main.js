@@ -248,6 +248,37 @@ function currencySelect(current) {
   return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'], current, () => {});
 }
 
+// The traveller's home currency (set in Settings; defaults to USD).
+function homeCurrency() { return (store.profile && store.profile.homeCurrency) || 'USD'; }
+
+// A local price range followed by an approximate home-currency conversion, e.g.
+// "฿40–120 (≈ $1.10–3.30)". Uses live rates when available, the offline fallback
+// otherwise (the ≈ signals it is approximate). Returns just the local range when
+// the price is already in the home currency or no rate is known.
+function priceLine(low, high, currency) {
+  const local = range(low, high, currency);
+  if (!local) return '';
+  const home = homeCurrency();
+  if (!currency || currency === home) return local;
+  const lo = low != null ? convert(Number(low), currency, home) : null;
+  const hi = high != null ? convert(Number(high), currency, home) : null;
+  if ((lo == null || !isFinite(lo)) && (hi == null || !isFinite(hi))) return local;
+  let approx;
+  if (lo != null && hi != null && low !== high) approx = `${money(lo, home)}–${money(hi, home)}`;
+  else approx = money(lo != null ? lo : hi, home);
+  return `${local} (≈ ${approx})`;
+}
+
+// Single-amount variant: returns "≈ $3.30" (or '' if same currency / unknown rate).
+function approxHome(amount, currency) {
+  if (amount == null || amount === '') return '';
+  const home = homeCurrency();
+  if (!currency || currency === home) return '';
+  const v = convert(Number(amount), currency, home);
+  if (v == null || !isFinite(v)) return '';
+  return `≈ ${money(v, home)}`;
+}
+
 function countryChips(onPick, selected = activeCountry) {
   return h('div', { class: 'country-row' }, COUNTRIES.map((c) =>
     h('button', {
@@ -445,7 +476,7 @@ function resolveItem(id) {
 function placeCard(p) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   const hasPrice = p.priceRange && p.priceRange.currency;
-  const priceStr = hasPrice ? (range(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
+  const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
   const colls = collectionsForItem(p.id);
   return h('div', { class: 'card' }, [
     h('div', { class: 'place-head' }, [
@@ -544,7 +575,7 @@ function placeScreen(id) {
   if (p.whyItFits) { card.append(h('h3', {}, 'Why it fits you'), h('p', {}, p.whyItFits)); }
   if (hasPrice) {
     card.append(h('h3', {}, 'Price'));
-    card.append(h('p', {}, `${range(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`));
+    card.append(h('p', {}, `${priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`));
   }
   if (p.hours) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
   if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
@@ -630,7 +661,7 @@ function pricesScreen(countryId) {
     const row = h('div', { class: 'price-item' }, [
       h('div', { class: 'row-between' }, [
         h('strong', {}, it.label),
-        h('span', { class: 'fair' }, `${range(it.fair.low, it.fair.high, data.currency)}`),
+        h('span', { class: 'fair' }, `${priceLine(it.fair.low, it.fair.high, data.currency)}`),
       ]),
       h('div', { class: 'muted' }, `${it.unit}${it.notes ? ' · ' + it.notes : ''}`),
       it.scamNote ? h('div', { class: 'scam' }, `⚠ ${it.scamNote}`) : null,
@@ -670,7 +701,7 @@ function transportScreen(countryId) {
           h('span', { class: 'mode' }, o.mode),
           o.recommended ? h('span', { class: 'pill-best' }, 'Best') : null,
         ]),
-        h('div', { class: 'muted' }, `${dur} · ${range(o.price.low, o.price.high, o.price.currency)} · ${o.freq}`),
+        h('div', { class: 'muted' }, `${dur} · ${priceLine(o.price.low, o.price.high, o.price.currency)} · ${o.freq}`),
         o.comfort ? h('div', {}, o.comfort) : null,
         o.notes ? h('div', { class: 'muted' }, o.notes) : null,
         o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
