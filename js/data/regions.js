@@ -19,6 +19,18 @@ import { PLACES_TH } from './places.th.js';
 import { PRICES_TH } from './prices.th.js';
 import { ROUTES_TH } from './routes.th.js';
 import { INFO_TH } from './info.th.js';
+import { PLACES_VI } from './places.vi.js';
+import { PRICES_VI } from './prices.vi.js';
+import { ROUTES_VI } from './routes.vi.js';
+import { INFO_VI } from './info.vi.js';
+import { PLACES_KH } from './places.kh.js';
+import { PRICES_KH } from './prices.kh.js';
+import { ROUTES_KH } from './routes.kh.js';
+import { INFO_KH } from './info.kh.js';
+import { PLACES_LA } from './places.la.js';
+import { PRICES_LA } from './prices.la.js';
+import { ROUTES_LA } from './routes.la.js';
+import { INFO_LA } from './info.la.js';
 
 export const LANGUAGES = {
   th: PHRASEBOOK_TH,
@@ -40,17 +52,17 @@ export const COUNTRIES = [
   {
     id: 'vi', name: 'Vietnam', flag: '🇻🇳', currency: 'VND', lang: 'vi',
     cities: ['Hanoi', 'Ho Chi Minh City', 'Hoi An', 'Da Nang'],
-    places: null, prices: null, routes: null, info: null,
+    places: PLACES_VI, prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI,
   },
   {
     id: 'kh', name: 'Cambodia', flag: '🇰🇭', currency: 'KHR', lang: 'km',
     cities: ['Phnom Penh', 'Siem Reap'],
-    places: null, prices: null, routes: null, info: null,
+    places: PLACES_KH, prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH,
   },
   {
     id: 'la', name: 'Laos', flag: '🇱🇦', currency: 'LAK', lang: 'lo',
     cities: ['Vientiane', 'Luang Prabang'],
-    places: null, prices: null, routes: null, info: null,
+    places: PLACES_LA, prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA,
   },
 ];
 

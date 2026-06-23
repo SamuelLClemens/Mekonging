@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.4.0';
+const CACHE_VERSION = 'mk-v0.5.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['demo-bucket.protomaps.com'];
 
@@ -24,6 +24,7 @@ const PRECACHE = [
   'js/translate.js',
   'js/util.js',
   'js/map.js',
+  'js/currency.js',
   'js/data/regions.js',
   'js/data/phrasebook.th.js',
   'js/data/phrasebook.vi.js',
@@ -37,6 +38,18 @@ const PRECACHE = [
   'js/data/prices.th.js',
   'js/data/routes.th.js',
   'js/data/info.th.js',
+  'js/data/places.vi.js',
+  'js/data/prices.vi.js',
+  'js/data/routes.vi.js',
+  'js/data/info.vi.js',
+  'js/data/places.kh.js',
+  'js/data/prices.kh.js',
+  'js/data/routes.kh.js',
+  'js/data/info.kh.js',
+  'js/data/places.la.js',
+  'js/data/prices.la.js',
+  'js/data/routes.la.js',
+  'js/data/info.la.js',
 ];
 
 self.addEventListener('install', (e) => {
