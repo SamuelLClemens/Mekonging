@@ -25,6 +25,7 @@ import { getRates, refreshRates, convert } from './currency.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
+  getEvents, allEvents, getEvent,
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
@@ -112,6 +113,7 @@ function homeScreen() {
     { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
     { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
     { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
+    { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
@@ -181,6 +183,7 @@ function countryHubScreen(id) {
     { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
     { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
     { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
+    { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
     { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
@@ -1100,7 +1103,7 @@ function journeySVG(pts) {
 }
 
 // ---- TRAVEL CALENDAR + DAY PLANNER ------------------------------------------
-const CAL_ICON = { stay: '🛏', meal: '🍽', activity: '🎟', plan: '🗓' };
+const CAL_ICON = { stay: '🛏', meal: '🍽', activity: '🎟', plan: '🗓', festival: '🎉' };
 function calendarDispatch(arg) { return arg === 'add' ? calendarAddScreen() : calendarScreen(); }
 
 // Order items by date, then by time-of-day (untimed entries fall to the end of the day).
@@ -1119,6 +1122,35 @@ function calendarScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Calendar & day planner', '#home'));
   wrap.append(h('button', { class: 'btn block', onclick: () => go('#calendar-add') }, '＋ Add plan, booking or meal'));
+
+  // Festivals & public holidays that fall within the trip window (or the next ~90
+  // days if nothing is planned yet) surface here automatically, so the calendar
+  // shows what is happening around your dates. "Add to my plan" copies one in.
+  const fests = festivalsInWindow();
+  if (fests.length) {
+    const sec = h('div', { class: 'card fest-card' }, [
+      h('div', { class: 'row-between' }, [
+        h('strong', {}, '🎉 Festivals & public holidays'),
+        h('button', { class: 'btn ghost', onclick: () => go('#events') }, 'See all'),
+      ]),
+      h('p', { class: 'muted', style: 'margin:6px 0 0' },
+        store.calendar.items.length ? 'Falling within your planned dates:' : 'Coming up in the next few months:'),
+    ]);
+    fests.forEach((e) => {
+      const addBtn = h('button', { class: 'btn ghost' }, 'Add to my plan');
+      addBtn.addEventListener('click', () => addEventToCalendar(e, addBtn));
+      sec.append(h('div', { class: 'card', style: 'margin:8px 0 0' }, [
+        h('strong', {}, `${e.flag || ''} ${e.name}`),
+        h('div', { class: 'muted', style: 'margin:2px 0 8px' }, `${evRange(e)} · ${e.countryName}`),
+        h('div', { class: 'row-between' }, [
+          h('button', { class: 'btn ghost', onclick: () => go(`#event-${e.id}`) }, 'Details'),
+          addBtn,
+        ]),
+      ]));
+    });
+    wrap.append(sec);
+  }
+
   const items = calItems();
   if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'Plan your days and log your stays, meals and activities — add a time and they line up into a timeline for each day.')); mount(wrap, '#home'); return; }
   let lastDate = '';
@@ -1166,6 +1198,124 @@ function calendarAddScreen() {
     addCalendarItem({ date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() });
     go('#calendar');
   } }, 'Save'));
+  mount(wrap, '#home');
+}
+
+// ---- FESTIVALS & EVENTS -----------------------------------------------------
+function todayISO() { try { return new Date().toISOString().slice(0, 10); } catch { return '2026-01-01'; } }
+function addDaysISO(iso, n) {
+  try { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+  catch { return iso; }
+}
+function evShort(d) {
+  try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
+  catch { return d; }
+}
+// Compact festival date label: "13 Apr – 15 Apr 2026" or "24 Nov 2026".
+function evRange(e) {
+  const y = (e.start || '').slice(0, 4);
+  if (e.end && e.end !== e.start) return `${evShort(e.start)} – ${evShort(e.end)} ${y}`;
+  return `${evShort(e.start)} ${y}`;
+}
+function eventTypeLabel(t) { return t === 'holiday' ? 'Public holiday' : (t === 'observance' ? 'Observance' : 'Festival'); }
+
+// The window festivals are matched against: the span of the user's own calendar
+// entries if any exist, otherwise today through +90 days.
+function tripWindow() {
+  const dates = store.calendar.items.map((i) => i.date).filter(Boolean).sort();
+  if (dates.length) return { start: dates[0], end: dates[dates.length - 1] };
+  const t = todayISO();
+  return { start: t, end: addDaysISO(t, 90) };
+}
+function festivalsInWindow() {
+  const { start, end } = tripWindow();
+  return allEvents().filter((e) => e.end >= start && e.start <= end)
+    .sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+}
+function addEventToCalendar(e, btn) {
+  addCalendarItem({
+    date: e.start, time: '', type: 'festival',
+    title: `${e.flag || ''} ${e.name}`.trim(),
+    place: (e.regions && e.regions[0]) || e.countryName || '',
+    cost: '', currency: '', rating: 0, note: e.impact || '',
+  });
+  if (btn) { btn.textContent = 'Added ✓'; btn.disabled = true; }
+}
+
+function eventCard(e) {
+  const addBtn = h('button', { class: 'btn ghost' }, 'Add to plan');
+  addBtn.addEventListener('click', () => addEventToCalendar(e, addBtn));
+  return h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('strong', {}, `${e.flag || ''} ${e.name}`),
+      h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
+    ]),
+    e.localName ? h('div', { class: 'native' }, e.localName) : null,
+    h('div', { class: 'muted', style: 'margin:2px 0' }, `${evRange(e)}${e.lunar ? ' · date varies yearly' : ''} · ${(e.regions && e.regions[0]) || e.countryName}`),
+    h('p', { style: 'margin:8px 0 6px' }, e.blurb),
+    h('div', { class: 'row-between' }, [
+      h('button', { class: 'btn ghost', onclick: () => go(`#event-${e.id}`) }, 'Details'),
+      addBtn,
+    ]),
+  ]);
+}
+
+let eventsCountry = '';
+function eventsScreen(country) {
+  if (country) eventsCountry = country;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Festivals & events', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
+
+  const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
+  const chips = h('div', { class: 'chips' }, filters.map((f) =>
+    h('button', { class: 'chip', 'aria-pressed': eventsCountry === f.id ? 'true' : 'false', dataset: { c: f.id },
+      onclick: () => { eventsCountry = f.id; chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.c === f.id ? 'true' : 'false')); renderEvents(); } },
+      `${f.flag} ${f.name}`)));
+  wrap.append(chips);
+
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderEvents() {
+    listEl.innerHTML = '';
+    const today = todayISO();
+    let evs = eventsCountry
+      ? getEvents(eventsCountry).map((e) => { const c = getCountry(eventsCountry); return { ...e, country: c.id, countryName: c.name, flag: c.flag }; })
+      : allEvents();
+    evs = evs.sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+    const upcoming = evs.filter((e) => e.end >= today);
+    const past = evs.filter((e) => e.end < today);
+    if (upcoming.length) { listEl.append(h('h2', { class: 'cat-title' }, 'Upcoming')); upcoming.forEach((e) => listEl.append(eventCard(e))); }
+    if (past.length) { listEl.append(h('h2', { class: 'cat-title' }, 'Earlier in 2026')); past.forEach((e) => listEl.append(eventCard(e))); }
+    if (!evs.length) listEl.append(h('p', { class: 'empty' }, 'No festivals listed.'));
+  }
+  renderEvents();
+  mount(wrap, '#home');
+}
+
+function eventScreen(id) {
+  const e = getEvent(id);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(e ? e.name : 'Festival', '#events'));
+  if (!e) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
+  const card = h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('strong', {}, `${e.flag || ''} ${e.name}`),
+      h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
+    ]),
+    e.localName ? h('div', { class: 'native' }, e.localName) : null,
+    h('div', { class: 'muted', style: 'margin:4px 0' }, `${evRange(e)} · ${e.countryName}`),
+    e.lunar ? h('div', { class: 'muted' }, '↻ Movable date — shifts each year.') : null,
+    h('p', {}, e.blurb),
+  ]);
+  card.append(h('h3', {}, 'When'), h('p', {}, e.rule));
+  card.append(h('h3', {}, 'Where'), h('p', {}, (e.regions || []).join(' · ')));
+  card.append(h('h3', {}, 'What it means for you'), h('p', {}, e.impact));
+  if (e.sources && e.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${e.sources.join('; ')}`));
+  wrap.append(card);
+  const addBtn = h('button', { class: 'btn block' }, 'Add to my calendar');
+  addBtn.addEventListener('click', () => addEventToCalendar(e, addBtn));
+  wrap.append(addBtn);
   mount(wrap, '#home');
 }
 
@@ -1669,6 +1819,8 @@ function render() {
       case 'journal': return journalDispatch(arg);
       case 'journey': return journeyScreen();
       case 'calendar': return calendarDispatch(arg);
+      case 'events': return eventsScreen(arg);
+      case 'event': return eventScreen(arg);
       case 'nature': return natureScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();

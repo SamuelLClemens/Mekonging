@@ -41,6 +41,11 @@ import { GUIDE_TH } from './guide.th.js';
 import { GUIDE_VI } from './guide.vi.js';
 import { GUIDE_KH } from './guide.kh.js';
 import { GUIDE_LA } from './guide.la.js';
+// Festivals and public holidays (2026 dates, sourced) wired per country.
+import { EVENTS_TH } from './events.th.js';
+import { EVENTS_VI } from './events.vi.js';
+import { EVENTS_KH } from './events.kh.js';
+import { EVENTS_LA } from './events.la.js';
 
 export const LANGUAGES = {
   th: PHRASEBOOK_TH,
@@ -57,22 +62,22 @@ export const COUNTRIES = [
   {
     id: 'th', name: 'Thailand', flag: '🇹🇭', currency: 'THB', lang: 'th',
     cities: ['Bangkok', 'Chiang Mai', 'Krabi', 'Koh Lanta', 'Pai'],
-    places: [...PLACES_TH, ...PLACES_TH_EXT], prices: PRICES_TH, routes: ROUTES_TH, info: INFO_TH, guide: GUIDE_TH,
+    places: [...PLACES_TH, ...PLACES_TH_EXT], prices: PRICES_TH, routes: ROUTES_TH, info: INFO_TH, guide: GUIDE_TH, events: EVENTS_TH.events,
   },
   {
     id: 'vi', name: 'Vietnam', flag: '🇻🇳', currency: 'VND', lang: 'vi',
     cities: ['Hanoi', 'Ho Chi Minh City', 'Hoi An', 'Da Nang'],
-    places: [...PLACES_VI, ...PLACES_VI_EXT], prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI, guide: GUIDE_VI,
+    places: [...PLACES_VI, ...PLACES_VI_EXT], prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI, guide: GUIDE_VI, events: EVENTS_VI.events,
   },
   {
     id: 'kh', name: 'Cambodia', flag: '🇰🇭', currency: 'KHR', lang: 'km',
     cities: ['Phnom Penh', 'Siem Reap'],
-    places: [...PLACES_KH, ...PLACES_KH_EXT], prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH, guide: GUIDE_KH,
+    places: [...PLACES_KH, ...PLACES_KH_EXT], prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH, guide: GUIDE_KH, events: EVENTS_KH.events,
   },
   {
     id: 'la', name: 'Laos', flag: '🇱🇦', currency: 'LAK', lang: 'lo',
     cities: ['Vientiane', 'Luang Prabang'],
-    places: [...PLACES_LA, ...PLACES_LA_EXT], prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA, guide: GUIDE_LA,
+    places: [...PLACES_LA, ...PLACES_LA_EXT], prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA, guide: GUIDE_LA, events: EVENTS_LA.events,
   },
 ];
 
@@ -95,6 +100,21 @@ export function allPlaces(filter = {}) {
 
 export function getPlace(id) {
   return allPlaces().find((p) => p.id === id) || null;
+}
+
+// Festivals / public holidays. getEvents(country) returns one country's list;
+// allEvents() flattens every country and tags each event with its country id,
+// name and flag so the calendar and festivals screen can show provenance.
+export function getEvents(id) {
+  const c = getCountry(id);
+  return c && Array.isArray(c.events) ? c.events : [];
+}
+export function allEvents() {
+  return COUNTRIES.flatMap((c) => (Array.isArray(c.events) ? c.events : [])
+    .map((e) => ({ ...e, country: c.id, countryName: c.name, flag: c.flag })));
+}
+export function getEvent(id) {
+  return allEvents().find((e) => e.id === id) || null;
 }
 
 export const INTERESTS = [
