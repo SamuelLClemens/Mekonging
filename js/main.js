@@ -127,17 +127,46 @@ function homeScreen() {
   mount(wrap, '#home');
 }
 
-// A stylised map-flavoured selector: countries arranged roughly geographically.
+// The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
+// four countries is a distinct colour and is tappable to enter its hub. No tiles, no
+// network — this always works. (The pannable street map with GPS lives on #map.)
+const REGION_COLORS = { th: '#E8632A', vi: '#C0392B', kh: '#2D6CDF', la: '#159E8C' };
+const REGION_PATHS = {
+  // Thailand: rounded northern body, eastern Isan point, long thin southern peninsula.
+  th: 'M150,140 C150,120 175,112 200,118 C230,126 250,150 262,182 C285,166 315,161 340,179 C372,197 372,233 352,263 C386,273 414,273 432,293 C420,315 384,313 350,311 C322,327 300,337 256,335 C242,357 232,367 228,393 C238,425 230,461 210,487 C218,515 236,541 224,561 C206,557 186,523 180,495 C168,457 172,421 180,395 C156,381 150,349 158,321 C136,303 126,273 128,241 C120,210 122,168 138,148 C142,143 146,141 150,140 Z',
+  // Laos: landlocked NE diagonal sliver.
+  la: 'M318,108 C354,110 388,126 406,150 C432,182 454,216 474,250 C492,274 508,294 518,314 C502,318 486,302 468,282 C436,246 404,212 379,188 C355,166 333,144 320,127 C315,121 314,114 318,108 Z',
+  // Cambodia: rounded block around the Tonle Sap, south-central.
+  kh: 'M338,320 C364,309 400,306 432,314 C458,321 474,338 473,364 C472,392 446,412 410,419 C384,424 359,421 340,408 C320,394 316,366 320,346 C324,333 330,325 338,320 Z',
+  // Vietnam: the long S-curve down the eastern coast to the Mekong delta.
+  vi: 'M438,44 C472,52 494,82 485,112 C477,138 458,152 463,174 C494,182 524,198 530,216 C558,238 588,252 602,270 C626,308 648,346 650,376 C644,400 600,410 558,416 C520,422 470,450 440,480 C452,453 483,439 517,423 C557,405 602,379 614,347 C604,304 578,268 550,238 C524,212 502,190 502,166 C514,132 504,92 474,70 C462,58 449,48 438,44 Z',
+};
+const REGION_LABELS = { th: [248, 250], la: [410, 206], kh: [396, 366], vi: [560, 332] };
+
 function regionPicker() {
-  const map = h('div', { class: 'region-map' });
-  COUNTRIES.forEach((c) => {
-    map.append(h('button', {
-      class: `region-pin r-${c.id}`, 'aria-pressed': c.id === activeCountry ? 'true' : 'false',
-      onclick: () => { activeCountry = c.id; go(`#country-${c.id}`); },
-    }, [h('span', { class: 'flag' }, c.flag), h('span', { class: 'rn' }, c.name)]));
+  const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
+    ? `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
+         <path class="ctry" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
+         <g class="ctry-label">
+           <text class="ctry-flag" x="${REGION_LABELS[c.id][0]}" y="${REGION_LABELS[c.id][1]}" text-anchor="middle">${c.flag}</text>
+           <text class="ctry-name" x="${REGION_LABELS[c.id][0]}" y="${REGION_LABELS[c.id][1] + 22}" text-anchor="middle">${esc(c.name)}</text>
+         </g>
+       </g>` : '').join('');
+  const svg = `<svg viewBox="0 0 700 600" class="region-svg" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="sea" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#BFE6E1"/><stop offset="1" stop-color="#7FC3BD"/></radialGradient></defs>
+      <rect x="0" y="0" width="700" height="600" fill="url(#sea)"/>
+      <path d="M318,108 C360,150 360,210 410,270 C440,310 420,360 384,418" fill="none" stroke="#5FB0AA" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+      ${paths}
+    </svg>`;
+  const box = h('div', { class: 'region-map', html: svg });
+  box.querySelectorAll('.ctry-group').forEach((g) => {
+    const id = g.getAttribute('data-country');
+    const enter = () => { activeCountry = id; go(`#country-${id}`); };
+    g.addEventListener('click', enter);
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); } });
   });
-  map.append(h('span', { class: 'region-cap' }, 'Tap a country to begin'));
-  return map;
+  box.append(h('span', { class: 'region-cap' }, 'Tap a country to explore it'));
+  return box;
 }
 
 // Per-country hub reached after picking a country.
@@ -777,6 +806,8 @@ function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map'));
   wrap.append(h('p', { class: 'map-hint' }, 'Tap the map to drop a pin. Use the ⊕ locate button to find yourself (GPS works offline).'));
+  const tileBanner = h('div', { class: 'banner', style: 'display:none' });
+  wrap.append(tileBanner);
 
   const dlBtn = h('button', { class: 'btn', disabled: '' }, 'Download this area');
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
@@ -810,6 +841,20 @@ function mapScreen() {
     onOpen: (id) => go(`#place-${id}`),
   })).then((ctrl) => {
     dlBtn.removeAttribute('disabled');
+    // The basemap tiles come from an external source and need the network the first
+    // time. If they fail, explain it rather than leaving a blank canvas; pins + GPS
+    // still work, and the home-screen country map is fully offline.
+    let tileErrShown = false;
+    ctrl.map.on('error', () => {
+      if (tileErrShown) return; tileErrShown = true;
+      tileBanner.innerHTML = '';
+      tileBanner.append(
+        h('span', {}, 'The street-map tiles could not load — they need an internet connection the first time you open the map. Your GPS and saved pins still work. '),
+        h('button', { class: 'btn ghost', style: 'margin-top:6px', onclick: () => go('#home') }, 'Use the offline country map'),
+      );
+      tileBanner.style.display = '';
+    });
+    ctrl.map.on('idle', () => { if (!tileErrShown) tileBanner.style.display = 'none'; });
     dlBtn.onclick = async () => {
       dlBtn.textContent = 'Downloading…';
       try {

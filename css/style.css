@@ -334,35 +334,38 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 }
 .coll-row input { width: 22px; height: 22px; accent-color: var(--orange); }
 
-/* --- country-picker region map --- */
+/* --- country-picker region map (offline SVG, clickable) --- */
 .region-map {
-  position: relative; height: 300px; margin-bottom: var(--sp-4);
+  position: relative; margin-bottom: var(--sp-4);
   border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
-  background: var(--sunburst), var(--card);
+  box-shadow: var(--shadow-soft);
 }
-.region-map::before { /* the Mekong, suggested */
-  content: ""; position: absolute; inset: 0;
-  background:
-    linear-gradient(115deg, transparent 46%, rgba(22,163,154,0.55) 46.5%, rgba(22,163,154,0.55) 48%, transparent 48.5%);
-  opacity: 0.5;
+.region-svg { display: block; width: 100%; height: auto; }
+.ctry-group { cursor: pointer; }
+.ctry {
+  stroke: #FFFDF5; stroke-width: 2.5; stroke-linejoin: round;
+  transform-box: fill-box; transform-origin: center;
+  transition: filter var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.region-pin {
-  position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
-  padding: var(--sp-2) var(--sp-3); font-family: inherit; font-weight: 800; color: var(--ink);
-  cursor: pointer; box-shadow: var(--shadow-soft);
-  transition: transform var(--dur) var(--ease);
+.ctry-group:hover .ctry,
+.ctry-group:focus-visible .ctry {
+  filter: brightness(1.1) drop-shadow(0 3px 7px rgba(0,0,0,0.28));
+  transform: translateY(-2px);
 }
-.region-pin .flag { font-size: 1.7rem; line-height: 1; }
-.region-pin .rn { font-size: var(--fs-sm); }
-.region-pin:hover { transform: translateY(-2px); }
-.region-pin[aria-pressed="true"] { background: var(--grad-sun); color: #fff; border-color: transparent; }
-.r-la { top: 7%; left: 39%; }
-.r-th { top: 40%; left: 7%; }
-.r-vi { top: 20%; right: 7%; }
-.r-kh { bottom: 12%; left: 37%; }
-.region-cap { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
-  font-size: var(--fs-label); color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; }
+.ctry-group:focus { outline: none; }
+.ctry-group:focus-visible .ctry { stroke-width: 4; }
+.ctry-label { pointer-events: none; }
+.ctry-flag { font-size: 26px; }
+.ctry-name {
+  font-family: inherit; font-weight: 800; font-size: 15px; fill: #fff;
+  paint-order: stroke; stroke: rgba(0,0,0,0.32); stroke-width: 2.4px; stroke-linejoin: round;
+  letter-spacing: 0.02em;
+}
+.region-cap {
+  display: block; text-align: center; padding: var(--sp-2);
+  font-size: var(--fs-label); color: var(--ink-soft);
+  text-transform: uppercase; letter-spacing: 0.06em; background: var(--card);
+}
 
 .fx-result { font-weight: 800; font-size: var(--fs-h2); color: var(--teal-deep); margin-top: var(--sp-3); }
 html[data-theme="dark"] .fx-result { color: var(--teal); }
