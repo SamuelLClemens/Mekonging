@@ -8,7 +8,7 @@ import {
   addJournalEntry, deleteJournalEntry, journalEntries,
   addCalendarItem, deleteCalendarItem,
 } from './state.js';
-import { h, esc, money, range, mapsUrl } from './util.js';
+import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
@@ -78,6 +78,10 @@ function homeScreen() {
     h('h1', {}, 'Mekong'),
     h('p', {}, 'Choose where you are headed.'),
   ]));
+  wrap.append(h('div', { class: 'home-actions' }, [
+    h('button', { class: 'btn ghost', onclick: () => go('#search') }, '🔎 Search everything'),
+    h('button', { class: 'btn', style: 'background:var(--coral)', onclick: () => go('#sos') }, '🆘 Emergency'),
+  ]));
   wrap.append(regionPicker());
 
   const tiles = [
@@ -131,7 +135,9 @@ function countryHubScreen(id) {
     { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
     { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
+    { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
     { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
+    { ic: '🆘', t: 'Emergency', d: 'Numbers + key phrases', hash: '#sos' },
     { ic: '⭐', t: 'Saved', d: 'Your collections', hash: '#saved' },
   ];
   wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
@@ -227,7 +233,7 @@ function phrasebookScreen(lang) {
   // search
   const search = h('input', {
     class: 'search', type: 'search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
-    oninput: (e) => { phraseQuery = e.target.value; renderPhrases(); },
+    oninput: debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120),
   });
   wrap.append(search);
 
@@ -1087,7 +1093,7 @@ function natureScreen() {
   wrap.append(h('p', { class: 'map-hint' }, 'Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
 
   const search = h('input', { class: 'search', type: 'search', placeholder: 'Search by name…', value: natureQuery,
-    oninput: (e) => { natureQuery = e.target.value; renderList(); } });
+    oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
 
   const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS);
@@ -1144,6 +1150,79 @@ function speciesScreen(id) {
   if (s.localNames && s.localNames.length) card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
   wrap.append(card);
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
+  mount(wrap, '#home');
+}
+
+// ---- GLOBAL SEARCH (find anything offline) ----------------------------------
+let searchQuery = '';
+function searchScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Search everything', '#home'));
+  wrap.append(h('input', { class: 'search', type: 'search', autofocus: '', value: searchQuery,
+    placeholder: 'Find places, phrases, wildlife, prices…',
+    oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) }));
+  const out = h('div', {});
+  wrap.append(out);
+
+  function section(title, nodes) {
+    if (!nodes.length) return;
+    out.append(h('h2', { class: 'cat-title' }, `${title} (${nodes.length})`));
+    nodes.slice(0, 8).forEach((n) => out.append(n));
+    if (nodes.length > 8) out.append(h('p', { class: 'muted' }, `…and ${nodes.length - 8} more — refine your search`));
+  }
+  const link = (label, hash, extra) => h('button', { class: 'btn ghost block srch', onclick: () => { if (extra) extra(); go(hash); } }, label);
+
+  function renderResults() {
+    out.innerHTML = '';
+    const q = searchQuery.trim().toLowerCase();
+    if (q.length < 2) { out.append(h('p', { class: 'muted' }, 'Type at least two letters to search across the whole app — places, phrasebook, wildlife, prices and countries.')); return; }
+    section('Places', allPlaces().filter((p) => `${p.name} ${p.blurb || ''} ${p.city || ''}`.toLowerCase().includes(q))
+      .map((p) => link(`📍 ${p.name} — ${p.city}`, `#place-${p.id}`)));
+    section('Wildlife & plants', allSpecies({ q }).map((s) => link(`${s.emoji || '🔎'} ${s.commonName}`, `#species-${s.id}`)));
+    const phr = [];
+    for (const b of Object.values(LANGUAGES)) for (const cat of b.categories) for (const p of cat.phrases) {
+      if (`${p.en} ${p.roman || ''} ${p.script || ''}`.toLowerCase().includes(q)) phr.push(link(`💬 ${b.label}: ${p.en} — ${p.script}`, `#phrasebook-${b.lang}`));
+    }
+    section('Phrases', phr);
+    const pr = [];
+    for (const c of COUNTRIES) if (c.prices) for (const it of c.prices.items) {
+      if (it.label.toLowerCase().includes(q)) pr.push(link(`💵 ${c.name}: ${it.label}`, `#prices-${c.id}`));
+    }
+    section('Fair prices', pr);
+    section('Countries', COUNTRIES.filter((c) => c.name.toLowerCase().includes(q))
+      .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { activeCountry = c.id; })));
+    if (!out.children.length) out.append(h('p', { class: 'empty' }, 'Nothing found. Try another word.'));
+  }
+  renderResults();
+  mount(wrap, '#home');
+}
+
+// ---- EMERGENCY / SOS --------------------------------------------------------
+function sosScreen() {
+  const c = getCountry(activeCountry);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Emergency', '#home'));
+  if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
+
+  const nums = h('div', { class: 'card sos-card' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
+  const em = (c.info && c.info.emergency) || [];
+  if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
+  else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
+  wrap.append(nums);
+
+  const book = getLanguage(c.lang);
+  const emCat = book && book.categories.find((cat) => cat.id === 'emergency');
+  if (emCat) {
+    const pcard = h('div', { class: 'card' }, [h('h2', {}, `Say it in ${book.label}`)]);
+    const voiceOk = hasVoiceFor(book.locale);
+    emCat.phrases.forEach((p) => pcard.append(h('div', { class: 'phrase' }, [
+      h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native' }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
+      h('button', { class: 'speak', disabled: voiceOk ? null : '', 'aria-label': `Speak ${p.en}`, onclick: () => speak(p.script, book.locale) }, '🔊'),
+    ])));
+    wrap.append(pcard);
+  }
+  wrap.append(h('a', { class: 'btn block', href: 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me', target: '_blank', rel: 'noopener' }, 'Find nearest hospital ↗'));
+  wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English.'));
   mount(wrap, '#home');
 }
 
@@ -1246,6 +1325,8 @@ function render() {
       case 'calendar': return calendarDispatch(arg);
       case 'nature': return natureScreen();
       case 'species': return speciesScreen(arg);
+      case 'search': return searchScreen();
+      case 'sos': return sosScreen();
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

@@ -376,6 +376,20 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 .map-hint { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0 0 var(--sp-2); }
 .maplibregl-ctrl-group { border-radius: var(--r-md) !important; }
 
+/* perf: skip rendering offscreen cards/rows in long lists */
+.card, .species-card, .phrase, .price-item { content-visibility: auto; contain-intrinsic-size: auto 90px; }
+
+/* home quick actions (search + emergency) */
+.home-actions { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.home-actions .btn { flex: 1; justify-content: center; }
+
+/* global search results */
+.srch { justify-content: flex-start; text-align: left; margin-bottom: var(--sp-2); }
+
+/* emergency / SOS */
+.sos-card { border-color: var(--coral); }
+.sos-num { background: var(--coral); font-size: 1.05rem; margin-bottom: var(--sp-2); }
+
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }
 .disclaimer { font-size: var(--fs-sm); color: var(--ink-soft); font-style: italic; margin-top: var(--sp-3); }
 a { color: var(--teal-deep); }

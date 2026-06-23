@@ -57,3 +57,19 @@ export function mapsUrl({ mapQuery, coords } = {}) {
 export function titleCase(s) {
   return String(s || '').replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+// Debounce — coalesce rapid calls (e.g. search keystrokes) into one.
+export function debounce(fn, ms = 130) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// Promise wrapper around the Geolocation API (works offline; device GPS).
+export function geolocate(opts = { enableHighAccuracy: true, timeout: 10000 }) {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) { reject(new Error('Geolocation unavailable')); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      (err) => reject(new Error(err.message || 'No location')), opts);
+  });
+}
