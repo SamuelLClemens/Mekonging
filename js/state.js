@@ -15,7 +15,7 @@ function defaults() {
         interests: [],          // subset of ['food','culture','nature','nightlife']
         budget: 'flexible',     // 'low' | 'mid' | 'high' | 'flexible'
       },
-      defaultLang: 'th',        // phrasebook language to open first
+      defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
       // device, never transmitted except to the endpoint the user configures, and
       // never committed to source. Enabling also requires the endpoint origin in

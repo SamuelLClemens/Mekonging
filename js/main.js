@@ -46,7 +46,22 @@ function applyTheme() {
 }
 
 // ---- UI state ---------------------------------------------------------------
-let activeCountry = 'th';   // current destination context (country id)
+// Default the destination to where the user actually is, using the device time
+// zone (works offline, no permission prompt). Falls back to Thailand outside the
+// region. The four countries share UTC+7 but have distinct IANA zone names.
+function detectCountryId() {
+  try {
+    const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+    const map = {
+      'Asia/Bangkok': 'th', 'Asia/Ho_Chi_Minh': 'vi', 'Asia/Saigon': 'vi',
+      'Asia/Phnom_Penh': 'kh', 'Asia/Vientiane': 'la',
+    };
+    if (map[tz]) return map[tz];
+  } catch { /* ignore */ }
+  return 'th';
+}
+function langForCountry(id) { const c = getCountry(id); return c ? c.lang : 'th'; }
+let activeCountry = detectCountryId();   // current destination context (country id)
 let pendingPinCoords = null; // coords captured by tapping the map, consumed by #addpin
 
 const TABS = [
@@ -296,7 +311,7 @@ function countryChips(onPick, selected = activeCountry) {
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
 function phrasebookScreen(lang) {
-  const code = lang || store.profile.defaultLang || 'th';
+  const code = lang || store.profile.defaultLang || langForCountry(activeCountry);
   const book = getLanguage(code);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Phrasebook'));
@@ -317,7 +332,11 @@ function phrasebookScreen(lang) {
   }
   if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
 
+  // Say-it tool: type or speak English, get the local text + spoken pronunciation.
+  wrap.append(liveTranslateBox(code, book.label, book.locale));
+
   // search
+  wrap.append(h('h2', { class: 'cat-title' }, 'Phrasebook'));
   const search = h('input', {
     class: 'search', type: 'search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
     oninput: debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120),
@@ -361,29 +380,58 @@ function phrasebookScreen(lang) {
     if (!listEl.children.length) listEl.append(h('p', { class: 'empty' }, 'No phrases match your search.'));
   }
   renderPhrases();
-
-  // live-translate fallback
-  wrap.append(liveTranslateBox(code, book.label));
   mount(wrap, '#phrasebook');
 }
 
-function liveTranslateBox(code, label) {
-  const box = h('div', { class: 'card' }, [h('h2', {}, 'Live translate (online)')]);
-  if (!translateConfigured()) {
-    box.append(h('p', { class: 'muted' },
-      'Optional: translate anything not in the phrasebook. Add an endpoint in Settings to enable. Requires internet.'));
-    box.append(h('button', { class: 'btn ghost', onclick: () => go('#settings') }, 'Open Settings'));
-    return box;
-  }
+// Speak/type-in-English → local-language text + spoken audio. Works with no setup
+// (free online service); the offline phrasebook below covers the essentials.
+function liveTranslateBox(code, label, locale) {
+  const box = h('div', { class: 'card translate-card' }, [
+    h('h2', { style: 'margin-top:0' }, `Say it in ${label}`),
+    h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
+  ]);
   const srcSel = selectEl([['en', 'From English'], ['he', 'From Hebrew (עברית)']], 'en', () => {});
-  const input = h('input', { class: 'search', type: 'text', placeholder: 'Type text to translate…' });
-  const out = h('div', { class: 'muted' });
-  const btn = h('button', { class: 'btn', onclick: async () => {
-    out.textContent = 'Translating…';
-    try { out.textContent = await translate(input.value, code, srcSel.value); }
-    catch (err) { out.textContent = err.message; }
-  } }, `Translate to ${label}`);
-  box.append(srcSel, input, btn, out);
+  const input = h('input', { class: 'search', type: 'text', placeholder: 'e.g. Where is the bus station?' });
+  const out = h('div', { class: 'tr-out', style: 'margin-top:10px' });
+
+  const doTranslate = async () => {
+    const text = input.value.trim();
+    if (!text) return;
+    out.innerHTML = ''; out.append(h('p', { class: 'muted' }, 'Translating…'));
+    try {
+      const res = await translate(text, code, srcSel.value);
+      out.innerHTML = '';
+      out.append(h('div', { class: 'native', style: 'font-size:23px;line-height:1.35' }, res));
+      const canSpeak = hasVoiceFor(locale);
+      const speakBtn = h('button', { class: 'btn', disabled: canSpeak ? null : '', onclick: () => speak(res, locale) },
+        canSpeak ? '🔊 Hear it' : '🔇 No device voice');
+      out.append(speakBtn);
+      if (!canSpeak) out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, `Your device has no ${label} voice installed, so audio is unavailable — the text above is correct to show or copy.`));
+      else speak(res, locale);   // auto-speak on success
+    } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(); } });
+
+  const btn = h('button', { class: 'btn', onclick: doTranslate }, 'Translate');
+  // Optional voice input via the Web Speech API (Chrome/Edge; hidden where absent).
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let micBtn = null;
+  if (SR) {
+    micBtn = h('button', { class: 'btn ghost', title: 'Speak instead of typing' }, '🎤 Speak');
+    micBtn.addEventListener('click', () => {
+      try {
+        const rec = new SR();
+        rec.lang = srcSel.value === 'he' ? 'he-IL' : 'en-US';
+        rec.interimResults = false; rec.maxAlternatives = 1;
+        micBtn.textContent = '🎙 Listening…'; micBtn.disabled = true;
+        rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(); };
+        rec.onerror = () => { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; };
+        rec.onend = () => { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; };
+        rec.start();
+      } catch { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; }
+    });
+  }
+  box.append(srcSel, input, h('div', { class: 'row-between', style: 'gap:8px;margin-top:8px' }, [btn, micBtn].filter(Boolean)), out);
   return box;
 }
 
@@ -2035,7 +2083,7 @@ function settingsScreen() {
     (v) => { p.homeCurrency = v; save(); })));
 
   card.append(field('Default phrasebook language',
-    selectEl(Object.values(LANGUAGES).map((b) => [b.lang, b.label]), p.defaultLang,
+    selectEl([['', 'Auto — match where I am']].concat(Object.values(LANGUAGES).map((b) => [b.lang, b.label])), p.defaultLang,
       (v) => { p.defaultLang = v; save(); })));
 
   card.append(field('Budget', selectEl([['flexible', 'Any / flexible'], ['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end']],
@@ -2064,8 +2112,8 @@ function settingsScreen() {
 
   // live translate
   const tcard = h('div', { class: 'card' }, [
-    h('h2', {}, 'Live translate (optional)'),
-    h('p', { class: 'muted' }, 'The phrasebook works offline. To translate free text online, set a LibreTranslate-compatible endpoint. Your endpoint and key stay on this device. Enabling also requires adding the endpoint origin to the page Content-Security-Policy (connect-src) in index.html.'),
+    h('h2', {}, 'Live translate'),
+    h('p', { class: 'muted' }, 'Translation already works with no setup, using a free online service — just type or speak English on the Talk screen. The phrasebook itself works fully offline. The advanced fields below are optional: point the app at your own LibreTranslate-compatible server for higher volume or full privacy. Your endpoint and key stay on this device, and the server origin must also be added to the page Content-Security-Policy (connect-src) in index.html.'),
   ]);
   tcard.append(field('Translate endpoint URL', h('input', {
     type: 'url', placeholder: 'https://your-endpoint/translate', value: p.translateEndpoint,
