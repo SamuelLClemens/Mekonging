@@ -1,14 +1,13 @@
 // Offline support: precache the app shell, serve cache-first. Bump CACHE_VERSION
-// per release. The map libraries (lib/maplibre-gl.*, lib/pmtiles.js) are NOT
-// precached — they are large and cache on first map use, so users who never open
-// the map never download them.
+// per release. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON basemap
+// ARE precached so the offline map works from first launch with no connection.
 //
 // TILE_CACHE holds the vector-tile byte ranges from the external tile source so the
 // map works offline once an area has been downloaded/viewed. The Cache API refuses
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.27.0';
+const CACHE_VERSION = 'mk-v0.28.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['demo-bucket.protomaps.com'];
 
@@ -83,6 +82,9 @@ const PRECACHE = [
   'js/data/food.la.ext.js',
   'js/data/produce.js',
   'js/data/schedules.js',
+  'js/data/basemap.js',
+  'lib/maplibre-gl.js',
+  'lib/maplibre-gl.css',
 ];
 
 self.addEventListener('install', (e) => {

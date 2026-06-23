@@ -1,18 +1,24 @@
-// Offline-capable vector map: MapLibre GL JS + PMTiles, lazy-loaded. Geometry-first
-// basemap (no glyph/sprite dependency). Curated places + user pins as markers, GPS
-// via the geolocate control, tap-to-drop-a-pin. Offline works through the service
-// worker, which caches the tile source's byte-range responses (see sw.js): once an
-// area is downloaded or viewed, it renders with no connection.
-//
-// The libraries are vendored under lib/ so the strict CSP (script-src 'self') holds.
-// The tile source is the Protomaps planet PMTiles (range requests). It is the one
-// external origin, allowlisted in connect-src, and degrades gracefully offline.
+// Fully offline vector map: MapLibre GL JS (vendored) renders a SELF-HOSTED GeoJSON
+// basemap of the four countries — no external tiles, so it works with no connection
+// from first launch (the old Protomaps demo bucket was retired and returned 404).
+// GPS via the geolocate control, curated places + user pins as rating-coloured
+// markers, inter-city routes and the Mekong drawn on top, tap-to-drop-a-pin. Street
+// detail is intentionally omitted so the whole region ships in ~26 KB and never breaks.
 
 import { store } from './state.js';
 import { allPlaces, COUNTRIES } from './data/regions.js';
+import { BASEMAP } from './data/basemap.js';
 
-const DEFAULT_TILES = 'https://demo-bucket.protomaps.com/v4.pmtiles';
-function tilesUrl() { return (store.profile && store.profile.mapTilesUrl) || DEFAULT_TILES; }
+// The Mekong main stem as lat/lng (same trace as the landing-map river).
+const MEKONG_LL = [
+  [100.08, 20.36], [100.60, 20.27], [101.15, 20.05], [101.65, 19.60], [102.10, 19.88],
+  [102.00, 19.25], [101.60, 18.70], [101.90, 18.00], [102.60, 17.97], [103.25, 17.60],
+  [104.05, 17.40], [104.74, 16.90], [105.00, 16.00], [105.45, 15.40], [105.80, 15.12],
+  [105.95, 14.50], [106.00, 13.95], [106.02, 13.52], [105.95, 12.70], [105.46, 12.00],
+  [104.93, 11.56], [105.25, 11.00], [105.46, 10.40], [105.78, 10.03], [106.20, 9.90],
+  [106.60, 9.65], [106.78, 9.50],
+];
+const MEKONG_FC = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: MEKONG_LL } }] };
 
 // Pin colour by rating. The traveller's OWN rating (placeData) wins over the
 // curated/synthesised score, so once you rate a place its pin reflects YOUR view.
@@ -87,46 +93,27 @@ function loadCss(href) {
 function loadLibs() {
   if (libsPromise) return libsPromise;
   loadCss('lib/maplibre-gl.css');
-  // pmtiles first (smaller), then maplibre; both are classic UMD globals.
-  libsPromise = loadScript('lib/pmtiles.js').then(() => loadScript('lib/maplibre-gl.js'));
+  libsPromise = loadScript('lib/maplibre-gl.js');
   return libsPromise;
 }
 
-// Warm, geometry-first style over the Protomaps v4 schema. No text layers, so no
-// glyphs are fetched. Missing source-layers simply do not draw.
-function basemapStyle(url) {
-  // No "glyphs" key: this style has no text layers, so MapLibre needs no glyphs.
-  // (Including glyphs:undefined fails style validation, so it must be omitted.)
+// Self-hosted geometry style: sea background, the four country fills with a coastline
+// outline, and the Mekong. No glyphs/sprites/text layers, so nothing is fetched.
+function basemapStyle() {
   return {
     version: 8,
-    sources: { pm: { type: 'vector', url: 'pmtiles://' + url, attribution: '© OpenStreetMap · Protomaps' } },
+    sources: {
+      land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
+      mekong: { type: 'geojson', data: MEKONG_FC },
+    },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#F3E7CE' } },
-      { id: 'earth', source: 'pm', 'source-layer': 'earth', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
-      { id: 'landuse', source: 'pm', 'source-layer': 'landuse', type: 'fill',
-        paint: { 'fill-color': '#CBD49A', 'fill-opacity': 0.5 } },
-      { id: 'natural', source: 'pm', 'source-layer': 'natural', type: 'fill',
-        paint: { 'fill-color': '#C2CF94', 'fill-opacity': 0.4 } },
-      { id: 'water', source: 'pm', 'source-layer': 'water', type: 'fill', paint: { 'fill-color': '#8FC9C4' } },
-      { id: 'roads-casing', source: 'pm', 'source-layer': 'roads', type: 'line',
-        paint: { 'line-color': '#E8A85B',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 14, 5, 18, 14] } },
-      { id: 'roads', source: 'pm', 'source-layer': 'roads', type: 'line',
-        paint: { 'line-color': '#FFFBF0',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.2, 14, 3, 18, 10] } },
-      { id: 'buildings', source: 'pm', 'source-layer': 'buildings', type: 'fill',
-        minzoom: 14, paint: { 'fill-color': '#E2CDA0', 'fill-opacity': 0.7 } },
-      { id: 'boundaries', source: 'pm', 'source-layer': 'boundaries', type: 'line',
-        paint: { 'line-color': '#B58AA0', 'line-dasharray': [2, 2], 'line-width': 1 } },
+      { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
+      { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
+      { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
+      { id: 'mekong-line', source: 'mekong', type: 'line', layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#2C7DA0', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.2, 8, 3, 12, 6] } },
     ],
   };
-}
-
-// slippy-tile math for area download
-function lon2x(lon, z) { return Math.floor((lon + 180) / 360 * Math.pow(2, z)); }
-function lat2y(lat, z) {
-  const r = lat * Math.PI / 180;
-  return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, z));
 }
 
 // Initialise the map into containerEl. Returns a controller with helpers for the
@@ -134,19 +121,14 @@ function lat2y(lat, z) {
 export async function initMap(containerEl, opts = {}) {
   await loadLibs();
   const maplibregl = window.maplibregl;
-  const pmtiles = window.pmtiles;
-  if (!maplibregl || !pmtiles) throw new Error('map libraries unavailable');
+  if (!maplibregl) throw new Error('map library unavailable');
 
-  const url = tilesUrl();
-  const protocol = new pmtiles.Protocol();
-  maplibregl.addProtocol('pmtiles', protocol.tile);
-
-  const start = opts.center || { lng: 100.5018, lat: 13.7563 }; // Bangkok
+  const start = opts.center || { lng: 104.5, lat: 13.5 }; // centre on the region
   const map = new maplibregl.Map({
     container: containerEl,
-    style: basemapStyle(url),
+    style: basemapStyle(),
     center: [start.lng, start.lat],
-    zoom: opts.zoom || 11,
+    zoom: opts.zoom || 5.4,
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -191,33 +173,9 @@ export async function initMap(containerEl, opts = {}) {
   // tap empty map to drop a pin at that point
   map.on('click', (e) => { if (opts.onMapClick) opts.onMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng }); });
 
-  // download the visible area for offline use: warm the tile byte-ranges (the SW
-  // caches them). Caps the tile count to keep it sane on the planet source.
-  async function downloadVisibleArea(onProgress) {
-    const p = new pmtiles.PMTiles(url);
-    const b = map.getBounds();
-    const z0 = Math.max(8, Math.floor(map.getZoom()));
-    const zMax = Math.min(14, z0 + 2);
-    const jobs = [];
-    for (let z = z0; z <= zMax; z++) {
-      const xMin = lon2x(b.getWest(), z), xMax = lon2x(b.getEast(), z);
-      const yMin = lat2y(b.getNorth(), z), yMax = lat2y(b.getSouth(), z);
-      for (let x = xMin; x <= xMax; x++) for (let y = yMin; y <= yMax; y++) jobs.push([z, x, y]);
-    }
-    const capped = jobs.slice(0, 2000);
-    let done = 0;
-    for (const [z, x, y] of capped) {
-      try { await p.getZxy(z, x, y); } catch { /* tile may not exist; ignore */ }
-      done++; if (onProgress && done % 25 === 0) onProgress(done, capped.length);
-    }
-    if (onProgress) onProgress(capped.length, capped.length);
-    return { tiles: capped.length, capped: jobs.length > capped.length };
-  }
-
   return {
     map,
-    flyTo: (lng, lat, z = 14) => map.flyTo({ center: [lng, lat], zoom: z }),
-    downloadVisibleArea,
+    flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
   };
 }
 

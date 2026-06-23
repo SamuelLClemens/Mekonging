@@ -907,17 +907,11 @@ function collectionScreen(id) {
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Tap the map to drop a pin. Use the ⊕ locate button to find yourself (GPS works offline).'));
-  const tileBanner = h('div', { class: 'banner', style: 'display:none' });
-  wrap.append(tileBanner);
+  wrap.append(h('p', { class: 'map-hint' }, 'Fully offline — the region map, your GPS location, saved pins, rated places and routes all work with no connection. Tap the map to drop a pin; use the ⊕ locate button to find yourself.'));
 
-  const dlBtn = h('button', { class: 'btn', disabled: '' }, 'Download this area');
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
-  const clearBtn = h('button', { class: 'btn ghost', onclick: async () => {
-    const m = await import('./map.js'); await m.clearTileCache(); showStorage();
-  } }, 'Clear map cache');
   const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
-  const toolbar = h('div', { class: 'map-toolbar' }, [dlBtn, addBtn, storeBtn, clearBtn]);
+  const toolbar = h('div', { class: 'map-toolbar' }, [addBtn, storeBtn]);
   const storageOut = h('p', { class: 'map-hint' }, '');
   async function showStorage() {
     const m = await import('./map.js'); const e = await m.storageEstimate();
@@ -948,47 +942,21 @@ function mapScreen() {
   wrap.append(pinsCard);
   mount(wrap, '#map');
 
-  // lazy-init the heavy map libs; fall back to a simple GPS panel if they fail.
+  // lazy-init the map engine (vendored); fall back to a simple GPS panel if it fails.
   import('./map.js').then((m) => m.initMap(canvas, {
     onMapClick: (coords) => { pendingPinCoords = coords; go('#addpin'); },
     onOpen: (id) => go(`#place-${id}`),
-  })).then((ctrl) => {
-    dlBtn.removeAttribute('disabled');
-    // The basemap tiles come from an external source and need the network the first
-    // time. If they fail, explain it rather than leaving a blank canvas; pins + GPS
-    // still work, and the home-screen country map is fully offline.
-    let tileErrShown = false;
-    ctrl.map.on('error', () => {
-      if (tileErrShown) return; tileErrShown = true;
-      tileBanner.innerHTML = '';
-      tileBanner.append(
-        h('span', {}, 'The street-map tiles could not load — they need an internet connection the first time you open the map. Your GPS and saved pins still work. '),
-        h('button', { class: 'btn ghost', style: 'margin-top:6px', onclick: () => go('#home') }, 'Use the offline country map'),
-      );
-      tileBanner.style.display = '';
-    });
-    ctrl.map.on('idle', () => { if (!tileErrShown) tileBanner.style.display = 'none'; });
-    dlBtn.onclick = async () => {
-      dlBtn.textContent = 'Downloading…';
-      try {
-        const r = await ctrl.downloadVisibleArea((d, t) => { dlBtn.textContent = `Downloading ${d}/${t}…`; });
-        dlBtn.textContent = `Saved ${r.tiles} tiles ✓`;
-        showStorage();
-        setTimeout(() => { dlBtn.textContent = 'Download this area'; }, 2500);
-      } catch (err) { dlBtn.textContent = 'Download failed'; }
-    };
-    showStorage();
-  }).catch(() => {
+  })).then(() => { showStorage(); }).catch(() => {
     canvas.replaceWith(mapFallback());
-    dlBtn.remove(); storeBtn.remove(); clearBtn.remove();
+    storeBtn.remove();
   });
 }
 
-// Shown if the map libraries cannot load (e.g. offline before first map use).
+// Shown only if the map engine itself fails to load (rare; it is precached).
 function mapFallback() {
   const card = h('div', { class: 'card' }, [
-    h('h2', {}, 'Map unavailable offline yet'),
-    h('p', { class: 'muted' }, 'The map could not load. Open it once while online so the map engine is cached, then it will work offline. You can still capture your location and manage pins.'),
+    h('h2', {}, 'Map engine could not start'),
+    h('p', { class: 'muted' }, 'The map could not start on this device. You can still capture your GPS location below and manage your pins; the home-screen country map also works.'),
   ]);
   const out = h('p', {});
   card.append(h('button', { class: 'btn', onclick: () => {
