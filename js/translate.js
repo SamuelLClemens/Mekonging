@@ -13,16 +13,17 @@ export function isConfigured() {
   return !!(store.profile && store.profile.translateEndpoint);
 }
 
-// Translate `text` from English into the target language code ('th','vi','km','lo').
+// Translate `text` into the target language code ('th','vi','km','lo') from a chosen
+// source language (defaults to English; 'he' Hebrew is also offered in the UI).
 // Resolves to the translated string, or throws an Error the UI can surface.
-export async function translate(text, target) {
+export async function translate(text, target, source = 'en') {
   const endpoint = store.profile && store.profile.translateEndpoint;
   const key = store.profile && store.profile.translateKey;
   if (!endpoint) throw new Error('Live translate is not configured. Add an endpoint in Settings.');
   if (!navigator.onLine) throw new Error('You are offline. Use the phrasebook instead.');
 
   // LibreTranslate-compatible request shape. A proxy can adapt other providers.
-  const body = { q: text, source: 'en', target, format: 'text' };
+  const body = { q: text, source: source || 'en', target, format: 'text' };
   if (key) body.api_key = key;
 
   const res = await fetch(endpoint, {

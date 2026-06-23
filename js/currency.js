@@ -12,7 +12,7 @@ const FALLBACK = {
   base: 'USD', date: 'approximate', live: false,
   rates: {
     USD: 1, EUR: 0.92, GBP: 0.79, AUD: 1.52, CAD: 1.36, SGD: 1.35, CNY: 7.15, MYR: 4.7,
-    THB: 36, VND: 25400, KHR: 4100, LAK: 21800,
+    ILS: 3.7, THB: 36, VND: 25400, KHR: 4100, LAK: 21800,
   },
 };
 

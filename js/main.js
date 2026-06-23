@@ -242,7 +242,7 @@ function currencyScreen() {
 }
 
 function currencySelect(current) {
-  return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'THB', 'VND', 'KHR', 'LAK'], current, () => {});
+  return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'], current, () => {});
 }
 
 function countryChips(onPick, selected = activeCountry) {
@@ -335,14 +335,15 @@ function liveTranslateBox(code, label) {
     box.append(h('button', { class: 'btn ghost', onclick: () => go('#settings') }, 'Open Settings'));
     return box;
   }
-  const input = h('input', { class: 'search', type: 'text', placeholder: 'Type English…' });
+  const srcSel = selectEl([['en', 'From English'], ['he', 'From Hebrew (עברית)']], 'en', () => {});
+  const input = h('input', { class: 'search', type: 'text', placeholder: 'Type text to translate…' });
   const out = h('div', { class: 'muted' });
   const btn = h('button', { class: 'btn', onclick: async () => {
     out.textContent = 'Translating…';
-    try { out.textContent = await translate(input.value, code); }
+    try { out.textContent = await translate(input.value, code, srcSel.value); }
     catch (err) { out.textContent = err.message; }
   } }, `Translate to ${label}`);
-  box.append(input, btn, out);
+  box.append(srcSel, input, btn, out);
   return box;
 }
 
@@ -1149,7 +1150,7 @@ function calendarAddScreen() {
   const title = h('input', { type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch' });
   const place = h('input', { type: 'text', placeholder: 'Where' });
   const cost = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Cost' });
-  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP'], c ? c.currency : 'THB', () => {});
+  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], c ? c.currency : 'THB', () => {});
   const note = h('textarea', { class: 'ta', placeholder: 'Plan details, or a review once you have been' });
   const stars = h('div', { class: 'stars' });
   const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
@@ -1580,7 +1581,7 @@ function settingsScreen() {
     type: 'text', value: p.name, oninput: (e) => { p.name = e.target.value; save(); },
   })));
 
-  card.append(field('Home currency', selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD'], p.homeCurrency,
+  card.append(field('Home currency', selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'ILS'], p.homeCurrency,
     (v) => { p.homeCurrency = v; save(); })));
 
   card.append(field('Default phrasebook language',
