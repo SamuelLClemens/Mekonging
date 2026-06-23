@@ -379,6 +379,12 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .ctry-group:focus { outline: none; }
 .ctry-group:focus-visible .ctry { stroke-width: 4; }
 .ctry-label { pointer-events: none; }
+/* the Mekong River, drawn over the country fills and under the labels */
+.mekong-group { pointer-events: none; }
+.mekong-casing { fill: none; stroke: #FFFDF5; stroke-width: 8.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; }
+.mekong { fill: none; stroke: #2C7DA0; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.mekong-name { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: 3px;
+  fill: #1B5C7A; paint-order: stroke; stroke: rgba(255,253,245,0.92); stroke-width: 4px; stroke-linejoin: round; }
 .ctry-flag { font-size: 52px; }
 .ctry-name {
   font-family: inherit; font-weight: 800; font-size: 34px; fill: #fff;

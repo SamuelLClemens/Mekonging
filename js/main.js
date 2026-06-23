@@ -33,7 +33,7 @@ import {
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
-import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX } from './data/geo.js';
+import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
 if ('serviceWorker' in navigator) {
@@ -163,20 +163,30 @@ function homeScreen() {
 const REGION_COLORS = { th: '#C25E3A', vi: '#9C5780', kh: '#E0A526', la: '#6E9A52' };
 
 function regionPicker() {
-  const paths = COUNTRIES.map((c) => {
+  // Z-order: country fills (clickable) → the Mekong → labels on top (so a name is
+  // never hidden by the river).
+  const shapes = COUNTRIES.map((c) => {
+    if (!REGION_PATHS[c.id]) return '';
+    return `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
+         <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
+       </g>`;
+  }).join('');
+  const river = REGION_RIVER ? `<g class="mekong-group" aria-hidden="true">
+         <path class="mekong-casing" d="${REGION_RIVER}"/>
+         <path id="mk-river-path" class="mekong" d="${REGION_RIVER}"/>
+         <text class="mekong-name" dy="-7"><textPath href="#mk-river-path" startOffset="38%">~ Mekong ~</textPath></text>
+       </g>` : '';
+  const labels = COUNTRIES.map((c) => {
     if (!REGION_PATHS[c.id]) return '';
     // REGION_LABELS is each country's pole of inaccessibility — its true visual centre.
     const [lx, ly] = REGION_LABELS[c.id];
-    return `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
-         <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
-         <g class="ctry-label">
-           <text class="ctry-flag" x="${lx}" y="${ly - 8}" text-anchor="middle">${c.flag}</text>
-           <text class="ctry-name" x="${lx}" y="${ly + 26}" text-anchor="middle">${esc(c.name)}</text>
-         </g>
+    return `<g class="ctry-label" aria-hidden="true">
+         <text class="ctry-flag" x="${lx}" y="${ly - 8}" text-anchor="middle">${c.flag}</text>
+         <text class="ctry-name" x="${lx}" y="${ly + 26}" text-anchor="middle">${esc(c.name)}</text>
        </g>`;
   }).join('');
-  const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam" xmlns="http://www.w3.org/2000/svg">
-      ${paths}
+  const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam, with the Mekong River" xmlns="http://www.w3.org/2000/svg">
+      ${shapes}${river}${labels}
     </svg>`;
   const box = h('div', { class: 'region-map', html: svg });
   box.querySelectorAll('.ctry-group').forEach((g) => {
@@ -185,7 +195,7 @@ function regionPicker() {
     g.addEventListener('click', enter);
     g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); } });
   });
-  box.append(h('span', { class: 'region-cap' }, 'Tap a country to explore it'));
+  box.append(h('span', { class: 'region-cap' }, 'Tap a country to explore · the Mekong runs through all four'));
   return box;
 }
 
