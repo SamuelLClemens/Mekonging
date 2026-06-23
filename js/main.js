@@ -22,6 +22,7 @@ import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, defaultSpot, getCachedWeather, refreshWeather } from './weather.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -114,6 +115,7 @@ function homeScreen() {
     { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
     { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
     { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
+    { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
@@ -184,6 +186,7 @@ function countryHubScreen(id) {
     { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
     { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
     { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
+    { ic: '⛅', t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
     { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
@@ -1232,6 +1235,87 @@ function calendarAddScreen() {
   mount(wrap, '#home');
 }
 
+// ---- WEATHER + FORECAST -----------------------------------------------------
+let weatherKey = '';   // remembered city selection across renders
+function wxAgo(ts) {
+  if (!ts) return 'never';
+  const m = Math.round((Date.now() - ts) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const hr = Math.round(m / 60);
+  if (hr < 24) return `${hr} h ago`;
+  return `${Math.round(hr / 24)} d ago`;
+}
+function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return d; } }
+
+function weatherScreen(country) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Weather & forecast', '#home'));
+  if (country) weatherKey = spotKey(defaultSpot(country));
+  if (!weatherKey) weatherKey = spotKey(defaultSpot(activeCountry || 'th'));
+  const spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
+
+  const chips = h('div', { class: 'chips' }, WEATHER_SPOTS.map((s) => {
+    const c = getCountry(s.country);
+    return h('button', { class: 'chip', 'aria-pressed': spotKey(s) === weatherKey ? 'true' : 'false',
+      onclick: () => { weatherKey = spotKey(s); render(); } }, `${c ? c.flag : ''} ${s.city}`);
+  }));
+  wrap.append(chips);
+
+  const body = h('div', {});
+  wrap.append(body);
+
+  function paint(rec, loading) {
+    body.innerHTML = '';
+    if (!rec) {
+      body.append(h('div', { class: 'card' }, [
+        h('p', {}, loading ? 'Fetching the latest forecast…' : 'No saved forecast yet for this city.'),
+        h('p', { class: 'muted' }, 'Connect to the internet once and tap Refresh to download it. The forecast is then stored on your device for offline viewing.'),
+      ]));
+    } else {
+      const [clabel, cemoji] = wmo(rec.current.code);
+      body.append(h('div', { class: 'card' }, [
+        h('div', { class: 'row-between' }, [
+          h('span', { style: 'font-size:44px;line-height:1' }, cemoji),
+          h('div', { style: 'text-align:right' }, [
+            h('div', { style: 'font-size:34px;font-weight:800' }, `${Math.round(rec.current.temp)}°C`),
+            h('div', { class: 'muted' }, clabel),
+          ]),
+        ]),
+        h('div', { class: 'muted', style: 'margin-top:8px' }, `${spot.city} · Humidity ${rec.current.humidity}% · Wind ${Math.round(rec.current.wind)} km/h`),
+      ]));
+      const fc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '7-day forecast')]);
+      rec.daily.forEach((d) => {
+        const [dl, de] = wmo(d.code);
+        fc.append(h('div', { class: 'row-between', style: 'padding:7px 0;border-top:1px solid rgba(0,0,0,0.07)' }, [
+          h('span', { style: 'min-width:40px;font-weight:700' }, wxDay(d.date)),
+          h('span', { style: 'font-size:20px' }, de),
+          h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rain != null ? ` · 💧${d.rain}%` : ''}`),
+          h('span', { style: 'font-weight:700' }, `${Math.round(d.tmin)}° / ${Math.round(d.tmax)}°`),
+        ]));
+      });
+      body.append(fc);
+      body.append(h('p', { class: 'muted', style: 'text-align:center' }, `Last updated ${wxAgo(rec.fetchedAt)}${navigator.onLine ? '' : ' · offline'}`));
+    }
+    const refreshBtn = h('button', { class: 'btn block' }, 'Refresh (needs internet)');
+    refreshBtn.addEventListener('click', async () => {
+      refreshBtn.textContent = 'Refreshing…'; refreshBtn.disabled = true;
+      const r = await refreshWeather(spot); paint(r, false);
+    });
+    body.append(refreshBtn);
+  }
+
+  const cached = getCachedWeather(weatherKey);
+  paint(cached, !cached && navigator.onLine);
+  // Background refresh when online; repaint only if still on this city's screen.
+  if (navigator.onLine) {
+    refreshWeather(spot).then((r) => {
+      if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
+    });
+  }
+  mount(wrap, '#home');
+}
+
 // ---- FESTIVALS & EVENTS -----------------------------------------------------
 function todayISO() { try { return new Date().toISOString().slice(0, 10); } catch { return '2026-01-01'; } }
 function addDaysISO(iso, n) {
@@ -1852,6 +1936,7 @@ function render() {
       case 'calendar': return calendarDispatch(arg);
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
+      case 'weather': return weatherScreen(arg);
       case 'nature': return natureScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
