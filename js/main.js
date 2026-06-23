@@ -19,7 +19,7 @@ import {
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
 } from './vault.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
-import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
+import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, defaultSpot, getCachedWeather, refreshWeather } from './weather.js';
@@ -348,7 +348,7 @@ function phrasebookScreen(lang) {
   const voiceOk = hasVoiceFor(book.locale);
   if (!voiceOk) {
     wrap.append(h('div', { class: 'banner' },
-      `Tap-to-speak is unavailable for ${book.label} on this device — the script and pronunciation are still shown.`));
+      `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
   }
   if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
 
@@ -391,8 +391,8 @@ function phrasebookScreen(lang) {
             p.note ? h('div', { class: 'note' }, p.note) : null,
           ]),
           h('button', {
-            class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: !voiceOk ? '' : null,
-            onclick: () => speak(p.script, book.locale),
+            class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: canSay(book.locale) ? null : '',
+            onclick: () => say(p.script, book.locale),
           }, '🔊'),
         ]));
       }
@@ -422,12 +422,12 @@ function liveTranslateBox(code, label, locale) {
       const res = await translate(text, code, srcSel.value);
       out.innerHTML = '';
       out.append(h('div', { class: 'native', style: 'font-size:23px;line-height:1.35' }, res));
-      const canSpeak = hasVoiceFor(locale);
-      const speakBtn = h('button', { class: 'btn', disabled: canSpeak ? null : '', onclick: () => speak(res, locale) },
-        canSpeak ? '🔊 Hear it' : '🔇 No device voice');
+      const able = canSay(locale);
+      const speakBtn = h('button', { class: 'btn', disabled: able ? null : '', onclick: () => say(res, locale) },
+        able ? '🔊 Hear it' : '🔇 Voice needs internet');
       out.append(speakBtn);
-      if (!canSpeak) out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, `Your device has no ${label} voice installed, so audio is unavailable — the text above is correct to show or copy.`));
-      else speak(res, locale);   // auto-speak on success
+      if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
+      else say(res, locale);   // best-effort auto-play; the button always works (direct tap)
     } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
   };
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(); } });
@@ -1363,6 +1363,8 @@ function dishScreen(id) {
   wrap.append(topbar(d ? d.name : 'Dish', '#food'));
   if (!d) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
   const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
+  const dc = getCountry(d.country);
+  const dLocale = (dc && getLanguage(dc.lang)) ? getLanguage(dc.lang).locale : '';
   const tagRow = 'display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';
   const card = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
@@ -1371,6 +1373,7 @@ function dishScreen(id) {
     ]),
     d.localName ? h('div', { class: 'native' }, d.localName) : null,
     d.roman ? h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), d.roman]) : null,
+    (d.localName && canSay(dLocale)) ? h('button', { class: 'btn ghost', style: 'margin:4px 0', onclick: () => say(d.localName, dLocale) }, '🔊 Hear the name (show a local)') : null,
     h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
     d.description ? h('p', {}, d.description) : null,
   ]);
@@ -1441,14 +1444,17 @@ function produceDetail(id) {
   wrap.append(topbar(p ? p.name : 'Produce', '#produce'));
   if (!p) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
   const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
-  const langs = [['th', '🇹🇭'], ['vi', '🇻🇳'], ['km', '🇰🇭'], ['lo', '🇱🇦']];
+  const langs = [['th', '🇹🇭', 'th-TH'], ['vi', '🇻🇳', 'vi-VN'], ['km', '🇰🇭', 'km-KH'], ['lo', '🇱🇦', 'lo-LA']];
   const card = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
       h('strong', {}, `${p.emoji || ''} ${p.name}`),
       cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
     ]),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:8px 0' },
-      langs.filter(([k]) => p.names && p.names[k]).map(([k, flag]) => h('span', { class: 'cat-tag' }, `${flag} ${p.names[k]}`))),
+    h('p', { class: 'muted', style: 'margin:6px 0 2px' }, 'Local names (tap 🔊 to hear):'),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px' },
+      langs.filter(([k]) => p.names && p.names[k]).map(([k, flag, loc]) => (canSay(loc)
+        ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(p.names[k], loc) }, `${flag} ${p.names[k]} 🔊`)
+        : h('span', { class: 'cat-tag' }, `${flag} ${p.names[k]}`)))),
   ]);
   if (p.season) card.append(h('h3', {}, 'In season'), h('p', {}, p.season));
   if (p.taste) card.append(h('h3', {}, 'Taste'), h('p', {}, p.taste));

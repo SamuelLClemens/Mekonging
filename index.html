@@ -6,7 +6,7 @@
        The app is fully self-hosted and offline-first. The optional live-translate
        feature (js/translate.js) calls a user-configured endpoint; enabling it
        requires adding that origin to connect-src below (documented in Settings). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://demo-bucket.protomaps.com https://open.er-api.com https://api.open-meteo.com https://api.mymemory.translated.net; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob: https://translate.google.com; worker-src 'self' blob:; connect-src 'self' https://demo-bucket.protomaps.com https://open.er-api.com https://api.open-meteo.com https://api.mymemory.translated.net; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Mekonging — travel Thailand, Vietnam, Cambodia & Laos like an expert</title>

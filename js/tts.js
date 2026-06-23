@@ -57,3 +57,37 @@ export function speak(text, locale) {
 export function stop() {
   try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch { /* ignore */ }
 }
+
+// Online voice fallback for languages with NO device voice (Khmer and Lao are almost
+// always missing). Uses Google Translate's TTS over an <audio> element (audio playback
+// is not CORS-restricted; the origin must be in the page CSP media-src). Needs the
+// network. Returns a Promise that resolves when playback starts/ends, rejects otherwise.
+const TTS_LANG = { 'th-TH': 'th', 'vi-VN': 'vi', 'km-KH': 'km', 'lo-LA': 'lo', 'he-IL': 'iw', 'en-US': 'en' };
+export function speakOnline(text, locale) {
+  return new Promise((resolve, reject) => {
+    const t = (text || '').trim();
+    if (!t) { reject(new Error('no text')); return; }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { reject(new Error('offline')); return; }
+    const lang = TTS_LANG[locale] || (locale || 'en').split('-')[0];
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(t.slice(0, 200))}`;
+    try {
+      const a = new Audio(url);
+      a.addEventListener('ended', () => resolve(true));
+      a.addEventListener('error', () => reject(new Error('audio failed')));
+      const p = a.play();
+      if (p && p.then) p.then(() => resolve(true), (e) => reject(e));
+    } catch (e) { reject(e); }
+  });
+}
+
+// Best path to pronounce `text` in `locale`: device voice if installed (works offline),
+// otherwise the online fallback. Returns 'device' | 'online' | false.
+export async function say(text, locale) {
+  if (hasVoiceFor(locale) && speak(text, locale)) return 'device';
+  try { await speakOnline(text, locale); return 'online'; } catch { return false; }
+}
+
+// Can we pronounce this locale at all right now (device voice, or online)?
+export function canSay(locale) {
+  return hasVoiceFor(locale) || (typeof navigator === 'undefined' || navigator.onLine !== false);
+}
