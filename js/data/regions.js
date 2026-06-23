@@ -51,6 +51,10 @@ import { FOOD_TH } from './food.th.js';
 import { FOOD_VI } from './food.vi.js';
 import { FOOD_KH } from './food.kh.js';
 import { FOOD_LA } from './food.la.js';
+import { FOOD_TH_EXT } from './food.th.ext.js';
+import { FOOD_VI_EXT } from './food.vi.ext.js';
+import { FOOD_KH_EXT } from './food.kh.ext.js';
+import { FOOD_LA_EXT } from './food.la.ext.js';
 
 export const LANGUAGES = {
   th: PHRASEBOOK_TH,
@@ -67,22 +71,22 @@ export const COUNTRIES = [
   {
     id: 'th', name: 'Thailand', flag: '🇹🇭', currency: 'THB', lang: 'th',
     cities: ['Bangkok', 'Chiang Mai', 'Krabi', 'Koh Lanta', 'Pai'],
-    places: [...PLACES_TH, ...PLACES_TH_EXT], prices: PRICES_TH, routes: ROUTES_TH, info: INFO_TH, guide: GUIDE_TH, events: EVENTS_TH.events, food: FOOD_TH.dishes,
+    places: [...PLACES_TH, ...PLACES_TH_EXT], prices: PRICES_TH, routes: ROUTES_TH, info: INFO_TH, guide: GUIDE_TH, events: EVENTS_TH.events, food: [...FOOD_TH.dishes, ...FOOD_TH_EXT],
   },
   {
     id: 'vi', name: 'Vietnam', flag: '🇻🇳', currency: 'VND', lang: 'vi',
     cities: ['Hanoi', 'Ho Chi Minh City', 'Hoi An', 'Da Nang'],
-    places: [...PLACES_VI, ...PLACES_VI_EXT], prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI, guide: GUIDE_VI, events: EVENTS_VI.events, food: FOOD_VI.dishes,
+    places: [...PLACES_VI, ...PLACES_VI_EXT], prices: PRICES_VI, routes: ROUTES_VI, info: INFO_VI, guide: GUIDE_VI, events: EVENTS_VI.events, food: [...FOOD_VI.dishes, ...FOOD_VI_EXT],
   },
   {
     id: 'kh', name: 'Cambodia', flag: '🇰🇭', currency: 'KHR', lang: 'km',
     cities: ['Phnom Penh', 'Siem Reap'],
-    places: [...PLACES_KH, ...PLACES_KH_EXT], prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH, guide: GUIDE_KH, events: EVENTS_KH.events, food: FOOD_KH.dishes,
+    places: [...PLACES_KH, ...PLACES_KH_EXT], prices: PRICES_KH, routes: ROUTES_KH, info: INFO_KH, guide: GUIDE_KH, events: EVENTS_KH.events, food: [...FOOD_KH.dishes, ...FOOD_KH_EXT],
   },
   {
     id: 'la', name: 'Laos', flag: '🇱🇦', currency: 'LAK', lang: 'lo',
     cities: ['Vientiane', 'Luang Prabang'],
-    places: [...PLACES_LA, ...PLACES_LA_EXT], prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA, guide: GUIDE_LA, events: EVENTS_LA.events, food: FOOD_LA.dishes,
+    places: [...PLACES_LA, ...PLACES_LA_EXT], prices: PRICES_LA, routes: ROUTES_LA, info: INFO_LA, guide: GUIDE_LA, events: EVENTS_LA.events, food: [...FOOD_LA.dishes, ...FOOD_LA_EXT],
   },
 ];
 

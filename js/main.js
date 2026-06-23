@@ -33,6 +33,7 @@ import {
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
+import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
@@ -138,6 +139,7 @@ function homeScreen() {
     { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
     { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
     { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
+    { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
     { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
@@ -1425,6 +1427,73 @@ function dishScreen(id) {
   mount(wrap, '#home');
 }
 
+// ---- MARKET PRODUCE GUIDE (fruit / vegetable / herb) ------------------------
+let produceQuery = '';
+let produceCat = '';
+function produceCard(p) {
+  const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
+  return h('button', { class: 'card species-card', onclick: () => go(`#produce-${p.id}`) }, [
+    h('span', { class: 'species-emoji' }, p.emoji || (cat ? cat.emoji : '🍈')),
+    h('span', { class: 'grow' }, [
+      h('div', { class: 'en' }, p.name),
+      h('div', { class: 'sci' }, `${(p.names && p.names.th) || ''}${p.season ? ' · ' + p.season : ''}`),
+    ]),
+  ]);
+}
+function produceScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Market produce', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
+  const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(PRODUCE_CATEGORIES);
+  const chips = h('div', { class: 'chips' }, cats.map((g) =>
+    h('button', { class: 'chip', 'aria-pressed': produceCat === g.id ? 'true' : 'false', dataset: { g: g.id },
+      onclick: () => { produceCat = g.id; chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
+      `${g.emoji} ${g.label}`)));
+  wrap.append(chips);
+  const search = h('input', { class: 'search', type: 'search', placeholder: 'Search produce…', value: produceQuery,
+    oninput: debounce((e) => { produceQuery = e.target.value; renderList(); }, 120) });
+  wrap.append(search);
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderList() {
+    listEl.innerHTML = '';
+    let items = produceByCategory(produceCat);
+    const q = produceQuery.trim().toLowerCase();
+    if (q) items = items.filter((p) => p.name.toLowerCase().includes(q)
+      || Object.values(p.names || {}).some((n) => (n || '').toLowerCase().includes(q) || (n || '').includes(produceQuery.trim())));
+    if (!items.length) { listEl.append(h('p', { class: 'empty' }, 'No produce matches.')); return; }
+    items.forEach((p) => listEl.append(produceCard(p)));
+  }
+  renderList();
+  mount(wrap, '#home');
+}
+function produceDetail(id) {
+  const p = getProduce(id);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(p ? p.name : 'Produce', '#produce'));
+  if (!p) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
+  const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
+  const langs = [['th', '🇹🇭'], ['vi', '🇻🇳'], ['km', '🇰🇭'], ['lo', '🇱🇦']];
+  const card = h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('strong', {}, `${p.emoji || ''} ${p.name}`),
+      cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
+    ]),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:8px 0' },
+      langs.filter(([k]) => p.names && p.names[k]).map(([k, flag]) => h('span', { class: 'cat-tag' }, `${flag} ${p.names[k]}`))),
+  ]);
+  if (p.season) card.append(h('h3', {}, 'In season'), h('p', {}, p.season));
+  if (p.taste) card.append(h('h3', {}, 'Taste'), h('p', {}, p.taste));
+  if (p.howToEat) card.append(h('h3', {}, 'How to eat'), h('p', {}, p.howToEat));
+  if (p.selectTip) card.append(h('h3', {}, 'Picking a good one'), h('p', {}, p.selectTip));
+  if (p.caution) card.append(h('div', { class: 'warn-note', style: 'margin-top:8px' }, `⚠ ${p.caution}`));
+  if (p.price) card.append(h('p', { style: 'margin-top:10px' }, [h('strong', {}, 'Typical price: '), `${priceLine(p.price.low, p.price.high, p.price.currency)}${p.price.unit ? ' ' + p.price.unit : ''}`]));
+  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Sources: ${p.sources.join('; ')}`));
+  wrap.append(card);
+  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${p.name} fruit vegetable`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
+  mount(wrap, '#home');
+}
+
 // ---- WEATHER + FORECAST -----------------------------------------------------
 let weatherKey = '';   // remembered city selection across renders
 function wxAgo(ts) {
@@ -2354,6 +2423,7 @@ function render() {
       case 'schedules': return schedulesScreen(arg);
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);
+      case 'produce': return arg ? produceDetail(arg) : produceScreen();
       case 'nature': return natureScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();

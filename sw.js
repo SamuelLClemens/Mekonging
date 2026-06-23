@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.26.0';
+const CACHE_VERSION = 'mk-v0.27.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['demo-bucket.protomaps.com'];
 
@@ -77,6 +77,11 @@ const PRECACHE = [
   'js/data/food.vi.js',
   'js/data/food.kh.js',
   'js/data/food.la.js',
+  'js/data/food.th.ext.js',
+  'js/data/food.vi.ext.js',
+  'js/data/food.kh.ext.js',
+  'js/data/food.la.ext.js',
+  'js/data/produce.js',
   'js/data/schedules.js',
 ];
 
