@@ -7,7 +7,11 @@ import {
   addPin, deletePin, getPin, getPlaceData, setPlaceField,
   addJournalEntry, deleteJournalEntry, journalEntries,
   addCalendarItem, deleteCalendarItem,
+  isChecked, toggleChecklistItem,
+  addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
 } from './state.js';
+import { CHECKLIST } from './data/checklist.js';
+import { putBlob, getBlob, delBlob } from './idb.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -28,6 +32,7 @@ function applyTheme() {
   const root = document.documentElement;
   root.setAttribute('data-theme', store.profile.theme === 'dark' ? 'dark' : 'light');
   root.setAttribute('data-reduced-motion', prefersReducedMotion() ? 'on' : 'off');
+  root.setAttribute('data-text', store.profile.textScale || 'm');
 }
 
 // ---- UI state ---------------------------------------------------------------
@@ -87,9 +92,12 @@ function homeScreen() {
   const tiles = [
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+    { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
+    { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
     { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
     { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+    { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
@@ -947,10 +955,15 @@ function journalEntryScreen(id) {
     h('h2', { class: 'entry-title' }, e.title),
     h('div', { class: 'entry-body' }, (e.text || '').split('\n').map((p) => h('p', {}, p))),
   ]);
+  if (e.photoKey) {
+    const img = h('img', { class: 'entry-photo', alt: 'Journal photo' });
+    page.insertBefore(img, page.children[1]); // just below the stamp
+    getBlob(e.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+  }
   wrap.append(page);
   wrap.append(h('div', { class: 'row-between', style: 'margin-top:14px' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
-    h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
+    h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { if (e.photoKey) delBlob(e.photoKey); deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
   ]));
   mount(wrap, '#home');
@@ -963,6 +976,7 @@ function addJournalScreen() {
   const title = h('input', { type: 'text', placeholder: 'A title for this memory' });
   const text = h('textarea', { class: 'ta', placeholder: 'What happened? What did you see, eat, feel?' });
   const place = h('input', { type: 'text', placeholder: 'Place (e.g. Hoi An old town)' });
+  const photoInput = h('input', { type: 'file', accept: 'image/*', capture: 'environment' });
   const locOut = h('p', { class: 'muted' }, 'Entry is stamped with the current date and time automatically.');
   const card = h('div', { class: 'card' }, [
     field('Title', title), field('Your entry', text), field('Place', place),
@@ -976,11 +990,15 @@ function addJournalScreen() {
       } }, '📍 Stamp my location'),
       locOut,
     ])),
+    field('Photo (optional)', photoInput),
   ]);
   wrap.append(card);
-  wrap.append(h('button', { class: 'btn block', onclick: () => {
+  wrap.append(h('button', { class: 'btn block', onclick: async () => {
     if (!title.value.trim() && !text.value.trim()) { alert('Write something first.'); return; }
-    addJournalEntry({ title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords });
+    let photoKey = null;
+    const f = photoInput.files && photoInput.files[0];
+    if (f) { photoKey = `jrphoto-${Date.now()}-${Math.floor(Math.random() * 1e6)}`; try { await putBlob(photoKey, f); } catch { photoKey = null; } }
+    addJournalEntry({ title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKey });
     go('#journal-open');
   } }, 'Save to journal'));
   mount(wrap, '#home');
@@ -1103,6 +1121,14 @@ function natureScreen() {
       `${g.emoji} ${g.label}`)));
   wrap.append(groupChips);
 
+  wrap.append(h('div', { class: 'card' }, [
+    h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Have a photo? Identify it online (needs internet):'),
+    h('div', { class: 'row-between' }, [
+      h('a', { class: 'btn ghost', href: 'https://lens.google.com/', target: '_blank', rel: 'noopener' }, 'Google Lens ↗'),
+      h('a', { class: 'btn ghost', href: 'https://www.inaturalist.org/observations/identify', target: '_blank', rel: 'noopener' }, 'iNaturalist ↗'),
+    ]),
+  ]));
+
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
@@ -1150,6 +1176,116 @@ function speciesScreen(id) {
   if (s.localNames && s.localNames.length) card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
   wrap.append(card);
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
+  mount(wrap, '#home');
+}
+
+// ---- TRIP PLANNER (itinerary + budget) --------------------------------------
+function tripScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('My Trip', '#home'));
+
+  // itinerary
+  const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);
+  const stops = store.trip.stops;
+  if (!stops.length) itin.append(h('p', { class: 'muted' }, 'Add the places or cities you plan to visit, in order.'));
+  stops.forEach((s, i) => itin.append(h('div', { class: 'row-between trip-stop' }, [
+    h('div', {}, [h('strong', {}, `${i + 1}. ${s.title}`), s.date ? h('div', { class: 'muted' }, s.date) : null]),
+    h('div', { class: 'cats' }, [
+      h('button', { class: 'chip', 'aria-label': 'Move up', disabled: i === 0 ? '' : null, onclick: () => { moveStop(s.id, -1); go('#trip'); } }, '↑'),
+      h('button', { class: 'chip', 'aria-label': 'Move down', disabled: i === stops.length - 1 ? '' : null, onclick: () => { moveStop(s.id, 1); go('#trip'); } }, '↓'),
+      h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { removeStop(s.id); go('#trip'); } }, '✕'),
+    ]),
+  ])));
+  const stopName = h('input', { type: 'text', placeholder: 'Place or city' });
+  const stopDate = h('input', { type: 'date' });
+  itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName, stopDate,
+    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: activeCountry, date: stopDate.value }); go('#trip'); } } }, 'Add stop')]));
+  // quick add from saved
+  const saved = store.favorites.map(resolveItem).filter(Boolean);
+  if (saved.length) {
+    itin.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Quick-add from saved:'));
+    itin.append(h('div', { class: 'chips' }, saved.slice(0, 12).map((p) => h('button', { class: 'chip', onclick: () => { addStop({ title: p.name, country: p.country }); go('#trip'); } }, p.name))));
+  }
+  wrap.append(itin);
+
+  // budget log
+  const bud = h('div', { class: 'card' }, [h('h2', {}, 'Budget log')]);
+  const totals = {};
+  store.trip.budgetLog.forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
+  if (Object.keys(totals).length) bud.append(h('p', { class: 'fair' }, 'Total: ' + Object.entries(totals).map(([c, v]) => `${v.toLocaleString()} ${c}`).join(' · ')));
+  store.trip.budgetLog.forEach((b) => bud.append(h('div', { class: 'row-between price-item' }, [
+    h('span', {}, `${b.date} · ${b.note || 'spend'}`), h('span', {}, [h('strong', {}, `${b.amount} ${b.currency}`), ' ',
+      h('button', { class: 'chip', onclick: () => { deleteBudgetItem(b.id); go('#trip'); } }, '✕')]),
+  ])));
+  const bAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
+  const c = getCountry(activeCountry);
+  const bCur = currencySelect(c ? c.currency : 'THB');
+  const bNote = h('input', { type: 'text', placeholder: 'On what?' });
+  bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log a spend'), bAmt, bCur, bNote,
+    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim() }); go('#trip'); } } }, 'Add spend')]));
+  wrap.append(bud);
+  mount(wrap, '#home');
+}
+
+// ---- BARGAIN HELPER ---------------------------------------------------------
+const BARGAIN = {
+  market: { label: 'Market / souvenirs', open: 0.4, aim: 0.6, tip: 'Start around 40% of the asking price and settle near 60%. Smile, stay friendly, and be ready to walk away politely.' },
+  clothing: { label: 'Clothing / tailor', open: 0.5, aim: 0.7, tip: 'Open near half; bundle several items for a better rate.' },
+  tuktuk: { label: 'Tuk-tuk / taxi', open: 0.5, aim: 0.6, tip: 'Better still: insist on the meter or use Grab/Bolt for an upfront price.' },
+  tour: { label: 'Tour / activity', open: 0.6, aim: 0.8, tip: 'Compare two or three operators; book direct rather than via a tout.' },
+};
+function bargainScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Bargain helper', '#home'));
+  const c = getCountry(activeCountry);
+  const price = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Asking price' });
+  const cur = currencySelect(c ? c.currency : 'THB');
+  const ctx = selectEl(Object.entries(BARGAIN).map(([k, v]) => [k, v.label]), 'market', () => {});
+  const out = h('div', { class: 'card' });
+  function recompute() {
+    out.innerHTML = '';
+    const v = parseFloat(price.value) || 0;
+    const b = BARGAIN[ctx.value];
+    if (!v) { out.append(h('p', { class: 'muted' }, 'Enter the asking price to get a suggested counter-offer.')); return; }
+    out.append(h('h3', {}, 'Suggested counter'));
+    out.append(h('p', { class: 'fx-result' }, `Open at ${Math.round(v * b.open).toLocaleString()} ${cur.value}, aim for about ${Math.round(v * b.aim).toLocaleString()} ${cur.value}.`));
+    out.append(h('p', {}, b.tip));
+    out.append(h('button', { class: 'btn ghost', onclick: () => go(`#prices-${activeCountry}`) }, 'Check fair prices'));
+  }
+  price.addEventListener('input', debounce(recompute, 120));
+  cur.addEventListener('change', recompute); ctx.addEventListener('change', recompute);
+  wrap.append(h('div', { class: 'card' }, [field('Asking price', price), field('Currency', cur), field('What are you buying?', ctx)]));
+  wrap.append(out);
+  recompute();
+  mount(wrap, '#home');
+}
+
+// ---- PRE-TRIP CHECKLIST -----------------------------------------------------
+const CK_CAT = { documents: '🛂 Documents', health: '💊 Health', money: '💳 Money', connectivity: '📶 Connectivity', packing: '🎒 Packing', safety: '🛡 Safety & laws' };
+function checklistScreen(countryId) {
+  if (countryId) activeCountry = countryId;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Pre-trip checklist', '#home'));
+  wrap.append(countryChips((id) => go(`#checklist-${id}`)));
+  const items = CHECKLIST[activeCountry] || [];
+  if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'The checklist is being prepared — reconnect once to download it.')); mount(wrap, '#home'); return; }
+  const done = items.filter((it) => isChecked(it.id)).length;
+  wrap.append(h('div', { class: 'banner' }, `${done} of ${items.length} done`));
+  // group by category in CK_CAT order
+  Object.keys(CK_CAT).forEach((cat) => {
+    const group = items.filter((it) => it.cat === cat);
+    if (!group.length) return;
+    wrap.append(h('h2', { class: 'cat-title' }, CK_CAT[cat]));
+    group.forEach((it) => {
+      const row = h('label', { class: 'ck-row' }, [
+        h('input', { type: 'checkbox', checked: isChecked(it.id) ? '' : null, onchange: () => { toggleChecklistItem(it.id); row.classList.toggle('done'); } }),
+        h('div', { class: 'grow' }, [h('strong', {}, it.title), it.detail ? h('div', { class: 'muted' }, it.detail) : null,
+          it.link ? h('a', { href: it.link, target: '_blank', rel: 'noopener' }, 'Official link ↗') : null]),
+      ]);
+      if (isChecked(it.id)) row.classList.add('done');
+      wrap.append(row);
+    });
+  });
   mount(wrap, '#home');
 }
 
@@ -1264,6 +1400,9 @@ function settingsScreen() {
 
   card.append(field('Reduce motion', selectEl([['auto', 'Auto (system)'], ['on', 'On'], ['off', 'Off']], p.reducedMotion,
     (v) => { p.reducedMotion = v; save(); applyTheme(); })));
+
+  card.append(field('Text size', selectEl([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], p.textScale || 'm',
+    (v) => { p.textScale = v; save(); applyTheme(); })));
   wrap.append(card);
 
   // live translate
@@ -1327,6 +1466,9 @@ function render() {
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
       case 'sos': return sosScreen();
+      case 'trip': return tripScreen();
+      case 'bargain': return bargainScreen();
+      case 'checklist': return checklistScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

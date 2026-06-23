@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 function defaults() {
   return {
@@ -24,6 +24,7 @@ function defaults() {
       translateKey: '',
       theme: 'light',           // 'light' | 'dark'
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
+      textScale: 'm',           // 's' | 'm' | 'l' — accessibility text size
       seenWelcome: false,
     },
     favorites: [],              // item ids (curated place or pin) saved as a quick shortlist
@@ -45,6 +46,8 @@ function defaults() {
     journal: { entries: [] },   // { id, ts(ISO), date, title, text, place, coords:{lat,lng}|null }
     // booked stays / meals / activities with cost + rating.
     calendar: { items: [] },    // { id, date, type:'stay'|'meal'|'activity', title, place, cost, currency, rating, note }
+    // --- v5: pre-trip checklist progress (per item id) ---
+    checklist: { checked: {} },
   };
 }
 
@@ -66,6 +69,7 @@ function migrate(data) {
     trip: { ...base.trip, ...(data.trip || {}) },
     journal: { entries: Array.isArray((data.journal || {}).entries) ? data.journal.entries : [] },
     calendar: { items: Array.isArray((data.calendar || {}).items) ? data.calendar.items : [] },
+    checklist: { checked: ((data.checklist || {}).checked && typeof data.checklist.checked === 'object') ? data.checklist.checked : {} },
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -102,14 +106,50 @@ export function resetAll() {
   store.trip = fresh.trip;
   store.journal = fresh.journal;
   store.calendar = fresh.calendar;
+  store.checklist = fresh.checklist;
   save();
 }
 
+// --- pre-trip checklist ------------------------------------------------------
+export function isChecked(id) { return !!store.checklist.checked[id]; }
+export function toggleChecklistItem(id) {
+  if (store.checklist.checked[id]) delete store.checklist.checked[id];
+  else store.checklist.checked[id] = true;
+  save();
+  return !!store.checklist.checked[id];
+}
+
+// --- trip planner (itinerary stops + budget log) -----------------------------
+export function addStop({ title, country = '', date = '' }) {
+  const s = { id: uid('stop'), title: String(title || '').slice(0, 80), country, date };
+  store.trip.stops.push(s); save(); return s;
+}
+export function removeStop(id) {
+  const i = store.trip.stops.findIndex((x) => x.id === id);
+  if (i >= 0) { store.trip.stops.splice(i, 1); save(); }
+}
+export function moveStop(id, dir) {
+  const a = store.trip.stops; const i = a.findIndex((x) => x.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= a.length) return;
+  [a[i], a[j]] = [a[j], a[i]]; save();
+}
+export function addBudgetItem({ date, amount, currency, note }) {
+  const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '' };
+  store.trip.budgetLog.push(b);
+  store.trip.budgetLog.sort((a, c) => (a.date < c.date ? -1 : 1));
+  save(); return b;
+}
+export function deleteBudgetItem(id) {
+  const i = store.trip.budgetLog.findIndex((x) => x.id === id);
+  if (i >= 0) { store.trip.budgetLog.splice(i, 1); save(); }
+}
+
 // --- travel journal ----------------------------------------------------------
-export function addJournalEntry({ title, text, place = '', coords = null, ts = null }) {
+export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null }) {
   const when = ts || new Date().toISOString();
   const e = { id: uid('jr'), ts: when, date: when.slice(0, 10),
-    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords };
+    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords, photoKey };
   store.journal.entries.push(e);
   store.journal.entries.sort((a, b) => (a.ts < b.ts ? -1 : 1));
   save(); return e;

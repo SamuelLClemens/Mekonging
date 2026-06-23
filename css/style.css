@@ -390,6 +390,20 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 .sos-card { border-color: var(--coral); }
 .sos-num { background: var(--coral); font-size: 1.05rem; margin-bottom: var(--sp-2); }
 
+/* accessibility: text size scales the rem-based type */
+html[data-text="s"] { font-size: 15px; }
+html[data-text="l"] { font-size: 18.5px; }
+
+/* pre-trip checklist */
+.ck-row { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-3) var(--sp-1); border-bottom: 1px dashed var(--line); cursor: pointer; }
+.ck-row input { width: 22px; height: 22px; accent-color: var(--orange); flex: none; margin-top: 2px; }
+.ck-row.done { opacity: 0.55; }
+.ck-row.done strong { text-decoration: line-through; }
+
+/* trip planner + journal photo */
+.trip-stop { padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
+.entry-photo { width: 100%; border-radius: var(--r-md); margin: var(--sp-2) 0; display: block; border: 1px solid var(--line); }
+
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }
 .disclaimer { font-size: var(--fs-sm); color: var(--ink-soft); font-style: italic; margin-top: var(--sp-3); }
 a { color: var(--teal-deep); }
