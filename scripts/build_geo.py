@@ -203,6 +203,9 @@ out = (
     + ''.join(f"  {c}: [{labels[c][0]}, {labels[c][1]}],\n" for c in labels)
     + "};\n"
     f"export const REGION_RIVER = '{river}';\n"
+    # Projection params so other screens (e.g. the weather map) can plot lat/lng onto
+    # this exact map: px = pad + (lng-minlng)*kx*scale ; py = pad + (maxlat-lat)*scale
+    f"export const REGION_PROJ = {{ minlng: {minlng}, maxlat: {maxlat}, kx: {kx}, scale: {scale}, pad: {PAD} }};\n"
 )
 dest = os.path.join(os.path.dirname(__file__), '..', 'js', 'data', 'geo.js')
 open(dest, 'w').write(out)

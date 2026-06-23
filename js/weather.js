@@ -9,18 +9,47 @@ const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
 // Key cities per country with coordinates. The first entry for each country is its
 // default (capital / main hub).
 export const WEATHER_SPOTS = [
+  // Thailand
   { country: 'th', city: 'Bangkok', lat: 13.7563, lng: 100.5018 },
   { country: 'th', city: 'Chiang Mai', lat: 18.7883, lng: 98.9853 },
+  { country: 'th', city: 'Chiang Rai', lat: 19.9105, lng: 99.8406 },
+  { country: 'th', city: 'Pai', lat: 19.3583, lng: 98.4406 },
   { country: 'th', city: 'Phuket', lat: 7.8804, lng: 98.3923 },
   { country: 'th', city: 'Krabi', lat: 8.0863, lng: 98.9063 },
+  { country: 'th', city: 'Koh Samui', lat: 9.5120, lng: 100.0136 },
+  { country: 'th', city: 'Pattaya', lat: 12.9236, lng: 100.8825 },
+  { country: 'th', city: 'Ayutthaya', lat: 14.3692, lng: 100.5877 },
+  { country: 'th', city: 'Sukhothai', lat: 17.0061, lng: 99.8233 },
+  { country: 'th', city: 'Kanchanaburi', lat: 14.0227, lng: 99.5328 },
+  { country: 'th', city: 'Hua Hin', lat: 12.5684, lng: 99.9577 },
+  { country: 'th', city: 'Udon Thani', lat: 17.4138, lng: 102.7870 },
+  // Vietnam
   { country: 'vi', city: 'Hanoi', lat: 21.0278, lng: 105.8342 },
   { country: 'vi', city: 'Ho Chi Minh City', lat: 10.8231, lng: 106.6297 },
   { country: 'vi', city: 'Da Nang', lat: 16.0544, lng: 108.2022 },
   { country: 'vi', city: 'Hoi An', lat: 15.8801, lng: 108.3380 },
+  { country: 'vi', city: 'Hue', lat: 16.4637, lng: 107.5909 },
+  { country: 'vi', city: 'Nha Trang', lat: 12.2388, lng: 109.1967 },
+  { country: 'vi', city: 'Da Lat', lat: 11.9404, lng: 108.4583 },
+  { country: 'vi', city: 'Sapa', lat: 22.3364, lng: 103.8438 },
+  { country: 'vi', city: 'Ha Long', lat: 20.9101, lng: 107.1839 },
+  { country: 'vi', city: 'Phu Quoc', lat: 10.2270, lng: 103.9670 },
+  { country: 'vi', city: 'Can Tho', lat: 10.0452, lng: 105.7469 },
+  // Cambodia
   { country: 'kh', city: 'Phnom Penh', lat: 11.5564, lng: 104.9282 },
   { country: 'kh', city: 'Siem Reap', lat: 13.3671, lng: 103.8448 },
+  { country: 'kh', city: 'Sihanoukville', lat: 10.6270, lng: 103.5223 },
+  { country: 'kh', city: 'Battambang', lat: 13.0957, lng: 103.1968 },
+  { country: 'kh', city: 'Kampot', lat: 10.6104, lng: 104.1819 },
+  { country: 'kh', city: 'Kep', lat: 10.4831, lng: 104.3169 },
+  // Laos
   { country: 'la', city: 'Vientiane', lat: 17.9757, lng: 102.6331 },
   { country: 'la', city: 'Luang Prabang', lat: 19.8845, lng: 102.1348 },
+  { country: 'la', city: 'Vang Vieng', lat: 18.9237, lng: 102.4470 },
+  { country: 'la', city: 'Pakse', lat: 15.1202, lng: 105.7820 },
+  { country: 'la', city: 'Savannakhet', lat: 16.5560, lng: 104.7520 },
+  { country: 'la', city: 'Nong Khiaw', lat: 20.5667, lng: 102.6167 },
+  { country: 'la', city: 'Phonsavan', lat: 19.4500, lng: 103.2000 },
 ];
 
 // WMO weather interpretation codes → [label, emoji].
@@ -49,6 +78,28 @@ export function defaultSpot(country) { return spotsForCountry(country)[0] || WEA
 
 export function getCachedWeather(key) {
   try { const c = JSON.parse(localStorage.getItem(PREFIX + key)); return c || null; } catch { return null; }
+}
+
+// Current conditions for MANY spots in one call — Open-Meteo accepts comma-separated
+// coordinates and returns an array. Powers the forecast map. Cached as a map of
+// spotKey -> { temp, code }.
+const MANY_KEY = 'mk.wx.many';
+export function getCachedMany() { try { return JSON.parse(localStorage.getItem(MANY_KEY)) || null; } catch { return null; } }
+export async function refreshMany(spots) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedMany();
+  const lats = spots.map((s) => s.lat).join(',');
+  const lngs = spots.map((s) => s.lng).join(',');
+  const url = `${ENDPOINT}?latitude=${lats}&longitude=${lngs}&current=temperature_2m,weather_code&timezone=auto`;
+  try {
+    const res = await fetch(url);
+    const d = await res.json();
+    const arr = Array.isArray(d) ? d : [d];
+    const data = {};
+    spots.forEach((s, i) => { const c = arr[i] && arr[i].current; if (c) data[spotKey(s)] = { temp: c.temperature_2m, code: c.weather_code }; });
+    const rec = { fetchedAt: Date.now(), data };
+    try { localStorage.setItem(MANY_KEY, JSON.stringify(rec)); } catch { /* full */ }
+    return rec;
+  } catch { return getCachedMany(); }
 }
 
 // Fetch + cache. Returns the fresh record, or the cached one when offline/blocked.

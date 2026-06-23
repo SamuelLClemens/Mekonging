@@ -22,7 +22,7 @@ import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, defaultSpot, getCachedWeather, refreshWeather } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -34,7 +34,7 @@ import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
 import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
-import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER } from './data/geo.js';
+import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
 if ('serviceWorker' in navigator) {
@@ -1480,7 +1480,11 @@ function wxAgo(ts) {
   return `${Math.round(hr / 24)} d ago`;
 }
 function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return d; } }
+function wxDayDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }); } catch { return d; } }
 function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : '–'; } }
+// Project lng/lat onto the same map as the landing-page country outlines.
+function projLL(lng, lat) { const P = REGION_PROJ; return [P.pad + (lng - P.minlng) * P.kx * P.scale, P.pad + (P.maxlat - lat) * P.scale]; }
+function wxTempVal(c) { return wxTempU() === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c); }
 
 // Unit preferences persist in the profile (default metric). Data is always stored
 // metric, so toggling converts on display without any re-fetch.
@@ -1532,12 +1536,44 @@ function weatherScreen(country) {
     unitChip('mph', wxWindU() === 'mph', () => setWind('mph')),
   ]));
 
-  const chips = h('div', { class: 'chips' }, WEATHER_SPOTS.map((s) => {
-    const c = getCountry(s.country);
-    return h('button', { class: 'chip', 'aria-pressed': spotKey(s) === weatherKey ? 'true' : 'false',
-      onclick: () => { weatherKey = spotKey(s); render(); } }, `${c ? c.flag : ''} ${s.city}`);
-  }));
-  wrap.append(chips);
+  // Pick a country first, then a city.
+  const curCountry = spot.country;
+  wrap.append(h('div', { class: 'chips' }, COUNTRIES.map((c) =>
+    h('button', { class: 'chip', 'aria-pressed': c.id === curCountry ? 'true' : 'false',
+      onclick: () => { weatherKey = spotKey(defaultSpot(c.id)); render(); } }, `${c.flag} ${c.name}`))));
+  wrap.append(h('div', { class: 'chips' }, spotsForCountry(curCountry).map((s) =>
+    h('button', { class: 'chip', 'aria-pressed': spotKey(s) === weatherKey ? 'true' : 'false',
+      onclick: () => { weatherKey = spotKey(s); render(); } }, s.city))));
+
+  // Forecast map: the region with this country's cities plotted, each showing its
+  // current temperature (one batched fetch), tappable to switch city.
+  const mapBox = h('div', {});
+  wrap.append(mapBox);
+  function renderMap(many) {
+    const cities = spotsForCountry(curCountry);
+    const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
+      ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1.5" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
+    const dots = cities.map((s) => {
+      const [x, y] = projLL(s.lng, s.lat);
+      const w = many && many[spotKey(s)];
+      const sel = spotKey(s) === weatherKey;
+      const temp = w ? `${wxTempVal(w.temp)}°` : '';
+      const emo = w ? wmo(w.code)[1] : '';
+      return `<g class="wx-dot" data-key="${spotKey(s)}" style="cursor:pointer">
+          <text x="${x}" y="${y - 14}" text-anchor="middle" style="font-size:24px">${emo}</text>
+          <circle cx="${x}" cy="${y}" r="${sel ? 9 : 6}" fill="${sel ? '#C0431A' : '#2C7DA0'}" stroke="#FFFDF5" stroke-width="2.5"/>
+          <text x="${x}" y="${y + 26}" text-anchor="middle" style="font-size:21px;font-weight:800;fill:#2A2118;paint-order:stroke;stroke:rgba(255,253,245,0.9);stroke-width:5px">${esc(s.city)} ${temp}</text>
+        </g>`;
+    }).join('');
+    const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather map" xmlns="http://www.w3.org/2000/svg">${paths}${dots}</svg>`;
+    mapBox.innerHTML = '';
+    const box = h('div', { class: 'region-map', html: svg });
+    box.querySelectorAll('.wx-dot').forEach((g) => g.addEventListener('click', () => { weatherKey = g.getAttribute('data-key'); render(); }));
+    box.append(h('span', { class: 'region-cap' }, many ? 'Tap a city for its full forecast' : 'Connect once to load city temperatures'));
+    mapBox.append(box);
+  }
+  renderMap(getCachedMany() && getCachedMany().data);
+  if (navigator.onLine) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
 
   const body = h('div', {});
   wrap.append(body);
@@ -1560,7 +1596,7 @@ function weatherScreen(country) {
           ]),
         ]),
         h('div', { class: 'muted', style: 'margin-top:8px' },
-          `${spot.city} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
+          `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
       ]));
       const fc = h('div', { class: 'card' }, [
         h('h3', { style: 'margin-top:0' }, '7-day forecast'),
@@ -1590,7 +1626,7 @@ function weatherScreen(country) {
           onclick: () => { detail.style.display = detail.style.display === 'none' ? 'block' : 'none'; },
         }, [
           h('div', { class: 'row-between' }, [
-            h('span', { style: 'min-width:38px;font-weight:700' }, wxDay(d.date)),
+            h('span', { style: 'min-width:104px;font-weight:700' }, wxDayDate(d.date)),
             h('span', { style: 'font-size:20px' }, de),
             h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}`),
             h('span', { style: 'font-weight:700' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
