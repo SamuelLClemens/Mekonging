@@ -233,6 +233,20 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 }
 .field input:focus, .field select:focus { outline: none; border-color: var(--orange); }
 
+/* --- your notes & review --- */
+.ta {
+  width: 100%; min-height: 80px; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
+  border: 2px solid var(--line); background: var(--card); border-radius: var(--r-md); padding: var(--sp-3); resize: vertical;
+}
+.ta:focus { outline: none; border-color: var(--orange); }
+.stars { display: flex; gap: var(--sp-1); }
+.star { border: none; background: none; cursor: pointer; font-size: 1.7rem; color: var(--sun-deep); line-height: 1; padding: 0; }
+.review-orig, .review-yours { border-left: 4px solid var(--teal); padding: var(--sp-2) var(--sp-3); margin: var(--sp-3) 0; border-radius: 0 var(--r-sm) var(--r-sm) 0; background: rgba(22,163,154,0.08); }
+.review-yours { border-left-color: var(--coral, #E8632A); background: rgba(232,99,42,0.09); }
+.rlabel { display: inline-block; font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal-deep); margin-bottom: var(--sp-1); }
+.review-yours .rlabel { color: var(--orange); }
+html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
+
 /* --- bottom tab bar --- */
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: var(--tabbar-h);

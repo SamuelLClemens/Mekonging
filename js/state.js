@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 function defaults() {
   return {
@@ -30,6 +30,11 @@ function defaults() {
     // --- v2: organise-and-find-again ---
     collections: [],            // { id, name, emoji, itemIds:[], createdAt } — named themes/tags
     pins: [],                   // { id:'pin-…', name, note, tags:[], coords:{lat,lng}|null, createdAt } — user-marked places
+    // --- v3: the user's own layer on any place (private, on-device) ---
+    // placeData[itemId] = { note, rating(1-5|0), review, updatedAt }. The curated
+    // guidebook text stays in the data modules (the "original"); review is the
+    // user's own take, shown alongside it colour-coded.
+    placeData: {},
     trip: {
       stops: [],                // { id, city, country, fromDate, toDate }
       budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note }
@@ -52,10 +57,11 @@ function migrate(data) {
     favorites: Array.isArray(data.favorites) ? data.favorites : base.favorites,
     collections: Array.isArray(data.collections) ? data.collections : base.collections,
     pins: Array.isArray(data.pins) ? data.pins : base.pins,
+    placeData: (data.placeData && typeof data.placeData === 'object' && !Array.isArray(data.placeData)) ? data.placeData : base.placeData,
     trip: { ...base.trip, ...(data.trip || {}) },
   };
-  // v1 -> v2: collections[] and pins[] are new arrays; the guards above already
-  // default them. Nothing to backfill from v1 — favorites carries forward verbatim.
+  // v1 -> v2: collections[] and pins[] are new arrays (guarded above).
+  // v2 -> v3: placeData{} is a new map (guarded above). favorites carries forward.
   return out;
 }
 
@@ -85,8 +91,18 @@ export function resetAll() {
   store.favorites = fresh.favorites;
   store.collections = fresh.collections;
   store.pins = fresh.pins;
+  store.placeData = fresh.placeData;
   store.trip = fresh.trip;
   save();
+}
+
+// --- the user's own layer on a place (note, rating, review) ------------------
+export function getPlaceData(id) { return store.placeData[id] || { note: '', rating: 0, review: '' }; }
+export function setPlaceField(id, field, value) {
+  const d = store.placeData[id] || { note: '', rating: 0, review: '' };
+  d[field] = value; d.updatedAt = todayKey();
+  store.placeData[id] = d; save();
+  return d;
 }
 
 // --- unique-id helper (no Math.random/Date.now reliance for determinism in tests) -

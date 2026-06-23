@@ -4,7 +4,7 @@
 import {
   store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
-  addPin, deletePin, getPin,
+  addPin, deletePin, getPin, getPlaceData, setPlaceField,
 } from './state.js';
 import { h, esc, money, range, mapsUrl } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor } from './tts.js';
@@ -481,9 +481,44 @@ function placeScreen(id) {
     }, 'Delete pin') : null,
   ]);
 
-  wrap.append(card, actions);
+  wrap.append(card, actions, yourLayer(p));
   if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified));
   mount(wrap, backHash);
+}
+
+// The user's own layer on a place: rating, private note, and their own review kept
+// alongside the guidebook original (colour-coded). All on-device.
+function yourLayer(p) {
+  const d = getPlaceData(p.id);
+  const card = h('div', { class: 'card' }, [h('h2', {}, 'Your notes & review')]);
+
+  const stars = h('div', { class: 'stars' });
+  const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
+  for (let i = 1; i <= 5; i++) {
+    stars.append(h('button', { class: 'star', 'aria-label': `${i} star${i > 1 ? 's' : ''}`, onclick: () => {
+      const nv = getPlaceData(p.id).rating === i ? 0 : i; setPlaceField(p.id, 'rating', nv); paint(nv);
+    } }, '☆'));
+  }
+  paint(d.rating || 0);
+  card.append(h('div', { class: 'field' }, [h('label', {}, 'Your rating'), stars]));
+
+  const note = h('textarea', { class: 'ta', placeholder: 'Private notes — directions, what to order, who you met…' });
+  note.value = d.note || '';
+  note.addEventListener('change', () => setPlaceField(p.id, 'note', note.value));
+  card.append(h('div', { class: 'field' }, [h('label', {}, 'Private note'), note]));
+
+  if (!p.isPin && (p.blurb || p.whyItFits)) {
+    card.append(h('div', { class: 'review-orig' }, [
+      h('span', { class: 'rlabel' }, 'Guidebook'),
+      h('p', {}, [p.blurb, p.whyItFits].filter(Boolean).join(' ')),
+    ]));
+  }
+  const yourRev = h('textarea', { class: 'ta', placeholder: 'Your own take — kept separately from the guidebook…' });
+  yourRev.value = d.review || '';
+  yourRev.addEventListener('change', () => setPlaceField(p.id, 'review', yourRev.value));
+  card.append(h('div', { class: 'review-yours' }, [h('span', { class: 'rlabel' }, 'Your take'), yourRev]));
+
+  return card;
 }
 
 function sourcesNote(sources, verified) {
