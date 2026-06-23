@@ -349,6 +349,19 @@ function tierBadge(tier) {
   return h('span', { class: `tier ${tier}` }, lbl);
 }
 
+function starsStr(n) { const r = Math.round(n); return '★'.repeat(r) + '☆'.repeat(5 - r); }
+
+// A unified, LAWFUL rating: a synthesised score from multiple cited public sources
+// (no scraping), plus a deep link to live Google reviews. The user's own rating
+// lives separately in yourLayer().
+function ratingBlock(p) {
+  return h('div', { class: 'rating-block' }, [
+    h('span', { class: 'stars-static' }, starsStr(p.rating)),
+    h('span', { class: 'muted' }, ` ${Number(p.rating).toFixed(1)} · synthesised from ${(p.reviewSources || []).join(', ') || 'multiple sources'}`),
+    h('a', { class: 'rev-link', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'See live reviews'),
+  ]);
+}
+
 // Resolve a saved item id to a renderable place-like object: a curated place, or a
 // user pin normalised into the same shape.
 function resolveItem(id) {
@@ -383,6 +396,7 @@ function placeCard(p) {
     ]) : null,
     p.blurb ? h('p', {}, p.blurb) : null,
     h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
+    p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
     colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
       h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
     h('div', { class: 'row-between' }, [
@@ -460,6 +474,8 @@ function placeScreen(id) {
     ]) : null,
     p.blurb ? h('p', {}, p.blurb) : null,
   ]);
+  if (p.rating) card.append(ratingBlock(p));
+  if (p.history) { card.append(h('h3', {}, 'A little history'), h('p', {}, p.history)); }
   if (p.whyItFits) { card.append(h('h3', {}, 'Why it fits you'), h('p', {}, p.whyItFits)); }
   if (hasPrice) {
     card.append(h('h3', {}, 'Price'));
@@ -595,6 +611,7 @@ function transportScreen(countryId) {
         o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
       ]));
     }
+    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: 'https://12go.asia', target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
     wrap.append(card);
   }
   wrap.append(h('p', { class: 'disclaimer' }, 'Times and prices are guidance and change with season and operator. Confirm before travel.'));
@@ -629,8 +646,22 @@ function infoScreen(countryId) {
     ]));
     acc.append(det);
   });
+  // deep history (from the side-car guide module, when present)
+  const g = country.guide;
+  if (g && Array.isArray(g.history) && g.history.length) {
+    const hist = h('details', { class: 'acc' }, [h('summary', {}, `History of ${country.name}`)]);
+    g.history.forEach((par) => hist.append(h('p', {}, par)));
+    acc.append(hist);
+  }
   wrap.append(acc);
-  wrap.append(sourcesNote(info.sources, info.verified));
+  // laws & safety the traveller must know (current-year facts)
+  if (g && Array.isArray(g.laws) && g.laws.length) {
+    const laws = h('div', { class: 'card' }, [h('h2', {}, 'Laws & safety you must know')]);
+    g.laws.forEach((l) => laws.append(h('div', { class: 'warn-note' }, typeof l === 'string' ? l : `${l.title}: ${l.body}`)));
+    wrap.append(laws);
+  }
+  const allSources = (g && Array.isArray(g.sources) && g.sources.length) ? g.sources : info.sources;
+  wrap.append(sourcesNote(allSources, info.verified));
   mount(wrap, '#home');
 }
 
