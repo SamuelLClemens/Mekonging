@@ -32,6 +32,7 @@ import {
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
+import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
@@ -138,6 +139,7 @@ function homeScreen() {
     { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
     { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+    { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
@@ -209,6 +211,7 @@ function countryHubScreen(id) {
     { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
     { ic: '⛅', t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
     { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
+    { ic: '🕑', t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
     { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
@@ -1565,6 +1568,67 @@ function weatherScreen(country) {
   mount(wrap, '#home');
 }
 
+// ---- TRANSPORT SCHEDULES (curated reference, re-synced on wifi) -------------
+const SCHED_KEY = 'mk.sched.checkedAt';
+let schedCountry = '';
+function schedCheckedAt() { return Number(localStorage.getItem(SCHED_KEY)) || 0; }
+async function schedRefresh() {
+  if (!navigator.onLine) return false;
+  try { await fetch('js/data/schedules.js', { cache: 'no-store' }); try { localStorage.setItem(SCHED_KEY, String(Date.now())); } catch { /* full */ } return true; }
+  catch { return false; }
+}
+function scheduleCard(s) {
+  const c = getCountry(s.country);
+  return h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('strong', {}, `${c ? c.flag + ' ' : ''}${s.from} → ${s.to}`),
+      h('span', { class: 'cat-tag' }, s.mode),
+    ]),
+    h('div', { class: 'muted', style: 'margin:2px 0' }, `${s.operator} · ~${s.durationHrs[0]}–${s.durationHrs[1]} h · verified ${s.verified}`),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:8px 0' }, s.departures.map((t) => h('span', { class: 'cat-tag' }, t))),
+    s.note ? h('p', { class: 'muted', style: 'margin:4px 0' }, s.note) : null,
+    s.book ? h('a', { class: 'btn ghost', href: s.book, target: '_blank', rel: 'noopener' }, 'Check / book ↗') : null,
+  ]);
+}
+function schedulesScreen(country) {
+  if (country && getCountry(country)) { activeCountry = country; schedCountry = country; }
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Transport schedules', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Reference departure times for popular routes — guidance only; always reconfirm with the operator. They re-sync whenever you are online.'));
+
+  const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
+  const chips = h('div', { class: 'chips' }, filters.map((f) =>
+    h('button', { class: 'chip', 'aria-pressed': schedCountry === f.id ? 'true' : 'false', dataset: { c: f.id },
+      onclick: () => { schedCountry = f.id; chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.c === f.id ? 'true' : 'false')); renderList(); } },
+      `${f.flag} ${f.name}`)));
+  wrap.append(chips);
+
+  const syncLine = h('p', { class: 'muted', style: 'text-align:center;margin:6px 0' });
+  function setSync() {
+    const t = schedCheckedAt();
+    syncLine.textContent = `Reference timetable (verified ${SCHEDULES_VERIFIED}) · ${t ? 'last synced ' + wxAgo(t) : 'not yet synced'}${navigator.onLine ? '' : ' · offline'}`;
+  }
+  setSync();
+  wrap.append(syncLine);
+  const refreshBtn = h('button', { class: 'btn ghost block' }, 'Refresh (needs internet)');
+  refreshBtn.addEventListener('click', async () => { refreshBtn.textContent = 'Syncing…'; refreshBtn.disabled = true; await schedRefresh(); refreshBtn.textContent = 'Refresh (needs internet)'; refreshBtn.disabled = false; setSync(); });
+  wrap.append(refreshBtn);
+
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderList() {
+    listEl.innerHTML = '';
+    const rows = schedCountry ? schedulesForCountry(schedCountry) : SCHEDULES;
+    if (!rows.length) { listEl.append(h('p', { class: 'empty' }, 'No reference schedules for this country yet.')); return; }
+    rows.forEach((s) => listEl.append(scheduleCard(s)));
+  }
+  renderList();
+  mount(wrap, '#home');
+
+  // re-sync in the background when online, then refresh the stamp
+  if (navigator.onLine) schedRefresh().then(() => { if ((location.hash || '').startsWith('#schedules')) setSync(); });
+}
+
 // ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
 let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
 function haversineKm(a, b) {
@@ -2277,6 +2341,7 @@ function render() {
       case 'event': return eventScreen(arg);
       case 'weather': return weatherScreen(arg);
       case 'today': return daySuggestScreen(arg);
+      case 'schedules': return schedulesScreen(arg);
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);
       case 'nature': return natureScreen();
