@@ -16,6 +16,8 @@ import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
 } from './data/regions.js';
+import { ALLERGENS } from './data/allergens.js';
+import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 
 // ---- service worker + theme -------------------------------------------------
 if ('serviceWorker' in navigator) {
@@ -83,6 +85,7 @@ function homeScreen() {
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
     { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
     { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
+    { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
@@ -231,10 +234,15 @@ function phrasebookScreen(lang) {
   const listEl = h('div', {});
   wrap.append(listEl);
 
+  // append an Allergies & dietary category from the allergens module (if present)
+  const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
+    ? { id: 'allergies', name: 'Allergies & dietary', phrases: ALLERGENS[code] } : null;
+  const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
+
   function renderPhrases() {
     listEl.innerHTML = '';
     const q = phraseQuery.trim().toLowerCase();
-    for (const cat of book.categories) {
+    for (const cat of categories) {
       // A query matches the whole category when its name matches (so "taxi"
       // surfaces the Taxi & directions phrases), else it matches per phrase.
       const catNameMatch = !q || cat.name.toLowerCase().includes(q);
@@ -1000,12 +1008,14 @@ function journeySVG(pts) {
   const d = 'M' + coords.map((c) => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(' L');
   const dots = coords.map((c) => `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="5" fill="#E8632A" stroke="#FFF6E2" stroke-width="2"/>`).join('');
   const last = coords[coords.length - 1];
+  // Indiana-Jones style: dashed (not dotted) red line, plane moving slowly along it.
+  const dur = Math.max(18, pts.length * 7).toFixed(0);
   const vehicle = prefersReducedMotion()
     ? `<text x="${last[0].toFixed(1)}" y="${last[1].toFixed(1)}" font-size="22" text-anchor="middle" dominant-baseline="middle">✈️</text>`
-    : `<text font-size="22" text-anchor="middle" dominant-baseline="middle">✈️<animateMotion dur="${Math.max(6, pts.length * 2.2).toFixed(0)}s" repeatCount="indefinite" rotate="auto" path="${d}"/></text>`;
+    : `<text font-size="22" text-anchor="middle" dominant-baseline="middle">✈️<animateMotion dur="${dur}s" repeatCount="indefinite" rotate="auto" path="${d}"/></text>`;
   return `<svg viewBox="0 0 ${W} ${H}" class="journey-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Your journey route">
     <rect x="2" y="2" width="${W - 4}" height="${H - 4}" rx="16" fill="none" stroke="#E7CFA6" stroke-width="2"/>
-    <path d="${d}" fill="none" stroke="#C0431A" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="#C0431A" stroke-width="3.5" stroke-dasharray="12 9" stroke-linecap="round"/>
     ${dots}${vehicle}</svg>`;
 }
 
@@ -1063,6 +1073,77 @@ function calendarAddScreen() {
     addCalendarItem({ date: date.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() });
     go('#calendar');
   } }, 'Save'));
+  mount(wrap, '#home');
+}
+
+// ---- NATURE FIELD GUIDE -----------------------------------------------------
+let natureQuery = '';
+let natureGroup = '';
+function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
+
+function natureScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Identify nature', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
+
+  const search = h('input', { class: 'search', type: 'search', placeholder: 'Search by name…', value: natureQuery,
+    oninput: (e) => { natureQuery = e.target.value; renderList(); } });
+  wrap.append(search);
+
+  const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS);
+  const groupChips = h('div', { class: 'chips' }, groups.map((g) =>
+    h('button', { class: 'chip', 'aria-pressed': natureGroup === g.id ? 'true' : 'false', dataset: { g: g.id },
+      onclick: () => { natureGroup = g.id; groupChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
+      `${g.emoji} ${g.label}`)));
+  wrap.append(groupChips);
+
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderList() {
+    listEl.innerHTML = '';
+    const results = allSpecies({ q: natureQuery.trim(), group: natureGroup });
+    if (!results.length) {
+      listEl.append(h('p', { class: 'empty' }, allSpecies().length === 0
+        ? 'The nature guide is being prepared — reconnect once to download it.'
+        : 'No species match. Try a different search or group.'));
+      return;
+    }
+    results.forEach((s) => listEl.append(speciesCard(s)));
+  }
+  renderList();
+  mount(wrap, '#home');
+}
+
+function speciesCard(s) {
+  const g = NATURE_GROUPS.find((x) => x.id === s.group);
+  return h('button', { class: 'card species-card', onclick: () => go(`#species-${s.id}`) }, [
+    h('span', { class: 'species-emoji' }, s.emoji || (g && g.emoji) || '🔎'),
+    h('span', { class: 'grow' }, [h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || '')]),
+    s.dangerous ? h('span', { class: 'tier high' }, 'Caution') : null,
+  ]);
+}
+
+function speciesScreen(id) {
+  const s = getSpecies(id);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(s ? s.commonName : 'Species', '#nature'));
+  if (!s) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
+  const g = NATURE_GROUPS.find((x) => x.id === s.group);
+  const card = h('div', { class: 'card' }, [
+    h('div', { class: 'species-head' }, [
+      h('span', { class: 'species-emoji big' }, s.emoji || (g && g.emoji) || '🔎'),
+      h('div', {}, [h('h2', {}, s.commonName), s.sciName ? h('div', { class: 'sci' }, s.sciName) : null,
+        g ? h('span', { class: 'cat-tag' }, g.label) : null]),
+    ]),
+    s.dangerous ? h('div', { class: 'warn-note' }, s.dangerNote || 'Potentially dangerous — keep your distance.') : null,
+    s.blurb ? h('p', {}, s.blurb) : null,
+  ]);
+  if (s.idTips) card.append(h('h3', {}, 'How to identify'), h('p', {}, s.idTips));
+  if (s.habitat) card.append(h('h3', {}, 'Habitat'), h('p', {}, s.habitat));
+  if (s.where) card.append(h('h3', {}, 'Where you might see it'), h('p', {}, s.where));
+  if (s.localNames && s.localNames.length) card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
+  wrap.append(card);
+  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
   mount(wrap, '#home');
 }
 
@@ -1163,6 +1244,8 @@ function render() {
       case 'journal': return journalDispatch(arg);
       case 'journey': return journeyScreen();
       case 'calendar': return calendarDispatch(arg);
+      case 'nature': return natureScreen();
+      case 'species': return speciesScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

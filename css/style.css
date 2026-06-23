@@ -31,8 +31,9 @@
   --fs-display: 2.2rem; --fs-h1: 1.45rem; --fs-h2: 1.18rem; --fs-h3: 1.02rem;
   --fs-body: 1rem; --fs-sm: 0.875rem; --fs-label: 0.7rem;
 
-  --shadow: 0 8px 24px rgba(120, 50, 20, 0.18);
-  --shadow-soft: 0 3px 10px rgba(120, 50, 20, 0.12);
+  /* softer, layered shadows for a modern feel */
+  --shadow: 0 12px 32px -8px rgba(120, 50, 20, 0.16), 0 2px 6px rgba(120, 50, 20, 0.06);
+  --shadow-soft: 0 4px 14px -4px rgba(120, 50, 20, 0.12);
   --dur: 220ms; --ease: cubic-bezier(0.34, 0.02, 0.2, 1);
 
   --bg: var(--cream);
@@ -78,7 +79,7 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
 .topbar {
   position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: var(--sp-3);
   padding: var(--sp-4) var(--sp-4) var(--sp-3); background: var(--bg);
-  border-bottom: 2px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 .topbar h1 { font-size: var(--fs-h1); margin: 0; flex: 1; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); }
 .topbar .back {
@@ -89,7 +90,7 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
 
 /* --- cards & buttons --- */
 .card {
-  background: var(--card); border: 2px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: var(--sp-4); box-shadow: var(--shadow-soft); margin-bottom: var(--sp-3);
 }
 .card h2 { font-size: var(--fs-h2); margin: 0 0 var(--sp-2); }
@@ -120,7 +121,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .tile {
   display: flex; flex-direction: column; gap: var(--sp-1); text-align: left; cursor: pointer;
-  background: var(--card); border: 2px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: var(--sp-4); box-shadow: var(--shadow-soft); font-family: inherit; color: var(--ink);
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
@@ -132,7 +133,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .country-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .country-chip {
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-family: inherit;
-  border: 2px solid var(--line); background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .country-chip[aria-pressed="true"] { background: var(--grad-sun); color: #fff; border-color: transparent; }
@@ -141,7 +142,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 /* --- chips / filters --- */
 .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-4); }
 .chip {
-  cursor: pointer; font-family: inherit; border: 2px solid var(--line); background: var(--card);
+  cursor: pointer; font-family: inherit; border: 1px solid var(--line); background: var(--card);
   color: var(--ink); border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-sm); font-weight: 700;
 }
@@ -149,7 +150,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 
 .search {
   width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
-  border: 2px solid var(--line); background: var(--card); border-radius: var(--r-pill);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-pill);
   padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-3);
 }
 .search:focus { outline: none; border-color: var(--orange); }
@@ -177,7 +178,7 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .speak[disabled] { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 .banner {
   background: linear-gradient(135deg, rgba(242,169,59,0.22), rgba(214,51,108,0.16));
-  border: 2px solid var(--line); color: var(--ink);
+  border: 1px solid var(--line); color: var(--ink);
   border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); margin-bottom: var(--sp-3);
 }
 
@@ -208,7 +209,7 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .price-item .scam { color: var(--warn); font-size: var(--fs-sm); }
 
 /* --- routes --- */
-.route-opt { border: 2px solid var(--line); border-radius: var(--r-md); padding: var(--sp-3);
+.route-opt { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-3);
              margin-top: var(--sp-2); background: var(--card); }
 .route-opt.best { border-color: var(--orange); background: linear-gradient(135deg, rgba(242,169,59,0.18), rgba(232,99,42,0.10)); }
 .route-opt .mode { font-weight: 800; }
@@ -229,14 +230,14 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .field label { display: block; font-weight: 700; margin-bottom: var(--sp-1); }
 .field input, .field select {
   width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
-  border: 2px solid var(--line); background: var(--card); border-radius: var(--r-md); padding: var(--sp-3);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md); padding: var(--sp-3);
 }
 .field input:focus, .field select:focus { outline: none; border-color: var(--orange); }
 
 /* --- your notes & review --- */
 .ta {
   width: 100%; min-height: 80px; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
-  border: 2px solid var(--line); background: var(--card); border-radius: var(--r-md); padding: var(--sp-3); resize: vertical;
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md); padding: var(--sp-3); resize: vertical;
 }
 .ta:focus { outline: none; border-color: var(--orange); }
 .stars { display: flex; gap: var(--sp-1); }
@@ -267,13 +268,13 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .book-count { margin-top: var(--sp-4); font-size: var(--fs-sm); opacity: 0.8; text-transform: uppercase; letter-spacing: 0.12em; }
 
 .book-open { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: var(--r-md); overflow: hidden;
-  box-shadow: var(--shadow); border: 2px solid var(--line); }
+  box-shadow: var(--shadow); border: 1px solid var(--line); }
 @media (max-width: 520px) { .book-open { grid-template-columns: 1fr; } }
 .page { background:
     repeating-linear-gradient(transparent, transparent 27px, rgba(120,90,50,0.12) 28px),
     linear-gradient(180deg, #FBF1DA, #F4E6C8); color: #4A3520; padding: var(--sp-5) var(--sp-4); min-height: 260px; }
 .page-left { background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(120,90,50,0.12) 28px), linear-gradient(90deg, #EFDFBE, #FBF1DA); text-align: center; }
-.page-single { border: 2px solid var(--line); border-radius: var(--r-md); }
+.page-single { border: 1px solid var(--line); border-radius: var(--r-md); }
 .page-enter { animation: pageIn var(--dur) var(--ease); transform-origin: left center; }
 @keyframes pageIn { from { transform: rotateY(-14deg); opacity: 0.5; } to { transform: rotateY(0); opacity: 1; } }
 .page-head { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; color: #8A5A2A; font-size: var(--fs-sm); margin-bottom: var(--sp-2); }
@@ -292,6 +293,13 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .stars-static { color: var(--sun-deep); font-size: 1.1rem; letter-spacing: 1px; }
 .rating-block { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0; }
 .rev-link { font-size: var(--fs-sm); font-weight: 700; }
+
+/* --- nature field guide --- */
+.species-card { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
+.species-emoji { font-size: 1.9rem; line-height: 1; flex: none; }
+.species-emoji.big { font-size: 2.6rem; }
+.species-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.sci { font-style: italic; color: var(--ink-soft); font-size: var(--fs-sm); }
 
 /* --- bottom tab bar --- */
 .tabbar {
@@ -329,7 +337,7 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 /* --- country-picker region map --- */
 .region-map {
   position: relative; height: 300px; margin-bottom: var(--sp-4);
-  border: 2px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
   background: var(--sunburst), var(--card);
 }
 .region-map::before { /* the Mekong, suggested */
@@ -340,7 +348,7 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 }
 .region-pin {
   position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  background: var(--card); border: 2px solid var(--line); border-radius: var(--r-md);
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
   padding: var(--sp-2) var(--sp-3); font-family: inherit; font-weight: 800; color: var(--ink);
   cursor: pointer; box-shadow: var(--shadow-soft);
   transition: transform var(--dur) var(--ease);
@@ -362,7 +370,7 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 /* --- map --- */
 #map-canvas {
   width: 100%; height: 62vh; min-height: 360px; border-radius: var(--r-lg);
-  border: 2px solid var(--line); overflow: hidden; margin-bottom: var(--sp-3); background: var(--card);
+  border: 1px solid var(--line); overflow: hidden; margin-bottom: var(--sp-3); background: var(--card);
 }
 .map-toolbar { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .map-hint { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0 0 var(--sp-2); }
