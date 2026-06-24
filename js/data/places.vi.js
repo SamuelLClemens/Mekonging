@@ -53,7 +53,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-ben-thanh-market", name: "Ben Thanh Market", city: "Ho Chi Minh City", country: "vi",
-    categories: ["food"], budgetTier: "mid",
+    categories: ["market", "food"], budgetTier: "mid",
     blurb: "Landmark central market with souvenir stalls by day and an outdoor street-food night market on the perimeter.",
     whyItFits: "Good for travellers who want street eats and souvenir browsing in one stop.",
     priceRange: { low: 60000, typical: 200000, high: 400000, currency: "VND", note: "a meal of several dishes per person; haggle on goods" },
@@ -118,7 +118,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-danang-han-market-seafood", name: "Han Market & Da Nang Seafood Eateries", city: "Da Nang", country: "vi",
-    categories: ["food"], budgetTier: "mid",
+    categories: ["market", "food"], budgetTier: "mid",
     blurb: "Bustling riverside market and nearby seafood restaurants known for fresh local catch and central Vietnamese specialities.",
     whyItFits: "Good for food-focused travellers wanting fresh seafood without resort prices.",
     priceRange: { low: 80000, typical: 250000, high: 600000, currency: "VND", note: "per person; seafood priced by weight, so confirm before ordering" },

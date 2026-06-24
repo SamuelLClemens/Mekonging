@@ -43,7 +43,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
-    categories: ['food', 'culture'], budgetTier: 'low',
+    categories: ['market', 'food', 'culture'], budgetTier: 'low',
     blurb: 'One of the world’s largest markets — 15,000+ stalls of food, crafts, clothes and curiosities.',
     whyItFits: 'A food-and-market paradise. Endless street eats; budget-friendly haggling.',
     priceRange: { low: 0, typical: 200, high: 600, currency: 'THB', note: 'Free entry; spend what you like.' },
