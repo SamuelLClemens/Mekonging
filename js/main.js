@@ -360,7 +360,7 @@ function phrasebookScreen(lang) {
   // search
   wrap.append(h('h2', { class: 'cat-title' }, 'Phrasebook'));
   const search = h('input', {
-    class: 'search', type: 'search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
+    class: 'search', type: 'search', 'aria-label': 'Search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
     oninput: debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120),
   });
   wrap.append(search);
@@ -413,7 +413,7 @@ function liveTranslateBox(code, label, locale) {
     h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
   ]);
   const srcSel = selectEl([['en', 'From English'], ['he', 'From Hebrew (עברית)']], 'en', () => {});
-  const input = h('input', { class: 'search', type: 'text', placeholder: 'e.g. Where is the bus station?' });
+  const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'e.g. Where is the bus station?' });
   const out = h('div', { class: 'tr-out', style: 'margin-top:10px' });
 
   const doTranslate = async () => {
@@ -598,7 +598,7 @@ function saveSheet(itemId) {
         () => { togglePlaceInCollection(c.id, itemId); rebuild(); }));
     }
     // create new
-    const input = h('input', { class: 'search', type: 'text', placeholder: 'New collection name…', style: 'margin-top:8px' });
+    const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'New collection name…', style: 'margin-top:8px' });
     const add = h('button', { class: 'btn', onclick: () => {
       if (!input.value.trim()) return;
       const c = createCollection(input.value.trim(), '⭐');
@@ -877,7 +877,7 @@ function savedScreen() {
 
   // create new + presets
   const create = h('div', { class: 'card' }, [h('h2', {}, 'New collection')]);
-  const input = h('input', { class: 'search', type: 'text', placeholder: 'Name your theme…' });
+  const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'Name your theme…' });
   create.append(input, h('button', { class: 'btn', onclick: () => {
     if (input.value.trim()) { createCollection(input.value.trim(), '⭐'); render(); }
   } }, 'Create'));
@@ -1346,7 +1346,7 @@ function calendarAddScreen() {
   const note = h('textarea', { class: 'ta', placeholder: 'Plan details, or a review once you have been' });
   const stars = h('div', { class: 'stars' });
   const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
-  for (let i = 1; i <= 5; i++) stars.append(h('button', { class: 'star', onclick: () => { st.rating = st.rating === i ? 0 : i; paint(st.rating); } }, '☆'));
+  for (let i = 1; i <= 5; i++) stars.append(h('button', { class: 'star', 'aria-label': `${i} star${i > 1 ? 's' : ''}`, onclick: () => { st.rating = st.rating === i ? 0 : i; paint(st.rating); } }, '☆'));
   wrap.append(h('div', { class: 'card' }, [
     field('Date', date), field('Time (optional)', time), field('Type', type), field('Title', title), field('Place', place),
     field('Cost (optional)', h('div', { class: 'row-between' }, [cost, cur])),
@@ -1396,7 +1396,7 @@ function foodScreen(country) {
       `${f.flag} ${f.name}`)));
   wrap.append(cChips);
 
-  const search = h('input', { class: 'search', type: 'search', placeholder: 'Search dishes or ingredients…', value: foodQuery,
+  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search dishes or ingredients…', value: foodQuery,
     oninput: debounce((e) => { foodQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
 
@@ -1498,7 +1498,7 @@ function produceScreen() {
       onclick: () => { produceCat = g.id; chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
       `${g.emoji} ${g.label}`)));
   wrap.append(chips);
-  const search = h('input', { class: 'search', type: 'search', placeholder: 'Search produce…', value: produceQuery,
+  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search produce…', value: produceQuery,
     oninput: debounce((e) => { produceQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
   const listEl = h('div', {});
@@ -2014,7 +2014,7 @@ function natureScreen() {
   wrap.append(topbar('Identify nature', '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
 
-  const search = h('input', { class: 'search', type: 'search', placeholder: 'Search by name…', value: natureQuery,
+  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search by name…', value: natureQuery,
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
 
@@ -2246,7 +2246,7 @@ let searchQuery = '';
 function searchScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Search everything', '#home'));
-  wrap.append(h('input', { class: 'search', type: 'search', autofocus: '', value: searchQuery,
+  wrap.append(h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
     placeholder: 'Find places, phrases, wildlife, prices…',
     oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) }));
   const out = h('div', {});

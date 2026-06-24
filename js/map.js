@@ -9,6 +9,7 @@ import { store } from './state.js';
 import { allPlaces, COUNTRIES } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
 import { CROSSINGS } from './data/borders.js';
+import { BORDER_LINES } from './data/borders_lines.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -115,14 +116,15 @@ function basemapStyle() {
       land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
       mekong: { type: 'geojson', data: MEKONG_FC },
       satellite: { type: 'raster', tiles: [SATELLITE_TILES], tileSize: 256, maxzoom: 19, attribution: SATELLITE_ATTR },
+      borderlines: { type: 'geojson', data: BORDER_LINES },
     },
     layers: [
       { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
       { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
       { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
       { id: 'satellite', source: 'satellite', type: 'raster', layout: { visibility: 'visible' } },
-      { id: 'borders', source: 'land', type: 'line', layout: { visibility: 'visible' },
-        paint: { 'line-color': '#FF5A5F', 'line-width': 1.6, 'line-dasharray': [3, 2], 'line-opacity': 0.92 } },
+      { id: 'borders', source: 'borderlines', type: 'line', layout: { visibility: 'visible' },
+        paint: { 'line-color': '#FF3B30', 'line-width': 2, 'line-dasharray': [2, 1.5], 'line-opacity': 0.95 } },
       { id: 'mekong-line', source: 'mekong', type: 'line', layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#2C7DA0', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.2, 8, 3, 12, 6] } },
     ],
