@@ -84,6 +84,13 @@ export const INFO_VI = {
       'Jellyfish blooms occur seasonally, most often in the hotter months; stings are usually painful rather than dangerous, though box jellyfish are present in the region. Douse a sting with vinegar, remove tentacles without bare hands, and seek help if symptoms spread.',
       'Sea urchins and stonefish live on rocky sections, so wear water shoes. Reef-safe sunscreen protects both you and the coral.',
     ], verifyAt: { org: 'Vietnam National Authority of Tourism', url: 'https://vietnam.travel' } },
+    { id: 'value', title: 'Best value: cheapest for the best', body: [
+      'The best pho, banh mi and bun cha come from pavement stalls with low plastic stools, not sit-down restaurants, for a fraction of the price.',
+      'Buy fruit and snacks at wet markets and from street vendors; fixed-price stores (Circle K, WinMart) are pricier but handy for water and SIMs.',
+      'For coffee, a street ca phe sua da costs a fraction of a cafe price, and egg coffee is the affordable Hanoi treat.',
+      'Use Grab (bike or car) for fair, app-metered city rides, and agree any non-app fare first; sleeper buses and trains are cheap for long hops.',
+      'Bargain at markets, starting around half the asking price, but not in fixed-price shops or for street food.',
+    ] }
   ],
   sources: [
     { org: "Vietnam Immigration (National Electronic Visa Portal)", url: "https://evisa.gov.vn" },

@@ -56,6 +56,13 @@ export const INFO_TH = {
       'For a sting, douse the area liberally with vinegar for at least 30 seconds (many beaches keep a bottle for this), do not rub the skin or rinse with fresh water, and call 1669 for an ambulance. Treat any breathing difficulty as a medical emergency.',
       'Lesser hazards include sea urchins, stonefish and sharp coral, so water shoes help. Use reef-safe sunscreen and reapply after swimming.',
     ], verifyAt: { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' } },
+    { id: 'value', title: 'Best value: cheapest for the best', body: [
+      'Eat where locals queue: a plate of rice-and-curry (khao gaeng) or a bowl of noodles from a busy street stall costs a fraction of a restaurant meal and is often better.',
+      'Use the markets — fresh fruit, snacks and cooked food are cheapest at day markets and street carts, not malls or tourist strips.',
+      'For city travel, metered ride apps (Grab, Bolt) and the BTS/MRT beat tuk-tuks, which quote tourist rates; rent a scooter by the day only with the correct licence.',
+      'Buy a local SIM data pack in town rather than at the airport, and change money at dedicated booths such as SuperRich rather than hotels.',
+      'The cheapest cold beer is from a 7-Eleven or local shop; bars mark it up heavily.',
+    ] }
   ],
   sources: [
     { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' },

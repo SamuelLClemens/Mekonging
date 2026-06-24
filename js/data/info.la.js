@@ -85,6 +85,13 @@ export const INFO_LA = {
       'Drownings have occurred at the Vang Vieng lagoons and on river tubing trips. Do not combine alcohol with swimming or tubing, check depth before jumping, and use the life jackets offered on cave and river-boat trips.',
       'The Si Phan Don (4000 Islands) stretch of the Mekong has powerful channels near the falls, so swim only where locals do. River water can carry parasites, so avoid swallowing it.',
     ], verifyAt: { org: 'Lao National Tourism Administration', url: 'https://www.tourismlaos.org' } },
+    { id: 'value', title: 'Best value: cheapest for the best', body: [
+      'The evening markets in Luang Prabang and Vientiane are the cheapest and best eating: a fill-your-plate buffet or grilled fish with sticky rice costs very little.',
+      'Buy fresh food and snacks at morning markets; bottled water and basics are cheapest at local shops rather than minimarts.',
+      'For long routes the Laos-China Railway is fast and inexpensive between Vientiane, Vang Vieng, Luang Prabang and Boten; book seats ahead in busy periods.',
+      'In towns, shared songthaews and tuk-tuks are cheap when you agree the fare and share the ride; bicycles are the best value in Luang Prabang and the 4000 Islands.',
+      'Beerlao and Lao-Lao from a shop are the budget drinks; riverside bars charge far more.',
+    ] }
   ],
   sources: [
     { org: "Lao Official Online Visa (Department of Immigration)", url: "https://laoevisa.gov.la" },

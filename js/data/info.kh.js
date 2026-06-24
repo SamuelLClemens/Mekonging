@@ -90,6 +90,13 @@ export const INFO_KH = {
       'Jellyfish stings occur and box jellyfish are present in Gulf waters; treat a sting by dousing with vinegar, removing tentacles without bare skin, and seeking medical help for any severe reaction.',
       'Sandflies on some island beaches leave intensely itchy bites, so use repellent and avoid sitting on the sand at dusk. Power and clinics are limited on the islands, so carry a basic first-aid kit.',
     ], verifyAt: { org: 'Ministry of Tourism Cambodia', url: 'https://www.tourismcambodia.org' } },
+    { id: 'value', title: 'Best value: cheapest for the best', body: [
+      'A plate of bai sach chrouk (pork and rice) or a bowl of kuy teav from a morning stall is the cheapest filling meal; local markets (psar) beat tourist restaurants.',
+      'The US dollar and riel circulate together; pay small change in riel and you effectively gain on the rate, so carry small notes.',
+      'For Angkor, a bicycle or a shared tuk-tuk by the day is far cheaper than a private car, and the pass is sold only at the official centre.',
+      'PassApp and Grab give metered tuk-tuk and car fares in Phnom Penh and Siem Reap, avoiding tourist quotes.',
+      'Markets such as the Russian Market in Phnom Penh are cheapest for souvenirs; bargain politely.',
+    ] }
   ],
   sources: [
     { org: "Royal Government of Cambodia e-Visa", url: "https://www.evisa.gov.kh/" },
