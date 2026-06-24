@@ -628,6 +628,24 @@ function collRow(emoji, label, checked, onToggle) {
   ]);
 }
 
+// Self-hosted, openly-licensed identify photo. `item.photo` is a repo-relative
+// path (e.g. 'img/nature/king-cobra.jpg') so it works fully offline once bundled;
+// `item.photoAttribution` credits the source and licence. Until an image is added
+// a placeholder slot makes the gap explicit (photos are filled in a dedicated
+// pass). Images lazy-load so slow/offline connections degrade gracefully.
+function photoBlock(item, alt) {
+  if (item && item.photo) {
+    return h('figure', { class: 'id-photo' }, [
+      h('img', { src: item.photo, alt: alt || '', loading: 'lazy', decoding: 'async' }),
+      item.photoAttribution ? h('figcaption', { class: 'muted' }, item.photoAttribution) : null,
+    ]);
+  }
+  return h('div', { class: 'id-photo placeholder' }, [
+    h('span', { class: 'id-photo-emoji' }, (item && item.emoji) || '📷'),
+    h('span', { class: 'muted' }, 'Photo coming soon'),
+  ]);
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -642,6 +660,7 @@ function placeScreen(id) {
       h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
+    photoBlock(p, p.name),
     p.blurb ? h('p', {}, p.blurb) : null,
   ]);
   if (p.rating) card.append(ratingBlock(p));
@@ -1377,6 +1396,7 @@ function dishScreen(id) {
     h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
     d.description ? h('p', {}, d.description) : null,
   ]);
+  card.append(photoBlock(d, d.name));
   if (d.price && (d.price.low != null || d.price.high != null)) {
     card.append(h('p', {}, [h('strong', {}, 'Typical price: '), priceLine(d.price.low, d.price.high, d.price.currency)]));
   }
@@ -1456,6 +1476,7 @@ function produceDetail(id) {
         ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(p.names[k], loc) }, `${flag} ${p.names[k]} 🔊`)
         : h('span', { class: 'cat-tag' }, `${flag} ${p.names[k]}`)))),
   ]);
+  card.append(photoBlock(p, p.name));
   if (p.season) card.append(h('h3', {}, 'In season'), h('p', {}, p.season));
   if (p.taste) card.append(h('h3', {}, 'Taste'), h('p', {}, p.taste));
   if (p.howToEat) card.append(h('h3', {}, 'How to eat'), h('p', {}, p.howToEat));
@@ -1994,6 +2015,7 @@ function speciesScreen(id) {
         g ? h('span', { class: 'cat-tag' }, g.label) : null]),
     ]),
     s.dangerous ? h('div', { class: 'warn-note' }, s.dangerNote || 'Potentially dangerous — keep your distance.') : null,
+    photoBlock(s, s.commonName),
     s.blurb ? h('p', {}, s.blurb) : null,
   ]);
   if (s.idTips) card.append(h('h3', {}, 'How to identify'), h('p', {}, s.idTips));
