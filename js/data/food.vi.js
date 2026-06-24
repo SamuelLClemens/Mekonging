@@ -118,7 +118,7 @@ export const FOOD_VI = {
     { "id": "vi-che", "name": "Che (Sweet Dessert Soup)", "localName": "chè", "roman": "cheh", "category": "sweet",
       "description": "A broad family of Vietnamese sweet soups, puddings and drinks built from beans, jellies, sticky rice, tapioca and fruit, frequently enriched with coconut cream and served hot or cold.",
       "ingredients": ["mung beans", "red beans", "coconut milk", "sticky rice", "tapioca pearls", "grass jelly", "fruit", "sugar", "pandan", "lotus seed"],
-      "allergens": ["tree nut", "sesame", "peanut"],
+      "allergens": ["treenut", "sesame", "peanut"],
       "veg": "Almost always vegetarian and most varieties are vegan, being plant- and coconut-based.",
       "spice": "none", "price": { "low": 10000, "high": 25000, "currency": "VND" },
       "whereToFind": "Nationwide at street vendors, dessert stalls and markets, with great regional variety.",
