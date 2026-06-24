@@ -6,8 +6,8 @@
 :root {
   /* Sunset psychedelia */
   --sun: #F2A93B;        --sun-deep: #E07A1F;
-  --orange: #E8632A;     --magenta: #D6336C;   --pink: #EE6CA0;
-  --teal: #16A39A;       --teal-deep: #0E7A73;
+  --orange: #CC5500;     --magenta: #D6336C;   --pink: #EE6CA0;
+  --teal: #16A39A;       --teal-deep: #0A615B;
   --grape: #6A4C93;      --grape-deep: #4A3068;
   --olive: #9C9A3A;
 
@@ -101,7 +101,7 @@ html[data-theme="dark"] .card h3 { color: var(--teal); }
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer;
   border: none; border-radius: var(--r-pill); padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-body); font-weight: 700; font-family: inherit;
-  background: var(--grad-sun); color: #fff; box-shadow: var(--shadow-soft);
+  background: var(--grad-sun); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); box-shadow: var(--shadow-soft);
   transition: filter var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 .btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
@@ -450,3 +450,13 @@ html[data-theme="dark"] a { color: var(--teal); }
 .id-photo figcaption { font-size: var(--fs-sm); color: var(--ink-soft); margin-top: var(--sp-1, 4px); }
 .id-photo.placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 132px; background: var(--card-2, rgba(0, 0, 0, 0.04)); border: 1px dashed var(--line); border-radius: var(--r-md); color: var(--ink-soft); }
 .id-photo .id-photo-emoji { font-size: 2.4rem; line-height: 1; }
+
+/* Visible keyboard focus ring on every interactive control (WCAG 2.4.7). */
+a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--ink); outline-offset: 2px; border-radius: var(--r-sm);
+}
+.search:focus-visible, .field input:focus-visible, .field select:focus-visible, .ta:focus-visible {
+  outline: 3px solid var(--orange); outline-offset: 1px;
+}
+html[data-theme="dark"] a:focus-visible, html[data-theme="dark"] button:focus-visible,
+html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex]:focus-visible { outline-color: var(--sun); }

@@ -5,7 +5,7 @@
 export const PHOTOS = {
   "banana": { src: "img/produce/banana.jpg", credit: "Wilfredor, CC BY-SA 3.0, via Wikimedia Commons" },
   "banana-blossom": { src: "img/produce/banana-blossom.jpg", credit: "Wilfredor, CC BY-SA 3.0, via Wikimedia Commons" },
-  "betel-leaf": { src: "img/produce/betel-leaf.jpg", credit: "No machine-readable author provided. Pamri assumed (based on copyright, Public domain, via Wikimedia Commons" },
+  "betel-leaf": { src: "img/produce/betel-leaf.jpg", credit: "Pamri, Public domain, via Wikimedia Commons" },
   "bitter-melon": { src: "img/produce/bitter-melon.jpg", credit: "Joydeep, CC BY-SA 3.0, via Wikimedia Commons" },
   "coconut": { src: "img/produce/coconut.jpg", credit: "Ivar Leidus, CC BY-SA 4.0, via Wikimedia Commons" },
   "coriander": { src: "img/produce/coriander.jpg", credit: "Sanjay Acharya, CC BY-SA 4.0, via Wikimedia Commons" },
@@ -111,7 +111,7 @@ export const PHOTOS = {
   "nat-fish-clownfish": { src: "img/nature/nat-fish-clownfish.jpg", credit: "Diego Delso, CC BY-SA 4.0, via Wikimedia Commons" },
   "nat-fish-giant-barb": { src: "img/nature/nat-fish-giant-barb.jpg", credit: "NasserHalaweh, CC BY-SA 4.0, via Wikimedia Commons" },
   "nat-fish-giant-freshwater-stingray": { src: "img/nature/nat-fish-giant-freshwater-stingray.jpg", credit: "Gant223, CC BY-SA 4.0, via Wikimedia Commons" },
-  "nat-fish-manta-ray": { src: "img/nature/nat-fish-manta-ray.jpg", credit: "Jaine FRA, Couturier LIE, Weeks SJ, Townsend KA, Bennett MB, et al. (2, CC BY 2.5, via Wikimedia Commons" },
+  "nat-fish-manta-ray": { src: "img/nature/nat-fish-manta-ray.jpg", credit: "Jaine FRA et al., CC BY 2.5, via Wikimedia Commons" },
   "nat-fish-mekong-giant-catfish": { src: "img/nature/nat-fish-mekong-giant-catfish.jpg", credit: "Cool critter channel, CC BY 4.0, via Wikimedia Commons" },
   "nat-fish-moorish-idol": { src: "img/nature/nat-fish-moorish-idol.jpg", credit: "Diego Delso, CC BY-SA 4.0, via Wikimedia Commons" },
   "nat-fish-parrotfish": { src: "img/nature/nat-fish-parrotfish.jpg", credit: "Diego Delso, CC BY-SA 4.0, via Wikimedia Commons" },
