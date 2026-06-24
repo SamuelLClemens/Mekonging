@@ -45,7 +45,7 @@ export const INFO_TH = {
       'March–May is very hot; June–October is the green, wetter season with afternoon downpours.',
     ]},
     { id: 'driving', title: 'Renting a car / driving', body: [
-      'Thailand drives on the left. Foreign drivers need an International Driving Permit (1949 Geneva style) together with the home licence; police run routine checkpoints and will ask for both.',
+      'Thailand drives on the left. Foreign drivers need an International Driving Permit together with the home licence; Thailand accepts permits issued under either the 1949 Geneva or the 1968 Vienna Convention. Police run routine checkpoints and will ask for both documents.',
       'Car hire from Avis, Budget, Hertz or a reputable local firm usually needs a driver aged 21 or over and a credit-card deposit. Roads are well paved, though northern mountain routes are winding and the Bangkok expressways are tolled.',
       'Scooter hire is cheap and everywhere, but motorbike crashes are the leading cause of tourist death and injury. A helmet is the law, and most travel-insurance policies pay out only if you hold the correct motorcycle entitlement on your licence.',
       'Keep small notes for fuel; petrol stations are plentiful. Never hand over your passport as a deposit — leave a cash deposit or a photocopy instead.',
