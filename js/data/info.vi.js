@@ -72,7 +72,18 @@ export const INFO_VI = {
         "The north (Hanoi, Sapa) is cool and misty in winter and hot, wet in summer; the centre (Hue, Da Nang, Hoi An) sees heavy rain and storm risk around October-November.",
         "The south (Ho Chi Minh City, Mekong Delta) is warm year-round with a dry season around December-April; expect crowds and higher prices around the Tet lunar new year."
       ]
-    }
+    },
+    { id: 'driving', title: 'Renting a car / driving', body: [
+      'Vietnam drives on the right. It recognises International Driving Permits issued under the 1968 Vienna Convention; permits issued under the older 1949 Geneva Convention, which several Western countries still use, are not officially valid here, so confirm which permit your country issues.',
+      'Because city traffic is dense, most visitors hire a car with a driver rather than self-driving; this is widely available and reasonably priced. Self-drive car hire exists but is uncommon.',
+      'Renting a motorbike is popular but legally needs a Vietnamese licence or a valid 1968-style permit with the correct category. Police do stop and fine foreign riders, and riding without the correct licence can void medical insurance.',
+      'Helmets are compulsory. Ride defensively, avoid rural night driving, and note that the central coast is exposed to typhoons from roughly September to November.',
+    ], verifyAt: { org: 'Vietnam National Authority of Tourism', url: 'https://vietnam.travel' } },
+    { id: 'beach-safety', title: 'Beach & jellyfish safety', body: [
+      'Rip currents affect popular beaches such as those at Da Nang, Nha Trang and Mui Ne. Swim between the flags where lifeguards operate, and stay out of the sea during and after the September to November storm season on the central coast.',
+      'Jellyfish blooms occur seasonally, most often in the hotter months; stings are usually painful rather than dangerous, though box jellyfish are present in the region. Douse a sting with vinegar, remove tentacles without bare hands, and seek help if symptoms spread.',
+      'Sea urchins and stonefish live on rocky sections, so wear water shoes. Reef-safe sunscreen protects both you and the coral.',
+    ], verifyAt: { org: 'Vietnam National Authority of Tourism', url: 'https://vietnam.travel' } },
   ],
   sources: [
     { org: "Vietnam Immigration (National Electronic Visa Portal)", url: "https://evisa.gov.vn" },

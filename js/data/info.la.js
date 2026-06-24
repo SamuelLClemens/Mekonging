@@ -73,7 +73,18 @@ export const INFO_LA = {
         "March to May is the hottest period and can bring smoky haze from agricultural burning, especially in the north. The wet season runs roughly June to October, bringing lush scenery and higher river levels but also rain and occasional flooding.",
         "Timing is guidance: weather varies by region and year, so check a current forecast and regional conditions when planning."
       ]
-    }
+    },
+    { id: 'driving', title: 'Renting a car / driving', body: [
+      'Laos drives on the right. An International Driving Permit with the home licence is required; mountain roads are narrow and winding, and landslides and washouts are common in the May to October wet season.',
+      'Hiring a car with a driver is the usual choice for longer trips given road conditions, while self-drive hire is available in the main towns.',
+      'Motorbike loops such as the Thakhek Loop are a highlight, but check brakes, tyres and insurance before setting off, watch for gravel and livestock, and avoid riding after dark. Helmets are required.',
+      'Fuel stations can be sparse on remote routes, so fill up when you can and carry small kip notes.',
+    ], verifyAt: { org: 'Lao National Tourism Administration', url: 'https://www.tourismlaos.org' } },
+    { id: 'water-safety', title: 'Water & river safety', body: [
+      'Laos is landlocked and has no sea coast, so there are no marine jellyfish; the real risks are its rivers, waterfalls and lagoons. Currents in the Mekong and the Nam Song are strong and unpredictable, particularly in the wet season.',
+      'Drownings have occurred at the Vang Vieng lagoons and on river tubing trips. Do not combine alcohol with swimming or tubing, check depth before jumping, and use the life jackets offered on cave and river-boat trips.',
+      'The Si Phan Don (4000 Islands) stretch of the Mekong has powerful channels near the falls, so swim only where locals do. River water can carry parasites, so avoid swallowing it.',
+    ], verifyAt: { org: 'Lao National Tourism Administration', url: 'https://www.tourismlaos.org' } },
   ],
   sources: [
     { org: "Lao Official Online Visa (Department of Immigration)", url: "https://laoevisa.gov.la" },

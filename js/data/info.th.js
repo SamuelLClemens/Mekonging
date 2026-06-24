@@ -44,6 +44,18 @@ export const INFO_TH = {
       'November–February is cool and dry — the most comfortable season (and busiest).',
       'March–May is very hot; June–October is the green, wetter season with afternoon downpours.',
     ]},
+    { id: 'driving', title: 'Renting a car / driving', body: [
+      'Thailand drives on the left. Foreign drivers need an International Driving Permit (1949 Geneva style) together with the home licence; police run routine checkpoints and will ask for both.',
+      'Car hire from Avis, Budget, Hertz or a reputable local firm usually needs a driver aged 21 or over and a credit-card deposit. Roads are well paved, though northern mountain routes are winding and the Bangkok expressways are tolled.',
+      'Scooter hire is cheap and everywhere, but motorbike crashes are the leading cause of tourist death and injury. A helmet is the law, and most travel-insurance policies pay out only if you hold the correct motorcycle entitlement on your licence.',
+      'Keep small notes for fuel; petrol stations are plentiful. Never hand over your passport as a deposit — leave a cash deposit or a photocopy instead.',
+    ], verifyAt: { org: 'Department of Land Transport', url: 'https://www.dlt.go.th' } },
+    { id: 'beach-safety', title: 'Beach & jellyfish safety', body: [
+      'Rip currents are the main hazard on both the Andaman and Gulf coasts. Obey the flag system — a red flag means do not enter — and take particular care on Phuket beaches during the May to October monsoon, when drownings rise.',
+      'Box jellyfish, including potentially fatal Chironex species, are present in Thai waters, most often in warmer, calmer months and after heavy rain. Stings have been recorded around Koh Samui, Koh Pha-ngan, Krabi and Phuket. No reliable real-time warning system exists, so ask lifeguards and locals about recent sightings.',
+      'For a sting, douse the area liberally with vinegar for at least 30 seconds (many beaches keep a bottle for this), do not rub the skin or rinse with fresh water, and call 1669 for an ambulance. Treat any breathing difficulty as a medical emergency.',
+      'Lesser hazards include sea urchins, stonefish and sharp coral, so water shoes help. Use reef-safe sunscreen and reapply after swimming.',
+    ], verifyAt: { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' } },
   ],
   sources: [
     { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' },

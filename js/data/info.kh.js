@@ -78,7 +78,18 @@ export const INFO_KH = {
         "The wet season from around June to October brings heavy afternoon downpours but lush green landscapes, fuller waterfalls and fewer crowds.",
         "Treat these as general patterns, as timing and intensity vary year to year."
       ]
-    }
+    },
+    { id: 'driving', title: 'Renting a car / driving', body: [
+      'Cambodia drives on the right. An International Driving Permit with the home licence is expected; enforcement is inconsistent, but driving without one leaves you exposed if stopped or in a crash.',
+      'Hiring a car with a driver is cheap, common and the least stressful option, especially for temple touring around Siem Reap and longer cross-country trips. Self-drive hire is limited.',
+      'Motorbike and scooter hire is available, though some towns restrict foreign rentals at times, and helmets are required. Rural roads can be rough, poorly lit and hazardous after dark.',
+      'Carry small US dollars and riel for fuel, and keep your passport rather than surrendering it as a deposit.',
+    ], verifyAt: { org: 'Ministry of Public Works and Transport', url: 'https://www.mpwt.gov.kh' } },
+    { id: 'beach-safety', title: 'Beach & jellyfish safety', body: [
+      'The southern coast and islands — Sihanoukville, Koh Rong and Koh Rong Samloem — sit on the calmer Gulf of Thailand, but rip currents can still form, especially in the May to October wet season.',
+      'Jellyfish stings occur and box jellyfish are present in Gulf waters; treat a sting by dousing with vinegar, removing tentacles without bare skin, and seeking medical help for any severe reaction.',
+      'Sandflies on some island beaches leave intensely itchy bites, so use repellent and avoid sitting on the sand at dusk. Power and clinics are limited on the islands, so carry a basic first-aid kit.',
+    ], verifyAt: { org: 'Ministry of Tourism Cambodia', url: 'https://www.tourismcambodia.org' } },
   ],
   sources: [
     { org: "Royal Government of Cambodia e-Visa", url: "https://www.evisa.gov.kh/" },
