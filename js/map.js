@@ -137,14 +137,33 @@ export async function initMap(containerEl, opts = {}) {
   });
   map.addControl(geo, 'top-right');
 
-  // markers: curated places coloured by EFFECTIVE rating (your own rating wins);
-  // user pins in grape so they stand apart.
+  // markers: curated places coloured by EFFECTIVE rating (your own rating wins),
+  // except markets, which use a distinct gold pin. Each marker is tagged with its
+  // map layer (stay / eat / go / market) so the layer toggles can show or hide it.
+  // User pins stay in grape and always show.
+  const markersByLayer = { stay: [], eat: [], go: [], market: [] };
+  const MARKET_PIN = '#E0A100';
+  function layerForCats(cats) {
+    cats = cats || [];
+    if (cats.includes('market')) return 'market';
+    if (cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'resort', 'hostel'].includes(c))) return 'stay';
+    if (cats.some((c) => ['food', 'restaurant'].includes(c))) return 'eat';
+    return 'go';
+  }
+  function setLayerVisible(layer, on) {
+    (markersByLayer[layer] || []).forEach((el) => { el.style.display = on ? '' : 'none'; });
+  }
   function addMarkers() {
     for (const p of allPlaces()) {
       if (!p.coords) continue;
-      const m = new maplibregl.Marker({ color: ratingColor(effectiveRating(p.id, p.rating)) }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
-      m.getElement().style.cursor = 'pointer';
-      m.getElement().addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); });
+      const layer = layerForCats(p.categories);
+      const color = layer === 'market' ? MARKET_PIN : ratingColor(effectiveRating(p.id, p.rating));
+      const m = new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+      const el = m.getElement();
+      el.style.cursor = 'pointer';
+      el.dataset.mkLayer = layer;
+      el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); });
+      markersByLayer[layer].push(el);
     }
     for (const pin of store.pins) {
       if (!pin.coords) continue;
@@ -176,6 +195,8 @@ export async function initMap(containerEl, opts = {}) {
   return {
     map,
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
+    setLayer: setLayerVisible,
+    layers: ['stay', 'eat', 'go', 'market'],
   };
 }
 

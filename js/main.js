@@ -938,7 +938,19 @@ function mapScreen() {
   }
 
   const canvas = h('div', { id: 'map-canvas' });
-  wrap.append(toolbar, storageOut, canvas);
+  // Layer toggles: show/hide marker groups (all on by default). Wired to the map
+  // controller once it initialises (mapCtrl). Markets are their own gold layer.
+  let mapCtrl = null;
+  const LAYER_DEFS = [['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'], ['stay', '🛏️ Places to stay']];
+  const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
+    h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide)'),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' },
+      LAYER_DEFS.map(([key, label]) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
+        h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setLayer(key, e.target.checked); } }),
+        h('span', {}, label),
+      ]))),
+  ]);
+  wrap.append(toolbar, storageOut, canvas, layersCard);
 
   // legend: what the pin colours and route lines mean
   const dot = (c) => h('span', { style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:6px;vertical-align:middle` });
@@ -946,6 +958,7 @@ function mapScreen() {
     h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:5px' }, 'Pin colour = rating (your own rating wins)'),
     h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px' },
       RATING_BANDS.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
+    h('div', { style: 'font-size:13px;margin-bottom:8px' }, [dot('#E0A100'), 'Markets (gold pin)']),
     h('div', { class: 'muted', style: 'font-weight:700;margin:6px 0 5px' }, 'Route lines = transport mode'),
     h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px' },
       ROUTE_LEGEND.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
@@ -965,7 +978,7 @@ function mapScreen() {
   import('./map.js').then((m) => m.initMap(canvas, {
     onMapClick: (coords) => { pendingPinCoords = coords; go('#addpin'); },
     onOpen: (id) => go(`#place-${id}`),
-  })).then(() => { showStorage(); }).catch(() => {
+  })).then((ctrl) => { mapCtrl = ctrl; showStorage(); }).catch(() => {
     canvas.replaceWith(mapFallback());
     storeBtn.remove();
   });
