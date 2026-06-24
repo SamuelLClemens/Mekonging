@@ -99,7 +99,7 @@ export function allPlaces(filter = {}) {
   let out = COUNTRIES.flatMap((c) => Array.isArray(c.places) ? c.places : []);
   if (filter.country) out = out.filter((p) => p.country === filter.country);
   if (Array.isArray(filter.interests) && filter.interests.length) {
-    out = out.filter((p) => p.categories.some((cat) => filter.interests.includes(cat)));
+    out = out.filter((p) => Array.isArray(p.categories) && p.categories.some((cat) => filter.interests.includes(cat)));
   }
   if (filter.budget && filter.budget !== 'flexible') {
     out = out.filter((p) => p.budgetTier === filter.budget || p.budgetTier === 'any');

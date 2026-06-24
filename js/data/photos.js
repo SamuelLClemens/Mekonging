@@ -1,5 +1,5 @@
-// Auto-generated identify photos. Each image is openly licensed (public domain or
-// Creative Commons) and SELF-HOSTED under img/ so the app stays offline-first;
+// Auto-generated identify photos. Each image is openly licensed (public domain,
+// Creative Commons, or GFDL) and SELF-HOSTED under img/ so the app stays offline-first;
 // images are lazy-loaded and runtime-cached, never precached. Attribution per
 // the source (Wikimedia Commons or Openverse) is shown in the photo caption.
 export const PHOTOS = {

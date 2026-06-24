@@ -2,12 +2,12 @@
 // per release. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON basemap
 // ARE precached so the offline map works from first launch with no connection.
 //
-// TILE_CACHE holds the vector-tile byte ranges from the external tile source so the
+// TILE_CACHE holds the raster satellite-tile byte ranges from the external tile source so the
 // map works offline once an area has been downloaded/viewed. The Cache API refuses
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.50.0';
+const CACHE_VERSION = 'mk-v0.51.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 

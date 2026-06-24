@@ -2481,8 +2481,15 @@ function settingsScreen() {
   mount(wrap, '#settings');
 }
 
+let _fieldSeq = 0;
 function field(labelText, control) {
-  return h('div', { class: 'field' }, [h('label', {}, labelText), control]);
+  // Associate the <label> with its control (programmatic label for screen readers):
+  // give the labelable element an id and point the label's `for` at it.
+  const target = control && (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName || '')
+    ? control
+    : (control.querySelector && control.querySelector('input, select, textarea')));
+  if (target && !target.id) target.id = 'fld-' + (++_fieldSeq);
+  return h('div', { class: 'field' }, [h('label', target && target.id ? { for: target.id } : {}, labelText), control]);
 }
 function selectEl(options, current, onchange) {
   const opts = options.map((o) => Array.isArray(o) ? o : [o, o]);
