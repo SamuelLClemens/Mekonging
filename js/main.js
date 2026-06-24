@@ -13,6 +13,7 @@ import {
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
+import { CROSSINGS } from './data/borders.js';
 import { putBlob, getBlob, delBlob } from './idb.js';
 import {
   available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
@@ -927,6 +928,33 @@ function collectionScreen(id) {
 }
 
 // ---- MAP (offline vector map + GPS + drop-a-pin) ----------------------------
+// Border crossings: open land/bridge/river crossings, grouped by country pair,
+// with guidance hours and visa notes. Reached from the Map screen and its markers.
+function crossingsScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Border crossings', '#map'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
+  const groups = {};
+  CROSSINGS.forEach((x) => { (groups[x.pair] = groups[x.pair] || []).push(x); });
+  Object.keys(groups).forEach((pair) => {
+    wrap.append(h('h2', { style: 'margin:16px 0 6px' }, pair));
+    groups[pair].forEach((x) => {
+      const card = h('div', { class: 'card' }, [
+        h('div', { class: 'row-between' }, [h('strong', {}, x.name), h('span', { class: 'cat-tag' }, x.type)]),
+        h('p', { class: 'muted', style: 'margin:4px 0' }, `${x.a.town} ↔ ${x.b.town}`),
+        h('p', {}, [h('strong', {}, 'Hours: '), x.hours]),
+        x.visa ? h('p', {}, [h('strong', {}, 'Visa: '), x.visa]) : null,
+        x.notes ? h('p', { class: 'muted' }, x.notes) : null,
+        x.scam ? h('div', { class: 'warn-note' }, `⚠ ${x.scam}`) : null,
+        x.coords ? h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: `https://www.google.com/maps/search/?api=1&query=${x.coords.lat},${x.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
+      ]);
+      if (x.sources && x.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${x.sources.map((s) => s.org).join(', ')} · verified ${x.verified}`));
+      wrap.append(card);
+    });
+  });
+  mount(wrap, '#map');
+}
+
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map'));
@@ -934,7 +962,8 @@ function mapScreen() {
 
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
   const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
-  const toolbar = h('div', { class: 'map-toolbar' }, [addBtn, storeBtn]);
+  const crossBtn = h('button', { class: 'btn ghost', onclick: () => go('#crossings') }, '🛂 Crossings');
+  const toolbar = h('div', { class: 'map-toolbar' }, [addBtn, crossBtn, storeBtn]);
   const storageOut = h('p', { class: 'map-hint' }, '');
   async function showStorage() {
     const m = await import('./map.js'); const e = await m.storageEstimate();
@@ -945,13 +974,17 @@ function mapScreen() {
   // Layer toggles: show/hide marker groups (all on by default). Wired to the map
   // controller once it initialises (mapCtrl). Markets are their own gold layer.
   let mapCtrl = null;
-  const LAYER_DEFS = [['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'], ['stay', '🛏️ Places to stay']];
+  const LAYER_DEFS = [['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'], ['stay', '🛏️ Places to stay'], ['crossing', '🛂 Border crossings']];
   const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
     h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide)'),
     h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' }, [
       h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
         h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setSatellite(e.target.checked); } }),
         h('span', {}, '🛰️ Satellite imagery'),
+      ]),
+      h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
+        h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setBorders(e.target.checked); } }),
+        h('span', {}, '🗺️ Country borders'),
       ]),
       ...LAYER_DEFS.map(([key, label]) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
         h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setLayer(key, e.target.checked); } }),
@@ -988,6 +1021,7 @@ function mapScreen() {
   import('./map.js').then((m) => m.initMap(canvas, {
     onMapClick: (coords) => { pendingPinCoords = coords; go('#addpin'); },
     onOpen: (id) => go(`#place-${id}`),
+    onOpenCrossing: () => go('#crossings'),
   })).then((ctrl) => { mapCtrl = ctrl; showStorage(); }).catch(() => {
     canvas.replaceWith(mapFallback());
     storeBtn.remove();
@@ -2476,6 +2510,7 @@ function render() {
       case 'saved': return savedScreen();
       case 'collection': return collectionScreen(arg);
       case 'map': return mapScreen();
+      case 'crossings': return crossingsScreen();
       case 'addpin': return addPinScreen();
       case 'journal': return journalDispatch(arg);
       case 'journey': return journeyScreen();

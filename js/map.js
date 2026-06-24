@@ -8,6 +8,7 @@
 import { store } from './state.js';
 import { allPlaces, COUNTRIES } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
+import { CROSSINGS } from './data/borders.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -120,6 +121,8 @@ function basemapStyle() {
       { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
       { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
       { id: 'satellite', source: 'satellite', type: 'raster', layout: { visibility: 'visible' } },
+      { id: 'borders', source: 'land', type: 'line', layout: { visibility: 'visible' },
+        paint: { 'line-color': '#FF5A5F', 'line-width': 1.6, 'line-dasharray': [3, 2], 'line-opacity': 0.92 } },
       { id: 'mekong-line', source: 'mekong', type: 'line', layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#2C7DA0', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.2, 8, 3, 12, 6] } },
     ],
@@ -151,7 +154,8 @@ export async function initMap(containerEl, opts = {}) {
   // except markets, which use a distinct gold pin. Each marker is tagged with its
   // map layer (stay / eat / go / market) so the layer toggles can show or hide it.
   // User pins stay in grape and always show.
-  const markersByLayer = { stay: [], eat: [], go: [], market: [] };
+  const markersByLayer = { stay: [], eat: [], go: [], market: [], crossing: [] };
+  const CROSSING_PIN = '#3B5BDB';
   const MARKET_PIN = '#E0A100';
   function layerForCats(cats) {
     cats = cats || [];
@@ -181,6 +185,16 @@ export async function initMap(containerEl, opts = {}) {
       m.getElement().style.cursor = 'pointer';
       m.getElement().addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(pin.id); });
     }
+    // border crossings as a distinct blue layer; click opens the crossings list
+    for (const x of CROSSINGS) {
+      if (!x.coords) continue;
+      const m = new maplibregl.Marker({ color: CROSSING_PIN }).setLngLat([x.coords.lng, x.coords.lat]).addTo(map);
+      const el = m.getElement();
+      el.style.cursor = 'pointer';
+      el.dataset.mkLayer = 'crossing';
+      el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenCrossing) opts.onOpenCrossing(x.id); });
+      markersByLayer.crossing.push(el);
+    }
   }
   // Inter-city route corridors as colour-coded lines (drawn under the markers).
   function addRoutes() {
@@ -206,8 +220,9 @@ export async function initMap(containerEl, opts = {}) {
     map,
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
     setLayer: setLayerVisible,
-    layers: ['stay', 'eat', 'go', 'market'],
+    layers: ['stay', 'eat', 'go', 'market', 'crossing'],
     setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); },
+    setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
   };
 }
 
