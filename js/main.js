@@ -39,7 +39,10 @@ import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './da
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
-if ('serviceWorker' in navigator) {
+// Register the service worker only in a secure web context (https / http localhost).
+// In the native iOS wrapper the app is served over a custom scheme where SW cannot
+// run and is not needed (all assets are bundled on-device), so skip it there.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 

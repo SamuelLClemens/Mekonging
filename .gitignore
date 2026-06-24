@@ -10,3 +10,6 @@ DerivedData/
 build/
 *.xcscmblueprint
 *.xccheckout
+
+# Generated iOS web bundle (run sync-web.sh to regenerate)
+Mekonging Xcode/Mekonging/Mekonging/Web/
