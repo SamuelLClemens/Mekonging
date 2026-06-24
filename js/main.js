@@ -36,6 +36,7 @@ import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
 import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
+import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 
 // ---- service worker + theme -------------------------------------------------
@@ -146,6 +147,7 @@ function homeScreen() {
     { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
     { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+    { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
     { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
@@ -230,6 +232,7 @@ function countryHubScreen(id) {
     { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
     { ic: '🕑', t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
     { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
+    { ic: '🏊', t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
     { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
     { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
@@ -933,6 +936,43 @@ function collectionScreen(id) {
 // ---- MAP (offline vector map + GPS + drop-a-pin) ----------------------------
 // Border crossings: open land/bridge/river crossings, grouped by country pair,
 // with guidance hours and visa notes. Reached from the Map screen and its markers.
+const POOL_TYPE_LABEL = { 'public': 'Public', 'hotel-daypass': 'Day pass', 'waterpark': 'Water park', 'natural': 'Natural' };
+function poolsScreen(arg) {
+  const cc = arg || '';
+  const country = cc ? getCountry(cc) : null;
+  const list = cc ? poolsForCountry(cc) : POOLS.slice();
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(country ? `${country.name} pools` : 'Public pools', cc ? `#country-${cc}` : '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Public swimming pools, hotel & resort day passes, water parks and managed natural swimming spots. Prices are ranges in local currency and change often — guidance only, confirm locally.'));
+  if (!list.length) { wrap.append(h('p', { class: 'muted' }, 'No pools listed for this area yet.')); mount(wrap, '#home'); return; }
+  const groups = {};
+  list.forEach((p) => { (groups[p.city] = groups[p.city] || []).push(p); });
+  Object.keys(groups).forEach((city) => {
+    wrap.append(h('h2', { style: 'margin:16px 0 6px' }, city));
+    groups[city].forEach((p) => {
+      const card = h('div', { class: 'card' }, [
+        h('div', { class: 'row-between' }, [h('strong', {}, p.name), h('span', { class: 'cat-tag' }, POOL_TYPE_LABEL[p.type] || p.type)]),
+        h('p', { class: 'price-line' }, [
+          h('strong', {}, priceLine(p.price.low, p.price.high, p.price.currency)),
+          p.confidence === 'low' ? h('span', { class: 'muted' }, ' · approx.') : null,
+        ]),
+        p.price.note ? h('p', { class: 'muted', style: 'font-size:13px' }, p.price.note) : null,
+        h('p', {}, [h('strong', {}, 'Cleanliness: '), p.cleanliness]),
+        p.hours ? h('p', {}, [h('strong', {}, 'Hours: '), p.hours]) : null,
+        p.facilities && p.facilities.length ? h('p', { class: 'muted' }, p.facilities.join(' · ')) : null,
+        ...((p.tips || []).map((t) => h('div', { class: 'list-note' }, t))),
+        (p.coords || p.mapQuery) ? h('a', { class: 'btn ghost block', style: 'margin-top:6px',
+          href: p.coords ? `https://www.google.com/maps/search/?api=1&query=${p.coords.lat},${p.coords.lng}`
+                          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapQuery)}`,
+          target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
+      ]);
+      if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
+      wrap.append(card);
+    });
+  });
+  mount(wrap, '#home');
+}
+
 function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Border crossings', '#map'));
@@ -2521,6 +2561,7 @@ function render() {
       case 'collection': return collectionScreen(arg);
       case 'map': return mapScreen();
       case 'crossings': return crossingsScreen();
+      case 'pools': return poolsScreen(arg);
       case 'addpin': return addPinScreen();
       case 'journal': return journalDispatch(arg);
       case 'journey': return journeyScreen();
