@@ -12,6 +12,7 @@ import {
 } from './state.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
+import { PHOTOS } from './data/photos.js';
 import { putBlob, getBlob, delBlob } from './idb.js';
 import {
   available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
@@ -634,10 +635,13 @@ function collRow(emoji, label, checked, onToggle) {
 // a placeholder slot makes the gap explicit (photos are filled in a dedicated
 // pass). Images lazy-load so slow/offline connections degrade gracefully.
 function photoBlock(item, alt) {
-  if (item && item.photo) {
+  const reg = (item && item.id && PHOTOS[item.id]) || null;
+  const src = (item && item.photo) || (reg && reg.src);
+  const credit = (item && item.photoAttribution) || (reg && reg.credit);
+  if (src) {
     return h('figure', { class: 'id-photo' }, [
-      h('img', { src: item.photo, alt: alt || '', loading: 'lazy', decoding: 'async' }),
-      item.photoAttribution ? h('figcaption', { class: 'muted' }, item.photoAttribution) : null,
+      h('img', { src, alt: alt || '', loading: 'lazy', decoding: 'async' }),
+      credit ? h('figcaption', { class: 'muted' }, credit) : null,
     ]);
   }
   return h('div', { class: 'id-photo placeholder' }, [
@@ -944,11 +948,17 @@ function mapScreen() {
   const LAYER_DEFS = [['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'], ['stay', '🛏️ Places to stay']];
   const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
     h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide)'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' },
-      LAYER_DEFS.map(([key, label]) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' }, [
+      h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
+        h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setSatellite(e.target.checked); } }),
+        h('span', {}, '🛰️ Satellite imagery'),
+      ]),
+      ...LAYER_DEFS.map(([key, label]) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
         h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setLayer(key, e.target.checked); } }),
         h('span', {}, label),
-      ]))),
+      ])),
+    ]),
+    h('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' }, 'Satellite imagery streams when online and is saved for the areas you view; the plain offline map always works with no connection.'),
   ]);
   wrap.append(toolbar, storageOut, canvas, layersCard);
 

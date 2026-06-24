@@ -20,6 +20,14 @@ const MEKONG_LL = [
 ];
 const MEKONG_FC = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: MEKONG_LL } }] };
 
+// Optional satellite basemap (Esri World Imagery) — streamed when online and
+// runtime-cached by the service worker so viewed areas persist offline. It sits
+// OVER the self-hosted vector basemap, which remains the always-offline fallback
+// (uncached tiles simply fail to paint and the vector layers show through). This
+// reuses the same source/attribution as the Nomadic Almanac map.
+const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const SATELLITE_ATTR = 'Imagery © Esri — Source: Esri, Maxar, Earthstar Geographics, USGS, NOAA';
+
 // Pin colour by rating. The traveller's OWN rating (placeData) wins over the
 // curated/synthesised score, so once you rate a place its pin reflects YOUR view.
 export function effectiveRating(id, curated) {
@@ -105,11 +113,13 @@ function basemapStyle() {
     sources: {
       land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
       mekong: { type: 'geojson', data: MEKONG_FC },
+      satellite: { type: 'raster', tiles: [SATELLITE_TILES], tileSize: 256, maxzoom: 19, attribution: SATELLITE_ATTR },
     },
     layers: [
       { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
       { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
       { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
+      { id: 'satellite', source: 'satellite', type: 'raster', layout: { visibility: 'visible' } },
       { id: 'mekong-line', source: 'mekong', type: 'line', layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#2C7DA0', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.2, 8, 3, 12, 6] } },
     ],
@@ -197,6 +207,7 @@ export async function initMap(containerEl, opts = {}) {
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
     setLayer: setLayerVisible,
     layers: ['stay', 'eat', 'go', 'market'],
+    setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); },
   };
 }
 
