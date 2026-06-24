@@ -2,3 +2,11 @@ node_modules/
 .DS_Store
 *.log
 .claude/
+
+# Xcode — per-user editor state and build artifacts (never share these)
+**/xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.xcscmblueprint
+*.xccheckout
