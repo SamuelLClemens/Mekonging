@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		28157BB82FECBF3E00CD8A9C /* Web in Resources */ = {isa = PBXBuildFile; fileRef = 28157BB72FECBF3E00CD8A9C /* Web */; };
 		285BE37A2FEB561C00A5D076 /* MekongingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285BE3792FEB561C00A5D076 /* MekongingApp.swift */; };
 		285BE37C2FEB561C00A5D076 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285BE37B2FEB561C00A5D076 /* ContentView.swift */; };
 		285BE37E2FEB561F00A5D076 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285BE37D2FEB561F00A5D076 /* Assets.xcassets */; };
@@ -36,6 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		28157BB72FECBF3E00CD8A9C /* Web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Web; sourceTree = "<group>"; };
 		285BE3762FEB561C00A5D076 /* Mekonging.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mekonging.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		285BE3792FEB561C00A5D076 /* MekongingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MekongingApp.swift; sourceTree = "<group>"; };
 		285BE37B2FEB561C00A5D076 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 			children = (
 				285BE3792FEB561C00A5D076 /* MekongingApp.swift */,
 				285BE37B2FEB561C00A5D076 /* ContentView.swift */,
+				28157BB72FECBF3E00CD8A9C /* Web */,
 				285BE37D2FEB561F00A5D076 /* Assets.xcassets */,
 				285BE3822FEB561F00A5D076 /* Persistence.swift */,
 				285BE3842FEB561F00A5D076 /* Mekonging.xcdatamodeld */,
@@ -237,6 +240,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				28157BB82FECBF3E00CD8A9C /* Web in Resources */,
 				285BE3812FEB561F00A5D076 /* Preview Assets.xcassets in Resources */,
 				285BE37E2FEB561F00A5D076 /* Assets.xcassets in Resources */,
 			);
@@ -428,11 +432,11 @@
 				DEVELOPMENT_TEAM = KYNT7822X8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Mekonging uses your location to show places near you and to stamp journal entries.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Mekonging uses the microphone for voice translation input.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Mekonging uses speech recognition to transcribe what you say for translation.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
@@ -460,11 +464,11 @@
 				DEVELOPMENT_TEAM = KYNT7822X8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Mekonging uses your location to show places near you and to stamp journal entries.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Mekonging uses the microphone for voice translation input.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Mekonging uses speech recognition to transcribe what you say for translation.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
