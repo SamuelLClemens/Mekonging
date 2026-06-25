@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 
 function defaults() {
   return {
@@ -14,6 +14,8 @@ function defaults() {
       prefs: {
         interests: [],          // subset of ['food','culture','nature','nightlife']
         budget: 'flexible',     // 'low' | 'mid' | 'high' | 'flexible'
+        // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
+        mapLayers: { go: true, eat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
@@ -49,6 +51,8 @@ function defaults() {
     calendar: { items: [] },    // { id, date, time, type:'stay'|'meal'|'activity'|'plan', title, place, cost, currency, rating, note }
     // --- v5: pre-trip checklist progress (per item id) ---
     checklist: { checked: {} },
+    // --- v6: the user's accommodation, so the map can always point the way back ---
+    myStay: null,               // { name, coords:{lat,lng}, setAt } | null
   };
 }
 
@@ -71,6 +75,7 @@ function migrate(data) {
     journal: { entries: Array.isArray((data.journal || {}).entries) ? data.journal.entries : [] },
     calendar: { items: Array.isArray((data.calendar || {}).items) ? data.calendar.items : [] },
     checklist: { checked: ((data.checklist || {}).checked && typeof data.checklist.checked === 'object') ? data.checklist.checked : {} },
+    myStay: (data.myStay && data.myStay.coords) ? data.myStay : base.myStay,
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -241,6 +246,15 @@ export function deletePin(id) {
   save();
 }
 export function getPin(id) { return store.pins.find((x) => x.id === id) || null; }
+
+// --- my stay (accommodation home pin) ----------------------------------------
+export function setMyStay({ name = 'My stay', coords } = {}) {
+  if (!coords) return null;
+  store.myStay = { name: String(name || 'My stay').slice(0, 80), coords, setAt: todayKey() };
+  save(); return store.myStay;
+}
+export function getMyStay() { return store.myStay || null; }
+export function clearMyStay() { store.myStay = null; save(); }
 
 // --- favorites helpers --------------------------------------------------------
 export function isFavorite(id) { return store.favorites.includes(id); }

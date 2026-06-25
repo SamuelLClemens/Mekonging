@@ -80,3 +80,34 @@ export function geolocate(opts = { enableHighAccuracy: true, timeout: 10000 }) {
       (err) => reject(new Error(err.message || 'No location')), opts);
   });
 }
+
+// Great-circle distance in km between two {lat,lng} points (works offline; pure maths).
+export function haversineKm(a, b) {
+  if (!a || !b) return null;
+  const R = 6371, toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+// Initial compass bearing (degrees, 0=N) from point a to point b.
+export function bearing(a, b) {
+  if (!a || !b) return null;
+  const toRad = (d) => d * Math.PI / 180;
+  const y = Math.sin(toRad(b.lng - a.lng)) * Math.cos(toRad(b.lat));
+  const x = Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat)) -
+            Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(toRad(b.lng - a.lng));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
+// Bearing degrees -> 8-point compass label (N, NE, E, ...).
+export function compass(deg) {
+  if (deg == null) return '';
+  return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(deg / 45) % 8];
+}
+
+// Human-friendly distance: "350 m" under 1 km, else "1.2 km".
+export function fmtDistance(km) {
+  if (km == null) return '';
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`;
+}

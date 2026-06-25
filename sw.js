@@ -7,7 +7,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.55.0';
+const CACHE_VERSION = 'mk-v0.56.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 
@@ -165,4 +165,39 @@ async function rebuildRanged(stored) {
   const headers = { 'Content-Type': stored.headers.get('Content-Type') || 'application/octet-stream', 'Accept-Ranges': 'bytes' };
   if (cr) headers['Content-Range'] = cr;
   return new Response(buf, { status: origStatus === 206 ? 206 : 200, headers });
+}
+
+// "Download this area for offline": the page posts the satellite-tile URLs covering the
+// current view; we fetch each FULL tile and store it under the same '__r=full' key that
+// handleTile() reads for non-ranged requests, so the area then renders with no signal.
+self.addEventListener('message', (e) => {
+  const d = e.data || {};
+  if (d.type === 'PREFETCH_TILES' && Array.isArray(d.urls)) {
+    e.waitUntil(prefetchTiles(d.urls.slice(0, 800), e.source));
+  }
+});
+
+async function prefetchTiles(urls, client) {
+  const cache = await caches.open(TILE_CACHE);
+  let done = 0, ok = 0;
+  for (const url of urls) {
+    const keyUrl = url + (url.includes('?') ? '&' : '?') + '__r=' + encodeURIComponent('full');
+    try {
+      if (await cache.match(keyUrl)) { ok++; }
+      else {
+        const res = await fetch(url);
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          await cache.put(keyUrl, new Response(buf, { status: 200, headers: {
+            'Content-Type': res.headers.get('Content-Type') || 'image/jpeg',
+            'x-orig-status': '200', 'x-content-range': '',
+          } }));
+          ok++;
+        }
+      }
+    } catch { /* skip this tile */ }
+    done++;
+    if (client && done % 25 === 0) client.postMessage({ type: 'PREFETCH_PROGRESS', done, total: urls.length, ok });
+  }
+  if (client) client.postMessage({ type: 'PREFETCH_DONE', done, total: urls.length, ok });
 }

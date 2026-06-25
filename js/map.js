@@ -5,11 +5,12 @@
 // markers, inter-city routes and the Mekong drawn on top, tap-to-drop-a-pin. Street
 // detail is intentionally omitted so the whole region ships in ~26 KB and never breaks.
 
-import { store } from './state.js';
+import { store, getMyStay } from './state.js';
 import { allPlaces, COUNTRIES } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
 import { CROSSINGS } from './data/borders.js';
 import { BORDER_LINES } from './data/borders_lines.js';
+import { POOLS } from './data/pools.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -29,6 +30,31 @@ const MEKONG_FC = { type: 'FeatureCollection', features: [{ type: 'Feature', pro
 // reuses the same source/attribution as the Nomadic Almanac map.
 const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const SATELLITE_ATTR = 'Imagery © Esri — Source: Esri, Maxar, Earthstar Geographics, USGS, NOAA';
+
+// Build the list of satellite-tile URLs covering `bounds` from the current zoom down a
+// few levels (capped) so the service worker can pre-cache the area for offline use.
+function tileUrlsForBounds(bounds, z0, extraZoom = 2, cap = 600) {
+  const lon2tile = (lon, z) => Math.floor((lon + 180) / 360 * 2 ** z);
+  const lat2tile = (lat, z) => {
+    const r = lat * Math.PI / 180;
+    return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z);
+  };
+  const clampTile = (t, z) => Math.max(0, Math.min(2 ** z - 1, t));
+  const urls = [];
+  const zStart = Math.max(1, Math.floor(z0));
+  const zEnd = Math.min(zStart + extraZoom, 17);
+  for (let z = zStart; z <= zEnd; z++) {
+    const x0 = clampTile(lon2tile(bounds.getWest(), z), z), x1 = clampTile(lon2tile(bounds.getEast(), z), z);
+    const y0 = clampTile(lat2tile(bounds.getNorth(), z), z), y1 = clampTile(lat2tile(bounds.getSouth(), z), z);
+    for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) {
+      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
+        urls.push(SATELLITE_TILES.replace('{z}', z).replace('{x}', x).replace('{y}', y));
+        if (urls.length >= cap) return urls;
+      }
+    }
+  }
+  return urls;
+}
 
 // Pin colour by rating. The traveller's OWN rating (placeData) wins over the
 // curated/synthesised score, so once you rate a place its pin reflects YOUR view.
@@ -156,9 +182,11 @@ export async function initMap(containerEl, opts = {}) {
   // except markets, which use a distinct gold pin. Each marker is tagged with its
   // map layer (stay / eat / go / market) so the layer toggles can show or hide it.
   // User pins stay in grape and always show.
-  const markersByLayer = { stay: [], eat: [], go: [], market: [], crossing: [] };
+  const markersByLayer = { stay: [], eat: [], go: [], market: [], pools: [], crossing: [] };
   const CROSSING_PIN = '#3B5BDB';
   const MARKET_PIN = '#E0A100';
+  const POOL_PIN = '#0EA5C4';     // watery cyan for swimming pools
+  let stayMarker = null;          // the user's accommodation home marker (set live)
   function layerForCats(cats) {
     cats = cats || [];
     if (cats.includes('market')) return 'market';
@@ -197,6 +225,30 @@ export async function initMap(containerEl, opts = {}) {
       el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenCrossing) opts.onOpenCrossing(x.id); });
       markersByLayer.crossing.push(el);
     }
+    // public / day-pass / water-park pools as a distinct cyan layer
+    for (const p of POOLS) {
+      if (!p.coords) continue;
+      const m = new maplibregl.Marker({ color: POOL_PIN }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+      const el = m.getElement();
+      el.style.cursor = 'pointer';
+      el.dataset.mkLayer = 'pools';
+      el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenPool) opts.onOpenPool(p); });
+      markersByLayer.pools.push(el);
+    }
+    // the user's accommodation, if set — a distinct home marker, always visible
+    const stay = getMyStay();
+    if (stay && stay.coords) placeStayMarker(stay.coords);
+  }
+
+  // Build a custom home-pin element (a 🏠 on a white disc) and (re)position it.
+  function placeStayMarker(coords) {
+    if (!coords) { if (stayMarker) { stayMarker.remove(); stayMarker = null; } return; }
+    if (stayMarker) { stayMarker.setLngLat([coords.lng, coords.lat]); return; }
+    const el = document.createElement('div');
+    el.textContent = '🏠';
+    el.title = 'Your accommodation';
+    el.style.cssText = 'font-size:18px;width:30px;height:30px;line-height:30px;text-align:center;background:#FFF6E2;border:2px solid #C0431A;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
+    stayMarker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([coords.lng, coords.lat]).addTo(map);
   }
   // Inter-city route corridors as colour-coded lines (drawn under the markers).
   function addRoutes() {
@@ -222,9 +274,17 @@ export async function initMap(containerEl, opts = {}) {
     map,
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
     setLayer: setLayerVisible,
-    layers: ['stay', 'eat', 'go', 'market', 'crossing'],
+    layers: ['stay', 'eat', 'go', 'market', 'pools', 'crossing'],
     setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); },
     setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
+    // GPS: reuse the single built-in GeolocateControl (one watcher, one blue dot).
+    triggerLocate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
+    onLocate: (cb) => geo.on('geolocate', (e) => cb({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy })),
+    // My-stay home marker: set/move/clear live, and centre on it.
+    setMyStay: (coords) => placeStayMarker(coords),
+    goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
+    // Offline area download: the satellite tiles covering the current view.
+    getDownloadTiles: (cap = 600) => tileUrlsForBounds(map.getBounds(), map.getZoom(), 2, cap),
   };
 }
 

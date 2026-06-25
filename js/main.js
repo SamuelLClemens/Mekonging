@@ -9,6 +9,7 @@ import {
   addCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
+  setMyStay, getMyStay, clearMyStay,
 } from './state.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
@@ -20,7 +21,7 @@ import {
   lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
 } from './vault.js';
-import { h, esc, money, range, mapsUrl, debounce, geolocate } from './util.js';
+import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
@@ -1001,7 +1002,7 @@ function crossingsScreen() {
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Fully offline — the region map, your GPS location, saved pins, rated places and routes all work with no connection. Tap the map to drop a pin; use the ⊕ locate button to find yourself.'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — the region map, your GPS location, places, pools, pins and your saved accommodation all work with no connection. Tap ⊕ to find yourself, tap the map to drop a pin, toggle layers below (remembered), and use “Save this area” to keep the satellite imagery offline.'));
 
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
   const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
@@ -1017,26 +1018,97 @@ function mapScreen() {
   // Layer toggles: show/hide marker groups (all on by default). Wired to the map
   // controller once it initialises (mapCtrl). Markets are their own gold layer.
   let mapCtrl = null;
-  const LAYER_DEFS = [['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'], ['stay', '🛏️ Places to stay'], ['crossing', '🛂 Border crossings']];
-  const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
-    h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide)'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' }, [
-      h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
-        h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setSatellite(e.target.checked); } }),
-        h('span', {}, '🛰️ Satellite imagery'),
-      ]),
-      h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
-        h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setBorders(e.target.checked); } }),
-        h('span', {}, '🗺️ Country borders'),
-      ]),
-      ...LAYER_DEFS.map(([key, label]) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
-        h('input', { type: 'checkbox', checked: '', onchange: (e) => { if (mapCtrl) mapCtrl.setLayer(key, e.target.checked); } }),
-        h('span', {}, label),
-      ])),
-    ]),
-    h('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' }, 'Satellite imagery streams when online and is saved for the areas you view; the plain offline map always works with no connection.'),
+  // Layer visibility is remembered (store.profile.prefs.mapLayers).
+  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true });
+  const TOGGLES = [
+    ['satellite', '🛰️ Satellite imagery'], ['borders', '🗺️ Country borders'],
+    ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'],
+    ['stay', '🛏️ Places to stay'], ['pools', '🏊 Pools'], ['crossing', '🛂 Border crossings'],
+  ];
+  function applyLayer(key, on) {
+    if (!mapCtrl) return;
+    if (key === 'satellite') mapCtrl.setSatellite(on);
+    else if (key === 'borders') mapCtrl.setBorders(on);
+    else mapCtrl.setLayer(key, on);
+  }
+  const layerLabel = (key, label) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
+    h('input', { type: 'checkbox', checked: ML[key] !== false ? '' : null, 'aria-label': label,
+      onchange: (e) => { ML[key] = e.target.checked; save(); applyLayer(key, e.target.checked); } }),
+    h('span', {}, label),
   ]);
-  wrap.append(toolbar, storageOut, canvas, layersCard);
+  const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
+    h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide — remembered)'),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' }, TOGGLES.map(([k, l]) => layerLabel(k, l))),
+    h('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' }, 'Satellite imagery streams when online; use “Save this area” to keep it offline. The plain offline map always works with no connection.'),
+  ]);
+
+  // --- My accommodation: save it, then always see the way back -----------------
+  const stayBanner = h('p', { class: 'stay-banner', style: 'margin:4px 0;font-weight:700' }, '');
+  const stayCard = h('div', { class: 'card' });
+  let lastFix = null;
+  function updateStayBanner() {
+    const stay = getMyStay();
+    if (!stay || !stay.coords) return;
+    if (!lastFix) { stayBanner.textContent = 'Tap the ⊕ locate button to see distance and direction back.'; return; }
+    stayBanner.textContent = `${fmtDistance(haversineKm(lastFix, stay.coords))} · ${compass(bearing(lastFix, stay.coords))} to your stay`;
+  }
+  async function setStayHere() {
+    stayBanner.textContent = 'Getting your location…';
+    try {
+      const pos = await geolocate();
+      const s = setMyStay({ name: (getMyStay() || {}).name || 'My stay', coords: { lat: pos.lat, lng: pos.lng } });
+      if (mapCtrl) mapCtrl.setMyStay(s.coords);
+      renderStay();
+    } catch (err) { stayBanner.textContent = 'Could not get your location: ' + err.message; }
+  }
+  function renderStay() {
+    stayCard.textContent = '';
+    stayCard.append(h('h2', {}, '🏠 My accommodation'));
+    const stay = getMyStay();
+    if (stay && stay.coords) {
+      stayCard.append(
+        h('p', {}, [h('strong', {}, stay.name || 'My stay'), h('span', { class: 'muted' }, ` · ${stay.coords.lat.toFixed(4)}, ${stay.coords.lng.toFixed(4)}`)]),
+        stayBanner,
+        h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:6px' }, [
+          h('a', { class: 'btn', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Directions back ↗'),
+          h('button', { class: 'btn ghost', onclick: () => { if (mapCtrl) mapCtrl.goToStay(stay.coords); } }, 'Show on map'),
+          h('button', { class: 'btn ghost', onclick: setStayHere }, 'Move to here'),
+          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (mapCtrl) mapCtrl.setMyStay(null); renderStay(); } }, 'Clear'),
+        ]),
+      );
+      updateStayBanner();
+    } else {
+      stayCard.append(
+        h('p', { class: 'muted' }, 'Save where you are staying and the map will always show the distance and direction back to it — even offline.'),
+        h('button', { class: 'btn block', onclick: setStayHere }, '📍 Set my stay to my current location'),
+        h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, 'Tip: stand at your hotel and tap this, or tap the map and choose “Set as my accommodation”.'),
+      );
+    }
+  }
+  renderStay();
+
+  // --- Save this area offline (satellite tiles -> service-worker cache) ---------
+  const swAvailable = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
+  const dlBtn = h('button', { class: 'btn ghost', onclick: downloadArea }, '⬇ Save this area');
+  if (!swAvailable) dlBtn.style.display = 'none';
+  async function downloadArea() {
+    if (!mapCtrl || !swAvailable) { storageOut.textContent = 'Offline area saving runs in the web app.'; return; }
+    const urls = mapCtrl.getDownloadTiles(600);
+    storageOut.textContent = `Saving ${urls.length} map tiles for offline…`;
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.type === 'PREFETCH_PROGRESS') storageOut.textContent = `Saving map tiles… ${d.done}/${d.total}`;
+      else if (d.type === 'PREFETCH_DONE') {
+        storageOut.textContent = `Saved ${d.ok} of ${d.total} tiles — this area now works offline.`;
+        navigator.serviceWorker.removeEventListener('message', onMsg); showStorage();
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMsg);
+    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls });
+  }
+  toolbar.append(dlBtn);
+
+  wrap.append(toolbar, storageOut, canvas, layersCard, stayCard);
 
   // legend: what the pin colours and route lines mean
   const dot = (c) => h('span', { style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:6px;vertical-align:middle` });
@@ -1044,7 +1116,13 @@ function mapScreen() {
     h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:5px' }, 'Pin colour = rating (your own rating wins)'),
     h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px' },
       RATING_BANDS.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
-    h('div', { style: 'font-size:13px;margin-bottom:8px' }, [dot('#E0A100'), 'Markets (gold pin)']),
+    h('div', { style: 'font-size:13px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px 14px' }, [
+      h('span', {}, [dot('#E0A100'), 'Markets']),
+      h('span', {}, [dot('#0EA5C4'), 'Pools']),
+      h('span', {}, [dot('#3B5BDB'), 'Crossings']),
+      h('span', {}, [dot('#6A4C93'), 'Your pins']),
+      h('span', {}, '🏠 Your accommodation'),
+    ]),
     h('div', { class: 'muted', style: 'font-weight:700;margin:6px 0 5px' }, 'Route lines = transport mode'),
     h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px' },
       ROUTE_LEGEND.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
@@ -1065,7 +1143,15 @@ function mapScreen() {
     onMapClick: (coords) => { pendingPinCoords = coords; go('#addpin'); },
     onOpen: (id) => go(`#place-${id}`),
     onOpenCrossing: () => go('#crossings'),
-  })).then((ctrl) => { mapCtrl = ctrl; showStorage(); }).catch(() => {
+    onOpenPool: () => go('#pools'),
+  })).then((ctrl) => {
+    mapCtrl = ctrl; showStorage();
+    const applyAll = () => Object.keys(ML).forEach((k) => applyLayer(k, ML[k] !== false));
+    applyAll();
+    ctrl.map.once('idle', applyAll);            // re-apply once markers (added on style.load) exist
+    ctrl.onLocate((fix) => { lastFix = fix; updateStayBanner(); });
+    ctrl.triggerLocate();                        // auto-start GPS: blue dot + live distance to your stay
+  }).catch(() => {
     canvas.replaceWith(mapFallback());
     storeBtn.remove();
   });
@@ -1122,12 +1208,16 @@ function addPinScreen() {
   } else {
     card.append(field('Add to collections', h('p', { class: 'muted' }, 'You have no collections yet. Save the pin, then tap “＋ Save” on it to file it under a theme.')));
   }
+  const stayChk = h('input', { type: 'checkbox' });
+  card.append(h('label', { style: 'display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px' },
+    [stayChk, h('span', {}, '🏠 Also set this as my accommodation (My stay)')]));
   wrap.append(card);
 
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!name.value.trim()) { alert('Give the place a name.'); return; }
     const pin = addPin({ name: name.value.trim(), note: note.value.trim(), coords: state.coords });
     state.colls.forEach((cid) => togglePlaceInCollection(cid, pin.id));
+    if (stayChk.checked && state.coords) setMyStay({ name: name.value.trim(), coords: state.coords });
     go('#saved');
   } }, 'Save place'));
   mount(wrap, '#map');
