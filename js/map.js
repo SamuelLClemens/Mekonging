@@ -190,6 +190,23 @@ export async function initMap(containerEl, opts = {}) {
   });
   map.addControl(geo, 'top-right');
   try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 130, unit: 'metric' }), 'top-left'); } catch { /* older build */ }
+  // "Key" button on the map itself: opens + scrolls to the legend so it is reachable
+  // while looking at the map (HTML control, not a GL text layer — glyph-free is unaffected).
+  if (opts.onShowKey) {
+    const keyCtrl = {
+      onAdd() {
+        const d = document.createElement('div');
+        d.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+        const b = document.createElement('button');
+        b.type = 'button'; b.title = 'Map key'; b.setAttribute('aria-label', 'Open the map key');
+        b.textContent = '🔑'; b.style.fontSize = '15px';
+        b.addEventListener('click', () => { try { opts.onShowKey(); } catch { /* noop */ } });
+        d.appendChild(b); this._c = d; return d;
+      },
+      onRemove() { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); },
+    };
+    map.addControl(keyCtrl, 'top-right');
+  }
 
   // markers: curated places coloured by EFFECTIVE rating (your own rating wins),
   // except markets, which use a distinct gold pin. Each marker is tagged with its

@@ -1352,6 +1352,7 @@ function mapScreen() {
     onOpen: (id) => go(`#place-${id}`),
     onOpenCrossing: () => go('#crossings'),
     onOpenPool: () => go('#pools'),
+    onShowKey: () => { keyCard.open = true; keyCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
   })).then((ctrl) => {
     mapCtrl = ctrl; liveMapCtrl = ctrl; showStorage();
     const applyAll = () => Object.keys(ML).forEach((k) => applyLayer(k, ML[k] !== false));
