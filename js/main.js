@@ -10,6 +10,7 @@ import {
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
   setMyStay, getMyStay, clearMyStay,
+  getSavedAreas, addSavedArea, removeSavedArea,
 } from './state.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
@@ -1073,10 +1074,12 @@ function mapScreen() {
     storageOut.innerHTML = '';
     storageOut.append(e ? `Stored on device: about ${e.usageMB.toFixed(1)} MB. ` : '');
     const clearBtn = h('button', { class: 'linklike', onclick: async () => {
-      storageOut.textContent = 'Clearing saved map areas…';
+      storageOut.textContent = 'Clearing all saved areas…';
       try { await m.clearTileCache(); } catch { /* noop */ }
+      getSavedAreas().length = 0; save();
+      renderAreas();
       showStorage();
-    } }, 'Clear saved map areas');
+    } }, 'Clear all saved areas');
     storageOut.append(clearBtn);
   }
 
@@ -1167,30 +1170,70 @@ function mapScreen() {
     if (!mapCtrl || !swAvailable) { storageOut.textContent = 'Offline area saving runs in the web app.'; return; }
     const urls = mapCtrl.getDownloadTiles(1000);
     if (!urls.length) { storageOut.textContent = 'Nothing to save at this view — zoom in to an area first.'; return; }
-    const mbNum = urls.length * 0.018;                 // Esri imagery tiles average ~18 KB
+    const viewInfo = mapCtrl.getViewInfo();             // recorded with the saved area
+    const mbNum = urls.length * 0.018;                  // Esri imagery tiles average ~18 KB
     const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
     storageOut.textContent = '';
     storageOut.append(
       `This area is about ${urls.length} satellite tiles (~${mb} MB). Zoom in for more street detail, or out to cover more ground. `,
-      h('button', { class: 'linklike', onclick: () => downloadArea(urls) }, 'Download now'),
+      h('button', { class: 'linklike', onclick: () => downloadArea(urls, viewInfo) }, 'Download now'),
       ' · ',
       h('button', { class: 'linklike', onclick: showStorage }, 'Cancel'),
     );
   }
-  async function downloadArea(urls) {
+  async function downloadArea(urls, viewInfo) {
     storageOut.textContent = `Saving ${urls.length} map tiles for offline…`;
     const onMsg = (e) => {
       const d = e.data || {};
-      if (d.type === 'PREFETCH_PROGRESS') storageOut.textContent = `Saving map tiles… ${d.done}/${d.total}`;
-      else if (d.type === 'PREFETCH_DONE') {
-        storageOut.textContent = d.quotaHit
-          ? `Storage is full — saved ${d.ok} tiles before stopping. Tap “Storage” to clear saved map areas, then try a smaller area.`
-          : `Saved ${d.ok} of ${d.total} tiles — this area now works offline.`;
-        navigator.serviceWorker.removeEventListener('message', onMsg); showStorage();
+      if (d.type === 'PREFETCH_PROGRESS') { storageOut.textContent = `Saving map tiles… ${d.done}/${d.total}`; return; }
+      if (d.type !== 'PREFETCH_DONE') return;
+      navigator.serviceWorker.removeEventListener('message', onMsg);
+      if (d.quotaHit) {
+        storageOut.textContent = `Storage is full — saved ${d.ok} tiles before stopping. Remove a saved area below, then try a smaller area.`;
+        return;
       }
+      if (d.ok > 0 && viewInfo) {
+        const def = (mapCtrl && mapCtrl.nearestCityName && mapCtrl.nearestCityName()) || 'Saved area';
+        const name = (prompt('Name this offline area:', def) || def).trim() || def;
+        addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.round(viewInfo.zoom), count: d.ok });
+        renderAreas();
+      }
+      showStorage();
     };
     navigator.serviceWorker.addEventListener('message', onMsg);
     navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls });
+  }
+
+  // --- Saved offline areas: named tile packs, each sized and individually removable -
+  const areasCard = h('div', { class: 'card' });
+  function renderAreas() {
+    areasCard.textContent = '';
+    areasCard.append(h('h2', {}, '🗂️ Saved offline areas'));
+    const areas = getSavedAreas();
+    if (!areas.length) {
+      areasCard.append(h('p', { class: 'muted' }, 'Save an area above to use the satellite map with no signal. Each area you save is listed here and can be removed on its own.'));
+      return;
+    }
+    areas.forEach((a) => {
+      const mbNum = (a.count || 0) * 0.018;
+      const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
+      areasCard.append(h('div', { class: 'row-between price-item' }, [
+        h('div', {}, [h('strong', {}, a.name), h('div', { class: 'muted', style: 'font-size:12px' }, `${a.count || 0} tiles · ~${mb} MB · saved ${a.savedAt}`)]),
+        h('div', { class: 'cats' }, [
+          h('button', { class: 'chip', title: 'Show on map', 'aria-label': `Show ${a.name} on map`, onclick: () => { if (mapCtrl && a.center) mapCtrl.flyTo(a.center.lng, a.center.lat, a.z || 12); } }, '◎'),
+          h('button', { class: 'chip', 'aria-label': `Delete ${a.name}`, onclick: () => deleteArea(a) }, '✕'),
+        ]),
+      ]));
+    });
+  }
+  function deleteArea(a) {
+    removeSavedArea(a.id); renderAreas();
+    if (mapCtrl && swAvailable && a.bounds && navigator.serviceWorker.controller) {
+      const urls = mapCtrl.tileUrlsForArea(a.bounds, a.z || 12, 1000);
+      const onMsg = (e) => { if ((e.data || {}).type === 'DELETE_DONE') { navigator.serviceWorker.removeEventListener('message', onMsg); showStorage(); } };
+      navigator.serviceWorker.addEventListener('message', onMsg);
+      navigator.serviceWorker.controller.postMessage({ type: 'DELETE_TILES', urls });
+    }
   }
   toolbar.append(dlBtn, wakeBtn);
 
@@ -1213,7 +1256,8 @@ function mapScreen() {
   searchInput.addEventListener('input', runSearch);
   const searchWrap = h('div', { class: 'map-search-wrap' }, [searchInput, searchResults]);
 
-  wrap.append(toolbar, searchWrap, storageOut, canvas, layersCard, stayCard);
+  wrap.append(toolbar, searchWrap, storageOut, canvas, layersCard, stayCard, areasCard);
+  renderAreas();
 
   // legend: what the pin colours and route lines mean
   const dot = (c) => h('span', { style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:6px;vertical-align:middle` });

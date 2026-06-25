@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 6;
+const CURRENT_VERSION = 7;
 
 function defaults() {
   return {
@@ -53,6 +53,10 @@ function defaults() {
     checklist: { checked: {} },
     // --- v6: the user's accommodation, so the map can always point the way back ---
     myStay: null,               // { name, coords:{lat,lng}, setAt } | null
+    // --- v7: named offline map packs the user has downloaded, listed + deletable ---
+    // The tiles themselves live in the service-worker TILE_CACHE; this records the
+    // metadata (and the exact bounds/zoom) so each pack can be sized and deleted alone.
+    savedAreas: [],             // { id, name, center:{lng,lat}, bounds:{w,s,e,n}, z, count, savedAt }
   };
 }
 
@@ -76,6 +80,7 @@ function migrate(data) {
     calendar: { items: Array.isArray((data.calendar || {}).items) ? data.calendar.items : [] },
     checklist: { checked: ((data.checklist || {}).checked && typeof data.checklist.checked === 'object') ? data.checklist.checked : {} },
     myStay: (data.myStay && data.myStay.coords) ? data.myStay : base.myStay,
+    savedAreas: Array.isArray(data.savedAreas) ? data.savedAreas : base.savedAreas,
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -113,6 +118,8 @@ export function resetAll() {
   store.journal = fresh.journal;
   store.calendar = fresh.calendar;
   store.checklist = fresh.checklist;
+  store.myStay = fresh.myStay;
+  store.savedAreas = fresh.savedAreas;
   save();
 }
 
@@ -255,6 +262,18 @@ export function setMyStay({ name = 'My stay', coords } = {}) {
 }
 export function getMyStay() { return store.myStay || null; }
 export function clearMyStay() { store.myStay = null; save(); }
+
+// --- saved offline map areas (named tile packs) ------------------------------
+export function getSavedAreas() { return Array.isArray(store.savedAreas) ? store.savedAreas : (store.savedAreas = []); }
+export function addSavedArea({ name, center, bounds, z, count }) {
+  const a = { id: uid('area'), name: String(name || 'Saved area').slice(0, 60), center, bounds, z, count: count || 0, savedAt: todayKey() };
+  getSavedAreas().push(a); save(); return a;
+}
+export function removeSavedArea(id) {
+  const list = getSavedAreas();
+  const i = list.findIndex((x) => x.id === id);
+  if (i >= 0) { list.splice(i, 1); save(); }
+}
 
 // --- favorites helpers --------------------------------------------------------
 export function isFavorite(id) { return store.favorites.includes(id); }

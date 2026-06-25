@@ -392,6 +392,18 @@ export async function initMap(containerEl, opts = {}) {
     },
     // Offline area download: the satellite tiles covering the current view.
     getDownloadTiles: (cap = 600) => tileUrlsForBounds(map.getBounds(), map.getZoom(), 2, cap),
+    // Snapshot of the current view, recorded with a saved area so it can be sized,
+    // re-shown and (tile-by-tile) deleted later.
+    getViewInfo: () => {
+      const b = map.getBounds(), c = map.getCenter();
+      return { center: { lng: c.lng, lat: c.lat }, bounds: { w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() }, zoom: map.getZoom() };
+    },
+    // Recompute a saved area's tile URLs (same params as the original save) so the
+    // service worker can delete exactly that pack.
+    tileUrlsForArea: (bounds, z, cap = 1000) =>
+      tileUrlsForBounds({ getWest: () => bounds.w, getEast: () => bounds.e, getNorth: () => bounds.n, getSouth: () => bounds.s }, z, 2, cap),
+    // Nearest known city to the current centre (for a default saved-area name), or null.
+    nearestCityName: () => { const c = map.getCenter(); return nearestCity({ lng: c.lng, lat: c.lat }); },
     // Tear down the map, its WebGL context and the GPS watcher — call when leaving the
     // map screen. Without this, each visit leaks a context and the map dies after ~8-16.
     dispose: () => { try { map.remove(); } catch { /* already gone */ } if (window.__mkMap === map) { try { window.__mkMap = null; } catch { /* noop */ } } },

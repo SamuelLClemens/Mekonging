@@ -7,7 +7,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.66.0';
+const CACHE_VERSION = 'mk-v0.67.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -176,8 +176,22 @@ self.addEventListener('message', (e) => {
   const d = e.data || {};
   if (d.type === 'PREFETCH_TILES' && Array.isArray(d.urls)) {
     e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source));
+  } else if (d.type === 'DELETE_TILES' && Array.isArray(d.urls)) {
+    e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
   }
 });
+
+// Delete a single saved area's tiles (the page recomputes the same tile URLs the
+// area was saved with, so only that pack is removed — other saved areas are kept).
+async function deleteTiles(urls, client) {
+  const cache = await caches.open(TILE_CACHE);
+  let removed = 0;
+  for (const url of urls) {
+    const keyUrl = url + (url.includes('?') ? '&' : '?') + '__r=' + encodeURIComponent('full');
+    try { if (await cache.delete(keyUrl)) removed++; } catch { /* skip */ }
+  }
+  if (client) client.postMessage({ type: 'DELETE_DONE', removed, total: urls.length });
+}
 
 async function prefetchTiles(urls, client) {
   const cache = await caches.open(TILE_CACHE);
