@@ -172,11 +172,15 @@ export async function initMap(containerEl, opts = {}) {
     zoom: opts.zoom || 5.4,
     attributionControl: true,
   });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  // Compass enabled so the map can be rotated and reset to north for orientation;
+  // a metric scale bar so distances can be judged offline (both glyph-free, no fetch).
+  map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
   const geo = new maplibregl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserLocation: true,
+    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true,
+    showUserLocation: true, showUserHeading: true,
   });
   map.addControl(geo, 'top-right');
+  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 130, unit: 'metric' }), 'top-left'); } catch { /* older build */ }
 
   // markers: curated places coloured by EFFECTIVE rating (your own rating wins),
   // except markets, which use a distinct gold pin. Each marker is tagged with its
@@ -303,9 +307,57 @@ export async function initMap(containerEl, opts = {}) {
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': ['get', 'color'], 'line-width': 3.4, 'line-dasharray': [2, 1.2] } });
   }
+  // "Way back" guide line: a direct dashed line from the live GPS dot to the saved
+  // accommodation, redrawn as you move. Not turn-by-turn (no offline routing engine),
+  // but a reliable heading + a casing so it reads over satellite — fully offline.
+  function addWayback() {
+    if (map.getSource('mk-wayback')) return;
+    map.addSource('mk-wayback', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'mk-wayback-casing', type: 'line', source: 'mk-wayback',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#FFFFFF', 'line-width': 7, 'line-opacity': 0.75 } });
+    map.addLayer({ id: 'mk-wayback-line', type: 'line', source: 'mk-wayback',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#D6336C', 'line-width': 4, 'line-dasharray': [1.4, 1] } });
+  }
+  function setWayback(from, to) {
+    const src = map.getSource('mk-wayback');
+    if (!src) return;
+    const empty = { type: 'FeatureCollection', features: [] };
+    if (!from || !to) { src.setData(empty); return; }
+    src.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {},
+      geometry: { type: 'LineString', coordinates: [[from.lng, from.lat], [to.lng, to.lat]] } }] });
+  }
+
+  // Offline search index over the curated data + the user's own pins. No geocoder /
+  // network: a simple case-insensitive name match across cities, places, pools and pins.
+  function searchIndex(q) {
+    q = (q || '').trim().toLowerCase();
+    if (q.length < 2) return [];
+    const out = [];
+    for (const name in CITY_COORDS) {
+      if (name.toLowerCase().includes(q)) out.push({ name, type: 'City', lng: CITY_COORDS[name][0], lat: CITY_COORDS[name][1], z: 12 });
+    }
+    for (const p of allPlaces()) {
+      if (p.coords && (p.name || '').toLowerCase().includes(q)) out.push({ name: p.name, type: 'Place', id: p.id, lng: p.coords.lng, lat: p.coords.lat, z: 15 });
+    }
+    for (const p of POOLS) {
+      if (p.coords && (p.name || '').toLowerCase().includes(q)) out.push({ name: p.name, type: 'Pool', lng: p.coords.lng, lat: p.coords.lat, z: 15 });
+    }
+    for (const pin of store.pins) {
+      if (pin.coords && (pin.name || '').toLowerCase().includes(q)) out.push({ name: pin.name, type: 'Pin', id: pin.id, lng: pin.coords.lng, lat: pin.coords.lat, z: 15 });
+    }
+    // exact / prefix matches first, then by name length (shorter = closer match)
+    out.sort((a, b) => {
+      const ap = a.name.toLowerCase().startsWith(q) ? 0 : 1, bp = b.name.toLowerCase().startsWith(q) ? 0 : 1;
+      return ap - bp || a.name.length - b.name.length;
+    });
+    return out.slice(0, 12);
+  }
+
   // Add on style.load (fires when the inline style parses) so they appear even before
   // — or without — basemap tiles (which need the network on first load).
-  map.on('style.load', () => { addRoutes(); addMarkers(); addCityMarkers(); refreshMarkers(); });
+  map.on('style.load', () => { addRoutes(); addWayback(); addMarkers(); addCityMarkers(); refreshMarkers(); });
   map.on('zoomend', refreshMarkers);
   try { window.__mkMap = map; } catch { /* dev aid */ }
 
@@ -325,6 +377,19 @@ export async function initMap(containerEl, opts = {}) {
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
+    // Draw / clear the "way back" guide line from `from` to `to` (pass nulls to clear).
+    setWayback: (from, to) => setWayback(from, to),
+    // Offline name search across cities, curated places, pools and the user's pins.
+    search: (q) => searchIndex(q),
+    // Fit the view to both points so the whole way-back line is visible.
+    frameBoth: (a, b, pad = 64) => {
+      if (!a || !b) return;
+      try {
+        const bounds = new maplibregl.LngLatBounds([a.lng, a.lat], [a.lng, a.lat]);
+        bounds.extend([b.lng, b.lat]);
+        map.fitBounds(bounds, { padding: pad, maxZoom: 16, duration: 600 });
+      } catch { /* noop */ }
+    },
     // Offline area download: the satellite tiles covering the current view.
     getDownloadTiles: (cap = 600) => tileUrlsForBounds(map.getBounds(), map.getZoom(), 2, cap),
     // Tear down the map, its WebGL context and the GPS watcher — call when leaving the

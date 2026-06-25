@@ -1037,7 +1037,7 @@ function crossingsScreen() {
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — the region map, your GPS location, places, pools, pins and your saved accommodation all work with no connection. Tap ⊕ to find yourself, tap the map to drop a pin, toggle layers below (remembered), and use “Save this area” to keep the satellite imagery offline.'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — the region map, your GPS location, search, places, pools, pins and your saved accommodation all work with no connection. Tap ⊕ to find yourself, search to jump to any place, tap the map to drop a pin, and set your accommodation to see a guide line and the distance and direction back. Use “Save this area” to keep the satellite imagery offline.'));
 
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
   const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
@@ -1099,7 +1099,7 @@ function mapScreen() {
     try {
       const pos = await geolocate();
       const s = setMyStay({ name: (getMyStay() || {}).name || 'My stay', coords: { lat: pos.lat, lng: pos.lng } });
-      if (mapCtrl) mapCtrl.setMyStay(s.coords);
+      if (mapCtrl) { mapCtrl.setMyStay(s.coords); if (lastFix) mapCtrl.setWayback(lastFix, s.coords); }
       renderStay();
     } catch (err) { stayBanner.textContent = 'Could not get your location: ' + err.message; }
   }
@@ -1112,10 +1112,14 @@ function mapScreen() {
         h('p', {}, [h('strong', {}, stay.name || 'My stay'), h('span', { class: 'muted' }, ` · ${stay.coords.lat.toFixed(4)}, ${stay.coords.lng.toFixed(4)}`)]),
         stayBanner,
         h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:6px' }, [
-          h('a', { class: 'btn', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Directions back ↗'),
+          h('button', { class: 'btn', onclick: () => {
+            if (mapCtrl && lastFix) { mapCtrl.setWayback(lastFix, stay.coords); mapCtrl.frameBoth(lastFix, stay.coords); }
+            else if (mapCtrl) { mapCtrl.goToStay(stay.coords); }
+          } }, '🧭 Show the way back'),
+          h('a', { class: 'btn ghost', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'),
           h('button', { class: 'btn ghost', onclick: () => { if (mapCtrl) mapCtrl.goToStay(stay.coords); } }, 'Show on map'),
           h('button', { class: 'btn ghost', onclick: setStayHere }, 'Move to here'),
-          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (mapCtrl) mapCtrl.setMyStay(null); renderStay(); } }, 'Clear'),
+          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (mapCtrl) { mapCtrl.setMyStay(null); mapCtrl.setWayback(null, null); } renderStay(); } }, 'Clear'),
         ]),
       );
       updateStayBanner();
@@ -1152,7 +1156,26 @@ function mapScreen() {
   }
   toolbar.append(dlBtn);
 
-  wrap.append(toolbar, storageOut, canvas, layersCard, stayCard);
+  // --- Offline search: find a place / city / pool / your pin and fly to it -------
+  const searchInput = h('input', { type: 'search', class: 'map-search', placeholder: 'Search places, cities, pools, your pins…', 'aria-label': 'Search the map', autocomplete: 'off' });
+  const searchResults = h('div', { class: 'map-search-results' });
+  const SEARCH_ICON = { City: '🏙️', Place: '📍', Pool: '🏊', Pin: '📌' };
+  function runSearch() {
+    searchResults.textContent = '';
+    const q = searchInput.value.trim();
+    if (!mapCtrl || q.length < 2) return;
+    const matches = mapCtrl.search(q);
+    if (!matches.length) { searchResults.append(h('p', { class: 'muted', style: 'padding:6px 4px;font-size:13px' }, 'No matches in the offline data.')); return; }
+    matches.forEach((m) => searchResults.append(
+      h('button', { class: 'btn ghost block', style: 'justify-content:flex-start;margin-top:4px', onclick: () => {
+        mapCtrl.flyTo(m.lng, m.lat, m.z);
+        searchResults.textContent = ''; searchInput.value = '';
+      } }, `${SEARCH_ICON[m.type] || '•'}  ${m.name}  ·  ${m.type}`)));
+  }
+  searchInput.addEventListener('input', runSearch);
+  const searchWrap = h('div', { class: 'map-search-wrap' }, [searchInput, searchResults]);
+
+  wrap.append(toolbar, searchWrap, storageOut, canvas, layersCard, stayCard);
 
   // legend: what the pin colours and route lines mean
   const dot = (c) => h('span', { style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:6px;vertical-align:middle` });
@@ -1193,7 +1216,11 @@ function mapScreen() {
     const applyAll = () => Object.keys(ML).forEach((k) => applyLayer(k, ML[k] !== false));
     applyAll();
     ctrl.map.once('idle', applyAll);            // re-apply once markers (added on style.load) exist
-    ctrl.onLocate((fix) => { lastFix = fix; updateStayBanner(); });
+    ctrl.onLocate((fix) => {
+      lastFix = fix; updateStayBanner();
+      const st = getMyStay();
+      if (st && st.coords) ctrl.setWayback(fix, st.coords);   // live guide line, redrawn as you move
+    });
     ctrl.triggerLocate();                        // auto-start GPS: blue dot + live distance to your stay
   }).catch(() => {
     canvas.replaceWith(mapFallback());

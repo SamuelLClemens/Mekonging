@@ -436,6 +436,14 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 .map-hint { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0 0 var(--sp-2); }
 .maplibregl-ctrl-group { border-radius: var(--r-md) !important; }
 
+/* offline map search */
+.map-search-wrap { margin-bottom: var(--sp-2); }
+.map-search { width: 100%; padding: 10px 14px; font: inherit; color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-pill); }
+.map-search:focus { outline: none; border-color: var(--orange); }
+.map-search-results:not(:empty) { margin-top: var(--sp-1); max-height: 230px; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); padding: 6px; }
+
 /* perf: skip rendering offscreen cards/rows in long lists */
 .card, .species-card, .phrase, .price-item { content-visibility: auto; contain-intrinsic-size: auto 90px; }
 
