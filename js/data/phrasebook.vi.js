@@ -17,8 +17,8 @@ export const PHRASEBOOK_VI = {
     { id: 'directions', name: 'Taxi & directions', phrases: [
       { en: 'Please use the meter', script: 'Làm ơn bật đồng hồ', roman: 'lam un but dong ho', note: 'Or use Grab to avoid fare disputes.' },
       { en: 'Stop here, please', script: 'Dừng ở đây', roman: 'zung uh day' },
-      { en: 'Turn left', script: 'Rẽ trái', roman: 'ze chai' },
-      { en: 'Turn right', script: 'Rẽ phải', roman: 'ze fai' },
+      { en: 'Turn left', script: 'Rẽ trái', roman: 'ze chai', note: 'Southern Vietnam often says “quẹo trái” (kweo chai).' },
+      { en: 'Turn right', script: 'Rẽ phải', roman: 'ze fai', note: 'Southern Vietnam often says “quẹo phải” (kweo fai).' },
       { en: 'Go straight', script: 'Đi thẳng', roman: 'dee thang' },
       { en: 'Where is...?', script: '... ở đâu?', roman: '... uh dow' },
       { en: 'Where is the toilet?', script: 'Nhà vệ sinh ở đâu?', roman: 'nya ve sing uh dow' },

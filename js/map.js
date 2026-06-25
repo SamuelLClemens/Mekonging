@@ -194,9 +194,19 @@ export async function initMap(containerEl, opts = {}) {
     if (cats.some((c) => ['food', 'restaurant'].includes(c))) return 'eat';
     return 'go';
   }
-  function setLayerVisible(layer, on) {
-    (markersByLayer[layer] || []).forEach((el) => { el.style.display = on ? '' : 'none'; });
+  // Visibility combines the layer toggle AND a zoom gate: the ~200 place/pool/crossing
+  // pins only appear once you zoom into an area, so the region-wide opening view stays
+  // legible and cheap. (User pins and the home marker are not bucketed, so always show.)
+  const layerOn = { stay: true, eat: true, go: true, market: true, pools: true, crossing: true };
+  const MARKER_MINZOOM = 7.5;
+  function refreshMarkers() {
+    const zoomedIn = map.getZoom() >= MARKER_MINZOOM;
+    for (const layer of Object.keys(markersByLayer)) {
+      const on = zoomedIn && layerOn[layer] !== false;
+      markersByLayer[layer].forEach((el) => { el.style.display = on ? '' : 'none'; });
+    }
   }
+  function setLayerVisible(layer, on) { layerOn[layer] = on; refreshMarkers(); }
   function addMarkers() {
     for (const p of allPlaces()) {
       if (!p.coords) continue;
@@ -264,7 +274,8 @@ export async function initMap(containerEl, opts = {}) {
   }
   // Add on style.load (fires when the inline style parses) so they appear even before
   // — or without — basemap tiles (which need the network on first load).
-  map.on('style.load', () => { addRoutes(); addMarkers(); });
+  map.on('style.load', () => { addRoutes(); addMarkers(); refreshMarkers(); });
+  map.on('zoomend', refreshMarkers);
   try { window.__mkMap = map; } catch { /* dev aid */ }
 
   // tap empty map to drop a pin at that point
@@ -285,6 +296,9 @@ export async function initMap(containerEl, opts = {}) {
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
     // Offline area download: the satellite tiles covering the current view.
     getDownloadTiles: (cap = 600) => tileUrlsForBounds(map.getBounds(), map.getZoom(), 2, cap),
+    // Tear down the map, its WebGL context and the GPS watcher — call when leaving the
+    // map screen. Without this, each visit leaks a context and the map dies after ~8-16.
+    dispose: () => { try { map.remove(); } catch { /* already gone */ } if (window.__mkMap === map) { try { window.__mkMap = null; } catch { /* noop */ } } },
   };
 }
 

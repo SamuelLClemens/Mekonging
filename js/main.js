@@ -391,25 +391,60 @@ function phrasebookScreen(lang) {
         catNameMatch || p.en.toLowerCase().includes(q) || (p.roman || '').toLowerCase().includes(q) || (p.script || '').includes(phraseQuery));
       if (!matches.length) continue;
       listEl.append(h('h2', { class: 'cat-title' }, cat.name));
-      for (const p of matches) {
-        listEl.append(h('div', { class: 'phrase' }, [
-          h('div', { class: 'grow' }, [
-            h('div', { class: 'en' }, p.en),
-            h('div', { class: 'native' }, p.script),
-            h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman]),
-            p.note ? h('div', { class: 'note' }, p.note) : null,
-          ]),
-          h('button', {
-            class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: canSay(book.locale) ? null : '',
-            onclick: () => say(p.script, book.locale),
-          }, '🔊'),
-        ]));
-      }
+      for (const p of matches) listEl.append(phraseRow(p, book.locale));
     }
     if (!listEl.children.length) listEl.append(h('p', { class: 'empty' }, 'No phrases match your search.'));
   }
   renderPhrases();
   mount(wrap, '#phrasebook');
+}
+
+// One phrasebook row: tap the text to show it LARGE to a local; copy and speak controls.
+function phraseRow(p, locale) {
+  const able = canSay(locale);
+  const grow = h('div', { class: 'grow tappable', role: 'button', tabindex: '0', 'aria-label': `Show large: ${p.en}`, title: 'Tap to show large to a local' }, [
+    h('div', { class: 'en' }, p.en),
+    h('div', { class: 'native' }, p.script),
+    h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman]),
+    p.note ? h('div', { class: 'note' }, p.note) : null,
+  ]);
+  grow.addEventListener('click', () => showBigPhrase(p, locale));
+  grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale); } });
+  const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${p.en}`, title: 'Copy the local text', onclick: () => copyText(p.script, copyBtn) }, '⧉');
+  const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: able ? null : '' }, '🔊');
+  speakBtn.addEventListener('click', async () => {
+    const ok = await say(p.script, locale);
+    if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
+  });
+  return h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [copyBtn, speakBtn])]);
+}
+
+// Full-screen, very large native script to point at a taxi driver / pharmacist / local.
+function showBigPhrase(p, locale) {
+  const able = canSay(locale);
+  const overlay = h('div', { class: 'bigphrase', role: 'dialog', 'aria-label': 'Show to a local' });
+  overlay.addEventListener('click', () => overlay.remove());
+  const inner = h('div', { class: 'bigphrase-inner' }, [
+    h('div', { class: 'bp-en' }, p.en),
+    h('div', { class: 'bp-script' }, p.script),
+    h('div', { class: 'bp-roman' }, p.roman),
+    p.note ? h('div', { class: 'bp-note' }, p.note) : null,
+    h('div', { class: 'bp-actions' }, [
+      able ? h('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); say(p.script, locale); } }, '🔊 Speak') : null,
+      h('button', { class: 'btn ghost', onclick: () => overlay.remove() }, 'Close'),
+    ]),
+    h('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Show this screen to a local · tap anywhere to close'),
+  ]);
+  inner.addEventListener('click', (e) => e.stopPropagation());
+  overlay.append(inner);
+  document.body.append(overlay);
+}
+
+// Copy text to the clipboard with graceful fallback; flashes a tick on the button.
+function copyText(text, btn) {
+  const flash = () => { if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '⧉'; }, 1200); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(flash, () => {}); return; }
+  try { const ta = h('textarea', {}); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); flash(); } catch { /* noop */ }
 }
 
 // Speak/type-in-English → local-language text + spoken audio. Works with no setup
@@ -1039,7 +1074,7 @@ function mapScreen() {
   const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
     h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide — remembered)'),
     h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' }, TOGGLES.map(([k, l]) => layerLabel(k, l))),
-    h('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' }, 'Satellite imagery streams when online; use “Save this area” to keep it offline. The plain offline map always works with no connection.'),
+    h('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' }, 'Place, pool and crossing pins appear as you zoom into an area, so the wide view stays clear. The plain map (coastlines, rivers, borders, your places) is always offline; satellite imagery streams when online — use “Save this area” to keep it offline.'),
   ]);
 
   // --- My accommodation: save it, then always see the way back -----------------
@@ -1145,7 +1180,7 @@ function mapScreen() {
     onOpenCrossing: () => go('#crossings'),
     onOpenPool: () => go('#pools'),
   })).then((ctrl) => {
-    mapCtrl = ctrl; showStorage();
+    mapCtrl = ctrl; liveMapCtrl = ctrl; showStorage();
     const applyAll = () => Object.keys(ML).forEach((k) => applyLayer(k, ML[k] !== false));
     applyAll();
     ctrl.map.once('idle', applyAll);            // re-apply once markers (added on style.load) exist
@@ -2631,8 +2666,12 @@ function selectEl(options, current, onchange) {
 }
 
 // ---- router -----------------------------------------------------------------
+let liveMapCtrl = null;   // the map controller for the current #map view, if any
 function render() {
   applyTheme();
+  // Tear down any live map before rendering the next screen (frees the WebGL context
+  // and stops the GPS watcher — prevents the map dying after repeated visits).
+  if (liveMapCtrl) { try { liveMapCtrl.dispose(); } catch { /* noop */ } liveMapCtrl = null; }
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');

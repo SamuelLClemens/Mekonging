@@ -15,7 +15,7 @@ export const PHRASEBOOK_TH = {
       { en: 'Do you speak English?', script: 'พูดภาษาอังกฤษได้ไหม', roman: 'phuut pasa angkrit dai mai' },
     ]},
     { id: 'directions', name: 'Taxi & directions', phrases: [
-      { en: 'Please use the meter', script: 'เปิดมิเตอร์ด้วย', roman: 'bert mi-ter duay', note: 'If they refuse, take another taxi or use Grab.' },
+      { en: 'Please use the meter', script: 'เปิดมิเตอร์ด้วย', roman: 'perd mi-ter duay', note: 'If they refuse, take another taxi or use Grab. Add ครับ (khrap) / ค่ะ (kha) to be polite.' },
       { en: 'Stop here, please', script: 'จอดตรงนี้', roman: 'jot trong nii' },
       { en: 'Turn left', script: 'เลี้ยวซ้าย', roman: 'liao sai' },
       { en: 'Turn right', script: 'เลี้ยวขวา', roman: 'liao khwa' },
@@ -27,7 +27,7 @@ export const PHRASEBOOK_TH = {
       { en: 'Delicious', script: 'อร่อย', roman: 'a-roi' },
       { en: 'Not spicy', script: 'ไม่เผ็ด', roman: 'mai phet' },
       { en: 'A little spicy', script: 'เผ็ดนิดหน่อย', roman: 'phet nit-noi' },
-      { en: 'I am vegetarian', script: 'กินเจ / กินมังสวิรัติ', roman: 'kin jay / kin mang-sa-wi-rat' },
+      { en: 'I am vegetarian', script: 'กินเจ / กินมังสวิรัติ', roman: 'kin jay / kin mang-sa-wi-rat', note: 'กินเจ (kin jay) = strict vegan (no meat, egg, dairy, garlic); กินมังสวิรัติ (kin mang-sa-wi-rat) = vegetarian (eggs/dairy ok).' },
       { en: 'Water', script: 'น้ำ', roman: 'nam' },
       { en: 'The bill, please', script: 'เช็คบิล', roman: 'check bin' },
       { en: 'No MSG, please', script: 'ไม่ใส่ผงชูรส', roman: 'mai sai phong-chu-rot' },

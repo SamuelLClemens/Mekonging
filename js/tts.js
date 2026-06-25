@@ -67,8 +67,11 @@ export function speakOnline(text, locale) {
   return new Promise((resolve, reject) => {
     const t = (text || '').trim();
     if (!t) { reject(new Error('no text')); return; }
+    // No locale (e.g. Hmong) means no online voice — do NOT fall back to English, which
+    // would mispronounce the phrase. Reject so the caller suppresses audio.
+    if (!locale) { reject(new Error('no voice for this language')); return; }
     if (typeof navigator !== 'undefined' && navigator.onLine === false) { reject(new Error('offline')); return; }
-    const lang = TTS_LANG[locale] || (locale || 'en').split('-')[0];
+    const lang = TTS_LANG[locale] || locale.split('-')[0];
     const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(t.slice(0, 200))}`;
     try {
       const a = new Audio(url);
@@ -88,6 +91,8 @@ export async function say(text, locale) {
 }
 
 // Can we pronounce this locale at all right now (device voice, or online)?
+// No locale (e.g. Hmong) => no audio: there is no online voice to fall back to.
 export function canSay(locale) {
+  if (!locale) return false;
   return hasVoiceFor(locale) || (typeof navigator === 'undefined' || navigator.onLine !== false);
 }
