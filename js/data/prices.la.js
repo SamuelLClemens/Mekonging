@@ -53,8 +53,8 @@ export const PRICES_LA = {
       scamNote: "Tour sellers bundling a vastly inflated entry fee into a day trip, or charging extra for the included shuttle cart.",
       betterOption: "Pay the posted entry fee at the gate; arrange shared transport rather than an overpriced private package." },
 
-    { id: "train-vte-lpb", label: "High-speed train Vientiane to Luang Prabang (Laos-China Railway)", fair: { low: 170000, typical: 220000, high: 350000 }, unit: "second class, one way",
-      notes: "About 2 hours. Second class roughly 170,000-220,000 LAK; first class higher. Official sales open about 3 days ahead; an agent or app fee of around 20,000 LAK applies off-station.",
+    { id: "train-vte-lpb", label: "High-speed train Vientiane to Luang Prabang (Laos-China Railway)", fair: { low: 340000, typical: 360000, high: 400000 }, unit: "second class, one way",
+      notes: "About 2 hours. Second class about 360,000 LAK; first class about 520,000–570,000 LAK (fares rose ~9% on 1 April 2026). Official sales open about 3 days ahead; an agent or app fee of around 20,000 LAK applies off-station.",
       scamNote: "Agents reselling seats at double face value, or claiming the only seats left are first/business class.",
       betterOption: "Buy at the station ticket office or via the official LCR channel; book early as seats sell out." },
 

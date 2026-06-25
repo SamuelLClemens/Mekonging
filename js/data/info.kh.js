@@ -32,7 +32,7 @@ export const INFO_KH = {
       title: "Visa basics",
       body: [
         "Most visitors need a tourist visa; a 30-day tourist visa is typically obtainable via the official e-Visa portal before travel, on arrival at major airports and some land borders, or at a Cambodian embassy.",
-        "Indicative costs are around 30 USD for the visa itself, with the online e-Visa carrying a small processing surcharge (roughly 36 USD total); visa-on-arrival is usually paid in US dollars cash and a passport photo is helpful.",
+        "The tourist e-Visa costs about 30 USD total (reduced from roughly 36 USD on 1 January 2025); this single fee already includes the online processing charge, with no separate surcharge added on top. Visa-on-arrival is usually paid in US dollars cash and a passport photo is helpful.",
         "Air arrivals are generally required to complete the free Cambodia e-Arrival (CeA) digital form shortly before arrival.",
         "Rules, fees and eligible entry points change; confirm requirements for your nationality on the official sources before you travel."
       ],

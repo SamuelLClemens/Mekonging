@@ -20,7 +20,7 @@ export const INFO_TH = {
       'Coverage is excellent in cities and good on the main islands.',
     ]},
     { id: 'visa', title: 'Visa basics', body: [
-      'Many nationalities receive a visa exemption for tourism (length varies and rules change).',
+      'Many nationalities (including the US, UK, EU and Australia) get a visa exemption for tourism. As of mid-2026 this is 60 days at the border, but a Cabinet-approved cut to 30 days is pending and takes effect 15 days after publication in the Royal Gazette — check your current entitlement before you fly. Once in force, the 30-day stay is extendable once by 30 days (1,900 THB) at an immigration office.',
       'Always confirm your nationality’s current entitlement and any onward-ticket or funds requirement.',
       'Overstaying carries a daily fine — track your permitted-to date.',
     ], verifyAt: { org: 'Thai Immigration Bureau', url: 'https://www.immigration.go.th' } },

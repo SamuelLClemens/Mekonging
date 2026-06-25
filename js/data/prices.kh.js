@@ -10,7 +10,7 @@ export const PRICES_KH = {
     { org: "Smart Axiata", url: "https://www.smart.com.kh" }
   ],
   items: [
-    { id: "airport-city-phnompenh", label: "Phnom Penh airport to city centre", fair: { low: 7, typical: 12, high: 18 }, unit: "one way (USD)",
+    { id: "airport-city-phnompenh", label: "Phnom Penh airport to city centre", fair: { low: 7, typical: 12, high: 20 }, unit: "one way (USD)",
       notes: "Phnom Penh now uses Techo International Airport (opened 2025), roughly 20-25 km south of the riverside, so fares run higher than the old in-town airport. App tuk-tuks are cheapest; air-conditioned cars cost a few dollars more.",
       scamNote: "Curbside drivers may quote a flat 25-40 USD and claim it is the fixed airport rate, or refuse to use a meter.",
       betterOption: "Book a Grab or PassApp car/tuk-tuk in the app so the price is set before you ride." },

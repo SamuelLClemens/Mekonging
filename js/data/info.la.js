@@ -31,7 +31,7 @@ export const INFO_LA = {
       title: "Visa basics",
       body: [
         "Many travellers need a tourist visa for Laos, available as an official eVisa applied for online before travel, or as a visa on arrival at designated international airports and land borders.",
-        "The tourist eVisa is generally single-entry and allows a stay of up to 30 days; fees are nationality-dependent and typically fall in the range of roughly 35-50 USD, paid online. Visa on arrival is usually paid in cash (US dollars are commonly accepted) and may carry small additional charges.",
+        "The tourist eVisa is single-entry, valid 60 days from issuance, and allows a stay of up to 30 days; a passport valid for at least 6 months (with a blank page) is required. The fee is reciprocity-based — about 50 USD for most Western passports (US, UK and most EU), while a few nationalities pay around 35 USD, so confirm your exact fee in the official calculator at laoevisa.gov.la before paying. Visa on arrival is usually paid in cash (US dollars are commonly accepted) and may carry small additional charges.",
         "Ensure your passport has at least six months validity and blank pages. Visa rules, fees and eligible entry points change, so confirm requirements for your nationality on the official source before you travel."
       ],
       verifyAt: { org: "Lao Official Online Visa (Department of Immigration)", url: "https://laoevisa.gov.la" }
