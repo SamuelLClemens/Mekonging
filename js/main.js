@@ -1205,8 +1205,12 @@ function mapScreen() {
       h('span', {}, '🏠 Your accommodation'),
     ]),
     h('div', { class: 'muted', style: 'font-weight:700;margin:6px 0 5px' }, 'Route lines = transport mode'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px' },
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px' },
       ROUTE_LEGEND.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
+    h('div', { style: 'font-size:13px;display:flex;align-items:center;gap:8px' }, [
+      h('span', { style: 'display:inline-block;width:22px;height:0;border-top:3px dashed #D6336C;vertical-align:middle' }),
+      h('span', {}, 'The way back to your accommodation (from your location)'),
+    ]),
   ]));
 
   // pins list (handy when offline / no GPS)
