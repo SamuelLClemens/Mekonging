@@ -86,18 +86,27 @@ const CITY_COORDS = {
   'Vientiane': [102.6331, 17.9757], 'Luang Prabang': [102.1348, 19.8845], 'Vang Vieng': [102.4470, 18.9237], 'Pakse': [105.7820, 15.1202],
 };
 function normCity(name) { return String(name || '').replace(/\s*\(.*\)\s*/g, '').trim(); }
-export function modeColor(mode) {
+// Classify a transport mode into one of five route keys. modeColor()/modeKey() must
+// agree; the default 'other' is a neutral grey that never collides with a rating pin.
+export function modeKey(mode) {
   const m = (mode || '').toLowerCase();
-  if (m.includes('train')) return '#3B6FE0';
-  if (m.includes('flight') || m.includes('fly') || m.includes('air')) return '#6A4C93';
-  if (m.includes('ferry') || m.includes('boat')) return '#16A39A';
-  if (m.includes('bus') || m.includes('van') || m.includes('minibus') || m.includes('car')) return '#2E8B57';
-  return '#E8632A';
+  if (m.includes('train')) return 'train';
+  if (m.includes('flight') || m.includes('fly') || m.includes('air')) return 'flight';
+  if (m.includes('ferry') || m.includes('boat') || m.includes('catamaran') || m.includes('cruise')) return 'ferry';
+  if (m.includes('bus') || m.includes('van') || m.includes('minibus') || m.includes('car') || m.includes('taxi') || m.includes('tuk-tuk')) return 'bus';
+  return 'other';
 }
+// Route colours. Ferry darkened #16A39A -> #138C84 for legend contrast on the cream
+// card; the old #E8632A default (which clashed with the 'Mixed' rating pin) is gone.
 export const ROUTE_LEGEND = [
-  { color: '#3B6FE0', label: 'Train' }, { color: '#6A4C93', label: 'Flight' },
-  { color: '#2E8B57', label: 'Bus' }, { color: '#16A39A', label: 'Ferry / boat' },
+  { key: 'train', color: '#3B6FE0', label: 'Train', dash: [3, 1.5], swatchDash: '7 3' },
+  { key: 'flight', color: '#6A4C93', label: 'Flight', dash: [1.5, 1.5], swatchDash: '3 3' },
+  { key: 'bus', color: '#2E8B57', label: 'Bus', dash: [0.8, 1.4], swatchDash: '1.5 3' },
+  { key: 'ferry', color: '#138C84', label: 'Ferry / boat', dash: [3, 1.2, 0.8, 1.2], swatchDash: '7 3 1.5 3' },
+  { key: 'other', color: '#7A8089', label: 'Other / mixed', dash: [2, 1.2], swatchDash: '5 3' },
 ];
+const ROUTE_COLOR = ROUTE_LEGEND.reduce((o, r) => { o[r.key] = r.color; return o; }, {});
+export function modeColor(mode) { return ROUTE_COLOR[modeKey(mode)]; }
 function routesGeoJSON() {
   const feats = [];
   for (const c of COUNTRIES) {
@@ -105,7 +114,7 @@ function routesGeoJSON() {
       const a = CITY_COORDS[normCity(r.from)], b = CITY_COORDS[normCity(r.to)];
       if (!a || !b) continue;
       const opt = (r.options || []).find((o) => o.recommended) || (r.options || [])[0] || {};
-      feats.push({ type: 'Feature', properties: { color: modeColor(opt.mode) }, geometry: { type: 'LineString', coordinates: [a, b] } });
+      feats.push({ type: 'Feature', properties: { color: modeColor(opt.mode), mode: modeKey(opt.mode) }, geometry: { type: 'LineString', coordinates: [a, b] } });
     }
   }
   return { type: 'FeatureCollection', features: feats };
@@ -303,9 +312,14 @@ export async function initMap(containerEl, opts = {}) {
     map.addLayer({ id: 'mk-routes-casing', type: 'line', source: 'mk-routes',
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': '#FFFBF0', 'line-width': 6, 'line-opacity': 0.6 } });
-    map.addLayer({ id: 'mk-routes-line', type: 'line', source: 'mk-routes',
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': ['get', 'color'], 'line-width': 3.4, 'line-dasharray': [2, 1.2] } });
+    // One line layer per mode: line-dasharray is not data-driven, so each transport
+    // mode gets its own static dash — a colour-blind-safe cue layered on top of colour.
+    for (const m of ROUTE_LEGEND) {
+      map.addLayer({ id: 'mk-routes-' + m.key, type: 'line', source: 'mk-routes',
+        filter: ['==', ['get', 'mode'], m.key],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': ['get', 'color'], 'line-width': 3.4, 'line-dasharray': m.dash } });
+    }
   }
   // "Way back" guide line: a direct dashed line from the live GPS dot to the saved
   // accommodation, redrawn as you move. Not turn-by-turn (no offline routing engine),

@@ -1281,18 +1281,25 @@ function mapScreen() {
   renderAreas();
 
   // ---- Map key: every pin and EVERY line on the map, grouped + swatched --------
-  const dot = (c) => h('span', { style: `display:inline-block;width:13px;height:13px;border-radius:50%;background:${c};flex:0 0 auto` });
-  // a small line sample that matches the real on-map style (colour, dash, casing)
-  const lineSwatch = ({ color, dash = false, casing = null, width = 3 }) => h('span', { class: 'line-swatch', html:
-    '<svg width="34" height="12" viewBox="0 0 34 12" role="img" aria-hidden="true">'
-    + (casing ? `<line x1="2" y1="6" x2="32" y2="6" stroke="${casing}" stroke-width="${width + 3}" stroke-linecap="round"/>` : '')
-    + `<line x1="2" y1="6" x2="32" y2="6" stroke="${color}" stroke-width="${width}" stroke-linecap="round"${dash ? ' stroke-dasharray="5 3"' : ''}/></svg>` });
+  // Each pin dot carries a faint ring so its edge stays visible on the cream/dark card.
+  const dot = (c) => h('span', { style: `display:inline-block;width:13px;height:13px;border-radius:50%;background:${c};box-shadow:0 0 0 1px var(--key-dot-ring);flex:0 0 auto` });
+  // A small line sample mirroring the real on-map style. `dash`: false = solid, true =
+  // "5 3", or a custom dash string. `point`: overlay a white dot (the measure vertices).
+  const lineSwatch = ({ color, dash = false, casing = null, width = 3, point = false }) => {
+    const da = dash === true ? '5 3' : (typeof dash === 'string' ? dash : null);
+    return h('span', { class: 'line-swatch', html:
+      '<svg width="34" height="12" viewBox="0 0 34 12" role="img" aria-hidden="true">'
+      + (casing ? `<line x1="2" y1="6" x2="32" y2="6" stroke="${casing}" stroke-width="${width + 3}" stroke-linecap="round"/>` : '')
+      + `<line x1="2" y1="6" x2="32" y2="6" stroke="${color}" stroke-width="${width}" stroke-linecap="round"${da ? ` stroke-dasharray="${da}"` : ''}/>`
+      + (point ? '<circle cx="17" cy="6" r="3" fill="#FFFFFF" stroke="#1E1E1E" stroke-width="1.5"/>' : '')
+      + '</svg>' });
+  };
   const keyRow = (swatch, label, sub) => h('div', { class: 'key-row' }, [
     swatch, h('span', {}, [h('span', { class: 'key-label' }, label), sub ? h('span', { class: 'key-sub' }, ` — ${sub}`) : null]),
   ]);
   const subhead = (t) => h('div', { class: 'key-subhead' }, t);
 
-  wrap.append(h('details', { class: 'card map-key', open: '' }, [
+  const keyCard = h('details', { class: 'card map-key', open: '' }, [
     h('summary', {}, 'Map key — what every pin and line means'),
 
     subhead('Pins'),
@@ -1300,7 +1307,7 @@ function mapScreen() {
     h('div', { class: 'key-grid', style: 'margin-top:6px' }, [
       keyRow(dot('#E0A100'), 'Market'),
       keyRow(dot('#0EA5C4'), 'Pool'),
-      keyRow(dot('#3B5BDB'), 'Border crossing'),
+      keyRow(dot('#3B5BDB'), 'Border crossing', 'a place you can cross between countries'),
       keyRow(dot('#6A4C93'), 'Your dropped pin'),
       keyRow(h('span', { style: 'flex:0 0 auto' }, '🏠'), 'Your accommodation'),
     ]),
@@ -1309,21 +1316,25 @@ function mapScreen() {
     subhead('Base map'),
     h('div', { class: 'key-grid' }, [
       keyRow(lineSwatch({ color: '#2C7DA0', width: 4 }), 'Mekong River'),
-      keyRow(lineSwatch({ color: '#C9A86A', width: 3 }), 'Coastline'),
-      keyRow(lineSwatch({ color: '#FF3B30', dash: true, width: 3 }), 'Country border'),
+      keyRow(lineSwatch({ color: '#A9824A', width: 3 }), 'Land / country outline'),
+      keyRow(lineSwatch({ color: '#FF3B30', dash: '3 2.5', width: 3 }), 'Country border', 'the line between two countries'),
     ]),
+    h('p', { class: 'key-note' }, 'The tan line outlines all land. Along national land borders it runs together with the red dashed Country border line (when that layer is on); only the tan line follows the sea coast.'),
 
     subhead('Transport routes (between cities)'),
     h('div', { class: 'key-grid' },
-      ROUTE_LEGEND.map((b) => keyRow(lineSwatch({ color: b.color, dash: true, casing: '#FFFBF0', width: 3 }), b.label))),
-    h('p', { class: 'key-note' }, 'A dashed line is the recommended way to travel between two cities; its colour is the transport mode.'),
+      ROUTE_LEGEND.map((b) => keyRow(lineSwatch({ color: b.color, dash: b.swatchDash, casing: '#FFFBF0', width: 3 }), b.label))),
+    h('p', { class: 'key-note' }, 'A dashed line is the recommended way to travel between two cities. Each mode has its own colour AND dash pattern, so they stay distinct even when colours are hard to tell apart.'),
 
     subhead('Your navigation (shown only while you use a tool)'),
     h('div', { class: 'key-grid' }, [
       keyRow(lineSwatch({ color: '#D6336C', dash: true, casing: '#FFFFFF', width: 3 }), 'Way back to your stay', 'a direct line from your GPS location'),
-      keyRow(lineSwatch({ color: '#1E1E1E', dash: true, width: 3 }), 'Measuring line', 'from the 📏 Measure tool'),
+      keyRow(lineSwatch({ color: '#1E1E1E', dash: true, casing: '#FFFFFF', width: 3, point: true }), 'Measuring line', 'from the 📏 Measure tool, with a dot at each tap'),
     ]),
-  ]));
+  ]);
+  // Place the key directly under the map so it is reachable without scrolling past
+  // the layers/stay/areas cards (expert map-UX finding).
+  layersCard.before(keyCard);
 
   // pins list (handy when offline / no GPS)
   const pinsCard = h('div', { class: 'card' }, [

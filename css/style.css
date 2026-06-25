@@ -463,6 +463,9 @@ html[data-theme="dark"] .map-key summary { color: var(--teal); }
 .key-label { font-weight: 600; }
 .key-sub { color: var(--ink-soft); }
 .key-note { font-size: 12px; color: var(--ink-soft); margin: 6px 0 0; }
+/* ring round each key dot so low-luminance fills keep a visible edge on both cards */
+:root { --key-dot-ring: rgba(0, 0, 0, 0.45); }
+html[data-theme="dark"] { --key-dot-ring: rgba(255, 255, 255, 0.45); }
 
 /* perf: skip rendering offscreen cards/rows in long lists */
 .card, .species-card, .phrase, .price-item { content-visibility: auto; contain-intrinsic-size: auto 90px; }
