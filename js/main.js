@@ -1280,25 +1280,48 @@ function mapScreen() {
   wrap.append(toolbar, searchWrap, storageOut, measureOut, canvas, layersCard, stayCard, areasCard);
   renderAreas();
 
-  // legend: what the pin colours and route lines mean
-  const dot = (c) => h('span', { style: `display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:6px;vertical-align:middle` });
-  wrap.append(h('div', { class: 'card', style: 'padding:10px 12px' }, [
-    h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:5px' }, 'Pin colour = rating (your own rating wins)'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px' },
-      RATING_BANDS.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
-    h('div', { style: 'font-size:13px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px 14px' }, [
-      h('span', {}, [dot('#E0A100'), 'Markets']),
-      h('span', {}, [dot('#0EA5C4'), 'Pools']),
-      h('span', {}, [dot('#3B5BDB'), 'Crossings']),
-      h('span', {}, [dot('#6A4C93'), 'Your pins']),
-      h('span', {}, '🏠 Your accommodation'),
+  // ---- Map key: every pin and EVERY line on the map, grouped + swatched --------
+  const dot = (c) => h('span', { style: `display:inline-block;width:13px;height:13px;border-radius:50%;background:${c};flex:0 0 auto` });
+  // a small line sample that matches the real on-map style (colour, dash, casing)
+  const lineSwatch = ({ color, dash = false, casing = null, width = 3 }) => h('span', { class: 'line-swatch', html:
+    '<svg width="34" height="12" viewBox="0 0 34 12" role="img" aria-hidden="true">'
+    + (casing ? `<line x1="2" y1="6" x2="32" y2="6" stroke="${casing}" stroke-width="${width + 3}" stroke-linecap="round"/>` : '')
+    + `<line x1="2" y1="6" x2="32" y2="6" stroke="${color}" stroke-width="${width}" stroke-linecap="round"${dash ? ' stroke-dasharray="5 3"' : ''}/></svg>` });
+  const keyRow = (swatch, label, sub) => h('div', { class: 'key-row' }, [
+    swatch, h('span', {}, [h('span', { class: 'key-label' }, label), sub ? h('span', { class: 'key-sub' }, ` — ${sub}`) : null]),
+  ]);
+  const subhead = (t) => h('div', { class: 'key-subhead' }, t);
+
+  wrap.append(h('details', { class: 'card map-key', open: '' }, [
+    h('summary', {}, 'Map key — what every pin and line means'),
+
+    subhead('Pins'),
+    h('div', { class: 'key-grid' }, RATING_BANDS.map((b) => keyRow(dot(b.color), b.label))),
+    h('div', { class: 'key-grid', style: 'margin-top:6px' }, [
+      keyRow(dot('#E0A100'), 'Market'),
+      keyRow(dot('#0EA5C4'), 'Pool'),
+      keyRow(dot('#3B5BDB'), 'Border crossing'),
+      keyRow(dot('#6A4C93'), 'Your dropped pin'),
+      keyRow(h('span', { style: 'flex:0 0 auto' }, '🏠'), 'Your accommodation'),
     ]),
-    h('div', { class: 'muted', style: 'font-weight:700;margin:6px 0 5px' }, 'Route lines = transport mode'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:8px' },
-      ROUTE_LEGEND.map((b) => h('span', { style: 'font-size:13px' }, [dot(b.color), b.label]))),
-    h('div', { style: 'font-size:13px;display:flex;align-items:center;gap:8px' }, [
-      h('span', { style: 'display:inline-block;width:22px;height:0;border-top:3px dashed #D6336C;vertical-align:middle' }),
-      h('span', {}, 'The way back to your accommodation (from your location)'),
+    h('p', { class: 'key-note' }, 'Place pins are coloured by rating — your own rating wins over the guidebook score.'),
+
+    subhead('Base map'),
+    h('div', { class: 'key-grid' }, [
+      keyRow(lineSwatch({ color: '#2C7DA0', width: 4 }), 'Mekong River'),
+      keyRow(lineSwatch({ color: '#C9A86A', width: 3 }), 'Coastline'),
+      keyRow(lineSwatch({ color: '#FF3B30', dash: true, width: 3 }), 'Country border'),
+    ]),
+
+    subhead('Transport routes (between cities)'),
+    h('div', { class: 'key-grid' },
+      ROUTE_LEGEND.map((b) => keyRow(lineSwatch({ color: b.color, dash: true, casing: '#FFFBF0', width: 3 }), b.label))),
+    h('p', { class: 'key-note' }, 'A dashed line is the recommended way to travel between two cities; its colour is the transport mode.'),
+
+    subhead('Your navigation (shown only while you use a tool)'),
+    h('div', { class: 'key-grid' }, [
+      keyRow(lineSwatch({ color: '#D6336C', dash: true, casing: '#FFFFFF', width: 3 }), 'Way back to your stay', 'a direct line from your GPS location'),
+      keyRow(lineSwatch({ color: '#1E1E1E', dash: true, width: 3 }), 'Measuring line', 'from the 📏 Measure tool'),
     ]),
   ]));
 

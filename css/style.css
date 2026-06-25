@@ -450,6 +450,20 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
   border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); padding: 6px; }
 .btn.toggle-on { background: var(--teal); color: #fff; border-color: var(--teal); }
 
+/* map key (legend): pins + every line, grouped and swatched */
+.map-key summary { font-weight: 800; cursor: pointer; color: var(--teal-deep); list-style: none; }
+.map-key summary::-webkit-details-marker { display: none; }
+.map-key summary::before { content: "▸ "; color: var(--orange); }
+.map-key[open] summary::before { content: "▾ "; }
+html[data-theme="dark"] .map-key summary { color: var(--teal); }
+.key-subhead { font-weight: 800; color: var(--orange); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 5px; }
+.key-grid { display: flex; flex-wrap: wrap; gap: 7px 18px; }
+.key-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.line-swatch { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.key-label { font-weight: 600; }
+.key-sub { color: var(--ink-soft); }
+.key-note { font-size: 12px; color: var(--ink-soft); margin: 6px 0 0; }
+
 /* perf: skip rendering offscreen cards/rows in long lists */
 .card, .species-card, .phrase, .price-item { content-visibility: auto; contain-intrinsic-size: auto 90px; }
 
