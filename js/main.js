@@ -1134,12 +1134,26 @@ function mapScreen() {
   renderStay();
 
   // --- Save this area offline (satellite tiles -> service-worker cache) ---------
+  // Two-step so a save can never silently fill the device: first show how many tiles
+  // and roughly how much space THIS view needs, then download only on confirm.
   const swAvailable = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
-  const dlBtn = h('button', { class: 'btn ghost', onclick: downloadArea }, '⬇ Save this area');
+  const dlBtn = h('button', { class: 'btn ghost', onclick: estimateArea }, '⬇ Save this area');
   if (!swAvailable) dlBtn.style.display = 'none';
-  async function downloadArea() {
+  function estimateArea() {
     if (!mapCtrl || !swAvailable) { storageOut.textContent = 'Offline area saving runs in the web app.'; return; }
-    const urls = mapCtrl.getDownloadTiles(600);
+    const urls = mapCtrl.getDownloadTiles(1000);
+    if (!urls.length) { storageOut.textContent = 'Nothing to save at this view — zoom in to an area first.'; return; }
+    const mbNum = urls.length * 0.018;                 // Esri imagery tiles average ~18 KB
+    const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
+    storageOut.textContent = '';
+    storageOut.append(
+      `This area is about ${urls.length} satellite tiles (~${mb} MB). Zoom in for more street detail, or out to cover more ground. `,
+      h('button', { class: 'linklike', onclick: () => downloadArea(urls) }, 'Download now'),
+      ' · ',
+      h('button', { class: 'linklike', onclick: showStorage }, 'Cancel'),
+    );
+  }
+  async function downloadArea(urls) {
     storageOut.textContent = `Saving ${urls.length} map tiles for offline…`;
     const onMsg = (e) => {
       const d = e.data || {};

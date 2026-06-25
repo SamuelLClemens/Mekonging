@@ -7,7 +7,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.61.0';
+const CACHE_VERSION = 'mk-v0.62.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -175,7 +175,7 @@ async function rebuildRanged(stored) {
 self.addEventListener('message', (e) => {
   const d = e.data || {};
   if (d.type === 'PREFETCH_TILES' && Array.isArray(d.urls)) {
-    e.waitUntil(prefetchTiles(d.urls.slice(0, 800), e.source));
+    e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source));
   }
 });
 
