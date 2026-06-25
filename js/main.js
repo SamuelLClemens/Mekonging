@@ -1043,6 +1043,30 @@ function mapScreen() {
   const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
   const crossBtn = h('button', { class: 'btn ghost', onclick: () => go('#crossings') }, '🛂 Crossings');
   const toolbar = h('div', { class: 'map-toolbar' }, [addBtn, crossBtn, storeBtn]);
+
+  // Keep-screen-awake while navigating on foot (Screen Wake Lock API). The OS releases
+  // the lock when the app is backgrounded, so re-acquire it when we return to foreground.
+  let wakeLock = null, wantWake = false;
+  const wakeBtn = h('button', { class: 'btn ghost', onclick: toggleWake }, '🔆 Keep screen on');
+  if (!('wakeLock' in navigator)) wakeBtn.style.display = 'none';
+  async function acquireWake() {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  }
+  async function toggleWake() {
+    if (wantWake) {
+      wantWake = false;
+      try { if (wakeLock) await wakeLock.release(); } catch { /* already gone */ }
+      wakeLock = null; wakeBtn.textContent = '🔆 Keep screen on'; wakeBtn.classList.remove('toggle-on');
+    } else {
+      try { await acquireWake(); wantWake = true; wakeBtn.textContent = '🔆 Screen stays on'; wakeBtn.classList.add('toggle-on'); }
+      catch (e) { storageOut.textContent = 'Could not keep the screen on: ' + ((e && e.message) || e); }
+    }
+  }
+  const onVis = () => { if (wantWake && wakeLock === null && document.visibilityState === 'visible') acquireWake().catch(() => { /* denied */ }); };
+  document.addEventListener('visibilitychange', onVis);
+  // release the lock + detach the listener when the user leaves the map screen
+  liveCleanup = () => { wantWake = false; document.removeEventListener('visibilitychange', onVis); if (wakeLock) { try { wakeLock.release(); } catch { /* noop */ } wakeLock = null; } };
   const storageOut = h('p', { class: 'map-hint' }, '');
   async function showStorage() {
     const m = await import('./map.js'); const e = await m.storageEstimate();
@@ -1168,7 +1192,7 @@ function mapScreen() {
     navigator.serviceWorker.addEventListener('message', onMsg);
     navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls });
   }
-  toolbar.append(dlBtn);
+  toolbar.append(dlBtn, wakeBtn);
 
   // --- Offline search: find a place / city / pool / your pin and fly to it -------
   const searchInput = h('input', { type: 'search', class: 'map-search', placeholder: 'Search places, cities, pools, your pins…', 'aria-label': 'Search the map', autocomplete: 'off' });
@@ -2384,13 +2408,32 @@ function tripScreen() {
 
   // budget log
   const bud = h('div', { class: 'card' }, [h('h2', {}, 'Budget log')]);
+  const home = homeCurrency();
   const totals = {};
   store.trip.budgetLog.forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
-  if (Object.keys(totals).length) bud.append(h('p', { class: 'fair' }, 'Total: ' + Object.entries(totals).map(([c, v]) => `${v.toLocaleString()} ${c}`).join(' · ')));
-  store.trip.budgetLog.forEach((b) => bud.append(h('div', { class: 'row-between price-item' }, [
-    h('span', {}, `${b.date} · ${b.note || 'spend'}`), h('span', {}, [h('strong', {}, `${b.amount} ${b.currency}`), ' ',
-      h('button', { class: 'chip', onclick: () => { deleteBudgetItem(b.id); go('#trip'); } }, '✕')]),
-  ])));
+  if (Object.keys(totals).length) {
+    bud.append(h('p', { class: 'fair' }, 'Total: ' + Object.entries(totals).map(([c, v]) => `${v.toLocaleString()} ${c}`).join(' · ')));
+    // Single grand total converted to the traveller's home currency (live or cached
+    // offline rates). Flag if any currency has no known rate so the figure is honest.
+    let homeSum = 0, allKnown = true;
+    for (const [c, v] of Object.entries(totals)) {
+      if (c === home) { homeSum += v; continue; }
+      const conv = convert(v, c, home);
+      if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
+    }
+    if (homeSum > 0 && Object.keys(totals).some((c) => c !== home)) {
+      bud.append(h('p', { class: 'muted', style: 'margin:-4px 0 0' },
+        `≈ ${Math.round(homeSum).toLocaleString()} ${home} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
+    }
+  }
+  store.trip.budgetLog.forEach((b) => {
+    const approx = approxHome(b.amount, b.currency);   // "≈ $3.30" in the home currency, or ''
+    bud.append(h('div', { class: 'row-between price-item' }, [
+      h('span', {}, `${b.date} · ${b.note || 'spend'}`),
+      h('span', {}, [h('strong', {}, `${b.amount} ${b.currency}`), approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
+        h('button', { class: 'chip', onclick: () => { deleteBudgetItem(b.id); go('#trip'); } }, '✕')]),
+    ]));
+  });
   const bAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const c = getCountry(activeCountry);
   const bCur = currencySelect(c ? c.currency : 'THB');
@@ -2721,11 +2764,13 @@ function selectEl(options, current, onchange) {
 
 // ---- router -----------------------------------------------------------------
 let liveMapCtrl = null;   // the map controller for the current #map view, if any
+let liveCleanup = null;   // per-screen teardown (e.g. release the screen wake lock)
 function render() {
   applyTheme();
   // Tear down any live map before rendering the next screen (frees the WebGL context
   // and stops the GPS watcher — prevents the map dying after repeated visits).
   if (liveMapCtrl) { try { liveMapCtrl.dispose(); } catch { /* noop */ } liveMapCtrl = null; }
+  if (liveCleanup) { try { liveCleanup(); } catch { /* noop */ } liveCleanup = null; }
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');

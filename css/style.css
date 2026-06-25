@@ -145,7 +145,12 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 .tile:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--orange); }
-.tile .ic { font-size: 1.8rem; }
+/* soft tinted disc behind each tile icon for visual rhythm (purely decorative) */
+.tile .ic { font-size: 1.55rem; width: 48px; height: 48px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 2px;
+  background: linear-gradient(135deg, rgba(242,169,59,0.24), rgba(232,99,42,0.12)); }
+html[data-theme="dark"] .tile .ic { background: linear-gradient(135deg, rgba(242,169,59,0.22), rgba(214,51,108,0.20)); }
+.tile:hover .ic { background: linear-gradient(135deg, rgba(242,169,59,0.34), rgba(232,99,42,0.20)); }
 .tile .t { font-weight: 800; font-size: var(--fs-h3); }
 .tile .d { color: var(--ink-soft); font-size: var(--fs-sm); }
 
@@ -443,6 +448,7 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 .map-search:focus { outline: none; border-color: var(--orange); }
 .map-search-results:not(:empty) { margin-top: var(--sp-1); max-height: 230px; overflow-y: auto;
   border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); padding: 6px; }
+.btn.toggle-on { background: var(--teal); color: #fff; border-color: var(--teal); }
 
 /* perf: skip rendering offscreen cards/rows in long lists */
 .card, .species-card, .phrase, .price-item { content-visibility: auto; contain-intrinsic-size: auto 90px; }
