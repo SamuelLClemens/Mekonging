@@ -1235,7 +1235,28 @@ function mapScreen() {
       navigator.serviceWorker.controller.postMessage({ type: 'DELETE_TILES', urls });
     }
   }
-  toolbar.append(dlBtn, wakeBtn);
+  // --- Measure tool: tap points to read distances, fully offline ----------------
+  let measuring = false;
+  const measureOut = h('p', { class: 'map-hint', style: 'margin:2px 0;display:none' }, '');
+  const measureBtn = h('button', { class: 'btn ghost', onclick: toggleMeasure }, '📏 Measure');
+  function fmtKm(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 2 : 1)} km`; }
+  function toggleMeasure() {
+    if (!mapCtrl) return;
+    measuring = !measuring;
+    if (measuring) {
+      measureBtn.textContent = '📏 Measuring — tap points'; measureBtn.classList.add('toggle-on');
+      measureOut.style.display = ''; measureOut.textContent = 'Tap two or more points on the map to measure the distance.';
+      mapCtrl.toggleMeasure(true, (km, n) => {
+        measureOut.textContent = n < 2 ? 'Tap another point to measure…'
+          : `Distance: ${fmtKm(km)} over ${n} points. Tap to extend, or tap “Measure” again to finish.`;
+      });
+    } else {
+      measureBtn.textContent = '📏 Measure'; measureBtn.classList.remove('toggle-on');
+      measureOut.style.display = 'none';
+      mapCtrl.toggleMeasure(false);
+    }
+  }
+  toolbar.append(dlBtn, wakeBtn, measureBtn);
 
   // --- Offline search: find a place / city / pool / your pin and fly to it -------
   const searchInput = h('input', { type: 'search', class: 'map-search', placeholder: 'Search places, cities, pools, your pins…', 'aria-label': 'Search the map', autocomplete: 'off' });
@@ -1256,7 +1277,7 @@ function mapScreen() {
   searchInput.addEventListener('input', runSearch);
   const searchWrap = h('div', { class: 'map-search-wrap' }, [searchInput, searchResults]);
 
-  wrap.append(toolbar, searchWrap, storageOut, canvas, layersCard, stayCard, areasCard);
+  wrap.append(toolbar, searchWrap, storageOut, measureOut, canvas, layersCard, stayCard, areasCard);
   renderAreas();
 
   // legend: what the pin colours and route lines mean

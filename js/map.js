@@ -329,6 +329,34 @@ export async function initMap(containerEl, opts = {}) {
       geometry: { type: 'LineString', coordinates: [[from.lng, from.lat], [to.lng, to.lat]] } }] });
   }
 
+  // Measure tool: tap points to lay a multi-segment line; the running total distance
+  // is reported back to the toolbar. Fully offline (great-circle maths, no service).
+  function haversineKmLL(a, b) {
+    const R = 6371, toR = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * toR, dLng = (b.lng - a.lng) * toR;
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+  let measuring = false, measurePts = [], measureCb = null;
+  function addMeasureLayers() {
+    if (map.getSource('mk-measure')) return;
+    map.addSource('mk-measure', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'mk-measure-line', type: 'line', source: 'mk-measure',
+      layout: { 'line-cap': 'round', 'line-join': 'round' }, filter: ['==', '$type', 'LineString'],
+      paint: { 'line-color': '#1E1E1E', 'line-width': 3, 'line-dasharray': [1.5, 1] } });
+    map.addLayer({ id: 'mk-measure-pts', type: 'circle', source: 'mk-measure', filter: ['==', '$type', 'Point'],
+      paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-stroke-color': '#1E1E1E', 'circle-stroke-width': 2 } });
+  }
+  function renderMeasure() {
+    const src = map.getSource('mk-measure'); if (!src) return;
+    const feats = measurePts.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] } }));
+    if (measurePts.length >= 2) feats.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: measurePts.map((p) => [p.lng, p.lat]) } });
+    src.setData({ type: 'FeatureCollection', features: feats });
+    let km = 0;
+    for (let i = 1; i < measurePts.length; i++) km += haversineKmLL(measurePts[i - 1], measurePts[i]);
+    if (measureCb) measureCb(km, measurePts.length);
+  }
+
   // Offline search index over the curated data + the user's own pins. No geocoder /
   // network: a simple case-insensitive name match across cities, places, pools and pins.
   function searchIndex(q) {
@@ -357,12 +385,15 @@ export async function initMap(containerEl, opts = {}) {
 
   // Add on style.load (fires when the inline style parses) so they appear even before
   // — or without — basemap tiles (which need the network on first load).
-  map.on('style.load', () => { addRoutes(); addWayback(); addMarkers(); addCityMarkers(); refreshMarkers(); });
+  map.on('style.load', () => { addRoutes(); addWayback(); addMeasureLayers(); addMarkers(); addCityMarkers(); refreshMarkers(); });
   map.on('zoomend', refreshMarkers);
   try { window.__mkMap = map; } catch { /* dev aid */ }
 
-  // tap empty map to drop a pin at that point
-  map.on('click', (e) => { if (opts.onMapClick) opts.onMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng }); });
+  // tap empty map to drop a pin — or, in measure mode, to add a measurement point
+  map.on('click', (e) => {
+    if (measuring) { measurePts.push({ lat: e.lngLat.lat, lng: e.lngLat.lng }); renderMeasure(); return; }
+    if (opts.onMapClick) opts.onMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+  });
 
   return {
     map,
@@ -404,6 +435,9 @@ export async function initMap(containerEl, opts = {}) {
       tileUrlsForBounds({ getWest: () => bounds.w, getEast: () => bounds.e, getNorth: () => bounds.n, getSouth: () => bounds.s }, z, 2, cap),
     // Nearest known city to the current centre (for a default saved-area name), or null.
     nearestCityName: () => { const c = map.getCenter(); return nearestCity({ lng: c.lng, lat: c.lat }); },
+    // Measure tool: toggle on with a callback (km, pointCount); off clears the line.
+    toggleMeasure: (on, cb) => { measuring = on; measureCb = cb || null; if (!on) { measurePts = []; renderMeasure(); } },
+    measureReset: () => { measurePts = []; renderMeasure(); },
     // Tear down the map, its WebGL context and the GPS watcher — call when leaving the
     // map screen. Without this, each visit leaks a context and the map dies after ~8-16.
     dispose: () => { try { map.remove(); } catch { /* already gone */ } if (window.__mkMap === map) { try { window.__mkMap = null; } catch { /* noop */ } } },
