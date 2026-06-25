@@ -7,9 +7,10 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.58.0';
+const CACHE_VERSION = 'mk-v0.59.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
+const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
 
 // `index.html` is the navigation fallback and so must cache for offline install to
 // be meaningful; it is listed in CRITICAL. Everything else is best-effort: a single
@@ -179,7 +180,7 @@ self.addEventListener('message', (e) => {
 
 async function prefetchTiles(urls, client) {
   const cache = await caches.open(TILE_CACHE);
-  let done = 0, ok = 0;
+  let done = 0, ok = 0, quotaHit = false;
   for (const url of urls) {
     const keyUrl = url + (url.includes('?') ? '&' : '?') + '__r=' + encodeURIComponent('full');
     try {
@@ -195,9 +196,23 @@ async function prefetchTiles(urls, client) {
           ok++;
         }
       }
-    } catch { /* skip this tile */ }
+    } catch (err) {
+      if (err && err.name === 'QuotaExceededError') { quotaHit = true; break; } // storage full — stop
+      /* otherwise skip this tile */
+    }
     done++;
     if (client && done % 25 === 0) client.postMessage({ type: 'PREFETCH_PROGRESS', done, total: urls.length, ok });
   }
-  if (client) client.postMessage({ type: 'PREFETCH_DONE', done, total: urls.length, ok });
+  await enforceTileCap(cache);
+  if (client) client.postMessage({ type: 'PREFETCH_DONE', done, total: urls.length, ok, quotaHit });
+}
+
+// Keep TILE_CACHE bounded: cache.keys() is insertion-ordered, so deleting from the front
+// evicts the oldest tiles (a simple FIFO / approximate-LRU cap).
+async function enforceTileCap(cache) {
+  try {
+    const keys = await cache.keys();
+    const over = keys.length - TILE_CACHE_MAX;
+    for (let i = 0; i < over; i++) await cache.delete(keys[i]);
+  } catch { /* best-effort */ }
 }

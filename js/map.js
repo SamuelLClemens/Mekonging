@@ -194,19 +194,50 @@ export async function initMap(containerEl, opts = {}) {
     if (cats.some((c) => ['food', 'restaurant'].includes(c))) return 'eat';
     return 'go';
   }
-  // Visibility combines the layer toggle AND a zoom gate: the ~200 place/pool/crossing
-  // pins only appear once you zoom into an area, so the region-wide opening view stays
-  // legible and cheap. (User pins and the home marker are not bucketed, so always show.)
   const layerOn = { stay: true, eat: true, go: true, market: true, pools: true, crossing: true };
-  const MARKER_MINZOOM = 7.5;
+  const CITY_ZOOM = 8.5;        // below this, show city count-bubbles instead of pins
+  const cityMarkers = [];       // { el, name, count }
+  // Assign a place/pool to its nearest known city centre (within ~0.8°), else none.
+  function nearestCity(coords) {
+    let best = null, bestD = Infinity;
+    for (const name in CITY_COORDS) {
+      const d = (coords.lng - CITY_COORDS[name][0]) ** 2 + (coords.lat - CITY_COORDS[name][1]) ** 2;
+      if (d < bestD) { bestD = d; best = name; }
+    }
+    return bestD <= 0.64 ? best : null;
+  }
+  // Clustering, glyph-free: at region zoom show ONE count bubble per city
+  // ("Bangkok 9") instead of ~200 overlapping pins; the bubbles become small place-name
+  // labels and the individual pins appear as you zoom in. (User pins + home always show.)
   function refreshMarkers() {
-    const zoomedIn = map.getZoom() >= MARKER_MINZOOM;
+    const cityMode = map.getZoom() < CITY_ZOOM;
     for (const layer of Object.keys(markersByLayer)) {
-      const on = zoomedIn && layerOn[layer] !== false;
+      const on = !cityMode && layerOn[layer] !== false;
       markersByLayer[layer].forEach((el) => { el.style.display = on ? '' : 'none'; });
+    }
+    for (const c of cityMarkers) {
+      c.el.className = 'mk-city ' + (cityMode ? 'bubble' : 'label');
+      c.el.textContent = cityMode ? `${c.name}  ${c.count}` : c.name;
     }
   }
   function setLayerVisible(layer, on) { layerOn[layer] = on; refreshMarkers(); }
+  // One HTML marker per city: a count bubble (low zoom) / name label (high zoom).
+  function addCityMarkers() {
+    const counts = {};
+    const tally = (coords) => { if (!coords) return; const c = nearestCity(coords); if (c) counts[c] = (counts[c] || 0) + 1; };
+    for (const p of allPlaces()) tally(p.coords);
+    for (const p of POOLS) tally(p.coords);
+    for (const name in CITY_COORDS) {
+      const count = counts[name] || 0;
+      if (!count) continue;                 // skip cities with no curated places
+      const el = document.createElement('div');
+      el.className = 'mk-city bubble';
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', (ev) => { ev.stopPropagation(); map.flyTo({ center: CITY_COORDS[name], zoom: 12 }); });
+      new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(CITY_COORDS[name]).addTo(map);
+      cityMarkers.push({ el, name, count });
+    }
+  }
   function addMarkers() {
     for (const p of allPlaces()) {
       if (!p.coords) continue;
@@ -274,7 +305,7 @@ export async function initMap(containerEl, opts = {}) {
   }
   // Add on style.load (fires when the inline style parses) so they appear even before
   // — or without — basemap tiles (which need the network on first load).
-  map.on('style.load', () => { addRoutes(); addMarkers(); refreshMarkers(); });
+  map.on('style.load', () => { addRoutes(); addMarkers(); addCityMarkers(); refreshMarkers(); });
   map.on('zoomend', refreshMarkers);
   try { window.__mkMap = map; } catch { /* dev aid */ }
 

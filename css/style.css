@@ -212,6 +212,16 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 html[data-theme="dark"] .bp-roman { color: var(--teal); }
 .bp-note { font-size: 1rem; color: var(--ink-soft); margin-top: 12px; }
 .bp-actions { display: flex; gap: 10px; justify-content: center; margin-top: 22px; }
+
+/* Map city markers: a count bubble at region zoom, a small place-name label zoomed in */
+.linklike { background: none; border: none; padding: 0; color: var(--teal-deep); font: inherit; text-decoration: underline; cursor: pointer; }
+html[data-theme="dark"] .linklike { color: var(--teal); }
+.mk-city { font-family: var(--font-ui, system-ui, sans-serif); font-weight: 700; white-space: nowrap; user-select: none; line-height: 1; }
+.mk-city.bubble { color: #fff; background: var(--teal-deep); padding: 4px 9px; border-radius: 999px;
+  font-size: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.5); }
+.mk-city.label { color: var(--ink); background: transparent; font-size: 11px; font-weight: 800;
+  text-shadow: 0 0 3px var(--card), 0 0 4px var(--card), 0 0 4px var(--card); }
+html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000, 0 0 4px #000; }
 .banner {
   background: linear-gradient(135deg, rgba(242,169,59,0.22), rgba(214,51,108,0.16));
   border: 1px solid var(--line); color: var(--ink);

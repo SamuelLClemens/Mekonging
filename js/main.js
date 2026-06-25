@@ -1046,7 +1046,14 @@ function mapScreen() {
   const storageOut = h('p', { class: 'map-hint' }, '');
   async function showStorage() {
     const m = await import('./map.js'); const e = await m.storageEstimate();
-    storageOut.textContent = e ? `Stored on device: about ${e.usageMB.toFixed(1)} MB.` : '';
+    storageOut.innerHTML = '';
+    storageOut.append(e ? `Stored on device: about ${e.usageMB.toFixed(1)} MB. ` : '');
+    const clearBtn = h('button', { class: 'linklike', onclick: async () => {
+      storageOut.textContent = 'Clearing saved map areas…';
+      try { await m.clearTileCache(); } catch { /* noop */ }
+      showStorage();
+    } }, 'Clear saved map areas');
+    storageOut.append(clearBtn);
   }
 
   const canvas = h('div', { id: 'map-canvas' });
@@ -1134,7 +1141,9 @@ function mapScreen() {
       const d = e.data || {};
       if (d.type === 'PREFETCH_PROGRESS') storageOut.textContent = `Saving map tiles… ${d.done}/${d.total}`;
       else if (d.type === 'PREFETCH_DONE') {
-        storageOut.textContent = `Saved ${d.ok} of ${d.total} tiles — this area now works offline.`;
+        storageOut.textContent = d.quotaHit
+          ? `Storage is full — saved ${d.ok} tiles before stopping. Tap “Storage” to clear saved map areas, then try a smaller area.`
+          : `Saved ${d.ok} of ${d.total} tiles — this area now works offline.`;
         navigator.serviceWorker.removeEventListener('message', onMsg); showStorage();
       }
     };
