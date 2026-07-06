@@ -15,7 +15,7 @@ function defaults() {
         interests: [],          // subset of ['food','culture','nature','nightlife']
         budget: 'flexible',     // 'low' | 'mid' | 'high' | 'flexible'
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
-        mapLayers: { go: true, eat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
+        mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
@@ -24,6 +24,10 @@ function defaults() {
       // the page CSP connect-src (see Settings copy).
       translateEndpoint: '',
       translateKey: '',
+      // Feedback: optional destination for the "Email feedback" action (set by the
+      // owner in Settings) + the user's own reply-to. Both on-device; never committed.
+      feedbackTo: '',
+      contactEmail: '',
       theme: 'light',           // 'light' | 'dark'
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
       textScale: 'm',           // 's' | 'm' | 'l' — accessibility text size

@@ -1,16 +1,30 @@
 // Bangkok places (slice). Each entry is tagged by interest categories and a budget
 // tier so the UI can filter to what fits the traveller. Prices are GUIDANCE ranges
 // with a verified stamp; confirm locally. categories: food | culture | nature | nightlife.
+//
+// Optional traveller-fit fields (all safe to omit; the UI shows them only when set):
+//   kidFriendly: true|false      — good with children
+//   isLocal: true                — a local (not tourist-oriented) eatery; gets its own map colour
+//   stayType: 'tent'|'hostel'|'guesthouse'|'homestay'|'hotel'|'resort'|'apartment'
+//   stayDuration: 'short'|'long'|'both'   — suited to short trips, long stays, or either
+//   activities: [string]         — what you can do here (e.g. 'temple', 'dive', 'cooking-class')
+//   amenities: [string]          — facilities for stays (e.g. 'wifi', 'kitchen', 'pool')
+//   externalRatings: [{ site, score, scale, count?, url, asOf:'YYYY-MM' }]  — verified snapshots from other sites
+//   externalPrices:  [{ site, from, currency, url, asOf:'YYYY-MM' }]        — last-checked "from" prices (deep-link for live)
 export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
     categories: ['culture'], budgetTier: 'low',
+    kidFriendly: true, activities: ['temple', 'thai-massage'],
     blurb: 'Bangkok’s oldest temple, home to the 46m gold Reclining Buddha and the birthplace of Thai massage.',
     whyItFits: 'A calm, iconic culture stop that is cheap and central. Combine with a river crossing to Wat Arun.',
     priceRange: { low: 300, typical: 300, high: 300, currency: 'THB', note: 'Includes a small bottle of water.' },
     hours: '08:00–18:30 daily',
     tips: ['Dress modestly: shoulders and knees covered.', 'Go early to avoid heat and crowds.'],
     scamWarnings: ['Ignore anyone outside saying the temple is "closed today" — it is a gem-shop scam.'],
+    externalRatings: [
+      { site: 'TripAdvisor', score: 4.6, scale: 5, count: 51489, url: 'https://www.tripadvisor.com/Attraction_Review-g293916-d311043-Reviews-Wat_Phra_Chetuphon-Bangkok.html', asOf: '2026-07' },
+    ],
     mapQuery: 'Wat Pho Bangkok', coords: { lat: 13.7465, lng: 100.4927 },
     bookHint: 'Pay at the gate; no booking needed.', verified: '2026-06',
     sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
@@ -18,12 +32,16 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-grand-palace', name: 'Grand Palace & Wat Phra Kaew', city: 'Bangkok', country: 'th',
     categories: ['culture'], budgetTier: 'mid',
+    kidFriendly: true, activities: ['temple', 'palace'],
     blurb: 'The former royal residence and the Temple of the Emerald Buddha — Thailand’s most revered site.',
     whyItFits: 'The headline cultural landmark. Strict dress code; worth the early start.',
     priceRange: { low: 500, typical: 500, high: 500, currency: 'THB', note: 'Entry ticket also covers some nearby sites.' },
     hours: '08:30–15:30 daily',
     tips: ['Strict dress code: no shorts, no bare shoulders. Sarongs can be borrowed at the gate.'],
     scamWarnings: ['"The palace is closed, let me take you to another temple" is always a scam.'],
+    externalRatings: [
+      { site: 'TripAdvisor', score: 4.2, scale: 5, count: 36082, url: 'https://www.tripadvisor.com/Attraction_Review-g293916-d317603-Reviews-The_Grand_Palace-Bangkok.html', asOf: '2026-07' },
+    ],
     mapQuery: 'Grand Palace Bangkok', coords: { lat: 13.75, lng: 100.4913 },
     bookHint: 'Buy at the official ticket office on site.', verified: '2026-06',
     sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
@@ -31,6 +49,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-wat-arun', name: 'Wat Arun (Temple of Dawn)', city: 'Bangkok', country: 'th',
     categories: ['culture'], budgetTier: 'low',
+    kidFriendly: true, activities: ['temple', 'viewpoint', 'ferry'],
     blurb: 'A striking riverside spire decorated with porcelain, best at sunset from the far bank.',
     whyItFits: 'Cheap, photogenic, and a short ferry hop from Wat Pho.',
     priceRange: { low: 200, typical: 200, high: 200, currency: 'THB' },
@@ -44,6 +63,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
     categories: ['market', 'food', 'culture'], budgetTier: 'low',
+    kidFriendly: true, activities: ['market', 'shopping', 'street-food'],
     blurb: 'One of the world’s largest markets — 15,000+ stalls of food, crafts, clothes and curiosities.',
     whyItFits: 'A food-and-market paradise. Endless street eats; budget-friendly haggling.',
     priceRange: { low: 0, typical: 200, high: 600, currency: 'THB', note: 'Free entry; spend what you like.' },
@@ -57,6 +77,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',
     categories: ['food', 'nightlife'], budgetTier: 'low',
+    kidFriendly: true, isLocal: true, activities: ['street-food', 'food-crawl'],
     blurb: 'Bangkok’s neon-lit Chinatown comes alive after dark with some of the city’s best street food.',
     whyItFits: 'Top-tier evening food crawl on a budget; lively without being a club scene.',
     priceRange: { low: 40, typical: 150, high: 400, currency: 'THB', note: 'Per dish to a full crawl.' },
@@ -70,12 +91,16 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-jay-fai', name: 'Jay Fai', city: 'Bangkok', country: 'th',
     categories: ['food'], budgetTier: 'high',
+    kidFriendly: false, isLocal: true, activities: ['street-food'],
     blurb: 'A Michelin-starred street kitchen famous for crab omelettes, cooked over charcoal by a goggle-wearing legend.',
     whyItFits: 'A splurge food experience — street setting, fine-dining prices and queues.',
     priceRange: { low: 800, typical: 1500, high: 3000, currency: 'THB', note: 'The crab omelette is the pricey signature.' },
     hours: 'Wed–Sun from ~14:00 (closes when sold out)',
     tips: ['Expect a long wait or a hefty premium to reserve.', 'Bring cash.'],
     scamWarnings: [],
+    externalRatings: [
+      { site: 'TripAdvisor', score: 3.5, scale: 5, url: 'https://www.tripadvisor.com/Restaurant_Review-g293916-d3703955-Reviews-Raan_Jay_Fai-Bangkok.html', asOf: '2026-07' },
+    ],
     mapQuery: 'Jay Fai Bangkok', coords: { lat: 13.7547, lng: 100.5066 },
     bookHint: 'Walk-in queue; reservations are limited and costly.', verified: '2026-06',
     sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }],
@@ -83,6 +108,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-lumpini', name: 'Lumphini Park', city: 'Bangkok', country: 'th',
     categories: ['nature'], budgetTier: 'low',
+    kidFriendly: true, activities: ['walk', 'boating', 'wildlife'],
     blurb: 'A green lung in the heart of the city — lakes, paddle boats, monitor lizards and morning tai chi.',
     whyItFits: 'A free, restful nature break between temples and traffic.',
     priceRange: { low: 0, typical: 0, high: 0, currency: 'THB', note: 'Free entry.' },
@@ -96,6 +122,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-khaosan', name: 'Khaosan Road', city: 'Bangkok', country: 'th',
     categories: ['nightlife', 'food'], budgetTier: 'low',
+    kidFriendly: false, activities: ['nightlife', 'bars', 'street-food'],
     blurb: 'The legendary backpacker strip: cheap beer, street bars, live music and late-night chaos.',
     whyItFits: 'Budget nightlife and easy traveller social scene; loud and touristy by design.',
     priceRange: { low: 60, typical: 300, high: 800, currency: 'THB', note: 'A beer to a night out.' },
@@ -109,6 +136,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-rooftop', name: 'Rooftop bar (Vertigo / Sky Bar)', city: 'Bangkok', country: 'th',
     categories: ['nightlife'], budgetTier: 'high',
+    kidFriendly: false, activities: ['cocktails', 'views'],
     blurb: 'Sky-high cocktails with sweeping skyline views from one of Bangkok’s famous rooftop bars.',
     whyItFits: 'A higher-end nightlife splurge with a dress code and a view to match.',
     priceRange: { low: 400, typical: 700, high: 1500, currency: 'THB', note: 'Per cocktail; minimum spend may apply.' },
@@ -117,6 +145,57 @@ export const PLACES_TH = [
     scamWarnings: [],
     mapQuery: 'Vertigo Rooftop Bar Bangkok', coords: { lat: 13.7223, lng: 100.5167 },
     bookHint: 'Reserve a table for sunset on weekends.', verified: '2026-06',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+  },
+
+  // --- Where to stay (area guidance) -----------------------------------------
+  // These describe a well-known accommodation CLUSTER and its typical price band,
+  // not one specific property — pick and book on a comparison site. Ranges are
+  // guidance; confirm live. They exercise the stay-type + short/long-stay filters.
+  {
+    id: 'th-bkk-stay-hostel-rambuttri', name: 'Backpacker hostels (Khaosan / Rambuttri)', city: 'Bangkok', country: 'th',
+    categories: ['stay', 'hostel'], budgetTier: 'low',
+    kidFriendly: false, stayType: 'hostel', stayDuration: 'short',
+    amenities: ['wifi', 'air-con', 'lockers', 'common-area'],
+    blurb: 'Dozens of hostels cluster around Soi Rambuttri and Khaosan Road — dorm beds and cheap privates in the heart of the Old City backpacker scene.',
+    whyItFits: 'The cheapest short-stay base, walkable to the Grand Palace and temples; social and easy for solo travellers.',
+    priceRange: { low: 300, typical: 450, high: 800, currency: 'THB', note: 'Per night for a dorm bed; private rooms run higher.' },
+    hours: 'Check-in typically from 14:00',
+    tips: ['Rooms over the bars are loud — ask for a quiet side.', 'Book the first night or two ahead in high season, then compare in person.'],
+    scamWarnings: ['Confirm the nightly rate and any deposit before paying.'],
+    mapQuery: 'Soi Rambuttri Bangkok hostels', coords: { lat: 13.7595, lng: 100.4965 },
+    bookHint: 'Compare dorms on Hostelworld or Booking; many take walk-ins.', verified: '2026-07',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+  },
+  {
+    id: 'th-bkk-stay-guesthouse-oldcity', name: 'Guesthouses (Old City / Phra Nakhon)', city: 'Bangkok', country: 'th',
+    categories: ['stay', 'guesthouse'], budgetTier: 'low',
+    kidFriendly: true, stayType: 'guesthouse', stayDuration: 'both',
+    amenities: ['wifi', 'air-con', 'private-bathroom'],
+    blurb: 'Small family-run guesthouses in the Old City — simple private rooms with air-con, an easy step up from a dorm.',
+    whyItFits: 'Comfortable enough for families or couples on a budget, and central to the headline sights; workable for a short trip or a longer base.',
+    priceRange: { low: 600, typical: 950, high: 1600, currency: 'THB', note: 'Per night for a private double; weekly/monthly deals often available.' },
+    hours: 'Check-in typically from 14:00',
+    tips: ['Ask about weekly or monthly rates if you plan to linger.', 'Rooms facing the street are brighter but noisier.'],
+    scamWarnings: [],
+    mapQuery: 'Old City Bangkok guesthouse', coords: { lat: 13.7563, lng: 100.4980 },
+    bookHint: 'Book the first nights online, then negotiate longer stays in person.', verified: '2026-07',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+  },
+  {
+    id: 'th-bkk-stay-apartment-sukhumvit', name: 'Serviced apartments (Sukhumvit, long-stay)', city: 'Bangkok', country: 'th',
+    categories: ['stay', 'apartment'], budgetTier: 'mid',
+    kidFriendly: true, stayType: 'apartment', stayDuration: 'long',
+    amenities: ['wifi', 'kitchen', 'pool', 'gym', 'laundry'],
+    activities: ['long-stay', 'coworking-nearby'],
+    blurb: 'Serviced studios and one-bedrooms along the Sukhumvit BTS line — the usual base for digital nomads and month-plus stays, with a pool, gym and weekly cleaning.',
+    whyItFits: 'Built for long stays: monthly rates, a kitchen, reliable wifi and quick transit; family-workable with space and a pool.',
+    priceRange: { low: 15000, typical: 25000, high: 45000, currency: 'THB', note: 'Per MONTH on a long lease; nightly rates are much higher.' },
+    hours: 'Viewings by appointment',
+    tips: ['Monthly leases are far cheaper than nightly — negotiate for 1 month+.', 'Check the BTS/MRT walking distance before committing.', 'Ask what the rate includes: electricity and water are often extra.'],
+    scamWarnings: ['Never wire a deposit before viewing the actual unit; use a reputable agent or platform.'],
+    mapQuery: 'Sukhumvit serviced apartment Bangkok', coords: { lat: 13.7373, lng: 100.5600 },
+    bookHint: 'Compare monthly listings; agents and long-stay platforms beat nightly OTAs.', verified: '2026-07',
     sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
   },
 ];

@@ -43,6 +43,29 @@ for (const p of allPlaces()) {
   ok(p.priceRange && p.priceRange.low <= p.priceRange.high, `place ${p.id}: price low>high`);
   ok(isYM(p.verified), `place ${p.id}: bad/missing verified (${p.verified})`);
   ok(p.mapQuery || p.coords, `place ${p.id}: missing mapQuery/coords`);
+  // Optional traveller-fit fields — validated only when present, so existing places pass.
+  if (p.kidFriendly != null) ok(typeof p.kidFriendly === 'boolean', `place ${p.id}: kidFriendly must be boolean`);
+  if (p.isLocal != null) ok(p.isLocal === true, `place ${p.id}: isLocal, if present, must be true`);
+  if (p.stayType != null) ok(['tent', 'hostel', 'guesthouse', 'homestay', 'hotel', 'resort', 'apartment'].includes(p.stayType), `place ${p.id}: bad stayType (${p.stayType})`);
+  if (p.stayDuration != null) ok(['short', 'long', 'both'].includes(p.stayDuration), `place ${p.id}: bad stayDuration (${p.stayDuration})`);
+  if (p.activities != null) ok(Array.isArray(p.activities), `place ${p.id}: activities must be an array`);
+  if (p.amenities != null) ok(Array.isArray(p.amenities), `place ${p.id}: amenities must be an array`);
+  if (p.externalRatings != null) {
+    ok(Array.isArray(p.externalRatings), `place ${p.id}: externalRatings must be an array`);
+    for (const e of p.externalRatings || []) {
+      ok(e && e.site && typeof e.score === 'number' && e.score >= 0, `place ${p.id}: externalRating needs site + numeric score`);
+      ok(typeof e.scale === 'number' && e.scale > 0, `place ${p.id}: externalRating needs a positive scale`);
+      ok(isYM(e.asOf), `place ${p.id}: externalRating asOf must be YYYY-MM (${e.asOf})`);
+    }
+  }
+  if (p.externalPrices != null) {
+    ok(Array.isArray(p.externalPrices), `place ${p.id}: externalPrices must be an array`);
+    for (const pr of p.externalPrices || []) {
+      ok(pr && pr.site, `place ${p.id}: externalPrice needs a site`);
+      ok(pr.from == null || typeof pr.from === 'number', `place ${p.id}: externalPrice.from must be a number`);
+      ok(pr.asOf == null || isYM(pr.asOf), `place ${p.id}: externalPrice asOf must be YYYY-MM`);
+    }
+  }
 }
 
 // --- per-country prices / routes / info --------------------------------------

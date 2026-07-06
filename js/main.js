@@ -22,11 +22,11 @@ import {
   lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
 } from './vault.js';
-import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance } from './util.js';
+import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -74,6 +74,10 @@ function detectCountryId() {
 function langForCountry(id) { const c = getCountry(id); return c ? c.lang : 'th'; }
 let activeCountry = detectCountryId();   // current destination context (country id)
 let pendingPinCoords = null; // coords captured by tapping the map, consumed by #addpin
+
+// Shown on the Help screen and stamped into feedback messages. Keep in sync with
+// CACHE_VERSION in sw.js on each release.
+const APP_VERSION = 'mk-v0.77.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -149,8 +153,10 @@ function homeScreen() {
     { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
     { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+    { ic: '🔊', t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
     { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
     { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
+    { ic: '❓', t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
@@ -511,6 +517,9 @@ function placesScreen(countryId) {
   const prefs = store.profile.prefs;
   const selInterests = new Set(prefs.interests || []);
   let selBudget = prefs.budget || 'flexible';
+  let selKids = !!prefs.kids;
+  let selStayType = prefs.stayType || 'any';
+  let selStayDur = prefs.stayDuration || 'any';
 
   const interestChips = h('div', { class: 'chips' }, INTERESTS.map((it) =>
     h('button', {
@@ -534,8 +543,34 @@ function placesScreen(countryId) {
       },
     }, lbl)));
 
-  wrap.append(h('div', {}, [h('div', { class: 'muted' }, 'Interests'), interestChips,
-                            h('div', { class: 'muted' }, 'Budget'), budgetChips]));
+  // Good-for-kids toggle (remembered in prefs).
+  const kidsChip = h('button', {
+    class: 'chip', 'aria-pressed': selKids ? 'true' : 'false',
+    onclick: (e) => { selKids = !selKids; e.currentTarget.setAttribute('aria-pressed', selKids ? 'true' : 'false'); prefs.kids = selKids; save(); renderList(); },
+  }, '👨‍👩‍👧 Good for kids');
+
+  const filterCard = h('div', {}, [
+    h('div', { class: 'muted' }, 'Interests'), interestChips,
+    h('div', { class: 'muted' }, 'Budget'), budgetChips,
+    h('div', { class: 'muted' }, 'Travelling with'), h('div', { class: 'chips' }, [kidsChip]),
+  ]);
+
+  // Stay filters appear only when this country has accommodation tagged, so the UI
+  // stays clean until stays exist for a country (remembered in prefs).
+  const hasStays = allPlaces({ country: activeCountry }).some((p) => p.stayType);
+  if (hasStays) {
+    const stayTypes = [['any', 'Any'], ['tent', '⛺ Camp'], ['hostel', 'Hostel'], ['guesthouse', 'Guesthouse'], ['homestay', 'Homestay'], ['hotel', 'Hotel'], ['resort', 'Resort'], ['apartment', 'Apartment']];
+    const stayTypeChips = h('div', { class: 'chips' }, stayTypes.map(([id, lbl]) =>
+      h('button', { class: 'chip', 'aria-pressed': selStayType === id ? 'true' : 'false', dataset: { s: id },
+        onclick: (e) => { selStayType = id; stayTypeChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.s === id ? 'true' : 'false')); prefs.stayType = id; save(); renderList(); } }, lbl)));
+    const stayDurs = [['any', 'Any length'], ['short', 'Short stay'], ['long', 'Long stay']];
+    const stayDurChips = h('div', { class: 'chips' }, stayDurs.map(([id, lbl]) =>
+      h('button', { class: 'chip', 'aria-pressed': selStayDur === id ? 'true' : 'false', dataset: { d: id },
+        onclick: (e) => { selStayDur = id; stayDurChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.d === id ? 'true' : 'false')); prefs.stayDuration = id; save(); renderList(); } }, lbl)));
+    filterCard.append(h('div', { class: 'muted' }, 'Where to stay'), stayTypeChips, stayDurChips);
+  }
+
+  wrap.append(filterCard);
 
   const listEl = h('div', {});
   wrap.append(listEl);
@@ -547,11 +582,14 @@ function placesScreen(countryId) {
       listEl.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} places are coming soon. Thailand is fully covered in this build.`));
       return;
     }
-    const results = allPlaces({
+    let results = allPlaces({
       country: activeCountry,
       interests: [...selInterests],
       budget: selBudget,
     });
+    if (selKids) results = results.filter((p) => p.kidFriendly === true);
+    if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
+    if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
     if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
     for (const p of results) listEl.append(placeCard(p));
   }
@@ -562,6 +600,18 @@ function placesScreen(countryId) {
 function tierBadge(tier) {
   const lbl = { low: 'Budget', mid: 'Mid', high: 'Higher-end', any: 'Any' }[tier] || tier;
   return h('span', { class: `tier ${tier}` }, lbl);
+}
+
+// Traveller-fit chips (kid-friendly, stay type, stay length) shown on cards + detail.
+const STAY_LABEL = { tent: '⛺ Camping', hostel: '🛏️ Hostel', guesthouse: '🏠 Guesthouse', homestay: '🏡 Homestay', hotel: '🏨 Hotel', resort: '🌴 Resort', apartment: '🏢 Apartment' };
+function travelerChips(p) {
+  const chips = [];
+  if (p.kidFriendly === true) chips.push(h('span', { class: 'cat-tag' }, '👨‍👩‍👧 Kids OK'));
+  if (p.stayType) chips.push(h('span', { class: 'cat-tag' }, STAY_LABEL[p.stayType] || p.stayType));
+  if (p.stayDuration === 'long') chips.push(h('span', { class: 'cat-tag' }, 'Long stay'));
+  else if (p.stayDuration === 'short') chips.push(h('span', { class: 'cat-tag' }, 'Short stay'));
+  else if (p.stayDuration === 'both') chips.push(h('span', { class: 'cat-tag' }, 'Short or long stay'));
+  return chips.length ? h('div', { class: 'cats', style: 'margin-top:4px' }, chips) : null;
 }
 
 function starsStr(n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return '★'.repeat(r) + '☆'.repeat(5 - r); }
@@ -609,6 +659,7 @@ function placeCard(p) {
       h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
+    travelerChips(p),
     p.blurb ? h('p', {}, p.blurb) : null,
     h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
     p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
@@ -694,6 +745,118 @@ function photoBlock(item, alt) {
   ]);
 }
 
+// Ratings + prices from across the web. Snapshots are curated (each stamped with the
+// month it was checked) so they work offline; every row and the compare buttons
+// deep-link out to the live site. No reviews are scraped.
+function extUrl(ext, p) {
+  if (ext && ext.url) return ext.url;
+  const q = encodeURIComponent(`${p.name} ${p.city || ''}`.trim());
+  const site = ((ext && ext.site) || '').toLowerCase();
+  if (site.includes('booking')) return `https://www.booking.com/searchresults.html?ss=${q}`;
+  if (site.includes('agoda')) return `https://www.agoda.com/search?q=${q}`;
+  if (site.includes('tripadvisor')) return `https://www.tripadvisor.com/Search?q=${q}`;
+  if (site.includes('trip.com') || site === 'trip') return `https://www.trip.com/hotels/list?searchword=${q}`;
+  if (site.includes('google')) return mapsUrl(p);
+  return `https://www.google.com/search?q=${q}%20${encodeURIComponent((ext && ext.site) || '')}`;
+}
+function extStars(score, scale) { const s = (Number(score) / (Number(scale) || 5)) * 5; return isNaN(s) ? NaN : Math.round(s * 10) / 10; }
+function extRow(label, right, href) {
+  return h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
+    h('span', { style: 'font-weight:600' }, label),
+    href ? h('a', { class: 'rev-link', href, target: '_blank', rel: 'noopener' }, right) : h('span', { class: 'muted' }, right),
+  ]);
+}
+function externalRatingsCard(p) {
+  const ext = Array.isArray(p.externalRatings) ? p.externalRatings : [];
+  const prices = Array.isArray(p.externalPrices) ? p.externalPrices : [];
+  const own = (getPlaceData(p.id).rating) || 0;
+  const isStay = !!p.stayType;
+  if (!ext.length && !prices.length && !isStay) return null;
+
+  const card = h('div', { class: 'card' }, [h('h2', {}, 'Across the web')]);
+
+  if (ext.length || own > 0) {
+    const stars = ext.map((e) => extStars(e.score, e.scale)).filter((n) => !isNaN(n));
+    const blended = stars.length ? stars.reduce((a, b) => a + b, 0) / stars.length : 0;
+    const overall = own > 0 ? own : blended;
+    if (overall > 0) {
+      card.append(h('div', { class: 'rating-block' }, [
+        h('span', { class: 'stars-static' }, starsStr(overall)),
+        h('span', { class: 'muted' }, ` ${overall.toFixed(1)} overall${own > 0 ? ' · your rating counts first' : (stars.length > 1 ? ' · averaged across sites' : '')}`),
+      ]));
+    }
+    if (own > 0) card.append(extRow('You', `${starsStr(own)} ${own.toFixed(1)}`));
+    ext.forEach((e) => {
+      const st = extStars(e.score, e.scale);
+      const cnt = e.count ? ` · ${Number(e.count).toLocaleString()} reviews` : '';
+      const as = e.asOf ? ` · ${e.asOf}` : '';
+      card.append(extRow(e.site, `${e.score}/${e.scale || 5}${isNaN(st) ? '' : ` (${st.toFixed(1)}★)`}${cnt}${as} ›`, extUrl(e, p)));
+    });
+  }
+
+  if (prices.length) {
+    card.append(h('h3', {}, 'Prices'));
+    prices.forEach((pr) => {
+      const from = pr.from != null ? `from ${money(pr.from, pr.currency) || (pr.from + ' ' + (pr.currency || ''))}` : 'Check price';
+      card.append(extRow(pr.site, `${from}${pr.asOf ? ` · ${pr.asOf}` : ''} ›`, extUrl(pr, p)));
+    });
+  }
+
+  const sites = isStay ? ['Booking', 'Agoda', 'Trip.com', 'Google'] : ['TripAdvisor', 'Google'];
+  card.append(h('h3', {}, isStay ? 'Compare & book' : 'Compare live'));
+  card.append(h('div', { class: 'chips' }, sites.map((site) =>
+    h('a', { class: 'chip', href: extUrl({ site }, p), target: '_blank', rel: 'noopener' }, site))));
+  card.append(h('p', { class: 'disclaimer' }, 'Scores and prices are snapshots from the dates shown — tap a site for live numbers and to book. Aggregated from public sources; no reviews are scraped.'));
+  return card;
+}
+
+// Compact current-conditions card for a place, read from the NEAREST listed weather
+// city (weather here is regional, not pinpoint — the distance is shown). Cached-first
+// so it works offline; refreshes once in the background when online.
+function weatherNearbyCard(p) {
+  if (!p.coords || p.coords.lat == null || p.coords.lng == null) return null;
+  const spot = nearestSpot(p.coords, p.country);
+  if (!spot) return null;
+  const km = haversineKm(p.coords, { lat: spot.lat, lng: spot.lng });
+  const key = spotKey(spot);
+
+  const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Weather nearby')]);
+  const body = h('div', {});
+  card.append(body);
+
+  function paintWx(rec, loading) {
+    body.innerHTML = '';
+    if (rec && rec.current) {
+      const [clabel, cemoji] = wmo(rec.current.code);
+      body.append(h('div', { class: 'row-between' }, [
+        h('span', { style: 'font-size:34px;line-height:1' }, cemoji),
+        h('div', { style: 'text-align:right' }, [
+          h('div', { style: 'font-size:26px;font-weight:800' }, fmtTemp(rec.current.temp)),
+          h('div', { class: 'muted' }, clabel),
+        ]),
+      ]));
+      body.append(h('div', { class: 'muted', style: 'margin-top:6px' },
+        `Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`));
+    } else {
+      body.append(h('p', { class: 'muted', style: 'margin:0' },
+        loading ? 'Fetching the latest forecast…' : 'No saved forecast yet — tap below, then Refresh while online.'));
+    }
+  }
+
+  const cached = getCachedWeather(key);
+  paintWx(cached, !cached && navigator.onLine);
+  if (!cached && navigator.onLine) {
+    refreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
+  }
+
+  card.append(
+    h('p', { class: 'muted', style: 'margin:6px 0 0' },
+      `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { weatherKey = key; go('#weather'); } }, 'See full forecast'),
+  );
+  return card;
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -708,6 +871,7 @@ function placeScreen(id) {
       h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
+    travelerChips(p),
     photoBlock(p, p.name),
     p.blurb ? h('p', {}, p.blurb) : null,
   ]);
@@ -722,6 +886,8 @@ function placeScreen(id) {
   if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
   if (p.tips && p.tips.length) { card.append(h('h3', {}, 'Tips')); p.tips.forEach((t) => card.append(h('div', { class: 'list-note' }, t))); }
   if (p.scamWarnings && p.scamWarnings.length) { card.append(h('h3', {}, 'Watch out')); p.scamWarnings.forEach((t) => card.append(h('div', { class: 'warn-note' }, t))); }
+  if (p.activities && p.activities.length) { card.append(h('h3', {}, 'Things to do here')); card.append(h('div', { class: 'cats' }, p.activities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
+  if (p.amenities && p.amenities.length) { card.append(h('h3', {}, 'Amenities')); card.append(h('div', { class: 'cats' }, p.amenities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
 
   const colls = collectionsForItem(p.id);
   const collStrip = colls.length
@@ -731,6 +897,7 @@ function placeScreen(id) {
   const actions = h('div', { class: 'card' }, [
     (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
     h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
     collStrip,
     p.isPin ? h('button', {
       class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
@@ -738,7 +905,12 @@ function placeScreen(id) {
     }, 'Delete pin') : null,
   ]);
 
-  wrap.append(card, actions, yourLayer(p));
+  wrap.append(card);
+  const extCard = externalRatingsCard(p);
+  if (extCard) wrap.append(extCard);
+  const wxCard = weatherNearbyCard(p);
+  if (wxCard) wrap.append(wxCard);
+  wrap.append(actions, yourLayer(p));
   if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified));
   mount(wrap, backHash);
 }
@@ -1088,10 +1260,10 @@ function mapScreen() {
   // controller once it initialises (mapCtrl). Markets are their own gold layer.
   let mapCtrl = null;
   // Layer visibility is remembered (store.profile.prefs.mapLayers).
-  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true });
+  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true });
   const TOGGLES = [
     ['satellite', '🛰️ Satellite imagery'], ['borders', '🗺️ Country borders'],
-    ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'],
+    ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['localeat', '🍲 Local restaurants'], ['market', '🛍️ Markets'],
     ['stay', '🛏️ Places to stay'], ['pools', '🏊 Pools'], ['crossing', '🛂 Border crossings'],
   ];
   function applyLayer(key, on) {
@@ -1305,13 +1477,14 @@ function mapScreen() {
     subhead('Pins'),
     h('div', { class: 'key-grid' }, RATING_BANDS.map((b) => keyRow(dot(b.color), b.label))),
     h('div', { class: 'key-grid', style: 'margin-top:6px' }, [
+      keyRow(dot('#D62828'), 'Local restaurant', 'a local, non-tourist eatery'),
       keyRow(dot('#E0A100'), 'Market'),
       keyRow(dot('#0EA5C4'), 'Pool'),
       keyRow(dot('#3B5BDB'), 'Border crossing', 'a place you can cross between countries'),
       keyRow(dot('#6A4C93'), 'Your dropped pin'),
       keyRow(h('span', { style: 'flex:0 0 auto' }, '🏠'), 'Your accommodation'),
     ]),
-    h('p', { class: 'key-note' }, 'Place pins are coloured by rating — your own rating wins over the guidebook score.'),
+    h('p', { class: 'key-note' }, 'Place pins are coloured by rating (your own rating wins over the guidebook score) — except markets (gold) and local restaurants (red), which have their own colour.'),
 
     subhead('Base map'),
     h('div', { class: 'key-grid' }, [
@@ -1932,12 +2105,14 @@ function daySegments(hourly, date) {
   return WX_SEGMENTS.map((seg) => {
     const inSeg = hrs.filter((h) => { const hr = +(h.t || '').slice(11, 13); return hr >= seg.from && hr < seg.to; });
     if (!inSeg.length) return null;
+    const hums = inSeg.map((h) => h.hum).filter((v) => v != null);
     return {
       label: seg.label,
       code: Math.max(...inSeg.map((h) => h.code || 0)),
       pp: Math.max(...inSeg.map((h) => (h.pp == null ? 0 : h.pp))),
       tmin: Math.min(...inSeg.map((h) => h.temp)),
       tmax: Math.max(...inSeg.map((h) => h.temp)),
+      hum: hums.length ? Math.round(hums.reduce((a, b) => a + b, 0) / hums.length) : null,
     };
   }).filter(Boolean);
 }
@@ -2029,16 +2204,18 @@ function weatherScreen(country) {
       rec.daily.forEach((d) => {
         const [dl, de] = wmo(d.code);
         const detail = h('div', { style: 'display:none;margin-top:6px' });
-        detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
-          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : '–'} · UV ${d.uv != null ? Math.round(d.uv) : '–'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         const segs = daySegments(rec.hourly, d.date);
+        const dayHums = segs.map((s) => s.hum).filter((v) => v != null);
+        const dayHum = dayHums.length ? Math.round(dayHums.reduce((a, b) => a + b, 0) / dayHums.length) : null;
+        detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
+          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : '–'}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : '–'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         if (segs.length) {
           segs.forEach((s) => {
             const [sl, se] = wmo(s.code);
             detail.append(h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
               h('span', { style: 'min-width:78px;font-weight:600' }, s.label),
               h('span', { style: 'font-size:18px' }, se),
-              h('span', { class: 'muted grow', style: 'margin:0 8px;text-align:left' }, `${sl} · 💧${s.pp}%`),
+              h('span', { class: 'muted grow', style: 'margin:0 8px;text-align:left' }, `${sl} · 💧${s.pp}%${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
               h('span', {}, `${fmtTemp(s.tmin)}/${fmtTemp(s.tmax)}`),
             ]));
           });
@@ -2180,12 +2357,14 @@ function daySuggestScreen(country) {
     if (today) { if (isWet(today.code) || (today.rainProb || 0) >= 60) mood = 'wet'; else if (today.tmax != null && today.tmax >= 34) mood = 'hot'; }
     if (today) {
       const [lbl, emo] = wmo(today.code);
+      const hum = rec.current && rec.current.humidity != null ? rec.current.humidity : null;
+      const muggy = hum != null && hum >= 75 && mood !== 'wet';
       body.append(h('div', { class: 'card' }, [
         h('div', { class: 'row-between' }, [
           h('strong', {}, `${emo} ${c.flag} ${spot.city} today`),
           h('span', { style: 'font-weight:700' }, `${fmtTemp(today.tmin)} / ${fmtTemp(today.tmax)}`),
         ]),
-        h('p', { class: 'muted', style: 'margin:6px 0 0' }, `${lbl} · rain ${today.rainProb != null ? today.rainProb + '%' : '–'} — ${moodLine(mood)}`),
+        h('p', { class: 'muted', style: 'margin:6px 0 0' }, `${lbl} · rain ${today.rainProb != null ? today.rainProb + '%' : '–'}${hum != null ? ` · humidity ${hum}%` : ''} — ${moodLine(mood)}${muggy ? ' Humid — hydrate and pace yourself.' : ''}`),
       ]));
     } else {
       body.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Connect once to load today’s weather for weather-aware picks; meanwhile, here are the top-rated places.')]));
@@ -2355,6 +2534,87 @@ let natureQuery = '';
 let natureGroup = '';
 function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
 
+// ---- ANIMAL SOUNDS (streamed online; iNaturalist — public, no key) ----------
+// Calls stream from iNaturalist over an <audio> element (its audio hosts are in the
+// page CSP media-src; the API host is in connect-src). We look up Creative-Commons
+// recordings by scientific name and play the top-voted one in-app, crediting the
+// recordist. If the network/API is unavailable or has no recording, we fall back to
+// opening a Xeno-canto page so the call is still reachable (a plain new-tab
+// navigation, not subject to CSP). No audio is bundled, so offline the control just
+// says it needs a connection. A species may optionally carry sound:{ xcQuery, page }
+// to override the sciName-derived lookup.
+const CALL_GROUPS = ['bird', 'mammal', 'insect', 'reptile', 'danger'];
+function hasCall(s) { return !!s && CALL_GROUPS.includes(s.group); }
+function xcQuery(s) { return (s && s.sound && s.sound.xcQuery) || (s && s.sciName) || (s && s.commonName) || ''; }
+function xcPageUrl(s) { return (s && s.sound && s.sound.page) || `https://xeno-canto.org/explore?query=${encodeURIComponent(xcQuery(s))}`; }
+function inatSoundUrl(s) {
+  return `https://api.inaturalist.org/v1/observations?taxon_name=${encodeURIComponent(xcQuery(s))}`
+    + '&sounds=true&order_by=votes&per_page=12&license=cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc0';
+}
+let callAudio = null;   // one shared element so starting a call stops the previous one
+async function playCall(s, btn, statusEl) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+  try {
+    const res = await fetch(inatSoundUrl(s));
+    const d = await res.json();
+    let snd = null;
+    for (const r of (d.results || [])) { const a = (r.sounds || []).find((x) => x && x.file_url); if (a) { snd = a; break; } }
+    if (!snd) throw new Error('no recording');
+    if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
+    callAudio = new Audio(snd.file_url);
+    callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not stream here — opening a recording online…'; window.open(xcPageUrl(s), '_blank', 'noopener'); });
+    await callAudio.play();
+    const credit = (snd.attribution || '').replace(/^\(c\)\s*/, '').replace(/,\s*some rights reserved.*$/i, '') || 'an iNaturalist contributor';
+    statusEl.textContent = `♪ ${s.commonName} — ${credit} · via iNaturalist (CC)`;
+  } catch (e) {
+    statusEl.textContent = 'Opening a recording online…';
+    window.open(xcPageUrl(s), '_blank', 'noopener');
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+function callControl(s, label) {
+  const status = h('div', { class: 'muted', style: 'font-size:13px;margin-top:4px' });
+  const btn = h('button', { class: 'btn ghost', onclick: () => playCall(s, btn, status) }, label || '🔊 Hear its call');
+  return h('div', {}, [btn, status]);
+}
+
+function soundsScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Sounds around you', '#nature'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Hear a call and learn what makes it. Tap ▶ to play (streams online); tap a name for the full field guide. Calls stream from iNaturalist (Creative Commons); if none is found, a Xeno-canto page opens instead.'));
+  const GROUPS = [{ id: 'bird', label: 'Birds', emoji: '🐦' }, { id: 'mammal', label: 'Mammals', emoji: '🐘' }, { id: 'insect', label: 'Insects', emoji: '🦗' }, { id: 'reptile', label: 'Frogs & reptiles', emoji: '🐸' }];
+  let group = 'bird';
+  const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
+    h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
+      onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
+      `${g.emoji} ${g.label}`)));
+  wrap.append(chips);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) wrap.append(h('p', { class: 'muted' }, 'You are offline — playing a call needs a connection. The names and field guide still work.'));
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderList() {
+    listEl.innerHTML = '';
+    const results = allSpecies({ group }).filter(hasCall);
+    if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No species in this group yet.')); return; }
+    results.forEach((s) => {
+      const status = h('div', { class: 'muted', style: 'font-size:13px' });
+      const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
+      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px' }, [
+        h('span', { class: 'species-emoji' }, s.emoji || '🔎'),
+        h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
+          h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
+        ]),
+        play,
+      ]));
+    });
+  }
+  renderList();
+  mount(wrap, '#home');
+}
+
 function natureScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify nature', '#home'));
@@ -2370,6 +2630,7 @@ function natureScreen() {
       onclick: () => { natureGroup = g.id; groupChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
       `${g.emoji} ${g.label}`)));
   wrap.append(groupChips);
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
 
   wrap.append(h('div', { class: 'card' }, [
     h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Have a photo? Identify it online (needs internet):'),
@@ -2434,6 +2695,7 @@ function speciesScreen(id) {
   } else if (s.localNames && s.localNames.length) {
     card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
   }
+  if (hasCall(s)) { card.append(h('h3', {}, 'Its call')); card.append(callControl(s)); }
   wrap.append(card);
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
   mount(wrap, '#home');
@@ -2780,6 +3042,96 @@ function vaultUnlockCard(body) {
 }
 
 // ---- SETTINGS ---------------------------------------------------------------
+// ---- HELP / FAQ (static, fully offline) -------------------------------------
+function helpScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Help & FAQ', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
+  const faq = (q, a) => h('details', { class: 'card' }, [h('summary', {}, q), typeof a === 'string' ? h('p', {}, a) : a]);
+
+  wrap.append(faq('What works offline, and what needs internet?', h('div', {}, [
+    h('p', {}, 'Almost everything works with no signal, because the guide is stored on your device: the phrasebook, places, food and produce guides, the wildlife field guide, fair prices, transport routes and schedules, border crossings, pools, your journal, trip, calendar, saved places, the document vault, and the base map (coastlines, rivers, borders and your pins).'),
+    h('p', {}, 'A few features need a connection, and each one says so: refreshing the weather, currency rates, live translation, the “Across the web” rating and “Compare & book” links, streamed animal calls, and satellite map imagery. Weather and rates are cached after one online refresh, so you can still read them offline.'),
+  ])));
+  wrap.append(faq('How do I build and log a trip?', h('div', {}, [
+    h('p', {}, '“My trip” holds your itinerary (stops with dates) and a budget log that totals your spending in your home currency. “Travel calendar” schedules stays, meals and activities by day and surfaces festivals falling in your dates. “Travel journal” keeps dated, GPS-stamped entries with photos, and the “Journey map” animates the path between them.'),
+    h('button', { class: 'btn ghost', onclick: () => go('#trip') }, 'Open My trip'),
+  ])));
+  wrap.append(faq('How do ratings work?', 'Each place shows a guidebook score synthesised from public sources, plus an “Across the web” card with snapshots from sites such as TripAdvisor — each stamped with the month it was checked — and live links to compare and book. Your own rating always counts first: rate a place and it becomes the headline score and colours its pin on the map.'));
+  wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, budget, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
+  wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device and cannot be recovered if you forget its passcode. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
+  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), Places, Map and Saved. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
+
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Suggest a feature or a correction'),
+    h('p', { class: 'muted' }, 'Spotted something out of date, or want a feature added? Send it over — it helps make the guide better for everyone.'),
+    h('button', { class: 'btn block', onclick: () => go('#feedback') }, '✍️ Send feedback'),
+  ]));
+  wrap.append(h('p', { class: 'disclaimer' }, `Mekonging ${APP_VERSION}. Guidance only — always confirm prices, hours and safety locally.`));
+  mount(wrap, '#home');
+}
+
+// ---- FEEDBACK / SUGGEST (no backend: share sheet, email, or copy) -----------
+// Composes a message the user sends themselves via the OS share sheet, their email
+// app (mailto — recipient is optional and set in Settings), or the clipboard. Nothing
+// is transmitted automatically and no personal address is baked into the app.
+function feedbackScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  const place = arg ? resolveItem(arg) : null;
+  wrap.append(topbar(place ? 'Suggest an edit' : 'Send feedback', place ? `#place-${place.id}` : '#help'));
+  wrap.append(h('p', { class: 'map-hint' }, place
+    ? `Suggest a correction or addition for “${place.name}”. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically.`
+    : 'Tell us what to fix, add or improve. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically, and no account is needed.'));
+
+  const card = h('div', { class: 'card' });
+  let category = place ? 'correction' : 'feedback';
+  card.append(field('Type', selectEl([['feedback', 'General feedback'], ['feature', 'Feature idea'], ['correction', 'Correct information']], category, (v) => { category = v; })));
+  const subject = h('input', { type: 'text', placeholder: 'Short summary', value: place ? `Correction: ${place.name}` : '' });
+  card.append(field('Subject', subject));
+  const body = h('textarea', { class: 'ta', rows: '6', placeholder: place ? 'What should change, and what is correct?' : 'Your message…' });
+  card.append(field('Message', body));
+  const fromEmail = h('input', { type: 'email', placeholder: 'you@example.com', value: store.profile.contactEmail || '' });
+  fromEmail.addEventListener('change', () => { store.profile.contactEmail = fromEmail.value.trim(); save(); });
+  card.append(field('Your email (optional, so we can reply)', fromEmail));
+  wrap.append(card);
+
+  function compose() {
+    const catLabel = { feedback: 'Feedback', feature: 'Feature idea', correction: 'Correction' }[category] || 'Feedback';
+    const text = [
+      body.value.trim(), '',
+      '— sent from Mekonging —',
+      `Type: ${catLabel}`,
+      place ? `Place: ${place.name} (${place.id})` : null,
+      fromEmail.value.trim() ? `Reply-to: ${fromEmail.value.trim()}` : null,
+      `App: ${APP_VERSION}`,
+    ].filter((x) => x != null).join('\n');
+    return { subject: `[Mekonging] ${catLabel}${subject.value.trim() ? ': ' + subject.value.trim() : ''}`, text };
+  }
+  const status = h('p', { class: 'muted' });
+  const actions = h('div', { class: 'card' });
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    actions.append(h('button', { class: 'btn block', onclick: async () => {
+      const m = compose();
+      try { await navigator.share({ title: m.subject, text: m.text }); status.textContent = 'Shared — choose where to send it.'; }
+      catch { /* user cancelled */ }
+    } }, '📤 Share…'));
+  }
+  actions.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => {
+    const m = compose();
+    const to = (store.profile.feedbackTo || '').trim();
+    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.text)}`;
+    status.textContent = to ? 'Opening your email app…' : 'Opened your email app — add a recipient, or set a feedback address in Settings.';
+  } }, '✉️ Email'));
+  actions.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+    const m = compose();
+    try { await navigator.clipboard.writeText(`${m.subject}\n\n${m.text}`); status.textContent = 'Copied to clipboard — paste it wherever you like.'; }
+    catch { status.textContent = 'Could not copy automatically — select your message and copy it.'; }
+  } }, '📋 Copy'));
+  actions.append(status);
+  wrap.append(actions);
+  mount(wrap, place ? `#place-${place.id}` : '#help');
+}
+
 function settingsScreen() {
   const p = store.profile;
   const wrap = h('div', { class: 'screen' });
@@ -2835,6 +3187,17 @@ function settingsScreen() {
     type: 'password', value: p.translateKey, oninput: (e) => { p.translateKey = e.target.value.trim(); save(); },
   })));
   wrap.append(tcard);
+
+  // help & feedback
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Help & feedback'),
+    h('button', { class: 'btn ghost block', onclick: () => go('#help') }, '❓ Help & FAQ'),
+    field('Feedback address (optional)', h('input', {
+      type: 'email', placeholder: 'where “Email feedback” is sent', value: p.feedbackTo || '',
+      oninput: (e) => { p.feedbackTo = e.target.value.trim(); save(); },
+    })),
+    h('p', { class: 'disclaimer' }, 'Set an address to collect feedback by email; otherwise the feedback screen uses your device share sheet or clipboard. This stays on your device and is never committed to the app.'),
+  ]));
 
   // reset
   wrap.append(h('div', { class: 'card' }, [
@@ -2903,6 +3266,7 @@ function render() {
       case 'dish': return dishScreen(arg);
       case 'produce': return arg ? produceDetail(arg) : produceScreen();
       case 'nature': return natureScreen();
+      case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
       case 'sos': return sosScreen();
@@ -2912,6 +3276,8 @@ function render() {
       case 'bestof': return bestofScreen(arg);
       case 'bestlist': return bestListScreen(arg);
       case 'vault': return vaultScreen();
+      case 'help': return helpScreen();
+      case 'feedback': return feedbackScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }
