@@ -527,3 +527,8 @@ html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex
 .contact-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .contact-id strong { display: block; }
 .contact-id .tiny { overflow-wrap: anywhere; }
+.thread { display: flex; flex-direction: column; gap: 8px; }
+.bubble { max-width: 82%; padding: 8px 12px; border-radius: 14px; overflow-wrap: anywhere; }
+.bubble.me { align-self: flex-end; background: var(--teal); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.them { align-self: flex-start; background: var(--card-2, rgba(0, 0, 0, 0.06)); border-bottom-left-radius: 4px; }
+.bubble .who { font-size: var(--fs-sm); opacity: 0.75; display: block; margin-bottom: 2px; }

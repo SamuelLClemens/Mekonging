@@ -103,3 +103,19 @@ export function parseShare(str) {
   }
   return { kind: k, from, msg: clean(s.m, 200), data };
 }
+
+// --- async messages ("postcards") --------------------------------------------
+// A single message travels as a link. The recipient imports it into a thread and
+// replies the same way — an offline, serverless back-and-forth. The payload
+// carries the SENDER's card so the recipient can thread and (optionally) add them.
+export function encodeMessage(me, text) {
+  return encodePayload('m', { f: fromCard(me), m: clean(text, 800) });
+}
+export function parseMessage(str) {
+  const p = decodePayload(str);
+  if (!p || p.t !== 'm' || !p.d) return null;
+  const from = p.d.f ? { userId: cleanId(p.d.f.i), name: clean(p.d.f.n, 40) || 'A traveller', avatar: cleanEmoji(p.d.f.a) } : null;
+  const text = clean(p.d.m, 800);
+  if (!from || !from.userId || !text) return null;
+  return { from, text };
+}

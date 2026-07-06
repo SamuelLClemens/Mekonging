@@ -13,8 +13,9 @@ import {
   getSavedAreas, addSavedArea, removeSavedArea,
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
+  getThread, addMessage,
 } from './state.js';
-import { encodeCard, parseCard, shareUrl, encodeShare, parseShare } from './social.js';
+import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
@@ -80,7 +81,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.85.0';
+const APP_VERSION = 'mk-v0.86.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -3214,7 +3215,10 @@ function circleScreen() {
     listCard.append(h('p', { class: 'muted' }, 'No one yet. Share your card, or open a friend’s link to add them.'));
   } else {
     contacts.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((c) => {
-      listCard.append(contactRow(c, h('button', { class: 'btn ghost', onclick: () => { if (confirm(`Remove ${c.name || 'this contact'} from your circle?`)) { removeContact(c.userId); go('#circle'); } } }, 'Remove')));
+      listCard.append(contactRow(c, h('div', { class: 'cats' }, [
+        h('button', { class: 'chip', onclick: () => go('#thread-' + c.userId) }, '💬 Message'),
+        h('button', { class: 'chip', onclick: () => { if (confirm(`Remove ${c.name || 'this contact'} from your circle?`)) { removeContact(c.userId); go('#circle'); } } }, '✕'),
+      ])));
     });
   }
   wrap.append(listCard);
@@ -3355,6 +3359,66 @@ function inboxScreen() {
     ]));
   });
   mount(wrap, '#circle');
+}
+
+// Async message thread with one contact. "Sending" records the note locally and
+// produces a link to hand over — the reply comes back as another #msg- link.
+function threadScreen(userId, fallbackCard) {
+  const wrap = h('div', { class: 'screen' });
+  const contact = getContact(userId) || fallbackCard || null;
+  const name = contact ? contact.name : 'Traveller';
+  wrap.append(topbar('💬 ' + name, '#circle'));
+  wrap.append(h('p', { class: 'muted' }, `Messages travel as links — no server. Write a note, then hand the link to ${name} (share sheet, AirDrop, any app). They open it to receive it and reply the same way.`));
+  if (contact && !getContact(userId)) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('p', { class: 'muted' }, `${name} is not in your circle yet.`),
+      h('button', { class: 'btn ghost block', onclick: (e) => { addContact(contact); e.currentTarget.textContent = '✓ Added to your circle'; } }, `Add ${name} to your circle`),
+    ]));
+  }
+  const th = getThread(userId);
+  const list = h('div', { class: 'card thread' });
+  if (!th.length) list.append(h('p', { class: 'muted' }, 'No messages yet — write the first note below.'));
+  else th.forEach((m) => list.append(h('div', { class: 'bubble ' + (m.from === 'me' ? 'me' : 'them') }, [
+    h('span', { class: 'who' }, m.from === 'me' ? 'You' : (m.name || name)),
+    m.text,
+  ])));
+  wrap.append(list);
+  const ta = h('textarea', { class: 'ta', rows: '3', maxlength: '800', placeholder: `Write a note to ${name}…` });
+  const sendBtn = h('button', { class: 'btn block', onclick: async () => {
+    const text = ta.value.trim(); if (!text) return;
+    addMessage(userId, { from: 'me', text });                       // recorded first, so it survives even if sharing is cancelled
+    const url = shareUrl('msg', encodeMessage(ensureMe(), text));
+    try { if (typeof navigator !== 'undefined' && navigator.share) await navigator.share({ title: `A note for ${name}`, url }); else await navigator.clipboard.writeText(url); }
+    catch (e) { if (!(e && e.name === 'AbortError')) { try { await navigator.clipboard.writeText(url); } catch { /* noop */ } } }
+    go('#thread-' + userId);
+  } }, '📤 Send (share the link)');
+  wrap.append(h('div', { class: 'card' }, [
+    h('h3', {}, 'Reply'), ta, sendBtn,
+    h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Your note is saved to this thread and a link is created to hand to them.'),
+  ]));
+  mount(wrap, '#circle');
+}
+
+// Import a received message (#msg-<payload>) into its thread, then show it.
+function importMessageScreen(arg) {
+  const m = parseMessage(arg);
+  if (!m) {
+    const wrap = h('div', { class: 'screen' });
+    wrap.append(topbar('Message', '#circle'));
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', {}, 'This message link could not be read'),
+      h('p', { class: 'muted' }, 'It may be invalid or was cut off in transit. Ask them to send it again.'),
+      h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'),
+    ]));
+    mount(wrap, '#circle'); return;
+  }
+  const uid = m.from.userId;
+  const th = getThread(uid);
+  const last = th[th.length - 1];
+  if (!(last && last.from === 'them' && last.text === m.text)) addMessage(uid, { from: 'them', text: m.text, name: m.from.name });
+  // rewrite the URL so a refresh does not re-import, then show the conversation
+  try { history.replaceState(null, '', '#thread-' + uid); } catch { /* noop */ }
+  return threadScreen(uid, m.from);
 }
 
 function settingsScreen() {
@@ -3507,6 +3571,8 @@ function render() {
       case 'add': return addContactScreen(arg);
       case 'in': return importShareScreen(arg);
       case 'inbox': return inboxScreen();
+      case 'thread': return threadScreen(arg);
+      case 'msg': return importMessageScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }
