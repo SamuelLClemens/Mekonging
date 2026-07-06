@@ -3,6 +3,8 @@
 // a timestamp (shown as "last updated"); a refresh only happens when online. When
 // offline the cached reading is returned so the screen still works.
 
+import { haversineKm } from './util.js';
+
 const PREFIX = 'mk.wx.';
 const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
 
@@ -75,6 +77,22 @@ export function isWet(code) {
 export function spotKey(s) { return `${s.country}:${s.city}`; }
 export function spotsForCountry(country) { return WEATHER_SPOTS.filter((s) => s.country === country); }
 export function defaultSpot(country) { return spotsForCountry(country)[0] || WEATHER_SPOTS[0]; }
+
+// Closest listed weather city to a place's coordinates, preferring cities in the
+// place's own country. Weather in this app is REGIONAL — the nearest hub, not a
+// pinpoint reading — so the UI labels the distance. Falls back to the country
+// default when coords are missing or no spot is found.
+export function nearestSpot(coords, country) {
+  const pool = spotsForCountry(country);
+  const spots = pool.length ? pool : WEATHER_SPOTS;
+  if (!coords || coords.lat == null || coords.lng == null) return defaultSpot(country);
+  let best = null; let bestKm = Infinity;
+  for (const s of spots) {
+    const km = haversineKm(coords, { lat: s.lat, lng: s.lng });
+    if (km != null && km < bestKm) { bestKm = km; best = s; }
+  }
+  return best || defaultSpot(country);
+}
 
 export function getCachedWeather(key) {
   try { const c = JSON.parse(localStorage.getItem(PREFIX + key)); return c || null; } catch { return null; }

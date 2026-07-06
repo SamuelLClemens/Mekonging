@@ -26,7 +26,7 @@ import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, f
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -694,6 +694,53 @@ function photoBlock(item, alt) {
   ]);
 }
 
+// Compact current-conditions card for a place, read from the NEAREST listed weather
+// city (weather here is regional, not pinpoint — the distance is shown). Cached-first
+// so it works offline; refreshes once in the background when online.
+function weatherNearbyCard(p) {
+  if (!p.coords || p.coords.lat == null || p.coords.lng == null) return null;
+  const spot = nearestSpot(p.coords, p.country);
+  if (!spot) return null;
+  const km = haversineKm(p.coords, { lat: spot.lat, lng: spot.lng });
+  const key = spotKey(spot);
+
+  const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Weather nearby')]);
+  const body = h('div', {});
+  card.append(body);
+
+  function paintWx(rec, loading) {
+    body.innerHTML = '';
+    if (rec && rec.current) {
+      const [clabel, cemoji] = wmo(rec.current.code);
+      body.append(h('div', { class: 'row-between' }, [
+        h('span', { style: 'font-size:34px;line-height:1' }, cemoji),
+        h('div', { style: 'text-align:right' }, [
+          h('div', { style: 'font-size:26px;font-weight:800' }, fmtTemp(rec.current.temp)),
+          h('div', { class: 'muted' }, clabel),
+        ]),
+      ]));
+      body.append(h('div', { class: 'muted', style: 'margin-top:6px' },
+        `Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`));
+    } else {
+      body.append(h('p', { class: 'muted', style: 'margin:0' },
+        loading ? 'Fetching the latest forecast…' : 'No saved forecast yet — tap below, then Refresh while online.'));
+    }
+  }
+
+  const cached = getCachedWeather(key);
+  paintWx(cached, !cached && navigator.onLine);
+  if (!cached && navigator.onLine) {
+    refreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
+  }
+
+  card.append(
+    h('p', { class: 'muted', style: 'margin:6px 0 0' },
+      `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { weatherKey = key; go('#weather'); } }, 'See full forecast'),
+  );
+  return card;
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -738,7 +785,10 @@ function placeScreen(id) {
     }, 'Delete pin') : null,
   ]);
 
-  wrap.append(card, actions, yourLayer(p));
+  wrap.append(card);
+  const wxCard = weatherNearbyCard(p);
+  if (wxCard) wrap.append(wxCard);
+  wrap.append(actions, yourLayer(p));
   if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified));
   mount(wrap, backHash);
 }
@@ -1932,12 +1982,14 @@ function daySegments(hourly, date) {
   return WX_SEGMENTS.map((seg) => {
     const inSeg = hrs.filter((h) => { const hr = +(h.t || '').slice(11, 13); return hr >= seg.from && hr < seg.to; });
     if (!inSeg.length) return null;
+    const hums = inSeg.map((h) => h.hum).filter((v) => v != null);
     return {
       label: seg.label,
       code: Math.max(...inSeg.map((h) => h.code || 0)),
       pp: Math.max(...inSeg.map((h) => (h.pp == null ? 0 : h.pp))),
       tmin: Math.min(...inSeg.map((h) => h.temp)),
       tmax: Math.max(...inSeg.map((h) => h.temp)),
+      hum: hums.length ? Math.round(hums.reduce((a, b) => a + b, 0) / hums.length) : null,
     };
   }).filter(Boolean);
 }
@@ -2029,16 +2081,18 @@ function weatherScreen(country) {
       rec.daily.forEach((d) => {
         const [dl, de] = wmo(d.code);
         const detail = h('div', { style: 'display:none;margin-top:6px' });
-        detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
-          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : '–'} · UV ${d.uv != null ? Math.round(d.uv) : '–'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         const segs = daySegments(rec.hourly, d.date);
+        const dayHums = segs.map((s) => s.hum).filter((v) => v != null);
+        const dayHum = dayHums.length ? Math.round(dayHums.reduce((a, b) => a + b, 0) / dayHums.length) : null;
+        detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
+          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : '–'}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : '–'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         if (segs.length) {
           segs.forEach((s) => {
             const [sl, se] = wmo(s.code);
             detail.append(h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
               h('span', { style: 'min-width:78px;font-weight:600' }, s.label),
               h('span', { style: 'font-size:18px' }, se),
-              h('span', { class: 'muted grow', style: 'margin:0 8px;text-align:left' }, `${sl} · 💧${s.pp}%`),
+              h('span', { class: 'muted grow', style: 'margin:0 8px;text-align:left' }, `${sl} · 💧${s.pp}%${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
               h('span', {}, `${fmtTemp(s.tmin)}/${fmtTemp(s.tmax)}`),
             ]));
           });
@@ -2180,12 +2234,14 @@ function daySuggestScreen(country) {
     if (today) { if (isWet(today.code) || (today.rainProb || 0) >= 60) mood = 'wet'; else if (today.tmax != null && today.tmax >= 34) mood = 'hot'; }
     if (today) {
       const [lbl, emo] = wmo(today.code);
+      const hum = rec.current && rec.current.humidity != null ? rec.current.humidity : null;
+      const muggy = hum != null && hum >= 75 && mood !== 'wet';
       body.append(h('div', { class: 'card' }, [
         h('div', { class: 'row-between' }, [
           h('strong', {}, `${emo} ${c.flag} ${spot.city} today`),
           h('span', { style: 'font-weight:700' }, `${fmtTemp(today.tmin)} / ${fmtTemp(today.tmax)}`),
         ]),
-        h('p', { class: 'muted', style: 'margin:6px 0 0' }, `${lbl} · rain ${today.rainProb != null ? today.rainProb + '%' : '–'} — ${moodLine(mood)}`),
+        h('p', { class: 'muted', style: 'margin:6px 0 0' }, `${lbl} · rain ${today.rainProb != null ? today.rainProb + '%' : '–'}${hum != null ? ` · humidity ${hum}%` : ''} — ${moodLine(mood)}${muggy ? ' Humid — hydrate and pace yourself.' : ''}`),
       ]));
     } else {
       body.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Connect once to load today’s weather for weather-aware picks; meanwhile, here are the top-rated places.')]));
