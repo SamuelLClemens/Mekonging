@@ -22,7 +22,7 @@ import {
   lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
 } from './vault.js';
-import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance } from './util.js';
+import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
@@ -511,6 +511,9 @@ function placesScreen(countryId) {
   const prefs = store.profile.prefs;
   const selInterests = new Set(prefs.interests || []);
   let selBudget = prefs.budget || 'flexible';
+  let selKids = !!prefs.kids;
+  let selStayType = prefs.stayType || 'any';
+  let selStayDur = prefs.stayDuration || 'any';
 
   const interestChips = h('div', { class: 'chips' }, INTERESTS.map((it) =>
     h('button', {
@@ -534,8 +537,34 @@ function placesScreen(countryId) {
       },
     }, lbl)));
 
-  wrap.append(h('div', {}, [h('div', { class: 'muted' }, 'Interests'), interestChips,
-                            h('div', { class: 'muted' }, 'Budget'), budgetChips]));
+  // Good-for-kids toggle (remembered in prefs).
+  const kidsChip = h('button', {
+    class: 'chip', 'aria-pressed': selKids ? 'true' : 'false',
+    onclick: (e) => { selKids = !selKids; e.currentTarget.setAttribute('aria-pressed', selKids ? 'true' : 'false'); prefs.kids = selKids; save(); renderList(); },
+  }, '👨‍👩‍👧 Good for kids');
+
+  const filterCard = h('div', {}, [
+    h('div', { class: 'muted' }, 'Interests'), interestChips,
+    h('div', { class: 'muted' }, 'Budget'), budgetChips,
+    h('div', { class: 'muted' }, 'Travelling with'), h('div', { class: 'chips' }, [kidsChip]),
+  ]);
+
+  // Stay filters appear only when this country has accommodation tagged, so the UI
+  // stays clean until stays exist for a country (remembered in prefs).
+  const hasStays = allPlaces({ country: activeCountry }).some((p) => p.stayType);
+  if (hasStays) {
+    const stayTypes = [['any', 'Any'], ['tent', '⛺ Camp'], ['hostel', 'Hostel'], ['guesthouse', 'Guesthouse'], ['homestay', 'Homestay'], ['hotel', 'Hotel'], ['resort', 'Resort'], ['apartment', 'Apartment']];
+    const stayTypeChips = h('div', { class: 'chips' }, stayTypes.map(([id, lbl]) =>
+      h('button', { class: 'chip', 'aria-pressed': selStayType === id ? 'true' : 'false', dataset: { s: id },
+        onclick: (e) => { selStayType = id; stayTypeChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.s === id ? 'true' : 'false')); prefs.stayType = id; save(); renderList(); } }, lbl)));
+    const stayDurs = [['any', 'Any length'], ['short', 'Short stay'], ['long', 'Long stay']];
+    const stayDurChips = h('div', { class: 'chips' }, stayDurs.map(([id, lbl]) =>
+      h('button', { class: 'chip', 'aria-pressed': selStayDur === id ? 'true' : 'false', dataset: { d: id },
+        onclick: (e) => { selStayDur = id; stayDurChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.d === id ? 'true' : 'false')); prefs.stayDuration = id; save(); renderList(); } }, lbl)));
+    filterCard.append(h('div', { class: 'muted' }, 'Where to stay'), stayTypeChips, stayDurChips);
+  }
+
+  wrap.append(filterCard);
 
   const listEl = h('div', {});
   wrap.append(listEl);
@@ -547,11 +576,14 @@ function placesScreen(countryId) {
       listEl.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} places are coming soon. Thailand is fully covered in this build.`));
       return;
     }
-    const results = allPlaces({
+    let results = allPlaces({
       country: activeCountry,
       interests: [...selInterests],
       budget: selBudget,
     });
+    if (selKids) results = results.filter((p) => p.kidFriendly === true);
+    if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
+    if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
     if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
     for (const p of results) listEl.append(placeCard(p));
   }
@@ -562,6 +594,18 @@ function placesScreen(countryId) {
 function tierBadge(tier) {
   const lbl = { low: 'Budget', mid: 'Mid', high: 'Higher-end', any: 'Any' }[tier] || tier;
   return h('span', { class: `tier ${tier}` }, lbl);
+}
+
+// Traveller-fit chips (kid-friendly, stay type, stay length) shown on cards + detail.
+const STAY_LABEL = { tent: '⛺ Camping', hostel: '🛏️ Hostel', guesthouse: '🏠 Guesthouse', homestay: '🏡 Homestay', hotel: '🏨 Hotel', resort: '🌴 Resort', apartment: '🏢 Apartment' };
+function travelerChips(p) {
+  const chips = [];
+  if (p.kidFriendly === true) chips.push(h('span', { class: 'cat-tag' }, '👨‍👩‍👧 Kids OK'));
+  if (p.stayType) chips.push(h('span', { class: 'cat-tag' }, STAY_LABEL[p.stayType] || p.stayType));
+  if (p.stayDuration === 'long') chips.push(h('span', { class: 'cat-tag' }, 'Long stay'));
+  else if (p.stayDuration === 'short') chips.push(h('span', { class: 'cat-tag' }, 'Short stay'));
+  else if (p.stayDuration === 'both') chips.push(h('span', { class: 'cat-tag' }, 'Short or long stay'));
+  return chips.length ? h('div', { class: 'cats', style: 'margin-top:4px' }, chips) : null;
 }
 
 function starsStr(n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return '★'.repeat(r) + '☆'.repeat(5 - r); }
@@ -609,6 +653,7 @@ function placeCard(p) {
       h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
+    travelerChips(p),
     p.blurb ? h('p', {}, p.blurb) : null,
     h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
     p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
@@ -755,6 +800,7 @@ function placeScreen(id) {
       h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
+    travelerChips(p),
     photoBlock(p, p.name),
     p.blurb ? h('p', {}, p.blurb) : null,
   ]);
@@ -769,6 +815,8 @@ function placeScreen(id) {
   if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
   if (p.tips && p.tips.length) { card.append(h('h3', {}, 'Tips')); p.tips.forEach((t) => card.append(h('div', { class: 'list-note' }, t))); }
   if (p.scamWarnings && p.scamWarnings.length) { card.append(h('h3', {}, 'Watch out')); p.scamWarnings.forEach((t) => card.append(h('div', { class: 'warn-note' }, t))); }
+  if (p.activities && p.activities.length) { card.append(h('h3', {}, 'Things to do here')); card.append(h('div', { class: 'cats' }, p.activities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
+  if (p.amenities && p.amenities.length) { card.append(h('h3', {}, 'Amenities')); card.append(h('div', { class: 'cats' }, p.amenities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
 
   const colls = collectionsForItem(p.id);
   const collStrip = colls.length
@@ -1138,10 +1186,10 @@ function mapScreen() {
   // controller once it initialises (mapCtrl). Markets are their own gold layer.
   let mapCtrl = null;
   // Layer visibility is remembered (store.profile.prefs.mapLayers).
-  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true });
+  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true });
   const TOGGLES = [
     ['satellite', '🛰️ Satellite imagery'], ['borders', '🗺️ Country borders'],
-    ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['market', '🛍️ Markets'],
+    ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['localeat', '🍲 Local restaurants'], ['market', '🛍️ Markets'],
     ['stay', '🛏️ Places to stay'], ['pools', '🏊 Pools'], ['crossing', '🛂 Border crossings'],
   ];
   function applyLayer(key, on) {
@@ -1355,13 +1403,14 @@ function mapScreen() {
     subhead('Pins'),
     h('div', { class: 'key-grid' }, RATING_BANDS.map((b) => keyRow(dot(b.color), b.label))),
     h('div', { class: 'key-grid', style: 'margin-top:6px' }, [
+      keyRow(dot('#D62828'), 'Local restaurant', 'a local, non-tourist eatery'),
       keyRow(dot('#E0A100'), 'Market'),
       keyRow(dot('#0EA5C4'), 'Pool'),
       keyRow(dot('#3B5BDB'), 'Border crossing', 'a place you can cross between countries'),
       keyRow(dot('#6A4C93'), 'Your dropped pin'),
       keyRow(h('span', { style: 'flex:0 0 auto' }, '🏠'), 'Your accommodation'),
     ]),
-    h('p', { class: 'key-note' }, 'Place pins are coloured by rating — your own rating wins over the guidebook score.'),
+    h('p', { class: 'key-note' }, 'Place pins are coloured by rating (your own rating wins over the guidebook score) — except markets (gold) and local restaurants (red), which have their own colour.'),
 
     subhead('Base map'),
     h('div', { class: 'key-grid' }, [
