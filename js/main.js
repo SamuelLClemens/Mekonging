@@ -149,6 +149,7 @@ function homeScreen() {
     { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
     { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
     { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+    { ic: '🔊', t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
     { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
     { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
@@ -2527,6 +2528,87 @@ let natureQuery = '';
 let natureGroup = '';
 function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
 
+// ---- ANIMAL SOUNDS (streamed online; iNaturalist — public, no key) ----------
+// Calls stream from iNaturalist over an <audio> element (its audio hosts are in the
+// page CSP media-src; the API host is in connect-src). We look up Creative-Commons
+// recordings by scientific name and play the top-voted one in-app, crediting the
+// recordist. If the network/API is unavailable or has no recording, we fall back to
+// opening a Xeno-canto page so the call is still reachable (a plain new-tab
+// navigation, not subject to CSP). No audio is bundled, so offline the control just
+// says it needs a connection. A species may optionally carry sound:{ xcQuery, page }
+// to override the sciName-derived lookup.
+const CALL_GROUPS = ['bird', 'mammal', 'insect', 'reptile', 'danger'];
+function hasCall(s) { return !!s && CALL_GROUPS.includes(s.group); }
+function xcQuery(s) { return (s && s.sound && s.sound.xcQuery) || (s && s.sciName) || (s && s.commonName) || ''; }
+function xcPageUrl(s) { return (s && s.sound && s.sound.page) || `https://xeno-canto.org/explore?query=${encodeURIComponent(xcQuery(s))}`; }
+function inatSoundUrl(s) {
+  return `https://api.inaturalist.org/v1/observations?taxon_name=${encodeURIComponent(xcQuery(s))}`
+    + '&sounds=true&order_by=votes&per_page=12&license=cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc0';
+}
+let callAudio = null;   // one shared element so starting a call stops the previous one
+async function playCall(s, btn, statusEl) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+  try {
+    const res = await fetch(inatSoundUrl(s));
+    const d = await res.json();
+    let snd = null;
+    for (const r of (d.results || [])) { const a = (r.sounds || []).find((x) => x && x.file_url); if (a) { snd = a; break; } }
+    if (!snd) throw new Error('no recording');
+    if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
+    callAudio = new Audio(snd.file_url);
+    callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not stream here — opening a recording online…'; window.open(xcPageUrl(s), '_blank', 'noopener'); });
+    await callAudio.play();
+    const credit = (snd.attribution || '').replace(/^\(c\)\s*/, '').replace(/,\s*some rights reserved.*$/i, '') || 'an iNaturalist contributor';
+    statusEl.textContent = `♪ ${s.commonName} — ${credit} · via iNaturalist (CC)`;
+  } catch (e) {
+    statusEl.textContent = 'Opening a recording online…';
+    window.open(xcPageUrl(s), '_blank', 'noopener');
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+function callControl(s, label) {
+  const status = h('div', { class: 'muted', style: 'font-size:13px;margin-top:4px' });
+  const btn = h('button', { class: 'btn ghost', onclick: () => playCall(s, btn, status) }, label || '🔊 Hear its call');
+  return h('div', {}, [btn, status]);
+}
+
+function soundsScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Sounds around you', '#nature'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Hear a call and learn what makes it. Tap ▶ to play (streams online); tap a name for the full field guide. Calls stream from iNaturalist (Creative Commons); if none is found, a Xeno-canto page opens instead.'));
+  const GROUPS = [{ id: 'bird', label: 'Birds', emoji: '🐦' }, { id: 'mammal', label: 'Mammals', emoji: '🐘' }, { id: 'insect', label: 'Insects', emoji: '🦗' }, { id: 'reptile', label: 'Frogs & reptiles', emoji: '🐸' }];
+  let group = 'bird';
+  const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
+    h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
+      onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
+      `${g.emoji} ${g.label}`)));
+  wrap.append(chips);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) wrap.append(h('p', { class: 'muted' }, 'You are offline — playing a call needs a connection. The names and field guide still work.'));
+  const listEl = h('div', {});
+  wrap.append(listEl);
+  function renderList() {
+    listEl.innerHTML = '';
+    const results = allSpecies({ group }).filter(hasCall);
+    if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No species in this group yet.')); return; }
+    results.forEach((s) => {
+      const status = h('div', { class: 'muted', style: 'font-size:13px' });
+      const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
+      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px' }, [
+        h('span', { class: 'species-emoji' }, s.emoji || '🔎'),
+        h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
+          h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
+        ]),
+        play,
+      ]));
+    });
+  }
+  renderList();
+  mount(wrap, '#home');
+}
+
 function natureScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify nature', '#home'));
@@ -2542,6 +2624,7 @@ function natureScreen() {
       onclick: () => { natureGroup = g.id; groupChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
       `${g.emoji} ${g.label}`)));
   wrap.append(groupChips);
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
 
   wrap.append(h('div', { class: 'card' }, [
     h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Have a photo? Identify it online (needs internet):'),
@@ -2606,6 +2689,7 @@ function speciesScreen(id) {
   } else if (s.localNames && s.localNames.length) {
     card.append(h('p', { class: 'muted' }, `Local names: ${s.localNames.join(', ')}`));
   }
+  if (hasCall(s)) { card.append(h('h3', {}, 'Its call')); card.append(callControl(s)); }
   wrap.append(card);
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
   mount(wrap, '#home');
@@ -3075,6 +3159,7 @@ function render() {
       case 'dish': return dishScreen(arg);
       case 'produce': return arg ? produceDetail(arg) : produceScreen();
       case 'nature': return natureScreen();
+      case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
       case 'sos': return sosScreen();
