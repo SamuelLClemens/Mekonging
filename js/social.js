@@ -68,3 +68,38 @@ export function parseCard(payloadStr) {
     bio: clean(p.d.b, 160),
   };
 }
+
+// --- shared content (place / collection / trip) ------------------------------
+// A user shares an item with another traveller. The payload carries the sender's
+// mini-card (so the recipient can add them back), an optional note, and compact,
+// id-based content the recipient's app re-opens against its OWN data. Untrusted:
+// every field is sanitised here and rendered as text by the caller.
+function fromCard(me) { return { i: cleanId(me.userId), n: clean(me.name, 40), a: cleanEmoji(me.avatar) }; }
+export function encodeShare(kind, payload, me, msg = '') {
+  return encodePayload('s', { k: String(kind).slice(0, 16), f: fromCard(me), m: clean(msg, 200), d: payload });
+}
+export function parseShare(str) {
+  const p = decodePayload(str);
+  if (!p || p.t !== 's' || !p.d) return null;
+  const s = p.d;
+  const k = String(s.k || '').slice(0, 16);
+  const from = s.f ? { userId: cleanId(s.f.i), name: clean(s.f.n, 40) || 'A traveller', avatar: cleanEmoji(s.f.a) } : null;
+  const raw = s.d || {};
+  let data;
+  if (k === 'place') {
+    const id = cleanId(raw.id);
+    if (!id) return null;
+    data = { id, name: clean(raw.n, 80) || 'A place' };
+  } else if (k === 'collection') {
+    const items = Array.isArray(raw.items) ? raw.items.slice(0, 100)
+      .map((it) => ({ id: cleanId(it && it.id), name: clean(it && it.n, 80) })).filter((it) => it.id) : [];
+    data = { name: clean(raw.name, 40) || 'Shared list', items };
+  } else if (k === 'trip') {
+    const stops = Array.isArray(raw.stops) ? raw.stops.slice(0, 60)
+      .map((st) => ({ title: clean(st && st.t, 80), country: clean(st && st.c, 4), date: clean(st && st.d, 10) })).filter((st) => st.title) : [];
+    data = { stops, notes: clean(raw.notes, 200) };
+  } else {
+    return null;
+  }
+  return { kind: k, from, msg: clean(s.m, 200), data };
+}

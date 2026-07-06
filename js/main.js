@@ -12,8 +12,9 @@ import {
   setMyStay, getMyStay, clearMyStay,
   getSavedAreas, addSavedArea, removeSavedArea,
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
+  getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
 } from './state.js';
-import { encodeCard, parseCard, shareUrl } from './social.js';
+import { encodeCard, parseCard, shareUrl, encodeShare, parseShare } from './social.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
@@ -79,7 +80,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.84.0';
+const APP_VERSION = 'mk-v0.85.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -900,6 +901,7 @@ function placeScreen(id) {
   const actions = h('div', { class: 'card' }, [
     (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
     h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    !p.isPin ? shareButton('📤 Recommend to a friend', `Check out ${p.name}`, () => shareUrl('in', encodeShare('place', { id: p.id, n: p.name }, ensureMe()))) : null,
     !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
     collStrip,
     p.isPin ? h('button', {
@@ -1136,6 +1138,13 @@ function collectionScreen(id) {
   const items = itemIds.map(resolveItem).filter(Boolean);
   if (!items.length) wrap.append(h('p', { class: 'empty' }, 'Nothing here yet. Tap “＋ Save” on a place to add it.'));
   else items.forEach((p) => wrap.append(placeCard(p)));
+  if (items.length) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h3', {}, 'Share this list'),
+      h('p', { class: 'muted' }, 'Send this list of places to a friend — they can save it as a collection in their own app.'),
+      shareButton('📤 Share this list', `${title} — places to check out`, () => shareUrl('in', encodeShare('collection', { name: title, items: items.map((p) => ({ id: p.id, n: p.name })) }, ensureMe()))),
+    ]));
+  }
   if (coll) {
     wrap.append(h('div', { class: 'card' }, [
       h('button', { class: 'btn ghost block', style: 'color:var(--warn); border-color:var(--warn)',
@@ -2771,6 +2780,15 @@ function tripScreen() {
   }
   wrap.append(itin);
 
+  // share this trip with a travel companion (backendless — link carries the stops)
+  if (store.trip.stops.length) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h3', {}, 'Share this trip'),
+      h('p', { class: 'muted' }, 'Send your itinerary to a travel companion — they can copy the stops straight into their own trip.'),
+      shareButton('📤 Share my trip', 'My Mekong trip', () => shareUrl('in', encodeShare('trip', { stops: store.trip.stops.map((s) => ({ t: s.title, c: s.country, d: s.date })), notes: store.trip.notes || '' }, ensureMe()))),
+    ]));
+  }
+
   // budget log
   const bud = h('div', { class: 'card' }, [h('h2', {}, 'Budget log')]);
   const home = homeCurrency();
@@ -3155,6 +3173,7 @@ function circleScreen() {
   wrap.append(topbar('Travel circle', '#home'));
   wrap.append(h('p', { class: 'muted' },
     'Connect with other travellers — no account, no server. Your card and messages travel only inside links you choose to share; nothing is uploaded and nothing leaves this device on its own.'));
+  wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#inbox') }, `📥 Shared with you (${getInbox().length})`));
 
   // --- your card (editable) ---
   const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', value: me.name || '' });
@@ -3233,6 +3252,108 @@ function addContactScreen(arg) {
   box.append(status);
   wrap.append(box);
   wrap.append(h('p', { class: 'tiny muted' }, 'Adding a contact only stores their card on your device. Nothing is sent anywhere.'));
+  mount(wrap, '#circle');
+}
+
+// A share/copy button that flips its own label to confirm, then reverts. Uses the
+// OS share sheet when available (which can send over AirDrop / Nearby Share with
+// no internet), else copies the link to the clipboard.
+function shareButton(label, title, buildUrl, cls = 'btn ghost block') {
+  const btn = h('button', { class: cls, style: 'margin-top:8px', onclick: async () => {
+    const url = buildUrl();
+    let msg;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) { await navigator.share({ title, url }); msg = '✓ Shared'; }
+      else { await navigator.clipboard.writeText(url); msg = '✓ Link copied'; }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;   // user dismissed the share sheet
+      try { await navigator.clipboard.writeText(url); msg = '✓ Link copied'; } catch { msg = 'Copy failed'; }
+    }
+    const old = btn.textContent; btn.textContent = msg; setTimeout(() => { btn.textContent = old; }, 1800);
+  } }, label);
+  return btn;
+}
+
+// Import screen for a shared place / list / trip (#in-<payload>). All decoded
+// fields are UNTRUSTED and rendered only as text.
+function importShareScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Shared with you', '#circle'));
+  const s = parseShare(arg);
+  if (!s) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', {}, 'This shared link could not be read'),
+      h('p', { class: 'muted' }, 'It may be invalid or was cut off in transit. Ask the sender to share it again.'),
+      h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'),
+    ]));
+    mount(wrap, '#circle'); return;
+  }
+  // Save to the inbox once (dedupe on identical content so re-opening the link
+  // does not pile up duplicates).
+  const sig = `${s.kind}|${s.from ? s.from.userId : ''}|${JSON.stringify(s.data)}`;
+  if (!getInbox().some((x) => `${x.kind}|${x.from ? x.from.userId : ''}|${JSON.stringify(x.data)}` === sig)) {
+    addInboxItem({ from: s.from, kind: s.kind, data: s.data, msg: s.msg });
+  }
+
+  const box = h('div', { class: 'card' });
+  if (s.from) box.append(contactRow(s.from));
+  if (s.msg) box.append(h('p', { style: 'margin-top:6px' }, s.msg));
+  if (s.kind === 'place') {
+    const exists = getPlace(s.data.id);
+    box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
+    box.append(h('p', { class: 'muted' }, exists ? 'A place they recommend.' : 'A place they recommend — not in your guide, so search for it by name.'));
+    if (exists) box.append(h('button', { class: 'btn block', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
+    box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: (e) => { toggleFavorite(s.data.id); e.currentTarget.textContent = '✓ Saved to favourites'; } }, '⭐ Save to favourites'));
+  } else if (s.kind === 'collection') {
+    box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
+    box.append(h('p', { class: 'muted' }, `${s.data.items.length} place${s.data.items.length === 1 ? '' : 's'} in this list.`));
+    box.append(h('ul', {}, s.data.items.slice(0, 40).map((it) => h('li', {}, it.name || it.id))));
+    box.append(h('button', { class: 'btn block', onclick: (e) => {
+      const c = createCollection(s.data.name || 'Shared list', '📥');
+      let n = 0; s.data.items.forEach((it) => { if (getPlace(it.id)) { togglePlaceInCollection(c.id, it.id); n++; } });
+      e.currentTarget.textContent = `✓ Saved (${n} in your guide)`;
+    } }, '＋ Save as a collection'));
+  } else if (s.kind === 'trip') {
+    box.append(h('h2', { style: 'margin-top:8px' }, 'A shared trip'));
+    box.append(h('ol', {}, s.data.stops.slice(0, 40).map((st) => h('li', {}, st.title + (st.date ? ` — ${st.date}` : '')))));
+    box.append(h('button', { class: 'btn block', onclick: (e) => { s.data.stops.forEach((st) => addStop({ title: st.title, country: st.country, date: st.date })); e.currentTarget.textContent = '✓ Added to my trip'; } }, '＋ Add these stops to my trip'));
+  }
+  wrap.append(box);
+
+  if (s.from) {
+    const already = getContact(s.from.userId);
+    wrap.append(h('div', { class: 'card' }, [
+      h('p', { class: 'muted' }, already ? `${s.from.name} is in your circle.` : `Add ${s.from.name} to your circle so you can share back?`),
+      already ? null : h('button', { class: 'btn ghost block', onclick: (e) => { addContact(s.from); e.currentTarget.textContent = '✓ Added to your circle'; } }, `Add ${s.from.name}`),
+    ]));
+  }
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#inbox') }, '📥 See everything shared with you'));
+  mount(wrap, '#circle');
+}
+
+function inboxScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Shared with you', '#circle'));
+  const items = getInbox();
+  if (!items.length) {
+    wrap.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Nothing yet. When a friend shares a place, list or trip with you, it lands here.')]));
+    mount(wrap, '#circle'); return;
+  }
+  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip' };
+  items.forEach((it) => {
+    const title = it.kind === 'place' ? (it.data.name || 'A place')
+      : it.kind === 'collection' ? (it.data.name || 'A list') : 'A trip';
+    wrap.append(h('div', { class: 'card' }, [
+      h('div', { class: 'row-between' }, [
+        h('div', {}, [h('strong', {}, title), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
+        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { deleteInboxItem(it.id); go('#inbox'); } }, '✕'),
+      ]),
+      it.msg ? h('p', { style: 'margin-top:6px' }, it.msg) : null,
+      (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,
+      (it.kind === 'trip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
+      (it.kind === 'collection') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { const c = createCollection(it.data.name || 'Shared list', '📥'); let n = 0; (it.data.items || []).forEach((x) => { if (getPlace(x.id)) { togglePlaceInCollection(c.id, x.id); n++; } }); e.currentTarget.textContent = `✓ Saved (${n})`; } }, 'Save as a collection') : null,
+    ]));
+  });
   mount(wrap, '#circle');
 }
 
@@ -3384,6 +3505,8 @@ function render() {
       case 'feedback': return feedbackScreen(arg);
       case 'circle': return circleScreen();
       case 'add': return addContactScreen(arg);
+      case 'in': return importShareScreen(arg);
+      case 'inbox': return inboxScreen();
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }
