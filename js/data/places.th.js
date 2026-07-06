@@ -9,6 +9,8 @@
 //   stayDuration: 'short'|'long'|'both'   — suited to short trips, long stays, or either
 //   activities: [string]         — what you can do here (e.g. 'temple', 'dive', 'cooking-class')
 //   amenities: [string]          — facilities for stays (e.g. 'wifi', 'kitchen', 'pool')
+//   externalRatings: [{ site, score, scale, count?, url, asOf:'YYYY-MM' }]  — verified snapshots from other sites
+//   externalPrices:  [{ site, from, currency, url, asOf:'YYYY-MM' }]        — last-checked "from" prices (deep-link for live)
 export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
@@ -20,6 +22,9 @@ export const PLACES_TH = [
     hours: '08:00–18:30 daily',
     tips: ['Dress modestly: shoulders and knees covered.', 'Go early to avoid heat and crowds.'],
     scamWarnings: ['Ignore anyone outside saying the temple is "closed today" — it is a gem-shop scam.'],
+    externalRatings: [
+      { site: 'TripAdvisor', score: 4.6, scale: 5, count: 51489, url: 'https://www.tripadvisor.com/Attraction_Review-g293916-d311043-Reviews-Wat_Phra_Chetuphon-Bangkok.html', asOf: '2026-07' },
+    ],
     mapQuery: 'Wat Pho Bangkok', coords: { lat: 13.7465, lng: 100.4927 },
     bookHint: 'Pay at the gate; no booking needed.', verified: '2026-06',
     sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
@@ -34,6 +39,9 @@ export const PLACES_TH = [
     hours: '08:30–15:30 daily',
     tips: ['Strict dress code: no shorts, no bare shoulders. Sarongs can be borrowed at the gate.'],
     scamWarnings: ['"The palace is closed, let me take you to another temple" is always a scam.'],
+    externalRatings: [
+      { site: 'TripAdvisor', score: 4.2, scale: 5, count: 36082, url: 'https://www.tripadvisor.com/Attraction_Review-g293916-d317603-Reviews-The_Grand_Palace-Bangkok.html', asOf: '2026-07' },
+    ],
     mapQuery: 'Grand Palace Bangkok', coords: { lat: 13.75, lng: 100.4913 },
     bookHint: 'Buy at the official ticket office on site.', verified: '2026-06',
     sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
@@ -90,6 +98,9 @@ export const PLACES_TH = [
     hours: 'Wed–Sun from ~14:00 (closes when sold out)',
     tips: ['Expect a long wait or a hefty premium to reserve.', 'Bring cash.'],
     scamWarnings: [],
+    externalRatings: [
+      { site: 'TripAdvisor', score: 3.5, scale: 5, url: 'https://www.tripadvisor.com/Restaurant_Review-g293916-d3703955-Reviews-Raan_Jay_Fai-Bangkok.html', asOf: '2026-07' },
+    ],
     mapQuery: 'Jay Fai Bangkok', coords: { lat: 13.7547, lng: 100.5066 },
     bookHint: 'Walk-in queue; reservations are limited and costly.', verified: '2026-06',
     sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }],

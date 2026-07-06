@@ -739,6 +739,71 @@ function photoBlock(item, alt) {
   ]);
 }
 
+// Ratings + prices from across the web. Snapshots are curated (each stamped with the
+// month it was checked) so they work offline; every row and the compare buttons
+// deep-link out to the live site. No reviews are scraped.
+function extUrl(ext, p) {
+  if (ext && ext.url) return ext.url;
+  const q = encodeURIComponent(`${p.name} ${p.city || ''}`.trim());
+  const site = ((ext && ext.site) || '').toLowerCase();
+  if (site.includes('booking')) return `https://www.booking.com/searchresults.html?ss=${q}`;
+  if (site.includes('agoda')) return `https://www.agoda.com/search?q=${q}`;
+  if (site.includes('tripadvisor')) return `https://www.tripadvisor.com/Search?q=${q}`;
+  if (site.includes('trip.com') || site === 'trip') return `https://www.trip.com/hotels/list?searchword=${q}`;
+  if (site.includes('google')) return mapsUrl(p);
+  return `https://www.google.com/search?q=${q}%20${encodeURIComponent((ext && ext.site) || '')}`;
+}
+function extStars(score, scale) { const s = (Number(score) / (Number(scale) || 5)) * 5; return isNaN(s) ? NaN : Math.round(s * 10) / 10; }
+function extRow(label, right, href) {
+  return h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
+    h('span', { style: 'font-weight:600' }, label),
+    href ? h('a', { class: 'rev-link', href, target: '_blank', rel: 'noopener' }, right) : h('span', { class: 'muted' }, right),
+  ]);
+}
+function externalRatingsCard(p) {
+  const ext = Array.isArray(p.externalRatings) ? p.externalRatings : [];
+  const prices = Array.isArray(p.externalPrices) ? p.externalPrices : [];
+  const own = (getPlaceData(p.id).rating) || 0;
+  const isStay = !!p.stayType;
+  if (!ext.length && !prices.length && !isStay) return null;
+
+  const card = h('div', { class: 'card' }, [h('h2', {}, 'Across the web')]);
+
+  if (ext.length || own > 0) {
+    const stars = ext.map((e) => extStars(e.score, e.scale)).filter((n) => !isNaN(n));
+    const blended = stars.length ? stars.reduce((a, b) => a + b, 0) / stars.length : 0;
+    const overall = own > 0 ? own : blended;
+    if (overall > 0) {
+      card.append(h('div', { class: 'rating-block' }, [
+        h('span', { class: 'stars-static' }, starsStr(overall)),
+        h('span', { class: 'muted' }, ` ${overall.toFixed(1)} overall${own > 0 ? ' · your rating counts first' : (stars.length > 1 ? ' · averaged across sites' : '')}`),
+      ]));
+    }
+    if (own > 0) card.append(extRow('You', `${starsStr(own)} ${own.toFixed(1)}`));
+    ext.forEach((e) => {
+      const st = extStars(e.score, e.scale);
+      const cnt = e.count ? ` · ${Number(e.count).toLocaleString()} reviews` : '';
+      const as = e.asOf ? ` · ${e.asOf}` : '';
+      card.append(extRow(e.site, `${e.score}/${e.scale || 5}${isNaN(st) ? '' : ` (${st.toFixed(1)}★)`}${cnt}${as} ›`, extUrl(e, p)));
+    });
+  }
+
+  if (prices.length) {
+    card.append(h('h3', {}, 'Prices'));
+    prices.forEach((pr) => {
+      const from = pr.from != null ? `from ${money(pr.from, pr.currency) || (pr.from + ' ' + (pr.currency || ''))}` : 'Check price';
+      card.append(extRow(pr.site, `${from}${pr.asOf ? ` · ${pr.asOf}` : ''} ›`, extUrl(pr, p)));
+    });
+  }
+
+  const sites = isStay ? ['Booking', 'Agoda', 'Trip.com', 'Google'] : ['TripAdvisor', 'Google'];
+  card.append(h('h3', {}, isStay ? 'Compare & book' : 'Compare live'));
+  card.append(h('div', { class: 'chips' }, sites.map((site) =>
+    h('a', { class: 'chip', href: extUrl({ site }, p), target: '_blank', rel: 'noopener' }, site))));
+  card.append(h('p', { class: 'disclaimer' }, 'Scores and prices are snapshots from the dates shown — tap a site for live numbers and to book. Aggregated from public sources; no reviews are scraped.'));
+  return card;
+}
+
 // Compact current-conditions card for a place, read from the NEAREST listed weather
 // city (weather here is regional, not pinpoint — the distance is shown). Cached-first
 // so it works offline; refreshes once in the background when online.
@@ -834,6 +899,8 @@ function placeScreen(id) {
   ]);
 
   wrap.append(card);
+  const extCard = externalRatingsCard(p);
+  if (extCard) wrap.append(extCard);
   const wxCard = weatherNearbyCard(p);
   if (wxCard) wrap.append(wxCard);
   wrap.append(actions, yourLayer(p));
