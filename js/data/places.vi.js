@@ -1,6 +1,7 @@
 export const PLACES_VI = [
   {
     id: "vi-hanoi-temple-of-literature", name: "Temple of Literature (Van Mieu)", city: "Hanoi", country: "vi",
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "Vietnam's first national university, founded in 1070, set across tranquil walled courtyards and lotus ponds.",
     whyItFits: "Ideal for history-minded travellers who want a calm, walkable introduction to Confucian heritage.",
@@ -14,6 +15,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hanoi-bun-cha-huong-lien", name: "Bun Cha Huong Lien", city: "Hanoi", country: "vi",
+    rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["food"], budgetTier: "low",
     blurb: "Famous bun cha house serving grilled pork patties and noodles, made well-known after a 2016 presidential visit.",
     whyItFits: "Suits budget food travellers who want an iconic, no-frills Hanoi lunch.",
@@ -27,6 +29,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hanoi-ta-hien-beer-street", name: "Ta Hien Beer Street", city: "Hanoi", country: "vi",
+    rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife"], budgetTier: "low",
     blurb: "Buzzing Old Quarter corner where plastic stools spill onto the street for cheap draught beer (bia hoi).",
     whyItFits: "Best for sociable travellers wanting a lively, low-cost night out.",
@@ -40,6 +43,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-war-remnants-museum", name: "War Remnants Museum", city: "Ho Chi Minh City", country: "vi",
+    rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "Sobering museum documenting the Vietnam War through photography, military hardware and personal accounts.",
     whyItFits: "Suits travellers seeking historical context and an honest, often heavy, perspective.",
@@ -53,6 +57,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-ben-thanh-market", name: "Ben Thanh Market", city: "Ho Chi Minh City", country: "vi",
+    rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["market", "food"], budgetTier: "mid",
     blurb: "Landmark central market with souvenir stalls by day and an outdoor street-food night market on the perimeter.",
     whyItFits: "Good for travellers who want street eats and souvenir browsing in one stop.",
@@ -66,6 +71,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-rooftop-bar-saigon", name: "Saigon Skydeck & Rooftop Bars (Bitexco area)", city: "Ho Chi Minh City", country: "vi",
+    rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife"], budgetTier: "high",
     blurb: "Cluster of high-rise observation decks and rooftop cocktail bars overlooking the Saigon River skyline.",
     whyItFits: "Best for travellers wanting upmarket views and cocktails for a special evening.",
@@ -79,6 +85,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hoian-ancient-town", name: "Hoi An Ancient Town", city: "Hoi An", country: "vi",
+    rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "UNESCO-listed riverside trading port of lantern-lit lanes, the Japanese Covered Bridge and merchant houses.",
     whyItFits: "Suits travellers who love walkable heritage, photography and an evening lantern atmosphere.",
@@ -92,6 +99,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hoian-an-bang-beach", name: "An Bang Beach", city: "Hoi An", country: "vi",
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "mid",
     blurb: "Relaxed stretch of sand a short ride from the old town, lined with beach bars and seafood shacks.",
     whyItFits: "Good for travellers wanting a laid-back swim and sunset away from the heritage crowds.",
@@ -105,6 +113,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-danang-marble-mountains", name: "Marble Mountains (Ngu Hanh Son)", city: "Da Nang", country: "vi",
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "low",
     blurb: "Cluster of limestone and marble outcrops riddled with caves, pagodas and panoramic viewpoints between Da Nang and Hoi An.",
     whyItFits: "Suits active travellers who want short cave hikes and coastal views in a half-day trip.",
@@ -118,6 +127,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-danang-han-market-seafood", name: "Han Market & Da Nang Seafood Eateries", city: "Da Nang", country: "vi",
+    rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["market", "food"], budgetTier: "mid",
     blurb: "Bustling riverside market and nearby seafood restaurants known for fresh local catch and central Vietnamese specialities.",
     whyItFits: "Good for food-focused travellers wanting fresh seafood without resort prices.",

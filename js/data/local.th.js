@@ -37,7 +37,7 @@ export const LOCAL_TH = [
     markets: [
       { name: "Muang Mai Market", when: "Daily, best 05:00–11:00", where: "Riverside, north of the Old City", what: "The city's wholesale fruit/veg hub — mangoes and longan by the kilo at local prices", tip: "Buy fruit here, not on Nimman." },
       { name: "Warorot Market (Kad Luang)", when: "Daily ~05:00–18:00", where: "Chang Moi, near the river", what: "Northern specialities: sai ua (herb sausage), kaep moo (pork crackling), dried chillies", tip: "Basement + street stalls are the cheap part." },
-      { name: "Chiang Mai Gate night market", when: "Daily ~17:00–24:00", where: "South moat gate", what: "Locals' dinner stalls — khao kha moo, som tam, smoothies", tip: "The famous 'cowboy-hat lady' braised-pork-leg stall is here." },
+      { name: "Chiang Mai Gate night market", when: "Daily ~17:00–24:00", where: "South moat gate", what: "Locals' dinner stalls — khao kha moo, som tam, smoothies", tip: "Good khao kha moo here too — but the famous 'cowboy-hat lady' stall (Khao Kha Moo Chang Phueak) is at Chang Phueak Gate, the NORTH moat gate." },
     ],
     shopLocal: [
       { what: "Fruit & veg", where: "Muang Mai for bulk; Ton Payom Market near the university for neighbourhood prices", tip: "University-area markets are cheap and unfussy." },

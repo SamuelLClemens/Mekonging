@@ -394,6 +394,9 @@ export function unreadInboxCount() { return getInbox().filter((x) => !x.read).le
 // --- travel circle: async message threads (backendless "postcards") ----------
 // threads[contactUserId] = [ { from:'me'|'them', text, name, at } ], in send order.
 export function getThread(userId) {
+  // Defence in depth (see social.js cleanId): never let a reserved key touch the
+  // threads object's prototype.
+  if (['__proto__', 'constructor', 'prototype'].includes(userId)) return [];
   const t = store.social.threads || (store.social.threads = {});
   return Array.isArray(t[userId]) ? t[userId] : (t[userId] = []);
 }

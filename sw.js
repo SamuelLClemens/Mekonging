@@ -7,7 +7,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.88.0';
+const CACHE_VERSION = 'mk-v0.89.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -181,7 +181,8 @@ async function rebuildRanged(stored) {
 self.addEventListener('message', (e) => {
   const d = e.data || {};
   if (d.type === 'PREFETCH_TILES' && Array.isArray(d.urls)) {
-    e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source));
+    // `protect` = tile URLs of already-saved packs; the cap must never evict them.
+    e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source, Array.isArray(d.protect) ? d.protect : []));
   } else if (d.type === 'DELETE_TILES' && Array.isArray(d.urls)) {
     e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
   }
@@ -199,7 +200,7 @@ async function deleteTiles(urls, client) {
   if (client) client.postMessage({ type: 'DELETE_DONE', removed, total: urls.length });
 }
 
-async function prefetchTiles(urls, client) {
+async function prefetchTiles(urls, client, protect = []) {
   const cache = await caches.open(TILE_CACHE);
   let done = 0, ok = 0, quotaHit = false;
   for (const url of urls) {
@@ -224,16 +225,25 @@ async function prefetchTiles(urls, client) {
     done++;
     if (client && done % 25 === 0) client.postMessage({ type: 'PREFETCH_PROGRESS', done, total: urls.length, ok });
   }
-  await enforceTileCap(cache);
+  // Protect the tiles of every saved pack (this download's own URLs plus the packs
+  // the page recomputed) so the cap only evicts loose browsing tiles.
+  const protectedKeys = new Set([...urls, ...protect].map((u) => u + (u.includes('?') ? '&' : '?') + '__r=' + encodeURIComponent('full')));
+  await enforceTileCap(cache, protectedKeys);
   if (client) client.postMessage({ type: 'PREFETCH_DONE', done, total: urls.length, ok, quotaHit });
 }
 
-// Keep TILE_CACHE bounded: cache.keys() is insertion-ordered, so deleting from the front
-// evicts the oldest tiles (a simple FIFO / approximate-LRU cap).
-async function enforceTileCap(cache) {
+// Keep TILE_CACHE bounded: cache.keys() is insertion-ordered, so deleting from the
+// front evicts the oldest tiles first (approximate LRU) — but never a tile that
+// belongs to a saved offline pack. The cap runs on the prefetch path; tiles cached
+// incidentally while browsing are additionally bounded by the browser's own quota.
+async function enforceTileCap(cache, protectedKeys = new Set()) {
   try {
     const keys = await cache.keys();
-    const over = keys.length - TILE_CACHE_MAX;
-    for (let i = 0; i < over; i++) await cache.delete(keys[i]);
+    let over = keys.length - TILE_CACHE_MAX;
+    for (let i = 0; i < keys.length && over > 0; i++) {
+      if (protectedKeys.has(keys[i].url)) continue;   // saved-pack tile — skip
+      await cache.delete(keys[i]);
+      over--;
+    }
   } catch { /* best-effort */ }
 }

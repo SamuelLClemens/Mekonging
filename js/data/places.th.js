@@ -14,6 +14,7 @@
 export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
+    rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['temple', 'thai-massage'],
     blurb: 'Bangkok’s oldest temple, home to the 46m gold Reclining Buddha and the birthplace of Thai massage.',
@@ -31,6 +32,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-grand-palace', name: 'Grand Palace & Wat Phra Kaew', city: 'Bangkok', country: 'th',
+    rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['culture'], budgetTier: 'mid',
     kidFriendly: true, activities: ['temple', 'palace'],
     blurb: 'The former royal residence and the Temple of the Emerald Buddha — Thailand’s most revered site.',
@@ -48,6 +50,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-wat-arun', name: 'Wat Arun (Temple of Dawn)', city: 'Bangkok', country: 'th',
+    rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['temple', 'viewpoint', 'ferry'],
     blurb: 'A striking riverside spire decorated with porcelain, best at sunset from the far bank.',
@@ -62,6 +65,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
+    rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['market', 'food', 'culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['market', 'shopping', 'street-food'],
     blurb: 'One of the world’s largest markets — 15,000+ stalls of food, crafts, clothes and curiosities.',
@@ -76,6 +80,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',
+    rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['food', 'nightlife'], budgetTier: 'low',
     kidFriendly: true, isLocal: true, activities: ['street-food', 'food-crawl'],
     blurb: 'Bangkok’s neon-lit Chinatown comes alive after dark with some of the city’s best street food.',
@@ -90,6 +95,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-jay-fai', name: 'Jay Fai', city: 'Bangkok', country: 'th',
+    rating: 3.9, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['food'], budgetTier: 'high',
     kidFriendly: false, isLocal: true, activities: ['street-food'],
     blurb: 'A Michelin-starred street kitchen famous for crab omelettes, cooked over charcoal by a goggle-wearing legend.',
@@ -107,6 +113,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-lumpini', name: 'Lumphini Park', city: 'Bangkok', country: 'th',
+    rating: 4.5, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nature'], budgetTier: 'low',
     kidFriendly: true, activities: ['walk', 'boating', 'wildlife'],
     blurb: 'A green lung in the heart of the city — lakes, paddle boats, monitor lizards and morning tai chi.',
@@ -121,6 +128,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-khaosan', name: 'Khaosan Road', city: 'Bangkok', country: 'th',
+    rating: 4.0, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nightlife', 'food'], budgetTier: 'low',
     kidFriendly: false, activities: ['nightlife', 'bars', 'street-food'],
     blurb: 'The legendary backpacker strip: cheap beer, street bars, live music and late-night chaos.',
@@ -135,6 +143,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-rooftop', name: 'Rooftop bar (Vertigo / Sky Bar)', city: 'Bangkok', country: 'th',
+    rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nightlife'], budgetTier: 'high',
     kidFriendly: false, activities: ['cocktails', 'views'],
     blurb: 'Sky-high cocktails with sweeping skyline views from one of Bangkok’s famous rooftop bars.',
@@ -154,6 +163,7 @@ export const PLACES_TH = [
   // guidance; confirm live. They exercise the stay-type + short/long-stay filters.
   {
     id: 'th-bkk-stay-hostel-rambuttri', name: 'Backpacker hostels (Khaosan / Rambuttri)', city: 'Bangkok', country: 'th',
+    rating: 4.2, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['stay', 'hostel'], budgetTier: 'low',
     kidFriendly: false, stayType: 'hostel', stayDuration: 'short',
     amenities: ['wifi', 'air-con', 'lockers', 'common-area'],
@@ -169,6 +179,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-stay-guesthouse-oldcity', name: 'Guesthouses (Old City / Phra Nakhon)', city: 'Bangkok', country: 'th',
+    rating: 4.3, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['stay', 'guesthouse'], budgetTier: 'low',
     kidFriendly: true, stayType: 'guesthouse', stayDuration: 'both',
     amenities: ['wifi', 'air-con', 'private-bathroom'],
@@ -184,6 +195,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-stay-apartment-sukhumvit', name: 'Serviced apartments (Sukhumvit, long-stay)', city: 'Bangkok', country: 'th',
+    rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['stay', 'apartment'], budgetTier: 'mid',
     kidFriendly: true, stayType: 'apartment', stayDuration: 'long',
     amenities: ['wifi', 'kitchen', 'pool', 'gym', 'laundry'],

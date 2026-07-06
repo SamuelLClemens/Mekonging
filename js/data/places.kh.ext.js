@@ -549,7 +549,7 @@ export const PLACES_KH_EXT = [
     scamWarnings: ["Confirm exactly how many dives and what gear are included before paying, as some cheap quotes exclude tank or weight rental"],
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Koh Rong island Cambodia diving", coords: { lat: 10.72, lng: 103.24 },
-    bookHint: "Book in person at a dive shop on Koh Long Set / Police Beach or via your guesthouse the day before", verified: "2026-07",
+    bookHint: "Book in person at a dive shop at Long Set (4K) Beach or Police Beach on Koh Rong or via your guesthouse the day before", verified: "2026-07",
     sources: [{ org: "Cambodia Ministry of Tourism", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attractions-g2385660-Activities-Koh_Rong_Sihanoukville_Province.html" }],
   },
   {
