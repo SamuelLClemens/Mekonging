@@ -84,7 +84,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.88.0';
+const APP_VERSION = 'mk-v0.89.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -1407,13 +1407,21 @@ function mapScreen() {
       if (d.ok > 0 && viewInfo) {
         const def = (mapCtrl && mapCtrl.nearestCityName && mapCtrl.nearestCityName()) || 'Saved area';
         const name = (prompt('Name this offline area:', def) || def).trim() || def;
-        addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.round(viewInfo.zoom), count: d.ok });
+        // floor (not round): tileUrlsForBounds downloads at Math.floor(zoom), so the
+        // recorded z must match or per-area delete would target the wrong zoom level.
+        addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.floor(viewInfo.zoom), count: d.ok });
         renderAreas();
       }
       showStorage();
     };
     navigator.serviceWorker.addEventListener('message', onMsg);
-    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls });
+    // Protect existing saved packs from FIFO eviction: recompute their exact tile
+    // URLs (bounds+z are recorded per area) and pass them so the cap skips them.
+    let protect = [];
+    try {
+      protect = getSavedAreas().flatMap((a) => (mapCtrl && mapCtrl.tileUrlsForArea) ? mapCtrl.tileUrlsForArea(a.bounds, a.z) : []);
+    } catch { /* best-effort */ }
+    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls, protect });
   }
 
   // --- Saved offline areas: named tile packs, each sized and individually removable -
@@ -2298,15 +2306,11 @@ function weatherScreen(country) {
   mount(wrap, '#home');
 }
 
-// ---- TRANSPORT SCHEDULES (curated reference, re-synced on wifi) -------------
-const SCHED_KEY = 'mk.sched.checkedAt';
+// ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------
+// The timetable is data built into the app bundle — it updates when the app
+// updates. (An in-page "re-sync" fetch would be answered cache-first by the
+// service worker and silently discarded, so we do not pretend to sync.)
 let schedCountry = '';
-function schedCheckedAt() { return Number(localStorage.getItem(SCHED_KEY)) || 0; }
-async function schedRefresh() {
-  if (!navigator.onLine) return false;
-  try { await fetch('js/data/schedules.js', { cache: 'no-store' }); try { localStorage.setItem(SCHED_KEY, String(Date.now())); } catch { /* full */ } return true; }
-  catch { return false; }
-}
 function scheduleCard(s) {
   const c = getCountry(s.country);
   return h('div', { class: 'card' }, [
@@ -2324,7 +2328,7 @@ function schedulesScreen(country) {
   if (country && getCountry(country)) { activeCountry = country; schedCountry = country; }
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Transport schedules', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Reference departure times for popular routes — guidance only; always reconfirm with the operator. They re-sync whenever you are online.'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const chips = h('div', { class: 'chips' }, filters.map((f) =>
@@ -2333,16 +2337,8 @@ function schedulesScreen(country) {
       `${f.flag} ${f.name}`)));
   wrap.append(chips);
 
-  const syncLine = h('p', { class: 'muted', style: 'text-align:center;margin:6px 0' });
-  function setSync() {
-    const t = schedCheckedAt();
-    syncLine.textContent = `Reference timetable (verified ${SCHEDULES_VERIFIED}) · ${t ? 'last synced ' + wxAgo(t) : 'not yet synced'}${navigator.onLine ? '' : ' · offline'}`;
-  }
-  setSync();
-  wrap.append(syncLine);
-  const refreshBtn = h('button', { class: 'btn ghost block' }, 'Refresh (needs internet)');
-  refreshBtn.addEventListener('click', async () => { refreshBtn.textContent = 'Syncing…'; refreshBtn.disabled = true; await schedRefresh(); refreshBtn.textContent = 'Refresh (needs internet)'; refreshBtn.disabled = false; setSync(); });
-  wrap.append(refreshBtn);
+  wrap.append(h('p', { class: 'muted', style: 'text-align:center;margin:6px 0' },
+    `Reference timetable, verified ${SCHEDULES_VERIFIED} · built into the app and updated with app updates`));
 
   const listEl = h('div', {});
   wrap.append(listEl);
@@ -2354,9 +2350,6 @@ function schedulesScreen(country) {
   }
   renderList();
   mount(wrap, '#home');
-
-  // re-sync in the background when online, then refresh the stamp
-  if (navigator.onLine) schedRefresh().then(() => { if ((location.hash || '').startsWith('#schedules')) setSync(); });
 }
 
 // ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
@@ -3432,12 +3425,22 @@ function threadScreen(userId, fallbackCard) {
     const text = ta.value.trim(); if (!text) return;
     addMessage(userId, { from: 'me', text });                       // recorded first, so it survives even if sharing is cancelled
     const url = shareUrl('msg', encodeMessage(ensureMe(), text));
-    try { if (typeof navigator !== 'undefined' && navigator.share) await navigator.share({ title: `A note for ${name}`, url }); else await navigator.clipboard.writeText(url); }
-    catch (e) { if (!(e && e.name === 'AbortError')) { try { await navigator.clipboard.writeText(url); } catch { /* noop */ } } }
+    let handed = false;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) { await navigator.share({ title: `A note for ${name}`, url }); handed = true; }
+      else if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(url); handed = true; }
+    } catch (e) { if (e && e.name === 'AbortError') { go('#thread-' + userId); return; } }
+    if (!handed) {
+      // no Share or Clipboard API (older webviews): execCommand fallback, then
+      // show the link as selectable text rather than failing silently.
+      try { const t = h('textarea', {}); t.value = url; document.body.append(t); t.select(); handed = document.execCommand('copy'); t.remove(); } catch { /* noop */ }
+    }
+    if (!handed) { sendStatus.textContent = 'Could not copy automatically — select and copy this link: '; sendStatus.append(h('span', { style: 'word-break:break-all; user-select:all' }, url)); return; }
     go('#thread-' + userId);
   } }, '📤 Send (share the link)');
+  const sendStatus = h('p', { class: 'tiny muted' });
   wrap.append(h('div', { class: 'card' }, [
-    h('h3', {}, 'Reply'), ta, sendBtn,
+    h('h3', {}, 'Reply'), ta, sendBtn, sendStatus,
     h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Your note is saved to this thread and a link is created to hand to them.'),
   ]));
   mount(wrap, '#circle');

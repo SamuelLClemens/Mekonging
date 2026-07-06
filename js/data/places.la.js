@@ -1,6 +1,7 @@
 export const PLACES_LA = [
   {
     id: "la-vte-cope",
+    rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "COPE Visitor Centre",
     city: "Vientiane",
     country: "la",
@@ -20,6 +21,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-pha-that-luang",
+    rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Pha That Luang",
     city: "Vientiane",
     country: "la",
@@ -39,6 +41,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-mekong-night-market",
+    rating: 4.1, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Vientiane Riverside Night Market",
     city: "Vientiane",
     country: "la",
@@ -58,6 +61,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-buddha-park",
+    rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Buddha Park (Xieng Khuan)",
     city: "Vientiane",
     country: "la",
@@ -77,6 +81,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-kuang-si",
+    rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Kuang Si Falls",
     city: "Luang Prabang",
     country: "la",
@@ -96,6 +101,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-night-market",
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Luang Prabang Night Market",
     city: "Luang Prabang",
     country: "la",
@@ -115,6 +121,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-mekong-slow-boat",
+    rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Mekong Slow Boat from Huay Xai",
     city: "Luang Prabang",
     country: "la",
@@ -134,6 +141,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-tamarind",
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Tamarind Restaurant",
     city: "Luang Prabang",
     country: "la",
@@ -153,6 +161,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-amantaka",
+    rating: 4.9, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Amantaka",
     city: "Luang Prabang",
     country: "la",

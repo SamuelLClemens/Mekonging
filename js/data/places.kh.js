@@ -1,8 +1,9 @@
 export const PLACES_KH = [
   {
     id: "kh-siemreap-angkor-wat", name: "Angkor Wat", city: "Siem Reap", country: "kh",
+    rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "mid",
-    blurb: "The vast 12th-century temple complex that is Cambodia\"s most iconic monument and a UNESCO World Heritage site.",
+    blurb: "The vast 12th-century temple complex that is Cambodia’s most iconic monument and a UNESCO World Heritage site.",
     whyItFits: "Essential for any first-time visitor and anyone drawn to history, architecture, or sunrise photography.",
     priceRange: { low: 37, typical: 62, high: 72, currency: "USD", note: "Official Angkor Pass: 1-day ~$37, 3-day ~$62, 7-day ~$72; covers the whole archaeological park" },
     hours: "Park gates ~05:00-17:30; Angkor Wat itself opens for sunrise around 05:00",
@@ -14,6 +15,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-bayon", name: "Bayon Temple (Angkor Thom)", city: "Siem Reap", country: "kh",
+    rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "mid",
     blurb: "The late-12th-century state temple at the centre of Angkor Thom, famous for its serene stone face-towers.",
     whyItFits: "Suits travellers who already hold an Angkor Pass and want a quieter, atmospheric temple beyond Angkor Wat.",
@@ -27,6 +29,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-pub-street", name: "Pub Street", city: "Siem Reap", country: "kh",
+    rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife", "food"], budgetTier: "low",
     blurb: "A pedestrianised strip of bars, street food and live music that forms the hub of Siem Reap nightlife.",
     whyItFits: "Best for budget-minded travellers and groups looking for cheap drinks and a lively post-temple evening.",
@@ -40,6 +43,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-cuisine-wat-damnak", name: "Cuisine Wat Damnak", city: "Siem Reap", country: "kh",
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["food"], budgetTier: "high",
     blurb: "A refined tasting-menu restaurant pairing seasonal Cambodian ingredients with modern technique.",
     whyItFits: "Ideal for food-focused travellers wanting an elevated, contemporary take on Khmer cuisine.",
@@ -53,9 +57,10 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-tuol-sleng", name: "Tuol Sleng Genocide Museum (S-21)", city: "Phnom Penh", country: "kh",
+    rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "A former Khmer Rouge prison, now a sobering memorial museum documenting the atrocities of the 1975-79 regime.",
-    whyItFits: "Important for travellers wanting to understand Cambodia\"s recent history; not suitable for young children.",
+    whyItFits: "Important for travellers wanting to understand Cambodia’s recent history; not suitable for young children.",
     priceRange: { low: 0, typical: 5, high: 6, currency: "USD", note: "Adult ~$5; an audio guide adds a small extra fee; Cambodian citizens free" },
     hours: "08:00-17:00 daily",
     tips: ["Take the recommended audio guide for essential context", "Dress respectfully with shoulders and knees covered", "Allow quiet time; the content is emotionally heavy"],
@@ -66,6 +71,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-royal-palace", name: "Royal Palace & Silver Pagoda", city: "Phnom Penh", country: "kh",
+    rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "The official royal residence and its adjacent Silver Pagoda, a gilded complex of throne halls and Khmer architecture.",
     whyItFits: "Great for travellers who enjoy palaces, Buddhist art, and well-kept grounds in the heart of the capital.",
@@ -79,6 +85,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-riverside-sisowath", name: "Sisowath Quay Riverside", city: "Phnom Penh", country: "kh",
+    rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature", "nightlife"], budgetTier: "low",
     blurb: "A breezy riverfront promenade along the Tonle Sap and Mekong confluence, lined with cafes, bars and evening strollers.",
     whyItFits: "Suits travellers wanting a relaxed sunset walk and easy access to riverside dining and drinks.",
@@ -92,6 +99,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-malis", name: "Malis Restaurant", city: "Phnom Penh", country: "kh",
+    rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["food"], budgetTier: "mid",
     blurb: "A leading modern-Khmer restaurant serving refined traditional dishes in a garden setting.",
     whyItFits: "Best for travellers wanting authentic Cambodian cuisine in a comfortable sit-down environment.",
@@ -105,8 +113,9 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-tonle-sap-floating", name: "Tonle Sap Floating Villages (Kampong Phluk)", city: "Siem Reap", country: "kh",
+    rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "mid",
-    blurb: "Stilted and floating communities and flooded forest on Southeast Asia\"s largest freshwater lake.",
+    blurb: "Stilted and floating communities and flooded forest on Southeast Asia’s largest freshwater lake.",
     whyItFits: "Suits travellers wanting nature, birdlife and a glimpse of lake-based village life beyond the temples.",
     priceRange: { low: 20, typical: 30, high: 45, currency: "USD", note: "Boat trips commonly $20-$35 per person; private tours and transport cost more" },
     hours: "Daylight tours, typically ~08:00-17:00; best at high water (roughly Aug-Oct)",

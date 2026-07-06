@@ -47,7 +47,12 @@ export function shareUrl(route, payloadStr) {
 
 // --- sanitisers (imported data is UNTRUSTED) ---------------------------------
 function clean(s, max) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max); }
-function cleanId(s) { return String(s == null ? '' : s).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64); }
+function cleanId(s) {
+  const id = String(s == null ? '' : s).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+  // Reject reserved object keys: ids key plain objects (threads, boards), so a
+  // crafted '__proto__' id would otherwise hit the prototype instead of a key.
+  return ['__proto__', 'constructor', 'prototype'].includes(id) ? '' : id;
+}
 function cleanEmoji(s) { return Array.from(String(s || '')).slice(0, 2).join('') || '🧭'; }
 
 // --- traveller card ----------------------------------------------------------
