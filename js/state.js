@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 7;
+const CURRENT_VERSION = 8;
 
 function defaults() {
   return {
@@ -61,6 +61,15 @@ function defaults() {
     // The tiles themselves live in the service-worker TILE_CACHE; this records the
     // metadata (and the exact bounds/zoom) so each pack can be sized and deleted alone.
     savedAreas: [],             // { id, name, center:{lng,lat}, bounds:{w,s,e,n}, z, count, savedAt }
+    // --- v8: backendless "travel circle" — user-to-user share/connect/message.
+    // Nothing here is ever sent anywhere automatically; connections and messages
+    // travel only inside links the user explicitly shares (see js/social.js).
+    social: {
+      me: { userId: '', name: '', avatar: '🧭', bio: '' },  // the user's own traveller card
+      contacts: [],   // { userId, name, avatar, bio, addedAt } — people added from a shared card
+      inbox: [],      // received shared items (Batch B) — { id, from, kind, data, ts, read }
+      threads: {},    // async message threads (Batch C) — { contactUserId: [ { from, text, attach, ts } ] }
+    },
   };
 }
 
@@ -85,6 +94,16 @@ function migrate(data) {
     checklist: { checked: ((data.checklist || {}).checked && typeof data.checklist.checked === 'object') ? data.checklist.checked : {} },
     myStay: (data.myStay && data.myStay.coords) ? data.myStay : base.myStay,
     savedAreas: Array.isArray(data.savedAreas) ? data.savedAreas : base.savedAreas,
+    social: (() => {
+      const s = (data.social && typeof data.social === 'object') ? data.social : {};
+      const me = (s.me && typeof s.me === 'object') ? s.me : {};
+      return {
+        me: { userId: me.userId || '', name: me.name || '', avatar: me.avatar || '🧭', bio: me.bio || '' },
+        contacts: Array.isArray(s.contacts) ? s.contacts : [],
+        inbox: Array.isArray(s.inbox) ? s.inbox : [],
+        threads: (s.threads && typeof s.threads === 'object' && !Array.isArray(s.threads)) ? s.threads : {},
+      };
+    })(),
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -124,6 +143,7 @@ export function resetAll() {
   store.checklist = fresh.checklist;
   store.myStay = fresh.myStay;
   store.savedAreas = fresh.savedAreas;
+  store.social = fresh.social;
   save();
 }
 
@@ -302,4 +322,49 @@ export function todayKey(d = new Date()) {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+// --- travel circle (backendless contacts) ------------------------------------
+// A local, random id identifies the user across the cards they share. It is not
+// tied to any account or personal detail and never leaves the device except
+// inside a card the user chooses to share.
+function newUserId() {
+  try { if (typeof crypto !== 'undefined' && crypto.randomUUID) return 'u-' + crypto.randomUUID().replace(/-/g, '').slice(0, 16); } catch { /* noop */ }
+  try { const a = new Uint8Array(8); crypto.getRandomValues(a); return 'u-' + Array.from(a, (x) => x.toString(16).padStart(2, '0')).join(''); } catch { /* noop */ }
+  return uid('u');
+}
+function trimEmoji(s) { return Array.from(String(s || '')).slice(0, 2).join('') || '🧭'; }
+export function ensureMe() {
+  if (!store.social.me.userId) { store.social.me.userId = newUserId(); save(); }
+  return store.social.me;
+}
+export function setMe(patch = {}) {
+  const me = store.social.me;
+  if (patch.name != null) me.name = String(patch.name).slice(0, 40);
+  if (patch.avatar != null) me.avatar = trimEmoji(patch.avatar);
+  if (patch.bio != null) me.bio = String(patch.bio).slice(0, 160);
+  ensureMe(); save(); return me;
+}
+export function getContacts() { return Array.isArray(store.social.contacts) ? store.social.contacts : (store.social.contacts = []); }
+export function getContact(userId) { return getContacts().find((c) => c.userId === userId) || null; }
+export function addContact(card) {
+  if (!card || !card.userId) return { ok: false, reason: 'invalid' };
+  ensureMe();
+  if (card.userId === store.social.me.userId) return { ok: false, reason: 'self' };
+  const list = getContacts();
+  const rec = {
+    userId: String(card.userId).slice(0, 64),
+    name: String(card.name || 'Traveller').slice(0, 40),
+    avatar: trimEmoji(card.avatar),
+    bio: String(card.bio || '').slice(0, 160),
+    addedAt: todayKey(),
+  };
+  const existing = list.find((c) => c.userId === rec.userId);
+  if (existing) { existing.name = rec.name; existing.avatar = rec.avatar; existing.bio = rec.bio; save(); return { ok: true, reason: 'updated', contact: existing }; }
+  list.push(rec); save(); return { ok: true, reason: 'added', contact: rec };
+}
+export function removeContact(userId) {
+  const list = getContacts();
+  const i = list.findIndex((c) => c.userId === userId);
+  if (i >= 0) { list.splice(i, 1); save(); }
 }
