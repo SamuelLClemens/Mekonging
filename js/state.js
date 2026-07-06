@@ -383,3 +383,16 @@ export function addInboxItem({ from = null, kind, data, msg = '' }) {
 export function markInboxRead(id) { const it = getInbox().find((x) => x.id === id); if (it && !it.read) { it.read = true; save(); } }
 export function deleteInboxItem(id) { const list = getInbox(); const i = list.findIndex((x) => x.id === id); if (i >= 0) { list.splice(i, 1); save(); } }
 export function unreadInboxCount() { return getInbox().filter((x) => !x.read).length; }
+
+// --- travel circle: async message threads (backendless "postcards") ----------
+// threads[contactUserId] = [ { from:'me'|'them', text, name, at } ], in send order.
+export function getThread(userId) {
+  const t = store.social.threads || (store.social.threads = {});
+  return Array.isArray(t[userId]) ? t[userId] : (t[userId] = []);
+}
+export function addMessage(userId, { from, text, name = '' }) {
+  if (!userId || !text) return null;
+  const msg = { from: from === 'me' ? 'me' : 'them', text: String(text).slice(0, 800), name: String(name || '').slice(0, 40), at: todayKey() };
+  getThread(userId).push(msg); save(); return msg;
+}
+export function threadUserIds() { const t = store.social.threads || {}; return Object.keys(t).filter((k) => Array.isArray(t[k]) && t[k].length); }
