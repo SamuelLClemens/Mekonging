@@ -167,6 +167,56 @@ export const ITINERARIES = [
     tips: ["Take the boat, not the 'speedboat'.", "Budget cash — ATMs are sparse outside the big towns."],
     sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }],
   },
+  {
+    id: "it-th-maehongson-loop", country: "th", title: "Mae Hong Son Loop", days: 7, pace: "steady",
+    party: ["solo", "couple"], budget: ["low", "mid"],
+    summary: "The classic 600 km mountain circuit from Chiang Mai through Pai, Mae Hong Son and Mae Sariang — 1,864 curves of misty ridgelines, hot springs, Shan temples and quiet border-country towns, done clockwise or counter-clockwise by motorbike or minivan.",
+    stops: [
+      { title: "Chiang Mai", nights: 1, why: "Stage the loop: sort a reliable bike or minivan tickets, then warm up with old-city temples and the night market." },
+      { title: "Pai", nights: 2, why: "The 762-curve descent lands you in a laid-back valley of hot springs, Pai Canyon sunsets and a lively walking street." },
+      { title: "Mae Hong Son", nights: 2, why: "Burmese-style temples ring Jong Kham lake, with Wat Phra That Doi Kong Mu above town and a day trip to the tea village of Ban Rak Thai." },
+      { title: "Mae Sariang", nights: 1, why: "A quiet riverside town on the loop's southern leg that breaks up the long final ride back to Chiang Mai." },
+    ],
+    tips: ["Rent a well-maintained 125cc or larger bike and check brakes before leaving Chiang Mai; the route has 1,864 curves, so pack motion-sickness tablets if travelling by minivan.", "Ride mornings only in the rainy season (June-October); afternoon downpours make the mountain switchbacks slippery.", "Book Pai accommodation ahead in high season (November-February); the town fills up fast on weekends."],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+  },
+  {
+    id: "it-th-lanna-slow-culture", country: "th", title: "Lanna Slow-Culture Trail", days: 9, pace: "relaxed",
+    party: ["solo", "couple"], budget: ["low", "mid"],
+    summary: "An unhurried journey down the old northern kingdoms: Chiang Mai's living Lanna heritage, Lampang's horse-carriage streets and teak temples, then the UNESCO-listed ruins of Sukhothai, cradle of the first Thai kingdom.",
+    stops: [
+      { title: "Chiang Mai", nights: 3, why: "Base yourself inside the moat for Wat Phra Singh and Wat Chedi Luang, craft villages, khao soi and a Doi Suthep sunrise." },
+      { title: "Lampang", nights: 2, why: "A slower Lanna town of horse-drawn carriages, riverside teak houses and Wat Phra That Lampang Luang, one of Thailand's finest wooden temples." },
+      { title: "Sukhothai", nights: 3, why: "Cycle the UNESCO Historical Park at dawn among lotus ponds and Buddha figures, with a day trip to the quieter ruins of Si Satchanalai." },
+    ],
+    tips: ["Travel Chiang Mai to Lampang by train for the scenery; Sukhothai has no railway station, so continue by bus (direct services run, or change at Phitsanulok).", "Rent a bicycle at Sukhothai Historical Park and start at opening time; the light is best and the heat mildest before 9 am.", "Wat Phra That Lampang Luang sits about 20 km from Lampang town — arrange a songthaew or taxi for the half-day visit."],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+  },
+  {
+    id: "it-vi-hagiang-ninhbinh", country: "vi", title: "Ha Giang Loop and Northern Karsts", days: 9, pace: "steady",
+    party: ["solo", "couple"], budget: ["low"],
+    summary: "Vietnam's great northern adventure on a backpacker budget: Hanoi's Old Quarter, the legendary Ha Giang loop through the Dong Van Karst Plateau and Ma Pi Leng Pass, then the river-and-limestone landscapes of Ninh Binh on the way back.",
+    stops: [
+      { title: "Hanoi", nights: 2, why: "Old Quarter street food and Hoan Kiem lake while you arrange the loop — self-ride or easy-rider — and the night bus north." },
+      { title: "Ha Giang loop (Yen Minh - Dong Van - Meo Vac - Du Gia)", nights: 4, why: "The classic 3-4 day circuit across the Dong Van Karst Plateau Geopark, cresting Ma Pi Leng Pass above the Nho Que river with homestay nights in minority villages." },
+      { title: "Ninh Binh (Tam Coc / Trang An)", nights: 2, why: "Decompress after the mountains with a rowed Trang An boat ride through caves and the 500-step Hang Mua viewpoint over the rice paddies." },
+    ],
+    tips: ["Foreigners need a border-area permit for the Ha Giang loop; homestays and rental shops in Ha Giang city arrange it cheaply on the spot.", "If you have limited motorbike experience, book an easy-rider (you ride pillion) — the passes are spectacular but unforgiving.", "Use night buses Hanoi-Ha Giang and a limousine van Hanoi-Ninh Binh to keep transport cheap and save daylight for riding."],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }],
+  },
+  {
+    id: "it-vi-north-family-sampler", country: "vi", title: "Northern Vietnam Family Sampler", days: 9, pace: "relaxed",
+    party: ["family"], budget: ["mid"],
+    summary: "A gentle family-paced sweep of the north: Hanoi's puppets and street life, easy valley cycling and a stilt-house stay in Mai Chau, boat rides beneath Ninh Binh's karsts, and an overnight cruise on Ha Long Bay.",
+    stops: [
+      { title: "Hanoi", nights: 3, why: "Water puppet theatre, Hoan Kiem lake strolls, the Museum of Ethnology and kid-approved street food ease everyone into Vietnam." },
+      { title: "Mai Chau", nights: 2, why: "A flat, quiet valley of rice paddies perfect for family cycling, with friendly White Thai stilt-house lodges and weaving villages." },
+      { title: "Ninh Binh (Trang An)", nights: 2, why: "Sampan boat rides through caves at Trang An or Tam Coc delight all ages, plus bicycles among the karsts and the Bai Dinh pagoda complex." },
+      { title: "Ha Long Bay", nights: 1, why: "An overnight cruise among the limestone islands — cabins, kayaking and cave visits make it the trip's grand finale." },
+    ],
+    tips: ["Book a family-friendly Ha Long cruise with connecting cabins and included Hanoi transfers; one night on the water is enough with children.", "Use private cars or limousine vans between stops — distances are short (3-4 hours) and door-to-door transfers are far easier with kids than public buses.", "In Ninh Binh choose Trang An over Tam Coc for boat trips with young children; boats are steadier and the circuit is well managed."],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }],
+  },
 ];
 
 // Match plans to a traveller profile. Everything is optional — with no profile the
