@@ -518,3 +518,12 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 }
 html[data-theme="dark"] a:focus-visible, html[data-theme="dark"] button:focus-visible,
 html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex]:focus-visible { outline-color: var(--sun); }
+
+/* Travel circle (backendless share / connect / message) */
+.tiny { font-size: var(--fs-sm); }
+.avatar { font-size: 1.55rem; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--card-2, rgba(0, 0, 0, 0.05)); border: 1px solid var(--line); flex: 0 0 auto; }
+.contact-row { padding: var(--sp-2, 8px) 0; border-top: 1px solid var(--line); gap: 10px; }
+.contact-row:first-of-type { border-top: 0; }
+.contact-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.contact-id strong { display: block; }
+.contact-id .tiny { overflow-wrap: anywhere; }

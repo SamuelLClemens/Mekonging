@@ -11,7 +11,9 @@ import {
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
   setMyStay, getMyStay, clearMyStay,
   getSavedAreas, addSavedArea, removeSavedArea,
+  ensureMe, setMe, getContacts, getContact, addContact, removeContact,
 } from './state.js';
+import { encodeCard, parseCard, shareUrl } from './social.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
@@ -77,7 +79,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.83.0';
+const APP_VERSION = 'mk-v0.84.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -143,6 +145,7 @@ function homeScreen() {
     { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+    { ic: '🧭', t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle' },
     { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
     { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
     { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
@@ -3132,6 +3135,107 @@ function feedbackScreen(arg) {
   mount(wrap, place ? `#place-${place.id}` : '#help');
 }
 
+// ---- TRAVEL CIRCLE (backendless share / connect / message) ------------------
+// No account, no server: a user's traveller card and (later) messages travel
+// only inside links they choose to share. Imported contact fields are UNTRUSTED
+// and are rendered exclusively as text children (never innerHTML).
+function avatarChip(av) { return h('span', { class: 'avatar', 'aria-hidden': 'true' }, av || '🧭'); }
+function contactRow(c, actionEl) {
+  return h('div', { class: 'row-between contact-row' }, [
+    h('div', { class: 'contact-id' }, [
+      avatarChip(c.avatar),
+      h('div', {}, [h('strong', {}, c.name || 'Traveller'), c.bio ? h('div', { class: 'tiny muted' }, c.bio) : null]),
+    ]),
+    actionEl || null,
+  ]);
+}
+function circleScreen() {
+  const me = ensureMe();
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Travel circle', '#home'));
+  wrap.append(h('p', { class: 'muted' },
+    'Connect with other travellers — no account, no server. Your card and messages travel only inside links you choose to share; nothing is uploaded and nothing leaves this device on its own.'));
+
+  // --- your card (editable) ---
+  const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', value: me.name || '' });
+  const avIn = h('input', { type: 'text', maxlength: '4', 'aria-label': 'Your emoji', value: me.avatar || '🧭', style: 'width:64px; text-align:center' });
+  const bioIn = h('textarea', { class: 'ta', maxlength: '160', rows: '2', placeholder: 'One line about you (optional)' }, me.bio || '');
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Your traveller card'),
+    h('div', { class: 'field' }, [h('label', {}, 'Emoji & name'), h('div', { style: 'display:flex; gap:8px' }, [avIn, nameIn])]),
+    field('Short bio', bioIn),
+    h('button', { class: 'btn', onclick: () => { setMe({ name: nameIn.value, avatar: avIn.value, bio: bioIn.value }); go('#circle'); } }, 'Save card'),
+  ]));
+
+  // --- share your card ---
+  const status = h('p', { class: 'muted' });
+  const buildUrl = () => shareUrl('add', encodeCard(ensureMe()));
+  const shareCard = h('div', { class: 'card' });
+  shareCard.append(h('h2', {}, 'Share your card'));
+  shareCard.append(h('p', { class: 'muted' }, 'Send this to another Mekonging traveller. When they open it, you are added to each other’s circle. On a phone, “Share” can send it over AirDrop or Nearby Share with no internet at all.'));
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    shareCard.append(h('button', { class: 'btn block', onclick: async () => {
+      try { await navigator.share({ title: 'Add me on Mekonging', text: `${ensureMe().name || 'A traveller'} on Mekonging`, url: buildUrl() }); status.textContent = 'Shared — they can open it to connect.'; }
+      catch { /* cancelled */ }
+    } }, '📤 Share my card…'));
+  }
+  shareCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+    try { await navigator.clipboard.writeText(buildUrl()); status.textContent = 'Link copied — paste it to a friend.'; }
+    catch { status.textContent = 'Could not copy automatically — select the link below to copy it.'; }
+  } }, '🔗 Copy my link'));
+  shareCard.append(h('p', { class: 'tiny muted', style: 'word-break:break-all; margin-top:8px' }, buildUrl()));
+  shareCard.append(status);
+  wrap.append(shareCard);
+
+  // --- your circle ---
+  const contacts = getContacts();
+  const listCard = h('div', { class: 'card' });
+  listCard.append(h('h2', {}, `Your circle (${contacts.length})`));
+  if (!contacts.length) {
+    listCard.append(h('p', { class: 'muted' }, 'No one yet. Share your card, or open a friend’s link to add them.'));
+  } else {
+    contacts.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((c) => {
+      listCard.append(contactRow(c, h('button', { class: 'btn ghost', onclick: () => { if (confirm(`Remove ${c.name || 'this contact'} from your circle?`)) { removeContact(c.userId); go('#circle'); } } }, 'Remove')));
+    });
+  }
+  wrap.append(listCard);
+
+  mount(wrap, '#circle');
+}
+
+function addContactScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Add to circle', '#circle'));
+  const card = parseCard(arg);
+  if (!card) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', {}, 'This link could not be read'),
+      h('p', { class: 'muted' }, 'The traveller-card link looks invalid or was cut off in transit. Ask them to share it again.'),
+      h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'),
+    ]));
+    mount(wrap, '#circle');
+    return;
+  }
+  const me = ensureMe();
+  const isSelf = card.userId === me.userId;
+  const existing = getContact(card.userId);
+  const box = h('div', { class: 'card' });
+  box.append(contactRow(card));
+  const status = h('p', { class: 'muted' });
+  if (isSelf) {
+    box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, 'This is your own card.'));
+    box.append(h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'));
+  } else {
+    box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, existing ? `${card.name} is already in your circle — you can refresh their card.` : `Add ${card.name} to your travel circle?`));
+    box.append(h('button', { class: 'btn block', onclick: () => { const r = addContact(card); if (r.ok) go('#circle'); else status.textContent = 'Could not add this contact.'; } }, existing ? 'Refresh their card' : `Add ${card.name}`));
+    box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#circle') }, 'Not now'));
+  }
+  box.append(status);
+  wrap.append(box);
+  wrap.append(h('p', { class: 'tiny muted' }, 'Adding a contact only stores their card on your device. Nothing is sent anywhere.'));
+  mount(wrap, '#circle');
+}
+
 function settingsScreen() {
   const p = store.profile;
   const wrap = h('div', { class: 'screen' });
@@ -3278,6 +3382,8 @@ function render() {
       case 'vault': return vaultScreen();
       case 'help': return helpScreen();
       case 'feedback': return feedbackScreen(arg);
+      case 'circle': return circleScreen();
+      case 'add': return addContactScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }
