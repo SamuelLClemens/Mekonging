@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 8;
+const CURRENT_VERSION = 9;
 
 function defaults() {
   return {
@@ -14,6 +14,9 @@ function defaults() {
       prefs: {
         interests: [],          // subset of ['food','culture','nature','nightlife']
         budget: 'flexible',     // 'low' | 'mid' | 'high' | 'flexible'
+        // --- traveller profile (drives "For you" ranking + plan suggestions) ---
+        party: '',              // '' | 'solo' | 'couple' | 'family'
+        tripLength: '',         // '' | 'short' (≤1wk) | 'medium' (2–3wk) | 'long' (1mo+)
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
       },
@@ -70,6 +73,8 @@ function defaults() {
       inbox: [],      // received shared items (Batch B) — { id, from, kind, data, ts, read }
       threads: {},    // async message threads (Batch C) — { contactUserId: [ { from, text, attach, ts } ] }
     },
+    // --- v9: the user's own posts on city noticeboards (on-device; shareable via links) ---
+    boardPosts: {},   // { '<cc>-<citySlug>': [ { id, topic, text, at } ] }
   };
 }
 
@@ -104,6 +109,7 @@ function migrate(data) {
         threads: (s.threads && typeof s.threads === 'object' && !Array.isArray(s.threads)) ? s.threads : {},
       };
     })(),
+    boardPosts: (data.boardPosts && typeof data.boardPosts === 'object' && !Array.isArray(data.boardPosts)) ? data.boardPosts : {},
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -144,6 +150,7 @@ export function resetAll() {
   store.myStay = fresh.myStay;
   store.savedAreas = fresh.savedAreas;
   store.social = fresh.social;
+  store.boardPosts = fresh.boardPosts;
   save();
 }
 
@@ -396,3 +403,19 @@ export function addMessage(userId, { from, text, name = '' }) {
   getThread(userId).push(msg); save(); return msg;
 }
 export function threadUserIds() { const t = store.social.threads || {}; return Object.keys(t).filter((k) => Array.isArray(t[k]) && t[k].length); }
+
+// --- local noticeboard: the user's own posts per city --------------------------
+export function getBoardPosts(key) {
+  const b = store.boardPosts || (store.boardPosts = {});
+  return Array.isArray(b[key]) ? b[key] : (b[key] = []);
+}
+export function addBoardPost(key, { topic = 'tip', text }) {
+  if (!key || !text) return null;
+  const p = { id: uid('post'), topic: String(topic).slice(0, 16), text: String(text).slice(0, 500), at: todayKey() };
+  getBoardPosts(key).unshift(p); save(); return p;
+}
+export function deleteBoardPost(key, id) {
+  const list = getBoardPosts(key);
+  const i = list.findIndex((x) => x.id === id);
+  if (i >= 0) { list.splice(i, 1); save(); }
+}

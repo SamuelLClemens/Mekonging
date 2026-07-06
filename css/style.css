@@ -532,3 +532,9 @@ html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex
 .bubble.me { align-self: flex-end; background: var(--teal); color: #fff; border-bottom-right-radius: 4px; }
 .bubble.them { align-self: flex-start; background: var(--card-2, rgba(0, 0, 0, 0.06)); border-bottom-left-radius: 4px; }
 .bubble .who { font-size: var(--fs-sm); opacity: 0.75; display: block; margin-bottom: 2px; }
+
+/* Local noticeboard */
+.board-row { padding: var(--sp-2, 8px) 0; border-top: 1px dashed var(--line); }
+.board-row:first-of-type { border-top: 0; }
+.board-post { padding: var(--sp-2, 8px) 0; border-top: 1px solid var(--line); }
+.board-post:first-of-type { border-top: 0; }

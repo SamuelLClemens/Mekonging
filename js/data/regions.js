@@ -55,6 +55,10 @@ import { FOOD_TH_EXT } from './food.th.ext.js';
 import { FOOD_VI_EXT } from './food.vi.ext.js';
 import { FOOD_KH_EXT } from './food.kh.ext.js';
 import { FOOD_LA_EXT } from './food.la.ext.js';
+import { LOCAL_TH } from './local.th.js';
+import { LOCAL_VI } from './local.vi.js';
+import { LOCAL_KH } from './local.kh.js';
+import { LOCAL_LA } from './local.la.js';
 
 export const LANGUAGES = {
   th: PHRASEBOOK_TH,
@@ -110,6 +114,12 @@ export function allPlaces(filter = {}) {
 export function getPlace(id) {
   return allPlaces().find((p) => p.id === id) || null;
 }
+
+// Local noticeboards (per-city local knowledge: markets & schedules, where locals
+// shop, family supplies, cheap eats, street food). Keyed '<country>-<slug>'.
+export const LOCAL_BOARDS = [...LOCAL_TH, ...LOCAL_VI, ...LOCAL_KH, ...LOCAL_LA];
+export function boardsForCountry(cc) { return LOCAL_BOARDS.filter((b) => b.country === cc); }
+export function getBoard(cc, slug) { return LOCAL_BOARDS.find((b) => b.country === cc && b.slug === slug) || null; }
 
 // Festivals / public holidays. getEvents(country) returns one country's list;
 // allEvents() flattens every country and tags each event with its country id,

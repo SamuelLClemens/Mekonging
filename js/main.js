@@ -14,7 +14,9 @@ import {
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
   getThread, addMessage,
+  getBoardPosts, addBoardPost, deleteBoardPost,
 } from './state.js';
+import { suggestPlans } from './data/itineraries.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
@@ -35,6 +37,7 @@ import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
+  boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
 } from './data/regions.js';
@@ -81,7 +84,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.86.0';
+const APP_VERSION = 'mk-v0.87.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -144,6 +147,10 @@ function homeScreen() {
   wrap.append(h('h2', { class: 'home-section' }, 'Everything you need'));
 
   const tiles = [
+    { ic: '🎯', t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
+    { ic: '🛤️', t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
+    { ic: '📋', t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
+    { ic: '🌶️', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
     { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
@@ -596,6 +603,8 @@ function placesScreen(countryId) {
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
     if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
     if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
+    // "For you": once a traveller profile exists, rank what matches it first.
+    if (profileIsSet()) results = results.slice().sort((a, b) => personalScore(b) - personalScore(a));
     for (const p of results) listEl.append(placeCard(p));
   }
   renderList();
@@ -617,6 +626,24 @@ function travelerChips(p) {
   else if (p.stayDuration === 'short') chips.push(h('span', { class: 'cat-tag' }, 'Short stay'));
   else if (p.stayDuration === 'both') chips.push(h('span', { class: 'cat-tag' }, 'Short or long stay'));
   return chips.length ? h('div', { class: 'cats', style: 'margin-top:4px' }, chips) : null;
+}
+
+// ---- "For you" personalisation ------------------------------------------------
+// Once the traveller sets a profile (#foryou), lists rank what fits them first:
+// budget tier, kids, long-stay fit and interests all add to a place's base rating.
+function profileIsSet() {
+  const p = store.profile.prefs;
+  return !!(p.party || p.tripLength || (p.budget && p.budget !== 'flexible') || (p.interests || []).length);
+}
+function personalScore(p) {
+  const prefs = store.profile.prefs;
+  let s = Number(p.rating) || 3;
+  if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) s += 0.7;
+  if (prefs.party === 'family' && p.kidFriendly === true) s += 0.8;
+  if (prefs.party === 'family' && p.kidFriendly === false) s -= 0.5;
+  if (prefs.tripLength === 'long' && (p.stayDuration === 'long' || p.stayDuration === 'both')) s += 0.5;
+  if ((prefs.interests || []).some((i) => (p.categories || []).includes(i))) s += 0.4;
+  return s;
 }
 
 function starsStr(n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return '★'.repeat(r) + '☆'.repeat(5 - r); }
@@ -3321,6 +3348,16 @@ function importShareScreen(arg) {
     box.append(h('h2', { style: 'margin-top:8px' }, 'A shared trip'));
     box.append(h('ol', {}, s.data.stops.slice(0, 40).map((st) => h('li', {}, st.title + (st.date ? ` — ${st.date}` : '')))));
     box.append(h('button', { class: 'btn block', onclick: (e) => { s.data.stops.forEach((st) => addStop({ title: st.title, country: st.country, date: st.date })); e.currentTarget.textContent = '✓ Added to my trip'; } }, '＋ Add these stops to my trip'));
+  } else if (s.kind === 'tip') {
+    box.append(h('h2', { style: 'margin-top:8px' }, `Local tip — ${s.data.city}`));
+    box.append(h('p', {}, s.data.text));
+    const board = getBoard(s.data.cc, s.data.city.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+    box.append(h('button', { class: 'btn block', onclick: (e) => {
+      const key = board ? `${board.country}-${board.slug}` : `${s.data.cc || 'xx'}-${s.data.city.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      addBoardPost(key, { topic: s.data.topic, text: `${s.from ? s.from.name + ': ' : ''}${s.data.text}` });
+      e.currentTarget.textContent = '✓ Pinned to your board';
+    } }, '📌 Pin to my noticeboard'));
+    if (board) box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#board-${board.country}-${board.slug}`) }, `📋 Open the ${board.city} board`));
   }
   wrap.append(box);
 
@@ -3343,10 +3380,11 @@ function inboxScreen() {
     wrap.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Nothing yet. When a friend shares a place, list or trip with you, it lands here.')]));
     mount(wrap, '#circle'); return;
   }
-  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip' };
+  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip' };
   items.forEach((it) => {
     const title = it.kind === 'place' ? (it.data.name || 'A place')
-      : it.kind === 'collection' ? (it.data.name || 'A list') : 'A trip';
+      : it.kind === 'collection' ? (it.data.name || 'A list')
+      : it.kind === 'tip' ? `Tip — ${it.data.city || 'a city'}` : 'A trip';
     wrap.append(h('div', { class: 'card' }, [
       h('div', { class: 'row-between' }, [
         h('div', {}, [h('strong', {}, title), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
@@ -3356,6 +3394,12 @@ function inboxScreen() {
       (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,
       (it.kind === 'trip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
       (it.kind === 'collection') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { const c = createCollection(it.data.name || 'Shared list', '📥'); let n = 0; (it.data.items || []).forEach((x) => { if (getPlace(x.id)) { togglePlaceInCollection(c.id, x.id); n++; } }); e.currentTarget.textContent = `✓ Saved (${n})`; } }, 'Save as a collection') : null,
+      (it.kind === 'tip') ? h('p', { style: 'margin-top:6px' }, it.data.text || '') : null,
+      (it.kind === 'tip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => {
+        const slug = String(it.data.city || 'a-city').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        addBoardPost(`${it.data.cc || 'xx'}-${slug}`, { topic: it.data.topic, text: `${it.from ? it.from.name + ': ' : ''}${it.data.text}` });
+        e.currentTarget.textContent = '✓ Pinned';
+      } }, '📌 Pin to my noticeboard') : null,
     ]));
   });
   mount(wrap, '#circle');
@@ -3419,6 +3463,231 @@ function importMessageScreen(arg) {
   // rewrite the URL so a refresh does not re-import, then show the conversation
   try { history.replaceState(null, '', '#thread-' + uid); } catch { /* noop */ }
   return threadScreen(uid, m.from);
+}
+
+// ---- FOR YOU (traveller profile + personalised picks) -----------------------
+function prefChips(pairs, current, onPick) {
+  const box = h('div', { class: 'chips' });
+  pairs.forEach(([val, lbl]) => box.append(h('button', {
+    class: 'chip', 'aria-pressed': current === val ? 'true' : 'false', dataset: { v: val },
+    onclick: () => { onPick(val); box.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.v === val ? 'true' : 'false')); },
+  }, lbl)));
+  return box;
+}
+function foryouScreen() {
+  const prefs = store.profile.prefs;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('For you', '#home'));
+  wrap.append(h('p', { class: 'muted' }, 'Tell the app how you travel and every list ranks what fits you first — and the trip plans match your situation. All of this stays on your device.'));
+
+  const card = h('div', { class: 'card' });
+  card.append(h('h2', {}, 'How are you travelling?'));
+  card.append(h('p', { class: 'muted' }, 'Who is coming?'));
+  card.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
+  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'How long is the trip?'));
+  card.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
+  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Budget'));
+  card.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
+  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
+  const intChips = h('div', { class: 'chips' });
+  INTERESTS.forEach((it) => {
+    const on = () => (prefs.interests || []).includes(it.id);
+    intChips.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false', onclick: (e) => {
+      prefs.interests = prefs.interests || [];
+      const i = prefs.interests.indexOf(it.id);
+      if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id);
+      save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false');
+    } }, `${it.emoji} ${it.label}`));
+  });
+  card.append(intChips);
+  card.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: () => go('#foryou') }, 'Show my picks'));
+  wrap.append(card);
+
+  if (profileIsSet()) {
+    // top personalised picks in the active country
+    const picks = allPlaces({ country: activeCountry }).slice().sort((a, b) => personalScore(b) - personalScore(a)).slice(0, 5);
+    const c = getCountry(activeCountry);
+    if (picks.length) {
+      const pk = h('div', { class: 'card' });
+      pk.append(h('h2', {}, `Top picks for you${c ? ' — ' + c.name : ''}`));
+      picks.forEach((p) => pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${p.id}`) },
+        `${starsStr(Math.round(effectiveRating(p.id, p.rating)))} ${p.name}`)));
+      pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${activeCountry}`) }, 'See all places, ranked for you'));
+      wrap.append(pk);
+    }
+    // the best-matching plan
+    const plans = suggestPlans({ country: activeCountry, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
+    if (plans.length) {
+      const pl = plans[0];
+      wrap.append(h('div', { class: 'card' }, [
+        h('h2', {}, 'A plan that fits you'),
+        h('p', {}, [h('strong', {}, pl.title), ` — ~${pl.days} days, ${pl.pace} pace.`]),
+        h('p', { class: 'muted' }, pl.summary),
+        h('button', { class: 'btn block', onclick: () => go('#plans') }, 'See matching trip plans'),
+      ]));
+    }
+  }
+  mount(wrap, '#home');
+}
+
+// ---- TRIP PLANS (suggested routes matched to the profile) --------------------
+function plansScreen() {
+  const prefs = store.profile.prefs;
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Trip plans', '#home'));
+  wrap.append(h('p', { class: 'muted' }, 'Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to My Trip and edit it there.'));
+  if (!profileIsSet()) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('p', { class: 'muted' }, 'Set your budget, party and trip length first and these plans sort themselves to fit you.'),
+      h('button', { class: 'btn block', onclick: () => go('#foryou') }, '🎯 Set up "For you"'),
+    ]));
+  }
+  wrap.append(countryChips((id) => { activeCountry = id; go('#plans'); }));
+  const plans = suggestPlans({ country: activeCountry, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
+  const PARTY_LBL = { solo: '🎒 solo', couple: '👫 couples', family: '👨‍👩‍👧 families' };
+  plans.forEach((pl, idx) => {
+    const card = h('div', { class: 'card' });
+    card.append(h('div', { class: 'row-between' }, [h('h2', {}, pl.title), idx === 0 && profileIsSet() ? h('span', { class: 'cat-tag' }, 'Best match') : null]));
+    card.append(h('p', { class: 'muted' }, `~${pl.days} days · ${pl.pace} pace · suits ${pl.party.map((x) => PARTY_LBL[x] || x).join(', ')}`));
+    card.append(h('p', {}, pl.summary));
+    card.append(h('ol', {}, pl.stops.map((s) => h('li', {}, [h('strong', {}, s.title), ` — ${s.nights} night${s.nights === 1 ? '' : 's'}. `, h('span', { class: 'muted' }, s.why)]))));
+    (pl.tips || []).forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
+    card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: (e) => {
+      pl.stops.forEach((s) => addStop({ title: s.title, country: pl.country }));
+      e.currentTarget.textContent = '✓ Added — open My Trip to edit';
+    } }, '＋ Add this plan to My Trip'));
+    card.append(sourcesNote(pl.sources, null));
+    wrap.append(card);
+  });
+  mount(wrap, '#home');
+}
+
+// ---- LOCAL NOTICEBOARD (per-city local knowledge + your own posts) -----------
+const BOARD_TOPICS = [['market', '🥬 Markets'], ['food', '🍜 Food'], ['family', '👶 Family'], ['tip', '💡 Tip']];
+function boardRow(title, sub, tip) {
+  return h('div', { class: 'board-row' }, [
+    h('strong', {}, title),
+    sub ? h('div', { class: 'tiny muted' }, sub) : null,
+    tip ? h('div', { class: 'list-note' }, tip) : null,
+  ]);
+}
+function boardScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  const parts = (arg || '').split('-');
+  const cc = parts.shift() || '';
+  const slug = parts.join('-');
+  const board = (cc && slug) ? getBoard(cc, slug) : null;
+
+  if (!board) {
+    // picker: country chips + city list
+    wrap.append(topbar('Local noticeboard', '#home'));
+    wrap.append(h('p', { class: 'muted' }, 'Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
+    const selected = cc || activeCountry;
+    wrap.append(countryChips((id) => { activeCountry = id; go(`#board-${id}`); }, selected));
+    const boards = boardsForCountry(selected);
+    if (!boards.length) wrap.append(h('p', { class: 'empty' }, 'No boards for this country yet — more cities are being added.'));
+    boards.forEach((b) => wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city}`)));
+    mount(wrap, '#home');
+    return;
+  }
+
+  wrap.append(topbar(`📋 ${board.city}`, `#board-${board.country}`));
+  if (board.intro) wrap.append(h('p', { class: 'muted' }, board.intro));
+
+  const section = (title, rows) => {
+    if (!rows || !rows.length) return;
+    const cardEl = h('div', { class: 'card' });
+    cardEl.append(h('h2', {}, title));
+    rows.forEach((r) => cardEl.append(r));
+    wrap.append(cardEl);
+  };
+  section('🕑 Markets & schedules', (board.markets || []).map((m) =>
+    boardRow(m.name, [m.when, m.where].filter(Boolean).join(' · ') + (m.what ? ` — ${m.what}` : ''), m.tip)));
+  section('🥬 Shop like a local', (board.shopLocal || []).map((s) => boardRow(s.what, s.where, s.tip)));
+  section('👶 Family supplies', (board.family || []).map((f) =>
+    boardRow(f.item, [f.where, f.price].filter(Boolean).join(' · '), f.tip)));
+  section('🍜 Cheap local food', (board.cheapEats || []).map((e) =>
+    boardRow(`${e.name} — ${e.dish}`, [e.price, e.where].filter(Boolean).join(' · '), e.tip)));
+  section('🌶️ Street food', (board.streetFood || []).map((s) =>
+    boardRow(`${s.name} — ${s.dish}`, [s.price, s.when, s.where].filter(Boolean).join(' · '), s.tip)));
+
+  // community notes: the user's own posts + share each to the circle
+  const key = `${board.country}-${board.slug}`;
+  const posts = getBoardPosts(key);
+  const notes = h('div', { class: 'card' });
+  notes.append(h('h2', {}, 'Your notes on this board'));
+  notes.append(h('p', { class: 'tiny muted' }, 'Notes stay on your device. Share one and it travels as a link your circle can pin to their own board.'));
+  const topicLbl = Object.fromEntries(BOARD_TOPICS);
+  posts.forEach((p) => notes.append(h('div', { class: 'board-post' }, [
+    h('div', { class: 'row-between' }, [
+      h('span', { class: 'cat-tag' }, topicLbl[p.topic] || p.topic),
+      h('div', { class: 'cats' }, [
+        shareButton('📤', `Local tip — ${board.city}`, () => shareUrl('in', encodeShare('tip', { cc: board.country, city: board.city, topic: p.topic, text: p.text }, ensureMe())), 'chip'),
+        h('button', { class: 'chip', 'aria-label': 'Delete note', onclick: () => { deleteBoardPost(key, p.id); go(`#board-${key}`); } }, '✕'),
+      ]),
+    ]),
+    h('p', { style: 'margin-top:4px' }, p.text),
+    h('div', { class: 'tiny muted' }, p.at),
+  ])));
+  let newTopic = 'tip';
+  const topicChips = h('div', { class: 'chips' }, BOARD_TOPICS.map(([id, lbl]) =>
+    h('button', { class: 'chip', 'aria-pressed': id === newTopic ? 'true' : 'false', dataset: { t: id }, onclick: (e) => {
+      newTopic = id; topicChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.t === id ? 'true' : 'false'));
+    } }, lbl)));
+  const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '500', placeholder: 'e.g. The mango lady at the north gate is the best deal in town…' });
+  notes.append(h('div', { style: 'margin-top:8px' }, [topicChips, ta,
+    h('button', { class: 'btn block', onclick: () => { if (ta.value.trim()) { addBoardPost(key, { topic: newTopic, text: ta.value.trim() }); go(`#board-${key}`); } } }, '＋ Post to my board')]));
+  wrap.append(notes);
+
+  wrap.append(sourcesNote(board.sources, board.verified));
+  mount(wrap, '#home');
+}
+
+// ---- STREET FOOD (find, rate, review) ----------------------------------------
+function starPicker(placeId, current) {
+  const row = h('div', { class: 'chips' });
+  for (let n = 1; n <= 5; n++) {
+    row.append(h('button', { class: 'chip', 'aria-pressed': current === n ? 'true' : 'false', 'aria-label': `Rate ${n} star${n > 1 ? 's' : ''}`, onclick: () => { setPlaceField(placeId, 'rating', n); go('#streetfood'); } }, '★'.repeat(n)));
+  }
+  return row;
+}
+function streetfoodScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Street food', '#home'));
+  wrap.append(h('p', { class: 'muted' }, 'The local stalls and food streets worth queueing for — with your own ratings and takes, kept on-device and shown first. Rate a stall and your score drives its colour on the map too.'));
+  wrap.append(countryChips((id) => { activeCountry = id; go('#streetfood'); }));
+
+  // rateable street-food places (curated local eats)
+  const places = allPlaces({ country: activeCountry }).filter((p) => p.isLocal === true || (p.categories || []).includes('streetfood'));
+  if (places.length) {
+    const card = h('div', { class: 'card' });
+    card.append(h('h2', {}, 'Rate the classics'));
+    places.forEach((p) => {
+      const mine = getPlaceData(p.id);
+      card.append(h('div', { class: 'board-post' }, [
+        h('button', { class: 'btn ghost block', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) }, `${p.name} — ${p.city}`),
+        h('div', { class: 'tiny muted' }, mine.rating ? `Your rating: ${starsStr(mine.rating)}` : `Guide rating ${Number(p.rating || 0).toFixed(1)} — tap to add yours`),
+        starPicker(p.id, mine.rating || 0),
+        mine.review ? h('p', { class: 'tiny', style: 'margin-top:4px' }, `“${mine.review}”`) : null,
+      ]));
+    });
+    wrap.append(card);
+  }
+
+  // street-food areas from the local boards (browse + jump to the board)
+  const boards = boardsForCountry(activeCountry).filter((b) => (b.streetFood || []).length);
+  if (boards.length) {
+    const card = h('div', { class: 'card' });
+    card.append(h('h2', {}, 'Where to graze, city by city'));
+    boards.forEach((b) => {
+      card.append(h('h3', { style: 'margin-top:8px' }, b.city));
+      (b.streetFood || []).forEach((s) => card.append(boardRow(`${s.name} — ${s.dish}`, [s.price, s.when].filter(Boolean).join(' · '), s.tip)));
+      card.append(h('button', { class: 'btn ghost block', style: 'margin-top:4px', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city} noticeboard`));
+    });
+    wrap.append(card);
+  }
+  if (!places.length && !boards.length) wrap.append(h('p', { class: 'empty' }, 'No street-food entries for this country yet — more cities are being added.'));
+  mount(wrap, '#home');
 }
 
 function settingsScreen() {
@@ -3573,6 +3842,10 @@ function render() {
       case 'inbox': return inboxScreen();
       case 'thread': return threadScreen(arg);
       case 'msg': return importMessageScreen(arg);
+      case 'foryou': return foryouScreen();
+      case 'plans': return plansScreen();
+      case 'board': return boardScreen(arg);
+      case 'streetfood': return streetfoodScreen();
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

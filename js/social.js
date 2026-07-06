@@ -98,6 +98,11 @@ export function parseShare(str) {
     const stops = Array.isArray(raw.stops) ? raw.stops.slice(0, 60)
       .map((st) => ({ title: clean(st && st.t, 80), country: clean(st && st.c, 4), date: clean(st && st.d, 10) })).filter((st) => st.title) : [];
     data = { stops, notes: clean(raw.notes, 200) };
+  } else if (k === 'tip') {
+    // a local-noticeboard tip: pinned to a country+city, with a topic + text
+    const text = clean(raw.text, 500);
+    if (!text) return null;
+    data = { cc: clean(raw.cc, 4), city: clean(raw.city, 40) || 'a city', topic: clean(raw.topic, 16) || 'tip', text };
   } else {
     return null;
   }
