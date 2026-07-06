@@ -516,5 +516,22 @@ export const PLACES_TH_EXT = [
     mapQuery: "Railay Beach rock climbing Krabi", coords: { lat: 8.0119, lng: 98.8378 },
     bookHint: "Book with a Railay climbing school on the day or ahead; longtails run from Ao Nang and Krabi.", verified: "2026-07",
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+  },
+  {
+    id: "th-ext-krabi-resort", name: "Krabi (Ao Nang & Railay) beach resort", city: "Krabi", country: "th",
+    categories: ["stay", "resort", "beach"], budgetTier: "high",
+    kidFriendly: true, stayType: "resort", stayDuration: "short",
+    activities: ["beach", "island-hopping", "snorkeling", "rock-climbing", "kayaking", "spa"],
+    amenities: ["pool", "beach", "spa", "restaurant", "bar", "kids-club", "wifi", "airport-transfer"],
+    blurb: "Krabi is Thailand's limestone-cliff beach playground: pool resorts along Ao Nang and boutique hideaways on boat-only Railay, with longtail hops to Phi Phi and the Hong Islands, world-class rock climbing and easy family snorkelling.",
+    whyItFits: "The full with-money beach-resort tier — infinity pools, spas and kids' clubs — with adventure (climbing, island-hopping) on the doorstep. Ao Nang suits families; Railay suits couples and climbers.",
+    priceRange: { low: 800, typical: 2500, high: 12000, currency: "THB", note: "Guidance, per night. Low season and 3★ at the low end; 5★ Railay and pool villas far higher. Longtail island trips are extra." },
+    hours: "Check-in from early afternoon",
+    tips: ["Ao Nang has the shops, restaurants and easy beach; Railay is quieter, cliff-ringed and reached only by longtail.", "Book island-hopping (Phi Phi, Hong Islands, 4 Islands) as day trips from Ao Nang pier.", "November–April is the calm, dry beach season; monsoon months are cheaper but wetter."],
+    scamWarnings: ["Agree longtail boat prices and pickup times before boarding; confirm the return trip."],
+    rating: 4.5, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
+    mapQuery: "Ao Nang Krabi beach resort", coords: { lat: 8.0325, lng: 98.8228 },
+    bookHint: "Compare Booking/Agoda for the same resort; book the Railay longtail transfer and island trips ahead.", verified: "2026-07",
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   }
 ];
