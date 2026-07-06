@@ -24,6 +24,10 @@ function defaults() {
       // the page CSP connect-src (see Settings copy).
       translateEndpoint: '',
       translateKey: '',
+      // Feedback: optional destination for the "Email feedback" action (set by the
+      // owner in Settings) + the user's own reply-to. Both on-device; never committed.
+      feedbackTo: '',
+      contactEmail: '',
       theme: 'light',           // 'light' | 'dark'
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
       textScale: 'm',           // 's' | 'm' | 'l' — accessibility text size

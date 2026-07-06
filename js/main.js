@@ -75,6 +75,10 @@ function langForCountry(id) { const c = getCountry(id); return c ? c.lang : 'th'
 let activeCountry = detectCountryId();   // current destination context (country id)
 let pendingPinCoords = null; // coords captured by tapping the map, consumed by #addpin
 
+// Shown on the Help screen and stamped into feedback messages. Keep in sync with
+// CACHE_VERSION in sw.js on each release.
+const APP_VERSION = 'mk-v0.77.0';
+
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
   { hash: '#phrasebook', label: 'Talk', ic: '💬' },
@@ -152,6 +156,7 @@ function homeScreen() {
     { ic: '🔊', t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
     { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
     { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
+    { ic: '❓', t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
     { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
     { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
     { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
@@ -892,6 +897,7 @@ function placeScreen(id) {
   const actions = h('div', { class: 'card' }, [
     (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
     h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
     collStrip,
     p.isPin ? h('button', {
       class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
@@ -3036,6 +3042,96 @@ function vaultUnlockCard(body) {
 }
 
 // ---- SETTINGS ---------------------------------------------------------------
+// ---- HELP / FAQ (static, fully offline) -------------------------------------
+function helpScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Help & FAQ', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
+  const faq = (q, a) => h('details', { class: 'card' }, [h('summary', {}, q), typeof a === 'string' ? h('p', {}, a) : a]);
+
+  wrap.append(faq('What works offline, and what needs internet?', h('div', {}, [
+    h('p', {}, 'Almost everything works with no signal, because the guide is stored on your device: the phrasebook, places, food and produce guides, the wildlife field guide, fair prices, transport routes and schedules, border crossings, pools, your journal, trip, calendar, saved places, the document vault, and the base map (coastlines, rivers, borders and your pins).'),
+    h('p', {}, 'A few features need a connection, and each one says so: refreshing the weather, currency rates, live translation, the “Across the web” rating and “Compare & book” links, streamed animal calls, and satellite map imagery. Weather and rates are cached after one online refresh, so you can still read them offline.'),
+  ])));
+  wrap.append(faq('How do I build and log a trip?', h('div', {}, [
+    h('p', {}, '“My trip” holds your itinerary (stops with dates) and a budget log that totals your spending in your home currency. “Travel calendar” schedules stays, meals and activities by day and surfaces festivals falling in your dates. “Travel journal” keeps dated, GPS-stamped entries with photos, and the “Journey map” animates the path between them.'),
+    h('button', { class: 'btn ghost', onclick: () => go('#trip') }, 'Open My trip'),
+  ])));
+  wrap.append(faq('How do ratings work?', 'Each place shows a guidebook score synthesised from public sources, plus an “Across the web” card with snapshots from sites such as TripAdvisor — each stamped with the month it was checked — and live links to compare and book. Your own rating always counts first: rate a place and it becomes the headline score and colours its pin on the map.'));
+  wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, budget, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
+  wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device and cannot be recovered if you forget its passcode. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
+  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), Places, Map and Saved. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
+
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Suggest a feature or a correction'),
+    h('p', { class: 'muted' }, 'Spotted something out of date, or want a feature added? Send it over — it helps make the guide better for everyone.'),
+    h('button', { class: 'btn block', onclick: () => go('#feedback') }, '✍️ Send feedback'),
+  ]));
+  wrap.append(h('p', { class: 'disclaimer' }, `Mekonging ${APP_VERSION}. Guidance only — always confirm prices, hours and safety locally.`));
+  mount(wrap, '#home');
+}
+
+// ---- FEEDBACK / SUGGEST (no backend: share sheet, email, or copy) -----------
+// Composes a message the user sends themselves via the OS share sheet, their email
+// app (mailto — recipient is optional and set in Settings), or the clipboard. Nothing
+// is transmitted automatically and no personal address is baked into the app.
+function feedbackScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  const place = arg ? resolveItem(arg) : null;
+  wrap.append(topbar(place ? 'Suggest an edit' : 'Send feedback', place ? `#place-${place.id}` : '#help'));
+  wrap.append(h('p', { class: 'map-hint' }, place
+    ? `Suggest a correction or addition for “${place.name}”. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically.`
+    : 'Tell us what to fix, add or improve. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically, and no account is needed.'));
+
+  const card = h('div', { class: 'card' });
+  let category = place ? 'correction' : 'feedback';
+  card.append(field('Type', selectEl([['feedback', 'General feedback'], ['feature', 'Feature idea'], ['correction', 'Correct information']], category, (v) => { category = v; })));
+  const subject = h('input', { type: 'text', placeholder: 'Short summary', value: place ? `Correction: ${place.name}` : '' });
+  card.append(field('Subject', subject));
+  const body = h('textarea', { class: 'ta', rows: '6', placeholder: place ? 'What should change, and what is correct?' : 'Your message…' });
+  card.append(field('Message', body));
+  const fromEmail = h('input', { type: 'email', placeholder: 'you@example.com', value: store.profile.contactEmail || '' });
+  fromEmail.addEventListener('change', () => { store.profile.contactEmail = fromEmail.value.trim(); save(); });
+  card.append(field('Your email (optional, so we can reply)', fromEmail));
+  wrap.append(card);
+
+  function compose() {
+    const catLabel = { feedback: 'Feedback', feature: 'Feature idea', correction: 'Correction' }[category] || 'Feedback';
+    const text = [
+      body.value.trim(), '',
+      '— sent from Mekonging —',
+      `Type: ${catLabel}`,
+      place ? `Place: ${place.name} (${place.id})` : null,
+      fromEmail.value.trim() ? `Reply-to: ${fromEmail.value.trim()}` : null,
+      `App: ${APP_VERSION}`,
+    ].filter((x) => x != null).join('\n');
+    return { subject: `[Mekonging] ${catLabel}${subject.value.trim() ? ': ' + subject.value.trim() : ''}`, text };
+  }
+  const status = h('p', { class: 'muted' });
+  const actions = h('div', { class: 'card' });
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    actions.append(h('button', { class: 'btn block', onclick: async () => {
+      const m = compose();
+      try { await navigator.share({ title: m.subject, text: m.text }); status.textContent = 'Shared — choose where to send it.'; }
+      catch { /* user cancelled */ }
+    } }, '📤 Share…'));
+  }
+  actions.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => {
+    const m = compose();
+    const to = (store.profile.feedbackTo || '').trim();
+    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.text)}`;
+    status.textContent = to ? 'Opening your email app…' : 'Opened your email app — add a recipient, or set a feedback address in Settings.';
+  } }, '✉️ Email'));
+  actions.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+    const m = compose();
+    try { await navigator.clipboard.writeText(`${m.subject}\n\n${m.text}`); status.textContent = 'Copied to clipboard — paste it wherever you like.'; }
+    catch { status.textContent = 'Could not copy automatically — select your message and copy it.'; }
+  } }, '📋 Copy'));
+  actions.append(status);
+  wrap.append(actions);
+  mount(wrap, place ? `#place-${place.id}` : '#help');
+}
+
 function settingsScreen() {
   const p = store.profile;
   const wrap = h('div', { class: 'screen' });
@@ -3091,6 +3187,17 @@ function settingsScreen() {
     type: 'password', value: p.translateKey, oninput: (e) => { p.translateKey = e.target.value.trim(); save(); },
   })));
   wrap.append(tcard);
+
+  // help & feedback
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Help & feedback'),
+    h('button', { class: 'btn ghost block', onclick: () => go('#help') }, '❓ Help & FAQ'),
+    field('Feedback address (optional)', h('input', {
+      type: 'email', placeholder: 'where “Email feedback” is sent', value: p.feedbackTo || '',
+      oninput: (e) => { p.feedbackTo = e.target.value.trim(); save(); },
+    })),
+    h('p', { class: 'disclaimer' }, 'Set an address to collect feedback by email; otherwise the feedback screen uses your device share sheet or clipboard. This stays on your device and is never committed to the app.'),
+  ]));
 
   // reset
   wrap.append(h('div', { class: 'card' }, [
@@ -3169,6 +3276,8 @@ function render() {
       case 'bestof': return bestofScreen(arg);
       case 'bestlist': return bestListScreen(arg);
       case 'vault': return vaultScreen();
+      case 'help': return helpScreen();
+      case 'feedback': return feedbackScreen(arg);
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }
