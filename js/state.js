@@ -368,3 +368,18 @@ export function removeContact(userId) {
   const i = list.findIndex((c) => c.userId === userId);
   if (i >= 0) { list.splice(i, 1); save(); }
 }
+
+// --- travel circle: inbox (places / lists / trips others shared with you) ----
+export function getInbox() { return Array.isArray(store.social.inbox) ? store.social.inbox : (store.social.inbox = []); }
+export function addInboxItem({ from = null, kind, data, msg = '' }) {
+  const item = {
+    id: uid('inb'),
+    from: from ? { userId: String(from.userId || '').slice(0, 64), name: String(from.name || 'A traveller').slice(0, 40), avatar: trimEmoji(from.avatar) } : null,
+    kind: String(kind || '').slice(0, 16), data: data || {}, msg: String(msg || '').slice(0, 200),
+    at: todayKey(), read: false,
+  };
+  getInbox().unshift(item); save(); return item;
+}
+export function markInboxRead(id) { const it = getInbox().find((x) => x.id === id); if (it && !it.read) { it.read = true; save(); } }
+export function deleteInboxItem(id) { const list = getInbox(); const i = list.findIndex((x) => x.id === id); if (i >= 0) { list.splice(i, 1); save(); } }
+export function unreadInboxCount() { return getInbox().filter((x) => !x.read).length; }
