@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.105.0';
+const APP_VERSION = 'mk-v0.106.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -148,6 +148,29 @@ function homeScreen() {
     h('button', { class: 'btn ghost', onclick: () => go('#search') }, '🔎 Search everything'),
     h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
   ]));
+
+  // One-time, dismissible location invite: capturing a GPS fix here makes distances,
+  // "Nearest first" and the Near-me hub work instantly on the very first visit. Asked at
+  // most once (prefs.geoAsked); never shown again once a fix exists or the user answers.
+  if (typeof navigator !== 'undefined' && navigator.geolocation && !getLastFix() && !store.profile.prefs.geoAsked) {
+    const invite = h('div', { class: 'card geo-invite' }, [
+      h('p', { style: 'margin:0 0 8px' }, [
+        h('strong', {}, '📍 See what’s near you'),
+        ' — allow location and the app will sort places by distance and power “Near me”. It stays on your device; nothing is sent anywhere.',
+      ]),
+      h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+        h('button', { class: 'btn', onclick: async (e) => {
+          store.profile.prefs.geoAsked = true; save();
+          e.currentTarget.textContent = 'Locating…';
+          try { setLastFix(await geolocate()); } catch { /* denied/unavailable — we still asked */ }
+          render();
+        } }, 'Use my location'),
+        h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.geoAsked = true; save(); render(); } }, 'Not now'),
+      ]),
+    ]);
+    wrap.append(invite);
+  }
+
   wrap.append(h('h2', { class: 'home-section' }, 'Where are you headed?'));
   wrap.append(regionPicker());
   wrap.append(h('h2', { class: 'home-section' }, 'Everything you need'));
