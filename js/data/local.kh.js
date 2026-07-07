@@ -112,4 +112,106 @@ export const LOCAL_KH = [
     ],
     sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Lonely Planet - Battambang", url: "https://www.lonelyplanet.com/cambodia/battambang" }],
   },
+  {
+    slug: "kep",
+    city: "Kep",
+    country: "kh",
+    verified: "2026-07",
+    intro: "Kep is a tiny seaside town built around one thing: the crab market on the waterfront, where locals buy seafood straight off the boats. There are no big supermarkets here, so treat Kampot (~25 km, roughly 30-45 min away) as your restock town and Kep itself as the place to eat.",
+    markets: [
+      {
+        name: "Kep Crab Market (Psar Kdam)",
+        when: "Daily; liveliest ~6:30-10:00 for crab straight from the traps, food stalls and shacks run to ~21:00",
+        where: "On the waterfront at the western end of town, along the seafront road",
+        what: "Live blue crab pulled from bamboo traps in the shallows, plus prawns, squid, fish, and a small wet-market row of fruit, vegetables, dried seafood and Kampot pepper",
+        tip: "Go in the morning when the crab baskets come out of the water, pick your crab, and have one of the stalls grill or fry it for you on the spot.",
+      },
+      {
+        name: "Coast-road fruit stalls",
+        when: "Daily, roughly ~7:00-18:00; stock is seasonal and heaviest in the May-August fruit months",
+        where: "Roadside stands along the main coastal road between Kep Beach and the crab market",
+        what: "Seasonal fruit by the kilo - mango, rambutan, mangosteen, pineapple, and durian in season (Kampot province durian is prized locally)",
+        tip: "Prices are usually per kilo and fair, but ask before they cut the fruit so there is no confusion at paying time.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Water, snacks, toiletries and everyday basics from small family-run shops",
+        where: "Along the main road through Kep town and near Kep Beach",
+        tip: "Shops here are tiny and close early, so grab what you need before dinner and do any bigger shop in Kampot.",
+      },
+      {
+        what: "Kampot pepper bought direct from the source",
+        where: "Pepper farms in the countryside between Kep and Kampot (several welcome visitors), or from stalls at the crab market",
+        tip: "Buying at a farm gets you a free look at how the pepper grows, and sealed packs travel well as gifts.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies/diapers",
+        where: "Stock up in Kampot town (~30-45 min by tuk-tuk or taxi) at minimarts and pharmacies, or in Phnom Penh supermarkets before you travel down; Kep shops carry small packs at best and sizes are hit-and-miss",
+        price: "5-9 USD per pack in Kampot; small packs in Kep, if found, cost more",
+        tip: "Buy a full pack in Kampot or Phnom Penh before you arrive - do not count on finding your size in Kep.",
+      },
+      {
+        item: "Formula and UHT milk",
+        where: "Pharmacies and minimarts in Kampot town; Kep minimarts sometimes have UHT milk but formula brands are unreliable",
+        price: "10-20 USD per tin of formula depending on brand",
+        tip: "Bring enough formula for your whole Kep stay, since the local shops cannot be relied on for a specific brand or stage.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Crab market noodle and rice stalls",
+        dish: "Morning noodle soup or rice plates alongside the seafood stalls",
+        price: "1-2.50 USD",
+        where: "Inside and around Psar Kdam, the crab market",
+        tip: "Eat where the market vendors themselves are eating breakfast and you will pay local prices.",
+      },
+      {
+        name: "Khmer rice-and-curry shopfronts",
+        dish: "Point-and-choose rice with a curry or stir-fry from the pots out front",
+        price: "1.50-3 USD",
+        where: "Along the main road through Kep town, busiest at lunchtime",
+        tip: "The pots are freshest before 13:00, so make this your lunch rather than dinner plan.",
+      },
+      {
+        name: "Kep Beach snack vendors",
+        dish: "Grilled corn, fruit plates and cold sugarcane juice",
+        price: "0.50-1.50 USD",
+        where: "Along the promenade at Kep Beach, busiest late afternoon and weekends",
+        tip: "Weekends bring day-tripping Cambodian families, which is exactly when the snack row is liveliest.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Crab shacks at the crab market",
+        dish: "Blue crab fried with fresh green Kampot pepper - the Kep classic",
+        price: "6-12 USD per plate depending on crab weight",
+        when: "Daily ~10:00-21:00; crab is freshest when morning stock is still coming in",
+        where: "The row of shacks on stilts over the water beside Psar Kdam",
+        tip: "Agree the crab price per kilo before cooking, and ask for extra green peppercorn on the side.",
+      },
+      {
+        name: "Grill stalls at Psar Kdam",
+        dish: "Squid grilled on lemongrass skewers, plus grilled prawns and fish",
+        price: "1-3 USD per skewer or small plate",
+        when: "Daily, late morning through sunset (~11:00-18:30)",
+        where: "The open grill row at the entrance to the crab market",
+        tip: "Watch which stall has the steadiest charcoal turnover and join that queue - the squid comes off the grill in minutes.",
+      },
+      {
+        name: "Fruit shake carts near Kep Beach",
+        dish: "Blended fruit shakes with mango, banana or dragon fruit",
+        price: "0.75-1.50 USD",
+        when: "Daily, afternoons to early evening (~13:00-19:00)",
+        where: "Carts along the beachfront promenade",
+        tip: "Ask for little or no added sugar - the seasonal fruit is sweet enough on its own.",
+      },
+    ],
+    sources: [
+      { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" },
+      { org: "Wikivoyage - Kep", url: "https://en.wikivoyage.org/wiki/Kep" },
+    ],
+  }
 ];

@@ -111,4 +111,99 @@ export const LOCAL_LA = [
     ],
     sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "The Laotian Times", url: "https://laotiantimes.com" }],
   },
+  {
+    slug: "nong-khiaw",
+    city: "Nong Khiaw",
+    country: "la",
+    verified: "2026-07",
+    intro: "Nong Khiaw is a small riverside town on the Nam Ou, strung along one main street either side of a high bridge, with a modest morning market, guesthouses and a handful of restaurants including a couple of long-running Indian places. There is no supermarket, pharmacy stock is minimal at best, and the ATM is unreliable, so stock up on cash, nappies and formula in Luang Prabang before you travel up.",
+    markets: [
+      {
+        name: "Nong Khiaw morning market",
+        when: "~Daily 05:30-09:00, busiest before 08:00",
+        where: "A short walk from the bridge along the main road through town",
+        what: "Fresh produce, herbs, sticky rice, river fish from the Nam Ou, grilled snacks, eggs and dry goods",
+        tip: "Go before 08:00 - stallholders pack up once the locals have shopped and the pick of the river fish goes first.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Everyday basics - water, snacks, instant noodles, soap, mosquito repellent",
+        where: "Small family-run general stores along the main street",
+        tip: "Stock is basic and prices run a little above Luang Prabang, so buy anything specific before you arrive.",
+      },
+      {
+        what: "Sticky rice, fruit and picnic supplies for the boat to Muang Ngoi",
+        where: "Morning market and the stalls near the boat landing",
+        tip: "Buy your boat picnic in the morning - there is almost nothing to buy once you are on the river.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies and formula",
+        where: "Not reliably available in Nong Khiaw - buy in Luang Prabang before the minivan or boat",
+        price: "In Luang Prabang: ~90,000-180,000 LAK per nappy pack, formula tins from ~150,000 LAK",
+        tip: "There is no supermarket here and pharmacy stock is minimal, so carry every nappy and scoop of formula you will need plus a spare day or two.",
+      },
+      {
+        item: "Cash for the whole stay",
+        where: "There is an ATM in town, but it is often empty or offline",
+        price: "ATM fees ~20,000-30,000 LAK per withdrawal - withdraw in Luang Prabang instead",
+        tip: "Bring enough kip for your whole stay including boat tickets - card payments are rare and the ATM cannot be trusted.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Khao soi noodle shophouses",
+        dish: "Khao soi - rice noodles with a minced-pork and fermented-soybean topping, the northern Lao staple",
+        price: "~30,000-50,000 LAK",
+        where: "Family-run shophouses along the main street",
+        tip: "Locals eat khao soi for breakfast, not dinner - go in the morning and load up from the herb plate on the table.",
+      },
+      {
+        name: "Morning market takeaway",
+        dish: "Sticky rice with grilled river fish or ping kai (grilled chicken)",
+        price: "~25,000-50,000 LAK for a filling parcel",
+        where: "Grill stalls in and around the morning market",
+        tip: "Point at what the aunties are buying and eat it warm on the riverbank.",
+      },
+      {
+        name: "Deen Restaurant",
+        dish: "Indian dal, curries and fresh chapati - a long-running budget standby",
+        price: "~50,000-90,000 LAK per main",
+        where: "On the main road through town",
+        tip: "Not Lao, but it is where travellers and long-stayers fill up cheaply when they want a change from noodles.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Morning market grill stalls",
+        dish: "Ping pa - whole river fish grilled in a bamboo clamp, plus pork skewers",
+        price: "~15,000-25,000 LAK per skewer, ~40,000-70,000 LAK for a whole fish",
+        when: "~Daily 05:30-09:00",
+        where: "Around the morning market near the bridge",
+        tip: "The fish comes straight off the Nam Ou boats, so earlier is fresher.",
+      },
+      {
+        name: "Khao jee baguette stalls",
+        dish: "Khao jee pate - crusty Lao baguette with pate, vegetables and chilli sauce",
+        price: "~20,000-35,000 LAK",
+        when: "~Mornings until about midday",
+        where: "Stalls on the main street",
+        tip: "Perfect boat food - have one wrapped to take on the slow boat to Muang Ngoi.",
+      },
+      {
+        name: "Evening shake and pancake stalls",
+        dish: "Roti-style pancakes with banana or condensed milk, plus fresh fruit shakes",
+        price: "~15,000-30,000 LAK",
+        when: "~17:00-21:00 most evenings",
+        where: "A stall or two along the main street near the bridge",
+        tip: "Stall numbers vary by season - if you see one open in low season, do not save it for later.",
+      },
+    ],
+    sources: [
+      { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" },
+      { org: "Lonely Planet", url: "https://www.lonelyplanet.com/laos/nong-khiaw" },
+    ],
+  }
 ];
