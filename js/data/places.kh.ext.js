@@ -9,6 +9,8 @@
 export const PLACES_KH_EXT = [
   {
     id: "kh-ext-phnom-sampov", name: "Phnom Sampov (Killing Caves & Bat Exodus)", city: "Battambang", country: "kh",
+    recognition: 'A lone limestone hill rising from flat rice plains about 12 km southwest of Battambang, topped by a golden pagoda; roadside drink stalls face the cliff cave where bats stream out at dusk.',
+    localName: 'ភ្នំសំពៅ · Phnom Sampov',
     categories: ["viewpoint", "culture", "nature"], budgetTier: "low",
     blurb: "A limestone hill about 12 km southwest of Battambang crowned by a pagoda and sweeping views over the rice plains. At dusk a column of roughly a million wrinkle-lipped bats pours from a cave mouth at its base, streaming out for several minutes. The somber Killing Caves memorialise Khmer Rouge victims.",
     whyItFits: "Suits travellers who want a free, genuinely spectacular nature event paired with a panoramic viewpoint and recent history, away from the temple circuit. Not suitable for young children at the memorial caves.",
@@ -135,6 +137,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-bou-sra", name: "Bou Sra Waterfall", city: "Mondulkiri", country: "kh",
+    recognition: 'About 40 km east of Sen Monorom in Mondulkiri, a powerful multi-tier waterfall in dense highland forest; viewing platforms overlook the wide upper tier and the plunging lower drop.',
+    localName: 'ទឹកជ្រោះប៊ូស្រា · Tuek Chruoh Bou Sra',
     categories: ["waterfall", "nature", "viewpoint"], budgetTier: "low",
     blurb: "One of Cambodia's most powerful waterfalls, a multi-tier cascade dropping through dense highland rainforest about 40 km from Sen Monorom and near the Vietnamese border. The lower tier plunges roughly 18-25 m; viewing platforms reach the first two stages, and birdlife in the surrounding forest is abundant.",
     whyItFits: "For travellers drawn to big, wild nature in Cambodia's cool northeastern highlands. Add an optional zipline for adrenaline, or simply swim and picnic at the natural pools.",
@@ -163,6 +167,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-yeak-laom", name: "Yeak Laom Volcanic Crater Lake", city: "Banlung", country: "kh",
+    recognition: 'About 5 km east of Banlung, an almost perfectly round, deep-blue crater lake roughly 800 m across, ringed by forest with wooden swimming jetties and a rim trail.',
+    localName: 'បឹងយក្សឡោម · Boeng Yeak Laom',
     categories: ["nature", "park"], budgetTier: "low",
     blurb: "An almost perfectly circular crater lake filling an ancient volcanic cone about 5 km east of Banlung, roughly 800 m across and deeply clear for swimming. A shaded 2.5 km forest trail rings the rim, and the site is managed by a committee of local indigenous elders who reinvest the fees in protection.",
     whyItFits: "For travellers wanting a serene, swimmable nature spot with a community-conservation story — far calmer than busier crater lakes elsewhere in the region.",
@@ -177,6 +183,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-cha-ong", name: "Cha Ong Waterfall", city: "Banlung", country: "kh",
+    recognition: 'Near Banlung, a roughly 20 m waterfall spilling off a red basalt overhang into a shaded gorge; a path leads down and behind the falling curtain of water.',
+    localName: 'ទឹកជ្រោះចាអុង · Tuek Chruoh Cha Ong',
     categories: ["waterfall", "nature"], budgetTier: "low",
     blurb: "The tallest waterfall near Banlung, dropping about 20 m off a basalt overhang into a forested gorge fed from Phnom Svay. A path leads down to a ledge that passes behind the curtain of water, and the pool below is cool enough for a dip.",
     whyItFits: "For travellers chasing a photogenic, swimmable jungle waterfall with the rare bonus of walking behind the falls — an easy add-on to a Banlung day exploring the area's lakes and falls.",
@@ -191,6 +199,8 @@ export const PLACES_KH_EXT = [
   },
 {
     id: "kh-ext-ta-prohm", name: "Ta Prohm", city: "Siem Reap", country: "kh",
+    recognition: 'Recognisable by the massive pale silk-cotton and strangler-fig roots draped over and prising apart the crumbling grey galleries, the temple made famous by the Tomb Raider film.',
+    localName: 'ប្រាសាទតាព្រហ្ម · Prasat Ta Prohm',
     categories: ["culture", "nature"], budgetTier: "mid",
     blurb: "The atmospheric jungle temple of the Angkor complex, deliberately left semi-cleared so colossal silk-cotton and strangler-fig roots prise apart its galleries. Widely known from the Tomb Raider film.",
     whyItFits: "For visitors wanting the most photogenic of the Angkor temples and a sense of how the ruins looked when rediscovered. Part of any small or grand circuit.",
@@ -205,6 +215,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-banteay-srei", name: "Banteay Srei", city: "Siem Reap", country: "kh",
+    recognition: 'A small, low temple built of distinctive pink-red sandstone about 25 km northeast of Angkor, covered in exceptionally deep, fine carving and guarded by kneeling animal-headed figures.',
+    localName: 'ប្រាសាទបន្ទាយស្រី · Prasat Banteay Srei',
     categories: ["culture"], budgetTier: "mid",
     blurb: "A small 10th-century temple built of pink sandstone and famed for the finest, deepest carving at Angkor — intricate lintels and guardian figures often called the jewel of Khmer art. It lies about 25 km north-east of the main group.",
     whyItFits: "For travellers who appreciate detail over scale; the carving is unmatched and the longer drive thins the crowds.",
@@ -219,6 +231,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-koh-ker", name: "Koh Ker", city: "Preah Vihear", country: "kh",
+    recognition: 'Deep in forest in Preah Vihear, dominated by Prasat Thom, a steep seven-tiered sandstone pyramid rising above the tree canopy that you can climb via a wooden stair.',
+    localName: 'កោះកេរ្ដិ៍ · Koh Ker',
     categories: ["culture", "nature"], budgetTier: "mid",
     blurb: "A remote, jungle-swallowed 10th-century capital crowned by Prasat Thom, a seven-tiered sandstone pyramid you can climb for views over the forest canopy. Inscribed by UNESCO in 2023 and far quieter than the main Angkor group.",
     whyItFits: "For adventurous history lovers wanting monumental ruins without the crowds, on a long day trip from Siem Reap.",
@@ -233,6 +247,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kampi-dolphins", name: "Kampi Irrawaddy Dolphins", city: "Kratie", country: "kh",
+    recognition: 'A widening deep pool of the Mekong at Kampi, about 15 km north of Kratie, where small wooden boats launch from a signed riverside pier to watch Irrawaddy dolphins surface.',
+    localName: 'កំពី · Kampi',
     categories: ["nature"], budgetTier: "low",
     blurb: "A deep Mekong pool near Kratie that shelters one of the last wild populations of the critically endangered Irrawaddy dolphin. A small wooden boat takes you out at dawn or dusk to watch them surface.",
     whyItFits: "For wildlife-minded travellers; this is the genuine place to see these dolphins, unlike the Lao stretch downstream where they are now locally extinct.",
@@ -359,6 +375,8 @@ export const PLACES_KH_EXT = [
   },
 {
     id: "kh-ext-central-market-pp", name: "Central Market (Phsar Thmei)", city: "Phnom Penh", country: "kh",
+    recognition: 'A cream-and-ochre 1937 art-deco building with a vast domed central hall and four radiating wings, standing on an open plaza in central Phnom Penh.',
+    localName: 'ផ្សារធំថ្មី · Phsar Thmei',
     categories: ["market", "culture"], budgetTier: "low",
     blurb: "A landmark 1937 art-deco market under a vast golden dome, with four wings selling jewellery, watches, electronics, souvenirs and a busy food section.",
     whyItFits: "For travellers wanting an architectural landmark that is also a working market in the heart of Phnom Penh.",
@@ -373,6 +391,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-russian-market", name: "Russian Market (Phsar Toul Tom Poung)", city: "Phnom Penh", country: "kh",
+    recognition: 'A low, crowded tin-roofed market block in the Toul Tom Poung district south of the centre, a warren of narrow stalls with a cluster of food and iced-coffee vendors in the middle.',
+    localName: 'ផ្សារទួលទំពូង · Phsar Toul Tom Poung',
     categories: ["market", "food"], budgetTier: "low",
     blurb: "A cramped, atmospheric market famous for souvenirs, silver, handicrafts and silk, with a beloved cluster of cheap food stalls and iced-coffee vendors in the middle.",
     whyItFits: "For travellers wanting the best souvenir shopping and local food in Phnom Penh, away from the tourist strip.",
@@ -586,6 +606,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kep-crab-market", name: "Kep Crab Market shacks (Psar Kdam)", city: "Kep", country: "kh",
+    recognition: 'A row of open-fronted wooden seafood shacks along the Kep waterfront, in front of bamboo crab traps set in the shallows and a bronze statue of a woman holding a crab.',
+    localName: 'ផ្សារក្តាមកែប · Phsar Kdam Kep',
     categories: ["food"], budgetTier: "budget",
     isLocal: true,
     kidFriendly: true,
@@ -618,6 +640,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-phnom-penh-raffles-le-royal",
+    recognition: 'A colonnaded cream 1929 colonial hotel with a central porte-cochere and landscaped gardens, set just south of Wat Phnom on Street 92 in the capital.',
     name: "Raffles Hotel Le Royal",
     city: "Phnom Penh",
     country: "kh",
@@ -679,6 +702,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-siem-reap-raffles-grand-hotel-dangkor",
+    recognition: 'A grand 1932 colonnaded hotel facing the Royal Gardens on the road toward the temples, known for its original 1930s open birdcage lift and long garden pool.',
     name: "Raffles Grand Hotel d'Angkor",
     city: "Siem Reap",
     country: "kh",

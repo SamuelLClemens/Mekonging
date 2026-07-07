@@ -8,6 +8,8 @@
 export const PLACES_TH_EXT = [
   {
     id: "th-ext-bua-tong", name: "Bua Tong (Sticky) Waterfall", city: "Chiang Mai", country: "th",
+    recognition: 'Look for the roadside car park and food stalls at the top; the falls are the tiered white-grey limestone slope where barefoot visitors climb up against the water flow, with the blue-green Chet Si spring pool just above.',
+    localName: 'น้ำตกบัวตอง · Nam Tok Bua Tong',
     categories: ["waterfall", "nature", "hike"], budgetTier: "low",
     blurb: "A limestone-tufa cascade you can literally walk up: mineral-rich water deposits calcium that grips your feet, so climbers ascend the falls barefoot. Above it bubbles the blue-green Nam Phu Chet Si spring.",
     whyItFits: "Suits active travellers and families wanting a free, genuinely unusual nature experience away from the temple circuit. Within Sri Lanna National Park, about 60 km north of the city.",
@@ -64,6 +66,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pai-canyon", name: "Pai Canyon (Kong Lan) sunset", city: "Pai", country: "th",
+    recognition: 'From the small hilltop car park off the 1095 road southeast of Pai, a short paved path leads to red-orange eroded sandstone ridges with narrow knife-edge spines dropping into a forested valley.',
+    localName: 'กองแลน · Kong Lan',
     categories: ["viewpoint", "nature", "hike"], budgetTier: "low",
     blurb: "Eroded sandstone ridges and narrow knife-edge spines drop into a forested valley. A short climb from the car park reaches the famous sunset platform.",
     whyItFits: "The signature Pai sunset for anyone who likes a little scramble with their view. Free and quick to reach.",
@@ -134,6 +138,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-sala-keoku", name: "Sala Keoku Sculpture Park", city: "Nong Khai", country: "th",
+    recognition: 'About 3 km east of Nong Khai town near the Friendship Bridge; a walled Mekong-side garden filled with towering grey concrete figures including a giant multi-headed naga serpent rearing over the visitors.',
+    localName: 'ศาลาแก้วกู่ · Sala Kaew Ku',
     categories: ["culture", "park"], budgetTier: "low",
     blurb: "A surreal Mekong-side garden of giant concrete Buddhist and Hindu sculptures — multi-headed nagas, a seven-headed serpent and figures rising several storeys — built by the mystic Luang Pu Bunleua Sulilat.",
     whyItFits: "One of Isan's most extraordinary and under-visited sights, perfect for travellers seeking the offbeat near the Laos border. Pairs with a Mekong riverfront stroll in Nong Khai.",
@@ -162,6 +168,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-erawan-falls", name: "Erawan Falls (day trip)", city: "Kanchanaburi", country: "th",
+    recognition: 'Enter through the Erawan National Park gate and visitor centre west of Kanchanaburi; a marked forest trail climbs past seven numbered tiers of emerald-blue pools fed by limestone-white cascades.',
+    localName: 'น้ำตกเอราวัณ · Nam Tok Erawan',
     categories: ["waterfall", "park", "nature", "hike"], budgetTier: "mid",
     blurb: "Seven tiers of emerald, mineral-blue pools climbing through forest in Erawan National Park — fish-nibbled swimming holes at most levels and a roughly two-hour walk to the top tier.",
     whyItFits: "The standout nature day-trip west of Bangkok (via Kanchanaburi) for travellers who want to hike and swim rather than temple-hop. Quieter and greener than the city's canal day-trips.",
@@ -176,6 +184,8 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-doi-inthanon", name: "Doi Inthanon National Park", city: "Chiang Mai", country: "th",
+    recognition: 'The park road climbs to Thailand highest summit; the twin royal pagodas Naphamethanidon and Naphaphonphumisiri stand side by side on the ridge, and the Wachirathan waterfall thunders beside the main road below.',
+    localName: 'ดอยอินทนนท์ · Doi Inthanon',
     categories: ["nature", "park", "viewpoint", "waterfall"], budgetTier: "mid",
     blurb: "The roof of Thailand at 2,565 m, wrapped in cloud forest, twin royal pagodas (Naphamethanidon and Naphaphonphumisiri), the Wachirathan waterfall and the Ang Ka boardwalk through dripping moss forest.",
     whyItFits: "Suits nature lovers who want cool mountain air, waterfalls and birdlife within a day trip of Chiang Mai. Cooler than the lowlands year-round, so bring a layer.",
@@ -190,6 +200,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-doi-suthep", name: "Wat Phra That Doi Suthep", city: "Chiang Mai", country: "th",
+    recognition: 'On the forested mountain west of Chiang Mai; a long naga-flanked staircase of 306 steps climbs to a terrace built around a gleaming gold chedi, with sweeping views over the city below.',
+    localName: 'วัดพระธาตุดอยสุเทพ · Wat Phra That Doi Suthep',
     categories: ["culture", "viewpoint"], budgetTier: "low",
     blurb: "Chiang Mai's most revered temple, perched on a forested ridge above the city behind a 306-step naga staircase, centred on a gleaming gold chedi said to enshrine a relic of the Buddha. A terrace gives sweeping views over the valley.",
     whyItFits: "For travellers who want a single essential cultural and viewpoint stop close to the city, reachable in well under an hour.",
@@ -204,6 +216,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-white-temple", name: "Wat Rong Khun (White Temple)", city: "Chiang Rai", country: "th",
+    recognition: 'South of Chiang Rai on the highway; an all-white temple encrusted with mirrored glass, approached across a bridge over a field of upreaching white hands, unmistakable against any other temple in Thailand.',
+    localName: 'วัดร่องขุ่น · Wat Rong Khun',
     categories: ["culture", "viewpoint"], budgetTier: "low",
     blurb: "A dazzling all-white contemporary temple by artist Chalermchai Kositpipat, encrusted with mirrored glass and crossed by a bridge over a field of reaching hands. The interior murals fuse Buddhist themes with pop-culture imagery.",
     whyItFits: "For anyone wanting Thailand's most photographed modern landmark and an easy half-day from Chiang Rai.",
@@ -218,6 +232,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-sukhothai-historical-park", name: "Sukhothai Historical Park", city: "Sukhothai", country: "th",
+    recognition: 'Inside the walled Old Sukhothai zone about 12 km west of the new town; brick temple ruins around lotus ponds, with the giant seated Buddha squeezed into the narrow Wat Si Chum mondop in the north zone.',
+    localName: 'อุทยานประวัติศาสตร์สุโขทัย · Utthayan Prawattisat Sukhothai',
     categories: ["culture", "park"], budgetTier: "low",
     blurb: "The UNESCO-listed ruins of Thailand's first capital: serene 13th-14th century temples, lotus ponds and a giant seated Buddha at Wat Si Chum, spread across landscaped grounds best explored by bicycle.",
     whyItFits: "For history-minded travellers who prefer a calm, green, cyclable site to the busier ruins elsewhere. The central zone alone rewards a half-day.",
@@ -232,6 +248,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-ayutthaya-historical-park", name: "Ayutthaya Historical Park", city: "Ayutthaya", country: "th",
+    recognition: 'On the island town north of Bangkok; brick prangs and rows of headless Buddhas, with the famous sandstone Buddha head entwined in fig-tree roots at Wat Mahathat marking the central cluster.',
+    localName: 'อุทยานประวัติศาสตร์อยุธยา · Utthayan Prawattisat Ayutthaya',
     categories: ["culture", "park"], budgetTier: "low",
     blurb: "The UNESCO-listed remains of Siam's former capital: brick prangs, rows of headless Buddhas and the famous sandstone Buddha head cradled in fig-tree roots at Wat Mahathat. An easy day trip north of Bangkok.",
     whyItFits: "For travellers wanting a major cultural site within a short train or van ride of Bangkok, explorable by bicycle or tuk-tuk.",
@@ -372,6 +390,8 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-damnoen-saduak", name: "Damnoen Saduak Floating Market", city: "Ratchaburi", country: "th",
+    recognition: 'Southwest of Bangkok in Ratchaburi; wooden boats piled with fruit and noodles crowd the narrow khlong canals, boarded from the piers and bank-side walkways lined with vendor shophouses.',
+    localName: 'ตลาดน้ำดำเนินสะดวก · Talat Nam Damnoen Saduak',
     categories: ["market", "food"], budgetTier: "low",
     blurb: "The most famous floating market in Thailand, a maze of canals where vendors paddle wooden boats laden with fruit, noodles and souvenirs near Bangkok.",
     whyItFits: "For travellers wanting the classic floating-market scene; go at dawn before the tour boats arrive.",
@@ -386,6 +406,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-maeklong-railway-market", name: "Maeklong Railway Market", city: "Samut Songkhram", country: "th",
+    recognition: 'In Samut Songkhram beside Maeklong station; fresh-produce stalls and awnings sit directly over an active single railway track, retracting as the train edges through and folding back after it passes.',
+    localName: 'ตลาดร่มหุบ · Talat Rom Hup',
     categories: ["market", "food"], budgetTier: "low",
     blurb: "A fresh market built right along a working railway: stalls and awnings retract within seconds as the train rolls through, then spill back over the tracks once it passes.",
     whyItFits: "For travellers wanting one of the regions most extraordinary market spectacles, an easy day trip from Bangkok.",
@@ -648,6 +670,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-nan-walking-street", name: "Nan Walking Street (Kad Khuang Muang Nan)", city: "Nan", country: "th",
+    recognition: 'On weekend evenings the street directly beside Wat Phumin in Nan old town; diners sit on mats at low khantoke tables in front of the temple that holds the Whispering Lovers mural.',
+    localName: 'กาดข่วงเมืองน่าน · Kad Khuang Muang Nan',
     categories: ["food"], budgetTier: "budget",
     isLocal: true,
     kidFriendly: true,
@@ -749,6 +773,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-bangkok-thipsamai",
+    recognition: 'At 313 Maha Chai Road near the Golden Mount in old Bangkok; an open-fronted shop with a charcoal wok line at the front, a fresh orange-juice counter and a pavement queue most evenings.',
+    localName: 'ผัดไทยทิพย์สมัย · Phat Thai Thipsamai',
     name: "Thipsamai Pad Thai",
     city: "Bangkok",
     country: "th",
@@ -867,6 +893,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-chiang-mai-cowboy-hat-kha-moo",
+    recognition: 'An evening stall at the Chang Phueak (north) gate night market of Chiang Mai; find the vendor in the black cowboy hat at the chopping board, with communal folding tables and a nightly queue.',
+    localName: 'ข้าวขาหมูช้างเผือก · Khao Kha Mu Chang Phueak',
     name: "Khao Kha Moo Chang Phueak (Cowboy Hat Lady)",
     city: "Chiang Mai",
     country: "th",
@@ -944,6 +972,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-bangkok-mandarin-oriental",
+    recognition: 'On the Chao Phraya east bank in the Charoen Krung trading quarter; a riverside grand hotel reached by its own shuttle boat, with the low colonial-era Authors Wing set beside the modern river-view tower.',
+    localName: 'โรงแรมแมนดาริน โอเรียนเต็ล กรุงเทพ · Rongraem Mandarin Oriental Krung Thep',
     name: "Mandarin Oriental Bangkok",
     city: "Bangkok",
     country: "th",
@@ -1005,6 +1035,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-bangkok-atlanta-hotel",
+    recognition: 'On Sukhumvit Soi 2 near Nana BTS; a 1950s hotel with a preserved art deco lobby and an original garden swimming pool, with its famous strict house rules posted at the entrance.',
+    localName: 'โรงแรมแอตแลนตา · Rongraem Atlanta',
     name: "The Atlanta Hotel",
     city: "Bangkok",
     country: "th",
@@ -1050,6 +1082,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-nong-khai-mut-mee-garden",
+    recognition: 'On the Mekong riverbank in central Nong Khai; a shaded garden of tables stepping down to the water, looking straight across the river to Laos, off the lane behind the town riverside promenade.',
     name: "Mut Mee Garden Guesthouse",
     city: "Nong Khai",
     country: "th",

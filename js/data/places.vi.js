@@ -1,6 +1,8 @@
 export const PLACES_VI = [
   {
     id: "vi-hanoi-temple-of-literature", name: "Temple of Literature (Van Mieu)", city: "Hanoi", country: "vi",
+    recognition: 'Look for the low red-tiled Van Mieu gate on Quoc Tu Giam Street, opening into a walled sequence of courtyards, lotus ponds and a stone stelae garden mounted on stone turtles.',
+    localName: 'Văn Miếu Quốc Tử Giám · Van Mieu Quoc Tu Giam',
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "Vietnam's first national university, founded in 1070, set across tranquil walled courtyards and lotus ponds.",
@@ -29,6 +31,8 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hanoi-ta-hien-beer-street", name: "Ta Hien Beer Street", city: "Hanoi", country: "vi",
+    recognition: 'You have found it when a narrow Old Quarter corner is jammed with tiny plastic stools spilling off the pavement and bia hoi signs, a short walk north of Hoan Kiem Lake.',
+    localName: 'Phố Tạ Hiện · Pho Ta Hien',
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife"], budgetTier: "low",
     blurb: "Buzzing Old Quarter corner where plastic stools spill onto the street for cheap draught beer (bia hoi).",
@@ -43,6 +47,8 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-war-remnants-museum", name: "War Remnants Museum", city: "Ho Chi Minh City", country: "vi",
+    recognition: 'A boxy multi-storey building on Vo Van Tan Street whose forecourt is parked with captured US helicopters, tanks and a fighter jet behind the perimeter fence.',
+    localName: 'Bảo tàng Chứng tích Chiến tranh · Bao tang Chung tich Chien tranh',
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "Sobering museum documenting the Vietnam War through photography, military hardware and personal accounts.",
@@ -57,6 +63,8 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-ben-thanh-market", name: "Ben Thanh Market", city: "Ho Chi Minh City", country: "vi",
+    recognition: 'Head for the large ochre market hall crowned by a clock tower over its south gate, sitting on the traffic roundabout at the western foot of Le Loi Street.',
+    localName: 'Chợ Bến Thành · Cho Ben Thanh',
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["market", "food"], budgetTier: "mid",
     blurb: "Landmark central market with souvenir stalls by day and an outdoor street-food night market on the perimeter.",
@@ -85,6 +93,8 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hoian-ancient-town", name: "Hoi An Ancient Town", city: "Hoi An", country: "vi",
+    recognition: 'You are in it once the traffic-free lanes turn to mustard-yellow shophouses hung with silk lanterns beside the Thu Bon River, anchored by the covered Japanese Bridge.',
+    localName: 'Phố cổ Hội An · Pho co Hoi An',
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "UNESCO-listed riverside trading port of lantern-lit lanes, the Japanese Covered Bridge and merchant houses.",
@@ -113,6 +123,8 @@ export const PLACES_VI = [
   },
   {
     id: "vi-danang-marble-mountains", name: "Marble Mountains (Ngu Hanh Son)", city: "Da Nang", country: "vi",
+    recognition: 'A cluster of marble-and-limestone hills rising abruptly from the flat coastal plain on Le Van Hien Street, ringed at their base by marble-carving workshops.',
+    localName: 'Ngũ Hành Sơn · Ngu Hanh Son',
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "low",
     blurb: "Cluster of limestone and marble outcrops riddled with caves, pagodas and panoramic viewpoints between Da Nang and Hoi An.",

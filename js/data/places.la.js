@@ -1,6 +1,7 @@
 export const PLACES_LA = [
   {
     id: "la-vte-cope",
+    recognition: 'A low visitor centre in the National Rehabilitation Centre grounds off Khouvieng Road, marked by hanging displays and sculptures made from cluster-bomb casings and prosthetic limbs.',
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "COPE Visitor Centre",
     city: "Vientiane",
@@ -21,6 +22,8 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-pha-that-luang",
+    recognition: 'A colossal gold-covered stupa with a tapering spire and a stepped square base, ringed by a cloister wall and a statue of King Setthathirath out front, northeast of the city centre.',
+    localName: 'ພະທາດຫຼວງ · Pha That Luang',
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Pha That Luang",
     city: "Vientiane",
@@ -61,6 +64,8 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-buddha-park",
+    recognition: 'A riverside field of weathered grey concrete statues about 25 km southeast of the city near the Friendship Bridge, dominated by a giant reclining Buddha and a tall domed pumpkin-shaped structure you climb through.',
+    localName: 'ວັດຊຽງຄວນ · Xieng Khuan',
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Buddha Park (Xieng Khuan)",
     city: "Vientiane",
@@ -81,6 +86,8 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-kuang-si",
+    recognition: 'About 30 km south of town, a multi-tier turquoise waterfall dropping through terraced limestone pools, with a moon-bear rescue enclosure beside the entrance path.',
+    localName: 'ນ້ຳຕົກຕາດກວາງຊີ · Nam Tok Tad Kuang Si',
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Kuang Si Falls",
     city: "Luang Prabang",
@@ -101,6 +108,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-night-market",
+    recognition: 'Rows of red-tented handicraft stalls that fill Sisavangvong Road each evening between the Royal Palace Museum and Mount Phousi, with a cheap fill-your-plate buffet in a side alley.',
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Luang Prabang Night Market",
     city: "Luang Prabang",

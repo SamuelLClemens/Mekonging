@@ -9,6 +9,7 @@
 export const PLACES_LA_EXT = [
   {
     id: "la-ext-nam-xay", name: "Nam Xay Viewpoint", city: "Vang Vieng", country: "la",
+    recognition: 'A steep karst peak southeast of town whose bare summit rock holds a much-photographed old motorbike prop, looking out over the Nam Song valley and its dawn hot-air balloons.',
     categories: ["viewpoint", "hike", "nature"], budgetTier: "low",
     blurb: "A short but steep karst climb that opens onto the photo most people picture when they think of Vang Vieng: jagged limestone peaks above the Nam Song valley, often with a hot-air balloon drifting past at dawn or dusk. A motorbike sits at the summit as a much-photographed prop.",
     whyItFits: "Suits photographers and active travellers who want the iconic vista without the river-tubing party scene. The climb takes roughly 30-45 minutes and rewards far beyond its effort.",
@@ -37,6 +38,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-pha-daeng-peak", name: "Pha Daeng Peak Viewpoint", city: "Nong Khiaw", country: "la",
+    recognition: 'A steep rope-assisted climb from the roadside just southwest of Nong Khiaw village, topping out at a bare rock ledge overlooking the Nam Ou, the village bridge and encircling karst peaks.',
     categories: ["viewpoint", "hike", "nature"], budgetTier: "low",
     blurb: "The most scenic of Nong Khiaw's limestone climbs, delivering a sweeping panorama over the Nam Ou river, the village bridge and an amphitheatre of karst peaks. A steep, root-and-rock trail with rope-assisted sections near the top.",
     whyItFits: "For hikers who want northern Laos at its most cinematic. The roughly 1.5-hour climb is demanding but the summit is one of the finest viewpoints in the country.",
@@ -65,6 +67,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-kong-lor", name: "Kong Lor Cave", city: "Thakhek", country: "la",
+    recognition: 'A cave mouth at the end of Ban Kong Lor village where longtail boats enter a 7.5 km river tunnel bored by the Nam Hin Bun through a limestone mountain.',
     categories: ["nature", "park"], budgetTier: "mid",
     blurb: "A 7.5 km river cave on the Thakhek Loop where a longtail boat motors you through a vast pitch-black limestone tunnel carved by the Nam Hin Bun, emerging into daylight at the far end. The cathedral-scale chambers and underground river are among Southeast Asia's most extraordinary cave experiences.",
     whyItFits: "The natural highlight of the Thakhek Loop and worth the detour for anyone in central Laos, even without a motorbike. Set within the Phou Hin Boun protected area.",
@@ -93,6 +96,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-tad-fane", name: "Tad Fane Waterfall", city: "Paksong", country: "la",
+    recognition: 'On the Bolaven Plateau near Paksong, twin side-by-side jets plunge about 120 m into a forested gorge, viewed from a clifftop platform beside a small resort cafe.',
     categories: ["waterfall", "viewpoint", "nature", "park"], budgetTier: "low",
     blurb: "A dramatic twin cascade plunging around 120 m off the Bolaven Plateau escarpment into a forested gorge, framed by a viewpoint within the Dong Hua Sao protected area. On windy days the spray throws up rainbows across the canyon.",
     whyItFits: "The most striking single waterfall on the Bolaven Plateau and an easy stop on the coffee-country loop out of Pakse. A short walk reaches the main viewpoint; longer trails and a zip-line cater to the more adventurous.",
@@ -135,6 +139,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-khone-phapheng", name: "Khone Phapheng Falls", city: "Si Phan Don", country: "la",
+    recognition: 'Near the Cambodian border, a broad thundering wall of Mekong rapids and cascades viewed from riverside platforms in a fenced park reached from Ban Nakasang.',
     categories: ["waterfall", "nature", "viewpoint"], budgetTier: "low",
     blurb: "The most powerful waterfall on the Mekong and, by volume, the largest in Southeast Asia: a vast set of rapids and cascades crashing across the river near the Cambodian border. Viewing platforms and a riverside park let you feel the sheer force up close.",
     whyItFits: "For anyone in the 4000 Islands who wants raw natural spectacle. It is a short trip from Nakasang or the islands and pairs naturally with a Don Khon cycling day.",
@@ -149,6 +154,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-plain-of-jars-1", name: "Plain of Jars — Site 1 (Thong Hai Hin)", city: "Phonsavan", country: "la",
+    recognition: 'About 10 km from Phonsavan, grassy hillsides scattered with hundreds of giant Iron Age stone jars, flagged walking paths threading between the jars and old bomb craters.',
     categories: ["culture", "nature", "park"], budgetTier: "low",
     blurb: "The largest and most accessible cluster of the UNESCO-listed Plain of Jars: hundreds of giant Iron Age stone jars, some over two metres tall, scattered across rolling grassland. Cleared walking paths thread between the jars and old wartime bomb craters mark the same fields.",
     whyItFits: "For history-minded travellers who want one of Southeast Asia's great archaeological mysteries plus sobering context on the Secret War. Site 1 is a ten-minute drive from Phonsavan and the easiest introduction.",
@@ -163,6 +169,7 @@ export const PLACES_LA_EXT = [
   },
 {
     id: "la-ext-pak-ou-caves", name: "Pak Ou Caves", city: "Luang Prabang", country: "la",
+    recognition: 'Two limestone caves in a cliff facing the Mekong at its junction with the Nam Ou, packed with thousands of small Buddha statues, reached by boat and a stairway from the water.',
     categories: ["culture", "nature"], budgetTier: "low",
     blurb: "Two riverside limestone caves above the confluence of the Mekong and Nam Ou, crammed with thousands of old Buddha statues left by pilgrims over centuries. Reached by a scenic slow-boat trip upriver from Luang Prabang.",
     whyItFits: "For travellers wanting a half-day on the Mekong combined with an atmospheric cave shrine; boats often stop at a whisky-making village en route.",
@@ -177,6 +184,8 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-wat-phou", name: "Wat Phou (Vat Phou)", city: "Champasak", country: "la",
+    recognition: 'A pre-Angkorian Khmer temple stepping up the slope of Phou Kao mountain above the Mekong plain south of Pakse, approached along a causeway past two ruined stone barays.',
+    localName: 'ວັດພູ · Wat Phou',
     categories: ["culture", "park", "viewpoint"], budgetTier: "low",
     blurb: "A UNESCO-listed pre-Angkorian Khmer temple complex stepping up a sacred mountainside above the Mekong plain, with a sanctuary, ancient causeways, frangipani-shaded terraces and a sweeping view from the upper shrine.",
     whyItFits: "For history lovers wanting major Khmer architecture without Angkor's crowds, on a quiet day trip from Pakse or Champasak town.",
@@ -191,6 +200,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-tad-yuang", name: "Tad Yuang Waterfall", city: "Paksong", country: "la",
+    recognition: 'On the Bolaven coffee loop near Paksong, a broad roughly 40 m curtain of water with a viewpoint platform and a path leading down to the pool and behind the falls.',
     categories: ["waterfall", "nature"], budgetTier: "low",
     blurb: "A broad, photogenic 40 m waterfall on the Bolaven Plateau, framed by coffee-country forest, with a viewpoint platform and a path leading down to the splash pool and behind the curtain of water.",
     whyItFits: "One of the easiest and prettiest stops on the Bolaven coffee loop, less developed than nearby Tad Fane and good for a short walk and a swim.",
@@ -289,6 +299,8 @@ export const PLACES_LA_EXT = [
   },
 {
     id: "la-ext-talat-sao", name: "Talat Sao Morning Market", city: "Vientiane", country: "la",
+    recognition: 'Vientiane central market, a large multi-storey complex with an adjoining modern mall wing at the Lane Xang and Khu Vieng junction near the bus station.',
+    localName: 'ຕະຫຼາດເຊົ້າ · Talat Sao',
     categories: ["market", "culture"], budgetTier: "low",
     blurb: "Vientiane main market, a sprawling complex selling textiles, silver, gold, handicrafts and electronics alongside a modern mall wing and a busy food court.",
     whyItFits: "For travellers wanting Lao textiles and silverware plus a cheap, varied lunch in the capital.",
@@ -386,6 +398,8 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-kuangsi-falls", name: "Kuang Si Falls", city: "Luang Prabang", country: "la",
+    recognition: 'About 30 km south of town, a multi-tier turquoise waterfall dropping through terraced limestone pools, with a moon-bear rescue enclosure beside the entrance path.',
+    localName: 'ນ້ຳຕົກຕາດກວາງຊີ · Nam Tok Tad Kuang Si',
     categories: ["nature", "waterfall"], budgetTier: "low",
     kidFriendly: true,
     activities: ["waterfalls", "swimming", "hiking", "wildlife"],
@@ -468,6 +482,8 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-vientiane-herbal-sauna", name: "Traditional Lao Herbal Sauna at Wat Sok Pa Luang", city: "Vientiane", country: "la",
+    recognition: 'A raised wooden herbal-steam hut in the forested grounds of Wat Sok Pa Luang monastery on the southern edge of the city, with shaded rest decks around it.',
+    localName: 'ວັດໂສກປາຫຼວງ · Wat Sok Pa Luang',
     categories: ["wellness", "culture"], budgetTier: "budget",
     kidFriendly: false,
     activities: ["spa", "massage"],
@@ -532,6 +548,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-luang-prabang-belmond-phou-vao",
+    recognition: 'A hilltop resort on Phou Vao just outside the old town, its lotus-pond spa and infinity pool looking across the temple roofs toward Mount Phousi.',
     name: "Belmond La Residence Phou Vao",
     city: "Luang Prabang",
     country: "la",
@@ -594,6 +611,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-vientiane-settha-palace",
+    recognition: 'A restored 1932 French-colonial hotel on Pang Kham Street near the Nam Phou fountain, with a cream facade, shuttered windows and a palm-lined garden pool.',
     name: "Settha Palace Hotel",
     city: "Vientiane",
     country: "la",
