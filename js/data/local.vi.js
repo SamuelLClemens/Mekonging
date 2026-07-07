@@ -507,5 +507,92 @@ export const LOCAL_VI = [
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
       { org: "Wikivoyage - Phu Quoc", url: "https://en.wikivoyage.org/wiki/Phu_Quoc" },
     ],
+  },
+  {
+    slug: "con-dao",
+    city: "Con Dao",
+    country: "vi",
+    verified: "2026-07",
+    intro: "Con Dao is a small national-park island where almost all local life happens in Con Son town: one morning market, a handful of minimarts and a strip of evening seafood stalls near the seafront. Supplies arrive by boat from the mainland, so everything costs more here than in Ho Chi Minh City or Vung Tau.",
+    markets: [
+      {
+        name: "Con Son Market (Cho Con Dao)",
+        when: "Daily, roughly ~5:30-10:00; liveliest before ~8:00",
+        where: "Con Son town centre, a couple of blocks in from the seafront",
+        what: "Fresh seafood straight off the boats, fruit, vegetables, herbs, eggs and a few breakfast food stalls",
+        tip: "Go before ~8:00 for the freshest seafood and produce, because by mid-morning most stalls are packing up.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Fruit and vegetables",
+        where: "Con Son Market in the morning; a few small grocery shops around town sell whatever is left later in the day",
+        tip: "Buy fruit at the morning market since it comes over on the boat and the afternoon leftovers in shops are pricier and tired.",
+      },
+      {
+        what: "Water, snacks, toiletries and dry goods",
+        where: "Minimarts and family-run grocery shops in Con Son town centre, mostly within a short walk of the market",
+        tip: "Expect prices noticeably above mainland supermarkets, and stock up early if rough seas are forecast because boat deliveries can be delayed.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies/diapers and baby formula - stock up BEFORE the island",
+        where: "Buy in Ho Chi Minh City (Co.opmart, Con Cung and other baby chains) before your flight, or in Vung Tau before the ferry",
+        price: "Mainland supermarket prices (VND); expect a clear markup for anything bought on the island",
+        tip: "Bring your full supply of nappies and your baby's usual formula with you, because island shops carry only small packs of a few brands and can simply run out.",
+      },
+      {
+        item: "Emergency top-up of nappies or basic formula on the island",
+        where: "Minimarts and grocery shops in Con Son town centre near the market",
+        price: "Roughly 20-40% above mainland VND prices when in stock",
+        tip: "Treat island stock as a backup only and do not count on finding your usual brand or size.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Com binh dan rice shops",
+        dish: "Rice plate with a choice of home-style dishes (fish, pork, greens)",
+        price: "35,000-60,000 VND",
+        where: "Small eateries along the streets around the market in Con Son town",
+        tip: "Point at two or three trays and you get a filling lunch at the same places workers and boat crews eat.",
+      },
+      {
+        name: "Morning banh mi carts",
+        dish: "Banh mi with egg, pate or grilled pork",
+        price: "15,000-30,000 VND",
+        where: "Around Con Son Market and the main streets, mornings only",
+        tip: "Grab one before a boat trip or national-park hike since food options outside town are almost nonexistent.",
+      },
+      {
+        name: "Breakfast noodle stalls",
+        dish: "Hu tieu or pho, often with local seafood",
+        price: "35,000-55,000 VND",
+        where: "In and around the market and nearby shophouses, roughly ~6:00-9:30",
+        tip: "Follow the locals eating before work; when the pot is empty the stall closes for the day.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Evening seafood and snail stalls",
+        dish: "Grilled squid, clams and oc (sea snails) with dipping sauces",
+        price: "60,000-150,000 VND per plate",
+        when: "Roughly ~17:00-22:00 daily",
+        where: "Near the market and along the seafront in Con Son town",
+        tip: "Ask the price per plate before ordering and expect busier nights when Vietnamese pilgrims are in town for the Vo Thi Sau shrine.",
+      },
+      {
+        name: "Che and sinh to (smoothie) stands",
+        dish: "Sweet bean desserts and fresh fruit smoothies",
+        price: "15,000-35,000 VND",
+        when: "Late afternoon into the evening, roughly ~15:00-21:00",
+        where: "Con Son town centre streets near the market",
+        tip: "A cold sinh to is the local way to cool down after the beach, and kids love the che cups.",
+      },
+    ],
+    sources: [
+      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Con Dao National Park", url: "http://condaopark.com.vn" },
+    ],
   }
 ];

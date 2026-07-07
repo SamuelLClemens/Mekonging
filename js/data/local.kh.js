@@ -213,5 +213,104 @@ export const LOCAL_KH = [
       { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" },
       { org: "Wikivoyage - Kep", url: "https://en.wikivoyage.org/wiki/Kep" },
     ],
+  },
+  {
+    slug: "koh-rong-sanloem",
+    city: "Koh Rong Sanloem",
+    country: "kh",
+    verified: "2026-07",
+    intro: "Koh Rong Sanloem is a tiny, low-key island: Saracen Bay is a crescent of resorts with no shops beyond resort minimarts, while M'Pai Bay in the north is the budget village with the island's only real shops and local eats. There are no ATMs and no pharmacies, power is generator-limited in places, so bring all your cash and do your stocking up in Sihanoukville before the ferry.",
+    markets: [
+      {
+        name: "Phsar Leu Market (Sihanoukville, before the ferry)",
+        when: "Daily, ~6:00-17:00; freshest produce before ~9:00",
+        where: "Central Sihanoukville, a short tuk-tuk ride from the ferry piers",
+        what: "The last full market before the island: fruit, vegetables, meat, dry goods, toiletries and household basics",
+        tip: "Do your big shop here the day before the ferry, because once you land on the island you will only find snack-shop basics.",
+      },
+      {
+        name: "M'Pai Bay village shops and morning fish landing",
+        when: "Daily; small shops roughly ~7:00-20:00, fishermen land the catch in the early morning",
+        where: "M'Pai Bay village, the local settlement at the island's northern end",
+        what: "A handful of small family shops with limited fruit, eggs, instant noodles, water and snacks, plus fresh fish straight off the boats; there is no market building",
+        tip: "Everything arrives by supply boat from Sihanoukville, so shop soon after the boat comes in for the best pick of fruit.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Water, snacks, mosquito repellent and basic toiletries",
+        where: "Family-run shops along the main sandy path in M'Pai Bay",
+        tip: "Prices run higher than the mainland because everything is boated over, so do not begrudge the small island markup.",
+      },
+      {
+        what: "Emergency basics only (crisps, water, sunscreen)",
+        where: "Resort minimarts along Saracen Bay",
+        tip: "Saracen Bay has no village and no shops at all beyond the resorts, so treat the minimarts as backup rather than a place to stock up.",
+      },
+      {
+        what: "Drinking water in big 1.5 L bottles or refills",
+        where: "M'Pai Bay shops and some guesthouses",
+        tip: "Ask your guesthouse about water refills before buying bottle after bottle — several places offer them and it saves plastic on a small island.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and baby wipes",
+        where: "Not reliably available anywhere on the island — stock up in Sihanoukville before the ferry, at the supermarkets and pharmacy shops around Phsar Leu Market and the town centre",
+        price: "5-9 USD per pack (mainland prices)",
+        tip: "Count out what you need for the whole stay plus a full spare day, because nobody on the island can sell you nappies at 9 pm.",
+      },
+      {
+        item: "Infant formula and baby food",
+        where: "Buy on the mainland in Sihanoukville pharmacies and supermarkets; island shops carry at most UHT milk and instant porridge",
+        price: "10-20 USD per formula tin (mainland prices)",
+        tip: "Power cuts are normal on the island, so plan for formula you can prepare with bottled water and ask your resort when the generator and kettle actually run.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Khmer family kitchens, M'Pai Bay",
+        dish: "Fried rice, lok lak, noodle soup",
+        price: "2-4 USD",
+        where: "Along the main path through M'Pai Bay village",
+        tip: "The blackboard-menu places where boat crews eat lunch are the ones charging local prices.",
+      },
+      {
+        name: "Fresh-catch barbecue plates",
+        dish: "Grilled fish or squid with rice and dipping sauce",
+        price: "4-6 USD",
+        where: "Beachfront grills in M'Pai Bay, evenings",
+        tip: "Ask what came off the boats that morning and order that, since anything else likely arrived frozen from the mainland.",
+      },
+      {
+        name: "Khmer-run restaurants among the Saracen Bay resorts",
+        dish: "Fish amok, fried noodles",
+        price: "4-7 USD",
+        where: "Mixed in along the Saracen Bay beachfront",
+        tip: "If you are based on Saracen Bay, the simpler Khmer-run places are noticeably cheaper than the resort dining rooms next door.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Morning noodle-soup stall, M'Pai Bay",
+        dish: "Kuy teav (rice-noodle soup with pork or fish)",
+        price: "1.50-2.50 USD",
+        when: "Mornings, roughly ~6:30-9:30",
+        where: "M'Pai Bay village",
+        tip: "Eat where the fishermen eat after landing the catch — when the pot is empty, breakfast is over.",
+      },
+      {
+        name: "Grilled seafood skewers",
+        dish: "Squid or fish skewers with pepper-lime dip",
+        price: "1.50-3 USD per skewer",
+        when: "Late afternoon into evening, ~16:00-21:00",
+        where: "Beach grills at M'Pai Bay",
+        tip: "Ask for skewers grilled to order rather than taking ones already sitting cooked on the rack.",
+      },
+    ],
+    sources: [
+      { org: "Ministry of Tourism Cambodia", url: "https://www.mot.gov.kh" },
+      { org: "Travelfish", url: "https://www.travelfish.org" },
+    ],
   }
 ];

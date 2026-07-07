@@ -205,5 +205,112 @@ export const LOCAL_LA = [
       { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" },
       { org: "Lonely Planet", url: "https://www.lonelyplanet.com/laos/nong-khiaw" },
     ],
+  },
+  {
+    slug: "don-det",
+    city: "Don Det (Si Phan Don)",
+    country: "la",
+    verified: "2026-07",
+    intro: "Don Det is a tiny, car-light island in Si Phan Don where nearly everything locals eat or sell is boated over from Ban Nakasang on the mainland. Do your real shopping and cash withdrawal before you cross - the island itself has only small family shops, simple traveller restaurants and guesthouse kitchens.",
+    markets: [
+      {
+        name: "Ban Nakasang Morning Market",
+        when: "Daily, ~5:00-11:00, busiest before 8:00",
+        where: "Ban Nakasang village on the mainland, a short walk uphill from the longtail boat pier to Don Det",
+        what: "Fresh fruit and vegetables, Mekong fish, grilled meats, sticky rice, dry goods and household basics - this is where island guesthouses do their own shopping",
+        tip: "Shop here right before your boat and hand the bags to the boatman - everyone does it and it is far cheaper than island prices.",
+      },
+      {
+        name: "Dao Heuang Market (Pakse)",
+        when: "Daily, ~6:00-17:00, freshest in the morning",
+        where: "Pakse, near the Lao-Nippon bridge, roughly 3 hours north of Nakasang by bus or minivan",
+        what: "The big regional market - produce, dry goods, pharmacies and minimarts nearby for baby supplies, toiletries and anything the islands do not carry",
+        tip: "Treat Pakse as your last full-service stop and buy anything specific here, because south of it the choice only shrinks.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Water, snacks, sunscreen, mosquito repellent and other basics",
+        where: "Small family-run shops along the main path near the Don Det boat landing and the sunset strip",
+        tip: "Stock is thin and prices carry an island markup, so buy heavy or bulky items in Nakasang before the boat.",
+      },
+      {
+        what: "Fresh fruit and vegetables",
+        where: "Ban Nakasang Morning Market before boarding the longtail boat",
+        tip: "There is no proper produce market on Don Det itself, so grab fruit on the mainland if you want it in your bungalow.",
+      },
+      {
+        what: "Cash in kip",
+        where: "ATMs and banks in Pakse; Ban Nakasang has a BCEL ATM but it can be empty or offline",
+        tip: "Don Det runs on cash, so carry enough kip from Pakse for your whole island stay plus the boat back.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies / diapers",
+        where: "Buy in Pakse (minimarts and pharmacies around Dao Heuang Market) before heading south; small packs occasionally appear in Nakasang shops but sizes and brands are unreliable, and Don Det itself has effectively none",
+        price: "~90,000-180,000 LAK per pack in Pakse",
+        tip: "Count out enough nappies for every island day plus two spare days, because once you are on Don Det there is no plan B.",
+      },
+      {
+        item: "Baby formula and baby food",
+        where: "Pharmacies and larger minimarts in Pakse; not stocked on the islands beyond the odd tin of UHT milk in a village shop",
+        price: "~150,000-300,000 LAK per formula tin in Pakse",
+        tip: "Bring sealed tins from Pakse and a way to boil water, since island shops cannot be counted on for either.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Noodle-soup shacks by the Don Det boat landing",
+        dish: "Feu (Lao rice-noodle soup)",
+        price: "25,000-45,000 LAK",
+        where: "North tip of Don Det, around the boat landing and main village path",
+        tip: "Eat where the boatmen eat mid-morning - the pot that is nearly empty by 10am is the one you want.",
+      },
+      {
+        name: "Family guesthouse kitchens on the sunrise side",
+        dish: "Fried rice, laap or curry with sticky rice",
+        price: "30,000-60,000 LAK",
+        where: "Quieter sunrise-side lane of Don Det, away from the sunset strip bars",
+        tip: "One person cooks every dish in order, so order early and treat the wait as part of island pace.",
+      },
+      {
+        name: "Nakasang market food stalls",
+        dish: "Khao piak sen and grilled chicken with sticky rice",
+        price: "20,000-40,000 LAK",
+        where: "Inside and around Ban Nakasang Morning Market, by the mainland pier",
+        tip: "Have breakfast here before catching the boat - it is cheaper and fresher than anything once you are on the island.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Khao jee baguette stands",
+        dish: "Lao baguette with egg, pate and vegetables",
+        price: "20,000-35,000 LAK",
+        when: "Mornings, ~6:30-11:00",
+        where: "Main village path near the Don Det boat landing",
+        tip: "Grab one wrapped to go before cycling over the French bridge to the Don Khon waterfalls - food options thin out along the way, and budget for the small bridge/waterfall fee.",
+      },
+      {
+        name: "Pancake and fruit-shake stalls",
+        dish: "Banana-chocolate pancake and fresh fruit shakes",
+        price: "15,000-30,000 LAK each",
+        when: "Afternoons to sunset, ~14:00-19:00",
+        where: "Along the sunset strip on Don Det's west side",
+        tip: "Time your pancake for sunset on the strip and check the ice looks factory-made in tube form before ordering a shake.",
+      },
+      {
+        name: "Grill stalls at Nakasang market",
+        dish: "Grilled Mekong fish and chicken skewers with sticky rice",
+        price: "25,000-50,000 LAK",
+        when: "Mornings, ~6:00-10:00",
+        where: "Ban Nakasang Morning Market, mainland side of the crossing",
+        tip: "Pick a skewer straight off the coals and it makes a cheap packed lunch for the boat ride around Si Phan Don.",
+      },
+    ],
+    sources: [
+      { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" },
+      { org: "Wikivoyage - Si Phan Don", url: "https://en.wikivoyage.org/wiki/Si_Phan_Don" },
+    ],
   }
 ];

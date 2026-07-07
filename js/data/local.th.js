@@ -501,5 +501,210 @@ export const LOCAL_TH = [
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Wikivoyage - Ko Pha Ngan", url: "https://en.wikivoyage.org/wiki/Ko_Pha_Ngan" },
     ],
+  },
+  {
+    slug: "koh-tao",
+    city: "Koh Tao",
+    country: "th",
+    verified: "2026-07",
+    intro: "Koh Tao is a small dive island with no big supermarket: Mae Haad around the pier is where locals actually shop and eat, while the Sairee beach strip is mostly geared to divers. Everything arrives by boat, so prices run higher than the mainland and stock can simply run out.",
+    markets: [
+      {
+        name: "Mae Haad fresh market",
+        when: "~daily mornings, roughly 06:00-13:00 (busiest early)",
+        where: "Back streets of Mae Haad village, a short walk inland from the main pier",
+        what: "A small local market with fruit, vegetables, fish, eggs and a handful of cooked-food and curry stalls where island workers eat - do not expect a big mainland-style market",
+        tip: "Produce and fish come over on the morning boats, so go before ~09:00 for the widest pick and the liveliest local crowd.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Fruit and vegetables",
+        where: "Mae Haad fresh market, plus pickup-truck and roadside fruit vendors along the Mae Haad-Sairee road",
+        tip: "The fruit trucks parked along the main road are often cheaper than shopfronts, and they will slice a pineapple or papaya for you on the spot.",
+      },
+      {
+        what: "Drinking water and everyday staples",
+        where: "Family-run minimarts on the inland roads rather than the beachfront 7-Elevens in Sairee and Mae Haad",
+        tip: "Refill bottles at the coin-operated water machines outside many minimarts for a few baht instead of buying new plastic every day.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and formula - stock up BEFORE the ferry",
+        where: "Big C, Lotus's or Makro on Koh Samui, or the supermarkets in Surat Thani or Chumphon town before you board the boat",
+        price: "Full-size packs ~300-600 THB on the mainland; island packs cost noticeably more",
+        tip: "There is no big-box store on Koh Tao, so buy a full trip's worth of nappies and formula on the mainland or Samui and treat island shops as backup only.",
+      },
+      {
+        item: "Emergency nappies, wipes and small formula tins on the island",
+        where: "7-Elevens in Sairee and Mae Haad, and the pharmacies near Mae Haad pier",
+        price: "Small packs ~150-300 THB",
+        tip: "Island shops mostly carry small packs in limited sizes, so if you see your size, buy it rather than hoping the next shop has it.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "995 Roasted Duck",
+        dish: "Roast duck over rice or duck noodle soup",
+        price: "60-120 THB",
+        where: "Mae Haad, on the road up from the pier",
+        tip: "This is where dive staff and islanders eat between boats, and the duck often sells out well before evening.",
+      },
+      {
+        name: "Pranee's Kitchen",
+        dish: "Thai curries, stir-fries and som tam",
+        price: "70-150 THB",
+        where: "Mae Haad, on the seafront a short walk from the pier",
+        tip: "A long-running Mae Haad Thai kitchen, so order the curries rather than the western menu.",
+      },
+      {
+        name: "Cooked-food stalls at Mae Haad market",
+        dish: "Khao gaeng (rice with pre-cooked curries) and noodle soups",
+        price: "40-80 THB",
+        where: "Inside and around the Mae Haad fresh market",
+        tip: "Point at two curries over rice like the locals do and you will eat well for the price of a smoothie on the beach.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Sairee roti carts",
+        dish: "Banana roti (Thai pancake), plain or with egg and condensed milk",
+        price: "40-80 THB",
+        when: "~evenings, 17:00-23:00",
+        where: "Along the Sairee village walking strip",
+        tip: "Go for the simple banana-and-egg version, which is cooked fresh in front of you and travels well back to the beach.",
+      },
+      {
+        name: "Grilled chicken and som tam stalls",
+        dish: "Gai yang (grilled chicken) with sticky rice and papaya salad",
+        price: "50-100 THB",
+        when: "~late morning to early evening",
+        where: "Roadside along the main Mae Haad-Sairee road",
+        tip: "Ask for the som tam 'pet nit noi' (a little spicy) unless you genuinely want the local heat level.",
+      },
+      {
+        name: "Morning skewer stalls at Mae Haad market",
+        dish: "Moo ping (grilled pork skewers) with sticky rice",
+        price: "10-15 THB per skewer",
+        when: "~mornings, 06:00-10:00",
+        where: "Around the Mae Haad fresh market and pier road",
+        tip: "Grab a bag of skewers and sticky rice before an early ferry or dive boat, which is exactly what the boat crews do.",
+      },
+    ],
+    sources: [
+      { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
+      {
+        org: "Lomprayah High Speed Ferries (mainland-island connections for stocking up)",
+        url: "https://www.lomprayah.com",
+      },
+    ],
+  },
+  {
+    slug: "koh-chang",
+    city: "Koh Chang",
+    country: "th",
+    verified: "2026-07",
+    intro: "Koh Chang is a big forested island in Trat province: tourist life runs down the west-coast strip from White Sand Beach through Klong Prao and Kai Bae to Lonely Beach, while everyday local life sits in Klong Son and Dan Mai villages and the Bang Bao fishing pier in the south. There is no full-size supermarket on the island - shops are mostly 7-Elevens and small minimarts - so locals and long-stayers do their serious shopping in Trat town on the mainland before crossing from Laem Ngop.",
+    markets: [
+      {
+        name: "Klong Son village fresh market",
+        when: "~Daily, roughly 06:00-09:00 (morning market)",
+        where: "Klong Son village, in the island's north between the ferry piers and White Sand Beach",
+        what: "Small village morning market: fruit and vegetables, fresh fish, ready-made curries, grilled chicken and sticky rice, Thai sweets",
+        tip: "Go before 8am with small notes - this is where island families actually buy their food, and the ready-cooked bags of curry make a very cheap breakfast or lunch.",
+      },
+      {
+        name: "Trat town markets (mainland, pre-ferry)",
+        when: "~Daily; day market from early morning, night market roughly 17:00-21:00",
+        where: "Central Trat town, about 20-30 minutes from the Laem Ngop ferry piers",
+        what: "Full-size fresh market plus an evening food market; Trat province fruit like rambutan, mangosteen and durian in season, and proper grocery shopping nearby",
+        tip: "Do your big shop here before you board the ferry - everything on the island costs more and comes in smaller sizes.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Roadside fruit stalls and pickup-truck vendors",
+        where: "Along the west-coast road, especially around Klong Prao and Kai Bae, and in Klong Son village",
+        tip: "Trat is a famous fruit province, so in season (roughly May-July) rambutan and mangosteen from these trucks are usually fresher and cheaper than shop fruit.",
+      },
+      {
+        what: "Fresh seafood straight from the fishing village",
+        where: "Bang Bao pier, at the island's southern end",
+        tip: "Walk past the first restaurants on the pier and buy where you see locals buying - ask the day's price per kilo before pointing at anything.",
+      },
+      {
+        what: "7-Eleven and small minimarts for daily basics",
+        where: "Dotted all along the strip from White Sand Beach to Lonely Beach",
+        tip: "Fine for water, snacks and toiletries, but treat them as top-ups - island minimart prices run noticeably above mainland prices.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and baby wipes",
+        where: "Stock up FIRST at the big supermarkets in Trat town before the Laem Ngop ferry; on the island, 7-Elevens and minimarts along the west coast carry small emergency packs only",
+        price: "Small island packs ~150-300 THB; large mainland packs work out far cheaper per nappy",
+        tip: "Buy a full-size pack in Trat town on your way in, because on the island you will mostly find small packs in limited sizes at tourist prices.",
+      },
+      {
+        item: "Formula, baby food and children's medicines",
+        where: "Pharmacies and minimarts around White Sand Beach and Klong Prao carry common Thai brands; anything specific should come with you from the mainland",
+        price: "Formula tins ~350-600 THB depending on brand and size",
+        tip: "If your child needs a particular formula or medicine, bring it across yourself - island pharmacies are small and cannot order things in quickly.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Klong Son village noodle and rice shops",
+        dish: "Noodle soup, khao man gai (chicken rice), rice-and-curry plates",
+        price: "~50-80 THB",
+        where: "Klong Son village, along the main road near the market",
+        tip: "Eating where the village eats is among the cheapest proper meals on the island - point at what looks good and it will be fine.",
+      },
+      {
+        name: "Back-road Thai eateries behind the beach strip",
+        dish: "Stir-fries, pad krapao with fried egg, fried rice",
+        price: "~60-100 THB",
+        where: "One street back from the main road in Klong Prao and Kai Bae, where staff from the resorts eat",
+        tip: "If the menu is handwritten in Thai and the tables are plastic, you have found the local price - the beachfront version of the same dish often costs double.",
+      },
+      {
+        name: "Morning market food stalls",
+        dish: "Bags of ready-made curry, grilled chicken with sticky rice, Thai sweets",
+        price: "~20-50 THB per item",
+        where: "Klong Son fresh market, mornings only",
+        tip: "Grab a few curry bags and a bag of rice and you have fed the whole family for the price of one beach-bar smoothie.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Bang Bao pier seafood grills",
+        dish: "Grilled fish, prawn and squid skewers from the fishing village",
+        price: "~60-150 THB per skewer or small portion",
+        when: "~Late morning to evening; freshest when the boats have just come in",
+        where: "Along the wooden pier at Bang Bao, southern Koh Chang",
+        tip: "Skewers from the small stalls partway down the pier are a cheap way to taste the catch without committing to a full restaurant bill.",
+      },
+      {
+        name: "Banana roti carts",
+        dish: "Roti pancake with banana, egg or chocolate",
+        price: "~40-70 THB",
+        when: "~Evenings, roughly 17:00 until late",
+        where: "Along the strip at White Sand Beach, Kai Bae and Lonely Beach",
+        tip: "Watch for the cart with a queue of Thai staff after their shift - that one is worth waiting for.",
+      },
+      {
+        name: "Som tam and grilled chicken stalls",
+        dish: "Som tam (papaya salad), gai yang (grilled chicken), sticky rice",
+        price: "~40-90 THB",
+        when: "~Lunchtime through late afternoon",
+        where: "Roadside stalls around Klong Prao and Klong Son",
+        tip: "Say 'phet nit noi' for only a little chilli - the local default heat level is serious.",
+      },
+    ],
+    sources: [
+      { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
+      { org: "Lonely Planet", url: "https://www.lonelyplanet.com" },
+    ],
   }
 ];

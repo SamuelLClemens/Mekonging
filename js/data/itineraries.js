@@ -267,6 +267,81 @@ export const ITINERARIES = [
     tips: ["Carry enough kip in cash for the whole Thakhek loop; ATMs are scarce outside Thakhek town and guesthouses on the route rarely take cards.", "Inspect your rental bike carefully (brakes, tyres, lights), photograph existing damage and wear a helmet; the loop's road surface is mostly sealed now but has rough patches near Thalang.", "November to February is the ideal dry and cool window; from Si Phan Don you can continue overland to Cambodia, so check current border and visa arrangements before relying on that exit."],
     sources: [{ org: "Ministry of Information, Culture and Tourism, Laos (Tourism Laos)", url: "https://www.tourismlaos.org" }],
   },
+  {
+    id: "it-th-gulf-islands-hop",
+    country: "th",
+    title: "Gulf Islands Hop",
+    days: 11,
+    pace: "steady",
+    party: ["solo", "couple", "family"],
+    budget: ["low", "mid"],
+    summary: "The classic Gulf of Thailand run: a night in Bangkok, then the overnight train or bus to Chumphon and the morning ferry out to Koh Tao for diving and snorkelling, island-hopping south through Koh Phangan's quiet north coast to Koh Samui, where you fly or ferry onward.",
+    stops: [
+      {
+        title: "Bangkok",
+        nights: 1,
+        why: "Land, settle in, and see a temple or the riverside before boarding the overnight train or bus south. Combined rail-and-catamaran tickets via Chumphon put you on Koh Tao by mid-morning.",
+      },
+      {
+        title: "Koh Tao",
+        nights: 3,
+        why: "One of the cheapest places anywhere to learn to dive, with dozens of schools and easy fun dives. Non-divers snorkel Shark Bay and Aow Leuk, day-trip to Koh Nang Yuan, or hike to the viewpoints.",
+      },
+      {
+        title: "Koh Phangan",
+        nights: 3,
+        why: "A short ferry hop for the mellow north coast: Chaloklum village, Haad Salad, and boat-or-hike-only Bottle Beach. Shallow, calm bays suit families, and waterfall walks fill the afternoons, far from the party strip.",
+      },
+      {
+        title: "Koh Samui",
+        nights: 2,
+        why: "Finish with easy comforts on Maenam or Lamai beach, the Big Buddha, and night markets. Samui's airport connects to Bangkok and beyond, or take the ferry-bus combination back to Surat Thani.",
+      },
+    ],
+    tips: [
+      "Book the Bangkok to Chumphon sleeper train and the connecting catamaran as one combined ticket; second-class berths sell out days ahead in high season.",
+      "Run the islands in this order (Tao, Phangan, Samui) so each boat hop is short and you end at an airport; ferries can be cancelled in rough seas, so keep a buffer day before any onward flight.",
+      "Full Moon weeks push room prices up across Koh Phangan, not just at Haad Rin; check the dates and base yourself on the north coast if you want quiet and better value.",
+    ],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+  },
+  {
+    id: "it-la-siphandon-slow-week",
+    country: "la",
+    title: "Si Phan Don Slow Week",
+    days: 7,
+    pace: "relaxed",
+    party: ["solo", "couple", "family"],
+    budget: ["low"],
+    summary: "Southern Laos at river speed: Pakse as the gateway, the UNESCO Khmer temple of Wat Phou at sleepy Champasak, then three unhurried days cycling Don Det and Don Khon among the Four Thousand Islands, with Khone Phapheng falls at the end of the line.",
+    stops: [
+      {
+        title: "Pakse",
+        nights: 1,
+        why: "Southern Laos's transport hub, reached by plane or bus. Withdraw kip, pick up supplies, and eat along the Mekong before heading downriver; everything south of here is cash-first and slower.",
+      },
+      {
+        title: "Champasak",
+        nights: 2,
+        why: "A quiet riverside town beneath UNESCO-listed Wat Phou. Climb the temple terraces early for shade and Mekong views, then spend the rest of the day cycling the flat lanes between rice paddies and old shophouses.",
+      },
+      {
+        title: "Don Det and Don Khon",
+        nights: 3,
+        why: "Near car-free islands linked by the old French railway bridge. Cycle to Tat Somphamit (Li Phi) falls, take a trip to thundering Khone Phapheng, the largest waterfall in Southeast Asia by volume, and walk to the quiet river viewpoint at Don Khon's southern tip near Hang Khon.",
+      },
+    ],
+    tips: [
+      "Carry enough cash for the whole island stay; ATMs on Don Det are unreliable and card payments are rare, so withdraw in Pakse.",
+      "Songthaew-and-boat combinations link Pakse, Champasak and Nakasang pier daily; travel in the morning, as afternoon boats to the islands thin out quickly.",
+    ],
+    sources: [
+      {
+        org: "Lao Ministry of Information, Culture and Tourism (Tourism Laos)",
+        url: "https://www.tourismlaos.org",
+      },
+    ],
+  }
 ];
 
 // Match plans to a traveller profile. Everything is optional — with no profile the
