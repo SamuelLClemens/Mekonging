@@ -63,16 +63,31 @@ export function stop() {
 // is not CORS-restricted; the origin must be in the page CSP media-src). Needs the
 // network. Returns a Promise that resolves when playback starts/ends, rejects otherwise.
 const TTS_LANG = { 'th-TH': 'th', 'vi-VN': 'vi', 'km-KH': 'km', 'lo-LA': 'lo', 'he-IL': 'iw', 'en-US': 'en' };
+
+// The exact online-TTS URL for a phrase. Exported so the offline "audio pack"
+// prefetch (service worker) and live playback build the IDENTICAL cache key.
+export function ttsUrl(text, locale) {
+  const t = (text || '').trim().slice(0, 200);
+  if (!t || !locale) return '';
+  const lang = TTS_LANG[locale] || locale.split('-')[0];
+  return `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(t)}`;
+}
+
+// Locales for which the user has downloaded an offline audio pack. Populated by the
+// app on boot / after a download so canSay() reports audio as available offline.
+let savedPacks = new Set();
+export function setSavedPacks(list) { savedPacks = new Set((list || []).map((s) => String(s).toLowerCase().split('-')[0])); }
+export function hasPack(locale) { return !!locale && savedPacks.has(String(locale).toLowerCase().split('-')[0]); }
+
 export function speakOnline(text, locale) {
   return new Promise((resolve, reject) => {
-    const t = (text || '').trim();
-    if (!t) { reject(new Error('no text')); return; }
     // No locale (e.g. Hmong) means no online voice — do NOT fall back to English, which
     // would mispronounce the phrase. Reject so the caller suppresses audio.
-    if (!locale) { reject(new Error('no voice for this language')); return; }
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) { reject(new Error('offline')); return; }
-    const lang = TTS_LANG[locale] || locale.split('-')[0];
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(t.slice(0, 200))}`;
+    const url = ttsUrl(text, locale);
+    if (!url) { reject(new Error('no voice for this language')); return; }
+    // We do NOT hard-reject when offline: the service worker serves this URL from the
+    // downloaded audio pack cache-first, so a saved phrase still plays with no signal.
+    // If it is genuinely uncached and offline, the <audio> 'error' fires and we reject.
     try {
       const a = new Audio(url);
       a.addEventListener('ended', () => resolve(true));
@@ -94,5 +109,5 @@ export async function say(text, locale) {
 // No locale (e.g. Hmong) => no audio: there is no online voice to fall back to.
 export function canSay(locale) {
   if (!locale) return false;
-  return hasVoiceFor(locale) || (typeof navigator === 'undefined' || navigator.onLine !== false);
+  return hasVoiceFor(locale) || hasPack(locale) || (typeof navigator === 'undefined' || navigator.onLine !== false);
 }
