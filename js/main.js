@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.102.0';
+const APP_VERSION = 'mk-v0.103.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -884,7 +884,33 @@ function placesScreen(arg) {
       return;
     }
     if (!currentResults.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
-    for (const p of currentResults) listEl.append(placeCard(p));
+    // "Show more" expander: reveal the rest inline (no full re-render) to cut scrolling.
+    const expander = (rest, label) => {
+      if (!rest.length) return null;
+      const btn = h('button', { class: 'btn ghost block', style: 'margin:2px 0 10px' }, label);
+      btn.onclick = () => { rest.forEach((p) => btn.before(placeCard(p))); btn.remove(); };
+      return btn;
+    };
+    if (sortMode === 'near') {
+      // proximity order matters — keep one flat list, capped, with a reveal.
+      const CAP = 12;
+      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeCard(p)));
+      const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
+      if (more) listEl.append(more);
+    } else {
+      // group by category so a long list scans as a few short sections.
+      const groups = {};
+      currentResults.forEach((p) => { const b = placeBucket(p); (groups[b] = groups[b] || []).push(p); });
+      const CAP = 5;
+      PLACE_BUCKETS.forEach(([key, label]) => {
+        const arr = groups[key];
+        if (!arr || !arr.length) return;
+        listEl.append(h('h3', { class: 'cat-title' }, `${label} · ${arr.length}`));
+        arr.slice(0, CAP).forEach((p) => listEl.append(placeCard(p)));
+        const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
+        if (more) listEl.append(more);
+      });
+    }
   }
 
   renderList();
@@ -969,6 +995,23 @@ function resolveItem(id) {
     };
   }
   return getPlace(id);
+}
+
+// Category buckets for grouping the Places list and filtering Search. A place falls in
+// the FIRST matching bucket (stays are distinct; then the four interest categories).
+const PLACE_BUCKETS = [
+  ['food', '🍜 Food & markets'],
+  ['stay', '🛏 Places to stay'],
+  ['culture', '🏛 Culture & history'],
+  ['nature', '🌿 Nature & outdoors'],
+  ['nightlife', '🌃 Nightlife & social'],
+  ['other', '📌 More to see'],
+];
+function placeBucket(p) {
+  const cats = Array.isArray(p.categories) ? p.categories : [];
+  if (p.stayType || cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
+  for (const it of ['food', 'culture', 'nature', 'nightlife']) if (cats.includes(it)) return it;
+  return 'other';
 }
 
 // "1.2 km · ~15 min walk away" from the user's last GPS fix, when known. Offline,
@@ -3264,37 +3307,62 @@ function searchScreen() {
   wrap.append(h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
     placeholder: 'Find places, phrases, wildlife, prices…',
     oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) }));
+
+  // Category filter for places. Picking one also lets you browse the nearest places of
+  // that kind with no query typed (a "nearest food / nearest stay" tool when GPS is on).
+  let cat = 'all';
+  const CATS = [['all', 'All'], ['food', '🍜 Food'], ['stay', '🛏 Stay'], ['culture', '🏛 Culture'], ['nature', '🌿 Nature'], ['nightlife', '🌃 Nightlife']];
+  const catRow = h('div', { class: 'chips', style: 'margin:6px 0' }, CATS.map(([id, lbl]) =>
+    h('button', { class: 'chip', 'aria-pressed': id === 'all' ? 'true' : 'false', dataset: { c: id },
+      onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); renderResults(); } }, lbl)));
+  wrap.append(catRow);
+
   const out = h('div', {});
   wrap.append(out);
 
   function section(title, nodes) {
     if (!nodes.length) return;
     out.append(h('h2', { class: 'cat-title' }, `${title} (${nodes.length})`));
-    nodes.slice(0, 8).forEach((n) => out.append(n));
-    if (nodes.length > 8) out.append(h('p', { class: 'muted' }, `…and ${nodes.length - 8} more — refine your search`));
+    nodes.slice(0, 12).forEach((n) => out.append(n));
+    if (nodes.length > 12) out.append(h('p', { class: 'muted' }, `…and ${nodes.length - 12} more — refine your search`));
   }
   const link = (label, hash, extra) => h('button', { class: 'btn ghost block srch', onclick: () => { if (extra) extra(); go(hash); } }, label);
 
   function renderResults() {
     out.innerHTML = '';
     const q = searchQuery.trim().toLowerCase();
-    if (q.length < 2) { out.append(h('p', { class: 'muted' }, 'Type at least two letters to search across the whole app — places, phrasebook, wildlife, prices and countries.')); return; }
-    section('Places', allPlaces().filter((p) => `${p.name} ${p.blurb || ''} ${p.city || ''}`.toLowerCase().includes(q))
-      .map((p) => link(`📍 ${p.name} — ${p.city}`, `#place-${p.id}`)));
-    section('Wildlife & plants', allSpecies({ q }).map((s) => link(`${s.emoji || '🔎'} ${s.commonName}`, `#species-${s.id}`)));
-    const phr = [];
-    for (const b of Object.values(LANGUAGES)) for (const cat of b.categories) for (const p of cat.phrases) {
-      if (`${p.en} ${p.roman || ''} ${p.script || ''}`.toLowerCase().includes(q)) phr.push(link(`💬 ${b.label}: ${p.en} — ${p.script}`, `#phrasebook-${b.lang}`));
+    const fix = getLastFix();
+    // Places: filter by category and/or text; when a location is known, order by distance.
+    let places = allPlaces();
+    if (cat !== 'all') places = places.filter((p) => placeBucket(p) === cat);
+    if (q.length >= 2) places = places.filter((p) => `${p.name} ${p.blurb || ''} ${p.city || ''}`.toLowerCase().includes(q));
+    if (q.length >= 2 || cat !== 'all') {
+      if (fix) places = places.slice().sort((a, b) => (a.coords ? haversineKm(fix, a.coords) : Infinity) - (b.coords ? haversineKm(fix, b.coords) : Infinity));
+      const catLbl = (CATS.find((x) => x[0] === cat) || [])[1] || 'Places';
+      const title = cat === 'all' ? 'Places' : `${catLbl}${fix ? ' near you' : ''}`;
+      section(title, places.map((p) => link(`📍 ${p.name} — ${p.city}${fix && p.coords ? ` · ${fmtDistance(haversineKm(fix, p.coords))}` : ''}`, `#place-${p.id}`)));
     }
-    section('Phrases', phr);
-    const pr = [];
-    for (const c of COUNTRIES) if (c.prices) for (const it of c.prices.items) {
-      if (it.label.toLowerCase().includes(q)) pr.push(link(`💵 ${c.name}: ${it.label}`, `#prices-${c.id}`));
+    // The wider indexes only apply to a text query and only when not scoped to a category.
+    if (q.length >= 2 && cat === 'all') {
+      section('Wildlife & plants', allSpecies({ q }).map((s) => link(`${s.emoji || '🔎'} ${s.commonName}`, `#species-${s.id}`)));
+      const phr = [];
+      for (const b of Object.values(LANGUAGES)) for (const cate of b.categories) for (const p of cate.phrases) {
+        if (`${p.en} ${p.roman || ''} ${p.script || ''}`.toLowerCase().includes(q)) phr.push(link(`💬 ${b.label}: ${p.en} — ${p.script}`, `#phrasebook-${b.lang}`));
+      }
+      section('Phrases', phr);
+      const pr = [];
+      for (const c of COUNTRIES) if (c.prices) for (const it of c.prices.items) {
+        if (it.label.toLowerCase().includes(q)) pr.push(link(`💵 ${c.name}: ${it.label}`, `#prices-${c.id}`));
+      }
+      section('Fair prices', pr);
+      section('Countries', COUNTRIES.filter((c) => c.name.toLowerCase().includes(q))
+        .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { activeCountry = c.id; })));
     }
-    section('Fair prices', pr);
-    section('Countries', COUNTRIES.filter((c) => c.name.toLowerCase().includes(q))
-      .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { activeCountry = c.id; })));
-    if (!out.children.length) out.append(h('p', { class: 'empty' }, 'Nothing found. Try another word.'));
+    if (!out.children.length) {
+      out.append(h('p', { class: 'muted' }, (q.length < 2 && cat === 'all')
+        ? 'Type at least two letters, or pick a category to see the nearest places to you.'
+        : 'Nothing found. Try another word or category.'));
+    }
   }
   renderResults();
   mount(wrap, '#home');
