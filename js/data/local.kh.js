@@ -312,5 +312,78 @@ export const LOCAL_KH = [
       { org: "Ministry of Tourism Cambodia", url: "https://www.mot.gov.kh" },
       { org: "Travelfish", url: "https://www.travelfish.org" },
     ],
+  },
+  {
+    slug: "kratie",
+    city: "Kratie",
+    country: "kh",
+    verified: "2026-07",
+    intro: "Kratie is a laid-back Mekong riverside town and the base for seeing the rare Irrawaddy dolphins in the Kampi pool upstream (the Cambodian Mekong still has a resident group). The central market and the sunset riverfront are where everyday life happens.",
+    markets: [
+      {
+        name: "Phsar Kratie (central market)",
+        when: "Daily ~06:00-17:00, best early",
+        where: "Around the old market building, town centre",
+        what: "Produce, fish, meat and everyday goods",
+        tip: "Go in the morning for the freshest fish and the busiest local crowd.",
+      },
+      {
+        name: "Riverfront food stalls",
+        when: "~Late afternoon to evening",
+        where: "Along the Mekong promenade",
+        what: "Grilled snacks, fruit shakes and simple Khmer plates",
+        tip: "Pair a plate with the sunset over the river, which is the town's main event.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Fresh food",
+        where: "Phsar Kratie and small riverfront shops",
+        tip: "The town is small, so the central market covers most needs.",
+      },
+      {
+        what: "Krolan (bamboo sticky rice)",
+        where: "Roadside stalls on the road to Kampi",
+        tip: "Buy it warm from the stalls on the way to the dolphin pool; it is the local road snack.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and formula",
+        where: "Market minimarts and small shops in town",
+        price: "~2-5 USD per pack",
+        tip: "Selection is limited; stock up in Phnom Penh or Kampong Cham for a specific brand before you arrive.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Riverfront Khmer eateries",
+        dish: "Rice with a curry or stir-fry; noodle soup",
+        price: "~1.50-3 USD",
+        where: "Along the Mekong promenade",
+        tip: "Eat where the local families sit rather than the few tourist cafes.",
+      },
+      {
+        name: "Num banh chok stalls",
+        dish: "Khmer rice-noodle breakfast with fish gravy",
+        price: "~1-2 USD",
+        where: "Around the central market, mornings",
+        tip: "A cheap, filling start before an early dolphin trip.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Sunset riverside stalls",
+        dish: "Grilled skewers and fruit shakes",
+        price: "~1-3 USD",
+        when: "~Late afternoon to evening",
+        where: "Mekong promenade",
+        tip: "Grab a shake and a skewer and find a bench facing the water.",
+      },
+    ],
+    sources: [
+      { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" },
+      { org: "Wikivoyage - Kratie", url: "https://en.wikivoyage.org/wiki/Kratie" },
+    ],
   }
 ];

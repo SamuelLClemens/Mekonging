@@ -594,5 +594,78 @@ export const LOCAL_VI = [
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
       { org: "Con Dao National Park", url: "http://condaopark.com.vn" },
     ],
+  },
+  {
+    slug: "chau-doc",
+    city: "Chau Doc",
+    country: "vi",
+    verified: "2026-07",
+    intro: "Chau Doc is a Mekong Delta border town famous for fermented fish (mam) and its riverfront market, with boats onward to Cambodia. Sam Mountain nearby draws Vietnamese pilgrims and its own food stalls.",
+    markets: [
+      {
+        name: "Chau Doc Market",
+        when: "Daily ~05:00-17:00, busiest early",
+        where: "Along the riverfront, town centre",
+        what: "Fish, the town's famous fermented fish (mam), palm sugar, fruit and vegetables",
+        tip: "The mam stalls are pungent; that is the local specialty, so try a little rather than walking past.",
+      },
+      {
+        name: "Sam Mountain (Nui Sam) stalls",
+        when: "~Daytime, busiest on pilgrimage days",
+        where: "Around the temples at the foot of Nui Sam, a few km from town",
+        what: "Snacks, fruit, grilled skewers and pilgrim food",
+        tip: "Combine a temple visit with lunch here rather than eating at the tourist spots.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Packaged goods and toiletries",
+        where: "Co.opmart in Chau Doc town",
+        tip: "Reliable for anything the market does not carry.",
+      },
+      {
+        what: "Palm sugar and mam",
+        where: "Direct from stalls in the central market",
+        tip: "Vendors will vacuum-pack mam so it travels; buy palm sugar (thot not) in blocks.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and formula",
+        where: "Co.opmart Chau Doc and town pharmacies",
+        price: "Packs ~90,000-250,000 VND",
+        tip: "Selection is limited here, so stock up in Long Xuyen or Can Tho if you are heading somewhere remote.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Bun ca Chau Doc shops",
+        dish: "Bun ca (fish noodle soup), the town's signature",
+        price: "~30,000-50,000 VND",
+        where: "Around the market and central streets",
+        tip: "This is the dish to order in Chau Doc; the turmeric-yellow broth is the local version.",
+      },
+      {
+        name: "Com tam and banh xeo stalls",
+        dish: "Broken-rice plates; crispy pancakes",
+        price: "~25,000-50,000 VND",
+        where: "Side streets off the riverfront",
+        tip: "A shop full of locals at lunch is the safe pick.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Riverfront evening stalls",
+        dish: "Che (sweet soup), grilled snacks and fruit",
+        price: "~10,000-30,000 VND",
+        when: "~Evenings",
+        where: "Along the Chau Doc riverfront",
+        tip: "The che stalls are a cheap, cooling end to a hot day.",
+      },
+    ],
+    sources: [
+      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Wikivoyage - Chau Doc", url: "https://en.wikivoyage.org/wiki/Chau_Doc" },
+    ],
   }
 ];
