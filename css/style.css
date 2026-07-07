@@ -677,3 +677,10 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 /* Embedded results map on the Places screen: give the empty canvas a resting shape. */
 .places-map { box-shadow: var(--elev-1); background: var(--card); }
 .places-map .maplibregl-ctrl-bottom-left, .places-map .maplibregl-ctrl-bottom-right { font-size: 10px; }
+
+/* Near-me: compact "name … distance" rows (scannable, low-scroll). */
+.near-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.near-row .near-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.near-row .dist-chip { flex: none; }
+.arrival-item { border-top: 1px solid var(--edge-hi, rgba(0,0,0,0.08)); padding: 6px 0; }
+.arrival-item summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
