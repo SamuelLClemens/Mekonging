@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.107.0';
+const APP_VERSION = 'mk-v0.108.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -653,7 +653,7 @@ function phraseRow(p, locale) {
   const able = canSay(locale);
   const grow = h('div', { class: 'grow tappable', role: 'button', tabindex: '0', 'aria-label': `Show large: ${p.en}`, title: 'Tap to show large to a local' }, [
     h('div', { class: 'en' }, p.en),
-    h('div', { class: 'native' }, p.script),
+    h('div', { class: 'native', lang: locale }, p.script),
     h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman]),
     p.note ? h('div', { class: 'note' }, p.note) : null,
   ]);
@@ -668,25 +668,65 @@ function phraseRow(p, locale) {
   return h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [copyBtn, speakBtn])]);
 }
 
+// Map a place/dish/event country to the BCP-47 lang subtag of its script, so screen
+// readers announce native text in the right voice instead of the page's English default.
+const SCRIPT_LANG = { th: 'th', vi: 'vi', kh: 'km', la: 'lo' };
+function scriptLang(country) { return SCRIPT_LANG[country] || null; }
+
+// Shared modal behaviour for overlay dialogs: close on Escape, keep Tab focus inside the
+// dialog, and restore focus to whatever was focused before it opened. `rootEl` is the
+// backdrop appended to <body>; the element carrying role="dialog" (rootEl itself or a
+// descendant) gets aria-modal and receives initial focus. Returns an idempotent close().
+function openModal(rootEl, onClose) {
+  const dialog = rootEl.matches('[role="dialog"]') ? rootEl : (rootEl.querySelector('[role="dialog"]') || rootEl);
+  dialog.setAttribute('aria-modal', 'true');
+  if (!dialog.hasAttribute('tabindex')) dialog.setAttribute('tabindex', '-1');
+  const prev = document.activeElement;
+  const focusables = () => [...dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    document.removeEventListener('keydown', onKey, true);
+    rootEl.remove();
+    try { if (prev && prev.focus) prev.focus(); } catch { /* noop */ }
+    if (onClose) onClose();
+  }
+  function onKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+    if (e.key === 'Tab') {
+      const f = focusables();
+      if (!f.length) { e.preventDefault(); dialog.focus(); return; }
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+  document.addEventListener('keydown', onKey, true);
+  document.body.append(rootEl);
+  setTimeout(() => { const f = focusables(); (f[0] || dialog).focus(); }, 0);
+  return close;
+}
+
 // Full-screen, very large native script to point at a taxi driver / pharmacist / local.
 function showBigPhrase(p, locale) {
   const able = canSay(locale);
   const overlay = h('div', { class: 'bigphrase', role: 'dialog', 'aria-label': 'Show to a local' });
-  overlay.addEventListener('click', () => overlay.remove());
+  let close = () => overlay.remove();
+  overlay.addEventListener('click', () => close());
   const inner = h('div', { class: 'bigphrase-inner' }, [
     h('div', { class: 'bp-en' }, p.en),
-    h('div', { class: 'bp-script' }, p.script),
+    h('div', { class: 'bp-script', lang: locale }, p.script),
     h('div', { class: 'bp-roman' }, p.roman),
     p.note ? h('div', { class: 'bp-note' }, p.note) : null,
     h('div', { class: 'bp-actions' }, [
       able ? h('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); say(p.script, locale); } }, '🔊 Speak') : null,
-      h('button', { class: 'btn ghost', onclick: () => overlay.remove() }, 'Close'),
+      h('button', { class: 'btn ghost', onclick: () => close() }, 'Close'),
     ]),
     h('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Show this screen to a local · tap anywhere to close'),
   ]);
   inner.addEventListener('click', (e) => e.stopPropagation());
   overlay.append(inner);
-  document.body.append(overlay);
+  close = openModal(overlay);
 }
 
 // Copy text to the clipboard with graceful fallback; flashes a tick on the button.
@@ -714,7 +754,7 @@ function liveTranslateBox(code, label, locale) {
     try {
       const res = await translate(text, code, srcSel.value);
       out.innerHTML = '';
-      out.append(h('div', { class: 'native', style: 'font-size:23px;line-height:1.35' }, res));
+      out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
       const able = canSay(locale);
       const speakBtn = h('button', { class: 'btn', disabled: able ? null : '', onclick: () => say(res, locale) },
         able ? '🔊 Hear it' : '🔇 Voice needs internet');
@@ -1086,7 +1126,7 @@ function placeCard(p) {
 function saveSheet(itemId) {
   const backdrop = h('div', { class: 'sheet-backdrop' });
   const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Save to collections' });
-  const close = () => backdrop.remove();
+  let close = () => backdrop.remove();
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
 
   const body = h('div', {});
@@ -1124,7 +1164,7 @@ function saveSheet(itemId) {
   rebuild();
   sheet.append(body);
   backdrop.append(sheet);
-  document.body.append(backdrop);
+  close = openModal(backdrop);
 }
 
 function collRow(emoji, label, checked, onToggle) {
@@ -1275,7 +1315,7 @@ function weatherNearbyCard(p) {
 function orientationCard(p) {
   if (!p || (!p.coords && !p.recognition && !p.localName)) return null;
   const card = h('div', { class: 'card' }, [h('h2', {}, '📍 Find it')]);
-  if (p.localName) card.append(h('p', { class: 'local-name' }, p.localName));
+  if (p.localName) card.append(h('p', { class: 'local-name', lang: scriptLang(p.country) }, p.localName));
   if (p.recognition) card.append(h('div', { class: 'recognition' }, [
     h('strong', {}, 'How you will know you are there — '), h('span', {}, p.recognition),
   ]));
@@ -2447,7 +2487,7 @@ function dishScreen(id) {
       h('strong', {}, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
       cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
     ]),
-    d.localName ? h('div', { class: 'native' }, d.localName) : null,
+    d.localName ? h('div', { class: 'native', lang: scriptLang(d.country) }, d.localName) : null,
     d.roman ? h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), d.roman]) : null,
     (d.localName && canSay(dLocale)) ? h('button', { class: 'btn ghost', style: 'margin:4px 0', onclick: () => say(d.localName, dLocale) }, '🔊 Hear the name (show a local)') : null,
     h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
@@ -2926,7 +2966,7 @@ function eventCard(e) {
       h('strong', {}, `${e.flag || ''} ${e.name}`),
       h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
     ]),
-    e.localName ? h('div', { class: 'native' }, e.localName) : null,
+    e.localName ? h('div', { class: 'native', lang: scriptLang(e.country) }, e.localName) : null,
     h('div', { class: 'muted', style: 'margin:2px 0' }, `${evRange(e)}${e.lunar ? ' · date varies yearly' : ''} · ${(e.regions && e.regions[0]) || e.countryName}`),
     h('p', { style: 'margin:8px 0 6px' }, e.blurb),
     h('div', { class: 'row-between' }, [
@@ -2979,7 +3019,7 @@ function eventScreen(id) {
       h('strong', {}, `${e.flag || ''} ${e.name}`),
       h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
     ]),
-    e.localName ? h('div', { class: 'native' }, e.localName) : null,
+    e.localName ? h('div', { class: 'native', lang: scriptLang(e.country) }, e.localName) : null,
     h('div', { class: 'muted', style: 'margin:4px 0' }, `${evRange(e)} · ${e.countryName}`),
     e.lunar ? h('div', { class: 'muted' }, '↻ Movable date — shifts each year.') : null,
     h('p', {}, e.blurb),
@@ -3431,7 +3471,7 @@ function sosScreen() {
     const pcard = h('div', { class: 'card' }, [h('h2', {}, `Say it in ${book.label}`)]);
     const voiceOk = hasVoiceFor(book.locale);
     emCat.phrases.forEach((p) => pcard.append(h('div', { class: 'phrase' }, [
-      h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native' }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
+      h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native', lang: book.locale }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
       h('button', { class: 'speak', disabled: voiceOk ? null : '', 'aria-label': `Speak ${p.en}`, onclick: () => speak(p.script, book.locale) }, '🔊'),
     ])));
     wrap.append(pcard);
