@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.99.0';
+const APP_VERSION = 'mk-v0.100.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -1154,6 +1154,38 @@ function weatherNearbyCard(p) {
   return card;
 }
 
+// "Find it" orientation block for place detail — the fix for "a name alone does not tell
+// me I am in the right place." Shows the local name/script, a one-line "how you will know
+// you are there" recognition cue, distance + direction from the traveller, and an inline
+// offline mini-map with the pin (tap the ⊕ to see yourself relative to it), plus a direct
+// "directions" hand-off. Every part is optional and appears only when data exists.
+function orientationCard(p) {
+  if (!p || (!p.coords && !p.recognition && !p.localName)) return null;
+  const card = h('div', { class: 'card' }, [h('h2', {}, '📍 Find it')]);
+  if (p.localName) card.append(h('p', { class: 'local-name' }, p.localName));
+  if (p.recognition) card.append(h('div', { class: 'recognition' }, [
+    h('strong', {}, 'How you will know you are there — '), h('span', {}, p.recognition),
+  ]));
+  const areaBits = [p.city ? `In ${p.city}` : null].filter(Boolean);
+  if (areaBits.length) card.append(h('p', { class: 'muted', style: 'margin:6px 0 2px' }, areaBits.join(' · ')));
+  const dchip = distanceChip(p);
+  if (dchip) card.append(h('div', { style: 'margin:2px 0 8px' }, dchip));
+  if (p.coords) {
+    const mini = h('div', { class: 'mini-map', style: 'height:210px;border-radius:14px;overflow:hidden;position:relative' });
+    card.append(mini);
+    import('./map.js').then((m) => m.initPlacesMap(mini, [p], {
+      onOpen: () => { /* already on this place */ },
+      onLocate: (f) => setLastFix(f),
+    })).then((c) => {
+      // dispose the mini-map when leaving the screen (chain with any existing cleanup).
+      const prev = liveCleanup;
+      liveCleanup = () => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } };
+    }).catch(() => { mini.remove(); });
+    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
+  }
+  return card;
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -1204,6 +1236,8 @@ function placeScreen(id) {
   ]);
 
   wrap.append(card);
+  const orient = orientationCard(p);
+  if (orient) wrap.append(orient);
   const extCard = externalRatingsCard(p);
   if (extCard) wrap.append(extCard);
   const wxCard = weatherNearbyCard(p);

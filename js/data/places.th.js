@@ -14,6 +14,8 @@
 export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
+    recognition: 'Long white perimeter walls by Tha Tien pier on the east bank of the river; inside are the huge gold Reclining Buddha hall and a cluster of coloured-tile spires. It adjoins the Grand Palace to the south.',
+    localName: 'วัดโพธิ์ · Wát Phoh',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['temple', 'thai-massage'],
@@ -32,6 +34,8 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-grand-palace', name: 'Grand Palace & Wat Phra Kaew', city: 'Bangkok', country: 'th',
+    recognition: 'Vast gleaming-white crenellated walls beside Sanam Luang park, with the golden spires of Wat Phra Kaew rising above them. A dress-code check and crowds mark the Na Phra Lan gate.',
+    localName: 'พระบรมมหาราชวัง · Phrá Boròm Mahǎ Râatchawang',
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['culture'], budgetTier: 'mid',
     kidFriendly: true, activities: ['temple', 'palace'],
@@ -50,6 +54,8 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-wat-arun', name: 'Wat Arun (Temple of Dawn)', city: 'Bangkok', country: 'th',
+    recognition: 'The tall Khmer-style prang (spire) covered in porcelain shards, on the Thonburi (west) bank — most recognisable from across the river or the cross-river ferry from Tha Tien.',
+    localName: 'วัดอรุณ · Wát Àrun',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['temple', 'viewpoint', 'ferry'],
@@ -65,6 +71,8 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
+    recognition: 'Enter by the clock tower near Mo Chit BTS or Chatuchak Park MRT: a maze of numbered alleys (sois) under corrugated roofs. Open weekends only.',
+    localName: 'ตลาดนัดจตุจักร · Talàat Nát Jàtujàk',
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['market', 'food', 'culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['market', 'shopping', 'street-food'],
@@ -80,6 +88,8 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',
+    recognition: 'The neon-signed main road of Chinatown; gold shops by day, then charcoal grills and seafood stalls spill onto the pavements after dark. Look for the big Chinese-character arches.',
+    localName: 'เยาวราช · Yao-wárâat',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['food', 'nightlife'], budgetTier: 'low',
     kidFriendly: true, isLocal: true, activities: ['street-food', 'food-crawl'],
@@ -128,6 +138,8 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-khaosan', name: 'Khaosan Road', city: 'Bangkok', country: 'th',
+    recognition: 'One short pedestrian street of neon bars, stalls and hostels off Ratchadamnoen Klang — listen for the music before you spot the sign.',
+    localName: 'ถนนข้าวสาร · Thanon Khao San',
     rating: 4.0, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nightlife', 'food'], budgetTier: 'low',
     kidFriendly: false, activities: ['nightlife', 'bars', 'street-food'],
