@@ -195,4 +195,90 @@ export const LOCAL_TH = [
     ],
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "UNESCO World Heritage Centre (Sukhothai and Associated Historic Towns)", url: "https://whc.unesco.org" }],
   },
+  {
+    slug: "krabi", city: "Krabi", country: "th", verified: "2026-07",
+    intro: "Krabi Town is where residents actually live and shop, while Ao Nang is the resort strip with resort prices. Base your market runs and big shops on Krabi Town and you will pay local rates.",
+    markets: [
+      { name: "Maharaj Market (Talat Maharaj)", when: "Daily, ~05:00-12:00, busiest before ~09:00", where: "Off Maharaj Road, central Krabi Town", what: "The main fresh market for Krabi Town residents: fruit, vegetables, fresh fish, meat, curry pastes and ready-cooked food.", tip: "Go before 9 in the morning for the widest choice and have breakfast at the cooked-food stalls while you are there." },
+      { name: "Chao Fah Night Market", when: "Daily, ~17:00-22:00", where: "Riverfront near Chao Fah pier, Krabi Town", what: "Evening food stalls with grilled meats, noodles, som tam and Thai desserts; local families eat dinner here.", tip: "Take a table by the river and order from several different stalls — the vendors are used to it." },
+      { name: "Krabi Walking Street", when: "Fri-Sun, ~17:00-22:00", where: "Soi Maharaj 8, Krabi Town", what: "Weekend night market with a big street-food court, local crafts and live music; a mixed local and traveller crowd.", tip: "Come hungry and treat the food court as your dinner — portions are small so you can try several things." },
+    ],
+    shopLocal: [
+      { what: "Fresh fruit and vegetables by the kilo", where: "Maharaj Market, plus fruit vendor pickup trucks parked around Krabi Town", tip: "Prices are usually marked per kilo, so buy by weight rather than per piece and you will pay what locals pay." },
+      { what: "Everyday groceries, toiletries and household staples", where: "Big C Supercenter and Lotus's on the edge of Krabi Town", tip: "Do one proper shop here before heading to Ao Nang, where minimarts charge noticeably more for the same items." },
+    ],
+    family: [
+      { item: "Nappies (diapers) and infant formula", where: "Big C Supercenter and Lotus's, Krabi Town outskirts", price: "Nappies ~250-450 THB per mid-size pack; formula ~350-700 THB per tin", tip: "Familiar brands such as MamyPoko and Huggies are easy to find here, but if your baby needs a specific imported formula, stock up in Bangkok or Phuket before you arrive." },
+      { item: "Emergency nappy packs, wipes and baby snacks", where: "7-Eleven branches in Ao Nang and Krabi Town", price: "Small packs ~80-150 THB", tip: "Convenience-store packs are fine for a night or two, but the per-nappy price is much higher, so do the main shop at Big C or Lotus's." },
+    ],
+    cheapEats: [
+      { name: "Khao rat kaeng (rice-and-curry) shops around Maharaj Market", dish: "Rice with one or two curries ladled from the trays", price: "40-70 THB", where: "Streets around Maharaj Market, Krabi Town", tip: "Just point at the trays — two toppings over rice is the standard local order." },
+      { name: "Muslim roti and southern curry shops", dish: "Roti with dhal or curry sauce, often with sweet tea", price: "20-50 THB", where: "Around Krabi Town, reflecting the province's large Muslim community", tip: "These open early, so they make a cheap and filling breakfast before a boat or bus." },
+      { name: "Noodle soup shops in Krabi Town", dish: "Kuay teow noodle soup with pork or chicken", price: "40-60 THB", where: "Small shophouse restaurants around central Krabi Town", tip: "A bowl is a light portion by design, so do as locals do and order a second round or add extras." },
+    ],
+    streetFood: [
+      { name: "Grill stalls at Chao Fah Night Market", dish: "Kai yang (grilled chicken) with sticky rice and som tam", price: "40-80 THB", when: "Daily evenings, ~17:00-22:00", where: "Riverfront near Chao Fah pier, Krabi Town", tip: "Queue at whichever grill has locals waiting — turnover means the chicken comes off the coals fresh." },
+      { name: "Krabi Walking Street food court", dish: "Hoy thod (crispy mussel pancake) and grilled seafood skewers", price: "30-80 THB", when: "Fri-Sun evenings, ~17:00-22:00", where: "Soi Maharaj 8, Krabi Town", tip: "Buy from a few different stalls and share at the communal tables in the middle." },
+      { name: "Morning stalls near Maharaj Market", dish: "Patongko (fried dough sticks) with hot soy milk", price: "10-30 THB", when: "Daily, ~06:00-09:00", where: "Around Maharaj Market, Krabi Town", tip: "Order a bag of hot sweetened soy milk to dip the patongko in, like everyone else at the stall." },
+    ],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Wikivoyage — Krabi", url: "https://en.wikivoyage.org/wiki/Krabi" }],
+  },
+  {
+    slug: "phuket", city: "Phuket", country: "th", verified: "2026-07",
+    intro: "Locals live, shop and eat around Phuket Town, not the west-coast beaches, so prices drop sharply once you head inland toward the old town. The island has full big-city retail (Central, Big C, Lotus's), which makes it one of the easiest places in southern Thailand to travel with kids.",
+    markets: [
+      { name: "Downtown Fresh Market (Talat Sod, Ranong Rd)", when: "Daily, busiest ~04:00-10:00, some stalls into the afternoon", where: "Ranong Road, central Phuket Town, near the bus terminal area", what: "The main locals' wet market: tropical fruit, vegetables, fresh seafood, meat, curry pastes and southern Thai staples", tip: "Go before 09:00 while the produce selection is at its peak, and bring small notes, as stallholders rarely have change for a 1,000." },
+      { name: "Sunday Walking Street (Lard Yai)", when: "Sundays only, ~16:00-22:00", where: "Thalang Road, Old Phuket Town", what: "Street food, Phuket-Chinese snacks, o-aew dessert, crafts and live music along the Sino-Portuguese shophouses", tip: "Arrive around 17:00 before the crowds peak and eat your way down one side of the street first." },
+      { name: "Naka Weekend Market", when: "Saturdays and Sundays, ~16:00-22:00", where: "Off Chao Fah West Road, near Central Festival, Phuket Town outskirts", what: "Huge local weekend market: cheap street food, clothes, secondhand goods and household bits, mostly Thai shoppers", tip: "Eat dinner from the food stalls here rather than paying beach-road prices, but expect it to be hot and packed." },
+      { name: "Chillva Market", when: "~Mon-Sat evenings, roughly 17:00-22:30, busiest Thu-Sat", where: "Yaowarat Road, north side of Phuket Town", what: "Container-and-stall night market popular with Thai students: snacks, grilled skewers, desserts and cheap clothes", tip: "It is more of a hangout than a grocery run, so come hungry in the evening and treat it as dinner plus a wander." },
+    ],
+    shopLocal: [
+      { what: "Everyday fruit and vegetables at local prices", where: "Downtown Fresh Market on Ranong Road, or the small morning markets (talat sod) in each district such as Kathu and Chalong", tip: "Fruit sold by the kilo at the wet market is roughly half the price of the pre-cut packs near the beaches." },
+      { what: "Big grocery runs, drinking water and household staples", where: "Big C Supercenter and Lotus's hypermarkets (several across the island), plus Tops in Central Festival and Central Floresta", tip: "Do one big supermarket run by taxi or rental car early in your stay, because minimart prices near the beaches add up fast." },
+      { what: "Southern Thai snacks and edible souvenirs", where: "Old town shophouses around Thalang and Dibuk Roads, and the dried-goods stalls beside the Ranong Road market", tip: "Locally made cashews and Phuket pineapple make better take-home gifts than anything from the airport shops." },
+    ],
+    family: [
+      { item: "Nappies/diapers (MamyPoko, Huggies, Merries and Thai brands)", where: "Big C, Lotus's, Tops, Boots and Watsons across the island; 7-Elevens carry small emergency packs", price: "~250-450 THB per standard pack, small 7-Eleven packs ~60-120 THB", tip: "No need to stock up in Bangkok first, since Phuket's hypermarkets carry the full range in all sizes, though pick some up in town because beach-area minimarts only stock small overpriced packs." },
+      { item: "Infant formula and baby food", where: "Big C, Lotus's and Tops baby aisles; pharmacies in Phuket Town for specific medical formulas", price: "~300-900 THB per tin depending on brand, size and stage", tip: "International brands are widely available, but if your baby needs one specific formula bring enough for the trip rather than gambling on exact stock." },
+    ],
+    cheapEats: [
+      { name: "Mee Ton Poe", dish: "Phuket-style Hokkien fried noodles (mee hokkien)", price: "~50-90 THB", where: "Near the Surin Circle clock tower area, Phuket Town", tip: "Order the wet-fried version like the locals do and add a squeeze of lime over the top." },
+      { name: "Lock Tien Food Court", dish: "Old-school Phuket hawker plates: Hokkien mee, loba, popiah, o-tao", price: "~40-80 THB per dish", where: "Corner of Dibuk and Yaowarat Roads, Old Phuket Town", tip: "Order two or three small dishes from different counters to sample the Phuket-Chinese classics in one sitting." },
+      { name: "Old town shophouse rice restaurants", dish: "Moo hong (Phuket braised pork belly) over rice", price: "~60-120 THB", where: "Family-run shophouse restaurants around Thalang, Dibuk and Phang Nga Roads, Phuket Town", tip: "If the menu lists moo hong, that is the local heritage dish to order, and lunchtime portions are cheaper than dinner." },
+    ],
+    streetFood: [
+      { name: "Lard Yai Sunday stalls", dish: "O-aew jelly dessert with ice, grilled squid, Phuket spring rolls", price: "~20-60 THB per item", when: "Sundays, ~16:00-22:00", where: "Thalang Road Walking Street, Old Phuket Town", tip: "Finish with a bowl of o-aew, the shaved-ice jelly dessert that is rarely found outside Phuket." },
+      { name: "Phuket Town morning dim sum shops", dish: "Steamed dim sum baskets with tea, a Phuket-Chinese breakfast tradition", price: "~15-35 THB per basket", when: "Early mornings, ~06:00-10:00", where: "Shophouse dim sum joints scattered around Phuket Town, especially near the old town and Ranong Road", tip: "Just point at the baskets you want as they come past and they count the empty steamers at the end to tally your bill." },
+      { name: "Naka Market food rows", dish: "Moo ping skewers, oyster omelette, mango sticky rice", price: "~20-100 THB per item", when: "Saturdays and Sundays, ~16:00-22:00", where: "Naka Weekend Market, near Central Festival, Phuket Town", tip: "Follow whichever stall has the longest Thai queue, since locals here are picky about their skewers." },
+    ],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/thailand/phuket" }],
+  },
+  {
+    slug: "kanchanaburi", city: "Kanchanaburi", country: "th", verified: "2026-07",
+    intro: "Kanchanaburi is a relaxed riverside provincial capital two to three hours west of Bangkok and the usual base for Erawan Falls and the Death Railway. Everyday local life runs along Saengchuto Road between the bus station and the railway station, a short walk inland from the riverside guesthouse strip.",
+    markets: [
+      { name: "City Fresh Market (municipal market)", when: "~Daily, roughly 04:00-12:00, busiest before 09:00", where: "Off Saengchuto Road, a short walk from the main bus station", what: "Fruit, vegetables, river fish, pork, curry pastes, flowers and cooked-food stalls where market workers eat breakfast", tip: "Go before 9am while the produce is at its freshest and grab a bag of cut fruit for the ride out to Erawan Falls." },
+      { name: "JJ Night Market", when: "~Daily evenings, about 18:00-22:00", where: "Beside the Kanchanaburi railway station on Saengchuto Road", what: "Rows of cooked street food, desserts, cheap clothes and phone accessories, drawing more local families than tourists", tip: "Buy a few dishes in takeaway boxes and eat at the shared tables in the middle the way local families do." },
+    ],
+    shopLocal: [
+      { what: "Everyday fruit and vegetables", where: "City Fresh Market near the bus station", tip: "Prices are per kilo and the same for everyone, so there is no need to bargain." },
+      { what: "Supermarket staples, sunscreen, toiletries and baby goods", where: "Big C and Lotus's superstores on Saengchuto Road at the highway end of town", tip: "Both sit on the main road served by songthaews, so combine the shop with a trip to or from the bus station." },
+      { what: "Water, snacks, SIM top-ups and small emergency items", where: "7-Eleven branches along Mae Nam Kwai Road and Saengchuto Road", tip: "You can pay small bills and top up mobile data at the counter while you are there." },
+    ],
+    family: [
+      { item: "Nappies/diapers and baby wipes (MamyPoko, Huggies and Thai brands)", where: "Big C or Lotus's on Saengchuto Road; small emergency packs at 7-Eleven", price: "~200-400 THB per mid-size pack", tip: "Kanchanaburi town has full-size superstores so you do not need to stock up in Bangkok first, but buy enough before day trips to Erawan or Sangkhlaburi where shops are small." },
+      { item: "Infant formula and baby food pouches", where: "Big C, Lotus's and pharmacies along Saengchuto Road", price: "~300-600 THB per tin", tip: "Thai and Nestle lines are easy to find here, but if your baby is on a specific European formula bring a supply from home or Bangkok." },
+    ],
+    cheapEats: [
+      { name: "Khao kaeng (rice-and-curry) shops by the fresh market", dish: "Rice with one or two ladled curries or stir-fries", price: "40-60 THB", where: "Around the City Fresh Market near the bus station", tip: "Point at two toppings over rice and add a fried egg for about 10 THB more." },
+      { name: "Noodle shophouses on Saengchuto Road", dish: "Kuay teow moo (pork noodle soup)", price: "40-60 THB", where: "Between the bus station and the railway station; look for a lunchtime crowd of office workers", tip: "Season the bowl yourself from the four-jar caddy on the table, since locals rarely eat it as served." },
+      { name: "JJ Night Market food rows", dish: "Pad krapow, som tam and grilled chicken plates", price: "40-80 THB", where: "Next to the railway station on Saengchuto Road", tip: "Portions are local-sized, so order a couple of dishes and share." },
+    ],
+    streetFood: [
+      { name: "Moo ping grills at JJ Night Market", dish: "Grilled pork skewers with sticky rice", price: "10-15 THB per skewer, sticky rice ~10 THB", when: "~Evenings from about 18:00", where: "Railway station end of Saengchuto Road", tip: "Join the stall with the local queue; the skewers come off the grill to order and the short wait is part of the deal." },
+      { name: "Morning market breakfast stalls", dish: "Patongo (fried dough sticks) with hot soy milk, or jok rice porridge", price: "20-40 THB", when: "~Daily, about 05:00-09:00", where: "City Fresh Market near the bus station", tip: "Eat early alongside the market workers, because the stalls sell out well before mid-morning." },
+      { name: "Banana roti carts on Mae Nam Kwai Road", dish: "Roti with banana and condensed milk", price: "20-40 THB", when: "~Evenings, roughly 17:00-22:00", where: "Along the guesthouse strip near the river", tip: "Ask for less condensed milk if you do not want it very sweet." },
+    ],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Wikivoyage - Kanchanaburi", url: "https://en.wikivoyage.org/wiki/Kanchanaburi" }],
+  },
 ];

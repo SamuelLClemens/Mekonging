@@ -217,6 +217,56 @@ export const ITINERARIES = [
     tips: ["Book a family-friendly Ha Long cruise with connecting cabins and included Hanoi transfers; one night on the water is enough with children.", "Use private cars or limousine vans between stops — distances are short (3-4 hours) and door-to-door transfers are far easier with kids than public buses.", "In Ninh Binh choose Trang An over Tam Coc for boat trips with young children; boats are steadier and the circuit is well managed."],
     sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }],
   },
+  {
+    id: "it-th-andaman-islands", country: "th", title: "Andaman Islands Week", days: 9, pace: "relaxed",
+    party: ["solo", "couple", "family"], budget: ["mid"],
+    summary: "A classic Bangkok-to-Andaman route pairing two capital days with a week of limestone karst, longtail boats and slow island beaches. Works equally well as a couples escape or an easy family trip with short transfers.",
+    stops: [
+      { title: "Bangkok", nights: 2, why: "Land, recover and see the essentials: the Grand Palace, Wat Pho and a Chao Phraya river boat ride, plus street food in Chinatown before flying south." },
+      { title: "Krabi / Ao Nang", nights: 3, why: "The mainland Andaman base. Longtail day trips to Railay's beaches and cliffs, the Four Islands tour (Poda, Chicken Island, Tup), Emerald Pool and Krabi Town's night market." },
+      { title: "Koh Lanta", nights: 4, why: "Two hours by ferry or van-and-ferry from Krabi. Long quiet beaches (Klong Dao is calm and shallow, ideal for kids), Lanta Old Town stilt houses, and snorkeling trips to Koh Rok. The relaxed finale of the trip." },
+    ],
+    tips: ["Fly Bangkok to Krabi (about 1 hour 20 minutes) rather than taking the overnight bus; domestic fares are cheap and it saves a full day.", "Railay is reachable only by longtail boat from Ao Nang or Krabi Town; swap the Koh Lanta stay for 2-3 nights on Railay if you prefer climbing and dramatic scenery over long beaches.", "High season on the Andaman coast is November to April. In the green season (May to October) the direct Krabi-Koh Lanta passenger boats generally stop running entirely (travel is then by minivan plus the short vehicle ferry, which runs year-round), Koh Rok snorkeling trips are suspended and some island resorts close, so re-check connections before booking."],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+  },
+  {
+    id: "it-vi-central-heritage", country: "vi", title: "Central Vietnam Heritage", days: 7, pace: "steady",
+    party: ["solo", "couple", "family"], budget: ["low", "mid"],
+    summary: "The compact heritage corridor of central Vietnam: beach city Da Nang, the lantern-lit UNESCO old town of Hoi An with a My Son side trip, and the imperial citadel and tombs of Hue, linked by the scenic Hai Van Pass.",
+    stops: [
+      { title: "Da Nang", nights: 2, why: "Fly in, unwind on My Khe beach, climb the Marble Mountains cave pagodas and watch the Dragon Bridge breathe fire on weekend nights. The region's transport hub." },
+      { title: "Hoi An", nights: 3, why: "UNESCO-listed Ancient Town of merchant houses, the Japanese Covered Bridge and nightly lanterns. Use one morning for the My Son Sanctuary Cham temple ruins (about an hour away), plus tailor shops, cooking classes and An Bang beach." },
+      { title: "Hue", nights: 2, why: "Vietnam's former imperial capital: the Citadel and Imperial City, the royal tombs of Tu Duc and Khai Dinh, Thien Mu Pagoda and a Perfume River boat trip, with a distinct royal cuisine." },
+    ],
+    tips: ["To actually cross the Hai Van Pass, book the Hoi An/Da Nang to Hue transfer as a private sightseeing car, jeep or motorbike-guide ride; most regular open-tour buses take the Hai Van road tunnel and skip the views. The Hue-Da Nang train is a scenic alternative, hugging the coastline below the pass.", "Visit My Son at opening time (early morning) to beat both the heat and the tour groups arriving from Da Nang.", "Central Vietnam's driest window is roughly February to August; October and November bring typhoon-season rain and occasional flooding in Hoi An's old town."],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }],
+  },
+  {
+    id: "it-kh-coast-capital", country: "kh", title: "Cambodia Coast and Capital", days: 9, pace: "steady",
+    party: ["solo", "couple"], budget: ["low", "mid"],
+    summary: "The standard southern Cambodia circuit: Phnom Penh's history and riverside energy, the laid-back Kampot river scene with pepper farms and Bokor, sleepy seafood town Kep, and a barefoot island finish on Koh Rong Sanloem.",
+    stops: [
+      { title: "Phnom Penh", nights: 3, why: "The Royal Palace and Silver Pagoda, the National Museum's Khmer sculpture, and the essential but heavy history of Tuol Sleng and Choeung Ek, balanced by riverside cafes and a lively food scene." },
+      { title: "Kampot", nights: 3, why: "A slow riverside town of French-era shophouses. Day trips to Bokor National Park's misty hill station, La Plantation and other Kampot pepper farms, and the cave temple of Phnom Chhngok, plus sunset river cruises." },
+      { title: "Kep", nights: 1, why: "Thirty minutes from Kampot: blue crab with Kampot pepper at the Crab Market, the jungle loop trail in Kep National Park, and an optional boat hop to Koh Tonsay (Rabbit Island)." },
+      { title: "Koh Rong Sanloem", nights: 2, why: "Backtrack west past Kampot to Sihanoukville (about 2.5-3 hours by road from Kep), then speed ferry to Saracen Bay's white sand. Snorkeling, jungle walks across to Lazy Beach for sunset, and bioluminescent plankton after dark. The quieter sibling of Koh Rong." },
+    ],
+    tips: ["Withdraw cash before the island: Koh Rong Sanloem has few or no reliable ATMs and many bungalows add card surcharges.", "Book the Sihanoukville to Koh Rong Sanloem speed ferry and your onward bus in advance in high season (November to April), which is also the best window for calm seas; in the wet season crossings still run but can be rough or delayed.", "Kep works as either an overnight or a day trip from Kampot; if you prefer fewer hotel changes, base 4 nights in Kampot and visit Kep by tuk-tuk or scooter."],
+    sources: [{ org: "Ministry of Tourism, Cambodia", url: "https://www.tourismcambodia.org" }],
+  },
+  {
+    id: "it-la-thakhek-south", country: "la", title: "Thakhek Loop and the Deep South", days: 11, pace: "steady",
+    party: ["solo", "couple"], budget: ["low"],
+    summary: "Laos's best-known backpacker combination: the 3-4 day Thakhek motorbike loop through karst country to the 7-kilometre Kong Lor river cave, then south to Pakse for the Bolaven Plateau's waterfalls and coffee farms, ending in the hammocks of the 4000 Islands.",
+    stops: [
+      { title: "Thakhek and the Loop", nights: 4, why: "Rent a semi-automatic bike and ride the classic loop: limestone karst, swimming caves near Thakhek, the flooded forest at Thalang, an overnight in Ban Nahin, and the unmissable boat trip through Kong Lor cave before closing the circuit." },
+      { title: "Pakse", nights: 2, why: "The southern hub on the Mekong, about 5-6 hours south of Thakhek by bus (there is no railway in southern Laos). Use it to regroup and make the half-day trip to Wat Phou, the UNESCO-listed pre-Angkorian Khmer temple complex at Champasak." },
+      { title: "Bolaven Plateau", nights: 2, why: "Cool highlands of coffee plantations and big waterfalls: Tad Fane's twin drop, swimmable Tad Yuang and Tad Lo village. Ride the small Bolaven loop by motorbike from Pakse or join a shared tour." },
+      { title: "Si Phan Don (4000 Islands)", nights: 3, why: "Boat across to Don Det or Don Khon: cycle between the two islands over the old French railway bridge, see Khone Phapheng and Li Phi falls, look for Irrawaddy dolphins at dusk, and end the trip in a riverside hammock." },
+    ],
+    tips: ["Carry enough kip in cash for the whole Thakhek loop; ATMs are scarce outside Thakhek town and guesthouses on the route rarely take cards.", "Inspect your rental bike carefully (brakes, tyres, lights), photograph existing damage and wear a helmet; the loop's road surface is mostly sealed now but has rough patches near Thalang.", "November to February is the ideal dry and cool window; from Si Phan Don you can continue overland to Cambodia, so check current border and visa arrangements before relying on that exit."],
+    sources: [{ org: "Ministry of Information, Culture and Tourism, Laos (Tourism Laos)", url: "https://www.tourismlaos.org" }],
+  },
 ];
 
 // Match plans to a traveller profile. Everything is optional — with no profile the
