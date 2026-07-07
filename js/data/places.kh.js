@@ -1,6 +1,8 @@
 export const PLACES_KH = [
   {
     id: "kh-siemreap-angkor-wat", name: "Angkor Wat", city: "Siem Reap", country: "kh",
+    recognition: 'Look for the long causeway across a wide moat leading to five lotus-bud sandstone towers; the tallest central tower is the temple silhouette on the national flag.',
+    localName: 'អង្គរវត្ត · Angkor Wat',
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "mid",
     blurb: "The vast 12th-century temple complex that is Cambodia’s most iconic monument and a UNESCO World Heritage site.",
@@ -15,6 +17,8 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-bayon", name: "Bayon Temple (Angkor Thom)", city: "Siem Reap", country: "kh",
+    recognition: 'At the centre of Angkor Thom, past the south gate causeway lined with stone gods and demons; identifiable by dozens of towers each carved with four large serene stone faces.',
+    localName: 'ប្រាសាទបាយ័ន · Prasat Bayon',
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "mid",
     blurb: "The late-12th-century state temple at the centre of Angkor Thom, famous for its serene stone face-towers.",
@@ -29,6 +33,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-pub-street", name: "Pub Street", city: "Siem Reap", country: "kh",
+    recognition: 'A short pedestrian-only lane in the Old Market quarter, marked by a large illuminated PUB STREET arch sign over the entrance and packed bars on both sides.',
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife", "food"], budgetTier: "low",
     blurb: "A pedestrianised strip of bars, street food and live music that forms the hub of Siem Reap nightlife.",
@@ -57,6 +62,8 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-tuol-sleng", name: "Tuol Sleng Genocide Museum (S-21)", city: "Phnom Penh", country: "kh",
+    recognition: 'A walled former high school of three-storey concrete blocks off Street 113; the balconies are still wrapped in barbed wire and white tombs of the last victims stand in the courtyard.',
+    localName: 'សារមន្ទីរឧក្រិដ្ឋកម្មប្រល័យពូជសាសន៍ទួលស្លែង · Tuol Sleng',
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "A former Khmer Rouge prison, now a sobering memorial museum documenting the atrocities of the 1975-79 regime.",
@@ -71,6 +78,8 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-royal-palace", name: "Royal Palace & Silver Pagoda", city: "Phnom Penh", country: "kh",
+    recognition: 'A walled complex facing the riverfront, its gold-and-cream throne halls topped by tiered spired roofs; entry is through the eastern gate near the Silver Pagoda compound.',
+    localName: 'ព្រះបរមរាជវាំង · Preah Barommareacheaveang',
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["culture"], budgetTier: "low",
     blurb: "The official royal residence and its adjacent Silver Pagoda, a gilded complex of throne halls and Khmer architecture.",
@@ -85,6 +94,8 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-riverside-sisowath", name: "Sisowath Quay Riverside", city: "Phnom Penh", country: "kh",
+    recognition: 'The wide tree-lined promenade running along the west bank at the Tonle Sap and Mekong meeting point, opposite the Royal Palace, lined with flags and riverfront bars.',
+    localName: 'ផ្លូវព្រះស៊ីសុវត្ថិ · Sisowath Quay',
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature", "nightlife"], budgetTier: "low",
     blurb: "A breezy riverfront promenade along the Tonle Sap and Mekong confluence, lined with cafes, bars and evening strollers.",

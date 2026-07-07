@@ -8,6 +8,8 @@
 export const PLACES_VI_EXT = [
   {
     id: "vi-ext-ma-pi-leng", name: "Ma Pi Leng Pass Viewpoint", city: "Ha Giang", country: "vi",
+    recognition: 'A clifftop road pass on the QL4C highway above Meo Vac where lay-bys look straight down onto the turquoise Nho Que River winding far below in its gorge.',
+    localName: 'Đèo Mã Pí Lèng · Deo Ma Pi Leng',
     categories: ["viewpoint", "nature"], budgetTier: "low",
     blurb: "A clifftop pass on the Ha Giang Loop that hangs roughly 1,200 m above the turquoise Nho Que River, threading the UNESCO Dong Van Karst Plateau Geopark. The 20 km road was carved by hand by ethnic-minority crews in the 1960s.",
     whyItFits: "For riders and road-trippers who want the single most dramatic panorama in northern Vietnam. The pull-offs and the Death Rock ledge reward an early start before the tour vans arrive.",
@@ -50,6 +52,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cat-cat-village", name: "Cat Cat Village & Waterfall", city: "Sapa", country: "vi",
+    recognition: 'A Hmong village reached on a downhill path below Sapa town, set around timber water wheels and indigo workshops with a small waterfall at its base.',
+    localName: 'Bản Cát Cát · Ban Cat Cat',
     categories: ["culture", "waterfall", "nature"], budgetTier: "low",
     blurb: "A Black Hmong village a short walk below Sapa town, set around water wheels, indigo workshops and a small waterfall, with terraced slopes rising on every side.",
     whyItFits: "For travellers short on time who still want a walkable taste of Hmong craft and highland scenery. Recently extended evening hours add small night markets and light displays near the falls.",
@@ -64,6 +68,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-mua-cave-viewpoint", name: "Mua Cave (Hang Mua) Viewpoint", city: "Ninh Binh", country: "vi",
+    recognition: 'You have arrived when a stone stairway zig-zags up the karst ridge to a carved white dragon at the summit, overlooking the Tam Coc river valley.',
+    localName: 'Hang Múa · Hang Mua',
     categories: ["viewpoint", "hike", "nature"], budgetTier: "low",
     blurb: "A roughly 500-step limestone climb to a dragon sculpture and a lotus-pond panorama over the Tam Coc river valley — one of the most photographed views in Vietnam.",
     whyItFits: "For anyone who can manage the stair climb and wants the postcard shot of boats threading the karst. A dawn start beats both the heat and the 10:00 crowd.",
@@ -92,6 +98,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-paradise-cave", name: "Paradise Cave (Thien Duong)", city: "Phong Nha", country: "vi",
+    recognition: 'Reached by a steep flight of steps into a hillside in Phong Nha, opening onto a long wooden boardwalk that descends into a vast stalactite chamber.',
+    localName: 'Động Thiên Đường · Dong Thien Duong',
     categories: ["nature", "park"], budgetTier: "mid",
     blurb: "A vast dry cave in Phong Nha-Ke Bang National Park, with a wooden boardwalk leading nearly a kilometre into cathedral-scale chambers of stalactites and stalagmites. Among the few caves reliably open year-round.",
     whyItFits: "For travellers who want jaw-dropping cave scenery without booking an expensive multi-day expedition. The boardwalk makes the first kilometre accessible to most visitors.",
@@ -134,6 +142,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cai-rang", name: "Cai Rang Floating Market", city: "Can Tho", country: "vi",
+    recognition: 'You are there when wholesale boats laden with fruit crowd the Can Tho River, each hanging a sample of its produce on a tall bamboo pole above the deck.',
+    localName: 'Chợ nổi Cái Răng · Cho noi Cai Rang',
     categories: ["market", "food", "culture"], budgetTier: "low",
     blurb: "The Mekong Delta's largest wholesale floating market, where boats laden with fruit and vegetables trade at dawn, each hanging a sample of its goods on a tall pole. About 30 minutes by boat from Can Tho.",
     whyItFits: "For travellers who want the authentic river-trade rhythm rather than a staged show. A 05:00 departure catches the genuine wholesale bustle before the heat and the day-tour boats.",
@@ -162,6 +172,8 @@ export const PLACES_VI_EXT = [
   },
 {
     id: "vi-ext-halong-bay", name: "Ha Long Bay", city: "Ha Long", country: "vi",
+    recognition: 'Thousands of forested limestone karst towers rise straight out of the emerald water, with cruise junks departing the harbours at Bai Chay and Tuan Chau.',
+    localName: 'Vịnh Hạ Long · Vinh Ha Long',
     categories: ["nature", "viewpoint"], budgetTier: "mid",
     blurb: "A UNESCO seascape of around 1,600 limestone karst islands and islets rising from emerald water, threaded by cruise junks, sea caves such as Sung Sot, and floating fishing communities. Quieter Lan Ha and Bai Tu Long bays adjoin it.",
     whyItFits: "Vietnam's signature natural wonder; an overnight cruise gives the calmest water and the best light at dawn and dusk.",
@@ -176,6 +188,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-trang-an", name: "Trang An Landscape Complex", city: "Ninh Binh", country: "vi",
+    recognition: 'A wharf lined with small rowed sampans sits below jagged limestone peaks and paddy fields, the boats threading low water-caves past riverside temples.',
+    localName: 'Tràng An · Trang An',
     categories: ["nature", "culture", "viewpoint"], budgetTier: "low",
     blurb: "A UNESCO mixed-heritage site of limestone peaks, paddy fields and a river that a rowed sampan follows through a chain of low water-caves past riverside temples — the inland karst scenery dubbed Halong Bay on land.",
     whyItFits: "For travellers wanting Ninh Binh's iconic boat ride and karst views as a relaxed day trip from Hanoi, gentler and greener than the coast.",
@@ -204,6 +218,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-golden-bridge", name: "Golden Bridge (Ba Na Hills)", city: "Da Nang", country: "vi",
+    recognition: 'A gold-coloured curved footbridge held up by two giant weathered stone hands, high on the Ba Na Hills summit reached by the long cable car above Da Nang.',
+    localName: 'Cầu Vàng · Cau Vang',
     categories: ["viewpoint", "culture"], budgetTier: "high",
     blurb: "The gold-coloured pedestrian bridge held aloft by two giant stone hands, set in the French-village theme park of Ba Na Hills above Da Nang and reached by one of the world's longest cable cars.",
     whyItFits: "For photographers and families wanting the famous hands-and-bridge shot plus mountain views and a full theme-park day.",
@@ -218,6 +234,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-imperial-city-hue", name: "Imperial City (Hue Citadel)", city: "Hue", country: "vi",
+    recognition: 'Enter through the Ngo Mon Gate, a tiered yellow pavilion above a stone gateway, set behind a wide moat and thick citadel walls near the Perfume River.',
+    localName: 'Đại Nội Huế · Dai Noi Hue',
     categories: ["culture", "park"], budgetTier: "low",
     blurb: "The UNESCO-listed walled and moated capital of the Nguyen dynasty, with the Forbidden Purple City, ceremonial gates and palaces along the Perfume River. War damage is steadily being restored.",
     whyItFits: "For history lovers wanting Vietnam's grandest imperial site, easily combined with the royal tombs scattered south of the city.",
@@ -246,6 +264,8 @@ export const PLACES_VI_EXT = [
   },
 {
     id: "vi-ext-ban-gioc", name: "Ban Gioc Waterfall", city: "Cao Bang", country: "vi",
+    recognition: 'A wide, multi-tiered curtain of turquoise water on the Vietnam-China border in Cao Bang, where bamboo rafts drift up to the base through karst-and-paddy scenery.',
+    localName: 'Thác Bản Giốc · Thac Ban Gioc',
     categories: ["waterfall", "nature", "viewpoint"], budgetTier: "low",
     blurb: "One of the widest waterfalls in Asia, a tiered curtain of turquoise water straddling the Vietnam-China border in remote Cao Bang, where bamboo rafts drift right up to the base of the falls through karst-and-paddy scenery.",
     whyItFits: "For travellers willing to go far north for a genuinely spectacular, uncrowded natural wonder, often paired with the nearby Nguom Ngao cave.",
@@ -288,6 +308,8 @@ export const PLACES_VI_EXT = [
   },
 {
     id: "vi-ext-my-khe", name: "My Khe Beach", city: "Da Nang", country: "vi",
+    recognition: 'A long, wide strip of pale sand backed by a palm promenade and high-rise resorts, running along Vo Nguyen Giap Street just east of central Da Nang.',
+    localName: 'Biển Mỹ Khê · Bien My Khe',
     categories: ["beach"], budgetTier: "any",
     blurb: "Da Nangs long, wide city beach of fine pale sand and gentle surf, lined with a palm promenade, seafood shacks and resorts, and easy to reach from the centre.",
     whyItFits: "For travellers wanting a convenient, swimmable urban beach with good food and a sunrise worth waking for.",
@@ -358,6 +380,8 @@ export const PLACES_VI_EXT = [
   },
 {
     id: "vi-ext-dong-xuan-market", name: "Dong Xuan Market", city: "Hanoi", country: "vi",
+    recognition: 'A large multi-storey covered market hall with an arched pale facade at the north end of the Old Quarter, near Long Bien.',
+    localName: 'Chợ Đồng Xuân · Cho Dong Xuan',
     categories: ["market", "food"], budgetTier: "low",
     blurb: "The largest covered market in Hanoi, a multi-storey warren in the Old Quarter selling everything from fabric and clothing to dried goods, with a busy street-food night market nearby at weekends.",
     whyItFits: "For travellers wanting the bustle of Hanoi wholesale trade and cheap eats around the edges.",
@@ -764,6 +788,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hoian-banhmiphuong",
+    recognition: 'A busy streetside banh mi counter at 2B Phan Chau Trinh in the Old Town, its wall inside lined with Anthony Bourdain photos and usually fronted by a queue.',
+    localName: 'Bánh Mì Phượng · Banh Mi Phuong',
     name: "Banh Mi Phuong",
     city: "Hoi An",
     country: "vi",
@@ -802,6 +828,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hochiminhcity-banhmihuynhhoa",
+    recognition: 'A takeaway banh mi counter at 26 Le Thi Rieng in District 1, marked by a pink sign and a constant queue of motorbikes and walk-ups.',
+    localName: 'Bánh Mì Huỳnh Hoa · Banh Mi Huynh Hoa',
     name: "Banh Mi Huynh Hoa",
     city: "Ho Chi Minh City",
     country: "vi",
@@ -840,6 +868,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hanoi-phogiatruyen",
+    recognition: 'A plain Old Quarter pho shop at 49 Bat Dan where the morning queue lines up at a counter and diners carry their own bowls to shared tables.',
+    localName: 'Phở Gia Truyền · Pho Gia Truyen',
     name: "Pho Gia Truyen (49 Bat Dan)",
     city: "Hanoi",
     country: "vi",
@@ -995,6 +1025,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hanoi-pho-thin-lo-duc",
+    recognition: 'A narrow, dark-walled pho shop at 13 Lo Duc in Hai Ba Trung district, where beef is stir-fried in a smoking wok at the front before it goes into the bowl.',
+    localName: 'Phở Thìn Lò Đúc · Pho Thin Lo Duc',
     name: "Pho Thin 13 Lo Duc",
     city: "Hanoi",
     country: "vi",
@@ -1033,6 +1065,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hanoi-sofitel-legend-metropole",
+    recognition: 'A white colonial building with green shutters and a wrought-iron canopy on Ngo Quyen Street in the French Quarter, a short walk from the Opera House.',
+    localName: 'Khách sạn Metropole Hà Nội · Khach san Metropole Ha Noi',
     name: "Sofitel Legend Metropole Hanoi",
     city: "Hanoi",
     country: "vi",
@@ -1094,6 +1128,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-ho-chi-minh-hotel-continental",
+    recognition: 'A cream-coloured 1880 colonial hotel with a street-side terrace and frangipani courtyard on Dong Khoi Street, standing near the Opera House.',
+    localName: 'Khách sạn Continental Sài Gòn · Khach san Continental Sai Gon',
     name: "Hotel Continental Saigon",
     city: "Ho Chi Minh City",
     country: "vi",
