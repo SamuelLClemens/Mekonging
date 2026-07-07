@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.106.0';
+const APP_VERSION = 'mk-v0.107.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -1356,7 +1356,7 @@ function placeScreen(id) {
   const wxCard = weatherNearbyCard(p);
   if (wxCard) wrap.append(wxCard);
   wrap.append(actions, yourLayer(p));
-  if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified));
+  if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified, p));
   mount(wrap, backHash);
 }
 
@@ -1395,9 +1395,30 @@ function yourLayer(p) {
   return card;
 }
 
-function sourcesNote(sources, verified) {
-  return h('p', { class: 'disclaimer' },
-    `Sources: ${sources.map((s) => s.org).join(', ')}${verified ? ` · verified ${verified}` : ''}. Guidance only — verify locally.`);
+// A citation is only worth linking when it points somewhere specific. A bare review-site
+// homepage (tripadvisor.com with no path) dumps the traveller on the front page, so when we
+// know the place we turn it into a search for that place; otherwise we show the name as plain
+// text rather than a useless link. Deep links (UNESCO listings, official sites) stay clickable.
+function sourceHref(s, place) {
+  const url = s && s.url;
+  if (!url) return null;
+  const m = /^https?:\/\/[^/]+(\/[^?#]*)?/i.exec(url);
+  const path = (m && m[1] ? m[1] : '').replace(/\/+$/, '');
+  const isReviewSite = /tripadvisor|booking|agoda|trip\.com|google/i.test(url);
+  if (isReviewSite && !path) return place ? extUrl({ site: s.org }, place) : null;
+  return url;
+}
+function sourcesNote(sources, verified, place) {
+  const kids = ['Sources: '];
+  sources.forEach((s, i) => {
+    if (i) kids.push(', ');
+    const href = sourceHref(s, place);
+    kids.push(href
+      ? h('a', { class: 'src-link', href, target: '_blank', rel: 'noopener' }, s.org)
+      : s.org);
+  });
+  kids.push(`${verified ? ` · verified ${verified}` : ''}. Guidance only — verify locally.`);
+  return h('p', { class: 'disclaimer' }, kids);
 }
 
 // ---- PRICES -----------------------------------------------------------------

@@ -32,10 +32,16 @@ for (const [code, book] of Object.entries(LANGUAGES)) {
 
 // --- places ------------------------------------------------------------------
 const seenIds = new Set();
+const seenNameCity = new Map();
 for (const p of allPlaces()) {
   ok(p.id && !seenIds.has(p.id), `place: duplicate or missing id (${p.id})`);
   seenIds.add(p.id);
   ok(p.name && p.city && p.country, `place ${p.id}: missing name/city/country`);
+  // Guard against the same place being entered twice under different ids (it would plot
+  // as two map pins). Keyed on normalised name+city+country.
+  const nk = `${(p.name || '').trim().toLowerCase()}|${(p.city || '').trim().toLowerCase()}|${p.country}`;
+  ok(!seenNameCity.has(nk), `place ${p.id}: duplicate name+city of ${seenNameCity.get(nk)} (${p.name}, ${p.city})`);
+  if (!seenNameCity.has(nk)) seenNameCity.set(nk, p.id);
   ok(Array.isArray(p.categories) && p.categories.length > 0, `place ${p.id}: missing categories`);
   ok(['low', 'mid', 'high', 'any'].includes(p.budgetTier), `place ${p.id}: bad budgetTier`);
   ok(p.blurb && p.whyItFits, `place ${p.id}: missing blurb/whyItFits`);

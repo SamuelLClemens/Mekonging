@@ -574,7 +574,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-phnom-penh-wildlife-sanctuary", name: "Phnom Tamao Wildlife Rescue Centre Day Visit", city: "Takeo", country: "kh",
-    categories: ["nature", "culture", "wildlife"], budgetTier: "budget",
+    categories: ["nature", "culture", "wildlife"], budgetTier: "low",
     kidFriendly: true,
     activities: ["wildlife", "walking"],
     blurb: "Phnom Tamao, near Takeo south of Phnom Penh, is Cambodia's largest wildlife rescue centre, home to rescued elephants, tigers, sun bears, gibbons and many native birds in large forested enclosures. It is a conservation-focused sanctuary rather than a traditional zoo, making it a rewarding family day out.",
@@ -590,7 +590,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-siem-reap-road60-night-market", name: "Road 60 Night Market food stalls", city: "Siem Reap", country: "kh",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "A sprawling evening strip on the road toward the Angkor ticket checkpoints where Siem Reap families spread mats, ride fairground attractions and graze on grilled chicken, beef skewers, num banh chok, fried insects, fertilised duck eggs and sugarcane juice. Almost entirely local, loud and cheerful.",
@@ -608,7 +608,7 @@ export const PLACES_KH_EXT = [
     id: "kh-ext-kep-crab-market", name: "Kep Crab Market shacks (Psar Kdam)", city: "Kep", country: "kh",
     recognition: 'A row of open-fronted wooden seafood shacks along the Kep waterfront, in front of bamboo crab traps set in the shallows and a bronze statue of a woman holding a crab.',
     localName: 'ផ្សារក្តាមកែប · Phsar Kdam Kep',
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Kep's famous waterfront crab market: women haul blue swimmer crabs from bamboo traps in the shallows and a row of simple shacks wok-fries them with fresh Kampot green peppercorns. Grilled squid, prawns and fish round out the menu, eaten at plastic tables over the water.",
@@ -624,7 +624,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-battambang-riverside-stalls", name: "Battambang riverside evening food stalls", city: "Battambang", country: "kh",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "As the heat drops, carts and stalls line the Sangkae River promenade near Psar Nat: grilled pork skewers, num pang baguette sandwiches, banana-leaf sticky rice, fried noodles, fruit shakes and Khmer desserts, with families strolling the riverbank between bites.",
@@ -770,7 +770,7 @@ export const PLACES_KH_EXT = [
     categories: ["food"],
     isLocal: true,
     kidFriendly: true,
-    budgetTier: "budget",
+    budgetTier: "low",
     blurb: "Small family-run Khmer kitchens scattered through M Pai Bay, the fishing village at the north tip of Koh Rong Sanloem. Fish amok, lok lak, fried noodles and the day's grilled catch come out of home kitchens a few steps from the sand, at village rather than resort prices.",
     whyItFits: "The village itself is the recommendation — a compact, well-known cluster of local kitchens travellers can wander between, and the most local eating experience on an island otherwise split between backpacker bars and resorts.",
     priceRange: {

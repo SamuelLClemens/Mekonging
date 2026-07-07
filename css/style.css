@@ -344,6 +344,7 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .stars-static { color: var(--sun-deep); font-size: 1.1rem; letter-spacing: 1px; }
 .rating-block { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0; }
 .rev-link { font-size: var(--fs-sm); font-weight: 700; }
+.src-link { color: var(--teal-deep); text-decoration: underline; font-style: normal; }
 
 /* --- nature field guide --- */
 .species-card { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
