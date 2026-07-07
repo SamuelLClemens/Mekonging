@@ -28,6 +28,7 @@ function defaults() {
         placesView: 'list',   // 'list' | 'map'  — scroll a list, or see results on a map
         placesSort: 'best',   // 'best' | 'near' — order by fit/rating, or by distance from you
         streetView: 'list',   // 'list' | 'map'  — Street-food screen: rate-list or map of stalls
+        geoAsked: false,      // have we offered the one-time "use my location" invite on Home?
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this

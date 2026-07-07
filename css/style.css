@@ -693,3 +693,6 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 }
 [data-theme="dark"] .recognition { background: rgba(110,154,82,0.18); }
 .mini-map { box-shadow: var(--elev-1); background: var(--card); }
+
+/* One-time "use my location" invite on Home. */
+.geo-invite { border-left: 3px solid var(--grape); }
