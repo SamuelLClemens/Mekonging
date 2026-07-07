@@ -312,5 +312,86 @@ export const LOCAL_LA = [
       { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" },
       { org: "Wikivoyage - Si Phan Don", url: "https://en.wikivoyage.org/wiki/Si_Phan_Don" },
     ],
+  },
+  {
+    slug: "luang-namtha",
+    city: "Luang Namtha",
+    country: "la",
+    verified: "2026-07",
+    intro: "Luang Namtha is the trekking hub for the Nam Ha protected area in far northern Laos. It is a small town of guesthouse kitchens and two markets; stock cash and any specifics before you arrive, as ATMs and shops are limited.",
+    markets: [
+      {
+        name: "Luang Namtha morning market",
+        when: "Daily, busiest ~05:30-09:00",
+        where: "Town centre",
+        what: "Fresh produce, hill-tribe goods, meat and river fish",
+        tip: "Go at dawn with the locals; by mid-morning the best is gone.",
+      },
+      {
+        name: "Night market food street",
+        when: "~Daily 17:00-21:30",
+        where: "Main street, town centre",
+        what: "Grilled fish, Lao-style khao soi noodle stalls and barbecue",
+        tip: "Follow the longest local queue and point at what looks good.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Everyday basics",
+        where: "Small family shops in town",
+        tip: "There is no big supermarket, so treat these as top-ups only.",
+      },
+      {
+        what: "Fresh produce and river fish",
+        where: "The morning market",
+        tip: "Bring small kip notes; card payment is rare.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and formula",
+        where: "Town shops (limited selection)",
+        price: "~30,000-80,000 LAK",
+        tip: "Stock up in Luang Prabang or via the Boten crossing before you arrive, and carry cash because ATMs here are unreliable.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Khao soi noodle stalls",
+        dish: "Lao-style khao soi (rice noodles, minced-pork tomato broth)",
+        price: "~15,000-30,000 LAK",
+        where: "Morning market and town noodle shops",
+        tip: "The northern Lao khao soi is different from the Thai coconut version; try it here.",
+      },
+      {
+        name: "Rice-and-dish shops",
+        dish: "Sticky rice with a Lao stir-fry or grill",
+        price: "~20,000-40,000 LAK",
+        where: "Main street",
+        tip: "Cheapest full meal in town, and where trekking guides eat.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Night market grills",
+        dish: "Grilled fish and sticky rice",
+        price: "~15,000-40,000 LAK",
+        when: "~Evenings 17:00-21:30",
+        where: "Main-street food area",
+        tip: "Grilled river fish with sticky rice and jaew (chilli dip) is the classic.",
+      },
+      {
+        name: "Baguette (khao jee) stalls",
+        dish: "Lao baguette sandwich",
+        price: "~15,000-30,000 LAK",
+        when: "~Mornings",
+        where: "Around the morning market",
+        tip: "A cheap, portable breakfast before a trek.",
+      },
+    ],
+    sources: [
+      { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" },
+      { org: "Wikivoyage - Luang Namtha", url: "https://en.wikivoyage.org/wiki/Luang_Namtha" },
+    ],
   }
 ];

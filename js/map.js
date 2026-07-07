@@ -84,6 +84,16 @@ const CITY_COORDS = {
   'Phnom Penh': [104.9282, 11.5564], 'Siem Reap': [103.8448, 13.3671], 'Sihanoukville': [103.5223, 10.6270],
   'Battambang': [103.1968, 13.0957], 'Kampot': [104.1819, 10.6104],
   'Vientiane': [102.6331, 17.9757], 'Luang Prabang': [102.1348, 19.8845], 'Vang Vieng': [102.4470, 18.9237], 'Pakse': [105.7820, 15.1202],
+  // Secondary towns matching board/place coverage, so the offline map shows more
+  // named orientation anchors (also feeds search + nearest-city naming). Additive.
+  'Chiang Rai': [99.8325, 19.9105], 'Mae Hong Son': [97.9654, 19.3020], 'Sukhothai': [99.8265, 17.0078],
+  'Kanchanaburi': [99.5328, 14.0227], 'Nan': [100.7730, 18.7756], 'Trang': [99.6114, 7.5589],
+  'Hua Hin': [99.9576, 12.5684], 'Koh Tao': [99.8403, 10.0956], 'Koh Phangan': [99.9931, 9.7318], 'Koh Chang': [102.3199, 12.0489],
+  'Ninh Binh': [105.9750, 20.2506], 'Ha Giang': [104.9784, 22.8233], 'Cat Ba': [107.0489, 20.7276],
+  'Da Lat': [108.4583, 11.9404], 'Phu Quoc': [103.9600, 10.2170], 'Can Tho': [105.7852, 10.0341],
+  'Chau Doc': [105.1259, 10.7010], 'Con Dao': [106.6100, 8.6900], 'Mai Chau': [105.0900, 20.6600], 'Buon Ma Thuot': [108.0500, 12.6667],
+  'Kratie': [106.0180, 12.4881], 'Kep': [104.3160, 10.4831], 'Koh Rong Sanloem': [103.3100, 10.6000],
+  'Nong Khiaw': [102.6167, 20.5667], 'Luang Namtha': [101.4130, 20.9490], 'Don Det': [105.9333, 13.9333], 'Thakhek': [104.8000, 17.4000],
 };
 function normCity(name) { return String(name || '').replace(/\s*\(.*\)\s*/g, '').trim(); }
 // Classify a transport mode into one of five route keys. modeColor()/modeKey() must

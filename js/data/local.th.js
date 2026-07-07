@@ -706,5 +706,193 @@ export const LOCAL_TH = [
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Lonely Planet", url: "https://www.lonelyplanet.com" },
     ],
+  },
+  {
+    slug: "koh-samui",
+    city: "Koh Samui",
+    country: "th",
+    verified: "2026-07",
+    intro: "Unlike the smaller islands, Koh Samui has full supermarkets, so stocking up is easy; the catch is that beach-road minimarts charge a premium. Nathon town on the west coast is where islanders actually shop and eat.",
+    markets: [
+      {
+        name: "Nathon day market (Talat Nathon)",
+        when: "Daily ~06:00-17:00, best before 10:00",
+        where: "Nathon town, west coast near the pier",
+        what: "Fresh produce, fish, cooked curries and Thai sweets at local prices",
+        tip: "This is the islanders' market, so it is cheaper and less touristy than anything in Chaweng.",
+      },
+      {
+        name: "Fisherman's Village Walking Street",
+        when: "~Fridays from about 16:00",
+        where: "Bophut, north coast",
+        what: "Seafood grills, snacks, crafts and clothes along the old shophouses",
+        tip: "Come early and hungry, because it gets packed and the best seafood stalls sell out.",
+      },
+      {
+        name: "Lamai and Chaweng night food stalls",
+        when: "~Daily evenings from about 17:00",
+        where: "Side sois off the main beach roads",
+        what: "Grilled skewers, som tam, noodles and roti",
+        tip: "Walk one street back from the beachfront and prices roughly halve.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Everyday groceries and toiletries",
+        where: "Big C, Lotus's and Makro around Chaweng and Bophut",
+        tip: "Prices here are close to mainland levels, unlike the beach-village minimarts.",
+      },
+      {
+        what: "Fruit for your room or the beach",
+        where: "Roadside fruit trucks along the ring road and Nathon market",
+        tip: "Buy whole fruit by the kilo rather than pre-cut tourist trays.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and formula",
+        where: "Big C, Lotus's and Makro near Chaweng and Bophut",
+        price: "Packs ~300-600 THB",
+        tip: "Samui has full supermarkets so you can buy on the island, but bring your specific brand from the mainland if your baby needs one.",
+      },
+      {
+        item: "Baby basics (wipes, kids' sunscreen, paracetamol syrup)",
+        where: "Pharmacies in Chaweng and Lamai",
+        price: "~50-300 THB per item",
+        tip: "Pharmacists here speak enough English to help with children's dosing.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Nathon rice-and-curry shops",
+        dish: "Two curries over rice (khao gaeng)",
+        price: "50-80 THB",
+        where: "Nathon town, off the pier road",
+        tip: "Point at two trays like the locals do for a full meal at smoothie prices.",
+      },
+      {
+        name: "Local noodle shops",
+        dish: "Chicken or pork noodle soup",
+        price: "50-70 THB",
+        where: "Inland roads and Maenam village",
+        tip: "A shop full of Thai diners at lunch is the only recommendation you need.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Fisherman's Village seafood stalls",
+        dish: "Grilled prawns and fish",
+        price: "100-300 THB",
+        when: "~Friday evenings",
+        where: "Bophut walking street",
+        tip: "Confirm the price per 100 grams before it goes on the grill.",
+      },
+      {
+        name: "Roti and moo ping carts",
+        dish: "Banana roti; grilled pork skewers with sticky rice",
+        price: "10-60 THB",
+        when: "~Evenings from 17:00",
+        where: "Chaweng and Lamai beach roads",
+        tip: "The moo ping carts by the 7-Elevens are a cheap, reliable dinner.",
+      },
+    ],
+    sources: [
+      { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
+      { org: "Lonely Planet - Ko Samui", url: "https://www.lonelyplanet.com/thailand/ko-samui" },
+    ],
+  },
+  {
+    slug: "hua-hin",
+    city: "Hua Hin",
+    country: "th",
+    verified: "2026-07",
+    intro: "Hua Hin is a royal seaside town with a strong Thai domestic-tourism food scene, so local eating is easy and good value away from the seafront. The central Chatchai market and the night markets are the heart of it.",
+    markets: [
+      {
+        name: "Chatchai Market",
+        when: "Daily, best ~06:00-11:00",
+        where: "Central Hua Hin, off Phetkasem Road",
+        what: "Fresh produce, fish, cooked food and Thai desserts",
+        tip: "Go in the morning for breakfast stalls and the widest pick before the heat.",
+      },
+      {
+        name: "Hua Hin Night Market",
+        when: "~Daily from about 17:00 to 23:00",
+        where: "Dechanuchit Road, town centre",
+        what: "Seafood grills, Thai dishes, snacks and souvenirs",
+        tip: "The seafood is good but check the price per 100 grams before ordering.",
+      },
+      {
+        name: "Cicada Market",
+        when: "~Friday to Sunday evenings",
+        where: "Near Khao Takiab, south of town",
+        what: "Arts, crafts, live music and a food zone",
+        tip: "More of an evening out than a cheap eat, but the food court is fair value.",
+      },
+    ],
+    shopLocal: [
+      {
+        what: "Groceries and packaged goods",
+        where: "Tops and Big C in the Market Village and BluPort malls",
+        tip: "Air-conditioned and fixed-price, handy on a hot afternoon.",
+      },
+      {
+        what: "Fish and produce",
+        where: "Chatchai Market and the fishing pier area",
+        tip: "Buy seafood near the pier where it lands, not on the tourist strip.",
+      },
+    ],
+    family: [
+      {
+        item: "Nappies (diapers) and formula",
+        where: "Tops and Big C in the Market Village and BluPort malls",
+        price: "Packs ~300-600 THB",
+        tip: "Hua Hin has full supermarkets, so there is no need to stock up elsewhere first.",
+      },
+      {
+        item: "Baby basics and children's medicine",
+        where: "Pharmacies along Phetkasem and Naresdamri Roads",
+        price: "~50-300 THB per item",
+        tip: "Boots and local pharmacies both stock common infant brands.",
+      },
+    ],
+    cheapEats: [
+      {
+        name: "Chatchai Market food stalls",
+        dish: "Noodle soup and rice-and-curry",
+        price: "40-70 THB",
+        where: "Inside and around Chatchai Market",
+        tip: "The cheapest genuinely local breakfast in town.",
+      },
+      {
+        name: "Soi rice-and-curry shops",
+        dish: "Rice with pre-cooked Thai dishes",
+        price: "50-90 THB",
+        where: "Sois off Phetkasem Road",
+        tip: "Eat where the office workers queue at noon.",
+      },
+    ],
+    streetFood: [
+      {
+        name: "Hua Hin Night Market grills",
+        dish: "Grilled seafood and satay",
+        price: "60-250 THB",
+        when: "~Evenings 17:00-23:00",
+        where: "Dechanuchit Road",
+        tip: "Agree the weight and price first; portions are sold by the 100 grams.",
+      },
+      {
+        name: "Morning stalls",
+        dish: "Pa-tong-go with warm soy milk",
+        price: "20-40 THB",
+        when: "~Mornings",
+        where: "Around Chatchai Market",
+        tip: "A cheap Thai breakfast the locals grab on the way to work.",
+      },
+    ],
+    sources: [
+      { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
+      { org: "Wikivoyage - Hua Hin", url: "https://en.wikivoyage.org/wiki/Hua_Hin" },
+    ],
   }
 ];
