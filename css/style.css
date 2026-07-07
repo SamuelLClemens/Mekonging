@@ -684,3 +684,12 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .near-row .dist-chip { flex: none; }
 .arrival-item { border-top: 1px solid var(--edge-hi, rgba(0,0,0,0.08)); padding: 6px 0; }
 .arrival-item summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+
+/* Place-detail "Find it" orientation block. */
+.local-name { font-size: 1.15rem; font-weight: 700; color: var(--grape); margin: 2px 0 6px; }
+.recognition {
+  background: rgba(30,158,90,0.10); border-left: 3px solid var(--sage, #6E9A52);
+  border-radius: 8px; padding: 8px 12px; margin: 4px 0 8px; line-height: 1.45;
+}
+[data-theme="dark"] .recognition { background: rgba(110,154,82,0.18); }
+.mini-map { box-shadow: var(--elev-1); background: var(--card); }

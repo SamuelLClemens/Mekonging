@@ -50,6 +50,8 @@ for (const p of allPlaces()) {
   if (p.stayDuration != null) ok(['short', 'long', 'both'].includes(p.stayDuration), `place ${p.id}: bad stayDuration (${p.stayDuration})`);
   if (p.activities != null) ok(Array.isArray(p.activities), `place ${p.id}: activities must be an array`);
   if (p.amenities != null) ok(Array.isArray(p.amenities), `place ${p.id}: amenities must be an array`);
+  if (p.recognition != null) ok(typeof p.recognition === 'string' && p.recognition.length > 0, `place ${p.id}: recognition must be a non-empty string`);
+  if (p.localName != null) ok(typeof p.localName === 'string' && p.localName.length > 0, `place ${p.id}: localName must be a non-empty string`);
   if (p.externalRatings != null) {
     ok(Array.isArray(p.externalRatings), `place ${p.id}: externalRatings must be an array`);
     for (const e of p.externalRatings || []) {
