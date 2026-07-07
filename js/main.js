@@ -88,7 +88,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.94.0';
+const APP_VERSION = 'mk-v0.95.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -158,7 +158,7 @@ function homeScreen() {
     { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
     { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
     { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
-    { ic: '🧭', t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle' },
+    { ic: '🧭', t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle', badge: unreadInboxCount() },
     { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
     { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
     { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
@@ -179,7 +179,8 @@ function homeScreen() {
     { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
   ];
   wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
-    h('button', { class: 'tile', onclick: () => go(x.hash) }, [
+    h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t }, [
+      x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
       h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
     ]))));
 
