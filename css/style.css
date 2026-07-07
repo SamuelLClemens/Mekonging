@@ -157,7 +157,7 @@ html[data-theme="dark"] .tile .ic { background: linear-gradient(135deg, rgba(242
 .country-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .country-chip {
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-family: inherit;
-  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); color: var(--ink); min-height: 44px;
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .country-chip[aria-pressed="true"] { background: var(--grad-sun); color: #fff; border-color: transparent; }
@@ -169,6 +169,7 @@ html[data-theme="dark"] .tile .ic { background: linear-gradient(135deg, rgba(242
   cursor: pointer; font-family: inherit; border: 1px solid var(--line); background: var(--card);
   color: var(--ink); border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-sm); font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
 }
 .chip[aria-pressed="true"] { background: var(--teal-deep); border-color: transparent; color: #fff; }
 
