@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.100.0';
+const APP_VERSION = 'mk-v0.101.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -247,6 +247,33 @@ function countryHubScreen(id) {
     h('p', {}, `Your companion for ${c.name}. Local currency: ${c.currency}.`),
     c.info ? null : h('p', { class: 'muted' }, 'Detailed guide expanding.'),
   ]));
+
+  // Explore by city: a spatial overview of the whole country's places plus a city
+  // picker, so a traveller sees WHERE things are and can scope straight to one city
+  // (which then browses as a short list or a map).
+  const cityPlaces = allPlaces({ country: id });
+  if (cityPlaces.length) {
+    const withCoords = cityPlaces.filter((p) => p.coords);
+    const counts = {};
+    cityPlaces.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
+    const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    const explore = h('div', { class: 'card' }, [h('h2', {}, `🗺 Explore ${c.name}`)]);
+    if (withCoords.length) {
+      const mini = h('div', { class: 'mini-map', style: 'height:220px;border-radius:14px;overflow:hidden;position:relative;margin-bottom:8px' });
+      explore.append(mini);
+      import('./map.js').then((m) => m.initPlacesMap(mini, withCoords, {
+        onOpen: (pid) => go(`#place-${pid}`),
+        onLocate: (f) => setLastFix(f),
+      })).then((ctrl) => { liveCleanup = () => { try { ctrl.dispose(); } catch { /* noop */ } }; }).catch(() => mini.remove());
+    }
+    if (cities.length) {
+      explore.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
+      explore.append(h('div', { class: 'chips' }, cities.slice(0, 16).map((city) =>
+        h('button', { class: 'chip', onclick: () => go(`#places-${id}-${citySlug(city)}`) }, `${city} (${counts[city]})`))));
+    }
+    wrap.append(explore);
+  }
+
   const tiles = [
     { ic: '💬', t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
     { ic: '📍', t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
@@ -699,11 +726,30 @@ function liveTranslateBox(code, label, locale) {
 }
 
 // ---- PLACES -----------------------------------------------------------------
-function placesScreen(countryId) {
-  if (countryId) activeCountry = countryId;
+// "Chiang Mai" -> "chiang-mai" for city-scoped Places routes (#places-<cc>-<slug>).
+function citySlug(name) {
+  return String(name || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function placesScreen(arg) {
+  // arg is "<cc>" or "<cc>-<citySlug>" (e.g. "th" or "th-chiang-mai").
+  const parts = String(arg || '').split('-');
+  const cc = parts.shift() || activeCountry;
+  const scopeSlug = parts.join('-');
+  if (cc) activeCountry = cc;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Places for you'));
+  // Resolve the scoped city's display name from the data (fall back to the slug).
+  const scopeCity = scopeSlug
+    ? (allPlaces({ country: activeCountry }).map((p) => p.city).find((c) => citySlug(c) === scopeSlug) || titleCase(scopeSlug.replace(/-/g, ' ')))
+    : '';
+  wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
+  if (scopeCity) {
+    wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
+      h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
+      h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `Show all of ${getCountry(activeCountry) ? getCountry(activeCountry).name : 'country'}`),
+    ]));
+  }
 
   // interest filters (seeded from saved prefs the first time)
   const prefs = store.profile.prefs;
@@ -806,6 +852,7 @@ function placesScreen(countryId) {
     const country = getCountry(activeCountry);
     if (!country || !Array.isArray(country.places)) return null;
     let results = allPlaces({ country: activeCountry, interests: [...selInterests], budget: selBudget });
+    if (scopeSlug) results = results.filter((p) => citySlug(p.city) === scopeSlug);
     if (selKids) results = results.filter((p) => p.kidFriendly === true);
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
     if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
@@ -3959,21 +4006,41 @@ function streetfoodScreen() {
   wrap.append(h('p', { class: 'muted' }, 'The local stalls and food streets worth queueing for — with your own ratings and takes, kept on-device and shown first. Rate a stall and your score drives its colour on the map too.'));
   wrap.append(countryChips((id) => { activeCountry = id; go('#streetfood'); }));
 
-  // rateable street-food places (curated local eats)
+  // rateable street-food places (curated local eats) — as a rate-list or on a map.
+  const prefs = store.profile.prefs;
+  const sview = prefs.streetView === 'map' ? 'map' : 'list';
   const places = allPlaces({ country: activeCountry }).filter((p) => p.isLocal === true || (p.categories || []).includes('streetfood'));
+  const mappable = places.filter((p) => p.coords);
   if (places.length) {
-    const card = h('div', { class: 'card' });
-    card.append(h('h2', {}, 'Rate the classics'));
-    places.forEach((p) => {
-      const mine = getPlaceData(p.id);
-      card.append(h('div', { class: 'board-post' }, [
-        h('button', { class: 'btn ghost block', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) }, `${p.name} — ${p.city}`),
-        h('div', { class: 'tiny muted' }, mine.rating ? `Your rating: ${starsStr(mine.rating)}` : `Guide rating ${Number(p.rating || 0).toFixed(1)} — tap to add yours`),
-        starPicker(p.id, mine.rating || 0),
-        mine.review ? h('p', { class: 'tiny', style: 'margin-top:4px' }, `“${mine.review}”`) : null,
+    if (mappable.length) {
+      wrap.append(h('div', { class: 'view-toggle', style: 'display:flex;gap:8px;align-items:center;margin:6px 0' }, [
+        h('div', { class: 'chips', style: 'margin:0' }, [
+          h('button', { class: 'chip', 'aria-pressed': sview === 'list' ? 'true' : 'false', onclick: () => { prefs.streetView = 'list'; save(); go('#streetfood'); } }, '📋 List'),
+          h('button', { class: 'chip', 'aria-pressed': sview === 'map' ? 'true' : 'false', onclick: () => { prefs.streetView = 'map'; save(); go('#streetfood'); } }, '🗺 Map'),
+        ]),
       ]));
-    });
-    wrap.append(card);
+    }
+    if (sview === 'map' && mappable.length) {
+      wrap.append(h('p', { class: 'muted', style: 'margin:2px 2px 6px' }, `${mappable.length} stalls & food streets on the map — tap a pin`));
+      const canvas = h('div', { class: 'places-map', style: 'height:340px;border-radius:16px;overflow:hidden;position:relative' });
+      wrap.append(canvas);
+      import('./map.js').then((m) => m.initPlacesMap(canvas, mappable, {
+        onOpen: (id) => go(`#place-${id}`), onLocate: (f) => setLastFix(f),
+      })).then((c) => { liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } }; }).catch(() => { /* list still below */ });
+    } else {
+      const card = h('div', { class: 'card' });
+      card.append(h('h2', {}, 'Rate the classics'));
+      places.forEach((p) => {
+        const mine = getPlaceData(p.id);
+        card.append(h('div', { class: 'board-post' }, [
+          h('button', { class: 'btn ghost block', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) }, `${p.name} — ${p.city}`),
+          h('div', { class: 'tiny muted' }, mine.rating ? `Your rating: ${starsStr(mine.rating)}` : `Guide rating ${Number(p.rating || 0).toFixed(1)} — tap to add yours`),
+          starPicker(p.id, mine.rating || 0),
+          mine.review ? h('p', { class: 'tiny', style: 'margin-top:4px' }, `“${mine.review}”`) : null,
+        ]));
+      });
+      wrap.append(card);
+    }
   }
 
   // street-food areas from the local boards (browse + jump to the board)
