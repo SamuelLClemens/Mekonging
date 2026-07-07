@@ -486,6 +486,83 @@ export async function initMap(containerEl, opts = {}) {
   };
 }
 
+// A lightweight, embeddable map for browsing a *specific set* of places (e.g. the
+// filtered Places results) spatially instead of as a scrolling list. Shares the same
+// offline geometry basemap, but hides the streaming satellite layer for a fast, always-
+// offline embed. Markers are coloured like the main map (markets gold, local eats red,
+// everything else by effective rating) and tapping one calls opts.onOpen(id). The
+// returned controller exposes setPlaces() so filter changes re-point the markers without
+// tearing down the WebGL context, plus dispose()/locate().
+export async function initPlacesMap(containerEl, places, opts = {}) {
+  await loadLibs();
+  const maplibregl = window.maplibregl;
+  if (!maplibregl) throw new Error('map library unavailable');
+
+  const map = new maplibregl.Map({
+    container: containerEl,
+    style: basemapStyle(),
+    center: [104.5, 13.5],
+    zoom: 5,
+    attributionControl: true,
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
+  const geo = new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true,
+    showUserLocation: true, showUserHeading: true,
+  });
+  map.addControl(geo, 'top-right');
+  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left'); } catch { /* older build */ }
+  geo.on('geolocate', (e) => { if (opts.onLocate) opts.onLocate({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }); });
+  // keep the embed offline-first and quick: hide the streaming satellite tiles.
+  map.on('style.load', () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', 'none'); } catch { /* noop */ } });
+
+  const MARKET = '#E0A100', LOCAL = '#D62828';
+  const colorFor = (p) => {
+    const cats = p.categories || [];
+    if (cats.includes('market')) return MARKET;
+    if (p.isLocal) return LOCAL;
+    return ratingColor(effectiveRating(p.id, p.rating));
+  };
+  let markers = [];
+  function fit(list) {
+    const pts = (list || []).filter((p) => p.coords).map((p) => [p.coords.lng, p.coords.lat]);
+    if (!pts.length) return;
+    if (pts.length === 1) { map.flyTo({ center: pts[0], zoom: 13, duration: 400 }); return; }
+    try {
+      const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
+      pts.forEach((c) => b.extend(c));
+      map.fitBounds(b, { padding: 46, maxZoom: 14, duration: 400 });
+    } catch { /* noop */ }
+  }
+  function setPlaces(list) {
+    markers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
+    markers = [];
+    (list || []).forEach((p) => {
+      if (!p.coords) return;
+      const m = new maplibregl.Marker({ color: colorFor(p) }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+      const el = m.getElement();
+      el.style.cursor = 'pointer';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', p.name || 'place');
+      const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
+      markers.push(m);
+    });
+    fit(list);
+  }
+
+  map.on('load', () => setPlaces(places));
+
+  return {
+    map,
+    setPlaces,
+    locate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
+    dispose: () => { try { map.remove(); } catch { /* already gone */ } },
+  };
+}
+
 export async function storageEstimate() {
   if (!navigator.storage || !navigator.storage.estimate) return null;
   const e = await navigator.storage.estimate();

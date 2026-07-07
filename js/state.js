@@ -21,6 +21,12 @@ function defaults() {
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
         audioPacks: [],
+        // Last known GPS fix { lat, lng, at } — cached so "distance from you" and the
+        // near-me experience work across the whole app, offline, without re-locating.
+        lastFix: null,
+        // Remembered browse mode + ordering on the Places screen.
+        placesView: 'list',   // 'list' | 'map'  — scroll a list, or see results on a map
+        placesSort: 'best',   // 'best' | 'near' — order by fit/rating, or by distance from you
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
@@ -295,6 +301,19 @@ export function setMyStay({ name = 'My stay', coords } = {}) {
 }
 export function getMyStay() { return store.myStay || null; }
 export function clearMyStay() { store.myStay = null; save(); }
+
+// The user's last GPS fix, cached on-device so distance/near-me work app-wide and
+// offline. Never transmitted. `at` lets callers judge how stale the fix is.
+export function getLastFix() {
+  const f = store.profile.prefs.lastFix;
+  return (f && f.lat != null && f.lng != null) ? f : null;
+}
+export function setLastFix(coords) {
+  if (!coords || coords.lat == null || coords.lng == null) return null;
+  store.profile.prefs.lastFix = { lat: coords.lat, lng: coords.lng, at: Date.now() };
+  save();
+  return store.profile.prefs.lastFix;
+}
 
 // --- saved offline map areas (named tile packs) ------------------------------
 export function getSavedAreas() { return Array.isArray(store.savedAreas) ? store.savedAreas : (store.savedAreas = []); }

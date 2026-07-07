@@ -668,3 +668,12 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
   font-size: 0.72rem; font-weight: 800; color: #fff; background: var(--magenta);
   box-shadow: 0 2px 6px -1px rgba(214,51,108,0.6); border: 1.5px solid var(--card);
 }
+
+/* "1.2 km · ~15 min walk · NE" from the user's last GPS fix, shown on cards + detail. */
+.dist-chip {
+  display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
+  color: #fff; background: var(--grape); border-radius: 999px; padding: 2px 10px;
+}
+/* Embedded results map on the Places screen: give the empty canvas a resting shape. */
+.places-map { box-shadow: var(--elev-1); background: var(--card); }
+.places-map .maplibregl-ctrl-bottom-left, .places-map .maplibregl-ctrl-bottom-right { font-size: 10px; }
