@@ -89,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.98.0';
+const APP_VERSION = 'mk-v0.99.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -144,6 +144,7 @@ function homeScreen() {
     h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
   ]));
   wrap.append(h('div', { class: 'home-actions' }, [
+    h('button', { class: 'btn', onclick: () => go('#nearby') }, '📍 What’s near me'),
     h('button', { class: 'btn ghost', onclick: () => go('#search') }, '🔎 Search everything'),
     h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
   ]));
@@ -270,6 +271,125 @@ function countryHubScreen(id) {
       h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
     ]))));
   mount(wrap, '#home');
+}
+
+// ---- "NEAR ME" / JUST-ARRIVED HUB -------------------------------------------
+// The just-stepped-off-the-plane front door. Uses the device GPS (offline; last fix
+// cached) to name where you are, order the closest places by distance, and lay out the
+// first-hour essentials — shaped by your profile. Every distance is pure offline maths.
+function nearCat(p) {
+  const c = p.categories || [];
+  if (p.stayType || c.some((x) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(x))) return 'stay';
+  if (p.isLocal || c.some((x) => ['food', 'restaurant', 'streetfood', 'market', 'cafe'].includes(x))) return 'eat';
+  return 'do';
+}
+function catEmoji(c) { return c === 'eat' ? '🍜' : c === 'stay' ? '🛏' : '🎫'; }
+
+// First-hour essentials, lightly tailored to the traveller's party/budget.
+function arrivalEssentials(country) {
+  const c = getCountry(country);
+  const lang = c ? c.lang : 'th';
+  const party = store.profile.prefs.party;
+  const budget = store.profile.prefs.budget;
+  const card = h('div', { class: 'card' }, [h('h2', {}, '🧭 Your first hour')]);
+  const item = (summary, ...kids) => h('details', { class: 'arrival-item' }, [h('summary', {}, summary), ...kids]);
+  card.append(
+    item('💵 Cash & ATMs',
+      h('p', { class: 'muted' }, `Use a bank ATM rather than an airport counter for a better rate${budget === 'low' ? '; withdraw a larger amount at once to spread the per-use fee' : ''}. Carry small notes for stalls, tuk-tuks and markets.`),
+      h('button', { class: 'btn ghost block', onclick: () => go('#currency') }, 'Open the currency converter')),
+    item('📶 SIM & data',
+      h('p', { class: 'muted' }, 'Pick up a tourist SIM or eSIM at the airport or a phone shop. You rarely need much — this whole app works offline once loaded.')),
+    item('🚰 Safe food & water',
+      h('p', { class: 'muted' }, party === 'family'
+        ? 'Choose busy stalls where food is hot and fresh, and stick to bottled or filtered water. For young children, start with plain rice and noodle dishes.'
+        : 'Bottled or filtered water only. Busy stalls with high turnover are usually the safest — the food is cooked to order and does not sit around.')),
+    item('🏠 Get to your stay',
+      h('p', { class: 'muted' }, 'Save where you are staying and the map will always show the distance and direction back — even with no signal.'),
+      h('button', { class: 'btn ghost block', onclick: () => go('#map') }, 'Set my accommodation on the map')),
+    item('💬 First words',
+      h('p', { class: 'muted' }, 'Hello, thank you and the numbers go a long way with drivers and vendors.'),
+      h('button', { class: 'btn ghost block', onclick: () => go(`#phrasebook-${lang}`) }, 'Open the phrasebook')),
+  );
+  return card;
+}
+
+function nearbyScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('📍 Near me', '#home'));
+  const status = h('p', { class: 'muted' }, 'Finding your location…');
+  const body = h('div', {});
+  wrap.append(status, body);
+  mount(wrap, '#home');
+
+  // Cached fix paints instantly; a live fix then refines it. Offline-safe throughout.
+  let fix = getLastFix();
+  if (fix) paint(fix);
+  geolocate()
+    .then((pos) => { fix = setLastFix(pos); paint(fix); })
+    .catch(() => { if (!fix) noLocation(); });
+
+  function nearestCityInfo(f) {
+    let best = null; let bestKm = Infinity;
+    for (const s of WEATHER_SPOTS) {
+      const km = haversineKm(f, { lat: s.lat, lng: s.lng });
+      if (km < bestKm) { bestKm = km; best = s; }
+    }
+    return best ? { city: best.city, country: best.country, km: bestKm } : null;
+  }
+
+  function noLocation() {
+    status.textContent = 'Location is off';
+    body.innerHTML = '';
+    body.append(h('div', { class: 'card' }, [
+      h('p', {}, 'Turn on location to see what is around you — distances, walking times and the closest places, all offline once you have a fix.'),
+      h('button', { class: 'btn block', onclick: () => go('#nearby') }, 'Try again'),
+      h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#home') }, 'Or browse by country'),
+    ]));
+  }
+
+  function paint(f) {
+    const info = nearestCityInfo(f);
+    const country = info ? info.country : activeCountry;
+    activeCountry = country;
+    const cName = getCountry(country) ? getCountry(country).name : '';
+    status.innerHTML = '';
+    status.append(
+      h('strong', {}, info ? `You are near ${info.city}` : 'You are here'),
+      (info && cName) ? h('span', { class: 'muted' }, ` · ${cName}${info.km > 60 ? ` (${fmtDistance(info.km)} away)` : ''}`) : null,
+    );
+
+    const ranked = allPlaces({ country }).filter((p) => p.coords)
+      .map((p) => ({ p, km: haversineKm(f, p.coords) })).sort((a, b) => a.km - b.km);
+
+    body.innerHTML = '';
+    body.append(arrivalEssentials(country));
+    body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
+      h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, '🗺 See on the map'),
+      h('button', { class: 'chip', onclick: () => go('#map') }, '📍 Set my stay'),
+      h('button', { class: 'chip', onclick: () => go('#sos') }, '🆘 Emergency'),
+    ]));
+
+    let cat = 'all';
+    const cats = [['all', 'Everything'], ['eat', '🍜 Eat'], ['stay', '🛏 Stay'], ['do', '🎫 Do']];
+    const catRow = h('div', { class: 'chips' }, cats.map(([id, lbl]) =>
+      h('button', {
+        class: 'chip', 'aria-pressed': id === 'all' ? 'true' : 'false', dataset: { c: id },
+        onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); drawList(); },
+      }, lbl)));
+    const listEl = h('div', {});
+    body.append(h('h3', { style: 'margin:14px 2px 4px' }, 'Closest to you'), catRow, listEl);
+
+    function drawList() {
+      listEl.innerHTML = '';
+      const rows = ranked.filter(({ p }) => cat === 'all' || nearCat(p) === cat).slice(0, 12);
+      if (!rows.length) { listEl.append(h('p', { class: 'empty' }, 'Nothing tagged nearby in this category yet — try “Everything” or the map.')); return; }
+      rows.forEach(({ p, km }) => listEl.append(h('button', { class: 'btn ghost block near-row', onclick: () => go(`#place-${p.id}`) }, [
+        h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}`),
+        h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
+      ])));
+    }
+    drawList();
+  }
 }
 
 // ---- CURRENCY CONVERTER -----------------------------------------------------
@@ -3947,6 +4067,7 @@ function render() {
     switch (head) {
       case '': case 'home': return homeScreen();
       case 'country': return countryHubScreen(arg);
+      case 'nearby': return nearbyScreen();
       case 'currency': return currencyScreen();
       case 'phrasebook': return phrasebookScreen(arg);
       case 'places': return placesScreen(arg);
