@@ -574,7 +574,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-krabi-hot-springs-waterfall", name: "Krabi Hot Springs and Emerald Pool", city: "Krabi", country: "th",
-    categories: ["nature", "wellness", "hike"], budgetTier: "budget",
+    categories: ["nature", "wellness", "hike"], budgetTier: "low",
     kidFriendly: true,
     activities: ["hot-springs", "swimming", "walking"],
     blurb: "In the Khlong Thom area southeast of Krabi town, natural thermal hot springs form warm stone pools in the forest, paired nearby with the mineral-rich Emerald Pool (Sa Morakot) and Blue Pool. Short shaded boardwalk trails link the pools, making it an easy half-day for families.",
@@ -590,7 +590,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-nan-cycling-old-town", name: "Nan Old Town Cycling Tour", city: "Nan", country: "th",
-    categories: ["culture", "nature"], budgetTier: "budget",
+    categories: ["culture", "nature"], budgetTier: "low",
     kidFriendly: true,
     activities: ["cycling", "temples", "sightseeing"],
     blurb: "Sleepy, mountain-ringed Nan in Thailand's far north is ideal for gentle cycling between its riverside temples, including Wat Phumin with its famous mural and the golden Wat Phra That Chae Haeng on a hill above town. Flat lanes and light traffic make it easy to explore the old town and surrounding rice fields by bicycle.",
@@ -606,7 +606,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-chiang-mai-faham-khao-soi", name: "Faham Road khao soi shops", city: "Chiang Mai", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "A short stretch of Faham Road on the east bank of the Ping River hosts Chiang Mai's most famous cluster of khao soi houses, including long-running names like Khao Soi Lam Duan and Khao Soi Samer Jai. Each shop ladles out the northern curry-noodle classic — coconut curry broth, boiled and crispy egg noodles, chicken or beef — with pickled mustard greens, shallots and lime on the side.",
@@ -622,7 +622,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-chiang-mai-chiang-mai-gate-market", name: "Chiang Mai Gate night food stalls (Pratu Chiang Mai)", city: "Chiang Mai", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Every evening the south gate of the Old City turns into one of Chiang Mai's best-loved street-food gatherings. Stalls line the moat road selling khao kha moo (braised pork leg on rice), grilled chicken, som tam, noodle soups, mango sticky rice and fresh fruit shakes, with plastic stools set out behind the carts.",
@@ -638,7 +638,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-chiang-rai-night-bazaar-food-court", name: "Chiang Rai Night Bazaar food court", city: "Chiang Rai", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Behind the souvenir stalls of Chiang Rai's nightly bazaar sits a large open-air food court ringed by dozens of vendors: northern sausage (sai ua), khao soi, grilled river fish, hotpots, som tam and Thai desserts. Shared tables face a stage with free live music and traditional dance most evenings, making it the town's default dinner spot.",
@@ -654,7 +654,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pai-walking-street", name: "Pai Walking Street night food run", city: "Pai", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "After sunset, Pai's main drag (Chaisongkhram Road and the lanes around it) closes to traffic and fills with food carts: grilled meat skewers, khao soi, sushi rolls, banana roti, fresh spring rolls, burgers, vegan bowls and fruit shakes. It reflects Pai's traveller crowd — half northern Thai street food, half international comfort food — and the whole strip is walkable in twenty minutes.",
@@ -672,7 +672,7 @@ export const PLACES_TH_EXT = [
     id: "th-ext-nan-walking-street", name: "Nan Walking Street (Kad Khuang Muang Nan)", city: "Nan", country: "th",
     recognition: 'On weekend evenings the street directly beside Wat Phumin in Nan old town; diners sit on mats at low khantoke tables in front of the temple that holds the Whispering Lovers mural.',
     localName: 'กาดข่วงเมืองน่าน · Kad Khuang Muang Nan',
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "On weekend evenings the street beside Wat Phumin — home of Nan's famous Whispering Lovers mural — becomes a relaxed walking street. Vendors sell Nan-style specialities such as khao soi, northern laab, kanom jeen nam ngiao, grilled skewers and Lanna sweets, and diners sit on mats at low khantoke-style tables spread across the plaza. It is one of the most atmospheric and least touristed food streets in northern Thailand.",
@@ -688,7 +688,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-phuket-old-town-hokkien-noodles", name: "Phuket Old Town Hokkien Noodle Heritage Cluster", city: "Phuket Town", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     activities: ["street food crawl", "old town walk", "shophouse architecture"],
@@ -705,7 +705,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-phuket-lard-yai-walking-street", name: "Lard Yai Sunday Walking Street (Thalang Road)", city: "Phuket Town", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     activities: ["night market grazing", "street performances", "souvenir browsing"],
@@ -722,7 +722,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-krabi-chao-fah-night-market", name: "Chao Fah Pier Night Market", city: "Krabi Town", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     activities: ["night market grazing", "riverfront stroll", "people watching"],
@@ -739,7 +739,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-trang-dim-sum-breakfast", name: "Trang Dim Sum Breakfast Shophouses", city: "Trang", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     activities: ["dim sum breakfast", "kopi coffee culture", "market browsing"],
@@ -756,7 +756,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-kanchanaburi-jj-night-market", name: "JJ Night Market (Kanchanaburi Station Market)", city: "Kanchanaburi", country: "th",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     activities: ["night market grazing", "post-sightseeing dinner", "dessert hunting"],
@@ -781,7 +781,7 @@ export const PLACES_TH_EXT = [
     categories: ["food"],
     isLocal: true,
     kidFriendly: true,
-    budgetTier: "budget",
+    budgetTier: "low",
     blurb: "Operating on Maha Chai Road since 1966, Thipsamai built its reputation on pad thai fried over charcoal in fast-moving woks and served 'haw kai' style, wrapped in a thin egg omelette. The open-fronted cook line, the orange-juice counter and the pavement queue have made it a fixture of old-town Bangkok eating.",
     whyItFits: "A landmark dinner stop a short walk from the Golden Mount and Wat Ratchanatda: quick to order, fascinating for kids to watch the charcoal wok line, and an easy add-on to an old-town evening.",
     priceRange: {
@@ -1041,7 +1041,7 @@ export const PLACES_TH_EXT = [
     city: "Bangkok",
     country: "th",
     categories: ["stay", "hotel"],
-    budgetTier: "budget",
+    budgetTier: "low",
     stayType: "hotel",
     stayDuration: "short",
     kidFriendly: true,
@@ -1087,7 +1087,7 @@ export const PLACES_TH_EXT = [
     city: "Nong Khai",
     country: "th",
     categories: ["stay", "guesthouse"],
-    budgetTier: "budget",
+    budgetTier: "low",
     stayType: "guesthouse",
     stayDuration: "short",
     kidFriendly: true,
@@ -1142,7 +1142,7 @@ export const PLACES_TH_EXT = [
     categories: ["food"],
     isLocal: true,
     kidFriendly: true,
-    budgetTier: "budget",
+    budgetTier: "low",
     blurb: "Cluster of local Thai stalls and simple market eateries in Mae Haad, the pier village where every Koh Tao ferry lands. Expect grilled chicken with sticky rice, som tam, noodle soups, roti pancakes and fruit shakes, served fast to boat crews, dive staff and islanders alike.",
     whyItFits: "A named village food area rather than a single shop, so travellers can browse several stalls and eat where locals queue. It is the cheapest, most local way to eat on an island otherwise dominated by dive-resort restaurants.",
     priceRange: {

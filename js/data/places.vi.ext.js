@@ -529,7 +529,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-dalat-camping", name: "Da Lat highlands camping & Ta Nang trek", city: "Da Lat", country: "vi",
-    categories: ["stay", "camping"], budgetTier: "budget",
+    categories: ["stay", "camping"], budgetTier: "low",
     kidFriendly: true, stayType: "tent", stayDuration: "short",
     activities: ["camping", "trekking", "campfire", "lake", "pine-forest"],
     amenities: ["tent-rental", "campfire", "guides"],
@@ -563,7 +563,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-tamcoc-guesthouse", name: "Tam Coc / Ninh Binh guesthouse", city: "Ninh Binh", country: "vi",
-    categories: ["stay", "guesthouse"], budgetTier: "budget",
+    categories: ["stay", "guesthouse"], budgetTier: "low",
     kidFriendly: true, stayType: "guesthouse", stayDuration: "both",
     activities: ["cycling", "boat", "caves", "birdwatching", "viewpoint"],
     amenities: ["wifi", "breakfast", "bike-rental", "pool", "restaurant", "family-rooms"],
@@ -612,7 +612,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-buon-ma-thuot-coffee", name: "Buon Ma Thuot Coffee Farm and Tasting Experience", city: "Buon Ma Thuot", country: "vi",
-    categories: ["food", "culture", "nature"], budgetTier: "budget",
+    categories: ["food", "culture", "nature"], budgetTier: "low",
     kidFriendly: true,
     activities: ["coffee", "farm", "culture", "walking"],
     blurb: "Buon Ma Thuot is the capital of Vietnam's Central Highlands coffee belt, where robusta plantations and roasteries offer tours through bean cultivation, processing and brewing. Tastings showcase the region's signature strong coffee alongside local Ede ethnic culture.",
@@ -628,7 +628,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hanoi-old-quarter-street-food", name: "Old Quarter street-food circuit (Dong Xuan alley to Ta Hien)", city: "Hanoi", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "The densest street-food concentration in northern Vietnam: the covered food alley beside Dong Xuan Market, the pho and bun cha kitchens threaded through Hang Buom and Hang Manh, and the low-stool beer-and-snack corner at Ta Hien. Expect pho bo, bun cha grilled over charcoal, banh cuon steamed to order, nom bo kho papaya salad, and egg coffee a few doors away.",
@@ -644,7 +644,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-ninhbinh-goat-com-chay-strip", name: "Goat-meat and com chay restaurant strip (Tam Coc-Trang An road)", city: "Ninh Binh", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Ninh Binh's two signature dishes are thit de (mountain goat raised on the limestone karsts) and com chay (crispy burnt rice with a savoury sauce). Family-run specialist restaurants cluster along the roads linking Ninh Binh city with Trang An and Tam Coc, serving goat steamed with lemon leaves, stir-fried, grilled, and as tai de (rare goat with lime), always with com chay on the side.",
@@ -660,7 +660,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hagiang-dongvan-thang-co-market", name: "Dong Van Sunday market and old-town eats (thang co and corn wine)", city: "Ha Giang", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: false,
     blurb: "Dong Van's Sunday market, at the heart of the Ha Giang loop, is the classic place to try thang co, the Hmong horse-meat and offal stew simmered in huge pans and eaten with corn wine among market-day crowds from the surrounding villages. On other days the stone houses of the old quarter serve mountain staples: banh cuon with bone broth, men men steamed corn, smoked buffalo, and ruou ngo corn wine.",
@@ -676,7 +676,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-sapa-market-bbq-stalls", name: "Sapa market food court and night barbecue stalls", city: "Sapa", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Sapa's cold mountain evenings are built for its barbecue culture: charcoal stalls around the market and the streets near the stone church grill skewers of lon cap nach (local black pig), chicken, mushrooms, eggs, and bamboo-tube rice, while the market food court and nearby kitchens serve the highland specialities of ca hoi (Sapa-farmed salmon) and ca tam (sturgeon) hotpot.",
@@ -708,7 +708,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hoian-banhmi-caolau-cluster", name: "Hoi An Old Town Banh Mi and Cao Lau Cluster", city: "Hoi An", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "A compact cluster of legendary banh mi counters and cao lau noodle stalls in and around Hoi An's Ancient Town and Central Market. Banh mi here is famously stacked with pate, herbs and chili sauce, while cao lau - chewy noodles, char siu pork and crispy croutons - is a dish found only in Hoi An, traditionally made with local well water.",
@@ -724,7 +724,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hue-bunbo-breakfast-shops", name: "Hue Bun Bo Breakfast Shops", city: "Hue", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Hue is the birthplace of bun bo Hue - a spicy lemongrass beef noodle soup - and locals eat it for breakfast at no-frills morning shops clustered around the city centre streets such as Ly Thuong Kiet, Nguyen Du and near Dong Ba Market. Steaming cauldrons, low stools, crab balls, pork knuckle and cubes of congealed blood for the adventurous.",
@@ -740,7 +740,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hcmc-vinhkhanh-seafood-street", name: "Vinh Khanh Seafood Street (District 4)", city: "Ho Chi Minh City", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "After dark, Vinh Khanh street in District 4 turns into Saigon's most famous seafood strip: pavement tables, tanks of live snails, clams, crab and prawns, and cooks grilling scallops with spring onion oil and peanuts. Loud, smoky and completely local - this is 'oc' (snail) culture at full volume, washed down with cold beer.",
@@ -756,7 +756,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-dalat-nightmarket-banhtrangnuong", name: "Da Lat Night Market Banh Trang Nuong Stalls", city: "Da Lat", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Da Lat's chilly evenings were made for banh trang nuong - 'Vietnamese pizza' - rice paper grilled over coals with egg, dried shrimp, spring onion, cheese and chili sauce. Stalls line the night market around Nguyen Thi Minh Khai street, alongside hot soy milk, grilled corn, skewers and strawberry vendors from the surrounding farms.",
@@ -772,7 +772,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cantho-cairang-floating-breakfast", name: "Cai Rang Floating Market Breakfast Boats", city: "Can Tho", country: "vi",
-    categories: ["food"], budgetTier: "budget",
+    categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "At dawn on the Can Tho River, sampans pull alongside your boat at Cai Rang floating market selling steaming bowls of hu tieu and bun rieu, strong iced coffee and fresh pineapple cut to order. Breakfast is passed hand to hand across the water while wholesale fruit boats trade around you - the Mekong Delta's most famous morning ritual.",
@@ -836,7 +836,7 @@ export const PLACES_VI_EXT = [
     categories: ["food"],
     isLocal: true,
     kidFriendly: true,
-    budgetTier: "budget",
+    budgetTier: "low",
     blurb: "District 1 institution famous for its heavily overstuffed banh mi — a dense stack of a dozen-odd cold cuts, pork floss, rich pate and butter in one baguette. Long a late-night Saigon ritual, it now runs most of the day and draws steady motorbike and walk-up queues.",
     whyItFits: "One sandwich genuinely feeds a hungry adult, so it works as a full cheap meal near Ben Thanh — a good pick for travellers who want a famous local order rather than a restaurant.",
     priceRange: {
@@ -876,7 +876,7 @@ export const PLACES_VI_EXT = [
     categories: ["food"],
     isLocal: true,
     kidFriendly: true,
-    budgetTier: "budget",
+    budgetTier: "low",
     blurb: "Decades-old Old Quarter beef pho shop famous for its morning queues down Bat Dan Street and its old-school self-service ritual: pay at the counter, carry your own bowl, and squeeze onto a shared table. The long-simmered beef broth is the draw; the routine is part of the experience.",
     whyItFits: "A classic early-start breakfast stop for travellers staying in or near the Old Quarter — cheap, fast, and a genuine local scene rather than a tourist restaurant.",
     priceRange: {
@@ -955,7 +955,7 @@ export const PLACES_VI_EXT = [
     city: "Ho Chi Minh City",
     country: "vi",
     categories: ["food"],
-    budgetTier: "budget",
+    budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Canal-side lunch stall on the edge of District 1 founded by Nguyen Thi Thanh, who became internationally known after Anthony Bourdain featured her on No Reservations. Thanh passed away in May 2025, and her family now runs the stall with her recipes. The draw remains the rotating repertoire: a different noodle soup each day of the week, from bun bo Hue to banh canh cua, ladled from one big pot until it runs out.",
@@ -1031,7 +1031,7 @@ export const PLACES_VI_EXT = [
     city: "Hanoi",
     country: "vi",
     categories: ["food"],
-    budgetTier: "budget",
+    budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Hanoi institution at 13 Lo Duc, serving since 1979, famous for pho tai lan: beef flash-seared in a smoking-hot wok with garlic before it hits the broth, a departure from the classic raw-sliced Hanoi style. Expect a rich, fatty bowl heavy on scallions, eaten elbow-to-elbow at communal tables - the formula has spawned branches as far as Tokyo and Melbourne.",
@@ -1180,7 +1180,7 @@ export const PLACES_VI_EXT = [
     categories: ["food"],
     isLocal: true,
     kidFriendly: true,
-    budgetTier: "budget",
+    budgetTier: "low",
     blurb: "Evening food stalls in and around Con Son town market, the commercial heart of Con Dao's only town. Locals come for banh mi, seafood noodle soups, grilled skewers, banh xeo and che desserts — the cheapest and most authentic eating on an island known for pricey resort dining.",
     whyItFits: "A named market cluster where several stalls trade side by side, letting travellers follow the local queue. On remote Con Dao, where restaurant prices climb steeply, this is the reliable budget anchor.",
     priceRange: {
