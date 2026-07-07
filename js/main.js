@@ -10,6 +10,7 @@ import {
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
   setMyStay, getMyStay, clearMyStay,
+  getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
@@ -88,7 +89,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.97.0';
+const APP_VERSION = 'mk-v0.98.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -641,33 +642,103 @@ function placesScreen(countryId) {
     filterCard.append(h('div', { class: 'muted' }, 'Where to stay'), stayTypeChips, stayDurChips);
   }
 
+  // View + sort controls. The same filtered results can be scrolled as a list OR seen
+  // spatially on an offline map, and optionally ordered by distance from you. Both are
+  // remembered. This is the "put location things on a map + less scrolling" fix.
+  let viewMode = prefs.placesView === 'map' ? 'map' : 'list';
+  let sortMode = prefs.placesSort === 'near' ? 'near' : 'best';
+
+  const viewBtn = (mode, label) => h('button', {
+    class: 'chip', 'aria-pressed': viewMode === mode ? 'true' : 'false',
+    onclick: () => { if (viewMode === mode) return; prefs.placesView = mode; save(); render(); },
+  }, label);
+  const nearChip = h('button', {
+    class: 'chip', 'aria-pressed': sortMode === 'near' ? 'true' : 'false',
+    onclick: async (e) => {
+      const btn = e.currentTarget;
+      if (sortMode === 'near') { sortMode = 'best'; prefs.placesSort = 'best'; save(); btn.setAttribute('aria-pressed', 'false'); btn.textContent = '📍 Nearest first'; renderList(); return; }
+      if (!getLastFix()) {
+        btn.textContent = 'Locating…';
+        try { setLastFix(await geolocate()); }
+        catch { btn.textContent = '📍 Turn on location'; setTimeout(() => { btn.textContent = '📍 Nearest first'; }, 1800); return; }
+      }
+      sortMode = 'near'; prefs.placesSort = 'near'; save();
+      btn.setAttribute('aria-pressed', 'true'); btn.textContent = '📍 Nearest first'; renderList();
+    },
+  }, '📍 Nearest first');
+  wrap.append(h('div', { class: 'view-toggle', style: 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0' }, [
+    h('div', { class: 'chips', style: 'margin:0' }, [viewBtn('list', '📋 List'), viewBtn('map', '🗺 Map')]),
+    h('span', { style: 'flex:1' }), nearChip,
+  ]));
+
   wrap.append(filterCard);
 
   const listEl = h('div', {});
-  wrap.append(listEl);
+  const mapWrap = h('div', {});
+  const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
+  wrap.append(viewMode === 'map' ? mapWrap : listEl);
 
-  function renderList() {
-    listEl.innerHTML = '';
+  let placesCtrl = null;
+  let currentResults = [];
+
+  // Filtered + sorted results, or null when this country has no places yet.
+  function computeResults() {
     const country = getCountry(activeCountry);
-    if (!country || !Array.isArray(country.places)) {
-      listEl.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} places are coming soon. Thailand is fully covered in this build.`));
-      return;
-    }
-    let results = allPlaces({
-      country: activeCountry,
-      interests: [...selInterests],
-      budget: selBudget,
-    });
+    if (!country || !Array.isArray(country.places)) return null;
+    let results = allPlaces({ country: activeCountry, interests: [...selInterests], budget: selBudget });
     if (selKids) results = results.filter((p) => p.kidFriendly === true);
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
     if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
-    if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
-    // "For you": once a traveller profile exists, rank what matches it first.
-    if (profileIsSet()) results = results.slice().sort((a, b) => personalScore(b) - personalScore(a));
-    for (const p of results) listEl.append(placeCard(p));
+    const fix = getLastFix();
+    if (sortMode === 'near' && fix) {
+      const d = (p) => (p.coords ? haversineKm(fix, p.coords) : Infinity);
+      results = results.slice().sort((a, b) => d(a) - d(b));
+    } else if (profileIsSet()) {
+      results = results.slice().sort((a, b) => personalScore(b) - personalScore(a));
+    }
+    return results;
   }
+
+  function renderList() {
+    const country = getCountry(activeCountry);
+    const computed = computeResults();
+    currentResults = computed || [];
+    if (viewMode === 'map') {
+      const withCoords = currentResults.filter((p) => p.coords).length;
+      cap.textContent = currentResults.length
+        ? `${withCoords} of ${currentResults.length} places on the map${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — tap a pin`
+        : '';
+      if (placesCtrl) placesCtrl.setPlaces(currentResults);
+      return;
+    }
+    listEl.innerHTML = '';
+    if (computed === null) {
+      listEl.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} places are coming soon. Thailand is fully covered in this build.`));
+      return;
+    }
+    if (!currentResults.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
+    for (const p of currentResults) listEl.append(placeCard(p));
+  }
+
   renderList();
   mount(wrap, '#places');
+
+  // In map mode, boot the embedded offline map with the current results. Filter changes
+  // call placesCtrl.setPlaces() (no WebGL rebuild); leaving the screen disposes it via
+  // liveCleanup so contexts don't leak.
+  if (viewMode === 'map') {
+    if (!currentResults.length) {
+      mapWrap.append(h('p', { class: 'empty' }, 'No mapped places for these filters yet — switch to List or widen the filters.'));
+    } else {
+      const canvas = h('div', { class: 'places-map', style: 'height:360px;border-radius:16px;overflow:hidden;position:relative' });
+      mapWrap.append(cap, canvas);
+      import('./map.js').then((m) => m.initPlacesMap(canvas, currentResults, {
+        onOpen: (id) => go(`#place-${id}`),
+        onLocate: (fix) => setLastFix(fix),
+      })).then((c) => { placesCtrl = c; liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } }; })
+        .catch(() => { cap.textContent = ''; mapWrap.append(h('p', { class: 'muted' }, 'The map could not start here — switch to List view.')); });
+    }
+  }
 }
 
 function tierBadge(tier) {
@@ -733,11 +804,25 @@ function resolveItem(id) {
   return getPlace(id);
 }
 
+// "1.2 km · ~15 min walk away" from the user's last GPS fix, when known. Offline,
+// pure maths (haversine + ~4.8 km/h walking pace); walk time only for close spots.
+// Returns a chip node or null. Reused on cards, detail and the near-me experiences.
+function distanceChip(p) {
+  const fix = getLastFix();
+  if (!fix || !p || !p.coords) return null;
+  const km = haversineKm(fix, p.coords);
+  const parts = [fmtDistance(km)];
+  if (km <= 6) parts.push(`~${Math.max(1, Math.round((km / 4.8) * 60))} min walk`);
+  parts.push(`${compass(bearing(fix, p.coords))}`);
+  return h('span', { class: 'dist-chip', title: 'From your last location' }, `📍 ${parts.join(' · ')}`);
+}
+
 function placeCard(p) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   const hasPrice = p.priceRange && p.priceRange.currency;
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
   const colls = collectionsForItem(p.id);
+  const dchip = distanceChip(p);
   return h('div', { class: 'card' }, [
     h('div', { class: 'place-head' }, [
       h('h2', {}, `${p.isPin ? '📌 ' : ''}${p.name}`),
@@ -753,6 +838,7 @@ function placeCard(p) {
     travelerChips(p),
     p.blurb ? h('p', {}, p.blurb) : null,
     h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
+    dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
     p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
     colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
       h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
