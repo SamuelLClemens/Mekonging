@@ -19,6 +19,8 @@ function defaults() {
         tripLength: '',         // '' | 'short' (≤1wk) | 'medium' (2–3wk) | 'long' (1mo+)
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
+        // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
+        audioPacks: [],
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
@@ -420,5 +422,22 @@ export function addBoardPost(key, { topic = 'tip', text }) {
 export function deleteBoardPost(key, id) {
   const list = getBoardPosts(key);
   const i = list.findIndex((x) => x.id === id);
+  if (i >= 0) { list.splice(i, 1); save(); }
+}
+
+// --- offline phrase-audio packs (downloaded per phrasebook language) ------------
+export function getAudioPacks() {
+  const p = store.profile.prefs;
+  return Array.isArray(p.audioPacks) ? p.audioPacks : (p.audioPacks = []);
+}
+export function hasAudioPack(lang) { return getAudioPacks().includes(lang); }
+export function addAudioPack(lang) {
+  if (!lang) return;
+  const list = getAudioPacks();
+  if (!list.includes(lang)) { list.push(lang); save(); }
+}
+export function removeAudioPack(lang) {
+  const list = getAudioPacks();
+  const i = list.indexOf(lang);
   if (i >= 0) { list.splice(i, 1); save(); }
 }

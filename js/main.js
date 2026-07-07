@@ -15,6 +15,7 @@ import {
   getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
   getThread, addMessage,
   getBoardPosts, addBoardPost, deleteBoardPost,
+  getAudioPacks, hasAudioPack, addAudioPack,
 } from './state.js';
 import { suggestPlans } from './data/itineraries.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
@@ -29,7 +30,7 @@ import {
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
 } from './vault.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
-import { speak, stop as stopSpeak, hasVoiceFor, say, canSay } from './tts.js';
+import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
@@ -62,6 +63,9 @@ function applyTheme() {
   root.setAttribute('data-reduced-motion', prefersReducedMotion() ? 'on' : 'off');
   root.setAttribute('data-text', store.profile.textScale || 'm');
 }
+// Tell the TTS layer which languages have a downloaded audio pack, so canSay()
+// reports audio as available offline for them (e.g. Khmer/Lao with no device voice).
+setSavedPacks(getAudioPacks());
 
 // ---- UI state ---------------------------------------------------------------
 // Default the destination to where the user actually is, using the device time
@@ -84,7 +88,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.93.0';
+const APP_VERSION = 'mk-v0.94.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -358,6 +362,55 @@ function countryChips(onPick, selected = activeCountry) {
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
+// A "Save audio for offline" card for one phrasebook language. The service worker
+// prefetches every phrase's online-TTS clip into a dedicated cache, so playback then
+// works with no connection. Returns null when there is nothing to save (e.g. Hmong,
+// which has no online voice) or when no SW is available (native wrapper / insecure ctx).
+function audioPackControl(code, book) {
+  const swOk = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
+  const allergy = (ALLERGENS[code] && ALLERGENS[code].length) ? ALLERGENS[code] : [];
+  const phrases = book.categories.flatMap((c) => c.phrases).concat(allergy);
+  const urls = [...new Set(phrases.map((p) => ttsUrl(p.script, book.locale)).filter(Boolean))];
+  if (!urls.length) return null;
+  const saved = hasAudioPack(code);
+  const mb = (urls.length * 10 / 1024).toFixed(1); // clips average ~10 KB
+  const card = h('div', { class: 'card' });
+  card.append(h('h3', {}, '🔊 Offline audio'));
+  const status = h('p', { class: 'tiny muted' }, saved
+    ? `${book.label} pronunciations are saved on this device — 🔊 works with no signal.`
+    : `Save ${book.label} pronunciations (${urls.length} clips, ~${mb} MB) so 🔊 works offline — best done on wifi.`);
+  card.append(status);
+  if (!swOk) {
+    card.append(h('p', { class: 'tiny muted' }, 'Add this app to your home screen to save audio for offline use.'));
+    return card;
+  }
+  const btn = h('button', { class: 'btn block', style: 'margin-top:8px' }, saved ? '↻ Re-download audio' : `⤓ Save ${book.label} audio`);
+  btn.onclick = () => {
+    if (!navigator.serviceWorker.controller) return;
+    btn.disabled = true;
+    status.textContent = `Downloading ${urls.length} clips…`;
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.lang !== code) return;
+      if (d.type === 'TTS_PROGRESS') { status.textContent = `Downloading… ${d.done}/${d.total}`; }
+      else if (d.type === 'TTS_DONE') {
+        navigator.serviceWorker.removeEventListener('message', onMsg);
+        btn.disabled = false;
+        if (!d.ok) { status.textContent = 'Could not download audio — check your connection and try again.'; return; }
+        addAudioPack(code); setSavedPacks(getAudioPacks());
+        status.textContent = d.quotaHit
+          ? `Saved ${d.ok} clips before hitting the storage limit — most phrases will play offline.`
+          : `Saved ${d.ok} clips — ${book.label} audio now works offline.`;
+        if (location.hash.replace(/^#/, '').startsWith('phrasebook')) go(`#phrasebook-${code}`);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMsg);
+    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TTS', urls, lang: code });
+  };
+  card.append(btn);
+  return card;
+}
+
 function phrasebookScreen(lang) {
   const code = lang || store.profile.defaultLang || langForCountry(activeCountry);
   const book = getLanguage(code);
@@ -379,6 +432,11 @@ function phrasebookScreen(lang) {
       `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
   }
   if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
+
+  // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
+  // no signal — essential for Khmer/Lao, which have no device voice on most phones.
+  const audioCard = audioPackControl(code, book);
+  if (audioCard) wrap.append(audioCard);
 
   // Say-it tool: type or speak English, get the local text + spoken pronunciation.
   wrap.append(liveTranslateBox(code, book.label, book.locale));

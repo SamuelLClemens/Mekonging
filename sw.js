@@ -7,10 +7,15 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.93.0';
+const CACHE_VERSION = 'mk-v0.94.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
+// Offline phrase-audio packs: online-TTS clips (translate.google.com) the user chooses
+// to download per language, so Khmer/Lao (no device voice) still speak with no signal.
+const TTS_CACHE = 'mk-tts-v1';
+const TTS_HOST = 'translate.google.com';
+const TTS_CACHE_MAX = 4000;
 
 // `index.html` is the navigation fallback and so must cache for offline install to
 // be meaningful; it is listed in CRITICAL. Everything else is best-effort: a single
@@ -116,7 +121,8 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
       // keep the current app-shell cache AND the tile cache (offline map packs)
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== TILE_CACHE).map((k) => caches.delete(k))))
+      // AND the TTS pack cache (offline phrase audio) across version bumps
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== TILE_CACHE && k !== TTS_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -126,6 +132,9 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (TILE_HOSTS.includes(url.hostname)) { e.respondWith(handleTile(req)); return; }
+  // Offline phrase audio: serve downloaded TTS clips cache-first (opaque cross-origin
+  // responses are fine to store and replay through an <audio> element).
+  if (url.hostname === TTS_HOST) { e.respondWith(handleTTS(req)); return; }
   if (url.origin !== self.location.origin) return;
   // same-origin app shell: cache-first, then network (runtime-caches map libs too)
   e.respondWith(
@@ -175,6 +184,22 @@ async function rebuildRanged(stored) {
   return new Response(buf, { status: origStatus === 206 ? 206 : 200, headers });
 }
 
+// Phrase-audio: serve a downloaded clip cache-first; otherwise fetch (opaque) and, when
+// online, cache a copy so the next play works offline too. Never throws — a failed fetch
+// while offline+uncached surfaces as an <audio> error the caller already handles.
+async function handleTTS(req) {
+  const cache = await caches.open(TTS_CACHE);
+  const hit = await cache.match(req, { ignoreVary: true });
+  if (hit) return hit;
+  try {
+    const res = await fetch(req);
+    if (res && (res.ok || res.type === 'opaque')) { cache.put(req, res.clone()).catch(() => {}); }
+    return res;
+  } catch {
+    return new Response('', { status: 504, statusText: 'offline: audio not downloaded' });
+  }
+}
+
 // "Download this area for offline": the page posts the satellite-tile URLs covering the
 // current view; we fetch each FULL tile and store it under the same '__r=full' key that
 // handleTile() reads for non-ranged requests, so the area then renders with no signal.
@@ -185,8 +210,41 @@ self.addEventListener('message', (e) => {
     e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source, Array.isArray(d.protect) ? d.protect : []));
   } else if (d.type === 'DELETE_TILES' && Array.isArray(d.urls)) {
     e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
+  } else if (d.type === 'PREFETCH_TTS' && Array.isArray(d.urls)) {
+    e.waitUntil(prefetchTTS(d.urls.slice(0, 2000), e.source, d.lang || ''));
   }
 });
+
+// Download an audio pack: fetch each TTS clip no-cors and store the opaque response.
+// Runs inside the service worker, so the page's meta-CSP connect-src does not apply.
+async function prefetchTTS(urls, client, lang) {
+  const cache = await caches.open(TTS_CACHE);
+  let done = 0, ok = 0, quotaHit = false;
+  for (const url of urls) {
+    try {
+      if (await cache.match(url, { ignoreVary: true })) { ok++; }
+      else {
+        const res = await fetch(url, { mode: 'no-cors' });
+        if (res && (res.ok || res.type === 'opaque')) { await cache.put(url, res.clone()); ok++; }
+      }
+    } catch (err) {
+      if (err && err.name === 'QuotaExceededError') { quotaHit = true; break; }
+      /* skip this clip */
+    }
+    done++;
+    if (client && done % 10 === 0) client.postMessage({ type: 'TTS_PROGRESS', done, total: urls.length, ok, lang });
+  }
+  await enforceTTSCap(cache);
+  if (client) client.postMessage({ type: 'TTS_DONE', done, total: urls.length, ok, quotaHit, lang });
+}
+
+async function enforceTTSCap(cache) {
+  try {
+    const keys = await cache.keys();
+    let over = keys.length - TTS_CACHE_MAX;
+    for (let i = 0; i < keys.length && over > 0; i++) { await cache.delete(keys[i]); over--; }
+  } catch { /* best-effort */ }
+}
 
 // Delete a single saved area's tiles (the page recomputes the same tile URLs the
 // area was saved with, so only that pack is removed — other saved areas are kept).
