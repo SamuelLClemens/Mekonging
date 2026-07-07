@@ -538,3 +538,124 @@ html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex
 .board-row:first-of-type { border-top: 0; }
 .board-post { padding: var(--sp-2, 8px) 0; border-top: 1px solid var(--line); }
 .board-post:first-of-type { border-top: 0; }
+
+/* ============================================================================
+   DESIGN REFRESH v2 — expert polish layer (2026-07, mk-v0.93.0)
+   Additive, token-level. Fluid type, layered depth, tasteful entrance motion,
+   refined micro-states. Fully honours reduced-motion. No identity change:
+   the 1970s sunset palette and motifs are kept; this makes them sing.
+   ========================================================================== */
+
+:root {
+  /* Fluid type — scales smoothly phone → desktop for a premium feel. */
+  --fs-display: clamp(2.05rem, 1.5rem + 3.4vw, 2.95rem);
+  --fs-h1: clamp(1.35rem, 1.18rem + 0.9vw, 1.6rem);
+  --fs-h2: clamp(1.12rem, 1.02rem + 0.5vw, 1.28rem);
+
+  /* Elevation tiers with a warm tint (matches the paper palette). */
+  --elev-1: 0 1px 2px rgba(120,50,20,0.05), 0 3px 10px -4px rgba(120,50,20,0.12);
+  --elev-2: 0 2px 5px rgba(120,50,20,0.07), 0 14px 34px -10px rgba(120,50,20,0.20);
+  --elev-3: 0 4px 10px rgba(120,50,20,0.09), 0 26px 56px -14px rgba(120,50,20,0.26);
+  /* Glass edge: a hairline top highlight that reads as a lit bevel. */
+  --edge-hi: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0));
+  --card-wash: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 46%);
+  --dur-fast: 140ms;
+}
+html[data-theme="dark"] {
+  --elev-1: 0 1px 2px rgba(0,0,0,0.4), 0 3px 10px -4px rgba(0,0,0,0.5);
+  --elev-2: 0 2px 6px rgba(0,0,0,0.45), 0 16px 36px -10px rgba(0,0,0,0.6);
+  --elev-3: 0 4px 12px rgba(0,0,0,0.5), 0 28px 60px -14px rgba(0,0,0,0.7);
+  --edge-hi: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0));
+  --card-wash: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 46%);
+}
+
+/* Brand-tinted selection + thin scrollbar — small touches that read as care. */
+::selection { background: rgba(214,51,108,0.24); }
+* { scrollbar-width: thin; scrollbar-color: var(--sun-deep) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb { background: var(--sun-deep); border-radius: 999px; border: 2px solid var(--bg); }
+
+/* Display headings: tighter tracking + optical line-height for a crafted look. */
+.hero h1 { line-height: 1.04; }
+h2, h3, .cat-title, .topbar h1, .home-section { text-wrap: balance; }
+
+/* --- Cards: layered depth + lit top edge + subtle top-light wash ---------- */
+.card { position: relative; box-shadow: var(--elev-1); background-image: var(--card-wash); background-repeat: no-repeat; }
+.card::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--edge-hi); pointer-events: none;
+}
+
+/* --- Tiles: crisper hover lift, gradient icon disc gains a ring ----------- */
+.tile { position: relative; box-shadow: var(--elev-1); overflow: hidden; }
+.tile::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: var(--grad-sun); opacity: 0; transition: opacity var(--dur) var(--ease);
+}
+.tile:hover { box-shadow: var(--elev-2); }
+.tile:hover::after { opacity: 1; }
+.tile:active { transform: translateY(-1px) scale(0.995); }
+.tile .ic { box-shadow: inset 0 0 0 1px rgba(232,99,42,0.18); transition: transform var(--dur) var(--ease); }
+.tile:hover .ic { transform: scale(1.06) rotate(-3deg); }
+
+/* --- Section headers: a short gradient accent bar ------------------------- */
+.home-section { display: flex; align-items: center; gap: var(--sp-2); }
+.home-section::before {
+  content: ''; width: 22px; height: 3px; border-radius: 999px; background: var(--grad-sun); flex: none;
+}
+
+/* --- Buttons: glossy top sheen + tactile press --------------------------- */
+.btn { position: relative; overflow: hidden; }
+.btn:not(.ghost)::before {
+  content: ''; position: absolute; inset: 0 0 50% 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0)); pointer-events: none;
+}
+.btn:active { transform: translateY(0) scale(0.98); filter: brightness(0.98); }
+
+/* --- Chips: active state gets a soft glow -------------------------------- */
+.chip[aria-pressed="true"], .country-chip[aria-pressed="true"] { box-shadow: 0 3px 10px -3px rgba(22,163,154,0.5); }
+.country-chip[aria-pressed="true"] { box-shadow: 0 3px 12px -3px rgba(214,51,108,0.5); }
+.chip, .country-chip { transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease); }
+.chip:active, .country-chip:active { transform: scale(0.95); }
+
+/* --- Bottom tab bar: active tab gains a gradient indicator + lift --------- */
+.tabbar button { position: relative; transition: color var(--dur) var(--ease); }
+.tabbar button .ic { transition: transform var(--dur) var(--ease); }
+.tabbar button[aria-current="page"] .ic { transform: translateY(-2px); }
+.tabbar button[aria-current="page"]::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 26px; height: 3px; border-radius: 0 0 999px 999px; background: var(--grad-sun);
+}
+
+/* --- Bubbles / boards: gentle depth --------------------------------------- */
+.bubble { box-shadow: var(--elev-1); }
+.route-opt.best, .banner { box-shadow: var(--elev-1); }
+
+/* --- Entrance motion: each screen's cards & tiles rise in (staggered) ------
+   Runs on every screen mount (the SPA replaces #app), so navigation feels
+   alive. Kept short and soft. Disabled for reduced-motion users. */
+@media (prefers-reduced-motion: no-preference) {
+  .screen > .card, .screen > .grid > .tile, .screen > .region-map, .screen > .banner {
+    animation: riseIn 380ms var(--ease) both;
+  }
+  .screen > .grid > .tile:nth-child(2) { animation-delay: 40ms; }
+  .screen > .grid > .tile:nth-child(3) { animation-delay: 80ms; }
+  .screen > .grid > .tile:nth-child(4) { animation-delay: 120ms; }
+  .screen > .grid > .tile:nth-child(5) { animation-delay: 160ms; }
+  .screen > .grid > .tile:nth-child(6) { animation-delay: 200ms; }
+  .screen > .grid > .tile:nth-child(n+7) { animation-delay: 240ms; }
+  .screen > .card:nth-of-type(2) { animation-delay: 60ms; }
+  .screen > .card:nth-of-type(3) { animation-delay: 110ms; }
+  .screen > .card:nth-of-type(n+4) { animation-delay: 150ms; }
+  /* Hero sun: a slow, calm breathing glow. */
+  .hero::before { animation: sunGlow 9s var(--ease) infinite; }
+}
+@keyframes riseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes sunGlow {
+  0%, 100% { opacity: 0.78; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.95; transform: translateX(-50%) scale(1.06); }
+}
+/* Respect the app's own reduced-motion switch too. */
+html[data-reduced-motion="on"] .screen > .card,
+html[data-reduced-motion="on"] .screen > .grid > .tile,
+html[data-reduced-motion="on"] .hero::before { animation: none !important; }
