@@ -85,6 +85,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cuc-phuong", name: "Cuc Phuong National Park", city: "Ninh Binh", country: "vi",
+    access: { stepFree: "partial", note: "Paths near the entrance and primate rescue centre are relatively flat, but the headline draws (1,000-year-tree trek ~3km, Cave of Prehistoric Man via ~220 steps, jungle trails) are unpaved and stepped; hiking tours are marked not wheelchair-accessible." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.1, scale: 5, count: 218, url: "https://www.tripadvisor.com/Attraction_Review-g303945-d8779716-Reviews-Cuc_Phuong_National_Park-Ninh_Binh_Ninh_Binh_Province.html", asOf: "2026-07" },
     ],
@@ -102,6 +103,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-paradise-cave", name: "Paradise Cave (Thien Duong)", city: "Phong Nha", country: "vi",
+    access: { stepFree: "no", note: "An electric buggy shortens the ~600m approach, but reaching the mouth still involves a steep stepped uphill climb, then a long wooden staircase descending into the cavern (sources cite anywhere from ~150 to ~500 steps); the stairs are unavoidable." },
     recognition: 'Reached by a steep flight of steps into a hillside in Phong Nha, opening onto a long wooden boardwalk that descends into a vast stalactite chamber.',
     localName: 'Động Thiên Đường · Dong Thien Duong',
     categories: ["nature", "park"], budgetTier: "mid",
@@ -146,6 +148,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cai-rang", name: "Cai Rang Floating Market", city: "Can Tho", country: "vi",
+    access: { stepFree: "no", note: "The market is experienced only from small wooden sampans; boarding means stepping down from the pier into a low, rocking boat, so it is not feasible for wheelchair users." },
     recognition: 'You are there when wholesale boats laden with fruit crowd the Can Tho River, each hanging a sample of its produce on a tall bamboo pole above the deck.',
     localName: 'Chợ nổi Cái Răng · Cho noi Cai Rang',
     categories: ["market", "food", "culture"], budgetTier: "low",
@@ -162,6 +165,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-tra-su", name: "Tra Su Cajuput Forest", city: "An Giang", country: "vi",
+    access: { stepFree: "partial", note: "Entrance and road access are flat, but the signature sampan leg needs a step-down transfer into a small low rowing boat, the elevated bamboo-plank walkway is uneven, and the observation watchtower is reached only by stairs." },
     categories: ["nature", "park"], budgetTier: "low",
     blurb: "A flooded melaleuca (cajuput) forest in An Giang where rowing boats glide along emerald, duckweed-carpeted canals beneath a dense green canopy — a haven for storks, egrets and other waterbirds.",
     whyItFits: "For nature lovers and photographers wanting the Mekong Delta's most otherworldly, low-key landscape. The flooded-forest season (roughly September-November) is the most striking.",
@@ -209,6 +213,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-phong-nha-ke-bang", name: "Phong Nha-Ke Bang National Park", city: "Phong Nha", country: "vi",
+    access: { stepFree: "partial", note: "Spread-out park: only the Phong Nha Cave boat is semi-feasible, and only if you can transfer into a low longtail; Paradise Cave, Tien Son (330+ steps) and the jungle/karst trails all involve unavoidable stairs and rough terrain." },
     categories: ["nature", "park", "hike"], budgetTier: "mid",
     blurb: "A UNESCO karst park honeycombed with some of the planet's largest caves, from the boat-accessed Phong Nha Cave to the vast Paradise and Dark caves and, for funded expeditions, the record-breaking Son Doong.",
     whyItFits: "For caving and outdoors travellers; ranges from easy boat-cave visits to multi-day adventure treks, all from the laid-back village of Phong Nha.",
@@ -240,6 +245,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-imperial-city-hue", name: "Imperial City (Hue Citadel)", city: "Hue", country: "vi",
+    access: { stepFree: "partial", note: "Main paved ceremonial courtyards (Ngo Mon/Noon Gate, Thai Hoa Palace) are flat and reachable and golf carts circulate the grounds, but many palaces have steps, raised thresholds and gravel, and a Tripadvisor reviewer flags real difficulty for wheelchair users." },
     externalRatings: [
       { site: "Google", score: 4.6, scale: 5, count: 23171, asOf: "2026-07" },
     ],
@@ -303,6 +309,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-mai-chau", name: "Mai Chau Valley", city: "Hoa Binh", country: "vi",
+    access: { stepFree: "partial", note: "Flat valley floor and some paved village lanes (Lac, Pom Coong) are rollable, but paths are largely narrow dirt tracks and the traditional stilt-house homestays sit 2-3m off the ground, reached by steps or ladders." },
     categories: ["culture", "nature"], budgetTier: "low",
     blurb: "A broad green valley of paddy fields ringed by hills, home to White Thai communities whose traditional stilt houses double as welcoming homestays. Evenings bring home-cooked food, rice wine and folk dancing.",
     whyItFits: "For travellers wanting an easy, friendly introduction to ethnic-minority village life and cycling among rice fields, within a half-day of Hanoi.",
@@ -406,6 +413,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-bac-ha-market", name: "Bac Ha Sunday Market", city: "Lao Cai", country: "vi",
+    access: { stepFree: "no", note: "Hillside highland market on sloping, uneven, often muddy ground with narrow crowded lanes shared with scooters and dirt-slope livestock pens; operators state it is not wheelchair-friendly." },
     categories: ["market", "culture"], budgetTier: "low",
     blurb: "A vivid weekly highland market where Flower Hmong and other ethnic-minority communities gather to trade textiles, livestock and produce, north-east of Sapa.",
     whyItFits: "For travellers wanting an authentic, colourful highland market and a window into ethnic-minority life; it runs on Sundays only.",
@@ -523,6 +531,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hoian-cooking", name: "Hoi An cooking class & market tour", city: "Hoi An", country: "vi",
+    access: { stepFree: "partial", note: "Central market is flat and ground-level but aisles are narrow and crowded; most packages add a round basket-boat (coracle) leg requiring a step-down transfer into a tippy low boat, though some home-kitchen classes run step-free." },
     categories: ["food", "culture"], budgetTier: "mid",
     kidFriendly: true,
     activities: ["cooking-class", "market-tour", "basket-boat"],
@@ -1340,6 +1349,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-linh-phuoc-pagoda",
+    access: { stepFree: "partial", note: "The paved front courtyard and giant bottle-dragon are viewable at ground level, but the main hall, the ~36m bell tower and the 300m underground '18 Levels of Hell' tunnel are all stairs-only." },
     name: "Linh Phuoc Pagoda (Dragon Pagoda)",
     city: "Da Lat",
     country: "vi",
@@ -1363,6 +1373,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-bai-dinh-pagoda",
+    access: { stepFree: "partial", note: "Electric buggies run the paved roads between the main areas and an elevator serves the 13-storey Bao Thap stupa, but the Tam The hall is reached by 32 stone steps, terraces have many steps, and the old hilltop temple needs 300+ stone stairs." },
     name: "Bai Dinh Pagoda Complex",
     city: "Ninh Binh",
     country: "vi",
@@ -1433,6 +1444,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-my-son-sanctuary",
+    access: { stepFree: "partial", note: "An included electric shuttle reaches the site and gravel walkways between temple groups are mostly flat, but getting close to or inside the brick ruins involves steps, raised thresholds and uneven ground." },
     name: "My Son Sanctuary",
     city: "Duy Phu",
     country: "vi",
@@ -1478,6 +1490,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-phong-nha-cave-boat",
+    access: { stepFree: "partial", note: "The cave floor and sandy-beach loop are flat with no climbing, but you must transfer down into a low wooden boat at the pier and step onto a sandy bank, which is hard without help; the optional Tien Son detour is 330 steps." },
     name: "Phong Nha Cave River Boat",
     city: "Phong Nha",
     country: "vi",
@@ -1573,6 +1586,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hue-dong-ba-market-food",
+    access: { stepFree: "partial", note: "Ground-floor entrances and the food court/stalls are flat, but aisles are narrow and very crowded and the upper floors are reached only by stairs; visit off-peak and expect to need assistance." },
     name: "Dong Ba Market food stalls, Hue",
     city: "Hue",
     country: "vi",

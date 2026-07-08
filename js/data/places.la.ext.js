@@ -162,6 +162,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-plain-of-jars-1", name: "Plain of Jars — Site 1 (Thong Hai Hin)", city: "Phonsavan", country: "la",
+    access: { stepFree: "no", note: "The most-developed jar site, but the jar clusters sit on a hillside reached by unpaved, sloping dirt-and-grass paths from the car park; visitors must stay on MAG-cleared tracks." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 669, url: "https://www.tripadvisor.com/Attraction_Review-g612364-d325753-Reviews-The_Plain_Of_Jars-Phonsavan_Xiangkhouang_Province.html", asOf: "2026-07" },
     ],
@@ -180,6 +181,7 @@ export const PLACES_LA_EXT = [
   },
 {
     id: "la-ext-pak-ou-caves", name: "Pak Ou Caves", city: "Luang Prabang", country: "la",
+    access: { stepFree: "no", note: "Reached only by boat onto a floating bamboo dock, then a flight of steps up to the lower cave and 200-plus steep, uneven stone steps to the upper cave; no wheelchair access anywhere on site." },
     recognition: 'Two limestone caves in a cliff facing the Mekong at its junction with the Nam Ou, packed with thousands of small Buddha statues, reached by boat and a stairway from the water.',
     categories: ["culture", "nature"], budgetTier: "low",
     blurb: "Two riverside limestone caves above the confluence of the Mekong and Nam Ou, crammed with thousands of old Buddha statues left by pilgrims over centuries. Reached by a scenic slow-boat trip upriver from Luang Prabang.",
@@ -303,6 +305,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-dong-natad", name: "Dong Natad Community Forest", city: "Savannakhet", country: "la",
+    access: { stepFree: "no", note: "Visited on guided 10-14 km jungle treks over unpaved forest trails, rocky outcrops and bamboo groves; requires moderate fitness and cannot be navigated by wheelchair." },
     categories: ["nature", "culture"], budgetTier: "low",
     blurb: "A sacred old-growth forest and lake near Savannakhet where village-led half- and full-day tours show how locals harvest honey, mushrooms, insects and resin, ending with a home-cooked lunch by the water. A gentle window into rural Lao life.",
     whyItFits: "For travellers wanting easy, low-key community ecotourism and an authentic taste of southern Lao village livelihoods close to a town.",
@@ -333,6 +336,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-phosy-market", name: "Phosy Market (Talat Phosy)", city: "Luang Prabang", country: "la",
+    access: { stepFree: "partial", note: "A ground-level market (part covered hall for dry goods and cooked food, part open-air produce under umbrellas) with no stairs, but aisles are narrow and crowded and the wet-market sections have uneven, wet, slippery floors." },
     categories: ["market", "food"], budgetTier: "low",
     blurb: "The largest fresh market in Luang Prabang, where locals shop for produce, herbs, river fish, grilled snacks and Lao coffee well away from the tourist night market.",
     whyItFits: "For travellers wanting an authentic, non-touristy fresh market and a genuine taste of daily Lao life.",
@@ -432,6 +436,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-mekong-slowboat", name: "Mekong slow boat to Luang Prabang", city: "Huay Xai", country: "la",
+    access: { stepFree: "no", note: "Boarding means descending a steep dirt riverbank and crossing narrow planks onto a low wooden long-boat fitted with fixed bench/car seats; there is no level boarding and no accessible facilities aboard." },
     categories: ["nature", "culture"], budgetTier: "mid",
     kidFriendly: true, stayDuration: "short",
     activities: ["boat", "mekong", "scenic", "villages"],
@@ -482,6 +487,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-vientiane-herbal-sauna", name: "Traditional Lao Herbal Sauna at Wat Sok Pa Luang", city: "Vientiane", country: "la",
+    access: { stepFree: "no", note: "Confirmed as a two-storey wooden building raised on tall stilts at the end of a garden path in the grove, with massage on bamboo beds in an open wooden hut; wooden steps up to the deck are unavoidable and there is no level access." },
     recognition: 'A raised wooden herbal-steam hut in the forested grounds of Wat Sok Pa Luang monastery on the southern edge of the city, with shaded rest decks around it.',
     localName: 'ວັດໂສກປາຫຼວງ · Wat Sok Pa Luang',
     categories: ["wellness", "culture"], budgetTier: "low",
@@ -747,6 +753,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-royal-palace-museum-lpb",
+    access: { stepFree: "no", note: "The palace (Haw Kham) is entered up a grand staircase with no documented ramp or lift; shoes must be removed and the galleries sit above ground level, so the building interior is not step-free." },
     name: "Royal Palace Museum (Haw Kham)",
     city: "Luang Prabang",
     country: "la",
@@ -794,6 +801,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-wat-sisaket",
+    access: { stepFree: "partial", note: "The flat courtyard is broadly navigable but its surface is gravel/paved and can be uneven; the surrounding cloister of Buddha niches and the raised ordination hall (sim) are entered via steps with no ramp." },
     name: "Wat Sisaket",
     city: "Vientiane",
     country: "la",
@@ -861,6 +869,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-that-ing-hang",
+    access: { stepFree: "partial", note: "The stupa stands on three stepped terrace bases that cannot be rolled onto, but the surrounding compound courtyard is broadly flat, so a wheelchair user can approach and circle it at ground level. Expect a raised threshold at the entrance and shoe removal near the shrine." },
     name: "That Ing Hang Stupa",
     city: "Savannakhet",
     country: "la",
@@ -929,6 +938,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-buddha-cave-thakhek",
+    access: { stepFree: "no", note: "The cave sits high on a cliff and is reached only by a steep concrete/bamboo staircase, and the entrance is a tiny hole you must duck and squeeze through \u2014 impossible for a wheelchair user." },
     name: "Buddha Cave (Tham Pa Fa)",
     city: "Thakhek",
     country: "la",
@@ -952,6 +962,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-plain-of-jars-2",
+    access: { stepFree: "no", note: "The jars sit on top of two low hills split by the access road, reached by stone steps up from an uneven, rocky path; the ground turns muddy and slippery when wet. Not passable for a wheelchair." },
     name: "Plain of Jars — Site 2 (Hai Hin Phu Salato)",
     city: "Phonsavan",
     country: "la",
@@ -1018,6 +1029,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-taec-lpb",
+    access: { stepFree: "no", note: "Housed in a raised 1920s former French judge's villa at the foot of Phousi Hill, reached up a steep drive; multiple independent sources confirm several steps to enter and exhibition levels sit above ground with no documented lift or ramp." },
     name: "Traditional Arts and Ethnology Centre (TAEC)",
     city: "Luang Prabang",
     country: "la",
@@ -1089,6 +1101,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-vangvieng-riverside-food",
+    access: { stepFree: "partial", note: "Food and souvenir stalls line a flat central-town street with some outdoor seating, browsable on the level, but the surface is mixed paved/dirt and getting down toward the riverside means curbs and uneven ground." },
     name: "Vang Vieng riverside & night-market food stalls",
     city: "Vang Vieng",
     country: "la",
@@ -1137,6 +1150,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-pakse-daoheuang-food",
+    access: { stepFree: "partial", note: "A large sprawling covered market zoned by product with a food court, all on one broadly flat concrete level (no stairs), but aisles are narrow and crowded and entrances may carry low thresholds or curbs." },
     name: "Daoheuang Market food court, Pakse",
     city: "Pakse",
     country: "la",
@@ -1161,6 +1175,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-pakse-ban-tong-night-market",
+    access: { stepFree: "partial", note: "Food stalls line a flat riverfront promenade you can browse on the level, but there are no tables or chairs \u2014 to sit and eat you must move onto the riverbank via steps or slopes down toward the Mekong." },
     name: "Pakse riverside night market food stalls",
     city: "Pakse",
     country: "la",

@@ -30,6 +30,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-bamboo-train", name: "Bamboo Train (Norry)", city: "Battambang", country: "kh",
+    access: { stepFree: "no", note: "The norry is a low, seat-less bamboo platform on rails with no ramp or rails; boarding means lowering onto it from uneven gravel trackside \u2014 a manual transfer with help, not wheelchair-rollable." },
     externalRatings: [
       { site: "Google", score: 4.0, scale: 5, count: 1033, asOf: "2026-07" },
     ],
@@ -47,6 +48,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-bokor-national-park", name: "Preah Monivong (Bokor) National Park", city: "Kampot", country: "kh",
+    access: { stepFree: "partial", note: "A well-paved mountain road lets a vehicle reach the plateau and its roadside viewpoints, giving a step-free view for someone who stays near the car, but Popokvil waterfall is a multi-hour hike and the old casino/church ruins have steps and rough ground;" },
     categories: ["park", "nature", "viewpoint", "hike"], budgetTier: "low",
     blurb: "A cool, mist-wrapped plateau rising to nearly 1,000 m above the Kampot plain, about an hour from town. The summit holds an eerie French-era hill station — the shell of the old Bokor Palace, an abandoned church and the Sampov Pram pagoda — with long views over the Gulf of Thailand and offshore islands.",
     whyItFits: "Ideal for travellers who want dramatic scenery, faded-grandeur ruins and a break from coastal heat. The atmospheric fog and emptiness reward photographers and slow explorers.",
@@ -75,6 +77,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kampot-pepper-farm", name: "Kampot Pepper Plantation Tour", city: "Kampot", country: "kh",
+    access: { stepFree: "no", note: "La Plantation is a working farm on sloping red-dirt paths between the pepper poles, and the standard combined tour adds Phnom Chhngok cave's ~200 concrete steps; it is not suitable for wheelchair users." },
     externalRatings: [
       { site: "Google", score: 4.7, scale: 5, count: 2336, asOf: "2026-07" },
     ],
@@ -179,6 +182,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-yeak-laom", name: "Yeak Laom Volcanic Crater Lake", city: "Banlung", country: "kh",
+    access: { stepFree: "no", note: "A ~2.5km natural forest trail (dirt, tree roots, undulating) circles the crater lake, and water access is only down steep staircases to the swimming area/docks \u2014 not wheelchair-navigable." },
     recognition: 'About 5 km east of Banlung, an almost perfectly round, deep-blue crater lake roughly 800 m across, ringed by forest with wooden swimming jetties and a rim trail.',
     localName: 'បឹងយក្សឡោម · Boeng Yeak Laom',
     categories: ["nature", "park"], budgetTier: "low",
@@ -231,6 +235,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-banteay-srei", name: "Banteay Srei", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "Flat fine-gravel paths let a sturdy manual wheelchair loop the compact temple's exterior and view the facade, but low steps and uneven plastered stone bar entry into the temple itself; sources conflict on whether an accessible toilet exists, so treat toilets as uncertain." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.7, scale: 5, count: 7326, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d469308-Reviews-Banteay_Srei-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
     ],
@@ -250,6 +255,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-koh-ker", name: "Koh Ker", city: "Preah Vihear", country: "kh",
+    access: { stepFree: "partial", note: "In the dry season a robust wheelchair can roll the flat dirt paths and see the main temples from a distance, but you cannot get up close and Prasat Thom's pyramid (steep modern wooden staircase) and other prasats have unavoidable steps." },
     recognition: 'Deep in forest in Preah Vihear, dominated by Prasat Thom, a steep seven-tiered sandstone pyramid rising above the tree canopy that you can climb via a wooden stair.',
     localName: 'កោះកេរ្ដិ៍ · Koh Ker',
     categories: ["culture", "nature"], budgetTier: "mid",
@@ -310,6 +316,7 @@ export const PLACES_KH_EXT = [
   },
 {
     id: "kh-ext-chi-phat", name: "Chi Phat (Cardamom Mountains)", city: "Koh Kong", country: "kh",
+    access: { stepFree: "no", note: "Remote Cardamom community reached only by unsealed road or a 1-2hr river boat, then experienced via 200km of jungle trekking, cycling and kayaking trails; there is no step-free or wheelchair infrastructure." },
     categories: ["nature", "hike", "park"], budgetTier: "low",
     blurb: "A pioneering community-based ecotourism project deep in the Southern Cardamom rainforest, where former loggers and poachers now guide visitors on jungle treks, river kayaking, mountain-bike trails and birdwatching, with income going directly to the village.",
     whyItFits: "For travellers who want genuine off-grid adventure and conservation with a purpose, far from any tour-bus circuit. Stays are in simple village homestays and guesthouses.",
@@ -324,6 +331,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-virachey", name: "Virachey National Park", city: "Banlung", country: "kh",
+    access: { stepFree: "no", note: "Vast remote park experienced only as multi-day guided treks over rugged jungle and mountain trails with hammock/forest camping; independent or wheelchair access is not feasible." },
     categories: ["nature", "hike", "park"], budgetTier: "mid",
     blurb: "One of Southeast Asia largest and least-visited protected areas, a vast wilderness of evergreen forest, grassland plateaus and rivers in remote Ratanakiri, explored only on ranger-and-guide-led multi-day treks from Banlung.",
     whyItFits: "For seasoned trekkers who want true frontier jungle, indigenous guides and a real chance of solitude. Trips fund park patrols and local communities.",
@@ -394,6 +402,7 @@ export const PLACES_KH_EXT = [
   },
 {
     id: "kh-ext-central-market-pp", name: "Central Market (Phsar Thmei)", city: "Phnom Penh", country: "kh",
+    access: { stepFree: "partial", note: "Renovated Art Deco hall: the central dome and four wide main corridors are ground-level and mostly flat with notably clearer, calmer passages than other markets; entry thresholds and crowded outer stalls create obstacles." },
     recognition: 'A cream-and-ochre 1937 art-deco building with a vast domed central hall and four radiating wings, standing on an open plaza in central Phnom Penh.',
     localName: 'ផ្សារធំថ្មី · Phsar Thmei',
     categories: ["market", "culture"], budgetTier: "low",
@@ -410,6 +419,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-russian-market", name: "Russian Market (Phsar Toul Tom Poung)", city: "Phnom Penh", country: "kh",
+    access: { stepFree: "partial", note: "Single-storey and flat at ground level, but the covered market is a maze of very narrow, cluttered, dimly-lit aisles that a wheelchair cannot pass in many sections; perimeter/outer shops are more reachable." },
     externalRatings: [
       { site: "Tripadvisor", score: 3.7, scale: 5, count: 2516, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d638459-Reviews-Russian_Market-Phnom_Penh.html", asOf: "2026-07" },
       { site: "Google", score: 4.1, scale: 5, count: 8424, asOf: "2026-07" },
@@ -516,6 +526,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-tonlesap-villages", name: "Tonlé Sap floating villages", city: "Siem Reap", country: "kh",
+    access: { stepFree: "no", note: "Operators explicitly state these tours are not wheelchair accessible: access is by small boats boarded over steep, often muddy banks and jetties, and stilt houses are reached by ladders or steep steps." },
     categories: ["nature", "culture"], budgetTier: "low",
     kidFriendly: true,
     activities: ["boat", "floating-village", "birdwatching", "sunset"],
@@ -599,6 +610,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-phnom-penh-wildlife-sanctuary", name: "Phnom Tamao Wildlife Rescue Centre Day Visit", city: "Takeo", country: "kh",
+    access: { stepFree: "partial", note: "A power-wheelchair user (John Morris) visited Phnom Tamao (~90min from Phnom Penh) via a wheelchair-accessible tuk-tuk (Mobilituk) and reported the tour 'not fully accessible': dirt/forest paths with long distances between enclosures; Wildlife Alliance arranges assisted/customised visits on request." },
     categories: ["nature", "culture", "wildlife"], budgetTier: "low",
     kidFriendly: true,
     activities: ["wildlife", "walking"],
@@ -960,6 +972,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-beng-mealea",
+    access: { stepFree: "no", note: "Unrestored collapsed jungle temple; the film-set wooden walkway around the ruin includes stairs and is not step-free, and reaching much of the temple means scrambling over rubble and walls, so wheelchairs, walkers and canes do not work here." },
     name: "Beng Mealea",
     city: "Siem Reap",
     country: "kh",
@@ -1028,6 +1041,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-choeung-ek",
+    access: { stepFree: "partial", note: "Most of the memorial is flat compacted sand/dirt that a manual wheelchair can cross (a few root-crossed paths are rough) and staff will help lift a chair on request, but the glass memorial stupa and the museum are reached only by stairs;" },
     name: "Choeung Ek Killing Fields",
     city: "Phnom Penh",
     country: "kh",
@@ -1071,6 +1085,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-koh-trong",
+    access: { stepFree: "no", note: "The small local ferry is not wheelchair-accessible and is boarded up/down a steep, sandy riverbank with no landing stage; the island's ~9km concrete loop is flat but only reachable via that boat." },
     name: "Koh Trong Island",
     city: "Kratie",
     country: "kh",
