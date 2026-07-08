@@ -34,6 +34,7 @@ import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, f
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes } from './journey.js';
+import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
@@ -90,7 +91,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.114.0';
+const APP_VERSION = 'mk-v0.115.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -318,6 +319,38 @@ function rightNowSection() {
   return card;
 }
 
+// ---- HISTORY & ORIENTATION -------------------------------------------------
+// "Where you are / where you're going" always leads with a short, sourced sense of the
+// place: its history, what it is known for, and when to come.
+function countryHistory(cc) { return (HISTORY.countries || {})[cc] || null; }
+function cityHistory(cc, slug) { return (HISTORY.cities || {})[`${cc}-${slug}`] || null; }
+
+function knownForRow(tags) {
+  if (!tags || !tags.length) return null;
+  return h('div', { class: 'knownfor' }, tags.map((t) => h('span', { class: 'kf-tag' }, t)));
+}
+
+function countryHistoryCard(cc) {
+  const hi = countryHistory(cc);
+  if (!hi || !hi.blurb) return null;
+  const card = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, 'History & culture')]);
+  card.append(h('p', {}, hi.blurb));
+  const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
+  if (hi.cultureTip) card.append(h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`));
+  if (hi.sources && hi.sources.length) card.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, `Sources: ${hi.sources.join(', ')}`));
+  return card;
+}
+
+function cityAboutCard(cc, slug) {
+  const hi = cityHistory(cc, slug);
+  if (!hi || !hi.blurb) return null;
+  const card = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, `About ${hi.name}`)]);
+  card.append(h('p', {}, hi.blurb));
+  const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
+  if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom:0' }, `🗓 Best time: ${hi.bestTime}`));
+  return card;
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
@@ -433,6 +466,7 @@ function countryHubScreen(id) {
     h('p', {}, `Your companion for ${c.name}. Local currency: ${c.currency}.`),
     c.info ? null : h('p', { class: 'muted' }, 'Detailed guide expanding.'),
   ]));
+  const chc = countryHistoryCard(id); if (chc) wrap.append(chc);
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
@@ -975,6 +1009,7 @@ function placesScreen(arg) {
       h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
       h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `Show all of ${getCountry(activeCountry) ? getCountry(activeCountry).name : 'country'}`),
     ]));
+    const ac = cityAboutCard(activeCountry, scopeSlug); if (ac) wrap.append(ac);
   }
 
   // interest filters (seeded from saved prefs the first time)
