@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.141.0';
+const APP_VERSION = 'mk-v0.142.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1725,7 +1725,7 @@ function placesScreen(arg) {
       PLACE_BUCKETS.forEach(([key, label]) => {
         const arr = groups[key];
         if (!arr || !arr.length) return;
-        listEl.append(h('h3', { class: 'cat-title' }, `${label} · ${arr.length}`));
+        listEl.append(h('h3', { class: 'cat-title cat-title-bar', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, `${label} · ${arr.length}`));
         arr.slice(0, CAP).forEach((p) => listEl.append(placeCard(p)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) listEl.append(more);
@@ -1827,6 +1827,15 @@ const PLACE_BUCKETS = [
   ['nightlife', '🌃 Nightlife & social'],
   ['other', '📌 More to see'],
 ];
+// One semantic colour per category bucket so the eye can tell a place to STAY (blue)
+// from a place to EAT (orange), see (violet), a nature spot (green) or nightlife (pink)
+// at a glance — on cards, list section headers and chips. Fixed hues (like the map
+// legend) read as an accent on both light and dark themes.
+const BUCKET_COLOR = {
+  food: '#E8632A', stay: '#2C7DA0', culture: '#8A5CC0',
+  nature: '#2E8B57', nightlife: '#D6336C', other: '#8A8F98',
+};
+function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
 function placeBucket(p) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   if (p.stayType || cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
@@ -1853,7 +1862,8 @@ function placeCard(p) {
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
   const colls = collectionsForItem(p.id);
   const dchip = distanceChip(p);
-  return h('div', { class: 'card' }, [
+  const accent = bucketColor(p);
+  return h('div', { class: 'card place-card', style: `--cat:${accent}` }, [
     h('div', { class: 'place-head' }, [
       h('h2', {}, `${p.isPin ? '📌 ' : ''}${p.name}`),
       h('button', {
@@ -1862,7 +1872,7 @@ function placeCard(p) {
       }, isFavorite(p.id) ? '★' : '☆'),
     ]),
     (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
-      h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
+      h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag', style: `background:${accent}` }, c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
     travelerChips(p),
