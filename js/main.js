@@ -50,6 +50,7 @@ import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
 import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
+import { ACCESSIBILITY, getAccessibility } from './data/accessibility.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 
@@ -92,7 +93,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.120.0';
+const APP_VERSION = 'mk-v0.121.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -451,6 +452,79 @@ function cityEssentials(cc, cityName, slug) {
   return card;
 }
 
+// ---- ACCESSIBILITY (honest disability guidance per country) -----------------
+function accessScreen(cc) {
+  const a = getAccessibility(cc);
+  const c = getCountry(cc);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Accessibility', c ? `#country-${cc}` : '#home'));
+  if (!a) { wrap.append(h('p', { class: 'empty' }, 'Accessibility guidance for this country is on the way.')); mount(wrap, 'home'); return; }
+  wrap.append(h('p', { class: 'muted' }, `How ${c ? c.name : 'this country'} works for travellers with disabilities — honestly. ${a.overview}`));
+  const needs = store.profile.prefs.access || [];
+  const SEC = [['mobility', '♿ Wheelchair / limited mobility'], ['vision', '🦯 Blind / low vision'], ['hearing', '🦻 Deaf / hard of hearing']];
+  // Surface the traveller's own needs first.
+  SEC.slice().sort((x, y) => (needs.includes(y[0]) ? 1 : 0) - (needs.includes(x[0]) ? 1 : 0)).forEach(([key, label]) => {
+    if (!a[key]) return;
+    const card = h('div', { class: 'card' + (needs.includes(key) ? ' access-focus' : '') });
+    card.append(h('h2', {}, label + (needs.includes(key) ? ' · for you' : '')));
+    card.append(h('p', {}, a[key]));
+    wrap.append(card);
+  });
+  if (a.tips && a.tips.length) {
+    const t = h('div', { class: 'card' }, [h('h2', {}, 'Practical tips')]);
+    a.tips.forEach((x) => t.append(h('div', { class: 'list-note' }, x)));
+    wrap.append(t);
+  }
+  wrap.append(sourcesNote(a.sources, a.verified));
+  mount(wrap, 'home');
+}
+// Country-hub entry to the accessibility guide (prominent when the traveller has a need).
+function accessCard(cc) {
+  if (!getAccessibility(cc)) return null;
+  const hasNeed = (store.profile.prefs.access || []).length > 0;
+  const card = h('div', { class: 'card' + (hasNeed ? ' access-focus' : '') });
+  card.append(h('h2', { style: 'margin-top:0' }, '♿ Accessibility'));
+  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, hasNeed
+    ? 'Honest, practical guidance tailored to the needs you set — your groups come first.'
+    : 'How this country works for travellers with limited mobility, low vision or hearing.'));
+  card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#access-${cc}`) }, 'Open the accessibility guide'));
+  return card;
+}
+
+// ---- TRAVELLING WITH A BABY (nappies, formula, family help) -----------------
+const DIAPER_WHERE = {
+  th: 'Cheapest at the big supercentres — Makro, Big C and Lotus’s (house brands plus MamyPoko / Huggies), far cheaper per nappy than 7-Eleven singles. Boots and Watsons pharmacies stock them too but cost more; Villa Market carries imported brands.',
+  vi: 'Cheapest at Bách Hóa Xanh and WinMart+, and at Con Cưng / Bibo Mart baby stores; markets and pharmacies also stock them. Bring your usual brand if your baby is fussy.',
+  kh: 'Minimarts and pharmacies in Phnom Penh and Siem Reap carry Huggies / MamyPoko; local markets are cheapest. Stock up in the cities before heading rural.',
+  la: 'Minimarts and pharmacies in Vientiane, Luang Prabang and larger towns; choice is limited and pricier, so stock up in the city before remote travel.',
+};
+function babyScreen(cc) {
+  const c = getCountry(cc);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Travelling with a baby', c ? `#country-${cc}` : '#home'));
+  wrap.append(h('p', { class: 'muted' }, `Where to find nappies, formula and baby basics in ${c ? c.name : 'this country'} — cheapest first — plus family tips. Guidance; verify locally.`));
+  const dc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '🧷 Where to buy nappies (diapers)')]);
+  dc.append(h('p', {}, DIAPER_WHERE[cc] || 'Look for the largest supermarket or pharmacy in town and buy larger packs for the best price per nappy.'));
+  wrap.append(dc);
+  const boards = boardsForCountry(cc).filter((b) => b.family && b.family.length);
+  if (boards.length) {
+    wrap.append(h('h3', { style: 'margin:14px 2px 4px' }, 'City by city'));
+    boards.forEach((b) => {
+      const card = h('div', { class: 'card' });
+      card.append(h('div', { class: 'row-between' }, [h('h2', { style: 'margin:0' }, b.city), h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${b.slug}`) }, 'Board')]));
+      b.family.forEach((f) => card.append(boardRow(f.item, [f.where, f.price].filter(Boolean).join(' · '), f.tip)));
+      wrap.append(card);
+    });
+  }
+  wrap.append(h('div', { class: 'card' }, [h('h2', {}, 'Handy to know'),
+    h('div', { class: 'list-note' }, 'Pharmacies (Boots / Watsons in Thailand, local pharmacies elsewhere) are reliable for formula, wipes and baby medicine.'),
+    h('div', { class: 'list-note' }, 'In bigger cities, Grab and delivery apps can bring supermarket nappies to your hotel.'),
+    h('div', { class: 'list-note' }, 'Changing tables are rare outside malls and airports — a portable changing mat helps.'),
+    h('div', { class: 'list-note' }, 'Heat and dehydration hit little ones fast: bottled water, shade and slow mornings.'),
+  ]));
+  mount(wrap, 'home');
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
@@ -466,6 +540,16 @@ function homeScreen() {
   wrap.append(netStatusRow());
   // Lead with what fits the user's place and moment, before the generic menu.
   wrap.append(rightNowSection());
+  // If the traveller set an accessibility need, surface the guide for where they are.
+  if ((store.profile.prefs.access || []).length) {
+    const fc = focusSpot().spot.country;
+    if (getAccessibility(fc)) wrap.append(h('button', { class: 'btn ghost block access-focus', style: 'margin-top:8px', onclick: () => go(`#access-${fc}`) }, '♿ Accessibility where you are'));
+  }
+  // Travelling with a baby: one tap to the local baby-supply help for where they are.
+  if (store.profile.prefs.withBaby) {
+    const fc = focusSpot().spot.country;
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#baby-${fc}`) }, '🍼 Travelling with a baby — local help'));
+  }
 
   wrap.append(h('h2', { class: 'home-section' }, 'Where are you headed?'));
   wrap.append(regionPicker());
@@ -568,6 +652,7 @@ function countryHubScreen(id) {
     c.info ? null : h('p', { class: 'muted' }, 'Detailed guide expanding.'),
   ]));
   const chc = countryHistoryCard(id); if (chc) wrap.append(chc);
+  const acc = accessCard(id); if (acc) wrap.append(acc);
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
@@ -4959,6 +5044,8 @@ function render() {
       case 'event': return eventScreen(arg);
       case 'weather': return weatherScreen(arg);
       case 'today': return daySuggestScreen(arg);
+      case 'access': return accessScreen(arg);
+      case 'baby': return babyScreen(arg);
       case 'schedules': return schedulesScreen(arg);
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);
