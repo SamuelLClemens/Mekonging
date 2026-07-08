@@ -209,6 +209,7 @@ export const PLACES_KH_EXT = [
   },
 {
     id: "kh-ext-ta-prohm", name: "Ta Prohm", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "The approach is a relatively flat compacted-earth path and some sections have a boardwalk, so exteriors are wheelable, but doorways and inner areas still have steps, so it is not fully accessible." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.8, scale: 5, count: 19490, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d325222-Reviews-Ta_Prohm-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
     ],
@@ -995,6 +996,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-phnom-penh-national-museum",
+    access: { stepFree: "partial", note: "Generally accessible to wheelchair users, but parts of the grounds and galleries include cobblestones, gravel and steps that require assistance." },
     name: "National Museum of Cambodia",
     city: "Phnom Penh",
     country: "kh",

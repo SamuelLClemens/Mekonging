@@ -52,6 +52,7 @@ import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './da
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
 import { ACCESSIBILITY, getAccessibility } from './data/accessibility.js';
 import { ARRIVAL, getArrival } from './data/arrival.js';
+import { VISA, getVisa } from './data/visa.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 
@@ -94,7 +95,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.123.0';
+const APP_VERSION = 'mk-v0.124.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -526,6 +527,46 @@ function babyScreen(cc) {
   mount(wrap, 'home');
 }
 
+// ---- ENTRY & VISA (per country; nationality-dependent, always confirm officially) ----
+const VISA_TYPE = { 'visa-free': '✅ Visa-free', 'e-visa': '💻 e-Visa', 'visa-on-arrival': '🛬 Visa on arrival', 'visa-required': '📋 Visa required' };
+function visaScreen(cc) {
+  const v = getVisa(cc);
+  const c = getCountry(cc);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Entry & visa', c ? `#country-${cc}` : '#home'));
+  if (!v) { wrap.append(h('p', { class: 'empty' }, 'Entry guidance for this country is on the way.')); mount(wrap, 'home'); return; }
+  wrap.append(h('div', { class: 'banner' }, 'Visa rules depend on your nationality and change often. Treat this as orientation, then confirm on the official site for your passport before you travel.'));
+  wrap.append(h('p', {}, v.summary));
+  (v.options || []).forEach((o) => {
+    const card = h('div', { class: 'card' });
+    card.append(h('div', { class: 'row-between' }, [h('h3', { style: 'margin:0' }, VISA_TYPE[o.type] || o.type), o.fee ? h('span', { class: 'cat-tag' }, o.fee) : null]));
+    if (o.who) card.append(h('p', { class: 'tiny muted', style: 'margin:4px 0' }, o.who));
+    if (o.duration) card.append(h('p', { style: 'margin:2px 0' }, `🕒 ${o.duration}`));
+    if (o.howApply) card.append(h('div', { class: 'list-note' }, o.howApply));
+    wrap.append(card);
+  });
+  if (v.officialEvisa && v.officialEvisa.url) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h3', { style: 'margin-top:0' }, 'Official e-visa portal'),
+      h('p', { class: 'tiny muted' }, 'Use only the official government site — look-alike reseller sites overcharge and harvest data.'),
+      h('a', { class: 'btn block', href: v.officialEvisa.url, target: '_blank', rel: 'noopener' }, `${v.officialEvisa.name} ↗`),
+    ]));
+  }
+  if (v.landBorderNotes) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'At land borders'), h('p', {}, v.landBorderNotes)]));
+  if (v.overstay) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Overstay'), h('p', {}, v.overstay)]));
+  if (v.scams && v.scams.length) { const s = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '⚠️ Common visa scams')]); v.scams.forEach((x) => s.append(h('div', { class: 'warn-note' }, x))); wrap.append(s); }
+  wrap.append(sourcesNote(v.sources, v.asOf));
+  mount(wrap, 'home');
+}
+function visaCard(cc) {
+  if (!getVisa(cc)) return null;
+  const card = h('div', { class: 'card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '🛂 Entry & visa'));
+  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
+  card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#visa-${cc}`) }, 'Open the entry guide'));
+  return card;
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
@@ -655,6 +696,7 @@ function countryHubScreen(id) {
   ]));
   const chc = countryHistoryCard(id); if (chc) wrap.append(chc);
   const acc = accessCard(id); if (acc) wrap.append(acc);
+  const vc = visaCard(id); if (vc) wrap.append(vc);
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
@@ -815,6 +857,7 @@ function arrivalScreen(arg) {
   doCard.append(h('button', { class: 'btn ghost block', onclick: () => go('#map') }, '🏠 Save where I am staying on the map'));
   if (c && c.lang) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 First words — hello, thanks, numbers'));
   doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#sos-${cc}`) }, '🆘 Emergency numbers here'));
+  if (getVisa(cc)) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#visa-${cc}`) }, '🛂 Entry & visa rules'));
   doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#nearby') }, '📍 What’s near me right now'));
   wrap.append(doCard);
 
@@ -2305,6 +2348,9 @@ function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Border crossings', '#map'));
   wrap.append(h('p', { class: 'map-hint' }, 'Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
+  // Per-country entry/visa guides (visa type, official portal, land-border tips, overstay).
+  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
+    h('button', { class: 'chip', onclick: () => go(`#visa-${c.id}`) }, `🛂 ${c.flag} ${c.name} entry`))));
   const groups = {};
   CROSSINGS.forEach((x) => { (groups[x.pair] = groups[x.pair] || []).push(x); });
   Object.keys(groups).forEach((pair) => {
@@ -5168,6 +5214,7 @@ function render() {
       case 'access': return accessScreen(arg);
       case 'baby': return babyScreen(arg);
       case 'arrival': return arrivalScreen(arg);
+      case 'visa': return visaScreen(arg);
       case 'schedules': return schedulesScreen(arg);
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);

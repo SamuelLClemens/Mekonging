@@ -1,6 +1,7 @@
 export const PLACES_VI = [
   {
     id: "vi-hanoi-temple-of-literature", name: "Temple of Literature (Van Mieu)", city: "Hanoi", country: "vi",
+    access: { stepFree: "partial", note: "Courtyards are linked by raised stone thresholds and narrow gates with uneven brick paving, so a wheelchair user needs assistance and cannot cross all sections independently." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.3, scale: 5, count: 11312, url: "https://www.tripadvisor.com/Attraction_Review-g293924-d311083-Reviews-Temple_of_Literature_National_University-Hanoi.html", asOf: "2026-07" },
     ],
@@ -50,6 +51,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-war-remnants-museum", name: "War Remnants Museum", city: "Ho Chi Minh City", country: "vi",
+    access: { stepFree: "yes", note: "A ramp at the main entrance and an elevator serve the multi-storey galleries and the outdoor display area is flat, though the replica prison outside is not accessible; an accessible toilet is not explicitly documented." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.4, scale: 5, count: 33502, url: "https://www.tripadvisor.com/Attraction_Review-g293925-d311103-Reviews-War_Remnants_Museum-Ho_Chi_Minh_City.html", asOf: "2026-07" },
       { site: "Google", score: 4.5, scale: 5, asOf: "2026-07" },
@@ -103,6 +105,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hoian-ancient-town", name: "Hoi An Ancient Town", city: "Hoi An", country: "vi",
+    access: { stepFree: "partial", note: "The car-free old town has flat paved lanes that are easy to roll along, but nearly every shop, restaurant and the wooden Japanese Bridge has at least one step or raised ledge to enter." },
     recognition: 'You are in it once the traffic-free lanes turn to mustard-yellow shophouses hung with silk lanterns beside the Thu Bon River, anchored by the covered Japanese Bridge.',
     localName: 'Phố cổ Hội An · Pho co Hoi An',
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -133,6 +136,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-danang-marble-mountains", name: "Marble Mountains (Ngu Hanh Son)", city: "Da Nang", country: "vi",
+    access: { stepFree: "partial", note: "A public elevator (about 15,000 VND) carries wheelchair users from the base up to the main Thuy Son pagoda level, bypassing hundreds of steps, but caves, viewpoints and upper paths beyond it remain stepped and uneven." },
     recognition: 'A cluster of marble-and-limestone hills rising abruptly from the flat coastal plain on Le Van Hien Street, ringed at their base by marble-carving workshops.',
     localName: 'Ngũ Hành Sơn · Ngu Hanh Son',
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],

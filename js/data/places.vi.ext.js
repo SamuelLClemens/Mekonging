@@ -1925,6 +1925,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-dragon-bridge-fire-water-show",
+    access: { stepFree: "yes", note: "Wide, smooth, flat pedestrian walkways run along both sides of the bridge, comfortable for wheelchairs and scooters when viewing the weekend fire-and-water show." },
     name: "Dragon Bridge fire & water show",
     city: "Da Nang",
     country: "vi",

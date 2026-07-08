@@ -1,6 +1,7 @@
 export const PLACES_KH = [
   {
     id: "kh-siemreap-angkor-wat", name: "Angkor Wat", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "Entering via the East Gate reaches the inner complex at ground level and causeway areas are paved, but the upper galleries and interior bas-relief levels are reached only by steep flights of steps." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.8, scale: 5, count: 49443, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d317907-Reviews-Angkor_Wat-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
       { site: "Google", score: 4.8, scale: 5, count: 43269, asOf: "2026-07" },
@@ -21,6 +22,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-bayon", name: "Bayon Temple (Angkor Thom)", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "Ground level is accessible via the smoother East entrance and the lower bas-reliefs can be viewed, but the upper terraces with the face towers are reached only by steep, uneven staircases." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.8, scale: 5, count: 20896, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d552507-Reviews-Bayon_Temple-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
       { site: "Google", score: 4.8, scale: 5, count: 14581, asOf: "2026-07" },
@@ -70,6 +72,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-tuol-sleng", name: "Tuol Sleng Genocide Museum (S-21)", city: "Phnom Penh", country: "kh",
+    access: { stepFree: "partial", note: "The ground floors of all buildings are wheelchair accessible with ramps provided, but at least one ramp is uneven and steep enough to need assistance, and upper floors are reached only by stairs." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.6, scale: 5, count: 12983, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d324063-Reviews-Tuol_Sleng_Genocide_Museum-Phnom_Penh.html", asOf: "2026-07" },
       { site: "Google", score: 4.6, scale: 5, count: 12072, asOf: "2026-07" },
@@ -90,6 +93,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-royal-palace", name: "Royal Palace & Silver Pagoda", city: "Phnom Penh", country: "kh",
+    access: { stepFree: "no", note: "Much of the complex, including the Silver Pagoda, is difficult for wheelchair users due to several very steep ramps and stepped religious buildings, and no accessible toilets are documented." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.0, scale: 5, count: 8306, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d324064-Reviews-Royal_Palace-Phnom_Penh.html", asOf: "2026-07" },
       { site: "Google", score: 4.3, scale: 5, count: 13516, asOf: "2026-07" },

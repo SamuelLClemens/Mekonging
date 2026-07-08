@@ -14,6 +14,7 @@
 export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", note: "Ramps connect much of the grounds, but there is no ramp into the main hall, so reaching the Reclining Buddha requires assistance up steep steps." },
     recognition: 'Long white perimeter walls by Tha Tien pier on the east bank of the river; inside are the huge gold Reclining Buddha hall and a cluster of coloured-tile spires. It adjoins the Grand Palace to the south.',
     localName: 'วัดโพธิ์ · Wát Phoh',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -34,6 +35,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-grand-palace', name: 'Grand Palace & Wat Phra Kaew', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", toilet: true, note: "Outer courtyards and the paved route past the chedi and Royal Pantheon are step-free, with free loan wheelchairs and signed accessible toilets near the front gate, but the Emerald Buddha hall (Wat Phra Kaew) has a raised threshold requiring staff assistance with a portable ramp." },
     recognition: 'Vast gleaming-white crenellated walls beside Sanam Luang park, with the golden spires of Wat Phra Kaew rising above them. A dress-code check and crowds mark the Na Phra Lan gate.',
     localName: 'พระบรมมหาราชวัง · Phrá Boròm Mahǎ Râatchawang',
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -54,6 +56,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-wat-arun', name: 'Wat Arun (Temple of Dawn)', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", toilet: true, note: "The riverside courtyard, ordination hall and surrounding terraces are paved and step-free with a signed accessible toilet near the ticket booth, but the central prang is reached only by very steep staircases and is not wheelchair navigable." },
     recognition: 'The tall Khmer-style prang (spire) covered in porcelain shards, on the Thonburi (west) bank — most recognisable from across the river or the cross-river ferry from Tha Tien.',
     localName: 'วัดอรุณ · Wát Àrun',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
