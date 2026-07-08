@@ -95,7 +95,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.129.0';
+const APP_VERSION = 'mk-v0.130.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -341,12 +341,19 @@ function rightNowSection() {
   const meta = PART_META[ctx.part];
   const card = h('div', { class: 'card right-now' });
   const cityName = ctx.near ? ctx.near.spot.city : ((getCountry(ctx.country) || {}).name || 'you');
-  const wxStr = ctx.wx ? ` · ${fmtTemp(ctx.wx.temp)}${ctx.raining ? ', rain' : ''}` : '';
+  // The temperature is a live link into the local forecast (nearest/focused city),
+  // so "check the weather here" is one tap from the home hero instead of buried in a grid.
   card.append(h('div', { class: 'rn-head' }, [
     h('span', { class: 'rn-emoji' }, meta.emoji),
     h('div', {}, [
       h('div', { class: 'rn-title' }, ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`),
-      h('div', { class: 'rn-sub muted' }, `${ctx.dayName}${wxStr}${ctx.wet ? ' · wet season' : ''}${ctx.approx ? ' · where you’re looking' : ''}`),
+      h('div', { class: 'rn-sub muted' }, [
+        ctx.dayName,
+        ctx.wx ? h('button', { class: 'rn-wx-link', onclick: () => go('#weather'), 'aria-label': `Weather forecast for ${cityName}` },
+          ` · ${fmtTemp(ctx.wx.temp)}${ctx.raining ? ', rain' : ''} →`) : null,
+        ctx.wet ? ' · wet season' : '',
+        ctx.approx ? ' · where you’re looking' : '',
+      ]),
     ]),
   ]));
 
@@ -1447,7 +1454,16 @@ function placesScreen(arg) {
     h('span', { style: 'flex:1' }), nearChip,
   ]));
 
-  wrap.append(filterCard);
+  // Results-first: the filter rows collapse into one tap so places show immediately
+  // instead of being pushed below ~5 rows of chips. The summary shows how many filters
+  // are active, so a returning traveller still sees their choices are applied.
+  const activeFilterCount = selInterests.size + (selBudget !== 'flexible' ? 1 : 0)
+    + (selKids ? 1 : 0) + (selStepFree ? 1 : 0)
+    + (selStayType !== 'any' ? 1 : 0) + (selStayDur !== 'any' ? 1 : 0);
+  wrap.append(h('details', { class: 'filters-collapse' }, [
+    h('summary', {}, activeFilterCount ? `⚙ Filters · ${activeFilterCount} on` : '⚙ Filters'),
+    filterCard,
+  ]));
 
   const listEl = h('div', {});
   const mapWrap = h('div', {});
