@@ -33,7 +33,7 @@ import {
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
-import { routeNodes, planRoutes } from './journey.js';
+import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
@@ -91,7 +91,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.115.0';
+const APP_VERSION = 'mk-v0.116.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -348,6 +348,23 @@ function cityAboutCard(cc, slug) {
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
   if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom:0' }, `🗓 Best time: ${hi.bestTime}`));
+  return card;
+}
+
+// A city's one-stop essentials: what's good at this time of day, and one-tap access to the
+// info a traveller needs to BE in or GET to this place — directions, weather, language, help.
+function cityEssentials(cc, cityName, slug) {
+  const c = getCountry(cc);
+  const meta = PART_META[partOfDay(new Date().getHours())];
+  const card = h('div', { class: 'card' }, [
+    h('p', { class: 'muted', style: 'margin:0 0 8px' }, `🕒 Right now: ${meta.tip}`),
+  ]);
+  card.append(h('div', { class: 'chips' }, [
+    isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, '🧭 Get here') : null,
+    h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, '⛅ Weather'),
+    (c && c.lang) ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 Phrasebook') : null,
+    h('button', { class: 'chip', onclick: () => go('#sos') }, '🆘 Emergency'),
+  ]));
   return card;
 }
 
@@ -1010,6 +1027,7 @@ function placesScreen(arg) {
       h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `Show all of ${getCountry(activeCountry) ? getCountry(activeCountry).name : 'country'}`),
     ]));
     const ac = cityAboutCard(activeCountry, scopeSlug); if (ac) wrap.append(ac);
+    wrap.append(cityEssentials(activeCountry, scopeCity, scopeSlug));
   }
 
   // interest filters (seeded from saved prefs the first time)
