@@ -16,7 +16,13 @@ function defaults() {
         budget: 'flexible',     // 'low' | 'mid' | 'high' | 'flexible'
         // --- traveller profile (drives "For you" ranking + plan suggestions) ---
         party: '',              // '' | 'solo' | 'couple' | 'family'
+        withBaby: false,        // travelling with a baby/toddler — surfaces nappies/formula/family help
+        access: [],             // accessibility needs, subset of ['mobility','vision','hearing']
         tripLength: '',         // '' | 'short' (≤1wk) | 'medium' (2–3wk) | 'long' (1mo+)
+        // Network consent: the app must never use mobile data / Wi-Fi silently. 'ask' = do
+        // not auto-fetch until the traveller chooses; 'online' = use data when available;
+        // 'offline' = stay fully offline. Set in onboarding, changeable any time.
+        netMode: 'ask',         // 'ask' | 'online' | 'offline'
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.

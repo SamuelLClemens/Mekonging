@@ -92,7 +92,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.119.0';
+const APP_VERSION = 'mk-v0.120.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -245,6 +245,28 @@ function spotForCity(cc, cityName) {
   if (exact) return exact;
   const rep = allPlaces({ country: cc }).find((p) => p.coords && citySlug(p.city) === slug);
   return rep ? nearestSpot(rep.coords, cc) : null;
+}
+
+// ---- NETWORK CONSENT -------------------------------------------------------
+// The app must never touch mobile data or Wi-Fi without the traveller choosing to.
+// online() is the SINGLE gate for every AUTOMATIC fetch (weather, exchange rates); a
+// user-initiated action (tapping "refresh", "play a call", a deep link) is its own
+// consent and is allowed regardless. 'ask' means we have not asked yet — treat as
+// offline until the traveller decides in onboarding or the Home toggle.
+function netMode() { return store.profile.prefs.netMode || 'ask'; }
+function setNetMode(m) { store.profile.prefs.netMode = m; save(); }
+function online() { return netMode() === 'online' && (typeof navigator === 'undefined' || navigator.onLine !== false); }
+// A compact, always-available control so the traveller can switch data on/off any time
+// and always see which mode they are in.
+function netStatusRow() {
+  const m = netMode();
+  const label = m === 'online' ? '📶 Online — using data when available'
+    : (m === 'offline' ? '✈️ Offline — no data used' : '✈️ Offline until you choose');
+  const other = m === 'online' ? 'offline' : 'online';
+  return h('div', { class: 'net-status' }, [
+    h('span', { class: 'tiny muted' }, label),
+    h('button', { class: 'chip', onclick: () => { setNetMode(other); render(); } }, other === 'online' ? 'Use data' : 'Go offline'),
+  ]);
 }
 
 // Festivals happening now, or starting within the next few weeks, in the user's country —
@@ -441,6 +463,7 @@ function homeScreen() {
     h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
   ]));
 
+  wrap.append(netStatusRow());
   // Lead with what fits the user's place and moment, before the generic menu.
   wrap.append(rightNowSection());
 
@@ -1575,8 +1598,8 @@ function weatherNearbyCard(p) {
   }
 
   const cached = getCachedWeather(key);
-  paintWx(cached, !cached && navigator.onLine);
-  if (!cached && navigator.onLine) {
+  paintWx(cached, !cached && online());
+  if (!cached && online()) {
     refreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
   }
 
@@ -3070,7 +3093,7 @@ function weatherScreen(country) {
     mapBox.append(box);
   }
   renderMap(getCachedMany() && getCachedMany().data);
-  if (navigator.onLine) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
+  if (online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
 
   const body = h('div', {});
   wrap.append(body);
@@ -3146,9 +3169,9 @@ function weatherScreen(country) {
   }
 
   const cached = getCachedWeather(weatherKey);
-  paint(cached, !cached && navigator.onLine);
-  // Background refresh when online; repaint only if still on this city's screen.
-  if (navigator.onLine) {
+  paint(cached, !cached && online());
+  // Background refresh only if the traveller has opted online; repaint if still here.
+  if (online()) {
     refreshWeather(spot).then((r) => {
       if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
     });
@@ -3305,7 +3328,7 @@ function daySuggestScreen(country) {
 
   let lastRec = getCachedWeather(spotKey(spot));
   paint(lastRec);
-  if (navigator.onLine) {
+  if (online()) {
     refreshWeather(spot).then((r) => { if (r && (location.hash || '').startsWith('#today')) { lastRec = r; paint(r); } });
   }
   mount(wrap, '#home');
@@ -4432,6 +4455,88 @@ function prefChips(pairs, current, onPick) {
   }, lbl)));
   return box;
 }
+// ---- ONBOARDING (learn the traveller first, then direct them) ---------------
+// First run: understand who the traveller is, whether to use data, and (optionally)
+// where they are — then the whole app leads with what fits their situation, place and
+// moment. Short, skippable, editable later in "For you" and Settings. Fully offline.
+function welcomeScreen() {
+  const prefs = store.profile.prefs;
+  const wrap = h('div', { class: 'screen welcome' });
+  wrap.append(h('section', { class: 'hero' }, [
+    h('div', { class: 'logo-wrap', html: logoSVG() }),
+    h('p', {}, 'Let us set the app up for you — whether to use data, how you travel, and where you are. A few taps; everything stays on your device.'),
+  ]));
+
+  // 1 — Network choice FIRST: the app will not touch mobile data or Wi-Fi without it.
+  const netCard = h('div', { class: 'card' });
+  netCard.append(h('h2', { style: 'margin-top:0' }, '1 · Data, or fully offline?'));
+  netCard.append(h('p', { class: 'muted' }, 'This app works fully offline. It will not use mobile data or Wi-Fi unless you allow it — handy when you have no SIM. You can change this any time.'));
+  const netRow = h('div', { class: 'chips' });
+  [['online', '📶 Use data when I have it'], ['offline', '✈️ Stay fully offline']].forEach(([id, lbl]) =>
+    netRow.append(h('button', { class: 'chip', dataset: { n: id }, 'aria-pressed': netMode() === id ? 'true' : 'false',
+      onclick: () => { setNetMode(id); netRow.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.n === netMode() ? 'true' : 'false')); } }, lbl)));
+  netCard.append(netRow);
+  wrap.append(netCard);
+
+  // 2 — Who is travelling (+ baby)
+  const whoCard = h('div', { class: 'card' });
+  whoCard.append(h('h2', {}, '2 · Who is travelling?'));
+  whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
+  whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Bringing little ones?'));
+  const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
+    onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 Travelling with a baby or toddler');
+  whoCard.append(h('div', { class: 'chips' }, [babyChip]));
+  wrap.append(whoCard);
+
+  // 3 — Accessibility needs
+  const accCard = h('div', { class: 'card' });
+  accCard.append(h('h2', {}, '3 · Any accessibility needs?'));
+  accCard.append(h('p', { class: 'muted' }, 'We will surface honest, practical guidance for how these countries work for you. Pick any that apply, or none.'));
+  const accRow = h('div', { class: 'chips' });
+  [['mobility', '♿ Wheelchair / limited mobility'], ['vision', '🦯 Blind / low vision'], ['hearing', '🦻 Deaf / hard of hearing']].forEach(([id, lbl]) => {
+    const on = () => (prefs.access || []).includes(id);
+    accRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
+      onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
+  });
+  accCard.append(accRow);
+  accCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Text size'));
+  accCard.append(prefChips([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], store.profile.textScale || 'm', (v) => { store.profile.textScale = v; save(); applyTheme(); }));
+  wrap.append(accCard);
+
+  // 4 — How you like to travel (budget / length / interests)
+  const fitCard = h('div', { class: 'card' });
+  fitCard.append(h('h2', {}, '4 · How you like to travel'));
+  fitCard.append(h('p', { class: 'muted' }, 'Budget'));
+  fitCard.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
+  fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
+  fitCard.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
+  fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
+  const intRow = h('div', { class: 'chips' });
+  INTERESTS.forEach((it) => { const on = () => (prefs.interests || []).includes(it.id);
+    intRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
+      onclick: (e) => { prefs.interests = prefs.interests || []; const i = prefs.interests.indexOf(it.id); if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, `${it.emoji} ${it.label}`)); });
+  fitCard.append(intRow);
+  wrap.append(fitCard);
+
+  // 5 — Location (optional; sensors, not data)
+  const locCard = h('div', { class: 'card' });
+  locCard.append(h('h2', {}, '5 · Use your location? (optional)'));
+  locCard.append(h('p', { class: 'muted' }, 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    const lb = h('button', { class: 'btn ghost block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
+    lb.onclick = async () => { lb.textContent = 'Locating…'; lb.disabled = true; try { const p = await geolocate(); setLastFix(p); const nb = nearestSpotGlobal(p); if (nb) setFocusSpot(nb.spot); lb.textContent = '📍 Location is on'; } catch { lb.textContent = '📍 Location unavailable'; } lb.disabled = false; };
+    locCard.append(lb);
+  } else {
+    locCard.append(h('p', { class: 'muted' }, 'Location is not available on this device — you can still browse by country and city.'));
+  }
+  wrap.append(locCard);
+
+  const finish = () => { store.profile.seenWelcome = true; store.profile.prefs.geoAsked = true; if (netMode() === 'ask') setNetMode('offline'); save(); go('#home'); };
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: finish }, 'Start exploring →'));
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: finish }, 'Skip for now'));
+  mount(wrap, 'home');
+}
+
 function foryouScreen() {
   const prefs = store.profile.prefs;
   const wrap = h('div', { class: 'screen' });
@@ -4441,7 +4546,18 @@ function foryouScreen() {
   const card = h('div', { class: 'card' });
   card.append(h('h2', {}, 'How are you travelling?'));
   card.append(h('p', { class: 'muted' }, 'Who is coming?'));
-  card.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
+  card.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
+  const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
+    onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 With a baby or toddler');
+  card.append(h('div', { class: 'chips' }, [babyChip]));
+  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Accessibility needs'));
+  const accRow = h('div', { class: 'chips' });
+  [['mobility', '♿ Mobility'], ['vision', '🦯 Low vision'], ['hearing', '🦻 Hearing']].forEach(([id, lbl]) => {
+    const on = () => (prefs.access || []).includes(id);
+    accRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
+      onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
+  });
+  card.append(accRow);
   card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'How long is the trip?'));
   card.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
   card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Budget'));
@@ -4814,8 +4930,12 @@ function render() {
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
   try {
+    // First run: learn the traveller before dropping them on the menu. Only intercepts the
+    // home route, so any deep link (a shared place/board) still opens directly.
+    if (!store.profile.seenWelcome && (head === '' || head === 'home')) return welcomeScreen();
     switch (head) {
       case '': case 'home': return homeScreen();
+      case 'welcome': return welcomeScreen();
       case 'country': return countryHubScreen(arg);
       case 'nearby': return nearbyScreen();
       case 'currency': return currencyScreen();
@@ -4890,4 +5010,4 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
 render();
 
 // Refresh exchange rates in the background when online; update the converter if open.
-refreshRates().then(() => { if ((location.hash || '').startsWith('#currency')) render(); }).catch(() => {});
+if (online()) refreshRates().then(() => { if ((location.hash || '').startsWith('#currency')) render(); }).catch(() => {});
