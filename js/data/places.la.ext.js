@@ -67,6 +67,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-kong-lor", name: "Kong Lor Cave", city: "Thakhek", country: "la",
+    access: { stepFree: "no", note: "Entry is boat-only across a footbridge, and the 7km river-cave passage requires disembarking into shallow water to walk a lit rocky stretch while the boat is hauled up rapids." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 352, url: "https://www.tripadvisor.com/Attraction_Review-g10138992-d2306807-Reviews-Kong_Lor_Cave-Phoun_Hin_Boun_Khammouane_Province.html", asOf: "2026-07" },
     ],
@@ -99,6 +100,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-tad-fane", name: "Tad Fane Waterfall", city: "Paksong", country: "la",
+    access: { stepFree: "no", note: "Even the main viewpoint, about 100 m from the car park, is reached by a short staircase, and the better gorge and falls overlooks are on short unpaved dirt-and-rock trails that turn muddy and slippery after rain; no paved or step-free route is documented." },
     recognition: 'On the Bolaven Plateau near Paksong, twin side-by-side jets plunge about 120 m into a forested gorge, viewed from a clifftop platform beside a small resort cafe.',
     categories: ["waterfall", "viewpoint", "nature", "park"], budgetTier: "low",
     blurb: "A dramatic twin cascade plunging around 120 m off the Bolaven Plateau escarpment into a forested gorge, framed by a viewpoint within the Dong Hua Sao protected area. On windy days the spray throws up rainbows across the canyon.",
@@ -193,6 +195,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-wat-phou", name: "Wat Phou (Vat Phou)", city: "Champasak", country: "la",
+    access: { stepFree: "no", note: "The lower causeway and baray are flat, but reaching the hillside sanctuary means climbing a long flight of steep, uneven, jagged ancient stone steps with no ramp or alternative route." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.4, scale: 5, count: 812, url: "https://www.tripadvisor.com/Attraction_Review-g1015988-d2011694-Reviews-Wat_Phu-Champasak_Town_Champasak_Province.html", asOf: "2026-07" },
     ],
@@ -227,6 +230,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-vieng-xai-caves", name: "Vieng Xai Caves", city: "Vieng Xai", country: "la",
+    access: { stepFree: "no", note: "Downgraded from partial: every cave chamber (the actual attraction) is entered by staircase over dim, uneven natural rock, and the caves are spread far apart requiring vehicle or bicycle transport rather than being genuinely rollable between; not step-free." },
     categories: ["culture", "nature"], budgetTier: "low",
     blurb: "A network of limestone caves in remote Houaphanh that sheltered the Pathet Lao leadership and thousands of villagers from heavy bombing during the Secret War. An excellent audio-guided tour walks through the hidden hospital, theatre and homes.",
     whyItFits: "For history-minded travellers wanting a powerful, well-presented account of the war years, away from the usual tourist trail.",
@@ -241,6 +245,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-bokeo-gibbon", name: "The Gibbon Experience (Bokeo Nature Reserve)", city: "Huay Xai", country: "la",
+    access: { stepFree: "no", note: "The multi-day activity is a steep, muddy jungle trek on earth-cut steps plus zipline platforms reached only on foot; the operator advises good fitness, making it unfeasible for wheelchair users." },
     categories: ["nature", "hike", "park"], budgetTier: "high",
     blurb: "A multi-day conservation adventure in the Bokeo Nature Reserve where you trek through forest, zip-line between giant trees and sleep in the world's highest tree-houses, listening for the dawn calls of wild black-crested gibbons.",
     whyItFits: "For active travellers wanting a once-in-a-trip jungle experience that directly funds gibbon and forest protection. Two- and three-day options exist.",
@@ -269,6 +274,7 @@ export const PLACES_LA_EXT = [
   },
 {
     id: "la-ext-nam-ha-ecotrek", name: "Nam Ha Protected Area Eco-Trek", city: "Luang Namtha", country: "la",
+    access: { stepFree: "no", note: "A 10-15km guided jungle trek with steep climbs, muddy riverbanks and rocky ridges on unbuilt forest paths; there is no made-up trail, so it is not navigable by wheelchair." },
     categories: ["nature", "hike", "park"], budgetTier: "mid",
     blurb: "A pioneering community-based trekking programme in the Nam Ha protected area of the far north, where licensed local guides lead one to three day hikes through forest to Akha, Khmu and Lanten villages, with overnights in community lodges.",
     whyItFits: "For travellers who want responsible jungle trekking and genuine hill-village encounters, with fees shared among the host communities.",
@@ -693,6 +699,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-wat-xieng-thong",
+    access: { stepFree: "partial", note: "Entered at grade from the southern street gate and the compound grounds are broadly rollable, but the temple buildings sit on low stepped plinths with raised sills and the northern river approach is a long steep staircase, so no building interiors are step-free." },
     name: "Wat Xieng Thong",
     city: "Luang Prabang",
     country: "la",

@@ -52,6 +52,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cat-cat-village", name: "Cat Cat Village & Waterfall", city: "Sapa", country: "vi",
+    access: { stepFree: "no", note: "The valley loop is almost entirely stone stairs, slopes and uneven paths; sources state explicitly it is not suitable for wheelchairs, and the steep uphill return is usually done by motorbike taxi." },
     recognition: 'A Hmong village reached on a downhill path below Sapa town, set around timber water wheels and indigo workshops with a small waterfall at its base.',
     localName: 'Bản Cát Cát · Ban Cat Cat',
     categories: ["culture", "waterfall", "nature"], budgetTier: "low",
@@ -191,6 +192,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-trang-an", name: "Trang An Landscape Complex", city: "Ninh Binh", country: "vi",
+    access: { stepFree: "no", note: "The scenery is seen only from a low wooden sampan; boarding means a 1-2ft step-down transfer from the dock (staff assist) and the temple stops and low cave passages along the route add unavoidable steps. Ignore OTA listings that tag it 'wheelchair accessible'." },
     recognition: 'A wharf lined with small rowed sampans sits below jagged limestone peaks and paddy fields, the boats threading low water-caves past riverside temples.',
     localName: 'Tràng An · Trang An',
     categories: ["nature", "culture", "viewpoint"], budgetTier: "low",
@@ -221,6 +223,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-golden-bridge", name: "Golden Bridge (Ba Na Hills)", city: "Da Nang", country: "vi",
+    access: { stepFree: "partial", note: "The Hoi An-station cable car has wheelchair-accessible cabins with priority boarding, and the Golden Bridge and French Village are reached via ramps and lifts; a free loaner wheelchair is available at main-entrance customer service (limited stock, arrive early)." },
     recognition: 'A gold-coloured curved footbridge held up by two giant weathered stone hands, high on the Ba Na Hills summit reached by the long cable car above Da Nang.',
     localName: 'Cầu Vàng · Cau Vang',
     categories: ["viewpoint", "culture"], budgetTier: "high",
@@ -344,6 +347,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-con-dao", name: "Con Dao Islands", city: "Ba Ria-Vung Tau", country: "vi",
+    access: { stepFree: "partial", note: "Con Son town is flat, small and grid-laid so rolling around town and reaching the centrally located prison complex is feasible, but historic cell blocks have raised thresholds and the best beaches require crossing soft sand or jungle paths." },
     categories: ["beach", "nature", "culture"], budgetTier: "high",
     blurb: "A remote, forested archipelago of empty beaches, coral reefs and nesting sea turtles, layered with a sombre history of colonial-era prisons. Reached by short flight or ferry.",
     whyItFits: "For travellers wanting pristine, near-deserted beaches and diving combined with poignant history.",
@@ -1219,6 +1223,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-thien-mu-pagoda",
+    access: { stepFree: "partial", note: "The road/car-park entrance still involves a front stone staircase without handrails, but a steep side ramp lets a wheelchair user reach the terrace with assistance; the grounds are then fairly flat with small steps between levels, and the Phuoc Duyen tower interior is stairs-only." },
     name: "Thien Mu Pagoda",
     city: "Hue",
     country: "vi",
@@ -1242,6 +1247,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-khai-dinh-tomb",
+    access: { stepFree: "no", note: "The tomb climbs a steep hillside: reaching the mausoleum requires about 127 very steep dragon-balustrade steps plus a further ~37 to the gate, with no ramp, lift or alternative route." },
     name: "Tomb of Khai Dinh",
     city: "Hue",
     country: "vi",
@@ -1265,6 +1271,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-po-nagar-cham-towers",
+    access: { stepFree: "partial", note: "The lower plaza and pillared meditation hall sit near ground level over cobblestones and are reachable with assistance, but the tower terrace itself is up a steep staircase (a gentler stepped path exists to the left) - the towers are not step-free, and surfaces are cobblestone throughout." },
     name: "Po Nagar Cham Towers",
     city: "Nha Trang",
     country: "vi",
@@ -1378,6 +1385,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-christ-of-vung-tau",
+    access: { stepFree: "no", note: "Reaching the statue requires ascending 800+ outdoor stone steps up Nho Mountain with no ramp or lift, followed by a narrow internal spiral stair; sources state explicitly it is not wheelchair accessible and not recommended for anyone with mobility difficulty." },
     name: "Christ of Vung Tau",
     city: "Vung Tau",
     country: "vi",
@@ -1401,6 +1409,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-banh-it-cham-towers",
+    access: { stepFree: "no", note: "The hilltop towers (a 100m-plus hill) are reached by roughly 100 stone steps from the car park; the only alternative is a motorbike-taxi to the base followed by a further stepped climb, which is not a wheelchair route, and the shrines have steps inside." },
     name: "Banh It Cham Towers",
     city: "Quy Nhon",
     country: "vi",
@@ -1492,6 +1501,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cannon-fort-cat-ba",
+    access: { stepFree: "partial", note: "A taxi or motorbike can drive up the paved road to near the fort/summit viewpoint, but expect an uphill walk from the drop-off, and the bunkers, trenches and tunnels are reached by steep, uneven paths and flights of steps. Only the top viewpoint area is roughly reachable;" },
     name: "Cannon Fort (Cat Ba)",
     city: "Cat Ba",
     country: "vi",
@@ -1515,6 +1525,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-thung-nham-bird-park",
+    access: { stepFree: "partial", note: "Only the flat, paved paths near the entrance and lakeside are navigable (with assistance); the bird sanctuary is reached only by small wooden rowboat, the main cave involves 400+ stone steps, and the hillside viewpoint trail is stepped and often muddy. Most of the site is not step-free." },
     name: "Thung Nham Bird Park",
     city: "Ninh Binh",
     country: "vi",

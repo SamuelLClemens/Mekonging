@@ -35,6 +35,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hanoi-ta-hien-beer-street", name: "Ta Hien Beer Street", city: "Hanoi", country: "vi",
+    access: { stepFree: "partial", note: "The lane is flat pavement but packed with parked scooters, plastic-stool seating and vendors, and most bars have a doorway step; vehicles stop at the pedestrian-zone perimeter, so a wheelchair user needs a corner drop-off plus assistance." },
     recognition: 'You have found it when a narrow Old Quarter corner is jammed with tiny plastic stools spilling off the pavement and bia hoi signs, a short walk north of Hoan Kiem Lake.',
     localName: 'Phố Tạ Hiện · Pho Ta Hien',
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -72,6 +73,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-ben-thanh-market", name: "Ben Thanh Market", city: "Ho Chi Minh City", country: "vi",
+    access: { stepFree: "partial", note: "Single-level market with ramped, level entrances (and disabled parking near the gates) that a wheelchair can use, but the narrow side aisles are congested; take a taxi/car drop-off directly at an entrance gate as street-side vendors block the perimeter." },
     externalRatings: [
       { site: "Tripadvisor", score: 3.5, scale: 5, url: "https://www.tripadvisor.com/Attraction_Review-g293925-d311087-Reviews-Ben_Thanh_Market-Ho_Chi_Minh_City.html", asOf: "2026-07" },
     ],
@@ -91,6 +93,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-rooftop-bar-saigon", name: "Saigon Skydeck & Rooftop Bars (Bitexco area)", city: "Ho Chi Minh City", country: "vi",
+    access: { stepFree: "yes", toilet: true, note: "Bitexco Saigon Skydeck (the enclosed level-49 observation deck) is fully step-free: a high-speed lift serves the deck, entrance paths are flat and smooth, and it is documented as a wheelchair-friendly attraction with a toilet on the deck." },
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife"], budgetTier: "high",
     blurb: "Cluster of high-rise observation decks and rooftop cocktail bars overlooking the Saigon River skyline.",
@@ -122,6 +125,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hoian-an-bang-beach", name: "An Bang Beach", city: "Hoi An", country: "vi",
+    access: { stepFree: "partial", note: "The paved beachfront lane and open-front beach cafes sit on flat, firm ground a wheelchair can reach, but getting onto the beach or to the water means crossing soft deep sand, and no beach matting or beach wheelchairs are documented here." },
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "mid",
     blurb: "Relaxed stretch of sand a short ride from the old town, lined with beach bars and seafood shacks.",
@@ -153,6 +157,7 @@ export const PLACES_VI = [
   },
   {
     id: "vi-danang-han-market-seafood", name: "Han Market & Da Nang Seafood Eateries", city: "Da Nang", country: "vi",
+    access: { stepFree: "partial", note: "Bach Dang riverside promenade and the market ground floor are flat and paved, but interior aisles are narrow and crowded and there is no lift or escalator to the upper floor (wheelchair users are confined to the ground level); seafood and dry-goods stalls are at ground level." },
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["market", "food"], budgetTier: "mid",
     blurb: "Bustling riverside market and nearby seafood restaurants known for fresh local catch and central Vietnamese specialities.",

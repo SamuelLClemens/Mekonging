@@ -1,6 +1,7 @@
 export const PLACES_LA = [
   {
     id: "la-vte-cope",
+    access: { stepFree: "yes", note: "Single-level museum on the National Rehabilitation Centre grounds; multiple independent sources confirm flat paths and wheelchair ramps and describe the exhibits as wheelchair-accessible. An accessible toilet is plausible at a rehabilitation centre but is not explicitly documented." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.7, scale: 5, count: 2535, url: "https://www.tripadvisor.com/Attraction_Review-g293950-d1092459-Reviews-COPE_Visitor_Centre-Vientiane_Vientiane_Prefecture.html", asOf: "2026-07" },
     ],
@@ -25,6 +26,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-pha-that-luang",
+    access: { stepFree: "partial", note: "The flat paved grounds can be approached and circled by wheelchair, but the golden stupa sits on raised tiers reached only by steps, so the monument itself is not step-free. Sources conflict on overall accessibility, supporting the middle rating." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.1, scale: 5, count: 1620, url: "https://www.tripadvisor.com/Attraction_Review-g293950-d17503455-Reviews-Pha_That_Luang-Vientiane_Vientiane_Prefecture.html", asOf: "2026-07" },
     ],
@@ -50,6 +52,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-mekong-night-market",
+    access: { stepFree: "yes", note: "Level paved riverside promenade in Chao Anouvong Park along Quai Fa Ngum Road; flat throughout and step-free, though the long stall run and dense evening crowds can be tight. One listing claims accessible restrooms, but that is unverified boilerplate." },
     rating: 4.1, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Vientiane Riverside Night Market",
     city: "Vientiane",
@@ -70,6 +73,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-buddha-park",
+    access: { stepFree: "partial", note: "The 2017 refurbishment added some paved walkways, but the sculptures stand on uneven grass, several sources mark the park as not fully wheelchair-accessible, and the iconic pumpkin dome is entered only by steep, narrow internal stairs." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.0, scale: 5, count: 2450, url: "https://www.tripadvisor.com/Attraction_Review-g293950-d325750-Reviews-Buddha_Park-Vientiane_Vientiane_Prefecture.html", asOf: "2026-07" },
     ],
@@ -95,6 +99,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-kuang-si",
+    access: { stepFree: "partial", note: "The mostly flat main trail to the lower pools is navigable by wheelchair with difficulty (electric buggies use it) but has tree roots and mud that worsen after rain; the upper falls require many steep, slippery steps. Not ideal, but the lower section is sometimes manageable." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.7, scale: 5, count: 11264, url: "https://www.tripadvisor.com/Attraction_Review-g295415-d555731-Reviews-Kuang_Si_Falls-Luang_Prabang_Luang_Prabang_Province.html", asOf: "2026-07" },
     ],
@@ -122,6 +127,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-night-market",
+    access: { stepFree: "partial", note: "A pedestrianised stretch of Sisavangvong Road, so broadly flat and step-free, but sources note the road surface can be uneven and that densely packed stalls plus evening crowds narrow the lanes, making wheelchair navigation challenging." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.1, scale: 5, count: 3526, url: "https://www.tripadvisor.com/Attraction_Review-g295415-d1727836-Reviews-Luang_Prabang_Night_Market-Luang_Prabang_Luang_Prabang_Province.html", asOf: "2026-07" },
     ],
@@ -146,6 +152,7 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-mekong-slow-boat",
+    access: { stepFree: "no", note: "Boarding requires a steep riverbank climb and a scramble over rocks and narrow planks onto a low boat with fixed repurposed car seats; the only toilet is a cramped engine-side stall. Effectively impassable in a wheelchair." },
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Mekong Slow Boat from Huay Xai",
     city: "Luang Prabang",

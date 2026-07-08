@@ -74,6 +74,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", toilet: true, note: "Outdoor main lanes are flat and paved and rollable, but the market was not designed for accessibility: many sub-sois (alleys) are narrow, weekend crowds are dense, vendor goods cause occasional obstructions, and some stalls have a step at the door." },
     externalRatings: [
       { site: "Google", score: 4.4, scale: 5, count: 54826, asOf: "2026-07" },
     ],
@@ -94,6 +95,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", note: "A wheelchair-user report confirms the main Chinatown sidewalks are mostly smooth with curb cuts, but they are packed with people and street-food vendors (hard to roll in places), some stretches are uneven, several intersections lack dropped curbs, and many eateries have a step at the entrance." },
     recognition: 'The neon-signed main road of Chinatown; gold shops by day, then charcoal grills and seafood stalls spill onto the pavements after dark. Look for the big Chinese-character arches.',
     localName: 'เยาวราช · Yao-wárâat',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -129,6 +131,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-lumpini', name: 'Lumphini Park', city: 'Bangkok', country: 'th',
+    access: { stepFree: "yes", note: "Flat paved loop paths throughout (roughly 2.5km main circuit), MRT at the gate, and wheelchair/mobility-scooter rental on site. A Universal-Design 'Green Bridge' elevated walkway (ramps and lifts, slip-resistant surface) connects to Benjakitti Park. Genuinely step-free terrain in the park itself." },
     rating: 4.5, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nature'], budgetTier: 'low',
     kidFriendly: true, activities: ['walk', 'boating', 'wildlife'],
@@ -144,6 +147,7 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-khaosan', name: 'Khaosan Road', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", note: "A 410m paved pedestrian walking street (rebuilt by the city in 2020 with proper drainage), which a wheelchair user navigated with some maneuvering. Heavy evening crowds, uneven patches and spilled drinks make it work; some spots remain blocked by steps or uneven surfaces. Easiest by day." },
     recognition: 'One short pedestrian street of neon bars, stalls and hostels off Ratchadamnoen Klang — listen for the music before you spot the sign.',
     localName: 'ถนนข้าวสาร · Thanon Khao San',
     rating: 4.0, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
