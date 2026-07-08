@@ -204,6 +204,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-doi-suthep", name: "Wat Phra That Doi Suthep", city: "Chiang Mai", country: "th",
+    access: { stepFree: "partial", note: "A lift and cable car from the car park bypass the 306-step staircase, and ramps reach the lookout and main terrace, but several ramps are very steep (around 1:4), so a wheelchair user needs a strong helper." },
     externalRatings: [
       { site: "Google", score: 4.7, scale: 5, count: 11828, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.4, scale: 5, count: 7796, url: "https://www.tripadvisor.com/Attraction_Review-g8286767-d456320-Reviews-Wat_Phra_That_Doi_Suthep-Doi_Suthep.html", asOf: "2026-07" },
@@ -224,6 +225,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-white-temple", name: "Wat Rong Khun (White Temple)", city: "Chiang Rai", country: "th",
+    access: { stepFree: "no", note: "The Bridge of Rebirth and the main ubosot are reached by steps with no ramps and uneven ornate surfaces, so wheelchair users can view and photograph the exterior from ground level but cannot cross the bridge or enter the main building." },
     externalRatings: [
       { site: "Google", score: 4.6, scale: 5, count: 24934, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 7954, url: "https://www.tripadvisor.com/Attraction_Review-g297920-d1368436-Reviews-Wat_Rong_Khun-Chiang_Rai_Chiang_Rai_Province.html", asOf: "2026-07" },
@@ -1344,6 +1346,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-jim-thompson-house",
+    access: { stepFree: "no", note: "The traditional raised teak houses are reached only by steps with raised thresholds, so the interior tour is not wheelchair accessible; only the garden and grounds can be enjoyed at ground level." },
     name: "Jim Thompson House",
     city: "Bangkok",
     country: "th",

@@ -716,6 +716,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-mount-phousi",
+    access: { stepFree: "no", note: "The sacred hilltop is reached only by long stairways (328 steps on the Royal Palace side, 355 on the Nam Khan side) with no ramp or lift, so it is not wheelchair accessible." },
     name: "Mount Phousi",
     city: "Luang Prabang",
     country: "la",
@@ -762,6 +763,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-patuxai",
+    access: { stepFree: "partial", note: "Ramps reach the lower observation deck and surrounding plaza, but the climb to the very top of the monument is via a steep internal staircase." },
     name: "Patuxai Monument",
     city: "Vientiane",
     country: "la",
@@ -1031,6 +1033,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-that-dam-vientiane",
+    access: { stepFree: "yes", note: "The Black Stupa sits on a traffic roundabout viewable from level paved pathways; the approach is accessible and there is no climbing involved." },
     name: "That Dam (Black Stupa)",
     city: "Vientiane",
     country: "la",
