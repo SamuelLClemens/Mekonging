@@ -9,6 +9,10 @@
 export const PLACES_KH_EXT = [
   {
     id: "kh-ext-phnom-sampov", name: "Phnom Sampov (Killing Caves & Bat Exodus)", city: "Battambang", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.5, scale: 5, count: 1754, asOf: "2026-07" },
+      { site: "Google", score: 4.5, scale: 5, count: 1475, asOf: "2026-07" },
+    ],
     recognition: 'A lone limestone hill rising from flat rice plains about 12 km southwest of Battambang, topped by a golden pagoda; roadside drink stalls face the cliff cave where bats stream out at dusk.',
     localName: 'ភ្នំសំពៅ · Phnom Sampov',
     categories: ["viewpoint", "culture", "nature"], budgetTier: "low",
@@ -25,6 +29,9 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-bamboo-train", name: "Bamboo Train (Norry)", city: "Battambang", country: "kh",
+    externalRatings: [
+      { site: "Google", score: 4.0, scale: 5, count: 1033, asOf: "2026-07" },
+    ],
     categories: ["culture", "nature"], budgetTier: "low",
     blurb: "A makeshift railcar — a bamboo slat on two axles driven by a small motor — that clatters along a single warped track through rice fields and villages. Born from improvisation after the rail network collapsed, it remains a quintessentially Cambodian countryside ride.",
     whyItFits: "For travellers wanting a quirky, low-cost slice of rural life and easy photos of the Battambang plains. Light and fun; pairs well with a Phnom Sampov afternoon.",
@@ -67,6 +74,9 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kampot-pepper-farm", name: "Kampot Pepper Plantation Tour", city: "Kampot", country: "kh",
+    externalRatings: [
+      { site: "Google", score: 4.7, scale: 5, count: 2336, asOf: "2026-07" },
+    ],
     categories: ["food", "culture", "nature"], budgetTier: "low",
     blurb: "Kampot pepper is a geographically protected product widely rated among the finest in the world. Several working farms in the countryside east of town offer short tours through the vine rows, explaining cultivation and harvest, ending with a tasting of green, black, red and white peppercorns.",
     whyItFits: "Best for food-curious travellers who want to understand a celebrated local product at its source and buy direct. Easy, shaded and rural — a calm half-day from town.",
@@ -199,6 +209,9 @@ export const PLACES_KH_EXT = [
   },
 {
     id: "kh-ext-ta-prohm", name: "Ta Prohm", city: "Siem Reap", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.8, scale: 5, count: 19490, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d325222-Reviews-Ta_Prohm-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'Recognisable by the massive pale silk-cotton and strangler-fig roots draped over and prising apart the crumbling grey galleries, the temple made famous by the Tomb Raider film.',
     localName: 'ប្រាសាទតាព្រហ្ម · Prasat Ta Prohm',
     categories: ["culture", "nature"], budgetTier: "mid",
@@ -215,6 +228,9 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-banteay-srei", name: "Banteay Srei", city: "Siem Reap", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.7, scale: 5, count: 7326, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d469308-Reviews-Banteay_Srei-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'A small, low temple built of distinctive pink-red sandstone about 25 km northeast of Angkor, covered in exceptionally deep, fine carving and guarded by kneeling animal-headed figures.',
     localName: 'ប្រាសាទបន្ទាយស្រី · Prasat Banteay Srei',
     categories: ["culture"], budgetTier: "mid",
@@ -391,6 +407,10 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-russian-market", name: "Russian Market (Phsar Toul Tom Poung)", city: "Phnom Penh", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 3.7, scale: 5, count: 2516, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d638459-Reviews-Russian_Market-Phnom_Penh.html", asOf: "2026-07" },
+      { site: "Google", score: 4.1, scale: 5, count: 8424, asOf: "2026-07" },
+    ],
     recognition: 'A low, crowded tin-roofed market block in the Toul Tom Poung district south of the centre, a warren of narrow stalls with a cluster of food and iced-coffee vendors in the middle.',
     localName: 'ផ្សារទួលទំពូង · Phsar Toul Tom Poung',
     categories: ["market", "food"], budgetTier: "low",

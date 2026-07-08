@@ -84,6 +84,9 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cuc-phuong", name: "Cuc Phuong National Park", city: "Ninh Binh", country: "vi",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.1, scale: 5, count: 218, url: "https://www.tripadvisor.com/Attraction_Review-g303945-d8779716-Reviews-Cuc_Phuong_National_Park-Ninh_Binh_Ninh_Binh_Province.html", asOf: "2026-07" },
+    ],
     categories: ["park", "nature", "hike"], budgetTier: "low",
     blurb: "Vietnam's oldest national park (established 1962), a 22,000-hectare swathe of ancient limestone rainforest with a thousand-year-old tree, prehistoric caves and respected primate and turtle rescue centres.",
     whyItFits: "For wildlife-minded travellers who want a quiet, genuinely wild counterpoint to Ninh Binh's boat-tour circuit. Stay overnight to catch the dawn forest and the firefly season in late spring.",
@@ -234,6 +237,9 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-imperial-city-hue", name: "Imperial City (Hue Citadel)", city: "Hue", country: "vi",
+    externalRatings: [
+      { site: "Google", score: 4.6, scale: 5, count: 23171, asOf: "2026-07" },
+    ],
     recognition: 'Enter through the Ngo Mon Gate, a tiered yellow pavilion above a stone gateway, set behind a wide moat and thick citadel walls near the Perfume River.',
     localName: 'Đại Nội Huế · Dai Noi Hue',
     categories: ["culture", "park"], budgetTier: "low",

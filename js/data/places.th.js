@@ -71,6 +71,9 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
+    externalRatings: [
+      { site: "Google", score: 4.4, scale: 5, count: 54826, asOf: "2026-07" },
+    ],
     recognition: 'Enter by the clock tower near Mo Chit BTS or Chatuchak Park MRT: a maze of numbered alleys (sois) under corrugated roofs. Open weekends only.',
     localName: 'ตลาดนัดจตุจักร · Talàat Nát Jàtujàk',
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],

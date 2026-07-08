@@ -67,6 +67,9 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-kong-lor", name: "Kong Lor Cave", city: "Thakhek", country: "la",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.5, scale: 5, count: 352, url: "https://www.tripadvisor.com/Attraction_Review-g10138992-d2306807-Reviews-Kong_Lor_Cave-Phoun_Hin_Boun_Khammouane_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'A cave mouth at the end of Ban Kong Lor village where longtail boats enter a 7.5 km river tunnel bored by the Nam Hin Bun through a limestone mountain.',
     categories: ["nature", "park"], budgetTier: "mid",
     blurb: "A 7.5 km river cave on the Thakhek Loop where a longtail boat motors you through a vast pitch-black limestone tunnel carved by the Nam Hin Bun, emerging into daylight at the far end. The cathedral-scale chambers and underground river are among Southeast Asia's most extraordinary cave experiences.",
@@ -139,6 +142,9 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-khone-phapheng", name: "Khone Phapheng Falls", city: "Si Phan Don", country: "la",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.3, scale: 5, count: 256, url: "https://www.tripadvisor.com/Attraction_Review-g1015968-d7653889-Reviews-Khone_Phapheng_Falls-Don_Khong_Champasak_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'Near the Cambodian border, a broad thundering wall of Mekong rapids and cascades viewed from riverside platforms in a fenced park reached from Ban Nakasang.',
     categories: ["waterfall", "nature", "viewpoint"], budgetTier: "low",
     blurb: "The most powerful waterfall on the Mekong and, by volume, the largest in Southeast Asia: a vast set of rapids and cascades crashing across the river near the Cambodian border. Viewing platforms and a riverside park let you feel the sheer force up close.",
@@ -154,6 +160,9 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-plain-of-jars-1", name: "Plain of Jars — Site 1 (Thong Hai Hin)", city: "Phonsavan", country: "la",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.5, scale: 5, count: 669, url: "https://www.tripadvisor.com/Attraction_Review-g612364-d325753-Reviews-The_Plain_Of_Jars-Phonsavan_Xiangkhouang_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'About 10 km from Phonsavan, grassy hillsides scattered with hundreds of giant Iron Age stone jars, flagged walking paths threading between the jars and old bomb craters.',
     categories: ["culture", "nature", "park"], budgetTier: "low",
     blurb: "The largest and most accessible cluster of the UNESCO-listed Plain of Jars: hundreds of giant Iron Age stone jars, some over two metres tall, scattered across rolling grassland. Cleared walking paths thread between the jars and old wartime bomb craters mark the same fields.",
@@ -184,6 +193,9 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-wat-phou", name: "Wat Phou (Vat Phou)", city: "Champasak", country: "la",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.4, scale: 5, count: 812, url: "https://www.tripadvisor.com/Attraction_Review-g1015988-d2011694-Reviews-Wat_Phu-Champasak_Town_Champasak_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'A pre-Angkorian Khmer temple stepping up the slope of Phou Kao mountain above the Mekong plain south of Pakse, approached along a causeway past two ruined stone barays.',
     localName: 'ວັດພູ · Wat Phou',
     categories: ["culture", "park", "viewpoint"], budgetTier: "low",
