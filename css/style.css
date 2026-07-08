@@ -268,6 +268,15 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .pill-best { font-size: var(--fs-label); font-weight: 800; background: var(--grad-sun); color: #fff;
              border-radius: var(--r-pill); padding: 3px var(--sp-2); text-transform: uppercase; }
 .border-flag { font-size: var(--fs-sm); color: var(--magenta); font-weight: 700; }
+/* --- journey planner --- */
+.plan-picker { display: flex; flex-direction: column; gap: var(--sp-2); }
+.plan-field { display: flex; flex-direction: column; gap: 4px; }
+.plan-field .lbl { font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; color: var(--ink-soft); letter-spacing: 0.04em; }
+.plan-picker select { width: 100%; min-height: 44px; font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
+.swap-btn { min-height: 40px; }
+.plan-chain { font-weight: 800; color: var(--teal-deep); line-height: 1.4; }
+.plan-leg { border-left: 3px solid var(--teal); padding: var(--sp-2) 0 var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
+.plan-leg-head { font-weight: 800; margin-bottom: 2px; }
 
 /* --- info accordion --- */
 .acc { border-bottom: 1px dashed var(--line); }
