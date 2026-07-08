@@ -90,7 +90,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.112.0';
+const APP_VERSION = 'mk-v0.113.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -138,6 +138,156 @@ function logoSVG() {
     <text x="180" y="94" text-anchor="middle" font-family="'Avenir Next','Trebuchet MS',system-ui,sans-serif" font-weight="800" font-size="40" fill="url(#mkgh)" letter-spacing="0.5">Mekonging</text>
     <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" stroke="#16A39A" stroke-width="4" stroke-linecap="round"/></svg>`;
 }
+// ---- CONTEXT-AWARE "RIGHT NOW" ---------------------------------------------
+// The home screen leads with what fits the user's place and moment: we read the last GPS
+// fix, the local clock (hour + weekend), cached weather and the wet season, then rank
+// nearby places by how well they suit right now. Fully offline; degrades to a time-aware
+// tip when there is no location yet.
+const PART_META = {
+  earlyMorning: { emoji: '🌅', label: 'Early morning', cats: ['market', 'culture', 'viewpoint', 'food', 'nature'], tip: 'Beat the heat — markets, temples and sunrise viewpoints are at their best now.' },
+  morning: { emoji: '☀️', label: 'Morning', cats: ['culture', 'nature', 'park', 'viewpoint', 'market'], tip: 'Cooler hours for sightseeing, temples and nature before midday.' },
+  midday: { emoji: '🥵', label: 'Midday', cats: ['culture', 'food', 'market', 'wellness', 'hotspring'], tip: 'Hottest part of the day — lean indoors: museums, a long lunch or a swim.' },
+  afternoon: { emoji: '⛅', label: 'Afternoon', cats: ['nature', 'viewpoint', 'beach', 'food', 'culture'], tip: 'Good for cafés, easy walks, beaches and viewpoints as the sun drops.' },
+  evening: { emoji: '🌆', label: 'Evening', cats: ['nightlife', 'food', 'market', 'viewpoint'], tip: 'Prime time for sunsets, night markets and street food.' },
+  night: { emoji: '🌙', label: 'Night', cats: ['nightlife', 'food', 'market'], tip: 'Night markets, street food and bars are in full swing.' },
+  lateNight: { emoji: '🌌', label: 'Late night', cats: ['nightlife', 'food'], tip: 'Late-night eats and bars — most sights are closed now.' },
+};
+const INDOOR_CATS = ['culture', 'food', 'market', 'wellness'];
+const OUTDOOR_CATS = ['nature', 'viewpoint', 'beach', 'park', 'hike', 'waterfall', 'island'];
+const WET_MONTHS = { th: [4, 5, 6, 7, 8, 9], kh: [4, 5, 6, 7, 8, 9], la: [4, 5, 6, 7, 8, 9], vi: [4, 5, 6, 7, 8, 9, 10] };
+
+function partOfDay(hour) {
+  if (hour < 5) return 'lateNight';
+  if (hour < 8) return 'earlyMorning';
+  if (hour < 11) return 'morning';
+  if (hour < 15) return 'midday';
+  if (hour < 17) return 'afternoon';
+  if (hour < 21) return 'evening';
+  return 'night';
+}
+
+// Best-effort "open now" from a free-form hours string. Returns true/false, or null when it
+// cannot be parsed (so an unparseable place is neither rewarded nor punished).
+function isOpenNow(hours, hour) {
+  if (!hours) return null;
+  if (/24\s*h|24\/7|round the clock/i.test(hours)) return true;
+  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(hours);
+  if (!m) return null;
+  const open = parseInt(m[1], 10), close = parseInt(m[3], 10);
+  if (isNaN(open) || isNaN(close) || open === close) return null;
+  return close < open ? (hour >= open || hour < close) : (hour >= open && hour < close);
+}
+
+function contextNow() {
+  const fix = getLastFix();
+  const near = fix ? nearestSpotGlobal(fix) : null;
+  const now = new Date();
+  const hour = now.getHours();
+  const dow = now.getDay();
+  const part = partOfDay(hour);
+  const country = near ? near.spot.country : activeCountry;
+  let wx = null, raining = false;
+  if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
+  const wet = (WET_MONTHS[country] || []).includes(now.getMonth());
+  const dayName = now.toLocaleDateString(undefined, { weekday: 'long' });
+  return { fix, near, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
+}
+
+function scoreForNow(p, ctx) {
+  if (!p.coords) return -Infinity;
+  const km = haversineKm(ctx.fix, p.coords);
+  if (km > 130) return -Infinity;               // "near you" ceiling (still allows day trips)
+  const cats = p.categories || [];
+  const meta = PART_META[ctx.part];
+  let s = 30 - km * 0.9;                          // proximity
+  if (cats.some((c) => meta.cats.includes(c))) s += 30;
+  if (ctx.isWeekend && cats.includes('market')) s += 8;
+  if (ctx.raining) {
+    if (cats.some((c) => INDOOR_CATS.includes(c))) s += 16;
+    if (cats.some((c) => OUTDOOR_CATS.includes(c))) s -= 22;
+  }
+  if (ctx.part === 'midday' && !ctx.raining) {
+    if (cats.includes('hike')) s -= 10;
+    if (cats.includes('hotspring') || cats.includes('beach')) s += 6;
+    if (cats.some((c) => INDOOR_CATS.includes(c))) s += 6;
+  }
+  const open = isOpenNow(p.hours, ctx.hour);
+  if (open === true) s += 12; else if (open === false) s -= 26;
+  s += (Number(p.rating) || 0) * 1.2;            // gentle quality tiebreak
+  return s;
+}
+
+function whyNow(p, ctx) {
+  const cats = p.categories || [];
+  const morning = ctx.part === 'earlyMorning' || ctx.part === 'morning';
+  const evening = ctx.part === 'evening' || ctx.part === 'night' || ctx.part === 'lateNight';
+  if (ctx.raining && cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
+  if (ctx.isWeekend && cats.includes('market')) return 'Weekend market';
+  if (evening && cats.includes('nightlife')) return 'Buzzing now';
+  if ((ctx.part === 'evening' || ctx.part === 'afternoon') && cats.includes('viewpoint')) return 'Sunset spot';
+  if (evening && (cats.includes('food') || cats.includes('market'))) return 'Street-food time';
+  if (morning && cats.includes('market')) return 'Morning market';
+  if (morning && cats.includes('culture') && !cats.includes('food')) return 'Cool-hours temple';
+  if (isOpenNow(p.hours, ctx.hour) === true) return 'Open now';
+  return null;
+}
+
+function rightNowSection() {
+  const ctx = contextNow();
+  const meta = PART_META[ctx.part];
+  const card = h('div', { class: 'card right-now' });
+  const cityName = ctx.near ? ctx.near.spot.city : ((getCountry(ctx.country) || {}).name || 'you');
+  const wxStr = ctx.wx ? ` · ${fmtTemp(ctx.wx.temp)}${ctx.raining ? ', rain' : ''}` : '';
+  card.append(h('div', { class: 'rn-head' }, [
+    h('span', { class: 'rn-emoji' }, meta.emoji),
+    h('div', {}, [
+      h('div', { class: 'rn-title' }, ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`),
+      h('div', { class: 'rn-sub muted' }, `${ctx.dayName}${wxStr}`),
+    ]),
+  ]));
+
+  if (!ctx.fix) {
+    card.append(h('p', { style: 'margin:8px 0 6px' }, meta.tip));
+    card.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, 'Turn on location and this becomes live picks for right where you are. It stays on your device — nothing is sent anywhere.'));
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      card.append(h('button', { class: 'btn block', onclick: async (e) => {
+        store.profile.prefs.geoAsked = true; save();
+        e.currentTarget.textContent = 'Locating…';
+        try { setLastFix(await geolocate()); } catch { /* denied/unavailable */ }
+        render();
+      } }, '📍 Use my location'));
+    }
+    return card;
+  }
+
+  const picks = allPlaces({ country: ctx.country })
+    .map((p) => ({ p, s: scoreForNow(p, ctx) }))
+    .filter((x) => x.s > -Infinity)
+    .sort((a, b) => b.s - a.s)
+    .slice(0, 5);
+
+  if (!picks.length) {
+    card.append(h('p', { style: 'margin:8px 0 0' }, `${meta.tip} Nothing is mapped very close — try “What’s near me”.`));
+  } else {
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 10px' }, meta.tip));
+    const list = h('div', { class: 'rn-list' });
+    picks.forEach(({ p }) => {
+      const reason = whyNow(p, ctx);
+      const km = haversineKm(ctx.fix, p.coords);
+      list.append(h('button', { class: 'rn-item', onclick: () => go(`#place-${p.id}`) }, [
+        h('div', { class: 'rn-item-main' }, [
+          h('span', { class: 'rn-name' }, p.name),
+          reason ? h('span', { class: 'rn-tag' }, reason) : null,
+        ]),
+        h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
+      ]));
+    });
+    card.append(list);
+  }
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#nearby') }, 'See more near me →'));
+  return card;
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
@@ -150,27 +300,8 @@ function homeScreen() {
     h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
   ]));
 
-  // One-time, dismissible location invite: capturing a GPS fix here makes distances,
-  // "Nearest first" and the Near-me hub work instantly on the very first visit. Asked at
-  // most once (prefs.geoAsked); never shown again once a fix exists or the user answers.
-  if (typeof navigator !== 'undefined' && navigator.geolocation && !getLastFix() && !store.profile.prefs.geoAsked) {
-    const invite = h('div', { class: 'card geo-invite' }, [
-      h('p', { style: 'margin:0 0 8px' }, [
-        h('strong', {}, '📍 See what’s near you'),
-        ' — allow location and the app will sort places by distance and power “Near me”. It stays on your device; nothing is sent anywhere.',
-      ]),
-      h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
-        h('button', { class: 'btn', onclick: async (e) => {
-          store.profile.prefs.geoAsked = true; save();
-          e.currentTarget.textContent = 'Locating…';
-          try { setLastFix(await geolocate()); } catch { /* denied/unavailable — we still asked */ }
-          render();
-        } }, 'Use my location'),
-        h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.geoAsked = true; save(); render(); } }, 'Not now'),
-      ]),
-    ]);
-    wrap.append(invite);
-  }
+  // Lead with what fits the user's place and moment, before the generic menu.
+  wrap.append(rightNowSection());
 
   wrap.append(h('h2', { class: 'home-section' }, 'Where are you headed?'));
   wrap.append(regionPicker());
