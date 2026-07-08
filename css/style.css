@@ -277,6 +277,7 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .plan-chain { font-weight: 800; color: var(--teal-deep); line-height: 1.4; }
 .plan-leg { border-left: 3px solid var(--teal); padding: var(--sp-2) 0 var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
 .plan-leg-head { font-weight: 800; margin-bottom: 2px; }
+.sos-loc { background: var(--card); border-left: 3px solid var(--magenta); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-weight: 600; margin: 0 0 var(--sp-3); }
 
 /* --- info accordion --- */
 .acc { border-bottom: 1px dashed var(--line); }

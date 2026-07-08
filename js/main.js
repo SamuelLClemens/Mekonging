@@ -90,7 +90,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.109.0';
+const APP_VERSION = 'mk-v0.110.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -3551,17 +3551,69 @@ function searchScreen() {
 }
 
 // ---- EMERGENCY / SOS --------------------------------------------------------
-function sosScreen() {
-  const c = getCountry(activeCountry);
+// Water/food safety keyed to the country you are actually in. General travel-health
+// guidance for the region — tap water is not potable in any of the four, and busy,
+// freshly-cooked street food is the safest bet.
+const SAFETY = {
+  th: {
+    water: 'Do not drink the tap water. Bottled and filtered water is cheap and everywhere, with refill stations in most towns. Ice in cafés and restaurants is factory-made and generally safe.',
+    food: 'Street food is a highlight and safe when the stall is busy and food is cooked fresh in front of you. Peel your own fruit, and be cautious with reheated buffet dishes left standing.',
+  },
+  vi: {
+    water: 'Do not drink the tap water. Use bottled or filtered water; most hotels supply it free. Café and bia-hơi ice in cities is normally commercial ice and fine.',
+    food: 'Busy stalls with high turnover are safest — choose freshly cooked, steaming dishes. Go easy on raw herbs you cannot wash yourself and on shellfish in hot weather.',
+  },
+  kh: {
+    water: 'Tap water is not safe to drink. Stick to sealed bottled or filtered water and check the seal. Outside the cities, ask for drinks without ice unless you are sure it is commercial ice.',
+    food: 'Eat where locals queue and food is cooked to order. Be extra careful with ice, salads and shellfish in rural areas and the hot season; peel your own fruit.',
+  },
+  la: {
+    water: 'Do not drink the tap water. Bottled water is widely sold and refill stations exist in tourist towns. Outside the main towns, ask for no ice unless you know it is commercial.',
+    food: 'Freshly grilled and boiled dishes from busy stalls are safest. Avoid raw or fermented meat/fish dishes such as laap dib — they carry a real parasite risk. Peel fruit yourself.',
+  },
+};
+
+// Globally nearest listed city to a GPS fix, so the SOS screen can infer which country
+// the traveller is actually in (rather than the last one they browsed).
+function nearestSpotGlobal(fix) {
+  let best = null, bestD = Infinity;
+  for (const s of WEATHER_SPOTS) {
+    const d = haversineKm(fix, { lat: s.lat, lng: s.lng });
+    if (d < bestD) { bestD = d; best = s; }
+  }
+  return best ? { spot: best, km: bestD } : null;
+}
+
+function sosScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Emergency', '#home'));
+
+  // Snap to where the traveller actually is: an explicit chip pick (cc) wins; otherwise
+  // infer the country from the last GPS fix. Falls back to the browsed country with no fix.
+  const fix = getLastFix();
+  const near = fix ? nearestSpotGlobal(fix) : null;
+  if (cc) activeCountry = cc;
+  else if (near) activeCountry = near.spot.country;
+
+  const c = getCountry(activeCountry);
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
+  if (!cc && near) wrap.append(h('p', { class: 'sos-loc' }, `📍 You appear to be near ${near.spot.city}. Showing ${c.name} — not right? Pick your country:`));
+  wrap.append(countryChips((id) => go(`#sos-${id}`)));
 
   const nums = h('div', { class: 'card sos-card' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
   const em = (c.info && c.info.emergency) || [];
   if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
   wrap.append(nums);
+
+  const safe = SAFETY[activeCountry];
+  if (safe) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', {}, 'Water & food safety'),
+      h('p', { style: 'margin:6px 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
+      h('p', { style: 'margin:6px 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
+    ]));
+  }
 
   const book = getLanguage(c.lang);
   const emCat = book && book.categories.find((cat) => cat.id === 'emergency');
@@ -3574,7 +3626,18 @@ function sosScreen() {
     ])));
     wrap.append(pcard);
   }
-  wrap.append(h('a', { class: 'btn block', href: 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me', target: '_blank', rel: 'noopener' }, 'Find nearest hospital ↗'));
+
+  // Hospital: the maps deep link needs internet, so pair it with an offline fallback —
+  // show a big "I need a doctor / hospital" phrase to a local (works with no signal).
+  const hosp = h('div', { class: 'card' }, [h('h2', {}, 'Get to a hospital')]);
+  const mapHref = (fix && fix.lat != null)
+    ? `https://www.google.com/maps/search/hospital/@${fix.lat},${fix.lng},14z`
+    : 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me';
+  hosp.append(h('a', { class: 'btn block', href: mapHref, target: '_blank', rel: 'noopener' }, 'Find nearest hospital (needs internet) ↗'));
+  const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
+  if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
+  wrap.append(hosp);
+
   wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English.'));
   mount(wrap, '#home');
 }
@@ -4448,7 +4511,7 @@ function render() {
       case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
-      case 'sos': return sosScreen();
+      case 'sos': return sosScreen(arg);
       case 'trip': return tripScreen();
       case 'bargain': return bargainScreen();
       case 'checklist': return checklistScreen(arg);
