@@ -126,6 +126,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-lanta-old-town", name: "Lanta Old Town (Sri Raya) food & stilt houses", city: "Koh Lanta", country: "th",
+    access: { stepFree: "partial", note: "The single flat seafront main street is paved and largely rollable, but shops and cafes occupy century-old wooden stilt houses over the water with raised door thresholds, uneven timber decking and stepped piers, so most interiors and the waterside are not step-free." },
     categories: ["food", "market", "culture"], budgetTier: "low",
     blurb: "A weathered Sino-Thai and sea-gypsy fishing village of stilt houses over the water on Lanta's east coast, now lined with seafood kitchens, cafes and small craft shops.",
     whyItFits: "The island's most characterful place to eat — fresh seafood on overwater decks, far from the package-resort beachfront. Great at golden hour.",
@@ -251,6 +252,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-sukhothai-historical-park", name: "Sukhothai Historical Park", city: "Sukhothai", country: "th",
+    access: { stepFree: "partial", note: "The Central Zone has flat paved paths (built for cycling) plus electric buggy hire so the grounds are easy to cross, but individual ruins sit on stepped brick platforms and some connecting paths are dirt, grass or uneven stone." },
     externalRatings: [
       { site: "Google", score: 4.7, scale: 5, count: 18178, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.7, scale: 5, count: 3491, url: "https://www.tripadvisor.com/Attraction_Review-g303921-d455348-Reviews-Sukhothai_Historical_Park-Sukhothai_Sukhothai_Province.html", asOf: "2026-07" },
@@ -271,6 +273,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-ayutthaya-historical-park", name: "Ayutthaya Historical Park", city: "Ayutthaya", country: "th",
+    access: { stepFree: "partial", note: "A wheelchair user (Cory Lee) reports Wat Mahathat has smooth paths and well-placed ramps reaching the famous Buddha head, but many other Ayutthaya ruins have uneven ground and steps up into the temple interiors." },
     externalRatings: [
       { site: "Google", score: 4.8, scale: 5, count: 86, asOf: "2026-07" },
     ],
@@ -420,6 +423,7 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-damnoen-saduak", name: "Damnoen Saduak Floating Market", city: "Ratchaburi", country: "th",
+    access: { stepFree: "partial", note: "Entrance, parking and the flat paved canal-side quays are rollable with assistance, but the narrow uneven wooden alleys are difficult and the iconic longtail/paddle boats are near-impossible to board in a wheelchair." },
     recognition: 'Southwest of Bangkok in Ratchaburi; wooden boats piled with fruit and noodles crowd the narrow khlong canals, boarded from the piers and bank-side walkways lined with vendor shophouses.',
     localName: 'ตลาดน้ำดำเนินสะดวก · Talat Nam Damnoen Saduak',
     categories: ["market", "food"], budgetTier: "low",
@@ -436,6 +440,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-maeklong-railway-market", name: "Maeklong Railway Market", city: "Samut Songkhram", country: "th",
+    access: { stepFree: "partial", note: "The market is flat and at-grade, but vendors line a very narrow, densely crowded corridor beside a live train track with uneven surfaces, cobbles and gravel; passing others in a wheelchair is extremely difficult and multiple reports call it not wheelchair-friendly." },
     recognition: 'In Samut Songkhram beside Maeklong station; fresh-produce stalls and awnings sit directly over an active single railway track, retracting as the train edges through and folding back after it passes.',
     localName: 'ตลาดร่มหุบ · Talat Rom Hup',
     categories: ["market", "food"], budgetTier: "low",
@@ -1268,6 +1273,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-phimai-historical-park",
+    access: { stepFree: "partial", note: "Grounds are mostly flat, shaded and gravel/paved with ramps and minimal stairs, so most of the Khmer complex is rollable; the elevated central prang has steps up to the inner sanctuary." },
     name: "Phimai Historical Park",
     city: "Nakhon Ratchasima (Korat)",
     country: "th",
@@ -1380,6 +1386,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-the-golden-mount-wat-saket",
+    access: { stepFree: "no", note: "Access to the summit chedi is a steep spiral staircase of 300+ steps (counted as 318-344 by various sources) with no lift or ramp; only the flat ground-level temple grounds are reachable, not the hilltop viewpoint." },
     name: "The Golden Mount (Wat Saket)",
     city: "Bangkok",
     country: "th",
@@ -1402,6 +1409,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-asiatique-the-riverfront",
+    access: { stepFree: "partial", note: "A modern riverfront night market on a mostly flat paved boardwalk with ramps, elevators and mobility-scooter rental, so much of it is rollable; however wheelchair-user reviews are mixed (missing slopes near parking and the waterfront), and the Ferris wheel, Sky Flyer and some restaurants are not." },
     name: "Asiatique The Riverfront",
     city: "Bangkok",
     country: "th",
@@ -1424,6 +1432,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-wat-benchamabophit-the-marble-temple",
+    access: { stepFree: "partial", note: "The marble courtyards, cloister gallery and grounds are flat and navigable with ramps for general movement, but entering the main ordination hall (ubosot) requires climbing several marble steps with no ramp." },
     name: "Wat Benchamabophit (The Marble Temple)",
     city: "Bangkok",
     country: "th",
@@ -1490,6 +1499,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-kaeng-krachan-national-park",
+    access: { stepFree: "no", note: "Rugged mountainous rainforest park; the upper road (Ban Krang to Phanoen Thung) is steep unpaved and 4WD-only, and waterfall/viewpoint trails are forest dirt paths with stream crossings and rope-assisted upper sections." },
     name: "Kaeng Krachan National Park",
     city: "Phetchaburi",
     country: "th",
@@ -1512,6 +1522,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-khao-sok-national-park",
+    access: { stepFree: "no", note: "Rugged jungle park with no documented step-free route; trails are generally uphill forest paths with roots and steps, and the signature Cheow Lan Lake highlight requires boarding a longtail boat from the pier." },
     name: "Khao Sok National Park",
     city: "Surat Thani",
     country: "th",
@@ -1534,6 +1545,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-ang-thong-marine-national-park",
+    access: { stepFree: "no", note: "Reached only by boat with a wobbly floating pier and beach landing; the main Koh Wua Talap viewpoint is a steep rope-assisted rocky climb and the Emerald Lagoon viewpoint is roughly 240 steep steps, so no step-free route reaches any highlight." },
     name: "Ang Thong Marine National Park",
     city: "Ko Samui / Surat Thani",
     country: "th",
