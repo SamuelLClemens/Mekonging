@@ -33,6 +33,7 @@ import {
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
+import { routeNodes, planRoutes } from './journey.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
@@ -89,7 +90,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.108.0';
+const APP_VERSION = 'mk-v0.109.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -178,6 +179,7 @@ function homeScreen() {
   const tiles = [
     { ic: '🎯', t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
     { ic: '🛤️', t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
+    { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats A → B', hash: '#route' },
     { ic: '📋', t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
     { ic: '🌶️', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
     { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
@@ -1499,6 +1501,7 @@ function transportScreen(countryId) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Getting around', '#home'));
   wrap.append(countryChips((id) => go(`#transport-${id}`)));
+  wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:12px', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
 
   const country = getCountry(activeCountry);
   const routes = country && country.routes;
@@ -1530,6 +1533,101 @@ function transportScreen(countryId) {
     wrap.append(card);
   }
   wrap.append(h('p', { class: 'disclaimer' }, 'Times and prices are guidance and change with season and operator. Confirm before travel.'));
+  mount(wrap, '#home');
+}
+
+// ---- JOURNEY PLANNER --------------------------------------------------------
+// Point-to-point trip planning that chains the bundled route legs across towns and
+// borders (see js/journey.js). Fully offline; the only online part is the optional
+// "book on 12Go" deep link.
+const CAPITAL = { th: 'Bangkok', vi: 'Hanoi', kh: 'Phnom Penh', la: 'Vientiane' };
+let planFrom = '', planTo = '';
+
+function twelveGoUrl(from, to) {
+  const slug = (s) => encodeURIComponent(String(s).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+  return `https://12go.asia/en/travel/${slug(from)}/${slug(to)}`;
+}
+
+function planLegRow(l, i) {
+  const o = l.option || {};
+  const dur = Array.isArray(o.durationHrs) ? `${o.durationHrs[0]}–${o.durationHrs[1]} h` : '';
+  const box = h('div', { class: 'plan-leg' }, [
+    h('div', { class: 'plan-leg-head' }, `${i + 1}. ${l.from} → ${l.to}`),
+    l.edge.crossBorder ? h('div', { class: 'border-flag' }, `🛂 Border crossing: ${l.edge.border || ''}`) : null,
+    (l.edge.crossBorder && l.edge.visa) ? h('div', { class: 'muted' }, `Visa: ${l.edge.visa.note}`) : null,
+    h('div', { class: `route-opt ${o.recommended ? 'best' : ''}` }, [
+      h('div', { class: 'row-between' }, [
+        h('span', { class: 'mode' }, o.mode || 'Transport'),
+        o.recommended ? h('span', { class: 'pill-best' }, 'Best') : null,
+      ]),
+      h('div', { class: 'muted' }, [dur, o.price ? priceLine(o.price.low, o.price.high, o.price.currency) : '', o.freq].filter(Boolean).join(' · ')),
+      o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
+    ]),
+  ]);
+  if (l.edge.crossBorder && Array.isArray(l.edge.scamWarnings)) l.edge.scamWarnings.forEach((w) => box.append(h('div', { class: 'warn-note' }, w)));
+  return box;
+}
+
+function planCard(pl, primary) {
+  const chain = [pl.legs[0].from, ...pl.legs.map((l) => l.to)];
+  const priceStr = Object.entries(pl.priceByCcy).map(([c, v]) => priceLine(v.low, v.high, c)).filter(Boolean).join(' + ');
+  const timeStr = pl.totalHrs[1] ? `~${pl.totalHrs[0]}–${pl.totalHrs[1]} h moving` : '';
+  const changes = pl.changes === 0 ? 'Direct' : `${pl.changes} change${pl.changes > 1 ? 's' : ''}`;
+  const card = h('div', { class: 'card plan-card' }, [
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, pl.label),
+      primary ? h('span', { class: 'pill-best' }, 'Suggested') : null,
+    ]),
+    h('div', { class: 'plan-chain' }, chain.join('  →  ')),
+    h('p', { class: 'muted', style: 'margin:2px 0 10px' }, [changes, timeStr, priceStr].filter(Boolean).join(' · ')),
+  ]);
+  pl.legs.forEach((l, i) => card.append(planLegRow(l, i)));
+  if (pl.borders.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Carry your passport — ${pl.borders.length} border crossing${pl.borders.length > 1 ? 's' : ''} on this route.`));
+  card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: twelveGoUrl(chain[0], chain[chain.length - 1]), target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
+  return card;
+}
+
+function planRouteScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Journey planner', '#home'));
+  wrap.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Chain buses, trains, boats and flights across Thailand, Laos, Cambodia and Vietnam — including overland border crossings. Times and fares are guidance and work offline.'));
+
+  const nodes = routeNodes();
+  const opts = [['', 'Choose…'], ...nodes.map((n) => [n, n])];
+  if (!planFrom) { const cap = CAPITAL[activeCountry]; if (cap && nodes.includes(cap)) planFrom = cap; }
+
+  const results = h('div', { class: 'plan-results' });
+  const fromSel = selectEl(opts, planFrom, (v) => { planFrom = v; renderResults(); });
+  const toSel = selectEl(opts, planTo, (v) => { planTo = v; renderResults(); });
+  const swap = h('button', { class: 'btn ghost swap-btn', 'aria-label': 'Swap start and destination', title: 'Swap', onclick: () => {
+    const t = planFrom; planFrom = planTo; planTo = t;
+    fromSel.value = planFrom; toSel.value = planTo; renderResults();
+  } }, '⇅ Swap');
+
+  wrap.append(h('div', { class: 'card plan-picker' }, [
+    h('label', { class: 'plan-field' }, [h('span', { class: 'lbl' }, 'From'), fromSel]),
+    h('div', { style: 'text-align:center' }, swap),
+    h('label', { class: 'plan-field' }, [h('span', { class: 'lbl' }, 'To'), toSel]),
+  ]));
+  wrap.append(results);
+
+  function renderResults() {
+    results.innerHTML = '';
+    if (!planFrom || !planTo) { results.append(h('p', { class: 'muted' }, 'Choose where you are and where you want to go.')); return; }
+    if (planFrom === planTo) { results.append(h('p', { class: 'muted' }, 'Choose two different places.')); return; }
+    const plans = planRoutes(planFrom, planTo);
+    if (!plans.length) {
+      results.append(h('div', { class: 'card' }, [
+        h('p', { style: 'margin-top:0' }, `No bundled overland route between ${planFrom} and ${planTo} yet.`),
+        h('p', { class: 'muted' }, 'Try planning via a major hub (Bangkok, Vientiane, Phnom Penh or Hanoi), or check live options:'),
+        h('a', { class: 'btn ghost block', href: twelveGoUrl(planFrom, planTo), target: '_blank', rel: 'noopener' }, 'Search 12Go for this trip ↗'),
+      ]));
+      return;
+    }
+    plans.forEach((pl, i) => results.append(planCard(pl, i === 0)));
+    results.append(h('p', { class: 'disclaimer' }, 'Routes are chained from guidance data and change with season and operator. Confirm each leg before travelling.'));
+  }
+  renderResults();
   mount(wrap, '#home');
 }
 
@@ -4327,6 +4425,7 @@ function render() {
       case 'place': return placeScreen(arg);
       case 'prices': return pricesScreen(arg);
       case 'transport': return transportScreen(arg);
+      case 'route': return planRouteScreen();
       case 'info': return infoScreen(arg);
       case 'saved': return savedScreen();
       case 'collection': return collectionScreen(arg);
