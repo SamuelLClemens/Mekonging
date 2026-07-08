@@ -102,6 +102,18 @@ html[data-theme="dark"] {
       rgba(217,84,30,0.18) 0deg 8deg, rgba(232,163,61,0.12) 8deg 16deg, rgba(214,51,108,0.13) 16deg 24deg);
   --shadow-soft: 0 5px 16px -6px rgba(120,50,20,0.22);
 }
+:root[data-skin="psychnight"] {
+  /* Cambodian psych as a black-light poster: near-black ground, electric neons. */
+  --cream: #120A1C; --bg: #120A1C; --card: #1C1030; --line: #3A2258;
+  --ink: #F6E9C9; --ink-soft: #C9A9D9;
+  --sun: #FF6A2B; --sun-deep: #E24E1B; --orange: #FF3D9A; --magenta: #FF3D9A; --pink: #FF6A2B;
+  --teal: #26E0C8; --teal-deep: #26E0C8; --grape: #B15CFF;
+  --grad-sun: linear-gradient(135deg, #F0561A 0%, #FF3D9A 50%, #B15CFF 100%);
+  --grad-teal: linear-gradient(135deg, #26E0C8 0%, #B15CFF 100%);
+  --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
+      rgba(255,61,154,0.16) 0deg 8deg, rgba(38,224,200,0.10) 8deg 16deg, rgba(255,106,43,0.12) 16deg 24deg);
+  --shadow-soft: 0 4px 16px -4px rgba(0,0,0,0.7);
+}
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
