@@ -92,7 +92,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.118.0';
+const APP_VERSION = 'mk-v0.119.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -4597,6 +4597,17 @@ function boardScreen(arg) {
     boardRow(`${e.name} — ${e.dish}`, [e.price, e.where].filter(Boolean).join(' · '), e.tip)));
   section('🌶️ Street food', (board.streetFood || []).map((s) =>
     boardRow(`${s.name} — ${s.dish}`, [s.price, s.when, s.where].filter(Boolean).join(' · '), s.tip)));
+
+  // Cannabis / dispensaries — only where they legally operate (Thailand), always led by
+  // the current legal status and a cross-border warning. Data-gated: absent = not shown.
+  if (board.dispensaries && board.dispensaries.length) {
+    const dc = h('div', { class: 'card' });
+    dc.append(h('h2', {}, '🌿 Cannabis & dispensaries'));
+    if (board.dispensaryNote) dc.append(h('p', { class: 'disclaimer', style: 'margin:0 0 8px' }, board.dispensaryNote));
+    board.dispensaries.forEach((d) => dc.append(boardRow(d.area, d.where || '', d.note)));
+    if (board.dispensarySources && board.dispensarySources.length) dc.append(sourcesNote(board.dispensarySources, board.dispensaryVerified));
+    wrap.append(dc);
+  }
 
   // community notes: the user's own posts + share each to the circle
   const key = `${board.country}-${board.slug}`;
