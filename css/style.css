@@ -294,6 +294,11 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-events { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-2) 0; }
 .rn-event { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: linear-gradient(135deg, rgba(242,169,59,0.16), rgba(214,51,108,0.10)); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); }
 .rn-event-when { font-weight: 800; color: var(--magenta); }
+/* --- history & orientation --- */
+.history-card { border-left: 4px solid var(--gold, var(--orange)); }
+.knownfor { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--sp-2) 0; }
+.kf-tag { font-size: var(--fs-label); font-weight: 700; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 3px 10px; }
+.culture-tip { font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--sp-2) 0 0; }
 
 /* --- info accordion --- */
 .acc { border-bottom: 1px dashed var(--line); }
