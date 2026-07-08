@@ -87,6 +87,11 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .topbar .back:hover { filter: brightness(1.08); }
+.topbar-star {
+  border: none; background: transparent; cursor: pointer; font-size: var(--fs-h2);
+  line-height: 1; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-pill); flex: none;
+}
+.topbar-star:hover { background: rgba(242, 169, 59, 0.18); }
 
 /* --- cards & buttons --- */
 .card {
