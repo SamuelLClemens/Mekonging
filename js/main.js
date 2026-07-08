@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.137.0';
+const APP_VERSION = 'mk-v0.138.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2166,20 +2166,29 @@ function pricesScreen(countryId) {
     mount(wrap, '#prices'); return;
   }
   wrap.append(h('div', { class: 'banner' }, data.disclaimer));
+  const priceRow = (it) => h('div', { class: 'price-item' }, [
+    h('div', { class: 'row-between' }, [
+      h('strong', {}, it.label),
+      h('span', { class: 'fair' }, `${priceLine(it.fair.low, it.fair.high, data.currency)}`),
+    ]),
+    h('div', { class: 'muted' }, `${it.unit}${it.notes ? ' · ' + it.notes : ''}`),
+    it.scamNote ? h('div', { class: 'scam' }, `⚠ ${it.scamNote}`) : null,
+    it.betterOption ? h('div', { class: 'better' }, `✓ Better: ${it.betterOption}`) : null,
+  ]);
+  // Everyday costs first; the full price sheet is one tap away rather than a long scroll.
+  const ESSENTIALS = 8;
+  const lead = data.items.slice(0, ESSENTIALS), extra = data.items.slice(ESSENTIALS);
   const card = h('div', { class: 'card' });
-  for (const it of data.items) {
-    const row = h('div', { class: 'price-item' }, [
-      h('div', { class: 'row-between' }, [
-        h('strong', {}, it.label),
-        h('span', { class: 'fair' }, `${priceLine(it.fair.low, it.fair.high, data.currency)}`),
-      ]),
-      h('div', { class: 'muted' }, `${it.unit}${it.notes ? ' · ' + it.notes : ''}`),
-      it.scamNote ? h('div', { class: 'scam' }, `⚠ ${it.scamNote}`) : null,
-      it.betterOption ? h('div', { class: 'better' }, `✓ Better: ${it.betterOption}`) : null,
-    ]);
-    card.append(row);
-  }
+  lead.forEach((it) => card.append(priceRow(it)));
   wrap.append(card);
+  if (extra.length) {
+    const moreCard = h('div', { class: 'card' });
+    extra.forEach((it) => moreCard.append(priceRow(it)));
+    wrap.append(h('details', { class: 'filters-collapse' }, [
+      h('summary', {}, `All ${data.items.length} everyday prices · ${extra.length} more`),
+      moreCard,
+    ]));
+  }
   wrap.append(sourcesNote(data.sources, data.verified));
   mount(wrap, '#prices');
 }
@@ -2198,7 +2207,7 @@ function transportScreen(countryId) {
     wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} routes are coming soon. Thailand is fully covered in this build.`));
     mount(wrap, '#home'); return;
   }
-  for (const r of routes) {
+  const routeCard = (r) => {
     const card = h('div', { class: 'card' }, [
       h('h2', {}, `${r.from} → ${r.to}`),
       r.crossBorder ? h('p', { class: 'border-flag' }, `Border crossing: ${r.border}`) : null,
@@ -2219,7 +2228,30 @@ function transportScreen(countryId) {
       ]));
     }
     card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: 'https://12go.asia', target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
-    wrap.append(card);
+    return card;
+  };
+
+  // Context-first: lead with journeys leaving the city you are in (or focused on); the
+  // rest of the country network collapses behind one tap instead of a long scroll.
+  const fs = focusSpot(activeCountry);
+  const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
+  const here = focusCity ? routes.filter((r) => citySlug(r.from) === citySlug(focusCity)) : [];
+  const rest = routes.filter((r) => !here.includes(r));
+  const collapse = (list, label) => {
+    const det = h('details', { class: 'filters-collapse' }, [h('summary', {}, label)]);
+    list.forEach((r) => det.append(routeCard(r)));
+    wrap.append(det);
+  };
+
+  if (here.length) {
+    wrap.append(h('h3', { class: 'cat-title' }, `Leaving ${focusCity} · ${here.length}`));
+    here.forEach((r) => wrap.append(routeCard(r)));
+    if (rest.length) collapse(rest, `More routes across ${country.name} · ${rest.length}`);
+  } else {
+    // No known city context: show the first few (hub routes lead the data), collapse the tail.
+    const lead = rest.slice(0, 5), tail = rest.slice(5);
+    lead.forEach((r) => wrap.append(routeCard(r)));
+    if (tail.length) collapse(tail, `More routes across ${country.name} · ${tail.length}`);
   }
   wrap.append(h('p', { class: 'disclaimer' }, 'Times and prices are guidance and change with season and operator. Confirm before travel.'));
   mount(wrap, '#home');
