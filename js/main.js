@@ -95,14 +95,18 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.128.0';
+const APP_VERSION = 'mk-v0.129.0';
 
+// Tabs are anchored to what a traveller reaches for most on the ground: where they
+// are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
+// moved out of the bar (it is empty for most sessions) to a ⭐ in the header, always
+// one tap away without taking prime navigation real estate.
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
+  { hash: '#nearby', label: 'Near me', ic: '📍' },
+  { hash: '#places', label: 'Places', ic: '🧭' },
   { hash: '#phrasebook', label: 'Talk', ic: '💬' },
-  { hash: '#places', label: 'Places', ic: '📍' },
   { hash: '#map', label: 'Map', ic: '🗺️' },
-  { hash: '#saved', label: 'Saved', ic: '⭐' },
 ];
 
 function go(hash) {
@@ -112,9 +116,12 @@ function go(hash) {
 
 // ---- shell ------------------------------------------------------------------
 function topbar(title, backHash) {
+  const hash = location.hash || '';
+  const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
   return h('header', { class: 'topbar' }, [
     backHash ? h('button', { class: 'back', onclick: () => go(backHash) }, '‹ Back') : null,
     h('h1', {}, title),
+    onSaved ? null : h('button', { class: 'topbar-star', 'aria-label': 'Saved & collections', title: 'Saved & collections', onclick: () => go('#saved') }, '⭐'),
   ]);
 }
 
@@ -893,7 +900,7 @@ function nearbyScreen() {
   const status = h('p', { class: 'muted' }, 'Finding your location…');
   const body = h('div', {});
   wrap.append(status, body);
-  mount(wrap, '#home');
+  mount(wrap, '#nearby');
 
   // Cached fix paints instantly; a live fix then refines it. Offline-safe throughout.
   let fix = getLastFix();
