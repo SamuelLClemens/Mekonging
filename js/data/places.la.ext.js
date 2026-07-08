@@ -1559,4 +1559,2915 @@ export const PLACES_LA_EXT = [
     verified: "2026-07",
     sources: [{ org: "AllTrails", url: "https://www.alltrails.com/trail/laos/luang-prabang/phanoi-viewpoint" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g1732900-d13494304-Reviews-Muang_Ngoi_Neua_Viewpoint-Muang_Ngoi_Neua_Luang_Prabang_Province.html" }],
   },
+  {
+    "id": "la-ext-plain-of-jars-site-3",
+    "name": "Plain of Jars - Site 3 (Hai Hin Lat Khai)",
+    "city": "Phonsavan",
+    "country": "la",
+    "recognition": "The quietest of the jar fields: after a 10-15 minute walk over rice paddies and a couple of bamboo footbridges, a shady hillock above Lat Khai village holds roughly 150 moss-flecked stone jars, MAG red-and-white cleared-path markers running between them.",
+    "categories": [
+      "archaeology",
+      "history",
+      "nature",
+      "hike"
+    ],
+    "budgetTier": "low",
+    "blurb": "The third of the visitable Plain of Jars clusters and the least crowded, reached on foot from a small ticket booth through working rice fields and up a wooded rise. Around 150 Iron-Age sandstone jars (roughly 2,000 years old) sit among the trees; a local family runs a simple noodle-soup stall by the entrance. Part of the wider Plain of Jars UNESCO World Heritage inscription (2019). The area was heavily bombed in the Secret War, so cleared paths matter here.",
+    "whyItFits": "For travellers who want the jars without the day-tripper crowds of Site 1, plus a short scenic walk and a village setting.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 15000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "~10,000-15,000 LAK site entry; tuk-tuk or a Plain of Jars tour is the real cost."
+    },
+    "hours": "Roughly 08:00-17:00 daily; best October-February when the plateau is dry and cool",
+    "tips": [
+      "Combine with Site 2 (Hai Hin Phu Salato) nearby on one loop.",
+      "Stay strictly between the MAG red-and-white markers; the ground off-path is not guaranteed UXO-cleared.",
+      "Wear shoes that cope with mud after rain; the paddy path gets slick.",
+      "Carry small kip for entry and the village noodle stall; no cards."
+    ],
+    "scamWarnings": [
+      "Agree your tuk-tuk or driver's total price (and wait time) before leaving Phonsavan."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet",
+      "Tourism Laos"
+    ],
+    "mapQuery": "Plain of Jars Site 3 Hai Hin Lat Khai Phonsavan",
+    "coords": {
+      "lat": 19.3639,
+      "lng": 103.1719
+    },
+    "bookHint": "No advance booking; pay at the booth, or join a half-/full-day jars tour from Phonsavan.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "UNESCO World Heritage Centre",
+        "url": "https://whc.unesco.org/en/list/1587/"
+      },
+      {
+        "org": "Tourism Laos (official)",
+        "url": "https://www.tourismlaos.org/northern-provinces/xiangkhouang-province/"
+      },
+      {
+        "org": "The Roaming Compass",
+        "url": "https://theroamingcompass.com/laos/how-to-visit-the-plain-of-jars-in-laos-an-essential-guide/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-muang-khoun-ruins",
+    "name": "Muang Khoun (Old Xieng Khuang) Ruins",
+    "city": "Muang Khoun",
+    "country": "la",
+    "recognition": "A sleepy town 35 km southeast of Phonsavan where the giant seated Buddha of roofless Wat Phia Wat sits open to the sky, and the brick-and-stucco stub of the 1576 That Foun stupa rises from a hilltop - both scarred survivors of wartime bombing.",
+    "categories": [
+      "history",
+      "culture",
+      "ruins",
+      "temple"
+    ],
+    "budgetTier": "low",
+    "blurb": "Muang Khoun was the royal capital of the Phuan kingdom and, later, the French provincial seat, until US bombing during the Second Indochina War flattened it and the capital moved to Phonsavan. What remains is quietly moving: the exposed brick Buddha and columns of Wat Phia Wat, the plundered 16th-century That Foun stupa, and fragments of colonial buildings. It pairs naturally with the jar sites on a Phonsavan day loop.",
+    "whyItFits": "History-minded travellers get the human backstory behind the Plain of Jars region in an unhurried, low-key setting.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 15000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Small entry at the temple sites (~10,000-20,000 LAK); transport from Phonsavan is the main expense."
+    },
+    "hours": "Daylight hours daily; ~1 hour drive each way from Phonsavan",
+    "tips": [
+      "Best combined with Plain of Jars Site 1 on the way back to Phonsavan.",
+      "Dress modestly at Wat Phia Wat - it is still an active place of respect.",
+      "Do not wander into brush or fields around the ruins; the district was heavily bombed."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Rough Guides",
+      "Tripadvisor",
+      "Travelfish"
+    ],
+    "mapQuery": "Muang Khoun Wat Phia Wat Xieng Khouang",
+    "coords": {
+      "lat": 19.335,
+      "lng": 103.3711
+    },
+    "bookHint": "No booking; hire a tuk-tuk/driver or add it to a jars tour.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Rough Guides",
+        "url": "https://www.roughguides.com/laos/northeast/muang-khoun-old-xieng-khuang/"
+      },
+      {
+        "org": "Xieng Khouang Tourism (official)",
+        "url": "https://xiengkhouangtourism.org/ancient-ruins-of-the-phuan-kingdom/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tham-piu-cave",
+    "name": "Tham Piu Cave War Memorial",
+    "city": "Muang Kham",
+    "country": "la",
+    "recognition": "A hillside cave above Muang Kham reached by a stone stairway past a memorial temple whose statue shows a grieving man cradling a limp child - inside, a bare rock chamber marks where a 1968 airstrike killed hundreds of civilians sheltering below.",
+    "categories": [
+      "history",
+      "memorial",
+      "cave"
+    ],
+    "budgetTier": "low",
+    "blurb": "On 24 November 1968 a rocket fired from a US jet struck this cave, killing the villagers who had turned it into an underground refuge - a village, school, clinic and all. Declared a national memorial in 2001, it is now a place of quiet remembrance rather than a polished museum: a climb to the blackened cave mouth, a small display, and the memorial temple at the base. It sits on the Phonsavan-Sam Neua road, often combined with the Muang Kham hot springs.",
+    "whyItFits": "Gives sober, first-hand context to the Secret War for travellers heading northeast toward Vieng Xai and Sam Neua.",
+    "priceRange": {
+      "low": 0,
+      "typical": 10000,
+      "high": 15000,
+      "currency": "LAK",
+      "note": "Small entry or donation (~10,000 LAK); transport is the main cost."
+    },
+    "hours": "Daylight hours daily; about 60-70 km east of Phonsavan near Muang Kham",
+    "tips": [
+      "Treat it as a memorial: keep voices low and photography respectful.",
+      "The stairway is steep; bring water in the hot months.",
+      "Easy to pair with the Muang Kham hot springs on the same run.",
+      "Stay on the built path - the surrounding hills are UXO-affected."
+    ],
+    "rating": 4.4,
+    "reviewSources": [
+      "Lonely Planet",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Tham Piu Cave memorial Muang Kham Xieng Khouang",
+    "coords": {
+      "lat": 19.5806,
+      "lng": 103.4972
+    },
+    "bookHint": "No booking; visit independently by hired vehicle or on a northeast route tour.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/northern-laos/xieng-khuang-province/attractions/tham-piu/a/poi-sig/1351141/1334268"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g3312575-d7702313-Reviews-Tham_Piu_Cave-Xieng_Khouang_Xiangkhouang_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-mag-uxo-centre-phonsavan",
+    "name": "MAG UXO Visitor Information Centre",
+    "city": "Phonsavan",
+    "country": "la",
+    "recognition": "A small storefront on Route 7 near central Phonsavan, its window and shelves lined with defused cluster-bomb casings and bomblets, with survivor stories on the walls and nightly documentary screenings.",
+    "categories": [
+      "history",
+      "museum",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Run by the Mines Advisory Group, this free centre explains why Xieng Khouang is among the most UXO-contaminated places on earth - more than half a million bombing missions were flown over Laos in 1964-1973 and a large share of the cluster munitions failed to explode. Displays, survivor testimony and evening documentary screenings put the whole region in context, and the shop sells crafts that fund clearance work. The essential first stop before heading out to the jars.",
+    "whyItFits": "Frames every other Xieng Khouang sight; understanding the UXO risk here is genuinely useful before rural walks.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free entry; donations fund clearance work."
+    },
+    "hours": "Daily, roughly 10:00-20:00; documentary screenings most evenings",
+    "tips": [
+      "Come before your jars trip so the cleared-path markers make sense.",
+      "Time your visit for an evening documentary screening.",
+      "The shop's silk bags and purses support UXO survivors - a fair place to buy gifts.",
+      "Bring a little cash for a donation; card facilities are unreliable."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet"
+    ],
+    "mapQuery": "MAG UXO Visitor Information Centre Phonsavan",
+    "coords": {
+      "lat": 19.4494,
+      "lng": 103.214
+    },
+    "bookHint": "No booking; walk in during opening hours.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "MAG International (official)",
+        "url": "https://www.maginternational.org/laos-visitor-centres/"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/northern-laos/phonsavan/attractions/uxo-information-centre-mag/a/poi-sig/1350292/356935"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g612364-d7349432-Reviews-MAG_UXO_Visitor_Information_Centre-Phonsavan_Xiangkhouang_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-nam-nern-night-safari",
+    "name": "Nam Nern Night Safari (Nam Et-Phou Louey NPA)",
+    "city": "Viengthong (Muang Hiam)",
+    "country": "la",
+    "recognition": "An award-winning community ecotour that starts at the Nam Et-Phou Louey visitor centre in Viengthong: a long-tail boat carries you upriver to a bamboo ranger camp, then drifts back after dark with a spotlight to scan the banks for wildlife.",
+    "categories": [
+      "wildlife",
+      "nature",
+      "ecotourism",
+      "boat"
+    ],
+    "budgetTier": "high",
+    "blurb": "Inside one of Laos's largest protected areas, this Wildlife Conservation Society-linked project pays local villagers - many former hunters - to guide, boat and cook, with bonuses tied to the wildlife guests actually see, which funds conservation. Expect a river journey, a bonfire barbecue, a night in a simple hut with mosquito nets, and a slow spotlit float back. Be realistic: you may see sambar deer, civets and abundant birdlife, but big cats and other rare species are very seldom seen. Getting to Viengthong is a long haul on mountain roads.",
+    "whyItFits": "The region's standout responsible-wildlife experience for travellers who value genuine community conservation over guaranteed sightings.",
+    "priceRange": {
+      "low": 95,
+      "typical": 160,
+      "high": 260,
+      "currency": "USD",
+      "note": "Per-person cost falls sharply with group size (roughly US$95-260 for the 1-night safari); includes boat, guide, meals and camp."
+    },
+    "hours": "Scheduled 1-night / 24-hour departures; drier months (November-March) are best; book ahead",
+    "tips": [
+      "Manage expectations - sightings vary hugely and the value is the conservation model, not a zoo-like guarantee.",
+      "Book through the official Nam Et-Phou Louey ecotourism unit; it is the only legitimate access to the core zone.",
+      "Budget a full day of travel each way to reach Viengthong (Muang Hiam).",
+      "Bring a head torch, insect repellent, and clothes that can get wet and muddy."
+    ],
+    "scamWarnings": [
+      "Book only via the official park ecotourism office - do not pay strangers claiming to arrange 'the same' trip."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Audley Travel",
+      "Tripadvisor",
+      "Nam Et-Phou Louey (official)"
+    ],
+    "mapQuery": "Nam Et-Phou Louey visitor centre Viengthong Houaphanh",
+    "coords": {
+      "lat": 20.32,
+      "lng": 103.63
+    },
+    "bookHint": "Reserve in advance through namet.org / the Viengthong ecotourism office.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Nam Et-Phou Louey National Park (official)",
+        "url": "https://www.namet.org/wildlife-tours/"
+      },
+      {
+        "org": "Audley Travel",
+        "url": "https://www.audleytravel.com/us/laos/things-to-do/nam-nern-night-safari"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-hintang-standing-stones",
+    "name": "Hintang Archaeological Park (Standing Stones)",
+    "city": "Houameuang (near Sam Neua)",
+    "country": "la",
+    "recognition": "A remote forest ridge reached down a rough spur off Route 6, where blade-like slabs of schist stand upright in clusters among flat stone discs - the main, easiest-reached group is San Kong Phan (Suan Hin, the 'stone garden').",
+    "categories": [
+      "archaeology",
+      "history",
+      "nature",
+      "hike"
+    ],
+    "budgetTier": "low",
+    "blurb": "Over 1,500 menhirs and around 150 stone discs, scattered in some 70 groups along a mountain ridge, mark Iron/Bronze-Age burial sites first surveyed by Madeleine Colani in 1931. Atmospheric and almost empty of visitors, but genuinely off the beaten track: the access road is steep, rough and often impassable in heavy rain, and the site is a long, winding drive from Sam Neua.",
+    "whyItFits": "A true adventurer's payoff - one of Southeast Asia's great megalith fields, seen without crowds, en route between the Plain of Jars and Sam Neua.",
+    "priceRange": {
+      "low": 0,
+      "typical": 10000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Little or no entry fee; a 4WD or capable motorbike and the access road are the real cost."
+    },
+    "hours": "Daylight hours; go in the dry season (November-March) - the spur road is treacherous when wet",
+    "tips": [
+      "Attempt the access track only in dry conditions and ideally with 4WD or an experienced rider.",
+      "San Kong Phan is the most accessible cluster; others need a real hike along the ridge.",
+      "Set out early - it is a long, slow mountain drive from Sam Neua.",
+      "Stay on visible paths between stone groups.",
+      "Bring water and snacks; there are no facilities at the stones."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Lonely Planet",
+      "Travelfish",
+      "Laotian Times"
+    ],
+    "mapQuery": "Hintang Archaeological Park San Kong Phan Houaphanh",
+    "coords": {
+      "lat": 20.145,
+      "lng": 103.63
+    },
+    "bookHint": "No booking; arrange a driver/4WD in Sam Neua or ride Route 6 yourself.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/northern-laos/sam-neua/attractions/hintang-archaeological-park/a/poi-sig/1351127/356921"
+      },
+      {
+        "org": "Travelfish",
+        "url": "https://www.travelfish.org/sight_profile/laos/northern_laos/hua_phan/sam_neua/341"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-sam-neua-morning-market",
+    "name": "Sam Neua Morning Market",
+    "city": "Sam Neua",
+    "country": "la",
+    "recognition": "A green-netted covered market in the centre of Sam Neua where highland shoppers carry tall woven bamboo baskets, produce and banana flowers spread on ground tarps, and stalls of Tai Daeng and Hmong supplementary-weft textiles line the edges.",
+    "categories": [
+      "market",
+      "culture",
+      "craft",
+      "food"
+    ],
+    "budgetTier": "low",
+    "blurb": "Houaphanh's main trading hub and one of northern Laos's most rewarding markets to wander. It mixes fresh highland produce and foraged forest goods with the province's real draw - handwoven textiles from Tai Daeng and other communities famous for the discontinuous supplementary-weft technique. Come early for the food stalls and the fullest textile selection. A natural base stop before or after Vieng Xai and Hintang.",
+    "whyItFits": "The best place in the northeast to see everyday highland life and buy authentic, locally woven Houaphanh silk directly.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free to browse; bring kip for textiles (prices vary widely) and market food."
+    },
+    "hours": "Busiest early morning, roughly 06:00-10:00; quieter through midday",
+    "tips": [
+      "Arrive by 07:00 for the liveliest trade and best-stocked textile stalls.",
+      "Bargain politely; ask whether a piece is handwoven and naturally dyed.",
+      "Try the market food stalls for a cheap local breakfast.",
+      "Carry small kip notes - vendors rarely change large bills and cards are not accepted."
+    ],
+    "scamWarnings": [
+      "'Antique' or 'hand-dyed' textiles are sometimes machine-made or chemically dyed - inspect the reverse and weave before paying premium prices."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Audley Travel",
+      "Travel Dojo"
+    ],
+    "mapQuery": "Sam Neua morning market Houaphanh",
+    "coords": {
+      "lat": 20.4178,
+      "lng": 104.0489
+    },
+    "bookHint": "No booking; walk in.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Audley Travel",
+        "url": "https://www.audleytravel.com/laos/places-to-go/sam-neau"
+      },
+      {
+        "org": "Travel Dojo",
+        "url": "https://www.traveldojo.com/sam-neua/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-ban-napia-spoon-village",
+    "name": "Ban Napia Spoon Village",
+    "city": "Phonsavan",
+    "country": "la",
+    "recognition": "A stilt-house village in a farming valley outside Phonsavan where families melt down war scrap in simple backyard kilns and pour it into wooden moulds - you will see spoons, bracelets and bottle-openers cooling on the ground and offered for sale.",
+    "categories": [
+      "culture",
+      "craft",
+      "history"
+    ],
+    "budgetTier": "low",
+    "blurb": "In Ban Napia, villagers turn the aluminium of downed aircraft and (historically) bomb scrap into spoons and trinkets - a striking, sobering example of life continuing atop the Secret War's debris. Visitors can watch a pour and buy directly from makers. Be aware of the ethical weight: handling war scrap has killed and maimed collectors, so buy from established makers rather than encouraging risky scavenging, and never handle unidentified metal yourself.",
+    "whyItFits": "A short, high-impact add-on to a jars day that puts a human, hopeful face on the region's UXO legacy.",
+    "priceRange": {
+      "low": 0,
+      "typical": 20000,
+      "high": 50000,
+      "currency": "LAK",
+      "note": "No fixed fee; buy a spoon/bracelet (~10,000-30,000 LAK) directly from a maker to support the village."
+    },
+    "hours": "Roughly daylight hours; casual - it is a working village, not a fixed attraction",
+    "tips": [
+      "Easily combined with Plain of Jars Site 1 on the same loop.",
+      "Buy from the makers themselves so income stays in the village.",
+      "Ask before photographing people or their kilns.",
+      "Never touch or pick up loose metal scrap yourself."
+    ],
+    "scamWarnings": [
+      "Souvenirs sold as 'made from real bombs' may be ordinary aluminium; buy for the craft and the cause, not the war-relic label."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Atlas Obscura",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Ban Napia spoon village Phonsavan",
+    "coords": {
+      "lat": 19.4028,
+      "lng": 103.1583
+    },
+    "bookHint": "No booking; visit independently or as a stop on a Plain of Jars tour.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Atlas Obscura",
+        "url": "https://www.atlasobscura.com/places/ban-napia-unexploded-bomb-spoons-village"
+      },
+      {
+        "org": "The Star",
+        "url": "https://www.thestar.com.my/lifestyle/living/2024/07/01/transforming-bombs-into-spoons"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-mulberries-silk-farm",
+    "name": "Mulberries Organic Silk Farm",
+    "city": "Phonsavan",
+    "country": "la",
+    "recognition": "A green farm just outside Phonsavan with rows of mulberry trees, silkworm-rearing huts, natural-dye vats bubbling with indigo and jackfruit, and weavers at looms - all explained on a free guided tour.",
+    "categories": [
+      "craft",
+      "culture",
+      "silk"
+    ],
+    "budgetTier": "low",
+    "blurb": "A fair-trade, non-profit silk enterprise founded in 1993 that walks visitors through the whole chain - silkworms and cocoons, reeling, natural plant dyeing, and hand-weaving - while creating income for local women. The free tour is genuinely informative and low-pressure, ending at a shop of scarves, bags and runners. A relaxed, ethical half-hour to an hour near town.",
+    "whyItFits": "A wholesome, socially responsible stop that shows how the region's famous textiles are actually made.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free guided tour; silk scarves and bags for sale in the shop."
+    },
+    "hours": "Monday-Saturday, roughly 08:00-16:00; guided tours during the working day",
+    "tips": [
+      "Tours run through the working day; late afternoon may catch fewer active stages.",
+      "Buying from the shop directly supports the weavers and the fair-trade model.",
+      "Ask which natural dye plant made each colour - the staff enjoy explaining.",
+      "It is a short tuk-tuk ride from central Phonsavan."
+    ],
+    "rating": 4.4,
+    "reviewSources": [
+      "Tripadvisor",
+      "Mulberries (official)"
+    ],
+    "mapQuery": "Mulberries Organic Silk Farm Phonsavan",
+    "coords": {
+      "lat": 19.4419,
+      "lng": 103.2033
+    },
+    "bookHint": "No booking needed for the standard tour; groups can contact the farm ahead.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Mulberries (official)",
+        "url": "https://mulberries.org/mulberries-organic-silk-farm/"
+      },
+      {
+        "org": "Just Gone Wandering",
+        "url": "https://justgonewandering.com/visiting-mulberries-organic-silk-farm-in-phonsavan-laos/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-nong-tang-lake",
+    "name": "Nong Tang Lake (Muang Sui)",
+    "city": "Muang Sui",
+    "country": "la",
+    "recognition": "A calm natural lake ringed by grey limestone karsts on Route 7 west of Phonsavan, at the edge of the old town of Muang Sui, with a Buddha-image cave (Tham Pha) and temple ruins nearby.",
+    "categories": [
+      "nature",
+      "lake",
+      "viewpoint"
+    ],
+    "budgetTier": "low",
+    "blurb": "A scenic, low-key stop about 48 km west of Phonsavan where soaring karst cliffs meet a quiet lake used by local fishers and picnickers. The old town of Muang Sui around it carries war-era history and temple ruins, and the nearby Tham Pha cave holds a cluster of Buddha images. A pleasant leg-stretch and photo stop for anyone travelling the Phonsavan-Luang Prabang road or exploring west of the jars.",
+    "whyItFits": "A restful natural counterpoint to the region's heavier war-history sights, with almost no crowds.",
+    "priceRange": {
+      "low": 0,
+      "typical": 10000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Little or no entry; any boat or local guide is extra."
+    },
+    "hours": "Daylight hours; calmest and clearest in the dry season",
+    "tips": [
+      "Combine with the drive toward Muang Sui / west of Phonsavan rather than a special trip.",
+      "Bring a picnic - facilities are minimal.",
+      "Ask locally before scrambling around ruins or into Tham Pha cave, and keep to trodden ground.",
+      "Morning light is best on the karsts for photos."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Tourism Laos"
+    ],
+    "mapQuery": "Nong Tang Lake Muang Sui Xieng Khouang",
+    "coords": {
+      "lat": 19.49,
+      "lng": 102.885
+    },
+    "bookHint": "No booking; visit independently by hired vehicle or motorbike.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g3312575-d13531880-Reviews-Nong_Tang_Lake-Xieng_Khouang_Xiangkhouang_Province.html"
+      },
+      {
+        "org": "Tourism Laos (official)",
+        "url": "https://www.tourismlaos.org/northern-provinces/xiangkhouang-province/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-phonsavan-guesthouses",
+    "name": "Guesthouses & small hotels around central Phonsavan",
+    "city": "Phonsavan",
+    "country": "la",
+    "recognition": "The cluster of family-run guesthouses and modest hotels along and just off Route 7 (the main tourist strip), within a short walk of the market, ATMs and jars-tour agencies.",
+    "categories": [
+      "stay"
+    ],
+    "budgetTier": "low",
+    "stayType": "guesthouse",
+    "blurb": "Phonsavan's accommodation is concentrated on the central Route 7 strip and the side road toward the market - practical, walkable and close to tour operators, the MAG centre and restaurants. Expect clean, simple budget rooms with a handful of mid-range hotels; travellers typically use them as a one- or two-night base for the Plain of Jars. Nothing luxurious, but reliable and central. Note the plateau gets genuinely cold on winter nights, so check for blankets/heating.",
+    "whyItFits": "A stable, sensible base for exploring the jars and northeast without hunting a specific business.",
+    "priceRange": {
+      "low": 12,
+      "typical": 22,
+      "high": 45,
+      "currency": "USD",
+      "note": "Budget guesthouses ~US$12-18; mid-range hotels ~US$25-45; quoted in USD on booking sites."
+    },
+    "hours": "N/A - accommodation",
+    "tips": [
+      "Base yourself on or just off Route 7 to walk to tours, the market and the MAG centre.",
+      "Ask for extra blankets or heating from November-February; nights on the plateau are cold.",
+      "Book ahead only in peak season; otherwise arrive and compare rooms in person.",
+      "Confirm whether jars-tour pickup is included when you book."
+    ],
+    "scamWarnings": [
+      "Confirm the room rate and what a bundled 'jars tour' actually includes before paying, to avoid surprise add-ons."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Travelfish",
+      "Tripadvisor",
+      "Booking.com"
+    ],
+    "mapQuery": "Phonsavan guesthouses Route 7 town centre",
+    "coords": {
+      "lat": 19.455,
+      "lng": 103.211
+    },
+    "bookHint": "Walk-in comparison works off-season; book online in peak months.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Travelfish",
+        "url": "https://www.travelfish.org/accommodation/laos/northern_laos/xieng_khuang/phonsavan/all"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Hotels-g612364-Phonsavan_Xiangkhouang_Province-Hotels.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-phonsavan-restaurant-scene",
+    "name": "Phonsavan restaurant & bar scene (Route 7)",
+    "city": "Phonsavan",
+    "country": "la",
+    "recognition": "The travellers' eating strip along Route 7 - most famously Craters Bar & Restaurant, decked out with genuine defused bomb casings, plus bamboo-lined Bamboozle and the Indian kitchen Nisha nearby.",
+    "categories": [
+      "food",
+      "nightlife"
+    ],
+    "budgetTier": "low",
+    "blurb": "Phonsavan's compact dining strip is where jars-day travellers regroup over Lao and Western plates and cold Beerlao. Craters is the landmark, its walls hung with war-era shell casings; Bamboozle does hearty Lao-Western comfort food in a bamboo interior; Nisha covers well-priced Indian and vegetarian dishes. Portions are generous, prices low, and it is the easiest place in town to swap route notes for Sam Neua, Vieng Xai and Hintang.",
+    "whyItFits": "A reliable, budget-friendly cluster to eat well and meet other travellers between the region's long drives.",
+    "priceRange": {
+      "low": 18000,
+      "typical": 45000,
+      "high": 90000,
+      "currency": "LAK",
+      "note": "Mains roughly 18,000-50,000 LAK; a meal with a Beerlao stays well under 100,000 LAK."
+    },
+    "hours": "Most open late morning through evening daily; individual hours vary",
+    "tips": [
+      "Craters is the meet-up landmark for trip-swapping and tour tips.",
+      "Nisha is the pick for vegetarians and cheap curries with fresh naan.",
+      "Bring cash; card acceptance is patchy across the strip.",
+      "Evenings can be chilly in winter - some rooms are unheated, so bring a layer."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Travelfish",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Craters Restaurant Phonsavan Route 7",
+    "coords": {
+      "lat": 19.4525,
+      "lng": 103.216
+    },
+    "bookHint": "No booking; walk in.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Travelfish",
+        "url": "https://www.travelfish.org/eatandmeet/laos/northern_laos/xieng_khuang/phonsavan/eat"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Restaurants-g612364-Phonsavan_Xiangkhouang_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-xe-bang-fai-cave",
+    "name": "Xe Bang Fai Cave (Tham Khoun Xe)",
+    "city": "Boualapha",
+    "country": "la",
+    "recognition": "You board a longtail at a remote jungle river mouth and glide into a black cavern so vast the beam of a headtorch cannot reach the ceiling — a river tunnel over 100 m high in the Hin Nam No karst.",
+    "categories": [
+      "cave",
+      "adventure",
+      "boat",
+      "nature",
+      "river"
+    ],
+    "budgetTier": "high",
+    "blurb": "One of the largest active river caves on earth: the Xe Bang Fai river runs for roughly 7 km through a pitch-black limestone tunnel with chambers up to 200 m wide, now inside the UNESCO-listed Hin Nam No National Park (inscribed July 2025). Reaching it is a genuine expedition — a long drive to Boualapha, a boat and a licensed guide — and it is only safe in the dry season when the river is low. This is a committing, weather-dependent adventure rather than a roadside stop.",
+    "whyItFits": "For adventurous, fit travellers with time and budget who want a world-class wild-cave expedition well off the standard trail.",
+    "priceRange": {
+      "low": 800000,
+      "typical": 2000000,
+      "high": 4500000,
+      "currency": "LAK",
+      "note": "Guided trip only, dry season; cost swings sharply with group size and operator (roughly from 800,000 LAK per person in a full group up to several million solo). Confirm current rates and inclusions with a Thakhek operator or the Hin Nam No ecotourism office."
+    },
+    "hours": "Dry season only (roughly November-April); multi-day guided trips depart by arrangement, not on demand.",
+    "tips": [
+      "Go only in the dry season (roughly November-April); the river is dangerous when high.",
+      "Book through a reputable Thakhek operator or the Hin Nam No office and confirm guide, boat and safety gear.",
+      "It is a long trip out to Boualapha - allow 2-3 days and expect basic village conditions.",
+      "Bring a strong headtorch, dry-bags and sturdy sandals."
+    ],
+    "scamWarnings": [
+      "Confirm exactly what the quoted price covers (transport, boat, guide, food, park fees) before paying.",
+      "Do not attempt to reach or enter the cave without a licensed guide."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet",
+      "Hin Nam No National Park"
+    ],
+    "mapQuery": "Tham Khoun Xe Xe Bang Fai Cave Boualapha Laos",
+    "coords": {
+      "lat": 17.3733,
+      "lng": 105.8372
+    },
+    "bookHint": "Book ahead through a Thakhek operator (e.g. Green Discovery) or the Hin Nam No ecotourism office; not a walk-up.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Xe_Bang_Fai_River"
+      },
+      {
+        "org": "Laos Insider",
+        "url": "https://laosinsider.com/laos-travel-guide/xe-bang-fai-cave/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-that-sikhottabong",
+    "name": "That Sikhottabong",
+    "city": "Thakhek",
+    "country": "la",
+    "recognition": "A gleaming white-and-gold lotus-bud stupa standing alone on the Mekong bank about 6 km south of Thakhek, its four-sided base ringed by a walled temple compound.",
+    "categories": [
+      "temple",
+      "culture",
+      "landmark",
+      "riverfront"
+    ],
+    "budgetTier": "low",
+    "blurb": "Khammouane's most revered stupa: a gilded lotus-bud tower on the Mekong, founded by tradition in the early Sikhottabong kingdom and remodelled by later Lao kings. It is an easy short trip from Thakhek and comes alive during the full-moon festival of the third lunar month (usually February).",
+    "whyItFits": "For culture-minded visitors and anyone basing in Thakhek who wants the province's key sacred site in a short outing.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free entry; donations welcome."
+    },
+    "hours": "Daily, roughly 08:00-18:00; busiest during the February full-moon festival.",
+    "tips": [
+      "Dress modestly - shoulders and knees covered - as it is an active place of worship.",
+      "Visit near sunset for the light on the Mekong.",
+      "Time your visit for the February full-moon festival for the full atmosphere, but expect crowds."
+    ],
+    "scamWarnings": [
+      "Agree any tuk-tuk fare from town before setting off."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "That Sikhottabong Thakhek Laos",
+    "coords": {
+      "lat": 17.3547,
+      "lng": 104.7905
+    },
+    "bookHint": "No booking; just arrive.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/That_Sikhottabong"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g7741494-d12161422-Reviews-That_Sikhottabong-Thakhek_Khammouane_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tham-nang-aen",
+    "name": "Tham Nang Aen Cave",
+    "city": "Thakhek",
+    "country": "la",
+    "recognition": "A wide cave mouth entered through a ceremonial wooden gateway, its chambers washed in coloured neon with a small boat waiting on an underground pool.",
+    "categories": [
+      "cave",
+      "nature",
+      "family"
+    ],
+    "budgetTier": "low",
+    "blurb": "A big, easy show-cave 18 km northeast of Thakhek on Route 12, fitted with concrete walkways, coloured lighting and a small underground lake you can tour by boat. Some travellers find the neon kitschy, but it is a low-effort first cave and a popular half-day trip from town; carry a torch as the lights can fail during power cuts.",
+    "whyItFits": "For families and first-time cavers wanting an easy, well-lit cave with a fun boat ride close to town.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 20000,
+      "high": 100000,
+      "currency": "LAK",
+      "note": "Roughly 10,000-20,000 LAK entry; the underground boat ride costs extra (around 50,000-100,000 LAK per boat)."
+    },
+    "hours": "Daily, roughly 08:00-17:00.",
+    "tips": [
+      "Carry a backup torch - the internal lighting sometimes cuts out.",
+      "The boat ride on the underground pool costs extra and is worth it.",
+      "Combine it with Tham Xang and Tha Falang on a Route 12 half-day."
+    ],
+    "scamWarnings": [
+      "Confirm the boat price per boat, not per person, before boarding."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Tham Nang Aen Cave Thakhek Laos",
+    "coords": {
+      "lat": 17.44,
+      "lng": 104.955
+    },
+    "bookHint": "No booking; pay at the gate.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g7741494-d9785961-Reviews-Tham_Nang_Aen_Cave-Thakhek_Khammouane_Province.html"
+      },
+      {
+        "org": "Love Laos",
+        "url": "https://love-laos.com/tham-nang-aen-cave/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tham-xang-elephant-cave",
+    "name": "Tham Xang (Elephant Cave, Thakhek)",
+    "city": "Thakhek",
+    "country": "la",
+    "recognition": "A working temple-cave east of Thakhek where, down a passage behind a large golden Buddha, a stalagmite has formed the unmistakable head and trunk of an elephant.",
+    "categories": [
+      "cave",
+      "temple",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "A small pilgrimage cave-temple east of Thakhek on Route 12, named for a stalagmite behind the main Buddha shrine that has grown into the shape of an elephant's head and trunk. It is quick and free to visit and pairs naturally with the other Route 12 caves. Note this is the Khammouane Tham Xang - not the similarly named cave near Vang Vieng - and the 'elephant' is a rock formation, not a live-animal attraction.",
+    "whyItFits": "For travellers on the Route 12 cave circuit who like quick, free, spiritually significant stops.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free; a small donation at the shrine is customary."
+    },
+    "hours": "Daily, daylight hours.",
+    "tips": [
+      "Look behind the main golden Buddha for the elephant-shaped stalagmite.",
+      "Remove shoes at the shrine and dress respectfully.",
+      "A very quick stop - pair it with the other Route 12 caves."
+    ],
+    "rating": 3.8,
+    "reviewSources": [
+      "Lonely Planet",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Tham Xang Elephant Cave Thakhek Khammouane Laos",
+    "coords": {
+      "lat": 17.402,
+      "lng": 104.845
+    },
+    "bookHint": "No booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Travelfish",
+        "url": "https://www.travelfish.org/sight_profile/laos/southern_laos/khammuan/tha_khaek/640"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/tha-khaek"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-thakhek-loop",
+    "name": "The Thakhek Loop",
+    "city": "Thakhek",
+    "country": "la",
+    "recognition": "Signposted from Thakhek's centre, the Route 12/8/13 motorbike circuit past towering grey karst walls, rice plains and cave turn-offs - you will pass other riders on rented semi-autos with roll-bags strapped on.",
+    "categories": [
+      "road-trip",
+      "adventure",
+      "nature",
+      "motorbike"
+    ],
+    "budgetTier": "low",
+    "blurb": "The classic central-Laos motorbike circuit - roughly 450-476 km over 3-4 days on Routes 12, 8 and 13 - linking Thakhek, the karst caves, the Nam Theun 2 reservoir, Lak Sao and Kong Lor. It is the region's signature experience for confident riders, but it involves long days, variable road surfaces, roadworks and sparse fuel and repair stops, so plan the route and check your bike carefully.",
+    "whyItFits": "For confident motorbikers and road-trippers wanting a multi-day karst adventure at their own pace.",
+    "priceRange": {
+      "low": 100000,
+      "typical": 150000,
+      "high": 250000,
+      "currency": "LAK",
+      "note": "Bike hire from Thakhek roughly 100,000-200,000 LAK/day for a semi-auto plus fuel; total cost also depends on 3-4 nights of budget guesthouses along the way."
+    },
+    "hours": "Rideable year-round; best in the November-March dry season. Ride in daylight only.",
+    "tips": [
+      "Check brakes, tyres and lights before renting, and photograph any existing damage.",
+      "Carry cash - ATMs are scarce once you leave Thakhek and Lak Sao.",
+      "Ride in daylight only; livestock, potholes and roadworks are common.",
+      "Pack a light layer - the Nakai plateau turns cool and wet."
+    ],
+    "scamWarnings": [
+      "Agree the rental terms, deposit and damage policy in writing; some shops overcharge for scratches.",
+      "Leave a cash deposit rather than your passport if the shop allows it."
+    ],
+    "rating": 4.7,
+    "reviewSources": [
+      "Lonely Planet",
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Thakhek Loop start Thakhek Laos",
+    "coords": {
+      "lat": 17.4085,
+      "lng": 104.8007
+    },
+    "bookHint": "No booking for the route; reserve a bike a day ahead in high season.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Novo-Monde",
+        "url": "https://www.novo-monde.com/en/thakhek-loop-konglor-cave/"
+      },
+      {
+        "org": "360nomad",
+        "url": "https://360nomad.org/thakhek-loop-the-complete-guide/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tham-pha-chan",
+    "name": "Tham Pha Chan",
+    "city": "Thakhek",
+    "country": "la",
+    "recognition": "A colossal cave portal about 60 m high with a shallow river running straight through the mountain, a small Buddha image set high on the far wall.",
+    "categories": [
+      "cave",
+      "nature",
+      "swimming",
+      "adventure"
+    ],
+    "budgetTier": "low",
+    "blurb": "A cathedral-scale cave arch north of Thakhek where a river flows about 600 m clean through the mountain beneath a small hillside Buddha image, with the swimmable Nam Don resurgence lagoon nearby. It sits at the end of a rough track off Route 13, so most people arrive with a guide or a capable bike, and the walk-through is reliable only in the dry season.",
+    "whyItFits": "For active loop riders and cave lovers happy to tackle a rough track for a dramatic, uncrowded cave and a swim.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "No fixed entry fee; your cost is transport or a guide - arrange a tuk-tuk or guide at the Thakhek Tourist Information Centre."
+    },
+    "hours": "Daylight only; the river passage is passable mainly in the dry season (roughly November-April).",
+    "tips": [
+      "Best in the dry season when you can walk the river passage.",
+      "The final track is rough - come by capable bike, tuk-tuk or with a guide from the Thakhek Tourist Information Centre.",
+      "Bring water shoes and a torch; the Nam Don lagoon nearby is good for a swim."
+    ],
+    "scamWarnings": [
+      "Fix the tuk-tuk or guide round-trip fare in advance, including waiting time."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Lonely Planet",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Tham Pha Chan cave Khammouane Laos",
+    "coords": {
+      "lat": 17.65,
+      "lng": 104.85
+    },
+    "bookHint": "Arrange transport or a guide at the Thakhek Tourist Information Centre.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/tha-khaek"
+      },
+      {
+        "org": "Novo-Monde",
+        "url": "https://www.novo-monde.com/en/thakhek-loop-konglor-cave/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-nam-kading-npa",
+    "name": "Nam Kading NPA",
+    "city": "Pakkading",
+    "country": "la",
+    "recognition": "Steep forested limestone gorges closing in on the jade-green Nam Kading river where it meets the Mekong at Pakkading, crossed by the Route 13 bridge.",
+    "categories": [
+      "nature",
+      "wildlife",
+      "river",
+      "protected-area"
+    ],
+    "budgetTier": "mid",
+    "blurb": "A rugged protected area of steep forested karst around the Nam Kading river in Bolikhamsai, rich in hornbills, gibbons and other wildlife but with almost no visitor infrastructure. There is no ticketed entry or marked trail system; access is essentially by private boat and local guide from Pakkading, and off-path travel carries UXO risk. It suits self-reliant naturalists rather than casual sightseers.",
+    "whyItFits": "For serious birders and wilderness travellers comfortable arranging their own boat and guide with no facilities.",
+    "priceRange": {
+      "low": 200000,
+      "typical": 500000,
+      "high": 1200000,
+      "currency": "LAK",
+      "note": "No formal entry fee or tourism set-up; your cost is a privately negotiated boat and guide from Pakkading, which varies widely by group and duration."
+    },
+    "hours": "No set hours; day access by boat only, safest in the dry season.",
+    "tips": [
+      "There is no visitor centre or ticket office - arrange a boat and guide in Pakkading.",
+      "Go with a local guide and stay on established routes; central Laos still has unexploded ordnance (UXO) off-trail.",
+      "Best wildlife chances are early morning from the water.",
+      "Bring everything you need; there are no shops or facilities inside."
+    ],
+    "scamWarnings": [
+      "Negotiate the full boat and guide price clearly before departing."
+    ],
+    "reviewSources": [
+      "Lonely Planet",
+      "Wikipedia",
+      "Ecotourism Laos"
+    ],
+    "mapQuery": "Nam Kading National Protected Area Pakkading Laos",
+    "coords": {
+      "lat": 18.3,
+      "lng": 104.1
+    },
+    "bookHint": "Arrange a boat and guide locally in Pakkading; no formal booking exists.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Nam_Kading_National_Protected_Area"
+      },
+      {
+        "org": "Ecotourism Laos",
+        "url": "https://www.ecotourismlaos.com/namkading"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-nakai-nam-theun-reservoir",
+    "name": "Nakai Plateau & Nam Theun 2 Reservoir",
+    "city": "Nakai",
+    "country": "la",
+    "recognition": "A vast pale-blue lake on the Nakai plateau bristling with thousands of bleached dead tree trunks reflected in still water.",
+    "categories": [
+      "nature",
+      "viewpoint",
+      "boat",
+      "landscape"
+    ],
+    "budgetTier": "low",
+    "blurb": "A haunting, man-made landscape on the Nakai plateau: the Nam Theun 2 hydropower reservoir flooded a forest in 2008, leaving thousands of bleached dead trees standing in pale water. Guesthouses in Nakai can arrange boat rides, and short hikes and the Song Sou waterfall lie nearby. Be aware the lake displaced more than 6,000 villagers - a history worth understanding before you photograph the 'ghost forest'.",
+    "whyItFits": "For photographers and slow travellers drawn to eerie, off-beat landscapes and willing to reflect on the dam's human cost.",
+    "priceRange": {
+      "low": 5000,
+      "typical": 100000,
+      "high": 400000,
+      "currency": "LAK",
+      "note": "Reservoir viewpoints are free; boat rides are arranged (and negotiated) via Nakai guesthouses; the nearby Song Sou waterfall charges around 5,000 LAK parking."
+    },
+    "hours": "Daytime; the visitor centre keeps roughly business hours.",
+    "tips": [
+      "Dawn and dusk give the best reflections on the dead-tree 'ghost forest'.",
+      "Arrange boat rides through Nakai guesthouses and agree the price first.",
+      "The plateau is cooler and wetter than the lowlands - bring a layer and rain cover.",
+      "Stay on roads and paths; UXO remains a risk off established ground."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Atlas Obscura",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Nam Theun 2 reservoir Nakai Laos flooded forest",
+    "coords": {
+      "lat": 17.66,
+      "lng": 105.1
+    },
+    "bookHint": "Arrange boat rides via Nakai guesthouses; no central booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Atlas Obscura",
+        "url": "https://www.atlasobscura.com/places/flooded-trees-nam-theun-ii-laos"
+      },
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Nam_Theun_2_Dam"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-paksan-riverfront",
+    "name": "Paksan Mekong Riverfront",
+    "city": "Paksan",
+    "country": "la",
+    "recognition": "A sleepy Mekong esplanade at the mouth of the Nam San, looking straight across to Bueng Kan in Thailand, with a gilded temple or two along the bank.",
+    "categories": [
+      "riverfront",
+      "town",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "The low-key capital of Bolikhamsai, a Mekong town at the mouth of the Nam San facing Bueng Kan in Thailand. There is little to 'do' beyond a quiet riverside stroll, a couple of temples and a border crossing, but it is a pleasant, tout-free pause on Route 13 or the start of the Route 8 road toward the Vietnam border.",
+    "whyItFits": "For overlanders and slow travellers wanting a genuine, unpolished Mekong town and border stop.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free; a low-key riverfront town with no admission."
+    },
+    "hours": "Riverfront always open; liveliest around sunset.",
+    "tips": [
+      "Come at sunset for the best of the Mekong and the Thai lights opposite.",
+      "This is a transit town - keep expectations modest and enjoy the calm.",
+      "It is the jumping-off point for Route 8 to the Vietnam border at Nam Phao."
+    ],
+    "rating": 3.5,
+    "reviewSources": [
+      "Google Maps consensus",
+      "Tourism Laos"
+    ],
+    "mapQuery": "Paksan riverfront Bolikhamsai Laos",
+    "coords": {
+      "lat": 18.3841,
+      "lng": 103.6577
+    },
+    "bookHint": "No booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Laos",
+        "url": "https://www.tourismlaos.org/central-provinces/bolikhamsai-province/"
+      },
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Bolikhamxai_Province"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-thakhek-french-quarter",
+    "name": "Thakhek French Colonial Quarter",
+    "city": "Thakhek",
+    "country": "la",
+    "recognition": "Faded French-era shophouses and shuttered villas around the central fountain circle and the old Mekong customs frontage, a block back from the river.",
+    "categories": [
+      "culture",
+      "heritage",
+      "architecture",
+      "town",
+      "riverfront"
+    ],
+    "budgetTier": "low",
+    "blurb": "The old riverside heart of Thakhek keeps a cluster of faded French-colonial shophouses, shuttered villas and the former customs frontage around the central fountain circle. It is a short, atmospheric wander - best in soft morning or evening light - rather than a formal attraction, and rewards travellers who enjoy decaying-colonial character and a riverside coffee stop.",
+    "whyItFits": "For travellers who enjoy colonial architecture, photography and unhurried town wandering.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free to wander; a self-guided stroll."
+    },
+    "hours": "Always open; pleasant in early morning or at sunset.",
+    "tips": [
+      "Wander early morning or at golden hour for photos of the colonial facades.",
+      "Grab a coffee at a fountain-square cafe and watch the town wake up.",
+      "Many buildings are private or derelict - admire them from the street."
+    ],
+    "rating": 3.8,
+    "reviewSources": [
+      "Lonely Planet",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Thakhek fountain square old town Laos",
+    "coords": {
+      "lat": 17.4046,
+      "lng": 104.801
+    },
+    "bookHint": "No booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Thakhek"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/tha-khaek"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-wat-phabat-phonsan",
+    "name": "Wat Phabat Phonsan",
+    "city": "Thaphabat",
+    "country": "la",
+    "recognition": "A hilltop temple off Route 13 sheltering a large gold-leafed 'Buddha footprint' pressed into the rock, busy with Lao pilgrims travelling between Vientiane and Paksan.",
+    "categories": [
+      "temple",
+      "culture",
+      "landmark",
+      "pilgrimage"
+    ],
+    "budgetTier": "low",
+    "blurb": "A popular roadside pilgrimage temple in Bolikhamsai, roughly 80 km south of Vientiane on Route 13, built around a large 'Buddha footprint' impression in the rock that pilgrims cover in gold leaf. Lao travellers routinely stop here for a safe-journey blessing, and the January full-moon festival draws big crowds; it is an easy, free cultural break between Vientiane and Paksan.",
+    "whyItFits": "For culturally curious road-trippers wanting an authentic Lao pilgrimage stop on the Vientiane-Paksan highway.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "LAK",
+      "note": "Free; a small offering is customary if you wish to pay respects."
+    },
+    "hours": "Daily, roughly 08:00-17:00; major festival on the January full moon.",
+    "tips": [
+      "Dress modestly and remove shoes before entering the footprint shrine.",
+      "A small offering of flowers or incense is customary if you wish to pay respects.",
+      "Easy to fold into the drive between Vientiane and Paksan."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tourism Laos",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Wat Phabat Phonsan Bolikhamsai Laos",
+    "coords": {
+      "lat": 18.33,
+      "lng": 103.13
+    },
+    "bookHint": "No booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Laos",
+        "url": "https://www.tourismlaos.org/central-provinces/bolikhamsai-province/"
+      },
+      {
+        "org": "Hidden Land Travel",
+        "url": "https://hiddenlandtravel.com/wat-phabat/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tad-faek",
+    "name": "Tad Faek Waterfall",
+    "city": "Sekong",
+    "country": "la",
+    "recognition": "A wide, low rock ledge where the Xe Nam Noy-side river drops only about 5 metres into a broad swimming pool, edged by simple bamboo-and-thatch salas and a small local eatery, roughly 14 km south of Sekong town.",
+    "categories": [
+      "waterfall",
+      "swimming",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Tad Faek is a broad, gentle cascade on the eastern edge of the Bolaven Plateau, popular with Lao families for picnicking and swimming rather than for height. The wide upper pool is calm enough for a dip; the lower boulder pool is locally said to hold sharp-toothed pa pao (puffer) fish, so people mostly swim in the upper basin. Rustic bamboo shelters and a small restaurant sit at the water's edge, with staff typically leaving by around 17:00.",
+    "whyItFits": "Suits Bolaven-loop riders and families wanting an easy, uncrowded roadside swim spot in under-visited Sekong Province.",
+    "priceRange": {
+      "low": 5000,
+      "typical": 10000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Small nominal entry/parking fee; tube rental extra. Cash (kip) only."
+    },
+    "hours": "Daylight hours; food and staff usually gone by around 17:00",
+    "tips": [
+      "Best flow and swimming are in the cooler dry months (roughly November-February); the river runs high and muddy in the July-September rains.",
+      "Bring your own snacks and water in case the small restaurant has closed for the day.",
+      "Stick to the upper pool for swimming; the lower pool is rocky and reportedly holds biting puffer fish.",
+      "Fuel up in Sekong town first, as there are no reliable pumps at the falls."
+    ],
+    "scamWarnings": [
+      "Agree any tuk-tuk or share-taxi fare from Sekong before setting off; there is little onward transport once you are dropped."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Wearelao",
+      "limited traveller reports"
+    ],
+    "mapQuery": "Tad Faek Waterfall Sekong Laos",
+    "coords": {
+      "lat": 15.2451,
+      "lng": 106.7513
+    },
+    "bookHint": "No booking; pay the small fee at the site. Bamboo shelters are first-come.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wearelao (Sekong Waterfalls)",
+        "url": "https://wearelao.com/standard-page/sekong-waterfalls/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tad-hua-khon",
+    "name": "Tad Hua Khon Waterfall",
+    "city": "Sekong",
+    "country": "la",
+    "recognition": "A wide sheet of the Xe Nam Noy river spilling over a broad ledge, reached by a short forest path past picnic salas, a few kilometres beyond Tad Faek south of Sekong.",
+    "categories": [
+      "waterfall",
+      "swimming",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Tad Hua Khon is the more striking of Sekong's roadside falls, a wide curtain of water on the plateau's eastern rim with swimming holes and a short path through the trees. Local accounts link its name to a wartime tragedy, so it carries some solemnity for nearby communities. It is a common stop on the 'big loop' between Paksong, Sekong and Attapeu.",
+    "whyItFits": "Gives loop riders a genuinely scenic, swimmable waterfall in a province most travellers skip entirely.",
+    "priceRange": {
+      "low": 5000,
+      "typical": 10000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Small entry/parking fee, cash only. No card facilities."
+    },
+    "hours": "Daylight hours; quietest early morning",
+    "tips": [
+      "The falls are widest just after the rains (roughly August-November); flow drops noticeably by March-April.",
+      "Wear grippy sandals for the wet rocks around the swimming holes.",
+      "Combine it with Tad Faek nearby for an easy half-day from Sekong town.",
+      "Carry small kip for the entry booth and any drinks."
+    ],
+    "scamWarnings": [
+      "If hiring a driver from Sekong, fix the round-trip price and waiting time in advance."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Wearelao",
+      "limited traveller reports"
+    ],
+    "mapQuery": "Tad Hua Khon Waterfall Sekong Laos",
+    "coords": {
+      "lat": 15.205,
+      "lng": 106.77
+    },
+    "bookHint": "No booking; pay at the booth on arrival.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wearelao (Sekong Waterfalls)",
+        "url": "https://wearelao.com/standard-page/sekong-waterfalls/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-nong-fa-lake",
+    "name": "Nong Fa Crater Lake",
+    "city": "Attapeu",
+    "country": "la",
+    "recognition": "A near-circular, startlingly sky-blue crater lake ringed by forest high in the Dong Ampham conservation area of far north-east Attapeu, close to the Vietnamese border.",
+    "categories": [
+      "lake",
+      "nature",
+      "viewpoint",
+      "remote"
+    ],
+    "budgetTier": "mid",
+    "blurb": "Nong Fa ('Blue Lake') is a remote highland lake whose vivid blue water and reputed great depth have made it a minor legend; American pilots operating near the Ho Chi Minh Trail are said to have called it 'Dollar Lake' for its round shape. Locals traditionally avoid bathing here, tied to a guardian-spirit belief. Reaching it is a genuine expedition deep into a protected forest, not a casual day trip.",
+    "whyItFits": "A bucket-list reward for hardy overlanders and 4WD/adventure-motorbike travellers who want the wildest corner of the deep south-east.",
+    "priceRange": {
+      "currency": "LAK",
+      "note": "No fixed entry fee, but expect significant cost for a 4WD or dirt-bike and a local guide/permit arrangement; budget for a full-day charter from Attapeu town. Cash only."
+    },
+    "hours": "Daytime only; access is weather-dependent",
+    "tips": [
+      "Attempt only in the dry season (roughly December-April); rains turn the forest tracks to impassable mud.",
+      "Arrange a local guide and check current access/permit rules in Attapeu town first, as this is a sensitive border and conservation zone.",
+      "This region was heavily bombed and remains UXO-affected; never leave established tracks or dig, and follow your guide exactly.",
+      "Go self-sufficient: carry fuel, water, food and a basic repair kit, as there are no services near the lake."
+    ],
+    "scamWarnings": [
+      "Confirm the guide/driver's total price, fuel and what the fee covers before departing Attapeu; there is no way to renegotiate once out in the forest.",
+      "Be wary of anyone promising easy access in the wet season."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "GT-Rider motorcycle forum",
+      "limited traveller reports (remote site)"
+    ],
+    "mapQuery": "Nong Fa Lake Attapeu Laos",
+    "coords": {
+      "lat": 15.11,
+      "lng": 107.16
+    },
+    "bookHint": "No online booking; arrange transport, guide and any permit through operators or the tourism office in Attapeu town.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "GT-Rider",
+        "url": "https://www.gt-rider.com/se-asia-motorcycling/"
+      },
+      {
+        "org": "Tourism Laos (Attapeu Province)",
+        "url": "https://www.tourismlaos.org/southern-provinces/attapeu-province/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-beung-kiat-ngong",
+    "name": "Beung Kiat Ngong Wetland & Kiet Ngong Village",
+    "city": "Kiet Ngong",
+    "country": "la",
+    "recognition": "A broad reed-and-marsh wetland at the foot of Phou Asa hill beside the stilted village of Ban Kiet Ngong, gateway to the Xe Pian protected area about 56 km south of Pakse, where domesticated elephants have long worked the fields.",
+    "categories": [
+      "wildlife",
+      "nature",
+      "village",
+      "wetland",
+      "birdwatching"
+    ],
+    "budgetTier": "low",
+    "blurb": "Beung Kiat Ngong is Laos's first Ramsar-listed wetland and the community jump-off point for the Xe Pian NPA, one of the country's most important protected areas for birds and large mammals. Ban Kiet Ngong is a traditional village long associated with working elephants, and community-run walks, canoe trips and birdwatching are the ethical draw. Historic elephant-back rides raise welfare concerns; where possible choose observation, walking or community-managed elephant projects over riding.",
+    "whyItFits": "For nature-minded travellers who want low-impact, community-based wildlife and wetland experiences away from the Pakse day-tripper crowds.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 100000,
+      "high": 400000,
+      "currency": "LAK",
+      "note": "Small village/wetland entry; guided walks, canoe trips and multi-day treks are priced per group and are the main cost. Cash only."
+    },
+    "hours": "Village accessible any time; guided activities and birdwatching best at dawn",
+    "tips": [
+      "Arrange guides through the village or the Pakse tourism information office; all Xe Pian treks should use a local guide.",
+      "Prefer walking, canoeing or observing elephants over riding them, for the animals' welfare.",
+      "Dawn is best for birdlife over the wetland; bring binoculars and mosquito repellent.",
+      "Stay overnight in a village homestay or nearby ecolodge to catch morning and evening wildlife activity."
+    ],
+    "scamWarnings": [
+      "Agree the guide, activity and price clearly before starting; freelance touts sometimes overquote.",
+      "Decline any offer involving wildlife handling or feeding beyond sanctioned community elephant activities."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Ecotourism Laos",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Ban Kiet Ngong Xe Pian Laos",
+    "coords": {
+      "lat": 14.135,
+      "lng": 106.183
+    },
+    "bookHint": "Book guides/homestays on arrival in the village or via the Pakse Provincial Tourism office; no reliable online booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Ecotourism Laos",
+        "url": "https://www.ecotourismlaos.com/"
+      },
+      {
+        "org": "Wikipedia (Beung Kiat Ngong Wetlands)",
+        "url": "https://en.wikipedia.org/wiki/Beung_Kiat_Ngong_Wetlands"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-phou-asa",
+    "name": "Phou Asa Mountain Ruins",
+    "city": "Kiet Ngong",
+    "country": "la",
+    "recognition": "A flat-topped hill above Ban Kiet Ngong crowned by a ring of roughly 100 stubby stone pillars, each capped with a flat slab, encircling a ruined shrine with sweeping views over the Xe Pian wetlands.",
+    "categories": [
+      "history",
+      "hike",
+      "viewpoint",
+      "ruins"
+    ],
+    "budgetTier": "low",
+    "blurb": "Phou Asa is an enigmatic hilltop ruin above Kiet Ngong: a rough ring of over a hundred plate-topped stone columns whose purpose (temple or 19th-century rebel stronghold) is still debated. The short climb rewards you with a panorama across the wetlands, forest and the Bolaven Plateau's edge. It is usually visited together with the village and wetland below.",
+    "whyItFits": "A mysterious, low-effort archaeological viewpoint that pairs perfectly with the Kiet Ngong wetland for history-minded travellers.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 50000,
+      "high": 100000,
+      "currency": "LAK",
+      "note": "Nominal site/guide fee arranged in the village; cash only. Elephant-ride ascents may be offered but are best declined on welfare grounds."
+    },
+    "hours": "Daylight; go early morning or late afternoon to avoid midday heat",
+    "tips": [
+      "It is a short but exposed climb, roughly 20-40 minutes on foot; wear a hat and carry water.",
+      "Take a village guide, both for the path and to hear the competing legends about the ruins.",
+      "Late afternoon light is best for photos over the wetland.",
+      "Skip the elephant-back ascent and walk instead, for the animals' sake."
+    ],
+    "scamWarnings": [
+      "Fix the guide fee before climbing; confirm whether it is per person or per group."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Discover Laos"
+    ],
+    "mapQuery": "Phou Asa Wat Phou Asa Kiet Ngong Laos",
+    "coords": {
+      "lat": 14.14,
+      "lng": 106.19
+    },
+    "bookHint": "No booking; arrange a guide at Ban Kiet Ngong.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g670161-d1219397-Reviews-Phou_Asa_Mountain-Pakse_Champasak_Province.html"
+      },
+      {
+        "org": "Discover Laos",
+        "url": "https://discoverlaos.today/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tad-soung",
+    "name": "Tad Soung Waterfall",
+    "city": "Tad Lo",
+    "country": "la",
+    "recognition": "The tall upstream member of the Tad Lo cluster: the Xe Set river plunging off a high cliff, reached by a short walk to a rock viewpoint above the valley, distinct from the low, swimmable main Tad Lo/Tad Hang falls.",
+    "categories": [
+      "waterfall",
+      "viewpoint",
+      "hike",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Tad Soung is the highest of the waterfalls around Tad Lo village, a dramatic near-vertical drop of the Xe Set best seen from the clifftop viewpoint above. In the dry season the flow thins to threads, but in and after the rains it becomes genuinely spectacular. Scrambling to the base is rough and only for the sure-footed; most visitors enjoy it from the top.",
+    "whyItFits": "Gives Tad Lo visitors a big-drop, big-view waterfall beyond the well-trodden village pools, without a long journey.",
+    "priceRange": {
+      "low": 0,
+      "typical": 10000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Little or no fixed fee; a small parking/access charge at times. Cash only."
+    },
+    "hours": "Daylight; morning light favours the viewpoint",
+    "tips": [
+      "Go in or shortly after the rainy season (roughly July-November) for the fullest flow; it is a trickle by March-April.",
+      "The clifftop viewpoint is an easy short walk; descending toward the base is a rough scramble, not recommended alone or in the wet.",
+      "Reach it by rented bike or a guide from Tad Lo village.",
+      "Combine with the main Tad Lo and Tad Hang falls for a full waterfall day."
+    ],
+    "scamWarnings": [
+      "If hiring a guide or moto-taxi from Tad Lo, agree the fare and waiting time first."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Discover Laos",
+      "Travelfish"
+    ],
+    "mapQuery": "Tad Soung Waterfall Tad Lo Salavan Laos",
+    "coords": {
+      "lat": 15.43,
+      "lng": 106.412
+    },
+    "bookHint": "No booking; ride or walk up from Tad Lo village.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Travelfish (Tad Lo)",
+        "url": "https://www.travelfish.org/location/laos/southern_laos/salavan/tad_lo"
+      },
+      {
+        "org": "Discover Laos",
+        "url": "https://discoverlaos.today/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-attapeu-riverfront",
+    "name": "Attapeu Town Riverfront",
+    "city": "Attapeu",
+    "country": "la",
+    "recognition": "A sleepy, tree-lined provincial capital (Samakhixay) set in a wide green valley near the meeting of the Xe Kong, Xe Kaman and Xe Xou rivers, with a busy early-morning market and low-key riverside lanes.",
+    "categories": [
+      "town",
+      "riverfront",
+      "market",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Attapeu, officially Muang Samakhixay, is a relaxed and rarely visited town in Laos's far south-east, ringed by mountains where several rivers meet. The main draws are the atmosphere and the dawn market, where traders from several ethnic groups buy and sell. It works best as a friendly base for the surrounding rivers, temples and the long approach toward Nong Fa.",
+    "whyItFits": "A genuinely off-the-map provincial town for slow travellers who want everyday Lao life rather than sights ticked off a list.",
+    "priceRange": {
+      "currency": "LAK",
+      "note": "Wandering the riverfront and market is free; you only pay for food, drinks and any boat hire. Cash only."
+    },
+    "hours": "Market busiest around 06:00-08:00; riverfront pleasant at dusk",
+    "tips": [
+      "Visit the market at first light for the widest range of produce and the best people-watching.",
+      "Bring cash from Pakse; ATMs and card acceptance are limited this far south-east.",
+      "Use the town as a staging post for Nong Fa and Xe Pian access rather than expecting big-ticket sights.",
+      "Nong Lom, a small lake a few kilometres out, is a popular local picnic spot."
+    ],
+    "scamWarnings": [
+      "Agree any river-boat or tuk-tuk charter price and route before boarding."
+    ],
+    "rating": 3.8,
+    "reviewSources": [
+      "Tourism Laos",
+      "limited traveller reports"
+    ],
+    "mapQuery": "Attapeu town Samakhixay Laos",
+    "coords": {
+      "lat": 14.808,
+      "lng": 106.834
+    },
+    "bookHint": "No booking needed; guesthouses in town are walk-in.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Laos",
+        "url": "https://www.tourismlaos.org/southern-provinces/attapeu-province/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-salavan-town",
+    "name": "Salavan Town & Markets",
+    "city": "Salavan",
+    "country": "la",
+    "recognition": "A quiet provincial capital on the northern rim of the Bolaven Plateau whose daytime morning market is the main pulse of town, framed by highland farms and minority villages.",
+    "categories": [
+      "town",
+      "market",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Salavan is a low-key provincial town that most travellers only pass through, useful as a base for Tad Lo, the Xe Set and surrounding ethnic-minority villages. The lively morning market is the main draw, alongside easygoing riverside walks and access to Bolaven coffee country. It rewards travellers who value atmosphere and local life over headline attractions.",
+    "whyItFits": "A practical, authentic highland base for reaching Tad Lo, Tad Soung and Bolaven villages without any tourist gloss.",
+    "priceRange": {
+      "currency": "LAK",
+      "note": "Markets and town walks are free; pay only for food, transport and lodging. Cash only."
+    },
+    "hours": "Morning market from around 06:00",
+    "tips": [
+      "Rent a motorbike here to reach Tad Lo and nearby villages, but carry plenty of kip for fuel.",
+      "Stock up on cash in Pakse or Salavan town, as smaller towns beyond have few ATMs.",
+      "Ask locally before venturing off-road; parts of the province remain UXO-affected.",
+      "Expect a functional town rather than a scenic destination in its own right."
+    ],
+    "scamWarnings": [
+      "Fix motorbike-rental condition and fuel level at pickup and photograph any existing damage."
+    ],
+    "rating": 3.6,
+    "reviewSources": [
+      "Tourism Laos",
+      "Travelfish"
+    ],
+    "mapQuery": "Salavan town Laos",
+    "coords": {
+      "lat": 15.717,
+      "lng": 106.417
+    },
+    "bookHint": "No booking needed; town guesthouses are walk-in.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Travelfish",
+        "url": "https://www.travelfish.org/location/laos/southern_laos/salavan/salavan"
+      },
+      {
+        "org": "Tourism Laos",
+        "url": "https://www.tourismlaos.org/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tad-tayicseua",
+    "name": "Tad Tayicseua Waterfall Valley",
+    "city": "Paksong",
+    "country": "la",
+    "recognition": "A remote forested valley on the far eastern Bolaven holding a chain of several waterfalls linked by jungle trails, reached down a rough dirt track past coffee plantations, with a simple viewpoint guesthouse at the trailhead.",
+    "categories": [
+      "waterfall",
+      "hike",
+      "nature",
+      "adventure"
+    ],
+    "budgetTier": "low",
+    "blurb": "Tad Tayicseua is a cluster of waterfalls (often described as seven) in a deep, forested valley on the little-visited eastern edge of the Bolaven Plateau. A network of trails links the falls through dense jungle and coffee farms, and a rustic guesthouse at the rim makes a memorable overnight. The final approach is a rough dirt road, so it stays quiet.",
+    "whyItFits": "For active travellers who want to trade the standard loop viewpoints for a full day of jungle waterfall hiking well off the beaten track.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 20000,
+      "high": 40000,
+      "currency": "LAK",
+      "note": "Small entry/parking fee at the trailhead; guide and simple room extra. Cash only."
+    },
+    "hours": "Daylight hours; allow several hours to hike the full trail circuit",
+    "tips": [
+      "Come in the dry season (roughly November-March); the last dirt kilometres and the trails get treacherous in the rains, when a dirt bike or 4WD is needed.",
+      "Wear proper shoes and start early, as the full circuit is a real half-day hike.",
+      "Consider a local guide for the trails, which are steep, slippery and easy to lose.",
+      "Fuel and food are scarce nearby, so arrive topped up and carry water and snacks."
+    ],
+    "scamWarnings": [
+      "Confirm the entry fee and any guide charge at the trailhead before starting the hike."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Tripadvisor",
+      "traveller blogs"
+    ],
+    "mapQuery": "Tad Tayicseua waterfall Bolaven Plateau Laos",
+    "coords": {
+      "lat": 15.13,
+      "lng": 106.4
+    },
+    "bookHint": "Rooms/guides arranged on arrival; there is a basic trailhead guesthouse.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g3680578-d13436034-Reviews-Tad_Tayicseua-Paksong_Champasak_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-sekong-riverfront",
+    "name": "Sekong Town & Xe Kong Riverfront",
+    "city": "Sekong",
+    "country": "la",
+    "recognition": "A small, ethnically diverse provincial capital on the wide Xe Kong river below the plateau, with a produce market, riverside eateries and longtail boats that can be hired for scenic runs.",
+    "categories": [
+      "town",
+      "riverfront",
+      "market",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Sekong (Xekong) is one of Laos's most ethnically diverse provinces, and its riverside capital is the natural base for the Tad Faek and Tad Hua Khon falls and the big Bolaven loop toward Attapeu. The town itself is modest; its pleasures are the market, riverside food stalls, and the chance to arrange a longtail boat along the Xe Kong. It suits travellers who enjoy quiet, workaday towns over attractions.",
+    "whyItFits": "A convenient, authentic launch point for eastern-Bolaven waterfalls and river trips that almost no foreign travellers reach.",
+    "priceRange": {
+      "low": 0,
+      "typical": 100000,
+      "high": 400000,
+      "currency": "LAK",
+      "note": "Town and market are free; a hired longtail boat is negotiated per trip. Cash only."
+    },
+    "hours": "Market from early morning; riverfront pleasant late afternoon",
+    "tips": [
+      "Use Sekong as your base for Tad Faek and Tad Hua Khon, both a short ride south.",
+      "Negotiate longtail-boat trips at the river; agree the route, duration and price up front.",
+      "Bring enough cash from Pakse, as banking options are limited.",
+      "The dry season (November-February) gives the most comfortable weather and river conditions."
+    ],
+    "scamWarnings": [
+      "Fix any boat-charter price and turnaround time clearly before departure to avoid disputes on the water."
+    ],
+    "rating": 3.7,
+    "reviewSources": [
+      "Tourism Laos",
+      "limited traveller reports"
+    ],
+    "mapQuery": "Sekong town Xe Kong river Laos",
+    "coords": {
+      "lat": 15.348,
+      "lng": 106.729
+    },
+    "bookHint": "No booking; guesthouses are walk-in, boats arranged at the riverside.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Laos",
+        "url": "https://www.tourismlaos.org/southern-provinces/xekong-province/"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-don-daeng-island",
+    "name": "Don Daeng Island",
+    "city": "Champasak",
+    "country": "la",
+    "recognition": "A long, car-free Mekong island facing Champasak town, ringed by a sandy track past stilt houses, an old brick stupa and rice fields, with Wat Phou's sacred mountain (Phou Kao) on the western skyline.",
+    "categories": [
+      "island",
+      "nature",
+      "culture",
+      "cycling"
+    ],
+    "budgetTier": "low",
+    "blurb": "A quiet river island inside the Wat Phou UNESCO buffer zone, with no cars, community homestays and the upscale La Folie Lodge. Cycle the ~8 km ring track past temples and paddies, and watch the sunset over the Mekong. Genuinely peaceful, but facilities are minimal.",
+    "whyItFits": "Suits slow travellers and cyclists who want authentic river-island life beside the UNESCO site without the day-tripper crowds.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 80000,
+      "high": 150000,
+      "currency": "LAK",
+      "note": "Short boat crossing ~20,000-30,000 LAK; village homestays ~50,000-100,000 LAK; La Folie Lodge is a separate upscale property quoted in USD."
+    },
+    "hours": "Island access year-round; boats run in daylight, roughly 07:00-18:00.",
+    "tips": [
+      "Bring cash; there are no ATMs on the island.",
+      "Rent a bicycle from your homestay to circle the island.",
+      "Dry season (Nov-Feb) is best; tracks get muddy in the rains.",
+      "Arrange crossings from Champasak's Wat Muang Kang pier."
+    ],
+    "scamWarnings": [
+      "Agree the boat fare per person or per boat before departing."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Don Daeng Island Champasak",
+    "coords": {
+      "lat": 14.85,
+      "lng": 105.885
+    },
+    "bookHint": "Homestays arranged on arrival or via Champasak guesthouses; La Folie Lodge books online.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet (Southern Laos)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos"
+      },
+      {
+        "org": "Tripadvisor (La Folie Lodge)",
+        "url": "https://www.tripadvisor.com/Hotel_Review-g12363855-d1047965-Reviews-La_Folie_Lodge-Don_Daeng_Island_Champasak_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-uo-moung-tomo-temple",
+    "name": "Uo Moung (Tomo Temple)",
+    "city": "Champasak",
+    "country": "la",
+    "recognition": "Moss-covered sandstone Khmer ruins in forest on the Mekong's east bank, reached by a short boat hop and a path, with carved lintels and a sacred spring — far quieter than Wat Phou across the water.",
+    "categories": [
+      "ruins",
+      "temple",
+      "history",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "A ninth-century pre-Angkorian Khmer sanctuary (also spelled Oup Moung/Tomo), historically linked to Wat Phou. Scattered laterite and sandstone blocks and a few carved lintels sit among the trees. Atmospheric and little-visited, with no real facilities.",
+    "whyItFits": "For history-minded travellers who have done Wat Phou and want its overgrown, crowd-free companion site.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 20000,
+      "currency": "LAK",
+      "note": "Small site donation/fee ~10,000-20,000 LAK; boat charter across the Mekong is extra and negotiable."
+    },
+    "hours": "Daylight hours; no fixed schedule — go with a boatman.",
+    "tips": [
+      "Combine it with Wat Phou by boat in a single trip.",
+      "Wear covered shoes; ground is uneven and there can be snakes.",
+      "Dry-season access is easier; the path can flood in the rains.",
+      "Bring water — there is little shade and no shop."
+    ],
+    "scamWarnings": [
+      "Fix the return boat fare and wait time in advance so you are not stranded."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Oup Moung Tomo Temple Champasak",
+    "coords": {
+      "lat": 14.795,
+      "lng": 105.856
+    },
+    "bookHint": "No booking; charter a boat from Champasak or the Wat Phou area.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet (Southern Laos)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-ban-kiet-ngong-wetland",
+    "name": "Ban Kiet Ngong & Beung Kiat Ngong Wetland",
+    "city": "Kiet Ngong",
+    "country": "la",
+    "recognition": "A stilted village beside Laos's largest Ramsar wetland, with dugout channels and reed beds at the edge of Xe Pian, buffalo in the marsh and the community's small elephant herd.",
+    "categories": [
+      "wetland",
+      "nature",
+      "wildlife",
+      "village"
+    ],
+    "budgetTier": "low",
+    "blurb": "The Ramsar-listed Beung Kiat Ngong wetland fronts a community-based-tourism village that is the gateway to Phou Asa and Xe Pian. Expect birdlife, buffalo and a few working village elephants. Kingfisher Ecolodge is here. It is a working landscape, not a manicured park.",
+    "whyItFits": "For nature and slow travellers who want genuine community ecotourism and wildlife over more temples.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 100000,
+      "high": 300000,
+      "currency": "LAK",
+      "note": "Community fees and guided wetland walks from ~20,000 LAK; longer treks and elephant programmes cost more."
+    },
+    "hours": "Village accessible year-round; the wetland is fullest during and after the rains (Jun-Oct); birdlife is best in the cooler months.",
+    "tips": [
+      "Base at or eat at Kingfisher Ecolodge and book guides through the village CBT office.",
+      "Ethics note: elephant riding is increasingly discouraged — ask for walking-with or observation options.",
+      "Bring mosquito repellent for the wetland.",
+      "Confirm exactly what a trek or activity includes before you set off."
+    ],
+    "scamWarnings": [
+      "Confirm what a trek or elephant activity includes, and its price, before paying."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet",
+      "Travelfish"
+    ],
+    "mapQuery": "Ban Kiet Ngong wetland Champasak",
+    "coords": {
+      "lat": 14.6167,
+      "lng": 106.2333
+    },
+    "bookHint": "Arrange on arrival via the village CBT office or Kingfisher Ecolodge.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Kingfisher Ecolodge",
+        "url": "https://kingfisherecolodge.com/"
+      },
+      {
+        "org": "Discover Laos Today",
+        "url": "https://discoverlaos.today/post/xe-pian-national-protected-area-wetlands-and-elephants"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-xe-pian-npa",
+    "name": "Xe Pian National Protected Area",
+    "city": "Kiet Ngong",
+    "country": "la",
+    "recognition": "A vast lowland forest-and-wetland reserve southeast of Pakse, entered via Kiet Ngong or Ban Phapho, with guided walking trails, dry dipterocarp forest and dawn birdsong.",
+    "categories": [
+      "nature",
+      "wildlife",
+      "hike",
+      "reserve"
+    ],
+    "budgetTier": "mid",
+    "blurb": "One of Laos's most important protected areas, home to hornbills, gibbons and lowland forest, visited on guided day treks or overnights from Kiet Ngong. Be realistic: hunting pressure means large-mammal sightings are rare, and the appeal is the forest and birdlife, not a safari.",
+    "whyItFits": "For adventurous nature travellers who want real NPA trekking rather than a manicured park.",
+    "priceRange": {
+      "low": 150000,
+      "typical": 400000,
+      "currency": "LAK",
+      "note": "Guided treks typically ~150,000-500,000+ LAK depending on length and group size; a guide and permit are required."
+    },
+    "hours": "Guided trips depart in the morning; overnight camps available; dry season (Nov-Apr) is best for the trails.",
+    "tips": [
+      "Always go with an authorised local guide — for navigation, community benefit and UXO safety.",
+      "Do not stray off marked paths; southern Laos has residual UXO.",
+      "Manage expectations — large mammals are scarce due to poaching.",
+      "The cooler dry months are the most comfortable for walking."
+    ],
+    "scamWarnings": [
+      "Book through the village CBT or a reputable Pakse operator, not roadside touts."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Lonely Planet",
+      "Tripadvisor",
+      "Travelfish"
+    ],
+    "mapQuery": "Xe Pian National Protected Area Laos",
+    "coords": {
+      "lat": 14.4,
+      "lng": 106.35
+    },
+    "bookHint": "Book via the Kiet Ngong CBT office, Kingfisher Ecolodge, or a licensed Pakse agency.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Discover Laos Today",
+        "url": "https://discoverlaos.today/post/xe-pian-national-protected-area-wetlands-and-elephants"
+      },
+      {
+        "org": "Lonely Planet (Southern Laos)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-dong-hua-sao-npa",
+    "name": "Dong Hua Sao NPA (Tree Top Explorer)",
+    "city": "Pakse",
+    "country": "la",
+    "recognition": "Waterfall-cut forest on the Bolaven Plateau's southwest escarpment, experienced on Green Discovery's multi-day circuit of canopy ziplines, a via ferrata by a falls, and forest treehouses.",
+    "categories": [
+      "nature",
+      "adventure",
+      "zipline",
+      "reserve"
+    ],
+    "budgetTier": "high",
+    "blurb": "A national protected area on the southwest edge of the Bolaven Plateau. The established way in is Green Discovery's 2-3 day Tree Top Explorer, combining ziplines, canopy walks, via ferrata and treehouse stays with village involvement. It is physically demanding and weather-dependent.",
+    "whyItFits": "For adventure travellers wanting an immersive multi-day canopy experience with genuine conservation credentials.",
+    "priceRange": {
+      "low": 200,
+      "typical": 250,
+      "high": 320,
+      "currency": "USD",
+      "note": "Green Discovery quotes in USD; roughly USD 200-320 for the 2-3 day tour including guides, meals and gear."
+    },
+    "hours": "Scheduled multi-day departures from Pakse, subject to minimum numbers; run mainly in the drier months.",
+    "tips": [
+      "Book ahead through Green Discovery's Pakse office.",
+      "You need reasonable fitness — long walks and exposure to heights.",
+      "Departures can be cancelled if too few sign up or in heavy rain.",
+      "Bring quick-dry clothing and sturdy footwear."
+    ],
+    "scamWarnings": [
+      "Book directly with Green Discovery or a bonded agent to avoid overpriced resellers."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Dong Hua Sao NPA Tree Top Explorer Laos",
+    "coords": {
+      "lat": 15.05,
+      "lng": 106.15
+    },
+    "bookHint": "Reserve through Green Discovery's Pakse office in advance.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Southern Laos (official tourism)",
+        "url": "https://www.southern-laos.com/travel-directory/tree-top-explorer/"
+      },
+      {
+        "org": "Discover Laos Today",
+        "url": "https://discoverlaos.today/paksong-bolaven-plateau/thing-to-do/tree-top-explorer"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-kayaking-si-phan-don",
+    "name": "Kayaking Don Det & Don Khon",
+    "city": "Don Det",
+    "country": "la",
+    "recognition": "Guided paddling trips launching from Don Det/Don Khon guesthouses, threading braided Mekong channels and islets, usually finishing near the Li Phi rapids and the border dolphin pool.",
+    "categories": [
+      "kayaking",
+      "boat",
+      "nature",
+      "adventure"
+    ],
+    "budgetTier": "mid",
+    "blurb": "A popular 4000 Islands activity: guided kayak day tours weave between islands, past rapids and bamboo fishing traps, often combined with a walk to Li Phi falls and a boat out to the border pool. Operator safety and skill vary, so choose carefully.",
+    "whyItFits": "For active travellers who want to see Si Phan Don from the water rather than from a hammock.",
+    "priceRange": {
+      "low": 250000,
+      "typical": 400000,
+      "high": 500000,
+      "currency": "LAK",
+      "note": "Day tours roughly 250,000-500,000 LAK (about USD 12-25), usually including guide, kayak and lunch/transfers."
+    },
+    "hours": "Morning departures; a full day is ~6-8 hrs; high-water months (Aug-Oct) bring stronger currents.",
+    "tips": [
+      "Choose an operator who provides life jackets and a sober, attentive guide.",
+      "The Mekong is powerful — avoid cheap trips near the falls in high water.",
+      "Dry season is calmer and safer for paddling.",
+      "Bring a dry bag, sun protection and water.",
+      "The 'dolphin' leg is scenery only — resident Irrawaddy dolphins are effectively gone on the Lao side."
+    ],
+    "scamWarnings": [
+      "Confirm the itinerary and whether the dolphin-pool boat and any entry fee are included before paying."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "kayaking Don Det Don Khon 4000 Islands",
+    "coords": {
+      "lat": 13.955,
+      "lng": 105.941
+    },
+    "bookHint": "Book at guesthouses or tour desks on Don Det or Don Khon a day ahead.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet (Si Phan Don)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos/si-phan-don"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-anlong-cheuteal-dolphin-pool",
+    "name": "Anlong Cheuteal Dolphin Pool (Mekong Border)",
+    "city": "Don Khon",
+    "country": "la",
+    "recognition": "A deep-water pool at the Lao-Cambodian border off Don Khon's southern tip, reached by boat from Ban Hang Khon — historically the northernmost home of the Mekong's Irrawaddy dolphins.",
+    "categories": [
+      "wildlife",
+      "boat",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Be honest with yourself before going: this trans-boundary pool was long the last place to glimpse Irrawaddy dolphins in Lao waters, but the resident dolphins are gone — the last one at Anlong Chheuteal died in 2022 and the species is effectively extinct on the Lao side. Boats still run at sunset, but sightings are now extremely unlikely; the remaining fewer-than-100 Mekong dolphins live downstream around Kratie in Cambodia. Go for the river scenery and the conservation story, not a guaranteed dolphin.",
+    "whyItFits": "For travellers who want an honest, low-key border boat trip and to understand the dolphins' plight — not a wildlife guarantee.",
+    "priceRange": {
+      "low": 60000,
+      "typical": 100000,
+      "currency": "LAK",
+      "note": "Shared boat ~60,000-100,000 LAK per person depending on group size; agree the price before boarding."
+    },
+    "hours": "Late-afternoon/sunset trips from Ban Hang Khon; the low-water dry season (Dec-May) was historically when dolphins were most visible.",
+    "tips": [
+      "Be realistic: Lao-side dolphins are effectively gone (the last died in 2022).",
+      "To actually see Irrawaddy dolphins, visit Kampi near Kratie in Cambodia instead.",
+      "Insist the boat keeps its distance and cuts the engine near any animal — engines and gill nets are what killed them.",
+      "Bring binoculars and manage expectations."
+    ],
+    "scamWarnings": [
+      "Some operators still market 'guaranteed dolphins' — this is misleading.",
+      "Confirm the price per person, not a vague per-boat figure."
+    ],
+    "rating": 3.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "WWF",
+      "IUCN Cetacean Specialist Group"
+    ],
+    "mapQuery": "Anlong Cheuteal dolphin pool Ban Hang Khon Don Khon",
+    "coords": {
+      "lat": 13.912,
+      "lng": 105.972
+    },
+    "bookHint": "Arrange the boat at Ban Hang Khon on Don Khon; no advance booking needed.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "IUCN Cetacean Specialist Group",
+        "url": "https://iucn-csg.org/mekong-dolphins/"
+      },
+      {
+        "org": "Cambodianess (last Anlong Chheuteal dolphin)",
+        "url": "https://cambodianess.com/article/last-irrawaddy-dolphin-in-anlong-chheuteal-section-of-mekong-river-dies"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-ban-saphai-don-kho",
+    "name": "Ban Saphai & Don Kho Weaving Village",
+    "city": "Pakse",
+    "country": "la",
+    "recognition": "A riverside weaving village about 15 km north of Pakse and its facing island Don Kho, where you hear looms clacking under stilt houses and can watch silk and cotton being handwoven.",
+    "categories": [
+      "culture",
+      "village",
+      "handicraft",
+      "island"
+    ],
+    "budgetTier": "low",
+    "blurb": "A cluster of Mekong villages known for traditional Lao silk and cotton weaving. A short boat hop reaches Don Kho island, with an old temple, homestays and weaving demonstrations. A calm half-day escape from Pakse.",
+    "whyItFits": "For culture travellers and textile shoppers who want authentic handwoven cloth bought directly from the weavers.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 30000,
+      "currency": "LAK",
+      "note": "Boat to Don Kho ~10,000-30,000 LAK return; textiles are priced individually and buying supports the weavers."
+    },
+    "hours": "Daytime; weavers work mainly in the mornings; boats run in daylight hours.",
+    "tips": [
+      "Buy directly from weavers for fair prices and to support the community.",
+      "Combine the visit with a Mekong sunset.",
+      "Bring cash; card payment is not available.",
+      "Dry season makes the boat crossing easier."
+    ],
+    "scamWarnings": [
+      "Agree the return boat fare before crossing to Don Kho."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Tripadvisor",
+      "Lonely Planet",
+      "Travelfish"
+    ],
+    "mapQuery": "Ban Saphai Don Kho weaving village Pakse",
+    "coords": {
+      "lat": 15.22,
+      "lng": 105.81
+    },
+    "bookHint": "No booking; hire a tuk-tuk from Pakse and a boat at the Ban Saphai pier.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet (Southern Laos)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-wat-phou-salao",
+    "name": "Wat Phou Salao (Golden Buddha, Pakse)",
+    "city": "Pakse",
+    "country": "la",
+    "recognition": "A large golden seated Buddha on a hill across the Mekong from Pakse, reached by a long stairway or a road, giving the best overview of the town and river — especially at sunset.",
+    "categories": [
+      "temple",
+      "viewpoint",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "A hilltop temple with a big modern golden Buddha overlooking Pakse and the confluence of the Mekong and Xe Don. Free to visit and popular for sunset. Reach it by a stair climb or drive to the top.",
+    "whyItFits": "For travellers wanting a free, easy sunset viewpoint and a living local temple close to Pakse.",
+    "priceRange": {
+      "currency": "LAK",
+      "note": "Free to enter; donations welcome. Budget a small tuk-tuk fare from central Pakse."
+    },
+    "hours": "Daily, roughly dawn to dusk; go in the late afternoon for sunset.",
+    "tips": [
+      "Dress modestly (cover shoulders and knees) — it is an active temple.",
+      "Come for sunset but arrange your tuk-tuk return in advance.",
+      "Climb the stairway for the view, or take the road to the top.",
+      "Bring water; the climb is hot in the afternoon."
+    ],
+    "scamWarnings": [
+      "Agree the tuk-tuk round-trip fare, including waiting time, before setting off."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Wat Phou Salao Pakse golden Buddha",
+    "coords": {
+      "lat": 15.1,
+      "lng": 105.79
+    },
+    "bookHint": "No booking; walk, cycle or take a tuk-tuk.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet (Pakse)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos/pakse"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-don-som-island",
+    "name": "Don Som Island",
+    "city": "Nakasang",
+    "country": "la",
+    "recognition": "A large, largely un-touristed island in the 4000 Islands between Don Khong and Don Det, with dirt tracks through rice fields and stilt villages and only simple riverside bungalows.",
+    "categories": [
+      "island",
+      "nature",
+      "village",
+      "cycling"
+    ],
+    "budgetTier": "low",
+    "stayType": "guesthouse",
+    "blurb": "A quieter alternative to Don Det and Don Khon, with basic homestays and bungalows, cycling on rough tracks, and farming-and-fishing daily life. Restaurants are few and electricity can be limited or solar-only in places — this is for travellers who genuinely want the quiet.",
+    "whyItFits": "For independent travellers wanting Si Phan Don without the party scene or the crowds.",
+    "priceRange": {
+      "low": 50000,
+      "typical": 100000,
+      "high": 120000,
+      "currency": "LAK",
+      "note": "Simple bungalows ~50,000-120,000 LAK; boat transfer from Nakasang or neighbouring islands is extra."
+    },
+    "hours": "Boats run in daylight only; bring what you need, as shops are minimal.",
+    "tips": [
+      "Bring cash and a torch — power can be limited or solar.",
+      "Stock up on snacks and water before crossing.",
+      "Dry season is best for cycling the dirt tracks.",
+      "Arrange your onward boat in advance, as services are infrequent."
+    ],
+    "scamWarnings": [
+      "Confirm boat fares and pickup times, as ad-hoc transfers can be overpriced."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Travelfish",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Don Som Island Si Phan Don",
+    "coords": {
+      "lat": 14.05,
+      "lng": 105.94
+    },
+    "bookHint": "Bungalows arranged on arrival; boats from Nakasang or nearby islands.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Travelfish (Si Phan Don)",
+        "url": "https://www.travelfish.org/location/laos/southern_laos/si_phan_don"
+      },
+      {
+        "org": "Lonely Planet (Si Phan Don)",
+        "url": "https://www.lonelyplanet.com/laos/southern-laos/si-phan-don"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-wat-si-muang",
+    "name": "Wat Si Muang",
+    "city": "Vientiane",
+    "country": "la",
+    "recognition": "A busy, living temple at the east end of Setthathirath Road, marked by a gilded seated Buddha out front and a constant stream of locals bringing marigolds, incense and offerings to the city's guardian pillar inside.",
+    "categories": [
+      "temple",
+      "culture",
+      "spiritual"
+    ],
+    "budgetTier": "low",
+    "blurb": "Vientiane's most actively worshipped temple, built around the lak muang (city pillar) that is believed to house the capital's guardian spirit. Unlike the museum-like Sisaket, this is a working temple where you will see genuine daily merit-making, blessings and offerings. Respectful visitors are welcome inside the ordination hall.",
+    "whyItFits": "Gives travellers a real, living-faith counterpoint to the historic monuments nearby, and it sits within easy reach of Sisaket and Haw Pha Kaeo for a central-Vientiane temple loop.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "No entry fee; a small donation (5,000-20,000 LAK) is customary if you receive a blessing or buy an offering tray."
+    },
+    "hours": "Roughly 06:00-19:00 daily; mornings and early evening are the most active for worship",
+    "tips": [
+      "Cover shoulders and knees and remove shoes before entering the hall.",
+      "This is an active place of worship, not a tourist site; keep voices low and ask before photographing people praying.",
+      "Monks or lay attendants may tie a white blessing string on your wrist for a small donation."
+    ],
+    "scamWarnings": [
+      "Agree the fare with any tuk-tuk before boarding; drivers waiting outside temples often quote inflated tourist prices."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Wat Si Muang Vientiane",
+    "coords": {
+      "lat": 17.9575,
+      "lng": 102.6206
+    },
+    "bookHint": "No booking; simply walk in during opening hours.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g293950-Wat_Si_Muang-Vientiane_Vientiane_Prefecture.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vientiane"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-haw-pha-kaeo",
+    "name": "Haw Pha Kaeo (Ho Phra Keo)",
+    "city": "Vientiane",
+    "country": "la",
+    "recognition": "A single ornate former royal temple raised on a terraced stone platform in a walled garden, its outer gallery lined with bronze Buddha images, standing directly across Setthathirath Road from Wat Sisaket.",
+    "categories": [
+      "temple",
+      "museum",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Originally built in the 16th century to house the Emerald Buddha (now in Bangkok), Haw Pha Kaeo was destroyed and rebuilt and today serves as a museum of Lao religious art. The exterior gallery of bronze Buddhas and the calm garden are the highlight; interior displays are modest. It pairs naturally with a visit to Wat Sisaket opposite.",
+    "whyItFits": "Adds historical and art-lover depth to central Vientiane without duplicating Sisaket, and the shaded garden is a genuine respite from the midday heat.",
+    "priceRange": {
+      "low": 30000,
+      "typical": 30000,
+      "high": 30000,
+      "currency": "LAK",
+      "note": "Around 30,000 LAK entry; cash only, small notes preferred."
+    },
+    "hours": "Roughly 08:00-12:00 and 13:00-16:00; closed over the lunch break and on some public holidays",
+    "tips": [
+      "Photography inside the hall is often restricted; ask or check signage first.",
+      "Combine with Wat Sisaket across the road on a single morning walk.",
+      "Interior labelling is limited; a guidebook or guide adds a lot of context."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Haw Pha Kaeo Vientiane",
+    "coords": {
+      "lat": 17.9626,
+      "lng": 102.6108
+    },
+    "bookHint": "No booking; pay at the gate.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g293950-Haw_Pha_Kaew-Vientiane_Vientiane_Prefecture.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vientiane"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-lao-national-museum",
+    "name": "Lao National Museum",
+    "city": "Vientiane",
+    "country": "la",
+    "recognition": "A state history museum whose galleries move from prehistoric and Khmer-era artefacts through French colonial rule to the revolutionary period, heavy on photographs, dioramas and captioned displays.",
+    "categories": [
+      "museum",
+      "culture",
+      "history"
+    ],
+    "budgetTier": "low",
+    "blurb": "The national collection covers Lao history from ancient times through the colonial era and the revolutionary struggle. Displays are earnest and text-led rather than slick, but it is one of the few places in Vientiane to get a chronological overview of the country. Note that the collection has been relocating from its long-running Samsenthai Road building to a large new national museum complex, so confirm the current site locally before setting out.",
+    "whyItFits": "Fills the history-context gap for travellers who want more than temples, and works well on a hot afternoon.",
+    "priceRange": {
+      "low": 30000,
+      "typical": 30000,
+      "high": 30000,
+      "currency": "LAK",
+      "note": "Around 30,000 LAK; cash only."
+    },
+    "hours": "Typically 08:00-12:00 and 13:00-16:00, but hours are irregular during the relocation; confirm on the day",
+    "tips": [
+      "Confirm the current building and opening hours at your guesthouse before travelling; the museum has been moving premises.",
+      "English labelling is patchy and the tone is state-narrative; treat it as one perspective.",
+      "Allow about an hour; it is compact."
+    ],
+    "reviewSources": [
+      "Google Maps consensus",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Lao National Museum Vientiane",
+    "coords": {
+      "lat": 17.9662,
+      "lng": 102.6069
+    },
+    "bookHint": "No booking; pay at the entrance.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g293950-Lao_National_Museum-Vientiane_Vientiane_Prefecture.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vientiane"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-wat-ong-teu",
+    "name": "Wat Ong Teu Mahawihan",
+    "city": "Vientiane",
+    "country": "la",
+    "recognition": "A large working monastery on Setthathirath Road, named for the heavy bronze 'weighty Buddha' inside its hall, and home to one of the country's main Buddhist teaching centres with young monks often studying in the grounds.",
+    "categories": [
+      "temple",
+      "culture",
+      "spiritual"
+    ],
+    "budgetTier": "low",
+    "blurb": "One of Vientiane's most important monasteries and a seat of Buddhist learning, centred on a large 16th-century bronze Buddha. It is a genuinely active study temple, so you will often see novices and monks around the grounds. Quieter and less touristed than Sisaket, it rewards a respectful wander.",
+    "whyItFits": "Rounds out a central temple walk with a living monastic community rather than a museum piece, and it is free.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 10000,
+      "currency": "LAK",
+      "note": "Free; a small donation is welcome."
+    },
+    "hours": "Roughly 06:00-18:00 daily",
+    "tips": [
+      "Dress modestly and remove shoes before entering the hall.",
+      "It sits beside Wat Inpeng, so you can see both in one short stop.",
+      "Do not disturb monks who are studying or chanting."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Google Maps consensus",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Wat Ong Teu Mahawihan Vientiane",
+    "coords": {
+      "lat": 17.9648,
+      "lng": 102.6088
+    },
+    "bookHint": "No booking; walk in during daylight hours.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g293950-Wat_Ong_Teu-Vientiane_Vientiane_Prefecture.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vientiane"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-nam-phu-guesthouses",
+    "name": "Mid-range guesthouses around Nam Phu (Fountain Square), Vientiane",
+    "city": "Vientiane",
+    "country": "la",
+    "recognition": "A cluster of small hotels and guesthouses on the lanes radiating from the round fountain plaza of Nam Phu, ringed by cafes and restaurants a couple of blocks back from the Mekong.",
+    "categories": [
+      "stay",
+      "guesthouse"
+    ],
+    "budgetTier": "mid",
+    "stayType": "guesthouse",
+    "blurb": "The Nam Phu (Fountain Square) area is central Vientiane's most convenient mid-range base: a walkable knot of guesthouses and small hotels surrounded by restaurants, cafes and bars, a short stroll from the river, the night market and the main temples. Rooms here are generally clean air-conditioned doubles rather than backpacker dorms.",
+    "whyItFits": "Gives a stable, walkable mid-range lodging cluster in the capital as an area recommendation rather than a single fragile business, filling a stay gap for Vientiane.",
+    "priceRange": {
+      "low": 250000,
+      "typical": 450000,
+      "high": 900000,
+      "currency": "LAK",
+      "note": "Roughly USD 20-45 (approx 250,000-900,000 LAK) for a mid-range double; book direct for better rates."
+    },
+    "hours": "Reception hours vary by property; most offer 24h or late check-in on request",
+    "tips": [
+      "Being central, this area can get street noise at night; ask for a room away from bars.",
+      "Walkable to the riverside night market, Nam Phu restaurants and the central temples.",
+      "Confirm whether breakfast and airport transfer are included when you book."
+    ],
+    "scamWarnings": [
+      "Book direct or via a reputable platform; ignore touts at the bus station steering you to a specific place for a commission."
+    ],
+    "reviewSources": [
+      "Booking.com",
+      "Google Maps consensus",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Nam Phu Fountain Square Vientiane",
+    "coords": {
+      "lat": 17.9642,
+      "lng": 102.61
+    },
+    "bookHint": "Book individual guesthouses via Booking.com/Agoda or by contacting them directly.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vientiane"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Hotels-g293950-Vientiane_Vientiane_Prefecture-Hotels.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-wat-mai-suwannaphumaham",
+    "name": "Wat Mai Suwannaphumaham",
+    "city": "Luang Prabang",
+    "country": "la",
+    "recognition": "A five-tiered red-and-gold roofed temple on Sisavangvong Road right beside the Royal Palace Museum, its front veranda covered in gilded relief panels depicting the Ramayana and village life.",
+    "categories": [
+      "temple",
+      "culture",
+      "spiritual"
+    ],
+    "budgetTier": "low",
+    "blurb": "One of Luang Prabang's largest and most richly decorated temples, distinguished by its sweeping multi-tiered roof and the ornate gilt-relief facade of its sim. Historically the residence of the head of Lao Buddhism, it sits immediately next to the Royal Palace, making it an easy add-on. During Pi Mai (Lao New Year) the Prabang Buddha is displayed here.",
+    "whyItFits": "A standout peninsula temple not yet in the app, right on the main street and pairable with the Royal Palace and Mount Phousi.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 20000,
+      "high": 30000,
+      "currency": "LAK",
+      "note": "Around 20,000-30,000 LAK entry; cash only."
+    },
+    "hours": "Roughly 08:00-17:00 daily",
+    "tips": [
+      "The gilded front veranda is best photographed in soft morning or late-afternoon light.",
+      "Cover shoulders and knees; a scarf or sarong helps.",
+      "Combine with the Royal Palace Museum next door and the night market that sets up on this street at dusk."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Wat Mai Suwannaphumaham Luang Prabang",
+    "coords": {
+      "lat": 19.8895,
+      "lng": 102.1355
+    },
+    "bookHint": "No booking; pay at the entrance.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g295415-Wat_Mai-Luang_Prabang_Luang_Prabang_Province.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/luang-prabang"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-wat-wisunarat",
+    "name": "Wat Wisunarat (Wat Visoun) & That Makmo",
+    "city": "Luang Prabang",
+    "country": "la",
+    "recognition": "The oldest operating temple in Luang Prabang, recognisable by the rounded, melon-shaped 'watermelon stupa' (That Makmo) standing in front of a broad hall on the southeast side of the peninsula.",
+    "categories": [
+      "temple",
+      "culture",
+      "history"
+    ],
+    "budgetTier": "low",
+    "blurb": "Founded in the early 16th century, Wat Wisunarat is Luang Prabang's oldest temple still in use. Its signature is That Makmo, the distinctive hemispherical 'watermelon stupa', alongside a hall that once displayed a collection of Buddha images and ordination markers. It is quieter than the peninsula-tip temples and rounds out the town's heritage circuit.",
+    "whyItFits": "Adds a genuinely historic, less-crowded temple to Luang Prabang and an unusual stupa form travellers will not see elsewhere in town.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 20000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Around 20,000 LAK entry; cash only."
+    },
+    "hours": "Roughly 08:00-17:00 daily",
+    "tips": [
+      "It sits at the base of Mount Phousi's south side, so it is easy to combine with a Phousi climb.",
+      "Modest dress and shoes-off inside the hall as at every temple here.",
+      "Early morning is quietest and coolest."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Wat Wisunarat That Makmo Luang Prabang",
+    "coords": {
+      "lat": 19.8863,
+      "lng": 102.1399
+    },
+    "bookHint": "No booking; pay at the gate.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g295415-Wat_Wisunarat-Luang_Prabang_Luang_Prabang_Province.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/luang-prabang"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-ock-pop-tok",
+    "name": "Ock Pop Tok Living Crafts Centre",
+    "city": "Luang Prabang",
+    "country": "la",
+    "recognition": "A riverside weaving and natural-dye workshop set in leafy gardens on the Mekong south of the centre, where you can watch artisans at floor looms and dye vats and see finished silk in the shop and cafe.",
+    "categories": [
+      "culture",
+      "workshop",
+      "shopping"
+    ],
+    "budgetTier": "low",
+    "blurb": "A well-run social enterprise dedicated to Lao textiles, natural dyeing and traditional weaving. Visiting the garden centre, watching the weavers and browsing the fair-trade shop is free, and a free tuk-tuk shuttles from town; hands-on half- and full-day classes (weaving, natural dye, batik) are the paid draw. Nearby Ban Xang Khong village is a traditional weaving and saa (mulberry) paper-making hamlet worth pairing on the same trip.",
+    "whyItFits": "A meaningful, ethical craft experience beyond temples and waterfalls, suited to travellers who want to make something and support local artisans.",
+    "priceRange": {
+      "low": 0,
+      "typical": 55,
+      "high": 130,
+      "currency": "USD",
+      "note": "Visiting the centre is free (free tuk-tuk from town); half-day classes from roughly USD 39, full-day from around USD 65-130. Operator quotes USD."
+    },
+    "hours": "Centre roughly 08:00-18:00 daily; classes run on set morning/afternoon schedules — book ahead",
+    "tips": [
+      "Book classes a day or more in advance, especially in peak season (Nov-Feb).",
+      "Use the free tuk-tuk shuttle from the Ock Pop Tok office in town rather than paying a private driver.",
+      "The riverside cafe is a pleasant lunch stop even if you only visit; pair with Ban Xang Khong village nearby."
+    ],
+    "scamWarnings": [
+      "Book through the official Ock Pop Tok office or website; some drivers push unaffiliated 'weaving village' stops for commission."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Ock Pop Tok Living Crafts Centre Luang Prabang",
+    "coords": {
+      "lat": 19.8735,
+      "lng": 102.1262
+    },
+    "bookHint": "Book classes via ockpoptok.com or at their in-town office; catch the free shuttle from there.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Ock Pop Tok",
+        "url": "https://www.ockpoptok.com"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g295415-Ock_Pop_Tok-Luang_Prabang_Luang_Prabang_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-living-land-farm",
+    "name": "Living Land Farm",
+    "city": "Luang Prabang",
+    "country": "la",
+    "recognition": "A community organic rice farm in the paddies a few kilometres outside town, where guests wade into flooded fields with a water buffalo named Rambo and work through the traditional stages of rice growing.",
+    "categories": [
+      "culture",
+      "workshop",
+      "nature",
+      "food"
+    ],
+    "budgetTier": "mid",
+    "blurb": "A hands-on community farm where the signature 'Rice Experience' walks you through the traditional steps of Lao rice cultivation — ploughing with the buffalo, planting, threshing, milling and tasting — in a genuinely fun, muddy, educational half-day. It is consistently one of Luang Prabang's top-rated experiences and supports local farming families and scholarships.",
+    "whyItFits": "A standout active, family-friendly and ethical experience that gets travellers out of town and into rural Lao life; a strong non-temple option.",
+    "priceRange": {
+      "low": 25,
+      "typical": 66,
+      "high": 66,
+      "currency": "USD",
+      "note": "The full Rice Experience is around USD 66; shorter/child rates are lower. Operator quotes USD; includes hotel pickup on some bookings."
+    },
+    "hours": "Morning and afternoon sessions daily; the full rice experience runs about 3-4 hours — book ahead",
+    "tips": [
+      "Book in advance; sessions are capped and sell out in high season.",
+      "Wear clothes and sandals you do not mind getting muddy; you will be in the paddy.",
+      "Confirm whether hotel pickup is included or you need your own tuk-tuk to the farm."
+    ],
+    "scamWarnings": [
+      "Book through the official Living Land operator; unrelated 'rice farm tours' of variable quality are sold around town."
+    ],
+    "rating": 4.8,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Living Land Farm Luang Prabang",
+    "coords": {
+      "lat": 19.8848,
+      "lng": 102.1048
+    },
+    "bookHint": "Book via livinglandlao.org or a reputable Luang Prabang tour desk.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Living Land",
+        "url": "https://www.livinglandlao.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g295415-Living_Land_Company-Luang_Prabang_Luang_Prabang_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-sakkaline-guesthouses",
+    "name": "Heritage guesthouses along Sakkaline & Sisavangvong Road, Luang Prabang",
+    "city": "Luang Prabang",
+    "country": "la",
+    "recognition": "Restored teak-and-shophouse guesthouses lining the main peninsula street between the Royal Palace and Wat Xieng Thong, most with wooden shutters, small verandas and courtyard gardens inside the UNESCO-protected old town.",
+    "categories": [
+      "stay",
+      "guesthouse"
+    ],
+    "budgetTier": "mid",
+    "stayType": "guesthouse",
+    "blurb": "The peninsula's main axis (Sisavangvong becoming Sakkaline as it runs northeast toward Wat Xieng Thong) is lined with converted heritage houses offering mid-range rooms inside the UNESCO World Heritage zone. Staying here puts the night market, temples, cafes and the Mekong all within a short walk, in atmospheric restored buildings rather than modern blocks.",
+    "whyItFits": "Provides a stable mid-range heritage stay cluster in the old town as an area recommendation, distinct from hostels and riverside resorts, filling a Luang Prabang lodging gap.",
+    "priceRange": {
+      "low": 300000,
+      "typical": 650000,
+      "high": 1500000,
+      "currency": "LAK",
+      "note": "Roughly USD 25-75 (approx 300,000-1,500,000 LAK) for a mid-range heritage double; rates rise sharply in peak season (Nov-Feb) and over Pi Mai."
+    },
+    "hours": "Reception hours vary by property; many are small and appreciate advance notice of late arrival",
+    "tips": [
+      "Rooms facing the street can catch night-market and early alms-round noise; ask for a quieter rear or courtyard room.",
+      "Book well ahead for December-February and Lao New Year (mid-April); the peninsula fills up.",
+      "Everything is walkable, but note the peninsula has a nightly quiet curfew, so plan late arrivals."
+    ],
+    "scamWarnings": [
+      "Reserve directly or via a reputable platform; ignore tuk-tuk touts at the bus station or airport steering you to a specific guesthouse for commission."
+    ],
+    "reviewSources": [
+      "Booking.com",
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Sakkaline Road guesthouses Luang Prabang",
+    "coords": {
+      "lat": 19.8925,
+      "lng": 102.1408
+    },
+    "bookHint": "Book individual heritage guesthouses via Booking.com/Agoda or contact them directly.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/luang-prabang"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Hotels-g295415-Luang_Prabang_Luang_Prabang_Province-Hotels.html"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-tham-nam-water-cave",
+    "name": "Tham Nam (Water Cave)",
+    "city": "Vang Vieng",
+    "country": "la",
+    "recognition": "A low, water-filled cave mouth in the karst west of the Nam Song, entered by floating in on an inner tube and pulling yourself along a fixed rope with a headlamp, usually as part of the local 'cave tubing' loop.",
+    "categories": [
+      "cave",
+      "adventure",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "One of Vang Vieng's classic outdoor experiences: you lie on an inner tube and haul yourself into a flooded cave along a rope, headlamp on, through cool underground passages. It is often sold combined with kayaking, ziplining or the Blue Lagoon, but can be done as a standalone with the local guides at the entrance. Physical, a little cramped, and great fun in the right conditions.",
+    "whyItFits": "A distinctive adventure not in the app, giving active travellers an underground counterpart to the town's viewpoints and lagoons.",
+    "priceRange": {
+      "low": 50000,
+      "typical": 80000,
+      "high": 150000,
+      "currency": "LAK",
+      "note": "Roughly 50,000-150,000 LAK for entry plus tube/headlamp hire; often bundled into combo tours."
+    },
+    "hours": "Daylight hours only, roughly 09:00-16:30; access depends on water levels",
+    "tips": [
+      "Water is cold and the passage narrow; not ideal if you are claustrophobic or a weak swimmer, though life jackets are provided.",
+      "In peak wet season (Aug-Sep) high water can make the cave unsafe or closed, and in the dry months levels drop — ask locally about conditions.",
+      "Leave valuables at your guesthouse or in a dry bag; phones get wet."
+    ],
+    "scamWarnings": [
+      "Agree the total price (entry + tube + headlamp) with the guides at the mouth before starting, and confirm what any 'combo' ticket actually includes."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus",
+      "Lonely Planet"
+    ],
+    "mapQuery": "Tham Nam Water Cave Vang Vieng",
+    "coords": {
+      "lat": 18.9218,
+      "lng": 102.4135
+    },
+    "bookHint": "Book via a Vang Vieng tour agency for a combo, or pay the guides at the cave entrance.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g303901-Water_Cave-Vang_Vieng_Vientiane_Province.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vang-vieng"
+      }
+    ]
+  },
+  {
+    "id": "la-ext-kaeng-nyui-waterfall",
+    "name": "Kaeng Nyui Waterfall",
+    "city": "Vang Vieng",
+    "country": "la",
+    "recognition": "A modest multi-tier jungle waterfall reached by a short forest walk a few kilometres east of town, past a small ticket booth and picnic shelters, with a shallow plunge pool at the base.",
+    "categories": [
+      "waterfall",
+      "nature",
+      "hike"
+    ],
+    "budgetTier": "low",
+    "blurb": "A low-key alternative to the busy lagoons: a small waterfall east of Vang Vieng set in forest, reached via a short, easy walk from the car park. It is more about the leafy setting and a cooling dip than a dramatic cascade, and it is far quieter than the Blue Lagoons. Best after rain, when the flow is strongest.",
+    "whyItFits": "A quiet, cheap nature stop for travellers wanting greenery away from the tubing and lagoon crowds, and it is close enough for a half-day.",
+    "priceRange": {
+      "low": 10000,
+      "typical": 15000,
+      "high": 20000,
+      "currency": "LAK",
+      "note": "Around 10,000-20,000 LAK entry, plus a small parking fee; cash only."
+    },
+    "hours": "Daylight hours, roughly 08:00-17:00",
+    "tips": [
+      "Flow is strong in and just after the rainy season (Aug-Nov) and can be a trickle in the dry months (Feb-Apr) — set expectations accordingly.",
+      "The access road is rough dirt; a scooter or hired tuk-tuk is easiest and can get slippery when wet.",
+      "Wear grippy shoes for the short forest path and bring water; there are few facilities."
+    ],
+    "scamWarnings": [
+      "Fix the tuk-tuk fare to the trailhead and back before setting off, as it is not walkable from town."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Kaeng Nyui Waterfall Vang Vieng",
+    "coords": {
+      "lat": 18.9305,
+      "lng": 102.498
+    },
+    "bookHint": "No booking; pay at the booth on arrival.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g303901-Kaeng_Nyui_Waterfall-Vang_Vieng_Vientiane_Province.html"
+      },
+      {
+        "org": "Lonely Planet",
+        "url": "https://www.lonelyplanet.com/laos/vang-vieng"
+      }
+    ]
+  }
 ];
