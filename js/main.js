@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.140.0';
+const APP_VERSION = 'mk-v0.141.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -167,10 +167,10 @@ const chipIcon = (name) => h('span', { class: 'chip-ic', html: ICON[name] || '' 
 
 const TABS = [
   { hash: '#home', label: 'Home', svg: ICON.home },
-  { hash: '#nearby', label: 'Near me', svg: ICON.pin },
   { hash: '#places', label: 'Places', svg: ICON.compass },
-  { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
   { hash: '#map', label: 'Map', svg: ICON.map },
+  { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
+  { hash: '#settings', label: 'Settings', svg: ICON.gear },
 ];
 
 function go(hash) {
@@ -653,17 +653,95 @@ function visaCard(cc) {
   return card;
 }
 
+// ---- JOURNEY PHASES ---------------------------------------------------------
+// The four stages of a trip. The chosen phase reshapes Home so the traveller
+// leads with what matters right now, while everything else is one tap away
+// (collapsed, never hidden). Phase is stored in prefs.phase and self-defaults.
+const PHASE_ORDER = ['planning', 'arrived', 'traveling', 'post'];
+const PHASES = {
+  planning: { emoji: '🗺️', label: 'Planning a trip', tagline: 'Research routes, visas and what fits you',
+    groups: ['Plan & remember', 'Get your bearings', 'Money & practical', 'Eat & do', 'Get around'] },
+  arrived: { emoji: '🛬', label: 'Just arrived', tagline: 'Get your bearings for the first hours',
+    groups: ['Get your bearings', 'Get around', 'Money & practical', 'Eat & do', 'Plan & remember'] },
+  traveling: { emoji: '🧭', label: 'While travelling', tagline: 'Day-to-day on the road',
+    groups: ['Eat & do', 'Get around', 'Get your bearings', 'Plan & remember', 'Money & practical'] },
+  post: { emoji: '📖', label: 'Post travel', tagline: 'Reflect and make something to keep',
+    groups: ['Plan & remember', 'Money & practical', 'Eat & do', 'Get around', 'Get your bearings'] },
+};
+
+function phaseSelector() {
+  const cur = store.profile.prefs.phase || '';
+  return h('div', { class: 'phase-seg', role: 'group', 'aria-label': 'Your journey phase' },
+    PHASE_ORDER.map((k) => {
+      const p = PHASES[k];
+      return h('button', {
+        class: 'phase-btn', 'aria-pressed': cur === k ? 'true' : 'false',
+        onclick: () => { store.profile.prefs.phase = k; save(); render(); },
+      }, [h('span', { class: 'phase-emoji' }, p.emoji), h('span', { class: 'phase-lbl' }, p.label)]);
+    }));
+}
+
+// The big, phase-specific "what now" actions shown above the menu.
+function phaseLead(phase, cc) {
+  const A = {
+    planning: [
+      { e: '🧭', t: 'Trip plans', h: '#plans', primary: true },
+      { e: '🎯', t: 'Tune “For you”', h: '#foryou' },
+      { e: '🛂', t: 'Entry & visa', h: `#visa-${cc}` },
+      { e: '✅', t: 'Pre-trip checklist', h: '#checklist' },
+    ],
+    arrived: [
+      { e: '📍', t: 'What’s near me', h: '#nearby', primary: true },
+      { e: '🛬', t: 'Arrival guide', h: '#arrival' },
+      { e: '🗺', t: 'Offline map', h: '#map' },
+      { e: '🆘', t: 'Emergency', h: '#sos', danger: true },
+    ],
+    traveling: [
+      { e: '☀️', t: 'Today’s plan', h: `#today-${cc}`, primary: true },
+      { e: '📍', t: 'Near me', h: '#nearby' },
+      { e: '🧭', t: 'Explore places', h: '#places' },
+      { e: '✍️', t: 'Journal this', h: '#journal-add' },
+    ],
+    post: [
+      { e: '📖', t: 'Build scrapbook', h: '#scrapbook', primary: true },
+      { e: '🗒', t: 'Travel journal', h: '#journal' },
+      { e: '💰', t: 'Trip & budget', h: '#trip' },
+      { e: '📤', t: 'Share with your circle', h: '#circle' },
+    ],
+  }[phase];
+  if (!A) return null;
+  return h('div', { class: 'home-actions phase-lead' }, A.map((x) =>
+    h('button', {
+      class: `btn ${x.primary ? '' : 'ghost'}`.trim(),
+      style: x.danger ? 'background:var(--magenta)' : null,
+      onclick: () => go(x.h),
+    }, `${x.e} ${x.t}`)));
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
     h('div', { class: 'logo-wrap', html: logoSVG() }),
     h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
   ]));
-  wrap.append(h('div', { class: 'home-actions' }, [
-    h('button', { class: 'btn', onclick: () => go('#nearby') }, '📍 What’s near me'),
-    h('button', { class: 'btn ghost', onclick: () => go('#search') }, '🔎 Search everything'),
-    h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
-  ]));
+
+  // Journey-phase entry: the traveller picks where they are in the trip, and Home
+  // leads with what that stage needs. If unset, prompt the choice prominently.
+  const phase = store.profile.prefs.phase || '';
+  if (!phase) wrap.append(h('h2', { class: 'home-section phase-prompt' }, 'Where are you in your journey?'));
+  wrap.append(phaseSelector());
+
+  const leadCC = focusSpot().spot.country;
+  if (phase) {
+    wrap.append(h('p', { class: 'phase-tagline muted' }, PHASES[phase].tagline));
+    wrap.append(phaseLead(phase, leadCC));
+  } else {
+    wrap.append(h('div', { class: 'home-actions' }, [
+      h('button', { class: 'btn', onclick: () => go('#nearby') }, '📍 What’s near me'),
+      h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
+    ]));
+  }
+  wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:8px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
 
   wrap.append(netStatusRow());
   // Lead with what fits the user's place and moment, before the generic menu.
@@ -717,6 +795,7 @@ function homeScreen() {
       { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
       { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
       { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
+      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Album from your journal & trip', hash: '#scrapbook' },
       { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
       { ic: ICON.ticket, t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
       { ic: ICON.star, t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
@@ -734,9 +813,21 @@ function homeScreen() {
     x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
     h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
   ]);
-  groups.forEach((g) => {
-    wrap.append(h('h3', { class: 'home-group' }, g.label));
-    wrap.append(h('div', { class: 'grid' }, g.items.map(tileBtn)));
+  // Order the clusters by the chosen phase's priorities, then render each as a
+  // minimise/maximise disclosure — the top ones open, the rest a tap away — so the
+  // traveller focuses on this stage without losing access to anything.
+  const ph = PHASES[phase];
+  let orderedGroups = groups;
+  if (ph) {
+    orderedGroups = ph.groups.map((lbl) => groups.find((g) => g.label === lbl)).filter(Boolean)
+      .concat(groups.filter((g) => !ph.groups.includes(g.label)));
+  }
+  const openCount = ph ? ((phase === 'planning' || phase === 'traveling') ? 2 : 1) : 2;
+  orderedGroups.forEach((g, i) => {
+    wrap.append(h('details', { class: 'home-group-d', open: i < openCount ? '' : null }, [
+      h('summary', { class: 'home-group' }, g.label),
+      h('div', { class: 'grid' }, g.items.map(tileBtn)),
+    ]));
   });
 
   wrap.append(h('p', { class: 'disclaimer' },
@@ -3053,6 +3144,136 @@ function journalEntryScreen(id) {
   mount(wrap, '#home');
 }
 
+// ---- POST-TRAVEL SCRAPBOOK --------------------------------------------------
+// A keepsake assembled automatically from what the traveller recorded on the road:
+// journal entries + photos, places they rated highly, the itinerary and the budget.
+// Nothing new is stored — it is a printable/shareable VIEW over the existing data,
+// which is exactly the "documentation carries over to post-travel" the trip needs.
+function sbFmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function sbDateRange(a, b) {
+  if (!a && !b) return '';
+  if (a && b && a !== b) return `${sbFmtDate(a)} – ${sbFmtDate(b)}`;
+  return sbFmtDate(a || b);
+}
+function sbStatPill(n, label) {
+  return h('span', { class: 'scrap-stat' }, [h('b', {}, String(n)), ` ${label}`]);
+}
+function scrapbookText(entries, loved, stops, budget, range) {
+  const L = [];
+  L.push(`${store.profile.name ? store.profile.name + '’s' : 'My'} journey${range ? ' · ' + range : ''}`);
+  if (stops.length) L.push('\nWhere I went: ' + stops.map((s) => s.city).filter(Boolean).join(', '));
+  if (loved.length) L.push('\nPlaces I loved:\n' + loved.slice(0, 20).map(({ p, d }) => `  • ${p.name} ${'★'.repeat(Math.round(d.rating || 0))}`).join('\n'));
+  if (entries.length) L.push('\nJournal:\n' + entries.map((e) => `  ${sbFmtDate(e.date || (e.ts || '').slice(0, 10))} — ${e.title || 'Untitled'}`).join('\n'));
+  if (budget.length) {
+    const t = {}; budget.forEach((b) => { const c = b.currency || '?'; t[c] = (t[c] || 0) + (parseFloat(b.amount) || 0); });
+    L.push('\nSpent: ' + Object.entries(t).map(([c, v]) => `${Math.round(v).toLocaleString()} ${c}`).join(', '));
+  }
+  L.push('\n— made with Mekonging (www.mekonging.com)');
+  return L.join('\n');
+}
+
+function scrapbookScreen() {
+  const wrap = h('div', { class: 'screen scrapbook' });
+  wrap.append(topbar('Trip scrapbook', '#home'));
+
+  const entries = (store.journal.entries || []).slice()
+    .sort((a, b) => String(a.ts || a.date || '').localeCompare(String(b.ts || b.date || '')));
+  const stops = store.trip.stops || [];
+  const budget = store.trip.budgetLog || [];
+  const loved = Object.entries(store.placeData || {})
+    .filter(([, d]) => d && d.rating >= 4)
+    .map(([id, d]) => ({ p: getPlace(id), d }))
+    .filter((x) => x.p);
+
+  if (!entries.length && !stops.length && !budget.length && !loved.length) {
+    wrap.append(h('div', { class: 'card empty-state' }, [
+      h('h2', { style: 'margin-top:0' }, 'Your scrapbook builds itself'),
+      h('p', { class: 'muted' }, 'As you travel, everything you record — journal entries and photos, places you rate, your itinerary and budget — gathers here into an album you can keep, print or share when you get home.'),
+      h('div', { class: 'chips' }, [
+        h('button', { class: 'chip', onclick: () => go('#journal-add') }, [chipIcon('book'), 'Write a journal entry']),
+        h('button', { class: 'chip', onclick: () => go('#trip') }, [chipIcon('suitcase'), 'Plan your trip']),
+      ]),
+    ]));
+    mount(wrap, '#home'); return;
+  }
+
+  const allDates = entries.map((e) => e.date || (e.ts || '').slice(0, 10)).filter(Boolean)
+    .concat(stops.map((s) => s.fromDate).filter(Boolean)).sort();
+  const range = allDates.length ? sbDateRange(allDates[0], allDates[allDates.length - 1]) : '';
+
+  wrap.append(h('div', { class: 'card scrap-cover' }, [
+    h('h2', { style: 'margin:0' }, store.profile.name ? `${store.profile.name}’s journey` : 'My journey'),
+    range ? h('p', { class: 'muted', style: 'margin:4px 0 8px' }, range) : null,
+    h('div', { class: 'scrap-stats' }, [
+      sbStatPill(entries.length, entries.length === 1 ? 'journal entry' : 'journal entries'),
+      sbStatPill(loved.length, 'places loved'),
+      sbStatPill(stops.length, stops.length === 1 ? 'stop' : 'stops'),
+    ]),
+  ]));
+
+  const copyBtn = h('button', { class: 'chip', onclick: async () => {
+    try { await navigator.clipboard.writeText(scrapbookText(entries, loved, stops, budget, range)); copyBtn.replaceChildren(document.createTextNode('✓ Copied')); }
+    catch { copyBtn.replaceChildren(document.createTextNode('Copy failed')); }
+    setTimeout(() => copyBtn.replaceChildren(chipIcon('users'), document.createTextNode('Copy summary')), 1600);
+  } }, [chipIcon('users'), 'Copy summary']);
+  wrap.append(h('div', { class: 'chips scrap-actions' }, [
+    h('button', { class: 'chip', onclick: () => window.print() }, [chipIcon('book'), 'Print / Save as PDF']),
+    copyBtn,
+  ]));
+
+  if (stops.length) {
+    const s = h('div', { class: 'card' }, [h('h3', { class: 'scrap-h' }, '🧳 Where you went')]);
+    stops.forEach((st) => s.append(h('div', { class: 'scrap-row' }, [
+      h('strong', {}, st.city || 'Stop'),
+      h('span', { class: 'muted' }, [st.country ? (getCountry(st.country) || {}).name : '', sbDateRange(st.fromDate, st.toDate)].filter(Boolean).join(' · ')),
+    ])));
+    wrap.append(s);
+  }
+
+  if (entries.length) {
+    wrap.append(h('h3', { class: 'scrap-section' }, '📖 Your journal'));
+    entries.forEach((e) => {
+      const card = h('div', { class: 'card scrap-entry' }, [
+        h('div', { class: 'scrap-date' }, [sbFmtDate(e.date || (e.ts || '').slice(0, 10)), e.place ? '📍 ' + e.place : ''].filter(Boolean).join(' · ')),
+        h('h3', { style: 'margin:2px 0' }, e.title || 'Untitled'),
+        e.text ? h('div', { class: 'scrap-text' }, (e.text || '').split('\n').map((p) => h('p', {}, p))) : null,
+      ]);
+      if (e.photoKey) {
+        const img = h('img', { class: 'scrap-photo', alt: 'Journal photo', loading: 'lazy' });
+        card.insertBefore(img, card.children[1]);
+        getBlob(e.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+      }
+      wrap.append(card);
+    });
+  }
+
+  if (loved.length) {
+    loved.sort((a, b) => (b.d.rating || 0) - (a.d.rating || 0));
+    const pv = h('div', { class: 'card' }, [h('h3', { class: 'scrap-h' }, '⭐ Places you loved')]);
+    loved.slice(0, 30).forEach(({ p, d }) => pv.append(h('button', { class: 'scrap-row scrap-link', onclick: () => go(`#place-${p.id}`) }, [
+      h('strong', {}, p.name),
+      h('span', { class: 'muted' }, `${'★'.repeat(Math.round(d.rating))}${d.review ? ' · “' + d.review.slice(0, 60) + '”' : ''}`),
+    ])));
+    wrap.append(pv);
+  }
+
+  if (budget.length) {
+    const t = {}; budget.forEach((b) => { const c = b.currency || '?'; t[c] = (t[c] || 0) + (parseFloat(b.amount) || 0); });
+    wrap.append(h('div', { class: 'card' }, [
+      h('h3', { class: 'scrap-h' }, '💰 What you spent'),
+      ...Object.entries(t).map(([c, v]) => h('div', { class: 'scrap-row' }, [h('strong', {}, c), h('span', {}, Math.round(v).toLocaleString())])),
+    ]));
+  }
+
+  wrap.append(h('p', { class: 'disclaimer' }, 'Built from your journal, ratings, trip and budget — all stored on this device. Print to keep or save as PDF; nothing is uploaded.'));
+  mount(wrap, '#home');
+}
+
 function addJournalScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('New entry', '#journal-open'));
@@ -5307,6 +5528,30 @@ function settingsScreen() {
     (v) => { p.textScale = v; save(); applyTheme(); })));
   wrap.append(card);
 
+  // Who's travelling — the party/baby/accessibility/trip-length preferences that shape
+  // ranking and surface the right help. Kept here (not scattered) so a traveller sets
+  // them once. These also drive "For you" and the baby / accessibility shortcuts.
+  const who = h('div', { class: 'card' }, [
+    h('h2', {}, 'Who’s travelling'),
+    h('p', { class: 'muted', style: 'margin-top:0' }, 'Set once — this tailors picks, plans and the help the app surfaces for you.'),
+  ]);
+  who.append(field('Travelling as', selectEl([['', 'Not set'], ['solo', 'Solo'], ['couple', 'Couple'], ['family', 'Family']],
+    p.prefs.party || '', (v) => { p.prefs.party = v; save(); })));
+  who.append(field('Travelling with a baby or toddler', selectEl([['no', 'No'], ['yes', 'Yes — show nappies, formula & family help']],
+    p.prefs.withBaby ? 'yes' : 'no', (v) => { p.prefs.withBaby = (v === 'yes'); save(); })));
+  const selAcc = new Set(p.prefs.access || []);
+  const accChips = h('div', { class: 'chips' }, [['mobility', '♿ Mobility'], ['vision', '👁 Vision'], ['hearing', '👂 Hearing']].map(([id, lbl]) =>
+    h('button', { class: 'chip', 'aria-pressed': selAcc.has(id) ? 'true' : 'false',
+      onclick: (e) => {
+        if (selAcc.has(id)) selAcc.delete(id); else selAcc.add(id);
+        p.prefs.access = [...selAcc]; save();
+        e.currentTarget.setAttribute('aria-pressed', selAcc.has(id) ? 'true' : 'false');
+      } }, lbl)));
+  who.append(field('Accessibility needs', accChips));
+  who.append(field('Trip length', selectEl([['', 'Not set'], ['short', 'Short (≤1 week)'], ['medium', '2–3 weeks'], ['long', '1 month+']],
+    p.prefs.tripLength || '', (v) => { p.prefs.tripLength = v; save(); })));
+  wrap.append(who);
+
   // live translate
   const tcard = h('div', { class: 'card' }, [
     h('h2', {}, 'Live translate'),
@@ -5394,6 +5639,7 @@ function render() {
       case 'pools': return poolsScreen(arg);
       case 'addpin': return addPinScreen();
       case 'journal': return journalDispatch(arg);
+      case 'scrapbook': return scrapbookScreen();
       case 'journey': return journeyScreen();
       case 'calendar': return calendarDispatch(arg);
       case 'events': return eventsScreen(arg);

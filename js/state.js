@@ -19,6 +19,8 @@ function defaults() {
         withBaby: false,        // travelling with a baby/toddler — surfaces nappies/formula/family help
         access: [],             // accessibility needs, subset of ['mobility','vision','hearing']
         tripLength: '',         // '' | 'short' (≤1wk) | 'medium' (2–3wk) | 'long' (1mo+)
+        // Journey phase: shapes what Home leads with. '' = not chosen yet (Home prompts).
+        phase: '',              // '' | 'planning' | 'arrived' | 'traveling' | 'post'
         // Network consent: the app must never use mobile data / Wi-Fi silently. 'ask' = do
         // not auto-fetch until the traveller chooses; 'online' = use data when available;
         // 'offline' = stay fully offline. Set in onboarding, changeable any time.
