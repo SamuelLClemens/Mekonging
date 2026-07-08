@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.138.0';
+const APP_VERSION = 'mk-v0.139.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -161,6 +161,9 @@ const ICON_PATH = {
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 9v5M12 17h.01"/>',
 };
 const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
+// A leading line-icon for an action chip; inherits the chip's text colour (incl. the
+// white of a pressed chip) via stroke:currentColor, so it recolours with every theme.
+const chipIcon = (name) => h('span', { class: 'chip-ic', html: ICON[name] || '' });
 
 const TABS = [
   { hash: '#home', label: 'Home', svg: ICON.home },
@@ -528,11 +531,11 @@ function cityEssentials(cc, cityName, slug) {
     h('p', { class: 'muted', style: 'margin:0 0 8px' }, `🕒 Right now: ${meta.tip}`),
   ]);
   card.append(h('div', { class: 'chips' }, [
-    isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, '🧭 Get here') : null,
-    getBoard(cc, slug) ? h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${slug}`) }, '🛒 Local finds') : null,
-    h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, '⛅ Weather'),
-    (c && c.lang) ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 Phrasebook') : null,
-    h('button', { class: 'chip', onclick: () => go('#sos') }, '🆘 Emergency'),
+    isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, [chipIcon('route'), 'Get here']) : null,
+    getBoard(cc, slug) ? h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${slug}`) }, [chipIcon('board'), 'Local finds']) : null,
+    h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, [chipIcon('cloud'), 'Weather']),
+    (c && c.lang) ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, [chipIcon('chat'), 'Phrasebook']) : null,
+    h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
   ]));
   return card;
 }
@@ -812,8 +815,8 @@ function countryHubScreen(id) {
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
       here ? h('button', { class: 'btn block', onclick: () => go(`#places-${id}-${slug}`) }, `Places in ${fcity}`) : null,
       h('div', { class: 'chips', style: 'margin-top:6px' }, [
-        h('button', { class: 'chip', onclick: () => go('#nearby') }, '📍 Near me now'),
-        h('button', { class: 'chip', onclick: () => go(`#weather-${id}`) }, '⛅ Weather'),
+        h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
+        h('button', { class: 'chip', onclick: () => go(`#weather-${id}`) }, [chipIcon('cloud'), 'Weather']),
       ]),
     ]));
   }
@@ -1053,9 +1056,9 @@ function nearbyScreen() {
     body.append(arrivalEssentials(country));
     body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
-      h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, '🗺 See on the map'),
-      h('button', { class: 'chip', onclick: () => go('#map') }, '📍 Set my stay'),
-      h('button', { class: 'chip', onclick: () => go('#sos') }, '🆘 Emergency'),
+      h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, [chipIcon('map'), 'See on the map']),
+      h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('pin'), 'Set my stay']),
+      h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
     ]));
 
     let cat = 'all';
@@ -1549,7 +1552,7 @@ function placesScreen(arg) {
     },
   }, '📍 Nearest first');
   wrap.append(h('div', { class: 'view-toggle', style: 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0' }, [
-    h('div', { class: 'chips', style: 'margin:0' }, [viewBtn('list', '📋 List'), viewBtn('map', '🗺 Map')]),
+    h('div', { class: 'chips', style: 'margin:0' }, [viewBtn('list', [chipIcon('checklist'), 'List']), viewBtn('map', [chipIcon('map'), 'Map'])]),
     h('span', { style: 'flex:1' }), nearChip,
   ]));
 

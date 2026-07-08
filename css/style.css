@@ -266,6 +266,8 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
 }
 .chip[aria-pressed="true"] { background: var(--teal-deep); border-color: transparent; color: #fff; }
+.chip .chip-ic { display: inline-flex; margin-right: 6px; }
+.chip .chip-ic svg { width: 16px; height: 16px; display: block; }
 
 .search {
   width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
