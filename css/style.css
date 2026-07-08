@@ -240,11 +240,11 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 }
 .tile:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--orange); }
 /* soft tinted disc behind each tile icon for visual rhythm (purely decorative) */
-.tile .ic { font-size: 1.55rem; width: 48px; height: 48px; line-height: 1;
+.tile .ic { width: 48px; height: 48px; line-height: 1; color: var(--orange);
   display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 2px;
-  background: linear-gradient(135deg, rgba(242,169,59,0.24), rgba(232,99,42,0.12)); }
-html[data-theme="dark"] .tile .ic { background: linear-gradient(135deg, rgba(242,169,59,0.22), rgba(214,51,108,0.20)); }
-.tile:hover .ic { background: linear-gradient(135deg, rgba(242,169,59,0.34), rgba(232,99,42,0.20)); }
+  background: rgba(128, 128, 128, 0.12); }
+.tile .ic svg { width: 26px; height: 26px; display: block; }
+.tile:hover .ic { background: rgba(128, 128, 128, 0.2); }
 .tile .t { font-weight: 800; font-size: var(--fs-h3); }
 .tile .d { color: var(--ink-soft); font-size: var(--fs-sm); }
 
