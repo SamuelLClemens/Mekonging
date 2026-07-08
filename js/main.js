@@ -115,23 +115,51 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.135.0';
+const APP_VERSION = 'mk-v0.136.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
 // moved out of the bar (it is empty for most sessions) to a ⭐ in the header, always
 // one tap away without taking prime navigation real estate.
-// Inline line icons (stroke: currentColor) so the menu recolours with the active theme —
-// an emoji can't. viewBox 24; the button's colour flows in via currentColor.
-const ICON = {
-  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V20h14V9.5"/></svg>',
-  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.5 7-11a7 7 0 0 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
-  compass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.3 4.9-4.9 2.3 2.3-4.9z"/></svg>',
-  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>',
-  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>',
-  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.9 6.7 19.5l1.2-6L3.4 9.3l6-.7z"/></svg>',
-  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7L5.6 5.6"/></svg>',
+// Inline line icons (stroke: currentColor) so the menu and tiles recolour with the active
+// theme — an emoji can't. One wrapper; each entry is just the inner shapes. viewBox 24.
+const svgIcon = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+const ICON_PATH = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 9.5V20h14V9.5"/>',
+  pin: '<path d="M12 21s7-5.5 7-11a7 7 0 0 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.3 4.9-4.9 2.3 2.3-4.9z"/>',
+  chat: '<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/>',
+  map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>',
+  star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.9 6.7 19.5l1.2-6L3.4 9.3l6-.7z"/>',
+  gear: '<circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7L5.6 5.6"/>',
+  arrive: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
+  passport: '<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M9 16h6"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+  route: '<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8h6"/>',
+  navarrow: '<path d="M3 11l18-8-8 18-2-8z"/>',
+  trophy: '<path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 0 1-12 0zM6 6H4a2 2 0 0 0 0 4h2M18 6h2a2 2 0 0 1 0 4h-2"/>',
+  bowl: '<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 3v3M9 5v1.5M15 5v1.5"/>',
+  board: '<rect x="3" y="4" width="18" height="15" rx="2"/><path d="M7 9h10M7 13h6"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>',
+  cloud: '<path d="M7 18a4 4 0 0 1 .5-8 5.5 5.5 0 0 1 10.5 1.5A3.5 3.5 0 0 1 17 18z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  fruit: '<path d="M12 8c-1.2-2.5-4.5-2.3-5.5.2C5 11.5 8 20 12 20s7-8.5 5.5-11.8C16.5 5.7 13.2 5.5 12 8z"/><path d="M12 8V4M12 5c.8-1 2.5-1.2 3.2-.2"/>',
+  leaf: '<path d="M11 20A7 7 0 0 1 4 13C4 8 7 4 20 4c0 10-5 16-9 16z"/><path d="M4 20c4-6 8-8 12-9"/>',
+  volume: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12"/>',
+  waves: '<path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 7c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  suitcase: '<rect x="5" y="8" width="14" height="12" rx="1.5"/><path d="M9 8V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M9.5 12v4M14.5 12v4"/>',
+  checklist: '<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',
+  book: '<path d="M5 4a1 1 0 0 1 1-1h13v18H6a1 1 0 0 1-1-1z"/><path d="M5 4v16M9 7h6M9 11h6"/>',
+  calendar: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9.5h16M9 3v4M15 3v4"/>',
+  ticket: '<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M13 6v12"/>',
+  coins: '<circle cx="9" cy="9" r="6"/><path d="M21 15a6 6 0 0 1-9.7 4.7"/>',
+  tag: '<path d="M20.6 13.4 12 22l-9-9V4h9z"/><circle cx="7.5" cy="7.5" r="1.2"/>',
+  users: '<path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="8" r="3.5"/><path d="M17 20v-1a4 4 0 0 0-3-3.9M15 4.2a4 4 0 0 1 0 7.6"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.6 1.3c0 1.6-2.1 2-2.1 3.5"/><path d="M12 17h.01"/>',
 };
+const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 
 const TABS = [
   { hash: '#home', label: 'Home', svg: ICON.home },
@@ -659,48 +687,48 @@ function homeScreen() {
   const visaCC = focusSpot().spot.country;
   const groups = [
     { label: 'Get your bearings', items: [
-      { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: '#arrival' },
-      { ic: '🛂', t: 'Entry & visa', d: 'Visa-free, e-visa or on arrival', hash: `#visa-${visaCC}` },
-      { ic: '🎯', t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
-      { ic: '🛤️', t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
-      { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
+      { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: '#arrival' },
+      { ic: ICON.passport, t: 'Entry & visa', d: 'Visa-free, e-visa or on arrival', hash: `#visa-${visaCC}` },
+      { ic: ICON.target, t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
+      { ic: ICON.route, t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
+      { ic: ICON.trophy, t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
     ] },
     { label: 'Eat & do', items: [
-      { ic: '🌶️', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-      { ic: '📋', t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
-      { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
-      { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
-      { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
-      { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
-      { ic: '🔊', t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
-      { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
+      { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
+      { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
+      { ic: ICON.sun, t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
+      { ic: ICON.search, t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
+      { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
+      { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+      { ic: ICON.volume, t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
+      { ic: ICON.waves, t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
     ] },
     { label: 'Get around', items: [
-      { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats A → B', hash: '#route' },
-      { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
-      { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
-      { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
+      { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats A → B', hash: '#route' },
+      { ic: ICON.map, t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
+      { ic: ICON.clock, t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
+      { ic: ICON.cloud, t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
     ] },
     { label: 'Plan & remember', items: [
-      { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
-      { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
-      { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
-      { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
-      { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
-      { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+      { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
+      { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
+      { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
+      { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
+      { ic: ICON.ticket, t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
+      { ic: ICON.star, t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
     ] },
     { label: 'Money & practical', items: [
-      { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
-      { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
-      { ic: '🧑‍🤝‍🧑', t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle', badge: unreadInboxCount() },
-      { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
-      { ic: '❓', t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
-      { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
+      { ic: ICON.coins, t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
+      { ic: ICON.tag, t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
+      { ic: ICON.users, t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle', badge: unreadInboxCount() },
+      { ic: ICON.lock, t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
+      { ic: ICON.help, t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
+      { ic: ICON.gear, t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
     ] },
   ];
   const tileBtn = (x) => h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t }, [
     x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
-    h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+    h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
   ]);
   groups.forEach((g) => {
     wrap.append(h('h3', { class: 'home-group' }, g.label));
