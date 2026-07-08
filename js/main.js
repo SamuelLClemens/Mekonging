@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.143.0';
+const APP_VERSION = 'mk-v0.144.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -725,21 +725,25 @@ function homeScreen() {
     h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
   ]));
 
-  // Journey-phase entry: the traveller picks where they are in the trip, and Home
-  // leads with what that stage needs. If unset, prompt the choice prominently.
+  // Journey phase shapes Home. FIRST run (unset) prompts the choice; once chosen we do
+  // NOT bring the traveller back to the picker — Home just leads with that stage's
+  // content, with a subtle current-stage line. The phase is switched in Settings.
   const phase = store.profile.prefs.phase || '';
-  if (!phase) wrap.append(h('h2', { class: 'home-section phase-prompt' }, 'Where are you in your journey?'));
-  wrap.append(phaseSelector());
-
   const leadCC = focusSpot().spot.country;
-  if (phase) {
-    wrap.append(h('p', { class: 'phase-tagline muted' }, PHASES[phase].tagline));
-    wrap.append(phaseLead(phase, leadCC));
-  } else {
+  if (!phase) {
+    wrap.append(h('h2', { class: 'home-section phase-prompt' }, 'Where are you in your journey?'));
+    wrap.append(phaseSelector());
     wrap.append(h('div', { class: 'home-actions' }, [
       h('button', { class: 'btn', onclick: () => go('#nearby') }, '📍 What’s near me'),
       h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
     ]));
+  } else {
+    wrap.append(h('div', { class: 'phase-current' }, [
+      h('span', { class: 'phase-current-lbl' }, `${PHASES[phase].emoji} ${PHASES[phase].label}`),
+      h('button', { class: 'linklike phase-change', onclick: () => go('#settings') }, 'Change in Settings'),
+    ]));
+    wrap.append(h('p', { class: 'phase-tagline muted' }, PHASES[phase].tagline));
+    wrap.append(phaseLead(phase, leadCC));
   }
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:8px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
 
@@ -5484,6 +5488,14 @@ function settingsScreen() {
   const p = store.profile;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Settings'));
+
+  // Journey phase — always switchable here, so Home never has to drag the traveller
+  // back to the picker once they have chosen a stage.
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Journey phase'),
+    h('p', { class: 'muted', style: 'margin-top:0' }, 'Switch any time — this reshapes Home for the stage you are in.'),
+    phaseSelector(),
+  ]));
 
   const card = h('div', { class: 'card' });
 

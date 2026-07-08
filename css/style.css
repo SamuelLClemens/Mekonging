@@ -245,6 +245,9 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .phase-btn:active { transform: scale(0.97); }
 .phase-btn[aria-pressed="true"] { border-color: transparent; background: var(--grad-sun); color: #fff; box-shadow: var(--shadow-soft); }
 .phase-tagline { text-align: center; margin: 0 0 var(--sp-2); font-size: var(--fs-sm); }
+.phase-current { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-1); }
+.phase-current-lbl { font-weight: 800; font-size: var(--fs-sm); }
+.phase-change { font-size: var(--fs-sm); }
 
 /* --- collapsible Home clusters (minimise / maximise) --- */
 .home-group-d { border-top: 1px solid var(--line); }
