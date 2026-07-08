@@ -115,18 +115,30 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.134.0';
+const APP_VERSION = 'mk-v0.135.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
 // moved out of the bar (it is empty for most sessions) to a ⭐ in the header, always
 // one tap away without taking prime navigation real estate.
+// Inline line icons (stroke: currentColor) so the menu recolours with the active theme —
+// an emoji can't. viewBox 24; the button's colour flows in via currentColor.
+const ICON = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V20h14V9.5"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.5 7-11a7 7 0 0 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  compass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.3 4.9-4.9 2.3 2.3-4.9z"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>',
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.9 6.7 19.5l1.2-6L3.4 9.3l6-.7z"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7L5.6 5.6"/></svg>',
+};
+
 const TABS = [
-  { hash: '#home', label: 'Home', ic: '🏠' },
-  { hash: '#nearby', label: 'Near me', ic: '📍' },
-  { hash: '#places', label: 'Places', ic: '🧭' },
-  { hash: '#phrasebook', label: 'Talk', ic: '💬' },
-  { hash: '#map', label: 'Map', ic: '🗺️' },
+  { hash: '#home', label: 'Home', svg: ICON.home },
+  { hash: '#nearby', label: 'Near me', svg: ICON.pin },
+  { hash: '#places', label: 'Places', svg: ICON.compass },
+  { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
+  { hash: '#map', label: 'Map', svg: ICON.map },
 ];
 
 function go(hash) {
@@ -139,13 +151,17 @@ function topbar(title, backHash) {
   const hash = location.hash || '';
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
   const onSos = hash.startsWith('#sos');
+  const onSettings = hash.startsWith('#settings');
+  const iconBtn = (label, target, svg) =>
+    h('button', { class: 'topbar-ic', 'aria-label': label, title: label, onclick: () => go(target), html: svg });
   return h('header', { class: 'topbar' }, [
     backHash ? h('button', { class: 'back', onclick: () => go(backHash) }, '‹ Back') : null,
     h('h1', {}, title),
-    // Persistent safety anchor: emergency help is one tap from every screen, so a lost or
-    // distressed traveller never has to hunt for it.
+    onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
+    onSettings ? null : iconBtn('Settings', '#settings', ICON.gear),
+    // Persistent safety anchor: emergency help one tap from every screen (kept as the
+    // bold red marker so it stands out from the neutral menu icons).
     onSos ? null : h('button', { class: 'topbar-sos', 'aria-label': 'Emergency help', title: 'Emergency help', onclick: () => go('#sos') }, '🆘'),
-    onSaved ? null : h('button', { class: 'topbar-star', 'aria-label': 'Saved & collections', title: 'Saved & collections', onclick: () => go('#saved') }, '⭐'),
   ]);
 }
 
@@ -154,7 +170,7 @@ function tabbar(activeHashPrefix) {
     h('button', {
       'aria-current': activeHashPrefix === t.hash ? 'page' : null,
       onclick: () => go(t.hash),
-    }, [h('span', { class: 'ic' }, t.ic), h('span', {}, t.label)])));
+    }, [h('span', { class: 'ic', html: t.svg }), h('span', {}, t.label)])));
 }
 
 function mount(node, activeTab) {
@@ -168,11 +184,11 @@ function mount(node, activeTab) {
 // ---- HOME (open with a country-picker map) ----------------------------------
 function logoSVG() {
   return `<svg class="logo" viewBox="0 0 360 122" role="img" aria-label="Mekonging" xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="mkgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="0.5" stop-color="#E8632A"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>
+    <defs><linearGradient id="mkgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="0.5" style="stop-color:var(--sun-deep)"/><stop offset="1" style="stop-color:var(--magenta)"/></linearGradient></defs>
     <g transform="translate(150 6)"><circle cx="30" cy="30" r="18" fill="url(#mkgh)"/>
-      <g stroke="#F2A93B" stroke-width="3" stroke-linecap="round"><line x1="30" y1="2" x2="30" y2="9"/><line x1="30" y1="51" x2="30" y2="58"/><line x1="2" y1="30" x2="9" y2="30"/><line x1="51" y1="30" x2="58" y2="30"/><line x1="10" y1="10" x2="15" y2="15"/><line x1="45" y1="45" x2="50" y2="50"/><line x1="50" y1="10" x2="45" y2="15"/><line x1="15" y1="45" x2="10" y2="50"/></g></g>
+      <g style="stroke:var(--sun)" stroke-width="3" stroke-linecap="round"><line x1="30" y1="2" x2="30" y2="9"/><line x1="30" y1="51" x2="30" y2="58"/><line x1="2" y1="30" x2="9" y2="30"/><line x1="51" y1="30" x2="58" y2="30"/><line x1="10" y1="10" x2="15" y2="15"/><line x1="45" y1="45" x2="50" y2="50"/><line x1="50" y1="10" x2="45" y2="15"/><line x1="15" y1="45" x2="10" y2="50"/></g></g>
     <text x="180" y="94" text-anchor="middle" font-family="'Avenir Next','Trebuchet MS',system-ui,sans-serif" font-weight="800" font-size="40" fill="url(#mkgh)" letter-spacing="0.5">Mekonging</text>
-    <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" stroke="#16A39A" stroke-width="4" stroke-linecap="round"/></svg>`;
+    <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" style="stroke:var(--teal)" stroke-width="4" stroke-linecap="round"/></svg>`;
 }
 // ---- CONTEXT-AWARE "RIGHT NOW" ---------------------------------------------
 // The home screen leads with what fits the user's place and moment: we read the last GPS
