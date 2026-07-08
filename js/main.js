@@ -95,7 +95,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.130.0';
+const APP_VERSION = 'mk-v0.131.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -118,9 +118,13 @@ function go(hash) {
 function topbar(title, backHash) {
   const hash = location.hash || '';
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
+  const onSos = hash.startsWith('#sos');
   return h('header', { class: 'topbar' }, [
     backHash ? h('button', { class: 'back', onclick: () => go(backHash) }, '‹ Back') : null,
     h('h1', {}, title),
+    // Persistent safety anchor: emergency help is one tap from every screen, so a lost or
+    // distressed traveller never has to hunt for it.
+    onSos ? null : h('button', { class: 'topbar-sos', 'aria-label': 'Emergency help', title: 'Emergency help', onclick: () => go('#sos') }, '🆘'),
     onSaved ? null : h('button', { class: 'topbar-star', 'aria-label': 'Saved & collections', title: 'Saved & collections', onclick: () => go('#saved') }, '⭐'),
   ]);
 }
@@ -614,9 +618,13 @@ function homeScreen() {
   // Grouped into labeled task clusters (not a flat 28-tile wall) so the screen is
   // scannable: the eye lands on a heading, not an undifferentiated grid. Every
   // destination is still present — nothing is hidden, just chunked by intent.
+  // Entry & visa had no top-level home; resolve it to where the traveller is focused so
+  // it is one tap from Home (not buried in a country hub) — a high-intent task.
+  const visaCC = focusSpot().spot.country;
   const groups = [
     { label: 'Get your bearings', items: [
       { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: '#arrival' },
+      { ic: '🛂', t: 'Entry & visa', d: 'Visa-free, e-visa or on arrival', hash: `#visa-${visaCC}` },
       { ic: '🎯', t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
       { ic: '🛤️', t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
       { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
