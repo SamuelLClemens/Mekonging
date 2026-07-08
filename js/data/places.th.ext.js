@@ -184,6 +184,10 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-doi-inthanon", name: "Doi Inthanon National Park", city: "Chiang Mai", country: "th",
+    externalRatings: [
+      { site: "Google", score: 4.6, scale: 5, count: 3661, asOf: "2026-07" },
+      { site: "Tripadvisor", score: 4.4, scale: 5, count: 2265, url: "https://www.tripadvisor.com/Attraction_Review-g1027112-d455307-Reviews-Doi_Inthanon-Doi_Inthanon_National_Park.html", asOf: "2026-07" },
+    ],
     recognition: 'The park road climbs to Thailand highest summit; the twin royal pagodas Naphamethanidon and Naphaphonphumisiri stand side by side on the ridge, and the Wachirathan waterfall thunders beside the main road below.',
     localName: 'ดอยอินทนนท์ · Doi Inthanon',
     categories: ["nature", "park", "viewpoint", "waterfall"], budgetTier: "mid",
@@ -200,6 +204,10 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-doi-suthep", name: "Wat Phra That Doi Suthep", city: "Chiang Mai", country: "th",
+    externalRatings: [
+      { site: "Google", score: 4.7, scale: 5, count: 11828, asOf: "2026-07" },
+      { site: "Tripadvisor", score: 4.4, scale: 5, count: 7796, url: "https://www.tripadvisor.com/Attraction_Review-g8286767-d456320-Reviews-Wat_Phra_That_Doi_Suthep-Doi_Suthep.html", asOf: "2026-07" },
+    ],
     recognition: 'On the forested mountain west of Chiang Mai; a long naga-flanked staircase of 306 steps climbs to a terrace built around a gleaming gold chedi, with sweeping views over the city below.',
     localName: 'วัดพระธาตุดอยสุเทพ · Wat Phra That Doi Suthep',
     categories: ["culture", "viewpoint"], budgetTier: "low",
@@ -216,6 +224,10 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-white-temple", name: "Wat Rong Khun (White Temple)", city: "Chiang Rai", country: "th",
+    externalRatings: [
+      { site: "Google", score: 4.6, scale: 5, count: 24934, asOf: "2026-07" },
+      { site: "Tripadvisor", score: 4.5, scale: 5, count: 7954, url: "https://www.tripadvisor.com/Attraction_Review-g297920-d1368436-Reviews-Wat_Rong_Khun-Chiang_Rai_Chiang_Rai_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'South of Chiang Rai on the highway; an all-white temple encrusted with mirrored glass, approached across a bridge over a field of upreaching white hands, unmistakable against any other temple in Thailand.',
     localName: 'วัดร่องขุ่น · Wat Rong Khun',
     categories: ["culture", "viewpoint"], budgetTier: "low",
@@ -232,6 +244,10 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-sukhothai-historical-park", name: "Sukhothai Historical Park", city: "Sukhothai", country: "th",
+    externalRatings: [
+      { site: "Google", score: 4.7, scale: 5, count: 18178, asOf: "2026-07" },
+      { site: "Tripadvisor", score: 4.7, scale: 5, count: 3491, url: "https://www.tripadvisor.com/Attraction_Review-g303921-d455348-Reviews-Sukhothai_Historical_Park-Sukhothai_Sukhothai_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'Inside the walled Old Sukhothai zone about 12 km west of the new town; brick temple ruins around lotus ponds, with the giant seated Buddha squeezed into the narrow Wat Si Chum mondop in the north zone.',
     localName: 'อุทยานประวัติศาสตร์สุโขทัย · Utthayan Prawattisat Sukhothai',
     categories: ["culture", "park"], budgetTier: "low",
@@ -248,6 +264,9 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-ayutthaya-historical-park", name: "Ayutthaya Historical Park", city: "Ayutthaya", country: "th",
+    externalRatings: [
+      { site: "Google", score: 4.8, scale: 5, count: 86, asOf: "2026-07" },
+    ],
     recognition: 'On the island town north of Bangkok; brick prangs and rows of headless Buddhas, with the famous sandstone Buddha head entwined in fig-tree roots at Wat Mahathat marking the central cluster.',
     localName: 'อุทยานประวัติศาสตร์อยุธยา · Utthayan Prawattisat Ayutthaya',
     categories: ["culture", "park"], budgetTier: "low",

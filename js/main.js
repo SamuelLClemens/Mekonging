@@ -90,7 +90,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.110.0';
+const APP_VERSION = 'mk-v0.111.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },

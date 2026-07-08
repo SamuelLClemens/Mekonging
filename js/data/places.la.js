@@ -1,6 +1,9 @@
 export const PLACES_LA = [
   {
     id: "la-vte-cope",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.7, scale: 5, count: 2535, url: "https://www.tripadvisor.com/Attraction_Review-g293950-d1092459-Reviews-COPE_Visitor_Centre-Vientiane_Vientiane_Prefecture.html", asOf: "2026-07" },
+    ],
     recognition: 'A low visitor centre in the National Rehabilitation Centre grounds off Khouvieng Road, marked by hanging displays and sculptures made from cluster-bomb casings and prosthetic limbs.',
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "COPE Visitor Centre",
@@ -22,6 +25,9 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-pha-that-luang",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.1, scale: 5, count: 1620, url: "https://www.tripadvisor.com/Attraction_Review-g293950-d17503455-Reviews-Pha_That_Luang-Vientiane_Vientiane_Prefecture.html", asOf: "2026-07" },
+    ],
     recognition: 'A colossal gold-covered stupa with a tapering spire and a stepped square base, ringed by a cloister wall and a statue of King Setthathirath out front, northeast of the city centre.',
     localName: 'ພະທາດຫຼວງ · Pha That Luang',
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -64,6 +70,9 @@ export const PLACES_LA = [
   },
   {
     id: "la-vte-buddha-park",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.0, scale: 5, count: 2450, url: "https://www.tripadvisor.com/Attraction_Review-g293950-d325750-Reviews-Buddha_Park-Vientiane_Vientiane_Prefecture.html", asOf: "2026-07" },
+    ],
     recognition: 'A riverside field of weathered grey concrete statues about 25 km southeast of the city near the Friendship Bridge, dominated by a giant reclining Buddha and a tall domed pumpkin-shaped structure you climb through.',
     localName: 'ວັດຊຽງຄວນ · Xieng Khuan',
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -86,6 +95,9 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-kuang-si",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.7, scale: 5, count: 11264, url: "https://www.tripadvisor.com/Attraction_Review-g295415-d555731-Reviews-Kuang_Si_Falls-Luang_Prabang_Luang_Prabang_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'About 30 km south of town, a multi-tier turquoise waterfall dropping through terraced limestone pools, with a moon-bear rescue enclosure beside the entrance path.',
     localName: 'ນ້ຳຕົກຕາດກວາງຊີ · Nam Tok Tad Kuang Si',
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -110,6 +122,9 @@ export const PLACES_LA = [
   },
   {
     id: "la-lpb-night-market",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.1, scale: 5, count: 3526, url: "https://www.tripadvisor.com/Attraction_Review-g295415-d1727836-Reviews-Luang_Prabang_Night_Market-Luang_Prabang_Luang_Prabang_Province.html", asOf: "2026-07" },
+    ],
     recognition: 'Rows of red-tented handicraft stalls that fill Sisavangvong Road each evening between the Royal Palace Museum and Mount Phousi, with a cheap fill-your-plate buffet in a side alley.',
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     name: "Luang Prabang Night Market",

@@ -1,6 +1,10 @@
 export const PLACES_KH = [
   {
     id: "kh-siemreap-angkor-wat", name: "Angkor Wat", city: "Siem Reap", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.8, scale: 5, count: 49443, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d317907-Reviews-Angkor_Wat-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
+      { site: "Google", score: 4.8, scale: 5, count: 43269, asOf: "2026-07" },
+    ],
     recognition: 'Look for the long causeway across a wide moat leading to five lotus-bud sandstone towers; the tallest central tower is the temple silhouette on the national flag.',
     localName: 'អង្គរវត្ត · Angkor Wat',
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -17,6 +21,10 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-bayon", name: "Bayon Temple (Angkor Thom)", city: "Siem Reap", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.8, scale: 5, count: 20896, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d552507-Reviews-Bayon_Temple-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
+      { site: "Google", score: 4.8, scale: 5, count: 14581, asOf: "2026-07" },
+    ],
     recognition: 'At the centre of Angkor Thom, past the south gate causeway lined with stone gods and demons; identifiable by dozens of towers each carved with four large serene stone faces.',
     localName: 'ប្រាសាទបាយ័ន · Prasat Bayon',
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -62,6 +70,10 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-tuol-sleng", name: "Tuol Sleng Genocide Museum (S-21)", city: "Phnom Penh", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.6, scale: 5, count: 12983, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d324063-Reviews-Tuol_Sleng_Genocide_Museum-Phnom_Penh.html", asOf: "2026-07" },
+      { site: "Google", score: 4.6, scale: 5, count: 12072, asOf: "2026-07" },
+    ],
     recognition: 'A walled former high school of three-storey concrete blocks off Street 113; the balconies are still wrapped in barbed wire and white tombs of the last victims stand in the courtyard.',
     localName: 'សារមន្ទីរឧក្រិដ្ឋកម្មប្រល័យពូជសាសន៍ទួលស្លែង · Tuol Sleng',
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -78,6 +90,10 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-royal-palace", name: "Royal Palace & Silver Pagoda", city: "Phnom Penh", country: "kh",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.0, scale: 5, count: 8306, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d324064-Reviews-Royal_Palace-Phnom_Penh.html", asOf: "2026-07" },
+      { site: "Google", score: 4.3, scale: 5, count: 13516, asOf: "2026-07" },
+    ],
     recognition: 'A walled complex facing the riverfront, its gold-and-cream throne halls topped by tiered spired roofs; entry is through the eastern gate near the Silver Pagoda compound.',
     localName: 'ព្រះបរមរាជវាំង · Preah Barommareacheaveang',
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -124,6 +140,9 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-tonle-sap-floating", name: "Tonle Sap Floating Villages (Kampong Phluk)", city: "Siem Reap", country: "kh",
+    externalRatings: [
+      { site: "Google", score: 4.1, scale: 5, count: 880, asOf: "2026-07" },
+    ],
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "mid",
     blurb: "Stilted and floating communities and flooded forest on Southeast Asia’s largest freshwater lake.",

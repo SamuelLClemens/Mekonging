@@ -1,6 +1,9 @@
 export const PLACES_VI = [
   {
     id: "vi-hanoi-temple-of-literature", name: "Temple of Literature (Van Mieu)", city: "Hanoi", country: "vi",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.3, scale: 5, count: 11312, url: "https://www.tripadvisor.com/Attraction_Review-g293924-d311083-Reviews-Temple_of_Literature_National_University-Hanoi.html", asOf: "2026-07" },
+    ],
     recognition: 'Look for the low red-tiled Van Mieu gate on Quoc Tu Giam Street, opening into a walled sequence of courtyards, lotus ponds and a stone stelae garden mounted on stone turtles.',
     localName: 'Văn Miếu Quốc Tử Giám · Van Mieu Quoc Tu Giam',
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -47,6 +50,10 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-war-remnants-museum", name: "War Remnants Museum", city: "Ho Chi Minh City", country: "vi",
+    externalRatings: [
+      { site: "Tripadvisor", score: 4.4, scale: 5, count: 33502, url: "https://www.tripadvisor.com/Attraction_Review-g293925-d311103-Reviews-War_Remnants_Museum-Ho_Chi_Minh_City.html", asOf: "2026-07" },
+      { site: "Google", score: 4.5, scale: 5, asOf: "2026-07" },
+    ],
     recognition: 'A boxy multi-storey building on Vo Van Tan Street whose forecourt is parked with captured US helicopters, tanks and a fighter jet behind the perimeter fence.',
     localName: 'Bảo tàng Chứng tích Chiến tranh · Bao tang Chung tich Chien tranh',
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -63,6 +70,9 @@ export const PLACES_VI = [
   },
   {
     id: "vi-hcmc-ben-thanh-market", name: "Ben Thanh Market", city: "Ho Chi Minh City", country: "vi",
+    externalRatings: [
+      { site: "Tripadvisor", score: 3.5, scale: 5, url: "https://www.tripadvisor.com/Attraction_Review-g293925-d311087-Reviews-Ben_Thanh_Market-Ho_Chi_Minh_City.html", asOf: "2026-07" },
+    ],
     recognition: 'Head for the large ochre market hall crowned by a clock tower over its south gate, sitting on the traffic roundabout at the western foot of Le Loi Street.',
     localName: 'Chợ Bến Thành · Cho Ben Thanh',
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
