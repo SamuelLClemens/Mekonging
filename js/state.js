@@ -47,7 +47,8 @@ function defaults() {
       // owner in Settings) + the user's own reply-to. Both on-device; never committed.
       feedbackTo: '',
       contactEmail: '',
-      theme: 'light',           // 'light' | 'dark'
+      theme: 'light',           // 'light' | 'dark' (applies to the Classic skin)
+      skin: 'classic',          // 'classic' | 'night' | 'silk' | 'tropical' | 'psych' — visual theme
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
       textScale: 'm',           // 's' | 'm' | 'l' — accessibility text size
       seenWelcome: false,
