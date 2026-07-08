@@ -66,7 +66,17 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 
 function applyTheme() {
   const root = document.documentElement;
-  root.setAttribute('data-theme', store.profile.theme === 'dark' ? 'dark' : 'light');
+  // Named visual themes ("skins") each define their own palette; Night Market rides the
+  // dark token set, the others the light one. Classic keeps the user's light/dark choice.
+  const skin = store.profile.skin || 'classic';
+  const SKIN_MODE = { night: 'dark', silk: 'light', tropical: 'light', psych: 'light' };
+  if (skin !== 'classic' && SKIN_MODE[skin]) {
+    root.setAttribute('data-skin', skin);
+    root.setAttribute('data-theme', SKIN_MODE[skin]);
+  } else {
+    root.removeAttribute('data-skin');
+    root.setAttribute('data-theme', store.profile.theme === 'dark' ? 'dark' : 'light');
+  }
   root.setAttribute('data-reduced-motion', prefersReducedMotion() ? 'on' : 'off');
   root.setAttribute('data-text', store.profile.textScale || 'm');
 }
@@ -95,7 +105,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.131.0';
+const APP_VERSION = 'mk-v0.132.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -912,7 +922,7 @@ function arrivalScreen(arg) {
 function nearbyScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('📍 Near me', '#home'));
-  const status = h('p', { class: 'muted' }, 'Finding your location…');
+  const status = h('p', { class: 'muted' }, [h('span', { class: 'spinner' }), 'Finding your location…']);
   const body = h('div', {});
   wrap.append(status, body);
   mount(wrap, '#nearby');
@@ -5155,7 +5165,13 @@ function settingsScreen() {
       } }, it.label)));
   card.append(field('Interests', intChips));
 
-  card.append(field('Theme', selectEl([['light', 'Light'], ['dark', 'Dark']], p.theme,
+  card.append(field('Theme', selectEl([
+    ['classic', 'Classic sunset'], ['night', 'Night Market'], ['silk', 'Silk Route'],
+    ['tropical', 'Tropical Pop'], ['psych', 'Cambodian Psych ’60s–’70s'],
+  ], p.skin || 'classic',
+    (v) => { p.skin = v; save(); applyTheme(); })));
+
+  card.append(field('Light / dark (Classic only)', selectEl([['light', 'Light'], ['dark', 'Dark']], p.theme,
     (v) => { p.theme = v; save(); applyTheme(); })));
 
   card.append(field('Reduce motion', selectEl([['auto', 'Auto (system)'], ['on', 'On'], ['off', 'Off']], p.reducedMotion,

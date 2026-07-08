@@ -53,6 +53,56 @@ html[data-theme="dark"] {
   --shadow-soft: 0 3px 10px rgba(0,0,0,0.4);
 }
 
+/* ---- Named visual themes (skins) — chosen in Settings -----------------------
+   Each redefines the palette leaves; components stay token-driven so they reskin
+   for free. Placed after the dark block so night (which rides data-theme=dark)
+   wins on shared tokens. */
+:root[data-skin="night"] {
+  --cream: #141017; --bg: #141017; --card: #1E1822; --line: #332A3C;
+  --ink: #F3EEE6; --ink-soft: #A79C8C;
+  --sun: #F5A524; --sun-deep: #E08A10; --orange: #F5A524; --magenta: #FF5C8A; --pink: #FF5C8A;
+  --teal: #2ED3B7; --teal-deep: #2ED3B7; --grape: #8A6BC0;
+  --grad-sun: linear-gradient(135deg, #F5A524 0%, #FF5C8A 100%);
+  --grad-teal: linear-gradient(135deg, #2ED3B7 0%, #8A6BC0 100%);
+  --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
+      rgba(245,165,36,0.10) 0deg 9deg, rgba(255,92,138,0.06) 9deg 18deg);
+  --shadow-soft: 0 4px 16px -4px rgba(0,0,0,0.6);
+}
+:root[data-skin="silk"] {
+  --cream: #F3F1EC; --bg: #F3F1EC; --card: #FFFFFF; --line: #E3DED2;
+  --ink: #222019; --ink-soft: #6B635A;
+  --sun: #0E7C66; --sun-deep: #0A5E4D; --orange: #0E7C66; --magenta: #E24E1B; --pink: #E24E1B;
+  --teal: #0E7C66; --teal-deep: #1B4038; --grape: #6A4C93;
+  --grad-sun: linear-gradient(135deg, #0E7C66 0%, #1B4038 100%);
+  --grad-teal: linear-gradient(135deg, #0E7C66 0%, #1B4038 100%);
+  --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
+      rgba(14,124,102,0.06) 0deg 10deg, rgba(226,78,27,0.04) 10deg 20deg);
+  --shadow-soft: 0 4px 14px -6px rgba(30,60,50,0.16);
+}
+:root[data-skin="tropical"] {
+  --cream: #FBFBF9; --bg: #FBFBF9; --card: #FFFFFF; --line: #E7EDEA;
+  --ink: #212529; --ink-soft: #66707A;
+  --sun: #12B886; --sun-deep: #0CA678; --orange: #0E7C66; --magenta: #FF6B6B; --pink: #FF922B;
+  --teal: #1098AD; --teal-deep: #0B7285; --grape: #7048E8;
+  --grad-sun: linear-gradient(135deg, #12B886 0%, #1098AD 100%);
+  --grad-teal: linear-gradient(135deg, #1098AD 0%, #7048E8 100%);
+  --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
+      rgba(18,184,134,0.08) 0deg 9deg, rgba(255,146,43,0.05) 9deg 18deg);
+  --r-lg: 22px; --shadow-soft: 0 6px 18px -8px rgba(18,184,134,0.30);
+}
+:root[data-skin="psych"] {
+  /* 1960s–70s Cambodian rock: vintage sleeve paper + swirling saturated warmth. */
+  --cream: #F6E7C4; --bg: #F6E7C4; --card: #FFF4D6; --line: #E3C98C;
+  --ink: #3A2410; --ink-soft: #7A5A2C;
+  --sun: #E8A33D; --sun-deep: #D9541E; --orange: #C43E12; --magenta: #D6336C; --pink: #E84C88;
+  --teal: #1FA6A0; --teal-deep: #0E6E68; --grape: #7B3FA0;
+  --grad-sun: linear-gradient(135deg, #D9541E 0%, #D6336C 50%, #7B3FA0 100%);
+  --grad-teal: linear-gradient(135deg, #1FA6A0 0%, #7B3FA0 100%);
+  --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
+      rgba(217,84,30,0.18) 0deg 8deg, rgba(232,163,61,0.12) 8deg 16deg, rgba(214,51,108,0.13) 16deg 24deg);
+  --shadow-soft: 0 5px 16px -6px rgba(120,50,20,0.22);
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
@@ -762,3 +812,26 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 
 /* One-time "use my location" invite on Home. */
 .geo-invite { border-left: 3px solid var(--grape); }
+
+/* ---- Wave 5: visual polish — rhythm, calm surfaces, real states ------------- */
+/* Display type should not ride the 1.5 body line-height; tighten heading rhythm. */
+h1, h2, h3, .topbar h1, .home-section, .cat-title { line-height: 1.18; }
+.card h2, .card h3 { line-height: 1.2; }
+/* Empty states: constrained measure + centred so they read as intentional, not broken. */
+.empty { font-size: var(--fs-sm); line-height: 1.55; max-width: 42ch; margin-inline: auto; }
+/* Loading states (previously none): subtle skeleton shimmer + inline spinner. */
+.skeleton { position: relative; overflow: hidden; background: var(--line);
+  border-radius: var(--r-sm); min-height: 14px; }
+.skeleton::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: translateX(-100%); animation: mk-shimmer 1.3s infinite; }
+@keyframes mk-shimmer { 100% { transform: translateX(100%); } }
+.spinner { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em;
+  margin-right: 0.4em; border: 2px solid var(--line); border-top-color: var(--teal);
+  border-radius: 50%; animation: mk-spin 0.7s linear infinite; }
+@keyframes mk-spin { 100% { transform: rotate(360deg); } }
+html[data-reduced-motion="on"] .skeleton::after,
+html[data-reduced-motion="on"] .spinner { animation: none; }
+/* The active tab lifts a touch so the current section is unmistakable. */
+.tabbar button[aria-current="page"] { font-weight: 800; }
+.tabbar button[aria-current="page"] .ic { transform: translateY(-1px) scale(1.08); }
