@@ -149,11 +149,13 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .topbar .back:hover { filter: brightness(1.08); }
-.topbar-star {
-  border: none; background: transparent; cursor: pointer; font-size: var(--fs-h2);
-  line-height: 1; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-pill); flex: none;
+.topbar-ic {
+  border: none; background: transparent; cursor: pointer; color: var(--ink-soft);
+  line-height: 1; padding: var(--sp-1) var(--sp-1); border-radius: var(--r-pill); flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
 }
-.topbar-star:hover { background: rgba(242, 169, 59, 0.18); }
+.topbar-ic svg { width: 22px; height: 22px; display: block; }
+.topbar-ic:hover { background: rgba(128, 128, 128, 0.14); color: var(--orange); }
 .topbar-sos {
   border: none; background: transparent; cursor: pointer; font-size: var(--fs-h2);
   line-height: 1; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-pill); flex: none;
@@ -492,7 +494,8 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   color: var(--ink-soft); font-size: var(--fs-label); font-weight: 700;
 }
-.tabbar button .ic { font-size: 1.3rem; }
+.tabbar button .ic { font-size: 1.3rem; display: block; }
+.tabbar button .ic svg { width: 26px; height: 26px; display: block; }
 .tabbar button[aria-current="page"] { color: var(--orange); }
 
 /* --- save sheet (modal) --- */
