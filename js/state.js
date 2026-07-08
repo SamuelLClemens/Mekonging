@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 9;
+const CURRENT_VERSION = 10;
 
 function defaults() {
   return {
@@ -47,7 +47,7 @@ function defaults() {
       // owner in Settings) + the user's own reply-to. Both on-device; never committed.
       feedbackTo: '',
       contactEmail: '',
-      theme: 'light',           // 'light' | 'dark' (applies to the Classic skin)
+      theme: 'auto',            // 'auto' | 'light' | 'dark' — auto = light by day, dark at night (Classic skin)
       skin: 'classic',          // 'classic' | 'night' | 'silk' | 'tropical' | 'psych' — visual theme
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
       textScale: 'm',           // 's' | 'm' | 'l' — accessibility text size
@@ -130,6 +130,9 @@ function migrate(data) {
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
+  // v9 -> v10: day/night auto becomes the default. Move anyone still on the old silent
+  // 'light' default onto 'auto' (an explicit 'dark' choice is preserved).
+  if ((data.version || 1) < 10 && out.profile.theme === 'light') out.profile.theme = 'auto';
   return out;
 }
 
