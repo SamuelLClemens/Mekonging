@@ -20,7 +20,7 @@
   --tier-low: #1F7A47;   --tier-mid: #E07A1F;  --tier-high: #D6336C;
 
   /* Signature gradients */
-  --grad-sun: linear-gradient(135deg, #F2A93B 0%, #E8632A 50%, #D6336C 100%);
+  --grad-sun: linear-gradient(135deg, #E07A1F 0%, #E8632A 45%, #D6336C 100%);
   --grad-teal: linear-gradient(135deg, #16A39A 0%, #6A4C93 100%);
   --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
       rgba(232,99,42,0.16) 0deg 9deg, rgba(242,169,59,0.10) 9deg 18deg);
@@ -29,7 +29,7 @@
   --r-pill: 999px; --r-lg: 24px; --r-md: 16px; --r-sm: 10px;
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
   --fs-display: 2.2rem; --fs-h1: 1.45rem; --fs-h2: 1.18rem; --fs-h3: 1.02rem;
-  --fs-body: 1rem; --fs-sm: 0.875rem; --fs-label: 0.7rem;
+  --fs-lg: 1.18rem; --fs-body: 1rem; --fs-base: 1rem; --fs-sm: 0.875rem; --fs-label: 0.7rem;
 
   /* softer, layered shadows for a modern feel */
   --shadow: 0 12px 32px -8px rgba(120, 50, 20, 0.16), 0 2px 6px rgba(120, 50, 20, 0.06);
@@ -136,6 +136,9 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .home-actions { display: flex; gap: var(--sp-2); justify-content: center; flex-wrap: wrap; margin-bottom: var(--sp-5); }
 .home-section { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.08em;
   font-size: var(--fs-sm); color: var(--orange); margin: 0 0 var(--sp-2); font-weight: 800; }
+.home-group { text-transform: uppercase; letter-spacing: 0.06em; font-size: var(--fs-label);
+  color: var(--ink-soft); font-weight: 700; margin: var(--sp-4) 0 var(--sp-2); }
+.home-group:first-of-type { margin-top: var(--sp-2); }
 
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .tile {

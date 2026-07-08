@@ -95,7 +95,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.127.0';
+const APP_VERSION = 'mk-v0.128.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -597,41 +597,57 @@ function homeScreen() {
   wrap.append(regionPicker());
   wrap.append(h('h2', { class: 'home-section' }, 'Everything you need'));
 
-  const tiles = [
-    { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: '#arrival' },
-    { ic: '🎯', t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
-    { ic: '🛤️', t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
-    { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats A → B', hash: '#route' },
-    { ic: '📋', t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
-    { ic: '🌶️', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-    { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
-    { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
-    { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
-    { ic: '🧭', t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle', badge: unreadInboxCount() },
-    { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
-    { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
-    { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
-    { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
-    { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
-    { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
-    { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
-    { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
-    { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
-    { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
-    { ic: '🔊', t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
-    { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
-    { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
-    { ic: '❓', t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
-    { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
-    { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
-    { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
-    { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
+  // Grouped into labeled task clusters (not a flat 28-tile wall) so the screen is
+  // scannable: the eye lands on a heading, not an undifferentiated grid. Every
+  // destination is still present — nothing is hidden, just chunked by intent.
+  const groups = [
+    { label: 'Get your bearings', items: [
+      { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: '#arrival' },
+      { ic: '🎯', t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
+      { ic: '🛤️', t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
+      { ic: '🏆', t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
+    ] },
+    { label: 'Eat & do', items: [
+      { ic: '🌶️', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
+      { ic: '📋', t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
+      { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
+      { ic: '🍜', t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
+      { ic: '🥭', t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
+      { ic: '🦋', t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
+      { ic: '🔊', t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
+      { ic: '🏊', t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
+    ] },
+    { label: 'Get around', items: [
+      { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats A → B', hash: '#route' },
+      { ic: '🗺️', t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
+      { ic: '🕑', t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
+      { ic: '⛅', t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
+    ] },
+    { label: 'Plan & remember', items: [
+      { ic: '🧳', t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
+      { ic: '✅', t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
+      { ic: '📖', t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
+      { ic: '📅', t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
+      { ic: '🎉', t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
+      { ic: '⭐', t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+    ] },
+    { label: 'Money & practical', items: [
+      { ic: '💱', t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
+      { ic: '🤝', t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
+      { ic: '🧑‍🤝‍🧑', t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle', badge: unreadInboxCount() },
+      { ic: '🔒', t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
+      { ic: '❓', t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
+      { ic: '⚙️', t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
+    ] },
   ];
-  wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
-    h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t }, [
-      x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
-      h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
-    ]))));
+  const tileBtn = (x) => h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t }, [
+    x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
+    h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+  ]);
+  groups.forEach((g) => {
+    wrap.append(h('h3', { class: 'home-group' }, g.label));
+    wrap.append(h('div', { class: 'grid' }, g.items.map(tileBtn)));
+  });
 
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
