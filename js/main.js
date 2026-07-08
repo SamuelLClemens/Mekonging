@@ -90,7 +90,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.113.0';
+const APP_VERSION = 'mk-v0.114.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -193,6 +193,24 @@ function contextNow() {
   return { fix, near, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
 }
 
+// Festivals happening now, or starting within the next few weeks, in the user's country —
+// the strongest "when" signal for a traveller (Songkran, Loy Krathong, Tet, Pchum Ben...).
+function eventsNow(country, now, soonDays = 21) {
+  const day = 86400000;
+  const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const out = [];
+  for (const e of getEvents(country)) {
+    if (!e.start) continue;
+    const s = new Date(e.start + 'T00:00:00').getTime();
+    const en = new Date((e.end || e.start) + 'T23:59:59').getTime();
+    if (isNaN(s)) continue;
+    if (t0 >= s && t0 <= en) out.push({ e, state: 'on', days: 0 });
+    else if (s > t0 && (s - t0) / day <= soonDays) out.push({ e, state: 'soon', days: Math.round((s - t0) / day) });
+  }
+  out.sort((a, b) => (a.state === 'on' ? -1 : 1) - (b.state === 'on' ? -1 : 1) || a.days - b.days);
+  return out.slice(0, 2);
+}
+
 function scoreForNow(p, ctx) {
   if (!p.coords) return -Infinity;
   const km = haversineKm(ctx.fix, p.coords);
@@ -242,7 +260,7 @@ function rightNowSection() {
     h('span', { class: 'rn-emoji' }, meta.emoji),
     h('div', {}, [
       h('div', { class: 'rn-title' }, ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`),
-      h('div', { class: 'rn-sub muted' }, `${ctx.dayName}${wxStr}`),
+      h('div', { class: 'rn-sub muted' }, `${ctx.dayName}${wxStr}${ctx.wet ? ' · wet season' : ''}`),
     ]),
   ]));
 
@@ -283,6 +301,18 @@ function rightNowSection() {
       ]));
     });
     card.append(list);
+  }
+  const evs = eventsNow(ctx.country, ctx.now);
+  if (evs.length) {
+    const strip = h('div', { class: 'rn-events' });
+    evs.forEach(({ e, state, days }) => {
+      const when = state === 'on' ? 'On now' : (days <= 1 ? 'Tomorrow' : `In ${days} days`);
+      strip.append(h('button', { class: 'rn-event', onclick: () => go('#events') }, [
+        h('span', { class: 'rn-event-when' }, `🎉 ${when}`),
+        ` ${e.name}`,
+      ]));
+    });
+    card.append(strip);
   }
   card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#nearby') }, 'See more near me →'));
   return card;
