@@ -94,7 +94,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.122.0';
+const APP_VERSION = 'mk-v0.123.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -1322,10 +1322,19 @@ function placesScreen(arg) {
     onclick: (e) => { selKids = !selKids; e.currentTarget.setAttribute('aria-pressed', selKids ? 'true' : 'false'); prefs.kids = selKids; save(); renderList(); },
   }, '👨‍👩‍👧 Good for kids');
 
+  // Step-free filter appears when the traveller has a mobility need or the country has any
+  // place tagged step-free — so the option is there for those who need it, unobtrusive otherwise.
+  let selStepFree = false;
+  const showStepFree = (store.profile.prefs.access || []).includes('mobility') || allPlaces({ country: activeCountry }).some((p) => p.access && p.access.stepFree);
+  const stepFreeChip = showStepFree ? h('button', {
+    class: 'chip', 'aria-pressed': 'false',
+    onclick: (e) => { selStepFree = !selStepFree; e.currentTarget.setAttribute('aria-pressed', selStepFree ? 'true' : 'false'); renderList(); },
+  }, '♿ Step-free') : null;
+
   const filterCard = h('div', {}, [
     h('div', { class: 'muted' }, 'Interests'), interestChips,
     h('div', { class: 'muted' }, 'Budget'), budgetChips,
-    h('div', { class: 'muted' }, 'Travelling with'), h('div', { class: 'chips' }, [kidsChip]),
+    h('div', { class: 'muted' }, 'Travelling with'), h('div', { class: 'chips' }, [kidsChip, stepFreeChip]),
   ]);
 
   // Stay filters appear only when this country has accommodation tagged, so the UI
@@ -1391,6 +1400,7 @@ function placesScreen(arg) {
     if (selKids) results = results.filter((p) => p.kidFriendly === true);
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
     if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
+    if (selStepFree) results = results.filter((p) => p.access && (p.access.stepFree === 'yes' || p.access.stepFree === 'partial'));
     const fix = getLastFix();
     if (sortMode === 'near' && fix) {
       const d = (p) => (p.coords ? haversineKm(fix, p.coords) : Infinity);
@@ -1811,6 +1821,32 @@ function orientationCard(p) {
   return card;
 }
 
+// Per-place accessibility: shows the recorded step-free/toilet tag if present; otherwise,
+// for a traveller with a mobility need, points honestly to the country guide.
+function placeAccessBlock(p) {
+  const a = p.access;
+  if (a && (a.stepFree || a.note)) {
+    const LBL = { yes: '♿ Step-free access', partial: '♿ Partly step-free', no: '⚠️ Not step-free' };
+    const box = h('div', { class: 'card access-focus' });
+    box.append(h('h3', { style: 'margin-top:0' }, LBL[a.stepFree] || '♿ Accessibility'));
+    if (a.note) box.append(h('p', { class: 'muted', style: 'margin:4px 0' }, a.note));
+    if (a.toilet) box.append(h('div', { class: 'list-note' }, 'Accessible toilet reported on site.'));
+    box.append(h('p', { class: 'tiny muted', style: 'margin-bottom:0' }, 'Reported accessibility — always verify on the day.'));
+    return box;
+  }
+  const needMobility = (store.profile.prefs.access || []).includes('mobility');
+  if (needMobility && !p.isPin) {
+    const cc = p.country || (p.id || '').split('-')[0];
+    if (getAccessibility(cc)) {
+      const box = h('div', { class: 'card' });
+      box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, 'Step-free access here is not recorded yet.'));
+      box.append(h('button', { class: 'btn ghost block', onclick: () => go(`#access-${cc}`) }, '♿ See the country accessibility guide'));
+      return box;
+    }
+  }
+  return null;
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -1861,6 +1897,8 @@ function placeScreen(id) {
   ]);
 
   wrap.append(card);
+  const accBlock = placeAccessBlock(p);
+  if (accBlock) wrap.append(accBlock);
   const orient = orientationCard(p);
   if (orient) wrap.append(orient);
   const extCard = externalRatingsCard(p);
