@@ -2015,4 +2015,1489 @@ export const PLACES_VI_EXT = [
     verified: "2026-07",
     sources: [{ org: "Travelfish" }, { org: "Lonely Planet Vietnam" }],
   },
+  {
+    "id": "vi-ext-cham-museum",
+    "name": "Da Nang Museum of Cham Sculpture",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "A mustard-yellow French-colonial pavilion at the western foot of Dragon Bridge by the Han River, its open galleries and garden crowded with sandstone Hindu-Buddhist carvings.",
+    "categories": [
+      "museum",
+      "culture",
+      "landmark"
+    ],
+    "budgetTier": "low",
+    "blurb": "Home to the world's largest collection of Cham art, this 1919 museum gathers sandstone altars, dancing apsaras and Shiva lingams rescued from temple sites like My Son. The galleries are compact and shaded - an easy hour that makes sense of the brick towers you see across central Vietnam.",
+    "whyItFits": "A cool, quick indoor culture stop right by Dragon Bridge that gives context to the Cham ruins (My Son, Marble Mountains shrines) you meet elsewhere.",
+    "priceRange": {
+      "low": 60000,
+      "typical": 60000,
+      "high": 60000,
+      "currency": "VND",
+      "note": "Entry around 60,000 VND; a free audio-guide app covers the main pieces."
+    },
+    "hours": "About 07:30-17:00 daily",
+    "tips": [
+      "Download the museum's free audio-guide app before you go - labels are sparse.",
+      "It is small; an hour is plenty, and mornings are quietest.",
+      "Combine with Dragon Bridge and the Han riverside a few minutes' walk away."
+    ],
+    "scamWarnings": [
+      "Cyclo and taxi touts wait outside - use Grab or agree a metered fare first."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Museum of Cham Sculpture Da Nang",
+    "coords": {
+      "lat": 16.0606,
+      "lng": 108.2233
+    },
+    "bookHint": "Buy tickets at the gate; no advance booking needed.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Museum_of_Cham_Sculpture"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-hai-van-pass",
+    "name": "Hai Van Pass",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "A 21km ribbon of hairpins climbing a cloud-wreathed mountain spur between Da Nang and Lang Co, topped at ~500m by the weathered stone gate of Hai Van Quan and old concrete bunkers.",
+    "categories": [
+      "viewpoint",
+      "nature",
+      "road-trip"
+    ],
+    "budgetTier": "low",
+    "blurb": "The 'Ocean Cloud Pass' is central Vietnam's iconic drive, made famous by Top Gear. Since most traffic now takes the tunnel below, the old road is a relatively quiet switchback with big sea-and-mountain views and a restored hilltop fort straddling the Da Nang-Hue provincial line. Weather changes fast - the northern (Hue) side is often misty while Da Nang stays sunny.",
+    "whyItFits": "The region's signature viewpoint and half-day ride, doable by scooter, private car, or an Easy Rider who ferries your bags through the tunnel.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "VND",
+      "note": "The road is free; cost is scooter rental (~120,000-200,000 VND/day), a car, or an Easy Rider transfer (from ~500,000 VND with luggage)."
+    },
+    "hours": "Open 24h; ride in daylight, ideally mid-to-late morning once the fog burns off",
+    "tips": [
+      "Ride only if you are a confident rider - the hairpins are steep and often damp; take it slow and stay wide of tour buses.",
+      "Cars and buses mostly use the tunnel, so the pass itself is calmer than its reputation suggests.",
+      "Bring a layer: the summit is windy and cool even in summer.",
+      "If you do not want to ride, an Easy Rider or private car with a stop at the gate is the safe option and carries your bags."
+    ],
+    "scamWarnings": [
+      "Inspect rental scooters and photograph existing damage to avoid inflated 'damage' charges on return.",
+      "Ignore roadside 'your bike is broken' fixers near the base - a common upsell.",
+      "Agree the full Easy Rider price and confirm it includes luggage transfer before setting off."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Vietnam Coracle",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Hai Van Pass summit Hai Van Quan",
+    "coords": {
+      "lat": 16.199,
+      "lng": 108.132
+    },
+    "bookHint": "Independent by scooter/car, or book an Easy Rider / private transfer that carries luggage via the tunnel.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Vietnam Coracle",
+        "url": "https://vietnamcoracle.com"
+      },
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/H%E1%BA%A3i_V%C3%A2n_Pass"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-non-nuoc-beach",
+    "name": "Non Nuoc Beach",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "The long, fine-sand strand at the southern end of Da Nang's beachfront, sitting right below the Marble Mountains and fronted by a row of big resorts.",
+    "categories": [
+      "beach",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "The quieter, resort-lined southern continuation of Da Nang's beach, Non Nuoc has soft sand and calmer crowds than My Khe. Public access points sit between the hotels, and the Marble Mountains rise just inland, so a swim pairs naturally with the caves and the nearby stone-carving village.",
+    "whyItFits": "An honest, less-hectic beach option on the Da Nang-Hoi An road, walkable from the Marble Mountains.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "VND",
+      "note": "Free public access; sunbeds/parking at beach clubs cost extra."
+    },
+    "hours": "Open daylight hours; lifeguard flags typically 06:00-18:00",
+    "tips": [
+      "Swim between the flags - central-Vietnam surf builds strong rip currents, especially Sep-Dec.",
+      "Use the marked public paths between resorts to reach the sand for free.",
+      "Best in the calm, sunny May-Aug window; winter brings rougher grey seas."
+    ],
+    "scamWarnings": [
+      "Confirm the price of sunbeds/umbrellas before you sit down at a beach club."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Non Nuoc Beach Da Nang",
+    "coords": {
+      "lat": 16.0016,
+      "lng": 108.2686
+    },
+    "bookHint": "No booking; free public beach.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://maps.google.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-danang-cathedral",
+    "name": "Da Nang Cathedral (Con Ga Church)",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "A candy-pink Gothic church on Tran Phu street with a rooster (con ga) weathervane on its steeple instead of a cross - hence the nickname 'Rooster Church'.",
+    "categories": [
+      "church",
+      "landmark",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Built by the French in 1923, this pastel-pink parish church is one of Da Nang's most photographed buildings. The interior, with its stained glass and Lourdes grotto in the courtyard, is only open around Mass; most visitors admire and photograph the facade from the gate or the courtyard.",
+    "whyItFits": "A five-minute photogenic city landmark near the Han Market and riverfront, easy to fold into a downtown walk.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "VND",
+      "note": "Free; a donation box inside for those attending."
+    },
+    "hours": "Courtyard/exterior viewable in daylight; interior generally open only around Mass times (early morning and evening) - check the posted schedule",
+    "tips": [
+      "It is a working church - dress modestly and keep quiet if a service is on.",
+      "Best light for photos is morning when the pink facade catches the sun.",
+      "Han Market is a two-minute walk for a food-and-souvenir combo."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Da Nang Cathedral Con Ga Church",
+    "coords": {
+      "lat": 16.0666,
+      "lng": 108.2237
+    },
+    "bookHint": "No booking; time your visit to the Mass schedule if you want to see inside.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Da_Nang_Cathedral"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-son-tra-night-market",
+    "name": "Son Tra Night Market",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "A compact grid of food and souvenir stalls on the east bank just north of Dragon Bridge, at its busiest after the weekend bridge fire-and-water show.",
+    "categories": [
+      "market",
+      "food",
+      "nightlife"
+    ],
+    "budgetTier": "low",
+    "blurb": "Da Nang's most central evening market: skewers, seafood, milk tea and cheap souvenirs packed into a few lanes near the Dragon Bridge tail. It is touristy and prices are marked up, but it is a lively, easy graze after the weekend bridge show and a fair spot for grilled seafood and Vietnamese street snacks.",
+    "whyItFits": "An after-dark eat-and-browse right by the Dragon Bridge show, useful when you want food and buzz without a scooter ride.",
+    "priceRange": {
+      "low": 20000,
+      "typical": 80000,
+      "high": 250000,
+      "currency": "VND",
+      "note": "Snacks 20,000-60,000 VND; a grilled-seafood plate 150,000-250,000 VND. Souvenir prices are negotiable."
+    },
+    "hours": "Roughly 18:00-23:00 daily; liveliest Fri-Sun around the 21:00 bridge show",
+    "tips": [
+      "Confirm seafood prices by weight before it hits the grill.",
+      "Haggle on souvenirs - opening prices are inflated for tourists.",
+      "Come around the weekend Dragon Bridge fire show for the best atmosphere."
+    ],
+    "scamWarnings": [
+      "Agree the price and weight of fresh seafood up front to avoid a surprise bill.",
+      "First souvenir prices can be 2-3x fair value - counter low."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Son Tra Night Market Da Nang",
+    "coords": {
+      "lat": 16.0616,
+      "lng": 108.234
+    },
+    "bookHint": "No booking; walk in.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://maps.google.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-tra-que-village",
+    "name": "Tra Que Vegetable Village",
+    "city": "Hoi An",
+    "country": "vi",
+    "recognition": "A patchwork of tidy herb beds between Da Nang and Hoi An where farmers fertilise with river algae raked from the lagoon; visitors borrow conical hats to hoe and water.",
+    "categories": [
+      "village",
+      "culture",
+      "food",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "A 300-year-old organic herb village a short cycle north of Hoi An, Tra Que grows the basil, mint and greens that flavour the town's cooking. Farming experiences let you rake seaweed fertiliser, plant seedlings and try the local 'tam huu' rolls; it is pretty and hands-on, though the ticketed visitor experience can feel staged.",
+    "whyItFits": "An easy, gentle half-day from Hoi An - cycle out, learn the herbs, and often roll it into a cooking class.",
+    "priceRange": {
+      "low": 35000,
+      "typical": 150000,
+      "high": 500000,
+      "currency": "VND",
+      "note": "Village entry around 35,000 VND; a farming experience or class with lunch runs 150,000-500,000+ VND."
+    },
+    "hours": "Fields open roughly 07:00-18:00; early morning and late afternoon are coolest and most photogenic",
+    "tips": [
+      "Cycle from Hoi An (15-20 min) rather than paying for a taxi - the ride through paddies is half the charm.",
+      "Book the farming/cooking experience ahead if you want the hands-on version; walk-in just to wander the paths.",
+      "Go early to beat both the heat and tour groups."
+    ],
+    "scamWarnings": [
+      "Buy the entry ticket at the official village booth, not from freelancers flagging you down on the road."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Tra Que Vegetable Village Hoi An",
+    "coords": {
+      "lat": 15.906,
+      "lng": 108.316
+    },
+    "bookHint": "Walk in for the fields; book a farming/cooking experience through your hotel or a Hoi An tour operator.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Vietnam Coracle",
+        "url": "https://vietnamcoracle.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-cam-thanh-coconut",
+    "name": "Cam Thanh Coconut Village & Bay Mau Basket Boats",
+    "city": "Hoi An",
+    "country": "vi",
+    "recognition": "A maze of water-coconut (nipa) palms on Hoi An's eastern edge where round bamboo basket boats spin tourists through the channels; look for the row of boat-launch jetties off the Cua Dai road.",
+    "categories": [
+      "nature",
+      "activity",
+      "village"
+    ],
+    "budgetTier": "low",
+    "blurb": "The Bay Mau nipa-palm forest was planted by resistance fighters and is now Hoi An's biggest boat-ride draw. A rower paddles you through the water-coconut channels, often demonstrating crab-trap weaving and, at some jetties, high-energy 'spinning boat' displays set to loud music. It can be charming or a circus depending on the operator.",
+    "whyItFits": "A short, quirky nature activity minutes from Hoi An that pairs with Tra Que and the beach for an easy day.",
+    "priceRange": {
+      "low": 150000,
+      "typical": 200000,
+      "high": 400000,
+      "currency": "VND",
+      "note": "Boat around 150,000-200,000 VND per basket (up to 2-3 people) plus a ~30,000 VND area ticket; tour packages cost more."
+    },
+    "hours": "Roughly 08:00-17:00 daily; mornings are calmer and quieter",
+    "tips": [
+      "Ask for a quiet paddle if you dislike the loud-music spinning shows - not all boats do them.",
+      "Agree the price and the tip expectation before boarding.",
+      "Go in the morning to avoid the loudest, most crowded afternoon slots."
+    ],
+    "scamWarnings": [
+      "Rowers and 'spinning' performers often expect a tip on top of the fare - clarify the total up front.",
+      "Some jetties quote inflated all-in prices to walk-ups; the standard boat fare is well under 300,000 VND."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Bay Mau Coconut Forest Cam Thanh Hoi An",
+    "coords": {
+      "lat": 15.884,
+      "lng": 108.362
+    },
+    "bookHint": "Walk up to a jetty and negotiate, or book a Cam Thanh boat tour through a Hoi An operator.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://maps.google.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-thanh-ha-pottery",
+    "name": "Thanh Ha Pottery Village",
+    "city": "Hoi An",
+    "country": "vi",
+    "recognition": "A 500-year-old riverside potters' hamlet west of Hoi An where you can spin a foot-powered wheel; the quirky Thanh Ha Terracotta Park with its miniature world monuments sits right beside it.",
+    "categories": [
+      "village",
+      "craft",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Downriver families have thrown clay here since the 16th century, and small workshops still fire tiles, pots and whistles. A modest entry ticket lets you watch and try the wheel; next door, the ceramic-themed Terracotta Park recreates world landmarks in fired clay - kitschy but fun for kids.",
+    "whyItFits": "A hands-on craft-village stop reachable by bike or boat from Hoi An, easy to combine with Kim Bong across the river.",
+    "priceRange": {
+      "low": 35000,
+      "typical": 35000,
+      "high": 150000,
+      "currency": "VND",
+      "note": "Village entry around 35,000 VND (includes a wheel try); the separate Terracotta Park charges its own, higher ticket."
+    },
+    "hours": "Workshops roughly 08:00-17:30; Terracotta Park similar",
+    "tips": [
+      "The village ticket usually includes a turn at the wheel and a small clay souvenir.",
+      "The Terracotta Park is a separate paid attraction - decide if the model monuments are worth it.",
+      "Cycle here along the river, or take a short boat from Hoi An for a nicer approach."
+    ],
+    "scamWarnings": [
+      "Buy tickets at the official village gate, not from touts on the approach road."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Thanh Ha Pottery Village Hoi An",
+    "coords": {
+      "lat": 15.879,
+      "lng": 108.313
+    },
+    "bookHint": "No booking; buy tickets at the village gate.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Vietnam Coracle",
+        "url": "https://vietnamcoracle.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-cua-dai-beach",
+    "name": "Cua Dai Beach",
+    "city": "Hoi An",
+    "country": "vi",
+    "recognition": "Hoi An's nearest beach at the Thu Bon river mouth - now heavily eroded, fronted by geotextile sandbag breakwaters and a rebuilt narrow strip of sand before the resorts.",
+    "categories": [
+      "beach",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Once Hoi An's showpiece beach, Cua Dai has lost much of its sand to severe erosion; long lines of sandbag breakwaters and pumped-in sand now hold a slimmer beach in front of the hotels. It is still a pleasant sunset and seafood spot at the river mouth, but for swimming and open sand most travellers now prefer An Bang just up the coast.",
+    "whyItFits": "An honest look at the working end of Hoi An's coast - fine for a stroll and river-mouth seafood, with realistic expectations.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "VND",
+      "note": "Free public access; sunbeds and parking at beach clubs cost extra."
+    },
+    "hours": "Open daylight hours",
+    "tips": [
+      "For a proper swim and wider sand, head to An Bang a little north instead.",
+      "The breakwaters create sheltered pockets but also currents - take care in the water.",
+      "The riverside seafood shacks at dusk are the real reason to come."
+    ],
+    "scamWarnings": [
+      "Check sunbed/parking fees at beach clubs before settling in."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Cua Dai Beach Hoi An",
+    "coords": {
+      "lat": 15.902,
+      "lng": 108.373
+    },
+    "bookHint": "No booking; free public beach.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://maps.google.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-kim-bong-carpentry",
+    "name": "Kim Bong Carpentry Village",
+    "city": "Hoi An",
+    "country": "vi",
+    "recognition": "A woodworking hamlet on Cam Kim island across the Thu Bon from Hoi An's Old Town, reached by a short boat or the newer bridge, where craftsmen carve furniture, doors and wooden boats.",
+    "categories": [
+      "village",
+      "craft",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Kim Bong's carpenters shaped much of Hoi An's old-town woodwork and once built the region's fishing boats. A visit to Cam Kim island is low-key: a few open workshops, the boat-building yards, and quiet lanes and paddies that reward a slow cycle far more than the tour buses do.",
+    "whyItFits": "A peaceful rural counterpoint to the Old Town, a five-minute boat hop away and ideal on a bike.",
+    "priceRange": {
+      "low": 0,
+      "typical": 30000,
+      "high": 50000,
+      "currency": "VND",
+      "note": "Village is free to wander; the small ferry from the Old Town costs a few thousand VND, and some workshops welcome tips or sales."
+    },
+    "hours": "Workshops roughly 08:00-17:00; quiet on Sundays and around midday",
+    "tips": [
+      "Take the short ferry from the Bach Dang riverfront for the classic approach, or cycle over the bridge.",
+      "It is a working village, not a theme park - go for the calm lanes as much as the carving.",
+      "Bring water; there is little shade and few cafes on the island."
+    ],
+    "scamWarnings": [
+      "Agree the ferry fare before boarding if using a private boatman rather than the public ferry."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Kim Bong Carpentry Village Cam Kim Hoi An",
+    "coords": {
+      "lat": 15.873,
+      "lng": 108.317
+    },
+    "bookHint": "No booking; reach it by public ferry from the Old Town or cycle over the Cam Kim bridge.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Vietnam Coracle",
+        "url": "https://vietnamcoracle.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-an-bang-cam-an-stays",
+    "name": "Homestays & Guesthouses around An Bang and Cam An",
+    "city": "Hoi An",
+    "country": "vi",
+    "recognition": "Lanes of garden homestays, small boutique villas and family guesthouses set back from An Bang beach and threaded through Cam An, a short cycle from the Old Town.",
+    "categories": [
+      "stay",
+      "area"
+    ],
+    "budgetTier": "mid",
+    "stayType": "homestay",
+    "blurb": "The An Bang and Cam An area is the sweet spot for a Hoi An beach stay: pool villas and homestays down quiet sandy lanes, walkable to An Bang's cafe-and-beach-bar strip and a 10-15 minute cycle from the Old Town. Rooms are generally good value, with breakfast and free bicycles common; book ahead in the Feb-Aug high season.",
+    "whyItFits": "The honest mid-range base for travellers who want beach mornings and Old Town evenings without staying in a big resort.",
+    "priceRange": {
+      "low": 500000,
+      "typical": 900000,
+      "high": 1800000,
+      "currency": "VND",
+      "note": "Mid-range homestays/guesthouses roughly 500,000-1,800,000 VND per night with breakfast; boutique pool villas higher."
+    },
+    "hours": "N/A - accommodation area",
+    "tips": [
+      "Pick a place with free bikes - the flat ride to the Old Town is the whole appeal.",
+      "Lanes flood briefly in the Oct-Nov rains; check recent reviews if travelling then.",
+      "Book well ahead for Feb-Aug and Vietnamese holidays."
+    ],
+    "scamWarnings": [
+      "Book through a reputable platform or the property directly; confirm airport-transfer prices in writing."
+    ],
+    "reviewSources": [
+      "Booking.com",
+      "Agoda",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "An Bang beach homestays Cam An Hoi An",
+    "coords": {
+      "lat": 15.906,
+      "lng": 108.345
+    },
+    "bookHint": "Compare on Booking.com / Agoda / Airbnb; reserve early in high season.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Booking.com",
+        "url": "https://www.booking.com"
+      },
+      {
+        "org": "Agoda",
+        "url": "https://www.agoda.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-danang-beach-hotels",
+    "name": "Mid-range Beach Hotels along Vo Nguyen Giap",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "The wall of hotels one block back from Da Nang's beachfront boulevard (Vo Nguyen Giap / Ho Nghinh area), a short walk from the sand and packed with rooftop pools and seafood restaurants.",
+    "categories": [
+      "stay",
+      "area"
+    ],
+    "budgetTier": "mid",
+    "stayType": "hotel",
+    "blurb": "Da Nang's beach side is lined with mid-range towers offering rooftop pools, sea-view rooms and easy walks to the beach and to the seafood streets around Ho Nghinh. It is a practical, good-value base with Grab everywhere - handy for combining city sights, the beach and day trips to Hoi An and Ba Na.",
+    "whyItFits": "A convenient, honestly-priced city-beach base for travellers who want a pool and walkable dinners rather than a self-catering apartment.",
+    "priceRange": {
+      "low": 700000,
+      "typical": 1200000,
+      "high": 2500000,
+      "currency": "VND",
+      "note": "Mid-range beach hotels roughly 700,000-2,500,000 VND per night; sea-view and rooftop-pool rooms at the top of that range."
+    },
+    "hours": "N/A - accommodation area",
+    "tips": [
+      "Rooms one block back are cheaper than absolute beachfront and still a 3-5 minute walk to the sand.",
+      "Ho Nghinh and nearby lanes are full of seafood eateries for cheap dinners.",
+      "Rates spike over Vietnamese holidays and the summer domestic-tourism peak."
+    ],
+    "scamWarnings": [
+      "Book via a reputable platform and confirm any 'sea view' claim with recent photos; agree transfer fares up front."
+    ],
+    "reviewSources": [
+      "Booking.com",
+      "Agoda",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "beach hotels Vo Nguyen Giap Da Nang",
+    "coords": {
+      "lat": 16.05,
+      "lng": 108.245
+    },
+    "bookHint": "Compare on Booking.com / Agoda; book ahead for summer and holidays.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Booking.com",
+        "url": "https://www.booking.com"
+      },
+      {
+        "org": "Agoda",
+        "url": "https://www.agoda.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-nam-o-village",
+    "name": "Nam O Fishing Village & Goi Ca",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "A working fishing village at Da Nang's northern edge below the Hai Van foothills, known for goi ca (raw herring salad) and a rocky, seaweed-fringed reef offshore.",
+    "categories": [
+      "food",
+      "village",
+      "beach"
+    ],
+    "budgetTier": "low",
+    "isLocal": true,
+    "blurb": "Nam O is an old net-fishing and fish-sauce village where the local specialty is goi ca Nam O - raw herring dressed with roasted rice powder, galangal and a tangle of herbs, wrapped in rice paper. The nearby Nam O reef draws locals at low tide, and the fishing beach is a raw, un-touristy slice of Da Nang life on the way to the Hai Van Pass.",
+    "whyItFits": "A genuinely local food-and-village stop north of the city, a natural pairing with a Hai Van Pass ride.",
+    "priceRange": {
+      "low": 50000,
+      "typical": 100000,
+      "high": 200000,
+      "currency": "VND",
+      "note": "A goi ca plate to share runs roughly 50,000-150,000 VND at village eateries."
+    },
+    "hours": "Eateries broadly 10:00-20:00 (vary by family); the reef is best around low tide",
+    "tips": [
+      "Goi ca is raw fish - order it fresh from a busy, popular eatery, and skip it if raw seafood is not for you.",
+      "Combine a stop here with the start of the Hai Van Pass just to the north.",
+      "Wear grippy shoes if scrambling on the reef - the rocks are slick with algae."
+    ],
+    "scamWarnings": [
+      "Prices are usually fair and local; still, confirm the plate price when ordering since there are no fixed menus."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Google Maps consensus",
+      "Tripadvisor"
+    ],
+    "mapQuery": "Nam O village goi ca Da Nang",
+    "coords": {
+      "lat": 16.113,
+      "lng": 108.128
+    },
+    "bookHint": "No booking; drop in to a village eatery, ideally with a local or on a food tour.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Vietnam Coracle",
+        "url": "https://vietnamcoracle.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://maps.google.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-ba-duong-banh-xeo",
+    "name": "Ba Duong Banh Xeo & Nem Lui Alley",
+    "city": "Da Nang",
+    "country": "vi",
+    "recognition": "A packed local eatery down alley 280 Hoang Dieu, sizzling crispy banh xeo pancakes and grilled nem lui skewers you wrap in rice paper with a pile of herbs.",
+    "categories": [
+      "food",
+      "street-food"
+    ],
+    "budgetTier": "low",
+    "isLocal": true,
+    "blurb": "Ba Duong is Da Nang's most famous address for banh xeo - crisp turmeric-yellow rice pancakes stuffed with shrimp, pork and beansprouts - served alongside nem lui (lemongrass pork skewers). You assemble your own rolls with rice paper, herbs and the house peanut dipping sauce. It is smoky, cheap, always busy and thoroughly local.",
+    "whyItFits": "A cheap, iconic local meal in the city centre that shows off central Vietnam's wrap-it-yourself street food.",
+    "priceRange": {
+      "low": 50000,
+      "typical": 90000,
+      "high": 150000,
+      "currency": "VND",
+      "note": "Roughly 50,000-150,000 VND per person for banh xeo plus nem lui and drinks."
+    },
+    "hours": "Roughly 09:30-21:30 daily; busiest at lunch and dinner",
+    "tips": [
+      "Order both the banh xeo and the nem lui, then build your own rolls with the herbs and peanut sauce.",
+      "It is down a small alley off Hoang Dieu - look for the crowds and the smoke, not a big sign.",
+      "Go slightly before peak meal times to avoid a wait for a table."
+    ],
+    "scamWarnings": [
+      "Cash only at most such spots - check the bill, though prices here are fixed and fair."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Banh Xeo Ba Duong Hoang Dieu Da Nang",
+    "coords": {
+      "lat": 16.057,
+      "lng": 108.217
+    },
+    "bookHint": "No booking; walk in and expect to share a busy space.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://maps.google.com"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-cat-ba-national-park",
+    "name": "Cat Ba National Park (Kim Giao Forest & Ngu Lam Peak)",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "A forested limestone massif in the middle of Cat Ba Island; the trailhead sits by the park headquarters at Trung Trang, and the Kim Giao-Ngu Lam path ends at a rusty steel watchtower on a jungle peak with a 360-degree view over the karsts.",
+    "categories": [
+      "nature",
+      "viewpoint",
+      "hiking"
+    ],
+    "budgetTier": "low",
+    "blurb": "The wild green heart of Cat Ba Island and a core zone of the Ha Long Bay-Cat Ba Archipelago UNESCO World Heritage Site (extended 2023). The classic short hike climbs through Kim Giao evergreen forest to the Ngu Lam watchtower for a panorama of jungled peaks; longer guided routes cross the island toward Viet Hai. It is the last refuge of the critically endangered Cat Ba langur, though sightings are extremely rare.",
+    "whyItFits": "A genuine half-day of forest hiking and a real viewpoint minutes from Cat Ba town, and a land-based counterpoint to the boat-heavy bay itineraries.",
+    "priceRange": {
+      "low": 40000,
+      "typical": 80000,
+      "high": 160000,
+      "currency": "VND",
+      "note": "Park entry is roughly 80,000 VND for the Kim Giao-Ngu Lam route; the longer Viet Hai crossing and optional guides cost more. Carry small cash."
+    },
+    "hours": "Roughly 07:00-16:00 daily; start early to beat the heat and afternoon rain",
+    "tips": [
+      "Wear proper shoes - the summit steps and the tower ladder are steep, slippery and rusted.",
+      "Bring water and insect repellent; there is little shade near the top.",
+      "The Cat Ba langur is almost never seen - come for the forest and the view, not guaranteed wildlife.",
+      "A guide is worth it for the longer Viet Hai crossing but unnecessary for the short Ngu Lam loop."
+    ],
+    "scamWarnings": [
+      "Confirm which route your ticket covers before paying; gate touts may upsell guides you do not need."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "AllTrails",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Cat Ba National Park headquarters Trung Trang",
+    "coords": {
+      "lat": 20.7975,
+      "lng": 106.9986
+    },
+    "bookHint": "No booking; pay at the park gate. Reach it by rented scooter, taxi or a park tour from Cat Ba town.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Cat Ba National Park",
+        "url": "https://catbanationalpark.com/overview-of-the-world-natural-heritage"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g737051-d6677777-Reviews-Cat_Ba_National_Park-Cat_Ba_Hai_Phong.html"
+      },
+      {
+        "org": "AllTrails",
+        "url": "https://www.alltrails.com/trail/vietnam/haiphong/dinh-ngu-lam"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-lan-ha-bay-kayak-dayboat",
+    "name": "Lan Ha Bay (Kayaking & Day Boats)",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "The cluster of hundreds of sheer karst islets immediately south of Cat Ba town - greener, quieter and cleaner than central Ha Long, dotted with hidden white-sand coves and floating pearl and fish farms.",
+    "categories": [
+      "nature",
+      "beach",
+      "viewpoint"
+    ],
+    "budgetTier": "mid",
+    "blurb": "Lan Ha is the southern lobe of the same UNESCO karst seascape as Ha Long Bay, reached from Cat Ba rather than the mainland. Shared day boats thread between towering limestone stacks with stops to kayak into lagoons, swim off empty beaches and paddle past working aquaculture rafts. Far fewer boats operate here than in central Ha Long, so it feels calmer and cleaner.",
+    "whyItFits": "The best-value, least-crowded way to get onto the famous karst water, run entirely out of Cat Ba town.",
+    "priceRange": {
+      "low": 300000,
+      "typical": 600000,
+      "high": 1200000,
+      "currency": "VND",
+      "note": "Shared day boats run roughly 300,000-700,000 VND per person; add kayak or bamboo-boat rental (~100,000-150,000 VND). Private boats cost more."
+    },
+    "hours": "Day boats depart Beo/Cat Ba harbour mid-morning; all-day trips return late afternoon",
+    "tips": [
+      "Base in Cat Ba town, not Ha Long City, to reach Lan Ha quickly and cheaply.",
+      "Kayaking through the lagoons early, before the boat crowds, is the highlight.",
+      "Bring reef-safe sunscreen and a dry bag; swimming stops are frequent.",
+      "Check the marine forecast from May to September - trips are cancelled in storms."
+    ],
+    "scamWarnings": [
+      "Agree exactly what the boat price includes (kayak, lunch, island landing fees) before boarding."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Lan Ha Bay Cat Ba",
+    "coords": {
+      "lat": 20.705,
+      "lng": 107.09
+    },
+    "bookHint": "Book a shared day boat through your Cat Ba guesthouse the night before, or join a dedicated Lan Ha cruise.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Oxalis Adventure",
+        "url": "https://oxalisadventure.com/lan-ha-bay-vietnam/"
+      },
+      {
+        "org": "UNESCO World Heritage Centre",
+        "url": "https://whc.unesco.org/en/list/672/"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-monkey-island-cat-dua",
+    "name": "Monkey Island (Cat Dua)",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "A small twin-beach islet a 10-minute boat hop from Cat Ba, named for the troop of macaques that patrols the sand and rocks.",
+    "categories": [
+      "beach",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Cat Dua, universally called Monkey Island, is a popular Lan Ha Bay boat stop with two arcs of sand and a short, sharp rock scramble to a viewpoint. Its fame comes from a resident troop of long-tailed macaques - which, honestly, are the reason many visitors leave unimpressed. The animals are habituated, bold and often aggressive.",
+    "whyItFits": "A quick, photogenic stop on a Lan Ha day boat, included here mainly so travellers arrive forewarned about the monkeys rather than surprised.",
+    "priceRange": {
+      "low": 80000,
+      "typical": 90000,
+      "high": 90000,
+      "currency": "VND",
+      "note": "About 80,000 VND landing fee plus ~10,000 VND for toilets; boat transfer is extra."
+    },
+    "hours": "Daylight hours; usually visited as a Lan Ha day-boat stop",
+    "tips": [
+      "The macaques are wild and aggressive - they snatch bags, bottles, sunglasses and food. Carry nothing loose and do not eat in the open.",
+      "Do NOT feed the monkeys; feeding drives the aggression and harms them.",
+      "The short climb to the viewpoint is over sharp rock - wear real shoes.",
+      "Treat it as one stop on a Lan Ha Bay boat trip, not a destination in itself."
+    ],
+    "scamWarnings": [
+      "Some boatmen add the landing fee on top of a price you thought was all-inclusive - clarify first."
+    ],
+    "rating": 3.7,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Monkey Island Cat Dua Cat Ba",
+    "coords": {
+      "lat": 20.728,
+      "lng": 107.077
+    },
+    "bookHint": "No advance booking; visited on Lan Ha day boats or a short hired transfer from Beo pier.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g737051-d5979069-Reviews-Monkey_Island-Cat_Ba_Hai_Phong.html"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-viet-hai-village",
+    "name": "Viet Hai Village",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "A tiny farming-and-fishing hamlet ringed by karst walls in a remote valley on eastern Cat Ba Island, reached by boat to a jetty then a flat lane inland - best explored by bicycle.",
+    "categories": [
+      "village",
+      "cycling",
+      "nature"
+    ],
+    "budgetTier": "mid",
+    "blurb": "Cut off from Cat Ba town by the national park, Viet Hai is a quiet valley of paddies, buffalo and simple homes that has slowly opened to low-key tourism. Boats drop visitors at the jetty; a level road or cycle track leads into the village, where homestays and small cafes offer an overnight far from the harbour bustle.",
+    "whyItFits": "A gentle, authentic rural counterpoint to the bay - easy cycling, real village life and a genuine homestay option.",
+    "priceRange": {
+      "low": 0,
+      "typical": 100000,
+      "high": 200000,
+      "currency": "VND",
+      "note": "Village access is small or free; bike rental ~50,000 VND; the national park's Viet Hai trekking route ticket runs ~160,000 VND."
+    },
+    "hours": "Daytime; most visitors arrive by boat late morning",
+    "tips": [
+      "Rent a bicycle at the jetty and pedal the quiet lane into the valley.",
+      "Homestays here give a real overnight away from Cat Ba town's noise.",
+      "Bring cash - there are no ATMs.",
+      "Combine with a Lan Ha Bay boat day; the village is a common lunch and cycle stop."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Viet Hai Village Cat Ba",
+    "coords": {
+      "lat": 20.768,
+      "lng": 107.105
+    },
+    "bookHint": "Reached on Lan Ha day boats or by ferry to the jetty; homestays bookable through Cat Ba operators.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g737051-Activities-c61-Cat_Ba_Hai_Phong.html"
+      },
+      {
+        "org": "UNESCO World Heritage Centre",
+        "url": "https://whc.unesco.org/en/list/672/"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-hospital-cave-cat-ba",
+    "name": "Hospital Cave (Hang Quan Y)",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "A concrete-fronted doorway set into a cliff on the cross-island road near Tran Chau; inside are three storeys of bunker rooms built as a secret hospital and hideout during the American War.",
+    "categories": [
+      "history",
+      "cave"
+    ],
+    "budgetTier": "low",
+    "blurb": "Built in the late 1960s inside a natural cave, Hospital Cave sheltered wounded fighters and served as a safe house during the war. Its concrete floors, sealed rooms and even a small pool are a stark, quick look at wartime ingenuity, set right on the scenic island road between town and the national park.",
+    "whyItFits": "A short, meaningful history stop that slots naturally into a scooter loop of Cat Ba Island.",
+    "priceRange": {
+      "low": 80000,
+      "typical": 80000,
+      "high": 80000,
+      "currency": "VND",
+      "note": "About 80,000 VND entry; a local guide inside is worthwhile for the context."
+    },
+    "hours": "Roughly 08:00-16:30 daily",
+    "tips": [
+      "It is small - allow 30 to 45 minutes; the value is the story, so take a guide or read up first.",
+      "Bring a light; interior rooms are dim.",
+      "Easy to pair with the national park and Trung Trang cave on an island scooter loop."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Hospital Cave Cat Ba",
+    "coords": {
+      "lat": 20.786,
+      "lng": 107.009
+    },
+    "bookHint": "No booking; pay at the entrance. It sits on the main road between Cat Ba town and the national park.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g737051-d3908229-Reviews-Hospital_Cave-Cat_Ba_Hai_Phong.html"
+      },
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/C%C3%A1t_B%C3%A0_Island"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-cat-co-beaches",
+    "name": "Cat Co 1, 2 & 3 Beaches",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "Three small crescent bays just east of Cat Ba town, linked to each other and the harbour by a cliff-side walkway cut into the rock.",
+    "categories": [
+      "beach"
+    ],
+    "budgetTier": "low",
+    "blurb": "Cat Ba town's nearest swimming beaches. Cat Co 1 and Cat Co 3 are the more developed, with resorts and beach clubs; Cat Co 2 is smaller, quieter and more natural. The scenic cliff-hugging boardwalk that connects them is a pleasant short walk with bay views in its own right.",
+    "whyItFits": "An easy, free swim and sunset walk within reach of town, no boat required.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 300000,
+      "currency": "VND",
+      "note": "The beaches are free; sun-loungers, resort sections and beach clubs charge."
+    },
+    "hours": "Daylight; busiest around midday in summer",
+    "tips": [
+      "Cat Co 2 is the quietest and most natural; Cat Co 1 and 3 are more built up.",
+      "Walk the scenic cliff path between the beaches rather than taking a taxi.",
+      "Vietnamese domestic crowds peak on summer weekends and holidays - go early.",
+      "Water can carry litter after storms; check before swimming."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Cat Co Beach Cat Ba",
+    "coords": {
+      "lat": 20.715,
+      "lng": 107.057
+    },
+    "bookHint": "No booking; a short walk or electric-cart ride from Cat Ba town.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g737051-d10723703-Reviews-Cat_Co_Beach-Cat_Ba_Hai_Phong.html"
+      },
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/C%C3%A1t_B%C3%A0_Island"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-sung-sot-cave",
+    "name": "Sung Sot (Surprise) Cave",
+    "city": "Ha Long",
+    "country": "vi",
+    "recognition": "Ha Long Bay's largest show cave, on Bo Hon Island - a steep stepped path up the cliff leads into two vast, floodlit chambers dripping with stalactites.",
+    "categories": [
+      "cave",
+      "sight"
+    ],
+    "budgetTier": "mid",
+    "blurb": "Sung Sot, or Surprise Cave, is the most visited cave in Ha Long Bay: two enormous chambers, the second big enough to hold hundreds of people, lit to show off the limestone formations. It is genuinely impressive, and genuinely crowded - a fixed one-way loop that tour groups pour through late morning.",
+    "whyItFits": "The bay's headline cave and a fixture on almost every Ha Long cruise route.",
+    "priceRange": {
+      "low": 290000,
+      "typical": 290000,
+      "high": 290000,
+      "currency": "VND",
+      "note": "Access is via the Ha Long Bay sightseeing route ticket (~290,000 VND for the route covering Sung Sot and Ti Top) plus your boat fare."
+    },
+    "hours": "Cave open roughly 07:30-16:30; expect large tour crowds late morning",
+    "tips": [
+      "Take an early or late boat to dodge the midday tour crush.",
+      "The entrance stairs are steep and the interior is humid and slippery.",
+      "It is a one-way loop - you cannot linger long when groups are pushing through.",
+      "Combine it with Ti Top Island on the same route ticket."
+    ],
+    "scamWarnings": [
+      "Buy the bay route ticket at the official pier counter, not from touts."
+    ],
+    "rating": 4.5,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Sung Sot Cave Surprise Cave Ha Long Bay",
+    "coords": {
+      "lat": 20.85,
+      "lng": 107.103
+    },
+    "bookHint": "No standalone booking; included on Ha Long Bay day-cruise and overnight-cruise itineraries.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "UNESCO World Heritage Centre",
+        "url": "https://whc.unesco.org/en/list/672/"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g298082-d456095-Reviews-Sung_Sot_Cave-Ha_Long_Bay_Quang_Ninh_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-titop-island",
+    "name": "Ti Top Island",
+    "city": "Ha Long",
+    "country": "vi",
+    "recognition": "A pyramid-shaped islet in Ha Long Bay with a small arc of beach at its base and a long staircase climbing to a hilltop platform that frames the bay's classic postcard panorama.",
+    "categories": [
+      "viewpoint",
+      "beach",
+      "island"
+    ],
+    "budgetTier": "mid",
+    "blurb": "Named after Soviet cosmonaut Gherman Titov, Ti Top pairs a tiny swimming beach with a steep flight of steps to a summit viewpoint. The climb is hot and busy, but the view over the surrounding karsts is the reason it appears on nearly every bay cruise route.",
+    "whyItFits": "The most accessible high viewpoint over the karst seascape, and a standard cruise stop.",
+    "priceRange": {
+      "low": 290000,
+      "typical": 290000,
+      "high": 290000,
+      "currency": "VND",
+      "note": "Covered by the Ha Long Bay route ticket (~290,000 VND) plus boat fare."
+    },
+    "hours": "Daylight; the climb is punishing at midday",
+    "tips": [
+      "There are roughly 400 steep steps to the top - climb early or late to avoid heat and queues.",
+      "The little beach gets very crowded; the summit view is the real reward.",
+      "Bring water; the summit has little shade."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Ti Top Island Titop Ha Long Bay",
+    "coords": {
+      "lat": 20.843,
+      "lng": 107.098
+    },
+    "bookHint": "Included on most Ha Long Bay cruise itineraries; no separate booking.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g298082-d1493438-Reviews-Ti_Top_Island-Ha_Long_Bay_Quang_Ninh_Province.html"
+      },
+      {
+        "org": "UNESCO World Heritage Centre",
+        "url": "https://whc.unesco.org/en/list/672/"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-bai-tu-long-bay",
+    "name": "Bai Tu Long Bay",
+    "city": "Ha Long",
+    "country": "vi",
+    "recognition": "The quieter northeastern continuation of Ha Long Bay: the same towering karsts and emerald water, but far fewer boats - cruises pass working fishing villages and empty lagoons rather than crowds.",
+    "categories": [
+      "nature",
+      "viewpoint"
+    ],
+    "budgetTier": "high",
+    "blurb": "Sharing the same UNESCO seascape as Ha Long but lying to its northeast, Bai Tu Long carries a fraction of the boat traffic. Cruises here trade queues at show caves for quiet anchorages, floating villages and kayaking in near-empty bays. It is the answer for travellers who want the karst magic without the flotilla.",
+    "whyItFits": "A quieter, more responsible alternative to central Ha Long for travellers put off by the crowds.",
+    "priceRange": {
+      "low": 2000000,
+      "typical": 3500000,
+      "high": 8000000,
+      "currency": "VND",
+      "note": "Experienced almost entirely by overnight cruise; per-person rates vary widely by boat class and season."
+    },
+    "hours": "Multi-day cruise itineraries departing Ha Long / Hon Gai",
+    "tips": [
+      "Choose Bai Tu Long over central Ha Long specifically to escape the boat traffic.",
+      "Fewer licensed boats operate here, so book ahead in peak season.",
+      "Vet the operator on waste handling - some boats still discharge greywater into the bay.",
+      "Weather from May to September can shorten or cancel trips; travel insurance helps."
+    ],
+    "scamWarnings": [
+      "Very cheap 'luxury' cruises often cut corners on safety and sanitation - read recent reviews before paying."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Bai Tu Long Bay Vietnam",
+    "coords": {
+      "lat": 20.95,
+      "lng": 107.3
+    },
+    "bookHint": "Book a licensed overnight cruise in advance; boats depart Ha Long City / Hon Gai.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "UNESCO World Heritage Centre",
+        "url": "https://whc.unesco.org/en/list/672/"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g298082-d2436877-Reviews-Bai_Tu_Long_Bay-Ha_Long_Bay_Quang_Ninh_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-sun-world-ha-long-cable-car",
+    "name": "Sun World Ha Long & Queen Cable Car (Bai Chay)",
+    "city": "Ha Long",
+    "country": "vi",
+    "recognition": "On the Bai Chay hillside: a giant Sun Wheel and the twin white towers of the Queen Cable Car, whose two-storey glass cabins cross the bay to Ba Deo hill.",
+    "categories": [
+      "viewpoint",
+      "attraction",
+      "family"
+    ],
+    "budgetTier": "mid",
+    "blurb": "A large mainland leisure complex above Bai Chay, anchored by the record-setting Queen Cable Car (dual-storey cabins) up to the Sun Wheel and Mystic Mountain gardens, with a separate water park and Dragon Park below. It is the polished, family-friendly, city-side view of Ha Long - not the wild bay, but a reliable option for a rainy afternoon or travellers not taking a boat.",
+    "whyItFits": "An accessible, all-weather high viewpoint over the bay for families and anyone skipping a cruise.",
+    "priceRange": {
+      "low": 150000,
+      "typical": 350000,
+      "high": 350000,
+      "currency": "VND",
+      "note": "Queen Cable Car return is around 350,000 VND for adults; seasonal promotions (e.g. winter) drop it far lower. The water park and other zones are separate tickets."
+    },
+    "hours": "Cable car roughly 14:00-20:00 weekdays and 09:00-20:00 weekends; verify seasonally on the official site",
+    "tips": [
+      "Ride near sunset for the best bay light and cooler air.",
+      "Opening hours and which zones are running change by season - check the official site the day before.",
+      "Fully paved and pram-friendly; a good rainy-afternoon fallback.",
+      "This is the city-side experience, not the wild karst bay - set expectations accordingly."
+    ],
+    "scamWarnings": [
+      "Buy tickets at the official counter or website; ignore resellers pushing 'skip-the-line' deals."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Sun World Ha Long Queen Cable Car Bai Chay",
+    "coords": {
+      "lat": 20.947,
+      "lng": 107.056
+    },
+    "bookHint": "Buy at the gate or on the official Sun World site; in the Bai Chay district of Ha Long City.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Sun World Ha Long (official)",
+        "url": "https://ticket.sunworld.vn/en/khu-vui-choi/sun-world-ha-long-en/"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Attraction_Review-g298082-d8683982-Reviews-Sun_World_Halong_Complex-Ha_Long_Bay_Quang_Ninh_Province.html"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-cat-ba-town-guesthouses",
+    "name": "Cat Ba Town Guesthouses & Hostels",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "The strip of tall, narrow mini-hotels and hostels lining the Cat Ba town harbourfront and the blocks just behind it - boat-tour signboards in every lobby.",
+    "categories": [
+      "stay",
+      "budget"
+    ],
+    "budgetTier": "low",
+    "stayType": "guesthouse",
+    "blurb": "Cat Ba town is the practical base for Lan Ha Bay, the national park and the island's beaches, and its lodging is overwhelmingly small guesthouses and hostels. Seafront rooms carry a view premium; the streets one block back are cheaper and quieter. Most places double as tour desks selling day boats and bus-boat transfers.",
+    "whyItFits": "An honest budget-to-mid stay cluster that puts travellers within walking distance of boats, food and the beaches.",
+    "priceRange": {
+      "low": 100000,
+      "typical": 350000,
+      "high": 900000,
+      "currency": "VND",
+      "note": "Hostel dorms ~100,000-180,000 VND; private guesthouse rooms ~250,000-600,000 VND; harbour-view rooms more."
+    },
+    "hours": "Check-in typically from 14:00",
+    "tips": [
+      "Rooms a block back from the harbour are cheaper and quieter than the seafront row.",
+      "Most guesthouses sell Lan Ha day boats and buses - convenient, but compare prices before committing.",
+      "Domestic-tourist peaks (summer weekends, Vietnamese holidays) spike rates - book ahead.",
+      "Ask for a room away from the karaoke bars if you are a light sleeper."
+    ],
+    "scamWarnings": [
+      "Confirm the total room rate and whether desk-booked tours carry a markup."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Cat Ba town guesthouses harbourfront",
+    "coords": {
+      "lat": 20.723,
+      "lng": 107.048
+    },
+    "bookHint": "Book on the usual hotel platforms, or walk in outside peak weekends.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Hotels-g737051-Cat_Ba_Hai_Phong-Hotels.html"
+      },
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/C%C3%A1t_B%C3%A0_Island"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-lan-ha-island-bungalows",
+    "name": "Lan Ha Bay Island Bungalow Stays",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "Cabana- and bungalow-style resorts tucked into private coves on islands off Cat Ba (Nam Cat, Cat Dua / Monkey Island, the Tung Thu area) - you arrive on the resort's own boat.",
+    "categories": [
+      "stay",
+      "nature"
+    ],
+    "budgetTier": "high",
+    "stayType": "resort",
+    "blurb": "A small crop of island resorts scattered through Lan Ha Bay offer wooden bungalows on private beaches, reached only by boat. They range from rustic backpacker cabanas to comfortable mid-range lodges, and trade town convenience for waking up on the water with kayaks at the door.",
+    "whyItFits": "An honest higher-end stay option for travellers who want a quiet night on the karst water rather than in town.",
+    "priceRange": {
+      "low": 700000,
+      "typical": 1500000,
+      "high": 3500000,
+      "currency": "VND",
+      "note": "Island bungalows run roughly 700,000-3,500,000 VND depending on the resort and season; boat transfers are sometimes extra."
+    },
+    "hours": "Boat transfers run to a set schedule; confirm the last boat of the day",
+    "tips": [
+      "You are committing to the island - bring everything you need, as on-site shops are minimal.",
+      "Check what the rate includes (transfers, meals, kayaks) before booking.",
+      "Some 'beaches' are small and tidal; study recent photos and reviews.",
+      "Great for a quiet night on the water; poor if you want town nightlife."
+    ],
+    "scamWarnings": [
+      "Confirm boat-transfer times and cost in writing so you are neither overcharged nor stranded."
+    ],
+    "rating": 4.1,
+    "reviewSources": [
+      "Tripadvisor",
+      "Agoda",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Lan Ha Bay island bungalow resort Cat Ba",
+    "coords": {
+      "lat": 20.725,
+      "lng": 107.085
+    },
+    "bookHint": "Book direct or via hotel platforms; the resort arranges the boat from Cat Ba / Beo pier.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Hotel_Review-g737051-d1842211-Reviews-Monkey_Island_Resort-Cat_Ba_Hai_Phong.html"
+      },
+      {
+        "org": "Agoda",
+        "url": "https://www.agoda.com/monkey-island-resort/hotel/cat-ba-island-vn.html"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-ha-long-cha-muc-banh-cuon",
+    "name": "Cha Muc & Banh Cuon Stalls, Ha Long",
+    "city": "Ha Long",
+    "country": "vi",
+    "recognition": "Modest shophouse eateries around Ha Long Market and Bach Dang ward on the Hon Gai side, griddling springy hand-pounded squid cakes (cha muc) served with steamed rice rolls - queues of locals, no English menu.",
+    "categories": [
+      "food",
+      "local",
+      "breakfast"
+    ],
+    "budgetTier": "low",
+    "isLocal": true,
+    "blurb": "Cha muc - grilled cuttlefish cake, hand-pounded so it bounces and chews unlike ordinary squid - is Quang Ninh's protected regional specialty. The classic way to eat it is at breakfast, sliced over banh cuon (steamed rice rolls) with a sweet-sour dipping sauce, at unassuming local shops on the Hon Gai side of the city. Long-running spots near Ha Long Market and Bach Dang ward are the ones with the queues.",
+    "whyItFits": "The single most local, most authentic thing to eat in Ha Long City, at honest neighbourhood prices.",
+    "priceRange": {
+      "low": 30000,
+      "typical": 40000,
+      "high": 60000,
+      "currency": "VND",
+      "note": "A plate of banh cuon cha muc runs about 30,000-50,000 VND. Cash only."
+    },
+    "hours": "Breakfast into early afternoon; the classic shops sell out and close around 14:00",
+    "tips": [
+      "Go for breakfast - the best-known shops close by early afternoon.",
+      "The Hon Gai side has far more genuine local spots than tourist-facing Bai Chay.",
+      "Point-and-order works fine; carry small notes.",
+      "Look for hand-pounding out front - it is the sign of real cha muc rather than machine-made."
+    ],
+    "scamWarnings": [
+      "At tourist-strip restaurants confirm the per-plate price; neighbourhood shops charge honest local rates."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Google Maps consensus",
+      "Vietnamese local press"
+    ],
+    "mapQuery": "banh cuon cha muc Ha Long market Bach Dang",
+    "coords": {
+      "lat": 20.953,
+      "lng": 107.085
+    },
+    "bookHint": "No booking; walk in for breakfast on the Hon Gai side of Ha Long City.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Vietnam.vn",
+        "url": "https://www.vietnam.vn/en/quan-banh-cuon-cha-muc-40-nam-tuoi-o-ha-long-chi-ban-den-2h-chieu"
+      },
+      {
+        "org": "Revitrip",
+        "url": "https://revitrip.com/blog/ha-long-5-local-dishes"
+      }
+    ]
+  },
+  {
+    "id": "vi-ext-ben-beo-floating-seafood",
+    "name": "Ben Beo Pier Floating Seafood (Cai Beo)",
+    "city": "Cat Ba",
+    "country": "vi",
+    "recognition": "Wooden raft-restaurants moored off Ben Beo (Cai Beo) pier southeast of Cat Ba town, where fish and shellfish swim in netted pens beneath the deck and you pick your dinner live.",
+    "categories": [
+      "food",
+      "seafood",
+      "local"
+    ],
+    "budgetTier": "mid",
+    "isLocal": true,
+    "blurb": "Cai Beo, off Ben Beo pier, is one of Vietnam's oldest floating fishing villages, and its raft restaurants let you eat the day's catch straight from the pens below. The setting is genuinely memorable - and genuinely risky on price. There are no menus, no posted rates, aggressive upselling, and you rely on the raft's boat to get back to shore, so bill-shock is a well-documented complaint.",
+    "whyItFits": "A real local seafood experience on the water, included with an honest warning so travellers can enjoy it without getting fleeced.",
+    "priceRange": {
+      "low": 150000,
+      "typical": 400000,
+      "high": 1200000,
+      "currency": "VND",
+      "note": "Priced by weight at market rate; a modest meal can be ~150,000 VND but bills climb fast - a single fish has been quoted over 1,000,000 VND."
+    },
+    "hours": "Lunch and dinner; small boats shuttle from Ben Beo pier",
+    "tips": [
+      "Ask the price per kilo for each item BEFORE it is cooked, and watch it weighed in front of you.",
+      "Expect prices well above mainland rates for the novelty and setting.",
+      "You depend on the raft's boat to return - agree the round trip before you go out.",
+      "The Cai Beo floating village setting is the real draw; treat it as an experience, not a bargain."
+    ],
+    "scamWarnings": [
+      "Well-documented bill-shock: no menu, no posted prices, aggressive upselling, and you cannot leave until their boat takes you back. Get every price in writing first, or eat at a fixed-menu place on shore."
+    ],
+    "rating": 3.9,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Ben Beo floating seafood restaurant Cat Ba",
+    "coords": {
+      "lat": 20.722,
+      "lng": 107.062
+    },
+    "bookHint": "No booking; small boats run out from Ben Beo / Cai Beo pier. Clarify all prices and the return trip first.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com/Restaurant_Review-g737051-d9739676-Reviews-Tuyen_Beo_Floating_Restaurant-Cat_Ba.html"
+      },
+      {
+        "org": "BestPrice Travel",
+        "url": "https://www.bestpricetravel.com/travel-guide/cai-beo-fishing-village.html"
+      }
+    ]
+  }
 ];
