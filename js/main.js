@@ -91,7 +91,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.116.0';
+const APP_VERSION = 'mk-v0.117.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -180,8 +180,15 @@ function isOpenNow(hours, hour) {
 }
 
 function contextNow() {
-  const fix = getLastFix();
-  const near = fix ? nearestSpotGlobal(fix) : null;
+  const gps = getLastFix();
+  let near = gps ? nearestSpotGlobal(gps) : null;
+  let fix = gps, approx = false;
+  if (!near) {
+    // No GPS: fall back to the city the traveller is focused on (last scoped or planned),
+    // so "right now" reflects where they are actually looking — never a blank capital default.
+    const fs = focusCitySpot();
+    if (fs) { near = { spot: fs, km: 0 }; fix = { lat: fs.lat, lng: fs.lng }; approx = true; }
+  }
   const now = new Date();
   const hour = now.getHours();
   const dow = now.getDay();
@@ -191,7 +198,52 @@ function contextNow() {
   if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
   const wet = (WET_MONTHS[country] || []).includes(now.getMonth());
   const dayName = now.toLocaleDateString(undefined, { weekday: 'long' });
-  return { fix, near, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
+  return { fix, near, approx, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
+}
+
+// ---- "WHERE AM I NOW" RESOLVER ---------------------------------------------
+// One source of truth for the traveller's effective location, so weather and
+// recommendations follow WHERE THEY ARE — a live/last GPS fix wins; else the city
+// they are focused on (last scoped or planned); else the country default. We never
+// silently assume the capital when a better signal exists: a traveller in Chiang Mai
+// must not be shown Bangkok picks.
+function focusCitySpot() {
+  const fk = store.profile.prefs.focusSpotKey;
+  return fk ? (WEATHER_SPOTS.find((s) => spotKey(s) === fk) || null) : null;
+}
+function setFocusSpot(spot) {
+  if (!spot) return;
+  const k = spotKey(spot);
+  if (store.profile.prefs.focusSpotKey === k && activeCountry === spot.country) return;
+  store.profile.prefs.focusSpotKey = k;
+  if (spot.country) activeCountry = spot.country;
+  save();
+}
+function focusSpot(explicitCountry) {
+  const gps = getLastFix();
+  const near = gps ? nearestSpotGlobal(gps) : null;
+  const focus = focusCitySpot();
+  if (explicitCountry && getCountry(explicitCountry)) {
+    // A country was explicitly requested (e.g. "Today in Vietnam"): stay in that country,
+    // but still prefer the focused/located city within it over the capital.
+    if (focus && focus.country === explicitCountry) return { spot: focus, source: 'focus' };
+    if (near && near.spot && near.spot.country === explicitCountry) return { spot: near.spot, source: 'gps', km: near.km };
+    return { spot: defaultSpot(explicitCountry), source: 'default' };
+  }
+  if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km };
+  if (focus) return { spot: focus, source: 'focus' };
+  return { spot: defaultSpot(activeCountry || 'th'), source: 'default' };
+}
+// Map a scoped city (by display name) to its nearest listed weather city, so browsing a
+// city page quietly makes that city the traveller's focus for weather + picks.
+function spotForCity(cc, cityName) {
+  if (!cityName) return null;
+  const slug = citySlug(cityName);
+  const inCountry = WEATHER_SPOTS.filter((s) => s.country === cc);
+  const exact = inCountry.find((s) => citySlug(s.city) === slug);
+  if (exact) return exact;
+  const rep = allPlaces({ country: cc }).find((p) => p.coords && citySlug(p.city) === slug);
+  return rep ? nearestSpot(rep.coords, cc) : null;
 }
 
 // Festivals happening now, or starting within the next few weeks, in the user's country —
@@ -261,7 +313,7 @@ function rightNowSection() {
     h('span', { class: 'rn-emoji' }, meta.emoji),
     h('div', {}, [
       h('div', { class: 'rn-title' }, ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`),
-      h('div', { class: 'rn-sub muted' }, `${ctx.dayName}${wxStr}${ctx.wet ? ' · wet season' : ''}`),
+      h('div', { class: 'rn-sub muted' }, `${ctx.dayName}${wxStr}${ctx.wet ? ' · wet season' : ''}${ctx.approx ? ' · where you’re looking' : ''}`),
     ]),
   ]));
 
@@ -302,6 +354,13 @@ function rightNowSection() {
       ]));
     });
     card.append(list);
+  }
+  if (ctx.approx && typeof navigator !== 'undefined' && navigator.geolocation) {
+    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
+      e.currentTarget.textContent = 'Locating…';
+      try { setLastFix(await geolocate()); } catch { /* denied/unavailable */ }
+      render();
+    } }, '📍 Use my exact location'));
   }
   const evs = eventsNow(ctx.country, ctx.now);
   if (evs.length) {
@@ -615,6 +674,7 @@ function nearbyScreen() {
     const info = nearestCityInfo(f);
     const country = info ? info.country : activeCountry;
     activeCountry = country;
+    const nb = nearestSpotGlobal(f); if (nb) setFocusSpot(nb.spot);   // remember where they are for weather/today
     const cName = getCountry(country) ? getCountry(country).name : '';
     status.innerHTML = '';
     status.append(
@@ -1026,6 +1086,9 @@ function placesScreen(arg) {
       h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
       h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `Show all of ${getCountry(activeCountry) ? getCountry(activeCountry).name : 'country'}`),
     ]));
+    // Browsing a city makes it the traveller's focus, so weather + "today" + "right now"
+    // follow this city (not the capital) until GPS or another city overrides it.
+    const cSpot = spotForCity(activeCountry, scopeCity); if (cSpot) setFocusSpot(cSpot);
     const ac = cityAboutCard(activeCountry, scopeSlug); if (ac) wrap.append(ac);
     wrap.append(cityEssentials(activeCountry, scopeCity, scopeSlug));
   }
@@ -2953,8 +3016,8 @@ function daySegments(hourly, date) {
 function weatherScreen(country) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Weather & forecast', '#home'));
-  if (country) weatherKey = spotKey(defaultSpot(country));
-  if (!weatherKey) weatherKey = spotKey(defaultSpot(activeCountry || 'th'));
+  if (country) weatherKey = spotKey(focusSpot(country).spot);
+  if (!weatherKey) weatherKey = spotKey(focusSpot().spot);
   const spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
 
   // Unit toggles (°C/°F, km/h/mph) — persist in the profile and re-render.
@@ -3151,19 +3214,26 @@ function moodLine(m) {
 }
 
 function daySuggestScreen(country) {
-  if (country && getCountry(country)) activeCountry = country;
-  const id = getCountry(activeCountry) ? activeCountry : 'th';
+  const explicit = country && getCountry(country) ? country : null;
+  if (explicit) activeCountry = explicit;
+  const fs = focusSpot(explicit || undefined);
+  const spot = fs.spot;
+  const id = getCountry(spot.country) ? spot.country : (getCountry(activeCountry) ? activeCountry : 'th');
+  activeCountry = id;
   const c = getCountry(id);
-  const spot = defaultSpot(id);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Today’s plan', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, `Suggestions for ${c.name} today, weighing the weather and the highest-rated places (your own ratings count first).`));
+  // Be explicit about WHERE these picks are for, so someone in Chiang Mai never silently
+  // gets Bangkok: GPS wins, else the city they are looking at, else the country default.
+  const scopeMsg = fs.source === 'gps' ? `📍 Near ${spot.city} — from your location`
+    : fs.source === 'focus' ? `📍 ${spot.city} — the place you’re looking at`
+    : `📍 ${spot.city} — turn on location or open a city for local picks`;
+  wrap.append(h('p', { class: 'map-hint' }, `${scopeMsg}. Weighing today’s weather and the highest-rated places (your own ratings count first).`));
   const locBtn = h('button', { class: 'btn ghost block', onclick: async () => {
     locBtn.textContent = 'Locating…'; locBtn.disabled = true;
-    try { const pos = await geolocate(); dayUserLoc = { lat: pos.lat, lng: pos.lng }; } catch { /* denied/offline */ }
-    locBtn.textContent = dayUserLoc ? '📍 Using your location' : '📍 Use my location for “near me”';
-    locBtn.disabled = false; paint(lastRec);
-  } }, dayUserLoc ? '📍 Using your location' : '📍 Use my location for “near me”');
+    try { setLastFix(await geolocate()); go('#today'); return; } catch { /* denied/offline */ }
+    locBtn.textContent = '📍 Location unavailable'; locBtn.disabled = false;
+  } }, fs.source === 'gps' ? '📍 Update my location' : '📍 Use my location');
   wrap.append(locBtn);
   const body = h('div', {});
   wrap.append(body);
@@ -3191,22 +3261,32 @@ function daySuggestScreen(country) {
     const isOutdoor = (p) => (p.categories || []).some((cat) => OUTDOOR.includes(cat));
     const prefer = mood === 'wet' ? ['culture', 'food', 'market', 'museum', 'temple', 'cafe', 'nightlife', 'shopping', 'wellness']
       : mood === 'hot' ? ['culture', 'food', 'nature', 'nightlife'] : ['nature', 'culture', 'food', 'nightlife'];
+    // Anchor distance to where the traveller actually is: their GPS fix if that is the
+    // active source, otherwise the focused city's coordinates. This is what stops a
+    // Chiang Mai traveller from being ranked into Bangkok's (higher-rated) places.
+    const gf = getLastFix();
+    const anchor = dayUserLoc || ((fs.source === 'gps' && gf) ? gf : { lat: spot.lat, lng: spot.lng });
     let scored = allPlaces({ country: id }).map((p) => {
       const er = effectiveRating(p.id, p.rating || 0);
       const catBonus = (p.categories || []).some((cat) => prefer.includes(cat)) ? 0.3 : 0;
       const outdoorPenalty = (mood === 'wet' && isOutdoor(p)) ? 1.6 : 0;
-      const dist = (dayUserLoc && p.coords) ? haversineKm(dayUserLoc, p.coords) : null;
-      const score = er + catBonus - outdoorPenalty - (dist != null ? Math.min(dist, 200) / 500 : 0);
-      return { p, er, dist, score, outdoor: isOutdoor(p) };
+      const dist = (anchor && p.coords) ? haversineKm(anchor, p.coords) : null;
+      return { p, er, dist, catBonus, outdoorPenalty, outdoor: isOutdoor(p) };
     }).filter((x) => x.er > 0 || x.p.coords);
+    // Keep it to what is actually reachable from here; widen only if the area is sparse.
+    const NEAR_KM = 150;
+    let pool = scored.filter((x) => x.dist != null && x.dist <= NEAR_KM);
+    const widened = pool.length < 6;
+    if (widened) pool = scored;
     if (mood === 'wet') {
-      const indoor = scored.filter((x) => !x.outdoor);
-      if (indoor.length >= 4) scored = indoor;   // hide outdoor picks entirely when enough indoor options exist
+      const indoor = pool.filter((x) => !x.outdoor);
+      if (indoor.length >= 4) pool = indoor;   // hide outdoor picks entirely when enough indoor options exist
     }
-    scored.sort((a, b) => b.score - a.score);
-    const top = scored.slice(0, 8);
-    const secLabel = mood === 'wet' ? (dayUserLoc ? 'Indoor-friendly, near you' : 'Indoor-friendly picks for the rain')
-      : (dayUserLoc ? 'Highly rated near you' : 'Highly rated picks');
+    pool.forEach((x) => { x.score = x.er + x.catBonus - x.outdoorPenalty - (x.dist != null ? Math.min(x.dist, 200) / 90 : 1.4); });
+    pool.sort((a, b) => b.score - a.score);
+    const top = pool.slice(0, 8);
+    const nearCity = !widened ? ` near ${spot.city}` : '';
+    const secLabel = mood === 'wet' ? `Indoor-friendly for the rain${nearCity}` : `Highly rated${nearCity}`;
     body.append(h('h2', { class: 'home-section' }, secLabel));
     if (!top.length) { body.append(h('p', { class: 'empty' }, 'No places to suggest yet for this country.')); return; }
     top.forEach(({ p, er, dist }) => {
