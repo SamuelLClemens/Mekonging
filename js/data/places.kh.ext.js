@@ -9,6 +9,7 @@
 export const PLACES_KH_EXT = [
   {
     id: "kh-ext-phnom-sampov", name: "Phnom Sampov (Killing Caves & Bat Exodus)", city: "Battambang", country: "kh",
+    access: { stepFree: "no", note: "A sealed road or a moto (~$4) carries you up the hill, but the Killing Caves memorial is reached by a staircase down into the cavern and the summit/bat-cave viewpoint by a long stone staircase (~700 steps), so the actual sights are not step-free." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 1754, asOf: "2026-07" },
       { site: "Google", score: 4.5, scale: 5, count: 1475, asOf: "2026-07" },
@@ -91,6 +92,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kep-national-park", name: "Kep National Park (Sunset Rock Trail)", city: "Kep", country: "kh",
+    access: { stepFree: "no", note: "The headline viewpoints (e.g. Sunset Rock) require a steep, rocky, root-strewn forest hike that is impassable by wheelchair. The 8km perimeter loop is a gently undulating concrete road that may be partly navigable with a strong assistant or power chair, but the actual viewpoints and interior trails." },
     categories: ["park", "hike", "viewpoint", "nature"], budgetTier: "low",
     blurb: "A compact forested hill behind Kep town threaded with quiet trails. The well-marked loop and the climb to Sunset Rock pass a pagoda and a nunnery, opening to panoramas over the coast, the crab market and the distant islands of Vietnam. Butterflies, birds and the occasional macaque keep it lively.",
     whyItFits: "Suits walkers who want an easy-to-moderate forest hike with rewarding views and almost no crowds, then fresh crab in town afterwards.",
@@ -497,6 +499,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-angkor-tour", name: "Angkor temples tour (sunrise & cycle)", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "Angkor Wat's causeway and upper towers have steep, unramped stone steps but the inner complex is reachable at ground level via the east gate; Ta Prohm offers a flat compacted-earth path, and Bayon's ground level/east entrance is viewable; wheelchair-accessible tuk-tuks can be hired in Siem Reap." },
     categories: ["culture", "hike"], budgetTier: "mid",
     kidFriendly: true,
     activities: ["temple", "sunrise", "cycling", "history"],
@@ -529,6 +532,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-siemreap-cooking", name: "Siem Reap Khmer cooking class", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "Most Siem Reap classes are in local homes with steps and are listed as not wheelchair-accessible; only a ground-floor riverside venue arranged well in advance may accommodate, and no specific step-free class is confirmed \u2014 call ahead to verify before booking." },
     categories: ["food", "culture"], budgetTier: "mid",
     kidFriendly: true,
     activities: ["cooking-class", "market-tour"],
@@ -824,6 +828,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-wat-banan",
+    access: { stepFree: "no", note: "Hilltop Angkor-era temple reached only by a steep stone naga staircase of roughly 358 steps; there is no ramp or vehicle route to the summit, so a wheelchair user cannot reach the ruins." },
     name: "Wat Banan (Prasat Banan)",
     city: "Battambang",
     country: "kh",
@@ -846,6 +851,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-battambang-circus",
+    access: { stepFree: "partial", note: "The Phare Ponleu Selpak big-top performance space is at ground level; the operator asks wheelchair users to notify ahead to arrange seating, but published step-free entry details are thin." },
     name: "Phare Ponleu Selpak Circus",
     city: "Battambang",
     country: "kh",
@@ -889,6 +895,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kampot-salt-fields",
+    access: { stepFree: "no", note: "Although the fields themselves are mirror-flat, access is only via muddy, rutted, often bike-only dirt tracks and viewing is from narrow raised earthen dykes with no paved path or facilities; tour operators explicitly list the site as unsuitable for wheelchair users." },
     name: "Kampot Salt Fields",
     city: "Kampot",
     country: "kh",
@@ -930,6 +937,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-preah-vihear-temple",
+    access: { stepFree: "no", note: "A clifftop temple reached only by climbing steep stone staircases (the naga stairway is ~162-163 steps, with further flights between sanctuaries) and no ramp; there is no way to reach the sanctuaries without stairs." },
     name: "Preah Vihear Temple",
     city: "Preah Vihear",
     country: "kh",
@@ -974,6 +982,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kbal-spean",
+    access: { stepFree: "no", note: "Reached only by a steep ~1.5 km jungle hike over exposed tree roots, boulders, gravel and slippery rock; sources explicitly say the terrain is not recommended for wheelchair users, and there is no paved or step-free route to the carvings or waterfall." },
     name: "Kbal Spean (River of a Thousand Lingas)",
     city: "Siem Reap",
     country: "kh",
@@ -1041,6 +1050,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kratie-riverfront",
+    access: { stepFree: "partial", note: "The flat Mekong riverfront boulevard and market streets are broadly level and rollable, but pavements are uneven with kerbs and gaps, and dolphin/ferry boats are boarded via steps down wooden piers." },
     name: "Kratie Riverfront & Colonial Town",
     city: "Kratie",
     country: "kh",
@@ -1103,6 +1113,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-kompong-cham-bamboo-bridge",
+    access: { stepFree: "no", note: "A seasonal (dry-season only, roughly Jan-May) ~1km bamboo bridge with a woven, bouncy, uneven slatted deck and gaps between poles that make it effectively impassable by wheels, regardless of the ramped/earthen approaches used by motorbikes." },
     name: "Koh Paen Bamboo Bridge",
     city: "Kampong Cham",
     country: "kh",
@@ -1125,6 +1136,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-independence-monument-pp",
+    access: { stepFree: "partial", note: "The flat, paved esplanade and park around it are rollable and are the actual visitor experience; the monument itself sits on a central traffic-circle island that no visitor may enter and is reachable only across busy multi-lane roads with poor pedestrian crossings." },
     name: "Independence Monument",
     city: "Phnom Penh",
     country: "kh",

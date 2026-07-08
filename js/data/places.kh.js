@@ -43,6 +43,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-pub-street", name: "Pub Street", city: "Siem Reap", country: "kh",
+    access: { stepFree: "partial", note: "The evening pedestrian street surface is flat and paved, but there are no dropped kerbs, essentially every bar/restaurant has a step up at the entrance, tables are packed tightly, and no accessible toilet exists on the strip (some venues have no ground-floor toilet at all)." },
     recognition: 'A short pedestrian-only lane in the Old Market quarter, marked by a large illuminated PUB STREET arch sign over the entrance and packed bars on both sides.',
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nightlife", "food"], budgetTier: "low",
@@ -114,6 +115,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-riverside-sisowath", name: "Sisowath Quay Riverside", city: "Phnom Penh", country: "kh",
+    access: { stepFree: "partial", note: "The riverside promenade is flat and newly paved for roughly 2km, but a high road kerb with no curb cuts means a wheelchair user must be dropped onto it by tuk-tuk, and a short cobblestone/gravel section remains directly opposite the Royal Palace (former Royal Barge Landing)." },
     recognition: 'The wide tree-lined promenade running along the west bank at the Tonle Sap and Mekong meeting point, opposite the Royal Palace, lined with flags and riverfront bars.',
     localName: 'ផ្លូវព្រះស៊ីសុវត្ថិ · Sisowath Quay',
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
@@ -144,6 +146,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-siemreap-tonle-sap-floating", name: "Tonle Sap Floating Villages (Kampong Phluk)", city: "Siem Reap", country: "kh",
+    access: { stepFree: "no", note: "Reachable only by small wooden boat boarded down a jetty/bank, and the village dwellings sit on ~8m stilts accessed by ladders and steps; tour operators explicitly state these trips are not wheelchair accessible." },
     externalRatings: [
       { site: "Google", score: 4.1, scale: 5, count: 880, asOf: "2026-07" },
     ],

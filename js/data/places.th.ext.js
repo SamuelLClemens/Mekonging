@@ -24,6 +24,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pha-dok-seaw", name: "Pha Dok Siao Waterfall & Nature Trail", city: "Chiang Mai", country: "th",
+    access: { stepFree: "no", note: "Guided-only forest trek on dirt paths with wooden and bamboo steps, narrow slopes with bamboo handrails, and bamboo river-crossing bridges; the waterfall section is stairs, impassable for a wheelchair." },
     categories: ["waterfall", "hike", "nature", "park"], budgetTier: "mid",
     blurb: "A lesser-trodden waterfall inside Doi Inthanon National Park reached on a guided trail that threads through Karen rice terraces, coffee plots and hill-tribe villages.",
     whyItFits: "For walkers who want Doi Inthanon's scenery without the summit crowds, plus a genuine community-tourism angle. Pairs well with the twin royal pagodas higher up the mountain.",
@@ -110,6 +111,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-mu-ko-lanta-np", name: "Mu Ko Lanta National Park (Cape & Lighthouse Trail)", city: "Koh Lanta", country: "th",
+    access: { stepFree: "no", note: "The cape/lighthouse nature trail is a steep, eroded ~1.7km loop; the first ~400m is very steep with ropes and tree roots and further sections have stairs, so the headland and lighthouse are reached only by steps and steep unpaved paths, not wheelable." },
     categories: ["park", "nature", "viewpoint", "beach", "hike"], budgetTier: "mid",
     blurb: "Koh Lanta's southern tip: a white lighthouse, a quiet beach, resident monitor lizards and macaques, and a forest nature trail with a viewpoint over Cape Tanote — a noted bird-watching route.",
     whyItFits: "For nature lovers wanting the island's calmest, most scenic corner. Combine a swim, a short loop hike and a picnic well away from the resort strip.",
@@ -154,6 +156,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-phu-pha-man", name: "Phu Pha Man National Park (Tat Yai Waterfall & caves)", city: "Khon Kaen", country: "th",
+    access: { stepFree: "no", note: "Reaching the 80m Tat Yai Waterfall means descending steep stairs with rails, then ladders and a rope down cliffs to lower levels; terrain is steep and slippery, unusable for a wheelchair." },
     categories: ["park", "waterfall", "nature", "hike"], budgetTier: "mid",
     blurb: "A rarely-touristed Isan park of steep limestone cliffs, caves and waterfalls about 100 km west of Khon Kaen, including the 80 m Tat Yai falls and a famous evening exodus of bats from Khang Khao Cave.",
     whyItFits: "For independent travellers wanting genuine off-the-beaten-track nature in the northeast — dramatic scenery with almost no foreign crowds. Best in the green season for full waterfalls.",
@@ -168,6 +171,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-erawan-falls", name: "Erawan Falls (day trip)", city: "Kanchanaburi", country: "th",
+    access: { stepFree: "partial", note: "A cheap golf-cart service (about 20-30 baht) plus a flat concrete path reaches the lower tiers 1-2; beyond that the trail climbs steep wooden steps, roots and rock-scrambles (roughly 200 steps with a stream crossing), so the upper tiers are not reachable by wheelchair." },
     recognition: 'Enter through the Erawan National Park gate and visitor centre west of Kanchanaburi; a marked forest trail climbs past seven numbered tiers of emerald-blue pools fed by limestone-white cascades.',
     localName: 'น้ำตกเอราวัณ · Nam Tok Erawan',
     categories: ["waterfall", "park", "nature", "hike"], budgetTier: "mid",
@@ -184,6 +188,7 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-doi-inthanon", name: "Doi Inthanon National Park", city: "Chiang Mai", country: "th",
+    access: { stepFree: "partial", note: "The summit Ang Ka nature trail is a near-flat 360m raised-boardwalk loop, but sources conflict on a few small step/uneven sections along it, so it is not fully step-free; the Royal Twin Pagodas and Wachirathan viewpoint need little walking but have paved steps around them." },
     externalRatings: [
       { site: "Google", score: 4.6, scale: 5, count: 3661, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.4, scale: 5, count: 2265, url: "https://www.tripadvisor.com/Attraction_Review-g1027112-d455307-Reviews-Doi_Inthanon-Doi_Inthanon_National_Park.html", asOf: "2026-07" },
@@ -285,6 +290,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-similan-islands", name: "Similan Islands National Park", city: "Khao Lak", country: "th",
+    access: { stepFree: "no", note: "Access is a 1.5-2h speedboat only, boarding via wet piers and beaches; on-island paths are soft sand and rough boardwalk. Multiple operators explicitly state the tours are not wheelchair accessible (and exclude PWDs and several medical conditions)." },
     categories: ["nature", "beach", "park"], budgetTier: "high",
     blurb: "An Andaman archipelago of granite boulders, powder-white sand and clear water ranked among the world's top dive and snorkel destinations, reached by speedboat from Khao Lak or Phuket.",
     whyItFits: "For divers and snorkellers chasing the clearest water in the region. Note the park closes annually to let the reefs recover.",
@@ -299,6 +305,7 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-sangkhlaburi", name: "Sangkhlaburi & the Mon Bridge", city: "Kanchanaburi", country: "th",
+    access: { stepFree: "no", note: "The 445m Mon (Uttamanusorn) Bridge is a hand-built wooden pedestrian footbridge with an undulating, uneven plank deck and raised step/dirt approaches at the banks, so it is not step-free;" },
     categories: ["culture", "nature", "viewpoint"], budgetTier: "low",
     blurb: "A tranquil lakeside town near the Myanmar border where Thailand longest wooden footbridge crosses a reservoir to a Mon community. Misty mornings, floating houses and a gentle blend of Thai, Mon and Karen cultures make it a slow-travel favourite.",
     whyItFits: "For travellers seeking calm, culture and lake scenery well off the southern-island trail. Dawn over the Mon Bridge is the signature scene.",
@@ -313,6 +320,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-ban-rak-thai", name: "Ban Rak Thai (Mae Aw)", city: "Mae Hong Son", country: "th",
+    access: { stepFree: "partial", note: "The flat lakeside tea-house promenade is relatively level, but the village sits at roughly 1,780m reached by steep hairpin mountain roads (Route 1219), with sharp inclines up to most shops and lodging; the lakeside surface itself is not independently confirmed as fully rollable." },
     categories: ["culture", "nature", "viewpoint"], budgetTier: "low",
     blurb: "A Yunnanese-Chinese tea-growing village settled by former Kuomintang soldiers, set around a misty lake high in the mountains near the Myanmar border, with terraced tea plantations, clay-walled guesthouses and pots of oolong served lakeside.",
     whyItFits: "For travellers who want a quietly atmospheric mountain village, tea culture and cool air on the remote Mae Hong Son loop.",
@@ -341,6 +349,7 @@ export const PLACES_TH_EXT = [
   },
 {
     id: "th-ext-maya-bay", name: "Maya Bay (Koh Phi Phi Leh)", city: "Krabi", country: "th",
+    access: { stepFree: "no", note: "Reached only by boat; visitors moor at a floating pier in Loh Samah Bay, walk ~5min on a wooden jungle boardwalk (slippery when wet) through a cliff gap, then step onto soft sand, with a boat transfer that has no step-free option." },
     categories: ["beach", "nature", "park"], budgetTier: "mid",
     blurb: "The cliff-ringed cove made famous by the film The Beach, reopened with strict visitor caps and a no-anchor, no-swimming-at-the-beach policy to let its reef recover.",
     whyItFits: "For travellers wanting the iconic Andaman postcard, now managed for conservation; go early and by an approved tour.",
@@ -1236,6 +1245,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-phanom-rung-historical-park",
+    access: { stepFree: "partial", note: "The 160m laterite processional promenade is broad and largely level (though the block surface is uneven), but the hilltop sanctuary is reached only via naga-bridge landings and multiple laterite stairways (five sets of steps), so the temple core itself is not step-free." },
     name: "Phanom Rung Historical Park",
     city: "Buriram",
     country: "th",
@@ -1324,6 +1334,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-phu-kradueng-national-park",
+    access: { stepFree: "no", note: "Access to the plateau is a strenuous ~8.7km mountain trail (5.2km steep ascent) with concrete/bamboo/wooden staircases and ladder/ramp sections; the summit is unreachable for a wheelchair user (porters carry gear at 30 baht/kg, not people)." },
     name: "Phu Kradueng National Park",
     city: "Loei",
     country: "th",
