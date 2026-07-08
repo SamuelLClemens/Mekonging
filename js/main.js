@@ -49,6 +49,7 @@ import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
 import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
+import { ESSENTIALS, getEssentials } from './data/essentials.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 
@@ -91,7 +92,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.117.0';
+const APP_VERSION = 'mk-v0.118.0';
 
 const TABS = [
   { hash: '#home', label: 'Home', ic: '🏠' },
@@ -420,6 +421,7 @@ function cityEssentials(cc, cityName, slug) {
   ]);
   card.append(h('div', { class: 'chips' }, [
     isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, '🧭 Get here') : null,
+    getBoard(cc, slug) ? h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${slug}`) }, '🛒 Local finds') : null,
     h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, '⛅ Weather'),
     (c && c.lang) ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 Phrasebook') : null,
     h('button', { class: 'chip', onclick: () => go('#sos') }, '🆘 Emergency'),
@@ -4550,6 +4552,23 @@ function boardScreen(arg) {
   wrap.append(topbar(`📋 ${board.city}`, `#board-${board.country}`));
   if (board.intro) wrap.append(h('p', { class: 'muted' }, board.intro));
 
+  // Highest-recommended places in this city — your own ratings count first.
+  const cityPlaces = allPlaces({ country: board.country })
+    .filter((p) => citySlug(p.city) === board.slug)
+    .map((p) => ({ p, er: effectiveRating(p.id, Number(p.rating) || 0) }))
+    .filter((x) => x.er > 0)
+    .sort((a, b) => b.er - a.er)
+    .slice(0, 6);
+  if (cityPlaces.length) {
+    const tc = h('div', { class: 'card' }, [h('h2', {}, `🏆 Top-rated in ${board.city}`)]);
+    cityPlaces.forEach(({ p, er }) => tc.append(h('button', { class: 'btn ghost block', style: 'justify-content:space-between;margin-top:6px', onclick: () => go(`#place-${p.id}`) }, [
+      h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}`),
+      h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)),
+    ])));
+    tc.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Blends the guide’s rating and yours — rate a place and it climbs your list.'));
+    wrap.append(tc);
+  }
+
   const section = (title, rows) => {
     if (!rows || !rows.length) return;
     const cardEl = h('div', { class: 'card' });
@@ -4560,6 +4579,18 @@ function boardScreen(arg) {
   section('🕑 Markets & schedules', (board.markets || []).map((m) =>
     boardRow(m.name, [m.when, m.where].filter(Boolean).join(' · ') + (m.what ? ` — ${m.what}` : ''), m.tip)));
   section('🥬 Shop like a local', (board.shopLocal || []).map((s) => boardRow(s.what, s.where, s.tip)));
+  const ess = getEssentials(board.country);
+  if (ess) {
+    const ec = h('div', { class: 'card' });
+    ec.append(h('h2', {}, '🛒 Cheapest essentials'));
+    if (ess.note) ec.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, ess.note));
+    ess.items.forEach((it) => ec.append(boardRow(
+      `${it.icon} ${it.item}`,
+      [it.cheapest, (it.price && it.price !== '—') ? `💰 ${it.price}` : null].filter(Boolean).join(' · '),
+      it.tip)));
+    ec.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Countrywide guidance — prices move; the cheapest option rarely does.'));
+    wrap.append(ec);
+  }
   section('👶 Family supplies', (board.family || []).map((f) =>
     boardRow(f.item, [f.where, f.price].filter(Boolean).join(' · '), f.tip)));
   section('🍜 Cheap local food', (board.cheapEats || []).map((e) =>
