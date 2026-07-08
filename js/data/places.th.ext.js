@@ -2188,4 +2188,726 @@ export const PLACES_TH_EXT = [
     coords: { lat: 14.354, lng: 100.568 },
     verified: "2026-07",
   },
+  {
+    "id": "th-ext-mhs-wat-jong-kham-klang",
+    "name": "Wat Jong Kham & Wat Jong Klang (Nong Jong Kham Lake)",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "Two golden Shan-Burmese temples with tiered white-and-gold spires mirrored in the small Nong Jong Kham lake in the middle of town; floodlit and reflected across the water at night.",
+    "categories": [
+      "temple",
+      "landmark",
+      "viewpoint"
+    ],
+    "budgetTier": "low",
+    "blurb": "The postcard heart of Mae Hong Son: a pair of adjoining Shan-Burmese temples on the south bank of Nong Jong Kham lake. Wat Jong Klang is known for its painted glass panels and carved wooden dolls (tukata) brought from Burma depicting the Vessantara Jataka; Wat Jong Kham next door dates to the 1820s and houses a large seated Buddha. At dusk the temples light up and reflect across the water, with the town's night walking street running along the shore.",
+    "whyItFits": "The single most photographed spot on the loop and an easy, free orientation point in the middle of town.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "THB",
+      "note": "Free entry; leave a small donation. Ignore anyone demanding a compulsory 'entrance fee'."
+    },
+    "hours": "Roughly 06:00-18:00 daily; go at dusk for the lit reflections and the night market",
+    "tips": [
+      "Cover shoulders and knees and remove shoes inside the viharn.",
+      "The Burmese glass paintings and wooden dolls are inside Wat Jong Klang - ask before photographing.",
+      "Come at dusk in cool season, when the temples are lit and the walking street sets up along the lake."
+    ],
+    "scamWarnings": [
+      "Entry is free - do not pay anyone claiming a mandatory admission charge."
+    ],
+    "rating": 4.4,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Wat Jong Klang Nong Jong Kham Mae Hong Son",
+    "coords": {
+      "lat": 19.2963,
+      "lng": 97.9689
+    },
+    "bookHint": "No booking; walk-in, central to town.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-mhs-doi-kong-mu",
+    "name": "Wat Phra That Doi Kong Mu",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "Twin white Shan-style chedis on a hilltop directly west of town, floodlit at night and reached by a steep switchback road; the terrace gives the widest view over Mae Hong Son and its airstrip.",
+    "categories": [
+      "temple",
+      "viewpoint"
+    ],
+    "budgetTier": "low",
+    "blurb": "Mae Hong Son's guardian hill temple, founded in the 1860s by the town's first ruler. Two whitewashed chedis hold Buddhist relics, and the terrace is the classic sunset viewpoint over the valley, the town, Nong Jong Kham lake and the small airport runway. On cool-season mornings mist fills the basin below the chedis.",
+    "whyItFits": "The best free panorama over the western loop's main town, and a short drive or walk from the centre.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "THB",
+      "note": "Free; donation welcome."
+    },
+    "hours": "Roughly 06:00-18:00; go for sunset or for dawn mist",
+    "tips": [
+      "The access road is short but steep with tight curves - ride or drive slowly.",
+      "Dawn in cool season often gives a sea of mist over the town.",
+      "A tall standing Buddha (Phra Chao Phlaachai) stands on the slope below - cover shoulders and knees."
+    ],
+    "rating": 4.5,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Wat Phra That Doi Kong Mu Mae Hong Son",
+    "coords": {
+      "lat": 19.2994,
+      "lng": 97.9563
+    },
+    "bookHint": "No booking; independent by scooter/songthaew or a steep walk up.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-tham-lod-cave",
+    "name": "Tham Lod Cave (Nam Lang River Cave)",
+    "city": "Soppong",
+    "country": "th",
+    "recognition": "A vast river cave near Soppong where a local guide leads you in by gas lantern and you cross the underground Nam Lang stream on a bamboo raft; at dusk clouds of swifts pour in as bats stream out of the mouth.",
+    "categories": [
+      "cave",
+      "nature",
+      "wildlife"
+    ],
+    "budgetTier": "low",
+    "blurb": "One of Thailand's great show caves, on the Nam Lang river in Pang Mapha (Soppong) district. Local guides - mandatory, carrying a pressure lantern - walk you through three main chambers (the Column, Doll and Coffin caverns) past stalactites and ancient teak 'spirit coffins', with two river crossings made by bamboo raft. Come near sunset for the spectacle of hundreds of thousands of swifts funnelling into the cave to roost while bats pour out.",
+    "whyItFits": "The signature natural attraction of the Soppong/Pang Mapha stretch and a working example of community-run, guide-supported tourism.",
+    "priceRange": {
+      "low": 150,
+      "typical": 550,
+      "high": 800,
+      "currency": "THB",
+      "note": "Fixed lantern-guide fee per group of up to ~3-4 people; bamboo raft charged extra per section. Cash only."
+    },
+    "hours": "Roughly 08:00-17:30 daily; arrive around 17:00 for the swift-and-bat show at the entrance",
+    "tips": [
+      "The lantern guide is compulsory and the fee supports the village - hire at the official booth.",
+      "Wear grippy shoes; steps, ladders and the raft get slippery.",
+      "The nearby Tham Lod archaeological rockshelter is a separate site."
+    ],
+    "scamWarnings": [
+      "Fees are set by the local guide association - pay at the official ticket booth, not to touts in the car park."
+    ],
+    "rating": 4.5,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Tham Lod Cave Ban Tham Pang Mapha",
+    "coords": {
+      "lat": 19.5686,
+      "lng": 98.2711
+    },
+    "bookHint": "No advance booking; guides and lamps are arranged on arrival at the cave.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-ban-jabo-cliff-noodles",
+    "name": "Ban Jabo Cliff Noodles (Lahu Village)",
+    "city": "Soppong",
+    "country": "th",
+    "recognition": "A ridge-top Lahu village south of Tham Lod where a tiny bamboo shophouse lets you sit on a plank bench with your legs dangling over a cloud-filled valley, a bowl of noodles in hand.",
+    "categories": [
+      "food",
+      "viewpoint",
+      "village"
+    ],
+    "budgetTier": "low",
+    "isLocal": true,
+    "blurb": "Ban Jabo (Ja Bo) is a Lahu hill village famous for one thing: noodles on the cliff. You perch on a long bamboo bench at the edge of a deck that drops into a deep valley and eat a simple bowl of pork or tomato broth noodles as morning mist swirls below. It is deliberately rustic, cheap, and hugely popular on cool-season mornings.",
+    "whyItFits": "A genuine hill-village food experience and one of the loop's most photographed breakfasts.",
+    "priceRange": {
+      "low": 30,
+      "typical": 50,
+      "high": 80,
+      "currency": "THB",
+      "note": "A bowl of noodles plus a drink; cash only."
+    },
+    "hours": "Morning to early afternoon; best before ~10:00 for mist and before crowds. Often quiet or closed in the wet months",
+    "tips": [
+      "Go at dawn in cool season (Nov-Feb) for the sea of mist below the deck.",
+      "It is basic and can get crowded with a queue - be patient and bring cash.",
+      "The access road is narrow, steep and unlit - ride slowly and sober."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Ban Jabo noodles cliff Pang Mapha",
+    "coords": {
+      "lat": 19.4386,
+      "lng": 98.2039
+    },
+    "bookHint": "No booking; walk-in only, cash.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Google Maps",
+        "url": "https://www.google.com/maps"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-pang-ung-reservoir",
+    "name": "Pang Ung Reservoir",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "A small pine-fringed reservoir near the Myanmar border where dawn mist rises off still water and rows of planted pines reflect - the reason it is nicknamed the 'Switzerland of Thailand'.",
+    "categories": [
+      "nature",
+      "viewpoint",
+      "camping"
+    ],
+    "budgetTier": "low",
+    "blurb": "Pang Ung is a Royal-project reservoir high in the hills near Ban Rak Thai, ringed by planted pines. It is best known for cold-season sunrises - mist lifting off glassy water, sometimes with swans, as first light catches the pines. There is a popular lakeside campsite and food stalls, and nights are genuinely cold in December and January.",
+    "whyItFits": "The classic cool-season dawn scene of the western loop and an accessible camping and photography stop.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 300,
+      "currency": "THB",
+      "note": "Free to enter; camping pitch and tent/blanket rental carry small fees in high season. Cash only."
+    },
+    "hours": "Open daily; arrive before sunrise for the mist. Peak scenery Nov-Feb",
+    "tips": [
+      "Come at dawn Nov-Feb; bring warm layers - temperatures can drop near freezing.",
+      "Rent tents and bedding on site in peak season or book a nearby homestay.",
+      "The mountain road up is winding; combine with Ban Rak Thai just beyond it."
+    ],
+    "scamWarnings": [
+      "Agree songthaew or charter prices from Mae Hong Son in advance - day-trip drivers may quote high for the remote run."
+    ],
+    "rating": 4.5,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Pang Ung Pang Tong Reservoir Mae Hong Son",
+    "coords": {
+      "lat": 19.3011,
+      "lng": 97.8783
+    },
+    "bookHint": "On-site camping in season; otherwise day trip by scooter/charter from Mae Hong Son.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-su-tong-pae-bamboo-bridge",
+    "name": "Su Tong Pae Bamboo Bridge",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "A long, humpbacked bamboo walkway snaking roughly 500m across paddy fields from Kung Mai Sang village to the forest temple of Wat Phu Sama - gold-green when the rice is high.",
+    "categories": [
+      "landmark",
+      "viewpoint",
+      "temple"
+    ],
+    "budgetTier": "low",
+    "blurb": "Su Tong Pae ('successful merit') is a community-built bamboo bridge linking Ban Kung Mai Sak to the hilltop forest temple of Wat Phu Sama, which monks cross on the dawn alms round. It lies about 12km north of Mae Hong Son town, signposted off Highway 1095 (the Pai road). It is most beautiful when the rice is green (roughly Aug-Oct) or gold just before harvest; a small market and coffee stalls have grown up at the village end.",
+    "whyItFits": "A short, photogenic walk that pairs a working temple with rice-field scenery just outside town.",
+    "priceRange": {
+      "low": 0,
+      "typical": 0,
+      "high": 0,
+      "currency": "THB",
+      "note": "Free; donations at the temple and support the village stalls."
+    },
+    "hours": "Daylight hours; dawn is best for the alms round and soft light. Rice greenest ~Sep-Oct",
+    "tips": [
+      "For the monks' alms round arrive at sunrise and be quiet and respectful.",
+      "The bamboo flexes and gets slippery when wet - watch your footing.",
+      "Buy alms sets and coffee from the villagers to support the community that built it."
+    ],
+    "rating": 4.4,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Su Tong Pae Bamboo Bridge Kung Mai Sang Mae Hong Son",
+    "coords": {
+      "lat": 19.3895,
+      "lng": 97.9546
+    },
+    "bookHint": "No booking; short drive north of Mae Hong Son town, signposted off Highway 1095.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-pha-sua-waterfall",
+    "name": "Pha Sua Waterfall",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "A wide, multi-tier limestone cascade on the road north toward Pang Ung and Ban Rak Thai - thundering brown in the rains and gentle and clearer in the cool season.",
+    "categories": [
+      "waterfall",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "blurb": "Nam Tok Pha Sua is the largest waterfall in the district, a series of limestone steps on the Mae Sa-nga stream inside Tham Pla-Namtok Pha Suea National Park. It is powerful and muddy at the height of the rains and much tamer (but clearer) later in the cool season. It sits right on the scenic run up to Pang Ung and Ban Rak Thai.",
+    "whyItFits": "An easy roadside nature stop when heading up to Pang Ung and Ban Rak Thai.",
+    "priceRange": {
+      "low": 0,
+      "typical": 100,
+      "high": 200,
+      "currency": "THB",
+      "note": "A national-park foreigner fee may be collected at busy times; cash."
+    },
+    "hours": "Daylight hours. Fullest and most dramatic Jul-Oct",
+    "tips": [
+      "Strongest in and just after the rains; flow is thin late in the dry season.",
+      "Do not swim when the water is brown and fast - drownings have occurred in flood.",
+      "Rocks are slippery; combine the visit with the Pha Sua-to-Pang Ung drive."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Pha Sua Waterfall Mae Hong Son",
+    "coords": {
+      "lat": 19.4219,
+      "lng": 97.9394
+    },
+    "bookHint": "No booking; roadside stop on the way to Pang Ung/Ban Rak Thai.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Department of National Parks (DNP)",
+        "url": "https://portal.dnp.go.th"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-tham-pla-fish-cave",
+    "name": "Tham Pla (Fish Cave)",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "A shaded riverside park northeast of town where a spring pours from a cave mouth crowded with large sacred carp that locals feed but never eat; a small bridge and a guardian statue stand over the pool.",
+    "categories": [
+      "nature",
+      "cave",
+      "park"
+    ],
+    "budgetTier": "low",
+    "blurb": "Tham Pla, the 'Fish Cave', is a spring-fed grotto about 17km northeast of Mae Hong Son on Highway 1095, where hundreds of big pla mung (soro brook carp) crowd the cool water flowing out of the cliff. The fish are considered sacred and protected, so they grow large and tame. The surrounding park - part of Tham Pla-Namtok Pha Suea National Park - has shaded walkways, a suspension bridge, a stream and picnic spots, an easy family-friendly stop.",
+    "whyItFits": "A quick, cooling nature-and-legend stop on route 1095 with flat, easy walking.",
+    "priceRange": {
+      "low": 40,
+      "typical": 100,
+      "high": 200,
+      "currency": "THB",
+      "note": "National-park entry (foreigner rate 100 THB, higher than Thai); cash."
+    },
+    "hours": "Roughly 08:00-18:00 daily",
+    "tips": [
+      "Buy the vegetable fish-food sold at the park, not bread, to feed the carp.",
+      "Do not touch or take the fish - they are protected and sacred.",
+      "Shady and cool - a good midday stop in the hot months."
+    ],
+    "rating": 4.0,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Tham Pla Fish Cave National Park Mae Hong Son",
+    "coords": {
+      "lat": 19.4246,
+      "lng": 97.9871
+    },
+    "bookHint": "No booking; on route 1095 northeast of Mae Hong Son town.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-cave-lodge-ban-tham",
+    "name": "Cave Lodge",
+    "city": "Soppong",
+    "country": "th",
+    "recognition": "A long-running timber-and-bamboo lodge in Ban Tham beside the Tham Lod turnoff, with a fire-lit common area, home cooking and hand-drawn caving maps on the walls.",
+    "categories": [
+      "stay",
+      "nature",
+      "cave"
+    ],
+    "budgetTier": "low",
+    "stayType": "guesthouse",
+    "blurb": "Cave Lodge, near Tham Lod, is one of northern Thailand's original adventure guesthouses - running since the 1980s and known for its own guided caving, kayaking and hill-village treks in the karst country of Pang Mapha. Rooms range from simple dorms to bamboo bungalows; the sociable common area, home cooking and wood-fired sauna make it a natural base for a night or two off the Pai-Soppong road.",
+    "whyItFits": "A rare honest, well-loved base for exploring the caves and trekking country around Soppong.",
+    "priceRange": {
+      "low": 200,
+      "typical": 600,
+      "high": 1500,
+      "currency": "THB",
+      "note": "Dorm bed to private bamboo bungalow; cash preferred. Book ahead in cool season."
+    },
+    "hours": "Reception in daytime; check-in from the afternoon",
+    "tips": [
+      "Book directly and early for Nov-Feb; it fills up.",
+      "Join their guided cave, kayak and trekking trips - a strong reason to stay.",
+      "It is rustic (some shared bathrooms) and cash-friendly, so bring enough baht."
+    ],
+    "scamWarnings": [
+      "Book direct through the lodge to avoid inflated third-party rates."
+    ],
+    "rating": 4.6,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Cave Lodge Ban Tham Pang Mapha Soppong",
+    "coords": {
+      "lat": 19.5642,
+      "lng": 98.2703
+    },
+    "bookHint": "Book direct via the lodge's own website; walk-ins possible off-season.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Cave Lodge (official)",
+        "url": "https://www.cavelodge.com"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-doi-mae-u-kho-sunflowers",
+    "name": "Doi Mae U-Kho Sunflower Fields (Thung Bua Tong)",
+    "city": "Khun Yuam",
+    "country": "th",
+    "recognition": "Whole hillsides above Khun Yuam turning solid yellow with wild Mexican sunflowers for a few weeks in November, mist often pooling in the valleys below the ridges.",
+    "categories": [
+      "viewpoint",
+      "nature",
+      "seasonal"
+    ],
+    "budgetTier": "low",
+    "blurb": "For roughly three weeks from mid-November, the slopes of Doi Mae U-Kho, in Namtok Mae Surin National Park about 26km east of Khun Yuam, erupt in Mexican sunflowers (dok bua tong) - a signature cool-season sight of the province. A festival brings shuttle songthaews, food and craft stalls. Go on a weekday at first light to beat the crowds and catch mist below the yellow ridges.",
+    "whyItFits": "The province's most famous seasonal spectacle and the reason many travellers time the loop for November.",
+    "priceRange": {
+      "low": 0,
+      "typical": 50,
+      "high": 100,
+      "currency": "THB",
+      "note": "Small park and shuttle fees during the festival; cash."
+    },
+    "hours": "Daylight hours; bloom peaks only from mid- to late November",
+    "tips": [
+      "The window is short and weather-dependent - check bloom reports before making the detour.",
+      "Weekend traffic and parking are brutal in peak bloom; go early and midweek.",
+      "It is cold and windy on top - bring a layer even in the daytime."
+    ],
+    "scamWarnings": [
+      "Use the official shuttle lot and agree any charter price from Khun Yuam beforehand."
+    ],
+    "rating": 4.5,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Doi Mae U-Kho Thung Bua Tong sunflowers Khun Yuam",
+    "coords": {
+      "lat": 18.6339,
+      "lng": 98.0561
+    },
+    "bookHint": "No booking; visit only in the November bloom window, ideally midweek at dawn.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org/Attraction/bua-tong-field-doi-mae-u-kho"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-khun-yuam-wwii-museum",
+    "name": "Khun Yuam WWII Museum (Thai-Japan Friendship Memorial Hall)",
+    "city": "Khun Yuam",
+    "country": "th",
+    "recognition": "A modest two-storey memorial hall on route 108 in Khun Yuam displaying rusted trucks, helmets, utensils and photographs from the Japanese army's WWII retreat through the town.",
+    "categories": [
+      "museum",
+      "history",
+      "culture"
+    ],
+    "budgetTier": "low",
+    "blurb": "Khun Yuam was a way-station on the Japanese army's brutal retreat from Burma in 1945, when thousands of soldiers passed through sick and dying and were nursed by local villagers. The Thai-Japan Friendship Memorial Hall gathers their relics - vehicles, weapons, cooking pots, letters and photographs - alongside the human stories of the townspeople who cared for them. It is a quiet, sobering counterpoint to the loop's scenery.",
+    "whyItFits": "The loop's most substantial piece of history and an honest reason to break the drive in Khun Yuam.",
+    "priceRange": {
+      "low": 30,
+      "typical": 50,
+      "high": 50,
+      "currency": "THB",
+      "note": "Small entry fee; cash."
+    },
+    "hours": "Roughly 08:00-17:00; may close midday or on some Mondays - confirm locally",
+    "tips": [
+      "Allow about 45 minutes to an hour.",
+      "Many labels are Thai-only with some English and Japanese - a translation app helps.",
+      "Pair it with the Doi Mae U-Kho sunflowers if you are here in November."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Thai-Japan Friendship Memorial Hall WWII Museum Khun Yuam",
+    "coords": {
+      "lat": 18.8206,
+      "lng": 97.9331
+    },
+    "bookHint": "No booking; walk-in on route 108 in Khun Yuam town.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-mae-sariang-riverside-guesthouses",
+    "name": "Mae Sariang Riverside Guesthouses",
+    "city": "Mae Sariang",
+    "country": "th",
+    "recognition": "Wooden guesthouses and riverside restaurants strung along the Yuam River in a quiet market town in the far southwest of the loop, ringed by Shan temples and with far fewer tourists than Pai.",
+    "categories": [
+      "stay",
+      "town",
+      "nature"
+    ],
+    "budgetTier": "low",
+    "stayType": "guesthouse",
+    "blurb": "Mae Sariang is the mellow southwestern anchor of the loop: a small riverside town on the Yuam, ringed by Shan (Tai Yai) temples such as Wat Jong Sung, and a launch point for trips toward the Salween (Salawin) river and national park on the Myanmar border. A cluster of laid-back wooden guesthouses and riverside restaurants makes it an easy overnight for anyone driving the loop clockwise on route 108.",
+    "whyItFits": "A genuine, low-key overnight and the counterweight to over-touristed Pai on the southern arc of the loop.",
+    "priceRange": {
+      "low": 250,
+      "typical": 500,
+      "high": 1000,
+      "currency": "THB",
+      "note": "Simple riverside guesthouse doubles up to small boutique rooms; cash and some cards."
+    },
+    "hours": "Town is always open; guesthouse reception in daytime and evening",
+    "tips": [
+      "Use it as a base for Salawin / Mae Sam Laep day trips toward the border river.",
+      "Route 108 in and out is very winding - dose motion-sickness sufferers before the drive.",
+      "Support the Shan food stalls and riverside restaurants; the pace here is deliberately slow."
+    ],
+    "scamWarnings": [
+      "Book Salawin and border-area trips through licensed operators; some stretches require permits."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Mae Sariang riverside guesthouses Yuam River",
+    "coords": {
+      "lat": 18.1622,
+      "lng": 97.9306
+    },
+    "bookHint": "Book a riverside guesthouse ahead in cool season; walk-in fine off-peak.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Mae_Sariang_district"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-mhs-lakeside-guesthouses",
+    "name": "Mae Hong Son Lakeside Guesthouses",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "Small family-run guesthouses and homestays within a few streets of Nong Jong Kham lake, many in teak Shan-style houses a short walk from the night market and morning market.",
+    "categories": [
+      "stay",
+      "town"
+    ],
+    "budgetTier": "low",
+    "stayType": "guesthouse",
+    "blurb": "The blocks around Nong Jong Kham lake hold most of Mae Hong Son town's budget-to-midrange stays - family guesthouses and small boutique places in wooden Shan-style houses, walkable to the twin temples, morning market and night walking street. It is the practical base for the western loop, the airport and day trips to Pang Ung, Tham Pla and Ban Rak Thai.",
+    "whyItFits": "An honest, central lodging cluster rather than a single hotel, walkable to everything in town.",
+    "priceRange": {
+      "low": 300,
+      "typical": 600,
+      "high": 1200,
+      "currency": "THB",
+      "note": "Guesthouse double up to small boutique room; cash widely accepted, cards at larger places."
+    },
+    "hours": "Reception in daytime and evening",
+    "tips": [
+      "Book ahead for the Nov-Jan peak, when the town is busiest.",
+      "Lakeside rooms are prettier but louder on market nights.",
+      "Many places rent scooters - check the brakes and tyres before taking one for the mountain roads."
+    ],
+    "scamWarnings": [
+      "Inspect and photograph any rental scooter's existing damage first, and never surrender your passport as deposit - leave a cash deposit or a copy instead."
+    ],
+    "rating": 4.2,
+    "reviewSources": [
+      "Tripadvisor",
+      "Booking.com"
+    ],
+    "mapQuery": "guesthouse Nong Jong Kham Mae Hong Son",
+    "coords": {
+      "lat": 19.2952,
+      "lng": 97.9683
+    },
+    "bookHint": "Book direct or on major platforms; several walk-in options around the lake.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      },
+      {
+        "org": "Booking.com",
+        "url": "https://www.booking.com"
+      }
+    ]
+  },
+  {
+    "id": "th-ext-mhs-walking-street-market",
+    "name": "Mae Hong Son Walking Street & Morning Market",
+    "city": "Mae Hong Son",
+    "country": "th",
+    "recognition": "An evening pedestrian strip along the lake lined with Shan and hill-tribe food stalls, plus a bustling dawn fresh-market a few blocks away where monks collect alms.",
+    "categories": [
+      "food",
+      "market"
+    ],
+    "budgetTier": "low",
+    "isLocal": true,
+    "blurb": "Mae Hong Son's food life splits in two: the lakeside walking street that fills with stalls each evening in the cool season, and the daily morning market (talat sao) that wakes before dawn. Look for Tai Yai (Shan) specialities - khao soi, khanom jeen nam ngiao (rice noodles in a tomato-and-pork-blossom broth), thua nao (fermented-soybean crackers), tea-leaf and pounded-vegetable dishes, and hill-tribe coffee. It is the cheapest, most local way to eat in town.",
+    "whyItFits": "The most authentic, budget way to taste the Shan/Tai Yai cooking that defines this corner of Thailand.",
+    "priceRange": {
+      "low": 20,
+      "typical": 60,
+      "high": 120,
+      "currency": "THB",
+      "note": "Per stall dish or snack; bring small cash."
+    },
+    "hours": "Morning market from ~05:00; walking street in the evenings, biggest and liveliest in cool season (Nov-Feb)",
+    "tips": [
+      "Try nam ngiao and Shan tea-leaf salad - they are regional specialities you rarely see elsewhere.",
+      "The morning market is best just after dawn, when locals also give alms to monks.",
+      "The full evening walking street mainly runs in high season; weeknights can be quiet off-season."
+    ],
+    "rating": 4.3,
+    "reviewSources": [
+      "Tripadvisor",
+      "Google Maps consensus"
+    ],
+    "mapQuery": "Mae Hong Son walking street night market morning market",
+    "coords": {
+      "lat": 19.2976,
+      "lng": 97.9661
+    },
+    "bookHint": "No booking; wander the lake in the evening and the market at dawn.",
+    "verified": "2026-06",
+    "sources": [
+      {
+        "org": "Tourism Authority of Thailand",
+        "url": "https://www.tourismthailand.org"
+      },
+      {
+        "org": "Tripadvisor",
+        "url": "https://www.tripadvisor.com"
+      }
+    ]
+  }
 ];
