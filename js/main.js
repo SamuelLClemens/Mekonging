@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.136.0';
+const APP_VERSION = 'mk-v0.137.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -158,6 +158,7 @@ const ICON_PATH = {
   users: '<path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="8" r="3.5"/><path d="M17 20v-1a4 4 0 0 0-3-3.9M15 4.2a4 4 0 0 1 0 7.6"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.6 1.3c0 1.6-2.1 2-2.1 3.5"/><path d="M12 17h.01"/>',
+  alert: '<path d="M12 3 2 20h20z"/><path d="M12 9v5M12 17h.01"/>',
 };
 const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 
@@ -796,6 +797,27 @@ function countryHubScreen(id) {
     h('p', {}, `Your companion for ${c.name}. Local currency: ${c.currency}.`),
     c.info ? null : h('p', { class: 'muted' }, 'Detailed guide expanding.'),
   ]));
+
+  // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
+  // this country, surface that city first and let them widen to the whole country. Only
+  // when it is a real signal (GPS or a chosen focus), never the capital default.
+  const fs = focusSpot(id);
+  const fcity = (fs && (fs.source === 'gps' || fs.source === 'focus') && fs.spot) ? fs.spot.city : null;
+  if (fcity) {
+    const slug = citySlug(fcity);
+    const here = allPlaces({ country: id }).filter((p) => citySlug(p.city || '') === slug).length;
+    wrap.append(h('div', { class: 'card access-focus' }, [
+      h('h2', { style: 'margin-top:0' }, `📍 You’re around ${fcity}`),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' },
+        here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
+      here ? h('button', { class: 'btn block', onclick: () => go(`#places-${id}-${slug}`) }, `Places in ${fcity}`) : null,
+      h('div', { class: 'chips', style: 'margin-top:6px' }, [
+        h('button', { class: 'chip', onclick: () => go('#nearby') }, '📍 Near me now'),
+        h('button', { class: 'chip', onclick: () => go(`#weather-${id}`) }, '⛅ Weather'),
+      ]),
+    ]));
+  }
+
   const chc = countryHistoryCard(id); if (chc) wrap.append(chc);
   const acc = accessCard(id); if (acc) wrap.append(acc);
   const vc = visaCard(id); if (vc) wrap.append(vc);
@@ -827,28 +849,33 @@ function countryHubScreen(id) {
   }
 
   const tiles = [
-    { ic: '💬', t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
-    { ic: '📍', t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
-    { ic: '💵', t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
-    { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
-    { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
-    { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
-    { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
-    { ic: '⛅', t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
-    { ic: '🌤️', t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
-    { ic: '🕑', t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
-    { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
-    { ic: '🏊', t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
-    { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
-    { ic: '🦋', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
-    { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
-    { ic: '🆘', t: 'Emergency', d: 'Numbers + key phrases', hash: '#sos' },
-    { ic: '⭐', t: 'Saved', d: 'Your collections', hash: '#saved' },
+    { ic: ICON.chat, t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
+    { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
+    { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
+    { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
+    { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
+    { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
+    { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
+    { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
+    { ic: ICON.sun, t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
+    { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
+    { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
+    { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
+    { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
+    { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
+    { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
+    { ic: ICON.alert, t: 'Emergency', d: 'Numbers + key phrases', hash: '#sos' },
+    { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
   ];
-  wrap.append(h('div', { class: 'grid' }, tiles.map((x) =>
-    h('button', { class: 'tile', onclick: () => go(x.hash) }, [
-      h('span', { class: 'ic' }, x.ic), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
-    ]))));
+  // Collapsed by default: the city-first card, guide cards and Explore map cover the
+  // primary needs; the full country toolkit is one tap away, not a wall of tiles.
+  wrap.append(h('details', { class: 'filters-collapse' }, [
+    h('summary', {}, `More for ${c.name}`),
+    h('div', { class: 'grid' }, tiles.map((x) =>
+      h('button', { class: 'tile', onclick: () => go(x.hash) }, [
+        h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+      ]))),
+  ]));
   mount(wrap, '#home');
 }
 
