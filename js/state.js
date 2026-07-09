@@ -220,6 +220,17 @@ export function addJournalEntry({ title, text, place = '', coords = null, ts = n
   store.journal.entries.sort((a, b) => (a.ts < b.ts ? -1 : 1));
   save(); return e;
 }
+export function updateJournalEntry(id, patch = {}) {
+  const e = store.journal.entries.find((x) => x.id === id);
+  if (!e) return null;
+  if (patch.title !== undefined) e.title = String(patch.title || 'Untitled').slice(0, 120);
+  if (patch.text !== undefined) e.text = String(patch.text || '');
+  if (patch.place !== undefined) e.place = patch.place;
+  if (patch.coords !== undefined) e.coords = patch.coords;
+  if (patch.photoKey !== undefined) e.photoKey = patch.photoKey;
+  e.editedAt = new Date().toISOString();
+  save(); return e;
+}
 export function deleteJournalEntry(id) {
   const i = store.journal.entries.findIndex((x) => x.id === id);
   if (i >= 0) { store.journal.entries.splice(i, 1); save(); }

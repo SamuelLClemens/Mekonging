@@ -5,7 +5,7 @@ import {
   store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
   addPin, deletePin, getPin, getPlaceData, setPlaceField,
-  addJournalEntry, deleteJournalEntry, journalEntries,
+  addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
   addCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.144.0';
+const APP_VERSION = 'mk-v0.145.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3072,7 +3072,8 @@ function collToggleChip(name, emoji, onToggle) {
 function journalDispatch(arg) {
   if (!arg) return journalCover();
   if (arg === 'open') return journalTOC();
-  if (arg === 'add') return addJournalScreen();
+  if (arg === 'add') return journalFormScreen();
+  if (arg.startsWith('edit-')) return journalFormScreen(arg.slice(5));
   if (arg.startsWith('entry-')) return journalEntryScreen(arg.slice(6));
   return journalCover();
 }
@@ -3150,7 +3151,8 @@ function journalEntryScreen(id) {
     getBlob(e.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
   }
   wrap.append(page);
-  wrap.append(h('div', { class: 'row-between', style: 'margin-top:14px' }, [
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top:10px' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
     h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { if (e.photoKey) delBlob(e.photoKey); deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
@@ -3288,15 +3290,40 @@ function scrapbookScreen() {
   mount(wrap, '#home');
 }
 
-function addJournalScreen() {
+// New OR edit an entry. editId set => editing an existing entry (prefilled, saved back).
+function journalFormScreen(editId) {
+  const existing = editId ? journalEntries().find((e) => e.id === editId) : null;
+  const editing = !!existing;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('New entry', '#journal-open'));
-  const st = { coords: null };
+  wrap.append(topbar(editing ? 'Edit entry' : 'New entry', editing ? `#journal-entry-${editId}` : '#journal-open'));
+  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
+
+  const st = { coords: existing ? existing.coords : null };
   const title = h('input', { type: 'text', placeholder: 'A title for this memory' });
   const text = h('textarea', { class: 'ta', placeholder: 'What happened? What did you see, eat, feel?' });
   const place = h('input', { type: 'text', placeholder: 'Place (e.g. Hoi An old town)' });
-  const photoInput = h('input', { type: 'file', accept: 'image/*', capture: 'environment' });
-  const locOut = h('p', { class: 'muted' }, 'Entry is stamped with the current date and time automatically.');
+  if (existing) { title.value = existing.title || ''; text.value = existing.text || ''; place.value = existing.place || ''; }
+
+  // Photo: TAKE a new one (camera) OR UPLOAD an existing picture (library / files); both
+  // feed one preview. In edit mode the current photo shows and can be replaced or removed.
+  let pendingFile = null, removePhoto = false;
+  const preview = h('img', { class: 'entry-photo', style: 'display:none;margin:8px 0' });
+  const camIn = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
+  const libIn = h('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+  const removeBtn = h('button', { class: 'chip', style: 'display:none', onclick: () => {
+    pendingFile = null; removePhoto = true; preview.style.display = 'none'; preview.removeAttribute('src'); removeBtn.style.display = 'none';
+  } }, '✕ Remove photo');
+  const showPreview = (src) => { preview.src = src; preview.style.display = 'block'; removeBtn.style.display = ''; };
+  const onPick = (inp) => { const f = inp.files && inp.files[0]; if (f) { pendingFile = f; removePhoto = false; showPreview(URL.createObjectURL(f)); } };
+  camIn.onchange = () => onPick(camIn);
+  libIn.onchange = () => onPick(libIn);
+  if (editing && existing.photoKey) {
+    getBlob(existing.photoKey).then((b) => { if (b && !pendingFile && !removePhoto) showPreview(URL.createObjectURL(b)); }).catch(() => {});
+  }
+
+  const locOut = h('p', { class: 'muted' }, st.coords
+    ? `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`
+    : 'Entry is stamped with the current date and time automatically.');
   const card = h('div', { class: 'card' }, [
     field('Title', title), field('Your entry', text), field('Place', place),
     field('Location', h('div', {}, [
@@ -3306,20 +3333,34 @@ function addJournalScreen() {
         navigator.geolocation.getCurrentPosition(
           (pos) => { st.coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; locOut.textContent = `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`; },
           (err) => { locOut.textContent = `No location: ${err.message}`; }, { enableHighAccuracy: true, timeout: 10000 });
-      } }, '📍 Stamp my location'),
+      } }, st.coords ? '📍 Update location' : '📍 Stamp my location'),
       locOut,
     ])),
-    field('Photo (optional)', photoInput),
+    field('Photo', h('div', {}, [
+      preview,
+      h('div', { class: 'chips' }, [
+        h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
+        h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Upload a picture'),
+        removeBtn,
+      ]),
+      camIn, libIn,
+    ])),
   ]);
   wrap.append(card);
   wrap.append(h('button', { class: 'btn block', onclick: async () => {
     if (!title.value.trim() && !text.value.trim()) { alert('Write something first.'); return; }
-    let photoKey = null;
-    const f = photoInput.files && photoInput.files[0];
-    if (f) { photoKey = `jrphoto-${Date.now()}-${Math.floor(Math.random() * 1e6)}`; try { await putBlob(photoKey, f); } catch { photoKey = null; } }
-    addJournalEntry({ title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKey });
-    go('#journal-open');
-  } }, 'Save to journal'));
+    let photoKey = editing ? (existing.photoKey || null) : null;
+    if (pendingFile) {
+      const newKey = `jrphoto-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      try { await putBlob(newKey, pendingFile); if (editing && existing.photoKey) delBlob(existing.photoKey); photoKey = newKey; } catch { /* keep prior photo */ }
+    } else if (removePhoto) {
+      if (editing && existing.photoKey) delBlob(existing.photoKey);
+      photoKey = null;
+    }
+    const fields = { title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKey };
+    if (editing) { updateJournalEntry(editId, fields); go(`#journal-entry-${editId}`); }
+    else { addJournalEntry(fields); go('#journal-open'); }
+  } }, editing ? 'Save changes' : 'Save to journal'));
   mount(wrap, '#home');
 }
 
