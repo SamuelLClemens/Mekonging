@@ -251,6 +251,21 @@ export function addCalendarItem(item) {
   store.calendar.items.sort(calCompare);
   save(); return it;
 }
+export function updateCalendarItem(id, patch = {}) {
+  const it = store.calendar.items.find((x) => x.id === id);
+  if (!it) return null;
+  if (patch.date !== undefined) it.date = patch.date;
+  if (patch.time !== undefined) it.time = patch.time || '';
+  if (patch.type !== undefined) it.type = patch.type || 'stay';
+  if (patch.title !== undefined) it.title = String(patch.title || '').slice(0, 120);
+  if (patch.place !== undefined) it.place = patch.place || '';
+  if (patch.cost !== undefined) it.cost = patch.cost || '';
+  if (patch.currency !== undefined) it.currency = patch.currency || '';
+  if (patch.rating !== undefined) it.rating = Math.max(0, Math.min(5, Math.round(Number(patch.rating) || 0)));
+  if (patch.note !== undefined) it.note = patch.note || '';
+  store.calendar.items.sort(calCompare);
+  save(); return it;
+}
 export function deleteCalendarItem(id) {
   const i = store.calendar.items.findIndex((x) => x.id === id);
   if (i >= 0) { store.calendar.items.splice(i, 1); save(); }
@@ -303,10 +318,13 @@ export function addPin({ name, note = '', tags = [], coords = null } = {}) {
   const p = { id: uid('pin'), name: String(name || 'My place').slice(0, 80), note, tags, coords, createdAt: todayKey() };
   store.pins.push(p); save(); return p;
 }
-export function updatePin(id, patch) {
+export function updatePin(id, patch = {}) {
   const p = store.pins.find((x) => x.id === id);
-  if (p) { Object.assign(p, patch); save(); }
-  return p;
+  if (!p) return null;
+  if (patch.name !== undefined) p.name = String(patch.name || 'My place').slice(0, 80);
+  if (patch.note !== undefined) p.note = patch.note;
+  if (patch.coords !== undefined) p.coords = patch.coords;
+  save(); return p;
 }
 export function deletePin(id) {
   const i = store.pins.findIndex((x) => x.id === id);
