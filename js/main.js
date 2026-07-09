@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.146.0';
+const APP_VERSION = 'mk-v0.147.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5274,9 +5274,8 @@ function foryouScreen() {
   card.append(h('h2', {}, 'How are you travelling?'));
   card.append(h('p', { class: 'muted' }, 'Who is coming?'));
   card.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
-  const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
-    onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 With a baby or toddler');
-  card.append(h('div', { class: 'chips' }, [babyChip]));
+  // Travelling with a baby is indicated once at the start of use (welcome) and changed
+  // only from Settings → Who's travelling. It is deliberately not a toggle here.
   card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Accessibility needs'));
   const accRow = h('div', { class: 'chips' });
   [['mobility', '♿ Mobility'], ['vision', '🦯 Low vision'], ['hearing', '🦻 Hearing']].forEach(([id, lbl]) => {
