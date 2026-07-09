@@ -4,9 +4,9 @@
 import {
   store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
-  addPin, deletePin, getPin, getPlaceData, setPlaceField,
-  addJournalEntry, deleteJournalEntry, journalEntries,
-  addCalendarItem, deleteCalendarItem,
+  addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField,
+  addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
+  addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
   setMyStay, getMyStay, clearMyStay,
@@ -115,7 +115,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.144.0';
+const APP_VERSION = 'mk-v0.146.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2179,6 +2179,7 @@ function placeScreen(id) {
     !p.isPin ? shareButton('📤 Recommend to a friend', `Check out ${p.name}`, () => shareUrl('in', encodeShare('place', { id: p.id, n: p.name }, ensureMe()))) : null,
     !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
     collStrip,
+    p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#addpin-${p.id}`) }, '✎ Edit this place') : null,
     p.isPin ? h('button', {
       class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
       onclick: () => { if (confirm('Delete this pin?')) { deletePin(p.id); go('#saved'); } },
@@ -3012,19 +3013,22 @@ function mapFallback() {
   return card;
 }
 
-function addPinScreen() {
+function addPinScreen(editId) {
+  const existing = editId ? getPin(editId) : null;
+  const editing = !!existing;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Add a place', '#map'));
-  const state = { coords: pendingPinCoords || null, colls: new Set() };
+  wrap.append(topbar(editing ? 'Edit place' : 'Add a place', editing ? `#place-${editId}` : '#map'));
+  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, '#map'); return; }
+  const state = { coords: existing ? existing.coords : (pendingPinCoords || null), colls: new Set() };
   pendingPinCoords = null; // consume the tapped coordinate
 
   const card = h('div', { class: 'card' });
-  const name = h('input', { type: 'text', placeholder: 'Place name (e.g. “Great noodle stall”)' });
-  const note = h('input', { type: 'text', placeholder: 'A note (optional)' });
+  const name = h('input', { type: 'text', placeholder: 'Place name (e.g. “Great noodle stall”)', value: existing ? existing.name : '' });
+  const note = h('input', { type: 'text', placeholder: 'A note (optional)', value: existing ? (existing.note || '') : '' });
   card.append(field('Name', name), field('Note', note));
 
   const coordOut = h('p', { class: 'muted' }, state.coords
-    ? `Attached from map tap: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`
+    ? `Location: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`
     : 'No location attached.');
   card.append(field('Location', h('div', {}, [
     h('button', { class: 'btn ghost', onclick: () => {
@@ -3038,25 +3042,33 @@ function addPinScreen() {
     coordOut,
   ])));
 
-  // file it under any existing collections (create new themes from Saved or the Save sheet)
-  if (store.collections.length) {
-    card.append(field('Add to collections', h('div', { class: 'chips' },
-      store.collections.map((c) => collToggleChip(c.name, c.emoji, () => toggleSet(state.colls, c.id))))));
-  } else {
-    card.append(field('Add to collections', h('p', { class: 'muted' }, 'You have no collections yet. Save the pin, then tap “＋ Save” on it to file it under a theme.')));
-  }
+  // Collections + "my stay" are creation-time extras; when editing, name/note/location
+  // are the editable fields (collections stay managed from the Save sheet).
   const stayChk = h('input', { type: 'checkbox' });
-  card.append(h('label', { style: 'display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px' },
-    [stayChk, h('span', {}, '🏠 Also set this as my accommodation (My stay)')]));
+  if (!editing) {
+    if (store.collections.length) {
+      card.append(field('Add to collections', h('div', { class: 'chips' },
+        store.collections.map((c) => collToggleChip(c.name, c.emoji, () => toggleSet(state.colls, c.id))))));
+    } else {
+      card.append(field('Add to collections', h('p', { class: 'muted' }, 'You have no collections yet. Save the pin, then tap “＋ Save” on it to file it under a theme.')));
+    }
+    card.append(h('label', { style: 'display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px' },
+      [stayChk, h('span', {}, '🏠 Also set this as my accommodation (My stay)')]));
+  }
   wrap.append(card);
 
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!name.value.trim()) { alert('Give the place a name.'); return; }
+    if (editing) {
+      updatePin(editId, { name: name.value.trim(), note: note.value.trim(), coords: state.coords });
+      go(`#place-${editId}`);
+      return;
+    }
     const pin = addPin({ name: name.value.trim(), note: note.value.trim(), coords: state.coords });
     state.colls.forEach((cid) => togglePlaceInCollection(cid, pin.id));
     if (stayChk.checked && state.coords) setMyStay({ name: name.value.trim(), coords: state.coords });
     go('#saved');
-  } }, 'Save place'));
+  } }, editing ? 'Save changes' : 'Save place'));
   mount(wrap, '#map');
 }
 
@@ -3072,7 +3084,8 @@ function collToggleChip(name, emoji, onToggle) {
 function journalDispatch(arg) {
   if (!arg) return journalCover();
   if (arg === 'open') return journalTOC();
-  if (arg === 'add') return addJournalScreen();
+  if (arg === 'add') return journalFormScreen();
+  if (arg.startsWith('edit-')) return journalFormScreen(arg.slice(5));
   if (arg.startsWith('entry-')) return journalEntryScreen(arg.slice(6));
   return journalCover();
 }
@@ -3150,7 +3163,8 @@ function journalEntryScreen(id) {
     getBlob(e.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
   }
   wrap.append(page);
-  wrap.append(h('div', { class: 'row-between', style: 'margin-top:14px' }, [
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top:10px' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
     h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { if (e.photoKey) delBlob(e.photoKey); deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
@@ -3288,15 +3302,40 @@ function scrapbookScreen() {
   mount(wrap, '#home');
 }
 
-function addJournalScreen() {
+// New OR edit an entry. editId set => editing an existing entry (prefilled, saved back).
+function journalFormScreen(editId) {
+  const existing = editId ? journalEntries().find((e) => e.id === editId) : null;
+  const editing = !!existing;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('New entry', '#journal-open'));
-  const st = { coords: null };
+  wrap.append(topbar(editing ? 'Edit entry' : 'New entry', editing ? `#journal-entry-${editId}` : '#journal-open'));
+  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
+
+  const st = { coords: existing ? existing.coords : null };
   const title = h('input', { type: 'text', placeholder: 'A title for this memory' });
   const text = h('textarea', { class: 'ta', placeholder: 'What happened? What did you see, eat, feel?' });
   const place = h('input', { type: 'text', placeholder: 'Place (e.g. Hoi An old town)' });
-  const photoInput = h('input', { type: 'file', accept: 'image/*', capture: 'environment' });
-  const locOut = h('p', { class: 'muted' }, 'Entry is stamped with the current date and time automatically.');
+  if (existing) { title.value = existing.title || ''; text.value = existing.text || ''; place.value = existing.place || ''; }
+
+  // Photo: TAKE a new one (camera) OR UPLOAD an existing picture (library / files); both
+  // feed one preview. In edit mode the current photo shows and can be replaced or removed.
+  let pendingFile = null, removePhoto = false;
+  const preview = h('img', { class: 'entry-photo', style: 'display:none;margin:8px 0' });
+  const camIn = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
+  const libIn = h('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+  const removeBtn = h('button', { class: 'chip', style: 'display:none', onclick: () => {
+    pendingFile = null; removePhoto = true; preview.style.display = 'none'; preview.removeAttribute('src'); removeBtn.style.display = 'none';
+  } }, '✕ Remove photo');
+  const showPreview = (src) => { preview.src = src; preview.style.display = 'block'; removeBtn.style.display = ''; };
+  const onPick = (inp) => { const f = inp.files && inp.files[0]; if (f) { pendingFile = f; removePhoto = false; showPreview(URL.createObjectURL(f)); } };
+  camIn.onchange = () => onPick(camIn);
+  libIn.onchange = () => onPick(libIn);
+  if (editing && existing.photoKey) {
+    getBlob(existing.photoKey).then((b) => { if (b && !pendingFile && !removePhoto) showPreview(URL.createObjectURL(b)); }).catch(() => {});
+  }
+
+  const locOut = h('p', { class: 'muted' }, st.coords
+    ? `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`
+    : 'Entry is stamped with the current date and time automatically.');
   const card = h('div', { class: 'card' }, [
     field('Title', title), field('Your entry', text), field('Place', place),
     field('Location', h('div', {}, [
@@ -3306,20 +3345,34 @@ function addJournalScreen() {
         navigator.geolocation.getCurrentPosition(
           (pos) => { st.coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; locOut.textContent = `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`; },
           (err) => { locOut.textContent = `No location: ${err.message}`; }, { enableHighAccuracy: true, timeout: 10000 });
-      } }, '📍 Stamp my location'),
+      } }, st.coords ? '📍 Update location' : '📍 Stamp my location'),
       locOut,
     ])),
-    field('Photo (optional)', photoInput),
+    field('Photo', h('div', {}, [
+      preview,
+      h('div', { class: 'chips' }, [
+        h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
+        h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Upload a picture'),
+        removeBtn,
+      ]),
+      camIn, libIn,
+    ])),
   ]);
   wrap.append(card);
   wrap.append(h('button', { class: 'btn block', onclick: async () => {
     if (!title.value.trim() && !text.value.trim()) { alert('Write something first.'); return; }
-    let photoKey = null;
-    const f = photoInput.files && photoInput.files[0];
-    if (f) { photoKey = `jrphoto-${Date.now()}-${Math.floor(Math.random() * 1e6)}`; try { await putBlob(photoKey, f); } catch { photoKey = null; } }
-    addJournalEntry({ title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKey });
-    go('#journal-open');
-  } }, 'Save to journal'));
+    let photoKey = editing ? (existing.photoKey || null) : null;
+    if (pendingFile) {
+      const newKey = `jrphoto-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      try { await putBlob(newKey, pendingFile); if (editing && existing.photoKey) delBlob(existing.photoKey); photoKey = newKey; } catch { /* keep prior photo */ }
+    } else if (removePhoto) {
+      if (editing && existing.photoKey) delBlob(existing.photoKey);
+      photoKey = null;
+    }
+    const fields = { title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKey };
+    if (editing) { updateJournalEntry(editId, fields); go(`#journal-entry-${editId}`); }
+    else { addJournalEntry(fields); go('#journal-open'); }
+  } }, editing ? 'Save changes' : 'Save to journal'));
   mount(wrap, '#home');
 }
 
@@ -3364,7 +3417,11 @@ function journeySVG(pts) {
 
 // ---- TRAVEL CALENDAR + DAY PLANNER ------------------------------------------
 const CAL_ICON = { stay: '🛏', meal: '🍽', activity: '🎟', plan: '🗓', festival: '🎉' };
-function calendarDispatch(arg) { return arg === 'add' ? calendarAddScreen() : calendarScreen(); }
+function calendarDispatch(arg) {
+  if (arg === 'add') return calendarFormScreen();
+  if (arg && arg.startsWith('edit-')) return calendarFormScreen(arg.slice(5));
+  return calendarScreen();
+}
 
 // Order items by date, then by time-of-day (untimed entries fall to the end of the day).
 function calItems() {
@@ -3424,29 +3481,38 @@ function calendarScreen() {
       it.place ? h('p', { class: 'muted' }, it.place) : null,
       it.rating ? h('div', { class: 'stars-static' }, starsStr(it.rating)) : null,
       it.note ? h('p', {}, it.note) : null,
-      h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); go('#calendar'); } } }, 'Delete'),
+      h('div', { class: 'row-between', style: 'margin-top:8px' }, [
+        h('button', { class: 'btn ghost', onclick: () => go(`#calendar-edit-${it.id}`) }, '✎ Edit'),
+        h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); go('#calendar'); } } }, 'Delete'),
+      ]),
     ]);
     wrap.append(card);
   });
   mount(wrap, '#home');
 }
 
-function calendarAddScreen() {
+// New OR edit a calendar item. editId set => editing (prefilled, saved back).
+function calendarFormScreen(editId) {
+  const existing = editId ? store.calendar.items.find((x) => x.id === editId) : null;
+  const editing = !!existing;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Add to calendar', '#calendar'));
+  wrap.append(topbar(editing ? 'Edit calendar entry' : 'Add to calendar', '#calendar'));
+  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
   const c = getCountry(activeCountry);
-  const st = { rating: 0 };
-  const date = h('input', { type: 'date' });
-  const time = h('input', { type: 'time' });
-  const type = selectEl([['plan', '🗓 Day plan'], ['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity']], 'plan', () => {});
-  const title = h('input', { type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch' });
-  const place = h('input', { type: 'text', placeholder: 'Where' });
-  const cost = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Cost' });
-  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], c ? c.currency : 'THB', () => {});
+  const st = { rating: existing ? (existing.rating || 0) : 0 };
+  const date = h('input', { type: 'date', value: existing ? existing.date : '' });
+  const time = h('input', { type: 'time', value: existing ? (existing.time || '') : '' });
+  const type = selectEl([['plan', '🗓 Day plan'], ['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity']], existing ? existing.type : 'plan', () => {});
+  const title = h('input', { type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch', value: existing ? existing.title : '' });
+  const place = h('input', { type: 'text', placeholder: 'Where', value: existing ? (existing.place || '') : '' });
+  const cost = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Cost', value: existing ? (existing.cost || '') : '' });
+  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], existing ? (existing.currency || (c ? c.currency : 'THB')) : (c ? c.currency : 'THB'), () => {});
   const note = h('textarea', { class: 'ta', placeholder: 'Plan details, or a review once you have been' });
+  if (existing) note.value = existing.note || '';
   const stars = h('div', { class: 'stars' });
   const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
   for (let i = 1; i <= 5; i++) stars.append(h('button', { class: 'star', 'aria-label': `${i} star${i > 1 ? 's' : ''}`, onclick: () => { st.rating = st.rating === i ? 0 : i; paint(st.rating); } }, '☆'));
+  paint(st.rating);
   wrap.append(h('div', { class: 'card' }, [
     field('Date', date), field('Time (optional)', time), field('Type', type), field('Title', title), field('Place', place),
     field('Cost (optional)', h('div', { class: 'row-between' }, [cost, cur])),
@@ -3455,9 +3521,10 @@ function calendarAddScreen() {
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!date.value) { alert('Pick a date.'); return; }
     if (!title.value.trim()) { alert('Add a title.'); return; }
-    addCalendarItem({ date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() });
+    const fields = { date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() };
+    if (editing) updateCalendarItem(editId, fields); else addCalendarItem(fields);
     go('#calendar');
-  } }, 'Save'));
+  } }, editing ? 'Save changes' : 'Save'));
   mount(wrap, '#home');
 }
 
@@ -5659,7 +5726,7 @@ function render() {
       case 'map': return mapScreen();
       case 'crossings': return crossingsScreen();
       case 'pools': return poolsScreen(arg);
-      case 'addpin': return addPinScreen();
+      case 'addpin': return addPinScreen(arg);
       case 'journal': return journalDispatch(arg);
       case 'scrapbook': return scrapbookScreen();
       case 'journey': return journeyScreen();
