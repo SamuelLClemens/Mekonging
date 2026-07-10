@@ -31,6 +31,8 @@ import {
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
   addSecureNote as vaultAddNote, getNoteText as vaultGetNote, exportVault, importVault,
   changePasscode as vaultChangePasscode, getHint as vaultGetHint, setHint as vaultSetHint,
+  hasRecoveryCode as vaultHasRecovery, createRecoveryCode as vaultCreateRecovery,
+  unlockWithRecovery as vaultUnlockRecovery, resetPasscodeWithRecovery as vaultResetWithRecovery,
 } from './vault.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
@@ -118,7 +120,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.155.0';
+const APP_VERSION = 'mk-v0.156.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5100,7 +5102,7 @@ function sosScreen(cc) {
 // re-renders into `body` after every state change so it always reflects the vault.
 function vaultWarning() {
   return h('div', { class: 'banner' },
-    'Documents are encrypted with your passcode and stored only on this device — never uploaded. If you forget the passcode they cannot be recovered, so keep a separate backup of anything critical.');
+    'Documents are encrypted with your passcode and stored only on this device — never uploaded. Save your recovery code and an encrypted backup, and a forgotten passcode need never lock you out.');
 }
 function docKind(type) {
   if (!type) return 'File';
@@ -5220,7 +5222,22 @@ async function renderVault(body) {
     vaultRestoreControl(body),
   ]));
 
-  // Change passcode + reminder. Re-encrypts everything under the new passcode on-device.
+  // Recovery code — the primary way back in if the passcode is ever forgotten. Every new
+  // vault mints one at setup; this lets the user check it is set or mint a fresh one.
+  let hasRec = false; try { hasRec = await vaultHasRecovery(); } catch { /* treat as none */ }
+  body.append(h('div', { class: 'card', style: hasRec ? '' : 'border:1px solid var(--orange)' }, [
+    h('h2', {}, '🔑 Recovery code'),
+    hasRec
+      ? h('p', { class: 'muted' }, 'A recovery code is set. If you ever forget your passcode, you can use it on the unlock screen to get back in and choose a new passcode. Keep it somewhere safe and private, apart from your phone.')
+      : h('p', { class: 'muted' }, 'No recovery code is set. Create one now so a forgotten passcode can never lock you out of your passports and cards for good.'),
+    h('button', { class: 'btn ghost block', onclick: async () => {
+      if (hasRec && !confirm('Generate a new recovery code? Your current recovery code will stop working immediately.')) return;
+      try { const code = await vaultCreateRecovery(); body.innerHTML = ''; body.append(recoveryCodeCard(body, code)); }
+      catch (e) { alert(e.message); }
+    } }, hasRec ? 'Replace recovery code' : 'Create a recovery code'),
+  ]));
+
+  // Change passcode + reminder. An instant re-wrap of the master key — documents are untouched.
   let curHint = ''; try { curHint = await vaultGetHint(); } catch { /* none */ }
   const np1 = h('input', { type: 'password', placeholder: 'New passcode (min 4)' });
   const np2 = h('input', { type: 'password', placeholder: 'Confirm new passcode' });
@@ -5232,12 +5249,12 @@ async function renderVault(body) {
       h('button', { class: 'btn block', onclick: async () => {
         if (!np1.value) { alert('Enter a new passcode.'); return; }
         if (np1.value !== np2.value) { alert('The new passcodes do not match.'); return; }
-        try { await vaultChangePasscode(np1.value); await vaultSetHint(hintIn.value.trim()); alert('Passcode changed — everything was re-encrypted with it.'); renderVault(body); }
+        try { await vaultChangePasscode(np1.value); await vaultSetHint(hintIn.value.trim()); alert('Passcode changed. Your recovery code still works.'); renderVault(body); }
         catch (e) { alert(e.message); }
       } }, 'Change passcode'),
       field('Passcode reminder (optional)', hintIn),
       h('button', { class: 'btn ghost block', onclick: async () => { try { await vaultSetHint(hintIn.value.trim()); alert('Reminder saved.'); } catch (e) { alert(e.message); } } }, 'Save reminder only'),
-      h('p', { class: 'disclaimer' }, 'There is no email or server reset — that keeps the vault private, with no key held anywhere off your device. If you forget the passcode, restore an encrypted backup and unlock it with that backup’s passcode. The reminder is just a hint shown on the unlock screen.'),
+      h('p', { class: 'disclaimer' }, 'There is no server or email reset — that is what keeps the vault private, with no key held anywhere off your device. To get back in without your passcode, use your recovery code (above) or restore an encrypted backup. The reminder is just a hint shown on the unlock screen.'),
     ]),
   ]));
 
@@ -5248,6 +5265,31 @@ async function renderVault(body) {
   ]));
 }
 function vaultStamp() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+// Shown exactly ONCE, right after a code is minted (setup / replace / reset). The code is
+// never stored where it can be read, so this is the only chance to save it.
+function recoveryCodeCard(body, code, opts) {
+  opts = opts || {};
+  const download = () => {
+    const txt = `Mekonging — vault recovery code\n\nKeep this somewhere safe and private, apart from your phone.\nIt can unlock your vault and reset a forgotten passcode.\n\n    ${code}\n\nAnyone who has this code can open your vault, so store it like a password.\nThis code is shown only once and is not saved anywhere it can be read.\n`;
+    const blob = new Blob([txt], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `mekonging-recovery-code-${vaultStamp()}.txt`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+  return h('div', { class: 'card', style: 'border:2px solid var(--orange)' }, [
+    h('h2', {}, '🔑 Save your recovery code'),
+    h('p', {}, opts.isReset
+      ? 'Your passcode has been reset. Here is a NEW recovery code — your old one no longer works. Save this one now.'
+      : 'This is the one way back in if you ever forget your passcode. Save it somewhere safe and private now — it is shown only once and is never stored where it can be read.'),
+    h('div', { style: 'margin:10px 0;padding:14px;text-align:center;font-size:1.15rem;letter-spacing:1px;font-family:monospace;user-select:all;word-break:break-all;background:var(--card-2, rgba(0,0,0,.06));border-radius:10px' }, code),
+    h('div', { class: 'row-between' }, [
+      h('button', { class: 'btn', onclick: () => { try { navigator.clipboard.writeText(code); } catch { /* no clipboard */ } } }, 'Copy'),
+      h('button', { class: 'btn', onclick: download }, 'Download as file'),
+    ]),
+    h('p', { class: 'disclaimer', style: 'margin-top:10px' }, 'Keep it private and separate from your device — a password manager, a note at home, or written down. Anyone with this code can open your vault.'),
+    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => renderVault(body) }, 'I have saved it — continue'),
+  ]);
+}
 async function vaultDownload() {
   const json = await exportVault();
   const blob = new Blob([json], { type: 'application/json' });
@@ -5299,10 +5341,11 @@ function vaultSetupCard(body) {
     vaultWarning(),
     field('Passcode', p1), field('Confirm', p2),
     field('Passcode reminder (optional)', hint),
-    h('p', { class: 'disclaimer', style: 'margin-top:0' }, 'The reminder is shown on the unlock screen to jog your memory. It is stored on this device and is not your passcode — keep it vague.'),
+    h('p', { class: 'disclaimer', style: 'margin-top:0' }, 'When you create the vault you will be shown a one-time recovery code — save it, and a forgotten passcode need never lock you out. The reminder is a separate, vaguer hint shown on the unlock screen; it is stored on this device and is not your passcode.'),
     h('button', { class: 'btn block', onclick: async () => {
       if (p1.value !== p2.value) { alert('The passcodes do not match.'); return; }
-      try { await vaultSetup(p1.value, hint.value.trim()); renderVault(body); } catch (e) { alert(e.message); }
+      try { const { recoveryCode } = await vaultSetup(p1.value, hint.value.trim()); body.innerHTML = ''; body.append(recoveryCodeCard(body, recoveryCode)); }
+      catch (e) { alert(e.message); }
     } }, 'Create vault'),
     h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Moving from another device? Restore your encrypted backup, then unlock it with the same passcode.'),
     vaultRestoreControl(body),
@@ -5322,9 +5365,33 @@ function vaultUnlockCard(body, hintText) {
     field('Passcode', pin), err,
     hintText ? h('p', { class: 'muted', style: 'margin:4px 0 0' }, `💡 Reminder: ${hintText}`) : null,
     h('button', { class: 'btn block', style: 'margin-top:8px', onclick: submit }, 'Unlock'),
-    h('details', { class: 'filters-collapse', style: 'margin-top:10px' }, [
-      h('summary', {}, 'Forgotten your passcode?'),
-      h('div', {}, [h('p', { class: 'muted' }, 'For your privacy there is no server and no email reset — the vault can only be opened with its passcode. If you saved an encrypted backup you can restore it and unlock with that backup’s passcode; otherwise the contents cannot be recovered.'), vaultRestoreControl(body)]),
+    forgottenPasscodeDetails(body),
+  ]);
+}
+// The recovery paths, in order: recovery code (resets the passcode), then an encrypted
+// backup. There is deliberately no server/email reset — that is what keeps the vault private.
+function forgottenPasscodeDetails(body) {
+  const rc = h('input', { type: 'text', placeholder: 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX', autocapitalize: 'characters', spellcheck: 'false' });
+  const rnp1 = h('input', { type: 'password', placeholder: 'New passcode (min 4)' });
+  const rnp2 = h('input', { type: 'password', placeholder: 'Confirm new passcode' });
+  const rerr = h('p', { class: 'warn-note', style: 'display:none' });
+  return h('details', { class: 'filters-collapse', style: 'margin-top:10px' }, [
+    h('summary', {}, 'Forgotten your passcode?'),
+    h('div', {}, [
+      h('p', { class: 'muted' }, 'Have your recovery code? Enter it with a new passcode to get back in.'),
+      field('Recovery code', rc), field('New passcode', rnp1), field('Confirm', rnp2), rerr,
+      h('button', { class: 'btn block', onclick: async () => {
+        rerr.style.display = 'none';
+        if (!rc.value.trim()) { rerr.textContent = 'Enter your recovery code.'; rerr.style.display = ''; return; }
+        if (!rnp1.value || rnp1.value !== rnp2.value) { rerr.textContent = 'Enter a new passcode in both fields — they must match.'; rerr.style.display = ''; return; }
+        try {
+          const { recoveryCode } = await vaultResetWithRecovery(rc.value.trim(), rnp1.value);
+          body.innerHTML = ''; body.append(recoveryCodeCard(body, recoveryCode, { isReset: true }));
+        } catch (e) { rerr.textContent = e.message; rerr.style.display = ''; }
+      } }, 'Reset passcode with recovery code'),
+      h('p', { class: 'muted', style: 'margin-top:14px' }, 'No recovery code? If you saved an encrypted backup, restore it and unlock with that backup’s passcode.'),
+      vaultRestoreControl(body),
+      h('p', { class: 'disclaimer' }, 'For your privacy there is no server or email reset. Without your passcode, your recovery code, or an encrypted backup, the contents cannot be recovered.'),
     ]),
   ]);
 }
@@ -5347,7 +5414,7 @@ function helpScreen() {
   ])));
   wrap.append(faq('How do ratings work?', 'Each place shows a guidebook score synthesised from public sources, plus an “Across the web” card with snapshots from sites such as TripAdvisor — each stamped with the month it was checked — and live links to compare and book. Your own rating always counts first: rate a place and it becomes the headline score and colours its pin on the map.'));
   wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, budget, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
-  wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device and cannot be recovered if you forget its passcode. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
+  wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device; if you forget the passcode you can still get back in with the one-time recovery code shown at setup, or by restoring an encrypted backup. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
   wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), Places, Map and Saved. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
 
   wrap.append(h('div', { class: 'card' }, [

@@ -1,14 +1,21 @@
 // Secure, on-device document vault for passports, visas, insurance and tickets.
 //
 // Security model (the whole point of this module):
-//   - Every document is encrypted with AES-GCM (256-bit) before it touches disk.
-//   - The key is derived from the user's passcode with PBKDF2-SHA-256 (250k iters)
-//     and a per-vault random salt. The key is held in memory only while unlocked
-//     and is NEVER written to storage. Locking simply discards it.
+//   - A random 256-bit master key (the DEK) encrypts every document and note with
+//     AES-GCM. The DEK never leaves memory and is never stored in the clear.
+//   - The DEK is WRAPPED (encrypted) twice, so there are two independent ways in:
+//       1. the user's PASSCODE  — PBKDF2-SHA-256 (250k iters) + random salt, and
+//       2. an optional one-time RECOVERY CODE — same derivation, its own salt.
+//     Either wrap can be unwrapped to recover the same DEK; losing the passcode is
+//     survivable if the recovery code was saved. There is still NO server, NO key
+//     escrow and NO backdoor — the recovery code is generated on-device, shown once,
+//     and only its wrapped copy of the DEK is stored (useless without the code).
+//   - Changing the passcode simply re-wraps the DEK, so it is instant and never
+//     touches the documents themselves.
 //   - Ciphertext lives in this browser's IndexedDB ('mk-vault'). Nothing is ever
 //     transmitted off the device, and nothing here is ever committed to source.
-//   - There is no recovery path: if the passcode is forgotten the data is gone.
-//     That is by design — there is no backdoor key escrow anywhere.
+//   - If BOTH the passcode and the recovery code are lost, the data is unrecoverable.
+//     That is by design.
 //
 // Web Crypto requires a secure context (HTTPS or localhost). available() reports
 // whether the environment can support the vault so the UI can degrade gracefully.
@@ -18,10 +25,11 @@ const STORE = 'vault';
 const CONFIG_ID = '__config__';
 const PBKDF2_ITERS = 250000;
 const VERIFIER_TEXT = 'mekonging-vault-v1';
+const CONFIG_VERSION = 2; // 2 = envelope (DEK wrapped by passcode + optional recovery code)
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
-let cryptoKey = null; // in-memory AES-GCM key; null when locked. Never persisted.
+let cryptoKey = null; // in-memory AES-GCM master key (DEK); null when locked. Never persisted.
 
 function subtle() {
   const c = (typeof crypto !== 'undefined') ? crypto : null;
@@ -76,18 +84,51 @@ async function idbAll() {
 }
 
 // ---- crypto primitives ------------------------------------------------------
-async function deriveKey(passcode, salt) {
-  const material = await subtle().importKey('raw', enc.encode(passcode), 'PBKDF2', false, ['deriveKey']);
-  return subtle().deriveKey(
-    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERS, hash: 'SHA-256' },
-    material, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+// A KEK (key-encryption key) is derived from a secret (passcode or recovery code) and
+// only ever used to wrap/unwrap the DEK. The DEK is a random AES-GCM key that encrypts
+// the actual documents. Two KEKs wrapping one DEK = two independent ways to unlock.
+async function deriveBits(secret, salt, iters) {
+  const material = await subtle().importKey('raw', enc.encode(secret), 'PBKDF2', false, ['deriveBits']);
+  return subtle().deriveBits({ name: 'PBKDF2', salt, iterations: iters || PBKDF2_ITERS, hash: 'SHA-256' }, material, 256);
 }
+async function kekFrom(secret, salt, iters) {
+  const bits = await deriveBits(secret, salt, iters);
+  return subtle().importKey('raw', bits, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+// The DEK is made extractable so we can re-wrap it (change passcode / add recovery code)
+// entirely in memory. It is never exported to storage — only its wrapped forms are stored.
+async function importDek(rawBits) {
+  return subtle().importKey('raw', rawBits, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+}
+async function exportDekRaw() { return new Uint8Array(await subtle().exportKey('raw', cryptoKey)); }
+
 async function aesEncrypt(key, bytes) {
   const iv = randBytes(12);
   const ct = await subtle().encrypt({ name: 'AES-GCM', iv }, key, bytes);
   return { iv, ct };
 }
 function aesDecrypt(key, iv, ct) { return subtle().decrypt({ name: 'AES-GCM', iv }, key, ct); }
+
+// ---- recovery code ----------------------------------------------------------
+// Crockford base32 without the ambiguous I, L, O, U. 25 symbols = ~116 bits of entropy,
+// shown grouped as XXXXX-XXXXX-XXXXX-XXXXX-XXXXX for legibility.
+const RC_ALPHA = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function newRecoveryCode() {
+  const b = randBytes(25);
+  let out = '';
+  for (let i = 0; i < 25; i++) {
+    out += RC_ALPHA[b[i] & 31];
+    if (i % 5 === 4 && i !== 24) out += '-';
+  }
+  return out;
+}
+// Accept loose user typing: uppercase, strip anything not in the alphabet, and fold the
+// ambiguous look-alikes back to their canonical symbol before deriving the key.
+function normalizeRecovery(input) {
+  return String(input || '').toUpperCase()
+    .replace(/[IL]/g, '1').replace(/O/g, '0').replace(/U/g, 'V')
+    .replace(/[^0-9A-Z]/g, '');
+}
 
 // ---- public API -------------------------------------------------------------
 export function available() {
@@ -97,14 +138,26 @@ export async function isInitialised() { try { return !!(await idbGet(CONFIG_ID))
 export function isUnlocked() { return !!cryptoKey; }
 export function lock() { cryptoKey = null; }
 
+// Set up a brand-new vault. Generates a random DEK, wraps it with the passcode, and
+// immediately mints a recovery code (wrapped separately). The recovery code is RETURNED
+// so the UI can show it exactly once — it is never stored in the clear.
 export async function setup(passcode, hint) {
   if (!passcode || passcode.length < 4) throw new Error('Choose a passcode of at least 4 characters.');
   if (await isInitialised()) throw new Error('The vault is already set up. Unlock it instead.');
-  const salt = randBytes(16);
-  const key = await deriveKey(passcode, salt);
-  const verifier = await aesEncrypt(key, enc.encode(VERIFIER_TEXT));
-  await idbPut({ id: CONFIG_ID, salt, iters: PBKDF2_ITERS, verifierIv: verifier.iv, verifierCt: verifier.ct, hint: String(hint || '').slice(0, 120) });
-  cryptoKey = key;
+  const dekRaw = randBytes(32);
+  cryptoKey = await importDek(dekRaw);
+  const passSalt = randBytes(16);
+  const kek = await kekFrom(passcode, passSalt, PBKDF2_ITERS);
+  const wrap = await aesEncrypt(kek, dekRaw);
+  const verifier = await aesEncrypt(cryptoKey, enc.encode(VERIFIER_TEXT));
+  await idbPut({
+    id: CONFIG_ID, version: CONFIG_VERSION,
+    passSalt, passIters: PBKDF2_ITERS, passWrapIv: wrap.iv, passWrapCt: wrap.ct,
+    verifierIv: verifier.iv, verifierCt: verifier.ct,
+    hint: String(hint || '').slice(0, 120),
+  });
+  const recoveryCode = await createRecoveryCode();
+  return { recoveryCode };
 }
 
 // Optional passcode HINT — a reminder the user writes (never the passcode). Stored on the
@@ -117,36 +170,102 @@ export async function setHint(text) {
   await idbPut(c);
 }
 
-// Change the passcode without a server: unlock re-derives, then EVERY doc/note is decrypted
-// with the old key and re-encrypted under a fresh key + salt. Zero-knowledge preserved.
+// ---- recovery code management ----------------------------------------------
+export async function hasRecoveryCode() { try { const c = await idbGet(CONFIG_ID); return !!(c && c.recWrapCt); } catch { return false; } }
+
+// Mint (or replace) the recovery code. Requires the vault to be unlocked so we can wrap
+// the live DEK. Returns the plaintext code ONCE for the user to save; only the wrapped
+// copy is persisted. Any previous recovery code stops working immediately.
+export async function createRecoveryCode() {
+  if (!cryptoKey) throw new Error('Unlock the vault first.');
+  const dekRaw = await exportDekRaw();
+  const code = newRecoveryCode();
+  const recSalt = randBytes(16);
+  const kek = await kekFrom(normalizeRecovery(code), recSalt, PBKDF2_ITERS);
+  const wrap = await aesEncrypt(kek, dekRaw);
+  const c = await idbGet(CONFIG_ID);
+  if (!c) throw new Error('Set up the vault first.');
+  c.recSalt = recSalt; c.recIters = PBKDF2_ITERS; c.recWrapIv = wrap.iv; c.recWrapCt = wrap.ct;
+  await idbPut(c);
+  return code;
+}
+export async function removeRecoveryCode() {
+  const c = await idbGet(CONFIG_ID);
+  if (!c) return;
+  delete c.recSalt; delete c.recIters; delete c.recWrapIv; delete c.recWrapCt;
+  await idbPut(c);
+}
+
+// Change the passcode: instant re-wrap of the DEK under a fresh passcode-derived key.
+// Documents are untouched. Zero-knowledge preserved. The recovery code still works.
 export async function changePasscode(newPasscode) {
   if (!cryptoKey) throw new Error('Unlock the vault first.');
   if (!newPasscode || newPasscode.length < 4) throw new Error('Choose a new passcode of at least 4 characters.');
-  const cfg = await idbGet(CONFIG_ID);
-  const newSalt = randBytes(16);
-  const newKey = await deriveKey(newPasscode, newSalt);
-  const items = (await idbAll()).filter((r) => r.id !== CONFIG_ID);
-  for (const r of items) {
-    const metaPlain = await aesDecrypt(cryptoKey, r.metaIv, r.metaCt);
-    const blobPlain = await aesDecrypt(cryptoKey, r.blobIv, r.blobCt);
-    const m = await aesEncrypt(newKey, metaPlain);
-    const b = await aesEncrypt(newKey, blobPlain);
-    await idbPut({ ...r, metaIv: m.iv, metaCt: m.ct, blobIv: b.iv, blobCt: b.ct });
-  }
-  const verifier = await aesEncrypt(newKey, enc.encode(VERIFIER_TEXT));
-  await idbPut({ id: CONFIG_ID, salt: newSalt, iters: PBKDF2_ITERS, verifierIv: verifier.iv, verifierCt: verifier.ct, hint: (cfg && cfg.hint) || '' });
-  cryptoKey = newKey;
+  await rewrapPasscode(newPasscode);
+}
+async function rewrapPasscode(newPasscode) {
+  const dekRaw = await exportDekRaw();
+  const passSalt = randBytes(16);
+  const kek = await kekFrom(newPasscode, passSalt, PBKDF2_ITERS);
+  const wrap = await aesEncrypt(kek, dekRaw);
+  const c = (await idbGet(CONFIG_ID)) || { id: CONFIG_ID };
+  c.version = CONFIG_VERSION; c.passSalt = passSalt; c.passIters = PBKDF2_ITERS;
+  c.passWrapIv = wrap.iv; c.passWrapCt = wrap.ct;
+  delete c.salt; delete c.iters; // clear any legacy v1 fields
+  await idbPut(c);
 }
 
 export async function unlock(passcode) {
   const cfg = await idbGet(CONFIG_ID);
   if (!cfg) throw new Error('The vault has not been set up yet.');
-  const key = await deriveKey(passcode, cfg.salt);
+  if (cfg.passWrapCt) { // v2 envelope
+    const kek = await kekFrom(passcode, cfg.passSalt, cfg.passIters);
+    let dekRaw;
+    try { dekRaw = await aesDecrypt(kek, cfg.passWrapIv, cfg.passWrapCt); } catch { throw new Error('Incorrect passcode.'); }
+    const dek = await importDek(dekRaw);
+    try { if (dec.decode(await aesDecrypt(dek, cfg.verifierIv, cfg.verifierCt)) !== VERIFIER_TEXT) throw 0; } catch { throw new Error('Incorrect passcode.'); }
+    cryptoKey = dek;
+    return;
+  }
+  await unlockLegacyAndUpgrade(passcode, cfg); // v1 vaults: verify, adopt, upgrade in place
+}
+
+// Legacy (v1) vaults encrypted every record directly with PBKDF2(passcode). Those exact
+// derived bits become the new DEK, so upgrading to the envelope model needs NO document
+// re-encryption — we just verify, adopt the bits as the DEK, and store a passcode wrap +
+// a fresh recovery code. Fast and lossless.
+async function unlockLegacyAndUpgrade(passcode, cfg) {
+  const bits = await deriveBits(passcode, cfg.salt, cfg.iters || PBKDF2_ITERS);
+  const dek = await importDek(bits);
+  try { if (dec.decode(await aesDecrypt(dek, cfg.verifierIv, cfg.verifierCt)) !== VERIFIER_TEXT) throw 0; } catch { throw new Error('Incorrect passcode.'); }
+  cryptoKey = dek;
   try {
-    const plain = await aesDecrypt(key, cfg.verifierIv, cfg.verifierCt);
-    if (dec.decode(plain) !== VERIFIER_TEXT) throw new Error('bad');
-  } catch { throw new Error('Incorrect passcode.'); }
-  cryptoKey = key;
+    await rewrapPasscode(passcode);            // adds v2 passcode wrap, clears legacy salt/iters
+    if (!(await hasRecoveryCode())) await createRecoveryCode().catch(() => {});
+  } catch { /* upgrade is best-effort; the vault is already unlocked and usable */ }
+}
+
+// Unlock using the recovery code instead of the passcode.
+export async function unlockWithRecovery(code) {
+  const cfg = await idbGet(CONFIG_ID);
+  if (!cfg) throw new Error('The vault has not been set up yet.');
+  if (!cfg.recWrapCt) throw new Error('No recovery code was saved for this vault.');
+  const kek = await kekFrom(normalizeRecovery(code), cfg.recSalt, cfg.recIters);
+  let dekRaw;
+  try { dekRaw = await aesDecrypt(kek, cfg.recWrapIv, cfg.recWrapCt); } catch { throw new Error('That recovery code is not correct.'); }
+  const dek = await importDek(dekRaw);
+  try { if (dec.decode(await aesDecrypt(dek, cfg.verifierIv, cfg.verifierCt)) !== VERIFIER_TEXT) throw 0; } catch { throw new Error('That recovery code is not correct.'); }
+  cryptoKey = dek;
+}
+
+// Forgot the passcode: unlock with the recovery code, then set a brand-new passcode.
+// Returns a fresh recovery code so the old (now-shared) one can be retired.
+export async function resetPasscodeWithRecovery(code, newPasscode) {
+  await unlockWithRecovery(code);
+  if (!newPasscode || newPasscode.length < 4) throw new Error('Choose a new passcode of at least 4 characters.');
+  await rewrapPasscode(newPasscode);
+  const recoveryCode = await createRecoveryCode();
+  return { recoveryCode };
 }
 
 export async function addDocument(file) {
@@ -205,9 +324,10 @@ export async function getNoteText(id) {
 }
 
 // ---- encrypted backup file (private by construction) ------------------------
-// Exports the RAW encrypted records (salt + ciphertext only — never the key or any
-// plaintext), so the backup file is useless without the passcode. Restoring replaces the
-// whole vault with the snapshot and re-locks it, so a new device unlocks with the same code.
+// Exports the RAW encrypted records (salts + ciphertext only — never the DEK, never any
+// plaintext), so the backup file is useless without the passcode OR the recovery code.
+// Restoring replaces the whole vault with the snapshot and re-locks it, so a new device
+// unlocks with the same code — this is the second, portable recovery path.
 function b64(buf) {
   const b = buf instanceof ArrayBuffer ? new Uint8Array(buf) : buf;
   let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
@@ -218,19 +338,20 @@ function unb64(str) {
   for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
   return a;
 }
-const BIN_FIELDS = ['salt', 'verifierIv', 'verifierCt', 'metaIv', 'metaCt', 'blobIv', 'blobCt'];
+const BIN_FIELDS = ['salt', 'verifierIv', 'verifierCt', 'metaIv', 'metaCt', 'blobIv', 'blobCt',
+  'passSalt', 'passWrapIv', 'passWrapCt', 'recSalt', 'recWrapIv', 'recWrapCt'];
+const SCALAR_FIELDS = ['version', 'iters', 'passIters', 'recIters', 'hint', 'createdAt'];
 
 export async function exportVault() {
   const all = await idbAll();
   if (!all.length) throw new Error('The vault is empty — nothing to back up yet.');
   const records = all.map((r) => {
-    const o = { id: r.id, createdAt: r.createdAt || null };
-    if (r.iters != null) o.iters = r.iters;
-    if (r.hint) o.hint = r.hint;   // plain reminder text (never the passcode)
+    const o = { id: r.id };
+    SCALAR_FIELDS.forEach((k) => { if (r[k] != null) o[k] = r[k]; });
     BIN_FIELDS.forEach((k) => { if (r[k] != null) o[k] = b64(r[k]); });
     return o;
   });
-  return JSON.stringify({ format: 'mekonging-vault-backup', v: 1, exportedAt: new Date().toISOString().slice(0, 10), records });
+  return JSON.stringify({ format: 'mekonging-vault-backup', v: 2, exportedAt: new Date().toISOString().slice(0, 10), records });
 }
 
 export async function importVault(text) {
@@ -238,13 +359,14 @@ export async function importVault(text) {
   try { parsed = JSON.parse(text); } catch { throw new Error('That file is not a valid vault backup.'); }
   if (!parsed || parsed.format !== 'mekonging-vault-backup' || !Array.isArray(parsed.records)) throw new Error('That file is not a Mekonging vault backup.');
   if (!parsed.records.some((r) => r.id === CONFIG_ID)) throw new Error('This backup is missing its passcode configuration and cannot be restored.');
-  // Replace the whole vault with this complete snapshot, then lock (unlock with its passcode).
+  // Replace the whole vault with this complete snapshot, then lock (unlock with its passcode
+  // or recovery code). Older v1 backups restore fine and upgrade on the next unlock.
   const existing = await idbAll();
   for (const r of existing) await idbDel(r.id);
   for (const rec of parsed.records) {
-    const out = { id: rec.id, createdAt: rec.createdAt || new Date().toISOString().slice(0, 10) };
-    if (rec.iters != null) out.iters = rec.iters;
-    if (rec.hint) out.hint = rec.hint;
+    const out = { id: rec.id };
+    SCALAR_FIELDS.forEach((k) => { if (rec[k] != null) out[k] = rec[k]; });
+    if (rec.id !== CONFIG_ID && out.createdAt == null) out.createdAt = new Date().toISOString().slice(0, 10);
     BIN_FIELDS.forEach((k) => { if (rec[k] != null) out[k] = unb64(rec[k]); });
     await idbPut(out);
   }
