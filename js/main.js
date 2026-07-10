@@ -8,7 +8,7 @@ import {
   addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
-  addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem,
+  addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem, updateBudgetItem,
   setMyStay, getMyStay, clearMyStay,
   getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
@@ -116,7 +116,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.151.0';
+const APP_VERSION = 'mk-v0.152.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1761,7 +1761,7 @@ function placesScreen(arg) {
         e.currentTarget.setAttribute('aria-pressed', selInterests.has(it.id) ? 'true' : 'false');
         renderList();
       },
-    }, it.label)));
+    }, `${it.emoji} ${it.label}`)));
 
   const budgets = [['flexible', 'Any budget'], ['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end']];
   const budgetChips = h('div', { class: 'chips' }, budgets.map(([id, lbl]) =>
@@ -4758,14 +4758,7 @@ function tripScreen() {
         `≈ ${Math.round(homeSum).toLocaleString()} ${home} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
     }
   }
-  store.trip.budgetLog.forEach((b) => {
-    const approx = approxHome(b.amount, b.currency);   // "≈ $3.30" in the home currency, or ''
-    bud.append(h('div', { class: 'row-between price-item' }, [
-      h('span', {}, `${b.date} · ${b.note || 'spend'}`),
-      h('span', {}, [h('strong', {}, `${b.amount} ${b.currency}`), approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
-        h('button', { class: 'chip', onclick: () => { deleteBudgetItem(b.id); go('#trip'); } }, '✕')]),
-    ]));
-  });
+  store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));
   const bAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const c = getCountry(activeCountry);
   const bCur = currencySelect(c ? c.currency : 'THB');
@@ -4828,6 +4821,34 @@ function bargainScreen() {
   mount(wrap, '#home');
 }
 
+// A budget-log row that flips to an inline editor — used on both Expenses and My Trip so
+// every logged spend can be corrected (amount, currency, note), not only deleted.
+let editExpenseId = null;
+function budgetLogRow(b) {
+  if (editExpenseId === b.id) {
+    const amt = h('input', { type: 'number', inputmode: 'decimal', value: b.amount });
+    const cur = currencySelect(b.currency || 'THB');
+    const note = h('input', { type: 'text', value: b.note || '', placeholder: 'On what?' });
+    return h('div', { class: 'card', style: 'margin:6px 0' }, [
+      field('Amount', amt), field('Currency', cur), field('On what?', note),
+      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+        h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
+        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim() }); editExpenseId = null; render(); } }, 'Save'),
+      ]),
+    ]);
+  }
+  const approx = approxHome(b.amount, b.currency);
+  return h('div', { class: 'row-between price-item' }, [
+    h('span', {}, `${b.date} · ${b.note || 'spend'}`),
+    h('span', {}, [
+      h('strong', {}, `${b.amount} ${b.currency}`),
+      approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
+      h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editExpenseId = b.id; render(); } }, '✎'), ' ',
+      h('button', { class: 'chip', 'aria-label': 'Delete', onclick: () => { if (confirm('Delete this spend?')) { deleteBudgetItem(b.id); render(); } } }, '✕'),
+    ]),
+  ]);
+}
+
 // Quick expense logger for money-on-the-road — shares the same budget log as My Trip, so
 // spends logged here show up there and roll into the home-currency total.
 function expensesScreen() {
@@ -4861,14 +4882,7 @@ function expensesScreen() {
   const log = store.trip.budgetLog.slice().reverse();
   if (log.length) {
     const list = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Recent')]);
-    log.slice(0, 50).forEach((b) => {
-      const approx = approxHome(b.amount, b.currency);
-      list.append(h('div', { class: 'row-between price-item' }, [
-        h('span', {}, `${b.date} · ${b.note || 'spend'}`),
-        h('span', {}, [h('strong', {}, `${b.amount} ${b.currency}`), approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
-          h('button', { class: 'chip', onclick: () => { deleteBudgetItem(b.id); go('#expenses'); } }, '✕')]),
-      ]));
-    });
+    log.slice(0, 50).forEach((b) => list.append(budgetLogRow(b)));
     wrap.append(list);
   } else {
     wrap.append(h('p', { class: 'empty' }, 'No expenses logged yet — add your first above.'));
@@ -5952,7 +5966,7 @@ function settingsScreen() {
         if (selInterests.has(it.id)) selInterests.delete(it.id); else selInterests.add(it.id);
         p.prefs.interests = [...selInterests]; save();
         e.currentTarget.setAttribute('aria-pressed', selInterests.has(it.id) ? 'true' : 'false');
-      } }, it.label)));
+      } }, `${it.emoji} ${it.label}`)));
   card.append(field('Interests', intChips));
 
   // Theme picker grouped Day / Night. Two dark themes (Night Market, Psych Night) and

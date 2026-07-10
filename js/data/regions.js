@@ -167,10 +167,10 @@ export const FOOD_CATEGORIES = [
 export const FOOD_ALLERGENS = ['peanut', 'tree nut', 'shellfish', 'fish', 'egg', 'soy', 'gluten', 'dairy', 'sesame'];
 
 export const INTERESTS = [
-  { id: 'food', label: 'Food & markets' },
-  { id: 'culture', label: 'Culture & history' },
-  { id: 'nature', label: 'Nature & outdoors' },
-  { id: 'nightlife', label: 'Nightlife & social' },
+  { id: 'food', emoji: '🍜', label: 'Food & markets' },
+  { id: 'culture', emoji: '🏛', label: 'Culture & history' },
+  { id: 'nature', emoji: '🌿', label: 'Nature & outdoors' },
+  { id: 'nightlife', emoji: '🌃', label: 'Nightlife & social' },
 ];
 
 // Suggested collections (themes/tags) the user can create with one tap. They can
