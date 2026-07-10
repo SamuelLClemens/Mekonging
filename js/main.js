@@ -2,7 +2,7 @@
 // content from js/data/regions.js so no destination is hard-coded here.
 
 import {
-  store, save, resetAll, isFavorite, toggleFavorite, prefersReducedMotion,
+  store, save, resetAll, exportData, importData, isFavorite, toggleFavorite, prefersReducedMotion,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
   addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField,
   addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
@@ -116,7 +116,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.152.0';
+const APP_VERSION = 'mk-v0.153.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6057,12 +6057,45 @@ function settingsScreen() {
     h('p', { class: 'disclaimer' }, 'Set an address to collect feedback by email; otherwise the feedback screen uses your device share sheet or clipboard. This stays on your device and is never committed to the app.'),
   ]));
 
+  // Your data — protected across updates, and yours to back up / move between devices.
+  const dataCard = h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Your data'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Everything you log — journal, budget, calendar and saved places — stays on this device and is kept safe across app updates. Download a backup to keep your own copy, or restore one (for example on a new phone).'),
+  ]);
+  dataCard.append(h('button', { class: 'btn ghost block', onclick: () => {
+    try {
+      const blob = new Blob([exportData()], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const d = new Date();
+      const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const a = document.createElement('a'); a.href = url; a.download = `mekonging-backup-${stamp}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch { alert('Could not create the backup file on this device.'); }
+  } }, '⬇️ Download a backup'));
+  const restoreInput = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none',
+    onchange: (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (!confirm('Restore this backup? It replaces the journal, budget and other data currently on this device.')) return;
+        const res = importData(String(reader.result || ''));
+        if (res.ok) { applyTheme(); alert(`Restored ${res.counts.journal} journal, ${res.counts.budget} budget and ${res.counts.calendar} calendar entries.`); go('#home'); }
+        else alert(res.error || 'Could not restore that file.');
+      };
+      reader.readAsText(file);
+    } });
+  dataCard.append(restoreInput);
+  dataCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => restoreInput.click() }, '⬆️ Restore from a backup file'));
+  wrap.append(dataCard);
+
   // reset
   wrap.append(h('div', { class: 'card' }, [
     h('button', { class: 'btn ghost block', onclick: () => {
-      if (confirm('Reset all settings and saved places on this device?')) { resetAll(); applyTheme(); go('#home'); }
+      if (confirm('Reset EVERYTHING on this device — including your journal and budget? This cannot be undone. Consider downloading a backup first.')) { resetAll(); applyTheme(); go('#home'); }
     } }, 'Reset everything'),
-    h('p', { class: 'disclaimer' }, 'Mekong stores everything locally. Clearing your browser data also resets it.'),
+    h('p', { class: 'disclaimer' }, 'Your data is kept safe across app updates — an update never erases your journal, budget or saved places. This button is the only in-app way to wipe them, and clearing your browser storage would also remove them.'),
   ]));
   mount(wrap, '#settings');
 }
