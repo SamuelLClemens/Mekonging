@@ -120,7 +120,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.156.0';
+const APP_VERSION = 'mk-v0.157.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -889,7 +889,7 @@ function phaseLead(phase, cc) {
     traveling: [
       { e: '☀️', t: 'Today’s plan', h: `#today-${cc}`, primary: true },
       { e: '📍', t: 'Near me', h: '#nearby' },
-      { e: '🧭', t: 'Explore places', h: '#places' },
+      { e: '💱', t: 'Currency', h: '#currency' },
       { e: '✍️', t: 'Journal this', h: '#journal-add' },
     ],
     post: [
@@ -3788,11 +3788,18 @@ function calendarScreen() {
       ]));
     } else if (mk.kind === 'journal') {
       const j = mk.ref;
-      wrap.append(h('div', { class: 'card' }, [
+      const card = h('div', { class: 'card' }, [
         h('strong', {}, [calDot(mk.color), ` ${j.photoKey ? '📷 ' : ''}${j.title || 'Journal entry'}`]),
         j.text ? h('p', { class: 'muted', style: 'margin:4px 0' }, j.text.slice(0, 140) + (j.text.length > 140 ? '…' : '')) : null,
         h('button', { class: 'btn ghost', style: 'margin-top:4px', onclick: () => go(`#journal-entry-${j.id}`) }, 'Open entry'),
-      ]));
+      ]);
+      // Show the entry's photo inline, loaded from IndexedDB, so the day reads like a diary.
+      if (j.photoKey) {
+        const img = h('img', { class: 'cal-thumb', alt: '', loading: 'lazy', onclick: () => go(`#journal-entry-${j.id}`) });
+        card.insertBefore(img, card.children[1]);
+        getBlob(j.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+      }
+      wrap.append(card);
     } else {
       const it = mk.ref;
       wrap.append(h('div', { class: 'card' }, [
@@ -4273,7 +4280,24 @@ function schedulesScreen(country) {
     listEl.innerHTML = '';
     const rows = schedCountry ? schedulesForCountry(schedCountry) : SCHEDULES;
     if (!rows.length) { listEl.append(h('p', { class: 'empty' }, 'No reference schedules for this country yet.')); return; }
-    rows.forEach((s) => listEl.append(scheduleCard(s)));
+    // Lead with departures from where the traveller actually is (GPS or focused city), so a
+    // route on the far side of the country never sits on top. The rest collapses behind a tap.
+    const fs = focusSpot(schedCountry || undefined);
+    const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
+    const here = focusCity ? rows.filter((s) => citySlug(s.from) === citySlug(focusCity)) : [];
+    const rest = rows.filter((s) => !here.includes(s));
+    if (here.length) {
+      listEl.append(h('h3', { class: 'cat-title' }, `🚌 Departing ${focusCity} · ${here.length}`));
+      here.forEach((s) => listEl.append(scheduleCard(s)));
+      if (rest.length) {
+        listEl.append(h('details', { class: 'filters-collapse' }, [
+          h('summary', {}, `More schedules${getCountry(schedCountry) ? ' across ' + getCountry(schedCountry).name : ''} · ${rest.length}`),
+          h('div', {}, rest.map((s) => scheduleCard(s))),
+        ]));
+      }
+    } else {
+      rows.forEach((s) => listEl.append(scheduleCard(s)));
+    }
   }
   renderList();
   mount(wrap, '#home');
@@ -4450,6 +4474,9 @@ function eventCard(e) {
 let eventsCountry = '';
 function eventsScreen(country) {
   if (country) eventsCountry = country;
+  // First visit with no explicit country: anchor to where the traveller is, so festivals
+  // in their country lead instead of a four-country pile (they can still tap "All").
+  else if (!eventsCountry) { const f = focusSpot(); if (f.spot && getCountry(f.spot.country)) eventsCountry = f.spot.country; }
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Festivals & events', '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
@@ -4472,7 +4499,33 @@ function eventsScreen(country) {
     evs = evs.sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
     const upcoming = evs.filter((e) => e.end >= today);
     const past = evs.filter((e) => e.end < today);
-    if (upcoming.length) { listEl.append(h('h2', { class: 'cat-title' }, 'Upcoming')); upcoming.forEach((e) => listEl.append(eventCard(e))); }
+    // Lead with festivals that touch where the traveller is — their city or nationwide ones
+    // (which happen everywhere) — so city-specific events elsewhere in the country drop into
+    // a collapse instead of pushing the relevant ones down the page.
+    const fs = focusSpot(eventsCountry || undefined);
+    const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
+    const isHere = (e) => (e.regions || []).some((r) => /nation|countrywide|throughout|national/i.test(r))
+      || (!!focusCity && (e.regions || []).some((r) => r.toLowerCase().includes(focusCity.toLowerCase())));
+    if (focusCity && eventsCountry && upcoming.length) {
+      const hereUp = upcoming.filter(isHere);
+      const restUp = upcoming.filter((e) => !hereUp.includes(e));
+      if (hereUp.length) {
+        listEl.append(h('h2', { class: 'cat-title' }, `📍 Around ${focusCity} & nationwide`));
+        hereUp.forEach((e) => listEl.append(eventCard(e)));
+        if (restUp.length) {
+          listEl.append(h('details', { class: 'filters-collapse' }, [
+            h('summary', {}, `More upcoming across ${getCountry(eventsCountry).name} · ${restUp.length}`),
+            h('div', {}, restUp.map((e) => eventCard(e))),
+          ]));
+        }
+      } else {
+        listEl.append(h('h2', { class: 'cat-title' }, 'Upcoming'));
+        upcoming.forEach((e) => listEl.append(eventCard(e)));
+      }
+    } else if (upcoming.length) {
+      listEl.append(h('h2', { class: 'cat-title' }, 'Upcoming'));
+      upcoming.forEach((e) => listEl.append(eventCard(e)));
+    }
     if (past.length) { listEl.append(h('h2', { class: 'cat-title' }, 'Earlier in 2026')); past.forEach((e) => listEl.append(eventCard(e))); }
     if (!evs.length) listEl.append(h('p', { class: 'empty' }, 'No festivals listed.'));
   }
