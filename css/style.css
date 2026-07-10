@@ -925,3 +925,7 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
 .cal-dot { width: 6px; height: 6px; border-radius: 50%; }
 .cal-dot-inline { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
 .cal-thumb { width: 100%; max-height: 190px; object-fit: cover; border-radius: var(--r-md); margin: 8px 0 4px; display: block; border: 1px solid var(--line); cursor: pointer; background: var(--card-2, rgba(0,0,0,.05)); }
+/* Private personal calendar (cycle/mood/intimacy/pregnancy) */
+.field-lbl { font-size: .82rem; font-weight: 700; opacity: .72; margin: 2px 0; }
+.personal-card { border: 1px solid var(--line); }
+.preg-banner { border: 2px solid #B5179E; }
