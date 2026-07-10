@@ -116,7 +116,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.149.0';
+const APP_VERSION = 'mk-v0.150.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -186,14 +186,18 @@ let navStack = [];
 let poppingBack = false;
 let lastHash = (typeof location !== 'undefined' && location.hash) || '#home';
 function goBack(fallback) {
+  // Always return to the PREVIOUS page — never jump to Home (there is a Home tab for that).
   if (navStack.length) {
     poppingBack = true;
     const target = navStack.pop();
     if (location.hash === target) { poppingBack = false; render(); }
     else location.hash = target;
-  } else {
-    go(fallback || '#home');
+    return;
   }
+  // No in-app history yet (fresh load / deep link): use the browser's history if we can,
+  // otherwise fall back to this screen's semantic parent.
+  if (typeof window !== 'undefined' && window.history && window.history.length > 1) { poppingBack = true; window.history.back(); return; }
+  go(fallback || '#home');
 }
 
 // ---- shell ------------------------------------------------------------------
@@ -528,6 +532,62 @@ function countryHistoryCard(cc) {
   if (hi.cultureTip) card.append(h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`));
   if (hi.sources && hi.sources.length) card.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, `Sources: ${hi.sources.join(', ')}`));
   return card;
+}
+
+// Offline manual location: pick your city so distances, weather, "near me" and local
+// prices all match — no GPS required. Used inline on the hub and full-screen at #setcity.
+function whereAmICard(cc) {
+  const c = getCountry(cc);
+  const spots = spotsForCountry(cc);
+  return h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, '📍 Where are you?'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
+    h('div', { class: 'chips' }, spots.map((s) => h('button', { class: 'chip', onclick: () => { setFocusSpot(s); render(); } }, s.city))),
+  ]);
+}
+
+function setCityScreen(cc) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Set your location', cc && getCountry(cc) ? `#country-${cc}` : '#home'));
+  wrap.append(h('p', { class: 'muted' }, 'Choose where you are so distances, weather, “near me” and local prices all match — even with no signal or GPS off.'));
+  const cur = focusCitySpot();
+  if (cur) wrap.append(h('div', { class: 'banner' }, `Currently set to ${cur.city}. Pick another to change it.`));
+  COUNTRIES.forEach((c) => {
+    const spots = spotsForCountry(c.id);
+    if (!spots.length) return;
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', { style: 'margin-top:0' }, `${c.flag} ${c.name}`),
+      h('div', { class: 'chips' }, spots.map((s) =>
+        h('button', { class: 'chip', 'aria-pressed': (cur && spotKey(cur) === spotKey(s)) ? 'true' : 'false', onclick: () => { setFocusSpot(s); go(`#country-${c.id}`); } }, s.city))),
+    ]));
+  });
+  mount(wrap, '#home');
+}
+
+// In-depth history & culture: the full country read PLUS every city history we hold, so
+// there is somewhere to go deeper than the collapsed hub card.
+function historyScreen(cc) {
+  const c = getCountry(cc);
+  const hi = countryHistory(cc);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(c ? `${c.name} — history` : 'History & culture', c ? `#country-${cc}` : '#home'));
+  if (!hi) { wrap.append(h('p', { class: 'empty' }, 'History for this country is on the way.')); mount(wrap, 'home'); return; }
+  wrap.append(h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, 'The short history'), h('p', {}, hi.blurb)]));
+  const kf = knownForRow(hi.knownFor); if (kf) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Known for'), kf]));
+  if (hi.cultureTip) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🙏 Cultural respect'), h('p', {}, hi.cultureTip)]));
+  const cityKeys = Object.keys(HISTORY.cities || {}).filter((k) => k.startsWith(cc + '-'));
+  if (cityKeys.length) {
+    wrap.append(h('h2', { class: 'home-section' }, 'City by city'));
+    cityKeys.forEach((k) => {
+      const ci = HISTORY.cities[k]; if (!ci || !ci.blurb) return;
+      wrap.append(h('details', { class: 'filters-collapse' }, [
+        h('summary', {}, ci.name || k),
+        h('div', {}, [h('p', {}, ci.blurb), knownForRow(ci.knownFor), ci.bestTime ? h('p', { class: 'culture-tip' }, `🗓 Best time: ${ci.bestTime}`) : null]),
+      ]));
+    });
+  }
+  if (hi.sources && hi.sources.length) wrap.append(h('p', { class: 'disclaimer' }, `Sources: ${hi.sources.join(', ')}`));
+  mount(wrap, 'home');
 }
 
 function cityAboutCard(cc, slug) {
@@ -890,9 +950,12 @@ function homeScreen() {
   // The focused country's hub is THE place for everything about where you are (places,
   // food, transport, weather, kids, visa…). One clear gateway avoids the old problem of
   // Home duplicating the whole country toolkit.
-  const hubCC = focusSpot().spot.country;
+  const hubFs = focusSpot();
+  const hubCC = hubFs.spot.country;
   const hubC = getCountry(hubCC);
   if (hubC) wrap.append(h('button', { class: 'btn block', style: 'margin:10px 0 2px', onclick: () => { activeCountry = hubCC; go(`#country-${hubCC}`); } }, `${hubC.flag} Explore ${hubC.name} — places, food, transport & more`));
+  // Offline / GPS off: let the traveller set where they are so everything matches.
+  if (hubFs.source === 'default') wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0 2px', onclick: () => go(`#setcity-${hubCC}`) }, '📍 Set where you are (works offline)'));
 
   wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
 
@@ -913,7 +976,8 @@ function homeScreen() {
     ] },
     { label: 'Money & tools', items: [
       { ic: ICON.coins, t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
-      { ic: ICON.tag, t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
+      { ic: ICON.suitcase, t: 'Log expenses', d: 'Track spend vs your budget', hash: '#expenses' },
+      { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
       { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
       { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
       { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
@@ -990,9 +1054,14 @@ function countryHubScreen(id) {
   wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Country', '#home'));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Unknown country.')); mount(wrap, '#home'); return; }
   const lang = getLanguage(c.lang);
-  wrap.append(h('div', { class: 'card' }, [
-    h('p', {}, `Your companion for ${c.name}. Local currency: ${c.currency}.`),
-    c.info ? null : h('p', { class: 'muted' }, 'Detailed guide expanding.'),
+  // Most-used tools first: language, money, places, map, help — reached every day.
+  // Reference reading (history, guides) is collapsed lower down, not the first thing.
+  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 8px' }, [
+    lang ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, [chipIcon('chat'), 'Phrasebook']) : null,
+    h('button', { class: 'chip', onclick: () => go('#currency') }, [chipIcon('coins'), 'Currency']),
+    h('button', { class: 'chip', onclick: () => go(`#places-${id}`) }, [chipIcon('pin'), 'Places']),
+    h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('map'), 'Map']),
+    h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
   ]));
 
   // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
@@ -1011,11 +1080,29 @@ function countryHubScreen(id) {
       h('div', { class: 'chips', style: 'margin-top:6px' }, [
         h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
         h('button', { class: 'chip', onclick: () => go(`#weather-${id}`) }, [chipIcon('cloud'), 'Weather']),
+        h('button', { class: 'chip', onclick: () => go(`#setcity-${id}`) }, [chipIcon('pin'), 'Not here? Change city']),
+      ]),
+    ]));
+  } else {
+    // No location signal (offline / GPS off): let them SET where they are so distances,
+    // weather and "near me" all match. Fully offline — no GPS required.
+    wrap.append(whereAmICard(id));
+  }
+
+  // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
+  // it is not something a traveller reads every day, so it should not be the first thing.
+  const hi = countryHistory(id);
+  if (hi && hi.blurb) {
+    wrap.append(h('details', { class: 'filters-collapse' }, [
+      h('summary', {}, 'History & culture'),
+      h('div', {}, [
+        h('p', {}, hi.blurb),
+        knownForRow(hi.knownFor),
+        hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
+        h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${id}`) }, '📖 In-depth history & culture'),
       ]),
     ]));
   }
-
-  const chc = countryHistoryCard(id); if (chc) wrap.append(chc);
   const acc = accessCard(id); if (acc) wrap.append(acc);
   const vc = visaCard(id); if (vc) wrap.append(vc);
   const famc = familyCard(id); if (famc) wrap.append(famc);
@@ -3576,58 +3663,141 @@ function calDateLabel(d) {
   catch { return d; }
 }
 
+// ---- Month-grid calendar with toggleable layers ----------------------------
+let calView = null;      // { y, m } month being viewed
+let calSelDate = null;   // 'YYYY-MM-DD' selected day
+const CAL_LAYERS = [
+  { key: 'holidays', label: 'Holidays & festivals', color: '#E0A526' },
+  { key: 'religious', label: 'Religious', color: '#8A5CC0' },
+  { key: 'other', label: 'Other countries', color: '#2C7DA0' },
+  { key: 'journal', label: 'Journal & photos', color: '#2E8B57' },
+  { key: 'mine', label: 'My plans', color: '#C25E3A' },
+];
+function calLayerState() {
+  return { holidays: true, religious: true, other: false, journal: true, mine: true, ...(store.profile.prefs.calLayers || {}) };
+}
+function isReligiousEvent(e) {
+  const s = `${e.name || ''} ${e.blurb || ''} ${e.localName || ''}`.toLowerCase();
+  return /buddh|monk|temple|vesak|visakh|makha|asalha|asanha|lent|phansa|christmas|easter|eid|ramadan|hari raya|diwali|hindu|catholic|christ|islam|muslim|vu lan|pchum ben|kathin|\bboun\b/.test(s);
+}
+function calYmd(dt) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`; }
+function calEachDate(start, end, fn) {
+  const s = new Date(start + 'T00:00:00'); const e = new Date((end || start) + 'T00:00:00');
+  if (isNaN(s.getTime())) return;
+  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) fn(calYmd(d));
+}
+function calDot(color) { return h('span', { class: 'cal-dot-inline', style: `background:${color}` }); }
+function calMonthGrid(y, m, byDate, sel, onSelect) {
+  const first = new Date(y, m, 1);
+  const startDow = (first.getDay() + 6) % 7;   // Monday = 0
+  const days = new Date(y, m + 1, 0).getDate();
+  const today = calYmd(new Date());
+  const cells = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((w) => h('div', { class: 'cal-wk' }, w));
+  for (let i = 0; i < startDow; i++) cells.push(h('div', { class: 'cal-cell cal-empty' }));
+  for (let d = 1; d <= days; d++) {
+    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const marks = byDate[ds] || [];
+    const colors = [...new Set(marks.map((mk) => mk.color))].slice(0, 4);
+    cells.push(h('button', {
+      class: 'cal-cell' + (ds === today ? ' cal-today' : '') + (ds === sel ? ' cal-sel' : '') + (marks.length ? ' cal-has' : ''),
+      onclick: () => onSelect(ds),
+    }, [
+      h('span', { class: 'cal-day' }, String(d)),
+      h('div', { class: 'cal-dots' }, colors.map((c) => h('span', { class: 'cal-dot', style: `background:${c}` }))),
+    ]));
+  }
+  return h('div', { class: 'cal-grid' }, cells);
+}
+
 function calendarScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Calendar & day planner', '#home'));
-  wrap.append(h('button', { class: 'btn block', onclick: () => go('#calendar-add') }, '＋ Add plan, booking or meal'));
+  wrap.append(topbar('Travel calendar', '#home'));
+  const L = calLayerState();
+  const now = new Date();
+  if (!calView) calView = { y: now.getFullYear(), m: now.getMonth() };
+  const focusCC = focusSpot().spot.country;
 
-  // Festivals & public holidays that fall within the trip window (or the next ~90
-  // days if nothing is planned yet) surface here automatically, so the calendar
-  // shows what is happening around your dates. "Add to my plan" copies one in.
-  const fests = festivalsInWindow();
-  if (fests.length) {
-    const sec = h('div', { class: 'card fest-card' }, [
-      h('div', { class: 'row-between' }, [
-        h('strong', {}, '🎉 Festivals & public holidays'),
-        h('button', { class: 'btn ghost', onclick: () => go('#events') }, 'See all'),
-      ]),
-      h('p', { class: 'muted', style: 'margin:6px 0 0' },
-        store.calendar.items.length ? 'Falling within your planned dates:' : 'Coming up in the next few months:'),
-    ]);
-    fests.forEach((e) => {
-      const addBtn = h('button', { class: 'btn ghost' }, 'Add to my plan');
-      addBtn.addEventListener('click', () => addEventToCalendar(e, addBtn));
-      sec.append(h('div', { class: 'card', style: 'margin:8px 0 0' }, [
-        h('strong', {}, `${e.flag || ''} ${e.name}`),
-        h('div', { class: 'muted', style: 'margin:2px 0 8px' }, `${evRange(e)} · ${e.countryName}`),
-        h('div', { class: 'row-between' }, [
+  // Build day-markers from every enabled layer.
+  const byDate = {};
+  const push = (ds, mk) => { (byDate[ds] = byDate[ds] || []).push(mk); };
+  const ccList = L.other ? COUNTRIES.map((c) => c.id) : [focusCC];
+  ccList.forEach((cc) => (getEvents(cc) || []).forEach((e) => {
+    if (!e.start) return;
+    const other = cc !== focusCC;
+    const rel = isReligiousEvent(e);
+    let show, color;
+    if (other) { show = L.other; color = '#2C7DA0'; }
+    else if (rel) { show = L.religious; color = '#8A5CC0'; }
+    else { show = L.holidays; color = '#E0A526'; }
+    if (!show) return;
+    calEachDate(e.start, e.end, (ds) => push(ds, { color, kind: 'event', ref: e, cc }));
+  }));
+  if (L.journal) (store.journal.entries || []).forEach((j) => { if (j.date) push(j.date, { color: '#2E8B57', kind: 'journal', ref: j }); });
+  if (L.mine) (store.calendar.items || []).forEach((it) => { if (it.date) push(it.date, { color: '#C25E3A', kind: 'item', ref: it }); });
+
+  // Layer toggles.
+  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 8px' }, CAL_LAYERS.map((ly) =>
+    h('button', { class: 'chip', 'aria-pressed': L[ly.key] ? 'true' : 'false',
+      onclick: () => { const cur = calLayerState(); store.profile.prefs.calLayers = { ...cur, [ly.key]: !cur[ly.key] }; save(); render(); } },
+      [calDot(ly.color), ' ' + ly.label]))));
+
+  // Month header + navigation.
+  const monthName = new Date(calView.y, calView.m, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const shift = (delta) => { let m = calView.m + delta, y = calView.y; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } calView = { y, m }; render(); };
+  wrap.append(h('div', { class: 'cal-head' }, [
+    h('button', { class: 'chip', 'aria-label': 'Previous month', onclick: () => shift(-1) }, '‹'),
+    h('strong', {}, monthName),
+    h('button', { class: 'chip', 'aria-label': 'Next month', onclick: () => shift(1) }, '›'),
+    h('button', { class: 'chip', onclick: () => { calView = { y: now.getFullYear(), m: now.getMonth() }; calSelDate = calYmd(now); render(); } }, 'Today'),
+  ]));
+
+  // Keep the selected day within the viewed month.
+  const monthPrefix = `${calView.y}-${String(calView.m + 1).padStart(2, '0')}`;
+  if (!calSelDate || !calSelDate.startsWith(monthPrefix)) {
+    calSelDate = (calView.y === now.getFullYear() && calView.m === now.getMonth()) ? calYmd(now) : `${monthPrefix}-01`;
+  }
+  wrap.append(calMonthGrid(calView.y, calView.m, byDate, calSelDate, (ds) => { calSelDate = ds; render(); }));
+
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#calendar-add') }, '＋ Add plan, booking or meal'));
+
+  // Selected day panel.
+  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top:14px' }, calDateLabel(calSelDate)));
+  const dayMarks = byDate[calSelDate] || [];
+  if (!dayMarks.length) wrap.append(h('p', { class: 'muted' }, 'Nothing on this day. Tap a layer above to show more, or “Add” to plan something.'));
+  dayMarks.forEach((mk) => {
+    if (mk.kind === 'event') {
+      const e = mk.ref; const ec = getCountry(mk.cc);
+      wrap.append(h('div', { class: 'card' }, [
+        h('div', { class: 'row-between' }, [h('strong', {}, [calDot(mk.color), ' ' + e.name]), ec ? h('span', { class: 'cat-tag' }, ec.flag) : null]),
+        e.blurb ? h('p', { class: 'muted', style: 'margin:4px 0' }, e.blurb) : null,
+        h('div', { class: 'row-between', style: 'margin-top:6px' }, [
           h('button', { class: 'btn ghost', onclick: () => go(`#event-${e.id}`) }, 'Details'),
-          addBtn,
+          h('button', { class: 'btn ghost', onclick: (ev) => addEventToCalendar(e, ev.currentTarget) }, 'Add to my plans'),
         ]),
       ]));
-    });
-    wrap.append(sec);
-  }
-
-  const items = calItems();
-  if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'Plan your days and log your stays, meals and activities — add a time and they line up into a timeline for each day.')); mount(wrap, '#home'); return; }
-  let lastDate = '';
-  items.forEach((it) => {
-    if (it.date !== lastDate) { wrap.append(h('h2', { class: 'cat-title' }, calDateLabel(it.date))); lastDate = it.date; }
-    const card = h('div', { class: 'card' }, [
-      h('div', { class: 'row-between' }, [
-        h('strong', {}, `${it.time ? it.time + ' · ' : ''}${CAL_ICON[it.type] || '•'} ${it.title}`),
-        h('span', { class: 'fair' }, it.cost ? `${it.cost} ${it.currency}` : ''),
-      ]),
-      it.place ? h('p', { class: 'muted' }, it.place) : null,
-      it.rating ? h('div', { class: 'stars-static' }, starsStr(it.rating)) : null,
-      it.note ? h('p', {}, it.note) : null,
-      h('div', { class: 'row-between', style: 'margin-top:8px' }, [
-        h('button', { class: 'btn ghost', onclick: () => go(`#calendar-edit-${it.id}`) }, '✎ Edit'),
-        h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); go('#calendar'); } } }, 'Delete'),
-      ]),
-    ]);
-    wrap.append(card);
+    } else if (mk.kind === 'journal') {
+      const j = mk.ref;
+      wrap.append(h('div', { class: 'card' }, [
+        h('strong', {}, [calDot(mk.color), ` ${j.photoKey ? '📷 ' : ''}${j.title || 'Journal entry'}`]),
+        j.text ? h('p', { class: 'muted', style: 'margin:4px 0' }, j.text.slice(0, 140) + (j.text.length > 140 ? '…' : '')) : null,
+        h('button', { class: 'btn ghost', style: 'margin-top:4px', onclick: () => go(`#journal-entry-${j.id}`) }, 'Open entry'),
+      ]));
+    } else {
+      const it = mk.ref;
+      wrap.append(h('div', { class: 'card' }, [
+        h('div', { class: 'row-between' }, [
+          h('strong', {}, [calDot(mk.color), ` ${it.time ? it.time + ' · ' : ''}${CAL_ICON[it.type] || '•'} ${it.title}`]),
+          h('span', { class: 'fair' }, it.cost ? `${it.cost} ${it.currency}` : ''),
+        ]),
+        it.place ? h('p', { class: 'muted' }, it.place) : null,
+        it.rating ? h('div', { class: 'stars-static' }, starsStr(it.rating)) : null,
+        it.note ? h('p', {}, it.note) : null,
+        h('div', { class: 'row-between', style: 'margin-top:8px' }, [
+          h('button', { class: 'btn ghost', onclick: () => go(`#calendar-edit-${it.id}`) }, '✎ Edit'),
+          h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); render(); } } }, 'Delete'),
+        ]),
+      ]));
+    }
   });
   mount(wrap, '#home');
 }
@@ -3856,6 +4026,7 @@ function produceDetail(id) {
 
 // ---- WEATHER + FORECAST -----------------------------------------------------
 let weatherKey = '';   // remembered city selection across renders
+let weatherSeededHash = null;   // route we last seeded weatherKey for (so city clicks stick)
 function wxAgo(ts) {
   if (!ts) return 'never';
   const m = Math.round((Date.now() - ts) / 60000);
@@ -3909,7 +4080,11 @@ function daySegments(hourly, date) {
 function weatherScreen(country) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Weather & forecast', '#home'));
-  if (country) weatherKey = spotKey(focusSpot(country).spot);
+  // Seed the city from the country arg ONLY when first arriving at this route — otherwise
+  // every render (e.g. a city-chip click, which calls render()) would overwrite the user's
+  // choice back to the focus city. That was the "weather buttons do nothing" bug.
+  const curHash = location.hash || '#weather';
+  if (country && weatherSeededHash !== curHash) { weatherKey = spotKey(focusSpot(country).spot); weatherSeededHash = curHash; }
   if (!weatherKey) weatherKey = spotKey(focusSpot().spot);
   const spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
 
@@ -3924,14 +4099,7 @@ function weatherScreen(country) {
     unitChip('mph', wxWindU() === 'mph', () => setWind('mph')),
   ]));
 
-  // Pick a country first, then a city.
   const curCountry = spot.country;
-  wrap.append(h('div', { class: 'chips' }, COUNTRIES.map((c) =>
-    h('button', { class: 'chip', 'aria-pressed': c.id === curCountry ? 'true' : 'false',
-      onclick: () => { weatherKey = spotKey(defaultSpot(c.id)); render(); } }, `${c.flag} ${c.name}`))));
-  wrap.append(h('div', { class: 'chips' }, spotsForCountry(curCountry).map((s) =>
-    h('button', { class: 'chip', 'aria-pressed': spotKey(s) === weatherKey ? 'true' : 'false',
-      onclick: () => { weatherKey = spotKey(s); render(); } }, s.city))));
 
   // Forecast map: the region with this country's cities plotted, each showing its
   // current temperature (one batched fetch), tappable to switch city.
@@ -4044,6 +4212,17 @@ function weatherScreen(country) {
       if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
     });
   }
+
+  // City switcher lives BELOW the map + forecast: tap the map, or pick from here.
+  const picker = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'See another city')]);
+  picker.append(h('div', { class: 'chips' }, COUNTRIES.map((c) =>
+    h('button', { class: 'chip', 'aria-pressed': c.id === curCountry ? 'true' : 'false',
+      onclick: () => { weatherKey = spotKey(defaultSpot(c.id)); render(); } }, `${c.flag} ${c.name}`))));
+  picker.append(h('div', { class: 'chips', style: 'margin-top:6px' }, spotsForCountry(curCountry).map((s) =>
+    h('button', { class: 'chip', 'aria-pressed': spotKey(s) === weatherKey ? 'true' : 'false',
+      onclick: () => { weatherKey = spotKey(s); render(); } }, s.city))));
+  wrap.append(picker);
+
   mount(wrap, '#home');
 }
 
@@ -4636,6 +4815,74 @@ function bargainScreen() {
   wrap.append(h('div', { class: 'card' }, [field('Asking price', price), field('Currency', cur), field('What are you buying?', ctx)]));
   wrap.append(out);
   recompute();
+
+  // Where to buy the everyday essentials cheapest, anchored to where the traveller is.
+  const fc = focusSpot().spot.country || activeCountry;
+  const fcName = (getCountry(fc) || {}).name || '';
+  const ess = getEssentials(fc);
+  if (ess && ess.items && ess.items.length) {
+    const card = h('div', { class: 'card' }, [
+      h('h2', { style: 'margin-top:0' }, `🛒 Cheapest essentials${fcName ? ' in ' + fcName : ''}`),
+      ess.note ? h('p', { class: 'muted', style: 'margin:4px 0 8px' }, ess.note) : null,
+    ]);
+    ess.items.forEach((it) => card.append(h('div', { class: 'list-note' }, [
+      h('strong', {}, `${it.icon || ''} ${it.item}: `), it.cheapest,
+      it.price && it.price !== '—' ? h('span', { class: 'muted' }, ` (${it.price})`) : null,
+    ])));
+    const slug = citySlug(focusSpot().spot.city || '');
+    if (getBoard(fc, slug)) card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#board-${fc}-${slug}`) }, '📍 Local finds & markets near you'));
+    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#prices-${fc}`) }, 'See fair prices'));
+    wrap.append(card);
+  }
+  mount(wrap, '#home');
+}
+
+// Quick expense logger for money-on-the-road — shares the same budget log as My Trip, so
+// spends logged here show up there and roll into the home-currency total.
+function expensesScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Expenses & budget', '#home'));
+  wrap.append(h('p', { class: 'muted' }, 'Log what you spend as you go — it converts to your home currency and feeds your trip budget.'));
+  const home = homeCurrency();
+  const fc = focusSpot().spot.country || activeCountry;
+  const c = getCountry(fc);
+
+  const bAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
+  const bCur = currencySelect(c ? c.currency : 'THB');
+  const bNote = h('input', { type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Log a spend'),
+    field('Amount', bAmt), field('Currency', bCur), field('On what?', bNote),
+    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim() }); go('#expenses'); } } }, '＋ Add expense'),
+  ]));
+
+  const totals = {};
+  store.trip.budgetLog.forEach((b) => { const cc = b.currency || '?'; totals[cc] = (totals[cc] || 0) + (parseFloat(b.amount) || 0); });
+  if (Object.keys(totals).length) {
+    const tot = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Total so far')]);
+    tot.append(h('p', { class: 'fair' }, Object.entries(totals).map(([cc, v]) => `${v.toLocaleString()} ${cc}`).join(' · ')));
+    let homeSum = 0, allKnown = true;
+    for (const [cc, v] of Object.entries(totals)) { if (cc === home) { homeSum += v; continue; } const conv = convert(v, cc, home); if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv; }
+    if (homeSum > 0 && Object.keys(totals).some((cc) => cc !== home)) tot.append(h('p', { class: 'muted', style: 'margin:-4px 0 0' }, `≈ ${Math.round(homeSum).toLocaleString()} ${home} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
+    wrap.append(tot);
+  }
+
+  const log = store.trip.budgetLog.slice().reverse();
+  if (log.length) {
+    const list = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Recent')]);
+    log.slice(0, 50).forEach((b) => {
+      const approx = approxHome(b.amount, b.currency);
+      list.append(h('div', { class: 'row-between price-item' }, [
+        h('span', {}, `${b.date} · ${b.note || 'spend'}`),
+        h('span', {}, [h('strong', {}, `${b.amount} ${b.currency}`), approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
+          h('button', { class: 'chip', onclick: () => { deleteBudgetItem(b.id); go('#expenses'); } }, '✕')]),
+      ]));
+    });
+    wrap.append(list);
+  } else {
+    wrap.append(h('p', { class: 'empty' }, 'No expenses logged yet — add your first above.'));
+  }
+  wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#trip') }, 'See full trip & budget'));
   mount(wrap, '#home');
 }
 
@@ -5877,6 +6124,8 @@ function render() {
       case 'access': return accessScreen(arg);
       case 'baby': return babyScreen(arg);
       case 'family': return familyScreen(arg);
+      case 'history': return historyScreen(arg);
+      case 'setcity': return setCityScreen(arg);
       case 'arrival': return arrivalScreen(arg);
       case 'visa': return visaScreen(arg);
       case 'schedules': return schedulesScreen(arg);
@@ -5889,6 +6138,7 @@ function render() {
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
       case 'trip': return tripScreen();
+      case 'expenses': return expensesScreen();
       case 'bargain': return bargainScreen();
       case 'checklist': return checklistScreen(arg);
       case 'bestof': return bestofScreen(arg);

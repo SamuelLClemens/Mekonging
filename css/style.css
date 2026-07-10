@@ -909,3 +909,18 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
 /* The active tab lifts a touch so the current section is unmistakable. */
 .tabbar button[aria-current="page"] { font-weight: 800; }
 .tabbar button[aria-current="page"] .ic { transform: translateY(-1px) scale(1.08); }
+
+/* Month-grid travel calendar */
+.cal-head { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 8px; }
+.cal-head strong { min-width: 150px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-wk { text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); padding: 2px 0; }
+.cal-cell { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; padding: 4px 0 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit; font: inherit; cursor: pointer; }
+.cal-cell.cal-empty { border: none; background: none; cursor: default; }
+.cal-day { font-size: 13px; font-weight: 600; line-height: 1; }
+.cal-cell.cal-today { box-shadow: inset 0 0 0 2px var(--orange); }
+.cal-cell.cal-sel { background: var(--orange); border-color: var(--orange); color: #fff; }
+.cal-cell.cal-sel .cal-day { color: #fff; }
+.cal-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; min-height: 8px; }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; }
+.cal-dot-inline { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
