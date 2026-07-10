@@ -156,6 +156,69 @@ export async function getDocument(id) {
 
 export async function deleteDocument(id) { await idbDel(id); }
 
+// ---- secure typed notes (card numbers, PINs, booking refs, anything text) ---
+// Stored exactly like a document (AES-GCM), but the payload is text and the metadata
+// marks it type 'note' so the UI can reveal + copy it instead of opening a file.
+export async function addSecureNote(title, text) {
+  if (!cryptoKey) throw new Error('Unlock the vault first.');
+  const body = enc.encode(String(text || ''));
+  const meta = await aesEncrypt(cryptoKey, enc.encode(JSON.stringify({ name: title || 'Secure note', type: 'note', size: body.byteLength })));
+  const blob = await aesEncrypt(cryptoKey, body);
+  const id = 'note-' + randHex(8);
+  await idbPut({ id, createdAt: new Date().toISOString().slice(0, 10), metaIv: meta.iv, metaCt: meta.ct, blobIv: blob.iv, blobCt: blob.ct });
+  return id;
+}
+export async function getNoteText(id) {
+  const doc = await getDocument(id);   // requires unlock; decrypts in memory
+  return await doc.blob.text();
+}
+
+// ---- encrypted backup file (private by construction) ------------------------
+// Exports the RAW encrypted records (salt + ciphertext only — never the key or any
+// plaintext), so the backup file is useless without the passcode. Restoring replaces the
+// whole vault with the snapshot and re-locks it, so a new device unlocks with the same code.
+function b64(buf) {
+  const b = buf instanceof ArrayBuffer ? new Uint8Array(buf) : buf;
+  let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s);
+}
+function unb64(str) {
+  const s = atob(str); const a = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+const BIN_FIELDS = ['salt', 'verifierIv', 'verifierCt', 'metaIv', 'metaCt', 'blobIv', 'blobCt'];
+
+export async function exportVault() {
+  const all = await idbAll();
+  if (!all.length) throw new Error('The vault is empty — nothing to back up yet.');
+  const records = all.map((r) => {
+    const o = { id: r.id, createdAt: r.createdAt || null };
+    if (r.iters != null) o.iters = r.iters;
+    BIN_FIELDS.forEach((k) => { if (r[k] != null) o[k] = b64(r[k]); });
+    return o;
+  });
+  return JSON.stringify({ format: 'mekonging-vault-backup', v: 1, exportedAt: new Date().toISOString().slice(0, 10), records });
+}
+
+export async function importVault(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { throw new Error('That file is not a valid vault backup.'); }
+  if (!parsed || parsed.format !== 'mekonging-vault-backup' || !Array.isArray(parsed.records)) throw new Error('That file is not a Mekonging vault backup.');
+  if (!parsed.records.some((r) => r.id === CONFIG_ID)) throw new Error('This backup is missing its passcode configuration and cannot be restored.');
+  // Replace the whole vault with this complete snapshot, then lock (unlock with its passcode).
+  const existing = await idbAll();
+  for (const r of existing) await idbDel(r.id);
+  for (const rec of parsed.records) {
+    const out = { id: rec.id, createdAt: rec.createdAt || new Date().toISOString().slice(0, 10) };
+    if (rec.iters != null) out.iters = rec.iters;
+    BIN_FIELDS.forEach((k) => { if (rec[k] != null) out[k] = unb64(rec[k]); });
+    await idbPut(out);
+  }
+  cryptoKey = null;
+  return { docs: parsed.records.filter((r) => r.id !== CONFIG_ID).length };
+}
+
 export async function wipeVault() {
   cryptoKey = null;
   const all = await idbAll();

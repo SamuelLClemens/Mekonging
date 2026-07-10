@@ -29,6 +29,7 @@ import {
   available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
   lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
   listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
+  addSecureNote as vaultAddNote, getNoteText as vaultGetNote, exportVault, importVault,
 } from './vault.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
@@ -116,7 +117,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.153.0';
+const APP_VERSION = 'mk-v0.154.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5090,6 +5091,7 @@ function vaultWarning() {
 }
 function docKind(type) {
   if (!type) return 'File';
+  if (type === 'note') return 'Secure note';
   if (type.startsWith('image/')) return 'Image';
   if (type === 'application/pdf') return 'PDF';
   return type;
@@ -5130,27 +5132,96 @@ async function renderVault(body) {
     } }, 'Encrypt & save'),
   ]));
 
-  const listCard = h('div', { class: 'card' }, [h('h2', {}, 'Your documents')]);
+  // Secure typed notes — for card numbers, PINs, booking references, anything you would
+  // never put in plain notes. Encrypted exactly like a document.
+  const noteTitle = h('input', { type: 'text', placeholder: 'Label (e.g. Visa card, Travel insurance)' });
+  const noteText = h('textarea', { rows: '3', placeholder: 'The number, PIN or details — encrypted before it is saved', style: 'width:100%' });
+  body.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Add a secure note'),
+    h('p', { class: 'muted' }, 'For card numbers, PINs or booking references. Stored encrypted; reveal it only when you need it.'),
+    field('Label', noteTitle), field('Details', noteText),
+    h('button', { class: 'btn block', onclick: async () => {
+      if (!noteText.value.trim()) { alert('Enter something to save.'); return; }
+      try { await vaultAddNote(noteTitle.value.trim(), noteText.value); renderVault(body); } catch (e) { alert(e.message); }
+    } }, 'Encrypt & save'),
+  ]));
+
+  const listCard = h('div', { class: 'card' }, [h('h2', {}, 'Your documents & notes')]);
   body.append(listCard);
   let docs = [];
   try { docs = await vaultList(); } catch (e) { listCard.append(h('p', { class: 'muted' }, e.message)); return; }
   if (!docs.length) listCard.append(h('p', { class: 'muted' }, 'No documents yet.'));
-  docs.forEach((d) => listCard.append(h('div', { class: 'row-between price-item' }, [
-    h('div', { class: 'grow' }, [h('strong', {}, d.name || 'Document'), h('div', { class: 'muted' }, `${docKind(d.type)} · added ${d.createdAt}`)]),
-    h('div', { class: 'cats' }, [
-      h('button', { class: 'chip', onclick: async () => {
-        try { const doc = await vaultGet(d.id); const u = URL.createObjectURL(doc.blob); window.open(u, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(u), 60000); }
-        catch (e) { alert(e.message); }
-      } }, 'View'),
-      h('button', { class: 'chip', onclick: async () => { if (confirm(`Delete “${d.name}” from the vault?`)) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
-    ]),
-  ])));
+  docs.forEach((d) => {
+    const row = h('div', { class: 'row-between price-item', style: 'flex-wrap:wrap' });
+    const reveal = h('div', { style: 'flex-basis:100%;margin-top:6px;display:none' });
+    const openBtn = d.type === 'note'
+      ? h('button', { class: 'chip', onclick: async () => {
+          if (reveal.style.display !== 'none') { reveal.style.display = 'none'; reveal.innerHTML = ''; return; }
+          try {
+            const text = await vaultGetNote(d.id);
+            reveal.innerHTML = '';
+            const box = h('div', { class: 'card', style: 'margin:0' }, [
+              h('pre', { style: 'white-space:pre-wrap;word-break:break-word;margin:0;font:inherit' }, text),
+              h('button', { class: 'chip', style: 'margin-top:6px', onclick: () => { try { navigator.clipboard.writeText(text); } catch { /* no clipboard */ } } }, 'Copy'),
+            ]);
+            reveal.append(box); reveal.style.display = '';
+          } catch (e) { alert(e.message); }
+        } }, 'Reveal')
+      : h('button', { class: 'chip', onclick: async () => {
+          try { const doc = await vaultGet(d.id); const u = URL.createObjectURL(doc.blob); window.open(u, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+          catch (e) { alert(e.message); }
+        } }, 'View');
+    row.append(
+      h('div', { class: 'grow' }, [h('strong', {}, d.name || 'Document'), h('div', { class: 'muted' }, `${docKind(d.type)} · added ${d.createdAt}`)]),
+      h('div', { class: 'cats' }, [
+        openBtn,
+        h('button', { class: 'chip', onclick: async () => { if (confirm(`Delete “${d.name}” from the vault?`)) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
+      ]),
+      reveal,
+    );
+    listCard.append(row);
+  });
+
+  // Encrypted backup — so passports, cards and notes are never lost to an update, a reset,
+  // or a new phone. The file holds only ciphertext + salt, so it stays private: useless
+  // without the passcode.
+  body.append(h('div', { class: 'card' }, [
+    h('h2', {}, 'Backup'),
+    h('p', { class: 'muted' }, 'Save an encrypted copy to your phone so you never lose these — even after an update, a reset, or moving to a new device. The file can only be opened with your passcode.'),
+    vaultDownloadBtn(),
+    vaultRestoreControl(body),
+  ]));
 
   body.append(h('div', { class: 'card' }, [
     h('button', { class: 'btn ghost block', onclick: () => { vaultLock(); renderVault(body); } }, '🔒 Lock vault'),
     h('button', { class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
-      onclick: async () => { if (confirm('Permanently erase the vault and every document in it? This cannot be undone.')) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
+      onclick: async () => { if (confirm('Permanently erase the vault and every document in it? This cannot be undone. Download a backup first if you want to keep them.')) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
   ]));
+}
+function vaultDownloadBtn() {
+  return h('button', { class: 'btn ghost block', onclick: async () => {
+    try {
+      const json = await exportVault();
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const d = new Date(); const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const a = document.createElement('a'); a.href = url; a.download = `mekonging-vault-${stamp}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) { alert(e.message); }
+  } }, '⬇️ Download encrypted backup');
+}
+function vaultRestoreControl(body) {
+  const inp = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      if (!confirm('Restore this vault backup? It replaces any vault currently on this device, and you unlock it with the backup’s passcode.')) return;
+      try { const res = await importVault(String(reader.result || '')); alert(`Restored ${res.docs} item${res.docs === 1 ? '' : 's'}. Unlock with your passcode.`); renderVault(body); }
+      catch (e) { alert(e.message); }
+    };
+    reader.readAsText(f);
+  } });
+  return h('div', {}, [inp, h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => inp.click() }, '⬆️ Restore from a backup file')]);
 }
 function vaultSetupCard(body) {
   const p1 = h('input', { type: 'password', placeholder: 'Choose a passcode (min 4 characters)' });
@@ -5163,6 +5234,8 @@ function vaultSetupCard(body) {
       if (p1.value !== p2.value) { alert('The passcodes do not match.'); return; }
       try { await vaultSetup(p1.value); renderVault(body); } catch (e) { alert(e.message); }
     } }, 'Create vault'),
+    h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Moving from another device? Restore your encrypted backup, then unlock it with the same passcode.'),
+    vaultRestoreControl(body),
   ]);
 }
 function vaultUnlockCard(body) {
