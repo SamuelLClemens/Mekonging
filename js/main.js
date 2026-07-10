@@ -116,7 +116,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.150.0';
+const APP_VERSION = 'mk-v0.151.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -538,11 +538,11 @@ function countryHistoryCard(cc) {
 // prices all match — no GPS required. Used inline on the hub and full-screen at #setcity.
 function whereAmICard(cc) {
   const c = getCountry(cc);
-  const spots = spotsForCountry(cc);
+  const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
   return h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, '📍 Where are you?'),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
-    h('div', { class: 'chips' }, spots.map((s) => h('button', { class: 'chip', onclick: () => { setFocusSpot(s); render(); } }, s.city))),
+    field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); render(); } })),
   ]);
 }
 
@@ -550,17 +550,12 @@ function setCityScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Set your location', cc && getCountry(cc) ? `#country-${cc}` : '#home'));
   wrap.append(h('p', { class: 'muted' }, 'Choose where you are so distances, weather, “near me” and local prices all match — even with no signal or GPS off.'));
-  const cur = focusCitySpot();
-  if (cur) wrap.append(h('div', { class: 'banner' }, `Currently set to ${cur.city}. Pick another to change it.`));
-  COUNTRIES.forEach((c) => {
-    const spots = spotsForCountry(c.id);
-    if (!spots.length) return;
-    wrap.append(h('div', { class: 'card' }, [
-      h('h2', { style: 'margin-top:0' }, `${c.flag} ${c.name}`),
-      h('div', { class: 'chips' }, spots.map((s) =>
-        h('button', { class: 'chip', 'aria-pressed': (cur && spotKey(cur) === spotKey(s)) ? 'true' : 'false', onclick: () => { setFocusSpot(s); go(`#country-${c.id}`); } }, s.city))),
-    ]));
-  });
+  // One dropdown, defaulting to your current (or last-set) location, grouped by country.
+  const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
+  wrap.append(h('div', { class: 'card' }, [
+    field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); go(`#country-${s.country}`); } })),
+    h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, `Currently: ${cur.city}. Works offline — no GPS needed.`),
+  ]));
   mount(wrap, '#home');
 }
 
@@ -4213,15 +4208,11 @@ function weatherScreen(country) {
     });
   }
 
-  // City switcher lives BELOW the map + forecast: tap the map, or pick from here.
-  const picker = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'See another city')]);
-  picker.append(h('div', { class: 'chips' }, COUNTRIES.map((c) =>
-    h('button', { class: 'chip', 'aria-pressed': c.id === curCountry ? 'true' : 'false',
-      onclick: () => { weatherKey = spotKey(defaultSpot(c.id)); render(); } }, `${c.flag} ${c.name}`))));
-  picker.append(h('div', { class: 'chips', style: 'margin-top:6px' }, spotsForCountry(curCountry).map((s) =>
-    h('button', { class: 'chip', 'aria-pressed': spotKey(s) === weatherKey ? 'true' : 'false',
-      onclick: () => { weatherKey = spotKey(s); render(); } }, s.city))));
-  wrap.append(picker);
+  // City switcher lives BELOW the map + forecast: tap the map, or pick from this dropdown
+  // (defaults to the city currently shown, which starts at where the traveller is).
+  wrap.append(h('div', { class: 'card' }, [
+    field('See another city', locationSelect(weatherKey, (key) => { weatherKey = key; render(); })),
+  ]));
 
   mount(wrap, '#home');
 }
@@ -6076,6 +6067,22 @@ function selectEl(options, current, onchange) {
   const opts = options.map((o) => Array.isArray(o) ? o : [o, o]);
   return h('select', { onchange: (e) => onchange(e.target.value) },
     opts.map(([val, lbl]) => h('option', { value: val, selected: val === current ? '' : null }, lbl)));
+}
+
+function spotForKey(key) { return WEATHER_SPOTS.find((s) => spotKey(s) === key) || null; }
+
+// A single location dropdown (cities grouped by country) that defaults to the given
+// spotKey — used everywhere a traveller picks "where they are" instead of a wall of
+// chips. Pass the resolved focus/weather key so it always opens on the current location.
+function locationSelect(currentKey, onChange) {
+  const sel = h('select', { class: 'loc-select', onchange: (e) => onChange(e.target.value) });
+  COUNTRIES.forEach((c) => {
+    const spots = spotsForCountry(c.id);
+    if (!spots.length) return;
+    sel.append(h('optgroup', { label: `${c.flag} ${c.name}` },
+      spots.map((s) => h('option', { value: spotKey(s), selected: spotKey(s) === currentKey ? '' : null }, s.city))));
+  });
+  return sel;
 }
 
 // ---- router -----------------------------------------------------------------
