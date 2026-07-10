@@ -97,14 +97,45 @@ export async function isInitialised() { try { return !!(await idbGet(CONFIG_ID))
 export function isUnlocked() { return !!cryptoKey; }
 export function lock() { cryptoKey = null; }
 
-export async function setup(passcode) {
+export async function setup(passcode, hint) {
   if (!passcode || passcode.length < 4) throw new Error('Choose a passcode of at least 4 characters.');
   if (await isInitialised()) throw new Error('The vault is already set up. Unlock it instead.');
   const salt = randBytes(16);
   const key = await deriveKey(passcode, salt);
   const verifier = await aesEncrypt(key, enc.encode(VERIFIER_TEXT));
-  await idbPut({ id: CONFIG_ID, salt, iters: PBKDF2_ITERS, verifierIv: verifier.iv, verifierCt: verifier.ct });
+  await idbPut({ id: CONFIG_ID, salt, iters: PBKDF2_ITERS, verifierIv: verifier.iv, verifierCt: verifier.ct, hint: String(hint || '').slice(0, 120) });
   cryptoKey = key;
+}
+
+// Optional passcode HINT — a reminder the user writes (never the passcode). Stored on the
+// config record on this device and shown on the unlock screen. getHint needs no key.
+export async function getHint() { try { const c = await idbGet(CONFIG_ID); return (c && c.hint) || ''; } catch { return ''; } }
+export async function setHint(text) {
+  const c = await idbGet(CONFIG_ID);
+  if (!c) throw new Error('Set up the vault first.');
+  c.hint = String(text || '').slice(0, 120);
+  await idbPut(c);
+}
+
+// Change the passcode without a server: unlock re-derives, then EVERY doc/note is decrypted
+// with the old key and re-encrypted under a fresh key + salt. Zero-knowledge preserved.
+export async function changePasscode(newPasscode) {
+  if (!cryptoKey) throw new Error('Unlock the vault first.');
+  if (!newPasscode || newPasscode.length < 4) throw new Error('Choose a new passcode of at least 4 characters.');
+  const cfg = await idbGet(CONFIG_ID);
+  const newSalt = randBytes(16);
+  const newKey = await deriveKey(newPasscode, newSalt);
+  const items = (await idbAll()).filter((r) => r.id !== CONFIG_ID);
+  for (const r of items) {
+    const metaPlain = await aesDecrypt(cryptoKey, r.metaIv, r.metaCt);
+    const blobPlain = await aesDecrypt(cryptoKey, r.blobIv, r.blobCt);
+    const m = await aesEncrypt(newKey, metaPlain);
+    const b = await aesEncrypt(newKey, blobPlain);
+    await idbPut({ ...r, metaIv: m.iv, metaCt: m.ct, blobIv: b.iv, blobCt: b.ct });
+  }
+  const verifier = await aesEncrypt(newKey, enc.encode(VERIFIER_TEXT));
+  await idbPut({ id: CONFIG_ID, salt: newSalt, iters: PBKDF2_ITERS, verifierIv: verifier.iv, verifierCt: verifier.ct, hint: (cfg && cfg.hint) || '' });
+  cryptoKey = newKey;
 }
 
 export async function unlock(passcode) {
@@ -195,6 +226,7 @@ export async function exportVault() {
   const records = all.map((r) => {
     const o = { id: r.id, createdAt: r.createdAt || null };
     if (r.iters != null) o.iters = r.iters;
+    if (r.hint) o.hint = r.hint;   // plain reminder text (never the passcode)
     BIN_FIELDS.forEach((k) => { if (r[k] != null) o[k] = b64(r[k]); });
     return o;
   });
@@ -212,6 +244,7 @@ export async function importVault(text) {
   for (const rec of parsed.records) {
     const out = { id: rec.id, createdAt: rec.createdAt || new Date().toISOString().slice(0, 10) };
     if (rec.iters != null) out.iters = rec.iters;
+    if (rec.hint) out.hint = rec.hint;
     BIN_FIELDS.forEach((k) => { if (rec[k] != null) out[k] = unb64(rec[k]); });
     await idbPut(out);
   }
