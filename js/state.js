@@ -210,6 +210,16 @@ export function deleteBudgetItem(id) {
   const i = store.trip.budgetLog.findIndex((x) => x.id === id);
   if (i >= 0) { store.trip.budgetLog.splice(i, 1); save(); }
 }
+export function updateBudgetItem(id, patch = {}) {
+  const b = store.trip.budgetLog.find((x) => x.id === id);
+  if (!b) return null;
+  if (patch.amount !== undefined) b.amount = patch.amount;
+  if (patch.currency !== undefined) b.currency = patch.currency;
+  if (patch.note !== undefined) b.note = patch.note;
+  if (patch.date !== undefined) b.date = patch.date;
+  store.trip.budgetLog.sort((a, c) => (a.date < c.date ? -1 : 1));
+  save(); return b;
+}
 
 // --- travel journal ----------------------------------------------------------
 export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null }) {
