@@ -99,13 +99,18 @@ function defaults() {
 
 function migrate(data) {
   if (!data || typeof data !== 'object') return defaults();
-  if (!data.version || data.version > CURRENT_VERSION) return defaults();
   const base = defaults();
-  // Additive, lossless: new fields self-default via the spread; existing
-  // favorites[] and trip carry forward verbatim. Future versions add
-  // `if ((data.version||1) < N) { ... }` blocks here, like Gardenoosh.
+  const dv = Number(data.version) || 1;
+  // NON-DESTRUCTIVE by design: user data (journal, budget, calendar, pins, reviews…) is
+  // NEVER wiped, no matter the version. If the stored data is NEWER than this code (an
+  // update mismatch / rollback), we still carry every field forward verbatim — older code
+  // simply ignores keys it does not know, and `...data` preserves them for when newer code
+  // loads again. If it is OLDER, missing fields self-default from `base`. The schema marker
+  // is kept at the HIGHER of the two so a newer schema is never silently downgraded.
   const out = {
-    version: CURRENT_VERSION,
+    ...base,
+    ...data,
+    version: Math.max(CURRENT_VERSION, dv),
     profile: { ...base.profile, ...(data.profile || {}),
                prefs: { ...base.profile.prefs, ...((data.profile || {}).prefs || {}) } },
     favorites: Array.isArray(data.favorites) ? data.favorites : base.favorites,
@@ -134,30 +139,87 @@ function migrate(data) {
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
   // v9 -> v10: day/night auto becomes the default. Move anyone still on the old silent
   // 'light' default onto 'auto' (an explicit 'dark' choice is preserved).
-  if ((data.version || 1) < 10 && out.profile.theme === 'light') out.profile.theme = 'auto';
+  if (dv < 10 && out.profile.theme === 'light') out.profile.theme = 'auto';
   return out;
 }
 
+const BAK = KEY + '.bak';
+
+function parseStore(k) {
+  try { const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+
+// Does this store hold anything the user created? Used to decide whether a recovery from
+// the backup is warranted (we never overwrite real data with an empty default).
+function hasUserData(s) {
+  if (!s || typeof s !== 'object') return false;
+  const j = s.journal && Array.isArray(s.journal.entries) && s.journal.entries.length;
+  const b = s.trip && Array.isArray(s.trip.budgetLog) && s.trip.budgetLog.length;
+  const c = s.calendar && Array.isArray(s.calendar.items) && s.calendar.items.length;
+  const p = Array.isArray(s.pins) && s.pins.length;
+  const col = Array.isArray(s.collections) && s.collections.length;
+  const pd = s.placeData && typeof s.placeData === 'object' && Object.keys(s.placeData).length;
+  const f = Array.isArray(s.favorites) && s.favorites.length;
+  return !!(j || b || c || p || col || pd || f);
+}
+
 function load() {
-  try {
-    return migrate(JSON.parse(localStorage.getItem(KEY)));
-  } catch {
-    return defaults();
+  const out = migrate(parseStore(KEY));
+  // Recovery net: if the primary store came back empty (corrupt/failed parse) but the
+  // rolling backup still holds real entries, restore from the backup rather than start blank.
+  if (!hasUserData(out)) {
+    const bak = migrate(parseStore(BAK));
+    if (hasUserData(bak)) return bak;
   }
+  return out;
 }
 
 export const store = load();
 
 export function save() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(store));
+    const next = JSON.stringify(store);
+    // Keep the previous good copy as a one-step rollback backup BEFORE overwriting, so a
+    // failed/partial write or a bad update can never leave the traveller with nothing.
+    // Only mirror a prev that actually parses — never let a corrupt primary clobber a good
+    // backup (that would defeat the whole recovery net).
+    const prev = localStorage.getItem(KEY);
+    if (prev && prev !== next && prev.length > 2) {
+      let ok = false; try { JSON.parse(prev); ok = true; } catch { ok = false; }
+      if (ok) { try { localStorage.setItem(BAK, prev); } catch { /* backup best-effort */ } }
+    }
+    localStorage.setItem(KEY, next);
   } catch {
     // storage full or private mode — the session still works, it just will not persist
   }
 }
 
+// Export the entire on-device store as a JSON string the user can save as a file.
+export function exportData() {
+  try { return JSON.stringify(store, null, 2); } catch { return '{}'; }
+}
+
+// Restore from a previously exported backup. Non-destructive to the file: the parsed
+// data runs through the same migration, then replaces the live store in place (keeping the
+// shared reference the rest of the app holds). Returns { ok, error?, counts? }.
+export function importData(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { return { ok: false, error: 'That file is not a valid backup.' }; }
+  if (!parsed || typeof parsed !== 'object') return { ok: false, error: 'That backup could not be read.' };
+  const migrated = migrate(parsed);
+  Object.keys(store).forEach((k) => { delete store[k]; });
+  Object.assign(store, migrated);
+  save();
+  return { ok: true, counts: {
+    journal: (store.journal.entries || []).length,
+    budget: (store.trip.budgetLog || []).length,
+    calendar: (store.calendar.items || []).length,
+  } };
+}
+
 export function resetAll() {
   try { localStorage.removeItem(KEY); } catch { /* ignore */ }
+  try { localStorage.removeItem(BAK); } catch { /* ignore */ }
   const fresh = defaults();
   store.version = fresh.version;
   store.profile = fresh.profile;
