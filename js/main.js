@@ -116,7 +116,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.148.0';
+const APP_VERSION = 'mk-v0.149.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -179,6 +179,23 @@ function go(hash) {
   else location.hash = hash;
 }
 
+// In-app back stack so "‹ Back" returns to the screen you actually came FROM, not a
+// hardcoded parent (fixes "I opened this from Search and Back sent me somewhere I never
+// saw"). The per-screen backHash is kept as the FALLBACK for a fresh load / deep link.
+let navStack = [];
+let poppingBack = false;
+let lastHash = (typeof location !== 'undefined' && location.hash) || '#home';
+function goBack(fallback) {
+  if (navStack.length) {
+    poppingBack = true;
+    const target = navStack.pop();
+    if (location.hash === target) { poppingBack = false; render(); }
+    else location.hash = target;
+  } else {
+    go(fallback || '#home');
+  }
+}
+
 // ---- shell ------------------------------------------------------------------
 function topbar(title, backHash) {
   const hash = location.hash || '';
@@ -188,7 +205,7 @@ function topbar(title, backHash) {
   const iconBtn = (label, target, svg) =>
     h('button', { class: 'topbar-ic', 'aria-label': label, title: label, onclick: () => go(target), html: svg });
   return h('header', { class: 'topbar' }, [
-    backHash ? h('button', { class: 'back', onclick: () => go(backHash) }, '‹ Back') : null,
+    backHash ? h('button', { class: 'back', onclick: () => goBack(backHash) }, '‹ Back') : null,
     h('h1', {}, title),
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     onSettings ? null : iconBtn('Settings', '#settings', ICON.gear),
@@ -864,90 +881,53 @@ function homeScreen() {
   wrap.append(netStatusRow());
   // Lead with what fits the user's place and moment, before the generic menu.
   wrap.append(rightNowSection());
-  // If the traveller set an accessibility need, surface the guide for where they are.
-  if ((store.profile.prefs.access || []).length) {
-    const fc = focusSpot().spot.country;
-    if (getAccessibility(fc)) wrap.append(h('button', { class: 'btn ghost block access-focus', style: 'margin-top:8px', onclick: () => go(`#access-${fc}`) }, '♿ Accessibility where you are'));
-  }
-  // Travelling with a baby: one tap to the local baby-supply help for where they are.
-  if (store.profile.prefs.withBaby) {
-    const fc = focusSpot().spot.country;
-    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#baby-${fc}`) }, '🍼 Travelling with a baby — local help'));
-  }
-  // Family travellers: one tap to schools, childcare and things to do with the kids.
-  if (store.profile.prefs.party === 'family' || store.profile.prefs.withBaby) {
-    const fc = focusSpot().spot.country;
-    if (getFamily(fc)) wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#family-${fc}`) }, '👨‍👩‍👧 Travelling with kids — schools, childcare & fun'));
-  }
+  // Profile-driven shortcuts (accessibility, baby, family) are NOT surfaced here any
+  // more — they live in Settings → Who's travelling and on the focused country's hub,
+  // so Home stays calm and every context has ONE menu, not several overlapping ones.
 
   wrap.append(h('h2', { class: 'home-section' }, 'Where are you headed?'));
   wrap.append(regionPicker());
-  wrap.append(h('h2', { class: 'home-section' }, 'Everything you need'));
+  // The focused country's hub is THE place for everything about where you are (places,
+  // food, transport, weather, kids, visa…). One clear gateway avoids the old problem of
+  // Home duplicating the whole country toolkit.
+  const hubCC = focusSpot().spot.country;
+  const hubC = getCountry(hubCC);
+  if (hubC) wrap.append(h('button', { class: 'btn block', style: 'margin:10px 0 2px', onclick: () => { activeCountry = hubCC; go(`#country-${hubCC}`); } }, `${hubC.flag} Explore ${hubC.name} — places, food, transport & more`));
 
-  // Grouped into labeled task clusters (not a flat 28-tile wall) so the screen is
-  // scannable: the eye lands on a heading, not an undifferentiated grid. Every
-  // destination is still present — nothing is hidden, just chunked by intent.
-  // Entry & visa had no top-level home; resolve it to where the traveller is focused so
-  // it is one tap from Home (not buried in a country hub) — a high-intent task.
-  const visaCC = focusSpot().spot.country;
+  wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
+
+  // Home now carries only TRIP-WIDE tools (planning, memories, money, admin). Everything
+  // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
+  // focused country's hub (the "Explore" button above), so there is one menu per context
+  // instead of Home and the hub duplicating each other.
   const groups = [
-    { label: 'Get your bearings', items: [
-      { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: '#arrival' },
-      { ic: ICON.passport, t: 'Entry & visa', d: 'Visa-free, e-visa or on arrival', hash: `#visa-${visaCC}` },
-      { ic: ICON.target, t: 'For you', d: 'Budget, party & trip length', hash: '#foryou' },
-      { ic: ICON.route, t: 'Trip plans', d: 'Suggested routes that fit you', hash: '#plans' },
-      { ic: ICON.trophy, t: 'Best of / top picks', d: 'Best for families & more', hash: '#bestof' },
-    ] },
-    { label: 'Eat & do', items: [
-      { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-      { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies, cheap eats', hash: '#board' },
-      { ic: ICON.sun, t: 'Today’s plan', d: 'Weather-aware top picks', hash: '#today' },
-      { ic: ICON.search, t: 'Identify food', d: 'Dishes, ingredients, allergens', hash: '#food' },
-      { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs guide', hash: '#produce' },
-      { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, animals, fish, plants', hash: '#nature' },
-      { ic: ICON.volume, t: 'Sounds around you', d: 'Hear animal & bird calls', hash: '#sounds' },
-      { ic: ICON.waves, t: 'Public pools', d: 'Swims, day passes, prices', hash: '#pools' },
-    ] },
-    { label: 'Get around', items: [
-      { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats A → B', hash: '#route' },
-      { ic: ICON.map, t: 'Offline map', d: 'See yourself, drop pins', hash: '#map' },
-      { ic: ICON.clock, t: 'Transport schedules', d: 'Train/bus times, sync on wifi', hash: '#schedules' },
-      { ic: ICON.cloud, t: 'Weather & forecast', d: '7-day, updates on wifi', hash: '#weather' },
-    ] },
-    { label: 'Plan & remember', items: [
+    { label: 'Plan your trip', items: [
+      { ic: ICON.route, t: 'Trip plans', d: 'Routes that fit you', hash: '#plans' },
+      { ic: ICON.target, t: 'For you', d: 'Your personalised picks', hash: '#foryou' },
       { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
       { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
-      { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + journey map', hash: '#journal' },
-      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Album from your journal & trip', hash: '#scrapbook' },
+      { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + map', hash: '#journal' },
+      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Album from your trip', hash: '#scrapbook' },
       { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
-      { ic: ICON.ticket, t: 'Festivals & events', d: 'Dates, on your calendar', hash: '#events' },
-      { ic: ICON.star, t: 'Saved & collections', d: 'Organise places by theme', hash: '#saved' },
+      { ic: ICON.star, t: 'Saved & collections', d: 'Organise by theme', hash: '#saved' },
     ] },
-    { label: 'Money & practical', items: [
+    { label: 'Money & tools', items: [
       { ic: ICON.coins, t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
       { ic: ICON.tag, t: 'Bargain helper', d: 'Fair counter-offers', hash: '#bargain' },
-      { ic: ICON.users, t: 'Travel circle', d: 'Share your card, connect & message', hash: '#circle', badge: unreadInboxCount() },
-      { ic: ICON.lock, t: 'Secure documents', d: 'Passports, encrypted on-device', hash: '#vault' },
-      { ic: ICON.help, t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
-      { ic: ICON.gear, t: 'Settings', d: 'Languages, theme, translate', hash: '#settings' },
+      { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
+      { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
+      { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
+      { ic: ICON.gear, t: 'Settings', d: 'Who’s travelling, theme, phase', hash: '#settings' },
     ] },
   ];
   const tileBtn = (x) => h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t }, [
     x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
     h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
   ]);
-  // Order the clusters by the chosen phase's priorities, then render each as a
-  // minimise/maximise disclosure — the top ones open, the rest a tap away — so the
-  // traveller focuses on this stage without losing access to anything.
-  const ph = PHASES[phase];
-  let orderedGroups = groups;
-  if (ph) {
-    orderedGroups = ph.groups.map((lbl) => groups.find((g) => g.label === lbl)).filter(Boolean)
-      .concat(groups.filter((g) => !ph.groups.includes(g.label)));
-  }
-  const openCount = ph ? ((phase === 'planning' || phase === 'traveling') ? 2 : 1) : 2;
-  orderedGroups.forEach((g, i) => {
-    wrap.append(h('details', { class: 'home-group-d', open: i < openCount ? '' : null }, [
+  // Both clusters render as minimise/maximise disclosures; both open by default since
+  // there are only two short groups now.
+  groups.forEach((g) => {
+    wrap.append(h('details', { class: 'home-group-d', open: '' }, [
       h('summary', { class: 'home-group' }, g.label),
       h('div', { class: 'grid' }, g.items.map(tileBtn)),
     ]));
@@ -1067,6 +1047,7 @@ function countryHubScreen(id) {
   }
 
   const tiles = [
+    { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${c.id}` },
     { ic: ICON.chat, t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
     { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
     { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
@@ -1078,10 +1059,15 @@ function countryHubScreen(id) {
     { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
     { ic: ICON.sun, t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
     { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
+    { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
     { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
+    { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
+    { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${c.id}` },
+    { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
     { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
-    { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
+    { ic: ICON.volume, t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
+    { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
     { ic: ICON.alert, t: 'Emergency', d: 'Numbers + key phrases', hash: '#sos' },
     { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
@@ -2708,39 +2694,73 @@ function collectionScreen(id) {
 // Border crossings: open land/bridge/river crossings, grouped by country pair,
 // with guidance hours and visa notes. Reached from the Map screen and its markers.
 const POOL_TYPE_LABEL = { 'public': 'Public', 'hotel-daypass': 'Day pass', 'waterpark': 'Water park', 'natural': 'Natural' };
+function poolCard(p, ref) {
+  const km = (ref && p.coords) ? haversineKm(ref, p.coords) : null;
+  const card = h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [h('strong', {}, p.name), h('span', { class: 'cat-tag' }, POOL_TYPE_LABEL[p.type] || p.type)]),
+    h('p', { class: 'tiny muted', style: 'margin:2px 0' }, km != null
+      ? `📍 ${p.city} · ${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min walk` : ''} · ${compass(bearing(ref, p.coords))}`
+      : p.city),
+    h('p', { class: 'price-line' }, [
+      h('strong', {}, priceLine(p.price.low, p.price.high, p.price.currency)),
+      p.confidence === 'low' ? h('span', { class: 'muted' }, ' · approx.') : null,
+    ]),
+    p.price.note ? h('p', { class: 'muted', style: 'font-size:13px' }, p.price.note) : null,
+    h('p', {}, [h('strong', {}, 'Cleanliness: '), p.cleanliness]),
+    p.hours ? h('p', {}, [h('strong', {}, 'Hours: '), p.hours]) : null,
+    p.facilities && p.facilities.length ? h('p', { class: 'muted' }, p.facilities.join(' · ')) : null,
+    ...((p.tips || []).map((t) => h('div', { class: 'list-note' }, t))),
+    (p.coords || p.mapQuery) ? h('a', { class: 'btn ghost block', style: 'margin-top:6px',
+      href: p.coords ? `https://www.google.com/maps/search/?api=1&query=${p.coords.lat},${p.coords.lng}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapQuery)}`,
+      target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
+  ]);
+  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
+  return card;
+}
+
 function poolsScreen(arg) {
-  const cc = arg || '';
+  let cc = arg || '';
+  const wrap = h('div', { class: 'screen' });
+  // No explicit country? Anchor to where the traveller is, not a global dump.
+  if (!cc) { const f = focusSpot(); cc = (f.spot && f.spot.country) || ''; }
   const country = cc ? getCountry(cc) : null;
   const list = cc ? poolsForCountry(cc) : POOLS.slice();
-  const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(country ? `${country.name} pools` : 'Public pools', cc ? `#country-${cc}` : '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'Public swimming pools, hotel & resort day passes, water parks and managed natural swimming spots. Prices are ranges in local currency and change often — guidance only, confirm locally.'));
   if (!list.length) { wrap.append(h('p', { class: 'muted' }, 'No pools listed for this area yet.')); mount(wrap, '#home'); return; }
-  const groups = {};
-  list.forEach((p) => { (groups[p.city] = groups[p.city] || []).push(p); });
-  Object.keys(groups).forEach((city) => {
-    wrap.append(h('h2', { style: 'margin:16px 0 6px' }, city));
-    groups[city].forEach((p) => {
-      const card = h('div', { class: 'card' }, [
-        h('div', { class: 'row-between' }, [h('strong', {}, p.name), h('span', { class: 'cat-tag' }, POOL_TYPE_LABEL[p.type] || p.type)]),
-        h('p', { class: 'price-line' }, [
-          h('strong', {}, priceLine(p.price.low, p.price.high, p.price.currency)),
-          p.confidence === 'low' ? h('span', { class: 'muted' }, ' · approx.') : null,
-        ]),
-        p.price.note ? h('p', { class: 'muted', style: 'font-size:13px' }, p.price.note) : null,
-        h('p', {}, [h('strong', {}, 'Cleanliness: '), p.cleanliness]),
-        p.hours ? h('p', {}, [h('strong', {}, 'Hours: '), p.hours]) : null,
-        p.facilities && p.facilities.length ? h('p', { class: 'muted' }, p.facilities.join(' · ')) : null,
-        ...((p.tips || []).map((t) => h('div', { class: 'list-note' }, t))),
-        (p.coords || p.mapQuery) ? h('a', { class: 'btn ghost block', style: 'margin-top:6px',
-          href: p.coords ? `https://www.google.com/maps/search/?api=1&query=${p.coords.lat},${p.coords.lng}`
-                          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapQuery)}`,
-          target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
-      ]);
-      if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
-      wrap.append(card);
+
+  // Lead with what is NEAR the traveller (GPS, else their focused city), so a pool
+  // hundreds of km away never sits at the top. Only reorder on a real location signal;
+  // otherwise keep the plain city grouping.
+  const fix = getLastFix();
+  const fs = focusSpot(cc || undefined);
+  const spot = fs && fs.spot;
+  const spotCoords = spot ? (spot.coords || (spot.lat != null ? { lat: spot.lat, lng: spot.lng } : null)) : null;
+  const ref = fix || spotCoords;
+  const refCity = spot ? spot.city : null;
+  const hereFirst = !!ref && (!!fix || fs.source === 'gps' || fs.source === 'focus');
+
+  if (hereFirst) {
+    const withKm = list.filter((p) => p.coords).map((p) => ({ p, km: haversineKm(ref, p.coords) })).sort((a, b) => a.km - b.km);
+    const near = withKm.slice(0, 6);
+    const rest = withKm.slice(6).map((x) => x.p).concat(list.filter((p) => !p.coords));
+    wrap.append(h('h2', { class: 'cat-title', style: 'margin:12px 2px 6px' }, refCity ? `🏊 Nearest to ${refCity}` : '🏊 Nearest to you'));
+    near.forEach((x) => wrap.append(poolCard(x.p, ref)));
+    if (rest.length) {
+      wrap.append(h('details', { class: 'filters-collapse' }, [
+        h('summary', {}, `More pools across ${country ? country.name : 'the region'} · ${rest.length}`),
+        h('div', {}, rest.map((p) => poolCard(p, ref))),
+      ]));
+    }
+  } else {
+    const groups = {};
+    list.forEach((p) => { (groups[p.city] = groups[p.city] || []).push(p); });
+    Object.keys(groups).forEach((city) => {
+      wrap.append(h('h2', { style: 'margin:16px 0 6px' }, city));
+      groups[city].forEach((p) => wrap.append(poolCard(p, null)));
     });
-  });
+  }
   mount(wrap, '#home');
 }
 
@@ -5389,42 +5409,28 @@ function foryouScreen() {
   const prefs = store.profile.prefs;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('For you', '#home'));
-  wrap.append(h('p', { class: 'muted' }, 'Tell the app how you travel and every list ranks what fits you first — and the trip plans match your situation. All of this stays on your device.'));
 
-  const card = h('div', { class: 'card' });
-  card.append(h('h2', {}, 'How are you travelling?'));
-  card.append(h('p', { class: 'muted' }, 'Who is coming?'));
-  card.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
-  // Travelling with a baby is indicated once at the start of use (welcome) and changed
-  // only from Settings → Who's travelling. It is deliberately not a toggle here.
-  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Accessibility needs'));
-  const accRow = h('div', { class: 'chips' });
-  [['mobility', '♿ Mobility'], ['vision', '🦯 Low vision'], ['hearing', '🦻 Hearing']].forEach(([id, lbl]) => {
-    const on = () => (prefs.access || []).includes(id);
-    accRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
-      onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
-  });
-  card.append(accRow);
-  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'How long is the trip?'));
-  card.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
-  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Budget'));
-  card.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
-  card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
-  const intChips = h('div', { class: 'chips' });
-  INTERESTS.forEach((it) => {
-    const on = () => (prefs.interests || []).includes(it.id);
-    intChips.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false', onclick: (e) => {
-      prefs.interests = prefs.interests || [];
-      const i = prefs.interests.indexOf(it.id);
-      if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id);
-      save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false');
-    } }, `${it.emoji} ${it.label}`));
-  });
-  card.append(intChips);
-  card.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: () => go('#foryou') }, 'Show my picks'));
-  wrap.append(card);
+  // "For you" now shows your personalised RESULTS. The traveller profile that drives them
+  // (who's travelling, baby, accessibility, trip length, budget, interests) is set in ONE
+  // place — Settings — so preferences are not scattered across the app.
+  if (!profileIsSet()) {
+    wrap.append(h('p', { class: 'muted' }, 'Set who you are and how you travel, and every list ranks what fits you first — and the trip plans match your situation. It all stays on your device.'));
+    wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#settings') }, '⚙️ Set up your travel profile in Settings'));
+    mount(wrap, '#home');
+    return;
+  }
+  const profSummary = [
+    prefs.party && ({ solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[prefs.party]),
+    prefs.withBaby && 'with a baby',
+    prefs.tripLength && ({ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[prefs.tripLength]),
+    prefs.budget && ({ low: 'budget', mid: 'mid', high: 'higher-end', flexible: 'flexible budget' }[prefs.budget]),
+  ].filter(Boolean).join(' · ');
+  wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap:8px' }, [
+    h('p', { class: 'muted', style: 'margin:0' }, profSummary ? `Ranked for: ${profSummary}` : 'Ranked to how you travel.'),
+    h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit profile'),
+  ]));
 
-  if (profileIsSet()) {
+  {
     // top personalised picks in the active country
     const picks = allPlaces({ country: activeCountry }).slice().sort((a, b) => personalScore(b) - personalScore(a)).slice(0, 5);
     const c = getCountry(activeCountry);
@@ -5759,6 +5765,19 @@ function settingsScreen() {
   who.append(field('Accessibility needs', accChips));
   who.append(field('Trip length', selectEl([['', 'Not set'], ['short', 'Short (≤1 week)'], ['medium', '2–3 weeks'], ['long', '1 month+']],
     p.prefs.tripLength || '', (v) => { p.prefs.tripLength = v; save(); })));
+  who.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Budget and interests are set in the profile card above.'));
+  // The guides that go WITH this profile (family/kids, baby supplies, accessibility) live
+  // right here in Settings too, resolved to where the traveller is focused — so "travelling
+  // with baby and kids and all that" is set AND opened from one place.
+  const whoCC = focusSpot().spot.country;
+  const guideLinks = [];
+  if ((p.prefs.party === 'family' || p.prefs.withBaby) && getFamily(whoCC))
+    guideLinks.push(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#family-${whoCC}`) }, '👨‍👩‍👧 Travelling with kids — schools, childcare & things to do'));
+  if (p.prefs.withBaby)
+    guideLinks.push(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#baby-${whoCC}`) }, '🍼 Baby: nappies, formula & family help'));
+  if ((p.prefs.access || []).length && getAccessibility(whoCC))
+    guideLinks.push(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#access-${whoCC}`) }, '♿ Accessibility where you are'));
+  if (guideLinks.length) { who.append(h('p', { class: 'muted', style: 'margin:12px 0 2px' }, 'Guides for your situation')); guideLinks.forEach((b) => who.append(b)); }
   wrap.append(who);
 
   // live translate
@@ -5901,7 +5920,14 @@ function render() {
   }
 }
 
-window.addEventListener('hashchange', () => { stopSpeak(); render(); });
+window.addEventListener('hashchange', () => {
+  stopSpeak();
+  // Record where we came from for history-aware Back, unless this change WAS a Back.
+  if (poppingBack) { poppingBack = false; }
+  else if (lastHash && lastHash !== location.hash) { navStack.push(lastHash); if (navStack.length > 60) navStack.shift(); }
+  lastHash = location.hash;
+  render();
+});
 // Auto day/night flips as the user navigates (applyTheme runs each render); this keeps a
 // left-open app in step with dawn/dusk too. Only re-applies while on the auto Classic theme.
 setInterval(() => {
