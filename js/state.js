@@ -3,7 +3,7 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 10;
+const CURRENT_VERSION = 11;
 
 function defaults() {
   return {
@@ -94,6 +94,11 @@ function defaults() {
     },
     // --- v9: the user's own posts on city noticeboards (on-device; shareable via links) ---
     boardPosts: {},   // { '<cc>-<citySlug>': [ { id, topic, text, at } ] }
+    // --- v11: private personal calendar (cycle/period, mood, symptoms, intimacy, pregnancy).
+    // Deeply private, on-device only, opt-in (default OFF), optional PIN. Managed by
+    // js/personal.js; kept here so it is carried through updates and the backup. NEVER
+    // uploaded and never committed. { enabled, pinHash, partners[], days{}, layers{}, pregnancy }
+    personal: { enabled: false, pinHash: null, partners: [], defaultPartnerId: null, showCycle: true, days: {}, layers: {}, pregnancy: null },
   };
 }
 
@@ -134,6 +139,9 @@ function migrate(data) {
       };
     })(),
     boardPosts: (data.boardPosts && typeof data.boardPosts === 'object' && !Array.isArray(data.boardPosts)) ? data.boardPosts : {},
+    // Private personal calendar — carried forward verbatim (js/personal.js normalizes the
+    // inner shape lazily); only reset to the empty default if it is missing or malformed.
+    personal: (data.personal && typeof data.personal === 'object' && !Array.isArray(data.personal)) ? data.personal : base.personal,
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -235,6 +243,7 @@ export function resetAll() {
   store.savedAreas = fresh.savedAreas;
   store.social = fresh.social;
   store.boardPosts = fresh.boardPosts;
+  store.personal = fresh.personal;
   save();
 }
 
@@ -284,10 +293,11 @@ export function updateBudgetItem(id, patch = {}) {
 }
 
 // --- travel journal ----------------------------------------------------------
-export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null }) {
+export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null, weather = '' }) {
   const when = ts || new Date().toISOString();
   const e = { id: uid('jr'), ts: when, date: when.slice(0, 10),
-    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords, photoKey };
+    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords, photoKey,
+    weather: String(weather || '').slice(0, 80) };
   store.journal.entries.push(e);
   store.journal.entries.sort((a, b) => (a.ts < b.ts ? -1 : 1));
   save(); return e;
@@ -300,6 +310,7 @@ export function updateJournalEntry(id, patch = {}) {
   if (patch.place !== undefined) e.place = patch.place;
   if (patch.coords !== undefined) e.coords = patch.coords;
   if (patch.photoKey !== undefined) e.photoKey = patch.photoKey;
+  if (patch.weather !== undefined) e.weather = String(patch.weather || '').slice(0, 80);
   e.editedAt = new Date().toISOString();
   save(); return e;
 }
