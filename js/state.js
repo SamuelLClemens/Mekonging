@@ -299,10 +299,12 @@ export function updateBudgetItem(id, patch = {}) {
 }
 
 // --- travel journal ----------------------------------------------------------
-export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null, weather = '' }) {
+export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null, photoKeys = null, weather = '' }) {
   const when = ts || new Date().toISOString();
+  const keys = Array.isArray(photoKeys) ? photoKeys.filter(Boolean) : (photoKey ? [photoKey] : []);
   const e = { id: uid('jr'), ts: when, date: when.slice(0, 10),
-    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords, photoKey,
+    title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords,
+    photoKeys: keys, photoKey: keys[0] || null,   // photoKey kept = first photo, for older readers
     weather: String(weather || '').slice(0, 80) };
   store.journal.entries.push(e);
   store.journal.entries.sort((a, b) => (a.ts < b.ts ? -1 : 1));
@@ -315,7 +317,8 @@ export function updateJournalEntry(id, patch = {}) {
   if (patch.text !== undefined) e.text = String(patch.text || '');
   if (patch.place !== undefined) e.place = patch.place;
   if (patch.coords !== undefined) e.coords = patch.coords;
-  if (patch.photoKey !== undefined) e.photoKey = patch.photoKey;
+  if (patch.photoKeys !== undefined) { e.photoKeys = Array.isArray(patch.photoKeys) ? patch.photoKeys.filter(Boolean) : []; e.photoKey = e.photoKeys[0] || null; }
+  else if (patch.photoKey !== undefined) { e.photoKey = patch.photoKey; e.photoKeys = patch.photoKey ? [patch.photoKey] : []; }
   if (patch.weather !== undefined) e.weather = String(patch.weather || '').slice(0, 80);
   e.editedAt = new Date().toISOString();
   save(); return e;
@@ -325,6 +328,29 @@ export function deleteJournalEntry(id) {
   if (i >= 0) { store.journal.entries.splice(i, 1); save(); }
 }
 export function journalEntries() { return store.journal.entries.slice().sort((a, b) => (a.ts < b.ts ? -1 : 1)); }
+
+// --- photo album (pictures the user adds directly; blobs live in IndexedDB) ------
+export function getAlbum() {
+  if (!store.album || typeof store.album !== 'object') store.album = { photos: [] };
+  if (!Array.isArray(store.album.photos)) store.album.photos = [];
+  return store.album.photos;
+}
+export function addAlbumPhoto({ key, caption = '', date = null }) {
+  if (!key) return null;
+  const ph = { id: uid('alb'), key, caption: String(caption || '').slice(0, 200), date: date || todayKey() };
+  getAlbum().push(ph); save(); return ph;
+}
+export function updateAlbumPhoto(id, patch = {}) {
+  const ph = getAlbum().find((x) => x.id === id);
+  if (!ph) return null;
+  if (patch.caption !== undefined) ph.caption = String(patch.caption || '').slice(0, 200);
+  if (patch.date !== undefined) ph.date = patch.date;
+  save(); return ph;
+}
+export function deleteAlbumPhoto(id) {
+  const a = getAlbum(); const i = a.findIndex((x) => x.id === id);
+  if (i >= 0) { a.splice(i, 1); save(); }
+}
 
 // --- travel calendar ---------------------------------------------------------
 // Order by date then time; undated-time items sort to the end of their day.
