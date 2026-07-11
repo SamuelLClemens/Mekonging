@@ -143,7 +143,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.166.0';
+const APP_VERSION = 'mk-v0.167.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -766,6 +766,23 @@ function freshnessNotice(dateStr, officialUrl, officialName, staleDays = 150) {
     h('strong', {}, '⚠ This may be out of date'),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Last verified ${dateStr} (about ${months} month${months === 1 ? '' : 's'} ago). Visa and entry rules change often — reconfirm on the official government portal for your nationality before you rely on this.`),
     officialUrl ? h('a', { class: 'btn block', href: officialUrl, target: '_blank', rel: 'noopener' }, `🔄 Check ${officialName || 'the official portal'} now ↗`) : null,
+  ]);
+}
+
+// A lighter freshness line for slower-moving reference data (prices, schedules) that has no
+// single authoritative portal to deep-link. Same self-checking age logic as visa: quiet
+// "verified" note while fresh, a plain "may be out of date — confirm locally" card once it
+// ages past staleDays. Keeps the honest self-update promise consistent across the app.
+function freshnessLine(dateStr, noun = 'This data', staleDays = 365) {
+  const age = dataAgeDays(dateStr);
+  if (age == null) return null;
+  if (age <= staleDays) {
+    return h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `✓ ${noun} verified ${dateStr}; the app re-checks this date on every open and flags it here once it ages.`);
+  }
+  const months = Math.max(1, Math.round(age / 30));
+  return h('div', { class: 'card', style: 'border:1px solid var(--orange); margin:6px 0' }, [
+    h('strong', {}, `⚠ ${noun} may be out of date`),
+    h('p', { class: 'muted', style: 'margin:4px 0 0' }, `Last verified ${dateStr} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
   ]);
 }
 
@@ -2114,7 +2131,7 @@ function starsStr(n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) ||
 function ratingBlock(p) {
   return h('div', { class: 'rating-block' }, [
     h('span', { class: 'stars-static' }, starsStr(p.rating)),
-    h('span', { class: 'muted' }, ` ${Number(p.rating).toFixed(1)} · synthesised from ${(p.reviewSources || []).join(', ') || 'multiple sources'}`),
+    h('span', { class: 'muted' }, ` ${Number(p.rating).toFixed(1)} · editorial estimate from ${(p.reviewSources || []).join(', ') || 'multiple public sources'}, not a live score`),
     h('a', { class: 'rev-link', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'See live reviews'),
   ]);
 }
@@ -2310,13 +2327,21 @@ function externalRatingsCard(p) {
   const card = h('div', { class: 'card' }, [h('h2', {}, 'Across the web')]);
 
   if (ext.length || own > 0) {
-    const stars = ext.map((e) => extStars(e.score, e.scale)).filter((n) => !isNaN(n));
-    const blended = stars.length ? stars.reduce((a, b) => a + b, 0) / stars.length : 0;
+    // Blend the sites' scores weighted by review volume, so a site with 50,000 reviews
+    // outweighs one with 86; fall back to a simple mean when no counts are present.
+    const scored = ext.map((e) => ({ star: extStars(e.score, e.scale), w: Number(e.count) || 0 })).filter((x) => !isNaN(x.star));
+    const totalW = scored.reduce((a, x) => a + x.w, 0);
+    const blended = !scored.length ? 0
+      : totalW > 0
+        ? scored.reduce((a, x) => a + x.star * (x.w || 1), 0) / scored.reduce((a, x) => a + (x.w || 1), 0)
+        : scored.reduce((a, x) => a + x.star, 0) / scored.length;
     const overall = own > 0 ? own : blended;
     if (overall > 0) {
+      const how = own > 0 ? ' · your rating counts first'
+        : scored.length > 1 ? (totalW > 0 ? ' · weighted by review volume' : ' · averaged across sites') : '';
       card.append(h('div', { class: 'rating-block' }, [
         h('span', { class: 'stars-static' }, starsStr(overall)),
-        h('span', { class: 'muted' }, ` ${overall.toFixed(1)} overall${own > 0 ? ' · your rating counts first' : (stars.length > 1 ? ' · averaged across sites' : '')}`),
+        h('span', { class: 'muted' }, ` ${overall.toFixed(1)} overall${how}`),
       ]));
     }
     if (own > 0) card.append(extRow('You', `${starsStr(own)} ${own.toFixed(1)}`));
@@ -2467,7 +2492,10 @@ function placeScreen(id) {
     photoBlock(p, p.name),
     p.blurb ? h('p', {}, p.blurb) : null,
   ]);
-  if (p.rating) card.append(ratingBlock(p));
+  // Show the synthesised rating only when there is no real external-ratings snapshot; when
+  // externalRatings exists it is the single source of truth (rendered lower down), so the two
+  // can no longer sit side by side showing slightly different numbers.
+  if (p.rating && !(Array.isArray(p.externalRatings) && p.externalRatings.length)) card.append(ratingBlock(p));
   if (p.history) { card.append(h('h3', {}, 'A little history'), h('p', {}, p.history)); }
   if (p.whyItFits) { card.append(h('h3', {}, 'Why it fits you'), h('p', {}, p.whyItFits)); }
   if (hasPrice) {
@@ -2611,6 +2639,8 @@ function pricesScreen(countryId) {
       moreCard,
     ]));
   }
+  const priceFresh = freshnessLine(data.verified, 'Prices', 365);
+  if (priceFresh) wrap.append(priceFresh);
   wrap.append(sourcesNote(data.sources, data.verified));
   mount(wrap, '#prices');
 }
@@ -4681,8 +4711,8 @@ function schedulesScreen(country) {
       `${f.flag} ${f.name}`)));
   wrap.append(chips);
 
-  wrap.append(h('p', { class: 'muted', style: 'text-align:center;margin:6px 0' },
-    `Reference timetable, verified ${SCHEDULES_VERIFIED} · built into the app and updated with app updates`));
+  const schedFresh = freshnessLine(SCHEDULES_VERIFIED, 'Reference timetable', 365);
+  if (schedFresh) wrap.append(schedFresh);
 
   const listEl = h('div', {});
   wrap.append(listEl);
