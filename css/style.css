@@ -16,7 +16,7 @@
   --ink: #3A2415;        --ink-soft: #7A5A3C;
 
   /* Roles */
-  --good: #1F7A47;       --warn: #C0431A;
+  --good: #1F7A47;       --warn: #A8380F;   /* darkened for AA contrast on cream (5.45:1) */
   --tier-low: #1F7A47;   --tier-mid: #E07A1F;  --tier-high: #D6336C;
 
   /* Signature gradients */
@@ -47,6 +47,7 @@ html[data-theme="dark"] {
   --cream: #201038; --card: #2C1A4A; --line: #4A2F6E;
   --ink: #F7E4C4; --ink-soft: #C9A9D9;
   --sun: #F6BD55; --orange: #FF7A40; --magenta: #FF5C95; --teal: #2FD0C4;
+  --warn: #FF6B4A;   /* brighter warning text so it stays AA-readable on the dark surface (6.25:1) */
   --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
       rgba(255,122,64,0.16) 0deg 9deg, rgba(47,208,196,0.10) 9deg 18deg);
   --shadow: 0 8px 24px rgba(0,0,0,0.5);
@@ -163,8 +164,11 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
 .topbar-sos:hover { background: rgba(214, 51, 108, 0.16); }
 .rn-wx-link {
   border: none; background: none; padding: 0; cursor: pointer; font: inherit;
-  color: var(--teal); font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
+  color: var(--teal-deep); font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
 }
+/* Dark surfaces need the bright teal (the deep teal would vanish); light keeps the deep
+   teal so this underlined link clears AA on cream (6.1:1 vs the 2.6:1 of plain --teal). */
+html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .rn-wx-link:hover { filter: brightness(1.1); }
 .filters-collapse { margin: 4px 0 10px; }
 .filters-collapse > summary {
