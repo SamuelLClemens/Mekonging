@@ -77,12 +77,18 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
-// Classic light/dark, honouring 'auto' = light by day, dark after dark. Uses the local
-// clock (06:00–18:00 = day), which tracks near-equatorial SE-Asia daylight well and needs
-// no network, so it works offline.
+// Classic light/dark. 'auto' first honours the DEVICE dark-mode setting (so a phone kept
+// in dark mode is respected all day, matching platform convention); when the device
+// expresses no dark preference it falls back to the local clock (06:00–18:00 = light),
+// which tracks near-equatorial SE-Asia daylight and needs no network, so it works offline.
+function systemPrefersDark() {
+  try { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
+  catch { return false; }
+}
 function classicMode() {
   const t = store.profile.theme || 'auto';
   if (t === 'light' || t === 'dark') return t;
+  if (systemPrefersDark()) return 'dark';
   const hr = new Date().getHours();
   return (hr >= 6 && hr < 18) ? 'light' : 'dark';
 }
@@ -102,6 +108,15 @@ function applyTheme() {
   }
   root.setAttribute('data-reduced-motion', prefersReducedMotion() ? 'on' : 'off');
   root.setAttribute('data-text', store.profile.textScale || 'm');
+  // Keep the browser/OS chrome (address bar, iOS status bar) in step with the active
+  // theme or skin, so a dark night theme does not sit under a bright orange bar. Reads
+  // the resolved surface token so every skin tints the chrome for free.
+  try {
+    const cs = getComputedStyle(root);
+    const surface = (cs.getPropertyValue('--bg') || cs.getPropertyValue('--cream') || '').trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && surface) meta.setAttribute('content', surface);
+  } catch { /* getComputedStyle unavailable */ }
 }
 // Tell the TTS layer which languages have a downloaded audio pack, so canSay()
 // reports audio as available offline for them (e.g. Khmer/Lao with no device voice).
@@ -128,7 +143,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.163.0';
+const APP_VERSION = 'mk-v0.164.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6651,7 +6666,7 @@ function settingsScreen() {
     ]),
   ])));
 
-  card.append(field('Day / night (Classic only)', selectEl([['auto', 'Auto — light by day, dark at night'], ['light', 'Always light'], ['dark', 'Always dark']], p.theme || 'auto',
+  card.append(field('Day / night (Classic only)', selectEl([['auto', 'Auto — match your device, else light by day'], ['light', 'Always light'], ['dark', 'Always dark']], p.theme || 'auto',
     (v) => { p.theme = v; save(); applyTheme(); })));
 
   card.append(field('Reduce motion', selectEl([['auto', 'Auto (system)'], ['on', 'On'], ['off', 'Off']], p.reducedMotion,
@@ -6922,6 +6937,13 @@ window.addEventListener('hashchange', () => {
 setInterval(() => {
   if ((store.profile.skin || 'classic') === 'classic' && (store.profile.theme || 'auto') === 'auto') applyTheme();
 }, 10 * 60 * 1000);
+// React immediately when the traveller flips their device between light and dark while on
+// the auto Classic theme, so the app tracks the OS setting without waiting for a navigation.
+try {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if ((store.profile.skin || 'classic') === 'classic' && (store.profile.theme || 'auto') === 'auto') applyTheme();
+  });
+} catch { /* older browsers: the interval + per-render applyTheme still cover it */ }
 // Re-render when device voices finish loading so speak buttons enable on the phrasebook.
 if (typeof window !== 'undefined' && window.speechSynthesis) {
   try { window.speechSynthesis.addEventListener('voiceschanged', () => {
