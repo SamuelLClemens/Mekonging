@@ -74,7 +74,49 @@ import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ 
 // In the native iOS wrapper the app is served over a custom scheme where SW cannot
 // run and is not needed (all assets are bundled on-device), so skip it there.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // When a new version installs while the app is already open, offer a one-tap refresh
+      // instead of silently letting a fresh cache serve into the currently-loaded modules.
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast();
+        });
+      });
+    }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
+  });
+}
+
+// A small, non-blocking "update ready" toast pinned above the tab bar. Tapping it reloads
+// so the newly-cached version takes over cleanly.
+let updateToastShown = false;
+function showUpdateToast() {
+  if (updateToastShown) return;
+  updateToastShown = true;
+  const toast = h('div', { class: 'update-toast', role: 'status' }, [
+    h('span', {}, 'A new version is ready.'),
+    h('button', { class: 'update-toast-btn', onclick: () => location.reload() }, 'Refresh'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: () => toast.remove() }, '✕'),
+  ]);
+  document.body.append(toast);
+}
+
+// Capture the Android/Chrome install prompt so the app can offer an "Install" button in
+// Settings (browsers only fire this once, and only when the PWA is installable). Cleared
+// once installed. iOS Safari never fires it, so Settings shows a Share-sheet hint instead.
+let deferredInstallPrompt = null;
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if ((location.hash || '').startsWith('#settings')) render();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    if ((location.hash || '').startsWith('#settings')) render();
+  });
 }
 
 // Classic light/dark. 'auto' first honours the DEVICE dark-mode setting (so a phone kept
@@ -143,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.167.0';
+const APP_VERSION = 'mk-v0.168.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6682,6 +6724,27 @@ function settingsScreen() {
   const p = store.profile;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Settings'));
+
+  // Install (Add to Home Screen) — keep the offline companion one tap away. Android/Chrome
+  // expose a captured prompt; iOS Safari needs the Share sheet; hidden once already installed.
+  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (!standalone) {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    const ic = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '📲 Install the app')]);
+    if (deferredInstallPrompt) {
+      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Add Mekonging to your home screen so it opens like an app and stays available offline.'));
+      ic.append(h('button', { class: 'btn', onclick: async () => {
+        const dp = deferredInstallPrompt; if (!dp) return;
+        dp.prompt(); try { await dp.userChoice; } catch { /* dismissed */ }
+        deferredInstallPrompt = null; render();
+      } }, '➕ Install app'));
+    } else if (isIOS) {
+      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'On iPhone or iPad: tap the Share button in Safari, then “Add to Home Screen”, to keep Mekonging one tap away and fully offline.'));
+    } else {
+      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Use your browser menu → “Install app” or “Add to Home Screen” to keep Mekonging on your home screen and available offline.'));
+    }
+    wrap.append(ic);
+  }
 
   // Journey phase — always switchable here, so Home never has to drag the traveller
   // back to the picker once they have chosen a stage.
