@@ -40,3 +40,23 @@ export async function delBlob(key) {
     tx.onerror = () => res();
   });
 }
+
+// Every stored blob with its key — used to bundle photos into a full on-device backup.
+// Returns [{ key, blob }]; resolves to [] on any error so a backup never fails on media.
+export async function getAllBlobs() {
+  try {
+    const db = await open();
+    return await new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const os = tx.objectStore(STORE);
+      const keysReq = os.getAllKeys();
+      const valsReq = os.getAll();
+      tx.oncomplete = () => {
+        const keys = keysReq.result || [];
+        const vals = valsReq.result || [];
+        res(keys.map((k, i) => ({ key: k, blob: vals[i] })));
+      };
+      tx.onerror = () => rej(tx.error);
+    });
+  } catch { return []; }
+}

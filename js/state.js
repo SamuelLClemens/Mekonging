@@ -18,6 +18,10 @@ function defaults() {
         party: '',              // '' | 'solo' | 'couple' | 'family'
         withBaby: false,        // travelling with a baby/toddler — surfaces nappies/formula/family help
         access: [],             // accessibility needs, subset of ['mobility','vision','hearing']
+        // Dietary restrictions & allergies. Drives the food-identifier highlighting
+        // (green = no flagged conflict, red = contains something to avoid) and the pinned
+        // allergy card in the phrasebook. Subset of DIET_OPTIONS ids (see js/main.js).
+        diet: [],               // e.g. ['peanut','shellfish','vegetarian','halal','gluten']
         tripLength: '',         // '' | 'short' (≤1wk) | 'medium' (2–3wk) | 'long' (1mo+)
         // Journey phase: shapes what Home leads with. '' = not chosen yet (Home prompts).
         phase: '',              // '' | 'planning' | 'arrived' | 'traveling' | 'post'

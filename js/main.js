@@ -25,7 +25,7 @@ import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
 import { CROSSINGS } from './data/borders.js';
-import { putBlob, getBlob, delBlob } from './idb.js';
+import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
 import {
   available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
   lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
@@ -185,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.168.0';
+const APP_VERSION = 'mk-v0.169.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -229,6 +229,7 @@ const ICON_PATH = {
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.6 1.3c0 1.6-2.1 2-2.1 3.5"/><path d="M12 17h.01"/>',
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 9v5M12 17h.01"/>',
+  heart: '<path d="M12 20s-6.5-4.3-9-8.2C1.1 8.5 2.8 5 6.2 5c2 0 3.3 1.1 3.8 2.2C10.5 6.1 11.8 5 13.8 5c3.4 0 5.1 3.5 3.2 6.8C18.5 15.7 12 20 12 20z"/>',
 };
 const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 // A leading line-icon for an action chip; inherits the chip's text colour (incl. the
@@ -307,6 +308,7 @@ const TAB_FOR_HEAD = {
   trip: '#home', expenses: '#home', bargain: '#home', currency: '#home', checklist: '#home',
   plans: '#home', foryou: '#home', vault: '#home', help: '#home', feedback: '#home',
   circle: '#home', add: '#home', in: '#home', inbox: '#home', thread: '#home', msg: '#home', sos: '#home',
+  donate: '#home',
 };
 function activeTabForHash() {
   const head = (location.hash || '#home').replace(/^#/, '').split('-')[0];
@@ -1149,6 +1151,7 @@ function homeScreen() {
       { ic: ICON.suitcase, t: 'Log expenses', d: 'Track spend vs your budget', hash: '#expenses' },
       { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
       { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
+      { ic: ICON.heart, t: 'Give back', d: 'Support local causes', hash: '#donate' },
       { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
       { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
       { ic: ICON.gear, t: 'Settings', d: 'Who’s travelling, theme, phase', hash: '#settings' },
@@ -1166,6 +1169,13 @@ function homeScreen() {
       h('div', { class: 'grid' }, g.items.map(tileBtn)),
     ]));
   });
+
+  // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
+  wrap.append(h('div', { class: 'card give-back', style: 'margin-top:10px' }, [
+    h('strong', {}, '❤️ Give back to the region'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
+    h('button', { class: 'btn block', onclick: () => go('#donate') }, 'See causes to support'),
+  ]));
 
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
@@ -1684,6 +1694,24 @@ function audioPackControl(code, book) {
   return card;
 }
 
+// A pinned "show this to the cook" allergy card at the very top of the phrasebook. Leads
+// with the traveller's saved restrictions; always includes the general allergy phrase.
+// Uses only the existing translated ALLERGENS phrases — never a fabricated translation.
+function allergyPinnedCard(code, book) {
+  const phrases = allergyPhrasesForProfile(code);
+  if (!phrases.length) return null;
+  const diet = store.profile.prefs.diet || [];
+  const card = h('div', { class: 'card allergy-card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '⚠️ Allergy & diet — show the cook'));
+  card.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, diet.length
+    ? 'Your saved restrictions, ready to show. Tap a line to enlarge it, 🔊 to speak it. Always double-check in person.'
+    : 'The essential phrase — set your allergies in Settings and your exact phrases pin here. Tap a line to enlarge it.'));
+  phrases.forEach((p) => card.append(phraseRow(p, book.locale)));
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#settings') },
+    diet.length ? '✎ Edit my restrictions' : '➕ Set my allergies & diet'));
+  return card;
+}
+
 function phrasebookScreen(lang) {
   const code = lang || store.profile.defaultLang || langForCountry(activeCountry);
   const book = getLanguage(code);
@@ -1698,6 +1726,10 @@ function phrasebookScreen(lang) {
     }, b.label))));
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
+
+  // Safety-critical: pin the allergy/diet card ABOVE everything else so it is one tap away.
+  const allergyCard = allergyPinnedCard(code, book);
+  if (allergyCard) wrap.append(allergyCard);
 
   const voiceOk = hasVoiceFor(book.locale);
   if (!voiceOk) {
@@ -4339,10 +4371,113 @@ function calendarFormScreen(editId, prefill) {
   mount(wrap, '#home');
 }
 
+// ---- DIETARY PROFILE (allergies + diet) -------------------------------------
+// Powers the food-identifier highlighting and the pinned phrasebook allergy card.
+// SAFETY: the highlighting is guidance drawn from each dish's LISTED allergens, never a
+// guarantee. A green border means "nothing you avoid is listed", not "confirmed safe";
+// recipes and shared woks vary. The real safety tool is showing the cook the translated
+// allergy phrase (phrasebook). Diet choices the data cannot verify (halal, kosher,
+// no-pork/beef/alcohol) never colour a dish — they only pin the right phrases + guidance.
+const DIET_OPTIONS = [
+  { group: 'Allergies — flagged on dishes', items: [
+    { id: 'peanut', label: 'Peanuts', emoji: '🥜' },
+    { id: 'tree nut', label: 'Tree nuts', emoji: '🌰' },
+    { id: 'shellfish', label: 'Shellfish', emoji: '🦐' },
+    { id: 'fish', label: 'Fish', emoji: '🐟' },
+    { id: 'egg', label: 'Egg', emoji: '🥚' },
+    { id: 'dairy', label: 'Dairy / milk', emoji: '🥛' },
+    { id: 'soy', label: 'Soy', emoji: '🫘' },
+    { id: 'gluten', label: 'Gluten / wheat (celiac)', emoji: '🌾' },
+    { id: 'sesame', label: 'Sesame', emoji: '🫓' },
+  ] },
+  { group: 'Diet & beliefs', items: [
+    { id: 'vegetarian', label: 'Vegetarian', emoji: '🥗' },
+    { id: 'vegan', label: 'Vegan', emoji: '🌱' },
+    { id: 'pescatarian', label: 'Pescatarian', emoji: '🐠' },
+    { id: 'halal', label: 'Halal', emoji: '🕌' },
+    { id: 'kosher', label: 'Kosher', emoji: '✡️' },
+    { id: 'no-pork', label: 'No pork', emoji: '🐖' },
+    { id: 'no-beef', label: 'No beef', emoji: '🐄' },
+    { id: 'no-alcohol', label: 'No alcohol', emoji: '🚫' },
+    { id: 'no-msg', label: 'No MSG', emoji: '🧂' },
+    { id: 'no-chili', label: 'Not spicy at all', emoji: '🌶' },
+  ] },
+];
+const DIET_LABEL = Object.fromEntries(DIET_OPTIONS.flatMap((g) => g.items).map((it) => [it.id, it]));
+
+// The allergen keys (matching FOOD_ALLERGENS) a profile means to avoid — including the
+// ones implied by a vegetarian/vegan choice. Only these can colour a dish red.
+function dietAvoidAllergens(diet) {
+  const set = new Set();
+  for (const key of (diet || store.profile.prefs.diet || [])) {
+    if (FOOD_ALLERGENS.includes(key)) set.add(key);
+    if (key === 'vegetarian') { set.add('fish'); set.add('shellfish'); }
+    if (key === 'vegan') { set.add('fish'); set.add('shellfish'); set.add('egg'); set.add('dairy'); }
+  }
+  return set;
+}
+
+// Verdict for one dish vs. the saved profile: 'bad' (lists something to avoid), 'ok'
+// (nothing flagged — still confirm), or '' (no profile set → no border).
+function dishDietVerdict(d, avoid) {
+  const av = avoid || dietAvoidAllergens();
+  if (!av.size) return '';
+  return (d.allergens || []).some((a) => av.has(a)) ? 'bad' : 'ok';
+}
+
+// A reusable chip picker for the dietary profile. onChange() fires after each toggle.
+function dietPicker(onChange) {
+  const sel = new Set(store.profile.prefs.diet || []);
+  const box = h('div', {});
+  DIET_OPTIONS.forEach((grp) => {
+    box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, grp.group));
+    box.append(h('div', { class: 'chips' }, grp.items.map((it) =>
+      h('button', {
+        class: 'chip', 'aria-pressed': sel.has(it.id) ? 'true' : 'false',
+        onclick: (e) => {
+          if (sel.has(it.id)) sel.delete(it.id); else sel.add(it.id);
+          store.profile.prefs.diet = [...sel]; save();
+          e.currentTarget.setAttribute('aria-pressed', sel.has(it.id) ? 'true' : 'false');
+          if (onChange) onChange();
+        },
+      }, `${it.emoji} ${it.label}`))));
+  });
+  return box;
+}
+
+// Map the saved profile to the EXISTING translated allergy phrases (never fabricate a
+// safety-critical translation). Returns an ordered, de-duplicated phrase list for `code`,
+// always led by the general "I have a food allergy" phrase.
+function allergyPhrasesForProfile(code, diet) {
+  const list = (ALLERGENS[code] && ALLERGENS[code].length) ? ALLERGENS[code] : [];
+  if (!list.length) return [];
+  const RX = {
+    general: /food allergy/i, egg: /\begg/i, peanut: /peanut/i, treenut: /tree nut/i,
+    shellfish: /shellfish|seafood/i, fish: /^no fish/i, dairy: /dairy|milk/i, soy: /\bsoy/i,
+    gluten: /gluten|wheat/i, msg: /msg/i, chili: /chili|spicy/i,
+  };
+  const KEYS = {
+    egg: ['egg'], peanut: ['peanut'], 'tree nut': ['treenut'], shellfish: ['shellfish'],
+    fish: ['fish'], dairy: ['dairy'], soy: ['soy'], gluten: ['gluten'], sesame: [],
+    vegetarian: ['fish', 'shellfish'], vegan: ['fish', 'shellfish', 'egg', 'dairy'],
+    'no-msg': ['msg'], 'no-chili': ['chili'],
+  };
+  const wanted = ['general'];
+  for (const id of (diet || store.profile.prefs.diet || [])) (KEYS[id] || []).forEach((k) => wanted.push(k));
+  const out = []; const seen = new Set();
+  for (const k of wanted) {
+    const rx = RX[k]; if (!rx) continue;
+    const found = list.find((p) => rx.test(p.en));
+    if (found && !seen.has(found.en)) { seen.add(found.en); out.push(found); }
+  }
+  return out;
+}
+
 // ---- FOOD / DISH IDENTIFIER -------------------------------------------------
 let foodCountry = '';
 let foodQuery = '';
 let foodCat = '';
+let foodFitOnly = false;
 const foodAvoid = new Set();
 function spiceLabel(s) {
   return s === 'hot' ? '🌶🌶🌶 Hot' : s === 'medium' ? '🌶🌶 Medium'
@@ -4351,12 +4486,20 @@ function spiceLabel(s) {
 
 function foodCard(d) {
   const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
-  return h('button', { class: 'card species-card', onclick: () => go(`#dish-${d.id}`) }, [
+  const verdict = dishDietVerdict(d);
+  const cls = 'card species-card' + (verdict === 'bad' ? ' food-bad' : verdict === 'ok' ? ' food-ok' : '');
+  const badge = verdict === 'bad'
+    ? h('span', { class: 'food-flag bad', title: 'Contains something you avoid' }, '✕')
+    : verdict === 'ok'
+      ? h('span', { class: 'food-flag ok', title: 'Nothing you avoid is listed — still confirm' }, '✓')
+      : null;
+  return h('button', { class: cls, onclick: () => go(`#dish-${d.id}`) }, [
     h('span', { class: 'species-emoji' }, cat ? cat.emoji : '🍽'),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
       h('div', { class: 'sci' }, `${d.localName || ''}${d.roman ? ` · ${d.roman}` : ''}`),
     ]),
+    badge,
     h('span', { class: 'fair' }, d.price ? range(d.price.low, d.price.high, d.price.currency) : ''),
   ]);
 }
@@ -4365,7 +4508,7 @@ function foodScreen(country) {
   if (country) foodCountry = country;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify food', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Use “Avoid” to hide dishes that contain an allergen.'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Set your allergies and diet below and dishes are highlighted for you — green fits, red to avoid. Use “Avoid” to hide dishes with an allergen.'));
 
   const cFilters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const cChips = h('div', { class: 'chips' }, cFilters.map((f) =>
@@ -4392,6 +4535,32 @@ function foodScreen(country) {
       `🚫 ${a}`)));
   wrap.append(avoidChips);
 
+  // Your dietary profile: highlight dishes that fit you + one tap to your allergy phrases.
+  const diet = store.profile.prefs.diet || [];
+  const profBox = h('div', { class: 'card diet-legend', style: 'margin:12px 0' });
+  if (diet.length) {
+    profBox.append(h('p', { style: 'margin:0 0 6px' }, [
+      h('strong', {}, '🍽 Highlighting for: '),
+      diet.map((id) => (DIET_LABEL[id] ? `${DIET_LABEL[id].emoji} ${DIET_LABEL[id].label}` : id)).join(', '),
+    ]));
+    profBox.append(h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, [
+      h('span', { class: 'food-flag ok' }, '✓'), ' green = nothing you avoid is listed · ',
+      h('span', { class: 'food-flag bad' }, '✕'), ' red = contains something you avoid. Guidance from listed allergens only — always confirm with the cook.',
+    ]));
+    profBox.append(h('div', { class: 'chips' }, [
+      h('button', { class: 'chip', 'aria-pressed': foodFitOnly ? 'true' : 'false',
+        onclick: (e) => { foodFitOnly = !foodFitOnly; e.currentTarget.setAttribute('aria-pressed', foodFitOnly ? 'true' : 'false'); renderList(); } }, '✓ Only dishes that fit me'),
+      h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit restrictions'),
+    ]));
+  } else {
+    profBox.append(h('p', { style: 'margin:0 0 8px' }, 'Tell the app your allergies and diet and it highlights dishes that fit — green for safe, red to avoid.'));
+    profBox.append(h('button', { class: 'btn ghost block', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
+  }
+  const foodLangCC = getCountry(foodCountry) ? foodCountry : (activeCountry || 'th');
+  const foodLang = (getCountry(foodLangCC) && getCountry(foodLangCC).lang) || 'th';
+  profBox.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
+  wrap.append(profBox);
+
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
@@ -4404,6 +4573,11 @@ function foodScreen(country) {
       || (d.localName || '').includes(foodQuery.trim()) || (d.ingredients || []).some((i) => i.toLowerCase().includes(q)));
     if (foodCat) dishes = dishes.filter((d) => d.category === foodCat);
     if (foodAvoid.size) dishes = dishes.filter((d) => !(d.allergens || []).some((a) => foodAvoid.has(a)));
+    // Dietary profile: optionally drop dishes that conflict, and float the fitting ones up.
+    const avoid = dietAvoidAllergens();
+    if (foodFitOnly && avoid.size) dishes = dishes.filter((d) => dishDietVerdict(d, avoid) !== 'bad');
+    if (avoid.size) dishes = dishes.slice().sort((a, b) =>
+      (dishDietVerdict(a, avoid) === 'bad' ? 1 : 0) - (dishDietVerdict(b, avoid) === 'bad' ? 1 : 0));
     if (!dishes.length) { listEl.append(h('p', { class: 'empty' }, 'No dishes match. Try clearing a filter.')); return; }
     dishes.forEach((d) => listEl.append(foodCard(d)));
   }
@@ -4439,6 +4613,12 @@ function dishScreen(id) {
     card.append(h('h3', {}, 'Ingredients'));
     card.append(h('div', { style: tagRow }, d.ingredients.map((i) => h('span', { class: 'cat-tag' }, i))));
   }
+  // Your dietary profile: an at-a-glance verdict for this dish (guidance, not a guarantee).
+  const dv = dishDietVerdict(d);
+  if (dv) card.append(h('div', { class: dv === 'bad' ? 'diet-banner bad' : 'diet-banner ok' },
+    dv === 'bad'
+      ? '✕ This lists something you avoid — check the allergens below and confirm with the cook.'
+      : '✓ Nothing you avoid is listed for this dish. Recipes vary, so still confirm with the cook.'));
   card.append(h('h3', {}, 'Allergens'));
   if (d.allergens && d.allergens.length) {
     card.append(h('div', { style: tagRow }, d.allergens.map((a) => h('span', { class: 'tier high' }, a))));
@@ -6412,9 +6592,16 @@ function welcomeScreen() {
   accCard.append(prefChips([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], store.profile.textScale || 'm', (v) => { store.profile.textScale = v; save(); applyTheme(); }));
   wrap.append(accCard);
 
-  // 4 — How you like to travel (budget / length / interests)
+  // 4 — Allergies & diet (drives food highlighting + pinned phrasebook phrases)
+  const dietCard = h('div', { class: 'card' });
+  dietCard.append(h('h2', {}, '4 · Any food allergies or diet?'));
+  dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
+  dietCard.append(dietPicker());
+  wrap.append(dietCard);
+
+  // 5 — How you like to travel (budget / length / interests)
   const fitCard = h('div', { class: 'card' });
-  fitCard.append(h('h2', {}, '4 · How you like to travel'));
+  fitCard.append(h('h2', {}, '5 · How you like to travel'));
   fitCard.append(h('p', { class: 'muted' }, 'Budget'));
   fitCard.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
   fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
@@ -6429,7 +6616,7 @@ function welcomeScreen() {
 
   // 5 — Location (optional; sensors, not data)
   const locCard = h('div', { class: 'card' });
-  locCard.append(h('h2', {}, '5 · Use your location? (optional)'));
+  locCard.append(h('h2', {}, '6 · Use your location? (optional)'));
   locCard.append(h('p', { class: 'muted' }, 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
   if (typeof navigator !== 'undefined' && navigator.geolocation) {
     const lb = h('button', { class: 'btn ghost block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
@@ -6720,6 +6907,87 @@ function streetfoodScreen() {
   mount(wrap, '#home');
 }
 
+// Full on-device backup: the store JSON PLUS every photo blob (base64), so "everything" —
+// journal, ratings, reviews, trip, calendar, saved places AND the pictures — travels in one
+// file. It stays on the device; nothing is uploaded. Older plain-store backups still restore
+// (detected by the absence of the bundle marker).
+function blobToDataURL(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+}
+function dataURLToBlob(dataUrl) {
+  const comma = dataUrl.indexOf(',');
+  const mime = (dataUrl.slice(0, comma).match(/data:([^;]+)/) || [])[1] || 'application/octet-stream';
+  const bin = atob(dataUrl.slice(comma + 1));
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+async function buildBackupBundle() {
+  const bundle = { format: 'mekonging-backup', v: 1, store: JSON.parse(exportData()), photos: [] };
+  const blobs = await getAllBlobs();
+  for (const { key, blob } of blobs) {
+    if (!blob) continue;
+    try { bundle.photos.push({ key, data: await blobToDataURL(blob) }); } catch { /* skip a bad blob */ }
+  }
+  return bundle;
+}
+async function restoreBackupFile(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); } catch { return { ok: false, error: 'That file is not a valid backup.' }; }
+  if (parsed && parsed.format === 'mekonging-backup' && parsed.store) {
+    // Photos first, so restored entries that reference them render immediately.
+    for (const ph of (parsed.photos || [])) {
+      if (ph && ph.key && ph.data) { try { await putBlob(ph.key, dataURLToBlob(ph.data)); } catch { /* skip a bad blob */ } }
+    }
+    const res = importData(JSON.stringify(parsed.store));
+    if (res.ok && res.counts) res.counts.photos = (parsed.photos || []).length;
+    return res;
+  }
+  return importData(text); // legacy plain store-JSON backup (no photos bundled)
+}
+
+// ---- GIVE BACK (donate to causes that help people in the region) ------------
+// Established non-profits, each verified to an official site (2026-07). The app never
+// processes money — every entry is a plain outbound link to the organisation's own site,
+// exactly like the booking deep links. People-focused, spanning all four countries.
+const DONATE_ORGS = [
+  { scope: 'Across the region', flag: '🌏', items: [
+    { name: 'MAG (Mines Advisory Group)', what: 'Finds and clears landmines and unexploded bombs left by war in Cambodia, Laos and Vietnam, so families can farm and children can play safely.', url: 'https://www.maginternational.org/' },
+    { name: 'Friends-International', what: 'Protects urban children and marginalised young people and trains them for work, across Cambodia, Laos and Thailand.', url: 'https://friends-international.org/' },
+  ] },
+  { scope: 'Thailand', flag: '🇹🇭', items: [
+    { name: 'The Mercy Centre (HDF)', what: 'Kindergartens, shelter and daily care for children of Bangkok’s Klong Toey community, serving the city’s poorest families since 1972.', url: 'https://mercycentre.org/' },
+  ] },
+  { scope: 'Vietnam', flag: '🇻🇳', items: [
+    { name: 'Blue Dragon Children’s Foundation', what: 'Rescues children from trafficking and slavery and helps street kids rebuild their lives, based in Hanoi.', url: 'https://www.bluedragon.org/donate/' },
+  ] },
+  { scope: 'Cambodia', flag: '🇰🇭', items: [
+    { name: 'Cambodian Children’s Fund', what: 'Education, healthcare, childcare and family support in one of Phnom Penh’s poorest areas, Steung Meanchey.', url: 'https://www.cambodianchildrensfund.org/donate' },
+  ] },
+  { scope: 'Laos', flag: '🇱🇦', items: [
+    { name: 'COPE', what: 'Free prosthetic limbs and rehabilitation for survivors of unexploded bombs, run from the visitor centre in Vientiane.', url: 'https://copelaos.org/' },
+    { name: 'Big Brother Mouse', what: 'A Lao-owned literacy project publishing books and running reading parties for village children, from Luang Prabang.', url: 'https://www.bigbrothermouse.com/' },
+  ] },
+];
+
+function donateScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Give back', '#home'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
+  wrap.append(h('div', { class: 'banner' }, 'Mekonging takes no money and no cut, and never processes a payment. These links open external sites and need internet. Please do your own checks before giving.'));
+  DONATE_ORGS.forEach((grp) => {
+    wrap.append(h('h2', { class: 'cat-title' }, `${grp.flag} ${grp.scope}`));
+    grp.items.forEach((o) => wrap.append(h('div', { class: 'card donate-card' }, [
+      h('strong', {}, o.name),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, o.what),
+      h('a', { class: 'btn ghost block', href: o.url, target: '_blank', rel: 'noopener noreferrer' }, 'Visit official site ↗'),
+    ])));
+  });
+  wrap.append(h('p', { class: 'muted', style: 'margin-top:12px' }, 'Prefer to help in person? Eating at their training restaurants, buying their books, or volunteering supports the same work — ask at each organisation’s visitor centre.'));
+  wrap.append(h('p', { class: 'disclaimer' }, 'Mekonging is not affiliated with these organisations and receives nothing from them. This is a starting point, not vetting or financial advice — confirm each charity independently before donating.'));
+  mount(wrap, '#home');
+}
+
 function settingsScreen() {
   const p = store.profile;
   const wrap = h('div', { class: 'screen' });
@@ -6827,6 +7095,9 @@ function settingsScreen() {
         e.currentTarget.setAttribute('aria-pressed', selAcc.has(id) ? 'true' : 'false');
       } }, lbl)));
   who.append(field('Accessibility needs', accChips));
+  who.append(h('p', { class: 'muted', style: 'margin:14px 0 0' }, 'Allergies & dietary restrictions'));
+  who.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 0' }, 'Highlights dishes that fit you in “Identify food”, and pins your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person.'));
+  who.append(dietPicker());
   who.append(field('Trip length', selectEl([['', 'Not set'], ['short', 'Short (≤1 week)'], ['medium', '2–3 weeks'], ['long', '1 month+']],
     p.prefs.tripLength || '', (v) => { p.prefs.tripLength = v; save(); })));
   who.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Budget and interests are set in the profile card above.'));
@@ -6889,11 +7160,14 @@ function settingsScreen() {
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Your data'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Everything you log — journal, budget, calendar and saved places — stays on this device and is kept safe across app updates. Download a backup to keep your own copy, or restore one (for example on a new phone).'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Everything you create — journal entries and photos, ratings and reviews, trip, budget, calendar, saved places and collections — stays on this device and is kept safe across app updates. Download one backup file with all of it (photos included) to keep your own copy or move to a new phone. Nothing is ever uploaded.'),
   ]);
-  dataCard.append(h('button', { class: 'btn ghost block', onclick: () => {
+  const dlBtn = h('button', { class: 'btn ghost block' }, '⬇️ Download a full backup (with photos)');
+  dlBtn.onclick = async () => {
+    dlBtn.disabled = true; const label = dlBtn.textContent; dlBtn.textContent = 'Preparing backup…';
     try {
-      const blob = new Blob([exportData()], { type: 'application/json' });
+      const bundle = await buildBackupBundle();
+      const blob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const d = new Date();
       const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -6902,17 +7176,24 @@ function settingsScreen() {
       setTimeout(() => URL.revokeObjectURL(url), 2000);
       store.profile.prefs.dataBackupDone = true; save();
     } catch { alert('Could not create the backup file on this device.'); }
-  } }, '⬇️ Download a backup'));
+    dlBtn.disabled = false; dlBtn.textContent = label;
+  };
+  dataCard.append(dlBtn);
   const restoreInput = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none',
     onchange: (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
-        if (!confirm('Restore this backup? It replaces the journal, budget and other data currently on this device.')) return;
-        const res = importData(String(reader.result || ''));
-        if (res.ok) { applyTheme(); alert(`Restored ${res.counts.journal} journal, ${res.counts.budget} budget and ${res.counts.calendar} calendar entries.`); go('#home'); }
-        else alert(res.error || 'Could not restore that file.');
+      reader.onload = async () => {
+        if (!confirm('Restore this backup? It replaces the journal, photos, budget and other data currently on this device.')) { e.target.value = ''; return; }
+        const res = await restoreBackupFile(String(reader.result || ''));
+        if (res.ok) {
+          applyTheme();
+          const c = res.counts || {};
+          alert(`Restored ${c.journal || 0} journal, ${c.budget || 0} budget, ${c.calendar || 0} calendar entries${c.photos ? ` and ${c.photos} photos` : ''}.`);
+          go('#home');
+        } else alert(res.error || 'Could not restore that file.');
+        e.target.value = '';
       };
       reader.readAsText(file);
     } });
@@ -7041,6 +7322,7 @@ function render() {
       case 'plans': return plansScreen();
       case 'board': return boardScreen(arg);
       case 'streetfood': return streetfoodScreen();
+      case 'donate': return donateScreen();
       case 'settings': return settingsScreen();
       default: return homeScreen();
     }

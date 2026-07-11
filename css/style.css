@@ -1013,3 +1013,21 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
   background: var(--grad-sun); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .update-toast-x { min-height: 40px; min-width: 40px; border: none; background: none; color: var(--ink-soft);
   font-size: 1rem; cursor: pointer; }
+
+/* ===== dietary highlighting + allergy/give-back (food profile) ====== */
+:root { --diet-ok: #2E9E5B; --diet-bad: var(--warn); }
+html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] { --diet-ok: #47C97E; }
+.species-card.food-ok { border: 2px solid var(--diet-ok); }
+.species-card.food-bad { border: 2px solid var(--diet-bad); }
+.food-flag { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill);
+  font-size: 0.8rem; font-weight: 800; color: #fff; flex: none; }
+.food-flag.ok { background: #1F7A47; }
+.food-flag.bad { background: #B23A16; }
+.diet-legend .food-flag { min-width: 18px; height: 18px; font-size: 0.7rem; vertical-align: middle; }
+.diet-banner { border-radius: var(--r-sm); padding: 8px 10px; margin: 8px 0;
+  font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
+.diet-banner.ok { background: rgba(46, 158, 91, 0.14); border: 1px solid var(--diet-ok); }
+.diet-banner.bad { background: rgba(178, 58, 22, 0.16); border: 1px solid var(--diet-bad); }
+.allergy-card { border: 1px solid var(--warn); }
+.give-back { border: 1px solid var(--magenta); }
