@@ -52,12 +52,30 @@ export function range(low, high, currency) {
   return money(low != null ? low : high, currency);
 }
 
-// Build a maps deep link from a query string or coordinates.
+// Coordinates are only trusted for a map link if they sit inside the mainland-SE-Asia
+// region these guides cover (with a margin) and are not the (0,0) null island. This stops
+// a stray/miskeyed coordinate from sending the traveller to the wrong place; such a link
+// falls back to a name search instead.
+export function coordsLookValid(coords) {
+  if (!coords || coords.lat == null || coords.lng == null) return false;
+  const { lat, lng } = coords;
+  if (Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01) return false;
+  return lat >= 5 && lat <= 29 && lng >= 91 && lng <= 111;
+}
+
+// Build a maps deep link from coordinates (preferred, exact) or a query string.
 export function mapsUrl({ mapQuery, coords } = {}) {
-  if (coords && coords.lat != null && coords.lng != null) {
+  if (coordsLookValid(coords)) {
     return `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
   }
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery || '')}`;
+}
+
+// A directions deep link (routes from the user's current location to the destination),
+// using exact coordinates when they look valid, else the place name.
+export function mapsDirUrl({ mapQuery, coords } = {}) {
+  const dest = coordsLookValid(coords) ? `${coords.lat},${coords.lng}` : encodeURIComponent(mapQuery || '');
+  return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
 }
 
 // Title-case a slug or short label.
