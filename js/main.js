@@ -143,7 +143,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.165.0';
+const APP_VERSION = 'mk-v0.166.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -246,19 +246,47 @@ function topbar(title, backHash) {
   ]);
 }
 
-function tabbar(activeHashPrefix) {
+// Which bottom tab owns each route head. Destination discovery + on-the-ground info group
+// under Places; trip planning, memories, money, social, safety and admin group under Home;
+// Map/Talk/Settings own their own routes. Anything unlisted falls back to Home.
+const TAB_FOR_HEAD = {
+  places: '#places', place: '#places', country: '#places', nearby: '#places', arrival: '#places',
+  bestof: '#places', bestlist: '#places', food: '#places', dish: '#places', produce: '#places',
+  nature: '#places', sounds: '#places', species: '#places', pools: '#places', events: '#places',
+  event: '#places', weather: '#places', today: '#places', prices: '#places', transport: '#places',
+  route: '#places', crossings: '#places', schedules: '#places', visa: '#places', info: '#places',
+  history: '#places', access: '#places', baby: '#places', family: '#places', streetfood: '#places',
+  board: '#places', setcity: '#places',
+  map: '#map', addpin: '#map',
+  phrasebook: '#phrasebook',
+  settings: '#settings',
+  home: '#home', '': '#home', welcome: '#home', search: '#home', saved: '#home', collection: '#home',
+  journal: '#home', scrapbook: '#home', contributions: '#home', journey: '#home', calendar: '#home',
+  trip: '#home', expenses: '#home', bargain: '#home', currency: '#home', checklist: '#home',
+  plans: '#home', foryou: '#home', vault: '#home', help: '#home', feedback: '#home',
+  circle: '#home', add: '#home', in: '#home', inbox: '#home', thread: '#home', msg: '#home', sos: '#home',
+};
+function activeTabForHash() {
+  const head = (location.hash || '#home').replace(/^#/, '').split('-')[0];
+  return TAB_FOR_HEAD[head] || '#home';
+}
+
+// The active tab is derived from the current route (not a per-screen arg), so every screen —
+// including deep detail pages — highlights the correct tab instead of defaulting to Home.
+function tabbar() {
+  const active = activeTabForHash();
   return h('nav', { class: 'tabbar' }, TABS.map((t) =>
     h('button', {
-      'aria-current': activeHashPrefix === t.hash ? 'page' : null,
+      'aria-current': active === t.hash ? 'page' : null,
       onclick: () => go(t.hash),
     }, [h('span', { class: 'ic', html: t.svg }), h('span', {}, t.label)])));
 }
 
-function mount(node, activeTab) {
+function mount(node, showTabbar) {
   const app = document.getElementById('app');
   app.innerHTML = '';
   app.append(node);
-  if (activeTab) app.append(tabbar(activeTab));
+  if (showTabbar) app.append(tabbar());
   window.scrollTo(0, 0);
 }
 
@@ -2061,11 +2089,19 @@ function profileIsSet() {
 }
 function personalScore(p) {
   const prefs = store.profile.prefs;
-  let s = Number(p.rating) || 3;
+  const r = Number(p.rating) || 0;
+  let s = r || 3;
   if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) s += 0.7;
-  if (prefs.party === 'family' && p.kidFriendly === true) s += 0.8;
-  if (prefs.party === 'family' && p.kidFriendly === false) s -= 0.5;
+  // Party shape — modest nudges using fields that always exist (rating/stayType/kidFriendly),
+  // so choosing Solo / Couple / Group / Family actually reorders picks instead of being inert.
+  if (prefs.party === 'family') { if (p.kidFriendly === true) s += 0.8; if (p.kidFriendly === false) s -= 0.5; }
+  if (prefs.party === 'solo' && p.stayType === 'hostel') s += 0.4;                 // sociable, budget-friendly bases
+  if (prefs.party === 'couple') { if (r >= 4.4) s += 0.3; if (p.stayType === 'hostel') s -= 0.3; }  // quality over dorms
+  if (prefs.party === 'group' && (p.stayType === 'hostel' || p.stayType === 'apartment')) s += 0.3; // space for several
+  // Trip length — long stays prefer long-stay lodging; short trips want the highlights first.
   if (prefs.tripLength === 'long' && (p.stayDuration === 'long' || p.stayDuration === 'both')) s += 0.5;
+  if (prefs.tripLength === 'short' && r >= 4.5) s += 0.5;
+  if (prefs.tripLength === 'medium' && r >= 4.3) s += 0.25;
   if ((prefs.interests || []).some((i) => (p.categories || []).includes(i))) s += 0.4;
   return s;
 }
@@ -6335,7 +6371,9 @@ function welcomeScreen() {
   const finish = () => { store.profile.seenWelcome = true; store.profile.prefs.geoAsked = true; if (netMode() === 'ask') setNetMode('offline'); save(); go('#home'); };
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: finish }, 'Start exploring →'));
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: finish }, 'Skip for now'));
-  mount(wrap, 'home');
+  // No tab bar during first-run setup: onboarding is a focused flow with its own
+  // "Start exploring" / "Skip for now" exits, not something to wander out of mid-step.
+  mount(wrap);
 }
 
 function foryouScreen() {
@@ -6404,7 +6442,7 @@ function plansScreen() {
   }
   wrap.append(countryChips((id) => { activeCountry = id; go('#plans'); }));
   const plans = suggestPlans({ country: activeCountry, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
-  const PARTY_LBL = { solo: '🎒 solo', couple: '👫 couples', family: '👨‍👩‍👧 families' };
+  const PARTY_LBL = { solo: '🎒 solo', couple: '👫 couples', family: '👨‍👩‍👧 families', group: '👥 groups' };
   plans.forEach((pl, idx) => {
     const card = h('div', { class: 'card' });
     card.append(h('div', { class: 'row-between' }, [h('h2', {}, pl.title), idx === 0 && profileIsSet() ? h('span', { class: 'cat-tag' }, 'Best match') : null]));
@@ -6683,7 +6721,7 @@ function settingsScreen() {
     h('h2', {}, 'Who’s travelling'),
     h('p', { class: 'muted', style: 'margin-top:0' }, 'Set once — this tailors picks, plans and the help the app surfaces for you.'),
   ]);
-  who.append(field('Travelling as', selectEl([['', 'Not set'], ['solo', 'Solo'], ['couple', 'Couple'], ['family', 'Family']],
+  who.append(field('Travelling as', selectEl([['', 'Not set'], ['solo', 'Solo'], ['couple', 'Couple'], ['family', 'Family'], ['group', 'Group']],
     p.prefs.party || '', (v) => { p.prefs.party = v; save(); })));
   who.append(field('Travelling with a baby or toddler', selectEl([['no', 'No'], ['yes', 'Yes — show nappies, formula & family help']],
     p.prefs.withBaby ? 'yes' : 'no', (v) => { p.prefs.withBaby = (v === 'yes'); save(); })));
