@@ -335,7 +335,8 @@ export function addCalendarItem(item) {
   const rating = Math.max(0, Math.min(5, Math.round(Number(item.rating) || 0)));
   const it = { id: uid('cal'), date: item.date, time: item.time || '', type: item.type || 'stay',
     title: String(item.title || '').slice(0, 120), place: item.place || '',
-    cost: item.cost || '', currency: item.currency || '', rating, note: item.note || '' };
+    cost: item.cost || '', currency: item.currency || '', rating, note: item.note || '',
+    remind: (item.remind == null || item.remind === '') ? null : Number(item.remind) };
   store.calendar.items.push(it);
   store.calendar.items.sort(calCompare);
   save(); return it;
@@ -352,6 +353,7 @@ export function updateCalendarItem(id, patch = {}) {
   if (patch.currency !== undefined) it.currency = patch.currency || '';
   if (patch.rating !== undefined) it.rating = Math.max(0, Math.min(5, Math.round(Number(patch.rating) || 0)));
   if (patch.note !== undefined) it.note = patch.note || '';
+  if (patch.remind !== undefined) it.remind = (patch.remind == null || patch.remind === '') ? null : Number(patch.remind);
   store.calendar.items.sort(calCompare);
   save(); return it;
 }

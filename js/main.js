@@ -39,6 +39,8 @@ import {
 import * as personal from './personal.js';
 // On-device contribution points + levels (Google Maps Local Guides-style, no accounts).
 import * as gamify from './gamify.js';
+// Server-free reminders (per-entry lead time + daily journal nudge; in-app + best-effort notifications).
+import * as reminders from './reminders.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -125,7 +127,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.160.0';
+const APP_VERSION = 'mk-v0.161.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -950,6 +952,19 @@ function homeScreen() {
   wrap.append(netStatusRow());
   // Lead with what fits the user's place and moment, before the generic menu.
   wrap.append(rightNowSection());
+  // "Coming up" — reminders you set on calendar entries, in the next week. Always in-app
+  // (works with no notification permission and offline); tap to open the calendar.
+  const up = reminders.upcoming(7);
+  if (up.length) {
+    const rc = h('div', { class: 'card', style: 'margin-top:8px' }, [h('h3', { style: 'margin-top:0' }, '🔔 Coming up')]);
+    up.slice(0, 5).forEach((u) => {
+      const it = u.item;
+      const when = u.eventAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
+      rc.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:6px', onclick: () => go('#calendar') },
+        `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when} · ⏰ ${reminders.leadLabel(it.remind)}`));
+    });
+    wrap.append(rc);
+  }
   // One-time nudge: once there is a journal or budget worth keeping, offer a backup so an
   // update, reset or lost phone can never take it. Dismissible; shown once.
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
@@ -4087,6 +4102,9 @@ function calendarFormScreen(editId, prefill) {
   const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], existing ? (existing.currency || (c ? c.currency : 'THB')) : (c ? c.currency : 'THB'), () => {});
   const note = h('textarea', { class: 'ta', placeholder: 'Plan details, or a review once you have been' });
   if (existing) note.value = existing.note || '';
+  // Reminder: a per-entry lead time (defaults to the user's chosen default for new entries).
+  const remindDefault = existing ? (existing.remind == null ? -1 : existing.remind) : reminders.defaultLead();
+  const remind = selectEl(reminders.LEADS.map((l) => [String(l[0]), l[1]]), String(remindDefault), () => {});
   const stars = h('div', { class: 'stars' });
   const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
   for (let i = 1; i <= 5; i++) stars.append(h('button', { class: 'star', 'aria-label': `${i} star${i > 1 ? 's' : ''}`, onclick: () => { st.rating = st.rating === i ? 0 : i; paint(st.rating); } }, '☆'));
@@ -4094,15 +4112,18 @@ function calendarFormScreen(editId, prefill) {
   wrap.append(h('div', { class: 'card' }, [
     field('Date', date), field('Time (optional)', time), field('Type', type), field('Title', title), field('Place', place),
     field('Cost (optional)', h('div', { class: 'row-between' }, [cost, cur])),
+    field('Reminder', remind),
     field('Rating (optional)', stars), field('Plan / review', note),
   ]));
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!date.value) { alert('Pick a date.'); return; }
     if (!title.value.trim()) { alert('Add a title.'); return; }
-    const fields = { date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim() };
+    const fields = { date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim(), remind: Number(remind.value) };
     if (editing) updateCalendarItem(editId, fields); else addCalendarItem(fields);
+    reminders.tick();
     go('#calendar');
   } }, editing ? 'Save changes' : 'Save'));
+  wrap.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'Reminders show on the “Coming up” card on Home, and — if you allow notifications in Settings — as a device alert while the app is open or when you next open it. Background alerts when the app is fully closed are not available (there is no server), so the Home card is the reliable reminder.'));
   mount(wrap, '#home');
 }
 
@@ -6613,6 +6634,23 @@ function settingsScreen() {
     h('p', { class: 'disclaimer' }, 'Set an address to collect feedback by email; otherwise the feedback screen uses your device share sheet or clipboard. This stays on your device and is never committed to the app.'),
   ]));
 
+  // Reminders — server-free: per-entry lead time on the calendar + an optional daily
+  // journal nudge. Always in-app on Home; device notifications are opt-in + best-effort.
+  const rset = reminders.settings();
+  const remCard = h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Reminders'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Set a reminder on any calendar entry, with its own lead time. Reminders always appear on the “Coming up” card on Home. Allow notifications for a device alert while the app is open or when you next open it — background alerts when the app is fully closed are not available, because there is no server.'),
+  ]);
+  remCard.append(h('button', { class: 'btn ghost block',
+    onclick: async () => { const ok = await reminders.requestNotify(); reminders.tick(); alert(ok ? 'Device notifications are on.' : 'Notifications are off — you can enable them for this site in your browser settings.'); render(); } },
+    (reminders.notifyGranted() && rset.notify) ? '🔔 Device notifications: on' : '🔔 Allow device notifications'));
+  remCard.append(field('Default reminder for new entries', selectEl(reminders.LEADS.map((l) => [String(l[0]), l[1]]), String(rset.defaultLead), (v) => { reminders.setDefaultLead(v); })));
+  remCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', 'aria-pressed': rset.journalDaily ? 'true' : 'false',
+    onclick: () => { reminders.setJournalDaily(!reminders.settings().journalDaily); reminders.tick(); render(); } },
+    rset.journalDaily ? '📔 Daily journal reminder: on' : '📔 Remind me to journal each day'));
+  if (rset.journalDaily) remCard.append(field('Journal reminder time', h('input', { type: 'time', value: rset.journalTime, onchange: (e) => { reminders.setJournalTime(e.target.value); reminders.tick(); } })));
+  wrap.append(remCard);
+
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Your data'),
@@ -6802,6 +6840,10 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   }); } catch { /* older API */ }
 }
 render();
+
+// Fire any due reminders (missed while away) + schedule this session's near-future ones,
+// and the optional daily journaling nudge. Best-effort + in-app; see js/reminders.js.
+try { reminders.tick(); } catch { /* reminders are best-effort */ }
 
 // Refresh exchange rates in the background when online; update the converter if open.
 if (online()) refreshRates().then(() => { if ((location.hash || '').startsWith('#currency')) render(); }).catch(() => {});
