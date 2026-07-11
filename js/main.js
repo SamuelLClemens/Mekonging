@@ -42,7 +42,7 @@ import * as personal from './personal.js';
 import * as gamify from './gamify.js';
 // Server-free reminders (per-entry lead time + daily journal nudge; in-app + best-effort notifications).
 import * as reminders from './reminders.js';
-import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
+import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
@@ -128,7 +128,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.162.0';
+const APP_VERSION = 'mk-v0.163.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -700,6 +700,32 @@ function babyScreen(cc) {
 
 // ---- ENTRY & VISA (per country; nationality-dependent, always confirm officially) ----
 const VISA_TYPE = { 'visa-free': '✅ Visa-free', 'e-visa': '💻 e-Visa', 'visa-on-arrival': '🛬 Visa on arrival', 'visa-required': '📋 Visa required' };
+// How old is a YYYY-MM or YYYY-MM-DD stamp, in days? Recomputed live on every open, so
+// freshness "keeps itself up to date" without any server or manual bump.
+function dataAgeDays(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date((String(dateStr).length === 7 ? dateStr + '-01' : dateStr) + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+// A freshness notice for time-sensitive data (e.g. visa rules). Fresh -> a quiet "checked"
+// line; stale -> a prominent warning + a live link to the authoritative official source.
+// This is the honest, server-free "self-update": the app can't rewrite the rules, but it
+// re-checks their age every open and pushes you to the official portal the moment they age.
+function freshnessNotice(dateStr, officialUrl, officialName, staleDays = 150) {
+  const age = dataAgeDays(dateStr);
+  if (age == null) return null;
+  if (age <= staleDays) {
+    return h('p', { class: 'muted', style: 'margin:2px 0 10px' }, `✓ Verified ${dateStr}. The app re-checks this date automatically and flags it here once it ages; always reconfirm on the official portal for your nationality.`);
+  }
+  const months = Math.max(1, Math.round(age / 30));
+  return h('div', { class: 'card', style: 'border:1px solid var(--orange)' }, [
+    h('strong', {}, '⚠ This may be out of date'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Last verified ${dateStr} (about ${months} month${months === 1 ? '' : 's'} ago). Visa and entry rules change often — reconfirm on the official government portal for your nationality before you rely on this.`),
+    officialUrl ? h('a', { class: 'btn block', href: officialUrl, target: '_blank', rel: 'noopener' }, `🔄 Check ${officialName || 'the official portal'} now ↗`) : null,
+  ]);
+}
+
 function visaScreen(cc) {
   const v = getVisa(cc);
   const c = getCountry(cc);
@@ -707,6 +733,8 @@ function visaScreen(cc) {
   wrap.append(topbar('Entry & visa', c ? `#country-${cc}` : '#home'));
   if (!v) { wrap.append(h('p', { class: 'empty' }, 'Entry guidance for this country is on the way.')); mount(wrap, 'home'); return; }
   wrap.append(h('div', { class: 'banner' }, 'Visa rules depend on your nationality and change often. Treat this as orientation, then confirm on the official site for your passport before you travel.'));
+  const fresh = freshnessNotice(v.asOf, v.officialEvisa && v.officialEvisa.url, v.officialEvisa && v.officialEvisa.name);
+  if (fresh) wrap.append(fresh);
   wrap.append(h('p', {}, v.summary));
   (v.options || []).forEach((o) => {
     const card = h('div', { class: 'card' });
@@ -2339,7 +2367,7 @@ function orientationCard(p) {
       const prev = liveCleanup;
       liveCleanup = () => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } };
     }).catch(() => { mini.remove(); });
-    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
+    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsDirUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
   }
   return card;
 }
@@ -5093,7 +5121,7 @@ function bestListScreen(id) {
       it.why ? h('p', {}, it.why) : null,
     ]);
     if (it.sources && it.sources.length) card.append(h('p', { class: 'disclaimer' }, `Sources: ${it.sources.map((s) => s.org || s).join(', ')}`));
-    card.append(h('a', { class: 'btn ghost', href: mapsUrl({ mapQuery: it.mapQuery || `${it.name} ${it.city || ''}` }), target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'));
+    card.append(h('a', { class: 'btn ghost', href: mapsUrl({ coords: it.coords, mapQuery: it.mapQuery || `${it.name} ${it.city || ''}` }), target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'));
     wrap.append(card);
   });
   wrap.append(h('p', { class: 'disclaimer' }, 'Curated from multiple public sources; tap through for live reviews. Verify hours and prices locally.'));
