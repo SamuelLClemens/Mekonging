@@ -6,6 +6,7 @@ import {
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
   addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField,
   addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
+  getAlbum, addAlbumPhoto, updateAlbumPhoto, deleteAlbumPhoto,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem, updateBudgetItem,
@@ -127,7 +128,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.161.0';
+const APP_VERSION = 'mk-v0.162.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3424,16 +3425,17 @@ function journalEntryScreen(id) {
     h('h2', { class: 'entry-title' }, e.title),
     h('div', { class: 'entry-body' }, (e.text || '').split('\n').map((p) => h('p', {}, p))),
   ]);
-  if (e.photoKey) {
+  // All photos on this entry, newest additions after older, just below the stamp.
+  entryPhotoKeys(e).forEach((k, i) => {
     const img = h('img', { class: 'entry-photo', alt: 'Journal photo' });
-    page.insertBefore(img, page.children[1]); // just below the stamp
-    getBlob(e.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
-  }
+    page.insertBefore(img, page.children[1 + i]);
+    getBlob(k).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+  });
   wrap.append(page);
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
   wrap.append(h('div', { class: 'row-between', style: 'margin-top:10px' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
-    h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { if (e.photoKey) delBlob(e.photoKey); deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
+    h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { entryPhotoKeys(e).forEach((k) => delBlob(k)); deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
   ]));
   mount(wrap, '#home');
@@ -3472,6 +3474,47 @@ function scrapbookText(entries, loved, stops, budget, range) {
   return L.join('\n');
 }
 
+// The scrapbook's photo album: the pictures the user adds directly + every journal photo,
+// in one editable gallery. Album photos are tappable to caption or remove; journal photos
+// open their entry. Blobs live in IndexedDB; metadata + captions in the store (backup-safe).
+function scrapAlbumSection() {
+  const album = getAlbum();
+  const journalPhotos = [];
+  (store.journal.entries || []).forEach((e) => entryPhotoKeys(e).forEach((k) => journalPhotos.push({ key: k, entry: e })));
+  const card = h('div', { class: 'card' }, [h('h3', { class: 'scrap-h' }, '📸 Photo album')]);
+  const inp = h('input', { type: 'file', accept: 'image/*', multiple: '', style: 'display:none', onchange: async (ev) => {
+    const files = ev.target.files ? [...ev.target.files] : [];
+    let n = 0;
+    for (const f of files) { const nk = `album-${Date.now()}-${n++}-${Math.floor(Math.random() * 1e6)}`; try { await putBlob(nk, f); addAlbumPhoto({ key: nk }); } catch { /* skip */ } }
+    ev.target.value = ''; render();
+  } });
+  card.append(h('div', { class: 'chips' }, [h('button', { class: 'chip', onclick: () => inp.click() }, '＋ Add pictures to album'), inp]));
+  if (!album.length && !journalPhotos.length) {
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Add pictures here, or add photos to your journal entries — they all gather in this album.'));
+    return card;
+  }
+  const grid = h('div', { class: 'photo-gallery' });
+  // Album photos first (most recent first), each editable.
+  album.slice().reverse().forEach((ph) => {
+    const img = h('img', { alt: ph.caption || '', loading: 'lazy' });
+    getBlob(ph.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    grid.append(h('button', { class: 'gallery-cell', onclick: () => {
+      const cap = prompt('Caption for this photo (leave blank to keep). Type DELETE to remove it.', ph.caption || '');
+      if (cap === null) return;
+      if (cap.trim().toUpperCase() === 'DELETE') { delBlob(ph.key); deleteAlbumPhoto(ph.id); render(); return; }
+      updateAlbumPhoto(ph.id, { caption: cap }); render();
+    } }, [img, ph.caption ? h('span', { class: 'gallery-cap' }, ph.caption) : null]));
+  });
+  // Journal photos (most recent first) — tap opens the entry.
+  journalPhotos.slice().reverse().forEach((jp) => {
+    const img = h('img', { alt: '', loading: 'lazy' });
+    getBlob(jp.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    grid.append(h('button', { class: 'gallery-cell', onclick: () => go(`#journal-entry-${jp.entry.id}`) }, [img, h('span', { class: 'gallery-cap' }, `📔 ${jp.entry.title || 'Journal'}`)]));
+  });
+  card.append(grid);
+  return card;
+}
+
 function scrapbookScreen() {
   const wrap = h('div', { class: 'screen scrapbook' });
   wrap.append(topbar('Trip scrapbook', '#home'));
@@ -3485,15 +3528,16 @@ function scrapbookScreen() {
     .map(([id, d]) => ({ p: getPlace(id), d }))
     .filter((x) => x.p);
 
-  if (!entries.length && !stops.length && !budget.length && !loved.length) {
+  if (!entries.length && !stops.length && !budget.length && !loved.length && !getAlbum().length) {
     wrap.append(h('div', { class: 'card empty-state' }, [
       h('h2', { style: 'margin-top:0' }, 'Your scrapbook builds itself'),
-      h('p', { class: 'muted' }, 'As you travel, everything you record — journal entries and photos, places you rate, your itinerary and budget — gathers here into an album you can keep, print or share when you get home.'),
+      h('p', { class: 'muted' }, 'It is a photo album of your trip — the pictures you add here plus every photo in your journal — alongside the places you rate, your itinerary and budget. Add pictures below, or start a journal entry.'),
       h('div', { class: 'chips' }, [
         h('button', { class: 'chip', onclick: () => go('#journal-add') }, [chipIcon('book'), 'Write a journal entry']),
         h('button', { class: 'chip', onclick: () => go('#trip') }, [chipIcon('suitcase'), 'Plan your trip']),
       ]),
     ]));
+    wrap.append(scrapAlbumSection()); // still let them add pictures straight away
     mount(wrap, '#home'); return;
   }
 
@@ -3521,6 +3565,9 @@ function scrapbookScreen() {
     copyBtn,
   ]));
 
+  // The album — the pictures the user adds here + every journal photo, in one gallery.
+  wrap.append(scrapAlbumSection());
+
   if (stops.length) {
     const s = h('div', { class: 'card' }, [h('h3', { class: 'scrap-h' }, '🧳 Where you went')]);
     stops.forEach((st) => s.append(h('div', { class: 'scrap-row' }, [
@@ -3538,11 +3585,11 @@ function scrapbookScreen() {
         h('h3', { style: 'margin:2px 0' }, e.title || 'Untitled'),
         e.text ? h('div', { class: 'scrap-text' }, (e.text || '').split('\n').map((p) => h('p', {}, p))) : null,
       ]);
-      if (e.photoKey) {
+      entryPhotoKeys(e).forEach((k, i) => {
         const img = h('img', { class: 'scrap-photo', alt: 'Journal photo', loading: 'lazy' });
-        card.insertBefore(img, card.children[1]);
-        getBlob(e.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
-      }
+        card.insertBefore(img, card.children[1 + i]);
+        getBlob(k).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+      });
       wrap.append(card);
     });
   }
@@ -3598,6 +3645,14 @@ function journalWeatherString(coords) {
   } catch { return ''; }
 }
 
+// A journal entry's photo blob keys — the multi-photo photoKeys[] if present, else the
+// legacy single photoKey. Tolerates a null entry (new entry).
+function entryPhotoKeys(e) {
+  if (!e) return [];
+  if (Array.isArray(e.photoKeys) && e.photoKeys.length) return e.photoKeys.filter(Boolean);
+  return e.photoKey ? [e.photoKey] : [];
+}
+
 function journalFormScreen(editId) {
   const existing = editId ? journalEntries().find((e) => e.id === editId) : null;
   const editing = !!existing;
@@ -3621,22 +3676,29 @@ function journalFormScreen(editId) {
     weather.value = journalWeatherString(st.coords);
   }
 
-  // Photo: TAKE a new one (camera) OR UPLOAD an existing picture (library / files); both
-  // feed one preview. In edit mode the current photo shows and can be replaced or removed.
-  let pendingFile = null, removePhoto = false;
-  const preview = h('img', { class: 'entry-photo', style: 'display:none;margin:8px 0' });
+  // Photos: MULTIPLE per entry. Take new ones and/or upload several; each is removable.
+  // st.photos = [{ key?, file?, url }] — key = an already-saved blob, file = a new pick.
+  st.photos = [];
+  const thumbs = h('div', { class: 'photo-thumbs' });
+  const renderThumbs = () => {
+    thumbs.innerHTML = '';
+    if (!st.photos.length) { thumbs.append(h('p', { class: 'muted', style: 'margin:0' }, 'No photos yet.')); return; }
+    st.photos.forEach((p, i) => {
+      const img = h('img', { alt: '', loading: 'lazy' });
+      if (p.url) img.src = p.url;
+      thumbs.append(h('div', { class: 'photo-thumb' }, [
+        img,
+        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { st.photos.splice(i, 1); renderThumbs(); } }, '✕'),
+      ]));
+    });
+  };
+  entryPhotoKeys(existing).forEach((k) => { const o = { key: k, url: null }; st.photos.push(o); getBlob(k).then((b) => { if (b) { o.url = URL.createObjectURL(b); renderThumbs(); } }).catch(() => {}); });
   const camIn = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
-  const libIn = h('input', { type: 'file', accept: 'image/*', style: 'display:none' });
-  const removeBtn = h('button', { class: 'chip', style: 'display:none', onclick: () => {
-    pendingFile = null; removePhoto = true; preview.style.display = 'none'; preview.removeAttribute('src'); removeBtn.style.display = 'none';
-  } }, '✕ Remove photo');
-  const showPreview = (src) => { preview.src = src; preview.style.display = 'block'; removeBtn.style.display = ''; };
-  const onPick = (inp) => { const f = inp.files && inp.files[0]; if (f) { pendingFile = f; removePhoto = false; showPreview(URL.createObjectURL(f)); } };
-  camIn.onchange = () => onPick(camIn);
-  libIn.onchange = () => onPick(libIn);
-  if (editing && existing.photoKey) {
-    getBlob(existing.photoKey).then((b) => { if (b && !pendingFile && !removePhoto) showPreview(URL.createObjectURL(b)); }).catch(() => {});
-  }
+  const libIn = h('input', { type: 'file', accept: 'image/*', multiple: '', style: 'display:none' });
+  const addFiles = (inp) => { (inp.files ? [...inp.files] : []).forEach((f) => st.photos.push({ file: f, url: URL.createObjectURL(f) })); inp.value = ''; renderThumbs(); };
+  camIn.onchange = () => addFiles(camIn);
+  libIn.onchange = () => addFiles(libIn);
+  renderThumbs();
 
   const locOut = h('p', { class: 'muted' }, st.coords
     ? `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`
@@ -3659,12 +3721,11 @@ function journalFormScreen(editId) {
       } }, st.coords ? '📍 Update location' : '📍 Stamp my location'),
       locOut,
     ])),
-    field('Photo', h('div', {}, [
-      preview,
+    field('Photos', h('div', {}, [
+      thumbs,
       h('div', { class: 'chips' }, [
         h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
-        h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Upload a picture'),
-        removeBtn,
+        h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Add pictures'),
       ]),
       camIn, libIn,
     ])),
@@ -3672,15 +3733,15 @@ function journalFormScreen(editId) {
   wrap.append(card);
   wrap.append(h('button', { class: 'btn block', onclick: async () => {
     if (!title.value.trim() && !text.value.trim()) { alert('Write something first.'); return; }
-    let photoKey = editing ? (existing.photoKey || null) : null;
-    if (pendingFile) {
-      const newKey = `jrphoto-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
-      try { await putBlob(newKey, pendingFile); if (editing && existing.photoKey) delBlob(existing.photoKey); photoKey = newKey; } catch { /* keep prior photo */ }
-    } else if (removePhoto) {
-      if (editing && existing.photoKey) delBlob(existing.photoKey);
-      photoKey = null;
+    const origKeys = entryPhotoKeys(existing);
+    const finalKeys = [];
+    let n = 0;
+    for (const p of st.photos) {
+      if (p.key) { finalKeys.push(p.key); continue; }
+      if (p.file) { const nk = `jrphoto-${Date.now()}-${n++}-${Math.floor(Math.random() * 1e6)}`; try { await putBlob(nk, p.file); finalKeys.push(nk); } catch { /* skip this one */ } }
     }
-    const fields = { title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKey, weather: weather.value.trim() };
+    origKeys.filter((k) => !finalKeys.includes(k)).forEach((k) => delBlob(k)); // free removed blobs
+    const fields = { title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKeys: finalKeys, weather: weather.value.trim() };
     if (editing) { updateJournalEntry(editId, fields); go(`#journal-entry-${editId}`); }
     else { addJournalEntry(fields); go('#journal-open'); }
   } }, editing ? 'Save changes' : 'Save to journal'));
