@@ -37,6 +37,8 @@ import {
 // Private personal calendar (cycle/period, mood, symptoms, intimacy, pregnancy). On-device,
 // opt-in, optional PIN. See js/personal.js. Namespaced to keep the many helpers clear.
 import * as personal from './personal.js';
+// On-device contribution points + levels (Google Maps Local Guides-style, no accounts).
+import * as gamify from './gamify.js';
 import { h, esc, money, range, mapsUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -123,7 +125,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.159.0';
+const APP_VERSION = 'mk-v0.160.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -982,6 +984,8 @@ function homeScreen() {
   // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
   // focused country's hub (the "Explore" button above), so there is one menu per context
   // instead of Home and the hub duplicating each other.
+  const cPts = gamify.contributionPoints(store);
+  const cLvl = gamify.levelInfo(cPts);
   const groups = [
     { label: 'Plan your trip', items: [
       { ic: ICON.route, t: 'Trip plans', d: 'Routes that fit you', hash: '#plans' },
@@ -989,7 +993,8 @@ function homeScreen() {
       { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
       { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
       { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + map', hash: '#journal' },
-      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Album from your trip', hash: '#scrapbook' },
+      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
+      { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
       { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
       { ic: ICON.star, t: 'Saved & collections', d: 'Organise by theme', hash: '#saved' },
     ] },
@@ -5693,6 +5698,45 @@ function forgottenPasscodeDetails(body) {
   ]);
 }
 
+// ---- YOUR CONTRIBUTIONS (on-device points + levels, Local Guides-style) ------
+function contributionsScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Your contributions', '#home'));
+  const pts = gamify.contributionPoints(store);
+  const lvl = gamify.levelInfo(pts);
+  const rows = gamify.contributionBreakdown(store);
+  const suggestions = gamify.contributionSuggestions(store);
+
+  // Level card with a progress bar to the next level.
+  wrap.append(h('div', { class: 'card contrib-hero' }, [
+    h('div', { class: 'contrib-badge' }, lvl.emoji),
+    h('h2', { style: 'margin:0' }, `${lvl.title}`),
+    h('p', { class: 'muted', style: 'margin:2px 0 10px' }, `Level ${lvl.level} · ${pts} point${pts === 1 ? '' : 's'}`),
+    h('div', { class: 'contrib-bar' }, [h('span', { style: `width:${Math.round(lvl.pct * 100)}%` })]),
+    h('p', { class: 'muted', style: 'margin:8px 0 0' },
+      lvl.nextTitle ? `${lvl.ptsToNext} point${lvl.ptsToNext === 1 ? '' : 's'} to ${lvl.nextTitle}` : 'You have reached the top level — thank you!'),
+  ]));
+  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, 'Points come from what you add to your own guide. Everything stays on this device — there are no accounts and no leaderboard, just your own progress.'));
+
+  // Ways to earn more (encouragement).
+  if (suggestions.length) {
+    const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Ways to earn more')]);
+    suggestions.forEach((s) => card.append(h('button', { class: 'btn ghost block contrib-suggest', style: 'margin-top:6px', onclick: () => go(s.hash) },
+      `${s.emoji} ${s.text}  ·  +${s.pts}`)));
+    wrap.append(card);
+  }
+
+  // Full breakdown of what counts.
+  const bd = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'What you have added')]);
+  rows.forEach((r) => bd.append(h('div', { class: 'row-between contrib-row' }, [
+    h('span', {}, `${r.emoji} ${r.label}`),
+    h('span', { class: 'muted' }, `${r.count} · ${r.points} pt${r.points === 1 ? '' : 's'}`),
+  ])));
+  wrap.append(bd);
+  wrap.append(h('p', { class: 'disclaimer' }, 'Scoring: review +10, photo +5, journal entry +5, tip +5, pin +3, rating +1, collection +2, calendar entry +1.'));
+  mount(wrap, '#home');
+}
+
 // ---- SETTINGS ---------------------------------------------------------------
 // ---- HELP / FAQ (static, fully offline) -------------------------------------
 function helpScreen() {
@@ -6682,6 +6726,7 @@ function render() {
       case 'addpin': return addPinScreen(arg);
       case 'journal': return journalDispatch(arg);
       case 'scrapbook': return scrapbookScreen();
+      case 'contributions': return contributionsScreen();
       case 'journey': return journeyScreen();
       case 'calendar': return calendarDispatch(arg);
       case 'events': return eventsScreen(arg);

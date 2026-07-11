@@ -960,3 +960,23 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
 .field-lbl { font-size: .82rem; font-weight: 700; opacity: .72; margin: 2px 0; }
 .personal-card { border: 1px solid var(--line); }
 .preg-banner { border: 2px solid #B5179E; }
+
+/* ===== button/chip text fit — long labels wrap neatly and never overflow ===== */
+.btn, .chip {
+  white-space: normal; overflow-wrap: anywhere; text-align: center; line-height: 1.22;
+}
+/* keep a leading emoji from being squeezed or split off its label */
+.btn { padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+.chip { padding-top: 6px; padding-bottom: 6px; }
+/* full-width buttons align their (possibly multi-line) text centrally */
+.btn.block { text-align: center; }
+
+/* ===== contributions (levels + points) ===== */
+.contrib-hero { text-align: center; }
+.contrib-badge { font-size: 2.6rem; line-height: 1; margin-bottom: 4px; }
+.contrib-bar { height: 12px; border-radius: var(--r-pill); background: rgba(128,128,128,0.18); overflow: hidden; }
+.contrib-bar > span { display: block; height: 100%; background: var(--grad-sun); border-radius: var(--r-pill);
+  transition: width var(--dur) var(--ease); }
+.contrib-row { padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
+.contrib-row:last-child { border-bottom: none; }
+.contrib-suggest { justify-content: space-between; text-align: left; }

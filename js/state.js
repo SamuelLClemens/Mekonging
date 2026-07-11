@@ -99,6 +99,10 @@ function defaults() {
     // js/personal.js; kept here so it is carried through updates and the backup. NEVER
     // uploaded and never committed. { enabled, pinHash, partners[], days{}, layers{}, pregnancy }
     personal: { enabled: false, pinHash: null, partners: [], defaultPartnerId: null, showCycle: true, days: {}, layers: {}, pregnancy: null },
+    // --- v11: photo album (pictures the user adds directly). Photo blobs live in
+    // IndexedDB; this holds the ordered metadata. The scrapbook shows these + journal
+    // photos together. On-device, backup-safe. { photos: [{ id, key, caption, date }] }
+    album: { photos: [] },
   };
 }
 
@@ -142,6 +146,7 @@ function migrate(data) {
     // Private personal calendar — carried forward verbatim (js/personal.js normalizes the
     // inner shape lazily); only reset to the empty default if it is missing or malformed.
     personal: (data.personal && typeof data.personal === 'object' && !Array.isArray(data.personal)) ? data.personal : base.personal,
+    album: { photos: Array.isArray((data.album || {}).photos) ? data.album.photos : [] },
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -244,6 +249,7 @@ export function resetAll() {
   store.social = fresh.social;
   store.boardPosts = fresh.boardPosts;
   store.personal = fresh.personal;
+  store.album = fresh.album;
   save();
 }
 
