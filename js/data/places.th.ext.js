@@ -274,9 +274,9 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-ayutthaya-historical-park", name: "Ayutthaya Historical Park", city: "Ayutthaya", country: "th",
     access: { stepFree: "partial", note: "A wheelchair user (Cory Lee) reports Wat Mahathat has smooth paths and well-placed ramps reaching the famous Buddha head, but many other Ayutthaya ruins have uneven ground and steps up into the temple interiors." },
-    externalRatings: [
-      { site: "Google", score: 4.8, scale: 5, count: 86, asOf: "2026-07" },
-    ],
+    // Removed a Google snapshot that was the wrong entity (4.8 from only 86 reviews — far too
+    // few for a UNESCO site with tens of thousands). Falls back to the cited editorial estimate
+    // until a correct Historical Park listing is captured.
     recognition: 'On the island town north of Bangkok; brick prangs and rows of headless Buddhas, with the famous sandstone Buddha head entwined in fig-tree roots at Wat Mahathat marking the central cluster.',
     localName: 'อุทยานประวัติศาสตร์อยุธยา · Utthayan Prawattisat Ayutthaya',
     categories: ["culture", "park"], budgetTier: "low",

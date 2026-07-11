@@ -8,7 +8,10 @@ import { COUNTRIES, LANGUAGES, allPlaces } from '../js/data/regions.js';
 
 let checks = 0;
 const errors = [];
+const warnings = [];
 const ok = (cond, msg) => { checks++; if (!cond) errors.push(msg); };
+// Non-fatal: flags likely-wrong data that should be eyeballed but should not block a build.
+const warn = (cond, msg) => { checks++; if (!cond) warnings.push(msg); };
 const isYM = (s) => typeof s === 'string' && /^\d{4}-\d{2}$/.test(s);
 
 // --- phrasebooks -------------------------------------------------------------
@@ -64,6 +67,10 @@ for (const p of allPlaces()) {
       ok(e && e.site && typeof e.score === 'number' && e.score >= 0, `place ${p.id}: externalRating needs site + numeric score`);
       ok(typeof e.scale === 'number' && e.scale > 0, `place ${p.id}: externalRating needs a positive scale`);
       ok(isYM(e.asOf), `place ${p.id}: externalRating asOf must be YYYY-MM (${e.asOf})`);
+      // A famous sight (non-stay) with a tiny review count is almost certainly the wrong
+      // map entity (e.g. a nearby cafe, not the park). Stays can genuinely have few reviews.
+      warn(!(typeof e.count === 'number' && e.count < 200 && !p.stayType),
+        `place ${p.id}: externalRating '${e.site}' has only ${e.count} reviews for a non-stay place — verify it is the correct entity`);
     }
   }
   if (p.externalPrices != null) {
@@ -110,6 +117,11 @@ for (const c of COUNTRIES) {
 }
 
 // --- report ------------------------------------------------------------------
+if (warnings.length) {
+  console.warn(`\n${warnings.length} warning(s) — non-fatal, worth a look:`);
+  for (const w of warnings) console.warn('  ⚠ ' + w);
+  console.warn('');
+}
 if (errors.length) {
   console.error(`VALIDATION FAILED: ${errors.length} error(s) across ${checks} checks\n`);
   for (const e of errors) console.error('  ✗ ' + e);
