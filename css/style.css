@@ -300,6 +300,37 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .tile .t { font-weight: 800; font-size: var(--fs-h3); }
 .tile .d { color: var(--ink-soft); font-size: var(--fs-sm); }
 
+/* ===== modern home + button refresh (mk-v0.159.0) ================= */
+/* Press + keyboard-focus affordances everywhere (reduced-motion switch covers transforms). */
+.btn:active { transform: translateY(0) scale(0.985); }
+.btn:focus-visible, .tile:focus-visible, .chip:focus-visible, .phase-btn:focus-visible {
+  outline: 3px solid var(--sun); outline-offset: 2px;
+}
+.btn { min-height: 48px; letter-spacing: 0.01em; }
+/* Modern tile icon: a solid brand-gradient chip with a white glyph (pairs with the
+   existing hover accent-bar + icon ring defined later in this file). */
+.tile .ic { width: 52px; height: 52px; background: var(--grad-sun); color: #fff; }
+.tile .ic svg { width: 26px; height: 26px; }
+.tile .tile-badge { z-index: 1; }
+
+/* Phase-lead: an app-launcher grid — the primary action spans full width as a hero CTA.
+   Specific enough (.home-actions.phase-lead) to beat the two generic .home-actions rules. */
+.home-actions.phase-lead { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.home-actions.phase-lead .btn { flex: none; justify-content: center; min-height: 54px; border-radius: var(--r-md);
+  padding: var(--sp-3); font-size: var(--fs-sm); box-shadow: var(--shadow-soft); }
+.home-actions.phase-lead .btn:first-child { grid-column: 1 / -1; min-height: 60px; font-size: var(--fs-lg); }
+
+/* The single, clear "Explore <country>" gateway — a prominent rounded CTA. */
+.home-explore { min-height: 62px; border-radius: var(--r-lg); font-size: var(--fs-lg);
+  padding: var(--sp-4); box-shadow: var(--shadow); }
+
+/* Reassurance badges under the hero tagline. */
+.hero-badges { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; margin-top: var(--sp-3); }
+.hero-badge { font-size: var(--fs-sm); font-weight: 700; color: var(--ink);
+  background: rgba(255,255,255,0.34); border: 1px solid var(--line); border-radius: var(--r-pill);
+  padding: 4px 12px; backdrop-filter: blur(2px); }
+html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
+
 .country-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .country-chip {
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-family: inherit;

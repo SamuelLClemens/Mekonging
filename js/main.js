@@ -123,7 +123,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.158.0';
+const APP_VERSION = 'mk-v0.159.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -916,6 +916,11 @@ function homeScreen() {
   wrap.append(h('section', { class: 'hero' }, [
     h('div', { class: 'logo-wrap', html: logoSVG() }),
     h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
+    h('div', { class: 'hero-badges' }, [
+      h('span', { class: 'hero-badge' }, '✓ Works offline'),
+      h('span', { class: 'hero-badge' }, '✓ No account'),
+      h('span', { class: 'hero-badge' }, '✓ Free & private'),
+    ]),
   ]));
 
   // Journey phase shapes Home. FIRST run (unset) prompts the choice; once chosen we do
@@ -967,7 +972,7 @@ function homeScreen() {
   const hubFs = focusSpot();
   const hubCC = hubFs.spot.country;
   const hubC = getCountry(hubCC);
-  if (hubC) wrap.append(h('button', { class: 'btn block', style: 'margin:10px 0 2px', onclick: () => { activeCountry = hubCC; go(`#country-${hubCC}`); } }, `${hubC.flag} Explore ${hubC.name} — places, food, transport & more`));
+  if (hubC) wrap.append(h('button', { class: 'btn block home-explore', style: 'margin:10px 0 2px', onclick: () => { activeCountry = hubCC; go(`#country-${hubCC}`); } }, `${hubC.flag} Explore ${hubC.name} — places, food, transport & more`));
   // Offline / GPS off: let the traveller set where they are so everything matches.
   if (hubFs.source === 'default') wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0 2px', onclick: () => go(`#setcity-${hubCC}`) }, '📍 Set where you are (works offline)'));
 
