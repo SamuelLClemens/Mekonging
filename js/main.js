@@ -185,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.170.0';
+const APP_VERSION = 'mk-v0.171.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -4581,6 +4581,26 @@ function foodScreen(country) {
         ]),
       ]));
     });
+    // A pork-free phrase for the current country's language — helpful when eating
+    // outside a Chabad house. Keeping fully kosher still means the Chabad houses above;
+    // this only asks to leave pork out, so it is framed that way.
+    const pk = DIET_PHRASES['no-pork'];
+    const pkLang = pk.langs[foodLang];
+    const kLang = getLanguage(foodLang);
+    kc.append(h('p', { class: 'tiny muted', style: 'margin:10px 0 2px' }, 'Eating outside a Chabad house? Ask the cook to leave pork out:'));
+    if (pkLang && kLang) {
+      kc.append(h('div', { class: 'phrase' }, [
+        h('div', { class: 'grow' }, [
+          h('div', { class: 'en' }, pk.en),
+          h('div', { class: 'native', lang: kLang.locale }, pkLang.script),
+          h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), pkLang.roman]),
+        ]),
+        h('button', { class: 'speak', disabled: hasVoiceFor(kLang.locale) ? null : '', 'aria-label': `Speak ${pk.en}`, onclick: () => speak(pkLang.script, kLang.locale) }, '🔊'),
+      ]));
+    } else {
+      kc.append(h('p', { class: 'tiny' }, `“${pk.en}” — show this to the cook. A verified ${kLang ? kLang.label : 'local'} phrase is not offered here yet, so the Chabad houses above remain the reliable source of kosher food.`));
+    }
+    kc.append(sourcesNote(KOSHER_SOURCES, 'July 2026'));
     wrap.append(kc);
   }
 
@@ -5768,6 +5788,7 @@ const HOSPITALS = [
   { cc: 'th', city: 'Chiang Mai', lat: 18.7965, lng: 98.9720, name: 'Chiang Mai Ram Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
   { cc: 'th', city: 'Phuket', lat: 7.8927, lng: 98.3699, name: 'Bangkok Hospital Phuket', tags: ['er', 'peds', 'maternity', 'intl'] },
   { cc: 'th', city: 'Koh Samui', lat: 9.5350, lng: 100.0620, name: 'Bangkok Hospital Samui', tags: ['er', 'intl'] },
+  { cc: 'th', city: 'Krabi', lat: 8.0800, lng: 98.9060, name: 'Krabi Nakharin International Hospital', tags: ['er', 'intl'] },
   // Vietnam
   { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7290, lng: 106.7220, name: 'FV Hospital (Franco-Vietnamese)', tags: ['er', 'peds', 'maternity', 'intl'] },
   { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7846, lng: 106.6960, name: 'Family Medical Practice HCMC', tags: ['er', 'intl'], note: '24/7 international clinic with evacuation support.' },
@@ -5782,6 +5803,7 @@ const HOSPITALS = [
   // Laos
   { cc: 'la', city: 'Vientiane', lat: 17.9660, lng: 102.6110, name: 'Alliance International Medical Centre', tags: ['er', 'intl'] },
   { cc: 'la', city: 'Vientiane', lat: 17.9610, lng: 102.6030, name: 'Mahosot Hospital', tags: ['er'], note: 'Public hospital. Serious cases are often stabilised then evacuated to Thailand (Udon Thani or Bangkok).' },
+  { cc: 'la', city: 'Luang Prabang', lat: 19.8790, lng: 102.1470, name: 'Luang Prabang Provincial Hospital', tags: ['er'], note: 'Basic care. Serious cases are commonly evacuated to Vientiane or Thailand.' },
 ];
 
 // Actually kosher — in this region that means Chabad houses (supervised), never
@@ -5800,6 +5822,19 @@ const KOSHER = [
   { cc: 'la', city: 'Luang Prabang', lat: 19.8900, lng: 102.1370, name: 'Chabad House Luang Prabang', offer: 'Kosher meat restaurant', url: 'https://www.chabad.org/centers' },
 ];
 
+// Verified pork-free phrase (kosher, halal and no-pork travellers). Only languages
+// whose script is verified are included; the rest fall back to English so nothing
+// wrong is ever shown. Shellfish/seafood avoidance is already covered by ALLERGENS.
+const DIET_PHRASES = {
+  'no-pork': {
+    en: 'No pork, please',
+    langs: {
+      th: { script: 'ไม่กินหมู', roman: 'mâi gin mŭu' },
+      vi: { script: 'Không ăn thịt heo', roman: 'khong an thit heo' },
+    },
+  },
+};
+
 // Notable houses of worship across faiths in the main cities. A starting point,
 // not a full directory; the worship screen also offers a "find one near me" search
 // for anywhere not listed.
@@ -5816,11 +5851,17 @@ const WORSHIP = [
   { cc: 'th', city: 'Chiang Mai', lat: 18.8048, lng: 98.9217, faith: 'buddhist', name: 'Wat Phra That Doi Suthep' },
   { cc: 'th', city: 'Chiang Mai', lat: 18.7877, lng: 98.9967, faith: 'muslim', name: 'Ban Haw Mosque (Matsayit Chiang Mai)' },
   { cc: 'th', city: 'Chiang Mai', lat: 18.7900, lng: 98.9960, faith: 'jewish', name: 'Chabad House Chiang Mai' },
+  // Phuket
+  { cc: 'th', city: 'Phuket', lat: 7.8464, lng: 98.3381, faith: 'buddhist', name: 'Wat Chalong' },
+  { cc: 'th', city: 'Phuket', lat: 7.8830, lng: 98.3870, faith: 'muslim', name: 'Phuket Central Mosque (Masjid Mukaram)' },
   // Ho Chi Minh City
   { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7797, lng: 106.6990, faith: 'christian', name: 'Notre-Dame Cathedral Basilica of Saigon' },
   { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7900, lng: 106.6810, faith: 'buddhist', name: 'Vinh Nghiem Pagoda' },
   { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7690, lng: 106.6940, faith: 'hindu', name: 'Mariamman Hindu Temple' },
   { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7710, lng: 106.6960, faith: 'muslim', name: 'Saigon Central Mosque (Jamia Al-Musulman)' },
+  // Da Nang
+  { cc: 'vi', city: 'Da Nang', lat: 16.1000, lng: 108.2790, faith: 'buddhist', name: 'Linh Ung Pagoda (Son Tra)' },
+  { cc: 'vi', city: 'Da Nang', lat: 16.0670, lng: 108.2220, faith: 'christian', name: 'Da Nang Cathedral (Con Ga Church)' },
   // Hanoi
   { cc: 'vi', city: 'Hanoi', lat: 21.0450, lng: 105.8350, faith: 'buddhist', name: 'Tran Quoc Pagoda' },
   { cc: 'vi', city: 'Hanoi', lat: 21.0288, lng: 105.8490, faith: 'christian', name: 'St Joseph’s Cathedral' },
@@ -5888,6 +5929,28 @@ const LIFESAVING = [
       'Public AEDs are not widely mapped in the region. You are most likely to find one at international airports, large shopping malls, five-star hotels and hospitals — ask staff or security.',
       'If someone collapses and is not breathing normally, send someone to call the emergency number and fetch an AED, then start hands-only CPR: push hard and fast in the centre of the chest, about twice a second, until help arrives.',
     ] },
+];
+
+// Authorities behind the safety, medical, kosher and worship data. Cited in-app with
+// the shared sourcesNote() renderer so a traveller can check the primary source.
+const FIRSTAID_SOURCES = [
+  { org: 'World Health Organization — snakebite envenoming', url: 'https://www.who.int/news-room/fact-sheets/detail/snakebite-envenoming' },
+  { org: 'IFRC / Red Cross first aid', url: 'https://www.ifrc.org/our-work/health-and-care/first-aid' },
+];
+const HOSP_SOURCES = [
+  { org: 'Joint Commission International (hospital accreditation)', url: 'https://www.jointcommissioninternational.org' },
+];
+const DANGER_SOURCES = [
+  { org: 'World Health Organization — snakebite envenoming', url: 'https://www.who.int/news-room/fact-sheets/detail/snakebite-envenoming' },
+  { org: 'Species photos: Wikimedia Commons (CC BY-SA, credited per image)', url: 'https://commons.wikimedia.org' },
+];
+const KOSHER_SOURCES = [
+  { org: 'Chabad of Thailand (JewishThailand.com)', url: 'https://www.jewishthailand.com' },
+  { org: 'Chabad of Cambodia (JewishCambodia.com)', url: 'https://www.jewishcambodia.com' },
+  { org: 'Chabad center directory', url: 'https://www.chabad.org/centers' },
+];
+const WORSHIP_SOURCES = [
+  { org: 'OpenStreetMap contributors', url: 'https://www.openstreetmap.org/copyright' },
 ];
 
 // ---- EMERGENCY / SOS --------------------------------------------------------
@@ -6027,6 +6090,7 @@ function sosScreen(cc) {
   });
   wrap.append(life);
 
+  wrap.append(sourcesNote([...HOSP_SOURCES, ...FIRSTAID_SOURCES], 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English. First-aid guidance here is general and does not replace professional medical care.'));
   mount(wrap, '#home');
 }
@@ -6056,6 +6120,7 @@ function dangerScreen() {
   const rest = list.filter((s) => !shown.has(s.id));
   if (rest.length) { wrap.append(h('h2', { class: 'home-section' }, '⚠️ Other hazards')); rest.forEach((s) => wrap.append(speciesCard(s))); }
   if (!list.length) wrap.append(h('p', { class: 'empty' }, 'The wildlife library is still downloading — reconnect once to fetch it.'));
+  wrap.append(sourcesNote(DANGER_SOURCES, 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Most animals leave you alone if you leave them alone. Wear shoes at night, do not reach into holes or thick leaf litter, and never handle or corner wildlife.'));
   mount(wrap, '#sos');
 }
@@ -6092,6 +6157,7 @@ function worshipScreen(cc) {
     ])));
     wrap.append(card);
   });
+  wrap.append(sourcesNote(WORSHIP_SOURCES, 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Dress modestly at religious sites: cover shoulders and knees, remove shoes where asked, and follow local custom. Service times change — confirm before you travel across town.'));
   mount(wrap, '#home');
 }
@@ -6454,6 +6520,21 @@ function helpScreen() {
   wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, budget, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
   wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device; if you forget the passcode you can still get back in with the one-time recovery code shown at setup, or by restoring an encrypted backup. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
   wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), Places, Map and Saved. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
+
+  // Site-wide source register. Individual screens also cite their own sources inline
+  // (via the same "Sources:" line), so every claim is traceable to a primary source.
+  wrap.append(faq('Where does the information come from? (Sources)', h('div', {}, [
+    h('p', {}, 'Guidance is compiled from public, authoritative sources, and each screen also cites its own inline. The main sources across the app:'),
+    h('ul', { class: 'sos-aid' }, [
+      h('li', {}, [h('strong', {}, 'Health & first aid: '), 'World Health Organization and the IFRC / Red Cross; hospitals reflect Joint Commission International accreditation and facilities travellers commonly use.']),
+      h('li', {}, [h('strong', {}, 'Kosher: '), 'Chabad of Thailand, Chabad of Cambodia and the Chabad center directory — only certified-kosher venues, never “kosher-style”.']),
+      h('li', {}, [h('strong', {}, 'Places, worship & maps: '), 'OpenStreetMap contributors and national tourism boards; satellite imagery from Esri / ArcGIS.']),
+      h('li', {}, [h('strong', {}, 'Weather: '), 'Open-Meteo. Exchange rates: open.er-api.com. Live translation: MyMemory.']),
+      h('li', {}, [h('strong', {}, 'Wildlife: '), 'photographs from Wikimedia Commons (Creative Commons, credited on each species); animal calls streamed from Xeno-canto and iNaturalist.']),
+      h('li', {}, [h('strong', {}, 'Ratings: '), 'public snapshots from sites such as TripAdvisor, each stamped with the month it was checked, with live links to the source.']),
+    ]),
+    h('p', { class: 'muted' }, 'Everything here is guidance — always confirm prices, hours, service times and safety with the primary source or locally before you rely on them.'),
+  ])));
 
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, 'Suggest a feature or a correction'),
