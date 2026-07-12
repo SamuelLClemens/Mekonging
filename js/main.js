@@ -185,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.172.0';
+const APP_VERSION = 'mk-v0.173.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -788,6 +788,55 @@ function babyScreen(cc) {
 
 // ---- ENTRY & VISA (per country; nationality-dependent, always confirm officially) ----
 const VISA_TYPE = { 'visa-free': '✅ Visa-free', 'e-visa': '💻 e-Visa', 'visa-on-arrival': '🛬 Visa on arrival', 'visa-required': '📋 Visa required' };
+
+// Long-stay & remote-work routes, verified July 2026 by WebSearch. These are nationality-
+// and policy-dependent and change often, so every entry defers to the official portal.
+// This is NOT tourist entry (that is VISA above) — it is for staying longer or working
+// remotely, the part digital nomads and retirees ask about.
+const LONG_STAY = {
+  th: {
+    note: 'Thailand has genuine long-stay routes for remote workers and retirees.',
+    options: [
+      { name: 'DTV — Destination Thailand Visa', who: 'Remote workers for foreign employers or clients, freelancers, and “soft-power” activities (Muay Thai, courses, medical stays)', duration: '5-year, multiple-entry; 180 days per stay, extendable once by +180', note: 'Proof of funds around 500,000 THB; you may work only for foreign clients, not Thai employers. Application fee about 10,000 THB.' },
+      { name: 'LTR — Long-Term Resident', who: 'Wealthy pensioners (50+, roughly USD 80k/yr income), work-from-Thailand professionals, high earners and investors', duration: '10-year, issued as 5+5, run by the Board of Investment', note: 'Higher income and asset thresholds with more documentation; includes tax benefits on foreign income and simpler re-entry.' },
+    ],
+    nomad: 'Chiang Mai is the region’s biggest nomad hub, with many cafés and coworking spaces (for example Punspace and CAMP); Bangkok, Phuket and Koh Lanta also have coworking. Spending 180+ days in a tax year can make you a Thai tax resident — take advice.',
+    official: { name: 'Thailand BOI — LTR visa', url: 'https://ltr.boi.go.th/' },
+    sources: [ { org: 'Thailand E-Visa (MFA)', url: 'https://www.thaievisa.go.th/' }, { org: 'Thailand BOI — LTR visa', url: 'https://ltr.boi.go.th/' } ],
+    asOf: '2026-07',
+  },
+  vi: {
+    note: 'Vietnam has no dedicated digital-nomad or retirement visa (a Golden Visa was proposed in 2025 but is not yet in force).',
+    options: [
+      { name: '90-day e-Visa (multiple entry)', who: 'All nationalities; what most remote workers use', duration: '90 days, multiple entry; cannot be extended or renewed from inside Vietnam', note: 'When it expires you must leave and apply again from abroad (a “visa run”). Apply only on the official portal. Fee about USD 50.' },
+    ],
+    nomad: 'Da Nang and Ho Chi Minh City are the main nomad bases, with coworking (for example Toong and Dreamplex) and strong, inexpensive internet. Spending 183+ days in a calendar year can make you a tax resident — take advice.',
+    official: { name: 'Vietnam Immigration — official e-Visa', url: 'https://evisa.gov.vn/' },
+    sources: [ { org: 'Vietnam Immigration (official e-Visa)', url: 'https://evisa.gov.vn/' } ],
+    asOf: '2026-07',
+  },
+  kh: {
+    note: 'Cambodia has no digital-nomad visa, but its long-stay business route is unusually simple.',
+    options: [
+      { name: 'E-class visa + EB extension', who: 'Long-stayers and those working or running a business', duration: 'Extendable indefinitely (1/3/6/12-month); about USD 285 for the 12-month extension', note: 'A work permit is now enforced — EB renewals are refused without one. Enter on the ordinary (E) visa, then extend as EB.' },
+      { name: 'ER retirement extension', who: 'Retirees aged 55+', duration: '12-month, renewable; about USD 275–300/year via an agent', note: 'Requires proof of retirement or means; usually arranged through a visa agent.' },
+    ],
+    nomad: 'Phnom Penh and Siem Reap have coworking spaces and reliable internet, and the E→EB route makes long stays straightforward compared with neighbours.',
+    official: { name: 'Cambodia e-Visa (official)', url: 'https://www.evisa.gov.kh/' },
+    sources: [ { org: 'Cambodia e-Visa (official)', url: 'https://www.evisa.gov.kh/' } ],
+    asOf: '2026-07',
+  },
+  la: {
+    note: 'Laos has no digital-nomad or retirement visa; long stays are built from tourist extensions or a sponsored business visa.',
+    options: [
+      { name: 'Tourist visa + extensions', who: 'Most long-stayers', duration: 'Tourist e-Visa or visa on arrival, extendable at immigration (about USD 2/day), then a border run', note: 'For anything longer you generally need a business (NI-B) visa arranged by a local sponsor or employer.' },
+    ],
+    nomad: 'Vientiane and Luang Prabang have some cafés and limited coworking, but internet and the nomad scene are smaller than in Thailand or Vietnam. Confirm current rules with immigration.',
+    official: { name: 'Laos eVisa (official)', url: 'https://laoevisa.gov.la/' },
+    sources: [ { org: 'Laos eVisa (official)', url: 'https://laoevisa.gov.la/' } ],
+    asOf: '2026-07',
+  },
+};
 // How old is a YYYY-MM or YYYY-MM-DD stamp, in days? Recomputed live on every open, so
 // freshness "keeps itself up to date" without any server or manual bump.
 function dataAgeDays(dateStr) {
@@ -849,6 +898,22 @@ function visaScreen(cc) {
     if (o.howApply) card.append(h('div', { class: 'list-note' }, o.howApply));
     wrap.append(card);
   });
+  // Long stay & remote work (digital nomads, retirees) — separate from tourist entry.
+  const ls = LONG_STAY[cc];
+  if (ls) {
+    const lc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🧳 Long stay & remote work')]);
+    if (ls.note) lc.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, ls.note));
+    ls.options.forEach((o) => lc.append(h('div', { style: 'margin:6px 0' }, [
+      h('strong', {}, o.name),
+      o.who ? h('div', { class: 'tiny muted', style: 'margin:2px 0' }, o.who) : null,
+      o.duration ? h('div', { style: 'margin:2px 0' }, `🕒 ${o.duration}`) : null,
+      o.note ? h('div', { class: 'list-note' }, o.note) : null,
+    ])));
+    if (ls.nomad) lc.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, '💻 Nomad tip: '), ls.nomad]));
+    if (ls.official && ls.official.url) lc.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: ls.official.url, target: '_blank', rel: 'noopener' }, `${ls.official.name} ↗`));
+    lc.append(sourcesNote(ls.sources, ls.asOf));
+    wrap.append(lc);
+  }
   if (v.officialEvisa && v.officialEvisa.url) {
     wrap.append(h('div', { class: 'card' }, [
       h('h3', { style: 'margin-top:0' }, 'Official e-visa portal'),
