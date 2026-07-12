@@ -185,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.169.0';
+const APP_VERSION = 'mk-v0.170.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -230,6 +230,7 @@ const ICON_PATH = {
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.6 1.3c0 1.6-2.1 2-2.1 3.5"/><path d="M12 17h.01"/>',
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 9v5M12 17h.01"/>',
   heart: '<path d="M12 20s-6.5-4.3-9-8.2C1.1 8.5 2.8 5 6.2 5c2 0 3.3 1.1 3.8 2.2C10.5 6.1 11.8 5 13.8 5c3.4 0 5.1 3.5 3.2 6.8C18.5 15.7 12 20 12 20z"/>',
+  temple: '<path d="M12 3 4 7v2h16V7z"/><path d="M6 9v8M10 9v8M14 9v8M18 9v8"/><path d="M3 17h18v3H3z"/>',
 };
 const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 // A leading line-icon for an action chip; inherits the chip's text colour (incl. the
@@ -308,7 +309,7 @@ const TAB_FOR_HEAD = {
   trip: '#home', expenses: '#home', bargain: '#home', currency: '#home', checklist: '#home',
   plans: '#home', foryou: '#home', vault: '#home', help: '#home', feedback: '#home',
   circle: '#home', add: '#home', in: '#home', inbox: '#home', thread: '#home', msg: '#home', sos: '#home',
-  donate: '#home',
+  donate: '#home', danger: '#home', worship: '#home',
 };
 function activeTabForHash() {
   const head = (location.hash || '#home').replace(/^#/, '').split('-')[0];
@@ -1336,7 +1337,8 @@ function countryHubScreen(id) {
     { ic: ICON.volume, t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
     { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
     { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
-    { ic: ICON.alert, t: 'Emergency', d: 'Numbers + key phrases', hash: '#sos' },
+    { ic: ICON.alert, t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
+    { ic: ICON.temple, t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${c.id}` },
     { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
   ];
   // Collapsed by default: the city-first card, guide cards and Explore map cover the
@@ -4561,6 +4563,27 @@ function foodScreen(country) {
   profBox.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
   wrap.append(profBox);
 
+  // Kosher: reliably kosher food in this region is served by Chabad houses (supervised).
+  // Anything advertised only as "kosher-style" is not certified — never suggest it.
+  if ((store.profile.prefs.diet || []).includes('kosher')) {
+    const fix = getLastFix();
+    const kv = nearestFirst(KOSHER, fix);
+    const kc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', { style: 'margin-top:0' }, '✡️ Kosher food & Chabad houses')]);
+    kc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'In Thailand, Vietnam, Cambodia and Laos, reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified kosher — always confirm supervision with the venue.'));
+    kv.slice(0, 8).forEach((k) => {
+      const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: k.lat, lng: k.lng }) : null;
+      kc.append(h('div', { style: 'margin:6px 0' }, [
+        h('div', { class: 'row-between' }, [h('strong', {}, k.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
+        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `${k.city} · ${k.offer}`),
+        h('div', { class: 'chips' }, [
+          h('a', { class: 'chip', href: mapsSearch(`${k.name} ${k.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
+          h('a', { class: 'chip', href: k.url, target: '_blank', rel: 'noopener' }, 'Official site ↗'),
+        ]),
+      ]));
+    });
+    wrap.append(kc);
+  }
+
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
@@ -5720,6 +5743,153 @@ function searchScreen() {
   mount(wrap, '#home');
 }
 
+// ---- SAFETY, MEDICAL, KOSHER & WORSHIP DATA --------------------------------
+// Curated and self-hosted so every card renders fully offline. External links
+// (maps, official sites) are enhancements that degrade gracefully with no signal.
+// No phone numbers are hard-coded — an out-of-date emergency number is dangerous,
+// so the national number (below) and the maps link (which resolves the exact
+// venue live) are the source of truth. City-centre coordinates drive "nearest
+// first"; they are for ordering and a map query, not a claim of a precise door.
+function mapsSearch(q) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`; }
+function nearestFirst(list, fix) {
+  if (!fix || fix.lat == null) return list.slice();
+  return list.slice().sort((a, b) => haversineKm(fix, { lat: a.lat, lng: a.lng }) - haversineKm(fix, { lat: b.lat, lng: b.lng }));
+}
+function kmLabel(km) { return km == null ? '' : (km < 1 ? '<1 km' : `${Math.round(km)} km`); }
+
+// Reputable hospitals travellers and expats commonly use, tagged by capability so a
+// family can find an ER, a children's ward or maternity care fast. Not exhaustive.
+const HOSP_TAG = { er: '🚑 24h ER', peds: '🧒 Children', maternity: '🤰 Maternity', intl: '🌐 English / international' };
+const HOSPITALS = [
+  // Thailand
+  { cc: 'th', city: 'Bangkok', lat: 13.7437, lng: 100.5548, name: 'Bumrungrad International Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
+  { cc: 'th', city: 'Bangkok', lat: 13.7305, lng: 100.5690, name: 'Samitivej Sukhumvit Hospital', tags: ['er', 'peds', 'maternity', 'intl'], note: 'Has a dedicated children’s hospital.' },
+  { cc: 'th', city: 'Bangkok', lat: 13.7247, lng: 100.5389, name: 'BNH Hospital', tags: ['er', 'maternity', 'intl'] },
+  { cc: 'th', city: 'Chiang Mai', lat: 18.7965, lng: 98.9720, name: 'Chiang Mai Ram Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
+  { cc: 'th', city: 'Phuket', lat: 7.8927, lng: 98.3699, name: 'Bangkok Hospital Phuket', tags: ['er', 'peds', 'maternity', 'intl'] },
+  { cc: 'th', city: 'Koh Samui', lat: 9.5350, lng: 100.0620, name: 'Bangkok Hospital Samui', tags: ['er', 'intl'] },
+  // Vietnam
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7290, lng: 106.7220, name: 'FV Hospital (Franco-Vietnamese)', tags: ['er', 'peds', 'maternity', 'intl'] },
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7846, lng: 106.6960, name: 'Family Medical Practice HCMC', tags: ['er', 'intl'], note: '24/7 international clinic with evacuation support.' },
+  { cc: 'vi', city: 'Hanoi', lat: 20.9950, lng: 105.8680, name: 'Vinmec International Hospital (Times City)', tags: ['er', 'peds', 'maternity', 'intl'] },
+  { cc: 'vi', city: 'Hanoi', lat: 21.0300, lng: 105.8130, name: 'Family Medical Practice Hanoi', tags: ['intl'] },
+  { cc: 'vi', city: 'Da Nang', lat: 16.0600, lng: 108.2200, name: 'Vinmec Da Nang International Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
+  // Cambodia
+  { cc: 'kh', city: 'Phnom Penh', lat: 11.5800, lng: 104.8990, name: 'Royal Phnom Penh Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
+  { cc: 'kh', city: 'Phnom Penh', lat: 11.5560, lng: 104.9280, name: 'Raffles Medical Phnom Penh', tags: ['er', 'intl'] },
+  { cc: 'kh', city: 'Siem Reap', lat: 13.3670, lng: 103.8560, name: 'Royal Angkor International Hospital', tags: ['er', 'intl'] },
+  { cc: 'kh', city: 'Siem Reap', lat: 13.3560, lng: 103.8590, name: 'Angkor Hospital for Children', tags: ['peds'], note: 'Renowned charitable children’s hospital.' },
+  // Laos
+  { cc: 'la', city: 'Vientiane', lat: 17.9660, lng: 102.6110, name: 'Alliance International Medical Centre', tags: ['er', 'intl'] },
+  { cc: 'la', city: 'Vientiane', lat: 17.9610, lng: 102.6030, name: 'Mahosot Hospital', tags: ['er'], note: 'Public hospital. Serious cases are often stabilised then evacuated to Thailand (Udon Thani or Bangkok).' },
+];
+
+// Actually kosher — in this region that means Chabad houses (supervised), never
+// "kosher-style". Each runs meals and/or a food shop for travellers.
+const KOSHER = [
+  { cc: 'th', city: 'Bangkok', lat: 13.7590, lng: 100.4970, name: 'Chabad House (Ohr Menachem), Khao San', offer: 'Kosher meat & dairy restaurants + food store', url: 'https://www.jewishthailand.com' },
+  { cc: 'th', city: 'Bangkok', lat: 13.7380, lng: 100.5720, name: 'JCafe, Sukhumvit (Mille Malle)', offer: 'Kosher café', url: 'https://www.jewishthailand.com' },
+  { cc: 'th', city: 'Chiang Mai', lat: 18.7900, lng: 98.9960, name: 'Chabad House Chiang Mai', offer: 'Kosher meat restaurant', url: 'https://www.jewishthailand.com' },
+  { cc: 'th', city: 'Phuket', lat: 7.8280, lng: 98.3360, name: 'Chabad House Phuket', offer: 'Kosher meat & dairy + food store', url: 'https://www.jewishthailand.com' },
+  { cc: 'th', city: 'Koh Samui', lat: 9.5350, lng: 100.0620, name: 'Chabad House Koh Samui', offer: 'Kosher meat & dairy restaurants', url: 'https://www.jewishthailand.com' },
+  { cc: 'th', city: 'Koh Phangan', lat: 9.7320, lng: 100.0130, name: 'Chabad Koh Phangan', offer: 'Kosher meat restaurant', url: 'https://www.jewishthailand.com' },
+  { cc: 'th', city: 'Pai', lat: 19.3590, lng: 98.4410, name: 'Chabad Pai', offer: 'Kosher meat restaurant (seasonal)', url: 'https://www.jewishthailand.com' },
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7880, lng: 106.6960, name: 'Chabad Jewish Center of Vietnam', offer: 'Kosher restaurant + meals for travellers', url: 'https://www.chabad.org/centers' },
+  { cc: 'vi', city: 'Hanoi', lat: 21.0330, lng: 105.8500, name: 'Chabad of Hanoi', offer: 'Kosher meals for travellers', url: 'https://www.chabad.org/centers' },
+  { cc: 'kh', city: 'Phnom Penh', lat: 11.5720, lng: 104.9300, name: 'Chabad Cambodia', offer: 'Kosher restaurant + food store (nationwide delivery)', url: 'https://www.jewishcambodia.com' },
+  { cc: 'la', city: 'Luang Prabang', lat: 19.8900, lng: 102.1370, name: 'Chabad House Luang Prabang', offer: 'Kosher meat restaurant', url: 'https://www.chabad.org/centers' },
+];
+
+// Notable houses of worship across faiths in the main cities. A starting point,
+// not a full directory; the worship screen also offers a "find one near me" search
+// for anywhere not listed.
+const WORSHIP_FAITH = { buddhist: '☸️ Buddhist', christian: '✝️ Christian', muslim: '☪️ Muslim', hindu: '🕉️ Hindu', jewish: '✡️ Jewish' };
+const WORSHIP_SEARCH = { buddhist: 'Buddhist temple', christian: 'church', muslim: 'mosque', hindu: 'Hindu temple', jewish: 'synagogue' };
+const WORSHIP = [
+  // Bangkok
+  { cc: 'th', city: 'Bangkok', lat: 13.7465, lng: 100.4931, faith: 'buddhist', name: 'Wat Pho (Temple of the Reclining Buddha)' },
+  { cc: 'th', city: 'Bangkok', lat: 13.7269, lng: 100.5140, faith: 'christian', name: 'Assumption Cathedral (Catholic)' },
+  { cc: 'th', city: 'Bangkok', lat: 13.7218, lng: 100.5140, faith: 'muslim', name: 'Haroon Mosque, Bang Rak' },
+  { cc: 'th', city: 'Bangkok', lat: 13.7248, lng: 100.5163, faith: 'hindu', name: 'Sri Maha Mariamman Temple (Wat Khaek), Silom' },
+  { cc: 'th', city: 'Bangkok', lat: 13.7590, lng: 100.4970, faith: 'jewish', name: 'Chabad Ohr Menachem / synagogue, Khao San' },
+  // Chiang Mai
+  { cc: 'th', city: 'Chiang Mai', lat: 18.8048, lng: 98.9217, faith: 'buddhist', name: 'Wat Phra That Doi Suthep' },
+  { cc: 'th', city: 'Chiang Mai', lat: 18.7877, lng: 98.9967, faith: 'muslim', name: 'Ban Haw Mosque (Matsayit Chiang Mai)' },
+  { cc: 'th', city: 'Chiang Mai', lat: 18.7900, lng: 98.9960, faith: 'jewish', name: 'Chabad House Chiang Mai' },
+  // Ho Chi Minh City
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7797, lng: 106.6990, faith: 'christian', name: 'Notre-Dame Cathedral Basilica of Saigon' },
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7900, lng: 106.6810, faith: 'buddhist', name: 'Vinh Nghiem Pagoda' },
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7690, lng: 106.6940, faith: 'hindu', name: 'Mariamman Hindu Temple' },
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7710, lng: 106.6960, faith: 'muslim', name: 'Saigon Central Mosque (Jamia Al-Musulman)' },
+  // Hanoi
+  { cc: 'vi', city: 'Hanoi', lat: 21.0450, lng: 105.8350, faith: 'buddhist', name: 'Tran Quoc Pagoda' },
+  { cc: 'vi', city: 'Hanoi', lat: 21.0288, lng: 105.8490, faith: 'christian', name: 'St Joseph’s Cathedral' },
+  { cc: 'vi', city: 'Hanoi', lat: 21.0300, lng: 105.8500, faith: 'muslim', name: 'Al-Noor Mosque, Hang Luoc' },
+  // Phnom Penh
+  { cc: 'kh', city: 'Phnom Penh', lat: 11.5764, lng: 104.9282, faith: 'buddhist', name: 'Wat Phnom' },
+  { cc: 'kh', city: 'Phnom Penh', lat: 11.5620, lng: 104.9190, faith: 'muslim', name: 'Al-Serkal Mosque (Central Mosque)' },
+  { cc: 'kh', city: 'Phnom Penh', lat: 11.5720, lng: 104.9300, faith: 'jewish', name: 'Chabad Cambodia (synagogue), Sisowath Quay' },
+  // Siem Reap
+  { cc: 'kh', city: 'Siem Reap', lat: 13.3540, lng: 103.8560, faith: 'buddhist', name: 'Wat Preah Prom Rath' },
+  // Vientiane
+  { cc: 'la', city: 'Vientiane', lat: 17.9660, lng: 102.6120, faith: 'buddhist', name: 'Wat Si Saket' },
+  { cc: 'la', city: 'Vientiane', lat: 17.9560, lng: 102.6100, faith: 'muslim', name: 'Azhar Mosque, Vientiane' },
+  // Luang Prabang
+  { cc: 'la', city: 'Luang Prabang', lat: 19.8945, lng: 102.1400, faith: 'buddhist', name: 'Wat Xieng Thong' },
+  { cc: 'la', city: 'Luang Prabang', lat: 19.8900, lng: 102.1370, faith: 'jewish', name: 'Chabad House Luang Prabang' },
+];
+
+// General first aid for the region's real hazards, aligned with mainstream medical
+// advice (WHO / Red Cross / St John). Guidance only — not a substitute for a doctor.
+// In a serious emergency, call the national number above and get to a hospital.
+const FIRST_AID = [
+  { t: '🐍 Snake bite', do: [
+      'Move out of the snake’s reach; keep the person calm and as still as possible — panic and movement speed venom through the body.',
+      'Keep the bitten limb still and roughly at heart level; splint it if you can.',
+      'Remove rings, watches and tight clothing before swelling starts.',
+      'Note the snake’s colour, size and shape, or photograph it from a safe distance — it helps doctors choose the antivenom.',
+      'Get to a hospital immediately and call the emergency number. Hospitals across the region stock antivenom; reaching one fast is what saves lives.',
+    ], dont: [
+      'Do not cut the wound or try to suck out the venom.',
+      'Do not apply a tight tourniquet, ice, alcohol or an electric shock.',
+      'Do not chase or try to kill the snake, and do not wait to “see if it was venomous”.',
+    ] },
+  { t: '🪼 Jellyfish & marine stings', do: [
+      'Get out of the water. Douse the sting with vinegar for at least 30 seconds — many beaches keep a bottle for this.',
+      'Lift off any tentacles with the edge of a card or a gloved hand.',
+      'For a stonefish, stingray or sea-urchin wound, soak the area in water as hot as can be comfortably tolerated.',
+      'Treat any difficulty breathing, chest pain or collapse as life-threatening, start CPR if needed, and call for help — box jellyfish stings can kill within minutes.',
+    ], dont: [
+      'Do not rub the area or rinse with fresh water — it can fire more stinging cells.',
+      'Do not use urine.',
+    ] },
+  { t: '🐝 Severe allergic reaction (anaphylaxis)', do: [
+      'Signs: swelling of the lips, tongue or throat, trouble breathing, widespread hives, or dizziness or collapse after a sting, food or medicine.',
+      'If an adrenaline auto-injector (EpiPen) is available, use it at once into the outer thigh, then call emergency services.',
+      'Lay the person flat and raise their legs; if breathing is hard, let them sit up. A second dose may be needed after 5–15 minutes.',
+      'Get to a hospital even if they improve — symptoms can return hours later.',
+    ], dont: [
+      'Do not make them stand up or walk around.',
+      'Do not wait for symptoms to worsen before using adrenaline.',
+    ] },
+];
+
+// Honest guidance on the two life-saving needs travellers ask about most. Neither is
+// reliably purchasable on the street here, so the advice is about preparation and where
+// the real help is — not a fabricated "nearest shop".
+const LIFESAVING = [
+  { t: '💉 Adrenaline auto-injectors (EpiPen)', body: [
+      'Auto-injectors are hard to buy in Thailand, Vietnam, Cambodia and Laos and are often unavailable outside major private hospitals.',
+      'If you are at risk of anaphylaxis, bring at least two from home, carry them on your person (not in checked luggage) and keep them out of extreme heat.',
+      'In an emergency, hospital emergency rooms and ambulances carry injectable adrenaline given by staff — reaching one fast matters more than finding a pharmacy.',
+      'To try to buy one locally, ask the pharmacy of a large international hospital (for example Bumrungrad or Samitivej in Bangkok). Availability is not guaranteed — telephone ahead.',
+    ] },
+  { t: '❤️ Defibrillators (AED) & CPR', body: [
+      'Public AEDs are not widely mapped in the region. You are most likely to find one at international airports, large shopping malls, five-star hotels and hospitals — ask staff or security.',
+      'If someone collapses and is not breathing normally, send someone to call the emergency number and fetch an AED, then start hands-only CPR: push hard and fast in the centre of the chest, about twice a second, until help arrives.',
+    ] },
+];
+
 // ---- EMERGENCY / SOS --------------------------------------------------------
 // Water/food safety keyed to the country you are actually in. General travel-health
 // guidance for the region — tap water is not potable in any of the four, and busy,
@@ -5806,9 +5976,123 @@ function sosScreen(cc) {
   hosp.append(h('a', { class: 'btn block', href: mapHref, target: '_blank', rel: 'noopener' }, 'Find nearest hospital (needs internet) ↗'));
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
   if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
+
+  // Reputable hospitals in the country, nearest city first, tagged so a family can find
+  // an ER, a children's ward or maternity care fast. The map link routes to the exact
+  // door; call ahead — in a life-threatening emergency use the number above.
+  const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === activeCountry), fix);
+  if (localHosp.length) {
+    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, `Trusted hospitals in ${c.name} — for adults, children, babies and pregnancy. Most have English-speaking staff.`));
+    localHosp.forEach((x) => {
+      const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
+      hosp.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
+        h('div', { class: 'row-between' }, [h('strong', {}, x.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
+        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city + (x.note ? ` · ${x.note}` : '')),
+        h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))),
+        h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: mapsSearch(`${x.name} ${x.city}`), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
+      ]));
+    });
+    hosp.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'A starting list, not exhaustive. For a young child, pregnancy or complex needs, telephone ahead to confirm the right department is open.'));
+  }
   wrap.append(hosp);
 
-  wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English.'));
+  // Bites, stings & dangerous wildlife — first aid you can read offline, then the
+  // illustrated "what to look out for" list (photos + how to identify + what to do).
+  const danger = h('div', { class: 'card allergy-card' }, [h('h2', {}, '🐍 Bites, stings & dangerous wildlife')]);
+  danger.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'));
+  FIRST_AID.forEach((fa) => {
+    const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, fa.t)]);
+    const inner = h('div', {});
+    inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do')]));
+    inner.append(h('ul', { class: 'sos-aid' }, fa.do.map((li) => h('li', {}, li))));
+    if (fa.dont && fa.dont.length) {
+      inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('ul', { class: 'sos-aid dont' }, fa.dont.map((li) => h('li', {}, li))));
+    }
+    dd.append(inner);
+    danger.append(dd);
+  });
+  danger.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#danger') }, '⚠️ Dangerous animals — photos & how to spot them'));
+  wrap.append(danger);
+
+  // Life-saving essentials: honest guidance on EpiPens and defibrillators (neither is
+  // reliably bought on the street here) plus hands-only CPR.
+  const life = h('div', { class: 'card' }, [h('h2', {}, '💉 Life-saving essentials')]);
+  LIFESAVING.forEach((ls) => {
+    const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, ls.t)]);
+    const inner = h('div', {});
+    ls.body.forEach((p) => inner.append(h('p', { class: 'tiny', style: 'margin:6px 0' }, p)));
+    dd.append(inner);
+    life.append(dd);
+  });
+  wrap.append(life);
+
+  wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English. First-aid guidance here is general and does not replace professional medical care.'));
+  mount(wrap, '#home');
+}
+
+// The region's dangerous animals, drawn from the wildlife library — each entry already
+// carries a photo, how to identify it, and what to do if bitten or stung. Grouped so a
+// traveller can scan snakes, marine hazards and the rest at a glance.
+function dangerScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Dangerous wildlife', '#sos'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
+  const list = allSpecies().filter((s) => s.dangerous);
+  const groups = [
+    { label: '🐍 Snakes', match: (s) => /cobra|krait|viper|python|snake/i.test(s.commonName) },
+    { label: '🌊 In the sea', match: (s) => /jellyfish|stonefish|lionfish|ray|triggerfish|urchin/i.test(s.commonName) },
+    { label: '🦂 Scorpions & centipedes', match: (s) => /scorpion|centipede/i.test(s.commonName) },
+    { label: '🐒 Larger animals', match: (s) => /macaque|elephant|boar|dog|buffalo/i.test(s.commonName) },
+  ];
+  const shown = new Set();
+  groups.forEach((g) => {
+    const items = list.filter((s) => g.match(s) && !shown.has(s.id));
+    if (!items.length) return;
+    items.forEach((s) => shown.add(s.id));
+    wrap.append(h('h2', { class: 'home-section' }, g.label));
+    items.forEach((s) => wrap.append(speciesCard(s)));
+  });
+  const rest = list.filter((s) => !shown.has(s.id));
+  if (rest.length) { wrap.append(h('h2', { class: 'home-section' }, '⚠️ Other hazards')); rest.forEach((s) => wrap.append(speciesCard(s))); }
+  if (!list.length) wrap.append(h('p', { class: 'empty' }, 'The wildlife library is still downloading — reconnect once to fetch it.'));
+  wrap.append(h('p', { class: 'disclaimer' }, 'Most animals leave you alone if you leave them alone. Wear shoes at night, do not reach into holes or thick leaf litter, and never handle or corner wildlife.'));
+  mount(wrap, '#sos');
+}
+
+// Places of worship across faiths — notable landmarks in the main cities, nearest
+// first, plus a "find one near me" search for anywhere not listed.
+function worshipScreen(cc) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Places of worship', '#home'));
+  const fix = getLastFix();
+  const near = fix ? nearestSpotGlobal(fix) : null;
+  if (cc) activeCountry = cc;
+  else if (near) activeCountry = near.spot.country;
+  const c = getCountry(activeCountry);
+  wrap.append(countryChips((id) => go(`#worship-${id}`)));
+  wrap.append(h('p', { class: 'map-hint' }, 'Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
+
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Find a place of worship near me'),
+    h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Opens a live map search (needs internet).'),
+    h('div', { class: 'chips' }, Object.keys(WORSHIP_FAITH).map((f) =>
+      h('a', { class: 'chip', href: mapsSearch(`${WORSHIP_SEARCH[f]} near me`), target: '_blank', rel: 'noopener' }, `${WORSHIP_FAITH[f]} ↗`))),
+  ]));
+
+  const local = nearestFirst(WORSHIP.filter((w) => !c || w.cc === activeCountry), fix);
+  if (!local.length) { wrap.append(h('p', { class: 'empty' }, 'No landmarks listed for this country yet — use the search above to find one near you.')); mount(wrap, '#home'); return; }
+  const byCity = {};
+  local.forEach((w) => { (byCity[w.city] = byCity[w.city] || []).push(w); });
+  Object.keys(byCity).forEach((city) => {
+    const card = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, city)]);
+    byCity[city].forEach((w) => card.append(h('div', { class: 'row-between', style: 'margin:4px 0' }, [
+      h('div', { class: 'grow' }, [h('strong', {}, w.name), h('div', { class: 'muted tiny' }, WORSHIP_FAITH[w.faith] || '')]),
+      h('a', { class: 'chip', href: mapsSearch(`${w.name} ${w.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
+    ])));
+    wrap.append(card);
+  });
+  wrap.append(h('p', { class: 'disclaimer' }, 'Dress modestly at religious sites: cover shoulders and knees, remove shoes where asked, and follow local custom. Service times change — confirm before you travel across town.'));
   mount(wrap, '#home');
 }
 
@@ -5869,7 +6153,7 @@ async function renderVault(body) {
   const fileInput = h('input', { type: 'file', accept: 'image/*,application/pdf' });
   body.append(h('div', { class: 'card' }, [
     h('h2', {}, 'Add a document'),
-    h('p', { class: 'muted' }, 'Photograph or scan your passport, visa, insurance or tickets, then add the file. It is encrypted before it is saved.'),
+    h('p', { class: 'muted' }, 'Photograph or scan your passport, ID, visa, insurance, tickets or vaccination records (including a yellow-fever certificate), then add the file. It is encrypted before it is saved.'),
     field('File', fileInput),
     h('button', { class: 'btn block', onclick: async () => {
       const f = fileInput.files && fileInput.files[0];
@@ -7303,6 +7587,8 @@ function render() {
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
+      case 'danger': return dangerScreen();
+      case 'worship': return worshipScreen(arg);
       case 'trip': return tripScreen();
       case 'expenses': return expensesScreen();
       case 'bargain': return bargainScreen();
