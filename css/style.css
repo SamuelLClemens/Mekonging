@@ -1031,3 +1031,8 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .diet-banner.bad { background: rgba(178, 58, 22, 0.16); border: 1px solid var(--diet-bad); }
 .allergy-card { border: 1px solid var(--warn); }
 .give-back { border: 1px solid var(--magenta); }
+/* Emergency: hospital rows + first-aid do/don't lists */
+.sos-hosp { background: var(--surface-2, rgba(0,0,0,0.03)); }
+.sos-aid { margin: 2px 0 4px; padding-left: 18px; }
+.sos-aid li { margin: 3px 0; font-size: var(--fs-sm); line-height: 1.4; }
+.sos-aid.dont li { color: var(--warn); }
