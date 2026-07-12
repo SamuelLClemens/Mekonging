@@ -185,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.171.0';
+const APP_VERSION = 'mk-v0.172.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1287,6 +1287,13 @@ function countryHubScreen(id) {
   const acc = accessCard(id); if (acc) wrap.append(acc);
   const vc = visaCard(id); if (vc) wrap.append(vc);
   const famc = familyCard(id); if (famc) wrap.append(famc);
+  if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
+    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
+      h('strong', {}, '🧭 Travelling solo'),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
+      h('button', { class: 'btn block', onclick: () => go(`#sos-${id}`) }, 'See solo & women’s safety'),
+    ]));
+  }
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
@@ -4604,6 +4611,33 @@ function foodScreen(country) {
     wrap.append(kc);
   }
 
+  // Halal & pork-free: a pork-free phrase in the current language + a live halal search.
+  // Halal-certified food is widespread here, especially near mosques and Muslim quarters.
+  const dietSet = store.profile.prefs.diet || [];
+  if (dietSet.includes('halal') || dietSet.includes('no-pork') || dietSet.includes('no-beef')) {
+    const hc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', { style: 'margin-top:0' }, '🕌 Halal & pork-free')]);
+    hc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Halal-certified food is widely available in the region, especially near mosques and Muslim quarters. Look for a halal-certification logo and confirm with the cook.'));
+    hc.append(h('a', { class: 'btn ghost block', href: mapsSearch('halal restaurant near me'), target: '_blank', rel: 'noopener' }, 'Find halal food near me ↗'));
+    const hpk = DIET_PHRASES['no-pork'];
+    const hpkLang = hpk.langs[foodLang];
+    const hLang = getLanguage(foodLang);
+    hc.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' }, 'Ask the cook to leave pork out:'));
+    if (hpkLang && hLang) {
+      hc.append(h('div', { class: 'phrase' }, [
+        h('div', { class: 'grow' }, [
+          h('div', { class: 'en' }, hpk.en),
+          h('div', { class: 'native', lang: hLang.locale }, hpkLang.script),
+          h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), hpkLang.roman]),
+        ]),
+        h('button', { class: 'speak', disabled: hasVoiceFor(hLang.locale) ? null : '', 'aria-label': `Speak ${hpk.en}`, onclick: () => speak(hpkLang.script, hLang.locale) }, '🔊'),
+      ]));
+    } else {
+      hc.append(h('p', { class: 'tiny' }, `“${hpk.en}” — show this to the cook (a verified ${hLang ? hLang.label : 'local'} phrase is coming soon).`));
+    }
+    hc.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#worship') }, 'Mosques & Muslim quarters — Places of worship'));
+    wrap.append(hc);
+  }
+
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
@@ -5953,6 +5987,40 @@ const WORSHIP_SOURCES = [
   { org: 'OpenStreetMap contributors', url: 'https://www.openstreetmap.org/copyright' },
 ];
 
+// Solo & women travellers — practical, non-alarmist guidance. General advice reflects
+// mainstream travel-safety consensus; per-country notes cover the region's real risks
+// (traffic, snatch-theft, nightlife) rather than stoking fear. Useful to everyone.
+const SOLO_SAFETY = {
+  general: [
+    'Thailand, Vietnam, Cambodia and Laos are, by global standards, among the safer places to travel solo — including for women. Ordinary city precautions apply; violent crime against tourists is rare and opportunistic theft is the main risk.',
+    'Use booked ride apps (Grab, Bolt) or metered taxis rather than unmarked cars, especially at night, and check the plate before getting in. Share your live trip with someone you trust.',
+    'Choose accommodation with strong recent reviews and 24-hour reception; a door that locks from the inside, and a padlock for hostel lockers, are worth it.',
+    'Watch your drink at bars and parties — drink-spiking happens at some nightlife spots. Keep enough phone charge and a little cash for a ride home.',
+    'Dress modestly at temples (shoulders and knees covered) and more conservatively in rural and Muslim-majority areas; it draws less attention and respects local custom.',
+    'Trust your instincts — it is always fine to be firm, say no, or walk away. Save the tourist-police and your embassy numbers offline before you need them.',
+  ],
+  th: [
+    'Bangkok’s BTS and MRT and the inter-city VIP buses and trains are reliable; on overnight trains you can request a lower berth when booking.',
+    'On the islands, take care at Full Moon-style parties: go with people you trust, mind your drink, and arrange your return boat or taxi in advance.',
+    'Rent a scooter only with the correct licence and a helmet — road injuries are the single biggest real risk to travellers here.',
+  ],
+  vi: [
+    'Use Grab (car or bike) in cities and insist on a helmet on bike taxis. Traffic is the main hazard — cross slowly and steadily so riders can flow around you.',
+    'Carry bags on the pavement side and keep phones away from the kerb; snatch-thefts from passing motorbikes happen in Ho Chi Minh City and Hanoi.',
+  ],
+  kh: [
+    'In Phnom Penh, bag-snatching from passing motorbikes is the main risk: wear bags across the body on the side away from the road, and keep your phone out of sight near traffic.',
+    'Use Grab or the PassApp for tuk-tuks and cars, so the fare and route are logged.',
+  ],
+  la: [
+    'Laos is very relaxed and low-crime, but towns wind down early — plan transport before dark, especially in rural areas where lighting and taxis are scarce.',
+    'On tubing or river days around Vang Vieng, be careful with alcohol near fast water; this is the main cause of traveller injuries.',
+  ],
+};
+const SOLO_SOURCES = [
+  { org: 'National tourist police & government travel advisories', url: 'https://www.gov.uk/foreign-travel-advice' },
+];
+
 // ---- EMERGENCY / SOS --------------------------------------------------------
 // Water/food safety keyed to the country you are actually in. General travel-health
 // guidance for the region — tap water is not potable in any of the four, and busy,
@@ -6089,6 +6157,26 @@ function sosScreen(cc) {
     life.append(dd);
   });
   wrap.append(life);
+
+  // Solo & women travellers — practical, non-alarmist safety, opened by default when the
+  // profile says solo/solo-female. Shown to everyone; the region's real risks are traffic,
+  // snatch-theft and nightlife, not stranger violence.
+  const soloOn = store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo';
+  const solo = h('div', { class: 'card' }, [h('h2', {}, '🧭 Solo & women travellers')]);
+  const sd = h('details', { class: 'filters-collapse', open: soloOn ? '' : null }, [
+    h('summary', {}, soloOn ? 'Staying safe on your own — tailored for you' : 'Staying safe on your own'),
+  ]);
+  const sInner = h('div', {});
+  sInner.append(h('ul', { class: 'sos-aid' }, SOLO_SAFETY.general.map((li) => h('li', {}, li))));
+  const cSolo = SOLO_SAFETY[activeCountry];
+  if (cSolo) {
+    sInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, `In ${c.name}`)]));
+    sInner.append(h('ul', { class: 'sos-aid' }, cSolo.map((li) => h('li', {}, li))));
+  }
+  sInner.append(sourcesNote(SOLO_SOURCES, 'July 2026'));
+  sd.append(sInner);
+  solo.append(sd);
+  wrap.append(solo);
 
   wrap.append(sourcesNote([...HOSP_SOURCES, ...FIRSTAID_SOURCES], 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English. First-aid guidance here is general and does not replace professional medical care.'));
@@ -6940,6 +7028,10 @@ function welcomeScreen() {
   const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
     onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 Travelling with a baby or toddler');
   whoCard.append(h('div', { class: 'chips' }, [babyChip]));
+  whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Travelling alone? We will surface tailored, non-alarmist safety notes.'));
+  const soloFemChip = h('button', { class: 'chip', 'aria-pressed': prefs.soloFemale ? 'true' : 'false',
+    onclick: (e) => { prefs.soloFemale = !prefs.soloFemale; save(); e.currentTarget.setAttribute('aria-pressed', prefs.soloFemale ? 'true' : 'false'); } }, '🧭 Solo female traveller');
+  whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
   wrap.append(whoCard);
 
   // 3 — Accessibility needs
