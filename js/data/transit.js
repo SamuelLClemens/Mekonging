@@ -39,7 +39,7 @@ export const TRANSPORT_HUBS = [
   // ============================ THAILAND — TRAINS ============================
   { id: 't-th-krungthep', cc: 'th', city: 'Bangkok', type: 'train', name: 'Krung Thep Aphiwat Central Terminal (Bang Sue)', coords: { lat: 13.803, lng: 100.539 },
     note: 'Bangkok’s main long-distance terminal since 2023 — northern, northeastern, southern and eastern lines all start here. On the MRT Blue Line (Bang Sue) and SRT Red Line.' },
-  { id: 't-th-hualamphong', cc: 'th', city: 'Bangkok', type: 'train', name: 'Hua Lamphong Station', coords: { lat: 13.737, lng: 100.517 },
+  { id: 't-th-hualamphong', cc: 'th', city: 'Bangkok', type: 'train', name: 'Hua Lamphong Station', coords: { lat: 13.737, lng: 100.517 }, secondary: true,
     note: 'Now handles mainly commuter and some ordinary services; MRT Hua Lamphong. Most long-distance trains have moved to Krung Thep Aphiwat.' },
   { id: 't-th-cnx', cc: 'th', city: 'Chiang Mai', type: 'train', name: 'Chiang Mai Railway Station', coords: { lat: 18.786, lng: 99.016 },
     note: 'Northern-line terminus; overnight sleepers to/from Bangkok.' },
@@ -205,6 +205,63 @@ export const TRANSPORT_HUBS = [
     note: 'Arrival/departure for the Mekong slow boats and short cruises to the Pak Ou caves.' },
   { id: 'f-la-nakasang', cc: 'la', city: 'Si Phan Don', type: 'ferry', name: 'Nakasang Pier (for 4000 Islands)', coords: { lat: 14.030, lng: 105.860 },
     note: 'Longtail boats to Don Det and Don Khon in the Si Phan Don archipelago.' },
+
+  // ============ TOWN-LEVEL TERMINALS & STATIONS ============
+  // Added so a place in a smaller destination finds its own town's bus terminal or station
+  // rather than the next city's. Coordinates are approximate town markers; the map link
+  // resolves each by name.
+  // --- Thailand ---
+  { id: 'b-th-krabi', cc: 'th', city: 'Krabi', type: 'bus', name: 'Krabi Bus Terminal (Talat Kao)', coords: { lat: 8.090, lng: 98.912 },
+    note: 'Buses to Bangkok, Phuket, Surat Thani and the south; songthaews to Ao Nang and the piers.' },
+  { id: 'b-th-chiangrai', cc: 'th', city: 'Chiang Rai', type: 'bus', name: 'Chiang Rai Bus Terminal 2', coords: { lat: 19.909, lng: 99.831 },
+    note: 'Buses to Chiang Mai, the Golden Triangle and the Chiang Khong border for Laos.' },
+  { id: 'b-th-pai', cc: 'th', city: 'Pai', type: 'bus', name: 'Pai Bus Station', coords: { lat: 19.359, lng: 98.439 },
+    note: 'Minivans over the 762 curves to Chiang Mai and on to Mae Hong Son.' },
+  { id: 'b-th-ayutthaya', cc: 'th', city: 'Ayutthaya', type: 'bus', name: 'Ayutthaya Bus Terminal', coords: { lat: 14.353, lng: 100.567 },
+    note: 'Buses and minivans to Bangkok (Mo Chit) and the north.' },
+  { id: 'b-th-kanchanaburi', cc: 'th', city: 'Kanchanaburi', type: 'bus', name: 'Kanchanaburi Bus Terminal', coords: { lat: 14.020, lng: 99.531 },
+    note: 'Buses to Bangkok; minivans to Erawan Falls and Hellfire Pass.' },
+  { id: 'b-th-huahin', cc: 'th', city: 'Hua Hin', type: 'bus', name: 'Hua Hin Bus Terminal', coords: { lat: 12.568, lng: 99.958 },
+    note: 'Buses to Bangkok and south down the peninsula.' },
+  { id: 'b-th-sukhothai', cc: 'th', city: 'Sukhothai', type: 'bus', name: 'Sukhothai Bus Terminal', coords: { lat: 17.008, lng: 99.822 },
+    note: 'Buses to Bangkok, Chiang Mai and Phitsanulok; songthaew to the Old City.' },
+  { id: 'b-th-trat', cc: 'th', city: 'Trat', type: 'bus', name: 'Trat Bus Terminal', coords: { lat: 12.243, lng: 102.514 },
+    note: 'Buses from Bangkok; minivans on to the Koh Chang ferry piers.' },
+  { id: 't-th-kanchanaburi', cc: 'th', city: 'Kanchanaburi', type: 'train', name: 'Kanchanaburi Railway Station', coords: { lat: 14.020, lng: 99.530 },
+    note: 'On the historic Death Railway to the River Kwai bridge and Nam Tok.' },
+  { id: 't-th-huahin', cc: 'th', city: 'Hua Hin', type: 'train', name: 'Hua Hin Railway Station', coords: { lat: 12.568, lng: 99.959 },
+    note: 'One of Thailand’s prettiest heritage stations, on the southern line.' },
+  // --- Vietnam ---
+  { id: 'b-vi-hue', cc: 'vi', city: 'Hue', type: 'bus', name: 'Hue Southern Bus Station', coords: { lat: 16.447, lng: 107.599 },
+    note: 'Intercity buses; open-tour buses and shuttle vans to Hoi An and Da Nang.' },
+  { id: 'b-vi-nhatrang', cc: 'vi', city: 'Nha Trang', type: 'bus', name: 'Nha Trang (Phia Nam) Bus Station', coords: { lat: 12.235, lng: 109.176 },
+    note: 'Buses along the coast and up to Da Lat and the highlands.' },
+  { id: 'b-vi-dalat', cc: 'vi', city: 'Da Lat', type: 'bus', name: 'Da Lat Bus Station', coords: { lat: 11.926, lng: 108.443 },
+    note: 'Buses to Nha Trang, Ho Chi Minh City and Mui Ne.' },
+  { id: 'b-vi-cantho', cc: 'vi', city: 'Can Tho', type: 'bus', name: 'Can Tho Bus Station', coords: { lat: 10.036, lng: 105.770 },
+    note: 'Buses across the Mekong Delta and to HCMC (Mien Tay).' },
+  { id: 'b-vi-chaudoc', cc: 'vi', city: 'Chau Doc', type: 'bus', name: 'Chau Doc Bus Station', coords: { lat: 10.702, lng: 105.118 },
+    note: 'Buses to HCMC and Can Tho; boats and buses to Phnom Penh via the river border.' },
+  { id: 'b-vi-ninhbinh', cc: 'vi', city: 'Ninh Binh', type: 'bus', name: 'Ninh Binh Bus Station', coords: { lat: 20.253, lng: 105.974 },
+    note: 'Buses to Hanoi and the north-central coast; beside the railway station.' },
+  { id: 'b-vi-donghoi', cc: 'vi', city: 'Dong Hoi', type: 'bus', name: 'Dong Hoi Bus Station', coords: { lat: 17.478, lng: 106.599 },
+    note: 'Buses along Highway 1; shuttles to the Phong Nha caves.' },
+  { id: 't-vi-laocai', cc: 'vi', city: 'Lao Cai', type: 'train', name: 'Lao Cai Railway Station (for Sapa)', coords: { lat: 22.485, lng: 103.972 },
+    note: 'Overnight trains from Hanoi; buses climb ~1 hour to Sapa.' },
+  { id: 't-vi-donghoi', cc: 'vi', city: 'Dong Hoi', type: 'train', name: 'Dong Hoi Railway Station', coords: { lat: 17.480, lng: 106.601 },
+    note: 'Reunification-line stop and the rail gateway to Phong Nha.' },
+  // --- Cambodia ---
+  { id: 'b-kh-battambang', cc: 'kh', city: 'Battambang', type: 'bus', name: 'Battambang Bus Operators', coords: { lat: 13.095, lng: 103.203 },
+    note: 'Giant Ibis / Mekong Express to Phnom Penh and Siem Reap; a scenic wet-season boat also runs to Siem Reap.' },
+  { id: 'b-kh-kampot', cc: 'kh', city: 'Kampot', type: 'bus', name: 'Kampot Bus / Van Stop', coords: { lat: 10.610, lng: 104.181 },
+    note: 'Buses and vans to Phnom Penh, Sihanoukville and Kep.' },
+  { id: 'b-kh-sihanoukville', cc: 'kh', city: 'Sihanoukville', type: 'bus', name: 'Sihanoukville Bus Operators', coords: { lat: 10.627, lng: 103.512 },
+    note: 'Buses to Phnom Penh and Kampot; near the islands ferry piers.' },
+  // --- Laos ---
+  { id: 'b-la-vangvieng', cc: 'la', city: 'Vang Vieng', type: 'bus', name: 'Vang Vieng Bus Terminal', coords: { lat: 18.923, lng: 102.448 },
+    note: 'Minivans and buses to Vientiane and Luang Prabang; the railway is faster.' },
+  { id: 'b-la-thakhek', cc: 'la', city: 'Thakhek', type: 'bus', name: 'Thakhek Bus Station', coords: { lat: 17.411, lng: 104.812 },
+    note: 'Buses to Vientiane, Savannakhet and Pakse; start of the Thakhek Loop.' },
 ];
 
 // Sources behind the transport-hub guidance. As with the rest of the app, these are a

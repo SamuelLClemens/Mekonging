@@ -186,7 +186,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.177.0';
+const APP_VERSION = 'mk-v0.178.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2637,14 +2637,19 @@ const HUB_TYPES = [
 ];
 
 function nearestHub(coords, type, cc) {
-  let best = null;
+  let best = null, bestSec = null;
   for (const hub of TRANSPORT_HUBS) {
     if (hub.type !== type || !hub.coords) continue;
     if (cc && hub.cc !== cc) continue;
     const km = haversineKm(coords, hub.coords);
-    if (!best || km < best.km) best = { hub, km };
+    if (hub.secondary) { if (!bestSec || km < bestSec.km) bestSec = { hub, km }; }
+    else if (!best || km < best.km) best = { hub, km };
   }
-  return best;
+  // Prefer a primary (long-distance) hub. Only fall back to a secondary/commuter one when
+  // it is substantially closer (>20 km) — so a central place shows the main terminal, not
+  // a nearer commuter stop, but a remote place still gets whatever is actually near.
+  if (best && bestSec) return (best.km <= bestSec.km + 20) ? best : bestSec;
+  return best || bestSec;
 }
 
 function nearestCrossing(coords, maxKm) {
