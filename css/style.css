@@ -1037,3 +1037,8 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .sos-aid { margin: 2px 0 4px; padding-left: 18px; }
 .sos-aid li { margin: 3px 0; font-size: var(--fs-sm); line-height: 1.4; }
 .sos-aid.dont li { color: var(--warn); }
+
+/* Transport: per-place "Getting here & away" connection rows */
+.transit-row { padding: var(--sp-2) 0; border-top: 1px solid var(--line, rgba(0,0,0,0.08)); }
+.transit-row:first-of-type { border-top: 0; }
+.transit-row .fair { white-space: nowrap; }

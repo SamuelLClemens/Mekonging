@@ -25,6 +25,7 @@ import { CHECKLIST } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
 import { CROSSINGS } from './data/borders.js';
+import { TRANSPORT_HUBS, TRANSIT_SOURCES } from './data/transit.js';
 import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
 import {
   available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
@@ -185,7 +186,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.176.0';
+const APP_VERSION = 'mk-v0.177.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1392,6 +1393,7 @@ function countryHubScreen(id) {
     { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
     { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
     { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
+    { ic: ICON.navarrow, t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
     { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
     { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
     { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${c.id}` },
@@ -2622,6 +2624,96 @@ function placeAccessBlock(p) {
   return null;
 }
 
+// ---- TRANSPORT: getting to & from a place ----------------------------------
+// Per-place connections computed from coordinates: the nearest airport, train, bus and
+// ferry hub (from TRANSPORT_HUBS) plus the nearest cross-border crossing (from CROSSINGS).
+// Distances are great-circle from the place; the map links resolve each hub by NAME, so
+// door-to-door directions stay accurate even where a hub coordinate is only approximate.
+const HUB_TYPES = [
+  { type: 'airport', emoji: '🛫', label: 'airport', max: Infinity },
+  { type: 'train', emoji: '🚆', label: 'train station', max: 130 },
+  { type: 'bus', emoji: '🚌', label: 'bus terminal', max: 90 },
+  { type: 'ferry', emoji: '⛴️', label: 'pier / ferry', max: 110 },
+];
+
+function nearestHub(coords, type, cc) {
+  let best = null;
+  for (const hub of TRANSPORT_HUBS) {
+    if (hub.type !== type || !hub.coords) continue;
+    if (cc && hub.cc !== cc) continue;
+    const km = haversineKm(coords, hub.coords);
+    if (!best || km < best.km) best = { hub, km };
+  }
+  return best;
+}
+
+function nearestCrossing(coords, maxKm) {
+  let best = null;
+  for (const x of CROSSINGS) {
+    if (!x.coords) continue;
+    const km = haversineKm(coords, x.coords);
+    if (!best || km < best.km) best = { x, km };
+  }
+  return best && best.km <= maxKm ? best : null;
+}
+
+// Google Maps directions from a place to a named hub. Origin is the place's coordinates;
+// destination is the hub NAME + city (resolved by Maps), so it stays accurate regardless
+// of the stored hub coordinate. Opening needs internet; the distances above work offline.
+function hubDirUrl(from, hub) {
+  const dest = encodeURIComponent(`${hub.name}, ${hub.city}`);
+  return `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${dest}`;
+}
+
+function transitCard(p) {
+  if (!p || !p.coords || p.isPin) return null;
+  const cc = p.country || (p.id || '').split('-')[0];
+  const card = h('div', { class: 'card' }, [
+    h('h2', {}, '🚉 Getting here & away'),
+    h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' },
+      'Nearest airport, train, bus and boat connections. Distances are straight-line from this spot; tap for door-to-door directions (needs internet).'),
+  ]);
+  HUB_TYPES.forEach((t) => {
+    const found = nearestHub(p.coords, t.type, cc);
+    if (!found || found.km > t.max) return;
+    const { hub, km } = found;
+    const dir = compass(bearing(p.coords, hub.coords));
+    card.append(h('div', { class: 'transit-row' }, [
+      h('div', { class: 'row-between' }, [
+        h('strong', {}, `${t.emoji} ${hub.name}${hub.code ? ` (${hub.code})` : ''}`),
+        h('span', { class: 'fair' }, `${kmLabel(km)} · ${dir}`),
+      ]),
+      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, (hub.city && hub.city !== p.city) ? `${titleCase(t.label)} · ${hub.city}` : titleCase(t.label)),
+      hub.into ? h('div', { class: 'list-note' }, hub.into) : null,
+      hub.note ? h('div', { class: 'muted tiny' }, hub.note) : null,
+      h('a', { class: 'btn ghost block', style: 'margin-top:4px', href: hubDirUrl(p.coords, hub), target: '_blank', rel: 'noopener' }, 'Directions ↗'),
+    ]));
+  });
+  // Nearest open cross-border crossing (from the borders dataset) — useful when a place
+  // sits near a frontier and the traveller is continuing into the next country.
+  const bx = nearestCrossing(p.coords, 100);
+  if (bx) {
+    card.append(h('div', { class: 'transit-row' }, [
+      h('div', { class: 'row-between' }, [
+        h('strong', {}, `🛂 ${bx.x.name}`),
+        h('span', { class: 'fair' }, kmLabel(bx.km)),
+      ]),
+      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `Border crossing · ${bx.x.pair}`),
+      h('button', { class: 'btn ghost block', onclick: () => go('#crossings') }, 'Crossing details, hours & visa ↗'),
+    ]));
+  }
+  // Always-on helpers: a live "transport near here" search, the country's intercity routes
+  // and its arrival guide (airport → town, cash, SIM). These keep every place useful even
+  // where no listed hub sits within range.
+  card.append(h('div', { class: 'chips', style: 'margin-top:8px' }, [
+    h('a', { class: 'chip', href: mapsSearch(`bus station OR train station near ${p.coords.lat},${p.coords.lng}`), target: '_blank', rel: 'noopener' }, '🔎 Transport near here ↗'),
+    h('button', { class: 'chip', onclick: () => go(`#transport-${cc}`) }, '🧭 Intercity routes'),
+    h('button', { class: 'chip', onclick: () => go(`#arrival-${cc}`) }, '🛬 Arrival guide'),
+  ]));
+  card.append(sourcesNote(TRANSIT_SOURCES, 'July 2026'));
+  return card;
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -2680,6 +2772,8 @@ function placeScreen(id) {
   if (accBlock) wrap.append(accBlock);
   const orient = orientationCard(p);
   if (orient) wrap.append(orient);
+  const transit = transitCard(p);
+  if (transit) wrap.append(transit);
   const extCard = externalRatingsCard(p);
   if (extCard) wrap.append(extCard);
   const wxCard = weatherNearbyCard(p);
@@ -2804,7 +2898,7 @@ function transportScreen(countryId) {
   const country = getCountry(activeCountry);
   const routes = country && country.routes;
   if (!routes) {
-    wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} routes are coming soon. Thailand is fully covered in this build.`));
+    wrap.append(h('p', { class: 'empty' }, `Intercity routes for ${country ? country.name : 'this country'} are not listed yet — use “Plan a whole journey” above, or open any place to see its nearest transport connections.`));
     mount(wrap, '#home'); return;
   }
   const routeCard = (r) => {
