@@ -317,12 +317,13 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .tile .ic svg { width: 26px; height: 26px; }
 .tile .tile-badge { z-index: 1; }
 
-/* Phase-lead: an app-launcher grid — the primary action spans full width as a hero CTA.
+/* Phase-lead: an app-launcher grid — a balanced 2x2 of four equal actions on every
+   journey phase. The primary action keeps emphasis through its solid fill (the other
+   three render as ghost buttons), so the grid stays visually even.
    Specific enough (.home-actions.phase-lead) to beat the two generic .home-actions rules. */
 .home-actions.phase-lead { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
-.home-actions.phase-lead .btn { flex: none; justify-content: center; min-height: 54px; border-radius: var(--r-md);
-  padding: var(--sp-3); font-size: var(--fs-sm); box-shadow: var(--shadow-soft); }
-.home-actions.phase-lead .btn:first-child { grid-column: 1 / -1; min-height: 60px; font-size: var(--fs-lg); }
+.home-actions.phase-lead .btn { flex: none; justify-content: center; align-items: center; text-align: center;
+  min-height: 58px; border-radius: var(--r-md); padding: var(--sp-3); font-size: var(--fs-sm); box-shadow: var(--shadow-soft); }
 
 /* The single, clear "Explore <country>" gateway — a prominent rounded CTA. */
 .home-explore { min-height: 62px; border-radius: var(--r-lg); font-size: var(--fs-lg);
