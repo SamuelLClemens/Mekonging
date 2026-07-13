@@ -185,7 +185,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.175.0';
+const APP_VERSION = 'mk-v0.176.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6138,36 +6138,24 @@ function sosScreen(cc) {
   if (!cc && near) wrap.append(h('p', { class: 'sos-loc' }, `📍 You appear to be near ${near.spot.city}. Showing ${c.name} — not right? Pick your country:`));
   wrap.append(countryChips((id) => go(`#sos-${id}`)));
 
+  // ORDER OF OPERATIONS. If something happens the traveller needs, in this order:
+  //   (1) call for help, (2) where to go — the nearest hospital, (3) what to do while
+  //   getting there — first aid and life-saving basics, and only THEN (4) how to
+  //   communicate once at the hospital. Each card is BUILT here; the ordered append is at
+  //   the end so the sequence on screen matches the real emergency flow. Preventive
+  //   background (water/food, solo safety) sits below all of that.
+  const book = getLanguage(c.lang);
+  const emCat = book && book.categories.find((cat) => cat.id === 'emergency');
+
+  // (1) Call for help — emergency numbers.
   const nums = h('div', { class: 'card sos-card' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
   const em = (c.info && c.info.emergency) || [];
   if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
-  wrap.append(nums);
 
-  const safe = SAFETY[activeCountry];
-  if (safe) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('h2', {}, 'Water & food safety'),
-      h('p', { style: 'margin:6px 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
-      h('p', { style: 'margin:6px 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
-    ]));
-  }
-
-  const book = getLanguage(c.lang);
-  const emCat = book && book.categories.find((cat) => cat.id === 'emergency');
-  if (emCat) {
-    const pcard = h('div', { class: 'card' }, [h('h2', {}, `Say it in ${book.label}`)]);
-    const voiceOk = hasVoiceFor(book.locale);
-    emCat.phrases.forEach((p) => pcard.append(h('div', { class: 'phrase' }, [
-      h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native', lang: book.locale }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
-      h('button', { class: 'speak', disabled: voiceOk ? null : '', 'aria-label': `Speak ${p.en}`, onclick: () => speak(p.script, book.locale) }, '🔊'),
-    ])));
-    wrap.append(pcard);
-  }
-
-  // Hospital: the maps deep link needs internet, so pair it with an offline fallback —
-  // show a big "I need a doctor / hospital" phrase to a local (works with no signal).
-  const hosp = h('div', { class: 'card' }, [h('h2', {}, 'Get to a hospital')]);
+  // (2) Where to go — the nearest hospital first. The maps deep link needs internet, so
+  // pair it with an offline fallback: show a big "I need a hospital" phrase to a local.
+  const hosp = h('div', { class: 'card' }, [h('h2', {}, 'Get to a hospital — nearest you')]);
   const mapHref = (fix && fix.lat != null)
     ? `https://www.google.com/maps/search/hospital/@${fix.lat},${fix.lng},14z`
     : 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me';
@@ -6175,12 +6163,12 @@ function sosScreen(cc) {
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
   if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
 
-  // Reputable hospitals in the country, nearest city first, tagged so a family can find
-  // an ER, a children's ward or maternity care fast. The map link routes to the exact
-  // door; call ahead — in a life-threatening emergency use the number above.
+  // Reputable hospitals in the country, nearest first, tagged so a family can find an ER,
+  // a children's ward or maternity care fast. The map link routes to the exact door; call
+  // ahead — in a life-threatening emergency use the number above.
   const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === activeCountry), fix);
   if (localHosp.length) {
-    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, `Trusted hospitals in ${c.name} — for adults, children, babies and pregnancy. Most have English-speaking staff.`));
+    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, `Trusted hospitals in ${c.name}, nearest first — for adults, children, babies and pregnancy. Most have English-speaking staff.`));
     localHosp.forEach((x) => {
       const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
       hosp.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
@@ -6192,10 +6180,8 @@ function sosScreen(cc) {
     });
     hosp.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'A starting list, not exhaustive. For a young child, pregnancy or complex needs, telephone ahead to confirm the right department is open.'));
   }
-  wrap.append(hosp);
 
-  // Bites, stings & dangerous wildlife — first aid you can read offline, then the
-  // illustrated "what to look out for" list (photos + how to identify + what to do).
+  // (3) What to do while getting there — bites/stings first aid, then life-saving basics.
   const danger = h('div', { class: 'card allergy-card' }, [h('h2', {}, '🐍 Bites, stings & dangerous wildlife')]);
   danger.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'));
   FIRST_AID.forEach((fa) => {
@@ -6211,7 +6197,6 @@ function sosScreen(cc) {
     danger.append(dd);
   });
   danger.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#danger') }, '⚠️ Dangerous animals — photos & how to spot them'));
-  wrap.append(danger);
 
   // Life-saving essentials: honest guidance on EpiPens and defibrillators (neither is
   // reliably bought on the street here) plus hands-only CPR.
@@ -6223,7 +6208,28 @@ function sosScreen(cc) {
     dd.append(inner);
     life.append(dd);
   });
-  wrap.append(life);
+
+  // (4) How to communicate once you are there — emergency phrases in the local language.
+  let phraseCard = null;
+  if (emCat) {
+    phraseCard = h('div', { class: 'card' }, [
+      h('h2', {}, `At the hospital: say it in ${book.label}`),
+      h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Show or speak these to hospital staff or anyone helping you.'),
+    ]);
+    const voiceOk = hasVoiceFor(book.locale);
+    emCat.phrases.forEach((p) => phraseCard.append(h('div', { class: 'phrase' }, [
+      h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native', lang: book.locale }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
+      h('button', { class: 'speak', disabled: voiceOk ? null : '', 'aria-label': `Speak ${p.en}`, onclick: () => speak(p.script, book.locale) }, '🔊'),
+    ])));
+  }
+
+  // Preventive / background info — kept below the live emergency flow.
+  const safe = SAFETY[activeCountry];
+  const safeCard = safe ? h('div', { class: 'card' }, [
+    h('h2', {}, 'Water & food safety'),
+    h('p', { style: 'margin:6px 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
+    h('p', { style: 'margin:6px 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
+  ]) : null;
 
   // Solo & women travellers — practical, non-alarmist safety, opened by default when the
   // profile says solo/solo-female. Shown to everyone; the region's real risks are traffic,
@@ -6243,6 +6249,14 @@ function sosScreen(cc) {
   sInner.append(sourcesNote(SOLO_SOURCES, 'July 2026'));
   sd.append(sInner);
   solo.append(sd);
+
+  // Ordered append — the true order of operations in an emergency.
+  wrap.append(nums);
+  wrap.append(hosp);
+  wrap.append(danger);
+  wrap.append(life);
+  if (phraseCard) wrap.append(phraseCard);
+  if (safeCard) wrap.append(safeCard);
   wrap.append(solo);
 
   wrap.append(sourcesNote([...HOSP_SOURCES, ...FIRSTAID_SOURCES], 'July 2026'));
