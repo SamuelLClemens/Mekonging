@@ -8,7 +8,10 @@
        requires adding that origin to connect-src below (documented in Settings). -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com; font-src 'self'; media-src 'self' blob: https://translate.google.com https://static.inaturalist.org https://inaturalist-open-data.s3.amazonaws.com; worker-src 'self' blob:; connect-src 'self' https://server.arcgisonline.com https://open.er-api.com https://api.open-meteo.com https://api.mymemory.translated.net https://api.inaturalist.org; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="referrer" content="no-referrer">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- interactive-widget=resizes-content: when the on-screen keyboard opens, the LAYOUT
+       viewport shrinks (rather than only the visual viewport), so the fixed bottom nav
+       stays pinned to the bottom of the usable area instead of jumping over the keyboard. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Mekonging — travel Thailand, Vietnam, Cambodia & Laos like an expert</title>
   <meta name="description" content="Mekonging is a free, private, offline-first travel companion for Thailand, Vietnam, Cambodia, and Laos: phrasebook, fair prices, places, transport, history, and best-of recommendations. No accounts, no tracking.">
   <meta name="theme-color" content="#E8632A">

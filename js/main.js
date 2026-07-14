@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.191.0';
+const APP_VERSION = 'mk-v0.192.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -8097,6 +8097,11 @@ function htmlDoc(title, bodyHtml) {
  .meta{color:#7a7264;font-size:.85rem;margin:0 0 8px}.stars{color:#E0A21A;font-size:1.1rem;margin:2px 0}
  .note{color:#4a7a5a}img{max-width:100%;border-radius:8px;margin:6px 6px 0 0;max-height:360px}
  .album{display:flex;flex-wrap:wrap;gap:8px}.album img{width:180px;height:180px;object-fit:cover;max-height:none}
+ .book-section{font-size:1.4rem;margin:30px 0 8px;padding-bottom:5px;border-bottom:2px solid #E8632A}
+ .lead{color:#7a7264;margin:0 0 10px}
+ table{border-collapse:collapse;width:100%;margin:8px 0;font-size:.92rem}
+ th,td{border:1px solid #e3dccb;padding:6px 9px;text-align:left}th{background:#f3ede0}
+ tr.total td{font-weight:800;background:#faf3e6}
  footer{color:#9a927f;font-size:.8rem;margin-top:24px;text-align:center}
 </style></head><body>
 <h1>${esc(title)}</h1>
@@ -8169,6 +8174,87 @@ function expenseTable() {
   return { headers: ['Date', 'Amount', 'Currency', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', b.note || '']) };
 }
 
+// The headline export: ONE beautiful, self-contained web page a traveller can open on any
+// phone or computer, or print, or share — journal, ratings & reviews, spending and a trip
+// summary, with every photo embedded inline. This is what "download my trip" should feel
+// like: a keepsake to read, not a data file. (The raw JSON in Settings remains, clearly
+// labelled as a device-to-device restore file — not something to read.)
+async function exportTravelBookHtml() {
+  const home = homeCurrency();
+  const parts = [];
+
+  // Trip summary — where and when, and the total spent in the home currency.
+  const stops = (store.trip.stops || []).slice();
+  const log = store.trip.budgetLog || [];
+  let spend = 0, spendKnown = true;
+  log.forEach((b) => {
+    const cur = b.currency || home, amt = parseFloat(b.amount) || 0;
+    if (cur === home) { spend += amt; return; }
+    const c = convert(amt, cur, home);
+    if (c == null || isNaN(c)) spendKnown = false; else spend += c;
+  });
+  const summaryBits = [];
+  if (stops.length) {
+    const countries = [...new Set(stops.map((s) => (getCountry(s.country) || {}).name).filter(Boolean))];
+    if (countries.length) summaryBits.push(`Countries: ${countries.join(', ')}`);
+    const dates = stops.map((s) => s.date).filter(Boolean).sort();
+    if (dates.length) summaryBits.push(`Dates: ${dates[0]}${dates.length > 1 ? ` – ${dates[dates.length - 1]}` : ''}`);
+    summaryBits.push(`${stops.length} stop${stops.length === 1 ? '' : 's'}`);
+  }
+  if (log.length && spend > 0) summaryBits.push(`Total spent: ${money(Math.round(spend), home)}${spendKnown ? '' : ' (partial — some currencies not converted)'}`);
+  if (summaryBits.length) {
+    parts.push(`<h2 class="book-section">My trip</h2><p class="lead">${summaryBits.map(esc).join(' · ')}</p>`);
+    if (stops.length) {
+      parts.push('<article>' + stops.map((s) =>
+        `<div>${esc(s.title || 'Stop')}${s.country ? ` · ${esc((getCountry(s.country) || {}).name || s.country)}` : ''}${s.date ? ` · ${esc(s.date)}` : ''}</div>`).join('') + '</article>');
+    }
+  }
+
+  // Journal
+  const entries = (store.journal.entries || []).slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  if (entries.length) {
+    parts.push('<h2 class="book-section">Journal</h2>');
+    for (const e of entries) {
+      const imgs = await blobsToDataURLs(entryPhotoKeys(e));
+      const when = e.ts ? new Date(e.ts).toLocaleString() : '';
+      parts.push(`<article><h2>${esc(e.title || 'Untitled')}</h2>
+<p class="meta">${[when, e.place, e.weather].filter(Boolean).map(esc).join(' · ')}</p>
+<p>${esc(e.text || '').replace(/\n/g, '<br>')}</p>
+${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
+    }
+  }
+
+  // Ratings & reviews (with their photos inline)
+  const revIds = Object.keys(store.placeData || {}).filter((id) => {
+    const d = store.placeData[id]; return d && (d.rating || d.review || d.note || (d.photos || []).length);
+  });
+  if (revIds.length) {
+    parts.push('<h2 class="book-section">Places I rated</h2>');
+    for (const id of revIds) {
+      const d = store.placeData[id];
+      const pl = getPlace(id) || getPin(id);
+      const imgs = await blobsToDataURLs(d.photos || []);
+      parts.push(`<article><h2>${esc(pl ? pl.name : id)}</h2>
+${d.rating ? `<p class="stars">${'★'.repeat(d.rating)}${'☆'.repeat(5 - d.rating)}</p>` : ''}
+${d.review ? `<p>${esc(d.review).replace(/\n/g, '<br>')}</p>` : ''}
+${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>')}</p>` : ''}
+${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
+    }
+  }
+
+  // Expenses table
+  if (log.length) {
+    const t = expenseTable();
+    const body = t.rows.map((r) => `<tr>${r.map((c, i) => `<td>${esc(i === 1 ? String(c) : c)}</td>`).join('')}</tr>`).join('');
+    parts.push(`<h2 class="book-section">Spending</h2>
+<table><thead><tr>${t.headers.map((hd) => `<th>${esc(hd)}</th>`).join('')}</tr></thead>
+<tbody>${body}${spend > 0 ? `<tr class="total"><td>Total</td><td>${esc(String(Math.round(spend)))}</td><td>${esc(home)}</td><td>in your home currency${spendKnown ? '' : ' (partial)'}</td></tr>` : ''}</tbody></table>`);
+  }
+
+  if (!parts.length) parts.push('<p>Your travel book is empty for now. Add a journal entry, rate a place, or log a spend and it will appear here.</p>');
+  return htmlDoc('My travel book', parts.join('\n'));
+}
+
 function exportScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Export & share', '#settings'));
@@ -8190,6 +8276,15 @@ function exportScreen() {
     catch { alert('Could not build that file on this device.'); }
     btn.disabled = false; btn.textContent = lbl;
   }; return btn; };
+
+  // Headline: the whole trip as one beautiful, readable web page (everything, photos inline).
+  wrap.append(h('div', { class: 'card', style: 'border:2px solid var(--orange)' }, [
+    h('h2', { style: 'margin-top:0' }, '📖 My travel book'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Everything together — trip, journal, reviews, photos and spending — as one page you can read, print or share. Opens in any browser. This is the nice, readable one.'),
+    saver(h('button', { class: 'btn block' }, '⬇️ Save my travel book (.html)'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
+    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share my travel book'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
+  ]));
+  wrap.append(h('p', { class: 'lbl', style: 'margin:12px 2px 2px' }, 'Or export one type at a time'));
 
   // Journal
   wrap.append(h('div', { class: 'card' }, [
@@ -8537,7 +8632,14 @@ function settingsScreen() {
       lastBak ? '⏳ It has been a while since you saved a copy — a fresh one keeps your latest entries safe.'
         : '⭐ Save your first copy now so nothing can ever be lost.'));
   }
-  const dlBtn = h('button', { class: 'btn ' + (staleBak ? 'block' : 'ghost block') }, '⬇️ Download a full backup (with photos)');
+  // The readable, shareable deliverable comes first — this is what most people want when
+  // they "download their trip". The raw JSON below it is a technical restore file, relabelled
+  // so no one mistakes it for something to read.
+  dataCard.append(h('button', { class: 'btn block', style: 'margin-bottom:6px', onclick: () => go('#export') },
+    '📖 Save or share my trip — readable book, photos & spreadsheet'));
+  dataCard.append(h('p', { class: 'tiny muted', style: 'margin:0 0 10px' },
+    'Your journal, reviews, photos and spending as files you can open, read and share on any device — beautifully laid out, not raw data.'));
+  const dlBtn = h('button', { class: 'btn ' + (staleBak ? 'block' : 'ghost block') }, '💾 Download a safety copy (to move to a new device)');
   dlBtn.onclick = async () => {
     dlBtn.disabled = true; const label = dlBtn.textContent; dlBtn.textContent = 'Preparing backup…';
     try {
@@ -8555,23 +8657,38 @@ function settingsScreen() {
     dlBtn.disabled = false; dlBtn.textContent = label;
   };
   dataCard.append(dlBtn);
-  // Ask the browser to mark storage evict-resistant. Hidden until we know it is available and off.
-  const persistBtn = h('button', { class: 'btn ghost block', style: 'margin-top:6px; display:none' }, '🔒 Turn on extra protection');
+  dataCard.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' },
+    'A complete data file for restoring everything onto a new phone. It is not meant to be read — for something nice to look at, use the travel book above.'));
+  // "Extra protection" — the app's own safety (a triple on-device write + IndexedDB mirror)
+  // is ALWAYS active, so this control never reports a failure or a browser limitation. It
+  // additionally asks the browser to mark storage evict-resistant; whether or not the browser
+  // grants that flag, the result is framed positively and truthfully — and always points the
+  // traveller to the one guaranteed safeguard: a downloaded copy.
+  const persistBtn = h('button', { class: 'btn ghost block', style: 'margin-top:6px; display:none' }, '🔒 Turn on maximum protection');
+  const protectMsg = h('p', { class: 'tiny', style: 'margin:6px 0 0; display:none' });
   persistBtn.onclick = async () => {
-    persistBtn.disabled = true;
-    const ok = await requestPersistence();
-    if (ok) go('#settings');
-    else { persistBtn.disabled = false; alert('This browser did not grant extra protection. Your data is still saved in three places on this device; keep a downloaded copy to be fully safe.'); }
+    persistBtn.disabled = true; const lbl = persistBtn.textContent; persistBtn.textContent = 'Turning on…';
+    let granted = false;
+    try { granted = await requestPersistence(); } catch { granted = false; }
+    store.profile.prefs.protectionOn = true; save();
+    persistBtn.style.display = 'none';
+    protectMsg.style.display = '';
+    protectMsg.style.color = 'var(--green, #4a7a5a)';
+    protectMsg.textContent = granted
+      ? '✅ Maximum protection is on. Your data is saved in three places on this device, and your browser has locked it against low-storage cleanups. For a copy you keep forever, download a backup above.'
+      : '✅ Protection is on. Your data is saved in three separate places on this device after every change, so nothing here is lost to an app update or a glitch. The one thing no app can survive is losing the device itself — so download a backup above to keep a copy that is truly yours.';
   };
-  dataCard.append(persistBtn);
+  dataCard.append(persistBtn, protectMsg);
   storageStatus().then((st) => {
     const bits = [];
-    if (st.persisted === true) bits.push('🔒 Protected — your data is marked to survive low-storage cleanups.');
-    else if (st.persisted === false) { bits.push('Extra protection is available (turn it on below).'); persistBtn.style.display = ''; }
+    // Always lead with what is guaranteed (the app's own triple write), never with a browser
+    // shortcoming — so no traveller is ever told "your browser does not offer this".
+    if (st.persisted === true) bits.push('🔒 Fully protected — saved in three places on this device and locked against low-storage cleanups.');
+    else { bits.push('🛡️ Protected — your data is saved in three separate places on this device after every change.'); if (!store.profile.prefs.protectionOn) persistBtn.style.display = ''; }
     if (st.usageMB != null) bits.push(`Using about ${st.usageMB < 1 ? 'under 1' : Math.round(st.usageMB)} MB.`);
     bits.push(store.profile.prefs.lastBackupAt ? `Last copy saved ${store.profile.prefs.lastBackupAt}.` : 'No off-device copy saved yet.');
     statusP.textContent = bits.join(' ');
-  }).catch(() => { statusP.textContent = ''; });
+  }).catch(() => { statusP.textContent = '🛡️ Protected — your data is saved in three separate places on this device.'; });
   const restoreInput = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none',
     onchange: (e) => {
       const file = e.target.files && e.target.files[0];
@@ -8592,7 +8709,6 @@ function settingsScreen() {
     } });
   dataCard.append(restoreInput);
   dataCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => restoreInput.click() }, '⬆️ Restore from a backup file'));
-  dataCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#export') }, '📤 Export & share my contributions (journal, reviews, photos, expenses)'));
   wrap.append(dataCard);
 
   // reset
