@@ -26,7 +26,7 @@ import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
 import { CROSSINGS } from './data/borders.js';
-import { TRANSPORT_HUBS, TRANSIT_SOURCES } from './data/transit.js';
+import { TRANSPORT_HUBS, TRANSIT_SOURCES, GET_AROUND } from './data/transit.js';
 import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
 import { zipStore, toCsv, buildXlsx, downloadBlob, shareOrDownload } from './exporter.js';
 import {
@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.193.0';
+const APP_VERSION = 'mk-v0.194.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3005,7 +3005,7 @@ function transitCard(p) {
   // where no listed hub sits within range.
   card.append(h('div', { class: 'chips', style: 'margin-top:8px' }, [
     h('a', { class: 'chip', href: mapsSearch(`bus station OR train station near ${p.coords.lat},${p.coords.lng}`), target: '_blank', rel: 'noopener' }, '🔎 Transport near here ↗'),
-    h('button', { class: 'chip', onclick: () => go(`#transport-${cc}`) }, '🧭 Intercity routes'),
+    h('button', { class: 'chip', onclick: () => go(`#transport-${cc}`) }, '🧭 Routes, rentals & tickets'),
     h('button', { class: 'chip', onclick: () => go(`#arrival-${cc}`) }, '🛬 Arrival guide'),
   ]));
   card.append(sourcesNote(TRANSIT_SOURCES, 'July 2026'));
@@ -3263,12 +3263,68 @@ function pricesScreen(countryId) {
 }
 
 // ---- TRANSPORT --------------------------------------------------------------
+// Rent & ride, buy tickets (flights, trains, buses, boats) and find live schedules for a
+// country. Guidance text is bundled and works offline; booking/timetable links open the
+// authoritative source (needs internet) — we never bundle fabricated times or fares.
+function getAroundSection(cc) {
+  const g = GET_AROUND[cc];
+  if (!g) return null;
+  const chip = (b) => h('a', { class: 'chip', href: b.url, target: '_blank', rel: 'noopener' }, `${b.name} ↗`);
+  const wrap = h('div', {});
+
+  if (g.hail && g.hail.length) {
+    const card = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '🚕 Ride-hailing apps')]);
+    g.hail.forEach((a) => card.append(h('div', { class: 'transit-row' }, [h('strong', {}, a.name), h('div', { class: 'muted tiny' }, a.what)])));
+    wrap.append(card);
+  }
+
+  const rentDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🛵 Rent a scooter or car')]);
+  if (g.scooter) {
+    rentDet.append(h('h3', {}, '🛵 Scooter / motorbike'));
+    rentDet.append(h('p', { class: 'muted' }, g.scooter.note));
+    (g.scooter.tips || []).forEach((t) => rentDet.append(h('div', { class: 'list-note' }, t)));
+    if (g.scooter.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.scooter.book.map(chip)));
+  }
+  if (g.car) {
+    rentDet.append(h('h3', {}, '🚗 Car'));
+    rentDet.append(h('p', { class: 'muted' }, g.car.note));
+    if (g.car.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.car.book.map(chip)));
+  }
+  rentDet.append(h('p', { class: 'tiny muted', style: 'margin-top:8px' }, `Reminder: ${g.name} drives on the ${g.drivesOn}. An International Driving Permit plus your home licence keeps you legal and insured.`));
+  wrap.append(rentDet);
+
+  const t = g.tickets || {};
+  const tkDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🎫 Buy tickets — flights, trains, buses & boats')]);
+  const tkRow = (label, arr) => { if (arr && arr.length) tkDet.append(h('div', { class: 'transit-row' }, [h('strong', {}, label), h('div', { class: 'chips', style: 'margin-top:4px' }, arr.map(chip))])); };
+  tkRow('✈️ Flights', t.flight);
+  tkRow('🚆 Trains', t.train);
+  tkRow('🚌 Buses', t.bus);
+  tkRow('⛴️ Boats & ferries', t.ferry);
+  tkDet.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Prices and seats are live on these sites. For trains and the fast Laos railway, book a day or two ahead.'));
+  wrap.append(tkDet);
+
+  if (g.schedules && g.schedules.length) {
+    const scDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🕘 Timetables & live schedules')]);
+    g.schedules.forEach((s) => scDet.append(h('div', { class: 'transit-row' }, [
+      h('div', { class: 'row-between' }, [h('strong', {}, s.what), h('span', { class: 'muted tiny' }, s.org)]),
+      s.note ? h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, s.note) : null,
+      h('a', { class: 'btn ghost block', style: 'margin-top:2px', href: s.url, target: '_blank', rel: 'noopener' }, `Open ${s.org} ↗`),
+    ])));
+    scDet.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'Live times need internet; the guidance above works offline. Schedules shift with season and demand — always confirm on the day.'));
+    wrap.append(scDet);
+  }
+  return wrap;
+}
+
 function transportScreen(countryId) {
   if (countryId) activeCountry = countryId;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Getting around', '#home'));
   wrap.append(countryChips((id) => go(`#transport-${id}`)));
   wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:12px', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
+  // Rent & ride, tickets and schedules — always shown, even where intercity routes are sparse.
+  const ga = getAroundSection(activeCountry);
+  if (ga) wrap.append(ga);
 
   const country = getCountry(activeCountry);
   const routes = country && country.routes;

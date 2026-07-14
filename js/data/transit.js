@@ -274,3 +274,149 @@ export const TRANSIT_SOURCES = [
   { org: '12Go Asia', url: 'https://12go.asia' },
   { org: 'OpenStreetMap', url: 'https://www.openstreetmap.org' },
 ];
+
+// ============================================================================
+// GETTING AROUND — rent & ride, buy tickets, and where to find live schedules.
+// ----------------------------------------------------------------------------
+// This is deliberately LINK-FIRST for anything that changes: we never bundle fabricated
+// timetables or prices. Instead each country carries (1) stable, verified guidance
+// (which side of the road, licence/helmet law, common scams) and (2) outbound links to
+// the authoritative booking and schedule sources, which are always current. Everything
+// opens in the browser; the guidance text itself works offline. Confirm on the day —
+// operators, routes and fares move constantly. Sources: official operator/rail sites,
+// The Man in Seat 61, 12Go Asia, and each country's civil-aviation carriers (2026-07).
+export const GET_AROUND = {
+  th: {
+    name: 'Thailand', drivesOn: 'left',
+    hail: [
+      { name: 'Grab', what: 'Cars, taxis, bikes & food — the main app nationwide.' },
+      { name: 'Bolt', what: 'Often cheaper than Grab in Bangkok and larger cities.' },
+      { name: 'InDrive', what: 'Name-your-price rides in many towns.' },
+    ],
+    scooter: {
+      note: 'Scooters (110–160cc) are the easiest way around towns and islands; rent from local shops from roughly 200–300 THB/day, less by the week.',
+      tips: [
+        'Legally you need an International Driving Permit (with the motorcycle category) plus your home licence — without them you are uninsured and can be fined at checkpoints.',
+        'Helmets are mandatory and police do stop riders, especially on islands and in tourist towns.',
+        'Never hand over your passport as a deposit — leave a photocopy and a cash deposit instead.',
+        'Photograph every existing scratch before you ride off, and check the brakes, lights and tyres.',
+      ],
+      book: [{ name: 'BikesBooking (scooter rental)', url: 'https://www.bikesbooking.com/' }, { name: 'Local shops via Klook', url: 'https://www.klook.com/' }],
+    },
+    car: {
+      note: 'Cars are simple to hire at airports and in cities; Thailand drives on the LEFT. An International Driving Permit is required. Automatic transmission is standard.',
+      book: [{ name: 'Rentalcars.com', url: 'https://www.rentalcars.com/' }, { name: 'Localrent', url: 'https://localrent.com/en/thailand/' }],
+    },
+    tickets: {
+      bus: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'Bookaway', url: 'https://www.bookaway.com/' }],
+      train: [{ name: 'SRT official e-tickets', url: 'https://www.dticket.railway.co.th/' }, { name: '12Go (trains)', url: 'https://12go.asia/' }],
+      ferry: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'Bookaway', url: 'https://www.bookaway.com/' }],
+      flight: [{ name: 'Skyscanner', url: 'https://www.skyscanner.net/' }, { name: 'Google Flights', url: 'https://www.google.com/travel/flights' }, { name: 'AirAsia', url: 'https://www.airasia.com/' }, { name: 'Bangkok Airways', url: 'https://www.bangkokair.com/' }],
+    },
+    schedules: [
+      { what: 'Trains', org: 'State Railway of Thailand', url: 'https://www.railway.co.th/', note: 'Official routes & timetables; buy on dticket.railway.co.th.' },
+      { what: 'Trains (plain-English guide)', org: 'The Man in Seat 61', url: 'https://www.seat61.com/Thailand.htm', note: 'The clearest schedule & fare explainer for Thai trains.' },
+      { what: 'Bangkok BTS / MRT / Airport Rail', org: 'Transit apps', url: 'https://www.bts.co.th/eng/', note: 'Live times in the “BTS SkyTrain” and “Bangkok MRT” apps; a Rabbit card taps you through the BTS.' },
+      { what: 'Flights (live boards)', org: 'Airports of Thailand', url: 'https://www.airportthai.co.th/en/', note: 'Departure/arrival boards for Suvarnabhumi, Don Mueang, Phuket, Chiang Mai and more.' },
+    ],
+  },
+  vi: {
+    name: 'Vietnam', drivesOn: 'right',
+    hail: [
+      { name: 'Grab', what: 'Cars, bikes & food nationwide — the default app.' },
+      { name: 'Xanh SM', what: 'All-electric taxis and bikes; clean, metered, widely available.' },
+      { name: 'Be', what: 'Popular Vietnamese ride app; often competitive on price.' },
+    ],
+    scooter: {
+      note: 'The motorbike is Vietnam’s heartbeat; rentals run ~120,000–200,000 VND/day. Traffic is intense — ride cautiously and only if experienced.',
+      tips: [
+        'To ride legally you need a licence Vietnam recognises: a 1968-Convention International Driving Permit (with motorcycle class) plus your home licence. A 1949 (Geneva) IDP is not valid here, and riding unlicensed voids any insurance.',
+        'Helmets are compulsory by law for rider and passenger.',
+        'Leave a cash deposit and a passport photocopy — not your actual passport.',
+        'Check brakes, horn and lights, and photograph existing damage before leaving.',
+      ],
+      book: [{ name: 'BikesBooking', url: 'https://www.bikesbooking.com/' }, { name: 'Local shops via Klook', url: 'https://www.klook.com/' }],
+    },
+    car: {
+      note: 'Foreigners rarely self-drive in Vietnam; hiring a car WITH a driver is normal, affordable and far less stressful. Vietnam drives on the RIGHT.',
+      book: [{ name: 'Car + driver via Klook', url: 'https://www.klook.com/' }, { name: '12Go private transfers', url: 'https://12go.asia/' }],
+    },
+    tickets: {
+      bus: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'Baolau', url: 'https://www.baolau.com/' }, { name: 'Vexere', url: 'https://vexere.com/' }],
+      train: [{ name: 'Vietnam Railways (official)', url: 'https://dsvn.vn/' }, { name: 'Baolau', url: 'https://www.baolau.com/' }],
+      ferry: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'Baolau', url: 'https://www.baolau.com/' }],
+      flight: [{ name: 'Skyscanner', url: 'https://www.skyscanner.net/' }, { name: 'Vietnam Airlines', url: 'https://www.vietnamairlines.com/' }, { name: 'VietJet Air', url: 'https://www.vietjetair.com/' }, { name: 'Bamboo Airways', url: 'https://www.bambooairways.com/' }],
+    },
+    schedules: [
+      { what: 'Trains (Reunification Express)', org: 'Vietnam Railways', url: 'https://dsvn.vn/', note: 'Official timetable & booking, Hanoi–Ho Chi Minh City and branches.' },
+      { what: 'Trains (plain-English guide)', org: 'The Man in Seat 61', url: 'https://www.seat61.com/Vietnam.htm', note: 'Best explainer of Vietnamese train classes, times and fares.' },
+      { what: 'Metros', org: 'Hanoi & HCMC metro', url: 'https://www.seat61.com/Vietnam.htm', note: 'Hanoi has the Cat Linh–Ha Dong line; Ho Chi Minh City opened Metro Line 1 (Ben Thanh–Suoi Tien) in Dec 2024.' },
+      { what: 'Flights (live boards)', org: 'Airports (ACV)', url: 'https://www.vietnamairport.vn/en', note: 'Noi Bai (Hanoi), Tan Son Nhat (HCMC), Da Nang and more.' },
+    ],
+  },
+  kh: {
+    name: 'Cambodia', drivesOn: 'right',
+    hail: [
+      { name: 'Grab', what: 'Cars, tuk-tuks & bikes in Phnom Penh, Siem Reap and beyond.' },
+      { name: 'PassApp', what: 'The local favourite for metered tuk-tuks (remorques) and cars.' },
+    ],
+    scooter: {
+      note: 'Scooters rent for ~$5–8/day in Siem Reap and Phnom Penh. Note: driving a motorbike is banned for tourists in Siem Reap town — use a tuk-tuk or PassApp there.',
+      tips: [
+        'Cambodia officially requires a Cambodian licence; carry an International Driving Permit and your home licence, and expect police to sometimes stop foreigners.',
+        'Helmets are legally required for the driver (and sensible for everyone).',
+        'Leave a cash deposit and a passport copy — keep your passport.',
+        'Roads and lighting are poor outside towns; avoid riding after dark.',
+      ],
+      book: [{ name: 'Local shops via Klook', url: 'https://www.klook.com/' }, { name: 'BikesBooking', url: 'https://www.bikesbooking.com/' }],
+    },
+    car: {
+      note: 'Hiring a car WITH a driver is the norm and is inexpensive; self-drive is uncommon. Cambodia drives on the RIGHT.',
+      book: [{ name: 'Car + driver via Klook', url: 'https://www.klook.com/' }, { name: '12Go private transfers', url: 'https://12go.asia/' }],
+    },
+    tickets: {
+      bus: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'CamboTicket', url: 'https://www.camboticket.com/' }, { name: 'Bookaway', url: 'https://www.bookaway.com/' }],
+      train: [{ name: 'Royal Railway Cambodia', url: 'https://royal-railway.com/' }, { name: '12Go (trains)', url: 'https://12go.asia/' }],
+      ferry: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'CamboTicket', url: 'https://www.camboticket.com/' }],
+      flight: [{ name: 'Skyscanner', url: 'https://www.skyscanner.net/' }, { name: 'Cambodia Angkor Air', url: 'https://www.cambodiaangkorair.com/' }, { name: 'Cambodia Airways', url: 'https://www.cambodia-airways.com/' }],
+    },
+    schedules: [
+      { what: 'Trains', org: 'Royal Railway', url: 'https://royal-railway.com/', note: 'Phnom Penh–Sihanoukville and Phnom Penh–Poipet (for the Thai border); weekend-heavy timetable.' },
+      { what: 'Trains (plain-English guide)', org: 'The Man in Seat 61', url: 'https://www.seat61.com/Cambodia.htm', note: 'Current explainer of Cambodia’s two passenger lines.' },
+      { what: 'Buses & boats', org: '12Go Asia', url: 'https://12go.asia/', note: 'Live times, operators and prices for intercity buses and the Siem Reap–Battambang boat.' },
+      { what: 'Flights (live boards)', org: 'Cambodia airports', url: 'https://www.cambodia-airports.aero/', note: 'Phnom Penh, Siem Reap–Angkor (new airport) and Sihanoukville.' },
+    ],
+  },
+  la: {
+    name: 'Laos', drivesOn: 'right',
+    hail: [
+      { name: 'LOCA', what: 'The main Lao ride-hailing app (cars & taxis) in Vientiane, Luang Prabang and Vang Vieng. Grab does not operate in Laos.' },
+    ],
+    scooter: {
+      note: 'Scooters (~50,000–100,000 LAK/day) and bicycles are the easy way around Luang Prabang, Vang Vieng and Pakse.',
+      tips: [
+        'Carry an International Driving Permit plus your home licence; police checks happen and unlicensed riding voids insurance.',
+        'Helmets are required by law and strongly advised — hospitals are limited outside the capital.',
+        'Leave a cash deposit and a passport copy, never the passport itself.',
+        'Fuel up in town before rural rides; stations are sparse, and ride only in daylight.',
+      ],
+      book: [{ name: 'Local guesthouses & shops (walk-in)', url: 'https://www.laos-guide-999.com/' }, { name: 'Bikes via Klook', url: 'https://www.klook.com/' }],
+    },
+    car: {
+      note: 'A car with a driver, or a minivan, is the usual way to cover distances; roads are winding and mountainous. Laos drives on the RIGHT.',
+      book: [{ name: 'Car + driver via Klook', url: 'https://www.klook.com/' }, { name: '12Go private transfers', url: 'https://12go.asia/' }],
+    },
+    tickets: {
+      bus: [{ name: '12Go Asia', url: 'https://12go.asia/' }, { name: 'Bookaway', url: 'https://www.bookaway.com/' }],
+      train: [{ name: 'Laos–China Railway tickets', url: 'https://www.laostraintickets.com/' }, { name: '12Go (LCR trains)', url: 'https://12go.asia/' }],
+      ferry: [{ name: '12Go Asia (slow boats)', url: 'https://12go.asia/' }, { name: 'Bookaway', url: 'https://www.bookaway.com/' }],
+      flight: [{ name: 'Skyscanner', url: 'https://www.skyscanner.net/' }, { name: 'Lao Airlines', url: 'https://www.laoairlines.com/' }, { name: 'Lao Skyway', url: 'https://www.laoskyway.com/' }],
+    },
+    schedules: [
+      { what: 'Laos–China Railway (fast train)', org: 'Seat61 / LCR', url: 'https://www.seat61.com/trains-and-routes/vientiane-to-luang-prabang-and-boten.htm', note: 'Vientiane–Vang Vieng–Luang Prabang–Boten in hours; seats sell out — book 1–2 days ahead.' },
+      { what: 'Buses & minivans', org: '12Go Asia', url: 'https://12go.asia/', note: 'Live times and operators; the LCR train has replaced many long bus routes.' },
+      { what: 'Mekong slow boat', org: 'The Man in Seat 61', url: 'https://www.seat61.com/Laos.htm', note: 'Huay Xai–Pakbeng–Luang Prabang two-day slow boat, plus rail and bus guidance.' },
+      { what: 'Flights (live boards)', org: 'Lao airports', url: 'https://www.vientianeairport.com/', note: 'Wattay (Vientiane), Luang Prabang and Pakse.' },
+    ],
+  },
+};
