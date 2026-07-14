@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.187.0';
+const APP_VERSION = 'mk-v0.188.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -4107,7 +4107,7 @@ function scrapbookText(entries, loved, stops, budget, range) {
   L.push(`${store.profile.name ? store.profile.name + '’s' : 'My'} journey${range ? ' · ' + range : ''}`);
   if (stops.length) L.push('\nWhere I went: ' + stops.map((s) => s.city).filter(Boolean).join(', '));
   if (loved.length) L.push('\nPlaces I loved:\n' + loved.slice(0, 20).map(({ p, d }) => `  • ${p.name} ${'★'.repeat(Math.round(d.rating || 0))}`).join('\n'));
-  if (entries.length) L.push('\nJournal:\n' + entries.map((e) => `  ${sbFmtDate(e.date || (e.ts || '').slice(0, 10))} — ${e.title || 'Untitled'}`).join('\n'));
+  if (entries.length) L.push('\nJournal:\n' + entries.map((e) => `  ${sbFmtDate(e.date || String(e.ts || '').slice(0, 10))} — ${e.title || 'Untitled'}`).join('\n'));
   if (budget.length) {
     const t = {}; budget.forEach((b) => { const c = b.currency || '?'; t[c] = (t[c] || 0) + (parseFloat(b.amount) || 0); });
     L.push('\nSpent: ' + Object.entries(t).map(([c, v]) => `${Math.round(v).toLocaleString()} ${c}`).join(', '));
@@ -4123,6 +4123,8 @@ function scrapAlbumSection() {
   const album = getAlbum();
   const journalPhotos = [];
   (store.journal.entries || []).forEach((e) => entryPhotoKeys(e).forEach((k) => journalPhotos.push({ key: k, entry: e })));
+  const placePhotos = [];
+  Object.keys(store.placeData || {}).forEach((id) => (store.placeData[id].photos || []).forEach((k) => placePhotos.push({ key: k, placeId: id })));
   const card = h('div', { class: 'card' }, [h('h3', { class: 'scrap-h' }, '📸 Photo album')]);
   const inp = h('input', { type: 'file', accept: 'image/*', multiple: '', style: 'display:none', onchange: async (ev) => {
     const files = ev.target.files ? [...ev.target.files] : [];
@@ -4131,8 +4133,8 @@ function scrapAlbumSection() {
     ev.target.value = ''; render();
   } });
   card.append(h('div', { class: 'chips' }, [h('button', { class: 'chip', onclick: () => inp.click() }, '＋ Add pictures to album'), inp]));
-  if (!album.length && !journalPhotos.length) {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Add pictures here, or add photos to your journal entries — they all gather in this album.'));
+  if (!album.length && !journalPhotos.length && !placePhotos.length) {
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Add pictures here, or add photos to your journal entries and the places you rate — they all gather in this album.'));
     return card;
   }
   const grid = h('div', { class: 'photo-gallery' });
@@ -4153,6 +4155,13 @@ function scrapAlbumSection() {
     getBlob(jp.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
     grid.append(h('button', { class: 'gallery-cell', onclick: () => go(`#journal-entry-${jp.entry.id}`) }, [img, h('span', { class: 'gallery-cap' }, `📔 ${jp.entry.title || 'Journal'}`)]));
   });
+  // Place photos (most recent first) — tap opens the place they belong to.
+  placePhotos.slice().reverse().forEach((pp) => {
+    const img = h('img', { alt: '', loading: 'lazy' });
+    getBlob(pp.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    const pl = getPlace(pp.placeId) || getPin(pp.placeId);
+    grid.append(h('button', { class: 'gallery-cell', onclick: () => go(`#place-${pp.placeId}`) }, [img, h('span', { class: 'gallery-cap' }, `📍 ${pl ? pl.name : 'Place'}`)]));
+  });
   card.append(grid);
   return card;
 }
@@ -4167,7 +4176,7 @@ function scrapbookScreen() {
   const budget = store.trip.budgetLog || [];
   const loved = Object.entries(store.placeData || {})
     .filter(([, d]) => d && d.rating >= 4)
-    .map(([id, d]) => ({ p: getPlace(id), d }))
+    .map(([id, d]) => ({ p: getPlace(id) || getPin(id), d }))
     .filter((x) => x.p);
 
   if (!entries.length && !stops.length && !budget.length && !loved.length && !getAlbum().length) {
@@ -4183,7 +4192,7 @@ function scrapbookScreen() {
     mount(wrap, '#home'); return;
   }
 
-  const allDates = entries.map((e) => e.date || (e.ts || '').slice(0, 10)).filter(Boolean)
+  const allDates = entries.map((e) => e.date || String(e.ts || '').slice(0, 10)).filter(Boolean)
     .concat(stops.map((s) => s.fromDate).filter(Boolean)).sort();
   const range = allDates.length ? sbDateRange(allDates[0], allDates[allDates.length - 1]) : '';
 
@@ -4223,7 +4232,7 @@ function scrapbookScreen() {
     wrap.append(h('h3', { class: 'scrap-section' }, '📖 Your journal'));
     entries.forEach((e) => {
       const card = h('div', { class: 'card scrap-entry' }, [
-        h('div', { class: 'scrap-date' }, [sbFmtDate(e.date || (e.ts || '').slice(0, 10)), e.place ? '📍 ' + e.place : ''].filter(Boolean).join(' · ')),
+        h('div', { class: 'scrap-date' }, [sbFmtDate(e.date || String(e.ts || '').slice(0, 10)), e.place ? '📍 ' + e.place : ''].filter(Boolean).join(' · ')),
         h('h3', { style: 'margin:2px 0' }, e.title || 'Untitled'),
         e.text ? h('div', { class: 'scrap-text' }, (e.text || '').split('\n').map((p) => h('p', {}, p))) : null,
       ]);
