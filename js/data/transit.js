@@ -288,6 +288,20 @@ export const TRANSIT_SOURCES = [
 export const GET_AROUND = {
   th: {
     name: 'Thailand', drivesOn: 'left',
+    rentalPrices: {
+      note: 'Approximate daily rates, mid-2026 — islands, airports and peak season run higher. Weekly and monthly hire is much cheaper per day. Always confirm before renting.',
+      rows: [
+        { city: 'Bangkok', scooter: '250–350 THB', car: '1,200–1,800 THB' },
+        { city: 'Chiang Mai', scooter: '150–250 THB', car: '900–1,400 THB' },
+        { city: 'Phuket', scooter: '200–300 THB', car: '1,000–1,600 THB' },
+        { city: 'Koh Samui & islands', scooter: '200–300 THB', car: '1,200–1,800 THB' },
+      ],
+    },
+    cityTransit: [
+      { city: 'Bangkok', lines: ['BTS Sukhumvit Line', 'BTS Silom Line', 'BTS Gold Line', 'MRT Blue Line', 'MRT Purple Line', 'MRT Yellow Line', 'MRT Pink Line', 'Airport Rail Link', 'SRT Red Line'], note: 'Fares are by distance. Tap through with a Rabbit card (BTS) or an MRT stored-value card; single-journey tokens also work.' },
+      { city: 'Chiang Mai', lines: [], note: 'No rail — red songthaews (shared pickup trucks, flag one down), plus Grab and Bolt.' },
+      { city: 'Phuket', lines: [], note: 'No rail — local songthaews, Grab/Bolt, and the Airport Express bus into Phuket Town.' },
+    ],
     hail: [
       { name: 'Grab', what: 'Cars, taxis, bikes & food — the main app nationwide.' },
       { name: 'Bolt', what: 'Often cheaper than Grab in Bangkok and larger cities.' },
@@ -322,6 +336,20 @@ export const GET_AROUND = {
   },
   vi: {
     name: 'Vietnam', drivesOn: 'right',
+    rentalPrices: {
+      note: 'Approximate daily rates, mid-2026. Cars are usually hired WITH a driver in Vietnam, so the car figure is the car-and-driver day rate. Confirm before hiring.',
+      rows: [
+        { city: 'Hanoi', scooter: '120,000–200,000 VND', car: '1.2–1.8M VND (with driver)' },
+        { city: 'Ho Chi Minh City', scooter: '120,000–180,000 VND', car: '1.2–1.8M VND (with driver)' },
+        { city: 'Hoi An & Da Nang', scooter: '120,000–150,000 VND', car: '1.0–1.6M VND (with driver)' },
+        { city: 'Da Lat / Ha Giang loops', scooter: '150,000–250,000 VND', car: '—' },
+      ],
+    },
+    cityTransit: [
+      { city: 'Hanoi', lines: ['Metro Line 2A (Cat Linh–Ha Dong)', 'Metro Line 3 (Nhon–Cau Giay, partial)', 'City bus network'], note: 'Metro and buses are very cheap; pay cash or by card at the gate.' },
+      { city: 'Ho Chi Minh City', lines: ['Metro Line 1 (Ben Thanh–Suoi Tien, opened Dec 2024)', 'City bus network'], note: 'Metro Line 1 links the centre to the eastern suburbs; buses cover the rest.' },
+      { city: 'Elsewhere', lines: [], note: 'No metro — Grab, Xanh SM electric taxis, Be, and local buses.' },
+    ],
     hail: [
       { name: 'Grab', what: 'Cars, bikes & food nationwide — the default app.' },
       { name: 'Xanh SM', what: 'All-electric taxis and bikes; clean, metered, widely available.' },
@@ -356,6 +384,18 @@ export const GET_AROUND = {
   },
   kh: {
     name: 'Cambodia', drivesOn: 'right',
+    rentalPrices: {
+      note: 'Approximate daily rates, mid-2026 in US dollars (widely used alongside riel). Confirm before hiring. Remember: motorbikes may not be driven by tourists in Siem Reap town.',
+      rows: [
+        { city: 'Phnom Penh', scooter: '$5–8', car: '$35–50 (with driver)' },
+        { city: 'Siem Reap', scooter: 'bicycle/e-bike $2–8', car: 'tuk-tuk day hire $15–25' },
+        { city: 'Battambang & Kampot', scooter: '$5–8', car: '$30–45 (with driver)' },
+      ],
+    },
+    cityTransit: [
+      { city: 'Phnom Penh', lines: ['Smart City Bus network (~13 routes)'], note: 'Flat 1,500 riel fare; otherwise metered tuk-tuks via PassApp or Grab.' },
+      { city: 'Siem Reap', lines: [], note: 'No city transit — tuk-tuks (remorques) via PassApp/Grab, or a bicycle.' },
+    ],
     hail: [
       { name: 'Grab', what: 'Cars, tuk-tuks & bikes in Phnom Penh, Siem Reap and beyond.' },
       { name: 'PassApp', what: 'The local favourite for metered tuk-tuks (remorques) and cars.' },
@@ -389,6 +429,19 @@ export const GET_AROUND = {
   },
   la: {
     name: 'Laos', drivesOn: 'right',
+    rentalPrices: {
+      note: 'Approximate daily rates, mid-2026. Bicycles are the cheapest way around the small towns. Confirm before hiring; fuel up in town before rural loops.',
+      rows: [
+        { city: 'Luang Prabang', scooter: '50,000–100,000 LAK', car: 'bicycle 20,000–30,000 LAK' },
+        { city: 'Vang Vieng', scooter: '60,000–100,000 LAK', car: '—' },
+        { city: 'Pakse (Bolaven loop)', scooter: '60,000–120,000 LAK', car: '—' },
+        { city: 'Vientiane', scooter: '50,000–100,000 LAK', car: 'from ~400,000 LAK (with driver)' },
+      ],
+    },
+    cityTransit: [
+      { city: 'Vientiane', lines: ['Central Bus Station city routes (limited)'], note: 'City buses are sparse — the LOCA app and tuk-tuks are the usual way around.' },
+      { city: 'Luang Prabang', lines: [], note: 'The old town is walkable; tuk-tuks reach the airport and the waterfalls.' },
+    ],
     hail: [
       { name: 'LOCA', what: 'The main Lao ride-hailing app (cars & taxis) in Vientiane, Luang Prabang and Vang Vieng. Grab does not operate in Laos.' },
     ],
