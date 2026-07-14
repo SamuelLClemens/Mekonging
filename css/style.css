@@ -733,6 +733,21 @@ html[data-text="l"] { font-size: 18.5px; }
 .ck-row input { width: 22px; height: 22px; accent-color: var(--orange); flex: none; margin-top: 2px; }
 .ck-row.done { opacity: 0.55; }
 .ck-row.done strong { text-decoration: line-through; }
+/* A small "tailored to your profile" tag on personalised checklist items. */
+.for-you-tag { margin-left: 6px; font-size: var(--fs-label); font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--teal-deep); background: rgba(20,160,160,0.14);
+  border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
+html[data-theme="dark"] .for-you-tag { color: var(--teal); }
+
+/* Journey companion cards (countdown before you leave, recap when back) */
+.companion-card { border: 1px solid var(--teal); }
+.countdown-num { font-size: var(--fs-lg); font-weight: 800; }
+.countdown-num b { font-size: 1.6em; color: var(--teal-deep); }
+html[data-theme="dark"] .countdown-num b { color: var(--teal); }
+.companion-todo { padding: 3px 0; color: var(--ink-soft); }
+.recap-stats { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); margin: 6px 0 2px; }
+.recap-stat { font-size: var(--fs-sm); color: var(--ink-soft); }
+.recap-stat b { font-size: 1.3em; color: var(--ink); }
 
 /* trip planner + journal photo */
 .bestof-card { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
