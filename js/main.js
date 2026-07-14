@@ -187,7 +187,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.184.0';
+const APP_VERSION = 'mk-v0.185.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2224,6 +2224,21 @@ function placesScreen(arg) {
     wrap.append(cityEssentials(activeCountry, scopeCity, scopeSlug));
   }
 
+  // Your own places live alongside the curated ones: add a location, then rate, review and
+  // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0', onclick: () => go('#addpin') }, '➕ Add a place of your own'));
+  if ((store.pins || []).length) {
+    const yp = h('details', { class: 'filters-collapse' }, [h('summary', {}, `📌 Your places · ${store.pins.length}`)]);
+    store.pins.forEach((pin) => {
+      const pd = getPlaceData(pin.id);
+      const kind = (pin.tags && pin.tags[0]) ? titleCase(pin.tags[0]) : 'Place';
+      const meta = [kind, pd.rating ? starsStr(pd.rating) : null, (placePhotoKeys(pin.id).length ? `📷 ${placePhotoKeys(pin.id).length}` : null)].filter(Boolean).join(' · ');
+      yp.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) },
+        `📌 ${pin.name} — ${meta}`));
+    });
+    wrap.append(yp);
+  }
+
   // interest filters (seeded from saved prefs the first time)
   const prefs = store.profile.prefs;
   const selInterests = new Set(prefs.interests || []);
@@ -3911,6 +3926,15 @@ function addPinScreen(editId) {
   const note = h('input', { type: 'text', placeholder: 'A note (optional)', value: existing ? (existing.note || '') : '' });
   card.append(field('Name', name), field('Note', note));
 
+  // What kind of place — single-select, stored as the pin's first tag so it reads as a type
+  // (like a category on a map) and can colour/group it later.
+  const PLACE_KINDS = [['food', '🍜 Food & drink'], ['stay', '🛏 Place to stay'], ['culture', '🏛 Culture'], ['nature', '🌿 Nature'], ['nightlife', '🌃 Nightlife'], ['shopping', '🛍 Shopping'], ['other', '📌 Other']];
+  let selKind = (existing && existing.tags && existing.tags[0]) || 'other';
+  const kindChips = h('div', { class: 'chips' }, PLACE_KINDS.map(([id, lbl]) =>
+    h('button', { class: 'chip', 'aria-pressed': selKind === id ? 'true' : 'false', dataset: { k: id },
+      onclick: (e) => { selKind = id; kindChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.k === id ? 'true' : 'false')); } }, lbl)));
+  card.append(field('What kind of place?', kindChips));
+
   const coordOut = h('p', { class: 'muted' }, state.coords
     ? `Location: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`
     : 'No location attached.');
@@ -3944,15 +3968,16 @@ function addPinScreen(editId) {
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!name.value.trim()) { alert('Give the place a name.'); return; }
     if (editing) {
-      updatePin(editId, { name: name.value.trim(), note: note.value.trim(), coords: state.coords });
+      updatePin(editId, { name: name.value.trim(), note: note.value.trim(), coords: state.coords, tags: [selKind] });
       go(`#place-${editId}`);
       return;
     }
-    const pin = addPin({ name: name.value.trim(), note: note.value.trim(), coords: state.coords });
+    const pin = addPin({ name: name.value.trim(), note: note.value.trim(), tags: [selKind], coords: state.coords });
     state.colls.forEach((cid) => togglePlaceInCollection(cid, pin.id));
     if (stayChk.checked && state.coords) setMyStay({ name: name.value.trim(), coords: state.coords });
-    go('#saved');
+    go(`#place-${pin.id}`);   // open the new place so photos, a rating and a review are one tap away
   } }, editing ? 'Save changes' : 'Save place'));
+  wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 2px' }, 'After saving, open the place to add your photos, a star rating and a review — everything stays on your device.'));
   mount(wrap, '#map');
 }
 

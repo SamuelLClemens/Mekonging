@@ -505,6 +505,7 @@ export function updatePin(id, patch = {}) {
   if (patch.name !== undefined) p.name = String(patch.name || 'My place').slice(0, 80);
   if (patch.note !== undefined) p.note = patch.note;
   if (patch.coords !== undefined) p.coords = patch.coords;
+  if (patch.tags !== undefined) p.tags = Array.isArray(patch.tags) ? patch.tags : p.tags;
   save(); return p;
 }
 export function deletePin(id) {
