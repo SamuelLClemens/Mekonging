@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.199.0';
+const APP_VERSION = 'mk-v0.200.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -585,6 +585,10 @@ function whyNow(p, ctx) {
   const cats = p.categories || [];
   const morning = ctx.part === 'earlyMorning' || ctx.part === 'morning';
   const evening = ctx.part === 'evening' || ctx.part === 'night' || ctx.part === 'lateNight';
+  // Make the situation-fit visible: when a family/with-a-baby traveller is shown a
+  // kid-friendly place (which profileFitAdj boosted), say so — the "made for you" reason.
+  const prefs = store.profile.prefs;
+  if ((prefs.withBaby || prefs.kids || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
   if (ctx.raining && cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
   if (ctx.isWeekend && cats.includes('market')) return 'Weekend market';
   if (evening && cats.includes('nightlife')) return 'Buzzing now';
