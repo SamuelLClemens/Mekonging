@@ -21,6 +21,14 @@ export async function putBlob(key, blob) {
   });
 }
 
+// Small key/value slots in the same object store for non-blob metadata — used to keep a
+// redundant mirror of the whole app store in IndexedDB, so a localStorage wipe (which loses
+// both the primary and its .bak) can still be recovered from a separate storage bucket.
+// Reserved keys are prefixed and excluded from the photo backup enumeration below.
+const META_PREFIX = '__mk_meta__';
+export async function putMeta(name, value) { return putBlob(META_PREFIX + name, value); }
+export async function getMeta(name) { try { return await getBlob(META_PREFIX + name); } catch { return null; } }
+
 export async function getBlob(key) {
   const db = await open();
   return new Promise((res, rej) => {
@@ -54,7 +62,8 @@ export async function getAllBlobs() {
       tx.oncomplete = () => {
         const keys = keysReq.result || [];
         const vals = valsReq.result || [];
-        res(keys.map((k, i) => ({ key: k, blob: vals[i] })));
+        res(keys.map((k, i) => ({ key: k, blob: vals[i] }))
+          .filter((x) => !(typeof x.key === 'string' && x.key.startsWith(META_PREFIX))));
       };
       tx.onerror = () => rej(tx.error);
     });
