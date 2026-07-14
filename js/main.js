@@ -187,7 +187,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.183.0';
+const APP_VERSION = 'mk-v0.184.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2987,6 +2987,63 @@ function placeScreen(id) {
   mount(wrap, backHash);
 }
 
+// Photos the traveller attached to a place, stored on-device: blobs in IndexedDB keyed by
+// the place, with the ordered key list kept in placeData[id].photos (so they ride along in
+// the full backup). Autosaves immediately, like the rating/note/review on the same card.
+function placePhotoKeys(id) { const d = getPlaceData(id); return Array.isArray(d.photos) ? d.photos : []; }
+async function addPlacePhotos(id, files) {
+  const keys = placePhotoKeys(id).slice();
+  let n = 0;
+  for (const f of files) {
+    const nk = `placephoto-${id}-${Date.now()}-${n++}-${Math.floor(Math.random() * 1e6)}`;
+    try { await putBlob(nk, f); keys.push(nk); } catch { /* skip a photo that will not store */ }
+  }
+  setPlaceField(id, 'photos', keys);
+  return keys;
+}
+function removePlacePhoto(id, key) {
+  setPlaceField(id, 'photos', placePhotoKeys(id).filter((k) => k !== key));
+  delBlob(key);
+}
+// A reusable "add photos" block (camera + library) that writes straight to a place and
+// repaints the given thumbs container. Shared by the place card and the pin editor.
+function placePhotoControls(id, thumbs, renderThumbs) {
+  const camIn = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
+  const libIn = h('input', { type: 'file', accept: 'image/*', multiple: '', style: 'display:none' });
+  const onPick = async (inp) => {
+    const files = inp.files ? [...inp.files] : []; inp.value = '';
+    if (files.length) { await addPlacePhotos(id, files); renderThumbs(); }
+  };
+  camIn.onchange = () => onPick(camIn);
+  libIn.onchange = () => onPick(libIn);
+  return h('div', {}, [
+    thumbs,
+    h('div', { class: 'chips' }, [
+      h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
+      h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Add pictures'),
+    ]),
+    camIn, libIn,
+  ]);
+}
+function placePhotoThumbs(id) {
+  const thumbs = h('div', { class: 'photo-thumbs' });
+  const renderThumbs = () => {
+    thumbs.innerHTML = '';
+    const keys = placePhotoKeys(id);
+    if (!keys.length) { thumbs.append(h('p', { class: 'muted', style: 'margin:0' }, 'No photos yet — add your own.')); return; }
+    keys.forEach((k) => {
+      const img = h('img', { alt: 'Your photo of this place', loading: 'lazy' });
+      getBlob(k).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+      thumbs.append(h('div', { class: 'photo-thumb' }, [
+        img,
+        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { removePlacePhoto(id, k); renderThumbs(); } }, '✕'),
+      ]));
+    });
+  };
+  renderThumbs();
+  return { thumbs, renderThumbs };
+}
+
 // The user's own layer on a place: rating, private note, and their own review kept
 // alongside the guidebook original (colour-coded). All on-device.
 function yourLayer(p) {
@@ -3002,6 +3059,10 @@ function yourLayer(p) {
   }
   paint(d.rating || 0);
   card.append(h('div', { class: 'field' }, [h('label', {}, 'Your rating'), stars]));
+
+  // Your photos — take or add pictures of this place (kept on-device, in the backup).
+  const { thumbs, renderThumbs } = placePhotoThumbs(p.id);
+  card.append(h('div', { class: 'field' }, [h('label', {}, 'Your photos'), placePhotoControls(p.id, thumbs, renderThumbs)]));
 
   const note = h('textarea', { class: 'ta', placeholder: 'Private notes — directions, what to order, who you met…' });
   note.value = d.note || '';
