@@ -186,7 +186,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.178.0';
+const APP_VERSION = 'mk-v0.179.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1770,21 +1770,92 @@ function audioPackControl(code, book) {
   return card;
 }
 
-// A pinned "show this to the cook" allergy card at the very top of the phrasebook. Leads
-// with the traveller's saved restrictions; always includes the general allergy phrase.
-// Uses only the existing translated ALLERGENS phrases — never a fabricated translation.
-function allergyPinnedCard(code, book) {
-  const phrases = allergyPhrasesForProfile(code);
-  if (!phrases.length) return null;
+// ---- personal phrasebook: derived keys + pin / hide -------------------------
+// Phrases carry no id, so derive a stable key from lang + category + english text.
+function phraseSlug(en) { return String(en).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+function phraseKey(code, catId, p) { return `${code}|${catId}|${phraseSlug(p.en)}`; }
+function phrasePinsFor(code) { const m = store.profile.prefs.phrasePins || (store.profile.prefs.phrasePins = {}); return m[code] || (m[code] = []); }
+function phraseHiddenFor(code) { const m = store.profile.prefs.phraseHidden || (store.profile.prefs.phraseHidden = {}); return m[code] || (m[code] = []); }
+function isPhrasePinned(code, key) { return phrasePinsFor(code).includes(key); }
+function isPhraseHidden(code, key) { return phraseHiddenFor(code).includes(key); }
+function togglePhrasePin(code, key) { const a = phrasePinsFor(code); const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); save(); }
+// Hiding a phrase also drops it from the pins so the two lists never disagree.
+function togglePhraseHide(code, key) {
+  const a = phraseHiddenFor(code); const i = a.indexOf(key);
+  if (i >= 0) { a.splice(i, 1); } else { a.push(key); const p = phrasePinsFor(code); const j = p.indexOf(key); if (j >= 0) p.splice(j, 1); }
+  save();
+}
+function movePhrasePin(code, key, dir) { const a = phrasePinsFor(code); const i = a.indexOf(key); const j = i + dir; if (i < 0 || j < 0 || j >= a.length) return; const t = a[i]; a[i] = a[j]; a[j] = t; save(); }
+// Map every phrase (incl. the allergens category) to its derived key, so pinned/hidden
+// keys can be resolved back to the phrase object regardless of which category it lives in.
+function phraseIndexFor(categories, code) {
+  const idx = new Map();
+  for (const cat of categories) for (const p of cat.phrases) idx.set(phraseKey(code, cat.id, p), { p, catId: cat.id });
+  return idx;
+}
+
+// The "Essentials" card: the traveller's most-needed phrases, first — Hello, Thank you,
+// then their allergy/diet phrases automatically, then Sorry, How much, question words and
+// numbers. Allergy phrases come from the ALLERGENS module (never fabricated) and re-derive
+// from the saved profile every render. onChange() repaints after a pin/hide toggle.
+function essentialsCard(code, book, onChange) {
+  const cats = book.categories;
+  const flat = cats.flatMap((c) => c.phrases.map((p) => ({ p, catId: c.id })));
+  const find = (rx) => flat.find((x) => rx.test(x.p.en));
+  const card = h('div', { class: 'card essentials-card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '⭐ Essentials'));
+  card.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' },
+    'Your most-needed phrases, first. Tap a line to show it large · 📌 pin · ✕ hide.'));
+  const addRow = (x) => {
+    if (!x || isPhraseHidden(code, phraseKey(code, x.catId, x.p))) return;
+    card.append(phraseRow(x.p, book.locale, { code, catId: x.catId, onChange, essential: true }));
+  };
+  addRow(find(/^hello/i));
+  addRow(find(/^thank you/i));
+  // allergy / diet — automatic, safety-critical (not hideable)
   const diet = store.profile.prefs.diet || [];
-  const card = h('div', { class: 'card allergy-card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '⚠️ Allergy & diet — show the cook'));
-  card.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, diet.length
-    ? 'Your saved restrictions, ready to show. Tap a line to enlarge it, 🔊 to speak it. Always double-check in person.'
-    : 'The essential phrase — set your allergies in Settings and your exact phrases pin here. Tap a line to enlarge it.'));
-  phrases.forEach((p) => card.append(phraseRow(p, book.locale)));
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#settings') },
-    diet.length ? '✎ Edit my restrictions' : '➕ Set my allergies & diet'));
+  const allergy = allergyPhrasesForProfile(code);
+  if (allergy.length) {
+    card.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' },
+      '⚠️ ' + (diet.length ? 'Your allergies & diet — show the cook' : 'Food allergy — show the cook')));
+    allergy.forEach((p) => card.append(phraseRow(p, book.locale, { code, catId: 'allergies', onChange, noHide: true, essential: true })));
+    if (!diet.length) card.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0 2px', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
+  } else if (!diet.length) {
+    card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' },
+      'Have an allergy? Set it in Settings and your exact phrase appears here automatically.'));
+  }
+  addRow(find(/excuse me|^sorry/i));
+  addRow(find(/how much/i));
+  // question words
+  const qCat = cats.find((c) => c.id === 'questions');
+  if (qCat) qCat.phrases.forEach((p) => { if (!isPhraseHidden(code, phraseKey(code, 'questions', p))) card.append(phraseRow(p, book.locale, { code, catId: 'questions', onChange, essential: true })); });
+  // numbers — compact tappable chips (tap to show large)
+  const nCat = cats.find((c) => c.id === 'numbers');
+  if (nCat) {
+    card.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' }, '🔢 Numbers'));
+    card.append(h('div', { class: 'chips num-chips' }, nCat.phrases.map((p) =>
+      h('button', { class: 'chip', title: 'Show large', onclick: () => showBigPhrase(p, book.locale) },
+        [h('b', {}, p.en), ' ', h('span', { lang: book.locale }, p.script)]))));
+  }
+  return card;
+}
+
+// The "Your pins" card: the phrases the traveller pinned, in their own order (↑ ↓ · 📌 removes).
+function phrasePinsCard(code, book, idx, onChange) {
+  const keys = phrasePinsFor(code).filter((k) => idx.has(k) && !isPhraseHidden(code, k));
+  if (!keys.length) return null;
+  const card = h('div', { class: 'card pins-card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '📌 Your pins'));
+  card.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, 'Your saved phrases, in your order. Use ↑ ↓ to reorder · 📌 to remove.'));
+  keys.forEach((k, i) => {
+    const { p, catId } = idx.get(k);
+    const row = phraseRow(p, book.locale, { code, catId, onChange, noHide: true });
+    const up = h('button', { class: 'speak', 'aria-label': `Move ${p.en} up`, title: 'Move up', disabled: i === 0 ? '' : null, onclick: () => { movePhrasePin(code, k, -1); if (onChange) onChange(); } }, '↑');
+    const down = h('button', { class: 'speak', 'aria-label': `Move ${p.en} down`, title: 'Move down', disabled: i === keys.length - 1 ? '' : null, onclick: () => { movePhrasePin(code, k, 1); if (onChange) onChange(); } }, '↓');
+    const ctrls = row.querySelector('.phrase-ctrls');
+    if (ctrls) ctrls.prepend(down, up);
+    card.append(row);
+  });
   return card;
 }
 
@@ -1803,9 +1874,18 @@ function phrasebookScreen(lang) {
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
 
-  // Safety-critical: pin the allergy/diet card ABOVE everything else so it is one tap away.
-  const allergyCard = allergyPinnedCard(code, book);
-  if (allergyCard) wrap.append(allergyCard);
+  const repaint = () => phrasebookScreen(code);
+
+  // Full category set incl. the allergens-module category (used by the pin index + list).
+  const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
+    ? { id: 'allergies', name: 'Allergies & dietary', phrases: ALLERGENS[code] } : null;
+  const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
+  const idx = phraseIndexFor(categories, code);
+
+  // Most-needed phrases first (allergy/diet auto-injected), then the traveller's own pins.
+  wrap.append(essentialsCard(code, book, repaint));
+  const pinsCard = phrasePinsCard(code, book, idx, repaint);
+  if (pinsCard) wrap.append(pinsCard);
 
   const voiceOk = hasVoiceFor(book.locale);
   if (!voiceOk) {
@@ -1823,7 +1903,7 @@ function phrasebookScreen(lang) {
   wrap.append(liveTranslateBox(code, book.label, book.locale));
 
   // search
-  wrap.append(h('h2', { class: 'cat-title' }, 'Phrasebook'));
+  wrap.append(h('h2', { class: 'cat-title' }, 'All phrases'));
   const search = h('input', {
     class: 'search', type: 'search', 'aria-label': 'Search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
     oninput: debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120),
@@ -1833,11 +1913,6 @@ function phrasebookScreen(lang) {
   const listEl = h('div', {});
   wrap.append(listEl);
 
-  // append an Allergies & dietary category from the allergens module (if present)
-  const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
-    ? { id: 'allergies', name: 'Allergies & dietary', phrases: ALLERGENS[code] } : null;
-  const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
-
   function renderPhrases() {
     listEl.innerHTML = '';
     const q = phraseQuery.trim().toLowerCase();
@@ -1845,20 +1920,41 @@ function phrasebookScreen(lang) {
       // A query matches the whole category when its name matches (so "taxi"
       // surfaces the Taxi & directions phrases), else it matches per phrase.
       const catNameMatch = !q || cat.name.toLowerCase().includes(q);
-      const matches = cat.phrases.filter((p) =>
-        catNameMatch || p.en.toLowerCase().includes(q) || (p.roman || '').toLowerCase().includes(q) || (p.script || '').includes(phraseQuery));
+      const matches = cat.phrases.filter((p) => {
+        if (isPhraseHidden(code, phraseKey(code, cat.id, p))) return false;
+        return catNameMatch || p.en.toLowerCase().includes(q) || (p.roman || '').toLowerCase().includes(q) || (p.script || '').includes(phraseQuery);
+      });
       if (!matches.length) continue;
       listEl.append(h('h2', { class: 'cat-title' }, cat.name));
-      for (const p of matches) listEl.append(phraseRow(p, book.locale));
+      for (const p of matches) listEl.append(phraseRow(p, book.locale, { code, catId: cat.id, onChange: repaint }));
     }
     if (!listEl.children.length) listEl.append(h('p', { class: 'empty' }, 'No phrases match your search.'));
+    // Hidden phrases: a collapsible reveal so nothing is lost, only tucked away.
+    const hiddenKeys = phraseHiddenFor(code).filter((k) => idx.has(k));
+    if (hiddenKeys.length && !q) {
+      const det = h('details', { class: 'hidden-reveal' });
+      det.append(h('summary', {}, `Hidden phrases (${hiddenKeys.length})`));
+      hiddenKeys.forEach((k) => {
+        const { p, catId } = idx.get(k);
+        const row = phraseRow(p, book.locale, { code, catId, onChange: repaint, noHide: true });
+        const restore = h('button', { class: 'speak', 'aria-label': `Restore ${p.en}`, title: 'Restore', onclick: () => { togglePhraseHide(code, k); repaint(); } }, '↩');
+        const ctrls = row.querySelector('.phrase-ctrls');
+        if (ctrls) ctrls.prepend(restore);
+        det.append(row);
+      });
+      listEl.append(det);
+    }
   }
   renderPhrases();
   mount(wrap, '#phrasebook');
 }
 
 // One phrasebook row: tap the text to show it LARGE to a local; copy and speak controls.
-function phraseRow(p, locale) {
+// opts (optional): { code, catId, onChange, noHide, essential } enable pin / hide controls.
+function phraseRow(p, locale, opts) {
+  opts = opts || {};
+  const { code, catId, onChange, noHide, essential } = opts;
+  const key = (code && catId) ? phraseKey(code, catId, p) : null;
   const able = canSay(locale);
   const grow = h('div', { class: 'grow tappable', role: 'button', tabindex: '0', 'aria-label': `Show large: ${p.en}`, title: 'Tap to show large to a local' }, [
     h('div', { class: 'en' }, p.en),
@@ -1874,7 +1970,17 @@ function phraseRow(p, locale) {
     const ok = await say(p.script, locale);
     if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
   });
-  return h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [copyBtn, speakBtn])]);
+  const ctrls = [copyBtn, speakBtn];
+  if (key) {
+    const pinned = isPhrasePinned(code, key);
+    const pinBtn = h('button', { class: 'speak pin' + (pinned ? ' on' : ''), 'aria-pressed': pinned ? 'true' : 'false', 'aria-label': (pinned ? 'Unpin ' : 'Pin ') + p.en, title: pinned ? 'Unpin' : 'Pin to top', onclick: () => { togglePhrasePin(code, key); if (onChange) onChange(); } }, '📌');
+    ctrls.push(pinBtn);
+    if (!noHide) {
+      const hideBtn = h('button', { class: 'speak hide', 'aria-label': `Hide ${p.en}`, title: 'Hide from lists', onclick: () => { togglePhraseHide(code, key); if (onChange) onChange(); } }, '✕');
+      ctrls.push(hideBtn);
+    }
+  }
+  return h('div', { class: 'phrase' + (essential ? ' essential' : '') }, [grow, h('div', { class: 'phrase-ctrls' }, ctrls)]);
 }
 
 // Map a place/dish/event country to the BCP-47 lang subtag of its script, so screen

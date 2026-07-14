@@ -13,6 +13,13 @@ export const PHRASEBOOK_ZH = {
       { en: 'I do not understand', script: '我不明白', roman: 'wǒ bù míng bai' },
       { en: 'Do you speak English?', script: '你会说英语吗？', roman: 'nǐ huì shuō yīng yǔ ma' },
     ]},
+    { id: 'questions', name: 'Question words', phrases: [
+      { en: 'Who?', script: '谁', roman: 'shéi' },
+      { en: 'What?', script: '什么', roman: 'shén me' },
+      { en: 'Where?', script: '哪里', roman: 'nǎ lǐ' },
+      { en: 'When?', script: '什么时候', roman: 'shén me shí hou' },
+      { en: 'Why?', script: '为什么', roman: 'wèi shén me' },
+    ]},
     { id: 'directions', name: 'Taxi & directions', phrases: [
       { en: 'Stop here, please', script: '在这里停', roman: 'zài zhè lǐ tíng' },
       { en: 'Turn left', script: '左转', roman: 'zuǒ zhuǎn' },

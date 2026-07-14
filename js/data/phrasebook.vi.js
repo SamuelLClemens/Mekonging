@@ -14,6 +14,13 @@ export const PHRASEBOOK_VI = {
       { en: 'I do not understand', script: 'Tôi không hiểu', roman: 'toy khohng hyew' },
       { en: 'Do you speak English?', script: 'Bạn nói tiếng Anh không?', roman: 'ban noy tieng anh khohng' },
     ]},
+    { id: 'questions', name: 'Question words', phrases: [
+      { en: 'Who?', script: 'Ai?', roman: 'ai' },
+      { en: 'What?', script: 'Cái gì?', roman: 'kai zi' },
+      { en: 'Where?', script: 'Ở đâu?', roman: 'uh dow' },
+      { en: 'When?', script: 'Khi nào?', roman: 'khee now' },
+      { en: 'Why?', script: 'Tại sao?', roman: 'tai sao' },
+    ]},
     { id: 'directions', name: 'Taxi & directions', phrases: [
       { en: 'Please use the meter', script: 'Làm ơn bật đồng hồ', roman: 'lam un but dong ho', note: 'Or use Grab to avoid fare disputes.' },
       { en: 'Stop here, please', script: 'Dừng ở đây', roman: 'zung uh day' },

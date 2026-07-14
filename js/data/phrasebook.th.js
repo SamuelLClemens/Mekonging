@@ -14,6 +14,13 @@ export const PHRASEBOOK_TH = {
       { en: 'I do not understand', script: 'ไม่เข้าใจ', roman: 'mai khao-jai' },
       { en: 'Do you speak English?', script: 'พูดภาษาอังกฤษได้ไหม', roman: 'phuut pasa angkrit dai mai' },
     ]},
+    { id: 'questions', name: 'Question words', phrases: [
+      { en: 'Who?', script: 'ใคร', roman: 'khrai' },
+      { en: 'What?', script: 'อะไร', roman: 'a-rai' },
+      { en: 'Where?', script: 'ที่ไหน', roman: 'thii-nai' },
+      { en: 'When?', script: 'เมื่อไหร่', roman: 'muea-rai' },
+      { en: 'Why?', script: 'ทำไม', roman: 'tham-mai' },
+    ]},
     { id: 'directions', name: 'Taxi & directions', phrases: [
       { en: 'Please use the meter', script: 'เปิดมิเตอร์ด้วย', roman: 'perd mi-ter duay', note: 'If they refuse, take another taxi or use Grab. Add ครับ (khrap) / ค่ะ (kha) to be polite.' },
       { en: 'Stop here, please', script: 'จอดตรงนี้', roman: 'jot trong nii' },
