@@ -186,7 +186,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.181.0';
+const APP_VERSION = 'mk-v0.182.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5437,6 +5437,100 @@ function moodLine(m) {
     : 'great for outdoor sights and nature.';
 }
 
+// ---- Daily-habit morning strip (the traveller's day, at a glance) ------------
+// A day-of-year index so the "phrase of the day" rotates once per day yet stays
+// stable within a day. (Browser Date is fine here — this is runtime, not a build.)
+function dayIndex() {
+  const now = new Date();
+  return Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+}
+// The next thing on the traveller's own calendar — today or later — i.e. their plan.
+function nextPlanItem() {
+  const t = todayISO();
+  return calItems().find((it) => it.date && it.date >= t) || null;
+}
+// One phrase to have ready today: rotates through the traveller's pins if they have
+// any, otherwise through the Essentials concepts — always in the local language.
+function phraseOfTheDay(code) {
+  const book = getLanguage(code);
+  if (!book || !book.categories) return null;
+  const cats = book.categories;
+  const notHidden = (x) => !!x && !isPhraseHidden(code, phraseKey(code, x.catId, x.p));
+  const idx = phraseIndexFor(cats, code);
+  const pinned = phrasePinsFor(code).map((k) => idx.get(k)).filter(Boolean)
+    .map((x) => ({ p: x.p, catId: x.catId })).filter(notHidden);
+  const flat = cats.flatMap((c) => c.phrases.map((p) => ({ p, catId: c.id })));
+  const find = (rx) => flat.find((x) => rx.test(x.p.en));
+  const essentials = [find(/^hello/i), find(/^thank you/i), find(/excuse me|^sorry/i), find(/how much/i)].filter(Boolean);
+  const qCat = cats.find((c) => c.id === 'questions');
+  if (qCat) qCat.phrases.forEach((p) => essentials.push({ p, catId: 'questions' }));
+  const cands = (pinned.length ? pinned : essentials).filter(notHidden);
+  if (!cands.length) return null;
+  const pick = cands[dayIndex() % cands.length];
+  return { p: pick.p, catId: pick.catId, locale: book.locale };
+}
+// The compact "Your day" card: next plan item · phrase of the day · one-tap spend.
+// Weather-independent, so it is rendered once (outside the weather repaint) and a
+// half-typed budget amount never gets wiped by a live-weather refresh.
+function dailyStripCard(id) {
+  const code = store.profile.defaultLang || langForCountry(id);
+  const c = getCountry(id);
+  const card = h('div', { class: 'card daily-strip' });
+  card.append(h('h2', { style: 'margin-top:0' }, '🎒 Your day'));
+
+  // 1) Next plan item — or a gentle nudge to add one.
+  const item = nextPlanItem();
+  const t = todayISO();
+  const when = item ? (item.date === t ? 'Today' : item.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(item.date)) : '';
+  card.append(h('button', { class: 'btn ghost block strip-row', onclick: () => go('#calendar') }, [
+    h('span', { class: 'strip-ic' }, '📅'),
+    h('span', { class: 'grow strip-txt' }, item ? [
+      h('div', { class: 'en' }, item.title || 'Planned'),
+      h('div', { class: 'sci' }, `${when}${item.time ? ' · ' + item.time : ''}${item.place ? ' · ' + item.place : ''}`),
+    ] : [
+      h('div', { class: 'en' }, 'Plan your day'),
+      h('div', { class: 'sci' }, 'Add what you want to do to your calendar'),
+    ]),
+  ]));
+
+  // 2) Phrase of the day.
+  const pod = phraseOfTheDay(code);
+  if (pod) {
+    card.append(h('button', { class: 'btn ghost block strip-row', onclick: () => showBigPhrase(pod.p, pod.locale) }, [
+      h('span', { class: 'strip-ic' }, '💬'),
+      h('span', { class: 'grow strip-txt' }, [
+        h('div', { class: 'en' }, [h('span', { class: 'tiny muted' }, 'Phrase of the day · '), pod.p.en]),
+        h('div', { class: 'sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
+      ]),
+    ]));
+    card.append(h('button', { class: 'linklike', style: 'margin:2px 0 0', onclick: () => go(`#phrasebook-${code}`) }, 'More phrases →'));
+  }
+
+  // 3) Budget quick-add — logs in one tap and shows today's running spend.
+  const budBox = h('div', { style: 'margin-top:10px' });
+  const cur = (c && c.currency) || 'THB';
+  const renderBud = () => {
+    budBox.innerHTML = '';
+    let spent = 0;
+    (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
+    const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', class: 'strip-amt', 'aria-label': 'Amount spent' });
+    const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the spend was on' });
+    const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim() }); renderBud(); };
+    amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
+    budBox.append(h('div', { class: 'strip-budget' }, [
+      h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
+      h('button', { class: 'btn strip-add', onclick: add }, '＋'),
+    ]));
+    budBox.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend in one tap. ',
+      h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
+    ]));
+  };
+  renderBud();
+  card.append(budBox);
+  return card;
+}
+
 function daySuggestScreen(country) {
   const explicit = country && getCountry(country) ? country : null;
   if (explicit) activeCountry = explicit;
@@ -5459,6 +5553,9 @@ function daySuggestScreen(country) {
     locBtn.textContent = '📍 Location unavailable'; locBtn.disabled = false;
   } }, fs.source === 'gps' ? '📍 Update my location' : '📍 Use my location');
   wrap.append(locBtn);
+  // The daily-habit strip: next plan item, phrase of the day, one-tap spend. Rendered
+  // once here (not inside paint) so a live-weather refresh never wipes a typed amount.
+  wrap.append(dailyStripCard(id));
   const body = h('div', {});
   wrap.append(body);
 

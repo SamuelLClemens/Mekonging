@@ -1064,6 +1064,16 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .diet-banner.bad { background: rgba(178, 58, 22, 0.16); border: 1px solid var(--diet-bad); }
 .allergy-card { border: 1px solid var(--warn); }
 .give-back { border: 1px solid var(--magenta); }
+/* Daily-habit morning strip on Today's plan */
+.daily-strip { border: 1px solid var(--teal); }
+.daily-strip .strip-row { justify-content: flex-start; text-align: left; gap: 10px; margin-top: 6px; }
+.daily-strip .strip-ic { font-size: 1.1rem; flex: none; }
+.daily-strip .strip-txt { text-align: left; min-width: 0; }
+.strip-budget { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.strip-budget .strip-amt { width: 92px; flex: none; }
+.strip-budget .strip-note { flex: 1 1 120px; min-width: 100px; }
+.strip-budget .strip-cur { font-weight: 700; flex: none; }
+.strip-budget .strip-add { flex: none; padding: 8px 14px; }
 /* Emergency: hospital rows + first-aid do/don't lists */
 .sos-hosp { background: var(--surface-2, rgba(0,0,0,0.03)); }
 .sos-aid { margin: 2px 0 4px; padding-left: 18px; }
