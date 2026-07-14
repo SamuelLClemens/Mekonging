@@ -21,7 +21,7 @@ import {
 } from './state.js';
 import { suggestPlans } from './data/itineraries.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
-import { CHECKLIST } from './data/checklist.js';
+import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
 import { CROSSINGS } from './data/borders.js';
@@ -186,7 +186,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.179.0';
+const APP_VERSION = 'mk-v0.180.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1115,6 +1115,93 @@ function phaseLead(phase, cc) {
     }, `${x.e} ${x.t}`)));
 }
 
+// ---- Journey companion: countdown (before you leave) + recap (after return) ----
+// Trip start = the earliest dated stop the traveller has planned (no separate date field).
+function tripStartISO() {
+  const dates = (store.trip.stops || []).map((s) => s.date).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || ''));
+  dates.sort();
+  return dates[0] || null;
+}
+function daysUntilISO(iso) {
+  const target = new Date(iso + 'T00:00:00');
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target - today) / 86400000);
+}
+// One stage-aware card for Home: a countdown in the planning phase, a recap in the post phase.
+function journeyCompanionCard(phase, cc) {
+  if (phase === 'planning') return tripCountdownCard(cc);
+  if (phase === 'post') return returnRecapCard();
+  return null;
+}
+function tripCountdownCard(cc) {
+  const start = tripStartISO();
+  if (!start) {
+    return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
+      h('strong', {}, '📅 Add your travel dates'),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Add your first stop with a date and Home counts down the days and surfaces what is still on your checklist.'),
+      h('button', { class: 'btn', onclick: () => go('#trip') }, 'Plan your trip'),
+    ]);
+  }
+  const days = daysUntilISO(start);
+  const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
+  if (days > 0) {
+    card.append(h('div', { class: 'countdown-num' }, [h('b', {}, String(days)), ` day${days === 1 ? '' : 's'} to go`]));
+    const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
+    if (todo.length) {
+      card.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
+      todo.slice(0, 3).forEach((it) => card.append(h('div', { class: 'companion-todo' }, `☐ ${it.title}`)));
+      card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
+    } else {
+      card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
+    }
+  } else {
+    card.append(h('div', { class: 'countdown-num' }, days === 0 ? '🎉 Today’s the day!' : '🛬 Your trip has started'));
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Switch Home to “Just arrived” for near-me help, arrival tips and emergency info.'));
+    card.append(h('button', { class: 'btn', onclick: () => { store.profile.prefs.phase = 'arrived'; save(); render(); } }, 'I have arrived →'));
+  }
+  return card;
+}
+function returnRecapCard() {
+  const jEntries = (store.journal.entries || []).length;
+  const stops = (store.trip.stops || []).length;
+  const loved = Object.entries(store.placeData || {}).filter(([, d]) => d && (d.rating || 0) >= 4).length;
+  const home = homeCurrency();
+  const totals = {};
+  (store.trip.budgetLog || []).forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
+  let homeSum = 0, allKnown = true, any = false;
+  for (const [c, v] of Object.entries(totals)) {
+    any = true;
+    if (c === home) { homeSum += v; continue; }
+    const conv = convert(v, c, home);
+    if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
+  }
+  if (!jEntries && !stops && !loved && !any) {
+    return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
+      h('strong', {}, '📖 Welcome back'),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
+      h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
+    ]);
+  }
+  const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
+  card.append(h('strong', {}, '📖 Welcome back'));
+  const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
+  const stats = [];
+  if (jEntries) stats.push(stat(jEntries, jEntries === 1 ? 'journal entry' : 'journal entries'));
+  if (loved) stats.push(stat(loved, loved === 1 ? 'place loved' : 'places loved'));
+  if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
+  if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
+  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, `Spent ≈ ${Math.round(homeSum).toLocaleString()} ${home}${allKnown ? '' : ' (some rates unknown)'}`));
+  const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
+  if (unrated.length) {
+    const first = getPlace(unrated[0]);
+    if (first) card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${first.id}`) },
+      unrated.length === 1 ? `⭐ Rate ${first.name}` : `⭐ Rate ${unrated.length} places you saved`));
+  }
+  card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#scrapbook') }, 'Build your scrapbook →'));
+  return card;
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero' }, [
@@ -1146,6 +1233,8 @@ function homeScreen() {
     ]));
     wrap.append(h('p', { class: 'phase-tagline muted' }, PHASES[phase].tagline));
     wrap.append(phaseLead(phase, leadCC));
+    const companion = journeyCompanionCard(phase, leadCC);
+    if (companion) wrap.append(companion);
   }
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:8px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
 
@@ -5971,12 +6060,38 @@ function expensesScreen() {
 
 // ---- PRE-TRIP CHECKLIST -----------------------------------------------------
 const CK_CAT = { documents: '🛂 Documents', health: '💊 Health', money: '💳 Money', connectivity: '📶 Connectivity', packing: '🎒 Packing', safety: '🛡 Safety & laws' };
+
+// Does the saved profile match a checklist item's `iff` descriptor? `true` means "set /
+// non-empty"; a scalar matches by equality or, when the pref is an array, by membership.
+function matchesProfile(iff, prefs) {
+  if (!iff) return true;
+  prefs = prefs || {};
+  for (const [k, want] of Object.entries(iff)) {
+    const have = prefs[k];
+    if (want === true) {
+      if (Array.isArray(have) ? have.length === 0 : !have) return false;
+    } else if (Array.isArray(have)) {
+      if (!have.includes(want)) return false;
+    } else if (have !== want) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// The full checklist for a country: its own items plus any profile-matched universal items.
+function checklistFor(cc) {
+  const prefs = store.profile.prefs || {};
+  const base = CHECKLIST[cc] || [];
+  const extra = (CHECKLIST_UNIVERSAL || []).filter((it) => matchesProfile(it.iff, prefs));
+  return base.concat(extra).filter((it) => matchesProfile(it.iff, prefs));
+}
 function checklistScreen(countryId) {
   if (countryId) activeCountry = countryId;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Pre-trip checklist', '#home'));
   wrap.append(countryChips((id) => go(`#checklist-${id}`)));
-  const items = CHECKLIST[activeCountry] || [];
+  const items = checklistFor(activeCountry);
   if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'The checklist is being prepared — reconnect once to download it.')); mount(wrap, '#home'); return; }
   const done = items.filter((it) => isChecked(it.id)).length;
   wrap.append(h('div', { class: 'banner' }, `${done} of ${items.length} done`));
@@ -5988,8 +6103,12 @@ function checklistScreen(countryId) {
     group.forEach((it) => {
       const row = h('label', { class: 'ck-row' }, [
         h('input', { type: 'checkbox', checked: isChecked(it.id) ? '' : null, onchange: () => { toggleChecklistItem(it.id); row.classList.toggle('done'); } }),
-        h('div', { class: 'grow' }, [h('strong', {}, it.title), it.detail ? h('div', { class: 'muted' }, it.detail) : null,
-          it.link ? h('a', { href: it.link, target: '_blank', rel: 'noopener' }, 'Official link ↗') : null]),
+        h('div', { class: 'grow' }, [
+          h('strong', {}, [it.title, it.iff ? h('span', { class: 'for-you-tag' }, 'for you') : null]),
+          it.detail ? h('div', { class: 'muted' }, it.detail) : null,
+          it.link ? (it.link.startsWith('#')
+            ? h('button', { class: 'linklike', onclick: (e) => { e.preventDefault(); go(it.link); } }, 'Open in app →')
+            : h('a', { href: it.link, target: '_blank', rel: 'noopener' }, 'Official link ↗')) : null]),
       ]);
       if (isChecked(it.id)) row.classList.add('done');
       wrap.append(row);
