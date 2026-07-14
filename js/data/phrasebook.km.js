@@ -13,6 +13,13 @@ export const PHRASEBOOK_KM = {
       { en: 'Sorry / Excuse me', script: 'សុំទោស', roman: 'som-toh' },
       { en: 'I do not understand', script: 'ខ្ញុំមិនយល់ទេ', roman: 'knhom min yol te' },
     ]},
+    { id: 'questions', name: 'Question words', phrases: [
+      { en: 'Who?', script: 'អ្នកណា', roman: 'neak naa' },
+      { en: 'What?', script: 'អ្វី', roman: 'a-vei' },
+      { en: 'Where?', script: 'នៅឯណា', roman: 'nov ae naa' },
+      { en: 'When?', script: 'ពេលណា', roman: 'pel naa' },
+      { en: 'Why?', script: 'ហេតុអ្វី', roman: 'haet a-vei' },
+    ]},
     { id: 'market', name: 'Market & taxi', phrases: [
       { en: 'How much?', script: 'ថ្លៃប៉ុន្មាន?', roman: 'thlay pon-maan' },
       { en: 'Too expensive', script: 'ថ្លៃណាស់', roman: 'thlay nah' },

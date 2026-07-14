@@ -14,6 +14,13 @@ export const PHRASEBOOK_LO = {
       { en: 'Sorry / Excuse me', script: 'ຂໍໂທດ', roman: 'kho-thot' },
       { en: 'I do not understand', script: 'ບໍ່ເຂົ້າໃຈ', roman: 'baw khao-jai' },
     ]},
+    { id: 'questions', name: 'Question words', phrases: [
+      { en: 'Who?', script: 'ໃຜ', roman: 'phai' },
+      { en: 'What?', script: 'ຫຍັງ', roman: 'nyang' },
+      { en: 'Where?', script: 'ຢູ່ໃສ', roman: 'yuu sai' },
+      { en: 'When?', script: 'ເມື່ອໃດ', roman: 'muea dai' },
+      { en: 'Why?', script: 'ເປັນຫຍັງ', roman: 'pen nyang' },
+    ]},
     { id: 'market', name: 'Market & taxi', phrases: [
       { en: 'How much?', script: 'ເທົ່າໃດ', roman: 'thao-dai' },
       { en: 'Too expensive', script: 'ແພງເກີນໄປ', roman: 'phaeng kern pai' },

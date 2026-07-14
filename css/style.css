@@ -390,6 +390,23 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .phrase .grow.tappable:hover { background: rgba(0,0,0,0.03); }
 .phrase .grow.tappable:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
+/* Personal phrasebook: essentials, pins, and per-row pin/hide/reorder controls */
+.essentials-card { border: 1px solid var(--teal); }
+.pins-card { border: 1px dashed var(--grape); }
+.phrase.essential { border-bottom-style: solid; }
+.num-chips { gap: var(--sp-1); }
+.num-chips .chip { display: inline-flex; gap: 4px; align-items: baseline; }
+.num-chips .chip [lang] { font-size: 1.05rem; }
+/* Secondary controls (pin, hide, reorder, restore) sit quieter than copy/speak. */
+.speak.pin, .speak.hide, .phrase-ctrls .speak[title="Move up"], .phrase-ctrls .speak[title="Move down"], .phrase-ctrls .speak[title="Restore"] {
+  width: 34px; height: 34px; font-size: 0.95rem; background: transparent; color: var(--ink-soft); border: 1px solid var(--line);
+}
+.speak.pin:hover, .speak.hide:hover { background: rgba(0,0,0,0.05); filter: none; }
+.speak.pin.on { background: var(--sun); color: var(--ink); border-color: transparent; }
+.hidden-reveal { margin-top: var(--sp-3); }
+.hidden-reveal summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
+.hidden-reveal .phrase { opacity: 0.72; }
+
 /* "Show to a local": full-screen, very large native script */
 .bigphrase {
   position: fixed; inset: 0; z-index: 200; background: var(--cream);
