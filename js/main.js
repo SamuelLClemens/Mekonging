@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.194.0';
+const APP_VERSION = 'mk-v0.195.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -512,6 +512,14 @@ function hideSpot(id) {
   const p = store.profile.prefs;
   p.hiddenSpots = p.hiddenSpots || [];
   if (!p.hiddenSpots.includes(id)) p.hiddenSpots.push(id);
+  save();
+}
+function isSpotDone(id) { return (store.profile.prefs.doneSpots || []).includes(id); }
+function toggleSpotDone(id) {
+  const p = store.profile.prefs;
+  p.doneSpots = p.doneSpots || [];
+  if (p.doneSpots.includes(id)) p.doneSpots = p.doneSpots.filter((x) => x !== id);
+  else { p.doneSpots.push(id); p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id); }
   save();
 }
 function clearSuggestionMarks() { const p = store.profile.prefs; p.doneSpots = []; p.hiddenSpots = []; save(); }
@@ -1781,12 +1789,30 @@ function nearbyScreen() {
 
     function drawList() {
       listEl.innerHTML = '';
-      const rows = ranked.filter(({ p }) => cat === 'all' || nearCat(p) === cat).slice(0, 12);
+      // Re-read the marks each draw so hiding one instantly promotes the next place into view,
+      // and "done" places show a tick but stay findable in this directory.
+      const hid = new Set(store.profile.prefs.hiddenSpots || []);
+      const rows = ranked.filter(({ p }) => !hid.has(p.id) && (cat === 'all' || nearCat(p) === cat)).slice(0, 12);
       if (!rows.length) { listEl.append(h('p', { class: 'empty' }, 'Nothing tagged nearby in this category yet — try “Everything” or the map.')); return; }
-      rows.forEach(({ p, km }) => listEl.append(h('button', { class: 'btn ghost block near-row', onclick: () => go(`#place-${p.id}`) }, [
-        h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}`),
-        h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
-      ])));
+      rows.forEach(({ p, km }) => {
+        const done = isSpotDone(p.id);
+        listEl.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
+          h('button', { class: 'rn-open near-open', onclick: () => go(`#place-${p.id}`) }, [
+            h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
+            h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
+          ]),
+          h('div', { class: 'rn-actions' }, [
+            h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { toggleSpotDone(p.id); drawList(); } }, '✓'),
+            h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { hideSpot(p.id); drawList(); } }, '✕'),
+          ]),
+        ]));
+      });
+      const nHid = (store.profile.prefs.hiddenSpots || []).length;
+      const nDone = (store.profile.prefs.doneSpots || []).length;
+      if (nHid || nDone) {
+        listEl.append(h('button', { class: 'rn-reset', onclick: () => { clearSuggestionMarks(); drawList(); } },
+          `↺ ${[nDone ? `${nDone} done` : '', nHid ? `${nHid} hidden` : ''].filter(Boolean).join(' · ')} — reset`));
+      }
     }
     drawList();
   }
@@ -3290,8 +3316,32 @@ function getAroundSection(cc) {
     rentDet.append(h('p', { class: 'muted' }, g.car.note));
     if (g.car.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.car.book.map(chip)));
   }
+  // Per-city price ranges so a traveller can budget before tapping out to a booking site.
+  if (g.rentalPrices && g.rentalPrices.rows && g.rentalPrices.rows.length) {
+    rentDet.append(h('h3', {}, '💰 What it costs (per day)'));
+    const tbl = h('table', { class: 'rent-price' }, [
+      h('thead', {}, h('tr', {}, [h('th', {}, 'City'), h('th', {}, '🛵 Scooter'), h('th', {}, '🚗 Car')])),
+      h('tbody', {}, g.rentalPrices.rows.map((r) => h('tr', {}, [h('td', {}, r.city), h('td', {}, r.scooter || '—'), h('td', {}, r.car || '—')]))),
+    ]);
+    rentDet.append(tbl);
+    if (g.rentalPrices.note) rentDet.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' }, g.rentalPrices.note));
+  }
   rentDet.append(h('p', { class: 'tiny muted', style: 'margin-top:8px' }, `Reminder: ${g.name} drives on the ${g.drivesOn}. An International Driving Permit plus your home licence keeps you legal and insured.`));
   wrap.append(rentDet);
+
+  // City transit — a stored, offline line list for the metro cities (plus an honest note
+  // where there is no rail). No live times bundled; the schedule links below cover those.
+  if (g.cityTransit && g.cityTransit.length) {
+    const ctDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🚈 City transit (works offline)')]);
+    g.cityTransit.forEach((c) => {
+      ctDet.append(h('div', { class: 'transit-row' }, [
+        h('strong', {}, c.city),
+        (c.lines && c.lines.length) ? h('ul', { class: 'transit-lines' }, c.lines.map((ln) => h('li', {}, ln))) : null,
+        c.note ? h('div', { class: 'muted tiny', style: 'margin-top:2px' }, c.note) : null,
+      ]));
+    });
+    wrap.append(ctDet);
+  }
 
   const t = g.tickets || {};
   const tkDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🎫 Buy tickets — flights, trains, buses & boats')]);

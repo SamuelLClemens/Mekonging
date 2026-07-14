@@ -951,6 +951,13 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .near-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
 .near-row .near-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .near-row .dist-chip { flex: none; }
+/* Near-me directory rows reuse the suggestion-row shell (clickable body + action column). */
+.near-open { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.near-open .near-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.near-open .dist-chip { flex: none; }
+.near-item.is-done { opacity: 0.62; }
+.near-item.is-done .near-name { text-decoration: line-through; text-decoration-color: var(--line); }
+.rn-act.done.on { color: var(--green, #4a7a5a); font-weight: 800; }
 .arrival-item { border-top: 1px solid var(--edge-hi, rgba(0,0,0,0.08)); padding: 6px 0; }
 .arrival-item summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
 
@@ -1099,3 +1106,8 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .transit-row { padding: var(--sp-2) 0; border-top: 1px solid var(--line, rgba(0,0,0,0.08)); }
 .transit-row:first-of-type { border-top: 0; }
 .transit-row .fair { white-space: nowrap; }
+.transit-lines { margin: 4px 0 0; padding-left: 1.1rem; }
+.transit-lines li { margin: 1px 0; font-size: var(--fs-sm); }
+table.rent-price { border-collapse: collapse; width: 100%; margin: 6px 0 0; font-size: var(--fs-sm); }
+table.rent-price th, table.rent-price td { border: 1px solid var(--line, rgba(0,0,0,0.1)); padding: 5px 8px; text-align: left; }
+table.rent-price th { background: var(--bg); font-weight: 800; }
