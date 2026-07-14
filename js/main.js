@@ -28,6 +28,7 @@ import { PHOTOS } from './data/photos.js';
 import { CROSSINGS } from './data/borders.js';
 import { TRANSPORT_HUBS, TRANSIT_SOURCES } from './data/transit.js';
 import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
+import { zipStore, toCsv, buildXlsx, downloadBlob, shareOrDownload } from './exporter.js';
 import {
   available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
   lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
@@ -187,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.185.0';
+const APP_VERSION = 'mk-v0.186.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -8031,6 +8032,141 @@ async function restoreBackupFile(text) {
   return importData(text); // legacy plain store-JSON backup (no photos bundled)
 }
 
+// ---- EXPORT the traveller's own contributions, per type, human-viewable ------
+// Everything is built on-device from the store + IndexedDB photos. Journal and reviews
+// come out as self-contained HTML (photos inline), photos as an album + a JPEG ZIP, and
+// spending as a true .xlsx and a .csv. Shareable via the device share sheet, else saved.
+function exportStamp() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function htmlDoc(title, bodyHtml) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)} · Mekonging</title>
+<style>
+ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:820px;margin:0 auto;padding:20px;color:#20143a;background:#faf7f0;line-height:1.5}
+ h1{font-size:1.7rem}h2{font-size:1.2rem;margin:0 0 4px}
+ article{border:1px solid #e3dccb;border-radius:12px;padding:14px 16px;margin:14px 0;background:#fff}
+ .meta{color:#7a7264;font-size:.85rem;margin:0 0 8px}.stars{color:#E0A21A;font-size:1.1rem;margin:2px 0}
+ .note{color:#4a7a5a}img{max-width:100%;border-radius:8px;margin:6px 6px 0 0;max-height:360px}
+ .album{display:flex;flex-wrap:wrap;gap:8px}.album img{width:180px;height:180px;object-fit:cover;max-height:none}
+ footer{color:#9a927f;font-size:.8rem;margin-top:24px;text-align:center}
+</style></head><body>
+<h1>${esc(title)}</h1>
+${bodyHtml}
+<footer>Exported from Mekonging on ${exportStamp()} · your data, kept on your device.</footer>
+</body></html>`;
+}
+async function blobsToDataURLs(keys) {
+  const out = [];
+  for (const k of keys) { try { const b = await getBlob(k); if (b) out.push(await blobToDataURL(b)); } catch { /* skip a missing photo */ } }
+  return out;
+}
+async function exportJournalHtml() {
+  const entries = (store.journal.entries || []).slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  const parts = [];
+  for (const e of entries) {
+    const imgs = await blobsToDataURLs(entryPhotoKeys(e));
+    const when = e.ts ? new Date(e.ts).toLocaleString() : '';
+    parts.push(`<article><h2>${esc(e.title || 'Untitled')}</h2>
+<p class="meta">${[when, e.place, e.weather].filter(Boolean).map(esc).join(' · ')}</p>
+<p>${esc(e.text || '').replace(/\n/g, '<br>')}</p>
+${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
+  }
+  return htmlDoc('My travel journal', parts.join('\n') || '<p>No journal entries yet.</p>');
+}
+async function exportReviewsHtml() {
+  const parts = [];
+  for (const id of Object.keys(store.placeData || {})) {
+    const d = store.placeData[id];
+    if (!d || !(d.rating || d.review || d.note || (d.photos || []).length)) continue;
+    const pl = getPlace(id) || getPin(id);
+    const imgs = await blobsToDataURLs(d.photos || []);
+    parts.push(`<article><h2>${esc(pl ? pl.name : id)}</h2>
+${d.rating ? `<p class="stars">${'★'.repeat(d.rating)}${'☆'.repeat(5 - d.rating)}</p>` : ''}
+${d.review ? `<p>${esc(d.review).replace(/\n/g, '<br>')}</p>` : ''}
+${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>')}</p>` : ''}
+${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
+  }
+  return htmlDoc('My ratings & reviews', parts.join('\n') || '<p>No ratings or reviews yet.</p>');
+}
+async function exportPhotosAlbumHtml() {
+  const blobs = await getAllBlobs().catch(() => []);
+  const imgs = [];
+  for (const { blob } of blobs) { if (blob) { try { imgs.push(await blobToDataURL(blob)); } catch { /* skip */ } } }
+  return htmlDoc('My photo album', imgs.length ? `<div class="album">${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</div>` : '<p>No photos yet.</p>');
+}
+async function exportPhotosZip() {
+  const blobs = await getAllBlobs().catch(() => []);
+  const files = [];
+  let n = 1;
+  for (const { blob } of blobs) {
+    if (!blob) continue;
+    const ext = (blob.type && blob.type.includes('png')) ? 'png' : 'jpg';
+    try { files.push({ name: `photo-${String(n++).padStart(3, '0')}.${ext}`, bytes: new Uint8Array(await blob.arrayBuffer()) }); } catch { /* skip */ }
+  }
+  return files.length ? zipStore(files) : null;
+}
+function expenseTable() {
+  const log = (store.trip.budgetLog || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  return { headers: ['Date', 'Amount', 'Currency', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', b.note || '']) };
+}
+
+function exportScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Export & share', '#settings'));
+  wrap.append(h('p', { class: 'muted' }, 'Save your own contributions as files you can read on any phone or computer, and share them however you like. Each type comes out in a fitting format. Everything is made on your device — nothing is uploaded.'));
+
+  const jCount = (store.journal.entries || []).length;
+  const rCount = Object.values(store.placeData || {}).filter((d) => d && (d.rating || d.review || d.note || (d.photos || []).length)).length;
+  const bCount = (store.trip.budgetLog || []).length;
+
+  const saver = (btn, build, filename, mime) => { btn.onclick = async () => {
+    const lbl = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
+    try { const content = await build(); const blob = (content instanceof Blob) ? content : new Blob([content], { type: mime }); if (!blob || (blob.size === 0)) { alert('Nothing to export yet.'); } else downloadBlob(blob, filename); }
+    catch { alert('Could not build that file on this device.'); }
+    btn.disabled = false; btn.textContent = lbl;
+  }; return btn; };
+  const sharer = (btn, build, filename, mime) => { btn.onclick = async () => {
+    const lbl = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
+    try { const content = await build(); const blob = (content instanceof Blob) ? content : new Blob([content], { type: mime }); if (!blob || blob.size === 0) alert('Nothing to share yet.'); else await shareOrDownload([{ blob, name: filename }], filename); }
+    catch { alert('Could not build that file on this device.'); }
+    btn.disabled = false; btn.textContent = lbl;
+  }; return btn; };
+
+  // Journal
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, '📖 Journal'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${jCount} ${jCount === 1 ? 'entry' : 'entries'} — a web page with your writing and photos.`),
+    saver(h('button', { class: 'btn ghost block' }, '⬇️ Save journal (.html)'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
+    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share journal'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
+  ]));
+  // Reviews & ratings
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, '⭐ Ratings & reviews'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${rCount} ${rCount === 1 ? 'place' : 'places'} — your stars, reviews, notes and photos.`),
+    saver(h('button', { class: 'btn ghost block' }, '⬇️ Save reviews (.html)'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
+    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share reviews'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
+  ]));
+  // Photos
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, '📷 Photos'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'A viewable album, or every picture as individual JPEGs in a zip.'),
+    saver(h('button', { class: 'btn ghost block' }, '⬇️ Photo album (.html)'), exportPhotosAlbumHtml, `mekonging-photos-${exportStamp()}.html`, 'text/html'),
+    saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ All photos (.zip of JPEGs)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
+    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share photos (.zip)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
+  ]));
+  // Expenses — both a true Excel workbook and a CSV, as requested.
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, '💸 Expenses'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'spend' : 'spends'} — as a spreadsheet.`),
+    saver(h('button', { class: 'btn ghost block' }, '⬇️ Excel (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
+    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share expenses (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+  ]));
+
+  wrap.append(h('p', { class: 'disclaimer' }, 'These files are for you — to keep, print or share. For moving everything to a new phone, use the full backup in Settings instead (it restores directly into the app).'));
+  mount(wrap, '#settings');
+}
+
 // ---- GIVE BACK (donate to causes that help people in the region) ------------
 // Established non-profits, each verified to an official site (2026-07). The app never
 // processes money — every entry is a plain outbound link to the organisation's own site,
@@ -8397,6 +8533,7 @@ function settingsScreen() {
     } });
   dataCard.append(restoreInput);
   dataCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => restoreInput.click() }, '⬆️ Restore from a backup file'));
+  dataCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#export') }, '📤 Export & share my contributions (journal, reviews, photos, expenses)'));
   wrap.append(dataCard);
 
   // reset
@@ -8524,6 +8661,7 @@ function render() {
       case 'streetfood': return streetfoodScreen();
       case 'donate': return donateScreen();
       case 'settings': return settingsScreen();
+      case 'export': return exportScreen();
       default: return homeScreen();
     }
   } catch (err) {
