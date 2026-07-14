@@ -24,7 +24,11 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div id="app">
+  <a class="skip-link" href="#app">Skip to content</a>
+  <!-- Persistent screen-reader announcer for single-page route changes. It lives OUTSIDE
+       #app so it survives the innerHTML reset that mount() performs on every navigation. -->
+  <div id="route-announce" class="sr-only" aria-live="polite" role="status"></div>
+  <div id="app" role="main" tabindex="-1">
     <main class="splash">
       <svg class="splash-logo-svg" viewBox="0 0 360 122" role="img" aria-label="Mekonging" xmlns="http://www.w3.org/2000/svg">
         <defs>
