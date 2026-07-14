@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.198.0';
+const APP_VERSION = 'mk-v0.199.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3622,6 +3622,25 @@ function savedScreen() {
   else store.pins.forEach((pin) => pinsCard.append(
     h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`)));
   wrap.append(pinsCard);
+
+  // Places you have ticked off. This gives the near-me "done" control a home: the reset there
+  // clears them all at once, whereas here you can open a place or un-mark just one.
+  const doneIds = store.profile.prefs.doneSpots || [];
+  if (doneIds.length) {
+    const doneCard = h('div', { class: 'card' }, [h('h2', {}, `✓ Done · ${doneIds.length}`)]);
+    doneCard.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Places you have ticked off — they no longer show in your near-me suggestions. Tap ↩ to put one back.'));
+    doneIds.slice().reverse().forEach((id) => {
+      const p = resolveItem(id);
+      const name = p ? p.name : id;
+      doneCard.append(h('div', { class: 'rn-item', style: 'margin-top:8px' }, [
+        h('button', { class: 'rn-open', onclick: () => go(`#place-${id}`) }, h('span', { class: 'near-name' }, `✓ ${name}`)),
+        h('div', { class: 'rn-actions' }, [
+          h('button', { class: 'rn-act', title: 'Undo — show it in suggestions again', 'aria-label': `Un-mark ${name} as done`, onclick: () => { toggleSpotDone(id); render(); } }, '↩'),
+        ]),
+      ]));
+    });
+    wrap.append(doneCard);
+  }
 
   mount(wrap, '#saved');
 }
