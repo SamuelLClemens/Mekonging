@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.190.0';
+const APP_VERSION = 'mk-v0.191.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1201,6 +1201,7 @@ function returnRecapCard() {
       unrated.length === 1 ? `⭐ Rate ${first.name}` : `⭐ Rate ${unrated.length} places you saved`));
   }
   card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#scrapbook') }, 'Build your scrapbook →'));
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#export') }, '📤 Save & share your trip (journal, reviews, photos, expenses)'));
   return card;
 }
 
