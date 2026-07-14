@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.196.0';
+const APP_VERSION = 'mk-v0.197.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2249,6 +2249,7 @@ function liveTranslateBox(code, label, locale) {
     h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
   ]);
   const srcSel = selectEl([['en', 'From English'], ['he', 'From Hebrew (עברית)']], 'en', () => {});
+  srcSel.setAttribute('aria-label', 'Language you are translating from');
   const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'e.g. Where is the bus station?' });
   const out = h('div', { class: 'tr-out', style: 'margin-top:10px' });
 
@@ -8867,7 +8868,7 @@ function settingsScreen() {
     bits.push(store.profile.prefs.lastBackupAt ? `Last copy saved ${store.profile.prefs.lastBackupAt}.` : 'No off-device copy saved yet.');
     statusP.textContent = bits.join(' ');
   }).catch(() => { statusP.textContent = '🛡️ Protected — your data is saved in three separate places on this device.'; });
-  const restoreInput = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none',
+  const restoreInput = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', 'aria-label': 'Choose a backup file to restore',
     onchange: (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
