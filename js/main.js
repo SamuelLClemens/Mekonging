@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.189.0';
+const APP_VERSION = 'mk-v0.190.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3101,6 +3101,22 @@ function yourLayer(p) {
   yourRev.value = d.review || '';
   yourRev.addEventListener('change', () => setPlaceField(p.id, 'review', yourRev.value));
   card.append(h('div', { class: 'review-yours' }, [h('span', { class: 'rlabel' }, 'Your take'), yourRev]));
+
+  // Share just this place's review — your stars, words and photos — as a small web page.
+  const shareBtn = h('button', { class: 'btn ghost block', style: 'margin-top:10px' }, '📤 Share my review');
+  shareBtn.onclick = async () => {
+    const dd = getPlaceData(p.id);
+    if (!(dd.rating || (dd.review || '').trim() || (dd.note || '').trim() || (dd.photos || []).length)) {
+      alert('Add a star rating, a review or a photo first, then share.'); return;
+    }
+    const lbl = shareBtn.textContent; shareBtn.disabled = true; shareBtn.textContent = 'Preparing…';
+    try {
+      const html = await exportOnePlaceReviewHtml(p.id, p.name);
+      await shareOrDownload([{ blob: new Blob([html], { type: 'text/html' }), name: `my-review-${phraseSlug(p.name || 'place')}.html` }], `My review of ${p.name || 'this place'}`);
+    } catch { alert('Could not build the review to share.'); }
+    shareBtn.disabled = false; shareBtn.textContent = lbl;
+  };
+  card.append(shareBtn);
 
   return card;
 }
@@ -8119,6 +8135,16 @@ ${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>
 ${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
   }
   return htmlDoc('My ratings & reviews', parts.join('\n') || '<p>No ratings or reviews yet.</p>');
+}
+async function exportOnePlaceReviewHtml(id, name) {
+  const d = store.placeData[id] || {};
+  const imgs = await blobsToDataURLs(d.photos || []);
+  const body = `<article><h2>${esc(name || id)}</h2>
+${d.rating ? `<p class="stars">${'★'.repeat(d.rating)}${'☆'.repeat(5 - d.rating)}</p>` : ''}
+${d.review ? `<p>${esc(d.review).replace(/\n/g, '<br>')}</p>` : ''}
+${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>')}</p>` : ''}
+${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`;
+  return htmlDoc(`My review — ${name || 'a place'}`, body);
 }
 async function exportPhotosAlbumHtml() {
   const blobs = await getAllBlobs().catch(() => []);
