@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.197.0';
+const APP_VERSION = 'mk-v0.198.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -336,6 +336,16 @@ function mount(node, showTabbar) {
   app.append(node);
   if (showTabbar) app.append(tabbar());
   window.scrollTo(0, 0);
+  // Single-page accessibility: a full page load moves focus to the top and lets a screen
+  // reader announce the new page. An SPA must do that itself, or keyboard and screen-reader
+  // users are stranded on the old, now-removed element. Move focus to the main region and
+  // announce the new screen's heading via the persistent live region.
+  try {
+    app.focus({ preventScroll: true });
+    const heading = node.querySelector('.topbar h1, h1, h2');
+    const live = document.getElementById('route-announce');
+    if (live && heading) { const t = (heading.textContent || '').trim(); live.textContent = ''; setTimeout(() => { live.textContent = t; }, 60); }
+  } catch { /* focus/announce is best-effort — never block a render */ }
 }
 
 // ---- HOME (open with a country-picker map) ----------------------------------
