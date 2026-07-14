@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.195.0';
+const APP_VERSION = 'mk-v0.196.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1762,10 +1762,11 @@ function nearbyScreen() {
       (info && cName) ? h('span', { class: 'muted' }, ` · ${cName}${info.km > 60 ? ` (${fmtDistance(info.km)} away)` : ''}`) : null,
     );
 
-    // "Not interested" places are hidden everywhere; places marked Done stay findable here
-    // (this is a directory, not the rotating suggestion feed) but drop out of Home picks.
-    const hidden = new Set(store.profile.prefs.hiddenSpots || []);
-    const ranked = allPlaces({ country }).filter((p) => p.coords && !hidden.has(p.id))
+    // Rank ALL nearby places once; drawList() filters "not interested" ones out on each draw
+    // (using the live set), so a reset — which clears the marks — restores them immediately
+    // without needing to leave and re-open the screen. "Done" places stay findable here (this
+    // is a directory, not the rotating suggestion feed) and only drop out of the Home picks.
+    const ranked = allPlaces({ country }).filter((p) => p.coords)
       .map((p) => ({ p, km: haversineKm(f, p.coords) })).sort((a, b) => a.km - b.km);
 
     body.innerHTML = '';
