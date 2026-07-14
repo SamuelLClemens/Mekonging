@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.188.0';
+const APP_VERSION = 'mk-v0.189.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2353,6 +2353,10 @@ function placesScreen(arg) {
 
   let placesCtrl = null;
   let currentResults = [];
+  // The map shows the filtered curated results PLUS the traveller's own places that have
+  // coordinates, so contributions appear spatially alongside the guide — like a map app.
+  const userMapPins = () => (store.pins || []).filter((p) => p.coords).map((p) => resolveItem(p.id)).filter(Boolean);
+  const mapPlaces = () => currentResults.concat(userMapPins());
 
   // Filtered + sorted results, or null when this country has no places yet.
   function computeResults() {
@@ -2379,11 +2383,12 @@ function placesScreen(arg) {
     const computed = computeResults();
     currentResults = computed || [];
     if (viewMode === 'map') {
-      const withCoords = currentResults.filter((p) => p.coords).length;
-      cap.textContent = currentResults.length
-        ? `${withCoords} of ${currentResults.length} places on the map${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — tap a pin`
+      const ml = mapPlaces();
+      const mine = userMapPins().length;
+      cap.textContent = ml.length
+        ? `${ml.filter((p) => p.coords).length} places on the map${mine ? ` (incl. ${mine} of yours)` : ''}${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — tap a pin`
         : '';
-      if (placesCtrl) placesCtrl.setPlaces(currentResults);
+      if (placesCtrl) placesCtrl.setPlaces(ml);
       return;
     }
     listEl.innerHTML = '';
@@ -2428,12 +2433,13 @@ function placesScreen(arg) {
   // call placesCtrl.setPlaces() (no WebGL rebuild); leaving the screen disposes it via
   // liveCleanup so contexts don't leak.
   if (viewMode === 'map') {
-    if (!currentResults.length) {
+    const mapList = mapPlaces();
+    if (!mapList.length) {
       mapWrap.append(h('p', { class: 'empty' }, 'No mapped places for these filters yet — switch to List or widen the filters.'));
     } else {
       const canvas = h('div', { class: 'places-map', style: 'height:360px;border-radius:16px;overflow:hidden;position:relative' });
       mapWrap.append(cap, canvas);
-      import('./map.js').then((m) => m.initPlacesMap(canvas, currentResults, {
+      import('./map.js').then((m) => m.initPlacesMap(canvas, mapList, {
         onOpen: (id) => go(`#place-${id}`),
         onLocate: (fix) => setLastFix(fix),
       })).then((c) => { placesCtrl = c; liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } }; })
