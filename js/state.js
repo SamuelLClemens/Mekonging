@@ -341,6 +341,14 @@ export function moveStop(id, dir) {
   if (i < 0 || j < 0 || j >= a.length) return;
   [a[i], a[j]] = [a[j], a[i]]; save();
 }
+export function updateStop(id, patch = {}) {
+  const s = store.trip.stops.find((x) => x.id === id);
+  if (!s) return null;
+  if (patch.title !== undefined) s.title = String(patch.title || s.title).slice(0, 80);
+  if (patch.date !== undefined) s.date = patch.date;
+  if (patch.country !== undefined) s.country = patch.country;
+  save(); return s;
+}
 export function addBudgetItem({ date, amount, currency, note }) {
   const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '' };
   store.trip.budgetLog.push(b);

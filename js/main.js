@@ -10,7 +10,7 @@ import {
   getAlbum, addAlbumPhoto, updateAlbumPhoto, deleteAlbumPhoto,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
-  addStop, removeStop, moveStop, addBudgetItem, deleteBudgetItem, updateBudgetItem,
+  addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem,
   setMyStay, getMyStay, clearMyStay,
   getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.186.0';
+const APP_VERSION = 'mk-v0.187.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6076,6 +6076,7 @@ function bestListScreen(id) {
 }
 
 // ---- TRIP PLANNER (itinerary + budget) --------------------------------------
+let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
 function tripScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('My Trip', '#home'));
@@ -6084,14 +6085,30 @@ function tripScreen() {
   const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);
   const stops = store.trip.stops;
   if (!stops.length) itin.append(h('p', { class: 'muted' }, 'Add the places or cities you plan to visit, in order.'));
-  stops.forEach((s, i) => itin.append(h('div', { class: 'row-between trip-stop' }, [
-    h('div', {}, [h('strong', {}, `${i + 1}. ${s.title}`), s.date ? h('div', { class: 'muted' }, s.date) : null]),
-    h('div', { class: 'cats' }, [
-      h('button', { class: 'chip', 'aria-label': 'Move up', disabled: i === 0 ? '' : null, onclick: () => { moveStop(s.id, -1); go('#trip'); } }, '↑'),
-      h('button', { class: 'chip', 'aria-label': 'Move down', disabled: i === stops.length - 1 ? '' : null, onclick: () => { moveStop(s.id, 1); go('#trip'); } }, '↓'),
-      h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { removeStop(s.id); go('#trip'); } }, '✕'),
-    ]),
-  ])));
+  stops.forEach((s, i) => {
+    // Inline editor when this stop is open for correction — fix a typo'd name or a wrong date.
+    if (editStopId === s.id) {
+      const t = h('input', { type: 'text', value: s.title });
+      const dt = h('input', { type: 'date', value: s.date || '' });
+      itin.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
+        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t, dt]),
+        h('div', { class: 'chips' }, [
+          h('button', { class: 'btn', onclick: () => { updateStop(s.id, { title: t.value.trim() || s.title, date: dt.value }); editStopId = null; go('#trip'); } }, 'Save'),
+          h('button', { class: 'btn ghost', onclick: () => { editStopId = null; render(); } }, 'Cancel'),
+        ]),
+      ]));
+      return;
+    }
+    itin.append(h('div', { class: 'row-between trip-stop' }, [
+      h('div', {}, [h('strong', {}, `${i + 1}. ${s.title}`), s.date ? h('div', { class: 'muted' }, s.date) : null]),
+      h('div', { class: 'cats' }, [
+        h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editStopId = s.id; render(); } }, '✎'),
+        h('button', { class: 'chip', 'aria-label': 'Move up', disabled: i === 0 ? '' : null, onclick: () => { moveStop(s.id, -1); go('#trip'); } }, '↑'),
+        h('button', { class: 'chip', 'aria-label': 'Move down', disabled: i === stops.length - 1 ? '' : null, onclick: () => { moveStop(s.id, 1); go('#trip'); } }, '↓'),
+        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { if (confirm('Remove this stop?')) { removeStop(s.id); go('#trip'); } } }, '✕'),
+      ]),
+    ]));
+  });
   const stopName = h('input', { type: 'text', placeholder: 'Place or city' });
   const stopDate = h('input', { type: 'date' });
   itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName, stopDate,
