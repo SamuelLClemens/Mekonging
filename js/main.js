@@ -3,6 +3,7 @@
 
 import {
   store, save, resetAll, exportData, importData, isFavorite, toggleFavorite, prefersReducedMotion,
+  ensureDurability, storageStatus, requestPersistence,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
   addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField,
   addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
@@ -186,7 +187,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.182.0';
+const APP_VERSION = 'mk-v0.183.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -8240,9 +8241,22 @@ function settingsScreen() {
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Your data'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Everything you create — journal entries and photos, ratings and reviews, trip, budget, calendar, saved places and collections — stays on this device and is kept safe across app updates. Download one backup file with all of it (photos included) to keep your own copy or move to a new phone. Nothing is ever uploaded.'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Everything you create — journal entries and photos, ratings and reviews, trip, budget, calendar, saved places and collections — stays on this device and is kept safe across app updates. It is written to three places on your device after every change (two in app storage, one in a separate database), so a single glitch can never wipe it. The one thing this app cannot do on its own is survive losing or wiping the device — so download a copy to keep somewhere safe. Nothing is ever uploaded.'),
   ]);
-  const dlBtn = h('button', { class: 'btn ghost block' }, '⬇️ Download a full backup (with photos)');
+  // On-device durability status — filled in asynchronously (persisted flag + space used).
+  const statusP = h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Checking on-device storage…');
+  dataCard.append(statusP);
+  // A gentle reminder to keep an off-device copy when none exists or it has gone stale.
+  const anyData = (store.journal.entries.length || store.trip.budgetLog.length || store.calendar.items.length
+    || (store.pins || []).length || Object.keys(store.placeData || {}).length);
+  const lastBak = store.profile.prefs.lastBackupAt || '';
+  const staleBak = anyData && (!lastBak || daysUntilISO(lastBak) <= -14);
+  if (staleBak) {
+    dataCard.append(h('p', { class: 'nudge-line', style: 'margin:0 0 8px' },
+      lastBak ? '⏳ It has been a while since you saved a copy — a fresh one keeps your latest entries safe.'
+        : '⭐ Save your first copy now so nothing can ever be lost.'));
+  }
+  const dlBtn = h('button', { class: 'btn ' + (staleBak ? 'block' : 'ghost block') }, '⬇️ Download a full backup (with photos)');
   dlBtn.onclick = async () => {
     dlBtn.disabled = true; const label = dlBtn.textContent; dlBtn.textContent = 'Preparing backup…';
     try {
@@ -8254,11 +8268,29 @@ function settingsScreen() {
       const a = document.createElement('a'); a.href = url; a.download = `mekonging-backup-${stamp}.json`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-      store.profile.prefs.dataBackupDone = true; save();
+      store.profile.prefs.dataBackupDone = true;
+      store.profile.prefs.lastBackupAt = todayISO(); save();
     } catch { alert('Could not create the backup file on this device.'); }
     dlBtn.disabled = false; dlBtn.textContent = label;
   };
   dataCard.append(dlBtn);
+  // Ask the browser to mark storage evict-resistant. Hidden until we know it is available and off.
+  const persistBtn = h('button', { class: 'btn ghost block', style: 'margin-top:6px; display:none' }, '🔒 Turn on extra protection');
+  persistBtn.onclick = async () => {
+    persistBtn.disabled = true;
+    const ok = await requestPersistence();
+    if (ok) go('#settings');
+    else { persistBtn.disabled = false; alert('This browser did not grant extra protection. Your data is still saved in three places on this device; keep a downloaded copy to be fully safe.'); }
+  };
+  dataCard.append(persistBtn);
+  storageStatus().then((st) => {
+    const bits = [];
+    if (st.persisted === true) bits.push('🔒 Protected — your data is marked to survive low-storage cleanups.');
+    else if (st.persisted === false) { bits.push('Extra protection is available (turn it on below).'); persistBtn.style.display = ''; }
+    if (st.usageMB != null) bits.push(`Using about ${st.usageMB < 1 ? 'under 1' : Math.round(st.usageMB)} MB.`);
+    bits.push(store.profile.prefs.lastBackupAt ? `Last copy saved ${store.profile.prefs.lastBackupAt}.` : 'No off-device copy saved yet.');
+    statusP.textContent = bits.join(' ');
+  }).catch(() => { statusP.textContent = ''; });
   const restoreInput = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none',
     onchange: (e) => {
       const file = e.target.files && e.target.files[0];
@@ -8446,6 +8478,12 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   }); } catch { /* older API */ }
 }
 render();
+
+// Durability, best-effort: request evict-resistant storage, and if localStorage came back
+// empty (cleared/blocked) recover the whole store from the IndexedDB mirror, then re-render.
+try {
+  ensureDurability().then((r) => { if (r && r.recovered) render(); }).catch(() => {});
+} catch { /* durability is best-effort */ }
 
 // Fire any due reminders (missed while away) + schedule this session's near-future ones,
 // and the optional daily journaling nudge. Best-effort + in-app; see js/reminders.js.

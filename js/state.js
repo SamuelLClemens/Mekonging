@@ -2,6 +2,8 @@
 // leaves it. Schema migrations keep future updates from wiping saved data.
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
+import { putMeta, getMeta } from './idb.js';
+
 const KEY = 'mk.store';
 const CURRENT_VERSION = 11;
 
@@ -213,6 +215,60 @@ export function save() {
   } catch {
     // storage full or private mode — the session still works, it just will not persist
   }
+  // Third copy, in a SEPARATE storage bucket (IndexedDB): localStorage can be cleared as a
+  // whole — taking the primary AND its .bak with it — whereas IndexedDB survives that. This
+  // mirror is what makes "backed up after every addition" true on a server-less app. Async,
+  // debounced and best-effort so it never blocks or breaks a save.
+  try { mirrorStore(); } catch { /* mirror is best-effort */ }
+}
+
+let _mirrorTimer = null;
+function mirrorStore() {
+  if (typeof putMeta !== 'function') return;
+  if (typeof setTimeout !== 'function') { putMeta('store', JSON.stringify(store)).catch(() => {}); return; }
+  if (_mirrorTimer) return;                       // coalesce bursts of saves into one write
+  _mirrorTimer = setTimeout(() => {
+    _mirrorTimer = null;
+    try { putMeta('store', JSON.stringify(store)).catch(() => {}); } catch { /* ignore */ }
+  }, 600);
+}
+
+// Called once on boot. (1) Requests durable storage so the browser will not silently evict
+// the traveller's data under space pressure. (2) If localStorage came back empty (cleared or
+// blocked) but the IndexedDB mirror still holds real entries, restores from it. Returns
+// { recovered } so the caller can re-render. Best-effort throughout — never throws.
+export async function ensureDurability() {
+  try { if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch { /* not supported */ }
+  try {
+    if (!hasUserData(store)) {
+      const mj = await getMeta('store');
+      if (mj) {
+        const rec = migrate(JSON.parse(mj));
+        if (hasUserData(rec)) {
+          Object.keys(store).forEach((k) => { delete store[k]; });
+          Object.assign(store, rec);
+          save();
+          return { recovered: true };
+        }
+      }
+    } else {
+      mirrorStore();   // keep the mirror current with whatever loaded
+    }
+  } catch { /* recovery is best-effort */ }
+  return { recovered: false };
+}
+
+// A snapshot of on-device durability for the Settings screen: whether storage is marked
+// persistent (evict-resistant) and roughly how much space the app is using.
+export async function storageStatus() {
+  const out = { persisted: null, usageMB: null, quotaMB: null };
+  try { if (navigator.storage && navigator.storage.persisted) out.persisted = await navigator.storage.persisted(); } catch { /* ignore */ }
+  try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); if (e.usage != null) out.usageMB = e.usage / 1048576; if (e.quota != null) out.quotaMB = e.quota / 1048576; } } catch { /* ignore */ }
+  return out;
+}
+export async function requestPersistence() {
+  try { if (navigator.storage && navigator.storage.persist) return await navigator.storage.persist(); } catch { /* ignore */ }
+  return false;
 }
 
 // Export the entire on-device store as a JSON string the user can save as a file.
