@@ -186,7 +186,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.180.0';
+const APP_VERSION = 'mk-v0.181.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2457,6 +2457,9 @@ function personalScore(p) {
   // Party shape — modest nudges using fields that always exist (rating/stayType/kidFriendly),
   // so choosing Solo / Couple / Group / Family actually reorders picks instead of being inert.
   if (prefs.party === 'family') { if (p.kidFriendly === true) s += 0.8; if (p.kidFriendly === false) s -= 0.5; }
+  // Travelling with a baby leans even harder on kid-friendly places, and away from
+  // ones explicitly flagged not-for-kids — regardless of the party shape chosen.
+  if (prefs.withBaby) { if (p.kidFriendly === true) s += 0.6; if (p.kidFriendly === false) s -= 0.6; }
   if (prefs.party === 'solo' && p.stayType === 'hostel') s += 0.4;                 // sociable, budget-friendly bases
   if (prefs.party === 'couple') { if (r >= 4.4) s += 0.3; if (p.stayType === 'hostel') s -= 0.3; }  // quality over dorms
   if (prefs.party === 'group' && (p.stayType === 'hostel' || p.stayType === 'apartment')) s += 0.3; // space for several
@@ -4793,6 +4796,20 @@ function dishDietVerdict(d, avoid) {
   return (d.allergens || []).some((a) => av.has(a)) ? 'bad' : 'ok';
 }
 
+// The specific allergens in THIS dish that the traveller flagged — so a cue can say
+// "contains peanut, shellfish" instead of a generic "something you avoid".
+function dishFlaggedAllergens(d, avoid) {
+  const av = avoid || dietAvoidAllergens();
+  if (!av.size) return [];
+  return (d.allergens || []).filter((a) => av.has(a));
+}
+// "peanut", "peanut and shellfish", "peanut, shellfish and egg" — a natural inline list.
+function joinList(arr) {
+  if (arr.length <= 1) return arr[0] || '';
+  if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
+  return `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`;
+}
+
 // A reusable chip picker for the dietary profile. onChange() fires after each toggle.
 function dietPicker(onChange) {
   const sel = new Set(store.profile.prefs.diet || []);
@@ -4855,9 +4872,10 @@ function spiceLabel(s) {
 function foodCard(d) {
   const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
   const verdict = dishDietVerdict(d);
+  const flagged = verdict === 'bad' ? dishFlaggedAllergens(d) : [];
   const cls = 'card species-card' + (verdict === 'bad' ? ' food-bad' : verdict === 'ok' ? ' food-ok' : '');
   const badge = verdict === 'bad'
-    ? h('span', { class: 'food-flag bad', title: 'Contains something you avoid' }, '✕')
+    ? h('span', { class: 'food-flag bad', title: flagged.length ? `Contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}` : 'Contains something you avoid' }, '✕')
     : verdict === 'ok'
       ? h('span', { class: 'food-flag ok', title: 'Nothing you avoid is listed — still confirm' }, '✓')
       : null;
@@ -5051,10 +5069,15 @@ function dishScreen(id) {
   }
   // Your dietary profile: an at-a-glance verdict for this dish (guidance, not a guarantee).
   const dv = dishDietVerdict(d);
-  if (dv) card.append(h('div', { class: dv === 'bad' ? 'diet-banner bad' : 'diet-banner ok' },
-    dv === 'bad'
-      ? '✕ This lists something you avoid — check the allergens below and confirm with the cook.'
-      : '✓ Nothing you avoid is listed for this dish. Recipes vary, so still confirm with the cook.'));
+  if (dv === 'bad') {
+    const flagged = dishFlaggedAllergens(d);
+    card.append(h('div', { class: 'diet-banner bad' }, flagged.length
+      ? `⚠️ Typically contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}. Recipes vary, so check the allergens below and confirm with the cook.`
+      : '✕ This lists something you avoid — check the allergens below and confirm with the cook.'));
+  } else if (dv === 'ok') {
+    card.append(h('div', { class: 'diet-banner ok' },
+      '✓ Nothing you avoid is listed for this dish. Recipes vary, so still confirm with the cook.'));
+  }
   card.append(h('h3', {}, 'Allergens'));
   if (d.allergens && d.allergens.length) {
     card.append(h('div', { style: tagRow }, d.allergens.map((a) => h('span', { class: 'tier high' }, a))));
@@ -7516,11 +7539,27 @@ function foryouScreen() {
     prefs.withBaby && 'with a baby',
     prefs.tripLength && ({ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[prefs.tripLength]),
     prefs.budget && ({ low: 'budget', mid: 'mid', high: 'higher-end', flexible: 'flexible budget' }[prefs.budget]),
+    (prefs.diet && prefs.diet.length) && `${prefs.diet.length} diet ${prefs.diet.length > 1 ? 'flags' : 'flag'}`,
   ].filter(Boolean).join(' · ');
   wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap:8px' }, [
     h('p', { class: 'muted', style: 'margin:0' }, profSummary ? `Ranked for: ${profSummary}` : 'Ranked to how you travel.'),
     h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit profile'),
   ]));
+
+  // Inline "finish your profile" nudges — one quiet chip per unset field, each opening the
+  // one place profiles live (Settings). More you fill, more the ranking is truly yours.
+  const missing = [
+    !prefs.party && "Who's travelling",
+    !prefs.tripLength && 'Trip length',
+    (!prefs.budget || prefs.budget === 'flexible') && 'Budget',
+    !(prefs.interests || []).length && 'Interests',
+    !(prefs.diet || []).length && 'Diet & allergies',
+  ].filter(Boolean);
+  if (missing.length) {
+    wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, 'Add these and your picks fit you even better:'));
+    wrap.append(h('div', { class: 'chips' }, missing.map((m) =>
+      h('button', { class: 'chip', onclick: () => go('#settings') }, `＋ ${m}`))));
+  }
 
   {
     // top personalised picks in the active country
