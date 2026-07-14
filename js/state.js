@@ -47,6 +47,11 @@ function defaults() {
         // Keys are derived (lang|categoryId|slug-of-english) since phrases carry no id.
         phrasePins: {},       // { th: ['th|basics|hello', …] } — pin order IS the display order
         phraseHidden: {},     // { th: [key, …] } — phrases tucked away from the lists
+        // --- "things to do near me" suggestion rotation. Marking a suggestion Done or Not
+        // interested removes it so a fresh one takes its place; suggestions never repeat the
+        // same set. Both hold place ids. doneSpots is a light achievement log too.
+        doneSpots: [],        // places the traveller has done — dropped from suggestions
+        hiddenSpots: [],      // places dismissed as "not interested" — dropped from suggestions
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this

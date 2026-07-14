@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.192.0';
+const APP_VERSION = 'mk-v0.193.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -494,6 +494,50 @@ function eventsNow(country, now, soonDays = 21) {
   return out.slice(0, 2);
 }
 
+// --- Suggestion rotation --------------------------------------------------
+// Places the traveller marks Done or Not-interested drop out of "near me" suggestions so a
+// fresh pick always takes their place — the list never shows the same set every time.
+function suggestExcluded() {
+  const p = store.profile.prefs;
+  return new Set([...(p.doneSpots || []), ...(p.hiddenSpots || [])]);
+}
+function markSpotDone(id) {
+  const p = store.profile.prefs;
+  p.doneSpots = p.doneSpots || [];
+  if (!p.doneSpots.includes(id)) p.doneSpots.push(id);
+  p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id);
+  save();
+}
+function hideSpot(id) {
+  const p = store.profile.prefs;
+  p.hiddenSpots = p.hiddenSpots || [];
+  if (!p.hiddenSpots.includes(id)) p.hiddenSpots.push(id);
+  save();
+}
+function clearSuggestionMarks() { const p = store.profile.prefs; p.doneSpots = []; p.hiddenSpots = []; save(); }
+
+// Bend a place's "right now" score toward the traveller's SITUATION, so a family with a
+// baby is steered to calm, kid-friendly, accessible spots and away from nightlife, while
+// other travellers are unaffected. Returns a signed adjustment added to the base score.
+function profileFitAdj(p, prefs) {
+  let s = 0;
+  const cats = p.categories || [];
+  const family = prefs.withBaby || prefs.kids || prefs.party === 'family';
+  if (family) {
+    if (p.kidFriendly === true) s += 24;
+    if (cats.includes('nightlife')) s -= 60;                                   // not with a baby/kids
+    if (prefs.withBaby && (cats.includes('hike') || cats.includes('waterfall'))) s -= 14; // hard with a pram/infant
+    if (cats.some((c) => ['park', 'beach', 'zoo', 'nature'].includes(c))) s += 8;
+  }
+  if ((prefs.access || []).includes('mobility')) {
+    if (cats.includes('hike') || cats.includes('waterfall')) s -= 40;          // step-heavy / rough ground
+    if (cats.includes('viewpoint')) s -= 8;
+  }
+  const interests = prefs.interests || [];
+  if (interests.length && cats.some((c) => interests.includes(c))) s += 10;     // a gentle nudge, never a filter
+  return s;
+}
+
 function scoreForNow(p, ctx) {
   if (!p.coords) return -Infinity;
   const km = haversineKm(ctx.fix, p.coords);
@@ -515,6 +559,7 @@ function scoreForNow(p, ctx) {
   const open = isOpenNow(p.hours, ctx.hour);
   if (open === true) s += 12; else if (open === false) s -= 26;
   s += (Number(p.rating) || 0) * 1.2;            // gentle quality tiebreak
+  s += profileFitAdj(p, store.profile.prefs);    // fit to who they are travelling as
   return s;
 }
 
@@ -568,30 +613,53 @@ function rightNowSection() {
     return card;
   }
 
-  const picks = allPlaces({ country: ctx.country })
+  // Rank every candidate once; drawPicks() then shows the top few MINUS anything marked
+  // Done or Not-interested, so dismissing one instantly promotes the next-best in its place.
+  const ranked = allPlaces({ country: ctx.country })
     .map((p) => ({ p, s: scoreForNow(p, ctx) }))
     .filter((x) => x.s > -Infinity)
-    .sort((a, b) => b.s - a.s)
-    .slice(0, 5);
+    .sort((a, b) => b.s - a.s);
+  const tipEl = h('p', { class: 'muted', style: 'margin:6px 0 10px' }, meta.tip);
+  const listWrap = h('div', { class: 'rn-list' });
+  const footEl = h('div', {});
+  card.append(tipEl, listWrap, footEl);
 
-  if (!picks.length) {
-    card.append(h('p', { style: 'margin:8px 0 0' }, `${meta.tip} Nothing is mapped very close — try “What’s near me”.`));
-  } else {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 10px' }, meta.tip));
-    const list = h('div', { class: 'rn-list' });
-    picks.forEach(({ p }) => {
-      const reason = whyNow(p, ctx);
-      const km = haversineKm(ctx.fix, p.coords);
-      list.append(h('button', { class: 'rn-item', onclick: () => go(`#place-${p.id}`) }, [
-        h('div', { class: 'rn-item-main' }, [
-          h('span', { class: 'rn-name' }, p.name),
-          reason ? h('span', { class: 'rn-tag' }, reason) : null,
-        ]),
-        h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
-      ]));
-    });
-    card.append(list);
+  function drawPicks() {
+    const ex = suggestExcluded();
+    const picks = ranked.filter((x) => !ex.has(x.p.id)).slice(0, 5);
+    listWrap.innerHTML = ''; footEl.innerHTML = '';
+    if (!picks.length) {
+      tipEl.textContent = ranked.length
+        ? `${meta.tip} That is everything nearby for now — reset below to see them again.`
+        : `${meta.tip} Nothing is mapped very close — try “What’s near me”.`;
+    } else {
+      tipEl.textContent = meta.tip;
+      picks.forEach(({ p }) => {
+        const reason = whyNow(p, ctx);
+        const km = haversineKm(ctx.fix, p.coords);
+        listWrap.append(h('div', { class: 'rn-item' }, [
+          h('button', { class: 'rn-open', onclick: () => go(`#place-${p.id}`) }, [
+            h('div', { class: 'rn-item-main' }, [
+              h('span', { class: 'rn-name' }, p.name),
+              reason ? h('span', { class: 'rn-tag' }, reason) : null,
+            ]),
+            h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
+          ]),
+          h('div', { class: 'rn-actions' }, [
+            h('button', { class: 'rn-act done', title: 'I did this — swap in something new', 'aria-label': `Mark ${p.name} as done`, onclick: () => { markSpotDone(p.id); drawPicks(); } }, '✓'),
+            h('button', { class: 'rn-act', title: 'Not interested — show me something else', 'aria-label': `Not interested in ${p.name}`, onclick: () => { hideSpot(p.id); drawPicks(); } }, '✕'),
+          ]),
+        ]));
+      });
+    }
+    const pf = store.profile.prefs;
+    const nDone = (pf.doneSpots || []).length, nHid = (pf.hiddenSpots || []).length;
+    if (nDone || nHid) {
+      footEl.append(h('button', { class: 'rn-reset', onclick: () => { clearSuggestionMarks(); drawPicks(); } },
+        `↺ ${[nDone ? `${nDone} done` : '', nHid ? `${nHid} skipped` : ''].filter(Boolean).join(' · ')} — reset`));
+    }
   }
+  drawPicks();
   if (ctx.approx && typeof navigator !== 'undefined' && navigator.geolocation) {
     card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
       e.currentTarget.textContent = 'Locating…';
@@ -1686,7 +1754,10 @@ function nearbyScreen() {
       (info && cName) ? h('span', { class: 'muted' }, ` · ${cName}${info.km > 60 ? ` (${fmtDistance(info.km)} away)` : ''}`) : null,
     );
 
-    const ranked = allPlaces({ country }).filter((p) => p.coords)
+    // "Not interested" places are hidden everywhere; places marked Done stay findable here
+    // (this is a directory, not the rotating suggestion feed) but drop out of Home picks.
+    const hidden = new Set(store.profile.prefs.hiddenSpots || []);
+    const ranked = allPlaces({ country }).filter((p) => p.coords && !hidden.has(p.id))
       .map((p) => ({ p, km: haversineKm(f, p.coords) })).sort((a, b) => a.km - b.km);
 
     body.innerHTML = '';
