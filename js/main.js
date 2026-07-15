@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.204.0';
+const APP_VERSION = 'mk-v0.205.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5935,7 +5935,7 @@ function dailyStripCard(id) {
     amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
     budBox.append(h('div', { class: 'strip-budget' }, [
       h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
-      h('button', { class: 'btn strip-add', onclick: add }, '＋'),
+      h('button', { class: 'btn strip-add', 'aria-label': 'Add spend', onclick: add }, '＋'),
     ]));
     budBox.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
       spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend in one tap. ',
@@ -7315,7 +7315,7 @@ async function renderVault(body) {
       h('div', { class: 'grow' }, [h('strong', {}, d.name || 'Document'), h('div', { class: 'muted' }, `${docKind(d.type)} · added ${d.createdAt}`)]),
       h('div', { class: 'cats' }, [
         openBtn,
-        h('button', { class: 'chip', onclick: async () => { if (confirm(`Delete “${d.name}” from the vault?`)) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': `Delete ${d.name || 'document'} from the vault`, onclick: async () => { if (confirm(`Delete “${d.name}” from the vault?`)) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
       ]),
       reveal,
     );
@@ -7715,7 +7715,7 @@ function circleScreen() {
     contacts.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((c) => {
       listCard.append(contactRow(c, h('div', { class: 'cats' }, [
         h('button', { class: 'chip', onclick: () => go('#thread-' + c.userId) }, '💬 Message'),
-        h('button', { class: 'chip', onclick: () => { if (confirm(`Remove ${c.name || 'this contact'} from your circle?`)) { removeContact(c.userId); go('#circle'); } } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': `Remove ${c.name || 'this contact'} from your circle`, onclick: () => { if (confirm(`Remove ${c.name || 'this contact'} from your circle?`)) { removeContact(c.userId); go('#circle'); } } }, '✕'),
       ])));
     });
   }
