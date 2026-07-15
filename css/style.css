@@ -1084,6 +1084,9 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 .food-flag.ok { background: #1F7A47; }
 .food-flag.bad { background: #B23A16; }
 .diet-legend .food-flag { min-width: 18px; height: 18px; font-size: 0.7rem; vertical-align: middle; }
+/* Visible allergy warning on a dish list card — so the flagged allergen is perceivable
+   without hovering a tooltip and without relying on colour alone. */
+.food-warn { margin-top: 2px; font-size: var(--fs-sm); font-weight: 700; color: var(--diet-bad); }
 .diet-banner { border-radius: var(--r-sm); padding: 8px 10px; margin: 8px 0;
   font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
 .diet-banner.ok { background: rgba(46, 158, 91, 0.14); border: 1px solid var(--diet-ok); }

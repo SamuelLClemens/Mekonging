@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.200.0';
+const APP_VERSION = 'mk-v0.201.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5206,16 +5206,26 @@ function foodCard(d) {
   const verdict = dishDietVerdict(d);
   const flagged = verdict === 'bad' ? dishFlaggedAllergens(d) : [];
   const cls = 'card species-card' + (verdict === 'bad' ? ' food-bad' : verdict === 'ok' ? ' food-ok' : '');
+  // Accessible name for the badge: `title` alone never appears on touch and is an
+  // unreliable accessible name, so the specific flagged allergen also renders as visible
+  // text on the card (below) and the badge carries an explicit aria-label + role.
+  const badLabel = flagged.length
+    ? `Contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}`
+    : 'Contains something you avoid';
+  const okLabel = 'Nothing you avoid is listed — still confirm';
   const badge = verdict === 'bad'
-    ? h('span', { class: 'food-flag bad', title: flagged.length ? `Contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}` : 'Contains something you avoid' }, '✕')
+    ? h('span', { class: 'food-flag bad', role: 'img', 'aria-label': badLabel, title: badLabel }, '✕')
     : verdict === 'ok'
-      ? h('span', { class: 'food-flag ok', title: 'Nothing you avoid is listed — still confirm' }, '✓')
+      ? h('span', { class: 'food-flag ok', role: 'img', 'aria-label': okLabel, title: okLabel }, '✓')
       : null;
   return h('button', { class: cls, onclick: () => go(`#dish-${d.id}`) }, [
-    h('span', { class: 'species-emoji' }, cat ? cat.emoji : '🍽'),
+    h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, cat ? cat.emoji : '🍽'),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
       h('div', { class: 'sci' }, `${d.localName || ''}${d.roman ? ` · ${d.roman}` : ''}`),
+      verdict === 'bad'
+        ? h('div', { class: 'food-warn' }, `⚠️ ${flagged.length ? `Contains ${joinList(flagged)}` : 'Contains something you avoid'}`)
+        : null,
     ]),
     badge,
     h('span', { class: 'fair' }, d.price ? range(d.price.low, d.price.high, d.price.currency) : ''),
