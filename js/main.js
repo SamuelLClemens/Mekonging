@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.202.0';
+const APP_VERSION = 'mk-v0.203.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5123,38 +5123,42 @@ function dietAvoidAllergens(diet) {
 // Verdict for one dish vs. the saved profile: 'bad' (lists something to avoid), 'ok'
 // (nothing flagged — still confirm), or '' (no profile set → no border).
 function dishDietVerdict(d, avoid, diet) {
-  const av = avoid || dietAvoidAllergens(diet);
-  const veg = dietIsVeg(diet);
-  if (!av.size && !veg) return '';
-  const allergenBad = (d.allergens || []).some((a) => av.has(a));
-  const meatBad = !!veg && dishMeatHits(d).length > 0;
-  return (allergenBad || meatBad) ? 'bad' : 'ok';
+  const dietArr = diet || store.profile.prefs.diet || [];
+  const av = avoid || dietAvoidAllergens(dietArr);
+  if (!dietEvaluable(dietArr, av)) return '';
+  return dishDietReasons(d, av, dietArr).length ? 'bad' : 'ok';
 }
 
-// The specific allergens in THIS dish that the traveller flagged — so a cue can say
-// "contains peanut, shellfish" instead of a generic "something you avoid".
+// The specific allergens in THIS dish that the traveller flagged.
 function dishFlaggedAllergens(d, avoid) {
   const av = avoid || dietAvoidAllergens();
   if (!av.size) return [];
   return (d.allergens || []).filter((a) => av.has(a));
 }
 
-// Vegetarian/vegan is NOT an allergen: fish sauce, shrimp paste, egg and dairy are caught via
-// dietAvoidAllergens, but land meat/poultry carries no allergen tag — so a meat dish that skips
-// fish sauce would otherwise read as "fits me" for a vegetarian. dietIsVeg + dishMeatHits close
-// that gap by reading the structured ingredients list.
+// --- Belief / preference diet flags (NOT allergens) --------------------------
+// Fish sauce, egg and dairy are caught via dietAvoidAllergens, but land meat, pork, beef and
+// alcohol carry no allergen tag. These helpers read the structured ingredients so the whole
+// "Diet & beliefs" group (vegetarian, vegan, pescatarian, halal, kosher, no-pork, no-beef,
+// no-alcohol) actually drives the red/green verdict — conservatively, using only unambiguous
+// signals so a dish is never misrepresented.
 function dietIsVeg(diet) {
   const d = diet || store.profile.prefs.diet || [];
   return d.includes('vegan') ? 'vegan' : d.includes('vegetarian') ? 'vegetarian' : '';
 }
+// Does this profile carry any flag we can actually evaluate against a dish?
+function dietEvaluable(dietArr, av) {
+  if (av && av.size) return true;
+  return (dietArr || []).some((f) => ['vegetarian', 'vegan', 'pescatarian', 'no-pork', 'no-beef', 'halal', 'kosher', 'no-alcohol'].includes(f));
+}
 const MEAT_TERMS = ['pork', 'beef', 'chicken', 'duck', 'buffalo', 'goat', 'lamb', 'bacon', 'ham', 'sausage', 'offal', 'liver'];
-// Guard against mock/plant meats ("mock duck", "vegetarian chicken", "soy beef", "chicken substitute")
-// being mistaken for the real thing.
+const ALCOHOL_TERMS = ['beer', 'wine', 'sake', 'rum', 'whisky', 'whiskey', 'vodka', 'brandy', 'liquor', 'lao-lao', 'lao khao', 'rượu', 'shaoxing'];
+// Guard against mock/plant meats ("mock duck", "vegetarian chicken", "soy beef", "chicken free").
 function isMockMeat(s, t) {
   return new RegExp(`(mock|vegan|vegetarian|plant|soy|imitation|faux)[ -]?(\\w+ )?${t}`).test(s)
     || new RegExp(`${t}[ -](substitute|alternative|free)`).test(s);
 }
-// The meats actually named in this dish's ingredients (deduped, human-readable).
+// The land meats / poultry named in this dish's ingredients (deduped, human-readable).
 function dishMeatHits(d) {
   const ings = (d.ingredients || []).map((i) => i.toLowerCase());
   const hits = [];
@@ -5164,11 +5168,28 @@ function dishMeatHits(d) {
   if (!hits.length && ings.some((s) => /\bmeat\b/.test(s) && !isMockMeat(s, 'meat'))) hits.push('meat');
   return hits;
 }
-// The full human list of why a dish conflicts with the profile: flagged allergens plus, for a
-// vegetarian/vegan traveller, the meats named in the dish. Powers the visible warning + label.
+// True alcohol — excludes "rice wine vinegar" / "wine vinegar", which are non-alcoholic.
+function dishHasAlcohol(d) {
+  const ings = (d.ingredients || []).map((i) => i.toLowerCase());
+  return ings.some((s) => ALCOHOL_TERMS.some((t) => s.includes(t)) && !/vinegar/.test(s));
+}
+// The full, human-readable list of why a dish conflicts with the traveller's diet profile:
+// flagged allergens + meats + alcohol, according to which beliefs/preferences are set. Powers
+// the visible warning line and the badge label.
 function dishDietReasons(d, avoid, diet) {
-  const reasons = dishFlaggedAllergens(d, avoid);
-  if (dietIsVeg(diet)) for (const m of dishMeatHits(d)) if (!reasons.includes(m)) reasons.push(m);
+  const dietArr = diet || store.profile.prefs.diet || [];
+  const set = new Set(dietArr);
+  const av = avoid || dietAvoidAllergens(dietArr);
+  const reasons = [];
+  const add = (r) => { if (r && !reasons.includes(r)) reasons.push(r); };
+  (d.allergens || []).forEach((a) => { if (av.has(a)) add(a); });
+  const meat = dishMeatHits(d);
+  const pork = meat.filter((m) => ['pork', 'bacon', 'ham'].includes(m));
+  if (set.has('vegetarian') || set.has('vegan') || set.has('pescatarian')) meat.forEach(add);
+  if (set.has('no-pork') || set.has('halal') || set.has('kosher')) pork.forEach(add);
+  if (set.has('no-beef') && meat.includes('beef')) add('beef');
+  if (set.has('kosher') && (d.allergens || []).includes('shellfish')) add('shellfish');
+  if ((set.has('halal') || set.has('no-alcohol')) && dishHasAlcohol(d)) add('alcohol');
   return reasons;
 }
 // "peanut", "peanut and shellfish", "peanut, shellfish and egg" — a natural inline list.
@@ -5406,9 +5427,12 @@ function foodScreen(country) {
     if (foodCat) dishes = dishes.filter((d) => d.category === foodCat);
     if (foodAvoid.size) dishes = dishes.filter((d) => !(d.allergens || []).some((a) => foodAvoid.has(a)));
     // Dietary profile: optionally drop dishes that conflict, and float the fitting ones up.
+    // `evaluable` (not avoid.size) so belief-only profiles — halal, no-beef, pescatarian — also
+    // filter and sort even when no allergen is ticked.
     const avoid = dietAvoidAllergens();
-    if (foodFitOnly && avoid.size) dishes = dishes.filter((d) => dishDietVerdict(d, avoid) !== 'bad');
-    if (avoid.size) dishes = dishes.slice().sort((a, b) =>
+    const evaluable = dietEvaluable(store.profile.prefs.diet || [], avoid);
+    if (foodFitOnly && evaluable) dishes = dishes.filter((d) => dishDietVerdict(d, avoid) !== 'bad');
+    if (evaluable) dishes = dishes.slice().sort((a, b) =>
       (dishDietVerdict(a, avoid) === 'bad' ? 1 : 0) - (dishDietVerdict(b, avoid) === 'bad' ? 1 : 0));
     if (!dishes.length) { listEl.append(h('p', { class: 'empty' }, 'No dishes match. Try clearing a filter.')); return; }
     dishes.forEach((d) => listEl.append(foodCard(d)));
