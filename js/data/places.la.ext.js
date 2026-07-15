@@ -4469,5 +4469,51 @@ export const PLACES_LA_EXT = [
         "url": "https://www.lonelyplanet.com/laos/vang-vieng"
       }
     ]
-  }
+  },
+
+  {
+    id: "la-ext-luang-prabang-night-market-food", name: "Luang Prabang night market food alley", city: "Luang Prabang", country: "la",
+    categories: ["food", "market"], budgetTier: "low",
+    isLocal: true, kidFriendly: true,
+    blurb: "Every evening a lane off the handicraft night market on Sisavangvong Road (running down toward the Mekong) fills with charcoal grills and food stalls. Look for ping kai (marinated grilled chicken), ping pa (grilled river fish) and Lao sausage eaten with sticky rice and jeow chilli dips, plus Luang Prabang khao soi (rice noodles under a savoury pork-and-tomato sauce), kanom krok coconut pancakes and French-influenced baguette sandwiches.",
+    whyItFits: "It is the easiest, cheapest way to eat properly Lao food in Luang Prabang, and the famous pile-your-plate vegetarian buffet stalls make it a rare street-food spot where vegans and vegetarians eat well for a few dollars.",
+    priceRange: { low: 15000, typical: 40000, high: 80000, currency: "LAK", note: "Guidance per person: the vegetarian buffet plate runs about 15,000-25,000 LAK, a grilled-meat-and-sticky-rice plate 30,000-60,000 LAK. Kip prices move with inflation, so confirm locally." },
+    hours: "Daily roughly 17:30-22:30; grills are busiest and freshest from about 18:30",
+    tips: ["The vegetarian buffet is one fixed price for a heaped plate, but it is not reheated to order, so go when a stall looks freshly stocked", "Ping kai and Lao sausage are cooked to order, so expect a short wait at the grill", "Carry small kip notes; most stalls cannot change large bills", "Eat where the queue is Lao, not only tourists, for the better grills"],
+    scamWarnings: ["Agree the price before a grilled item is weighed or bagged, as a few stalls quote higher to obvious tourists", "Fruit-shake stalls occasionally use sweetened syrup and ice of unknown source; ask for no syrup and bottled-water ice if you are cautious"],
+    rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
+    mapQuery: "Luang Prabang night market food alley", coords: { lat: 19.889, lng: 102.135 },
+    bookHint: "No booking; walk in and order at the grill", verified: "2026-07",
+    sources: [{ org: "Tourism Luang Prabang (official)", url: "https://tourismluangprabang.org/things-to-do/arts-and-shopping/night-market/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g295415-d1727836-Reviews-Luang_Prabang_Night_Market-Luang_Prabang_Luang_Prabang_Province.html" }],
+  },
+  {
+    id: "la-ext-phonsavan-fresh-market-food", name: "Phonsavan fresh market and night-market eats", city: "Phonsavan", country: "la",
+    categories: ["food", "market"], budgetTier: "low",
+    isLocal: true, kidFriendly: true,
+    blurb: "Phonsavan, the base for the Plain of Jars, eats at two markets. The Phoukam Garden fresh market (best in the morning) is ringed by sit-down diners ladling noodle soups (feu and khao poon) and barbecue stalls, alongside cooked curries, salads and spring rolls. After dark a small night market sells grilled meats, sticky rice and fruit shakes. Local specialities lean to laap (minced-meat salad) and hearty Xieng Khuang noodle soups.",
+    whyItFits: "Xieng Khuang is a highland province with its own cool-climate produce, so eating at the town markets is both the cheapest option and the most genuinely local meal between Plain of Jars sites.",
+    priceRange: { low: 15000, typical: 35000, high: 70000, currency: "LAK", note: "Guidance per person: a bowl of noodle soup about 25,000-40,000 LAK, a barbecue-and-sticky-rice plate 35,000-60,000 LAK. Confirm locally; kip prices shift with inflation." },
+    hours: "Fresh market daily about 06:00-18:00 (best before 09:00); night market from roughly 17:30",
+    tips: ["Come to the fresh market early; the soup and barbecue stalls around its edge are at their best in the morning", "This is highland Laos, so evenings are cold in the cool season; a hot noodle soup is the local move", "Some regional delicacies at the market are very unusual (fermented and foraged items); point at cooked, recognisable dishes if you prefer to play it safe"],
+    scamWarnings: ["Prices at the markets are generally honest; simply confirm the note denominations when paying, as kip bills carry many zeroes"],
+    rating: 4.1, reviewSources: ["Travelfish", "Google Maps consensus"],
+    mapQuery: "Phoukam Garden market Phonsavan", coords: { lat: 19.457, lng: 103.218 },
+    bookHint: "No booking; arrive and order at the stalls", verified: "2026-07",
+    sources: [{ org: "Travelfish", url: "https://www.travelfish.org/eatandmeet/laos/northern_laos/xieng_khuang/phonsavan/eat" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/laos/northern-laos/phonsavan/attractions/fresh-food-market/a/poi-sig/480140/356935" }],
+  },
+  {
+    id: "la-ext-luang-namtha-night-market-food", name: "Luang Namtha night market food stalls", city: "Luang Namtha", country: "la",
+    categories: ["food", "market"], budgetTier: "low",
+    isLocal: true, kidFriendly: true,
+    blurb: "The night market in the centre of Luang Namtha has two halves: a front row of grilled chicken, papaya salad and fruit smoothies aimed at visitors, and a back section of Lao small plates, sausages and soups where locals eat. Try northern khao soi (rice noodles in a rich, slightly tart pork-and-tomato sauce), sindad cook-your-own barbecue hotpot, grilled pork and chicken with sticky rice, and forest-gathered ingredients you will not see further south.",
+    whyItFits: "Luang Namtha is the launch point for Nam Ha trekking, and the night market is where trekkers refuel cheaply on genuinely northern Lao food; the back stalls in particular are as local as it gets in town.",
+    priceRange: { low: 15000, typical: 40000, high: 80000, currency: "LAK", note: "Guidance per person: a bowl or small plate about 25,000-45,000 LAK, a shared sindad barbecue 60,000-100,000 LAK for two. Kip prices move with inflation; confirm locally." },
+    hours: "Daily roughly 17:00-22:00",
+    tips: ["Walk past the first tourist-facing row to the back stalls for the more authentic Lao small plates and soups", "Sindad barbecue is designed to share; order one grill between two or more people", "Some stalls sell adventurous items (insects, foraged forest food); nothing obliges you to try them, so order what appeals"],
+    scamWarnings: ["Prices are usually fair; confirm the total before handing over a large kip note, as change can be slow"],
+    rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
+    mapQuery: "Luang Namtha night market", coords: { lat: 20.948, lng: 101.404 },
+    bookHint: "No booking; walk in and order at the stalls", verified: "2026-07",
+    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g424933-d2031506-Reviews-Night_Market-Luang_Namtha_Luang_Namtha_Province.html" }, { org: "Ethnic Travel Laos", url: "https://ethnictravellaos.com/luangnamtha-where-to-eat/" }],
+  },
 ];
