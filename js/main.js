@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.205.0';
+const APP_VERSION = 'mk-v0.206.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5514,7 +5514,7 @@ let produceCat = '';
 function produceCard(p) {
   const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
   return h('button', { class: 'card species-card', onclick: () => go(`#produce-${p.id}`) }, [
-    h('span', { class: 'species-emoji' }, p.emoji || (cat ? cat.emoji : '🍈')),
+    h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, p.emoji || (cat ? cat.emoji : '🍈')),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, p.name),
       h('div', { class: 'sci' }, `${(p.names && p.names.th) || ''}${p.season ? ' · ' + p.season : ''}`),
@@ -6028,7 +6028,7 @@ function daySuggestScreen(country) {
     if (!top.length) { body.append(h('p', { class: 'empty' }, 'No places to suggest yet for this country.')); return; }
     top.forEach(({ p, er, dist }) => {
       body.append(h('button', { class: 'card species-card', onclick: () => go(`#place-${p.id}`) }, [
-        h('span', { class: 'species-emoji', style: `color:${ratingColor(er)}` }, '●'),
+        h('span', { class: 'species-emoji', 'aria-hidden': 'true', style: `color:${ratingColor(er)}` }, '●'),
         h('span', { class: 'grow' }, [
           h('div', { class: 'en' }, p.name),
           h('div', { class: 'sci' }, `${(p.categories || []).join(', ')}${dist != null ? ' · ' + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + ' km' : ''}`),
@@ -6267,7 +6267,7 @@ function soundsScreen() {
       const status = h('div', { class: 'muted', style: 'font-size:13px' });
       const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
       listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px' }, [
-        h('span', { class: 'species-emoji' }, s.emoji || '🔎'),
+        h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, s.emoji || '🔎'),
         h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
           h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
         ]),
@@ -6324,7 +6324,7 @@ function natureScreen() {
 function speciesCard(s) {
   const g = NATURE_GROUPS.find((x) => x.id === s.group);
   return h('button', { class: 'card species-card', onclick: () => go(`#species-${s.id}`) }, [
-    h('span', { class: 'species-emoji' }, s.emoji || (g && g.emoji) || '🔎'),
+    h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, s.emoji || (g && g.emoji) || '🔎'),
     h('span', { class: 'grow' }, [h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || '')]),
     s.dangerous ? h('span', { class: 'tier high' }, 'Caution') : null,
   ]);
