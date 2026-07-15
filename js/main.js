@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.206.0';
+const APP_VERSION = 'mk-v0.207.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5129,13 +5129,6 @@ function dishDietVerdict(d, avoid, diet) {
   return dishDietReasons(d, av, dietArr).length ? 'bad' : 'ok';
 }
 
-// The specific allergens in THIS dish that the traveller flagged.
-function dishFlaggedAllergens(d, avoid) {
-  const av = avoid || dietAvoidAllergens();
-  if (!av.size) return [];
-  return (d.allergens || []).filter((a) => av.has(a));
-}
-
 // --- Belief / preference diet flags (NOT allergens) --------------------------
 // Fish sauce, egg and dairy are caught via dietAvoidAllergens, but land meat, pork, beef and
 // alcohol carry no allergen tag. These helpers read the structured ingredients so the whole
@@ -5464,6 +5457,7 @@ function dishScreen(id) {
   const dc = getCountry(d.country);
   const dLocale = (dc && getLanguage(dc.lang)) ? getLanguage(dc.lang).locale : '';
   const tagRow = 'display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';
+  const spiceNote = dishSpiceCaution(d, store.profile.prefs);
   const card = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
       h('strong', {}, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
@@ -5473,6 +5467,7 @@ function dishScreen(id) {
     d.roman ? h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), d.roman]) : null,
     (d.localName && canSay(dLocale)) ? h('button', { class: 'btn ghost', style: 'margin:4px 0', onclick: () => say(d.localName, dLocale) }, '🔊 Hear the name (show a local)') : null,
     h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
+    spiceNote ? h('div', { class: 'food-spice', style: 'margin:0 0 6px' }, `🌶 ${spiceNote}`) : null,
     d.description ? h('p', {}, d.description) : null,
   ]);
   card.append(photoBlock(d, d.name));
