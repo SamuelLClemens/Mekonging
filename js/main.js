@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.201.0';
+const APP_VERSION = 'mk-v0.202.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5122,10 +5122,13 @@ function dietAvoidAllergens(diet) {
 
 // Verdict for one dish vs. the saved profile: 'bad' (lists something to avoid), 'ok'
 // (nothing flagged — still confirm), or '' (no profile set → no border).
-function dishDietVerdict(d, avoid) {
-  const av = avoid || dietAvoidAllergens();
-  if (!av.size) return '';
-  return (d.allergens || []).some((a) => av.has(a)) ? 'bad' : 'ok';
+function dishDietVerdict(d, avoid, diet) {
+  const av = avoid || dietAvoidAllergens(diet);
+  const veg = dietIsVeg(diet);
+  if (!av.size && !veg) return '';
+  const allergenBad = (d.allergens || []).some((a) => av.has(a));
+  const meatBad = !!veg && dishMeatHits(d).length > 0;
+  return (allergenBad || meatBad) ? 'bad' : 'ok';
 }
 
 // The specific allergens in THIS dish that the traveller flagged — so a cue can say
@@ -5134,6 +5137,39 @@ function dishFlaggedAllergens(d, avoid) {
   const av = avoid || dietAvoidAllergens();
   if (!av.size) return [];
   return (d.allergens || []).filter((a) => av.has(a));
+}
+
+// Vegetarian/vegan is NOT an allergen: fish sauce, shrimp paste, egg and dairy are caught via
+// dietAvoidAllergens, but land meat/poultry carries no allergen tag — so a meat dish that skips
+// fish sauce would otherwise read as "fits me" for a vegetarian. dietIsVeg + dishMeatHits close
+// that gap by reading the structured ingredients list.
+function dietIsVeg(diet) {
+  const d = diet || store.profile.prefs.diet || [];
+  return d.includes('vegan') ? 'vegan' : d.includes('vegetarian') ? 'vegetarian' : '';
+}
+const MEAT_TERMS = ['pork', 'beef', 'chicken', 'duck', 'buffalo', 'goat', 'lamb', 'bacon', 'ham', 'sausage', 'offal', 'liver'];
+// Guard against mock/plant meats ("mock duck", "vegetarian chicken", "soy beef", "chicken substitute")
+// being mistaken for the real thing.
+function isMockMeat(s, t) {
+  return new RegExp(`(mock|vegan|vegetarian|plant|soy|imitation|faux)[ -]?(\\w+ )?${t}`).test(s)
+    || new RegExp(`${t}[ -](substitute|alternative|free)`).test(s);
+}
+// The meats actually named in this dish's ingredients (deduped, human-readable).
+function dishMeatHits(d) {
+  const ings = (d.ingredients || []).map((i) => i.toLowerCase());
+  const hits = [];
+  for (const t of MEAT_TERMS) {
+    if (ings.some((s) => s.includes(t) && !isMockMeat(s, t)) && !hits.includes(t)) hits.push(t);
+  }
+  if (!hits.length && ings.some((s) => /\bmeat\b/.test(s) && !isMockMeat(s, 'meat'))) hits.push('meat');
+  return hits;
+}
+// The full human list of why a dish conflicts with the profile: flagged allergens plus, for a
+// vegetarian/vegan traveller, the meats named in the dish. Powers the visible warning + label.
+function dishDietReasons(d, avoid, diet) {
+  const reasons = dishFlaggedAllergens(d, avoid);
+  if (dietIsVeg(diet)) for (const m of dishMeatHits(d)) if (!reasons.includes(m)) reasons.push(m);
+  return reasons;
 }
 // "peanut", "peanut and shellfish", "peanut, shellfish and egg" — a natural inline list.
 function joinList(arr) {
@@ -5204,7 +5240,7 @@ function spiceLabel(s) {
 function foodCard(d) {
   const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
   const verdict = dishDietVerdict(d);
-  const flagged = verdict === 'bad' ? dishFlaggedAllergens(d) : [];
+  const flagged = verdict === 'bad' ? dishDietReasons(d) : [];
   const cls = 'card species-card' + (verdict === 'bad' ? ' food-bad' : verdict === 'ok' ? ' food-ok' : '');
   // Accessible name for the badge: `title` alone never appears on touch and is an
   // unreliable accessible name, so the specific flagged allergen also renders as visible
@@ -5412,7 +5448,7 @@ function dishScreen(id) {
   // Your dietary profile: an at-a-glance verdict for this dish (guidance, not a guarantee).
   const dv = dishDietVerdict(d);
   if (dv === 'bad') {
-    const flagged = dishFlaggedAllergens(d);
+    const flagged = dishDietReasons(d);
     card.append(h('div', { class: 'diet-banner bad' }, flagged.length
       ? `⚠️ Typically contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}. Recipes vary, so check the allergens below and confirm with the cook.`
       : '✕ This lists something you avoid — check the allergens below and confirm with the cook.'));
