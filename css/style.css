@@ -1087,6 +1087,9 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 /* Visible allergy warning on a dish list card — so the flagged allergen is perceivable
    without hovering a tooltip and without relying on colour alone. */
 .food-warn { margin-top: 2px; font-size: var(--fs-sm); font-weight: 700; color: var(--diet-bad); }
+/* Spice caution for travellers with a baby/kids or who dislike heat — guidance, not a safety
+   flag, so it uses the warm amber tone rather than the red allergen colour. */
+.food-spice { margin-top: 2px; font-size: var(--fs-sm); font-weight: 600; color: var(--warn); }
 .diet-banner { border-radius: var(--r-sm); padding: 8px 10px; margin: 8px 0;
   font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
 .diet-banner.ok { background: rgba(46, 158, 91, 0.14); border: 1px solid var(--diet-ok); }
