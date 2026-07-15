@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.203.0';
+const APP_VERSION = 'mk-v0.204.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -5192,6 +5192,18 @@ function dishDietReasons(d, avoid, diet) {
   if ((set.has('halal') || set.has('no-alcohol')) && dishHasAlcohol(d)) add('alcohol');
   return reasons;
 }
+
+// A gentle, non-safety spice note for travellers who said they are with a baby/kids or dislike
+// heat ("Not spicy at all"). This is guidance, NOT the red allergen verdict — Thai/Lao/Isan heat
+// is a real surprise for little ones, and most dishes can be ordered milder.
+function dishSpiceCaution(d, prefs) {
+  const family = prefs.withBaby || prefs.kids || prefs.party === 'family';
+  const noChili = (prefs.diet || []).includes('no-chili');
+  if (!family && !noChili) return '';
+  if (d.spice === 'hot') return family ? 'Very spicy — often too hot for young children' : 'Very spicy — you can ask for it milder';
+  if (d.spice === 'medium' && (prefs.withBaby || noChili)) return 'Can be spicy — you can ask for it milder';
+  return '';
+}
 // "peanut", "peanut and shellfish", "peanut, shellfish and egg" — a natural inline list.
 function joinList(arr) {
   if (arr.length <= 1) return arr[0] || '';
@@ -5270,6 +5282,7 @@ function foodCard(d) {
     ? `Contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}`
     : 'Contains something you avoid';
   const okLabel = 'Nothing you avoid is listed — still confirm';
+  const spiceNote = dishSpiceCaution(d, store.profile.prefs);
   const badge = verdict === 'bad'
     ? h('span', { class: 'food-flag bad', role: 'img', 'aria-label': badLabel, title: badLabel }, '✕')
     : verdict === 'ok'
@@ -5283,6 +5296,7 @@ function foodCard(d) {
       verdict === 'bad'
         ? h('div', { class: 'food-warn' }, `⚠️ ${flagged.length ? `Contains ${joinList(flagged)}` : 'Contains something you avoid'}`)
         : null,
+      spiceNote ? h('div', { class: 'food-spice' }, `🌶 ${spiceNote}`) : null,
     ]),
     badge,
     h('span', { class: 'fair' }, d.price ? range(d.price.low, d.price.high, d.price.currency) : ''),
