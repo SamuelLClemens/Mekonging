@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.207.0';
+const APP_VERSION = 'mk-v0.208.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1881,7 +1881,7 @@ function currencyScreen() {
 }
 
 function currencySelect(current) {
-  return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'], current, () => {});
+  return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'], current, () => {}, 'Currency');
 }
 
 // The traveller's home currency (set in Settings; defaults to USD).
@@ -4549,10 +4549,10 @@ function journalFormScreen(editId) {
   // New entries auto-stamp the current location (last GPS fix) and weather; both stay
   // editable. Existing entries keep whatever was saved.
   const st = { coords: existing ? existing.coords : (getLastFix() || null) };
-  const title = h('input', { type: 'text', placeholder: 'A title for this memory' });
-  const text = h('textarea', { class: 'ta', placeholder: 'What happened? What did you see, eat, feel?' });
-  const place = h('input', { type: 'text', placeholder: 'Place (e.g. Hoi An old town)' });
-  const weather = h('input', { type: 'text', placeholder: 'Weather (auto — editable)' });
+  const title = h('input', { 'aria-label': 'Memory title', type: 'text', placeholder: 'A title for this memory' });
+  const text = h('textarea', { 'aria-label': 'What happened', class: 'ta', placeholder: 'What happened? What did you see, eat, feel?' });
+  const place = h('input', { 'aria-label': 'Place', type: 'text', placeholder: 'Place (e.g. Hoi An old town)' });
+  const weather = h('input', { 'aria-label': 'Weather', type: 'text', placeholder: 'Weather (auto — editable)' });
   if (existing) {
     title.value = existing.title || ''; text.value = existing.text || ''; place.value = existing.place || '';
     weather.value = existing.weather || '';
@@ -5039,15 +5039,15 @@ function calendarFormScreen(editId, prefill) {
   if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
   const c = getCountry(activeCountry);
   const st = { rating: existing ? (existing.rating || 0) : 0 };
-  const date = h('input', { type: 'date', value: existing ? existing.date : (pf.date || '') });
-  const time = h('input', { type: 'time', value: existing ? (existing.time || '') : '' });
+  const date = h('input', { 'aria-label': 'Date', type: 'date', value: existing ? existing.date : (pf.date || '') });
+  const time = h('input', { 'aria-label': 'Time', type: 'time', value: existing ? (existing.time || '') : '' });
   const TYPES = [['plan', '🗓 Day plan'], ['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity'], ['laundry', '🧺 Laundry day'], ['appointment', '📌 Appointment']];
-  const type = selectEl(TYPES, existing ? existing.type : (pf.type || 'plan'), () => {});
-  const title = h('input', { type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch', value: existing ? existing.title : '' });
-  const place = h('input', { type: 'text', placeholder: 'Where', value: existing ? (existing.place || '') : '' });
-  const cost = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Cost', value: existing ? (existing.cost || '') : '' });
-  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], existing ? (existing.currency || (c ? c.currency : 'THB')) : (c ? c.currency : 'THB'), () => {});
-  const note = h('textarea', { class: 'ta', placeholder: 'Plan details, or a review once you have been' });
+  const type = selectEl(TYPES, existing ? existing.type : (pf.type || 'plan'), () => {}, 'Entry type');
+  const title = h('input', { 'aria-label': 'Title', type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch', value: existing ? existing.title : '' });
+  const place = h('input', { 'aria-label': 'Where', type: 'text', placeholder: 'Where', value: existing ? (existing.place || '') : '' });
+  const cost = h('input', { 'aria-label': 'Cost', type: 'number', inputmode: 'decimal', placeholder: 'Cost', value: existing ? (existing.cost || '') : '' });
+  const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], existing ? (existing.currency || (c ? c.currency : 'THB')) : (c ? c.currency : 'THB'), () => {}, 'Currency');
+  const note = h('textarea', { 'aria-label': 'Details', class: 'ta', placeholder: 'Plan details, or a review once you have been' });
   if (existing) note.value = existing.note || '';
   // Reminder: a per-entry lead time (defaults to the user's chosen default for new entries).
   const remindDefault = existing ? (existing.remind == null ? -1 : existing.remind) : reminders.defaultLead();
@@ -6411,8 +6411,8 @@ function tripScreen() {
   stops.forEach((s, i) => {
     // Inline editor when this stop is open for correction — fix a typo'd name or a wrong date.
     if (editStopId === s.id) {
-      const t = h('input', { type: 'text', value: s.title });
-      const dt = h('input', { type: 'date', value: s.date || '' });
+      const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.title });
+      const dt = h('input', { 'aria-label': 'Stop date', type: 'date', value: s.date || '' });
       itin.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
         h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t, dt]),
         h('div', { class: 'chips' }, [
@@ -6432,8 +6432,8 @@ function tripScreen() {
       ]),
     ]));
   });
-  const stopName = h('input', { type: 'text', placeholder: 'Place or city' });
-  const stopDate = h('input', { type: 'date' });
+  const stopName = h('input', { 'aria-label': 'Stop name', type: 'text', placeholder: 'Place or city' });
+  const stopDate = h('input', { 'aria-label': 'Stop date', type: 'date' });
   itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName, stopDate,
     h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: activeCountry, date: stopDate.value }); go('#trip'); } } }, 'Add stop')]));
   // quick add from saved
@@ -6474,10 +6474,10 @@ function tripScreen() {
     }
   }
   store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));
-  const bAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
+  const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const c = getCountry(activeCountry);
   const bCur = currencySelect(c ? c.currency : 'THB');
-  const bNote = h('input', { type: 'text', placeholder: 'On what?' });
+  const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what?' });
   bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log a spend'), bAmt, bCur, bNote,
     h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim() }); go('#trip'); } } }, 'Add spend')]));
   wrap.append(bud);
@@ -6495,9 +6495,9 @@ function bargainScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Bargain helper', '#home'));
   const c = getCountry(activeCountry);
-  const price = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Asking price' });
+  const price = h('input', { 'aria-label': 'Asking price', type: 'number', inputmode: 'decimal', placeholder: 'Asking price' });
   const cur = currencySelect(c ? c.currency : 'THB');
-  const ctx = selectEl(Object.entries(BARGAIN).map(([k, v]) => [k, v.label]), 'market', () => {});
+  const ctx = selectEl(Object.entries(BARGAIN).map(([k, v]) => [k, v.label]), 'market', () => {}, 'What you are bargaining for');
   const out = h('div', { class: 'card' });
   function recompute() {
     out.innerHTML = '';
@@ -6574,9 +6574,9 @@ function expensesScreen() {
   const fc = focusSpot().spot.country || activeCountry;
   const c = getCountry(fc);
 
-  const bAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
+  const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const bCur = currencySelect(c ? c.currency : 'THB');
-  const bNote = h('input', { type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
+  const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
   wrap.append(h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Log a spend'),
     field('Amount', bAmt), field('Currency', bCur), field('On what?', bNote),
@@ -9022,9 +9022,11 @@ function field(labelText, control) {
   if (target && !target.id) target.id = 'fld-' + (++_fieldSeq);
   return h('div', { class: 'field' }, [h('label', target && target.id ? { for: target.id } : {}, labelText), control]);
 }
-function selectEl(options, current, onchange) {
+function selectEl(options, current, onchange, ariaLabel) {
   const opts = options.map((o) => Array.isArray(o) ? o : [o, o]);
-  return h('select', { onchange: (e) => onchange(e.target.value) },
+  const attrs = { onchange: (e) => onchange(e.target.value) };
+  if (ariaLabel) attrs['aria-label'] = ariaLabel;
+  return h('select', attrs,
     opts.map(([val, lbl]) => h('option', { value: val, selected: val === current ? '' : null }, lbl)));
 }
 
@@ -9034,7 +9036,7 @@ function spotForKey(key) { return WEATHER_SPOTS.find((s) => spotKey(s) === key) 
 // spotKey — used everywhere a traveller picks "where they are" instead of a wall of
 // chips. Pass the resolved focus/weather key so it always opens on the current location.
 function locationSelect(currentKey, onChange) {
-  const sel = h('select', { class: 'loc-select', onchange: (e) => onChange(e.target.value) });
+  const sel = h('select', { class: 'loc-select', 'aria-label': 'Choose your location', onchange: (e) => onChange(e.target.value) });
   COUNTRIES.forEach((c) => {
     const spots = spotsForCountry(c.id);
     if (!spots.length) return;
