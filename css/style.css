@@ -453,6 +453,10 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .cats { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
 .cat-tag { font-size: var(--fs-label); color: #fff; background: var(--teal-deep);
            border-radius: var(--r-pill); padding: 3px var(--sp-2); text-transform: capitalize; }
+/* Round colour swatch used to key filter chips to the same colours as the tags/legend. */
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+          vertical-align: middle; box-shadow: 0 0 0 1px rgba(0,0,0,0.18); }
+.color-key .cat-tag { text-transform: none; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .place-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 /* Category colour-coding: an inset accent bar keyed to the place's bucket, so stay /
