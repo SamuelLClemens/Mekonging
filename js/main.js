@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.211.0';
+const APP_VERSION = 'mk-v0.212.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -564,7 +564,12 @@ function scoreForNow(p, ctx) {
   const meta = PART_META[ctx.part];
   let s = 30 - km * 0.9;                          // proximity
   if (cats.some((c) => meta.cats.includes(c))) s += 30;
-  if (ctx.isWeekend && cats.includes('market')) s += 8;
+  if (cats.includes('market')) {
+    // Day-specific markets (walking streets, Fri–Sun floating markets) are closed on
+    // off-days, so penalise them hard for "now"; boost any market that is on today.
+    if (marketOnToday(p, ctx.dow)) s += marketOpenDays(p) ? 14 : (ctx.isWeekend ? 8 : 0);
+    else s -= 30;
+  }
   if (ctx.raining) {
     if (cats.some((c) => INDOOR_CATS.includes(c))) s += 16;
     if (cats.some((c) => OUTDOOR_CATS.includes(c))) s -= 22;
@@ -590,6 +595,7 @@ function whyNow(p, ctx) {
   const prefs = store.profile.prefs;
   if ((prefs.withBaby || prefs.kids || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
   if (ctx.raining && cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
+  if (cats.includes('market') && marketOpenDays(p) && marketOnToday(p, ctx.dow)) return 'Market on today';
   if (ctx.isWeekend && cats.includes('market')) return 'Weekend market';
   if (evening && cats.includes('nightlife')) return 'Buzzing now';
   if ((ctx.part === 'evening' || ctx.part === 'afternoon') && cats.includes('viewpoint')) return 'Sunset spot';
@@ -2662,6 +2668,65 @@ function placeBucket(p) {
   return 'other';
 }
 
+// ---- MARKETS: day-of-week awareness -----------------------------------------
+// Many markets run only on certain days (weekend walking streets, Fri–Sun floating
+// markets). marketDays is an array of weekday indices (0=Sun … 6=Sat); absent/empty
+// means daily. These helpers drive the "on today?" line, card chip and ranking so a
+// Sunday-only market is not surfaced as "near you now" on a Tuesday.
+const DOW_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function isMarket(p) {
+  return !!(p && (p.marketType || (Array.isArray(p.marketDays) && p.marketDays.length)
+    || (Array.isArray(p.categories) && p.categories.includes('market'))));
+}
+// Returns the sorted unique open-days array, or null when the market runs daily.
+function marketOpenDays(p) {
+  const d = Array.isArray(p.marketDays) ? p.marketDays.filter((n) => Number.isInteger(n) && n >= 0 && n <= 6) : [];
+  if (!d.length || d.length >= 7) return null;
+  return [...new Set(d)].sort((a, b) => a - b);
+}
+function marketOnToday(p, dow) { const d = marketOpenDays(p); return !d || d.includes(dow); }
+function formatMarketDays(p) {
+  const d = marketOpenDays(p);
+  if (!d) return 'Daily';
+  if (d.length === 2 && d.includes(0) && d.includes(6)) return 'Weekends (Sat & Sun)';
+  if (d.join(',') === '0,5,6') return 'Fri–Sun';                 // Fri, Sat, Sun (Sun wraps to index 0)
+  let contig = true;
+  for (let i = 1; i < d.length; i++) if (d[i] !== d[i - 1] + 1) contig = false;
+  if (contig && d.length > 2) return `${DOW_SHORT[d[0]]}–${DOW_SHORT[d[d.length - 1]]}`;
+  return d.map((n) => DOW_SHORT[n]).join(d.length > 2 ? ', ' : ' & ');
+}
+// Human "next open" hint from today: 'tomorrow' or the weekday name; null when daily.
+function nextMarketDay(p, dow) {
+  const d = marketOpenDays(p);
+  if (!d) return null;
+  for (let i = 1; i <= 7; i++) { const nd = (dow + i) % 7; if (d.includes(nd)) return i === 1 ? 'tomorrow' : DOW_SHORT[nd]; }
+  return null;
+}
+// Small chip for cards/lists: green "On today" when open now, else the day pattern.
+function marketChip(p) {
+  if (!isMarket(p)) return null;
+  const d = marketOpenDays(p);
+  if (!d) return h('span', { class: 'mkt-chip daily' }, `🛍️ ${p.marketType || 'Market'} · daily`);
+  const on = d.includes(new Date().getDay());
+  return h('span', { class: `mkt-chip ${on ? 'on' : 'off'}`, title: `Runs ${formatMarketDays(p)}` },
+    on ? '🛍️ On today' : `🛍️ ${formatMarketDays(p)}`);
+}
+// Detail-screen block: market type, what they sell, the days/hours and a live on-today line.
+function marketInfoCard(p) {
+  if (!isMarket(p)) return null;
+  const card = h('div', { class: 'card market-info' }, [h('h2', {}, '🛍️ Market')]);
+  if (p.marketType) card.append(h('p', { class: 'market-type' }, h('strong', {}, p.marketType)));
+  if (p.sells) card.append(h('p', {}, [h('strong', {}, 'What they sell: '), h('span', {}, p.sells)]));
+  card.append(h('p', {}, [h('strong', {}, 'Runs: '), h('span', {}, formatMarketDays(p) + (p.hours ? ` · ${p.hours}` : ''))]));
+  const d = marketOpenDays(p);
+  if (!d) { card.append(h('p', { class: 'mkt-status on' }, '✅ Open daily')); return card; }
+  const on = d.includes(new Date().getDay());
+  const nxt = nextMarketDay(p, new Date().getDay());
+  card.append(h('p', { class: `mkt-status ${on ? 'on' : 'off'}` },
+    on ? '✅ On today' : `⏳ Not on today${nxt ? ` — next on ${titleCase(nxt)}` : ''}`));
+  return card;
+}
+
 // "1.2 km · ~15 min walk away" from the user's last GPS fix, when known. Offline,
 // pure maths (haversine + ~4.8 km/h walking pace); walk time only for close spots.
 // Returns a chip node or null. Reused on cards, detail and the near-me experiences.
@@ -2695,6 +2760,7 @@ function placeCard(p) {
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
     travelerChips(p),
+    isMarket(p) ? h('div', { style: 'margin:2px 0' }, marketChip(p)) : null,
     p.blurb ? h('p', {}, p.blurb) : null,
     h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
     dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
@@ -3082,7 +3148,7 @@ function placeScreen(id) {
     card.append(h('h3', {}, 'Price'));
     card.append(h('p', {}, `${priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`));
   }
-  if (p.hours) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
+  if (p.hours && !isMarket(p)) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
   if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
   if (p.tips && p.tips.length) { card.append(h('h3', {}, 'Tips')); p.tips.forEach((t) => card.append(h('div', { class: 'list-note' }, t))); }
   if (p.scamWarnings && p.scamWarnings.length) { card.append(h('h3', {}, 'Watch out')); p.scamWarnings.forEach((t) => card.append(h('div', { class: 'warn-note' }, t))); }
@@ -3110,6 +3176,8 @@ function placeScreen(id) {
   wrap.append(card);
   const accBlock = placeAccessBlock(p);
   if (accBlock) wrap.append(accBlock);
+  const mkt = marketInfoCard(p);
+  if (mkt) wrap.append(mkt);
   const orient = orientationCard(p);
   if (orient) wrap.append(orient);
   const transit = transitCard(p);
