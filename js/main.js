@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.225.0';
+const APP_VERSION = 'mk-v0.226.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2587,11 +2587,40 @@ function placesScreen(arg) {
     if (!mapList.length) {
       mapWrap.append(h('p', { class: 'empty' }, 'No mapped places for these filters yet — switch to List or widen the filters.'));
     } else {
+      // Colour-by toggle: rating (default) or the site-wide category colours, with a matching
+      // legend so the map obeys the same colour language as the rest of the app when chosen.
+      const colorModeOf = () => (prefs.placesColor === 'category' ? 'category' : 'rating');
+      const RATING_KEY = [['#1E9E5A', 'Excellent'], ['#7DB23A', 'Great'], ['#F2A93B', 'Good'], ['#E8632A', 'Mixed'], ['#E0A100', 'Market'], ['#D62828', 'Local eat']];
+      const legendBox = h('div', {});
+      const renderMapLegend = () => {
+        legendBox.innerHTML = '';
+        const items = colorModeOf() === 'category'
+          ? CATEGORY_FAMILIES.filter((f) => f.key !== 'other').map((f) => [f.color, `${f.emoji} ${f.label}`])
+          : RATING_KEY;
+        legendBox.append(h('div', { class: 'cats', style: 'margin:2px 0 6px' },
+          items.map(([c, l]) => h('span', { class: 'cat-tag', style: `background:${c}` }, l))));
+      };
+      const colorToggle = h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
+        h('span', { class: 'muted small', style: 'align-self:center;margin-right:4px' }, 'Colour by:'),
+        ...[['rating', '⭐ Rating'], ['category', '🎨 Category']].map(([m, l]) =>
+          h('button', {
+            class: 'chip', 'aria-pressed': colorModeOf() === m ? 'true' : 'false', dataset: { cm: m },
+            onclick: () => {
+              prefs.placesColor = m; save();
+              colorToggle.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.cm === m ? 'true' : 'false'));
+              if (placesCtrl) placesCtrl.setColorMode(m);
+              renderMapLegend();
+            },
+          }, l)),
+      ]);
       const canvas = h('div', { class: 'places-map', style: 'height:360px;border-radius:16px;overflow:hidden;position:relative' });
-      mapWrap.append(cap, canvas);
+      mapWrap.append(colorToggle, legendBox, cap, canvas);
+      renderMapLegend();
       import('./map.js').then((m) => m.initPlacesMap(canvas, mapList, {
         onOpen: (id) => go(`#place-${id}`),
         onLocate: (fix) => setLastFix(fix),
+        colorMode: colorModeOf(),
+        categoryColor: placeCatColor,
       })).then((c) => { placesCtrl = c; liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } }; })
         .catch(() => { cap.textContent = ''; mapWrap.append(h('p', { class: 'muted' }, 'The map could not start here — switch to List view.')); });
     }
@@ -2732,6 +2761,14 @@ const CAT_FAMILY = {
 };
 function catFamily(cat) { return CAT_FAMILY[cat] || 'other'; }
 function catColor(cat) { return FAMILY_COLOR[catFamily(cat)] || FAMILY_COLOR.other; }
+// The single most identifying category colour for a whole place (beach beats nature,
+// culture beats park, etc.) — used to colour map pins by category.
+function placeCatColor(p) {
+  const cats = p.categories || [];
+  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport'];
+  for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return FAMILY_COLOR[fam];
+  return FAMILY_COLOR.other;
+}
 // A category chip coloured by its family, with the family name as a tooltip.
 function catTag(cat, label) {
   const fam = catFamily(cat);
