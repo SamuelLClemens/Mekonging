@@ -2256,4 +2256,20 @@ export const PLACES_KH_EXT = [
     verified: "2026-07",
     sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
   },
+  {
+    id: "kh-ext-kep-beach",
+    name: "Kep Beach",
+    city: "Kep", country: "kh",
+    categories: ["beach", "nature"], budgetTier: "low",
+    coords: { lat: 10.4817, lng: 104.299 },
+    blurb: "Kep's small, palm-lined town beach of imported white sand, beside the seafront promenade and a short ride from the famous crab market.",
+    whyItFits: "For a relaxed paddle and a seafood-and-sunset stroll along the promenade; most swimmers take a boat to Rabbit Island for clearer water.",
+    priceRange: { currency: "KHR", low: 0, high: 0 },
+    verified: "2026-07",
+    recognition: "A short crescent of pale imported sand backed by casuarina trees and food vendors, with the White Lady (Sela Cham Pou) statue on the rocks nearby.",
+    lifeguard: "no",
+    swim: "A small, calm, shallow town beach that is pleasant for a paddle but often murky; most visitors swim at Rabbit Island (Koh Tonsay) instead. No patrol.",
+    jellyfishMonths: [5, 6, 7, 8, 9, 10],
+    jellyfish: "Box jellyfish occur along Cambodia's coast and can be dangerous; risk is highest in the May–October wet season and after rain. Douse a sting with vinegar and get urgent medical help."
+  }
 ];

@@ -3119,4 +3119,20 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }],
   },
+  {
+    id: "th-ext-chaweng-beach",
+    name: "Chaweng Beach",
+    city: "Koh Samui", country: "th",
+    categories: ["beach", "nature"], budgetTier: "mid",
+    coords: { lat: 9.5357, lng: 100.0629 },
+    blurb: "Koh Samui's longest and liveliest beach — a sweep of white sand on the island's east coast backed by resorts, bars and restaurants.",
+    whyItFits: "For travellers who want a long, lively main beach with easy swimming, nightlife and every service on the doorstep.",
+    priceRange: { currency: "THB", low: 0, high: 0 },
+    verified: "2026-07",
+    recognition: "A long, gently curving white-sand beach fronting a dense strip of hotels and bars; the small island of Koh Matlang sits off the quieter northern end.",
+    lifeguard: "no",
+    swim: "Gently shelving, usually calm water that is good for swimming, but this is one of the island's busiest beaches — watch for jet-skis and boats near shore, and note there is no municipal lifeguard patrol.",
+    jellyfishMonths: [7, 8, 9, 10],
+    jellyfish: "Chaweng is one of Koh Samui's most-reported box-jellyfish sting locations; potentially fatal box jellyfish (Chironex) appear mainly in the July–October wet season and after rain. Swim inside any netted enclosure, heed warning signs, douse a sting with vinegar and get urgent medical help."
+  }
 ];

@@ -3537,4 +3537,34 @@ export const PLACES_VI_EXT = [
     verified: "2026-07",
     sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel/" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }],
   },
+  {
+    id: "vi-ext-mui-ne-beach",
+    name: "Mui Ne Beach",
+    city: "Phan Thiet", country: "vi",
+    categories: ["beach", "nature"], budgetTier: "mid",
+    coords: { lat: 10.933, lng: 108.287 },
+    blurb: "A long palm-fringed bay near Phan Thiet that is one of Asia's best-known kitesurfing and windsurfing spots, with famous red-and-white sand dunes nearby.",
+    whyItFits: "For watersports lovers — steady afternoon winds from November to April make this a legendary kite- and windsurfing beach.",
+    priceRange: { currency: "VND", low: 0, high: 0 },
+    verified: "2026-07",
+    recognition: "A wide bay lined with resorts and kite schools, kites filling the sky most afternoons; the fishing harbour and its round coracle boats sit at the eastern end.",
+    lifeguard: "no",
+    swim: "Better for kitesurfing and windsurfing than gentle swimming — a strong shorebreak and powerful shoreline current build most afternoons in the windy November–April high season, and the beach is eroded in places. No patrol, so take real care in the surf.",
+    jellyfish: "Jellyfish are reported seasonally along this south-central coast; ask locally before swimming and carry vinegar for stings."
+  },
+  {
+    id: "vi-ext-vung-tau-back-beach",
+    name: "Back Beach (Bai Sau), Vung Tau",
+    city: "Vung Tau", country: "vi",
+    categories: ["beach", "nature"], budgetTier: "low",
+    coords: { lat: 10.3489, lng: 107.0975 },
+    blurb: "Vung Tau's long main swimming beach on the open sea, the classic weekend seaside escape from Ho Chi Minh City about two hours away.",
+    whyItFits: "For an easy beach day or overnight from Ho Chi Minh City, with a long sandy stretch, seafood and lifeguard-flagged swim zones.",
+    priceRange: { currency: "VND", low: 0, high: 0 },
+    verified: "2026-07",
+    recognition: "A long open-ocean beach lined with hotels and seafood restaurants, with the giant Christ of Vung Tau statue on the headland to the south.",
+    lifeguard: "seasonal",
+    swim: "Lifeguards watch the busier sections and mark swim zones with flags, but dangerous rip currents — strongest in the December–March northeast monsoon — cause drownings every year. Swim only between the flags, stay within waist depth, and never swim after drinking.",
+    jellyfish: "Jellyfish are reported seasonally on this coast; ask locally before swimming and carry vinegar for stings."
+  }
 ];
