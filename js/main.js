@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.224.0';
+const APP_VERSION = 'mk-v0.225.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1192,7 +1192,7 @@ function phaseLead(phase, cc) {
       { e: '🆘', t: 'Emergency', h: '#sos', danger: true },
     ],
     traveling: [
-      { e: '☀️', t: 'Today’s plan', h: `#today-${cc}`, primary: true },
+      { e: '🧭', t: 'Things to do', h: `#today-${cc}`, primary: true },
       { e: '📍', t: 'Near me', h: '#nearby' },
       { e: '💱', t: 'Currency', h: '#currency' },
       { e: '✍️', t: 'Journal this', h: '#journal-add' },
@@ -1587,7 +1587,7 @@ function countryHubScreen(id) {
     { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${c.id}` },
     { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
     { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
-    { ic: ICON.sun, t: 'Today’s plan', d: 'Weather-aware picks', hash: `#today-${c.id}` },
+    { ic: ICON.sun, t: 'Things to do', d: 'Picks for right now', hash: `#today-${c.id}` },
     { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
     { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
     { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
@@ -6379,6 +6379,91 @@ function dailyStripCard(id) {
   return card;
 }
 
+// ---- "Things to do" ranking: weather + time of day + day of week + profile ------
+// A place counts as a "thing to do" when it is somewhere you go (not a stay, rental or
+// transport hub). We rank the whole pool by how well it fits RIGHT NOW and attach short
+// human reasons ("Good in the rain", "Best in the cool morning", "Matches your interests")
+// shown as chips, so the "many options" always feel picked for this person, place and moment.
+const TODO_RAIN_BAD = ['beach', 'hike', 'waterfall', 'viewpoint', 'park', 'nature', 'island', 'outdoors', 'dive', 'snorkel', 'garden', 'riverside'];
+const TODO_NIGHT = ['nightlife', 'bars', 'clubs', 'cocktail', 'rooftop', 'streetfood'];
+const TODO_CLOSED_AT_NIGHT = ['temple', 'museum', 'nature', 'hike', 'waterfall', 'park', 'viewpoint', 'wildlife', 'cave', 'garden'];
+const TODO_DOABLE = ['culture', 'temple', 'museum', 'spectacle', 'heritage', 'nature', 'waterfall', 'hike', 'viewpoint', 'park', 'wildlife', 'hotspring', 'cave', 'garden', 'sunset', 'riverside', 'beach', 'island', 'market', 'shopping', 'streetfood', 'food', 'seafood', 'cafe', 'nightlife', 'bars', 'clubs', 'cocktail', 'rooftop', 'wellness', 'spa', 'dive', 'snorkel'];
+function todoDoable(p) {
+  const c = p.categories || [];
+  if (p.stayType) return false;
+  if (c.includes('rental') || c.includes('transport')) return false;
+  return c.some((x) => TODO_DOABLE.includes(x));
+}
+function todoHasCat(p, list) { return (p.categories || []).some((c) => list.includes(c)); }
+function todoContext(rec, spot) {
+  const now = new Date();
+  const hr = now.getHours();
+  const daypart = hr < 11 ? 'morning' : hr < 15 ? 'midday' : hr < 18 ? 'afternoon' : hr < 22 ? 'evening' : 'night';
+  const dow = now.getDay();
+  const today = rec && rec.daily && rec.daily[0];
+  let weather = 'clear';
+  if (today) { if (isWet(today.code) || (today.rainProb || 0) >= 60) weather = 'wet'; else if (today.tmax != null && today.tmax >= 34) weather = 'hot'; }
+  const uv = today && today.uv != null ? today.uv : null;
+  const air = getCachedAir(spotKey(spot));
+  const aqi = air && air.aqi != null ? air.aqi : null;
+  return { hr, daypart, dow, weekend: dow === 0 || dow === 6, weather, uv, aqi };
+}
+// Score a place for RIGHT NOW and collect human reasons. Higher = better fit.
+function todoScore(p, ctx, prefs, anchor) {
+  const cats = p.categories || [];
+  const er = effectiveRating(p.id, p.rating || 0);
+  let s = er || 3;
+  const reasons = [];
+  // Weather
+  if (ctx.weather === 'wet') {
+    if (todoHasCat(p, TODO_RAIN_BAD)) s -= 1.8;
+    else { s += 0.5; reasons.push('☔ Good in the rain'); }
+  } else if (ctx.weather === 'hot') {
+    if (todoHasCat(p, ['beach', 'island', 'water', 'waterfall', 'hotspring'])) { s += 0.7; reasons.push('🏊 Cool off from the heat'); }
+    else if (todoHasCat(p, ['museum', 'wellness', 'spa']) || (cats.includes('culture') && !todoHasCat(p, ['temple', 'park']))) { s += 0.4; reasons.push('❄️ Out of the midday heat'); }
+  } else if (todoHasCat(p, ['nature', 'viewpoint', 'hike', 'park', 'beach', 'waterfall', 'island'])) { s += 0.4; reasons.push('☀️ Great in clear weather'); }
+  // Poor air discourages strenuous outdoor picks
+  if (ctx.aqi != null && ctx.aqi > 150 && todoHasCat(p, TODO_RAIN_BAD)) s -= 0.8;
+  // Time of day
+  if (ctx.daypart === 'night') {
+    if (todoHasCat(p, TODO_NIGHT)) { s += 0.9; reasons.push('🌙 Good tonight'); }
+    else if (todoHasCat(p, TODO_CLOSED_AT_NIGHT)) s -= 1.4;   // likely shut / dark after hours
+  } else if (ctx.daypart === 'evening') {
+    if (todoHasCat(p, ['viewpoint', 'sunset', 'nightlife', 'food', 'streetfood', 'bars', 'rooftop', 'market'])) { s += 0.5; reasons.push('🌇 Nice this evening'); }
+  } else if (ctx.daypart === 'morning') {
+    if (todoHasCat(p, ['temple', 'culture', 'market', 'nature', 'hike', 'viewpoint'])) { s += 0.4; reasons.push('🌅 Best in the cool morning'); }
+  } else if (ctx.daypart === 'midday') {
+    if (todoHasCat(p, ['beach', 'museum', 'food', 'wellness', 'spa'])) s += 0.3;
+  }
+  // Markets only surface when they are open today
+  if (isMarket(p)) {
+    if (marketOnToday(p, ctx.dow)) { s += 0.6; reasons.push('🛍 Market on today'); }
+    else s -= 1.0;
+  }
+  // Profile
+  if ((prefs.interests || []).some((i) => cats.includes(i))) { s += 0.6; reasons.push('❤️ Matches your interests'); }
+  if ((prefs.party === 'family' || prefs.withBaby) && p.kidFriendly === true) { s += 0.6; reasons.push('👨‍👩‍👧 Good with kids'); }
+  if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) { s += 0.3; reasons.push('💰 Fits your budget'); }
+  // Distance
+  const dist = (anchor && p.coords) ? haversineKm(anchor, p.coords) : null;
+  if (dist != null) s -= Math.min(dist, 200) / 90;
+  return { p, er, s, dist, reasons, cats };
+}
+// A "thing to do" result card: coloured category tags, rating, distance and reason chips.
+function todoCard(x, maxReasons) {
+  const { p, er, dist, reasons, cats } = x;
+  const rc = (reasons || []).slice(0, maxReasons || 2).map((r) => h('span', { class: 'todo-reason' }, r));
+  return h('button', { class: 'card place-card todo-card', style: `--cat:${bucketColor(p)}`, onclick: () => go(`#place-${p.id}`) }, [
+    h('div', { class: 'place-head' }, [
+      h('h2', {}, p.name),
+      er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
+    ]),
+    h('div', { class: 'cats', style: 'margin:2px 0' }, cats.slice(0, 3).map((c) => catTag(c))),
+    rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
+    h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, dist != null ? `${dist < 10 ? dist.toFixed(1) : Math.round(dist)} km away` : null].filter(Boolean).join(' · ')),
+  ]);
+}
+
 function daySuggestScreen(country) {
   const explicit = country && getCountry(country) ? country : null;
   if (explicit) activeCountry = explicit;
@@ -6388,13 +6473,13 @@ function daySuggestScreen(country) {
   activeCountry = id;
   const c = getCountry(id);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Today’s plan', '#home'));
+  wrap.append(topbar('Things to do', '#home'));
   // Be explicit about WHERE these picks are for, so someone in Chiang Mai never silently
   // gets Bangkok: GPS wins, else the city they are looking at, else the country default.
   const scopeMsg = fs.source === 'gps' ? `📍 Near ${spot.city} — from your location`
     : fs.source === 'focus' ? `📍 ${spot.city} — the place you’re looking at`
     : `📍 ${spot.city} — turn on location or open a city for local picks`;
-  wrap.append(h('p', { class: 'map-hint' }, `${scopeMsg}. Weighing today’s weather and the highest-rated places (your own ratings count first).`));
+  wrap.append(h('p', { class: 'map-hint' }, `${scopeMsg}. Ranked for right now — the weather, the time of day, the day of the week and your profile. Your own ratings count first.`));
   const locBtn = h('button', { class: 'btn ghost block', onclick: async () => {
     locBtn.textContent = 'Locating…'; locBtn.disabled = true;
     try { setLastFix(await geolocate()); go('#today'); return; } catch { /* denied/offline */ }
@@ -6426,48 +6511,74 @@ function daySuggestScreen(country) {
     } else {
       body.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Connect once to load today’s weather for weather-aware picks; meanwhile, here are the top-rated places.')]));
     }
-    const OUTDOOR = ['nature', 'waterfall', 'hike', 'park', 'beach', 'viewpoint', 'outdoors', 'island', 'dive', 'snorkel', 'garden'];
-    const isOutdoor = (p) => (p.categories || []).some((cat) => OUTDOOR.includes(cat));
-    const prefer = mood === 'wet' ? ['culture', 'food', 'market', 'museum', 'temple', 'cafe', 'nightlife', 'shopping', 'wellness']
-      : mood === 'hot' ? ['culture', 'food', 'nature', 'nightlife'] : ['nature', 'culture', 'food', 'nightlife'];
-    // Anchor distance to where the traveller actually is: their GPS fix if that is the
-    // active source, otherwise the focused city's coordinates. This is what stops a
-    // Chiang Mai traveller from being ranked into Bangkok's (higher-rated) places.
     const gf = getLastFix();
     const anchor = dayUserLoc || ((fs.source === 'gps' && gf) ? gf : { lat: spot.lat, lng: spot.lng });
-    let scored = allPlaces({ country: id }).map((p) => {
-      const er = effectiveRating(p.id, p.rating || 0);
-      const catBonus = (p.categories || []).some((cat) => prefer.includes(cat)) ? 0.3 : 0;
-      const outdoorPenalty = (mood === 'wet' && isOutdoor(p)) ? 1.6 : 0;
-      const dist = (anchor && p.coords) ? haversineKm(anchor, p.coords) : null;
-      return { p, er, dist, catBonus, outdoorPenalty, outdoor: isOutdoor(p) };
-    }).filter((x) => x.er > 0 || x.p.coords);
-    // Keep it to what is actually reachable from here; widen only if the area is sparse.
-    const NEAR_KM = 150;
-    let pool = scored.filter((x) => x.dist != null && x.dist <= NEAR_KM);
+    const ctx = todoContext(rec, spot);
+    const prefs = store.profile.prefs;
+    const DAYPART_LBL = { morning: 'this morning', midday: 'midday', afternoon: 'this afternoon', evening: 'this evening', night: 'tonight' };
+
+    // One-line "conditions now" summary so the "right now" picks are explained.
+    const condBits = [ctx.weather === 'wet' ? '🌧 Rainy' : ctx.weather === 'hot' ? '🔥 Hot' : '🌤 Fair'];
+    if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) condBits.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
+    if (ctx.aqi != null) { const ab = aqiBand(ctx.aqi); if (ab) condBits.push(`AQI ${Math.round(ctx.aqi)} ${ab[0]}`); }
+
+    // Rank the whole "doable" pool for RIGHT NOW.
+    const scored = allPlaces({ country: id }).filter(todoDoable)
+      .map((p) => todoScore(p, ctx, prefs, anchor)).filter((x) => x.er > 0 || x.p.coords);
+    let pool = scored.filter((x) => x.dist != null && x.dist <= 150);
     const widened = pool.length < 6;
     if (widened) pool = scored;
-    if (mood === 'wet') {
-      const indoor = pool.filter((x) => !x.outdoor);
-      if (indoor.length >= 4) pool = indoor;   // hide outdoor picks entirely when enough indoor options exist
-    }
-    pool.forEach((x) => { x.score = x.er + x.catBonus - x.outdoorPenalty - (x.dist != null ? Math.min(x.dist, 200) / 90 : 1.4); });
-    pool.sort((a, b) => b.score - a.score);
-    const top = pool.slice(0, 8);
+    pool = pool.slice().sort((a, b) => b.s - a.s);
     const nearCity = !widened ? ` near ${spot.city}` : '';
-    const secLabel = mood === 'wet' ? `Indoor-friendly for the rain${nearCity}` : `Highly rated${nearCity}`;
-    body.append(h('h2', { class: 'home-section' }, secLabel));
-    if (!top.length) { body.append(h('p', { class: 'empty' }, 'No places to suggest yet for this country.')); return; }
-    top.forEach(({ p, er, dist }) => {
-      body.append(h('button', { class: 'card species-card', onclick: () => go(`#place-${p.id}`) }, [
-        h('span', { class: 'species-emoji', 'aria-hidden': 'true', style: `color:${ratingColor(er)}` }, '●'),
-        h('span', { class: 'grow' }, [
-          h('div', { class: 'en' }, p.name),
-          h('div', { class: 'sci' }, `${(p.categories || []).join(', ')}${dist != null ? ' · ' + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + ' km' : ''}`),
-        ]),
-        er ? h('span', { class: 'stars-static' }, starsStr(er)) : null,
-      ]));
-    });
+
+    // SECTION 1 — Right now (time-of-day + weather aware), with reason chips.
+    body.append(h('h2', { class: 'home-section' }, `Right now — ${DAYPART_LBL[ctx.daypart]}${nearCity}`));
+    body.append(h('p', { class: 'muted small', style: 'margin:0 0 6px' }, condBits.join(' · ')));
+    const rightNow = pool.slice(0, 8);
+    if (!rightNow.length) { body.append(h('p', { class: 'empty' }, 'No places to suggest yet for this area.')); return; }
+    rightNow.forEach((x) => body.append(todoCard(x, 2)));
+
+    // SECTION 2 — Made for you (profile-driven), or a nudge to set a profile.
+    if (profileIsSet()) {
+      const shown = new Set(rightNow.map((x) => x.p.id));
+      const forYou = scored.slice().sort((a, b) => personalScore(b.p) - personalScore(a.p))
+        .filter((x) => !shown.has(x.p.id)).slice(0, 6);
+      if (forYou.length) {
+        body.append(h('h2', { class: 'home-section' }, '❤️ Made for you'));
+        body.append(h('p', { class: 'muted small', style: 'margin:0 0 6px' }, 'Ranked by your profile — tune it in “For you”.'));
+        forYou.forEach((x) => body.append(todoCard(x, 2)));
+      }
+    } else {
+      body.append(h('button', { class: 'btn ghost block', style: 'margin:12px 0', onclick: () => go('#foryou') }, '⚙ Set your profile to personalise these picks'));
+    }
+
+    // SECTION 3 — On today: markets open today + festivals in the trip window.
+    const marketsToday = scored.filter((x) => isMarket(x.p) && marketOnToday(x.p, ctx.dow))
+      .sort((a, b) => (a.dist == null ? 9e9 : a.dist) - (b.dist == null ? 9e9 : b.dist)).slice(0, 4);
+    const fests = festivalsInWindow().filter((e) => e.country === id).slice(0, 3);
+    if (marketsToday.length || fests.length) {
+      body.append(h('h2', { class: 'home-section' }, '📅 On today'));
+      marketsToday.forEach((x) => body.append(todoCard(x, 1)));
+      fests.forEach((e) => body.append(eventCard(e)));
+    }
+
+    // SECTION 4 — Browse by type: coloured category chips populate a list of that family.
+    body.append(h('h2', { class: 'home-section' }, 'Browse by type'));
+    body.append(h('p', { class: 'muted small', style: 'margin:0 0 6px' }, 'Tap a colour to see every option of that kind near here.'));
+    const famListEl = h('div', {});
+    const famChips = h('div', { class: 'chips' }, CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key)).map((f) =>
+      h('button', {
+        class: 'chip', dataset: { f: f.key }, 'aria-pressed': 'false',
+        onclick: () => {
+          famChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.f === f.key ? 'true' : 'false'));
+          famListEl.innerHTML = '';
+          const items = scored.filter((x) => x.cats.some((c) => catFamily(c) === f.key))
+            .sort((a, b) => ((a.dist == null ? 9e9 : a.dist) - (b.dist == null ? 9e9 : b.dist)) || (b.er - a.er)).slice(0, 12);
+          if (!items.length) famListEl.append(h('p', { class: 'empty' }, `No ${f.label.toLowerCase()} listed near here yet.`));
+          else items.forEach((x) => famListEl.append(todoCard(x, 1)));
+        },
+      }, [swatch(f.color), ` ${f.emoji} ${f.label}`])));
+    body.append(famChips, famListEl);
   }
 
   let lastRec = getCachedWeather(spotKey(spot));
