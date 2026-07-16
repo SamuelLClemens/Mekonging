@@ -457,11 +457,24 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
           vertical-align: middle; box-shadow: 0 0 0 1px rgba(0,0,0,0.18); }
 .color-key .cat-tag { text-transform: none; }
-/* "Things to do" reason chips — short human explanations of why a pick fits right now. */
-.todo-card { text-align: left; width: 100%; display: block; }
+/* "Things to do" — a list-first screen: compact header, then reachable picks in cards
+   that carry a recognition thumbnail and short "why now" reason chips. */
+.todo-card { text-align: left; width: 100%; display: flex; gap: 10px; align-items: stretch; }
+.todo-body { flex: 1 1 auto; min-width: 0; }
+.todo-thumb { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 10px; object-fit: cover; align-self: center; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+.todo-thumb-ph { display: flex; align-items: center; justify-content: center; font-size: 1.6rem; line-height: 1; }
 .todo-reasons { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 0; }
 .todo-reason { font-size: var(--fs-label); background: rgba(0,0,0,0.06); border-radius: var(--r-pill); padding: 2px 8px; }
 [data-theme="dark"] .todo-reason { background: rgba(255,255,255,0.09); }
+/* Compact conditions header — glanceable, never pushes the list below the fold. */
+.todo-header { margin-bottom: 6px; }
+.todo-scope { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0; }
+.todo-scope-city { font-weight: 700; }
+.todo-cond { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.todo-cond-chip { font-size: var(--fs-label); background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.08); border-radius: var(--r-pill); padding: 3px 9px; white-space: nowrap; }
+[data-theme="dark"] .todo-cond-chip { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+.todo-filter { margin-top: 8px; }
+.todo-tier { display: flex; align-items: baseline; gap: 6px; font-size: var(--fs-h3); margin: 14px 0 6px; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .place-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 /* Category colour-coding: an inset accent bar keyed to the place's bucket, so stay /
