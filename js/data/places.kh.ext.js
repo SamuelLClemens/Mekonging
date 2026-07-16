@@ -120,7 +120,7 @@ export const PLACES_KH_EXT = [
     rating: 4.1, reviewSources: ["Tripadvisor", "Google Maps consensus", "Southeast Asia Backpacker"],
     mapQuery: "Koh Tonsay Rabbit Island Kep Cambodia", coords: { lat: 10.4470, lng: 104.3580 },
     bookHint: "Buy the return boat ticket at the official Kep pier booth; bungalows are usually booked on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Rustic Rabbit Island with shallow, calm, gently shelving bays; basic facilities and no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
   {
     id: "kh-ext-lazy-beach", name: "Lazy Beach", city: "Koh Rong Sanloem", country: "kh",
@@ -402,7 +402,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Ta Kiev Cambodia", coords: { lat: 10.55, lng: 103.59 },
     bookHint: "Arrange a boat and a bungalow through an island eco-camp before you go.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "An undeveloped island with clear, calm water and rustic camps; no patrol and limited help, so swim with care.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
 {
     id: "kh-ext-central-market-pp", name: "Central Market (Phsar Thmei)", city: "Phnom Penh", country: "kh",
@@ -492,7 +492,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Koh Rong Sanloem Saracen Bay bungalows", coords: { lat: 10.6086, lng: 103.3006 },
     bookHint: "Book the bungalow + ferry combo online; ferries leave from Sihanoukville.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Koh Rong Sanloem's Saracen Bay is a calm, shallow, postcard-perfect bay — beautiful and family-friendly, but with no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
   {
     id: "kh-ext-phnompenh-longstay", name: "Phnom Penh long-stay (BKK1 serviced apartments)", city: "Phnom Penh", country: "kh",
@@ -949,7 +949,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.713, lng: 103.253 },
     bookHint: "No booking; take the ferry from Sihanoukville to Koh Touch and walk the coastal path.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "A long, quiet white-sand beach (also called 4K Beach) with clear, generally calm water and glowing plankton at night; no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
   {
     id: "kh-ext-preah-vihear-temple",
@@ -1487,7 +1487,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.612, lng: 103.2765 },
     bookHint: "Compare hostels on Hostelworld and bungalows on Booking; book the ferry from Sihanoukville separately.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "The main village beach at Koh Touch is lively and shallow; watch for boat traffic near the pier, and note there is no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
   {
     id: "kh-ext-koh-rong-koh-touch-food-stalls",
@@ -1994,7 +1994,7 @@ export const PLACES_KH_EXT = [
     mapQuery: "Koh Sdach Island, Koh Kong Province, Cambodia",
     coords: { lat: 10.933, lng: 103.067 },
     verified: "2026-07",
-    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Koh_Sdach" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/cambodia/koh-sdach-archipelago" }],
+    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Koh_Sdach" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/cambodia/koh-sdach-archipelago" }], lifeguard: "no", swim: "A working fishing island with quiet beaches and clear water off the main village; swimming is possible, but this is a local community rather than a resort beach, and there is no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
   {
     id: "kh-ext-koh-totang-island",
@@ -2016,7 +2016,7 @@ export const PLACES_KH_EXT = [
     mapQuery: "Koh Totang, Koh Sdach Archipelago, Cambodia",
     coords: { lat: 10.958, lng: 103.05 },
     verified: "2026-07",
-    sources: [{ org: "Travelfish", url: "https://www.travelfish.org/location/cambodia/southern_cambodia/koh_kong/koh_totang" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/articles/island-hopping-off-cambodias-coast" }],
+    sources: [{ org: "Travelfish", url: "https://www.travelfish.org/location/cambodia/southern_cambodia/koh_kong/koh_totang" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/articles/island-hopping-off-cambodias-coast" }], lifeguard: "no", swim: "A tiny, off-grid island in the Koh Sdach group with clear, calm water; remote, solar-powered and unpatrolled.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
   },
   {
     id: "kh-ext-secret-lake-kampot",
