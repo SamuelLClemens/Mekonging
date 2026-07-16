@@ -517,13 +517,21 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
   map.on('style.load', () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', 'none'); } catch { /* noop */ } });
 
   const MARKET = '#E0A100', LOCAL = '#D62828';
+  // Two ways to colour a pin: by RATING (default — quality at a glance, markets gold / local
+  // eats red kept as special cases) or by CATEGORY family (opts.categoryColor(p), supplied by
+  // the app's canonical colour system). setColorMode() flips between them without re-fitting.
+  let colorMode = opts.colorMode === 'category' ? 'category' : 'rating';
   const colorFor = (p) => {
+    if (colorMode === 'category' && typeof opts.categoryColor === 'function') {
+      try { const c = opts.categoryColor(p); if (c) return c; } catch { /* fall through to rating */ }
+    }
     const cats = p.categories || [];
     if (cats.includes('market')) return MARKET;
     if (p.isLocal) return LOCAL;
     return ratingColor(effectiveRating(p.id, p.rating));
   };
   let markers = [];
+  let lastList = places || [];
   function fit(list) {
     const pts = (list || []).filter((p) => p.coords).map((p) => [p.coords.lng, p.coords.lat]);
     if (!pts.length) return;
@@ -534,7 +542,7 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
       map.fitBounds(b, { padding: 46, maxZoom: 14, duration: 400 });
     } catch { /* noop */ }
   }
-  function setPlaces(list) {
+  function drawMarkers(list) {
     markers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
     markers = [];
     (list || []).forEach((p) => {
@@ -550,14 +558,16 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
       el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
       markers.push(m);
     });
-    fit(list);
   }
+  function setPlaces(list) { lastList = list || []; drawMarkers(lastList); fit(lastList); }
+  function setColorMode(mode) { colorMode = mode === 'category' ? 'category' : 'rating'; drawMarkers(lastList); }
 
   map.on('load', () => setPlaces(places));
 
   return {
     map,
     setPlaces,
+    setColorMode,
     locate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
     dispose: () => { try { map.remove(); } catch { /* already gone */ } },
   };
