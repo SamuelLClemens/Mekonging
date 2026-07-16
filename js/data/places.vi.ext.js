@@ -3566,5 +3566,53 @@ export const PLACES_VI_EXT = [
     lifeguard: "seasonal",
     swim: "Lifeguards watch the busier sections and mark swim zones with flags, but dangerous rip currents — strongest in the December–March northeast monsoon — cause drownings every year. Swim only between the flags, stay within waist depth, and never swim after drinking.",
     jellyfish: "Jellyfish are reported seasonally on this coast; ask locally before swimming and carry vinegar for stings."
+  },
+  {
+    id: "vi-ext-rental-ninh-binh",
+    name: "Bicycle rental, Ninh Binh (Tam Coc & Trang An)",
+    city: "Ninh Binh",
+    country: "vi",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "The rice-field and karst scenery around Tam Coc and Trang An is flat and gorgeous by bicycle; most homestays lend or rent them, with scooters also available.",
+    whyItFits: "For pedalling between the limestone valleys, pagodas and rice paddies at your own pace.",
+    priceRange: { low: 30000, typical: 60000, high: 180000, currency: "VND", note: "Per day: bicycles roughly 30,000-80,000 VND; an automatic scooter around 120,000-180,000 VND." },
+    tips: ["Ride the quiet lanes between Tam Coc, Mua Cave and Trang An early, before the tour buses; many homestays include a bicycle free.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 20.2506, lng: 105.9745 },
+    mapQuery: "bicycle rental Ninh Binh Tam Coc",
+    verified: "2026-07",
+    sources: []
+  },
+  {
+    id: "vi-ext-rental-nha-trang",
+    name: "Scooter rental, Nha Trang",
+    city: "Nha Trang",
+    country: "vi",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "Scooter shops line the streets near the beach, handy for the Ponagar towers, mud baths and coast road, though city traffic is busy.",
+    whyItFits: "For reaching Nha Trang's pagodas, hot springs and the northern coast beyond the beach strip.",
+    priceRange: { low: 100000, typical: 150000, high: 200000, currency: "VND", note: "Per day for an automatic scooter." },
+    tips: ["Ride out to the Ponagar towers and the northern coast road early, and keep off the main beach strip at its busiest.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 12.2388, lng: 109.1967 },
+    mapQuery: "scooter rental Nha Trang",
+    verified: "2026-07",
+    sources: []
+  },
+  {
+    id: "vi-ext-rental-phu-quoc",
+    name: "Motorbike rental, Phu Quoc",
+    city: "Phu Quoc",
+    country: "vi",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "The island's beaches, night market and pepper farms are spread out; scooters are the cheapest way around, rented near Duong Dong and the main beaches.",
+    whyItFits: "For exploring Phu Quoc's far-flung beaches and the north of the island independently.",
+    priceRange: { low: 120000, typical: 150000, high: 250000, currency: "VND", note: "Per day for an automatic scooter." },
+    tips: ["Some island roads are rough or under construction - take it slowly, and carry rain gear in the May-October wet season.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 10.227, lng: 103.967 },
+    mapQuery: "scooter rental Phu Quoc Duong Dong",
+    verified: "2026-07",
+    sources: []
   }
 ];

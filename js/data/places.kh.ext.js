@@ -2271,5 +2271,37 @@ export const PLACES_KH_EXT = [
     swim: "A small, calm, shallow town beach that is pleasant for a paddle but often murky; most visitors swim at Rabbit Island (Koh Tonsay) instead. No patrol.",
     jellyfishMonths: [5, 6, 7, 8, 9, 10],
     jellyfish: "Box jellyfish occur along Cambodia's coast and can be dangerous; risk is highest in the May–October wet season and after rain. Douse a sting with vinegar and get urgent medical help."
+  },
+  {
+    id: "kh-ext-rental-sihanoukville",
+    name: "Scooter rental, Sihanoukville",
+    city: "Sihanoukville",
+    country: "kh",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "A scooter reaches the ferry piers for Koh Rong and the quieter southern beaches; the town itself is a busy, fast-changing construction zone, so ride carefully.",
+    whyItFits: "For reaching the island ferries and the beaches beyond the busy town centre.",
+    priceRange: { low: 5, typical: 7, high: 12, currency: "USD", note: "Per day for an automatic scooter; petrol extra." },
+    tips: ["The islands (Koh Rong, Koh Rong Sanloem) have no roads for rental bikes - park on the mainland and take the ferry.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 10.627, lng: 103.5223 },
+    mapQuery: "scooter rental Sihanoukville",
+    verified: "2026-07",
+    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com" }]
+  },
+  {
+    id: "kh-ext-rental-phnom-penh",
+    name: "Scooter & bicycle rental, Phnom Penh",
+    city: "Phnom Penh",
+    country: "kh",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "Bicycles and sub-125cc scooters are rented across the city, but Phnom Penh's traffic is chaotic and foreign riders face real risks, so many travellers use Grab or PassApp instead.",
+    whyItFits: "For confident riders who want to explore independently; others may prefer app-based tuk-tuks and rides.",
+    priceRange: { low: 1, typical: 6, high: 10, currency: "USD", note: "Per day: bicycles about 1-3 USD, an automatic scooter around 5-8 USD." },
+    tips: ["Phnom Penh traffic is dense and unpredictable; rental bikes carry no third-party insurance, and a foreigner on a Cambodian-plate bike can be held responsible after an accident - Grab or PassApp are a lower-risk way around town.", "Scooters of 125cc and under need no licence under Cambodian law, but police checkpoints are common - always wear a helmet and carry ID rather than your passport.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 11.5564, lng: 104.9282 },
+    mapQuery: "bicycle rental Phnom Penh",
+    verified: "2026-07",
+    sources: [{ org: "AG Cambodia (legal guidance)", url: "https://www.agcambodia.com/" }]
   }
 ];

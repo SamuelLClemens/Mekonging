@@ -3134,5 +3134,53 @@ export const PLACES_TH_EXT = [
     swim: "Gently shelving, usually calm water that is good for swimming, but this is one of the island's busiest beaches — watch for jet-skis and boats near shore, and note there is no municipal lifeguard patrol.",
     jellyfishMonths: [7, 8, 9, 10],
     jellyfish: "Chaweng is one of Koh Samui's most-reported box-jellyfish sting locations; potentially fatal box jellyfish (Chironex) appear mainly in the July–October wet season and after rain. Swim inside any netted enclosure, heed warning signs, douse a sting with vinegar and get urgent medical help."
+  },
+  {
+    id: "th-ext-rental-sukhothai",
+    name: "Bicycle rental, Sukhothai Historical Park",
+    city: "Sukhothai",
+    country: "th",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "The ruins of the old capital spread across a flat, walled park that is perfect for cycling; shops by the park gate rent bicycles, and automatic scooters are available in the new town.",
+    whyItFits: "For exploring Sukhothai Historical Park's scattered temples at your own pace, far better than walking in the heat.",
+    priceRange: { low: 30, typical: 50, high: 250, currency: "THB", note: "Per day: bicycles from about 30-50 THB, an automatic scooter around 200-250 THB." },
+    tips: ["Hire the bicycle at the Central Zone gate; a single ticket covers the main temples, and early mornings are coolest before the park fills.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 17.017, lng: 99.703 },
+    mapQuery: "bicycle rental Sukhothai Historical Park",
+    verified: "2026-07",
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }]
+  },
+  {
+    id: "th-ext-rental-ayutthaya",
+    name: "Bicycle rental, Ayutthaya",
+    city: "Ayutthaya",
+    country: "th",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "The temple ruins of the former royal capital sit close together on a flat river island, ideal by bicycle, with rentals clustered near the station and guesthouses.",
+    whyItFits: "For seeing Ayutthaya's ruins in a day without a car, an easy trip from Bangkok.",
+    priceRange: { low: 50, typical: 60, high: 250, currency: "THB", note: "Per day: bicycles about 50 THB, an automatic scooter around 200-250 THB." },
+    tips: ["Take the short ferry across to the temple island with your bike, and ride between Wat Mahathat, Wat Phra Si Sanphet and Wat Chaiwatthanaram.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 14.3535, lng: 100.5689 },
+    mapQuery: "bicycle rental Ayutthaya",
+    verified: "2026-07",
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }]
+  },
+  {
+    id: "th-ext-rental-koh-samui",
+    name: "Scooter rental, Koh Samui",
+    city: "Koh Samui",
+    country: "th",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    blurb: "Scooters are the island's default transport, with shops in Chaweng, Lamai and near the pier; the ring road links the beaches but carries fast, heavy traffic.",
+    whyItFits: "For reaching Samui's beaches, viewpoints and waterfalls, which are spread around the island.",
+    priceRange: { low: 200, typical: 250, high: 350, currency: "THB", note: "Per day for an automatic scooter; more for larger bikes." },
+    tips: ["Samui's ring road has one of Thailand's higher accident rates - ride defensively, avoid the coast road after dark and after rain, and never ride after drinking.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 9.512, lng: 100.0136 },
+    mapQuery: "scooter rental Koh Samui",
+    verified: "2026-07",
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }]
   }
 ];
