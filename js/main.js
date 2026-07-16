@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.226.0';
+const APP_VERSION = 'mk-v0.227.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1334,6 +1334,9 @@ function homeScreen() {
     wrap.append(phaseLead(phase, leadCC));
     const companion = journeyCompanionCard(phase, leadCC);
     if (companion) wrap.append(companion);
+    // While travelling, the day-at-a-glance strip (next plan item, phrase of the day,
+    // one-tap spend) lives on Home — Things-to-do now holds only things to do.
+    if (phase === 'traveling') wrap.append(dailyStripCard(leadCC));
   }
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:8px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
 
@@ -6311,6 +6314,7 @@ function schedulesScreen(country) {
 
 // ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
 let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
+let todoFamily = 'all';  // active category filter on the Things-to-do screen
 function haversineKm(a, b) {
   const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
@@ -6486,18 +6490,41 @@ function todoScore(p, ctx, prefs, anchor) {
   if (dist != null) s -= Math.min(dist, 200) / 90;
   return { p, er, s, dist, reasons, cats };
 }
-// A "thing to do" result card: coloured category tags, rating, distance and reason chips.
+// The place's single most-identifying category family (beach beats nature, culture beats
+// park, …) — used for the accent colour and the placeholder emoji when no photo exists.
+function placeFamily(p) {
+  const cats = p.categories || [];
+  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport'];
+  for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return fam;
+  return 'other';
+}
+// The self-hosted, openly-licensed photo path for a place, or null. Same lookup as
+// photoBlock, exposed so list cards can show a small recognition thumbnail offline.
+function placePhotoSrc(p) {
+  const reg = (p && p.id && PHOTOS[p.id]) || null;
+  return (p && p.photo) || (reg && reg.src) || null;
+}
+// A "thing to do" result card: a recognition thumbnail, coloured category tags, rating,
+// distance and "why now" reason chips. Tapping opens the full detail page (with a photo).
 function todoCard(x, maxReasons) {
   const { p, er, dist, reasons, cats } = x;
   const rc = (reasons || []).slice(0, maxReasons || 2).map((r) => h('span', { class: 'todo-reason' }, r));
-  return h('button', { class: 'card place-card todo-card', style: `--cat:${bucketColor(p)}`, onclick: () => go(`#place-${p.id}`) }, [
-    h('div', { class: 'place-head' }, [
-      h('h2', {}, p.name),
-      er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
+  const fam = placeFamily(p);
+  const src = placePhotoSrc(p);
+  const thumb = src
+    ? h('img', { class: 'todo-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
+    : h('span', { class: 'todo-thumb todo-thumb-ph', style: `background:${FAMILY_COLOR[fam] || FAMILY_COLOR.other}` }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
+  return h('button', { class: 'card place-card todo-card', style: `--cat:${FAMILY_COLOR[fam] || bucketColor(p)}`, onclick: () => go(`#place-${p.id}`) }, [
+    h('div', { class: 'todo-body' }, [
+      h('div', { class: 'place-head' }, [
+        h('h2', {}, p.name),
+        er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
+      ]),
+      h('div', { class: 'cats', style: 'margin:2px 0' }, cats.slice(0, 3).map((c) => catTag(c))),
+      rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
+      h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, dist != null ? `${dist < 10 ? dist.toFixed(1) : Math.round(dist)} km away` : null].filter(Boolean).join(' · ')),
     ]),
-    h('div', { class: 'cats', style: 'margin:2px 0' }, cats.slice(0, 3).map((c) => catTag(c))),
-    rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
-    h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, dist != null ? `${dist < 10 ? dist.toFixed(1) : Math.round(dist)} km away` : null].filter(Boolean).join(' · ')),
+    thumb,
   ]);
 }
 
@@ -6508,114 +6535,115 @@ function daySuggestScreen(country) {
   const spot = fs.spot;
   const id = getCountry(spot.country) ? spot.country : (getCountry(activeCountry) ? activeCountry : 'th');
   activeCountry = id;
-  const c = getCountry(id);
+  todoFamily = 'all';   // fresh filter each visit, so a stale category never hides a new city's picks
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Things to do', '#home'));
-  // Be explicit about WHERE these picks are for, so someone in Chiang Mai never silently
-  // gets Bangkok: GPS wins, else the city they are looking at, else the country default.
-  const scopeMsg = fs.source === 'gps' ? `📍 Near ${spot.city} — from your location`
-    : fs.source === 'focus' ? `📍 ${spot.city} — the place you’re looking at`
-    : `📍 ${spot.city} — turn on location or open a city for local picks`;
-  wrap.append(h('p', { class: 'map-hint' }, `${scopeMsg}. Ranked for right now — the weather, the time of day, the day of the week and your profile. Your own ratings count first.`));
-  const locBtn = h('button', { class: 'btn ghost block', onclick: async () => {
-    locBtn.textContent = 'Locating…'; locBtn.disabled = true;
-    try { setLastFix(await geolocate()); go('#today'); return; } catch { /* denied/offline */ }
-    locBtn.textContent = '📍 Location unavailable'; locBtn.disabled = false;
-  } }, fs.source === 'gps' ? '📍 Update my location' : '📍 Use my location');
-  wrap.append(locBtn);
-  // The daily-habit strip: next plan item, phrase of the day, one-tap spend. Rendered
-  // once here (not inside paint) so a live-weather refresh never wipes a typed amount.
-  wrap.append(dailyStripCard(id));
-  const body = h('div', {});
-  wrap.append(body);
+
+  // A compact header (scope + conditions + filters) sits above the list, but the list itself
+  // starts near the top so the traveller never scrolls past chrome to reach what they can do now.
+  const header = h('div', { class: 'todo-header' });
+  const listWrap = h('div', {});
+  wrap.append(header, listWrap);
 
   function paint(rec) {
-    body.innerHTML = '';
+    header.innerHTML = ''; listWrap.innerHTML = '';
     const today = rec && rec.daily && rec.daily[0];
-    let mood = 'clear';
-    if (today) { if (isWet(today.code) || (today.rainProb || 0) >= 60) mood = 'wet'; else if (today.tmax != null && today.tmax >= 34) mood = 'hot'; }
-    if (today) {
-      const [lbl, emo] = wmo(today.code);
-      const hum = rec.current && rec.current.humidity != null ? rec.current.humidity : null;
-      const muggy = hum != null && hum >= 75 && mood !== 'wet';
-      body.append(h('div', { class: 'card' }, [
-        h('div', { class: 'row-between' }, [
-          h('strong', {}, `${emo} ${c.flag} ${spot.city} today`),
-          h('span', { style: 'font-weight:700' }, `${fmtTemp(today.tmin)} / ${fmtTemp(today.tmax)}`),
-        ]),
-        h('p', { class: 'muted', style: 'margin:6px 0 0' }, `${lbl} · rain ${today.rainProb != null ? today.rainProb + '%' : '–'}${hum != null ? ` · humidity ${hum}%` : ''} — ${moodLine(mood)}${muggy ? ' Humid — hydrate and pace yourself.' : ''}`),
-      ]));
-    } else {
-      body.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Connect once to load today’s weather for weather-aware picks; meanwhile, here are the top-rated places.')]));
-    }
-    const gf = getLastFix();
-    const anchor = dayUserLoc || ((fs.source === 'gps' && gf) ? gf : { lat: spot.lat, lng: spot.lng });
     const ctx = todoContext(rec, spot);
     const prefs = store.profile.prefs;
-    const DAYPART_LBL = { morning: 'this morning', midday: 'midday', afternoon: 'this afternoon', evening: 'this evening', night: 'tonight' };
+    const DAYPART_LBL = { morning: 'Morning', midday: 'Midday', afternoon: 'Afternoon', evening: 'Evening', night: 'Tonight' };
 
-    // One-line "conditions now" summary so the "right now" picks are explained.
-    const condBits = [ctx.weather === 'wet' ? '🌧 Rainy' : ctx.weather === 'hot' ? '🔥 Hot' : '🌤 Fair'];
-    if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) condBits.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
-    if (ctx.aqi != null) { const ab = aqiBand(ctx.aqi); if (ab) condBits.push(`AQI ${Math.round(ctx.aqi)} ${ab[0]}`); }
+    // --- Scope row: where the picks are for, plus a one-tap location control. ---
+    const gps = fs.source === 'gps';
+    header.append(h('div', { class: 'todo-scope' }, [
+      h('span', { class: 'todo-scope-city' }, `📍 ${gps ? 'Near ' : ''}${spot.city}`),
+      h('button', { class: 'chip', onclick: async (e) => {
+        const b = e.currentTarget; b.textContent = 'Locating…'; b.disabled = true;
+        try { setLastFix(await geolocate()); go('#today'); return; } catch { /* denied/offline */ }
+        b.textContent = 'Location off'; b.disabled = false;
+      } }, gps ? 'Update' : '📍 Use my location'),
+    ]));
 
-    // Rank the whole "doable" pool for RIGHT NOW.
+    // --- Conditions now: one glanceable chip row (weather · time · UV · air). ---
+    const cond = [];
+    if (today) {
+      const emo = wmo(today.code)[1];
+      cond.push(`${emo} ${fmtTemp(today.tmin)}–${fmtTemp(today.tmax)}`);
+      if (today.rainProb != null) cond.push(`☔ ${today.rainProb}%`);
+    }
+    cond.push(`🕑 ${DAYPART_LBL[ctx.daypart]}`);
+    if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) cond.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
+    if (ctx.aqi != null) { const ab = aqiBand(ctx.aqi); if (ab) cond.push(`AQI ${Math.round(ctx.aqi)}`); }
+    header.append(h('div', { class: 'todo-cond' }, cond.map((b) => h('span', { class: 'todo-cond-chip' }, b))));
+    header.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, today ? moodLine(ctx.weather) : 'Connect once for weather-aware picks; meanwhile these are ranked by rating and distance.'));
+    if (!profileIsSet()) header.append(h('button', { class: 'linklike', style: 'display:block;margin:6px 0 0', onclick: () => go('#foryou') }, '⚙ Personalise these picks →'));
+
+    // --- Rank the doable pool for RIGHT NOW, then keep only what is actually reachable. ---
+    const anchor = dayUserLoc || ((gps && getLastFix()) ? getLastFix() : { lat: spot.lat, lng: spot.lng });
     const scored = allPlaces({ country: id }).filter(todoDoable)
-      .map((p) => todoScore(p, ctx, prefs, anchor)).filter((x) => x.er > 0 || x.p.coords);
-    let pool = scored.filter((x) => x.dist != null && x.dist <= 150);
-    const widened = pool.length < 6;
-    if (widened) pool = scored;
-    pool = pool.slice().sort((a, b) => b.s - a.s);
-    const nearCity = !widened ? ` near ${spot.city}` : '';
+      .map((p) => todoScore(p, ctx, prefs, anchor));
+    const sameCity = (x) => citySlug(x.p.city || '') === citySlug(spot.city || '');
+    // In scope only if reachability is trustworthy: a real distance within a day-trip radius,
+    // or — when a place has no coordinates — the very same city. Anything further is hidden.
+    const tierOf = (x) => {
+      if (x.dist != null) return x.dist <= 5 ? 'walk' : x.dist <= 25 ? 'near' : x.dist <= 60 ? 'trip' : null;
+      return sameCity(x) ? 'near' : null;
+    };
+    const inScope = scored.filter((x) => tierOf(x));
 
-    // SECTION 1 — Right now (time-of-day + weather aware), with reason chips.
-    body.append(h('h2', { class: 'home-section' }, `Right now — ${DAYPART_LBL[ctx.daypart]}${nearCity}`));
-    body.append(h('p', { class: 'muted small', style: 'margin:0 0 6px' }, condBits.join(' · ')));
-    const rightNow = pool.slice(0, 8);
-    if (!rightNow.length) { body.append(h('p', { class: 'empty' }, 'No places to suggest yet for this area.')); return; }
-    rightNow.forEach((x) => body.append(todoCard(x, 2)));
+    // --- Category filter chips (only the families that exist nearby). ---
+    const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key))
+      .filter((f) => inScope.some((x) => x.cats.some((c) => catFamily(c) === f.key)));
+    const chipRow = h('div', { class: 'chips todo-filter' });
+    const mkChip = (key, label) => h('button', { class: 'chip', dataset: { f: key }, 'aria-pressed': todoFamily === key ? 'true' : 'false', onclick: () => { todoFamily = key; drawList(); } }, label);
+    chipRow.append(mkChip('all', 'All'));
+    famsPresent.forEach((f) => chipRow.append(mkChip(f.key, [swatch(f.color), ` ${f.emoji} ${f.label}`])));
+    header.append(chipRow);
 
-    // SECTION 2 — Made for you (profile-driven), or a nudge to set a profile.
-    if (profileIsSet()) {
-      const shown = new Set(rightNow.map((x) => x.p.id));
-      const forYou = scored.slice().sort((a, b) => personalScore(b.p) - personalScore(a.p))
-        .filter((x) => !shown.has(x.p.id)).slice(0, 6);
-      if (forYou.length) {
-        body.append(h('h2', { class: 'home-section' }, '❤️ Made for you'));
-        body.append(h('p', { class: 'muted small', style: 'margin:0 0 6px' }, 'Ranked by your profile — tune it in “For you”.'));
-        forYou.forEach((x) => body.append(todoCard(x, 2)));
+    const listBody = h('div', {});
+    listWrap.append(listBody);
+    const TIERS = [
+      { key: 'walk', label: '🚶 Right here' },
+      { key: 'near', label: '📍 Nearby' },
+      { key: 'trip', label: '🚌 Worth a day trip' },
+    ];
+    function renderTier(label, items) {
+      listBody.append(h('h2', { class: 'home-section todo-tier' }, `${label} · ${items.length}`));
+      const CAP = 8;
+      items.slice(0, CAP).forEach((x) => listBody.append(todoCard(x, 2)));
+      if (items.length > CAP) {
+        const more = h('div', {});
+        const btn = h('button', { class: 'btn ghost block', onclick: () => { items.slice(CAP).forEach((x) => more.append(todoCard(x, 2))); btn.remove(); } }, `Show all ${items.length}`);
+        listBody.append(btn, more);
       }
-    } else {
-      body.append(h('button', { class: 'btn ghost block', style: 'margin:12px 0', onclick: () => go('#foryou') }, '⚙ Set your profile to personalise these picks'));
     }
-
-    // SECTION 3 — On today: markets open today + festivals in the trip window.
-    const marketsToday = scored.filter((x) => isMarket(x.p) && marketOnToday(x.p, ctx.dow))
-      .sort((a, b) => (a.dist == null ? 9e9 : a.dist) - (b.dist == null ? 9e9 : b.dist)).slice(0, 4);
-    const fests = festivalsInWindow().filter((e) => e.country === id).slice(0, 3);
-    if (marketsToday.length || fests.length) {
-      body.append(h('h2', { class: 'home-section' }, '📅 On today'));
-      marketsToday.forEach((x) => body.append(todoCard(x, 1)));
-      fests.forEach((e) => body.append(eventCard(e)));
+    function drawList() {
+      chipRow.querySelectorAll('.chip').forEach((el) => el.setAttribute('aria-pressed', el.dataset.f === todoFamily ? 'true' : 'false'));
+      listBody.innerHTML = '';
+      let pool = inScope.slice();
+      if (todoFamily !== 'all') pool = pool.filter((x) => x.cats.some((c) => catFamily(c) === todoFamily));
+      pool.sort((a, b) => b.s - a.s);
+      let rendered = 0;
+      TIERS.forEach((t) => {
+        const items = pool.filter((x) => tierOf(x) === t.key);
+        if (items.length) { renderTier(t.label, items); rendered += items.length; }
+      });
+      if (!rendered) {
+        // Nothing trustworthy nearby: fall back to the nearest we can measure, clearly labelled.
+        const far = scored.filter((x) => x.dist != null && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
+          .sort((a, b) => a.dist - b.dist).slice(0, 12);
+        if (far.length) {
+          listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' }, `Nothing mapped close to ${spot.city} yet — here are the nearest.`));
+          renderTier('Nearest to you', far);
+        } else {
+          listBody.append(h('p', { class: 'empty' }, 'No things to do mapped for this area yet. Turn on location or open a city.'));
+        }
+      }
     }
+    drawList();
 
-    // SECTION 4 — Browse by type: coloured category chips populate a list of that family.
-    body.append(h('h2', { class: 'home-section' }, 'Browse by type'));
-    body.append(h('p', { class: 'muted small', style: 'margin:0 0 6px' }, 'Tap a colour to see every option of that kind near here.'));
-    const famListEl = h('div', {});
-    const famChips = h('div', { class: 'chips' }, CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key)).map((f) =>
-      h('button', {
-        class: 'chip', dataset: { f: f.key }, 'aria-pressed': 'false',
-        onclick: () => {
-          famChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.f === f.key ? 'true' : 'false'));
-          famListEl.innerHTML = '';
-          const items = scored.filter((x) => x.cats.some((c) => catFamily(c) === f.key))
-            .sort((a, b) => ((a.dist == null ? 9e9 : a.dist) - (b.dist == null ? 9e9 : b.dist)) || (b.er - a.er)).slice(0, 12);
-          if (!items.length) famListEl.append(h('p', { class: 'empty' }, `No ${f.label.toLowerCase()} listed near here yet.`));
-          else items.forEach((x) => famListEl.append(todoCard(x, 1)));
-        },
-      }, [swatch(f.color), ` ${f.emoji} ${f.label}`])));
-    body.append(famChips, famListEl);
+    // Festivals have their own screen; surface only a single quiet link when any fall in the trip window.
+    const fests = festivalsInWindow().filter((e) => e.country === id);
+    if (fests.length) listWrap.append(h('button', { class: 'linklike', style: 'display:block;margin:14px 0 0', onclick: () => go('#events') }, `🎉 ${fests.length} festival${fests.length === 1 ? '' : 's'} during your trip →`));
   }
 
   let lastRec = getCachedWeather(spotKey(spot));
