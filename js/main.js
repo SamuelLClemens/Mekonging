@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.230.0';
+const APP_VERSION = 'mk-v0.231.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -9035,7 +9035,13 @@ function streetfoodScreen() {
       places.forEach((p) => {
         const mine = getPlaceData(p.id);
         card.append(h('div', { class: 'board-post' }, [
-          h('button', { class: 'btn ghost block', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) }, `${p.name} — ${p.city}`),
+          h('button', { class: 'sf-row', onclick: () => go(`#place-${p.id}`) }, [
+            rnThumb(p),
+            h('div', { class: 'sf-text' }, [
+              h('div', { class: 'sf-name' }, p.name),
+              h('div', { class: 'tiny muted' }, p.city),
+            ]),
+          ]),
           h('div', { class: 'tiny muted' }, mine.rating ? `Your rating: ${starsStr(mine.rating)}` : `Guide rating ${Number(p.rating || 0).toFixed(1)} — tap to add yours`),
           starPicker(p.id, mine.rating || 0),
           mine.review ? h('p', { class: 'tiny', style: 'margin-top:4px' }, `“${mine.review}”`) : null,

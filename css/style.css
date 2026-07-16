@@ -549,6 +549,10 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-thumb.ph { display: flex; align-items: center; justify-content: center; font-size: 1.2rem; line-height: 1; background: rgba(0,0,0,0.05); }
 [data-theme="dark"] .rn-thumb.ph { background: rgba(255,255,255,0.06); }
 .near-text { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* Street-food "rate the classics" rows: thumbnail + name/city, tap to open. */
+.sf-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; cursor: pointer; font-family: inherit; color: var(--ink); padding: 6px 0; }
+.sf-text { min-width: 0; }
+.sf-name { font-weight: 700; }
 .rn-actions { flex: none; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
 .rn-act { flex: 1; min-width: 44px; min-height: 44px; border: none; background: none; cursor: pointer; font-size: 1rem; color: var(--ink-soft); font-family: inherit; padding: 0 var(--sp-2); }
 .rn-act + .rn-act { border-top: 1px solid var(--line); }
