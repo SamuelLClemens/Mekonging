@@ -108,6 +108,11 @@ export function parseShare(str) {
     const text = clean(raw.text, 500);
     if (!text) return null;
     data = { cc: clean(raw.cc, 4), city: clean(raw.city, 40) || 'a city', topic: clean(raw.topic, 16) || 'tip', text };
+  } else if (k === 'jelly') {
+    // a community jellyfish sighting pinned to a beach place: id + date + severity + note
+    const id = cleanId(raw.id);
+    if (!id) return null;
+    data = { id, name: clean(raw.n, 80) || 'a beach', d: clean(raw.d, 10), sev: clean(raw.sev, 8) || 'seen', note: clean(raw.note, 160) };
   } else {
     return null;
   }

@@ -474,6 +474,26 @@ export function setPlaceField(id, field, value) {
   return d;
 }
 
+// Community jellyfish sightings on a beach place. An additive array on placeData[id],
+// so reports ride along in the full backup. Each report = { d:'YYYY-MM-DD', sev, note, by }.
+// Newest first, capped, and de-duplicated so re-opening a shared link never piles up copies.
+export function getJellyReports(id) {
+  const d = store.placeData[id];
+  return (d && Array.isArray(d.jellyReports)) ? d.jellyReports : [];
+}
+export function addJellyReport(id, report) {
+  const d = store.placeData[id] || { note: '', rating: 0, review: '' };
+  if (!Array.isArray(d.jellyReports)) d.jellyReports = [];
+  const key = (r) => `${r.d}|${r.sev}|${r.note || ''}|${r.by || ''}`;
+  if (!d.jellyReports.some((r) => key(r) === key(report))) {
+    d.jellyReports.unshift(report);
+    d.jellyReports = d.jellyReports.slice(0, 50);
+    d.updatedAt = todayKey();
+    store.placeData[id] = d; save();
+  }
+  return d.jellyReports;
+}
+
 // --- unique-id helper (no Math.random/Date.now reliance for determinism in tests) -
 let _seq = 0;
 function uid(prefix) {
