@@ -457,6 +457,11 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
           vertical-align: middle; box-shadow: 0 0 0 1px rgba(0,0,0,0.18); }
 .color-key .cat-tag { text-transform: none; }
+/* "Things to do" reason chips — short human explanations of why a pick fits right now. */
+.todo-card { text-align: left; width: 100%; display: block; }
+.todo-reasons { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 0; }
+.todo-reason { font-size: var(--fs-label); background: rgba(0,0,0,0.06); border-radius: var(--r-pill); padding: 2px 8px; }
+[data-theme="dark"] .todo-reason { background: rgba(255,255,255,0.09); }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .place-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 /* Category colour-coding: an inset accent bar keyed to the place's bucket, so stay /
