@@ -999,7 +999,7 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .beach-info .beach-jelly { font-weight: 700; margin: 6px 0 2px; }
 .beach-info .beach-jelly.on { color: var(--warn); }
 .beach-info .beach-jelly.off { color: var(--muted, #667); }
-.beach-info .small { font-size: 0.82rem; }
+.small { font-size: 0.82rem; }
 .beach-info .beach-sea { margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: rgba(40,120,200,0.10); }
 .beach-info .beach-sea-line { font-weight: 700; margin: 0; }
 .beach-info .beach-sea-line.on { color: var(--good); }
@@ -1013,6 +1013,20 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .beach-chip.off { background: rgba(196,90,60,0.16); color: var(--warn); }
 .beach-chip.jelly { background: rgba(150,60,180,0.18); color: #7a2e93; }
 [data-theme="dark"] .beach-chip.jelly { color: #D69BE8; }
+
+/* Air-quality readout (US AQI bands). */
+.air-block { margin: 6px 0; }
+.aqi-line { font-weight: 700; margin: 0; }
+.aqi-line.good { color: var(--good); }
+.aqi-line.mod { color: #B08900; }
+.aqi-line.usg { color: #C86A1F; }
+.aqi-line.unhealthy { color: var(--warn); }
+.aqi-line.vunhealthy { color: #8A2BE2; }
+.aqi-line.hazard { color: #7D1128; }
+[data-theme="dark"] .aqi-line.mod { color: #E0C000; }
+[data-theme="dark"] .aqi-line.usg { color: #F0A050; }
+[data-theme="dark"] .aqi-line.vunhealthy { color: #C79BF0; }
+[data-theme="dark"] .aqi-line.hazard { color: #E8788C; }
 
 /* One-time "use my location" invite on Home. */
 .geo-invite { border-left: 3px solid var(--grape); }
