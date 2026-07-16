@@ -3503,5 +3503,38 @@ export const PLACES_VI_EXT = [
         "url": "https://www.bestpricetravel.com/travel-guide/cai-beo-fishing-village.html"
       }
     ]
-  }
+  },
+  {
+    id: "vi-ext-rental-hoi-an", name: "Bicycle & scooter rental, Hoi An", city: "Hoi An", country: "vi",
+    categories: ["rental", "transport"], budgetTier: "low",
+    blurb: "Hoi An is made for bicycles - most guesthouses lend or hire them, and the flat ride to An Bang and Cua Dai beaches is a highlight; scooters are easy to hire too.",
+    whyItFits: "For pedalling the rice paddies and beaches around the Old Town at your own pace.",
+    priceRange: { low: 120000, typical: 140000, high: 200000, currency: "VND", note: "Per day for a scooter; bicycles are often free from guesthouses or ~30,000 VND." },
+    tips: ["The Old Town is largely pedestrianised through the day and evening - park at the edge and walk in.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 15.8801, lng: 108.338 }, mapQuery: "scooter rental Hoi An",
+    verified: "2026-07",
+    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel/" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }],
+  },
+  {
+    id: "vi-ext-rental-da-lat", name: "Motorbike rental, Da Lat", city: "Da Lat", country: "vi",
+    categories: ["rental", "transport"], budgetTier: "low",
+    blurb: "The mountain town where the classic Easy Rider motorbike tours begin; self-hire scooters are widely available for the pine-forest lakes, waterfalls and coffee farms.",
+    whyItFits: "For the loops around Da Lat and, for the experienced, the road down to the coast.",
+    priceRange: { low: 150000, typical: 180000, high: 250000, currency: "VND", note: "Per day for a self-hire scooter; Easy Rider guided tours cost more." },
+    tips: ["Da Lat is cold and often misty in the mornings and the descents are steep - dress warm and brake early.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 11.9404, lng: 108.4583 }, mapQuery: "scooter rental Da Lat",
+    verified: "2026-07",
+    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel/" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }],
+  },
+  {
+    id: "vi-ext-rental-hue", name: "Scooter & bicycle rental, Hue", city: "Hue", country: "vi",
+    categories: ["rental", "transport"], budgetTier: "low",
+    blurb: "Scooters and bicycles are easy to hire near the Perfume River and the backpacker streets, handy for the royal tombs strung out south of the city.",
+    whyItFits: "For reaching the scattered Nguyen-dynasty tombs, which lie many kilometres apart.",
+    priceRange: { low: 120000, typical: 140000, high: 180000, currency: "VND", note: "Per day for a scooter; bicycles cheaper." },
+    tips: ["The Hai Van Pass towards Da Nang is spectacular but exposed - check the weather and start early.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
+    coords: { lat: 16.4637, lng: 107.5909 }, mapQuery: "scooter rental Hue",
+    verified: "2026-07",
+    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel/" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }],
+  },
 ];
