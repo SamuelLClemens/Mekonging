@@ -9,6 +9,8 @@ const PREFIX = 'mk.wx.';
 const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
 const MARINE_ENDPOINT = 'https://marine-api.open-meteo.com/v1/marine';
 const MARINE_PREFIX = 'mk.sea.';
+const AIR_ENDPOINT = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+const AIR_PREFIX = 'mk.air.';
 
 // Key cities per country with coordinates. The first entry for each country is its
 // default (capital / main hub).
@@ -195,4 +197,28 @@ export async function refreshMarine(coords) {
     }
   } catch { /* offline or no marine data — fall through to cache */ }
   return getCachedMarine(coords);
+}
+
+// --- Air quality -------------------------------------------------------------
+// US AQI + PM2.5 for a city via Open-Meteo's Air Quality API (free, no key). Cached
+// per spot so it works offline. Relevant across the region, and especially during the
+// February-April crop-burning haze in the north. Never throws.
+export function getCachedAir(key) {
+  try { return JSON.parse(localStorage.getItem(AIR_PREFIX + key)) || null; } catch { return null; }
+}
+export async function refreshAir(spot) {
+  const key = spotKey(spot);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedAir(key);
+  const url = `${AIR_ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}&current=us_aqi,pm2_5&timezone=auto`;
+  try {
+    const res = await fetch(url);
+    const d = await res.json();
+    const c = d && d.current;
+    if (c && c.us_aqi != null) {
+      const rec = { fetchedAt: Date.now(), aqi: c.us_aqi, pm25: c.pm2_5 };
+      try { localStorage.setItem(AIR_PREFIX + key, JSON.stringify(rec)); } catch { /* full */ }
+      return rec;
+    }
+  } catch { /* offline or blocked — fall through to cache */ }
+  return getCachedAir(key);
 }

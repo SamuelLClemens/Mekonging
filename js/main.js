@@ -51,7 +51,7 @@ import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine, refreshAir, getCachedAir } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.215.0';
+const APP_VERSION = 'mk-v0.216.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3033,6 +3033,41 @@ function externalRatingsCard(p) {
 // Compact current-conditions card for a place, read from the NEAREST listed weather
 // city (weather here is regional, not pinpoint — the distance is shown). Cached-first
 // so it works offline; refreshes once in the background when online.
+// --- Air quality -------------------------------------------------------------
+// US AQI band -> [label, css class, health advice]. Standard US EPA breakpoints.
+function aqiBand(aqi) {
+  if (aqi == null) return null;
+  if (aqi <= 50) return ['Good', 'good', 'Air is clean — enjoy the outdoors.'];
+  if (aqi <= 100) return ['Moderate', 'mod', 'Fine for most; unusually sensitive people may take it easier.'];
+  if (aqi <= 150) return ['Unhealthy for sensitive groups', 'usg', 'Asthma, heart or lung conditions, children and the elderly should limit long or intense time outdoors.'];
+  if (aqi <= 200) return ['Unhealthy', 'unhealthy', 'Everyone may feel effects — limit prolonged exertion outdoors and consider a mask.'];
+  if (aqi <= 300) return ['Very unhealthy', 'vunhealthy', 'Health warning — avoid outdoor exertion and wear an N95/KN95 mask outside.'];
+  return ['Hazardous', 'hazard', 'Emergency conditions — stay indoors with air filtered where possible; wear an N95/KN95 outdoors.'];
+}
+// Air-quality sub-block for a city spot: US AQI + PM2.5, painted from cache immediately
+// and refreshed when online (repaints only if still attached). Honest offline fallback.
+function airBlock(spot, opts) {
+  const compact = opts && opts.compact;
+  const box = h('div', { class: 'air-block' });
+  const key = spotKey(spot);
+  function paint(rec, loading) {
+    box.innerHTML = '';
+    if (rec && rec.aqi != null) {
+      const b = aqiBand(rec.aqi);
+      const pm = rec.pm25 != null ? ` · PM2.5 ${Math.round(rec.pm25)} µg/m³` : '';
+      box.append(h('p', { class: `aqi-line ${b[1]}` }, `🌫️ Air quality: ${Math.round(rec.aqi)} US AQI — ${b[0]}${pm}`));
+      if (!compact) box.append(h('p', { class: 'muted small' }, b[2]));
+      box.append(h('p', { class: 'muted small' }, `Updated ${seaAgo(rec.fetchedAt)}${online() ? '' : ' · offline'}`));
+    } else {
+      box.append(h('p', { class: 'muted small' }, loading ? '🌫️ Checking air quality…' : '🌫️ Air quality loads when you are online.'));
+    }
+  }
+  const cached = getCachedAir(key);
+  paint(cached, !cached && online());
+  if (online()) refreshAir(spot).then((r) => { if (r && box.isConnected) paint(r, false); });
+  return box;
+}
+
 function weatherNearbyCard(p) {
   if (!p.coords || p.coords.lat == null || p.coords.lng == null) return null;
   const spot = nearestSpot(p.coords, p.country);
@@ -3069,6 +3104,7 @@ function weatherNearbyCard(p) {
     refreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
   }
 
+  card.append(airBlock(spot, { compact: true }));
   card.append(
     h('p', { class: 'muted', style: 'margin:6px 0 0' },
       `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
@@ -5884,6 +5920,7 @@ function weatherScreen(country) {
         h('div', { class: 'muted', style: 'margin-top:8px' },
           `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
       ]));
+      body.append(h('div', { class: 'card' }, [airBlock(spot)]));
       const fc = h('div', { class: 'card' }, [
         h('h3', { style: 'margin-top:0' }, '7-day forecast'),
         h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
