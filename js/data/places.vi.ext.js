@@ -144,7 +144,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Vietnam Coracle", "Google Maps consensus", "Vietnam Airlines Travel Guide"],
     mapQuery: "Rach Vem Starfish Beach Phu Quoc", coords: { lat: 10.3686, lng: 103.9183 },
     bookHint: "No booking; scooter or taxi to the north of the island, about 45 minutes from Duong Dong.", verified: "2026-06",
-    sources: [{ org: "Vietnam Coracle", url: "https://www.vietnamcoracle.com/phu-quoc-beaches-a-guide/" }, { org: "Vietnam Airlines Travel Guide", url: "https://www.vietnamairlines.com/us/en/plan-book/travel/travel-guide/phu-quoc-island-beaches" }], lifeguard: "no", swim: "Very shallow, warm, mangrove-fringed north-Phu-Quoc water known for its starfish rather than for swimming; stand, do not touch or lift the starfish. No patrol.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings."
+    sources: [{ org: "Vietnam Coracle", url: "https://www.vietnamcoracle.com/phu-quoc-beaches-a-guide/" }, { org: "Vietnam Airlines Travel Guide", url: "https://www.vietnamairlines.com/us/en/plan-book/travel/travel-guide/phu-quoc-island-beaches" }], lifeguard: "no", swim: "Very shallow, warm, mangrove-fringed north-Phu-Quoc water known for its starfish rather than for swimming; stand, do not touch or lift the starfish. No patrol.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "A shallow, mangrove-fringed bay on Phu Quoc's quiet north coast where orange starfish rest in the clear shallows; a few stilted seafood shacks line the water."
   },
   {
     id: "vi-ext-cai-rang", name: "Cai Rang Floating Market", city: "Can Tho", country: "vi",
@@ -275,7 +275,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Lang Co Beach Vietnam", coords: { lat: 16.2300, lng: 108.0800 },
     bookHint: "No booking for the public beach; trains and buses on the Hue-Da Nang line stop at Lang Co.", verified: "2026-06",
-    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "A long, gently shelving central-coast bay; calm in summer but with rip currents and rougher water in the September–December rainy season. Treat as unpatrolled.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
+    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "A long, gently shelving central-coast bay; calm in summer but with rip currents and rougher water in the September–December rainy season. Treat as unpatrolled.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "A long, thin sandspit between a turquoise lagoon and the sea just south of the Hai Van Pass, with the railway and highway running along its length."
   },
 {
     id: "vi-ext-ban-gioc", name: "Ban Gioc Waterfall", city: "Cao Bang", country: "vi",
@@ -352,7 +352,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Bai Sao Beach Phu Quoc", coords: { lat: 10.05, lng: 104.03 },
     bookHint: "No booking; reach it by scooter or taxi from Duong Dong.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A curving bay of soft white sand and clear, calm water on Phu Quoc's south-east coast, backed by casuarinas and a few seafood restaurants with beach swings."
   },
   {
     id: "vi-ext-con-dao", name: "Con Dao Islands", city: "Ba Ria-Vung Tau", country: "vi",
@@ -367,7 +367,7 @@ export const PLACES_VI_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Con Dao Islands Vietnam", coords: { lat: 8.69, lng: 106.61 },
     bookHint: "Fly or ferry in; book accommodation and park activities in advance.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Remote, clean and often near-empty beaches with clear, calm water; some exposed shores have strong currents and there is no patrol, so swim near your beach and ask locally.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings."
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Remote, clean and often near-empty beaches with clear, calm water; some exposed shores have strong currents and there is no patrol, so swim near your beach and ask locally.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "A cluster of remote, forested islands with quiet crescent beaches, a small French-colonial town and historic prisons; the main island's coast road is near-empty."
   },
   {
     id: "vi-ext-ky-co", name: "Ky Co Beach", city: "Quy Nhon", country: "vi",
@@ -381,7 +381,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ky Co Beach Quy Nhon Vietnam", coords: { lat: 13.66, lng: 109.27 },
     bookHint: "Join a Quy Nhon tour or hire a boat/car; pay the access fee on site.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "A sheltered turquoise cove reached by boat or a steep track; shallow and usually calm, but remote with no patrol.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "A sheltered turquoise cove reached by boat or a steep track; shallow and usually calm, but remote with no patrol.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "A tiny turquoise cove enclosed by golden rock cliffs near Quy Nhon, reached by speedboat or a steep track; the shallow, glass-clear water is dotted with fish pens."
   },
   {
     id: "vi-ext-doc-let", name: "Doc Let Beach", city: "Nha Trang", country: "vi",
@@ -396,7 +396,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Doc Let Beach Nha Trang Vietnam", coords: { lat: 12.47, lng: 109.2 },
     bookHint: "No booking; reach it by taxi or scooter from Nha Trang.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A very long, flat, powder-white beach north of Nha Trang with shallow, calm water, backed by casuarina trees and scattered resorts; salt fields lie inland."
   },
 {
     id: "vi-ext-dong-xuan-market", name: "Dong Xuan Market", city: "Hanoi", country: "vi",
@@ -581,7 +581,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Phu Quoc Long Beach resort", coords: { lat: 10.1899, lng: 103.9598 },
     bookHint: "Compare Booking/Agoda/Trip.com for the same resort; book beach-week dates and transfers ahead.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Phu Quoc's west-coast resort beaches (Long Beach) have calm, warm water and famous sunsets; the dry season is roughly November–April. Treat as unpatrolled unless your resort posts flags.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings."
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Phu Quoc's west-coast resort beaches (Long Beach) have calm, warm water and famous sunsets; the dry season is roughly November–April. Treat as unpatrolled unless your resort posts flags.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "Phu Quoc's west-coast Long Beach: a long strip of resorts and beach bars facing the sunset, busiest around Duong Dong and the night market."
   },
   {
     id: "vi-ext-tamcoc-guesthouse", name: "Tam Coc / Ninh Binh guesthouse", city: "Ninh Binh", country: "vi",
@@ -1636,7 +1636,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2388, lng: 109.1967 },
     bookHint: "Compare Booking, Agoda and Trip.com for the same hotel; book summer and Tet dates well ahead.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Nha Trang's long city beach has gentle water in the dry season (roughly January–August) and rougher surf with rip currents in the October–December rainy months; flagged swim zones operate in season — obey the flags.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Nha Trang's long city beach has gentle water in the dry season (roughly January–August) and rougher surf with rip currents in the October–December rainy months; flagged swim zones operate in season — obey the flags.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "The high-rise hotel wall along Tran Phu boulevard fronting Nha Trang's long crescent city beach, lined with palms and a landscaped seafront park."
   },
   {
     id: "vi-ext-nhatrang-night-market-food",

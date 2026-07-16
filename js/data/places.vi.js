@@ -137,7 +137,7 @@ export const PLACES_VI = [
     scamWarnings: [],
     mapQuery: "An Bang Beach Hoi An", coords: { lat: 15.9134, lng: 108.3447 },
     bookHint: "Walk on; no entry fee", verified: "2026-06",
-    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }]
+    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }], recognition: "A relaxed white-sand beach north-east of Hoi An lined with driftwood beach bars and loungers, reached down a lane of homestays; the calmest swimming near town."
   },
   {
     id: "vi-danang-marble-mountains", name: "Marble Mountains (Ngu Hanh Son)", city: "Da Nang", country: "vi",
