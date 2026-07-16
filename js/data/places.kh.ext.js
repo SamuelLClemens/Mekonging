@@ -2135,6 +2135,7 @@ export const PLACES_KH_EXT = [
     isLocal: true,
     kidFriendly: true,
     budgetTier: "low",
+    marketType: "Riverside weekend night market", sells: "Grilled skewers, seafood, sausages, noodles and coconut ice cream, eaten picnic-style with live music.", marketDays: [5, 6, 0],
     blurb: "The open-air Phnom Penh Night Market (Phsar Reatrey), on the Sisowath Quay riverside, runs on weekend evenings only. A large central food zone grills skewers, seafood, sausages, offal, tofu and vegetables alongside noodle dishes, eggs and coconut ice cream; you buy a plate and eat picnic-style on straw mats spread in front of a stage with live music.",
     whyItFits: "It is the liveliest cheap-eat evening in the capital and a genuine local weekend outing, right on the riverfront where many travellers stay. The mat-seating and grilled snacks make it relaxed with children.",
     priceRange: { low: 0.5, typical: 3, high: 6, currency: "USD", note: "Guidance per person; skewers and snacks are roughly 2,000-4,000 riel (0.50-1 USD) each, a full graze about 3-6 USD. Carry small riel notes." },

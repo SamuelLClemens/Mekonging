@@ -978,6 +978,20 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 [data-theme="dark"] .recognition { background: rgba(110,154,82,0.18); }
 .mini-map { box-shadow: var(--elev-1); background: var(--card); }
 
+/* Markets: day/hours info block + "on today" chip. Gold ties to the map's market layer. */
+.market-info .market-type { font-weight: 700; margin: 2px 0 6px; }
+.market-info .mkt-status { font-weight: 800; margin: 8px 0 0; }
+.mkt-status.on { color: var(--good); }
+.mkt-status.off { color: var(--warn); }
+.mkt-chip {
+  display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
+  border-radius: 999px; padding: 2px 10px;
+  background: rgba(224,161,0,0.16); color: #8a6300;
+}
+.mkt-chip.on { background: rgba(31,122,71,0.16); color: var(--good); }
+[data-theme="dark"] .mkt-chip { color: #E0A100; }
+[data-theme="dark"] .mkt-chip.on { color: #7ED9A6; }
+
 /* One-time "use my location" invite on Home. */
 .geo-invite { border-left: 3px solid var(--grape); }
 

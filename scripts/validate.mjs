@@ -61,6 +61,11 @@ for (const p of allPlaces()) {
   if (p.amenities != null) ok(Array.isArray(p.amenities), `place ${p.id}: amenities must be an array`);
   if (p.recognition != null) ok(typeof p.recognition === 'string' && p.recognition.length > 0, `place ${p.id}: recognition must be a non-empty string`);
   if (p.localName != null) ok(typeof p.localName === 'string' && p.localName.length > 0, `place ${p.id}: localName must be a non-empty string`);
+  // Market metadata — optional, validated only when present. marketDays is an array of
+  // weekday indices (0=Sun … 6=Sat) for periodic markets; absent/empty means daily.
+  if (p.marketDays != null) ok(Array.isArray(p.marketDays) && p.marketDays.every((d) => Number.isInteger(d) && d >= 0 && d <= 6), `place ${p.id}: marketDays must be an array of integers 0-6`);
+  if (p.marketType != null) ok(typeof p.marketType === 'string' && p.marketType.length > 0, `place ${p.id}: marketType must be a non-empty string`);
+  if (p.sells != null) ok(typeof p.sells === 'string' && p.sells.length > 0, `place ${p.id}: sells must be a non-empty string`);
   if (p.externalRatings != null) {
     ok(Array.isArray(p.externalRatings), `place ${p.id}: externalRatings must be an array`);
     for (const e of p.externalRatings || []) {
