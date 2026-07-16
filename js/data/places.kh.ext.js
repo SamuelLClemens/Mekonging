@@ -120,7 +120,7 @@ export const PLACES_KH_EXT = [
     rating: 4.1, reviewSources: ["Tripadvisor", "Google Maps consensus", "Southeast Asia Backpacker"],
     mapQuery: "Koh Tonsay Rabbit Island Kep Cambodia", coords: { lat: 10.4470, lng: 104.3580 },
     bookHint: "Buy the return boat ticket at the official Kep pier booth; bungalows are usually booked on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Rustic Rabbit Island with shallow, calm, gently shelving bays; basic facilities and no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
+    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Rustic Rabbit Island with shallow, calm, gently shelving bays; basic facilities and no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "A small island of rustic bamboo bungalows and hammock huts along a shallow, gently curving bay; longtail boats beach right on the sand."
   },
   {
     id: "kh-ext-lazy-beach", name: "Lazy Beach", city: "Koh Rong Sanloem", country: "kh",
@@ -135,7 +135,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Along Dusty Roads"],
     mapQuery: "Lazy Beach Koh Rong Sanloem Cambodia", coords: { lat: 10.6010, lng: 103.2940 },
     bookHint: "Take a ferry to Saracen Bay from Sihanoukville, then walk the cross-island trail; book on-site bungalows ahead in high season.", verified: "2026-06",
-    sources: [{ org: "Visit Koh Rong", url: "https://www.visitkohrong.com/samloem/lazy-beach/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Visit Koh Rong", url: "https://www.visitkohrong.com/samloem/lazy-beach/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A single wide, west-facing white-sand beach with sunset views, reached by a short jungle path across the narrow island from Saracen Bay; one low-key resort backs it."
   },
   {
     id: "kh-ext-koh-rong-lighthouse", name: "Koh Rong Sanloem Lighthouse Viewpoint", city: "Koh Rong Sanloem", country: "kh",
@@ -300,7 +300,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Rong Samloem Saracen Bay", coords: { lat: 10.6000, lng: 103.3000 },
     bookHint: "Book a fast-ferry ticket (Buva Sea or similar) from Sihanoukville and reserve a bungalow ahead.", verified: "2026-06",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com/cambodia/koh-rong-sanloem" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com/cambodia/koh-rong-sanloem" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A long, calm, horseshoe bay of powder-white sand lined with low wooden resorts and a small dive-shop pier; the water is turquoise and very shallow far out."
   },
   {
     id: "kh-ext-kampot-old-town", name: "Kampot Old Town & Riverfront", city: "Kampot", country: "kh",
@@ -373,7 +373,7 @@ export const PLACES_KH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Otres Beach Sihanoukville Cambodia", coords: { lat: 10.59, lng: 103.51 },
     bookHint: "No booking; tuk-tuk from central Sihanoukville.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A long, flat, laid-back strip south of the main town, backed by low bars and bungalows rather than high-rises, with the sand ending at the Otres River lagoon."
   },
   {
     id: "kh-ext-koh-rong-long-beach", name: "Long Beach (Sok San), Koh Rong", city: "Sihanoukville", country: "kh",
@@ -388,7 +388,7 @@ export const PLACES_KH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Long Beach Sok San Koh Rong Cambodia", coords: { lat: 10.66, lng: 103.24 },
     bookHint: "Book a ferry from Sihanoukville and a bungalow in advance.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A 7km sweep of near-empty white sand on Koh Rong's west side, backed by jungle, reached by boat taxi or a sweaty cross-island trail from Koh Touch."
   },
   {
     id: "kh-ext-koh-ta-kiev", name: "Koh Ta Kiev", city: "Sihanoukville", country: "kh",
@@ -402,7 +402,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Ta Kiev Cambodia", coords: { lat: 10.55, lng: 103.59 },
     bookHint: "Arrange a boat and a bungalow through an island eco-camp before you go.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "An undeveloped island with clear, calm water and rustic camps; no patrol and limited help, so swim with care.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "An undeveloped island with clear, calm water and rustic camps; no patrol and limited help, so swim with care.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "A wild, undeveloped island of rustic beach camps and hammocks with no roads or reliable power; boats land on a shallow, driftwood-strewn bay."
   },
 {
     id: "kh-ext-central-market-pp", name: "Central Market (Phsar Thmei)", city: "Phnom Penh", country: "kh",
@@ -492,7 +492,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Koh Rong Sanloem Saracen Bay bungalows", coords: { lat: 10.6086, lng: 103.3006 },
     bookHint: "Book the bungalow + ferry combo online; ferries leave from Sihanoukville.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Koh Rong Sanloem's Saracen Bay is a calm, shallow, postcard-perfect bay — beautiful and family-friendly, but with no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Koh Rong Sanloem's Saracen Bay is a calm, shallow, postcard-perfect bay — beautiful and family-friendly, but with no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "Wooden bungalows lined along the calm, shallow, white-sand Saracen Bay on Koh Rong Sanloem, facing a turquoise lagoon with a small boat pier."
   },
   {
     id: "kh-ext-phnompenh-longstay", name: "Phnom Penh long-stay (BKK1 serviced apartments)", city: "Phnom Penh", country: "kh",
@@ -1487,7 +1487,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.612, lng: 103.2765 },
     bookHint: "Compare hostels on Hostelworld and bungalows on Booking; book the ferry from Sihanoukville separately.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "The main village beach at Koh Touch is lively and shallow; watch for boat traffic near the pier, and note there is no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help."
+    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "The main village beach at Koh Touch is lively and shallow; watch for boat traffic near the pier, and note there is no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "The busy main arrival village on Koh Rong: a cluster of budget guesthouses and bars packed along a short pier-side beach where the ferries dock."
   },
   {
     id: "kh-ext-koh-rong-koh-touch-food-stalls",
