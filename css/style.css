@@ -1005,6 +1005,10 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .beach-info .beach-sea-line.on { color: var(--good); }
 .beach-info .beach-sea-line.off { color: var(--warn); }
 [data-theme="dark"] .beach-info .beach-sea { background: rgba(80,150,220,0.14); }
+.beach-info .swim-verdict { font-weight: 800; margin: 2px 0 6px; padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,0.04); }
+.beach-info .swim-verdict.on { color: var(--good); }
+.beach-info .swim-verdict.off { color: var(--warn); }
+[data-theme="dark"] .beach-info .swim-verdict { background: rgba(255,255,255,0.06); }
 .beach-chip {
   display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
   border-radius: 999px; padding: 2px 10px;
