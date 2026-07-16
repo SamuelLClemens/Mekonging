@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.217.0';
+const APP_VERSION = 'mk-v0.218.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -7417,9 +7417,47 @@ function sosScreen(cc) {
 // The region's dangerous animals, drawn from the wildlife library — each entry already
 // carries a photo, how to identify it, and what to do if bitten or stung. Grouped so a
 // traveller can scan snakes, marine hazards and the rest at a glance.
+// Mosquito-borne illness — dengue is the biggest real health risk to travellers here.
+// SEASONAL guidance only (verified peak months per country); there is no reliable free
+// real-time case feed, so the card says so and points to official advisories.
+const MOSQUITO_PEAK = { th: [6, 7, 8, 9, 10], vi: [6, 7, 8, 9, 10, 11], kh: [5, 6, 7, 8, 9, 10], la: [5, 6, 7, 8, 9, 10] };
+const MOSQUITO_NAME = { th: 'Thailand', vi: 'Vietnam', kh: 'Cambodia', la: 'Laos' };
+const MOSQUITO_PREVENT = [
+  'Use a repellent with DEET (20-30%) or picaridin on exposed skin and reapply — the Aedes mosquitoes that carry dengue bite by DAY, peaking in early morning and late afternoon.',
+  'Cover up at dawn and dusk with loose long sleeves and trousers, and sleep with air-conditioning, window screens or a net.',
+  'Tip out or cover any standing water where you are staying (buckets, plant saucers, old tyres) — that is where these mosquitoes breed.',
+  'See a doctor for any high fever, severe headache or aching joints during or after your trip. Dengue needs rest, fluids and monitoring; avoid aspirin and ibuprofen, and get urgent care for warning signs such as bleeding, severe abdominal pain or persistent vomiting.',
+];
+const MOSQUITO_SOURCES = [
+  { org: 'WHO — Dengue and severe dengue', url: 'https://www.who.int/health-topics/dengue-and-severe-dengue' },
+  { org: 'CDC Travelers’ Health', url: 'https://wwwnc.cdc.gov/travel' },
+];
+function mosquitoCard() {
+  const m = new Date().getMonth() + 1;
+  const hot = Object.keys(MOSQUITO_PEAK).filter((cc) => MOSQUITO_PEAK[cc].includes(m)).map((cc) => MOSQUITO_NAME[cc]);
+  const card = h('div', { class: 'card mosquito-card' }, [h('h2', { style: 'margin-top:0' }, '🦟 Mosquitoes & dengue')]);
+  card.append(h('p', {}, 'Dengue fever is the most common serious mosquito-borne illness across all four countries. It is spread by day-biting Aedes mosquitoes and rises sharply in the rainy season.'));
+  card.append(h('p', { class: hot.length ? 'mkt-status off' : 'mkt-status on' },
+    hot.length ? `⚠️ Dengue risk is elevated this month in: ${hot.join(', ')}` : 'Lower-risk month across the region — but dengue occurs year-round, so keep up prevention.'));
+  card.append(h('h3', {}, 'When it peaks'));
+  Object.keys(MOSQUITO_PEAK).forEach((cc) => {
+    const on = MOSQUITO_PEAK[cc].includes(m);
+    card.append(h('div', { class: 'list-note' }, `${MOSQUITO_NAME[cc]}: peak ${formatMonths(MOSQUITO_PEAK[cc])}${on ? ' · elevated now' : ''}`));
+  });
+  card.append(h('h3', {}, 'Protect yourself'));
+  MOSQUITO_PREVENT.forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
+  card.append(h('h3', {}, 'Other mosquito-borne illness'));
+  card.append(h('div', { class: 'list-note' }, 'Malaria is a risk mainly in rural, forested and some border areas (not the big cities), spread by night-biting mosquitoes — ask a travel clinic about prophylaxis for those regions.'));
+  card.append(h('div', { class: 'list-note' }, 'Japanese encephalitis (rural rice-farming areas in the wet season) and Zika are also present; consider vaccination for long or rural stays, and pregnant travellers should seek specific advice.'));
+  card.append(sourcesNote(MOSQUITO_SOURCES, 'July 2026'));
+  card.append(h('p', { class: 'muted small' }, 'Seasonal guidance only — there is no reliable real-time case feed here. Check your government travel-health advisory and a travel clinic before you go.'));
+  return card;
+}
+
 function dangerScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Dangerous wildlife', '#sos'));
+  wrap.append(topbar('Health & wildlife hazards', '#sos'));
+  wrap.append(mosquitoCard());
   wrap.append(h('p', { class: 'map-hint' }, 'Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
   const list = allSpecies().filter((s) => s.dangerous);
   const groups = [
