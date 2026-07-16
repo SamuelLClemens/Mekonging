@@ -327,6 +327,7 @@ export const PLACES_VI_EXT = [
     recognition: 'A long, wide strip of pale sand backed by a palm promenade and high-rise resorts, running along Vo Nguyen Giap Street just east of central Da Nang.',
     localName: 'Biển Mỹ Khê · Bien My Khe',
     categories: ["beach"], budgetTier: "any",
+    lifeguard: "yes", swim: "Long patrolled city beach; swim between the flags - central-coast rip currents build strongly from September to December.", jellyfishMonths: [6,7,8,9], jellyfish: "Central-coast jellyfish, including box jellyfish, cluster in the warm June-September months; most stings are painful rather than deadly. Rinse with vinegar and seek help if symptoms spread.",
     blurb: "Da Nangs long, wide city beach of fine pale sand and gentle surf, lined with a palm promenade, seafood shacks and resorts, and easy to reach from the centre.",
     whyItFits: "For travellers wanting a convenient, swimmable urban beach with good food and a sunrise worth waking for.",
     priceRange: { low: 0, typical: 0, high: 0, currency: "VND", note: "Free public beach; sunbeds and water sports cost extra." },
@@ -341,6 +342,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-bai-sao", name: "Bai Sao (Star Beach)", city: "Phu Quoc", country: "vi",
     categories: ["beach", "nature"], budgetTier: "mid",
+    lifeguard: "no", swim: "Calm white-sand bay, among Vietnam's safest swimming in the November-April dry season; no patrol.", jellyfishMonths: [11,12], jellyfish: "Jellyfish appear around Phu Quoc mainly from late November to mid-December; usually a painful sting rather than a danger.",
     blurb: "A curving bay of exceptionally soft white sand and calm, shallow turquoise water on the south-east of Phu Quoc island, with beach clubs and seafood at one end and quieter sand beyond.",
     whyItFits: "For island travellers wanting the softest sand and calmest swimming on Phu Quoc.",
     priceRange: { low: 0, typical: 0, high: 50000, currency: "VND", note: "Beach is free; sunbeds via the beach clubs or a small parking fee." },
@@ -384,6 +386,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-doc-let", name: "Doc Let Beach", city: "Nha Trang", country: "vi",
     categories: ["beach"], budgetTier: "low",
+    lifeguard: "no", swim: "Shallow, calm and clear over a long white beach; no patrol.", jellyfishMonths: [4,5,6,7,8], jellyfish: "Small stinging (itchy) jellyfish are common around Nha Trang from April to August; painful but not usually dangerous.",
     blurb: "A long, quiet stretch of powdery white sand and shallow calm water north of Nha Trang, far less developed than the city beach and popular with those seeking space and stillness.",
     whyItFits: "For travellers wanting an uncrowded, swimmable beach within reach of Nha Trang.",
     priceRange: { low: 0, typical: 0, high: 30000, currency: "VND", note: "Public sections are free; some resort beachfronts charge a day fee." },
@@ -2136,6 +2139,7 @@ export const PLACES_VI_EXT = [
       "nature"
     ],
     "budgetTier": "low",
+    lifeguard: "seasonal", swim: "Broad soft-sand beach below the Marble Mountains; swim between flags and watch for September-December rip currents.", jellyfishMonths: [6,7,8,9], jellyfish: "Central-coast jellyfish appear in the warm months; rinse a sting with vinegar.",
     "blurb": "The quieter, resort-lined southern continuation of Da Nang's beach, Non Nuoc has soft sand and calmer crowds than My Khe. Public access points sit between the hotels, and the Marble Mountains rise just inland, so a swim pairs naturally with the caves and the nearby stone-carving village.",
     "whyItFits": "An honest, less-hectic beach option on the Da Nang-Hoi An road, walkable from the Marble Mountains.",
     "priceRange": {

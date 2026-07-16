@@ -66,6 +66,12 @@ for (const p of allPlaces()) {
   if (p.marketDays != null) ok(Array.isArray(p.marketDays) && p.marketDays.every((d) => Number.isInteger(d) && d >= 0 && d <= 6), `place ${p.id}: marketDays must be an array of integers 0-6`);
   if (p.marketType != null) ok(typeof p.marketType === 'string' && p.marketType.length > 0, `place ${p.id}: marketType must be a non-empty string`);
   if (p.sells != null) ok(typeof p.sells === 'string' && p.sells.length > 0, `place ${p.id}: sells must be a non-empty string`);
+  // Beach & swimming safety — optional, validated only when present. lifeguard is an
+  // enum; jellyfishMonths is an array of 1-12 month indices for elevated seasonal risk.
+  if (p.lifeguard != null) ok(['yes', 'seasonal', 'no', 'unknown'].includes(p.lifeguard), `place ${p.id}: bad lifeguard (${p.lifeguard})`);
+  if (p.swim != null) ok(typeof p.swim === 'string' && p.swim.length > 0, `place ${p.id}: swim must be a non-empty string`);
+  if (p.jellyfishMonths != null) ok(Array.isArray(p.jellyfishMonths) && p.jellyfishMonths.every((m) => Number.isInteger(m) && m >= 1 && m <= 12), `place ${p.id}: jellyfishMonths must be an array of integers 1-12`);
+  if (p.jellyfish != null) ok(typeof p.jellyfish === 'string' && p.jellyfish.length > 0, `place ${p.id}: jellyfish must be a non-empty string`);
   if (p.externalRatings != null) {
     ok(Array.isArray(p.externalRatings), `place ${p.id}: externalRatings must be an array`);
     for (const e of p.externalRatings || []) {

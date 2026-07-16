@@ -368,6 +368,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-koh-kradan", name: "Koh Kradan", city: "Trang", country: "th",
     categories: ["beach", "nature"], budgetTier: "mid",
+    lifeguard: "no", swim: "Shallow, calm and clear water; no patrol and few facilities.", jellyfish: "Box jellyfish are present in the region though rarely reported; more likely after heavy rain.",
     blurb: "A slender, low-development island in the Trang archipelago with powder-white sand, shallow turquoise water and a snorkelable reef just offshore, repeatedly rated among the worlds best beaches.",
     whyItFits: "For travellers seeking a quiet, scenic swim-and-snorkel island without nightlife or crowds.",
     priceRange: { low: 0, typical: 0, high: 60, currency: "THB", note: "The beach is free; a small national-park fee and the boat transfer from the Trang mainland apply." },
@@ -382,6 +383,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-freedom-beach", name: "Freedom Beach", city: "Phuket", country: "th",
     categories: ["beach", "nature"], budgetTier: "mid",
+    lifeguard: "no", swim: "Boat-access cove with no patrol; water is calm and clear in the November-April dry season but avoid the monsoon swell.", jellyfish: "Box jellyfish are present in the region though rarely reported here; take care after heavy rain.",
     blurb: "A secluded crescent of fine white sand below forested cliffs on Phukets south-west coast, reached mainly by longtail boat and prized for clear water and relative quiet.",
     whyItFits: "For Phuket visitors who want a calmer, scenic beach away from the busy Patong strip.",
     priceRange: { low: 200, typical: 400, high: 700, currency: "THB", note: "Longtail boat transfer each way; the beach itself is free." },
@@ -396,6 +398,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-bottle-beach", name: "Bottle Beach (Haad Khuat)", city: "Koh Phangan", country: "th",
     categories: ["beach", "nature"], budgetTier: "low",
+    lifeguard: "no", swim: "Remote north-Phangan bay with no patrol; generally gentle water, but you are far from help.", jellyfishMonths: [7,8,9,10], jellyfish: "Potentially fatal box jellyfish (Chironex) are documented around Koh Phangan and Koh Samui; recorded stings peak in the July-October wet season and after rain. Douse a sting with vinegar and get medical help fast.",
     blurb: "A remote north-coast bay on Koh Phangan, backed by jungle hills and reached only by boat taxi or a rugged trail, offering a peaceful contrast to the islands full-moon party scene.",
     whyItFits: "For travellers wanting a tranquil, hard-to-reach beach with simple bungalows and good swimming.",
     priceRange: { low: 0, typical: 150, high: 400, currency: "THB", note: "Beach is free; a longtail boat taxi from Chaloklum is the usual cost." },
@@ -410,6 +413,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-nai-harn", name: "Nai Harn Beach", city: "Phuket", country: "th",
     categories: ["beach"], budgetTier: "low",
+    lifeguard: "seasonal", swim: "Sheltered south-Phuket bay with generally good swimming in the November-April dry season; heed red flags in the monsoon.", jellyfish: "Box jellyfish are occasionally reported on the Andaman coast, more likely after heavy rain.",
     blurb: "A clean, locally loved bay at Phukets quieter southern tip, backed by a lagoon and a monastery, with soft sand, swimming pontoons in season and lifeguard-flagged areas.",
     whyItFits: "For travellers wanting an unpretentious, swimmable Phuket beach with a relaxed local feel.",
     priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free public beach; sunbeds and parking may carry a small charge." },
@@ -1578,6 +1582,7 @@ export const PLACES_TH_EXT = [
     localName: "เกาะหลีเป๊ะ · Ko Lipe",
     categories: ["island", "beach"],
     budgetTier: "mid",
+    lifeguard: "no", swim: "Calm turquoise bays with excellent swimming in the November-April season; no patrol.", jellyfish: "Jellyfish are present in Andaman waters; ask locally about recent sightings.",
     kidFriendly: true,
     blurb: "A tiny far-south island fringed by powder-white sand and clear turquoise water, on the edge of Tarutao Marine Park near the Malaysian border.",
     whyItFits: "The Andaman deep-south beach island that rounds out the coast beyond the Krabi/Phuket cluster.",
@@ -1622,6 +1627,7 @@ export const PLACES_TH_EXT = [
     localName: "เกาะเสม็ด · Ko Samet",
     categories: ["island", "beach"],
     budgetTier: "mid",
+    lifeguard: "no", swim: "Clear, mostly calm bays; some rip currents on the exposed southern end.", jellyfishMonths: [7,8,9,10], jellyfish: "Box jellyfish appear in Gulf waters mainly in the wet season; use vinegar first aid, then seek medical help for any severe reaction.",
     kidFriendly: true,
     blurb: "The closest classic white-sand beach island to Bangkok, inside a national park, with squeaky sand, clear water and easygoing beach bars.",
     whyItFits: "The go-to eastern-seaboard weekend island near Bangkok, absent from the current beach/island list.",
@@ -2981,6 +2987,7 @@ export const PLACES_TH_EXT = [
     recognition: "Phuket's biggest resort beach — a long sweep of sand on the west coast — backed after dark by the neon bar strip of Bangla Road, the island's nightlife heart.",
     localName: "ป่าตอง · Patong",
     categories: ["beach", "nightlife"], budgetTier: "mid",
+    lifeguard: "yes", swim: "Busy patrolled beach; strong rip currents build during the May-October southwest monsoon and drown swimmers most years - obey the red flags.", jellyfish: "Box jellyfish are present in Thai waters but documented cases cluster on the Gulf coast rather than the Andaman; risk rises after heavy rain.",
     blurb: "Patong is Phuket at its loudest: a broad three-kilometre beach for swimming, sunbeds and water sports by day, and after dark the pedestrianised Bangla Road erupts into bars, clubs and cabaret. Love it or avoid it, it is the island's tourist engine and the base for most day-trip boats and shopping.",
     whyItFits: "The one-stop hub for nightlife, water sports and big-resort convenience — useful to know whether you want it or want to stay well away from it.",
     priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Beach is free; sunbeds, water sports and drinks are charged — agree prices first." },

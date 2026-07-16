@@ -125,6 +125,7 @@ export const PLACES_KH_EXT = [
   {
     id: "kh-ext-lazy-beach", name: "Lazy Beach", city: "Koh Rong Sanloem", country: "kh",
     categories: ["beach", "nature", "hike"], budgetTier: "mid",
+    lifeguard: "no", swim: "Small remote west-coast cove with no patrol; strong sun and open water beyond the bay.", jellyfish: "Box jellyfish occur in Gulf waters; vinegar first aid, then medical help if a reaction spreads.",
     blurb: "A west-facing crescent of soft white sand on the quieter side of Koh Rong Sanloem, reached by a 20-30 minute jungle trail across the island from Saracen Bay. Clear water, sunset views and a single low-key resort keep it blissfully uncrowded compared with the main bay.",
     whyItFits: "For travellers who want a postcard beach with sunsets and minimal development, and do not mind a short forest walk to reach it. Pairs naturally with bioluminescent-plankton swims after dark.",
     priceRange: { low: 0, typical: 10, high: 40, currency: "USD", note: "The beach is free to visit; the access trail starts from Saracen Bay. Food, drinks and bungalows on-site are extra." },
@@ -289,6 +290,7 @@ export const PLACES_KH_EXT = [
   {
     id: "kh-ext-koh-rong-samloem", name: "Koh Rong Samloem (Saracen Bay)", city: "Sihanoukville", country: "kh",
     categories: ["beach", "nature"], budgetTier: "mid",
+    lifeguard: "no", swim: "Sheltered, shallow, calm bay - among the archipelago's safest swimming - but with no lifeguard.", jellyfish: "Box jellyfish are present in the Gulf; ask locally about recent sightings.",
     blurb: "The calmer sister island to Koh Rong, ringed by white sand and clear water, with Saracen Bay's gentle arc on the east coast and bioluminescent plankton visible on dark nights. No cars, limited electricity.",
     whyItFits: "For travellers wanting a quiet, low-key island escape with snorkelling and starry nights rather than a party scene.",
     priceRange: { low: 20, typical: 25, high: 30, currency: "USD", note: "Round-trip fast-ferry fare from Sihanoukville; accommodation ranges from beach huts to comfortable bungalows." },
@@ -361,6 +363,7 @@ export const PLACES_KH_EXT = [
 {
     id: "kh-ext-otres-beach", name: "Otres Beach", city: "Sihanoukville", country: "kh",
     categories: ["beach", "nightlife"], budgetTier: "low",
+    lifeguard: "no", swim: "Calm, shallow Gulf water on a long relaxed beach; rip currents can form in the May-October wet season and there is no patrol.", jellyfish: "Box jellyfish are present in Gulf of Thailand waters; treat a sting with vinegar, remove tentacles without bare skin, and seek help for any severe reaction.",
     blurb: "A long, laid-back strip of sand south of central Sihanoukville, holding on to a mellow, low-rise vibe of beach bars, hammocks and sunset drinks despite the citys rapid development.",
     whyItFits: "For travellers wanting an easygoing mainland beach with a relaxed social scene and seafood shacks.",
     priceRange: { low: 0, typical: 0, high: 0, currency: "USD", note: "Free public beach; sunbeds come with a drink or small fee." },
@@ -375,6 +378,7 @@ export const PLACES_KH_EXT = [
   {
     id: "kh-ext-koh-rong-long-beach", name: "Long Beach (Sok San), Koh Rong", city: "Sihanoukville", country: "kh",
     categories: ["beach", "nature"], budgetTier: "mid",
+    lifeguard: "no", swim: "Long open west-facing beach, generally calm but with no patrol and few facilities.", jellyfish: "Box jellyfish occur in Gulf waters; vinegar first aid, then medical help for a severe reaction.",
     blurb: "A roughly seven-kilometre sweep of near-empty white sand on the west side of Koh Rong, with squeaky sand, clear water and bioluminescent plankton on dark nights.",
     whyItFits: "For travellers wanting one of Cambodias most beautiful, undeveloped long beaches and a true island escape.",
     priceRange: { low: 20, typical: 25, high: 35, currency: "USD", note: "Round-trip ferry from Sihanoukville; accommodation ranges from huts to resorts." },

@@ -128,6 +128,7 @@ export const PLACES_VI = [
     access: { stepFree: "partial", note: "The paved beachfront lane and open-front beach cafes sit on flat, firm ground a wheelchair can reach, but getting onto the beach or to the water means crossing soft deep sand, and no beach matting or beach wheelchairs are documented here." },
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     categories: ["nature"], budgetTier: "mid",
+    lifeguard: "seasonal", swim: "Gentle most of the year, but the beach closes in the September-November storm season when rip currents turn dangerous.", jellyfishMonths: [6,7,8,9], jellyfish: "Stinging jellyfish gather along the central coast (Cua Dai, An Bang) in the warm months; usually painful, not dangerous.",
     blurb: "Relaxed stretch of sand a short ride from the old town, lined with beach bars and seafood shacks.",
     whyItFits: "Good for travellers wanting a laid-back swim and sunset away from the heritage crowds.",
     priceRange: { low: 0, typical: 150000, high: 400000, currency: "VND", note: "beach is free; sun-lounger plus food and drink per person" },
