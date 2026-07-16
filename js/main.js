@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.229.0';
+const APP_VERSION = 'mk-v0.230.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6334,6 +6334,7 @@ function schedulesScreen(country) {
 // ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
 let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
 let todoFamily = 'all';  // active category filter on the Things-to-do screen
+let todoPlan = 'now';    // "plan ahead" scenario for the Things-to-do ranking
 function haversineKm(a, b) {
   const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
@@ -6564,6 +6565,7 @@ function daySuggestScreen(country) {
   const id = getCountry(spot.country) ? spot.country : (getCountry(activeCountry) ? activeCountry : 'th');
   activeCountry = id;
   todoFamily = 'all';   // fresh filter each visit, so a stale category never hides a new city's picks
+  todoPlan = 'now';     // always open on "now"; planning ahead is an explicit, per-visit choice
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Things to do', '#home'));
 
@@ -6607,8 +6609,19 @@ function daySuggestScreen(country) {
 
     // --- Rank the doable pool for RIGHT NOW, then keep only what is actually reachable. ---
     const anchor = dayUserLoc || ((gps && getLastFix()) ? getLastFix() : { lat: spot.lat, lng: spot.lng });
-    const scored = allPlaces({ country: id }).filter(todoDoable)
-      .map((p) => todoScore(p, ctx, prefs, anchor));
+    const doable = allPlaces({ country: id }).filter(todoDoable);
+    // "Plan ahead" re-ranks the SAME reachable places for a hypothetical time or weather,
+    // without touching the live conditions shown above. Reachability (distance) is unchanged;
+    // only the score and the "why now" reasons shift, so the tiers stay stable.
+    const ctxForPlan = (base, plan) =>
+      plan === 'heat' ? { ...base, weather: 'hot' }
+        : plan === 'rain' ? { ...base, weather: 'wet' }
+          : plan === 'morning' ? { ...base, daypart: 'morning' }
+            : plan === 'evening' ? { ...base, daypart: 'evening' }
+              : plan === 'night' ? { ...base, daypart: 'night' }
+                : base;
+    let scored = doable.map((p) => todoScore(p, ctxForPlan(ctx, todoPlan), prefs, anchor));
+    const rescore = () => { scored = doable.map((p) => todoScore(p, ctxForPlan(ctx, todoPlan), prefs, anchor)); };
     const sameCity = (x) => citySlug(x.p.city || '') === citySlug(spot.city || '');
     // In scope only if reachability is trustworthy: a real distance within a day-trip radius,
     // or — when a place has no coordinates — the very same city. Anything further is hidden.
@@ -6626,6 +6639,26 @@ function daySuggestScreen(country) {
     chipRow.append(mkChip('all', 'All'));
     famsPresent.forEach((f) => chipRow.append(mkChip(f.key, [swatch(f.color), ` ${f.emoji} ${f.label}`])));
     header.append(chipRow);
+
+    // --- Plan ahead (progressive disclosure): re-rank for a different time or weather. ---
+    const PLANS = [['now', 'Now'], ['heat', '☀️ Beat the heat'], ['rain', '🌧 If it rains'], ['morning', '🌅 Morning'], ['evening', '🌇 Evening'], ['night', '🌙 Tonight']];
+    const PLAN_NOTE = { heat: 'to beat the midday heat', rain: 'for if it rains', morning: 'for the morning', evening: 'for the evening', night: 'for tonight' };
+    const planNote = h('p', { class: 'muted small', style: 'margin:6px 0 0' });
+    const updatePlanNote = () => { planNote.textContent = todoPlan === 'now' ? '' : `Re-ranked ${PLAN_NOTE[todoPlan]}. The live conditions above are unchanged.`; };
+    const planChips = h('div', { class: 'chips todo-plan' }, PLANS.map(([k, lbl]) =>
+      h('button', {
+        class: 'chip', dataset: { p: k }, 'aria-pressed': todoPlan === k ? 'true' : 'false',
+        onclick: () => {
+          todoPlan = k;
+          planChips.querySelectorAll('.chip').forEach((el) => el.setAttribute('aria-pressed', el.dataset.p === k ? 'true' : 'false'));
+          rescore(); drawList(); updatePlanNote();
+        },
+      }, lbl)));
+    updatePlanNote();
+    header.append(h('details', { class: 'todo-plan-d', open: todoPlan !== 'now' ? '' : null }, [
+      h('summary', {}, '🗓 Plan for a different time or weather'),
+      planChips, planNote,
+    ]));
 
     const listBody = h('div', {});
     listWrap.append(listBody);
@@ -6647,7 +6680,7 @@ function daySuggestScreen(country) {
     function drawList() {
       chipRow.querySelectorAll('.chip').forEach((el) => el.setAttribute('aria-pressed', el.dataset.f === todoFamily ? 'true' : 'false'));
       listBody.innerHTML = '';
-      let pool = inScope.slice();
+      let pool = scored.filter((x) => tierOf(x));
       if (todoFamily !== 'all') pool = pool.filter((x) => x.cats.some((c) => catFamily(c) === todoFamily));
       pool.sort((a, b) => b.s - a.s);
       let rendered = 0;
