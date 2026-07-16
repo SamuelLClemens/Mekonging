@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.218.0';
+const APP_VERSION = 'mk-v0.219.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1736,6 +1736,31 @@ function arrivalScreen(arg) {
   mount(wrap, 'home');
 }
 
+// Arrival-hub "conditions & safety now" strip — surfaces the app's live health/safety
+// readouts at the moment of arrival, where they matter most: air quality and sun (UV)
+// for the nearest city, a dengue-season flag for the country, and a one-tap hop to the
+// nearest beach (flagged when jellyfish are in season) and to the full Health screen.
+function nearbySafetyStrip(country, fix) {
+  const spot = nearestSpot(fix, country);
+  const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🩺 Conditions & safety now')]);
+  card.append(airBlock(spot, { compact: true }));
+  card.append(uvTodayBlock(fix, country));
+  const m = new Date().getMonth() + 1;
+  if (MOSQUITO_PEAK[country] && MOSQUITO_PEAK[country].includes(m)) {
+    card.append(h('p', { class: 'aqi-line usg' }, '🦟 Dengue risk is elevated this month — use day-time repellent.'));
+  }
+  const beaches = allPlaces({ country }).filter((p) => p.coords && isBeach(p))
+    .map((p) => ({ p, km: haversineKm(fix, p.coords) })).filter((x) => x.km != null).sort((a, b) => a.km - b.km);
+  if (beaches.length && beaches[0].km <= 60) {
+    const b = beaches[0].p;
+    const inSeason = jellyInSeason(b, m);
+    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${b.id}`) },
+      `${inSeason ? '🪼' : '🏖️'} Nearest beach: ${b.name}${inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'}`));
+  }
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#danger') }, '🩹 Health & hazards'));
+  return card;
+}
+
 function nearbyScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('📍 Near me', '#home'));
@@ -1797,6 +1822,7 @@ function nearbyScreen() {
       h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('pin'), 'Set my stay']),
       h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
     ]));
+    body.append(nearbySafetyStrip(country, f));
 
     let cat = 'all';
     const cats = [['all', 'Everything'], ['eat', '🍜 Eat'], ['stay', '🛏 Stay'], ['do', '🎫 Do']];
@@ -2870,11 +2896,40 @@ function jellyReportsBlock(p) {
   return wrap;
 }
 
+// One-line "can I swim here today?" synthesis from everything the app knows: seasonal
+// jellyfish risk, recent traveller sightings, lifeguard status and the cached sea state.
+// A summary only — the detailed blocks below (and the live sea state) always carry the
+// full picture. Red = take real care; amber = caution; green = no specific warning now.
+function swimVerdict(p) {
+  if (!isBeach(p)) return null;
+  const nowM = new Date().getMonth() + 1;
+  const reasons = [];
+  let sev = 0;
+  if (jellyInSeason(p, nowM)) { reasons.push('jellyfish season'); sev = Math.max(sev, 1); }
+  const reps = getJellyReports(p.id) || [];
+  if (reps.some((r) => r.sev === 'stung' && daysSinceISO(r.d) <= 14)) { reasons.push('a sting reported in the last two weeks'); sev = 2; }
+  else if (reps.some((r) => daysSinceISO(r.d) <= 14)) { reasons.push('recent traveller sightings'); sev = Math.max(sev, 1); }
+  if (p.lifeguard === 'no') { reasons.push('no lifeguards'); sev = Math.max(sev, 1); }
+  const sea = p.coords ? getCachedMarine(p.coords) : null;
+  if (sea && sea.waveHeight != null) {
+    if (sea.waveHeight >= 2.5) { reasons.push('very rough water now'); sev = 2; }
+    else if (sea.waveHeight >= 1.25) { reasons.push('choppy water now'); sev = Math.max(sev, 1); }
+  }
+  const label = sev === 2 ? ['🔴', 'Take real care in the water today', 'off']
+    : sev === 1 ? ['🟠', 'Swim with caution today', 'off']
+    : ['🟢', 'No specific warnings right now — always obey the beach flags', 'on'];
+  const box = h('div', {});
+  box.append(h('p', { class: `swim-verdict ${label[2]}` }, `${label[0]} ${label[1]}`));
+  if (reasons.length) box.append(h('p', { class: 'muted small' }, `Because: ${reasons.join('; ')}.`));
+  return box;
+}
+
 // Detail-screen block: lifeguard status, swimming conditions, live sea state (waves /
 // water temperature), seasonal jellyfish risk ("in season this month?"), and first aid.
 function beachInfoCard(p) {
   if (!isBeach(p)) return null;
   const card = h('div', { class: 'card beach-info' }, [h('h2', {}, '🏖️ Beach & swimming')]);
+  const sv = swimVerdict(p); if (sv) card.append(sv);
   if (p.lifeguard) {
     const lg = LIFEGUARD_LABEL[p.lifeguard] || LIFEGUARD_LABEL.unknown;
     card.append(h('p', { class: `beach-lg ${lg[2]}` }, `${lg[0]} ${lg[1]}`));
@@ -3129,6 +3184,47 @@ function airBlock(spot, opts) {
   return box;
 }
 
+// --- Sun / UV index ----------------------------------------------------------
+// WHO UV Index band -> [label, css band class, sun-safety advice]. Reuses the AQI
+// colour bands so no new palette is needed. UV comes free with the 7-day forecast
+// (Open-Meteo daily uv_index_max), so it is cache-first and works offline.
+function uvBand(uv) {
+  if (uv == null) return null;
+  if (uv < 3) return ['Low', 'good', 'Minimal sun protection needed for most people.'];
+  if (uv < 6) return ['Moderate', 'mod', 'Wear sunscreen, a hat and sunglasses; seek shade near midday.'];
+  if (uv < 8) return ['High', 'usg', 'Protection needed — SPF 30+, a hat, and shade between 11am and 3pm.'];
+  if (uv < 11) return ['Very high', 'unhealthy', 'Extra care — avoid the sun 11am–4pm, use SPF 50+, cover up and re-apply often.'];
+  return ['Extreme', 'hazard', 'Avoid being outside in the middle of the day; full protection is essential.'];
+}
+// A coloured UV line node (optionally with the advice line). Returns null when unknown.
+function uvLineNode(uv, opts) {
+  const b = uvBand(uv);
+  if (!b) return null;
+  const box = h('div', {});
+  box.append(h('p', { class: `aqi-line ${b[1]}` }, `☀️ Sun index (UV): ${Math.round(uv)} — ${b[0]}`));
+  if (opts && opts.advice) box.append(h('p', { class: 'muted small' }, b[2]));
+  return box;
+}
+// Today's UV for a place's location, taken from the nearest forecast city (cache-first,
+// refreshed once when online). Mirrors airBlock so the card never blocks on the network.
+function uvTodayBlock(coords, country) {
+  const spot = nearestSpot(coords, country);
+  const box = h('div', { class: 'air-block' });
+  function paint(rec) {
+    box.innerHTML = '';
+    const uv = rec && rec.daily && rec.daily[0] ? rec.daily[0].uv : null;
+    const node = uvLineNode(uv, { advice: true });
+    if (node) box.append(node);
+    else box.append(h('p', { class: 'muted small' }, online() ? '☀️ Checking the sun index…' : '☀️ Sun (UV) index loads with the forecast when you are online.'));
+  }
+  const cached = getCachedWeather(spotKey(spot));
+  paint(cached);
+  if (online() && !(cached && cached.daily && cached.daily.length)) {
+    refreshWeather(spot).then((r) => { if (r && box.isConnected) paint(r); });
+  }
+  return box;
+}
+
 function weatherNearbyCard(p) {
   if (!p.coords || p.coords.lat == null || p.coords.lng == null) return null;
   const spot = nearestSpot(p.coords, p.country);
@@ -3166,6 +3262,7 @@ function weatherNearbyCard(p) {
   }
 
   card.append(airBlock(spot, { compact: true }));
+  card.append(uvTodayBlock(p.coords, p.country));
   card.append(
     h('p', { class: 'muted', style: 'margin:6px 0 0' },
       `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
@@ -5982,6 +6079,7 @@ function weatherScreen(country) {
           `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
       ]));
       body.append(h('div', { class: 'card' }, [airBlock(spot)]));
+      if (rec.daily && rec.daily[0]) { const uvn = uvLineNode(rec.daily[0].uv, { advice: true }); if (uvn) body.append(h('div', { class: 'card' }, [uvn])); }
       const fc = h('div', { class: 'card' }, [
         h('h3', { style: 'margin-top:0' }, '7-day forecast'),
         h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
