@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.228.0';
+const APP_VERSION = 'mk-v0.229.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -666,12 +666,15 @@ function rightNowSection() {
         const reason = whyNow(p, ctx);
         const km = haversineKm(ctx.fix, p.coords);
         listWrap.append(h('div', { class: 'rn-item' }, [
-          h('button', { class: 'rn-open', onclick: () => go(`#place-${p.id}`) }, [
-            h('div', { class: 'rn-item-main' }, [
-              h('span', { class: 'rn-name' }, p.name),
-              reason ? h('span', { class: 'rn-tag' }, reason) : null,
+          h('button', { class: 'rn-open has-thumb', onclick: () => go(`#place-${p.id}`) }, [
+            rnThumb(p),
+            h('div', { class: 'rn-textcol' }, [
+              h('div', { class: 'rn-item-main' }, [
+                h('span', { class: 'rn-name' }, p.name),
+                reason ? h('span', { class: 'rn-tag' }, reason) : null,
+              ]),
+              h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
             ]),
-            h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
           ]),
           h('div', { class: 'rn-actions' }, [
             h('button', { class: 'rn-act done', title: 'I did this — swap in something new', 'aria-label': `Mark ${p.name} as done`, onclick: () => { markSpotDone(p.id); drawPicks(); } }, '✓'),
@@ -1848,8 +1851,11 @@ function nearbyScreen() {
         const done = isSpotDone(p.id);
         listEl.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
           h('button', { class: 'rn-open near-open', onclick: () => go(`#place-${p.id}`) }, [
-            h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
-            h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
+            rnThumb(p),
+            h('div', { class: 'near-text' }, [
+              h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
+              h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
+            ]),
           ]),
           h('div', { class: 'rn-actions' }, [
             h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { toggleSpotDone(p.id); drawList(); } }, '✓'),
@@ -6516,6 +6522,15 @@ function placeFamily(p) {
 function placePhotoSrc(p) {
   const reg = (p && p.id && PHOTOS[p.id]) || null;
   return (p && p.photo) || (reg && reg.src) || null;
+}
+// A small (44px) recognition thumbnail for compact "near me" rows: a self-hosted photo when
+// one exists, else a calm family-emoji placeholder. Helps a disoriented traveller confirm a
+// place by sight. Hoisted, so the near-me rows above can call it.
+function rnThumb(p) {
+  const src = placePhotoSrc(p);
+  if (src) return h('img', { class: 'rn-thumb', src, alt: '', loading: 'lazy', decoding: 'async' });
+  const fam = placeFamily(p);
+  return h('span', { class: 'rn-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
 }
 // A "thing to do" result card: a recognition thumbnail, coloured category tags, rating,
 // distance and "why now" reason chips. Tapping opens the full detail page (with a photo).
