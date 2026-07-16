@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.212.0';
+const APP_VERSION = 'mk-v0.213.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2727,6 +2727,72 @@ function marketInfoCard(p) {
   return card;
 }
 
+// --- Beaches, lifeguards & jellyfish safety ----------------------------------
+// Beaches are ordinary map places (editable review, save, share) that additionally
+// carry optional safety fields: lifeguard status, a swimming-conditions note, and a
+// seasonal jellyfish window. No real-time jellyfish feed exists for the region, so the
+// month window is HONEST SEASONAL GUIDANCE — the card says so and points to the flags.
+const MONTH_SHORT = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function isBeach(p) {
+  return !!(p && (p.lifeguard || p.swim || (Array.isArray(p.jellyfishMonths) && p.jellyfishMonths.length)
+    || (Array.isArray(p.categories) && p.categories.includes('beach'))));
+}
+// Sorted unique 1-12 month list of elevated jellyfish risk, or null when none is set.
+function jellyMonths(p) {
+  const m = Array.isArray(p.jellyfishMonths) ? p.jellyfishMonths.filter((n) => Number.isInteger(n) && n >= 1 && n <= 12) : [];
+  return m.length ? [...new Set(m)].sort((a, b) => a - b) : null;
+}
+function jellyInSeason(p, month) { const m = jellyMonths(p); return !!(m && m.includes(month)); }
+// Compact "Jul–Oct" / "Apr, Jun & Aug" from a sorted month array.
+function formatMonths(m) {
+  if (!m || !m.length) return '';
+  let contig = true;
+  for (let i = 1; i < m.length; i++) if (m[i] !== m[i - 1] + 1) contig = false;
+  if (contig && m.length > 2) return `${MONTH_SHORT[m[0]]}–${MONTH_SHORT[m[m.length - 1]]}`;
+  return m.map((n) => MONTH_SHORT[n]).join(m.length > 2 ? ', ' : ' & ');
+}
+const LIFEGUARD_LABEL = {
+  yes: ['✅', 'Lifeguards patrol this beach', 'on'],
+  seasonal: ['⚠️', 'Lifeguards / flags in season — check for a red flag before you swim', 'off'],
+  no: ['❌', 'No lifeguards — swim with extra care and never alone', 'off'],
+  unknown: ['ℹ️', 'No patrol information — treat as unpatrolled', 'muted'],
+};
+// Small card/list chip: warns first about jellyfish season, else shows lifeguard status.
+// Returns null for a bare beach with no structured info and no active warning (no clutter).
+function beachChip(p) {
+  if (!isBeach(p)) return null;
+  const nowM = new Date().getMonth() + 1;
+  if (jellyInSeason(p, nowM)) return h('span', { class: 'beach-chip jelly', title: 'Elevated jellyfish season — check the flags' }, '🪼 Jellyfish season');
+  if (p.lifeguard === 'yes') return h('span', { class: 'beach-chip on' }, '🏖️ Lifeguards');
+  if (p.lifeguard === 'no') return h('span', { class: 'beach-chip off' }, '🏖️ No lifeguards');
+  return null;
+}
+// Detail-screen block: lifeguard status, swimming conditions, seasonal jellyfish risk
+// (live "in season this month?"), and a first-aid link. Live sea conditions (waves /
+// water temperature) are appended separately by the marine add-on when online.
+function beachInfoCard(p) {
+  if (!isBeach(p)) return null;
+  const card = h('div', { class: 'card beach-info' }, [h('h2', {}, '🏖️ Beach & swimming')]);
+  if (p.lifeguard) {
+    const lg = LIFEGUARD_LABEL[p.lifeguard] || LIFEGUARD_LABEL.unknown;
+    card.append(h('p', { class: `beach-lg ${lg[2]}` }, `${lg[0]} ${lg[1]}`));
+  } else {
+    card.append(h('p', { class: 'muted' }, 'Check on arrival for a lifeguard flag system.'));
+  }
+  if (p.swim) card.append(h('p', {}, [h('strong', {}, 'Conditions: '), h('span', {}, p.swim)]));
+  const m = jellyMonths(p);
+  if (m) {
+    const on = m.includes(new Date().getMonth() + 1);
+    card.append(h('p', { class: `beach-jelly ${on ? 'on' : 'off'}` },
+      on ? `🪼 Jellyfish: elevated risk this month (peak season ${formatMonths(m)})`
+         : `🪼 Jellyfish: lower risk now — peak season is ${formatMonths(m)}`));
+  }
+  if (p.jellyfish) card.append(h('p', { class: 'muted' }, p.jellyfish));
+  card.append(h('p', { class: 'muted small' }, 'No real-time jellyfish warning exists anywhere in the region. Always obey the beach flags — a red flag means do not swim — and ask lifeguards or locals about recent sightings.'));
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#danger') }, '🩹 Sting & marine first aid'));
+  return card;
+}
+
 // "1.2 km · ~15 min walk away" from the user's last GPS fix, when known. Offline,
 // pure maths (haversine + ~4.8 km/h walking pace); walk time only for close spots.
 // Returns a chip node or null. Reused on cards, detail and the near-me experiences.
@@ -2761,6 +2827,7 @@ function placeCard(p) {
     ]) : null,
     travelerChips(p),
     isMarket(p) ? h('div', { style: 'margin:2px 0' }, marketChip(p)) : null,
+    (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin:2px 0' }, bc) : null; })(),
     p.blurb ? h('p', {}, p.blurb) : null,
     h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
     dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
@@ -3178,6 +3245,8 @@ function placeScreen(id) {
   if (accBlock) wrap.append(accBlock);
   const mkt = marketInfoCard(p);
   if (mkt) wrap.append(mkt);
+  const beach = beachInfoCard(p);
+  if (beach) wrap.append(beach);
   const orient = orientationCard(p);
   if (orient) wrap.append(orient);
   const transit = transitCard(p);

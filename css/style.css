@@ -992,6 +992,23 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 [data-theme="dark"] .mkt-chip { color: #E0A100; }
 [data-theme="dark"] .mkt-chip.on { color: #7ED9A6; }
 
+/* Beach & swimming safety block + card chip. */
+.beach-info .beach-lg { font-weight: 800; margin: 4px 0; }
+.beach-info .beach-lg.on { color: var(--good); }
+.beach-info .beach-lg.off { color: var(--warn); }
+.beach-info .beach-jelly { font-weight: 700; margin: 6px 0 2px; }
+.beach-info .beach-jelly.on { color: var(--warn); }
+.beach-info .beach-jelly.off { color: var(--muted, #667); }
+.beach-info .small { font-size: 0.82rem; }
+.beach-chip {
+  display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
+  border-radius: 999px; padding: 2px 10px;
+  background: rgba(31,122,71,0.16); color: var(--good);
+}
+.beach-chip.off { background: rgba(196,90,60,0.16); color: var(--warn); }
+.beach-chip.jelly { background: rgba(150,60,180,0.18); color: #7a2e93; }
+[data-theme="dark"] .beach-chip.jelly { color: #D69BE8; }
+
 /* One-time "use my location" invite on Home. */
 .geo-invite { border-left: 3px solid var(--grape); }
 
