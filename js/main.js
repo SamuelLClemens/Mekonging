@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.227.0';
+const APP_VERSION = 'mk-v0.228.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -3073,27 +3073,40 @@ function placeCard(p) {
   const colls = collectionsForItem(p.id);
   const dchip = distanceChip(p);
   const accent = bucketColor(p);
+  const fam = placeFamily(p);
+  const src = placePhotoSrc(p);
+  // A recognition thumbnail on the left: a self-hosted photo when one exists (offline,
+  // lazy-loaded), else a calm family-emoji placeholder. The category colour still reads
+  // from the left accent bar and the coloured tags, so the placeholder stays quiet.
+  const thumb = src
+    ? h('img', { class: 'pc-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
+    : h('span', { class: 'pc-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
   return h('div', { class: 'card place-card', style: `--cat:${accent}` }, [
-    h('div', { class: 'place-head' }, [
-      h('h2', {}, `${p.isPin ? '📌 ' : ''}${p.name}`),
-      h('button', {
-        class: 'save-star', 'aria-label': 'Quick save to favourites', title: 'Quick save',
-        onclick: (e) => { const on = toggleFavorite(p.id); e.currentTarget.textContent = on ? '★' : '☆'; },
-      }, isFavorite(p.id) ? '★' : '☆'),
+    h('div', { class: 'pc-row' }, [
+      thumb,
+      h('div', { class: 'pc-body' }, [
+        h('div', { class: 'place-head' }, [
+          h('h2', {}, `${p.isPin ? '📌 ' : ''}${p.name}`),
+          h('button', {
+            class: 'save-star', 'aria-label': 'Quick save to favourites', title: 'Quick save',
+            onclick: (e) => { const on = toggleFavorite(p.id); e.currentTarget.textContent = on ? '★' : '☆'; },
+          }, isFavorite(p.id) ? '★' : '☆'),
+        ]),
+        (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
+          h('div', { class: 'cats' }, cats.map((c) => catTag(c))),
+          (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+        ]) : null,
+        travelerChips(p),
+        isMarket(p) ? h('div', { style: 'margin:2px 0' }, marketChip(p)) : null,
+        (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin:2px 0' }, bc) : null; })(),
+        p.blurb ? h('p', {}, p.blurb) : null,
+        h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
+        dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
+        p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
+        colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
+          h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
+      ]),
     ]),
-    (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
-      h('div', { class: 'cats' }, cats.map((c) => catTag(c))),
-      (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
-    ]) : null,
-    travelerChips(p),
-    isMarket(p) ? h('div', { style: 'margin:2px 0' }, marketChip(p)) : null,
-    (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin:2px 0' }, bc) : null; })(),
-    p.blurb ? h('p', {}, p.blurb) : null,
-    h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
-    dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
-    p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
-    colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
-      h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
     h('div', { class: 'row-between' }, [
       h('button', { class: 'btn ghost', onclick: () => go(`#place-${p.id}`) }, 'Details'),
       h('button', { class: 'btn ghost', onclick: () => saveSheet(p.id) }, '＋ Save'),

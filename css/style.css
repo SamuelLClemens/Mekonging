@@ -483,6 +483,14 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .place-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--cat, transparent); }
 .cat-title-bar { border-left: 5px solid var(--cat, var(--magenta)); padding-left: var(--sp-2); }
 .save-star { border: none; background: none; cursor: pointer; font-size: 1.5rem; color: var(--sun-deep); line-height: 1; }
+/* Two-column place card: a full-height recognition thumbnail on the left, content on the
+   right. The thumbnail is calm (photo, or neutral-tinted family emoji) so lists stay slick. */
+.pc-row { display: flex; gap: 12px; align-items: stretch; }
+.pc-body { flex: 1 1 auto; min-width: 0; }
+.pc-thumb { flex: 0 0 auto; width: 92px; align-self: stretch; min-height: 92px; object-fit: cover; border-radius: 10px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+.pc-thumb.ph { display: flex; align-items: center; justify-content: center; font-size: 1.9rem; line-height: 1; background: rgba(0,0,0,0.05); }
+[data-theme="dark"] .pc-thumb.ph { background: rgba(255,255,255,0.06); }
+@media (max-width: 360px) { .pc-thumb { width: 72px; min-height: 72px; } }
 
 .list-note { display: flex; gap: var(--sp-2); padding: var(--sp-2) 0; }
 .list-note::before { content: "✷"; color: var(--orange); }
