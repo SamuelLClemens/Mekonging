@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.214.0';
+const APP_VERSION = 'mk-v0.215.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2650,6 +2650,7 @@ const PLACE_BUCKETS = [
   ['culture', '🏛 Culture & history'],
   ['nature', '🌿 Nature & outdoors'],
   ['nightlife', '🌃 Nightlife & social'],
+  ['rental', '🛵 Getting around & rentals'],
   ['other', '📌 More to see'],
 ];
 // One semantic colour per category bucket so the eye can tell a place to STAY (blue)
@@ -2658,12 +2659,13 @@ const PLACE_BUCKETS = [
 // legend) read as an accent on both light and dark themes.
 const BUCKET_COLOR = {
   food: '#E8632A', stay: '#2C7DA0', culture: '#8A5CC0',
-  nature: '#2E8B57', nightlife: '#D6336C', other: '#8A8F98',
+  nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
 };
 function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
 function placeBucket(p) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   if (p.stayType || cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
+  if (cats.includes('rental')) return 'rental';
   for (const it of ['food', 'culture', 'nature', 'nightlife']) if (cats.includes(it)) return it;
   return 'other';
 }
