@@ -475,6 +475,13 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 [data-theme="dark"] .todo-cond-chip { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
 .todo-filter { margin-top: 8px; }
 .todo-tier { display: flex; align-items: baseline; gap: 6px; font-size: var(--fs-h3); margin: 14px 0 6px; }
+/* "Plan ahead" — a quiet disclosure so it never competes with the picks by default. */
+.todo-plan-d { margin-top: 10px; }
+.todo-plan-d > summary { cursor: pointer; font-size: var(--fs-sm); color: var(--ink-soft); list-style: none; padding: 4px 0; }
+.todo-plan-d > summary::-webkit-details-marker { display: none; }
+.todo-plan-d > summary::before { content: '▸ '; }
+.todo-plan-d[open] > summary::before { content: '▾ '; }
+.todo-plan { margin-top: 6px; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .place-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 /* Category colour-coding: an inset accent bar keyed to the place's bucket, so stay /
