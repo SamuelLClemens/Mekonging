@@ -51,7 +51,7 @@ import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine } from './weather.js';
 import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.213.0';
+const APP_VERSION = 'mk-v0.214.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2767,9 +2767,49 @@ function beachChip(p) {
   if (p.lifeguard === 'no') return h('span', { class: 'beach-chip off' }, '🏖️ No lifeguards');
   return null;
 }
-// Detail-screen block: lifeguard status, swimming conditions, seasonal jellyfish risk
-// (live "in season this month?"), and a first-aid link. Live sea conditions (waves /
-// water temperature) are appended separately by the marine add-on when online.
+// Wave-height descriptor for swimming: [label, severity class].
+function waveDesc(m) {
+  if (m == null) return null;
+  if (m < 0.3) return ['glassy calm', 'on'];
+  if (m < 0.6) return ['calm', 'on'];
+  if (m < 1.25) return ['moderate — take care', 'off'];
+  if (m < 2.5) return ['rough — strong swimmers only', 'off'];
+  return ['very rough — stay out of the water', 'off'];
+}
+function seaAgo(ts) {
+  const min = Math.max(1, Math.round((Date.now() - ts) / 60000));
+  if (min < 60) return `${min} min ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.round(hr / 24)}d ago`;
+}
+// Live sea-state sub-block for a beach: significant wave height + water temperature from
+// the Open-Meteo Marine API, painted from cache immediately and refreshed when online.
+// Honest offline fallback so the beach card never blocks on the network.
+function beachSeaBlock(coords) {
+  const box = h('div', { class: 'beach-sea' });
+  function paint(rec, loading) {
+    box.innerHTML = '';
+    if (rec && rec.waveHeight != null) {
+      const wd = waveDesc(rec.waveHeight);
+      const bits = [`🌊 Sea now: waves ${rec.waveHeight.toFixed(1)} m`];
+      if (wd) bits.push(`(${wd[0]})`);
+      if (rec.seaTemp != null) bits.push(`· water ${Math.round(rec.seaTemp)}°C`);
+      box.append(h('p', { class: `beach-sea-line ${wd ? wd[1] : ''}` }, bits.join(' ')));
+      box.append(h('p', { class: 'muted small' }, `Live sea state · updated ${seaAgo(rec.fetchedAt)}${online() ? '' : ' · offline'}`));
+    } else {
+      box.append(h('p', { class: 'muted small' }, loading ? '🌊 Checking sea conditions…' : '🌊 Live sea conditions load when you are online.'));
+    }
+  }
+  const cached = getCachedMarine(coords);
+  paint(cached, !cached && online());
+  if (online()) {
+    refreshMarine(coords).then((r) => { if ((location.hash || '').startsWith('#place') && r) paint(r, false); });
+  }
+  return box;
+}
+// Detail-screen block: lifeguard status, swimming conditions, live sea state (waves /
+// water temperature), seasonal jellyfish risk ("in season this month?"), and first aid.
 function beachInfoCard(p) {
   if (!isBeach(p)) return null;
   const card = h('div', { class: 'card beach-info' }, [h('h2', {}, '🏖️ Beach & swimming')]);
@@ -2780,6 +2820,7 @@ function beachInfoCard(p) {
     card.append(h('p', { class: 'muted' }, 'Check on arrival for a lifeguard flag system.'));
   }
   if (p.swim) card.append(h('p', {}, [h('strong', {}, 'Conditions: '), h('span', {}, p.swim)]));
+  if (p.coords && p.coords.lat != null && p.coords.lng != null) card.append(beachSeaBlock(p.coords));
   const m = jellyMonths(p);
   if (m) {
     const on = m.includes(new Date().getMonth() + 1);

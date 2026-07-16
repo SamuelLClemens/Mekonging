@@ -1000,6 +1000,11 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .beach-info .beach-jelly.on { color: var(--warn); }
 .beach-info .beach-jelly.off { color: var(--muted, #667); }
 .beach-info .small { font-size: 0.82rem; }
+.beach-info .beach-sea { margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: rgba(40,120,200,0.10); }
+.beach-info .beach-sea-line { font-weight: 700; margin: 0; }
+.beach-info .beach-sea-line.on { color: var(--good); }
+.beach-info .beach-sea-line.off { color: var(--warn); }
+[data-theme="dark"] .beach-info .beach-sea { background: rgba(80,150,220,0.14); }
 .beach-chip {
   display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
   border-radius: 999px; padding: 2px 10px;

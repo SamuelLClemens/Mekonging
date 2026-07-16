@@ -7,6 +7,8 @@ import { haversineKm } from './util.js';
 
 const PREFIX = 'mk.wx.';
 const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
+const MARINE_ENDPOINT = 'https://marine-api.open-meteo.com/v1/marine';
+const MARINE_PREFIX = 'mk.sea.';
 
 // Key cities per country with coordinates. The first entry for each country is its
 // default (capital / main hub).
@@ -164,4 +166,33 @@ export async function refreshWeather(spot) {
     }
   } catch { /* offline or blocked — fall through to cache */ }
   return getCachedWeather(key);
+}
+
+// --- Marine / swimming conditions -------------------------------------------
+// Live sea state for a specific beach via Open-Meteo's Marine API (free, no key).
+// Coordinate-specific (not the regional hub), cached per rounded lat/lng so it works
+// offline. Returns null when offline with no cache, or when the point has no marine
+// data (inland / lake). Never throws.
+function marineKey(coords) { return `${MARINE_PREFIX}${coords.lat.toFixed(2)},${coords.lng.toFixed(2)}`; }
+export function getCachedMarine(coords) {
+  if (!coords || coords.lat == null || coords.lng == null) return null;
+  try { return JSON.parse(localStorage.getItem(marineKey(coords))) || null; } catch { return null; }
+}
+export async function refreshMarine(coords) {
+  if (!coords || coords.lat == null || coords.lng == null) return null;
+  const key = marineKey(coords);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedMarine(coords);
+  const url = `${MARINE_ENDPOINT}?latitude=${coords.lat}&longitude=${coords.lng}`
+    + '&current=wave_height,wave_period,sea_surface_temperature&timezone=auto';
+  try {
+    const res = await fetch(url);
+    const d = await res.json();
+    const c = d && d.current;
+    if (c && c.wave_height != null) {
+      const rec = { fetchedAt: Date.now(), waveHeight: c.wave_height, wavePeriod: c.wave_period, seaTemp: c.sea_surface_temperature };
+      try { localStorage.setItem(key, JSON.stringify(rec)); } catch { /* full */ }
+      return rec;
+    }
+  } catch { /* offline or no marine data — fall through to cache */ }
+  return getCachedMarine(coords);
 }
