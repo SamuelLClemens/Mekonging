@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.231.0';
+const APP_VERSION = 'mk-v0.232.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -6551,10 +6551,18 @@ function todoCard(x, maxReasons) {
       ]),
       h('div', { class: 'cats', style: 'margin:2px 0' }, cats.slice(0, 3).map((c) => catTag(c))),
       rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
-      h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, dist != null ? `${dist < 10 ? dist.toFixed(1) : Math.round(dist)} km away` : null].filter(Boolean).join(' · ')),
+      h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, todoDistLabel(dist)].filter(Boolean).join(' · ')),
     ]),
     thumb,
   ]);
+}
+// Distance label that answers "can I walk it?" for close picks: within ~3 km it adds a
+// rough walking time (≈4.8 km/h), so the "Right here" tier reads as genuinely reachable.
+function todoDistLabel(dist) {
+  if (dist == null) return null;
+  const km = dist < 10 ? dist.toFixed(1) : String(Math.round(dist));
+  if (dist <= 3) return `${km} km · ~${Math.max(1, Math.round((dist / 4.8) * 60))} min walk`;
+  return `${km} km away`;
 }
 
 function daySuggestScreen(country) {
