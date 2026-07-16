@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.223.0';
+const APP_VERSION = 'mk-v0.224.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2402,7 +2402,7 @@ function placesScreen(arg) {
         e.currentTarget.setAttribute('aria-pressed', selInterests.has(it.id) ? 'true' : 'false');
         renderList();
       },
-    }, `${it.emoji} ${it.label}`)));
+    }, [swatch(catColor(it.id)), ` ${it.emoji} ${it.label}`])));
 
   const budgets = [['flexible', 'Any budget'], ['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end']];
   const budgetChips = h('div', { class: 'chips' }, budgets.map(([id, lbl]) =>
@@ -2414,7 +2414,7 @@ function placesScreen(arg) {
           c.setAttribute('aria-pressed', c.dataset.b === id ? 'true' : 'false'));
         renderList();
       },
-    }, lbl)));
+    }, [swatch(tierColor(id)), ` ${lbl}`])));
 
   // Good-for-kids toggle (remembered in prefs).
   const kidsChip = h('button', {
@@ -2490,6 +2490,10 @@ function placesScreen(arg) {
   wrap.append(h('details', { class: 'filters-collapse' }, [
     h('summary', {}, activeFilterCount ? `⚙ Filters · ${activeFilterCount} on` : '⚙ Filters'),
     filterCard,
+  ]));
+  wrap.append(h('details', { class: 'filters-collapse' }, [
+    h('summary', {}, '🎨 Colour key'),
+    colorKeyCard(),
   ]));
 
   const listEl = h('div', {});
@@ -2694,6 +2698,63 @@ function placeBucket(p) {
   if (cats.includes('rental')) return 'rental';
   for (const it of ['food', 'culture', 'nature', 'nightlife']) if (cats.includes(it)) return it;
   return 'other';
+}
+
+// ---- CANONICAL CATEGORY COLOUR SYSTEM ---------------------------------------
+// One fixed hue per category "family", used EVERYWHERE a category appears (tags on
+// cards and detail, filters, the colour key) so the colour means the same thing all
+// over the app. Every one of the ~30 fine categories in the data maps to a family.
+// Fixed hues (not CSS vars) so they read as an accent on both light and dark themes.
+const CATEGORY_FAMILIES = [
+  { key: 'culture',   label: 'Culture & history',   emoji: '🏛', color: '#8A5CC0' },
+  { key: 'nature',    label: 'Nature & outdoors',   emoji: '🌿', color: '#2E8B57' },
+  { key: 'beach',     label: 'Beaches & water',     emoji: '🏖', color: '#0EA5C4' },
+  { key: 'food',      label: 'Food & drink',        emoji: '🍜', color: '#E8632A' },
+  { key: 'market',    label: 'Markets & shopping',  emoji: '🛍', color: '#E0A100' },
+  { key: 'stay',      label: 'Places to stay',      emoji: '🛏', color: '#2C7DA0' },
+  { key: 'nightlife', label: 'Nightlife & social',  emoji: '🌃', color: '#D6336C' },
+  { key: 'transport', label: 'Getting around',      emoji: '🛵', color: '#0F9D8C' },
+  { key: 'wellness',  label: 'Wellness & spa',      emoji: '💆', color: '#7048E8' },
+  { key: 'other',     label: 'More to see',         emoji: '📌', color: '#8A8F98' },
+];
+const FAMILY_COLOR = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.key, f.color]));
+const FAMILY_META = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.key, f]));
+const CAT_FAMILY = {
+  culture: 'culture', temple: 'culture', museum: 'culture', spectacle: 'culture', history: 'culture', wat: 'culture', heritage: 'culture',
+  nature: 'nature', hike: 'nature', waterfall: 'nature', viewpoint: 'nature', park: 'nature', wildlife: 'nature', hotspring: 'nature', sunset: 'nature', riverside: 'nature', garden: 'nature', cave: 'nature', outdoors: 'nature',
+  beach: 'beach', island: 'beach', water: 'beach', dive: 'beach', snorkel: 'beach',
+  food: 'food', streetfood: 'food', seafood: 'food', restaurant: 'food', cafe: 'food',
+  market: 'market', shopping: 'market',
+  stay: 'stay', hotel: 'stay', guesthouse: 'stay', homestay: 'stay', hostel: 'stay', resort: 'stay', apartment: 'stay', camping: 'stay', backpacker: 'stay', accommodation: 'stay',
+  nightlife: 'nightlife', bars: 'nightlife', clubs: 'nightlife', cocktail: 'nightlife', rooftop: 'nightlife',
+  transport: 'transport', rental: 'transport',
+  wellness: 'wellness', spa: 'wellness',
+};
+function catFamily(cat) { return CAT_FAMILY[cat] || 'other'; }
+function catColor(cat) { return FAMILY_COLOR[catFamily(cat)] || FAMILY_COLOR.other; }
+// A category chip coloured by its family, with the family name as a tooltip.
+function catTag(cat, label) {
+  const fam = catFamily(cat);
+  return h('span', { class: 'cat-tag', style: `background:${FAMILY_COLOR[fam]}`, title: FAMILY_META[fam].label }, label || cat);
+}
+
+// Budget-tier colours — one source of truth shared by badges, chips and the key.
+const TIER_COLOR = { low: 'var(--tier-low)', mid: 'var(--tier-mid)', high: 'var(--tier-high)', any: 'var(--grape)', flexible: 'var(--grape)' };
+function tierColor(tier) { return TIER_COLOR[tier] || 'var(--grape)'; }
+// A small round colour swatch (used to colour filter chips consistently with the key).
+function swatch(color) { return h('span', { class: 'swatch', 'aria-hidden': 'true', style: `background:${color}` }); }
+
+// The site-wide colour key: what each category colour and budget colour means. Shown
+// (collapsed) on Places and the Map so the colour language is always explained.
+function colorKeyCard() {
+  const wrap = h('div', { class: 'color-key' });
+  wrap.append(h('div', { class: 'muted', style: 'margin:2px 0 4px' }, 'Category colours'));
+  wrap.append(h('div', { class: 'cats' }, CATEGORY_FAMILIES.filter((f) => f.key !== 'other').map((f) =>
+    h('span', { class: 'cat-tag', style: `background:${f.color}`, title: f.label }, `${f.emoji} ${f.label}`))));
+  wrap.append(h('div', { class: 'muted', style: 'margin:10px 0 4px' }, 'Budget'));
+  wrap.append(h('div', { class: 'cats' }, [['low', 'Budget'], ['mid', 'Mid-range'], ['high', 'Higher-end'], ['any', 'Any']].map(([t, l]) =>
+    h('span', { class: `tier ${t}` }, l))));
+  return wrap;
 }
 
 // ---- MARKETS: day-of-week awareness -----------------------------------------
@@ -2981,7 +3042,7 @@ function placeCard(p) {
       }, isFavorite(p.id) ? '★' : '☆'),
     ]),
     (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
-      h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag', style: `background:${accent}` }, c))),
+      h('div', { class: 'cats' }, cats.map((c) => catTag(c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
     travelerChips(p),
@@ -3435,7 +3496,7 @@ function placeScreen(id) {
   const hasPrice = p.priceRange && p.priceRange.currency;
   const card = h('div', { class: 'card' }, [
     (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
-      h('div', { class: 'cats' }, cats.map((c) => h('span', { class: 'cat-tag' }, c))),
+      h('div', { class: 'cats' }, cats.map((c) => catTag(c))),
       (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     ]) : null,
     travelerChips(p),
