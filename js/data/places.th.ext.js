@@ -122,7 +122,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Thai National Parks"],
     mapQuery: "Mu Ko Lanta National Park lighthouse", coords: { lat: 7.4711, lng: 99.0828 },
     bookHint: "No booking; pay foreigner entry at the gate. Scooter or taxi from Saladan/Long Beach.", verified: "2026-06",
-    sources: [{ org: "Thai National Parks", url: "https://www.thainationalparks.com/mu-ko-lanta-national-park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org/Destinations/Provinces/Ko-Lanta/357" }],
+    sources: [{ org: "Thai National Parks", url: "https://www.thainationalparks.com/mu-ko-lanta-national-park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org/Destinations/Provinces/Ko-Lanta/357" }], lifeguard: "no", swim: "The national park's beaches and coves are calm and clear in the November–April dry season; mind the monsoon swell, and note there is no patrol.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
   },
   {
     id: "th-ext-lanta-old-town", name: "Lanta Old Town (Sri Raya) food & stilt houses", city: "Koh Lanta", country: "th",
@@ -304,7 +304,7 @@ export const PLACES_TH_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "PADI dive operators"],
     mapQuery: "Similan Islands National Park", coords: { lat: 8.6500, lng: 97.6400 },
     bookHint: "Book a speedboat day trip or liveaboard through a Khao Lak/Phuket operator; park fee usually included.", verified: "2026-06",
-    sources: [{ org: "DNP Thailand", url: "https://portal.dnp.go.th" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "DNP Thailand", url: "https://portal.dnp.go.th" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Clear, calm water excellent for snorkelling on dry-season (roughly October–May) boat trips; the park closes in the monsoon. No patrol — stay with your boat.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
   },
 {
     id: "th-ext-sangkhlaburi", name: "Sangkhlaburi & the Mon Bridge", city: "Kanchanaburi", country: "th",
@@ -348,7 +348,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Mak island Trat Thailand", coords: { lat: 11.8200, lng: 102.4700 },
     bookHint: "Book a speedboat from Laem Ngop (Trat) and reserve a bungalow ahead in high season.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Calm, shallow, gently shelving bays that are among the safest swimming in the eastern Gulf; no patrol.", jellyfishMonths: [7, 8, 9, 10], jellyfish: "Potentially fatal box jellyfish (Chironex) occur in Gulf of Thailand waters, with recorded stings peaking in the July–October wet season and after heavy rain. If stung, douse the area with vinegar and get medical help urgently."
   },
 {
     id: "th-ext-maya-bay", name: "Maya Bay (Koh Phi Phi Leh)", city: "Krabi", country: "th",
@@ -363,7 +363,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Maya Bay Koh Phi Phi Leh", coords: { lat: 7.677, lng: 98.766 },
     bookHint: "Join an approved boat tour from Phi Phi or Krabi; park fee paid on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Swimming is not permitted in Maya Bay itself, to protect the recovering reef and its blacktip reef sharks; you view the bay from the shore or your boat.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
   },
   {
     id: "th-ext-koh-kradan", name: "Koh Kradan", city: "Trang", country: "th",
@@ -595,7 +595,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Ao Nang Krabi beach resort", coords: { lat: 8.0325, lng: 98.8228 },
     bookHint: "Compare Booking/Agoda for the same resort; book the Railay longtail transfer and island trips ahead.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Ao Nang and Railay have calm, sheltered swimming in the November–April dry season; the southwest monsoon (May–October) brings swell and murkier water. No formal patrol — mind long-tail boat traffic near shore.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
   },
   {
     id: "th-ext-koh-tao-diving", name: "Koh Tao Scuba Diving Day Trip", city: "Koh Tao", country: "th",
@@ -1571,7 +1571,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 9.6167, lng: 99.6667 },
     bookHint: "Book a day tour from Ko Samui or Ko Pha Ngan; independent access is difficult.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }], lifeguard: "no", swim: "Swimming and snorkelling are on national-park boat trips; the water is clear and generally calm, but there is no patrol — stay with your group.", jellyfishMonths: [7, 8, 9, 10], jellyfish: "Potentially fatal box jellyfish (Chironex) occur in Gulf of Thailand waters, with recorded stings peaking in the July–October wet season and after heavy rain. If stung, douse the area with vinegar and get medical help urgently."
   },
   {
     id: "th-ext-koh-lipe",
@@ -1616,7 +1616,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 8.1167, lng: 98.5833 },
     bookHint: "No booking for public longtails from Bang Rong pier; reserve resorts ahead.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }], lifeguard: "no", swim: "Quiet, shallow east-facing beaches with a big tidal range — at low tide the sea retreats a long way; generally calm, and unpatrolled.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
   },
   {
     id: "th-ext-koh-samet",

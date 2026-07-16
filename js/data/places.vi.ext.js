@@ -144,7 +144,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Vietnam Coracle", "Google Maps consensus", "Vietnam Airlines Travel Guide"],
     mapQuery: "Rach Vem Starfish Beach Phu Quoc", coords: { lat: 10.3686, lng: 103.9183 },
     bookHint: "No booking; scooter or taxi to the north of the island, about 45 minutes from Duong Dong.", verified: "2026-06",
-    sources: [{ org: "Vietnam Coracle", url: "https://www.vietnamcoracle.com/phu-quoc-beaches-a-guide/" }, { org: "Vietnam Airlines Travel Guide", url: "https://www.vietnamairlines.com/us/en/plan-book/travel/travel-guide/phu-quoc-island-beaches" }],
+    sources: [{ org: "Vietnam Coracle", url: "https://www.vietnamcoracle.com/phu-quoc-beaches-a-guide/" }, { org: "Vietnam Airlines Travel Guide", url: "https://www.vietnamairlines.com/us/en/plan-book/travel/travel-guide/phu-quoc-island-beaches" }], lifeguard: "no", swim: "Very shallow, warm, mangrove-fringed north-Phu-Quoc water known for its starfish rather than for swimming; stand, do not touch or lift the starfish. No patrol.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings."
   },
   {
     id: "vi-ext-cai-rang", name: "Cai Rang Floating Market", city: "Can Tho", country: "vi",
@@ -275,7 +275,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Lang Co Beach Vietnam", coords: { lat: 16.2300, lng: 108.0800 },
     bookHint: "No booking for the public beach; trains and buses on the Hue-Da Nang line stop at Lang Co.", verified: "2026-06",
-    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "A long, gently shelving central-coast bay; calm in summer but with rip currents and rougher water in the September–December rainy season. Treat as unpatrolled.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
   },
 {
     id: "vi-ext-ban-gioc", name: "Ban Gioc Waterfall", city: "Cao Bang", country: "vi",
@@ -367,7 +367,7 @@ export const PLACES_VI_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Con Dao Islands Vietnam", coords: { lat: 8.69, lng: 106.61 },
     bookHint: "Fly or ferry in; book accommodation and park activities in advance.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Remote, clean and often near-empty beaches with clear, calm water; some exposed shores have strong currents and there is no patrol, so swim near your beach and ask locally.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings."
   },
   {
     id: "vi-ext-ky-co", name: "Ky Co Beach", city: "Quy Nhon", country: "vi",
@@ -381,7 +381,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ky Co Beach Quy Nhon Vietnam", coords: { lat: 13.66, lng: 109.27 },
     bookHint: "Join a Quy Nhon tour or hire a boat/car; pay the access fee on site.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "A sheltered turquoise cove reached by boat or a steep track; shallow and usually calm, but remote with no patrol.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
   },
   {
     id: "vi-ext-doc-let", name: "Doc Let Beach", city: "Nha Trang", country: "vi",
@@ -581,7 +581,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Phu Quoc Long Beach resort", coords: { lat: 10.1899, lng: 103.9598 },
     bookHint: "Compare Booking/Agoda/Trip.com for the same resort; book beach-week dates and transfers ahead.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Phu Quoc's west-coast resort beaches (Long Beach) have calm, warm water and famous sunsets; the dry season is roughly November–April. Treat as unpatrolled unless your resort posts flags.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings."
   },
   {
     id: "vi-ext-tamcoc-guesthouse", name: "Tam Coc / Ninh Binh guesthouse", city: "Ninh Binh", country: "vi",
@@ -1636,7 +1636,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2388, lng: 109.1967 },
     bookHint: "Compare Booking, Agoda and Trip.com for the same hotel; book summer and Tet dates well ahead.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Nha Trang's long city beach has gentle water in the dry season (roughly January–August) and rougher surf with rip currents in the October–December rainy months; flagged swim zones operate in season — obey the flags.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
   },
   {
     id: "vi-ext-nhatrang-night-market-food",
@@ -2496,7 +2496,7 @@ export const PLACES_VI_EXT = [
         "org": "Google Maps",
         "url": "https://maps.google.com"
       }
-    ]
+    ], "lifeguard": "unknown", "swim": "Badly eroded in places, with breakwaters and sudden drop-offs; the calmest swimming near Hoi An is now at neighbouring An Bang. Take care and treat as unpatrolled.", "jellyfishMonths": [6, 7, 8, 9], "jellyfish": "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water."
   },
   {
     "id": "vi-ext-kim-bong-carpentry",
@@ -2924,7 +2924,7 @@ export const PLACES_VI_EXT = [
         "org": "Tripadvisor",
         "url": "https://www.tripadvisor.com/Attraction_Review-g737051-d5979069-Reviews-Monkey_Island-Cat_Ba_Hai_Phong.html"
       }
-    ]
+    ], "lifeguard": "no", "swim": "Quiet resort beaches on calm Lan Ha Bay; watch the resident macaques, which can be aggressive around food. No patrol.", "jellyfishMonths": [6, 7, 8], "jellyfish": "Jellyfish can appear in the warm summer months (roughly June–August) around Ha Long and Cat Ba; stings are usually mild, but ask locally and rinse any sting with vinegar."
   },
   {
     "id": "vi-ext-viet-hai-village",
@@ -3073,7 +3073,7 @@ export const PLACES_VI_EXT = [
         "org": "Wikipedia",
         "url": "https://en.wikipedia.org/wiki/C%C3%A1t_B%C3%A0_Island"
       }
-    ]
+    ], "lifeguard": "unknown", "swim": "Three small, sheltered coves near Cat Ba town, linked by a cliff path; calm and family-friendly in summer. Treat as unpatrolled.", "jellyfishMonths": [6, 7, 8], "jellyfish": "Jellyfish can appear in the warm summer months (roughly June–August) around Ha Long and Cat Ba; stings are usually mild, but ask locally and rinse any sting with vinegar."
   },
   {
     "id": "vi-ext-sung-sot-cave",
@@ -3176,7 +3176,7 @@ export const PLACES_VI_EXT = [
         "org": "UNESCO World Heritage Centre",
         "url": "https://whc.unesco.org/en/list/672/"
       }
-    ]
+    ], "lifeguard": "no", "swim": "A small crescent beach in the sheltered, calm waters of Ha Long Bay, busy with tour boats. No patrol — swim close to shore.", "jellyfishMonths": [6, 7, 8], "jellyfish": "Jellyfish can appear in the warm summer months (roughly June–August) around Ha Long and Cat Ba; stings are usually mild, but ask locally and rinse any sting with vinegar."
   },
   {
     "id": "vi-ext-bai-tu-long-bay",
