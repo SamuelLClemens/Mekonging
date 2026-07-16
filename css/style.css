@@ -1014,6 +1014,15 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .beach-chip.jelly { background: rgba(150,60,180,0.18); color: #7a2e93; }
 [data-theme="dark"] .beach-chip.jelly { color: #D69BE8; }
 
+/* Community jellyfish sightings. */
+.jelly-reports { margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: rgba(150,60,180,0.08); }
+.jelly-reports .jelly-head { font-weight: 700; margin: 0 0 4px; }
+.jelly-reports .sev-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.jelly-reports .jelly-note-input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.18); font: inherit; box-sizing: border-box; }
+.jelly-reports .jelly-form summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+[data-theme="dark"] .jelly-reports { background: rgba(150,60,180,0.14); }
+[data-theme="dark"] .jelly-reports .jelly-note-input { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.05); color: inherit; }
+
 /* Air-quality readout (US AQI bands). */
 .air-block { margin: 6px 0; }
 .aqi-line { font-weight: 700; margin: 0; }

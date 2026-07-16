@@ -5,7 +5,7 @@ import {
   store, save, resetAll, exportData, importData, isFavorite, toggleFavorite, prefersReducedMotion,
   ensureDurability, storageStatus, requestPersistence,
   createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
-  addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField,
+  addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField, getJellyReports, addJellyReport, todayKey,
   addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
   getAlbum, addAlbumPhoto, updateAlbumPhoto, deleteAlbumPhoto,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.216.0';
+const APP_VERSION = 'mk-v0.217.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2810,6 +2810,66 @@ function beachSeaBlock(coords) {
   }
   return box;
 }
+// Community jellyfish sightings — the honest "updated on wifi" layer: no real-time feed
+// exists, but travellers can record and SHARE sightings through the backendless Travel
+// Circle, and received ones pin to the beach. Reports live on placeData[id].jellyReports.
+const SEV_LABEL = { seen: 'Jellyfish seen', lots: 'Lots of jellyfish', stung: 'Someone was stung' };
+function daysSinceISO(iso) { const n = -daysUntilISO(iso); return Number.isFinite(n) ? n : 9999; }
+function fmtReportDate(iso) {
+  const ds = daysSinceISO(iso);
+  if (ds <= 0) return 'today';
+  if (ds === 1) return 'yesterday';
+  if (ds < 30) return `${ds} days ago`;
+  return iso;
+}
+function jellyReportsBlock(p) {
+  const wrap = h('div', { class: 'jelly-reports' });
+  const list = h('div', {});
+  wrap.append(list);
+  function render() {
+    list.innerHTML = '';
+    const reps = getJellyReports(p.id);
+    const recent = reps.filter((r) => daysSinceISO(r.d) <= 60).sort((a, b) => daysSinceISO(a.d) - daysSinceISO(b.d));
+    if (recent.length) {
+      list.append(h('p', { class: 'jelly-head' }, `🪼 Traveller sightings — ${recent.length} in the last 60 days`));
+      recent.slice(0, 4).forEach((r) => {
+        const who = r.by === 'You' ? 'you' : (r.by || 'a traveller');
+        const when = fmtReportDate(r.d);
+        list.append(h('div', { class: 'list-note' },
+          `${when.charAt(0).toUpperCase()}${when.slice(1)} · ${SEV_LABEL[r.sev] || SEV_LABEL.seen}${r.note ? ` — ${r.note}` : ''} · ${who}`));
+      });
+    } else {
+      list.append(h('p', { class: 'muted small' }, reps.length
+        ? 'No sightings in the last 60 days (older reports are kept in your records).'
+        : 'No traveller sightings reported here yet. If you see jellyfish, add a report to warn others.'));
+    }
+    let sev = 'seen';
+    const note = h('input', { type: 'text', maxlength: '160', class: 'jelly-note-input', placeholder: 'Optional: where / how many (e.g. north end, small stingers)' });
+    const sevRow = h('div', { class: 'sev-row' });
+    [['seen', 'Seen'], ['lots', 'Lots'], ['stung', 'Stung']].forEach(([k, lbl]) => {
+      sevRow.append(h('button', {
+        class: 'chip', dataset: { k }, 'aria-pressed': k === sev ? 'true' : 'false',
+        onclick: () => { sev = k; sevRow.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.k === sev ? 'true' : 'false')); },
+      }, lbl));
+    });
+    list.append(h('details', { class: 'jelly-form' }, [
+      h('summary', {}, '＋ Report a jellyfish sighting'),
+      h('p', { class: 'muted small' }, 'Saved on your device and dated today. Share it below so other travellers see it — nothing is sent to any server.'),
+      sevRow, note,
+      h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => {
+        addJellyReport(p.id, { d: todayKey(), sev, note: (note.value || '').trim().slice(0, 160), by: 'You' });
+        render();
+      } }, 'Save sighting'),
+    ]));
+    if (reps.length) {
+      list.append(shareButton('📤 Share the latest sighting', `Jellyfish sighting — ${p.name}`,
+        () => { const r = getJellyReports(p.id).slice().sort((a, b) => daysSinceISO(a.d) - daysSinceISO(b.d))[0]; return shareUrl('in', encodeShare('jelly', { id: p.id, n: p.name, d: r.d, sev: r.sev, note: r.note }, ensureMe())); }));
+    }
+  }
+  render();
+  return wrap;
+}
+
 // Detail-screen block: lifeguard status, swimming conditions, live sea state (waves /
 // water temperature), seasonal jellyfish risk ("in season this month?"), and first aid.
 function beachInfoCard(p) {
@@ -2831,6 +2891,7 @@ function beachInfoCard(p) {
          : `🪼 Jellyfish: lower risk now — peak season is ${formatMonths(m)}`));
   }
   if (p.jellyfish) card.append(h('p', { class: 'muted' }, p.jellyfish));
+  card.append(jellyReportsBlock(p));
   card.append(h('p', { class: 'muted small' }, 'No real-time jellyfish warning exists anywhere in the region. Always obey the beach flags — a red flag means do not swim — and ask lifeguards or locals about recent sightings.'));
   card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#danger') }, '🩹 Sting & marine first aid'));
   return card;
@@ -8041,6 +8102,16 @@ function importShareScreen(arg) {
       e.currentTarget.textContent = '✓ Pinned to your board';
     } }, '📌 Pin to my noticeboard'));
     if (board) box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#board-${board.country}-${board.slug}`) }, `📋 Open the ${board.city} board`));
+  } else if (s.kind === 'jelly') {
+    const exists = getPlace(s.data.id);
+    box.append(h('h2', { style: 'margin-top:8px' }, `🪼 Jellyfish sighting — ${s.data.name}`));
+    box.append(h('p', {}, `${SEV_LABEL[s.data.sev] || SEV_LABEL.seen}${s.data.note ? ` — ${s.data.note}` : ''}${s.data.d ? ` · ${fmtReportDate(s.data.d)}` : ''}`));
+    box.append(h('button', { class: 'btn block', onclick: (e) => {
+      addJellyReport(s.data.id, { d: s.data.d || todayKey(), sev: s.data.sev || 'seen', note: s.data.note || '', by: s.from ? s.from.name : 'a traveller' });
+      e.currentTarget.textContent = '✓ Added to this beach';
+    } }, '＋ Add this sighting to the beach'));
+    if (exists) box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${s.data.id}`) }, 'Open this beach'));
+    else box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This beach is not in your guide, so the sighting cannot be pinned to it.'));
   }
   wrap.append(box);
 
@@ -8063,11 +8134,12 @@ function inboxScreen() {
     wrap.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Nothing yet. When a friend shares a place, list or trip with you, it lands here.')]));
     mount(wrap, '#circle'); return;
   }
-  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip' };
+  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip', jelly: '🪼 Sighting' };
   items.forEach((it) => {
     const title = it.kind === 'place' ? (it.data.name || 'A place')
       : it.kind === 'collection' ? (it.data.name || 'A list')
-      : it.kind === 'tip' ? `Tip — ${it.data.city || 'a city'}` : 'A trip';
+      : it.kind === 'tip' ? `Tip — ${it.data.city || 'a city'}`
+      : it.kind === 'jelly' ? `🪼 Jellyfish — ${it.data.name || 'a beach'}` : 'A trip';
     wrap.append(h('div', { class: 'card' }, [
       h('div', { class: 'row-between' }, [
         h('div', {}, [h('strong', {}, title), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
@@ -8083,6 +8155,11 @@ function inboxScreen() {
         addBoardPost(`${it.data.cc || 'xx'}-${slug}`, { topic: it.data.topic, text: `${it.from ? it.from.name + ': ' : ''}${it.data.text}` });
         e.currentTarget.textContent = '✓ Pinned';
       } }, '📌 Pin to my noticeboard') : null,
+      (it.kind === 'jelly') ? h('p', { style: 'margin-top:6px' }, `${SEV_LABEL[it.data.sev] || SEV_LABEL.seen}${it.data.note ? ` — ${it.data.note}` : ''}${it.data.d ? ` · ${fmtReportDate(it.data.d)}` : ''}`) : null,
+      (it.kind === 'jelly' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => {
+        addJellyReport(it.data.id, { d: it.data.d || todayKey(), sev: it.data.sev || 'seen', note: it.data.note || '', by: it.from ? it.from.name : 'a traveller' });
+        e.currentTarget.textContent = '✓ Added to the beach';
+      } }, '＋ Add to the beach') : null,
     ]));
   });
   mount(wrap, '#circle');
