@@ -54,6 +54,10 @@ function cleanId(s) {
   return ['__proto__', 'constructor', 'prototype'].includes(id) ? '' : id;
 }
 function cleanEmoji(s) { return Array.from(String(s || '')).slice(0, 2).join('') || '🧭'; }
+// A currency code: letters only, upper-cased, 2–4 chars (ISO codes are 3, but stay lenient).
+function cleanCur(s) { return String(s == null ? '' : s).replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase(); }
+// A non-negative, finite amount (untrusted numbers may be NaN/Infinity/negative/huge strings).
+function cleanNum(n) { const v = Number(n); return Number.isFinite(v) && v > 0 ? Math.min(v, 1e12) : 0; }
 
 // --- traveller card ----------------------------------------------------------
 // A minimal identity a user chooses to share: an on-device id + display name +
@@ -113,6 +117,27 @@ export function parseShare(str) {
     const id = cleanId(raw.id);
     if (!id) return null;
     data = { id, name: clean(raw.n, 80) || 'a beach', d: clean(raw.d, 10), sev: clean(raw.sev, 8) || 'seen', note: clean(raw.note, 160) };
+  } else if (k === 'secret') {
+    // a "local secret" tip pinned to a specific place: place id + name + the tip + who
+    const id = cleanId(raw.id);
+    const text = clean(raw.text, 400);
+    if (!id || !text) return null;
+    data = { id, name: clean(raw.n, 80) || 'a place', text, by: clean(raw.by, 40) };
+  } else if (k === 'bb') {
+    // a Traveller Board listing (any category): cash swap, ride, stay, kids, gear, other.
+    // A generic, fully-sanitised shape — the recipient's app renders by `cat`.
+    const cat = clean(raw.cat, 12) || 'other';
+    data = {
+      cat,
+      title: clean(raw.title, 80),
+      have: raw.have ? { c: cleanCur(raw.have.c), a: cleanNum(raw.have.a) } : null,
+      want: raw.want ? { c: cleanCur(raw.want.c) } : null,
+      from: clean(raw.from, 40), to: clean(raw.to, 40),
+      when: clean(raw.when, 40), seats: cleanNum(raw.seats),
+      price: raw.price ? { a: cleanNum(raw.price.a), c: cleanCur(raw.price.c) } : null,
+      g: clean(raw.g, 16),
+      city: clean(raw.city, 40), note: clean(raw.note, 400), contact: clean(raw.contact, 80),
+    };
   } else {
     return null;
   }
