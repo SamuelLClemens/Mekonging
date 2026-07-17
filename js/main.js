@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.236.0';
+const APP_VERSION = 'mk-v0.237.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1882,6 +1882,10 @@ function nearbyScreen() {
       h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
     ]));
     body.append(nearbySafetyStrip(country, f));
+    // Diet-aware "where you can eat": for a kosher / vegan / vegetarian / halal traveller,
+    // point them straight at the verified places they can actually eat, nearest-first.
+    const dietCard = dietEatCard(country, f);
+    if (dietCard) body.append(dietCard);
 
     let cat = 'all';
     const cats = [['all', 'Everything'], ['eat', '🍜 Eat'], ['stay', '🛏 Stay'], ['do', '🎫 Do']];
@@ -5914,6 +5918,11 @@ function foodScreen(country) {
   profBox.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
   wrap.append(profBox);
 
+  // Vegetarian / vegan travellers get the verified veg kitchens up front (kosher has its own
+  // card just below); general eateries are never assumed to be veg.
+  const vegCard = dietEatCard(foodCountry, getLastFix(), { only: 'veg' });
+  if (vegCard) wrap.append(vegCard);
+
   // Kosher: reliably kosher food in this region is served by Chabad houses (supervised).
   // Anything advertised only as "kosher-style" is not certified — never suggest it.
   if ((store.profile.prefs.diet || []).includes('kosher')) {
@@ -7553,6 +7562,60 @@ const KOSHER = [
   { cc: 'kh', city: 'Phnom Penh', lat: 11.5720, lng: 104.9300, name: 'Chabad Cambodia', offer: 'Kosher restaurant + food store (nationwide delivery)', url: 'https://www.jewishcambodia.com' },
   { cc: 'la', city: 'Luang Prabang', lat: 19.8900, lng: 102.1370, name: 'Chabad House Luang Prabang', offer: 'Kosher meat restaurant', url: 'https://www.chabad.org/centers' },
 ];
+
+// Long-established, web-verified dedicated vegetarian / vegan kitchens (July 2026). Coordinates
+// are neighbourhood-level (the Map link resolves the exact venue), so nearest-first ordering
+// works without over-claiming precision. Only venues confirmed still operating and genuinely
+// veg/vegan are listed — general eateries are never assumed to be vegetarian.
+const VEG_SPOTS = [
+  { cc: 'th', city: 'Bangkok', lat: 13.7597, lng: 100.4972, name: 'May Kaidee (Khao San)', offer: 'Thai vegan, since 1988', tags: ['vegan'] },
+  { cc: 'th', city: 'Bangkok', lat: 13.7365, lng: 100.5805, name: 'Broccoli Revolution', offer: 'Plant-based, Sukhumvit / Thong Lo', tags: ['vegan'] },
+  { cc: 'th', city: 'Bangkok', lat: 13.7585, lng: 100.4965, name: 'Ethos', offer: 'Vegetarian & raw, off Khao San', tags: ['vegetarian'] },
+  { cc: 'th', city: 'Chiang Mai', lat: 18.7880, lng: 98.9930, name: 'May Kaidee Chiang Mai', offer: 'Thai vegan + cooking school', tags: ['vegan'] },
+  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7860, lng: 106.6990, name: 'Hum Vegetarian', offer: 'Vegetarian fine dining, District 1/3', tags: ['vegetarian'] },
+  { cc: 'vi', city: 'Hanoi', lat: 21.0208, lng: 105.8490, name: 'Ưu Đàm Chay', offer: 'Vegetarian, Hoàn Kiếm (55 Nguyễn Du)', tags: ['vegetarian'] },
+  { cc: 'kh', city: 'Siem Reap', lat: 13.3540, lng: 103.8560, name: 'Chamkar', offer: 'Khmer vegetarian, Old Market', tags: ['vegetarian'] },
+];
+
+// Diet-aware "where you can actually eat" card for the traveller's declared diet: verified
+// kosher (Chabad) and/or vegetarian/vegan venues, nearest-first, plus an honest halal note.
+// Returns null when the profile needs none. opts.only = 'veg' | 'kosher' to show one section.
+function dietEatCard(cc, fix, opts) {
+  opts = opts || {};
+  const diet = store.profile.prefs.diet || [];
+  const wantKosher = diet.includes('kosher') && opts.only !== 'veg';
+  const wantVeg = (diet.includes('vegan') || diet.includes('vegetarian')) && opts.only !== 'kosher';
+  const wantHalal = diet.includes('halal') && !opts.only;
+  if (!wantKosher && !wantVeg && !wantHalal) return null;
+  const card = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', { style: 'margin-top:0' }, '🍽 Where you can eat')]);
+  const kmOf = (v) => (fix && fix.lat != null && v.lat != null) ? haversineKm(fix, { lat: v.lat, lng: v.lng }) : null;
+  const venueRow = (name, city, offer, km, tag) => h('div', { style: 'margin:6px 0' }, [
+    h('div', { class: 'row-between' }, [h('strong', {}, name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
+    h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `${city}${offer ? ' · ' + offer : ''}`),
+    h('div', { class: 'chips' }, [tag ? attrTag(tag) : null, h('a', { class: 'chip', href: mapsSearch(`${name} ${city}`), target: '_blank', rel: 'noopener' }, 'Map ↗')]),
+  ]);
+  if (wantVeg) {
+    card.append(h('h3', { style: 'margin:6px 0 2px' }, '🌱 Vegetarian & vegan'));
+    const vs = nearestFirst(VEG_SPOTS.filter((v) => v.cc === cc), fix);
+    if (vs.length) {
+      vs.slice(0, 8).forEach((v) => card.append(venueRow(v.name, v.city, v.offer, kmOf(v), (v.tags || []).includes('vegan') ? '🌱 Vegan' : '🥗 Vegetarian')));
+    } else {
+      card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0' }, 'No dedicated veg kitchen is listed for this country yet. Many local kitchens cook to order — ask for the vegetarian version and use the dish guide’s green/red verdicts.'));
+    }
+    card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'These are verified vegetarian/vegan kitchens. General eateries are not checked — confirm on arrival, especially fish sauce, oyster sauce and egg.'));
+  }
+  if (wantKosher) {
+    card.append(h('h3', { style: 'margin:10px 0 2px' }, '✡️ Kosher (Chabad houses)'));
+    const kv = nearestFirst(KOSHER.filter((k) => k.cc === cc), fix);
+    (kv.length ? kv : nearestFirst(KOSHER, fix)).slice(0, 6).forEach((k) => card.append(venueRow(k.name, k.city, k.offer, kmOf(k), null)));
+    card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'Reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified — always confirm supervision.'));
+  }
+  if (wantHalal) {
+    card.append(h('h3', { style: 'margin:10px 0 2px' }, '🕌 Halal'));
+    card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, 'Halal food is widely available near mosques and in Muslim quarters. Look for the green halal sign, and ask “halal?” — the app’s pork-free phrase is in the phrasebook.'));
+  }
+  return card;
+}
 
 // Verified pork-free phrase (kosher, halal and no-pork travellers). Only languages whose
 // script is verified against a reliable source are included (Thai, Vietnamese, Lao — Lao
