@@ -188,7 +188,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.234.0';
+const APP_VERSION = 'mk-v0.235.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -556,10 +556,55 @@ function profileFitAdj(p, prefs) {
   return s;
 }
 
+// Hard ceiling for every "near me" surface (right-now, the nearby hub, the Things-to-do
+// fallback). Beyond this a place is not "near you" — a Chiang Mai pick has no business in a
+// "near Pai" list — so we would rather show fewer, genuinely-reachable options than pad the
+// list with a 3-hour drive. Matches the Things-to-do "worth a day trip" tier (<=60 km).
+const NEAR_CAP_KM = 60;
+
+// ---- Colour-coded attribute/status chips ------------------------------------
+// Category tags are already family-coloured (catTag). These are the OTHER little tags —
+// "Good with kids", "Good in the rain", "Open now", stay type, "may not suit you" — which
+// used to be one flat colour. attrClass() maps a chip's text/emoji to a semantic colour
+// class so every kind of tag on the site reads at a glance. attrTag() builds the pill.
+function attrClass(text) {
+  const t = String(text).toLowerCase();
+  if (/may not suit|not a good fit|⚠/.test(t)) return 'at-warn';
+  if (/closed/.test(t)) return 'at-closed';
+  if (/open now/.test(t)) return 'at-open';
+  if (/kids|family|👨‍👩‍👧/.test(t)) return 'at-kids';
+  if (/rain|☔|indoor/.test(t)) return 'at-rain';
+  if (/cool off|🏊|heat|❄/.test(t)) return 'at-heat';
+  if (/market|🛍|🧺/.test(t)) return 'at-market';
+  if (/step[- ]free|wheelchair|accessible|♿|walking|steps|mobility/.test(t)) return 'at-access';
+  if (/veg|vegan|kosher|halal/.test(t)) return 'at-veg';
+  if (/morning|cool-hours|🌅|clear weather|☀/.test(t)) return 'at-cool';
+  if (/sunset|evening|🌇|rooftop|buzzing|street-food|night|🌙/.test(t)) return 'at-evening';
+  if (/hostel|hotel|guesthouse|homestay|resort|apartment|short stay|long stay|stay/.test(t)) return 'at-stay';
+  return 'at-info';
+}
+function attrTag(text, base) { return h('span', { class: `${base || 'attr-tag'} ${attrClass(text)}` }, text); }
+
+// Best-effort open/closed at the current local hour (null when hours are unknown/unparseable,
+// so we never wrongly call an unknown place "closed").
+function openStateNow(p) { return isOpenNow(p.hours, new Date().getHours()); }
+
+// Whether a place is a POOR fit for who the traveller is travelling as, with a short reason.
+// Only flags what the data actually supports (kid-suitability, mobility) — it never invents a
+// diet verdict for an eatery, since places carry no per-venue diet data (dishes do). Poor fits
+// are sorted after good fits and tagged, never hidden.
+function placeFitReason(p, prefs) {
+  const cats = p.categories || [];
+  const family = prefs.withBaby || prefs.kids || prefs.party === 'family';
+  if (family && p.kidFriendly === false) return 'May not suit kids';
+  if ((prefs.access || []).includes('mobility') && (cats.includes('hike') || cats.includes('waterfall'))) return 'Lots of walking / steps';
+  return null;
+}
+
 function scoreForNow(p, ctx) {
   if (!p.coords) return -Infinity;
   const km = haversineKm(ctx.fix, p.coords);
-  if (km > 130) return -Infinity;               // "near you" ceiling (still allows day trips)
+  if (km > NEAR_CAP_KM) return -Infinity;        // "near you" ceiling — see NEAR_CAP_KM
   const cats = p.categories || [];
   const meta = PART_META[ctx.part];
   let s = 30 - km * 0.9;                          // proximity
@@ -579,8 +624,11 @@ function scoreForNow(p, ctx) {
     if (cats.includes('hotspring') || cats.includes('beach')) s += 6;
     if (cats.some((c) => INDOOR_CATS.includes(c))) s += 6;
   }
+  // Suggestions default to OPEN: a place we know is shut right now is not offered as a
+  // "go now" pick (unknown hours are still fine — we do not punish what we cannot parse).
   const open = isOpenNow(p.hours, ctx.hour);
-  if (open === true) s += 12; else if (open === false) s -= 26;
+  if (open === false) return -Infinity;
+  if (open === true) s += 12;
   s += (Number(p.rating) || 0) * 1.2;            // gentle quality tiebreak
   s += profileFitAdj(p, store.profile.prefs);    // fit to who they are travelling as
   return s;
@@ -671,7 +719,8 @@ function rightNowSection() {
             h('div', { class: 'rn-textcol' }, [
               h('div', { class: 'rn-item-main' }, [
                 h('span', { class: 'rn-name' }, p.name),
-                reason ? h('span', { class: 'rn-tag' }, reason) : null,
+                (() => { const fit = placeFitReason(p, store.profile.prefs); return fit ? attrTag('⚠️ ' + fit) : null; })(),
+                reason ? attrTag(reason) : null,
               ]),
               h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
             ]),
@@ -1633,15 +1682,17 @@ function nearCat(p) {
 }
 function catEmoji(c) { return c === 'eat' ? '🍜' : c === 'stay' ? '🛏' : '🎫'; }
 
-// First-hour essentials, lightly tailored to the traveller's party/budget.
-function arrivalEssentials(country) {
+// First-hour essentials, lightly tailored to the traveller's party/budget. The first hour
+// happens once, so this is FEATURED (open) only while the traveller is in the "arrived"
+// phase; afterwards it stays one tap away as a collapsed dropdown rather than always sitting
+// at the top of every "near me" visit.
+function arrivalEssentials(country, featured) {
   const c = getCountry(country);
   const lang = c ? c.lang : 'th';
   const party = store.profile.prefs.party;
   const budget = store.profile.prefs.budget;
-  const card = h('div', { class: 'card' }, [h('h2', {}, '🧭 Your first hour')]);
   const item = (summary, ...kids) => h('details', { class: 'arrival-item' }, [h('summary', {}, summary), ...kids]);
-  card.append(
+  const items = [
     item('💵 Cash & ATMs',
       h('p', { class: 'muted' }, `Use a bank ATM rather than an airport counter for a better rate${budget === 'low' ? '; withdraw a larger amount at once to spread the per-use fee' : ''}. Carry small notes for stalls, tuk-tuks and markets.`),
       h('button', { class: 'btn ghost block', onclick: () => go('#currency') }, 'Open the currency converter')),
@@ -1657,8 +1708,10 @@ function arrivalEssentials(country) {
     item('💬 First words',
       h('p', { class: 'muted' }, 'Hello, thank you and the numbers go a long way with drivers and vendors.'),
       h('button', { class: 'btn ghost block', onclick: () => go(`#phrasebook-${lang}`) }, 'Open the phrasebook')),
-  );
-  return card;
+  ];
+  if (featured) return h('div', { class: 'card' }, [h('h2', {}, '🧭 Your first hour'), ...items]);
+  // Past the first hour: accessible, not featured.
+  return h('details', { class: 'card arrival-fold' }, [h('summary', {}, '🧭 Your first hour — arrival basics'), ...items]);
 }
 
 // The full "just arrived / first hour" assistant, keyed to where the traveller lands:
@@ -1821,7 +1874,7 @@ function nearbyScreen() {
       .map((p) => ({ p, km: haversineKm(f, p.coords) })).sort((a, b) => a.km - b.km);
 
     body.innerHTML = '';
-    body.append(arrivalEssentials(country));
+    body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'arrived'));
     body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
       h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, [chipIcon('map'), 'See on the map']),
@@ -1845,16 +1898,30 @@ function nearbyScreen() {
       // Re-read the marks each draw so hiding one instantly promotes the next place into view,
       // and "done" places show a tick but stay findable in this directory.
       const hid = new Set(store.profile.prefs.hiddenSpots || []);
-      const rows = ranked.filter(({ p }) => !hid.has(p.id) && (cat === 'all' || nearCat(p) === cat)).slice(0, 12);
-      if (!rows.length) { listEl.append(h('p', { class: 'empty' }, 'Nothing tagged nearby in this category yet — try “Everything” or the map.')); return; }
+      const prefs = store.profile.prefs;
+      // Only genuinely-near places (<= NEAR_CAP_KM). Comprehensive within that radius (up to
+      // 40) rather than padded with far picks, so every row is somewhere they can actually go.
+      const cand = ranked.filter(({ p, km }) => km <= NEAR_CAP_KM && !hid.has(p.id) && (cat === 'all' || nearCat(p) === cat));
+      // Good fits that are open lead; poor fits (kids/mobility) and places closed right now
+      // sink to the bottom — kept and tagged, never hidden — then order by distance.
+      const fitKey = ({ p }) => (placeFitReason(p, prefs) ? 2 : 0) + (openStateNow(p) === false ? 1 : 0);
+      cand.sort((a, b) => fitKey(a) - fitKey(b) || a.km - b.km);
+      const rows = cand.slice(0, 40);
+      if (!rows.length) { listEl.append(h('p', { class: 'empty' }, `Nothing mapped within ~${NEAR_CAP_KM} km of you in this category yet — try “Everything”, the map, or open a nearby city.`)); return; }
       rows.forEach(({ p, km }) => {
         const done = isSpotDone(p.id);
+        const closed = openStateNow(p) === false;
+        const fit = placeFitReason(p, prefs);
+        const tags = [];
+        if (closed) tags.push(attrTag('🔒 Closed now'));
+        if (fit) tags.push(attrTag('⚠️ ' + fit));
         listEl.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
           h('button', { class: 'rn-open near-open', onclick: () => go(`#place-${p.id}`) }, [
             rnThumb(p),
             h('div', { class: 'near-text' }, [
               h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
               h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
+              tags.length ? h('div', { class: 'near-tags' }, tags) : null,
             ]),
           ]),
           h('div', { class: 'rn-actions' }, [
@@ -2645,11 +2712,11 @@ function tierBadge(tier) {
 const STAY_LABEL = { tent: '⛺ Camping', hostel: '🛏️ Hostel', guesthouse: '🏠 Guesthouse', homestay: '🏡 Homestay', hotel: '🏨 Hotel', resort: '🌴 Resort', apartment: '🏢 Apartment' };
 function travelerChips(p) {
   const chips = [];
-  if (p.kidFriendly === true) chips.push(h('span', { class: 'cat-tag' }, '👨‍👩‍👧 Kids OK'));
-  if (p.stayType) chips.push(h('span', { class: 'cat-tag' }, STAY_LABEL[p.stayType] || p.stayType));
-  if (p.stayDuration === 'long') chips.push(h('span', { class: 'cat-tag' }, 'Long stay'));
-  else if (p.stayDuration === 'short') chips.push(h('span', { class: 'cat-tag' }, 'Short stay'));
-  else if (p.stayDuration === 'both') chips.push(h('span', { class: 'cat-tag' }, 'Short or long stay'));
+  if (p.kidFriendly === true) chips.push(attrTag('👨‍👩‍👧 Kids OK'));
+  if (p.stayType) chips.push(attrTag(STAY_LABEL[p.stayType] || p.stayType));
+  if (p.stayDuration === 'long') chips.push(attrTag('Long stay'));
+  else if (p.stayDuration === 'short') chips.push(attrTag('Short stay'));
+  else if (p.stayDuration === 'both') chips.push(attrTag('Short or long stay'));
   return chips.length ? h('div', { class: 'cats', style: 'margin-top:4px' }, chips) : null;
 }
 
@@ -6537,7 +6604,12 @@ function rnThumb(p) {
 // distance and "why now" reason chips. Tapping opens the full detail page (with a photo).
 function todoCard(x, maxReasons) {
   const { p, er, dist, reasons, cats } = x;
-  const rc = (reasons || []).slice(0, maxReasons || 2).map((r) => h('span', { class: 'todo-reason' }, r));
+  const rc = [];
+  // Status/fit first (colour-coded): closed-now and "may not suit you" lead the chip row so
+  // they are not lost behind the "why now" reasons; both are set by the list that renders us.
+  if (x._closed) rc.push(attrTag('🔒 Closed now'));
+  if (x._fit) rc.push(attrTag('⚠️ ' + x._fit));
+  (reasons || []).slice(0, maxReasons || 2).forEach((r) => rc.push(attrTag(r)));
   const fam = placeFamily(p);
   const src = placePhotoSrc(p);
   const thumb = src
@@ -6690,21 +6762,28 @@ function daySuggestScreen(country) {
       listBody.innerHTML = '';
       let pool = scored.filter((x) => tierOf(x));
       if (todoFamily !== 'all') pool = pool.filter((x) => x.cats.some((c) => catFamily(c) === todoFamily));
-      pool.sort((a, b) => b.s - a.s);
+      // Annotate each pick with fit + open status. "Closed now" only applies when planning for
+      // NOW (a place shut this minute is irrelevant when you are planning tonight/tomorrow).
+      const nowPlan = todoPlan === 'now';
+      pool.forEach((x) => { x._fit = placeFitReason(x.p, prefs); x._closed = nowPlan && openStateNow(x.p) === false; });
+      // Good fits that are open lead; poor fits and closed sink (but stay, tagged) — then score.
+      const fitKey = (x) => (x._fit ? 2 : 0) + (x._closed ? 1 : 0);
+      pool.sort((a, b) => fitKey(a) - fitKey(b) || b.s - a.s);
       let rendered = 0;
       TIERS.forEach((t) => {
         const items = pool.filter((x) => tierOf(x) === t.key);
         if (items.length) { renderTier(t.label, items); rendered += items.length; }
       });
       if (!rendered) {
-        // Nothing trustworthy nearby: fall back to the nearest we can measure, clearly labelled.
-        const far = scored.filter((x) => x.dist != null && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
+        // Nothing trustworthy nearby: fall back to the nearest we can measure — but still only
+        // within the near-me radius, so we never pad a "near you" list with a 3-hour drive.
+        const far = scored.filter((x) => x.dist != null && x.dist <= NEAR_CAP_KM && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
           .sort((a, b) => a.dist - b.dist).slice(0, 12);
         if (far.length) {
           listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' }, `Nothing mapped close to ${spot.city} yet — here are the nearest.`));
           renderTier('Nearest to you', far);
         } else {
-          listBody.append(h('p', { class: 'empty' }, 'No things to do mapped for this area yet. Turn on location or open a city.'));
+          listBody.append(h('p', { class: 'empty' }, `Nothing to do mapped within ~${NEAR_CAP_KM} km of ${spot.city} yet. Open a nearby city, or browse all places.`));
         }
       }
     }
