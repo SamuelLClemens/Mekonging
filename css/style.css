@@ -548,7 +548,33 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-thumb { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
 .rn-thumb.ph { display: flex; align-items: center; justify-content: center; font-size: 1.2rem; line-height: 1; background: rgba(0,0,0,0.05); }
 [data-theme="dark"] .rn-thumb.ph { background: rgba(255,255,255,0.06); }
-.near-text { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.near-text { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.near-tags { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+/* Colour-coded attribute / status chips (kids, rain, open/closed, fit, stay type, …).
+   Category tags keep their family colours; these carry meaning by hue so the traveller reads
+   status at a glance. Solid fills with white (or dark) text stay legible in light and dark. */
+.attr-tag { display: inline-block; font-size: var(--fs-label); font-weight: 800; color: #fff;
+  border-radius: var(--r-pill); padding: 2px 8px; line-height: 1.35; white-space: nowrap; }
+.attr-tag.at-kids   { background: #d97706; }   /* amber — family */
+.attr-tag.at-rain   { background: #2563eb; }   /* blue — good in the rain / indoor */
+.attr-tag.at-heat   { background: #0891b2; }   /* cyan — cool off from the heat */
+.attr-tag.at-cool   { background: #0ea5b7; }   /* teal — cool morning hours */
+.attr-tag.at-evening{ background: #6d28d9; }   /* violet — evening / sunset / nightlife */
+.attr-tag.at-market { background: #0f766e; }   /* deep teal — market on today */
+.attr-tag.at-open   { background: #15803d; }   /* green — open now */
+.attr-tag.at-veg    { background: #16a34a; }   /* green — veg/diet-friendly */
+.attr-tag.at-access { background: #7c3aed; }   /* purple — accessibility note */
+.attr-tag.at-stay   { background: #4f46e5; }   /* indigo — stay type / length */
+.attr-tag.at-info   { background: var(--teal-deep); }  /* neutral — budget/interest */
+.attr-tag.at-warn   { background: #b91c1c; }   /* red — may not suit you */
+.attr-tag.at-closed { background: #6b7280; }   /* grey — closed right now */
+@media (prefers-color-scheme: dark) {
+  .attr-tag.at-info { background: #2b7a72; }
+  .attr-tag.at-closed { background: #4b5563; }
+}
+:root[data-theme="dark"] .attr-tag.at-info { background: #2b7a72; }
+:root[data-theme="dark"] .attr-tag.at-closed { background: #4b5563; }
 /* Street-food "rate the classics" rows: thumbnail + name/city, tap to open. */
 .sf-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; cursor: pointer; font-family: inherit; color: var(--ink); padding: 6px 0; }
 .sf-text { min-width: 0; }
@@ -1016,6 +1042,10 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .rn-act.done.on { color: var(--green, #4a7a5a); font-weight: 800; }
 .arrival-item { border-top: 1px solid var(--edge-hi, rgba(0,0,0,0.08)); padding: 6px 0; }
 .arrival-item summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+/* Collapsed "first hour" once past arrival: a quiet, tappable header; children indent when open. */
+.arrival-fold > summary { cursor: pointer; font-weight: 800; padding: 2px 0; list-style-position: inside; }
+.arrival-fold[open] > summary { margin-bottom: 6px; }
+.arrival-fold > .arrival-item:first-of-type { border-top: none; }
 
 /* Place-detail "Find it" orientation block. */
 .local-name { font-size: 1.15rem; font-weight: 700; color: var(--grape); margin: 2px 0 6px; }
