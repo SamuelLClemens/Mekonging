@@ -1047,6 +1047,30 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .arrival-fold[open] > summary { margin-bottom: 6px; }
 .arrival-fold > .arrival-item:first-of-type { border-top: none; }
 
+/* "Further afield / next destinations": a quiet, collapsed tier below the near-me list. */
+.near-afield { margin-top: 10px; }
+.near-afield > summary { cursor: pointer; font-weight: 800; padding: 2px 0; list-style-position: inside; }
+.near-afield[open] > summary { margin-bottom: 4px; }
+.near-afield-body { display: flex; flex-direction: column; gap: 6px; }
+
+/* Traveller board (cash swap / rides / stays / kids / gear): chips, cards, actions. */
+.bb-chips { margin: 8px 0 4px; }
+/* Active category chip adopts its category colour, so the board reads at a glance. */
+.bb-chip[aria-pressed="true"] { background: var(--chip, var(--teal-deep)); border-color: var(--chip, var(--teal-deep)); color: #fff; }
+.listing-card { border-left: 4px solid var(--cat, var(--teal-deep)); }
+.listing-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.listing-actions .btn { flex: 1 1 auto; margin-top: 0; }
+.swap-calc { line-height: 1.35; }
+
+/* Local Secrets: a progressive-disclosure drawer of per-place tips + a contribute CTA. */
+.local-secrets > summary { cursor: pointer; font-weight: 800; padding: 2px 0; list-style-position: inside; }
+.local-secrets[open] > summary { margin-bottom: 6px; }
+.secret-item { border-top: 1px solid var(--hair, rgba(128,128,128,.25)); padding: 8px 0; }
+.secret-item:first-of-type { border-top: none; }
+.secret-add { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--hair, rgba(128,128,128,.3)); }
+.secret-cta { display: block; font-weight: 800; color: var(--orange, #d97706); margin-bottom: 6px; }
+.secret-add .ta { width: 100%; }
+
 /* Place-detail "Find it" orientation block. */
 .local-name { font-size: 1.15rem; font-weight: 700; color: var(--grape); margin: 2px 0 6px; }
 .recognition {

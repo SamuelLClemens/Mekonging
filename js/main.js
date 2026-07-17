@@ -16,6 +16,7 @@ import {
   getSavedAreas, addSavedArea, removeSavedArea,
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
+  getListings, addListing, removeListing,
   getThread, addMessage,
   getBoardPosts, addBoardPost, deleteBoardPost,
   getAudioPacks, hasAudioPack, addAudioPack,
@@ -188,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.237.0';
+const APP_VERSION = 'mk-v0.243.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -556,11 +557,30 @@ function profileFitAdj(p, prefs) {
   return s;
 }
 
-// Hard ceiling for every "near me" surface (right-now, the nearby hub, the Things-to-do
-// fallback). Beyond this a place is not "near you" — a Chiang Mai pick has no business in a
-// "near Pai" list — so we would rather show fewer, genuinely-reachable options than pad the
-// list with a 3-hour drive. Matches the Things-to-do "worth a day trip" tier (<=60 km).
-const NEAR_CAP_KM = 60;
+// "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
+// understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
+// crow flies but a 3-hour mountain drive — so a flat km cap would still call Chiang Mai "near
+// Pai". We convert straight-line km to an estimated road drive (a winding-road multiplier and a
+// realistic effective speed) and cap "near you" at about an hour give or take. Places just
+// beyond that, up to a ~3-hour day trip, surface separately as "Further afield".
+const ROAD_FACTOR = 1.35;       // straight-line km -> likely road km (curves, terrain, towns)
+const DRIVE_KMH = 50;           // effective road speed incl. towns, stops, slow sections
+const NEAR_MAX_MIN = 75;        // "within an hour give or take" — the near-me ceiling (~46 km)
+const DAYTRIP_MAX_MIN = 180;    // "further afield / next destinations" — up to a ~3-hour trip
+function estDriveMin(km) { return km == null ? null : Math.round((km * ROAD_FACTOR) / DRIVE_KMH * 60); }
+function withinNear(km) { const m = estDriveMin(km); return m != null && m <= NEAR_MAX_MIN; }
+function withinDayTrip(km) { const m = estDriveMin(km); return m != null && m > NEAR_MAX_MIN && m <= DAYTRIP_MAX_MIN; }
+// Human label: a walk time under ~2.5 km, otherwise an estimated drive ("~40 min drive", "~2h drive").
+function driveLabel(km) {
+  if (km == null) return null;
+  if (km <= 2.5) return `~${Math.max(1, Math.round((km / 4.8) * 60))} min walk`;
+  // Round to 5-minute steps — an honest granularity for an estimate, and enough to keep a
+  // just-near place (e.g. ~70 min) visually distinct from a just-further one (e.g. ~80 min).
+  const m = Math.max(5, Math.round(estDriveMin(km) / 5) * 5);
+  if (m < 60) return `~${m} min drive`;
+  const hrs = Math.floor(m / 60), rem = m % 60;
+  return rem ? `~${hrs}h ${rem}m drive` : `~${hrs}h drive`;
+}
 
 // ---- Colour-coded attribute/status chips ------------------------------------
 // Category tags are already family-coloured (catTag). These are the OTHER little tags —
@@ -604,7 +624,7 @@ function placeFitReason(p, prefs) {
 function scoreForNow(p, ctx) {
   if (!p.coords) return -Infinity;
   const km = haversineKm(ctx.fix, p.coords);
-  if (km > NEAR_CAP_KM) return -Infinity;        // "near you" ceiling — see NEAR_CAP_KM
+  if (!withinNear(km)) return -Infinity;         // ~1-hour-drive "near you" ceiling — see NEAR_MAX_MIN
   const cats = p.categories || [];
   const meta = PART_META[ctx.part];
   let s = 30 - km * 0.9;                          // proximity
@@ -1461,6 +1481,7 @@ function homeScreen() {
       { ic: ICON.suitcase, t: 'Log expenses', d: 'Track spend vs your budget', hash: '#expenses' },
       { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
       { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
+      { ic: ICON.tag, t: 'Traveller board', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
       { ic: ICON.heart, t: 'Give back', d: 'Support local causes', hash: '#donate' },
       { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
       { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
@@ -1810,11 +1831,13 @@ function nearbySafetyStrip(country, fix) {
   }
   const beaches = allPlaces({ country }).filter((p) => p.coords && isBeach(p))
     .map((p) => ({ p, km: haversineKm(fix, p.coords) })).filter((x) => x.km != null).sort((a, b) => a.km - b.km);
-  if (beaches.length && beaches[0].km <= 60) {
+  if (beaches.length && estDriveMin(beaches[0].km) != null && estDriveMin(beaches[0].km) <= DAYTRIP_MAX_MIN) {
     const b = beaches[0].p;
     const inSeason = jellyInSeason(b, m);
+    const near = withinNear(beaches[0].km);
+    const dl = driveLabel(beaches[0].km);
     card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${b.id}`) },
-      `${inSeason ? '🪼' : '🏖️'} Nearest beach: ${b.name}${inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'}`));
+      `${inSeason ? '🪼' : '🏖️'} ${near ? 'Nearest beach' : 'Closest beach'}: ${b.name} (${dl})${inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'}`));
   }
   card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#danger') }, '🩹 Health & hazards'));
   return card;
@@ -1903,28 +1926,30 @@ function nearbyScreen() {
       // and "done" places show a tick but stay findable in this directory.
       const hid = new Set(store.profile.prefs.hiddenSpots || []);
       const prefs = store.profile.prefs;
-      // Only genuinely-near places (<= NEAR_CAP_KM). Comprehensive within that radius (up to
-      // 40) rather than padded with far picks, so every row is somewhere they can actually go.
-      const cand = ranked.filter(({ p, km }) => km <= NEAR_CAP_KM && !hid.has(p.id) && (cat === 'all' || nearCat(p) === cat));
+      const catOk = (p) => cat === 'all' || nearCat(p) === cat;
       // Good fits that are open lead; poor fits (kids/mobility) and places closed right now
       // sink to the bottom — kept and tagged, never hidden — then order by distance.
       const fitKey = ({ p }) => (placeFitReason(p, prefs) ? 2 : 0) + (openStateNow(p) === false ? 1 : 0);
-      cand.sort((a, b) => fitKey(a) - fitKey(b) || a.km - b.km);
-      const rows = cand.slice(0, 40);
-      if (!rows.length) { listEl.append(h('p', { class: 'empty' }, `Nothing mapped within ~${NEAR_CAP_KM} km of you in this category yet — try “Everything”, the map, or open a nearby city.`)); return; }
-      rows.forEach(({ p, km }) => {
+      const bySort = (a, b) => fitKey(a) - fitKey(b) || a.km - b.km;
+      // "Near me" = within about an hour's DRIVE (road-time, not straight-line). Comprehensive
+      // within that reach (up to 40) rather than padded with far picks, so every row is truly
+      // reachable. A separate, collapsed tier holds real "further afield" next-destinations.
+      const near = ranked.filter(({ p, km }) => withinNear(km) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 40);
+      const afield = ranked.filter(({ p, km }) => withinDayTrip(km) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 20);
+
+      function renderRow(container, p, km) {
         const done = isSpotDone(p.id);
         const closed = openStateNow(p) === false;
         const fit = placeFitReason(p, prefs);
         const tags = [];
         if (closed) tags.push(attrTag('🔒 Closed now'));
         if (fit) tags.push(attrTag('⚠️ ' + fit));
-        listEl.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
+        container.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
           h('button', { class: 'rn-open near-open', onclick: () => go(`#place-${p.id}`) }, [
             rnThumb(p),
             h('div', { class: 'near-text' }, [
               h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
-              h('span', { class: 'dist-chip' }, `${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min` : ''} · ${compass(bearing(f, p.coords))}`),
+              h('span', { class: 'dist-chip' }, `${fmtDistance(km)} · ${driveLabel(km)} · ${compass(bearing(f, p.coords))}`),
               tags.length ? h('div', { class: 'near-tags' }, tags) : null,
             ]),
           ]),
@@ -1933,7 +1958,23 @@ function nearbyScreen() {
             h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { hideSpot(p.id); drawList(); } }, '✕'),
           ]),
         ]));
-      });
+      }
+
+      if (!near.length && !afield.length) {
+        listEl.append(h('p', { class: 'empty' }, 'Nothing within about an hour’s drive in this category yet — try “Everything”, the map, or open a nearby city.'));
+        return;
+      }
+      if (near.length) near.forEach(({ p, km }) => renderRow(listEl, p, km));
+      else listEl.append(h('p', { class: 'muted small', style: 'margin:2px 2px 8px' }, 'Nothing within about an hour’s drive in this category — the nearest are further afield, below.'));
+      if (afield.length) {
+        const afBody = h('div', { class: 'near-afield-body' });
+        afield.forEach(({ p, km }) => renderRow(afBody, p, km));
+        listEl.append(h('details', { class: 'card near-afield', open: near.length ? null : '' }, [
+          h('summary', {}, `🚌 Further afield · next destinations (${afield.length})`),
+          h('p', { class: 'muted small', style: 'margin:2px 0 8px' }, 'Beyond an hour’s drive — worth a day trip or your next stop.'),
+          afBody,
+        ]));
+      }
       const nHid = (store.profile.prefs.hiddenSpots || []).length;
       const nDone = (store.profile.prefs.doneSpots || []).length;
       if (nHid || nDone) {
@@ -1986,6 +2027,7 @@ function currencyScreen() {
   });
   wrap.append(quick);
 
+  wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#exchange-swap') }, '🤝 Swap cash with a traveller (no fees)'));
   wrap.append(h('button', { class: 'btn block', onclick: async () => { await refreshRates(); go('#currency'); } }, 'Refresh rates (needs internet)'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Indicative mid-market values for guidance; money changers and cards apply their own spread.'));
   mount(wrap, '#home');
@@ -1998,6 +2040,216 @@ function currencySelect(current) {
 
 // The traveller's home currency (set in Settings; defaults to USD).
 function homeCurrency() { return (store.profile && store.profile.homeCurrency) || 'USD'; }
+
+// ---- TRAVELLER BOARD (backendless bulletin board) ---------------------------
+// One peer board that fits the app's no-server, no-PII model: swap leftover cash,
+// split a ride, pass on a room, hand off a car seat / stroller / bike / camping
+// kit / SIM, or post anything else. A listing lives on THIS device and travels
+// only inside a link the user chooses to share (same mechanism as the travel
+// circle — AirDrop / chat / etc). Cash-swap values use the offline mid-market
+// rate table, so both sides agree on a fair number.
+
+const BB_CATS = [
+  { id: 'swap', emoji: '💱', label: 'Cash swap', color: '#16a34a', blurb: 'Swap leftover cash at the fair mid-market rate — no booth, no fees.' },
+  { id: 'ride', emoji: '🚗', label: 'Ride share', color: '#2563eb', blurb: 'Share a car, taxi or minibus and split the cost.' },
+  { id: 'house', emoji: '🏠', label: 'Stay share', color: '#4f46e5', blurb: 'A spare room, a place to crash, or split a rental.' },
+  { id: 'kids', emoji: '🧸', label: 'Kids & baby', color: '#d97706', blurb: 'Car seats, strollers, carriers, toys, kids clothing.' },
+  { id: 'gear', emoji: '🎒', label: 'Gear & bikes', color: '#0891b2', blurb: 'Motorbikes, bicycles, camping kit, a leftover SIM.' },
+  { id: 'other', emoji: '📦', label: 'Other', color: '#6b7280', blurb: 'Free giveaways, wanted, or anything else.' },
+];
+function bbCat(id) { return BB_CATS.find((c) => c.id === id) || { id: 'other', emoji: '📦', label: 'Listing', color: '#6b7280', blurb: '' }; }
+// Sub-kind options per category (value + labelled option), for the item picker.
+function bbSubKinds(cat) {
+  if (cat === 'kids') return [['carseat', '🚼 Car seat'], ['stroller', '🍼 Stroller / pram'], ['carrier', '👶 Baby carrier'], ['toys', '🧸 Toys'], ['clothing', '🧥 Kids clothing'], ['other', '📦 Other kids item']];
+  if (cat === 'gear') return [['motorbike', '🏍 Motorbike / scooter'], ['bicycle', '🚲 Bicycle'], ['camping', '⛺ Camping / trekking'], ['sim', '📶 SIM / e-SIM'], ['clothing', '🧥 Clothing / boots'], ['other', '🎒 Other gear']];
+  return [['free', '🎁 Free / giveaway'], ['sale', '🏷 For sale'], ['wanted', '🙋 Wanted'], ['other', '📦 Other']];
+}
+const HOUSE_KIND = { room: 'Room / bed', place: 'Whole place', looking: 'Looking for a place' };
+function fmtMoney(n, cur) { return `${Number(n).toLocaleString(undefined, { maximumFractionDigits: n >= 100 ? 0 : 2 })} ${cur || ''}`.trim(); }
+
+// A listing's one-line headline and a short subline, shared by the card + import views.
+function bbHeadline(cat, d) {
+  if (cat === 'swap') return `${fmtMoney((d.have && d.have.a) || 0, (d.have && d.have.c) || '?')} → ${(d.want && d.want.c) || '?'}`;
+  if (cat === 'ride') return `${d.from || '?'} → ${d.to || '?'}`;
+  if (cat === 'house') return d.title || HOUSE_KIND[d.g] || 'Stay share';
+  return d.title || 'Item';
+}
+function bbSubline(cat, d) {
+  if (cat === 'ride') return [d.when, d.seats ? `${d.seats} seat${d.seats === 1 ? '' : 's'}` : '', (d.price && d.price.a) ? `${fmtMoney(d.price.a, d.price.c)} share` : ''].filter(Boolean).join(' · ');
+  if (cat === 'house') return [HOUSE_KIND[d.g] || '', d.when, (d.price && d.price.a) ? fmtMoney(d.price.a, d.price.c) : ''].filter(Boolean).join(' · ');
+  if (cat !== 'swap' && d.price && d.price.a) return fmtMoney(d.price.a, d.price.c);
+  return '';
+}
+// A category-appropriate safety line (shown under each post form).
+function bbSafety(cat) {
+  if (cat === 'swap') return 'Never type card or bank details; exchange cash in person in a safe, public place.';
+  if (cat === 'ride') return 'Agree the cost up front and share your live location with a friend. You travel at your own risk.';
+  if (cat === 'house') return 'See the place before you pay. Never wire a deposit to someone you have not met.';
+  if (cat === 'kids') return 'Check safety items — car seats, helmets, carriers — for damage and expiry before use.';
+  return 'Meet in a safe, public place. For a motorbike, check the papers and never leave your passport as a deposit.';
+}
+
+// Fair mid-market value + an honest "what a booth would keep" range, as text nodes.
+function swapCalcNodes(a, have, want) {
+  if (have === want) return [document.createTextNode('Pick two different currencies.')];
+  if (!a) return [document.createTextNode('Enter an amount to see the fair mid-market value.')];
+  const got = convert(a, have, want);
+  if (got == null) return [document.createTextNode('No offline rate for this pair yet — open Currency with internet once to refresh.')];
+  return [
+    h('strong', { class: 'fair' }, `${fmtMoney(a, have)} ≈ ${fmtMoney(got, want)}`),
+    document.createTextNode(` at mid-market. A money changer usually keeps ~3–7%, so roughly ${fmtMoney(got * 0.03, want)}–${fmtMoney(got * 0.07, want)} stays between you two.`),
+  ];
+}
+
+// Best-effort nearest town name (for pre-filling a listing's "where"), else the country.
+function guessCityName() {
+  const fix = getLastFix();
+  if (fix) { try { const s = nearestSpot(fix, activeCountry); if (s && s.city) return s.city; } catch { /* noop */ } }
+  const c = getCountry(activeCountry); return c ? c.name : '';
+}
+
+// A "paste a shared link" importer: opens the payload exactly as tapping the link would.
+function pasteLinkBox(hint) {
+  const inp = h('input', { type: 'text', placeholder: hint || 'Paste a link a traveller sent you', style: 'width:100%' });
+  return h('div', { class: 'card' }, [
+    h('h3', { style: 'margin-top:0' }, '📥 Got a link?'),
+    inp,
+    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => {
+      const m = String(inp.value || '').match(/#(.+)$/);
+      if (m && m[1]) location.hash = '#' + m[1].trim();
+    } }, 'Open the link'),
+  ]);
+}
+
+// One listing card (any category) with a share link and a remove control.
+function listingCard(it) {
+  const d = it.data || {};
+  const cat = it.cat || 'other';
+  const meta = bbCat(cat);
+  const card = h('div', { class: 'card listing-card', style: `--cat:${meta.color}` });
+  card.append(h('h3', { style: 'margin-top:0' }, `${meta.emoji} ${bbHeadline(cat, d)}`));
+  if (cat === 'swap') {
+    card.append(h('p', { class: 'muted small' }, swapCalcNodes((d.have && d.have.a) || 0, d.have && d.have.c, d.want && d.want.c)));
+  } else {
+    const sub = bbSubline(cat, d);
+    if (sub) card.append(h('p', { class: 'small', style: 'font-weight:700' }, sub));
+  }
+  const metaLine = [meta.label, d.city, it.mine ? 'Your post' : (it.from ? `From ${it.from.name}` : 'Saved')].filter(Boolean).join(' · ');
+  if (metaLine) card.append(h('p', { class: 'tiny muted' }, metaLine));
+  if (d.note) card.append(h('p', {}, d.note));
+  if (d.contact) card.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
+  card.append(h('div', { class: 'listing-actions' }, [
+    shareButton('🔗 Share this', meta.label, () => shareUrl('in', encodeShare('bb', Object.assign({ cat }, d), ensureMe(), '')), 'btn ghost'),
+    h('button', { class: 'btn ghost', onclick: () => { removeListing(it.id); go('#exchange-' + cat); } }, '🗑 Remove'),
+  ]));
+  return card;
+}
+
+// A category-adaptive "post to the board" form. Re-created when the category changes.
+function buildBBForm(cat) {
+  const c = getCountry(activeCountry);
+  const meta = bbCat(cat);
+  const card = h('div', { class: 'card' });
+  card.append(h('h2', { style: 'margin-top:0' }, `${meta.emoji} Post: ${meta.label}`));
+
+  const cityIn = h('input', { type: 'text', value: guessCityName(), placeholder: 'Where (town / area)', maxLength: 40 });
+  const noteIn = h('input', { type: 'text', placeholder: 'Notes (optional)', maxLength: 400 });
+  const contactIn = h('input', { type: 'text', placeholder: 'How to reach you — your choice', maxLength: 80 });
+
+  let collect, valid, firstEl;
+  if (cat === 'swap') {
+    const haveSel = currencySelect(c ? c.currency : 'THB');
+    const haveAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', min: '0' });
+    const wantSel = currencySelect(homeCurrency());
+    const calc = h('p', { class: 'muted small swap-calc' });
+    const upd = () => calc.replaceChildren(...swapCalcNodes(parseFloat(haveAmt.value) || 0, haveSel.value, wantSel.value));
+    haveAmt.addEventListener('input', upd); haveSel.addEventListener('change', upd); wantSel.addEventListener('change', upd);
+    card.append(field('I have', haveSel), field('Amount', haveAmt), field('I want', wantSel), calc);
+    upd(); firstEl = haveAmt;
+    valid = () => (parseFloat(haveAmt.value) || 0) > 0;
+    collect = () => ({ have: { c: haveSel.value, a: parseFloat(haveAmt.value) || 0 }, want: { c: wantSel.value } });
+  } else if (cat === 'ride') {
+    const fromIn = h('input', { type: 'text', value: guessCityName(), placeholder: 'From (e.g. Pai)', maxLength: 40 });
+    const toIn = h('input', { type: 'text', placeholder: 'To (e.g. Chiang Mai)', maxLength: 40 });
+    const whenIn = h('input', { type: 'text', placeholder: 'When (e.g. Sat 9am)', maxLength: 40 });
+    const seatsIn = h('input', { type: 'number', placeholder: 'Seats', min: '0' });
+    const priceAmt = h('input', { type: 'number', placeholder: 'Cost share (optional)', min: '0' });
+    const priceCur = currencySelect(c ? c.currency : 'THB');
+    card.append(field('From', fromIn), field('To', toIn), field('When', whenIn), field('Seats', seatsIn), field('Cost share', priceAmt), field('Currency', priceCur));
+    firstEl = toIn;
+    valid = () => fromIn.value.trim() && toIn.value.trim();
+    collect = () => ({ from: fromIn.value.trim(), to: toIn.value.trim(), when: whenIn.value.trim(), seats: parseFloat(seatsIn.value) || 0, price: { a: parseFloat(priceAmt.value) || 0, c: priceCur.value } });
+  } else if (cat === 'house') {
+    const kindSel = h('select', { 'aria-label': 'Kind' }, Object.entries(HOUSE_KIND).map(([v, l]) => h('option', { value: v }, l)));
+    const titleIn = h('input', { type: 'text', placeholder: 'Short title (e.g. Spare room, 2 nights)', maxLength: 80 });
+    const whenIn = h('input', { type: 'text', placeholder: 'Dates (optional)', maxLength: 40 });
+    const priceAmt = h('input', { type: 'number', placeholder: 'Price / split (optional)', min: '0' });
+    const priceCur = currencySelect(c ? c.currency : 'THB');
+    card.append(field('Type', kindSel), field('Title', titleIn), field('Dates', whenIn), field('Price', priceAmt), field('Currency', priceCur));
+    firstEl = titleIn;
+    valid = () => titleIn.value.trim();
+    collect = () => ({ g: kindSel.value, title: titleIn.value.trim(), when: whenIn.value.trim(), price: { a: parseFloat(priceAmt.value) || 0, c: priceCur.value } });
+  } else {
+    const subSel = h('select', { 'aria-label': 'What is it' }, bbSubKinds(cat).map(([v, l]) => h('option', { value: v }, l)));
+    const titleIn = h('input', { type: 'text', placeholder: 'What is it', maxLength: 80 });
+    const priceAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Price (blank = free / offers)', min: '0' });
+    const priceCur = currencySelect(c ? c.currency : 'THB');
+    card.append(field('Item', subSel), field('Title', titleIn), field('Price', priceAmt), field('Currency', priceCur));
+    firstEl = titleIn;
+    valid = () => titleIn.value.trim();
+    collect = () => ({ g: subSel.value, title: titleIn.value.trim(), price: { a: parseFloat(priceAmt.value) || 0, c: priceCur.value } });
+  }
+
+  card.append(field('Where', cityIn), field('Note', noteIn), field('Contact', contactIn));
+  card.append(h('button', { class: 'btn block', onclick: () => {
+    if (valid && !valid()) { if (firstEl) firstEl.focus(); return; }
+    const data = Object.assign(collect(), { city: cityIn.value.trim(), note: noteIn.value.trim(), contact: contactIn.value.trim() });
+    addListing({ cat, mine: true, data });
+    go('#exchange-' + cat);
+  } }, '＋ Post to the board'));
+  card.append(h('p', { class: 'tiny muted' }, `Stays on your device until you share its link. ${bbSafety(cat)}`));
+  return card;
+}
+
+// The Traveller Board: a backendless bulletin board with category tabs. Cash swap,
+// ride share, stay/room share, kids & baby gear, bikes & gear, and a general bucket.
+function bulletinScreen(arg) {
+  let cat = BB_CATS.some((c) => c.id === arg) ? arg : 'all';
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Traveller board', '#home'));
+  wrap.append(h('p', { class: 'lead' }, 'A traveller-to-traveller board you share by link — swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. Post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
+  const rates = getRates();
+  if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));
+
+  const chips = h('div', { class: 'chips bb-chips' });
+  const formWrap = h('div', {});
+  const listWrap = h('div', {});
+  wrap.append(chips, formWrap, pasteLinkBox('Paste a board link a traveller sent'), listWrap);
+
+  function repaint() {
+    chips.innerHTML = '';
+    const mk = (id, label, color) => h('button', { class: 'chip bb-chip', dataset: { c: id }, style: color ? `--chip:${color}` : '', 'aria-pressed': cat === id ? 'true' : 'false', onclick: () => { cat = id; repaint(); } }, label);
+    chips.append(mk('all', '📋 All'));
+    BB_CATS.forEach((c) => chips.append(mk(c.id, `${c.emoji} ${c.label}`, c.color)));
+
+    formWrap.innerHTML = '';
+    if (cat === 'all') {
+      formWrap.append(h('p', { class: 'muted small', style: 'margin:2px 2px 8px' }, 'Pick a category above to post, or browse everything below.'));
+    } else {
+      formWrap.append(h('p', { class: 'muted small', style: 'margin:2px 2px 6px' }, bbCat(cat).blurb));
+      formWrap.append(buildBBForm(cat));
+    }
+
+    listWrap.innerHTML = '';
+    const all = getListings();
+    const items = cat === 'all' ? all : all.filter((x) => x.cat === cat);
+    listWrap.append(h('h2', { class: 'home-section' }, `${cat === 'all' ? 'On your board' : bbCat(cat).label} · ${items.length}`));
+    if (!items.length) listWrap.append(h('p', { class: 'empty' }, 'Nothing here yet. Pick a category to post, or open a link a traveller sends you.'));
+    items.forEach((it) => listWrap.append(listingCard(it)));
+  }
+  repaint();
+  mount(wrap, '#home');
+}
 
 // A local price range followed by an approximate home-currency conversion, e.g.
 // "฿40–120 (≈ $1.10–3.30)". Uses live rates when available, the offline fallback
@@ -3138,7 +3390,8 @@ function distanceChip(p) {
   if (!fix || !p || !p.coords) return null;
   const km = haversineKm(fix, p.coords);
   const parts = [fmtDistance(km)];
-  if (km <= 6) parts.push(`~${Math.max(1, Math.round((km / 4.8) * 60))} min walk`);
+  const t = driveLabel(km);            // walk time if close, else estimated road-drive time
+  if (t) parts.push(t);
   parts.push(`${compass(bearing(fix, p.coords))}`);
   return h('span', { class: 'dist-chip', title: 'From your last location' }, `📍 ${parts.join(' · ')}`);
 }
@@ -3615,6 +3868,62 @@ function transitCard(p) {
   return card;
 }
 
+// ---- LOCAL SECRETS (per-place crowdsourced tips; on-device, shared by link) --
+// Insider tips for a place: curated guide tips + the user's own secrets + secrets
+// other travellers shared with a link. Stored in placeData[id].secrets (rides along
+// in the backup). A progressive-disclosure drawer keeps the place page calm.
+function getPlaceSecrets(id) { const s = getPlaceData(id).secrets; return Array.isArray(s) ? s : []; }
+function addPlaceSecret(id, { text, by }) {
+  const list = getPlaceSecrets(id).slice();
+  list.unshift({ text: String(text || '').slice(0, 400), by: String(by || '').slice(0, 40), at: todayKey() });
+  setPlaceField(id, 'secrets', list);
+}
+function removePlaceSecret(id, idx) { const list = getPlaceSecrets(id).slice(); list.splice(idx, 1); setPlaceField(id, 'secrets', list); }
+
+function localSecretsCard(p) {
+  if (p.isPin) return null;
+  const guideTips = Array.isArray(p.tips) ? p.tips : [];
+  const card = h('details', { class: 'card local-secrets' });
+  const summary = h('summary', {}, '');
+  card.append(summary);
+  card.append(h('p', { class: 'muted small', style: 'margin:2px 0 8px' }, 'Insider tips for this place — from the guide, from you, and from travellers who shared a link. Kept on your device.'));
+  if (guideTips.length) {
+    card.append(h('h3', { style: 'margin:6px 0 2px' }, '📖 From the guide'));
+    guideTips.forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
+  }
+  const listEl = h('div', {});
+  card.append(listEl);
+  function drawSecrets() {
+    listEl.innerHTML = '';
+    const s = getPlaceSecrets(p.id);
+    summary.textContent = `🔑 Local secrets & tips${s.length ? ` (${s.length})` : ''}`;
+    if (s.length) listEl.append(h('h3', { style: 'margin:10px 0 2px' }, '🔑 Traveller secrets'));
+    s.forEach((sec, i) => {
+      listEl.append(h('div', { class: 'secret-item' }, [
+        h('p', { style: 'margin:0' }, sec.text),
+        h('div', { class: 'tiny muted' }, [sec.by, sec.at].filter(Boolean).join(' · ')),
+        h('div', { class: 'listing-actions' }, [
+          shareButton('🔗 Share', `A tip for ${p.name}`, () => shareUrl('in', encodeShare('secret', { id: p.id, n: p.name, text: sec.text, by: sec.by || (ensureMe().name || '') }, ensureMe())), 'btn ghost'),
+          h('button', { class: 'btn ghost', 'aria-label': 'Remove this secret', onclick: () => { removePlaceSecret(p.id, i); drawSecrets(); } }, '🗑'),
+        ]),
+      ]));
+    });
+  }
+  drawSecrets();
+  const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '400', placeholder: 'A hidden gem, a shortcut, a heads-up…' });
+  card.append(h('div', { class: 'secret-add' }, [
+    h('label', { class: 'secret-cta' }, '✨ Spotted something new? Add to the collective wisdom'),
+    ta,
+    h('button', { class: 'btn block', style: 'margin-top:6px', onclick: () => {
+      const t = ta.value.trim(); if (!t) { ta.focus(); return; }
+      addPlaceSecret(p.id, { text: t, by: ensureMe().name || '' });
+      ta.value = ''; drawSecrets();
+    } }, '＋ Add this secret'),
+    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest a bigger correction to the guide'),
+  ]));
+  return card;
+}
+
 function placeScreen(id) {
   const p = resolveItem(id);
   const backHash = p && p.isPin ? '#saved' : '#places';
@@ -3645,7 +3954,6 @@ function placeScreen(id) {
   }
   if (p.hours && !isMarket(p)) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
   if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
-  if (p.tips && p.tips.length) { card.append(h('h3', {}, 'Tips')); p.tips.forEach((t) => card.append(h('div', { class: 'list-note' }, t))); }
   if (p.scamWarnings && p.scamWarnings.length) { card.append(h('h3', {}, 'Watch out')); p.scamWarnings.forEach((t) => card.append(h('div', { class: 'warn-note' }, t))); }
   if (p.activities && p.activities.length) { card.append(h('h3', {}, 'Things to do here')); card.append(h('div', { class: 'cats' }, p.activities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
   if (p.amenities && p.amenities.length) { card.append(h('h3', {}, 'Amenities')); card.append(h('div', { class: 'cats' }, p.amenities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
@@ -3683,6 +3991,8 @@ function placeScreen(id) {
   if (extCard) wrap.append(extCard);
   const wxCard = weatherNearbyCard(p);
   if (wxCard) wrap.append(wxCard);
+  const secretsCard = localSecretsCard(p);
+  if (secretsCard) wrap.append(secretsCard);
   wrap.append(actions, yourLayer(p));
   if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified, p));
   mount(wrap, backHash);
@@ -6637,13 +6947,14 @@ function todoCard(x, maxReasons) {
     thumb,
   ]);
 }
-// Distance label that answers "can I walk it?" for close picks: within ~3 km it adds a
-// rough walking time (≈4.8 km/h), so the "Right here" tier reads as genuinely reachable.
+// Distance label that answers "how long to get there?": a walk time for close picks and an
+// estimated road-drive time beyond that (see driveLabel), so every tier reads as time, not just
+// straight-line km — the honest measure on the region's winding roads.
 function todoDistLabel(dist) {
   if (dist == null) return null;
   const km = dist < 10 ? dist.toFixed(1) : String(Math.round(dist));
-  if (dist <= 3) return `${km} km · ~${Math.max(1, Math.round((dist / 4.8) * 60))} min walk`;
-  return `${km} km away`;
+  const lbl = driveLabel(dist);
+  return lbl ? `${km} km · ${lbl}` : `${km} km away`;
 }
 
 function daySuggestScreen(country) {
@@ -6712,10 +7023,11 @@ function daySuggestScreen(country) {
     let scored = doable.map((p) => todoScore(p, ctxForPlan(ctx, todoPlan), prefs, anchor));
     const rescore = () => { scored = doable.map((p) => todoScore(p, ctxForPlan(ctx, todoPlan), prefs, anchor)); };
     const sameCity = (x) => citySlug(x.p.city || '') === citySlug(spot.city || '');
-    // In scope only if reachability is trustworthy: a real distance within a day-trip radius,
-    // or — when a place has no coordinates — the very same city. Anything further is hidden.
+    // In scope only if reachability is trustworthy, tiered by estimated DRIVE time: walkable,
+    // within about an hour's drive ("near"), or up to a ~3-hour day trip ("trip"). When a place
+    // has no coordinates we fall back to same-city as "near". Anything further is hidden.
     const tierOf = (x) => {
-      if (x.dist != null) return x.dist <= 5 ? 'walk' : x.dist <= 25 ? 'near' : x.dist <= 60 ? 'trip' : null;
+      if (x.dist != null) return x.dist <= 2.5 ? 'walk' : withinNear(x.dist) ? 'near' : withinDayTrip(x.dist) ? 'trip' : null;
       return sameCity(x) ? 'near' : null;
     };
     const inScope = scored.filter((x) => tierOf(x));
@@ -6785,14 +7097,14 @@ function daySuggestScreen(country) {
       });
       if (!rendered) {
         // Nothing trustworthy nearby: fall back to the nearest we can measure — but still only
-        // within the near-me radius, so we never pad a "near you" list with a 3-hour drive.
-        const far = scored.filter((x) => x.dist != null && x.dist <= NEAR_CAP_KM && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
+        // within about an hour's drive, so we never pad a "near you" list with a 3-hour trip.
+        const far = scored.filter((x) => withinNear(x.dist) && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
           .sort((a, b) => a.dist - b.dist).slice(0, 12);
         if (far.length) {
           listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' }, `Nothing mapped close to ${spot.city} yet — here are the nearest.`));
           renderTier('Nearest to you', far);
         } else {
-          listBody.append(h('p', { class: 'empty' }, `Nothing to do mapped within ~${NEAR_CAP_KM} km of ${spot.city} yet. Open a nearby city, or browse all places.`));
+          listBody.append(h('p', { class: 'empty' }, `Nothing to do mapped within about an hour’s drive of ${spot.city} yet. Open a nearby city, or browse all places.`));
         }
       }
     }
@@ -8531,6 +8843,14 @@ function circleScreen() {
     'Connect with other travellers — no account, no server. Your card and messages travel only inside links you choose to share; nothing is uploaded and nothing leaves this device on its own.'));
   wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#inbox') }, `📥 Shared with you (${getInbox().length})`));
 
+  // --- traveller board (peer bulletin board; on-device, shared by link) ---
+  const nListings = getListings().length;
+  wrap.append(h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Traveller board'),
+    h('p', { class: 'muted' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. On-device; a listing travels only inside a link you share.'),
+    h('button', { class: 'btn ghost block', onclick: () => go('#exchange') }, `🧭 Open the board${nListings ? ` (${nListings})` : ''}`),
+  ]));
+
   // --- your card (editable) ---
   const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', value: me.name || '' });
   const avIn = h('input', { type: 'text', maxlength: '4', 'aria-label': 'Your emoji', value: me.avatar || '🧭', style: 'width:64px; text-align:center' });
@@ -8696,6 +9016,28 @@ function importShareScreen(arg) {
     } }, '＋ Add this sighting to the beach'));
     if (exists) box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${s.data.id}`) }, 'Open this beach'));
     else box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This beach is not in your guide, so the sighting cannot be pinned to it.'));
+  } else if (s.kind === 'secret') {
+    const exists = getPlace(s.data.id);
+    box.append(h('h2', { style: 'margin-top:8px' }, `🔑 Local secret — ${s.data.name}`));
+    box.append(h('p', {}, s.data.text));
+    if (s.data.by) box.append(h('p', { class: 'tiny muted' }, `Shared by ${s.data.by}`));
+    if (exists) {
+      box.append(h('button', { class: 'btn block', onclick: (e) => { addPlaceSecret(s.data.id, { text: s.data.text, by: s.data.by || (s.from ? s.from.name : 'a traveller') }); e.currentTarget.textContent = '✓ Saved to this place'; } }, '＋ Save this secret to the place'));
+      box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
+    } else {
+      box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This place is not in your guide, so the secret cannot be pinned to it.'));
+    }
+  } else if (s.kind === 'bb') {
+    const d = s.data; const cat = d.cat || 'other'; const meta = bbCat(cat);
+    box.append(h('h2', { style: 'margin-top:8px' }, `${meta.emoji} ${bbHeadline(cat, d)}`));
+    if (cat === 'swap') box.append(h('p', { class: 'muted small' }, swapCalcNodes((d.have && d.have.a) || 0, d.have && d.have.c, d.want && d.want.c)));
+    else { const sub = bbSubline(cat, d); if (sub) box.append(h('p', { class: 'small', style: 'font-weight:700' }, sub)); }
+    const line = [meta.label, d.city].filter(Boolean).join(' · ');
+    if (line) box.append(h('p', { class: 'tiny muted' }, line));
+    if (d.note) box.append(h('p', { style: 'margin-top:6px' }, d.note));
+    if (d.contact) box.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
+    box.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: (e) => { addListing({ cat, mine: false, from: s.from, data: d }); e.currentTarget.textContent = '✓ Saved to your board'; } }, '＋ Save to my board'));
+    box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#exchange-' + cat) }, 'Open the traveller board'));
   }
   wrap.append(box);
 
@@ -8718,12 +9060,15 @@ function inboxScreen() {
     wrap.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Nothing yet. When a friend shares a place, list or trip with you, it lands here.')]));
     mount(wrap, '#circle'); return;
   }
-  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip', jelly: '🪼 Sighting' };
+  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip', jelly: '🪼 Sighting', secret: '🔑 Secret', bb: '🧭 Board' };
   items.forEach((it) => {
     const title = it.kind === 'place' ? (it.data.name || 'A place')
       : it.kind === 'collection' ? (it.data.name || 'A list')
       : it.kind === 'tip' ? `Tip — ${it.data.city || 'a city'}`
-      : it.kind === 'jelly' ? `🪼 Jellyfish — ${it.data.name || 'a beach'}` : 'A trip';
+      : it.kind === 'jelly' ? `🪼 Jellyfish — ${it.data.name || 'a beach'}`
+      : it.kind === 'secret' ? `🔑 ${it.data.name || 'a place'}`
+      : it.kind === 'bb' ? `${bbCat(it.data.cat).emoji} ${bbHeadline(it.data.cat || 'other', it.data)}`
+      : 'A trip';
     wrap.append(h('div', { class: 'card' }, [
       h('div', { class: 'row-between' }, [
         h('div', {}, [h('strong', {}, title), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
@@ -8837,8 +9182,14 @@ function welcomeScreen() {
   const wrap = h('div', { class: 'screen welcome' });
   wrap.append(h('section', { class: 'hero' }, [
     h('div', { class: 'logo-wrap', html: logoSVG() }),
-    h('p', {}, 'Let us set the app up for you — whether to use data, how you travel, and where you are. A few taps; everything stays on your device.'),
+    h('p', {}, 'Set the app up in a few taps — or dive straight in and personalise as you go. Everything stays on your device.'),
   ]));
+
+  const finish = () => { store.profile.seenWelcome = true; store.profile.prefs.geoAsked = true; if (netMode() === 'ask') setNetMode('offline'); save(); go('#home'); };
+  // Straight into the app: a first-timer can skip the whole setup and personalise later (Settings,
+  // the For-you screen, the on-Home location invite). Setup is optional, never a gate.
+  wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:4px', onclick: finish }, '✨ Skip setup — just explore'));
+  wrap.append(h('p', { class: 'muted small', style: 'margin:0 2px 10px' }, 'Or set a few things up below. You can change all of it any time in Settings.'));
 
   // 1 — Network choice FIRST: the app will not touch mobile data or Wi-Fi without it.
   const netCard = h('div', { class: 'card' });
@@ -8915,9 +9266,7 @@ function welcomeScreen() {
   }
   wrap.append(locCard);
 
-  const finish = () => { store.profile.seenWelcome = true; store.profile.prefs.geoAsked = true; if (netMode() === 'ask') setNetMode('offline'); save(); go('#home'); };
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: finish }, 'Start exploring →'));
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: finish }, 'Skip for now'));
   // No tab bar during first-run setup: onboarding is a focused flow with its own
   // "Start exploring" / "Skip for now" exits, not something to wander out of mid-step.
   mount(wrap);
@@ -9952,6 +10301,9 @@ function render() {
       case 'country': return countryHubScreen(arg);
       case 'nearby': return nearbyScreen();
       case 'currency': return currencyScreen();
+      case 'exchange': return bulletinScreen(arg);
+      case 'swap': return bulletinScreen('swap');
+      case 'market': return bulletinScreen('gear');
       case 'phrasebook': return phrasebookScreen(arg);
       case 'places': return placesScreen(arg);
       case 'place': return placeScreen(arg);

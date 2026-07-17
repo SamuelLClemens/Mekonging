@@ -106,6 +106,9 @@ function defaults() {
       contacts: [],   // { userId, name, avatar, bio, addedAt } — people added from a shared card
       inbox: [],      // received shared items (Batch B) — { id, from, kind, data, ts, read }
       threads: {},    // async message threads (Batch C) — { contactUserId: [ { from, text, attach, ts } ] }
+      listings: [],   // v12: local P2P classifieds — currency swaps + gear/motorbike hand-offs.
+                      // { id, cat:'swap'|'gear', ...fields, mine:true|false, from?, ts }. On-device;
+                      // shared only inside links the user chooses to send. No server, no PII.
     },
     // --- v9: the user's own posts on city noticeboards (on-device; shareable via links) ---
     boardPosts: {},   // { '<cc>-<citySlug>': [ { id, topic, text, at } ] }
@@ -155,6 +158,7 @@ function migrate(data) {
         contacts: Array.isArray(s.contacts) ? s.contacts : [],
         inbox: Array.isArray(s.inbox) ? s.inbox : [],
         threads: (s.threads && typeof s.threads === 'object' && !Array.isArray(s.threads)) ? s.threads : {},
+        listings: Array.isArray(s.listings) ? s.listings : [],
       };
     })(),
     boardPosts: (data.boardPosts && typeof data.boardPosts === 'object' && !Array.isArray(data.boardPosts)) ? data.boardPosts : {},
@@ -669,6 +673,23 @@ export function addInboxItem({ from = null, kind, data, msg = '' }) {
 export function markInboxRead(id) { const it = getInbox().find((x) => x.id === id); if (it && !it.read) { it.read = true; save(); } }
 export function deleteInboxItem(id) { const list = getInbox(); const i = list.findIndex((x) => x.id === id); if (i >= 0) { list.splice(i, 1); save(); } }
 export function unreadInboxCount() { return getInbox().filter((x) => !x.read).length; }
+
+// --- travel circle: local classifieds (currency swaps + gear hand-offs) --------
+// On-device listings the user posts or saves from a shared link. Nothing is sent
+// anywhere automatically; a listing travels only inside a link the user shares.
+export function getListings() { return Array.isArray(store.social.listings) ? store.social.listings : (store.social.listings = []); }
+export function addListing(rec) {
+  const item = {
+    id: uid('lst'),
+    cat: (String(rec.cat || 'other').replace(/[^a-z]/g, '').slice(0, 12)) || 'other',
+    mine: rec.mine !== false,
+    from: rec.from ? { userId: String(rec.from.userId || '').slice(0, 64), name: String(rec.from.name || 'A traveller').slice(0, 40), avatar: trimEmoji(rec.from.avatar) } : null,
+    data: rec.data || {},
+    at: todayKey(), ts: Date.now(),
+  };
+  getListings().unshift(item); save(); return item;
+}
+export function removeListing(id) { const list = getListings(); const i = list.findIndex((x) => x.id === id); if (i >= 0) { list.splice(i, 1); save(); } }
 
 // --- travel circle: async message threads (backendless "postcards") ----------
 // threads[contactUserId] = [ { from:'me'|'them', text, name, at } ], in send order.
