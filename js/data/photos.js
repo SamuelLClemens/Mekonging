@@ -3,6 +3,8 @@
 // images are lazy-loaded and runtime-cached, never precached. Attribution per
 // the source (Wikimedia Commons or Openverse) is shown in the photo caption.
 export const PHOTOS = {
+  "th-ext-koh-tao-diving": { src: "img/places/th-ext-koh-tao-diving.jpg", credit: "kallerna, CC BY-SA 4.0, via Wikimedia Commons" },
+  "th-ext-phuket-old-town": { src: "img/places/th-ext-phuket-old-town.jpg", credit: "Myinternationalwikipedia, CC0, via Wikimedia Commons" },
   "kh-ext-kampot-old-town": { src: "img/places/kh-ext-kampot-old-town.jpg", credit: "Marcin Konsek, CC BY-SA 4.0, via Wikimedia Commons" },
   "kh-ext-kirirom-national-park": { src: "img/places/kh-ext-kirirom-national-park.jpg", credit: "Arie at flickr, CC BY-SA 3.0, via Wikimedia Commons" },
   "kh-ext-koh-rong-samloem": { src: "img/places/kh-ext-koh-rong-samloem.jpg", credit: "Wikirictor, CC BY-SA 3.0, via Wikimedia Commons" },
