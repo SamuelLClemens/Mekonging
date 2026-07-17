@@ -1058,6 +1058,7 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 /* Active category chip adopts its category colour, so the board reads at a glance. */
 .bb-chip[aria-pressed="true"] { background: var(--chip, var(--teal-deep)); border-color: var(--chip, var(--teal-deep)); color: #fff; }
 .listing-card { border-left: 4px solid var(--cat, var(--teal-deep)); }
+.listing-stale { color: var(--warn); font-weight: 600; }
 .listing-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .listing-actions .btn { flex: 1 1 auto; margin-top: 0; }
 .swap-calc { line-height: 1.35; }
