@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.245.0';
+const APP_VERSION = 'mk-v0.246.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -512,6 +512,11 @@ function suggestExcluded() {
   const p = store.profile.prefs;
   return new Set([...(p.doneSpots || []), ...(p.hiddenSpots || [])]);
 }
+// A single tap on ✓ (done) or ✕ (not interested) removes a place from the feed, so an
+// accidental tap silently loses a suggestion. Confirm the intent first. Undoing a mark
+// (tapping ✓ on an already-done row) never prompts — reversing is always safe.
+function confirmSpotDone(name) { return confirm(`Mark “${name}” as done? It will drop out of your suggestions.`); }
+function confirmSpotHide(name) { return confirm(`Not interested in “${name}”? It will stop appearing in your suggestions.`); }
 function markSpotDone(id) {
   const p = store.profile.prefs;
   p.doneSpots = p.doneSpots || [];
@@ -746,8 +751,8 @@ function rightNowSection() {
             ]),
           ]),
           h('div', { class: 'rn-actions' }, [
-            h('button', { class: 'rn-act done', title: 'I did this — swap in something new', 'aria-label': `Mark ${p.name} as done`, onclick: () => { markSpotDone(p.id); drawPicks(); } }, '✓'),
-            h('button', { class: 'rn-act', title: 'Not interested — show me something else', 'aria-label': `Not interested in ${p.name}`, onclick: () => { hideSpot(p.id); drawPicks(); } }, '✕'),
+            h('button', { class: 'rn-act done', title: 'I did this — swap in something new', 'aria-label': `Mark ${p.name} as done`, onclick: () => { if (confirmSpotDone(p.name)) { markSpotDone(p.id); drawPicks(); } } }, '✓'),
+            h('button', { class: 'rn-act', title: 'Not interested — show me something else', 'aria-label': `Not interested in ${p.name}`, onclick: () => { if (confirmSpotHide(p.name)) { hideSpot(p.id); drawPicks(); } } }, '✕'),
           ]),
         ]));
       });
@@ -1955,8 +1960,8 @@ function nearbyScreen() {
             ]),
           ]),
           h('div', { class: 'rn-actions' }, [
-            h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { toggleSpotDone(p.id); drawList(); } }, '✓'),
-            h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { hideSpot(p.id); drawList(); } }, '✕'),
+            h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { if (done || confirmSpotDone(p.name)) { toggleSpotDone(p.id); drawList(); } } }, '✓'),
+            h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { if (confirmSpotHide(p.name)) { hideSpot(p.id); drawList(); } } }, '✕'),
           ]),
         ]));
       }
