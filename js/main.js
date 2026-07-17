@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.246.0';
+const APP_VERSION = 'mk-v0.247.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2707,6 +2707,75 @@ function citySlug(name) {
   return String(name || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+// A representative self-hosted photo for a city: the highest-rated place in that city
+// that carries a photo. Lets the city picker show a recognisable image, not just a name.
+function cityRepPhoto(cc, slug) {
+  const inCity = allPlaces({ country: cc })
+    .filter((p) => citySlug(p.city || '') === slug)
+    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+  for (const p of inCity) { const src = placePhotoSrc(p); if (src) return src; }
+  return null;
+}
+
+// "Choose a city" drill-down for the country level of Places for you: tap a country, its
+// featured cities show (with a photo + count); tap one and that city's categories open.
+function cityPickerCard(cc) {
+  const country = getCountry(cc);
+  const places = allPlaces({ country: cc });
+  if (!places.length) return null;
+  const counts = {};
+  places.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
+  const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  if (!cities.length) return null;
+  const card = h('div', { class: 'card' });
+  card.append(h('h2', { style: 'margin-top:0' }, `🗺 Choose a city in ${country ? country.name : 'this country'}`));
+  card.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a city to see just its places, grouped by category.'));
+  const grid = h('div', { class: 'city-pick-grid' });
+  cities.slice(0, 12).forEach((city) => {
+    const slug = citySlug(city);
+    const src = cityRepPhoto(cc, slug);
+    const thumb = src
+      ? h('img', { class: 'city-pick-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
+      : h('span', { class: 'city-pick-thumb ph' }, '🏙');
+    grid.append(h('button', { class: 'city-pick', onclick: () => go(`#places-${cc}-${slug}`) }, [
+      thumb,
+      h('span', { class: 'city-pick-name' }, city),
+      h('span', { class: 'city-pick-count' }, `${counts[city]} place${counts[city] > 1 ? 's' : ''}`),
+    ]));
+  });
+  card.append(grid);
+  return card;
+}
+
+// "Closest to you" — the user's "first and foremost" ask. When a location fix is known,
+// the nearest few places (optionally within the scoped city) sit at the very top, open.
+// With no fix, a single quiet prompt to turn location on (never nags — no fix, one button).
+function closestPlacesCard(cc, scopeSlug) {
+  const fix = getLastFix();
+  if (!fix) {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
+    const card = h('div', { class: 'card closest-prompt' }, [
+      h('strong', {}, '📍 See what’s closest to you'),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn on location and the nearest places rise to the top. It stays on your device.'),
+    ]);
+    const btn = h('button', { class: 'btn block' }, '📍 Use my location');
+    btn.onclick = async () => { btn.textContent = 'Locating…'; try { setLastFix(await geolocate()); render(); } catch { btn.textContent = '📍 Location unavailable'; } };
+    card.append(btn);
+    return card;
+  }
+  let pool = allPlaces({ country: cc }).filter((p) => p.coords);
+  if (scopeSlug) pool = pool.filter((p) => citySlug(p.city || '') === scopeSlug);
+  if (!pool.length) return null;
+  pool = pool.slice().sort((a, b) => haversineKm(fix, a.coords) - haversineKm(fix, b.coords)).slice(0, 4);
+  const det = h('details', { class: 'place-cat-group closest-card', open: '', style: '--cat:#0F9D8C' }, [
+    h('summary', { class: 'place-cat-summary' }, '📍 Closest to you'),
+  ]);
+  const body = h('div', { class: 'place-cat-body' });
+  pool.forEach((p) => body.append(placeCard(p)));
+  det.append(body);
+  return det;
+}
+
 function placesScreen(arg) {
   // arg is "<cc>" or "<cc>-<citySlug>" (e.g. "th" or "th-chiang-mai").
   const parts = String(arg || '').split('-');
@@ -2731,6 +2800,13 @@ function placesScreen(arg) {
     const ac = cityAboutCard(activeCountry, scopeSlug); if (ac) wrap.append(ac);
     wrap.append(cityEssentials(activeCountry, scopeCity, scopeSlug));
   }
+
+  // "First and foremost, present places closest to you": the nearest few sit at the top.
+  const closest = closestPlacesCard(activeCountry, scopeSlug);
+  if (closest) wrap.append(closest);
+  // Country level (no city chosen yet): drill down by city — tap a city and just its
+  // places show, grouped into the collapsible category sections below.
+  if (!scopeSlug) { const cp = cityPickerCard(activeCountry); if (cp) wrap.append(cp); }
 
   // Your own places live alongside the curated ones: add a location, then rate, review and
   // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
@@ -2922,17 +2998,26 @@ function placesScreen(arg) {
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
-      // group by category so a long list scans as a few short sections.
+      // Group by category, each a COLLAPSIBLE section (minimised until the traveller opens
+      // it), so the screen reads as a short menu — Food, Markets, Stay… — instead of one long
+      // scroll. Inside each, closest-to-you first when a location fix is known.
       const groups = {};
       currentResults.forEach((p) => { const b = placeBucket(p); (groups[b] = groups[b] || []).push(p); });
+      const fix = getLastFix();
+      const byNear = (a, b) => (a.coords ? haversineKm(fix, a.coords) : Infinity) - (b.coords ? haversineKm(fix, b.coords) : Infinity);
       const CAP = 5;
       PLACE_BUCKETS.forEach(([key, label]) => {
-        const arr = groups[key];
+        let arr = groups[key];
         if (!arr || !arr.length) return;
-        listEl.append(h('h3', { class: 'cat-title cat-title-bar', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, `${label} · ${arr.length}`));
-        arr.slice(0, CAP).forEach((p) => listEl.append(placeCard(p)));
+        if (fix) arr = arr.slice().sort(byNear);
+        const body = h('div', { class: 'place-cat-body' });
+        arr.slice(0, CAP).forEach((p) => body.append(placeCard(p)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
-        if (more) listEl.append(more);
+        if (more) body.append(more);
+        listEl.append(h('details', { class: 'place-cat-group', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
+          h('summary', { class: 'place-cat-summary' }, `${label} · ${arr.length}`),
+          body,
+        ]));
       });
     }
   }
@@ -3065,7 +3150,8 @@ function resolveItem(id) {
 // Category buckets for grouping the Places list and filtering Search. A place falls in
 // the FIRST matching bucket (stays are distinct; then the four interest categories).
 const PLACE_BUCKETS = [
-  ['food', '🍜 Food & markets'],
+  ['food', '🍜 Food'],
+  ['market', '🛒 Markets'],
   ['stay', '🛏 Places to stay'],
   ['culture', '🏛 Culture & history'],
   ['nature', '🌿 Nature & outdoors'],
@@ -3078,13 +3164,16 @@ const PLACE_BUCKETS = [
 // at a glance — on cards, list section headers and chips. Fixed hues (like the map
 // legend) read as an accent on both light and dark themes.
 const BUCKET_COLOR = {
-  food: '#E8632A', stay: '#2C7DA0', culture: '#8A5CC0',
+  food: '#E8632A', market: '#E0A100', stay: '#2C7DA0', culture: '#8A5CC0',
   nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
 };
 function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
 function placeBucket(p) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   if (p.stayType || cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
+  // Markets are their own section (the user asked for "food and markets" separately),
+  // taken before the generic food bucket so a wet / night / weekend market reads as a market.
+  if (isMarket(p)) return 'market';
   if (cats.includes('rental')) return 'rental';
   for (const it of ['food', 'culture', 'nature', 'nightlife']) if (cats.includes(it)) return it;
   return 'other';
