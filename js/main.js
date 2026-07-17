@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.244.0';
+const APP_VERSION = 'mk-v0.245.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -2122,6 +2122,15 @@ function pasteLinkBox(hint) {
   ]);
 }
 
+// A listing's "posted N ago" line. Time-sensitive categories (a shared ride, a cash
+// swap) are flagged "may be past" once they age, so a board that lives on a device and
+// travels by link over days or weeks stays honest instead of accumulating dead posts.
+const BB_STALE_DAYS = { ride: 3, swap: 7 };
+function listingIsStale(it) {
+  const lim = BB_STALE_DAYS[it && it.cat];
+  return !!(lim && it && it.ts && (Date.now() - it.ts) > lim * 86400000);
+}
+
 // One listing card (any category) with a share link and a remove control.
 function listingCard(it) {
   const d = it.data || {};
@@ -2137,6 +2146,10 @@ function listingCard(it) {
   }
   const metaLine = [meta.label, d.city, it.mine ? 'Your post' : (it.from ? `From ${it.from.name}` : 'Saved')].filter(Boolean).join(' · ');
   if (metaLine) card.append(h('p', { class: 'tiny muted' }, metaLine));
+  if (it.ts) {
+    const stale = listingIsStale(it);
+    card.append(h('p', { class: stale ? 'tiny listing-stale' : 'tiny muted' }, `Posted ${seaAgo(it.ts)}${stale ? ' · may be past' : ''}`));
+  }
   if (d.note) card.append(h('p', {}, d.note));
   if (d.contact) card.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
   card.append(h('div', { class: 'listing-actions' }, [
@@ -2250,6 +2263,12 @@ function bulletinScreen(arg) {
     const items = cat === 'all' ? all : all.filter((x) => x.cat === cat);
     listWrap.append(h('h2', { class: 'home-section' }, `${cat === 'all' ? 'On your board' : bbCat(cat).label} · ${items.length}`));
     if (!items.length) listWrap.append(h('p', { class: 'empty' }, 'Nothing here yet. Pick a category to post, or open a link a traveller sends you.'));
+    // Let the traveller sweep away their own long-past posts in one tap (backendless tidy).
+    const old = items.filter((x) => x.mine && x.ts && (Date.now() - x.ts) > 14 * 86400000);
+    if (old.length) {
+      listWrap.append(h('button', { class: 'btn ghost block tiny', onclick: () => { old.forEach((s) => removeListing(s.id)); repaint(); } },
+        `🧹 Clear ${old.length} old post${old.length > 1 ? 's' : ''} of yours (over 2 weeks)`));
+    }
     items.forEach((it) => listWrap.append(listingCard(it)));
   }
   repaint();
