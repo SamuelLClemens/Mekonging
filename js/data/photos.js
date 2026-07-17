@@ -3,6 +3,18 @@
 // images are lazy-loaded and runtime-cached, never precached. Attribution per
 // the source (Wikimedia Commons or Openverse) is shown in the photo caption.
 export const PHOTOS = {
+  "kh-ext-kampot-old-town": { src: "img/places/kh-ext-kampot-old-town.jpg", credit: "Marcin Konsek, CC BY-SA 4.0, via Wikimedia Commons" },
+  "kh-ext-kirirom-national-park": { src: "img/places/kh-ext-kirirom-national-park.jpg", credit: "Arie at flickr, CC BY-SA 3.0, via Wikimedia Commons" },
+  "kh-ext-koh-rong-samloem": { src: "img/places/kh-ext-koh-rong-samloem.jpg", credit: "Wikirictor, CC BY-SA 3.0, via Wikimedia Commons" },
+  "kh-ext-tonlesap-villages": { src: "img/places/kh-ext-tonlesap-villages.jpg", credit: "Deror_avi, CC BY-SA 3.0, via Wikimedia Commons" },
+  "kh-ext-virachey": { src: "img/places/kh-ext-virachey.jpg", credit: "Mangoholic2 (talk), CC BY-SA 3.0, via Wikimedia Commons" },
+  "la-ext-blue-lagoon-1": { src: "img/places/la-ext-blue-lagoon-1.jpg", credit: "Tango7174, CC BY-SA 4.0, via Wikimedia Commons" },
+  "la-ext-nam-ha-ecotrek": { src: "img/places/la-ext-nam-ha-ecotrek.jpg", credit: "Tango7174, CC BY-SA 4.0, via Wikimedia Commons" },
+  "la-ext-vangvieng-outdoors": { src: "img/places/la-ext-vangvieng-outdoors.jpg", credit: "Tango7174, CC BY-SA 4.0, via Wikimedia Commons" },
+  "th-ext-amphawa-floating-market": { src: "img/places/th-ext-amphawa-floating-market.jpg", credit: "Ahoerstemeier, CC BY-SA 3.0, via Wikimedia Commons" },
+  "th-ext-chiang-dao-cave-tham-chiang-dao": { src: "img/places/th-ext-chiang-dao-cave-tham-chiang-dao.jpg", credit: "This Photo was taken by Supanut Arunoprayote. Feel free to u, CC BY 4.0, via Wikimedia Commons" },
+  "th-ext-patong-bangla": { src: "img/places/th-ext-patong-bangla.jpg", credit: "Unknown, CC BY-SA 3.0, via Wikimedia Commons" },
+  "th-ext-railay-climbing": { src: "img/places/th-ext-railay-climbing.jpg", credit: "kallerna, CC BY-SA 3.0, via Wikimedia Commons" },
   "kh-ext-bou-sra": { src: "img/places/kh-ext-bou-sra.jpg", credit: "Wikivoyage shared: User Somnang, Public domain, via Wikimedia Commons" },
   "kh-ext-koh-ker": { src: "img/places/kh-ext-koh-ker.jpg", credit: "(WT-en) Peaceofangkor at English Wikivoyage, Public domain, via Wikimedia Commons" },
   "kh-ext-koh-tonsay": { src: "img/places/kh-ext-koh-tonsay.jpg", credit: "Peter Merrett, Public domain, via Wikimedia Commons" },
