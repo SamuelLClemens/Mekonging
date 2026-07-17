@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.243.0';
+const APP_VERSION = 'mk-v0.244.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1902,6 +1902,7 @@ function nearbyScreen() {
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
       h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, [chipIcon('map'), 'See on the map']),
       h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('pin'), 'Set my stay']),
+      h('button', { class: 'chip', onclick: () => go('#exchange') }, '🤝 Traveller board'),
       h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
     ]));
     body.append(nearbySafetyStrip(country, f));
@@ -2220,6 +2221,10 @@ function bulletinScreen(arg) {
   wrap.append(h('p', { class: 'lead' }, 'A traveller-to-traveller board you share by link — swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. Post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
   const rates = getRates();
   if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));
+
+  // Invite a fellow traveller so the board actually has two sides. Shares the app link to
+  // the board itself — no server, no account; they open it and can post their own listings.
+  wrap.append(shareButton('📣 Invite a traveller to this board', 'Mekonging Traveller Board', () => `${location.origin}${location.pathname}#exchange`, 'btn ghost block'));
 
   const chips = h('div', { class: 'chips bb-chips' });
   const formWrap = h('div', {});
