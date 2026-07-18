@@ -52,7 +52,26 @@
     </main>
   </div>
   <noscript>
-    <p style="text-align:center;font-family:sans-serif;padding:2rem">Mekonging needs JavaScript to run. Please enable it and reload.</p>
+    <!-- No-JavaScript fallback. Mekonging is a client-rendered PWA (it has no server to
+         render pages), so the full app needs JavaScript. But a traveller who lands here
+         with JS off — or a bundle that failed on weak signal — must still get the one thing
+         that cannot wait: emergency numbers. These are the same verified numbers the app
+         carries offline (js/data/info.*.js). tel: links dial directly. -->
+    <div style="max-width:34rem;margin:0 auto;padding:1.5rem 1.25rem;font-family:'Avenir Next','Trebuchet MS',system-ui,sans-serif;color:#3A2415;line-height:1.5">
+      <h1 style="color:#E8632A;font-size:1.6rem;margin:.25rem 0">Mekonging</h1>
+      <p style="margin:.25rem 0 1rem">Your offline travel companion for Thailand, Vietnam, Cambodia and Laos. The full guide needs JavaScript enabled — turn it on and reload, and it then works offline. Meanwhile, the emergency numbers you might need right now:</p>
+      <div style="border:2px solid #E8632A;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem">
+        <h2 style="font-size:1.05rem;margin:.25rem 0">🇹🇭 Thailand</h2>
+        <p style="margin:.15rem 0">Tourist Police (English): <a href="tel:1155" style="color:#16847C;font-weight:700">1155</a> · Police: <a href="tel:191" style="color:#16847C;font-weight:700">191</a> · Ambulance: <a href="tel:1669" style="color:#16847C;font-weight:700">1669</a></p>
+        <h2 style="font-size:1.05rem;margin:.6rem 0 .25rem">🇻🇳 Vietnam</h2>
+        <p style="margin:.15rem 0">Police: <a href="tel:113" style="color:#16847C;font-weight:700">113</a> · Ambulance: <a href="tel:115" style="color:#16847C;font-weight:700">115</a> · Fire: <a href="tel:114" style="color:#16847C;font-weight:700">114</a></p>
+        <h2 style="font-size:1.05rem;margin:.6rem 0 .25rem">🇰🇭 Cambodia</h2>
+        <p style="margin:.15rem 0">Police: <a href="tel:117" style="color:#16847C;font-weight:700">117</a> · Ambulance: <a href="tel:119" style="color:#16847C;font-weight:700">119</a> · Fire: <a href="tel:118" style="color:#16847C;font-weight:700">118</a></p>
+        <h2 style="font-size:1.05rem;margin:.6rem 0 .25rem">🇱🇦 Laos</h2>
+        <p style="margin:.15rem 0">Police: <a href="tel:1191" style="color:#16847C;font-weight:700">1191</a> · Ambulance: <a href="tel:1195" style="color:#16847C;font-weight:700">1195</a> · Fire: <a href="tel:1190" style="color:#16847C;font-weight:700">1190</a></p>
+      </div>
+      <p style="font-size:.9rem;color:#7A5A3C;margin:.25rem 0">To enable JavaScript: open your browser menu → Settings → Site settings → JavaScript → Allow, then reload. Once loaded, Mekonging keeps working with no signal.</p>
+    </div>
   </noscript>
   <script type="module" src="js/main.js"></script>
 </body>
