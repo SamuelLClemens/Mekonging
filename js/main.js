@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.247.0';
+const APP_VERSION = 'mk-v0.248.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1650,8 +1650,7 @@ function countryHubScreen(id) {
     }
     if (cities.length) {
       explore.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
-      explore.append(h('div', { class: 'chips' }, cities.slice(0, 16).map((city) =>
-        h('button', { class: 'chip', onclick: () => go(`#places-${id}-${citySlug(city)}`) }, `${city} (${counts[city]})`))));
+      explore.append(cityPickGrid(id, cities.slice(0, 12), counts));
     }
     wrap.append(explore);
   }
@@ -2717,6 +2716,26 @@ function cityRepPhoto(cc, slug) {
   return null;
 }
 
+// A photo grid of cities: each a tappable card with a representative photo (emoji fallback)
+// and a place count, scoping to that city. Shared by the Places-for-you city picker and the
+// country hub's "Explore" card so both drill down the same, recognisable way.
+function cityPickGrid(cc, cities, counts) {
+  const grid = h('div', { class: 'city-pick-grid' });
+  cities.forEach((city) => {
+    const slug = citySlug(city);
+    const src = cityRepPhoto(cc, slug);
+    const thumb = src
+      ? h('img', { class: 'city-pick-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
+      : h('span', { class: 'city-pick-thumb ph' }, '🏙');
+    grid.append(h('button', { class: 'city-pick', onclick: () => go(`#places-${cc}-${slug}`) }, [
+      thumb,
+      h('span', { class: 'city-pick-name' }, city),
+      h('span', { class: 'city-pick-count' }, `${counts[city]} place${counts[city] > 1 ? 's' : ''}`),
+    ]));
+  });
+  return grid;
+}
+
 // "Choose a city" drill-down for the country level of Places for you: tap a country, its
 // featured cities show (with a photo + count); tap one and that city's categories open.
 function cityPickerCard(cc) {
@@ -2730,20 +2749,7 @@ function cityPickerCard(cc) {
   const card = h('div', { class: 'card' });
   card.append(h('h2', { style: 'margin-top:0' }, `🗺 Choose a city in ${country ? country.name : 'this country'}`));
   card.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a city to see just its places, grouped by category.'));
-  const grid = h('div', { class: 'city-pick-grid' });
-  cities.slice(0, 12).forEach((city) => {
-    const slug = citySlug(city);
-    const src = cityRepPhoto(cc, slug);
-    const thumb = src
-      ? h('img', { class: 'city-pick-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
-      : h('span', { class: 'city-pick-thumb ph' }, '🏙');
-    grid.append(h('button', { class: 'city-pick', onclick: () => go(`#places-${cc}-${slug}`) }, [
-      thumb,
-      h('span', { class: 'city-pick-name' }, city),
-      h('span', { class: 'city-pick-count' }, `${counts[city]} place${counts[city] > 1 ? 's' : ''}`),
-    ]));
-  });
-  card.append(grid);
+  card.append(cityPickGrid(cc, cities.slice(0, 12), counts));
   return card;
 }
 
@@ -6256,6 +6262,17 @@ function spiceLabel(s) {
     : s === 'mild' ? '🌶 Mild' : s === 'varies' ? '🌶 Varies' : 'Not spicy';
 }
 
+// A small recognition thumbnail for list rows whose item keys into the PHOTOS registry
+// (dishes, produce, wildlife). Shows the self-hosted photo when one exists (offline,
+// lazy-loaded); otherwise the same calm emoji placeholder as before, so a row with no photo
+// is visually unchanged. Helps a traveller match a dish / fruit / creature by sight.
+function recogThumb(item, emoji, extra) {
+  const src = placePhotoSrc(item);
+  const cls = extra ? ` ${extra}` : '';
+  if (src) return h('img', { class: `species-photo${cls}`, src, alt: '', loading: 'lazy', decoding: 'async' });
+  return h('span', { class: `species-emoji${cls}`, 'aria-hidden': 'true' }, emoji);
+}
+
 function foodCard(d) {
   const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
   const verdict = dishDietVerdict(d);
@@ -6275,7 +6292,7 @@ function foodCard(d) {
       ? h('span', { class: 'food-flag ok', role: 'img', 'aria-label': okLabel, title: okLabel }, '✓')
       : null;
   return h('button', { class: cls, onclick: () => go(`#dish-${d.id}`) }, [
-    h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, cat ? cat.emoji : '🍽'),
+    recogThumb(d, cat ? cat.emoji : '🍽'),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
       h('div', { class: 'sci' }, `${d.localName || ''}${d.roman ? ` · ${d.roman}` : ''}`),
@@ -6507,7 +6524,7 @@ let produceCat = '';
 function produceCard(p) {
   const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
   return h('button', { class: 'card species-card', onclick: () => go(`#produce-${p.id}`) }, [
-    h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, p.emoji || (cat ? cat.emoji : '🍈')),
+    recogThumb(p, p.emoji || (cat ? cat.emoji : '🍈')),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, p.name),
       h('div', { class: 'sci' }, `${(p.names && p.names.th) || ''}${p.season ? ' · ' + p.season : ''}`),
@@ -7462,7 +7479,7 @@ function soundsScreen() {
       const status = h('div', { class: 'muted', style: 'font-size:13px' });
       const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
       listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px' }, [
-        h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, s.emoji || '🔎'),
+        recogThumb(s, s.emoji || '🔎'),
         h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
           h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
         ]),
@@ -7519,7 +7536,7 @@ function natureScreen() {
 function speciesCard(s) {
   const g = NATURE_GROUPS.find((x) => x.id === s.group);
   return h('button', { class: 'card species-card', onclick: () => go(`#species-${s.id}`) }, [
-    h('span', { class: 'species-emoji', 'aria-hidden': 'true' }, s.emoji || (g && g.emoji) || '🔎'),
+    recogThumb(s, s.emoji || (g && g.emoji) || '🔎'),
     h('span', { class: 'grow' }, [h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || '')]),
     s.dangerous ? h('span', { class: 'tier high' }, 'Caution') : null,
   ]);

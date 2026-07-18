@@ -697,6 +697,9 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .species-card { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
 .species-emoji { font-size: 1.9rem; line-height: 1; flex: none; }
 .species-emoji.big { font-size: 2.6rem; }
+/* Recognition photo (dishes / produce / wildlife list rows) — same footprint as the emoji. */
+.species-photo { width: 46px; height: 46px; flex: none; border-radius: 10px; object-fit: cover; background: var(--line); }
+.species-photo.big { width: 64px; height: 64px; border-radius: 12px; }
 .species-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); }
 .sci { font-style: italic; color: var(--ink-soft); font-size: var(--fs-sm); }
 
