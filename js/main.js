@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.252.0';
+const APP_VERSION = 'mk-v0.253.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1604,12 +1604,29 @@ function regionPicker() {
 }
 
 // Per-country hub reached after picking a country.
+// A slim "chapter opener" photo band for the country hub: the country's top-rated
+// photographed sight, name overlaid. Self-hosted, lazy; returns null if none maps.
+function countryHeroBand(c) {
+  const top = allPlaces({ country: c.id })
+    .filter((p) => placeBucket(p) !== 'stay' && placePhotoSrc(p))
+    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))[0];
+  const src = top ? placePhotoSrc(top) : null;
+  if (!src) return null;
+  return h('div', { class: 'country-hero' }, [
+    h('img', { class: 'country-hero-img', src, alt: '', loading: 'lazy', decoding: 'async' }),
+    h('span', { class: 'country-hero-grad', 'aria-hidden': 'true' }),
+    h('span', { class: 'country-hero-cap' }, `${c.flag} ${c.name}`),
+  ]);
+}
+
 function countryHubScreen(id) {
   const c = getCountry(id);
   if (c) activeCountry = id;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Country', '#home'));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Unknown country.')); mount(wrap, '#home'); return; }
+  const hero = countryHeroBand(c);
+  if (hero) wrap.append(hero);
   const lang = getLanguage(c.lang);
   // Most-used tools first: language, money, places, map, help — reached every day.
   // Reference reading (history, guides) is collapsed lower down, not the first thing.
@@ -2972,13 +2989,26 @@ function placesScreen(arg) {
   // Results-first: the filter rows collapse into one tap so places show immediately
   // instead of being pushed below ~5 rows of chips. The summary shows how many filters
   // are active, so a returning traveller still sees their choices are applied.
-  const activeFilterCount = selInterests.size + (selBudget !== 'flexible' ? 1 : 0)
+  // Filters live in a spring-up bottom sheet so the results stay on top and the controls are
+  // one tap away, rather than pushing the list down. The count on the button re-reads live.
+  const countFilters = () => selInterests.size + (selBudget !== 'flexible' ? 1 : 0)
     + (selKids ? 1 : 0) + (selStepFree ? 1 : 0)
     + (selStayType !== 'any' ? 1 : 0) + (selStayDur !== 'any' ? 1 : 0);
-  wrap.append(h('details', { class: 'filters-collapse' }, [
-    h('summary', {}, activeFilterCount ? `⚙ Filters · ${activeFilterCount} on` : '⚙ Filters'),
-    filterCard,
-  ]));
+  const filterLabel = () => (countFilters() ? `⚙ Filters · ${countFilters()} on` : '⚙ Filters');
+  const filterBtn = h('button', { class: 'btn ghost block', style: 'margin:4px 0' }, filterLabel());
+  filterBtn.onclick = () => {
+    const backdrop = h('div', { class: 'sheet-backdrop' });
+    const sheet = h('div', { class: 'sheet filter-sheet', role: 'dialog', 'aria-label': 'Filters' });
+    const close = () => { backdrop.remove(); filterBtn.textContent = filterLabel(); };
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+    sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
+    sheet.append(h('h3', {}, 'Filters'));
+    sheet.append(filterCard);
+    sheet.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: close }, 'Show results'));
+    backdrop.append(sheet);
+    document.body.append(backdrop);
+  };
+  wrap.append(filterBtn);
   wrap.append(h('details', { class: 'filters-collapse' }, [
     h('summary', {}, '🎨 Colour key'),
     colorKeyCard(),
