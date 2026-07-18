@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.256.0';
+const APP_VERSION = 'mk-v0.257.0';
 
 // Single source of truth for the app's display name. The personal-hub tab shows the
 // whole name when it is short, otherwise its initial — so "Mekonging" becomes "M".
@@ -7983,22 +7983,163 @@ function bargainScreen() {
 // A budget-log row that flips to an inline editor — used on both Expenses and My Trip so
 // every logged spend can be corrected (amount, currency, note), not only deleted.
 let editExpenseId = null;
+// ---- expenses: categories, budget target, donut chart, projection ----------
+// A small, fixed taxonomy so spends roll up into a clear picture. Colours are distinct
+// and readable on both themes; they drive the donut and the legend dots.
+const EXP_CATS = [
+  { id: 'food', label: 'Food', emoji: '🍜', color: '#E0A100' },
+  { id: 'stay', label: 'Stay', emoji: '🛏', color: '#9C5780' },
+  { id: 'transit', label: 'Transit', emoji: '🚌', color: '#3E7CB1' },
+  { id: 'gear', label: 'Gear', emoji: '🎒', color: '#5E9A52' },
+  { id: 'other', label: 'Other', emoji: '•', color: '#8A8A8A' },
+];
+const EXP_CAT = Object.fromEntries(EXP_CATS.map((c) => [c.id, c]));
+function expCatOf(b) { return (b && EXP_CAT[b.category]) ? b.category : 'other'; }
+
+// Segmented category picker. Reflects the choice in place and exposes .get().
+function expCatPicker(current) {
+  let val = EXP_CAT[current] ? current : 'other';
+  const row = h('div', { class: 'chips exp-cat-pick' });
+  EXP_CATS.forEach((c) => {
+    row.append(h('button', {
+      type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
+      onclick: () => { val = c.id; [...row.children].forEach((x, i) => { const on = EXP_CATS[i].id === val; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); }); },
+    }, `${c.emoji} ${c.label}`));
+  });
+  row.get = () => val;
+  return row;
+}
+
+// Budget target in home currency, per whole trip or per day. Stored in prefs so it
+// self-persists; null means "no target set yet".
+function budgetTarget() { const t = store.profile.prefs.budgetCap; return (t && +t.amount > 0) ? { amount: +t.amount, per: t.per === 'day' ? 'day' : 'trip' } : null; }
+function setBudgetTarget(amount, per) { store.profile.prefs.budgetCap = { amount: +amount || 0, per: per === 'day' ? 'day' : 'trip' }; save(); }
+
+// Trip span in whole days from any known dates (stops + logged spends). elapsed = start→today;
+// total = start→last planned stop date (null if no stop end date). Returns null if no dates.
+function tripSpanDays() {
+  const parse = (d) => { const p = String(d).split('-').map(Number); return Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1); };
+  const stops = (store.trip.stops || []);
+  const dates = [];
+  stops.forEach((s) => { if (s.fromDate) dates.push(s.fromDate); if (s.toDate) dates.push(s.toDate); });
+  (store.trip.budgetLog || []).forEach((b) => { if (b.date) dates.push(b.date); });
+  if (!dates.length) return null;
+  const start = dates.slice().sort()[0];
+  const ends = stops.map((s) => s.toDate || s.fromDate).filter(Boolean).sort();
+  const end = ends.length ? ends[ends.length - 1] : null;
+  const today = todayKey();
+  const dayMs = 86400000;
+  const elapsed = Math.max(1, Math.round((parse(today) - parse(start)) / dayMs) + 1);
+  const total = end ? Math.max(elapsed, Math.round((parse(end) - parse(start)) / dayMs) + 1) : null;
+  return { elapsed, total, start, end };
+}
+
+// Inline donut chart from [{value,color}]; radius makes the circumference 100 so each
+// segment length equals its percentage. Centre shows a headline + sub-label.
+function donutSVG(segs, centerTop, centerSub) {
+  const total = segs.reduce((s, x) => s + (x.value > 0 ? x.value : 0), 0);
+  let acc = 0;
+  const ring = total > 0 ? segs.filter((s) => s.value > 0).map((s) => {
+    const pct = s.value / total * 100;
+    const el = `<circle cx="21" cy="21" r="15.91549" fill="none" stroke="${s.color}" stroke-width="5.5" stroke-dasharray="${pct.toFixed(2)} ${(100 - pct).toFixed(2)}" stroke-dashoffset="${(25 - acc).toFixed(2)}"/>`;
+    acc += pct; return el;
+  }).join('') : '<circle cx="21" cy="21" r="15.91549" fill="none" stroke="var(--line)" stroke-width="5.5"/>';
+  return `<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Spending by category">${ring}<text x="21" y="20.3" class="donut-top" text-anchor="middle">${esc(String(centerTop || ''))}</text><text x="21" y="25.6" class="donut-sub" text-anchor="middle">${esc(String(centerSub || ''))}</text></svg>`;
+}
+
+// The budget picture: donut + legend, remaining vs a target, and a spend-trend projection.
+function budgetSummaryCard() {
+  const log = store.trip.budgetLog || [];
+  const target = budgetTarget();
+  if (!log.length && !target) return null;
+  const home = homeCurrency();
+  const sums = {}; EXP_CATS.forEach((c) => { sums[c.id] = 0; });
+  let spent = 0, unknown = false;
+  log.forEach((b) => {
+    const amt = parseFloat(b.amount) || 0; if (!amt) return;
+    const cc = b.currency || home;
+    const conv = cc === home ? amt : convert(amt, cc, home);
+    if (conv == null || isNaN(conv)) { unknown = true; return; }
+    sums[expCatOf(b)] += conv; spent += conv;
+  });
+  const segs = EXP_CATS.map((c) => ({ value: sums[c.id], color: c.color }));
+  const card = h('div', { class: 'card budget-card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
+
+  const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, spent > 0 ? Math.round(spent).toLocaleString() : '—', home) });
+  const legend = h('div', { class: 'budget-legend' });
+  EXP_CATS.filter((c) => sums[c.id] > 0).forEach((c) => legend.append(h('div', { class: 'blg-row' }, [
+    h('span', { class: 'blg-dot', style: `background:${c.color}` }),
+    h('span', { class: 'blg-lbl' }, `${c.emoji} ${c.label}`),
+    h('span', { class: 'blg-val' }, `${Math.round(sums[c.id]).toLocaleString()} ${home}`),
+  ])));
+  if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin:0' }, 'Log a few spends to see the breakdown.'));
+  card.append(h('div', { class: 'budget-head' }, [donut, legend]));
+
+  if (target) {
+    const span = tripSpanDays();
+    const dailyRate = span && span.elapsed > 0 ? spent / span.elapsed : spent;
+    if (target.per === 'trip') {
+      const remaining = target.amount - spent;
+      const pctSpent = Math.round(spent / target.amount * 100);
+      card.append(h('div', { class: 'budget-bar' }, [h('span', { class: 'budget-bar-fill' + (remaining < 0 ? ' over' : ''), style: `width:${Math.min(100, Math.max(0, spent / target.amount * 100))}%` })]));
+      card.append(h('p', { style: 'margin:6px 0 0' }, [
+        h('strong', { style: remaining < 0 ? 'color:var(--magenta)' : '' }, remaining >= 0 ? `${Math.round(remaining).toLocaleString()} ${home} left` : `${Math.round(-remaining).toLocaleString()} ${home} over`),
+        h('span', { class: 'muted' }, ` of ${target.amount.toLocaleString()} ${home} · ${pctSpent}% spent`),
+      ]));
+      if (span && span.total && spent > 0) {
+        const projected = dailyRate * span.total; const diff = projected - target.amount;
+        card.append(h('p', { class: 'budget-proj ' + (diff > 0 ? 'over' : 'under') }, `${diff > 0 ? '⚠️' : '✓'} At ~${Math.round(dailyRate).toLocaleString()} ${home}/day, you are on track to ${diff > 0 ? 'go over by ' + Math.round(diff).toLocaleString() : 'finish ' + Math.round(-diff).toLocaleString() + ' under'} ${home} across ${span.total} days.`));
+      } else if (spent > 0) {
+        card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, `Spending ~${Math.round(dailyRate).toLocaleString()} ${home}/day so far. Add trip dates in My trip for a full projection.`));
+      }
+    } else {
+      const overUnder = dailyRate - target.amount;
+      card.append(h('p', { style: 'margin:6px 0 0' }, [
+        h('strong', { style: overUnder > 0 ? 'color:var(--magenta)' : '' }, `~${Math.round(dailyRate).toLocaleString()} ${home}/day`),
+        h('span', { class: 'muted' }, ` vs ${target.amount.toLocaleString()} ${home}/day budget`),
+      ]));
+      if (spent > 0) card.append(h('p', { class: 'budget-proj ' + (overUnder > 0 ? 'over' : 'under') }, overUnder > 0 ? `⚠️ About ${Math.round(overUnder).toLocaleString()} ${home}/day over budget at this rate.` : `✓ About ${Math.round(-overUnder).toLocaleString()} ${home}/day under budget — nicely on track.`));
+    }
+  }
+  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some spends use a currency with no cached rate — refresh in Currency to include them.'));
+  card.append(budgetTargetEditor());
+  return card;
+}
+
+function budgetTargetEditor() {
+  const home = homeCurrency();
+  const t = budgetTarget();
+  const det = h('details', { class: 'budget-set' });
+  det.append(h('summary', {}, t ? '✎ Change budget' : '＋ Set a budget'));
+  const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: `Amount in ${home}`, value: t ? t.amount : '' });
+  const per = selectEl(['Whole trip', 'Per day'], t && t.per === 'day' ? 'Per day' : 'Whole trip', () => {}, 'Budget applies to');
+  det.append(field(`Budget (${home})`, amt), field('Applies to', per));
+  det.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+    t ? h('button', { class: 'btn ghost', onclick: () => { if (confirm('Clear your budget target?')) { store.profile.prefs.budgetCap = null; save(); render(); } } }, 'Clear') : h('span', {}, ''),
+    h('button', { class: 'btn', onclick: () => { if (amt.value) { setBudgetTarget(amt.value, per.value === 'Per day' ? 'day' : 'trip'); render(); } } }, 'Save budget'),
+  ]));
+  return det;
+}
+
 function budgetLogRow(b) {
   if (editExpenseId === b.id) {
     const amt = h('input', { type: 'number', inputmode: 'decimal', value: b.amount });
     const cur = currencySelect(b.currency || 'THB');
     const note = h('input', { type: 'text', value: b.note || '', placeholder: 'On what?' });
+    const cat = expCatPicker(expCatOf(b));
     return h('div', { class: 'card', style: 'margin:6px 0' }, [
-      field('Amount', amt), field('Currency', cur), field('On what?', note),
+      field('Amount', amt), field('Currency', cur), field('On what?', note), field('Category', cat),
       h('div', { class: 'row-between', style: 'margin-top:6px' }, [
         h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
-        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim() }); editExpenseId = null; render(); } }, 'Save'),
+        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), category: cat.get() }); editExpenseId = null; render(); } }, 'Save'),
       ]),
     ]);
   }
   const approx = approxHome(b.amount, b.currency);
+  const cat = EXP_CAT[expCatOf(b)];
   return h('div', { class: 'row-between price-item' }, [
-    h('span', {}, `${b.date} · ${b.note || 'spend'}`),
+    h('span', {}, [h('span', { class: 'exp-cat-dot', style: `background:${cat.color}`, title: cat.label }), `${b.date} · ${b.note || 'spend'}`]),
     h('span', {}, [
       h('strong', {}, `${b.amount} ${b.currency}`),
       approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
@@ -8012,31 +8153,24 @@ function budgetLogRow(b) {
 // spends logged here show up there and roll into the home-currency total.
 function expensesScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Expenses & budget', '#home'));
-  wrap.append(h('p', { class: 'muted' }, 'Log what you spend as you go — it converts to your home currency and feeds your trip budget.'));
-  const home = homeCurrency();
+  wrap.append(topbar('Expenses & budget', '#me'));
+  wrap.append(h('p', { class: 'muted' }, 'Log what you spend as you go — it converts to your home currency, sorts by category, and tracks you against your budget.'));
   const fc = focusSpot().spot.country || activeCountry;
   const c = getCountry(fc);
+
+  // The budget picture first: donut, remaining, and an over/under-budget projection.
+  const summary = budgetSummaryCard();
+  if (summary) wrap.append(summary);
 
   const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const bCur = currencySelect(c ? c.currency : 'THB');
   const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
+  const bCat = expCatPicker('other');
   wrap.append(h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Log a spend'),
-    field('Amount', bAmt), field('Currency', bCur), field('On what?', bNote),
-    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim() }); go('#expenses'); } } }, '＋ Add expense'),
+    field('Amount', bAmt), field('Currency', bCur), field('On what?', bNote), field('Category', bCat),
+    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get() }); go('#expenses'); } } }, '＋ Add expense'),
   ]));
-
-  const totals = {};
-  store.trip.budgetLog.forEach((b) => { const cc = b.currency || '?'; totals[cc] = (totals[cc] || 0) + (parseFloat(b.amount) || 0); });
-  if (Object.keys(totals).length) {
-    const tot = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Total so far')]);
-    tot.append(h('p', { class: 'fair' }, Object.entries(totals).map(([cc, v]) => `${v.toLocaleString()} ${cc}`).join(' · ')));
-    let homeSum = 0, allKnown = true;
-    for (const [cc, v] of Object.entries(totals)) { if (cc === home) { homeSum += v; continue; } const conv = convert(v, cc, home); if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv; }
-    if (homeSum > 0 && Object.keys(totals).some((cc) => cc !== home)) tot.append(h('p', { class: 'muted', style: 'margin:-4px 0 0' }, `≈ ${Math.round(homeSum).toLocaleString()} ${home} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
-    wrap.append(tot);
-  }
 
   const log = store.trip.budgetLog.slice().reverse();
   if (log.length) {
@@ -8047,7 +8181,7 @@ function expensesScreen() {
     wrap.append(h('p', { class: 'empty' }, 'No expenses logged yet — add your first above.'));
   }
   wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#trip') }, 'See full trip & budget'));
-  mount(wrap, '#home');
+  mount(wrap, '#me');
 }
 
 // ---- PRE-TRIP CHECKLIST -----------------------------------------------------
