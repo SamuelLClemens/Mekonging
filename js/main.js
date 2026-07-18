@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.251.0';
+const APP_VERSION = 'mk-v0.252.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -7968,7 +7968,19 @@ function searchScreen() {
       if (fix) places = places.slice().sort((a, b) => (a.coords ? haversineKm(fix, a.coords) : Infinity) - (b.coords ? haversineKm(fix, b.coords) : Infinity));
       const catLbl = (CATS.find((x) => x[0] === cat) || [])[1] || 'Places';
       const title = cat === 'all' ? 'Places' : `${catLbl}${fix ? ' near you' : ''}`;
-      section(title, places.map((p) => link(`📍 ${p.name} — ${p.city}${fix && p.coords ? ` · ${fmtDistance(haversineKm(fix, p.coords))}` : ''}`, `#place-${p.id}`)));
+      // Place hits get a recognition thumbnail (photo when one exists, family emoji otherwise)
+      // so a search reads like a guide, not a text index. Other sections stay as text links.
+      const placeRow = (p) => {
+        const dist = (fix && p.coords) ? ` · ${fmtDistance(haversineKm(fix, p.coords))}` : '';
+        return h('button', { class: 'btn ghost block srch srch-place', onclick: () => go(`#place-${p.id}`) }, [
+          recogThumb(p, (FAMILY_META[placeFamily(p)] || FAMILY_META.other).emoji),
+          h('span', { class: 'srch-place-text' }, [
+            h('span', { class: 'srch-place-name' }, p.name),
+            h('span', { class: 'srch-place-sub muted' }, `${p.city || ''}${dist}`),
+          ]),
+        ]);
+      };
+      section(title, places.map(placeRow));
     }
     // The wider indexes only apply to a text query and only when not scoped to a category.
     if (q.length >= 2 && cat === 'all') {
