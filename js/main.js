@@ -189,12 +189,19 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.254.0';
+const APP_VERSION = 'mk-v0.255.0';
+
+// Single source of truth for the app's display name. The personal-hub tab shows the
+// whole name when it is short, otherwise its initial — so "Mekonging" becomes "M".
+const APP_NAME = 'Mekonging';
+const TAB_LABEL = APP_NAME.length <= 3 ? APP_NAME : APP_NAME[0];
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
 // moved out of the bar (it is empty for most sessions) to a ⭐ in the header, always
-// one tap away without taking prime navigation real estate.
+// one tap away without taking prime navigation real estate. The 5th tab is the
+// personal hub ("M" — the app's initial); Settings folds into it and also stays on
+// the header gear, so nothing was lost by giving the slot to "your space".
 // Inline line icons (stroke: currentColor) so the menu and tiles recolour with the active
 // theme — an emoji can't. One wrapper; each entry is just the inner shapes. viewBox 24.
 const svgIcon = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
@@ -235,6 +242,7 @@ const ICON_PATH = {
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 9v5M12 17h.01"/>',
   heart: '<path d="M12 20s-6.5-4.3-9-8.2C1.1 8.5 2.8 5 6.2 5c2 0 3.3 1.1 3.8 2.2C10.5 6.1 11.8 5 13.8 5c3.4 0 5.1 3.5 3.2 6.8C18.5 15.7 12 20 12 20z"/>',
   temple: '<path d="M12 3 4 7v2h16V7z"/><path d="M6 9v8M10 9v8M14 9v8M18 9v8"/><path d="M3 17h18v3H3z"/>',
+  me: '<circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
 };
 const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 // A leading line-icon for an action chip; inherits the chip's text colour (incl. the
@@ -246,7 +254,7 @@ const TABS = [
   { hash: '#places', label: 'Places', svg: ICON.compass },
   { hash: '#map', label: 'Map', svg: ICON.map },
   { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
-  { hash: '#settings', label: 'Settings', svg: ICON.gear },
+  { hash: '#me', label: TAB_LABEL, svg: ICON.me },
 ];
 
 function go(hash) {
@@ -307,11 +315,15 @@ const TAB_FOR_HEAD = {
   board: '#places', setcity: '#places',
   map: '#map', addpin: '#map',
   phrasebook: '#phrasebook',
-  settings: '#settings',
-  home: '#home', '': '#home', welcome: '#home', search: '#home', saved: '#home', collection: '#home',
-  journal: '#home', scrapbook: '#home', contributions: '#home', journey: '#home', calendar: '#home',
-  trip: '#home', expenses: '#home', bargain: '#home', currency: '#home', checklist: '#home',
-  plans: '#home', foryou: '#home', vault: '#home', help: '#home', feedback: '#home',
+  // The personal hub ("M") owns everything that is about the traveller themselves:
+  // their calendar, memories, money, saved things, documents and settings.
+  me: '#me', settings: '#me',
+  saved: '#me', collection: '#me',
+  journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
+  trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
+  exchange: '#me', swap: '#me', market: '#me',
+  home: '#home', '': '#home', welcome: '#home', search: '#home', checklist: '#home',
+  plans: '#home', help: '#home', feedback: '#home',
   circle: '#home', add: '#home', in: '#home', inbox: '#home', thread: '#home', msg: '#home', sos: '#home',
   donate: '#home', danger: '#home', worship: '#home',
 };
@@ -1557,6 +1569,67 @@ function homeScreen() {
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
   mount(wrap, '#home');
+}
+
+// ---- "M" — the personal hub ("your space") ---------------------------------
+// Everything that is about the traveller themselves, gathered behind one tab so it is
+// reachable in a single tap from anywhere. The screen stays calm: it leads with what is
+// relevant right now, then offers large, few-word tiles into the mature screens that
+// already do the work (calendar, journal, money, phrases, board, saved, documents,
+// settings). Settings also remains on the header gear, so folding it in costs nothing.
+function countSavedPhrases() {
+  const pins = (store.profile.prefs && store.profile.prefs.phrasePins) || {};
+  let n = 0;
+  for (const code in pins) if (Array.isArray(pins[code])) n += pins[code].length;
+  return n;
+}
+
+function meHubScreen() {
+  const wrap = h('div', { class: 'screen' });
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s space` : 'Your space'));
+
+  const jN = store.journal.entries.length;
+  const exN = store.trip.budgetLog.length;
+  const svP = countSavedPhrases();
+  const items = [
+    { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
+    { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
+    { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log spend vs budget', hash: '#expenses' },
+    { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#phrasebook' },
+    { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
+    { ic: ICON.star, t: 'Saved places', d: 'Your collections', hash: '#saved' },
+    { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
+    { ic: ICON.gear, t: 'Settings', d: 'You, theme & journey', hash: '#settings' },
+  ];
+  const tileBtn = (x) => h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.t }, [
+    h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+  ]);
+  wrap.append(h('h2', { class: 'home-section' }, 'Your space'));
+  wrap.append(h('div', { class: 'grid' }, items.map(tileBtn)));
+
+  // Coming up: reminders set on calendar entries in the next week — one tap to open.
+  const up = reminders.upcoming(7);
+  if (up.length) {
+    const rc = h('div', { class: 'card', style: 'margin-top:12px' }, [h('h3', { style: 'margin-top:0' }, '🔔 Coming up')]);
+    up.slice(0, 4).forEach((u) => {
+      const it = u.item;
+      const when = u.eventAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
+      rc.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:6px', onclick: () => go('#calendar') },
+        `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when}`));
+    });
+    wrap.append(rc);
+  }
+
+  // Then, below the deck, always-relevant suggestions — the same place-and-moment engine
+  // Home leads with. It renders its own gentle empty state when there is no location fix.
+  wrap.append(h('h2', { class: 'home-section' }, 'For you right now'));
+  const now = rightNowSection();
+  if (now) wrap.append(now);
+
+  wrap.append(h('p', { class: 'disclaimer' },
+    'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));
+  mount(wrap, '#me');
 }
 
 // The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
@@ -10519,6 +10592,7 @@ function render() {
     if (!store.profile.seenWelcome && (head === '' || head === 'home')) return welcomeScreen();
     switch (head) {
       case '': case 'home': return homeScreen();
+      case 'me': return meHubScreen();
       case 'welcome': return welcomeScreen();
       case 'country': return countryHubScreen(arg);
       case 'nearby': return nearbyScreen();
