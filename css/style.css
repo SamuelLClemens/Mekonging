@@ -115,6 +115,22 @@ html[data-theme="dark"] {
       rgba(255,61,154,0.16) 0deg 8deg, rgba(38,224,200,0.10) 8deg 16deg, rgba(255,106,43,0.12) 16deg 24deg);
   --shadow-soft: 0 4px 16px -4px rgba(0,0,0,0.7);
 }
+:root[data-skin="expedition"] {
+  /* Luxury Expedition: deep near-black forest ground, rich jade/emerald, glowing
+     sunset-orange highlights, elegant serif headlines. Rides the dark token set. */
+  --cream: #0F1512; --bg: #0F1512; --card: #18211C; --line: #2B3A32;
+  --ink: #F3ECDD; --ink-soft: #A6B2A6;
+  --sun: #F2A44E; --sun-deep: #E07A33; --orange: #EC8340; --magenta: #E4795A; --pink: #E4795A;
+  --teal: #23A579; --teal-deep: #148A63; --grape: #7E6BA8;
+  --grad-sun: linear-gradient(135deg, #F2A44E 0%, #E4663B 100%);
+  --grad-teal: linear-gradient(135deg, #23A579 0%, #148A63 100%);
+  --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
+      rgba(242,164,78,0.10) 0deg 9deg, rgba(35,165,121,0.07) 9deg 18deg);
+  --shadow: 0 10px 30px rgba(0,0,0,0.55);
+  --shadow-soft: 0 6px 20px -6px rgba(0,0,0,0.6);
+  --font-display: 'Cochin', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --r-lg: 20px;
+}
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
