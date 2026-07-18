@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.250.0';
+const APP_VERSION = 'mk-v0.251.0';
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -1382,21 +1382,24 @@ function returnRecapCard() {
 // places across the four countries, interleaved so every country appears (≤3 each, one per
 // city). Inspiration on open and a warm, premium first impression — offline, self-hosted
 // images only, and every card taps through to the real place. Returns null if too few map.
-function signatureSightsStrip() {
-  const perCountry = COUNTRIES.map((c) => {
+function signatureSightsStrip(cc) {
+  const list = cc ? [getCountry(cc)].filter(Boolean) : COUNTRIES;
+  if (!list.length) return null;
+  const cap = cc ? 8 : 3;              // sights per country (more when scoped to one)
+  const perCountry = list.map((c) => {
     const seen = new Set();
     return allPlaces({ country: c.id })
       .filter((p) => placeBucket(p) !== 'stay' && (Number(p.rating) || 0) >= 4.5 && placePhotoSrc(p))
       .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
       .filter((p) => { const k = p.city || p.id; if (seen.has(k)) return false; seen.add(k); return true; })
-      .slice(0, 3)
+      .slice(0, cap)
       .map((p) => ({ p, flag: c.flag }));
   });
   const picks = [];
-  for (let i = 0; i < 3; i++) perCountry.forEach((arr) => { if (arr[i]) picks.push(arr[i]); });
-  if (picks.length < 4) return null;
+  for (let i = 0; i < cap; i++) perCountry.forEach((arr) => { if (arr[i]) picks.push(arr[i]); });
+  if (picks.length < (cc ? 3 : 4)) return null;
   const strip = h('div', { class: 'sights-strip' });
-  picks.forEach(({ p, flag }) => {
+  picks.slice(0, cc ? 10 : 12).forEach(({ p, flag }) => {
     strip.append(h('button', { class: 'sight-card', 'aria-label': `${p.name}, ${p.city || ''}`, onclick: () => go(`#place-${p.id}`) }, [
       h('img', { class: 'sight-photo', src: placePhotoSrc(p), alt: '', loading: 'lazy', decoding: 'async' }),
       h('span', { class: 'sight-grad', 'aria-hidden': 'true' }),
@@ -1406,8 +1409,9 @@ function signatureSightsStrip() {
       ]),
     ]));
   });
+  const c = cc ? getCountry(cc) : null;
   return h('section', {}, [
-    h('h2', { class: 'home-section' }, '✨ Signature sights'),
+    h('h2', { class: 'home-section' }, c ? `✨ Signature sights in ${c.name}` : '✨ Signature sights'),
     strip,
   ]);
 }
@@ -1666,6 +1670,10 @@ function countryHubScreen(id) {
       h('button', { class: 'btn block', onclick: () => go(`#sos-${id}`) }, 'See solo & women’s safety'),
     ]));
   }
+
+  // Photo-forward lead: this country's iconic sights, before the map/city picker.
+  const hubSights = signatureSightsStrip(id);
+  if (hubSights) wrap.append(hubSights);
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
