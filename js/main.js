@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.255.0';
+const APP_VERSION = 'mk-v0.256.0';
 
 // Single source of truth for the app's display name. The personal-hub tab shows the
 // whole name when it is short, otherwise its initial — so "Mekonging" becomes "M".
@@ -317,7 +317,7 @@ const TAB_FOR_HEAD = {
   phrasebook: '#phrasebook',
   // The personal hub ("M") owns everything that is about the traveller themselves:
   // their calendar, memories, money, saved things, documents and settings.
-  me: '#me', settings: '#me',
+  me: '#me', settings: '#me', dictionary: '#me',
   saved: '#me', collection: '#me',
   journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
   trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
@@ -1596,7 +1596,7 @@ function meHubScreen() {
     { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
     { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
     { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log spend vs budget', hash: '#expenses' },
-    { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#phrasebook' },
+    { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#dictionary' },
     { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
     { ic: ICON.star, t: 'Saved places', d: 'Your collections', hash: '#saved' },
     { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
@@ -2524,6 +2524,11 @@ function phraseIndexFor(categories, code) {
   for (const cat of categories) for (const p of cat.phrases) idx.set(phraseKey(code, cat.id, p), { p, catId: cat.id });
   return idx;
 }
+// Personal-dictionary notes: a free-text note the traveller attaches to a saved phrase,
+// keyed by the same derived phrase key. Lazily initialised so it self-defaults on old saves.
+function phraseNotesMap() { return store.profile.prefs.phraseNotes || (store.profile.prefs.phraseNotes = {}); }
+function phraseNoteFor(key) { return phraseNotesMap()[key] || ''; }
+function setPhraseNote(key, text) { const m = phraseNotesMap(); const t = String(text || '').trim(); if (t) m[key] = t; else delete m[key]; save(); }
 
 // The "Essentials" card: the traveller's most-needed phrases, first — Hello, Thank you,
 // then their allergy/diet phrases automatically, then Sorry, How much, question words and
@@ -2678,6 +2683,80 @@ function phrasebookScreen(lang) {
   }
   renderPhrases();
   mount(wrap, '#phrasebook');
+}
+
+// ---- Personal Dictionary ("My phrases") ------------------------------------
+// Every phrase the traveller saved, across all languages, gathered in one place. Built
+// from the pins (tap 📌 on any phrase to add it). Each entry can carry a personal note,
+// and removal is confirmed — the "add / delete with verification" the user asked for.
+function dictionaryScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('My phrases'));
+  const repaint = () => dictionaryScreen();
+
+  const pinsMap = store.profile.prefs.phrasePins || {};
+  const langCodes = Object.keys(pinsMap).filter((c) => (pinsMap[c] || []).length);
+  const total = langCodes.reduce((n, c) => n + pinsMap[c].length, 0);
+
+  if (!total) {
+    wrap.append(h('div', { class: 'card', style: 'text-align:center' }, [
+      h('div', { style: 'font-size:2.4rem;margin-bottom:6px' }, '📖'),
+      h('h2', { style: 'margin:0 0 4px' }, 'No saved phrases yet'),
+      h('p', { class: 'muted', style: 'margin:0 0 12px' }, 'Open the phrasebook, then tap 📌 on any phrase to save it here — build your own pocket dictionary of the words you actually use.'),
+      h('button', { class: 'btn block', onclick: () => go('#phrasebook') }, '💬 Browse phrases'),
+    ]));
+    mount(wrap, '#me');
+    return;
+  }
+
+  wrap.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 10px' },
+    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${langCodes.length} ${langCodes.length === 1 ? 'language' : 'languages'}. Tap a line to show it large · 📝 add a note · 🗑 remove.`));
+
+  langCodes.forEach((code) => {
+    const book = getLanguage(code);
+    if (!book) return;
+    const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
+      ? { id: 'allergies', name: 'Allergies & dietary', phrases: ALLERGENS[code] } : null;
+    const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
+    const idx = phraseIndexFor(categories, code);
+    const keys = phrasePinsFor(code).filter((k) => idx.has(k));
+    if (!keys.length) return;
+
+    const card = h('div', { class: 'card dict-card' });
+    card.append(h('h2', { style: 'margin-top:0' }, book.label));
+    keys.forEach((k) => {
+      const { p, catId } = idx.get(k);
+      const row = phraseRow(p, book.locale, { code, catId, onChange: repaint, noHide: true });
+      const ctrls = row.querySelector('.phrase-ctrls');
+      // In the dictionary the pin is implicit (everything here is saved); replace the
+      // instant-unpin 📌 with a confirmed 🗑 remove, and add a note control.
+      const pinBtn = ctrls && ctrls.querySelector('.pin');
+      if (pinBtn) pinBtn.remove();
+      const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${p.en}`, title: 'Add or edit a note' }, '📝');
+      const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { if (confirm(`Remove “${p.en}” from your saved phrases?`)) { togglePhrasePin(code, k); repaint(); } } }, '🗑');
+      if (ctrls) ctrls.append(noteBtn, rm);
+      card.append(row);
+
+      // Note: shown beneath the row when set; the 📝 button reveals an inline editor.
+      const noteText = phraseNoteFor(k);
+      const noteWrap = h('div', { class: 'dict-note-wrap' });
+      const disp = h('div', { class: 'dict-note', hidden: noteText ? null : '' }, noteText ? `📝 ${noteText}` : '');
+      const ta = h('textarea', { class: 'dict-note-edit', hidden: '', rows: '2', placeholder: 'Your note — e.g. “say it softly”, “use with elders”', 'aria-label': `Note for ${p.en}` });
+      ta.value = noteText;
+      const saveNote = h('button', { class: 'btn ghost dict-note-save', hidden: '', onclick: () => { setPhraseNote(k, ta.value); repaint(); } }, 'Save note');
+      noteBtn.addEventListener('click', () => {
+        const hidden = ta.hasAttribute('hidden');
+        if (hidden) { ta.removeAttribute('hidden'); saveNote.removeAttribute('hidden'); ta.focus(); }
+        else { ta.setAttribute('hidden', ''); saveNote.setAttribute('hidden', ''); }
+      });
+      noteWrap.append(disp, ta, saveNote);
+      card.append(noteWrap);
+    });
+    wrap.append(card);
+  });
+
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#phrasebook') }, '💬 Add more from the phrasebook'));
+  mount(wrap, '#me');
 }
 
 // One phrasebook row: tap the text to show it LARGE to a local; copy and speak controls.
@@ -10601,6 +10680,7 @@ function render() {
       case 'swap': return bulletinScreen('swap');
       case 'market': return bulletinScreen('gear');
       case 'phrasebook': return phrasebookScreen(arg);
+      case 'dictionary': return dictionaryScreen();
       case 'places': return placesScreen(arg);
       case 'place': return placeScreen(arg);
       case 'prices': return pricesScreen(arg);

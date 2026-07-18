@@ -47,6 +47,7 @@ function defaults() {
         // Keys are derived (lang|categoryId|slug-of-english) since phrases carry no id.
         phrasePins: {},       // { th: ['th|basics|hello', …] } — pin order IS the display order
         phraseHidden: {},     // { th: [key, …] } — phrases tucked away from the lists
+        phraseNotes: {},      // { 'th|basics|hello': 'wave when you say it' } — your notes, by phrase key
         // --- "things to do near me" suggestion rotation. Marking a suggestion Done or Not
         // interested removes it so a fresh one takes its place; suggestions never repeat the
         // same set. Both hold place ids. doneSpots is a light achievement log too.

@@ -459,6 +459,14 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .hidden-reveal summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
 .hidden-reveal .phrase { opacity: 0.72; }
 
+/* Personal dictionary: per-phrase notes shown under a saved phrase. */
+.dict-card { border: 1px dashed var(--grape); }
+.dict-note-wrap { margin: 2px 0 var(--sp-2); }
+.dict-note { color: var(--ink-soft); font-size: var(--fs-sm); font-style: italic; padding: 2px 0 4px; }
+.dict-note[hidden] { display: none; }
+.dict-note-edit { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2); font: inherit; margin-top: 4px; background: var(--card); color: var(--ink); }
+.dict-note-save { width: auto; padding: 6px 14px; margin-top: 4px; }
+
 /* "Show to a local": full-screen, very large native script */
 .bigphrase {
   position: fixed; inset: 0; z-index: 200; background: var(--cream);
