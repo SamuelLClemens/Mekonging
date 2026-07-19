@@ -459,6 +459,36 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .hidden-reveal summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
 .hidden-reveal .phrase { opacity: 0.72; }
 
+/* Personal dictionary: per-phrase notes shown under a saved phrase. */
+.dict-card { border: 1px dashed var(--grape); }
+.dict-note-wrap { margin: 2px 0 var(--sp-2); }
+.dict-note { color: var(--ink-soft); font-size: var(--fs-sm); font-style: italic; padding: 2px 0 4px; }
+.dict-note[hidden] { display: none; }
+.dict-note-edit { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2); font: inherit; margin-top: 4px; background: var(--card); color: var(--ink); }
+.dict-note-save { width: auto; padding: 6px 14px; margin-top: 4px; }
+
+/* Expenses vs budget: donut, legend, progress bar, projection, category chips. */
+.budget-head { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
+.budget-donut { flex: none; width: 118px; height: 118px; }
+.donut { width: 118px; height: 118px; transform: rotate(0deg); }
+.donut-top { font-size: 7px; font-weight: 800; fill: var(--ink); }
+.donut-sub { font-size: 3.1px; fill: var(--ink-soft); letter-spacing: 0.3px; }
+.budget-legend { flex: 1 1 150px; min-width: 150px; display: flex; flex-direction: column; gap: 4px; }
+.blg-row { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }
+.blg-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.blg-lbl { flex: 1; }
+.blg-val { font-weight: 600; }
+.budget-bar { height: 9px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: var(--sp-3); }
+.budget-bar-fill { display: block; height: 100%; background: var(--teal); border-radius: 6px; }
+.budget-bar-fill.over { background: var(--magenta); }
+.budget-proj { margin: 4px 0 0; font-size: var(--fs-sm); font-weight: 600; }
+.budget-proj.under { color: var(--teal-deep, var(--teal)); }
+.budget-proj.over { color: var(--magenta); }
+.budget-set { margin-top: var(--sp-3); }
+.budget-set summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
+.exp-cat-pick .chip.on { background: var(--sun); color: var(--ink); border-color: transparent; font-weight: 700; }
+.exp-cat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
+
 /* "Show to a local": full-screen, very large native script */
 .bigphrase {
   position: fixed; inset: 0; z-index: 200; background: var(--cream);

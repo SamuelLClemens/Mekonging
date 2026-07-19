@@ -47,6 +47,7 @@ function defaults() {
         // Keys are derived (lang|categoryId|slug-of-english) since phrases carry no id.
         phrasePins: {},       // { th: ['th|basics|hello', …] } — pin order IS the display order
         phraseHidden: {},     // { th: [key, …] } — phrases tucked away from the lists
+        phraseNotes: {},      // { 'th|basics|hello': 'wave when you say it' } — your notes, by phrase key
         // --- "things to do near me" suggestion rotation. Marking a suggestion Done or Not
         // interested removes it so a fresh one takes its place; suggestions never repeat the
         // same set. Both hold place ids. doneSpots is a light achievement log too.
@@ -358,8 +359,8 @@ export function updateStop(id, patch = {}) {
   if (patch.country !== undefined) s.country = patch.country;
   save(); return s;
 }
-export function addBudgetItem({ date, amount, currency, note }) {
-  const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '' };
+export function addBudgetItem({ date, amount, currency, note, category }) {
+  const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '', category: category || 'other' };
   store.trip.budgetLog.push(b);
   store.trip.budgetLog.sort((a, c) => (a.date < c.date ? -1 : 1));
   save(); return b;
@@ -375,6 +376,7 @@ export function updateBudgetItem(id, patch = {}) {
   if (patch.currency !== undefined) b.currency = patch.currency;
   if (patch.note !== undefined) b.note = patch.note;
   if (patch.date !== undefined) b.date = patch.date;
+  if (patch.category !== undefined) b.category = patch.category;
   store.trip.budgetLog.sort((a, c) => (a.date < c.date ? -1 : 1));
   save(); return b;
 }
