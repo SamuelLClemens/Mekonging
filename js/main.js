@@ -144,7 +144,7 @@ function applyTheme() {
   // Named visual themes ("skins") each define their own palette; Night Market rides the
   // dark token set, the others the light one. Classic follows the day/night (or fixed) choice.
   const skin = store.profile.skin || 'classic';
-  const SKIN_MODE = { night: 'dark', psychnight: 'dark', silk: 'light', tropical: 'light', psych: 'light' };
+  const SKIN_MODE = { night: 'dark', psychnight: 'dark', expedition: 'dark', silk: 'light', tropical: 'light', psych: 'light' };
   if (skin !== 'classic' && SKIN_MODE[skin]) {
     root.setAttribute('data-skin', skin);
     root.setAttribute('data-theme', SKIN_MODE[skin]);
@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.257.0';
+const APP_VERSION = 'mk-v0.258.0';
 
 // Single source of truth for the app's display name. The personal-hub tab shows the
 // whole name when it is short, otherwise its initial — so "Mekonging" becomes "M".
@@ -10550,7 +10550,7 @@ function settingsScreen() {
       opt('silk', 'Silk Route'), opt('tropical', 'Tropical Pop'), opt('psych', 'Cambodian Psych ’60s–’70s'),
     ]),
     h('optgroup', { label: '☾ Night' }, [
-      opt('night', 'Night Market'), opt('psychnight', 'Psych Night'),
+      opt('night', 'Night Market'), opt('psychnight', 'Psych Night'), opt('expedition', 'Luxury Expedition'),
     ]),
   ])));
 
