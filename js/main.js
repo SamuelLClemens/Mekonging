@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.258.0';
+const APP_VERSION = 'mk-v0.259.0';
 
 // Single source of truth for the app's display name. The personal-hub tab shows the
 // whole name when it is short, otherwise its initial — so "Mekonging" becomes "M".
@@ -248,6 +248,55 @@ const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, sv
 // A leading line-icon for an action chip; inherits the chip's text colour (incl. the
 // white of a pressed chip) via stroke:currentColor, so it recolours with every theme.
 const chipIcon = (name) => h('span', { class: 'chip-ic', html: ICON[name] || '' });
+
+// Per-section identity: one colour per section, keyed by the route head so the SAME
+// section shows the SAME accent everywhere it appears (personal hub, Home tools, country
+// hub). Icons are already section-specific per tile; this adds the consistent colour the
+// user asked for. Sections sharing a destination (swap/market/exchange = "Buy or sell";
+// today/weather) deliberately share a hue. Unlisted heads fall back to the brand gradient.
+const SECTION_ACCENT = {
+  // where you are / browse
+  places: '#1FA98A', place: '#1FA98A', nearby: '#1FA98A', country: '#1FA98A', setcity: '#1FA98A',
+  bestof: '#1FA98A', bestlist: '#1FA98A',
+  map: '#2E7DB0', addpin: '#2E7DB0',
+  // food & nature
+  food: '#E0663A', dish: '#E0663A', streetfood: '#D2542E', produce: '#CE8A3A',
+  nature: '#4E9A52', species: '#4E9A52', sounds: '#3E9A7A', pools: '#2E8FB0',
+  // talk
+  phrasebook: '#7A5FB0', dictionary: '#8A5FA8',
+  // getting around & practicalities
+  transport: '#6E7BC0', route: '#6E7BC0', schedules: '#6E7BC0', crossings: '#5E6FB0',
+  visa: '#B0567F', info: '#6E8FA0', history: '#9C7A3A', weather: '#3FA0C0', today: '#3FA0C0',
+  events: '#C86AA0', event: '#C86AA0', prices: '#C9902B', arrival: '#E08A2E',
+  // people / profiles
+  family: '#D06A8A', baby: '#D06A8A', access: '#4C8AA0', worship: '#8A6FB0',
+  // money
+  currency: '#4C9A6A', expenses: '#E0A100', bargain: '#C77D2E',
+  // plan & memories
+  plans: '#2FA0A0', foryou: '#E08A2E', trip: '#2FA0A0', checklist: '#6E8F3F',
+  calendar: '#3E7CB1', journal: '#C25E3A', scrapbook: '#B0567F', contributions: '#C9902B',
+  saved: '#D98A3D', collection: '#D98A3D',
+  // exchange / social / admin / safety
+  exchange: '#9C5780', swap: '#9C5780', market: '#9C5780', board: '#C9902B',
+  circle: '#4C79C0', vault: '#4C6B8A', donate: '#D64545', help: '#5B8CA0',
+  settings: '#7A7F87', me: '#E0663A', sos: '#D64545', danger: '#D64545',
+};
+function accentFor(hash) {
+  const head = String(hash || '').replace(/^#/, '').split('-')[0];
+  return SECTION_ACCENT[head] || '';
+}
+// The one true tile: a section-coloured icon badge + title + hint, with an optional badge
+// count. Every tile grid (Home tools, personal hub, country hub) uses this so a section's
+// colour and icon are identical wherever it shows.
+function sectionTile(x) {
+  const accent = accentFor(x.hash);
+  const attrs = { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t };
+  if (accent) attrs.style = `--tile-accent:${accent}`;
+  return h('button', attrs, [
+    x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
+    h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+  ]);
+}
 
 const TABS = [
   { hash: '#home', label: 'Home', svg: ICON.home },
@@ -1546,10 +1595,7 @@ function homeScreen() {
       { ic: ICON.gear, t: 'Settings', d: 'Who’s travelling, theme, phase', hash: '#settings' },
     ] },
   ];
-  const tileBtn = (x) => h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t }, [
-    x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
-    h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
-  ]);
+  const tileBtn = sectionTile;
   // Both clusters render as minimise/maximise disclosures; both open by default since
   // there are only two short groups now.
   groups.forEach((g) => {
@@ -1602,9 +1648,7 @@ function meHubScreen() {
     { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
     { ic: ICON.gear, t: 'Settings', d: 'You, theme & journey', hash: '#settings' },
   ];
-  const tileBtn = (x) => h('button', { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.t }, [
-    h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
-  ]);
+  const tileBtn = sectionTile;
   wrap.append(h('h2', { class: 'home-section' }, 'Your space'));
   wrap.append(h('div', { class: 'grid' }, items.map(tileBtn)));
 
@@ -1822,10 +1866,7 @@ function countryHubScreen(id) {
   // primary needs; the full country toolkit is one tap away, not a wall of tiles.
   wrap.append(h('details', { class: 'filters-collapse' }, [
     h('summary', {}, `More for ${c.name}`),
-    h('div', { class: 'grid' }, tiles.map((x) =>
-      h('button', { class: 'tile', onclick: () => go(x.hash) }, [
-        h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
-      ]))),
+    h('div', { class: 'grid' }, tiles.map(sectionTile)),
   ]));
   mount(wrap, '#home');
 }

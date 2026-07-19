@@ -362,7 +362,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
   padding: var(--sp-4); box-shadow: var(--shadow-soft); font-family: inherit; color: var(--ink);
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-.tile:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--orange); }
+.tile:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--tile-accent, var(--orange)); }
 /* soft tinted disc behind each tile icon for visual rhythm (purely decorative) */
 .tile .ic { width: 48px; height: 48px; line-height: 1; color: var(--orange);
   display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 2px;
@@ -381,7 +381,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .btn { min-height: 48px; letter-spacing: 0.01em; }
 /* Modern tile icon: a solid brand-gradient chip with a white glyph (pairs with the
    existing hover accent-bar + icon ring defined later in this file). */
-.tile .ic { width: 52px; height: 52px; background: var(--grad-sun); color: #fff; }
+.tile .ic { width: 52px; height: 52px; background: var(--tile-accent, var(--grad-sun)); color: #fff; }
 .tile .ic svg { width: 26px; height: 26px; }
 .tile .tile-badge { z-index: 1; }
 
