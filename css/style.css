@@ -237,6 +237,13 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .explore-name { font-weight: 800; font-size: var(--fs-lg); }
 .explore-sub { color: var(--ink-soft); font-size: var(--fs-sm); }
 
+/* Phrase of the day — a compact daily highlight at the top of the phrasebook. */
+.potd-card { cursor: pointer; border-left: 5px solid var(--grape, #7A5FB0); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.potd-card:hover, .potd-card:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(58, 36, 21, 0.12); outline: none; }
+.potd-lbl { font-size: var(--fs-sm); color: var(--ink-soft); font-weight: 700; }
+.potd-en { font-size: var(--fs-lg); font-weight: 800; margin-top: 2px; }
+.potd-sci { color: var(--ink-soft); margin-top: 2px; }
+
 /* Region/province maps: clickable coloured provinces (pure offline SVG). */
 .regions-map { width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
 .regions-svg { width: 100%; height: auto; display: block; max-height: 62vh; }

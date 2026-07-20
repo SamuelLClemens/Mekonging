@@ -193,7 +193,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.262.0';
+const APP_VERSION = 'mk-v0.263.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1505,38 +1505,30 @@ function homeScreen() {
     ]),
   ]));
 
-  // Journey phase shapes Home. FIRST run (unset) prompts the choice; once chosen we do
-  // NOT bring the traveller back to the picker — Home just leads with that stage's
-  // content, with a subtle current-stage line. The phase is switched in Settings.
+  // The four journey buttons sit at the very top with the active stage highlighted, so a
+  // traveller sets or switches their phase in one tap. Home no longer hides the picker once
+  // a phase is chosen, and the country map now lives on the Explore tab rather than here.
   const phase = store.profile.prefs.phase || '';
   const leadCC = focusSpot().spot.country;
-  if (!phase) {
-    wrap.append(h('h2', { class: 'home-section phase-prompt' }, 'Where are you in your journey?'));
-    wrap.append(phaseSelector());
-    wrap.append(h('div', { class: 'home-actions' }, [
-      h('button', { class: 'btn', onclick: () => go('#nearby') }, '📍 What’s near me'),
-      h('button', { class: 'btn', style: 'background:var(--magenta)', onclick: () => go('#sos') }, '🆘 Emergency'),
-    ]));
-  } else {
-    wrap.append(h('div', { class: 'phase-current' }, [
-      h('span', { class: 'phase-current-lbl' }, `${PHASES[phase].emoji} ${PHASES[phase].label}`),
-      h('button', { class: 'linklike phase-change', onclick: () => go('#settings') }, 'Change in Settings'),
-    ]));
-    wrap.append(h('p', { class: 'phase-tagline muted' }, PHASES[phase].tagline));
-    wrap.append(phaseLead(phase, leadCC));
+  wrap.append(h('h2', { class: 'home-section' }, 'Where are you in your journey?'));
+  wrap.append(phaseSelector());
+
+  // Search everything.
+  wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
+  wrap.append(netStatusRow());
+
+  // Time of day where you are — the live, place-and-moment picks, ABOVE "Your day".
+  wrap.append(rightNowSection());
+
+  // Your day — next plan item + one-tap spend. (Phrase of the day now lives in Talk.)
+  wrap.append(dailyStripCard(leadCC));
+
+  // Day/trip cards shown only when they have something to say: a trip countdown or return
+  // recap, upcoming reminders, and a one-time backup nudge.
+  if (phase) {
     const companion = journeyCompanionCard(phase, leadCC);
     if (companion) wrap.append(companion);
-    // While travelling, the day-at-a-glance strip (next plan item, phrase of the day,
-    // one-tap spend) lives on Home — Things-to-do now holds only things to do.
-    if (phase === 'traveling') wrap.append(dailyStripCard(leadCC));
   }
-  wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:8px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
-
-  wrap.append(netStatusRow());
-  // Lead with what fits the user's place and moment, before the generic menu.
-  wrap.append(rightNowSection());
-  // "Coming up" — reminders you set on calendar entries, in the next week. Always in-app
-  // (works with no notification permission and offline); tap to open the calendar.
   const up = reminders.upcoming(7);
   if (up.length) {
     const rc = h('div', { class: 'card', style: 'margin-top:8px' }, [h('h3', { style: 'margin-top:0' }, '🔔 Coming up')]);
@@ -1548,8 +1540,6 @@ function homeScreen() {
     });
     wrap.append(rc);
   }
-  // One-time nudge: once there is a journal or budget worth keeping, offer a backup so an
-  // update, reset or lost phone can never take it. Dismissible; shown once.
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
     wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--orange); margin-top:8px' }, [
       h('strong', {}, '⬇️ Back up your journal & budget'),
@@ -1560,24 +1550,6 @@ function homeScreen() {
       ]),
     ]));
   }
-  // Profile-driven shortcuts (accessibility, baby, family) are NOT surfaced here any
-  // more — they live in Settings → Who's travelling and on the focused country's hub,
-  // so Home stays calm and every context has ONE menu, not several overlapping ones.
-
-  const sights = signatureSightsStrip();
-  if (sights) wrap.append(sights);
-
-  wrap.append(h('h2', { class: 'home-section' }, 'Where are you headed?'));
-  wrap.append(regionPicker());
-  // The focused country's hub is THE place for everything about where you are (places,
-  // food, transport, weather, kids, visa…). One clear gateway avoids the old problem of
-  // Home duplicating the whole country toolkit.
-  const hubFs = focusSpot();
-  const hubCC = hubFs.spot.country;
-  const hubC = getCountry(hubCC);
-  if (hubC) wrap.append(h('button', { class: 'btn block home-explore', style: 'margin:10px 0 2px', onclick: () => { activeCountry = hubCC; go(`#country-${hubCC}`); } }, `${hubC.flag} Explore ${hubC.name} — places, food, transport & more`));
-  // Offline / GPS off: let the traveller set where they are so everything matches.
-  if (hubFs.source === 'default') wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0 2px', onclick: () => go(`#setcity-${hubCC}`) }, '📍 Set where you are (works offline)'));
 
   wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
 
@@ -1605,7 +1577,6 @@ function homeScreen() {
       { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
       { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
       { ic: ICON.tag, t: 'Traveller board', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
-      { ic: ICON.heart, t: 'Give back', d: 'Support local causes', hash: '#donate' },
       { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
       { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
       { ic: ICON.gear, t: 'Settings', d: 'Who’s travelling, theme, phase', hash: '#settings' },
@@ -1662,6 +1633,7 @@ function meHubScreen() {
     { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
     { ic: ICON.star, t: 'Saved places', d: 'Your collections', hash: '#saved' },
     { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
+    { ic: ICON.heart, t: 'Give back', d: 'Support the region', hash: '#donate' },
     { ic: ICON.gear, t: 'Settings', d: 'You, theme & journey', hash: '#settings' },
   ];
   const tileBtn = sectionTile;
@@ -2854,6 +2826,18 @@ function phrasebookScreen(lang) {
     }, b.label))));
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
+
+  // Phrase of the day — one phrase to have ready today (moved here from Home's "Your day").
+  const pod = phraseOfTheDay(code);
+  if (pod) {
+    const openPod = () => showBigPhrase(pod.p, pod.locale);
+    wrap.append(h('div', { class: 'card potd-card', role: 'button', tabindex: '0', onclick: openPod,
+      onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPod(); } } }, [
+      h('div', { class: 'potd-lbl' }, '💬 Phrase of the day'),
+      h('div', { class: 'potd-en' }, pod.p.en),
+      h('div', { class: 'potd-sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
+    ]));
+  }
 
   const repaint = () => phrasebookScreen(code);
 
@@ -7401,20 +7385,8 @@ function dailyStripCard(id) {
     ]),
   ]));
 
-  // 2) Phrase of the day.
-  const pod = phraseOfTheDay(code);
-  if (pod) {
-    card.append(h('button', { class: 'btn ghost block strip-row', onclick: () => showBigPhrase(pod.p, pod.locale) }, [
-      h('span', { class: 'strip-ic' }, '💬'),
-      h('span', { class: 'grow strip-txt' }, [
-        h('div', { class: 'en' }, [h('span', { class: 'tiny muted' }, 'Phrase of the day · '), pod.p.en]),
-        h('div', { class: 'sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
-      ]),
-    ]));
-    card.append(h('button', { class: 'linklike', style: 'margin:2px 0 0', onclick: () => go(`#phrasebook-${code}`) }, 'More phrases →'));
-  }
-
-  // 3) Budget quick-add — logs in one tap and shows today's running spend.
+  // 2) Budget quick-add — logs in one tap and shows today's running spend.
+  //    (Phrase of the day moved to the phrasebook — see phraseOfTheDayCard.)
   const budBox = h('div', { style: 'margin-top:10px' });
   const cur = (c && c.currency) || 'THB';
   const renderBud = () => {
