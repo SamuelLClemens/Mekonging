@@ -193,7 +193,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.263.0';
+const APP_VERSION = 'mk-v0.264.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -312,8 +312,7 @@ const TABS = [
   { hash: '#explore', label: 'Explore', svg: ICON.compass },
   { hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
   { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
-  { hash: '#settings', label: 'Settings', svg: ICON.gear },
-  { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel()
+  { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel(); Settings lives inside this hub
 ];
 
 function go(hash) {
@@ -363,7 +362,7 @@ function topbar(title, backHash) {
 
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
 // under Places; trip planning, memories, money, social, safety and admin group under Home;
-// Map/Talk/Settings own their own routes. Anything unlisted falls back to Home.
+// Settings now lives inside the YOU hub, so its route maps to #me. Anything unlisted → Home.
 const TAB_FOR_HEAD = {
   // Explore = the geographic drill-down: country → region → city, plus the country-wide
   // reading (history, culture, country guide) reached by tapping into a country.
@@ -378,11 +377,9 @@ const TAB_FOR_HEAD = {
   access: '#places', baby: '#places', family: '#places', streetfood: '#places', board: '#places',
   setcity: '#places',
   phrasebook: '#phrasebook',
-  // Settings is now its own tab.
-  settings: '#settings',
-  // The personal hub ("M"/name) owns everything that is about the traveller themselves:
-  // their calendar, memories, money, saved things and documents.
-  me: '#me', dictionary: '#me',
+  // The personal hub ("YOU"/name) owns everything that is about the traveller themselves:
+  // their calendar, memories, money, saved things, documents — and Settings.
+  me: '#me', dictionary: '#me', settings: '#me',
   saved: '#me', collection: '#me',
   journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
   trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
@@ -1579,7 +1576,6 @@ function homeScreen() {
       { ic: ICON.tag, t: 'Traveller board', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
       { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
       { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
-      { ic: ICON.gear, t: 'Settings', d: 'Who’s travelling, theme, phase', hash: '#settings' },
     ] },
   ];
   const tileBtn = sectionTile;
