@@ -237,6 +237,15 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .explore-name { font-weight: 800; font-size: var(--fs-lg); }
 .explore-sub { color: var(--ink-soft); font-size: var(--fs-sm); }
 
+/* Region/province maps: clickable coloured provinces (pure offline SVG). */
+.regions-map { width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
+.regions-svg { width: 100%; height: auto; display: block; max-height: 62vh; }
+.prov-group { cursor: pointer; outline: none; }
+.prov { stroke: var(--card); stroke-width: 0.8; transition: fill-opacity var(--dur) var(--ease); }
+.prov-group:hover .prov, .prov-group:focus-visible .prov { fill-opacity: 0.9 !important; }
+.prov-group.active .prov { stroke: var(--ink); stroke-width: 1.4; }
+.prov-group:focus-visible .prov { stroke: var(--ink); stroke-width: 1.4; }
+
 /* Home "Signature sights" — a photo-forward horizontal showcase of iconic places. */
 .sights-strip { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
 .sight-card { position: relative; flex: 0 0 auto; width: 158px; height: 200px; border-radius: 16px; overflow: hidden; border: none; padding: 0; cursor: pointer; scroll-snap-align: start; background: var(--line); }
