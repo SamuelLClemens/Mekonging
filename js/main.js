@@ -189,7 +189,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.260.0';
+const APP_VERSION = 'mk-v0.261.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -258,10 +258,12 @@ const chipIcon = (name) => h('span', { class: 'chip-ic', html: ICON[name] || '' 
 // user asked for. Sections sharing a destination (swap/market/exchange = "Buy or sell";
 // today/weather) deliberately share a hue. Unlisted heads fall back to the brand gradient.
 const SECTION_ACCENT = {
-  // where you are / browse
+  // explore = the geographic drill-down (its own identity, distinct from Places)
+  explore: '#3E8E5A', region: '#3E8E5A',
+  // where you are / browse — Places and the (now merged in) Map share ONE accent
   places: '#1FA98A', place: '#1FA98A', nearby: '#1FA98A', country: '#1FA98A', setcity: '#1FA98A',
   bestof: '#1FA98A', bestlist: '#1FA98A',
-  map: '#2E7DB0', addpin: '#2E7DB0',
+  map: '#1FA98A', addpin: '#1FA98A',
   // food & nature
   food: '#E0663A', dish: '#E0663A', streetfood: '#D2542E', produce: '#CE8A3A',
   nature: '#4E9A52', species: '#4E9A52', sounds: '#3E9A7A', pools: '#2E8FB0',
@@ -303,9 +305,10 @@ function sectionTile(x) {
 
 const TABS = [
   { hash: '#home', label: 'Home', svg: ICON.home },
-  { hash: '#places', label: 'Places', svg: ICON.compass },
-  { hash: '#map', label: 'Map', svg: ICON.map },
+  { hash: '#explore', label: 'Explore', svg: ICON.compass },
+  { hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
   { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
+  { hash: '#settings', label: 'Settings', svg: ICON.gear },
   { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel()
 ];
 
@@ -358,18 +361,24 @@ function topbar(title, backHash) {
 // under Places; trip planning, memories, money, social, safety and admin group under Home;
 // Map/Talk/Settings own their own routes. Anything unlisted falls back to Home.
 const TAB_FOR_HEAD = {
-  places: '#places', place: '#places', country: '#places', nearby: '#places', arrival: '#places',
-  bestof: '#places', bestlist: '#places', food: '#places', dish: '#places', produce: '#places',
-  nature: '#places', sounds: '#places', species: '#places', pools: '#places', events: '#places',
-  event: '#places', weather: '#places', today: '#places', prices: '#places', transport: '#places',
-  route: '#places', crossings: '#places', schedules: '#places', visa: '#places', info: '#places',
-  history: '#places', access: '#places', baby: '#places', family: '#places', streetfood: '#places',
-  board: '#places', setcity: '#places',
-  map: '#map', addpin: '#map',
+  // Explore = the geographic drill-down: country → region → city, plus the country-wide
+  // reading (history, culture, country guide) reached by tapping into a country.
+  explore: '#explore', country: '#explore', region: '#explore', history: '#explore', info: '#explore',
+  // Places = finding specific things on the ground, AND the full offline map (merged in:
+  // map/addpin used to be their own tab). One section, one icon.
+  places: '#places', place: '#places', map: '#places', addpin: '#places', nearby: '#places',
+  arrival: '#places', bestof: '#places', bestlist: '#places', food: '#places', dish: '#places',
+  produce: '#places', nature: '#places', sounds: '#places', species: '#places', pools: '#places',
+  events: '#places', event: '#places', weather: '#places', today: '#places', prices: '#places',
+  transport: '#places', route: '#places', crossings: '#places', schedules: '#places', visa: '#places',
+  access: '#places', baby: '#places', family: '#places', streetfood: '#places', board: '#places',
+  setcity: '#places',
   phrasebook: '#phrasebook',
-  // The personal hub ("M") owns everything that is about the traveller themselves:
-  // their calendar, memories, money, saved things, documents and settings.
-  me: '#me', settings: '#me', dictionary: '#me',
+  // Settings is now its own tab.
+  settings: '#settings',
+  // The personal hub ("M"/name) owns everything that is about the traveller themselves:
+  // their calendar, memories, money, saved things and documents.
+  me: '#me', dictionary: '#me',
   saved: '#me', collection: '#me',
   journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
   trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
@@ -1677,6 +1686,51 @@ function meHubScreen() {
   wrap.append(h('p', { class: 'disclaimer' },
     'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));
   mount(wrap, '#me');
+}
+
+// Explore tab: the geographic front door. A tap on a country opens that country's hub —
+// country-wide history, culture, guide and cities — and (from Wave 2) its regions map.
+function exploreScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Explore'));
+  wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 10px' },
+    'Tap a country to explore its regions, cities, history and culture. It all works offline.'));
+  wrap.append(regionPicker());
+
+  // Whatever country the traveller is in (or last looked at) gets a prominent "keep going".
+  const fs = focusSpot();
+  const fcc = fs && fs.spot ? fs.spot.country : '';
+  const fc = getCountry(fcc);
+  if (fc) {
+    wrap.append(h('button', { class: 'btn block home-explore', style: 'margin:12px 0 2px', onclick: () => { activeCountry = fcc; go(`#country-${fcc}`); } },
+      `${fc.flag} Explore ${fc.name}`));
+  }
+
+  // Country cards — a large, tap-friendly alternative to the SVG map, each in its own
+  // colour so a country reads the same here as on the map above.
+  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, 'All four countries'));
+  const grid = h('div', { class: 'explore-grid' });
+  COUNTRIES.forEach((c) => {
+    grid.append(h('button', {
+      class: 'explore-card', style: `--ec:${REGION_COLORS[c.id] || 'var(--teal)'}`,
+      onclick: () => { activeCountry = c.id; go(`#country-${c.id}`); },
+      'aria-label': `Explore ${c.name}`,
+    }, [
+      h('span', { class: 'explore-flag' }, c.flag),
+      h('span', { class: 'explore-name' }, c.name),
+      h('span', { class: 'explore-sub' }, 'Regions · cities · history · culture'),
+    ]));
+  });
+  wrap.append(grid);
+  mount(wrap, '#explore');
+}
+
+// Region/province drill-down. The full implementation — an outlined, clickable province
+// map plus per-region content — lands in Wave 2. Until then the route falls back to the
+// country hub so it never dead-ends.
+function regionScreen(arg) {
+  const cc = String(arg || '').split('-')[0] || activeCountry;
+  return countryHubScreen(cc);
 }
 
 // The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
@@ -3214,6 +3268,12 @@ function placesScreen(arg) {
   const mapWrap = h('div', {});
   const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
   wrap.append(viewMode === 'map' ? mapWrap : listEl);
+  // Map and Places are one section now: from the places map, reach the full offline map
+  // (GPS, layers, saved offline areas, measure) that used to have its own tab.
+  if (viewMode === 'map') {
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin:8px 0 2px', onclick: () => go('#map') },
+      [chipIcon('map'), ' Full map — offline areas, layers & measure']));
+  }
 
   let placesCtrl = null;
   let currentResults = [];
@@ -5058,7 +5118,7 @@ function crossingsScreen() {
 
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Map'));
+  wrap.append(topbar('Map', '#places'));
   wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — the region map, your GPS location, search, places, pools, pins and your saved accommodation all work with no connection. Tap ⊕ to find yourself, search to jump to any place, tap the map to drop a pin, and set your accommodation to see a guide line and the distance and direction back. Use “Save this area” to keep the satellite imagery offline.'));
 
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
@@ -10851,7 +10911,9 @@ function render() {
       case '': case 'home': return homeScreen();
       case 'me': return meHubScreen();
       case 'welcome': return welcomeScreen();
+      case 'explore': return exploreScreen();
       case 'country': return countryHubScreen(arg);
+      case 'region': return regionScreen(arg);
       case 'nearby': return nearbyScreen();
       case 'currency': return currencyScreen();
       case 'exchange': return bulletinScreen(arg);

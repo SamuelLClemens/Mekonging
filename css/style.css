@@ -224,6 +224,19 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .city-pick-name { font-weight: 700; padding: var(--sp-2) var(--sp-2) 0; }
 .city-pick-count { padding: 0 var(--sp-2) var(--sp-2); color: var(--ink-soft); font-size: var(--fs-sm); }
 
+/* Explore tab: large country cards, each in its own accent colour (--ec). */
+.explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp-2); }
+.explore-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  padding: var(--sp-3); border: 1px solid var(--line); border-left: 5px solid var(--ec, var(--teal));
+  border-radius: var(--r-lg); background: var(--card); cursor: pointer; color: var(--ink);
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.explore-card:hover { border-color: var(--ec, var(--teal)); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(58, 36, 21, 0.12); }
+.explore-flag { font-size: 1.9rem; line-height: 1.1; }
+.explore-name { font-weight: 800; font-size: var(--fs-lg); }
+.explore-sub { color: var(--ink-soft); font-size: var(--fs-sm); }
+
 /* Home "Signature sights" — a photo-forward horizontal showcase of iconic places. */
 .sights-strip { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
 .sight-card { position: relative; flex: 0 0 auto; width: 158px; height: 200px; border-radius: 16px; overflow: hidden; border: none; padding: 0; cursor: pointer; scroll-snap-align: start; background: var(--line); }
@@ -788,12 +801,17 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 }
 html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 .tabbar button {
-  flex: 1; border: none; background: none; cursor: pointer; font-family: inherit;
+  flex: 1; min-width: 0; border: none; background: none; cursor: pointer; font-family: inherit;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   color: var(--ink-soft); font-size: var(--fs-label); font-weight: 700;
+  padding: 0 2px;
+}
+/* Six tabs share the bar, so labels must never wrap or overflow their slot. */
+.tabbar button > span:last-child {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;
 }
 .tabbar button .ic { font-size: 1.3rem; display: block; }
-.tabbar button .ic svg { width: 26px; height: 26px; display: block; }
+.tabbar button .ic svg { width: 25px; height: 25px; display: block; }
 .tabbar button[aria-current="page"] { color: var(--orange); }
 
 /* --- save sheet (modal) --- */
