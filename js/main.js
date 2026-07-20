@@ -189,12 +189,15 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.259.0';
+const APP_VERSION = 'mk-v0.260.0';
 
-// Single source of truth for the app's display name. The personal-hub tab shows the
-// whole name when it is short, otherwise its initial — so "Mekonging" becomes "M".
-const APP_NAME = 'Mekonging';
-const TAB_LABEL = APP_NAME.length <= 3 ? APP_NAME : APP_NAME[0];
+// The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
+// Once set, it shows that name IF it is short enough to fit the tab; a longer name would
+// wrap or get truncated, so it falls back to "YOU" rather than showing a truncated name.
+function meTabLabel() {
+  const name = (store.profile.name || '').trim();
+  return name && name.length <= 3 ? name : 'YOU';
+}
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
 // are (Near me), what to browse (Places), how to speak (Talk) and the map. "Saved"
@@ -303,7 +306,7 @@ const TABS = [
   { hash: '#places', label: 'Places', svg: ICON.compass },
   { hash: '#map', label: 'Map', svg: ICON.map },
   { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
-  { hash: '#me', label: TAB_LABEL, svg: ICON.me },
+  { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel()
 ];
 
 function go(hash) {
@@ -389,7 +392,7 @@ function tabbar() {
     h('button', {
       'aria-current': active === t.hash ? 'page' : null,
       onclick: () => go(t.hash),
-    }, [h('span', { class: 'ic', html: t.svg }), h('span', {}, t.label)])));
+    }, [h('span', { class: 'ic', html: t.svg }), h('span', {}, t.hash === '#me' ? meTabLabel() : t.label)])));
 }
 
 function mount(node, showTabbar) {
