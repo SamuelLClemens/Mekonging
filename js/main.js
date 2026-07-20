@@ -72,6 +72,10 @@ import { VISA, getVisa } from './data/visa.js';
 import { FAMILY, getFamily } from './data/family.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
+import { REGIONS_TH } from './data/regions.th.js';
+import { REGIONS_VI } from './data/regions.vi.js';
+import { REGIONS_KH } from './data/regions.kh.js';
+import { REGIONS_LA } from './data/regions.la.js';
 
 // ---- service worker + theme -------------------------------------------------
 // Register the service worker only in a secure web context (https / http localhost).
@@ -189,7 +193,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.261.0';
+const APP_VERSION = 'mk-v0.262.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1728,9 +1732,140 @@ function exploreScreen() {
 // Region/province drill-down. The full implementation — an outlined, clickable province
 // map plus per-region content — lands in Wave 2. Until then the route falls back to the
 // country hub so it never dead-ends.
+// ---- Region / province drill-down (ADM1) -------------------------------------------
+const REGIONS_BY_CC = { th: REGIONS_TH, vi: REGIONS_VI, kh: REGIONS_KH, la: REGIONS_LA };
+function regionSetFor(cc) { return REGIONS_BY_CC[cc] || null; }
+function findProvince(cc, code) {
+  const set = regionSetFor(cc);
+  return set ? set.provinces.find((p) => p.code === code) || null : null;
+}
+// Project a lng/lat to the country region map's SVG space (same maths as build_regions.py).
+function projRegionPt(proj, lng, lat) {
+  return [
+    +(proj.pad + (lng - proj.minlng) * proj.kx * proj.scale).toFixed(1),
+    +(proj.pad + (proj.maxlat - lat) * proj.scale).toFixed(1),
+  ];
+}
+// SVG path 'd' for a province: one subpath per ring of every polygon.
+function provincePathD(prov, proj) {
+  const subs = [];
+  for (const poly of prov.polys) {
+    for (const ring of poly) {
+      const pts = ring.map(([lng, lat]) => projRegionPt(proj, lng, lat));
+      subs.push('M' + pts.map((p) => `${p[0]},${p[1]}`).join(' L') + ' Z');
+    }
+  }
+  return subs.join(' ');
+}
+function pointInRing(lng, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function pointInProvince(prov, lng, lat) {
+  for (const poly of prov.polys) {
+    if (pointInRing(lng, lat, poly[0]) && !poly.slice(1).some((hole) => pointInRing(lng, lat, hole))) return true;
+  }
+  return false;
+}
+function placesInProvince(cc, code) {
+  const prov = findProvince(cc, code);
+  if (!prov) return [];
+  return allPlaces({ country: cc }).filter((p) => p.coords
+    && typeof p.coords.lng === 'number' && typeof p.coords.lat === 'number'
+    && pointInProvince(prov, p.coords.lng, p.coords.lat));
+}
+// A stable, spread-out fill per province so neighbours differ (a political-map look).
+const REGION_PALETTE = ['#E0663A', '#3E8E5A', '#3E7CB1', '#C9902B', '#9C5780', '#4C9A6A', '#B0567F', '#2E8FB0', '#C77D2E', '#6E7BC0', '#4E9A52', '#8A5FA8'];
+
+// A clickable, coloured SVG map of one country's provinces. opts.activeCode highlights one;
+// opts.onPick(code) fires on tap/Enter. Pure SVG + offline — no tiles, no network.
+function regionsMap(cc, opts = {}) {
+  const set = regionSetFor(cc);
+  if (!set) return null;
+  const proj = set.proj;
+  const shapes = set.provinces.map((p, i) => {
+    const active = opts.activeCode && p.code === opts.activeCode;
+    // When one province is highlighted, the rest go a muted slate so the active one — in
+    // its own bright colour — clearly pops while neighbours stay visible and tappable.
+    const fill = active ? REGION_PALETTE[i % REGION_PALETTE.length]
+      : (opts.activeCode ? '#8A94A6' : REGION_PALETTE[i % REGION_PALETTE.length]);
+    const op = active ? 0.98 : (opts.activeCode ? 0.55 : 0.62);
+    return `<g class="prov-group${active ? ' active' : ''}" data-code="${esc(p.code)}" role="button" tabindex="0" aria-label="${esc(p.name)}">`
+      + `<path class="prov" d="${provincePathD(p, proj)}" fill="${fill}" fill-opacity="${op}"/></g>`;
+  }).join('');
+  const cName = (getCountry(cc) || {}).name || '';
+  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Provinces of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
+  const box = h('div', { class: 'regions-map', html: svg });
+  box.querySelectorAll('.prov-group').forEach((g) => {
+    const code = g.getAttribute('data-code');
+    const pick = () => { if (opts.onPick) opts.onPick(code); };
+    g.addEventListener('click', pick);
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  });
+  return box;
+}
+
+// Region detail: arg is "<cc>-<CODE>" (the ISO code itself contains a hyphen, e.g.
+// "th-TH-50"), so split on the FIRST hyphen only. Lists the region's cities and mapped
+// places, keeps the province map one tap from its neighbours, and links up to the country.
 function regionScreen(arg) {
-  const cc = String(arg || '').split('-')[0] || activeCountry;
-  return countryHubScreen(cc);
+  const raw = String(arg || '');
+  const dash = raw.indexOf('-');
+  const cc = dash >= 0 ? raw.slice(0, dash) : (raw || activeCountry);
+  const code = dash >= 0 ? raw.slice(dash + 1) : '';
+  const c = getCountry(cc);
+  const prov = findProvince(cc, code);
+  const wrap = h('div', { class: 'screen' });
+  if (!c || !prov) {
+    wrap.append(topbar('Region', `#country-${cc}`));
+    wrap.append(h('p', { class: 'empty' }, 'That region could not be found.'));
+    mount(wrap, '#explore');
+    return;
+  }
+  activeCountry = cc;
+  wrap.append(topbar(prov.name, `#country-${cc}`));
+  wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `${prov.name} — a region of ${c.name}. Tap another region on the map to jump there.`));
+
+  const mini = regionsMap(cc, { activeCode: code, onPick: (nc) => go(`#region-${cc}-${nc}`) });
+  if (mini) wrap.append(h('div', { class: 'card', style: 'padding:8px' }, [mini]));
+
+  if (cc === 'vi') {
+    wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
+      'Note: Vietnam reorganised its provinces in 2025. These outlines reflect the earlier boundaries until open map data is updated.'));
+  }
+
+  const inRegion = placesInProvince(cc, code);
+  const cityCounts = {};
+  inRegion.forEach((p) => { if (p.city) cityCounts[p.city] = (cityCounts[p.city] || 0) + 1; });
+  const cities = Object.keys(cityCounts).sort((a, b) => cityCounts[b] - cityCounts[a]);
+  if (cities.length) {
+    const cityCard = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `🏙 Cities & towns in ${prov.name}`)]);
+    cityCard.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a place to see everything mapped there.'));
+    cityCard.append(cityPickGrid(cc, cities, cityCounts));
+    wrap.append(cityCard);
+  }
+
+  if (inRegion.length) {
+    const pc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `📍 ${inRegion.length} place${inRegion.length > 1 ? 's' : ''} in ${prov.name}`)]);
+    inRegion.slice(0, 40).forEach((p) => pc.append(placeCard(p)));
+    wrap.append(pc);
+  } else {
+    wrap.append(h('div', { class: 'card' }, [
+      h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${prov.name} yet. Explore neighbouring regions on the map above, or browse all of ${c.name}.`),
+      h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) }, `All places in ${c.name}`),
+    ]));
+  }
+
+  wrap.append(h('div', { class: 'chips', style: 'margin-top:6px' }, [
+    h('button', { class: 'chip', onclick: () => go(`#country-${cc}`) }, [chipIcon('compass'), `About ${c.name}`]),
+    h('button', { class: 'chip', onclick: () => go(`#history-${cc}`) }, [chipIcon('book'), 'History & culture']),
+    h('button', { class: 'chip', onclick: () => go(`#info-${cc}`) }, [chipIcon('compass'), 'Country guide']),
+  ]));
+  mount(wrap, '#explore');
 }
 
 // The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
@@ -1811,6 +1946,18 @@ function countryHubScreen(id) {
     h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('map'), 'Map']),
     h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
   ]));
+
+  // Regions map: tapping into a country shows its provinces outlined and coloured; each is
+  // tappable through to a region view (its cities and mapped places).
+  if (regionSetFor(id)) {
+    const regionsCard = h('div', { class: 'card region-card' }, [
+      h('h2', { style: 'margin-top:0' }, `🗺 Regions of ${c.name}`),
+      h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a region to see its cities, places and how it fits into the country.'),
+    ]);
+    const rm = regionsMap(id, { onPick: (code) => go(`#region-${id}-${code}`) });
+    if (rm) regionsCard.append(rm);
+    wrap.append(regionsCard);
+  }
 
   // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
   // this country, surface that city first and let them widen to the whole country. Only
