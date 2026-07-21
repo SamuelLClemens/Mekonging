@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.276.0';
+const APP_VERSION = 'mk-v0.277.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1163,16 +1163,17 @@ function freshnessNotice(dateStr, officialUrl, officialName, staleDays = 150) {
 // single authoritative portal to deep-link. Same self-checking age logic as visa: quiet
 // "verified" note while fresh, a plain "may be out of date — confirm locally" card once it
 // ages past staleDays. Keeps the honest self-update promise consistent across the app.
-function freshnessLine(dateStr, noun = 'This data', staleDays = 365) {
+function freshnessLine(dateStr, noun = 'This data', staleDays = 365, label) {
   const age = dataAgeDays(dateStr);
   if (age == null) return null;
+  const shown = label || dateStr;
   if (age <= staleDays) {
-    return h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `✓ ${noun} verified ${dateStr}; the app re-checks this date on every open and flags it here once it ages.`);
+    return h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `✓ ${noun} verified ${shown}; the app re-checks this date on every open and flags it here once it ages.`);
   }
   const months = Math.max(1, Math.round(age / 30));
   return h('div', { class: 'card', style: 'border:1px solid var(--orange); margin:6px 0' }, [
     h('strong', {}, `⚠ ${noun} may be out of date`),
-    h('p', { class: 'muted', style: 'margin:4px 0 0' }, `Last verified ${dateStr} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
+    h('p', { class: 'muted', style: 'margin:4px 0 0' }, `Last verified ${shown} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
   ]);
 }
 
@@ -5419,6 +5420,19 @@ function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Border crossings', '#map'));
   wrap.append(h('p', { class: 'map-hint' }, 'Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
+  // Freshness badge: the oldest "verified" date across all crossings, so the whole set is
+  // judged by its weakest link. Quiet ✓ while under ~6 months old, a prominent ⚠ nudge once
+  // it ages. Re-checked on every open (self-updating age, server-free).
+  {
+    const dates = CROSSINGS.map((x) => x.verified).filter(Boolean).sort();
+    const oldest = dates[0];
+    if (oldest) {
+      const d = new Date(oldest + '-01T00:00:00');
+      const label = isNaN(d.getTime()) ? oldest : d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      const fresh = freshnessLine(oldest, 'Border crossing details', 183, label);
+      if (fresh) wrap.append(fresh);
+    }
+  }
   // Per-country entry/visa guides (visa type, official portal, land-border tips, overstay).
   wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
     h('button', { class: 'chip', onclick: () => go(`#visa-${c.id}`) }, `🛂 ${c.flag} ${c.name} entry`))));
