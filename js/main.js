@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.268.0';
+const APP_VERSION = 'mk-v0.269.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -645,21 +645,28 @@ function profileFitAdj(p, prefs) {
 // beyond that, up to a ~3-hour day trip, surface separately as "Further afield".
 const ROAD_FACTOR = 1.35;       // straight-line km -> likely road km (curves, terrain, towns)
 const DRIVE_KMH = 50;           // effective road speed incl. towns, stops, slow sections
+// Kept conservative at 75 min rather than raised to 90: because the estimate is straight-line
+// derived, a 90-min ceiling would pull genuine 3-hour mountain routes (e.g. Pai->Chiang Mai,
+// est. ~89 min) into "near you". Raising it safely needs verified corridor/terrain drive times.
 const NEAR_MAX_MIN = 75;        // "within an hour give or take" — the near-me ceiling (~46 km)
 const DAYTRIP_MAX_MIN = 180;    // "further afield / next destinations" — up to a ~3-hour trip
 function estDriveMin(km) { return km == null ? null : Math.round((km * ROAD_FACTOR) / DRIVE_KMH * 60); }
 function withinNear(km) { const m = estDriveMin(km); return m != null && m <= NEAR_MAX_MIN; }
 function withinDayTrip(km) { const m = estDriveMin(km); return m != null && m > NEAR_MAX_MIN && m <= DAYTRIP_MAX_MIN; }
-// Human label: a walk time under ~2.5 km, otherwise an estimated drive ("~40 min drive", "~2h drive").
+// Human label: a walk time under ~2.5 km, otherwise a ROUGH road estimate. The estimate is
+// derived from straight-line distance, so it is deliberately framed as approximate ("by road
+// (est.)") with coarse granularity and a "+" on longer trips — a switchback mountain route can
+// take far longer than the number suggests, and false precision would mislead a traveller.
 function driveLabel(km) {
   if (km == null) return null;
   if (km <= 2.5) return `~${Math.max(1, Math.round((km / 4.8) * 60))} min walk`;
-  // Round to 5-minute steps — an honest granularity for an estimate, and enough to keep a
-  // just-near place (e.g. ~70 min) visually distinct from a just-further one (e.g. ~80 min).
-  const m = Math.max(5, Math.round(estDriveMin(km) / 5) * 5);
-  if (m < 60) return `~${m} min drive`;
-  const hrs = Math.floor(m / 60), rem = m % 60;
-  return rem ? `~${hrs}h ${rem}m drive` : `~${hrs}h drive`;
+  const m = estDriveMin(km);
+  if (m < 60) return `~${Math.max(5, Math.round(m / 5) * 5)} min by road (est.)`;
+  // Coarse half-hour steps + a trailing "+" so a straight-line estimate is never read as a
+  // precise routed time.
+  const half = Math.round(m / 30) * 30;
+  const hrs = Math.floor(half / 60), rem = half % 60;
+  return `~${rem ? `${hrs}h ${rem}m` : `${hrs}h`}+ by road (est.)`;
 }
 
 // ---- Colour-coded attribute/status chips ------------------------------------
@@ -2310,7 +2317,13 @@ function nearbyScreen() {
         onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); drawList(); },
       }, lbl)));
     const listEl = h('div', {});
-    body.append(h('h3', { style: 'margin:14px 2px 4px' }, 'Closest to you'), catRow, listEl);
+    body.append(
+      h('h3', { style: 'margin:14px 2px 4px' }, 'Closest to you'),
+      catRow,
+      h('p', { class: 'tiny muted', style: 'margin:6px 2px 8px' },
+        'Distances are straight-line and drive times are rough estimates — mountain roads (for example around Pai, Sapa or the Bolaven Plateau) take considerably longer.'),
+      listEl,
+    );
 
     function drawList() {
       listEl.innerHTML = '';
