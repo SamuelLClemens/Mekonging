@@ -26,7 +26,7 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
 - [x] **2.11** Surface `verified` date badge + >6-month staleness nudge on visa + crossings screens (js/main.js:5236). [S] — shipped mk-v0.277.0 (visa already had freshnessNotice; added a screen-level freshnessLine badge to crossingsScreen from the oldest verified date, 183-day nudge; freshnessLine gained optional label arg for "June 2026" display).
 
 ## Priority 3 — Media & Accessibility
-- [ ] **3.1** Multi-speed read-aloud reader: thread `{rate}` through `speak()/say()` (js/tts.js:49); reusable `readAloud(getText)` play/pause + 1.0/1.25/1.5/2.0x, sentence-chunked, cancel on nav; drop on history/guide/province/first-aid; persist rate. [M]
+- [x] **3.1** Multi-speed read-aloud reader: thread `{rate}` through `speak()/say()` (js/tts.js:49); reusable `readAloud(getText)` play/pause + 1.0/1.25/1.5/2.0x, sentence-chunked, cancel on nav; drop on history/guide/province/first-aid; persist rate. [M] — shipped mk-v0.280.0 (readAloudBar sentence-chunked w/ generation-token; stopAllReaders() in render() cancels on nav; prefs.readRate persists; on history/place-history/province/first-aid; tts.js opts{rate,onend,onerror} + lazy voice refresh).
 
 ## Priority 4 — Code Quality & Technical Debt
 - [ ] **4.1** Fix photo object-URL leak: revoke read-only thumbs on `img load` (js/main.js:4647,5784,5854,5865,5871,5952,6334); revoke editor thumbs (6059) via `liveCleanup` (11029). [S]
