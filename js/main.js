@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.267.0';
+const APP_VERSION = 'mk-v0.268.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1527,16 +1527,15 @@ function homeScreen() {
     const companion = journeyCompanionCard(phase, leadCC);
     if (companion) wrap.append(companion);
   }
+  // The full "Coming up" list lives on the YOU hub; Home carries only a one-line pointer to
+  // the next reminder so the two tabs do not duplicate the same block.
   const up = reminders.upcoming(7);
   if (up.length) {
-    const rc = h('div', { class: 'card', style: 'margin-top:8px' }, [h('h3', { style: 'margin-top:0' }, '🔔 Coming up')]);
-    up.slice(0, 5).forEach((u) => {
-      const it = u.item;
-      const when = u.eventAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
-      rc.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:6px', onclick: () => go('#calendar') },
-        `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when} · ⏰ ${reminders.leadLabel(it.remind)}`));
-    });
-    wrap.append(rc);
+    const u0 = up[0];
+    const when0 = u0.eventAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (u0.item.time ? ` ${u0.item.time}` : '');
+    const more = up.length > 1 ? ` · +${up.length - 1} more` : '';
+    wrap.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:8px', onclick: () => go('#calendar') },
+      `🔔 Next: ${CAL_ICON[u0.item.type] || '🗓'} ${u0.item.title} · ${when0}${more} →`));
   }
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
     wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--orange); margin-top:8px' }, [
@@ -1650,12 +1649,8 @@ function meHubScreen() {
     wrap.append(rc);
   }
 
-  // Then, below the deck, always-relevant suggestions — the same place-and-moment engine
-  // Home leads with. It renders its own gentle empty state when there is no location fix.
-  wrap.append(h('h2', { class: 'home-section' }, 'For you right now'));
-  const now = rightNowSection();
-  if (now) wrap.append(now);
-
+  // "For you right now" lives on Home (the place-and-moment engine leads there); the YOU
+  // hub stays focused on the traveller's own things, so it is not duplicated here.
   wrap.append(h('p', { class: 'disclaimer' },
     'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));
   mount(wrap, '#me');
@@ -2009,17 +2004,29 @@ function countryHubScreen(id) {
     cityPlaces.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
     const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
     const explore = h('div', { class: 'card' }, [h('h2', {}, `🗺 Explore ${c.name}`)]);
-    if (withCoords.length) {
-      const mini = h('div', { class: 'mini-map', style: 'height:220px;border-radius:14px;overflow:hidden;position:relative;margin-bottom:8px' });
-      explore.append(mini);
-      import('./map.js').then((m) => m.initPlacesMap(mini, withCoords, {
-        onOpen: (pid) => go(`#place-${pid}`),
-        onLocate: (f) => setLastFix(f),
-      })).then((ctrl) => { liveCleanup = () => { try { ctrl.dispose(); } catch { /* noop */ } }; }).catch(() => mini.remove());
-    }
+    // City picker leads (compact, high-value). The photo sights already lead the hub above,
+    // so the heavy full-country map no longer double-leads: it is folded and only built when
+    // opened (avoids a 0-height render and the wasted MapLibre load when it stays closed).
     if (cities.length) {
       explore.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
       explore.append(cityPickGrid(id, cities.slice(0, 12), counts));
+    }
+    if (withCoords.length) {
+      const mapDetails = h('details', { class: 'filters-collapse', style: 'margin-top:8px' }, [
+        h('summary', {}, `Show all ${withCoords.length} places on the map`),
+      ]);
+      const mini = h('div', { class: 'mini-map', style: 'height:220px;border-radius:14px;overflow:hidden;position:relative;margin-top:8px' });
+      mapDetails.append(mini);
+      let mapInit = false;
+      mapDetails.addEventListener('toggle', () => {
+        if (!mapDetails.open || mapInit) return;
+        mapInit = true;
+        import('./map.js').then((m) => m.initPlacesMap(mini, withCoords, {
+          onOpen: (pid) => go(`#place-${pid}`),
+          onLocate: (f) => setLastFix(f),
+        })).then((ctrl) => { liveCleanup = () => { try { ctrl.dispose(); } catch { /* noop */ } }; }).catch(() => mini.remove());
+      });
+      explore.append(mapDetails);
     }
     wrap.append(explore);
   }
