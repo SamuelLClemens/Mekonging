@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.281.0';
+const APP_VERSION = 'mk-v0.282.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -449,6 +449,21 @@ function readAloudBar(getText, locale = 'en-US') {
   };
   readerStops.push(reset);
   return h('div', { class: 'read-aloud' }, [playBtn, rateBtn]);
+}
+
+// Point a read-only <img> at an on-device blob, then revoke the object URL as soon as the
+// browser has decoded it (or failed): the decoded bitmap is retained independently, so the
+// blob URL is no longer needed and would otherwise leak for the lifetime of the page. For
+// EDITABLE thumbnails that must survive re-renders, keep the URL and revoke it via liveCleanup.
+function setBlobThumb(img, key) {
+  getBlob(key).then((b) => {
+    if (!b) return;
+    const u = URL.createObjectURL(b);
+    const done = () => URL.revokeObjectURL(u);
+    img.addEventListener('load', done, { once: true });
+    img.addEventListener('error', done, { once: true });
+    img.src = u;
+  }).catch(() => {});
 }
 
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
@@ -4908,7 +4923,7 @@ function placePhotoThumbs(id) {
     if (!keys.length) { thumbs.append(h('p', { class: 'muted', style: 'margin:0' }, 'No photos yet — add your own.')); return; }
     keys.forEach((k) => {
       const img = h('img', { alt: 'Your photo of this place', loading: 'lazy' });
-      getBlob(k).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+      setBlobThumb(img, k);
       thumbs.append(h('div', { class: 'photo-thumb' }, [
         img,
         h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { removePlacePhoto(id, k); renderThumbs(); } }, '✕'),
@@ -6058,7 +6073,7 @@ function journalEntryScreen(id) {
   entryPhotoKeys(e).forEach((k, i) => {
     const img = h('img', { class: 'entry-photo', alt: 'Journal photo' });
     page.insertBefore(img, page.children[1 + i]);
-    getBlob(k).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    setBlobThumb(img, k);
   });
   wrap.append(page);
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
@@ -6128,7 +6143,7 @@ function scrapAlbumSection() {
   // Album photos first (most recent first), each editable.
   album.slice().reverse().forEach((ph) => {
     const img = h('img', { alt: ph.caption || '', loading: 'lazy' });
-    getBlob(ph.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    setBlobThumb(img, ph.key);
     grid.append(h('button', { class: 'gallery-cell', onclick: () => {
       const cap = prompt('Caption for this photo (leave blank to keep). Type DELETE to remove it.', ph.caption || '');
       if (cap === null) return;
@@ -6139,13 +6154,13 @@ function scrapAlbumSection() {
   // Journal photos (most recent first) — tap opens the entry.
   journalPhotos.slice().reverse().forEach((jp) => {
     const img = h('img', { alt: '', loading: 'lazy' });
-    getBlob(jp.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    setBlobThumb(img, jp.key);
     grid.append(h('button', { class: 'gallery-cell', onclick: () => go(`#journal-entry-${jp.entry.id}`) }, [img, h('span', { class: 'gallery-cap' }, `📔 ${jp.entry.title || 'Journal'}`)]));
   });
   // Place photos (most recent first) — tap opens the place they belong to.
   placePhotos.slice().reverse().forEach((pp) => {
     const img = h('img', { alt: '', loading: 'lazy' });
-    getBlob(pp.key).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+    setBlobThumb(img, pp.key);
     const pl = getPlace(pp.placeId) || getPin(pp.placeId);
     grid.append(h('button', { class: 'gallery-cell', onclick: () => go(`#place-${pp.placeId}`) }, [img, h('span', { class: 'gallery-cap' }, `📍 ${pl ? pl.name : 'Place'}`)]));
   });
@@ -6226,7 +6241,7 @@ function scrapbookScreen() {
       entryPhotoKeys(e).forEach((k, i) => {
         const img = h('img', { class: 'scrap-photo', alt: 'Journal photo', loading: 'lazy' });
         card.insertBefore(img, card.children[1 + i]);
-        getBlob(k).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+        setBlobThumb(img, k);
       });
       wrap.append(card);
     });
@@ -6383,6 +6398,10 @@ function journalFormScreen(editId) {
     if (editing) { updateJournalEntry(editId, fields); go(`#journal-entry-${editId}`); }
     else { addJournalEntry(fields); go('#journal-open'); }
   } }, editing ? 'Save changes' : 'Save to journal'));
+  // Editable thumbnails hold live object URLs (they must survive re-renders while picking), so
+  // revoke them when the editor screen is torn down rather than on img-load. render() runs this
+  // before the next screen builds.
+  liveCleanup = () => { (st.photos || []).forEach((p) => { if (p.url) { try { URL.revokeObjectURL(p.url); } catch { /* noop */ } p.url = null; } }); };
   mount(wrap, '#home');
 }
 
@@ -6608,7 +6627,7 @@ function calendarScreen() {
       if (j.photoKey) {
         const img = h('img', { class: 'cal-thumb', alt: '', loading: 'lazy', onclick: () => go(`#journal-entry-${j.id}`) });
         card.insertBefore(img, card.children[1]);
-        getBlob(j.photoKey).then((b) => { if (b) img.src = URL.createObjectURL(b); }).catch(() => {});
+        setBlobThumb(img, j.photoKey);
       }
       wrap.append(card);
     } else {
