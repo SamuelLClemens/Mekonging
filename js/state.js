@@ -54,6 +54,7 @@ function defaults() {
         doneSpots: [],        // places the traveller has done — dropped from suggestions
         hiddenSpots: [],      // places dismissed as "not interested" — dropped from suggestions
         recentSearches: [],   // last few committed search terms (most-recent first, capped) — Search launchpad
+        hintsSeen: {},        // { 'home-phase': true, … } — one-time contextual hints the user has dismissed
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
