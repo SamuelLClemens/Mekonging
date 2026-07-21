@@ -460,6 +460,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-3);
 }
 .search:focus { outline: none; border-color: var(--orange); }
+.search-launch { gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-3); }
 
 /* --- phrasebook --- */
 .lang-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }

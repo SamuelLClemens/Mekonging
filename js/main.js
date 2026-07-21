@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.274.0';
+const APP_VERSION = 'mk-v0.275.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -8664,12 +8664,31 @@ function checklistScreen(countryId) {
 
 // ---- GLOBAL SEARCH (find anything offline) ----------------------------------
 let searchQuery = '';
+// A handful of useful example searches for the empty state — each reliably hits a real
+// index (place names/blurbs, phrases and price labels), so a first-time user learns what
+// Search covers by tapping rather than guessing.
+const SEARCH_EXAMPLES = ['Market', 'Temple', 'Waterfall', 'Beach', 'Coffee', 'Massage', 'Hello', 'Thank you'];
+// Remember a committed search term (the user acted on a result). Most-recent first,
+// de-duplicated case-insensitively, capped at five. Self-defaulting pref, no store bump.
+function rememberSearch(q) {
+  q = (q || '').trim();
+  if (q.length < 2) return;
+  const prefs = store.profile.prefs;
+  const list = Array.isArray(prefs.recentSearches) ? prefs.recentSearches : [];
+  const next = [q, ...list.filter((s) => s.toLowerCase() !== q.toLowerCase())].slice(0, 5);
+  prefs.recentSearches = next;
+  save();
+}
+
 function searchScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Search everything', '#home'));
-  wrap.append(h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
+  const input = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
     placeholder: 'Find places, phrases, wildlife, prices…',
-    oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) }));
+    oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) });
+  wrap.append(input);
+  // Set the query from a tapped chip (recent or example) and refresh, keeping the box in sync.
+  const setQuery = (q) => { searchQuery = q; input.value = q; renderResults(); input.focus(); };
 
   // Category filter for places. Picking one also lets you browse the nearest places of
   // that kind with no query typed (a "nearest food / nearest stay" tool when GPS is on).
@@ -8689,7 +8708,7 @@ function searchScreen() {
     nodes.slice(0, 12).forEach((n) => out.append(n));
     if (nodes.length > 12) out.append(h('p', { class: 'muted' }, `…and ${nodes.length - 12} more — refine your search`));
   }
-  const link = (label, hash, extra) => h('button', { class: 'btn ghost block srch', onclick: () => { if (extra) extra(); go(hash); } }, label);
+  const link = (label, hash, extra) => h('button', { class: 'btn ghost block srch', onclick: () => { rememberSearch(searchQuery); if (extra) extra(); go(hash); } }, label);
 
   function renderResults() {
     out.innerHTML = '';
@@ -8707,7 +8726,7 @@ function searchScreen() {
       // so a search reads like a guide, not a text index. Other sections stay as text links.
       const placeRow = (p) => {
         const dist = (fix && p.coords) ? ` · ${fmtDistance(haversineKm(fix, p.coords))}` : '';
-        return h('button', { class: 'btn ghost block srch srch-place', onclick: () => go(`#place-${p.id}`) }, [
+        return h('button', { class: 'btn ghost block srch srch-place', onclick: () => { rememberSearch(searchQuery); go(`#place-${p.id}`); } }, [
           recogThumb(p, (FAMILY_META[placeFamily(p)] || FAMILY_META.other).emoji),
           h('span', { class: 'srch-place-text' }, [
             h('span', { class: 'srch-place-name' }, p.name),
@@ -8734,9 +8753,26 @@ function searchScreen() {
         .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { activeCountry = c.id; })));
     }
     if (!out.children.length) {
-      out.append(h('p', { class: 'muted' }, (q.length < 2 && cat === 'all')
-        ? 'Type at least two letters, or pick a category to see the nearest places to you.'
-        : 'Nothing found. Try another word or category.'));
+      if (q.length < 2 && cat === 'all') {
+        // Zero-state launchpad: recent searches (if any) then example queries, so the
+        // screen teaches what Search covers instead of showing a bare instruction line.
+        const prefs = store.profile.prefs;
+        const recent = (Array.isArray(prefs.recentSearches) ? prefs.recentSearches : []).filter((s) => s && s.trim());
+        if (recent.length) {
+          out.append(h('h2', { class: 'cat-title' }, 'Recent'));
+          out.append(h('div', { class: 'chips search-launch' }, [
+            ...recent.map((s) => h('button', { class: 'chip', onclick: () => setQuery(s) }, `🕘 ${s}`)),
+            h('button', { class: 'chip ghost', 'aria-label': 'Clear recent searches',
+              onclick: () => { prefs.recentSearches = []; save(); renderResults(); } }, 'Clear'),
+          ]));
+        }
+        out.append(h('h2', { class: 'cat-title' }, 'Try searching for'));
+        out.append(h('div', { class: 'chips search-launch' },
+          SEARCH_EXAMPLES.map((s) => h('button', { class: 'chip', onclick: () => setQuery(s) }, s))));
+        out.append(h('p', { class: 'muted tiny', style: 'margin:8px 2px 0' }, 'Or type any word — places, phrases, wildlife and prices are all searchable. Pick a category above to browse the nearest places to you.'));
+      } else {
+        out.append(h('p', { class: 'muted' }, 'Nothing found. Try another word or category.'));
+      }
     }
   }
   renderResults();
