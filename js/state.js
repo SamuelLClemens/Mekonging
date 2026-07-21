@@ -212,19 +212,25 @@ function load() {
 
 export const store = load();
 
-export function save() {
+let _saveTimer = null;
+let _lastWritten = null;   // the last JSON we wrote to KEY — known-good, so backups need no re-parse
+
+function flushSave() {
+  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
   try {
     const next = JSON.stringify(store);
-    // Keep the previous good copy as a one-step rollback backup BEFORE overwriting, so a
-    // failed/partial write or a bad update can never leave the traveller with nothing.
-    // Only mirror a prev that actually parses — never let a corrupt primary clobber a good
-    // backup (that would defeat the whole recovery net).
-    const prev = localStorage.getItem(KEY);
+    // Roll the previous good copy into the backup slot BEFORE overwriting, so a failed/partial
+    // write or a bad update can never leave the traveller with nothing. When the previous copy
+    // came from THIS session it is already valid JSON (we serialised it), so we skip the
+    // defensive parse; only the very first write validates the on-disk value it inherited.
+    const prev = _lastWritten != null ? _lastWritten : localStorage.getItem(KEY);
     if (prev && prev !== next && prev.length > 2) {
-      let ok = false; try { JSON.parse(prev); ok = true; } catch { ok = false; }
+      let ok = true;
+      if (_lastWritten == null) { try { JSON.parse(prev); } catch { ok = false; } }
       if (ok) { try { localStorage.setItem(BAK, prev); } catch { /* backup best-effort */ } }
     }
     localStorage.setItem(KEY, next);
+    _lastWritten = next;
   } catch {
     // storage full or private mode — the session still works, it just will not persist
   }
@@ -233,6 +239,22 @@ export function save() {
   // mirror is what makes "backed up after every addition" true on a server-less app. Async,
   // debounced and best-effort so it never blocks or breaks a save.
   try { mirrorStore(); } catch { /* mirror is best-effort */ }
+}
+
+// Public save: coalesce a burst of mutations into ONE localStorage write on a short timer.
+// A pagehide / tab-hidden flush (installed below) guarantees the latest state is persisted the
+// instant the tab goes away, so the debounce never risks data loss.
+export function save() {
+  if (typeof setTimeout !== 'function') { flushSave(); return; }
+  if (_saveTimer) return;                 // a flush is already scheduled — it will read the latest store
+  _saveTimer = setTimeout(flushSave, 200);
+}
+// Force any pending write out immediately (used on pagehide and by callers that must persist now).
+export function flushSaveNow() { flushSave(); }
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('pagehide', flushSave);
+  window.addEventListener('beforeunload', flushSave);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 }
 
 let _mirrorTimer = null;
@@ -503,10 +525,23 @@ export function addJellyReport(id, report) {
   return d.jellyReports;
 }
 
-// --- unique-id helper (no Math.random/Date.now reliance for determinism in tests) -
+// --- unique-id helper --------------------------------------------------------
+// Prefers crypto.randomUUID() for a collision-proof id; always keeps a monotonically
+// increasing `-<seq>` suffix so ids stay unique even if the random source is unavailable or a
+// test pins it. Tests can inject a deterministic source via setIdSource(fn); fn receives the
+// running sequence number. Ids are opaque lookup keys, never parsed, so the format is free to
+// change and existing stored ids are unaffected.
 let _seq = 0;
+let _idSource = null;
+export function setIdSource(fn) { _idSource = (typeof fn === 'function') ? fn : null; }
 function uid(prefix) {
   _seq += 1;
+  if (_idSource) return `${prefix}-${_idSource(_seq)}`;
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return `${prefix}-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}-${_seq}`;
+    }
+  } catch { /* fall through to the deterministic path */ }
   const t = (typeof performance !== 'undefined' && performance.now) ? Math.floor(performance.now()) : _seq;
   return `${prefix}-${t}-${_seq}`;
 }
