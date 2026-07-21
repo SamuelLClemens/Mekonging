@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.265.0';
+const APP_VERSION = 'mk-v0.266.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -8749,6 +8749,17 @@ const FIRST_AID = [
       'Do not apply a tight tourniquet, ice, alcohol or an electric shock.',
       'Do not chase or try to kill the snake, and do not wait to “see if it was venomous”.',
     ] },
+  { t: '🐕 Animal bite or scratch (rabies risk)', do: [
+      'Wash the wound at once with soap and running water for at least 15 minutes — thorough washing alone removes much of the virus and is the single most important step. If there is no soap, flush with plenty of water.',
+      'After washing, apply an antiseptic such as povidone-iodine or 70% alcohol if you have it, and cover the wound loosely.',
+      'Get to a clinic or hospital the same day for rabies post-exposure vaccination — do not wait for symptoms. Dog, cat, monkey and bat bites or scratches across this region can carry rabies, which is almost always fatal once symptoms begin but is nearly always preventable when treatment starts promptly.',
+      'Tell the clinic if the skin was broken, if a bat was involved, or if saliva reached your eyes, mouth or an open cut — these also need rabies immunoglobulin, not the vaccine alone.',
+      'If you were vaccinated against rabies before the trip, you still need booster doses after a bite — say so at the clinic.',
+    ], dont: [
+      'Do not scrub hard enough to bruise the tissue, and do not have the wound stitched closed straight away unless a doctor decides it is necessary — leave it open after washing.',
+      'Do not wait to “see if the animal was sick”, and do not assume a calm or healthy-looking animal is safe.',
+      'Do not dismiss a minor scratch or a lick on broken skin — these can pass on rabies too.',
+    ] },
   { t: '🪼 Jellyfish & marine stings', do: [
       'Get out of the water. Douse the sting with vinegar for at least 30 seconds — many beaches keep a bottle for this.',
       'Lift off any tentacles with the edge of a card or a gloved hand.',
@@ -8789,6 +8800,7 @@ const LIFESAVING = [
 // the shared sourcesNote() renderer so a traveller can check the primary source.
 const FIRSTAID_SOURCES = [
   { org: 'World Health Organization — snakebite envenoming', url: 'https://www.who.int/news-room/fact-sheets/detail/snakebite-envenoming' },
+  { org: 'World Health Organization — rabies', url: 'https://www.who.int/news-room/fact-sheets/detail/rabies' },
   { org: 'IFRC / Red Cross first aid', url: 'https://www.ifrc.org/our-work/health-and-care/first-aid' },
 ];
 const HOSP_SOURCES = [
