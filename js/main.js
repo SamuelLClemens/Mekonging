@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.279.0';
+const APP_VERSION = 'mk-v0.280.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -396,6 +396,59 @@ function oneTimeHint(key, text) {
     } }, '✕'),
   ]);
   return el;
+}
+
+// ---- Read-aloud reader ------------------------------------------------------
+// Play/pause long-form text (history, guides, first aid) at a chosen speed. Speech is
+// sentence-chunked and chained via the utterance onend, because the native pause/resume is
+// unreliable across browsers; chunking gives dependable stop + speed changes. Device voice
+// only — rate applies there — so the bar returns null when no device voice exists for the
+// locale (never a control that cannot obey the chosen speed). Reads are cancelled on
+// navigation via stopAllReaders() in render(). The chosen speed persists in prefs.readRate.
+const READ_RATES = [1, 1.25, 1.5, 2];
+let readerStops = [];
+function stopAllReaders() { const s = readerStops; readerStops = []; s.forEach((fn) => { try { fn(); } catch { /* noop */ } }); }
+function splitSentences(text) {
+  return String(text || '').replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]*(?:\s|$)/g) || [];
+}
+function readAloudBar(getText, locale = 'en-US') {
+  // Gate on the API existing, NOT on voices being loaded: Chromium returns an empty voice
+  // list until 'voiceschanged' fires (often after this first render), so a hasVoiceFor()
+  // gate here would wrongly hide the control on a fresh load. Voices are reliably present by
+  // the time the user taps play; if a device genuinely lacks the voice, speak() returns false
+  // and the reader simply resets (graceful no-op).
+  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+  let rate = READ_RATES.includes(store.profile.prefs.readRate) ? store.profile.prefs.readRate : 1;
+  let chunks = [], idx = 0, playing = false, gen = 0;
+  const playBtn = h('button', { class: 'btn ghost read-play', 'aria-label': 'Read this aloud' }, '🔊 Read aloud');
+  const rateBtn = h('button', { class: 'btn ghost read-rate', 'aria-label': 'Reading speed' }, `${rate}×`);
+  const reset = () => { gen += 1; playing = false; idx = 0; stopSpeak(); playBtn.textContent = '🔊 Read aloud'; playBtn.classList.remove('playing'); };
+  const next = () => {
+    if (!playing) return;
+    if (idx >= chunks.length) { reset(); return; }
+    const myGen = gen;
+    const ok = speak((chunks[idx] || '').trim(), locale, {
+      rate,
+      onend: () => { if (myGen === gen && playing) { idx += 1; next(); } },
+      onerror: () => { if (myGen === gen) reset(); },
+    });
+    if (!ok) reset();
+  };
+  playBtn.onclick = () => {
+    if (playing) { reset(); return; }
+    chunks = splitSentences(getText());
+    if (!chunks.length) return;
+    idx = 0; playing = true; playBtn.textContent = '⏸ Stop'; playBtn.classList.add('playing');
+    next();
+  };
+  rateBtn.onclick = () => {
+    rate = READ_RATES[(READ_RATES.indexOf(rate) + 1) % READ_RATES.length];
+    store.profile.prefs.readRate = rate; save();
+    rateBtn.textContent = `${rate}×`;
+    if (playing) { gen += 1; stopSpeak(); next(); } // re-speak the current sentence at the new speed
+  };
+  readerStops.push(reset);
+  return h('div', { class: 'read-aloud' }, [playBtn, rateBtn]);
 }
 
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
@@ -982,7 +1035,9 @@ function historyScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(c ? `${c.name} — history` : 'History & culture', c ? `#country-${cc}` : '#home'));
   if (!hi) { wrap.append(h('p', { class: 'empty' }, 'History for this country is on the way.')); mount(wrap, 'home'); return; }
-  wrap.append(h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, 'The short history'), h('p', {}, hi.blurb)]));
+  const histCard = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, 'The short history'), h('p', {}, hi.blurb)]);
+  { const rd = readAloudBar(() => hi.blurb); if (rd) histCard.append(rd); }
+  wrap.append(histCard);
   const kf = knownForRow(hi.knownFor); if (kf) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Known for'), kf]));
   if (hi.cultureTip) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🙏 Cultural respect'), h('p', {}, hi.cultureTip)]));
   const cityKeys = Object.keys(HISTORY.cities || {}).filter((k) => k.startsWith(cc + '-'));
@@ -1987,6 +2042,7 @@ function regionScreen(arg) {
     ]);
     const kf = knownForRow(pinfo.knownFor); if (kf) ic.append(kf);
     if (pinfo.cultureTip) ic.append(h('p', { class: 'culture-tip' }, `🙏 ${pinfo.cultureTip}`));
+    { const rd = readAloudBar(() => [pinfo.blurb, pinfo.cultureTip].filter(Boolean).join('. ')); if (rd) ic.append(rd); }
     const srcBits = [];
     if (pinfo.sources && pinfo.sources.length) srcBits.push(`Sources: ${pinfo.sources.join(', ')}`);
     if (pinfo.verified) srcBits.push(`Verified ${pinfo.verified}`);
@@ -4751,7 +4807,7 @@ function placeScreen(id) {
   // externalRatings exists it is the single source of truth (rendered lower down), so the two
   // can no longer sit side by side showing slightly different numbers.
   if (p.rating && !(Array.isArray(p.externalRatings) && p.externalRatings.length)) card.append(ratingBlock(p));
-  if (p.history) { card.append(h('h3', {}, 'A little history'), h('p', {}, p.history)); }
+  if (p.history) { card.append(h('h3', {}, 'A little history'), h('p', {}, p.history)); { const rd = readAloudBar(() => [p.blurb, p.history].filter(Boolean).join('. ')); if (rd) card.append(rd); } }
   if (p.whyItFits) { card.append(h('h3', {}, 'Why it fits you'), h('p', {}, p.whyItFits)); }
   if (hasPrice) {
     card.append(h('h3', {}, 'Price'));
@@ -9247,6 +9303,8 @@ function sosScreen(cc) {
       inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do not')]));
       inner.append(h('ul', { class: 'sos-aid dont' }, fa.dont.map((li) => h('li', {}, li))));
     }
+    // Read the steps aloud — hands are often busy in a bite/sting emergency.
+    { const rd = readAloudBar(() => [`${fa.t}.`, 'Do:', fa.do.join('. ') + '.', (fa.dont && fa.dont.length) ? 'Do not: ' + fa.dont.join('. ') + '.' : ''].filter(Boolean).join(' ')); if (rd) inner.append(rd); }
     dd.append(inner);
     danger.append(dd);
   });
@@ -11335,6 +11393,7 @@ function render() {
   // and stops the GPS watcher — prevents the map dying after repeated visits).
   if (liveMapCtrl) { try { liveMapCtrl.dispose(); } catch { /* noop */ } liveMapCtrl = null; }
   if (liveCleanup) { try { liveCleanup(); } catch { /* noop */ } liveCleanup = null; }
+  stopAllReaders();   // cancel any in-progress read-aloud before the screen changes
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
