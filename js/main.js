@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.275.0';
+const APP_VERSION = 'mk-v0.276.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -8390,6 +8390,7 @@ function bargainScreen() {
     ess.items.forEach((it) => card.append(h('div', { class: 'list-note' }, [
       h('strong', {}, `${it.icon || ''} ${it.item}: `), it.cheapest,
       it.price && it.price !== '—' ? h('span', { class: 'muted' }, ` (${it.price})`) : null,
+      it.esim ? h('div', { class: 'tiny muted', style: 'margin-top:3px' }, it.esim) : null,
     ])));
     const slug = citySlug(focusSpot().spot.city || '');
     if (getBoard(fc, slug)) card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#board-${fc}-${slug}`) }, '📍 Local finds & markets near you'));
