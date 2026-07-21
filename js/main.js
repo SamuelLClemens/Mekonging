@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.283.0';
+const APP_VERSION = 'mk-v0.284.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -464,6 +464,19 @@ function setBlobThumb(img, key) {
     img.addEventListener('error', done, { once: true });
     img.src = u;
   }).catch(() => {});
+}
+
+// Reusable collapsible: a <details>/<summary> pair with the body appended as direct children
+// (no wrapper div, so existing CSS that targets the details keeps working). `body` may be a
+// node, an array of nodes, or a function returning either (evaluated eagerly here). opts:
+// { open } start expanded, { cls } override the default 'filters-collapse' class.
+function foldable(summary, body, opts = {}) {
+  const det = h('details', { class: opts.cls || 'filters-collapse' });
+  if (opts.open) det.setAttribute('open', '');
+  det.append(h('summary', {}, summary));
+  const content = typeof body === 'function' ? body() : body;
+  (Array.isArray(content) ? content : [content]).forEach((n) => { if (n) det.append(n); });
+  return det;
 }
 
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
@@ -1060,10 +1073,8 @@ function historyScreen(cc) {
     wrap.append(h('h2', { class: 'home-section' }, 'City by city'));
     cityKeys.forEach((k) => {
       const ci = HISTORY.cities[k]; if (!ci || !ci.blurb) return;
-      wrap.append(h('details', { class: 'filters-collapse' }, [
-        h('summary', {}, ci.name || k),
-        h('div', {}, [h('p', {}, ci.blurb), knownForRow(ci.knownFor), ci.bestTime ? h('p', { class: 'culture-tip' }, `🗓 Best time: ${ci.bestTime}`) : null]),
-      ]));
+      wrap.append(foldable(ci.name || k,
+        h('div', {}, [h('p', {}, ci.blurb), knownForRow(ci.knownFor), ci.bestTime ? h('p', { class: 'culture-tip' }, `🗓 Best time: ${ci.bestTime}`) : null])));
     });
   }
   if (hi.sources && hi.sources.length) wrap.append(h('p', { class: 'disclaimer' }, `Sources: ${hi.sources.join(', ')}`));
@@ -2215,15 +2226,12 @@ function countryHubScreen(id) {
   // it is not something a traveller reads every day, so it should not be the first thing.
   const hi = countryHistory(id);
   if (hi && hi.blurb) {
-    wrap.append(h('details', { class: 'filters-collapse' }, [
-      h('summary', {}, 'History & culture'),
-      h('div', {}, [
-        h('p', {}, hi.blurb),
-        knownForRow(hi.knownFor),
-        hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
-        h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${id}`) }, '📖 In-depth history & culture'),
-      ]),
-    ]));
+    wrap.append(foldable('History & culture', h('div', {}, [
+      h('p', {}, hi.blurb),
+      knownForRow(hi.knownFor),
+      hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
+      h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${id}`) }, '📖 In-depth history & culture'),
+    ])));
   }
   const acc = accessCard(id); if (acc) wrap.append(acc);
   const vc = visaCard(id); if (vc) wrap.append(vc);
@@ -2320,10 +2328,7 @@ function countryHubScreen(id) {
   // primary needs; the full toolkit is four tappable intents, not a wall of tiles.
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
   tileGroups.forEach((g) => {
-    wrap.append(h('details', { class: 'filters-collapse' }, [
-      h('summary', {}, g.label),
-      h('div', { class: 'grid' }, g.tiles.map(sectionTile)),
-    ]));
+    wrap.append(foldable(g.label, h('div', { class: 'grid' }, g.tiles.map(sectionTile))));
   });
   mount(wrap, '#home');
 }
