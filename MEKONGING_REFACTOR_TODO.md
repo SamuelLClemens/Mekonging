@@ -7,13 +7,13 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
 ---
 
 ## Priority 1 — Information Architecture & Layout
-- [ ] **1.1** Regroup country-hub "More for &lt;country&gt;" 26 tiles into 4 labelled sub-clusters (Get oriented / Getting around / Eat & drink / On the ground) — `js/main.js` ~2027-2060 (also groups the identify tools). [M]
-- [ ] **1.3** De-duplicate: keep `rightNowSection` on Home only (drop from meHub 1656); keep "Coming up" on YOU only, replace Home copy (1530-1540) with a one-line "next reminder →". [S]
-- [ ] **1.2** Resolve Signature-Sights vs Explore-mini-map redundancy on the country hub (js/main.js:1998-2024): compact photo teaser high, demote/fold full mini-map below History/guide. [S]
+- [x] **1.1** (shipped mk-v0.267.0) Regroup country-hub "More for &lt;country&gt;" 26 tiles into 4 labelled sub-clusters (Get oriented / Getting around / Eat & drink / On the ground) — `js/main.js` ~2027-2060 (also groups the identify tools). [M]
+- [x] **1.3** (shipped mk-v0.268.0) De-duplicate: keep `rightNowSection` on Home only (drop from meHub 1656); keep "Coming up" on YOU only, replace Home copy (1530-1540) with a one-line "next reminder →". [S]
+- [x] **1.2** (shipped mk-v0.268.0) Resolve Signature-Sights vs Explore-mini-map redundancy on the country hub (js/main.js:1998-2024): compact photo teaser high, demote/fold full mini-map below History/guide. [S]
 
 ## Priority 2 — Feature Discovery & Guidance
 - [x] **2.6** (shipped mk-v0.266.0) Add WHO-sourced rabies / animal-bite first-aid entry to `FIRST_AID` + SOS (js/main.js:8740-8770, sources 8790) — SAFETY-CRITICAL, web-verify + cite. [S]
-- [ ] **2.5** Near-Me: set `NEAR_MAX_MIN=90` (js/main.js:648), add data-driven `roadFactor` corridor override, soften `driveLabel` to disclose straight-line estimate + "mountain road, allow longer". [M]
+- [~] **2.5** (partial mk-v0.269.0: label honesty + caveat done; 90-min cap deferred pending verified corridor drive times) Near-Me: set `NEAR_MAX_MIN=90` (js/main.js:648), add data-driven `roadFactor` corridor override, soften `driveLabel` to disclose straight-line estimate + "mountain road, allow longer". [M]
 - [ ] **2.1** Seed a default focus city for no-fix/no-focusSpotKey fresh profiles so `rightNowSection` shows real picks with honest "showing &lt;city&gt;" label (js/main.js:773, 778-790). [M]
 - [ ] **2.2** Collapse both Home tool decks by default for fresh profiles (`profileIsSet()` js/main.js:3578); promote one phase-aware next-best-action via `phaseLead()` (1332). [S]
 - [ ] **2.3** Auto-infer + pre-select journey phase from GPS fix + `tripStartISO()` (js/main.js:1370); reframe heading as correctable statement. [M]
