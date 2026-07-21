@@ -2,13 +2,24 @@
 const DB = 'mk-media';
 const STORE = 'blobs';
 
+// One cached connection shared by every operation — opening a fresh IndexedDB connection per
+// call is wasteful and can serialise behind version transactions. The promise is cleared on
+// error (so a later call can retry) and when the connection closes or is version-changed out.
+let _dbPromise = null;
 function open() {
-  return new Promise((res, rej) => {
+  if (_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((res, rej) => {
     const r = indexedDB.open(DB, 1);
     r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE); };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const db = r.result;
+      db.onclose = () => { _dbPromise = null; };
+      db.onversionchange = () => { try { db.close(); } catch { /* noop */ } _dbPromise = null; };
+      res(db);
+    };
+    r.onerror = () => { _dbPromise = null; rej(r.error); };
   });
+  return _dbPromise;
 }
 
 export async function putBlob(key, blob) {
