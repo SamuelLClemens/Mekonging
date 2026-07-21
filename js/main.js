@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.270.0';
+const APP_VERSION = 'mk-v0.271.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1390,6 +1390,21 @@ function phaseLead(phase, cc) {
     }, `${x.e} ${x.t}`)));
 }
 
+// One prominent, phase-aware "next best action" for the top of Home. Mirrors the primary
+// action of each phase in phaseLead, so a traveller (especially a fresh one) has a single
+// obvious next step above the collapsed tool decks instead of a wall of equal-weight tiles.
+function phaseNextBest(phase, cc) {
+  const primary = {
+    planning: { e: '🧭', t: 'Plan your trip', h: '#plans' },
+    arrived: { e: '📍', t: 'See what’s near me', h: '#nearby' },
+    traveling: { e: '🧭', t: 'Things to do right now', h: `#today-${cc}` },
+    post: { e: '📖', t: 'Build your scrapbook', h: '#scrapbook' },
+  }[phase];
+  if (!primary) return null;
+  return h('button', { class: 'btn block home-next-best', style: 'margin:8px 0 2px', onclick: () => go(primary.h) },
+    `${primary.e} ${primary.t} →`);
+}
+
 // ---- Journey companion: countdown (before you leave) + recap (after return) ----
 // Trip start = the earliest dated stop the traveller has planned (no separate date field).
 function tripStartISO() {
@@ -1535,6 +1550,9 @@ function homeScreen() {
   const leadCC = focusSpot().spot.country;
   wrap.append(h('h2', { class: 'home-section' }, 'Where are you in your journey?'));
   wrap.append(phaseSelector());
+  // One prominent phase-aware next step, so a fresh traveller has a clear first action
+  // above the (now-collapsed) tool decks rather than a wall of tiles.
+  if (phase) { const nb = phaseNextBest(phase, leadCC); if (nb) wrap.append(nb); }
 
   // Search everything.
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
@@ -1604,10 +1622,12 @@ function homeScreen() {
     ] },
   ];
   const tileBtn = sectionTile;
-  // Both clusters render as minimise/maximise disclosures; both open by default since
-  // there are only two short groups now.
+  // Both clusters render as minimise/maximise disclosures. They open by default for a
+  // returning/engaged traveller (profile set), but stay COLLAPSED for a fresh profile so the
+  // first impression is the hero + one next-best-action, not a wall of ~16 equal tiles.
+  const decksOpen = profileIsSet();
   groups.forEach((g) => {
-    wrap.append(h('details', { class: 'home-group-d', open: '' }, [
+    wrap.append(h('details', { class: 'home-group-d', open: decksOpen ? '' : null }, [
       h('summary', { class: 'home-group' }, g.label),
       h('div', { class: 'grid' }, g.items.map(tileBtn)),
     ]));
