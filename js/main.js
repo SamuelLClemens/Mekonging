@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.269.0';
+const APP_VERSION = 'mk-v0.270.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -476,12 +476,19 @@ function isOpenNow(hours, hour) {
 function contextNow() {
   const gps = getLastFix();
   let near = gps ? nearestSpotGlobal(gps) : null;
-  let fix = gps, approx = false;
+  let fix = gps, approx = false, seeded = false;
   if (!near) {
     // No GPS: fall back to the city the traveller is focused on (last scoped or planned),
     // so "right now" reflects where they are actually looking — never a blank capital default.
     const fs = focusCitySpot();
     if (fs) { near = { spot: fs, km: 0 }; fix = { lat: fs.lat, lng: fs.lng }; approx = true; }
+  }
+  if (!near) {
+    // Fresh profile — no GPS and nothing focused yet: seed the country's default city so the
+    // home "right now" strip shows real picks immediately (honestly labelled "showing <city>")
+    // instead of only a permission prompt. Turning on location upgrades it to where they are.
+    const ds = defaultSpot(activeCountry || 'th');
+    if (ds) { near = { spot: ds, km: 0 }; fix = { lat: ds.lat, lng: ds.lng }; approx = true; seeded = true; }
   }
   const now = new Date();
   const hour = now.getHours();
@@ -492,7 +499,7 @@ function contextNow() {
   if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
   const wet = (WET_MONTHS[country] || []).includes(now.getMonth());
   const dayName = now.toLocaleDateString(undefined, { weekday: 'long' });
-  return { fix, near, approx, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
+  return { fix, near, approx, seeded, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
 }
 
 // ---- "WHERE AM I NOW" RESOLVER ---------------------------------------------
@@ -771,13 +778,13 @@ function rightNowSection() {
   card.append(h('div', { class: 'rn-head' }, [
     h('span', { class: 'rn-emoji' }, meta.emoji),
     h('div', {}, [
-      h('div', { class: 'rn-title' }, ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`),
+      h('div', { class: 'rn-title' }, ctx.seeded ? `${meta.label} in ${cityName}` : (ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`)),
       h('div', { class: 'rn-sub muted' }, [
         ctx.dayName,
         ctx.wx ? h('button', { class: 'rn-wx-link', onclick: () => go('#weather'), 'aria-label': `Weather forecast for ${cityName}` },
           ` · ${fmtTemp(ctx.wx.temp)}${ctx.raining ? ', rain' : ''} →`) : null,
         ctx.wet ? ' · wet season' : '',
-        ctx.approx ? ' · where you’re looking' : '',
+        ctx.seeded ? ` · showing ${cityName}` : (ctx.approx ? ' · where you’re looking' : ''),
       ]),
     ]),
   ]));
@@ -806,6 +813,17 @@ function rightNowSection() {
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
   card.append(tipEl, listWrap, footEl);
+
+  // When the picks are seeded from the country default (no GPS, nothing focused yet), keep a
+  // gentle one-tap upgrade to real local picks — the invite is not lost just because we seeded.
+  if (ctx.seeded && typeof navigator !== 'undefined' && navigator.geolocation) {
+    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
+      store.profile.prefs.geoAsked = true; save();
+      e.currentTarget.textContent = 'Locating…';
+      try { setLastFix(await geolocate()); } catch { /* denied/unavailable */ }
+      render();
+    } }, '📍 Use my location for picks where you are'));
+  }
 
   function drawPicks() {
     const ex = suggestExcluded();
