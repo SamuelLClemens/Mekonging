@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.282.0';
+const APP_VERSION = 'mk-v0.283.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3251,7 +3251,7 @@ function dictionaryScreen() {
       const pinBtn = ctrls && ctrls.querySelector('.pin');
       if (pinBtn) pinBtn.remove();
       const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${p.en}`, title: 'Add or edit a note' }, '📝');
-      const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { if (confirm(`Remove “${p.en}” from your saved phrases?`)) { togglePhrasePin(code, k); repaint(); } } }, '🗑');
+      const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { confirmAction({ title: 'Remove phrase?', body: `Remove “${p.en}” from your saved phrases?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { togglePhrasePin(code, k); repaint(); } }); } }, '🗑');
       if (ctrls) ctrls.append(noteBtn, rm);
       card.append(row);
 
@@ -3348,6 +3348,29 @@ function openModal(rootEl, onClose) {
   document.body.append(rootEl);
   setTimeout(() => { const f = focusables(); (f[0] || dialog).focus(); }, 0);
   return close;
+}
+
+// Promise-based confirmation built on openModal — the styled, focus-trapped, in-app
+// replacement for the native blocking window.confirm. Resolves true on confirm and false on
+// cancel / Escape / backdrop tap. opts: { title, body, confirmLabel, cancelLabel, danger }.
+function confirmAction(opts = {}) {
+  const { title = 'Are you sure?', body = '', confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false } = opts;
+  return new Promise((resolve) => {
+    let close = null, settled = false;
+    const done = (val) => { if (settled) return; settled = true; resolve(val); if (close) close(); };
+    const backdrop = h('div', { class: 'sheet-backdrop center' });
+    const dialog = h('div', { class: 'sheet confirm-card', role: 'dialog', 'aria-label': title }, [
+      h('h3', {}, title),
+      body ? h('p', { style: 'margin:0 0 14px' }, body) : null,
+      h('div', { class: 'confirm-actions' }, [
+        h('button', { class: 'btn ghost', onclick: () => done(false) }, cancelLabel),
+        h('button', { class: 'btn' + (danger ? ' danger' : ''), onclick: () => done(true) }, confirmLabel),
+      ]),
+    ]);
+    backdrop.append(dialog);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) done(false); });
+    close = openModal(backdrop, () => done(false));
+  });
 }
 
 // Full-screen, very large native script to point at a taxi driver / pharmacist / local.
@@ -4848,7 +4871,7 @@ function placeScreen(id) {
     p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#addpin-${p.id}`) }, '✎ Edit this place') : null,
     p.isPin ? h('button', {
       class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
-      onclick: () => { if (confirm('Delete this pin?')) { deletePin(p.id); go('#saved'); } },
+      onclick: () => { confirmAction({ title: 'Delete this pin?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deletePin(p.id); go('#saved'); } }); },
     }, 'Delete pin') : null,
   ]);
 
@@ -5432,7 +5455,7 @@ function collectionScreen(id) {
   if (coll) {
     wrap.append(h('div', { class: 'card' }, [
       h('button', { class: 'btn ghost block', style: 'color:var(--warn); border-color:var(--warn)',
-        onclick: () => { if (confirm(`Delete the “${coll.name}” collection? Your places stay; only the grouping is removed.`)) { deleteCollection(coll.id); go('#saved'); } } }, 'Delete collection'),
+        onclick: () => { confirmAction({ title: 'Delete collection?', body: `Delete the “${coll.name}” collection? Your places stay; only the grouping is removed.`, confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteCollection(coll.id); go('#saved'); } }); } }, 'Delete collection'),
     ]));
   }
   mount(wrap, '#saved');
@@ -6079,7 +6102,7 @@ function journalEntryScreen(id) {
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
   wrap.append(h('div', { class: 'row-between', style: 'margin-top:10px' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
-    h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { entryPhotoKeys(e).forEach((k) => delBlob(k)); deleteJournalEntry(e.id); go('#journal-open'); } } }, 'Delete'),
+    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', body: 'This removes the journal entry and its photos from this device.', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { entryPhotoKeys(e).forEach((k) => delBlob(k)); deleteJournalEntry(e.id); go('#journal-open'); } }); } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
   ]));
   mount(wrap, '#home');
@@ -6642,7 +6665,7 @@ function calendarScreen() {
         it.note ? h('p', {}, it.note) : null,
         h('div', { class: 'row-between', style: 'margin-top:8px' }, [
           h('button', { class: 'btn ghost', onclick: () => go(`#calendar-edit-${it.id}`) }, '✎ Edit'),
-          h('button', { class: 'btn ghost', onclick: () => { if (confirm('Delete this entry?')) { deleteCalendarItem(it.id); render(); } } }, 'Delete'),
+          h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteCalendarItem(it.id); render(); } }); } }, 'Delete'),
         ]),
       ]));
     }
@@ -6769,8 +6792,8 @@ function personalControlCard() {
     const ps = personal.pregnancyStatus();
     card.append(h('p', { class: 'muted' }, `🤰 Pregnancy on: week ${ps ? ps.weeks : '–'} · due ${preg.edd}.`));
     card.append(h('div', { class: 'row-between' }, [
-      h('button', { class: 'btn ghost', onclick: () => { if (confirm('Turn off the pregnancy tracker? Your dates are kept.')) { personal.endPregnancy(); render(); } } }, 'Turn off'),
-      h('button', { class: 'btn ghost', onclick: () => { if (confirm('Clear the pregnancy dates?')) { personal.clearPregnancy(); render(); } } }, 'Clear dates'),
+      h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Turn off the pregnancy tracker?', body: 'Your dates are kept.', confirmLabel: 'Turn off' }).then((ok) => { if (ok) { personal.endPregnancy(); render(); } }); } }, 'Turn off'),
+      h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear the pregnancy dates?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { personal.clearPregnancy(); render(); } }); } }, 'Clear dates'),
     ]));
   } else {
     const det = h('details', { class: 'filters-collapse' });
@@ -6794,7 +6817,7 @@ function personalControlCard() {
     h('p', { class: 'disclaimer' }, 'A PIN hides this section from a casual glance. It is not encryption — the data is stored on this device like your journal. For documents you need encrypted, use the vault.'),
   ]));
   card.append(pinDet);
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { if (confirm('Turn off the private calendar? Your entries are kept and return when you turn it back on.')) { personal.setEnabled(false); personal.lock(); render(); } } }, 'Turn off private calendar'));
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { confirmAction({ title: 'Turn off the private calendar?', body: 'Your entries are kept and return when you turn it back on.', confirmLabel: 'Turn off' }).then((ok) => { if (ok) { personal.setEnabled(false); personal.lock(); render(); } }); } }, 'Turn off private calendar'));
   card.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'This calendar is descriptive and informational, not medical advice or contraception guidance. In this region, pregnant and trying-to-conceive travellers should note dengue and Zika risk and discuss travel, vaccines and insurance with a health professional. Sources: ACOG, NHS, WHO, US CDC Travelers’ Health.'));
   return card;
 }
@@ -8436,7 +8459,7 @@ function tripScreen() {
         h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editStopId = s.id; render(); } }, '✎'),
         h('button', { class: 'chip', 'aria-label': 'Move up', disabled: i === 0 ? '' : null, onclick: () => { moveStop(s.id, -1); go('#trip'); } }, '↑'),
         h('button', { class: 'chip', 'aria-label': 'Move down', disabled: i === stops.length - 1 ? '' : null, onclick: () => { moveStop(s.id, 1); go('#trip'); } }, '↓'),
-        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { if (confirm('Remove this stop?')) { removeStop(s.id); go('#trip'); } } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { confirmAction({ title: 'Remove this stop?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeStop(s.id); go('#trip'); } }); } }, '✕'),
       ]),
     ]));
   });
@@ -8681,7 +8704,7 @@ function budgetTargetEditor() {
   const per = selectEl(['Whole trip', 'Per day'], t && t.per === 'day' ? 'Per day' : 'Whole trip', () => {}, 'Budget applies to');
   det.append(field(`Budget (${home})`, amt), field('Applies to', per));
   det.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
-    t ? h('button', { class: 'btn ghost', onclick: () => { if (confirm('Clear your budget target?')) { store.profile.prefs.budgetCap = null; save(); render(); } } }, 'Clear') : h('span', {}, ''),
+    t ? h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear your budget target?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { store.profile.prefs.budgetCap = null; save(); render(); } }); } }, 'Clear') : h('span', {}, ''),
     h('button', { class: 'btn', onclick: () => { if (amt.value) { setBudgetTarget(amt.value, per.value === 'Per day' ? 'day' : 'trip'); render(); } } }, 'Save budget'),
   ]));
   return det;
@@ -8709,7 +8732,7 @@ function budgetLogRow(b) {
       h('strong', {}, `${b.amount} ${b.currency}`),
       approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
       h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editExpenseId = b.id; render(); } }, '✎'), ' ',
-      h('button', { class: 'chip', 'aria-label': 'Delete', onclick: () => { if (confirm('Delete this spend?')) { deleteBudgetItem(b.id); render(); } } }, '✕'),
+      h('button', { class: 'chip', 'aria-label': 'Delete', onclick: () => { confirmAction({ title: 'Delete this spend?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteBudgetItem(b.id); render(); } }); } }, '✕'),
     ]),
   ]);
 }
@@ -9608,7 +9631,7 @@ async function renderVault(body) {
       h('div', { class: 'grow' }, [h('strong', {}, d.name || 'Document'), h('div', { class: 'muted' }, `${docKind(d.type)} · added ${d.createdAt}`)]),
       h('div', { class: 'cats' }, [
         openBtn,
-        h('button', { class: 'chip', 'aria-label': `Delete ${d.name || 'document'} from the vault`, onclick: async () => { if (confirm(`Delete “${d.name}” from the vault?`)) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': `Delete ${d.name || 'document'} from the vault`, onclick: async () => { if (await confirmAction({ title: 'Delete document?', body: `Delete “${d.name}” from the vault?`, confirmLabel: 'Delete', danger: true })) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
       ]),
       reveal,
     );
@@ -9635,7 +9658,7 @@ async function renderVault(body) {
       ? h('p', { class: 'muted' }, 'A recovery code is set. If you ever forget your passcode, you can use it on the unlock screen to get back in and choose a new passcode. Keep it somewhere safe and private, apart from your phone.')
       : h('p', { class: 'muted' }, 'No recovery code is set. Create one now so a forgotten passcode can never lock you out of your passports and cards for good.'),
     h('button', { class: 'btn ghost block', onclick: async () => {
-      if (hasRec && !confirm('Generate a new recovery code? Your current recovery code will stop working immediately.')) return;
+      if (hasRec && !(await confirmAction({ title: 'Generate a new recovery code?', body: 'Your current recovery code will stop working immediately.', confirmLabel: 'Replace code', danger: true }))) return;
       try { const code = await vaultCreateRecovery(); body.innerHTML = ''; body.append(recoveryCodeCard(body, code)); }
       catch (e) { alert(e.message); }
     } }, hasRec ? 'Replace recovery code' : 'Create a recovery code'),
@@ -9665,7 +9688,7 @@ async function renderVault(body) {
   body.append(h('div', { class: 'card' }, [
     h('button', { class: 'btn ghost block', onclick: () => { vaultLock(); renderVault(body); } }, '🔒 Lock vault'),
     h('button', { class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
-      onclick: async () => { if (confirm('Permanently erase the vault and every document in it? This cannot be undone. Download a backup first if you want to keep them.')) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
+      onclick: async () => { if (await confirmAction({ title: 'Erase the entire vault?', body: 'This permanently deletes every document in it and cannot be undone. Download a backup first if you want to keep them.', confirmLabel: 'Erase vault', danger: true })) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
   ]));
 }
 function vaultStamp() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -9728,7 +9751,7 @@ function vaultRestoreControl(body) {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     const reader = new FileReader();
     reader.onload = async () => {
-      if (!confirm('Restore this vault backup? It replaces any vault currently on this device, and you unlock it with the backup’s passcode.')) return;
+      if (!(await confirmAction({ title: 'Restore this vault backup?', body: 'It replaces any vault currently on this device, and you unlock it with the backup’s passcode.', confirmLabel: 'Restore', danger: true }))) return;
       try { const res = await importVault(String(reader.result || '')); alert(`Restored ${res.docs} item${res.docs === 1 ? '' : 's'}. Unlock with your passcode.`); renderVault(body); }
       catch (e) { alert(e.message); }
     };
@@ -10016,7 +10039,7 @@ function circleScreen() {
     contacts.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((c) => {
       listCard.append(contactRow(c, h('div', { class: 'cats' }, [
         h('button', { class: 'chip', onclick: () => go('#thread-' + c.userId) }, '💬 Message'),
-        h('button', { class: 'chip', 'aria-label': `Remove ${c.name || 'this contact'} from your circle`, onclick: () => { if (confirm(`Remove ${c.name || 'this contact'} from your circle?`)) { removeContact(c.userId); go('#circle'); } } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': `Remove ${c.name || 'this contact'} from your circle`, onclick: () => { confirmAction({ title: 'Remove contact?', body: `Remove ${c.name || 'this contact'} from your circle?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeContact(c.userId); go('#circle'); } }); } }, '✕'),
       ])));
     });
   }
@@ -11343,7 +11366,7 @@ function settingsScreen() {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = async () => {
-        if (!confirm('Restore this backup? It replaces the journal, photos, budget and other data currently on this device.')) { e.target.value = ''; return; }
+        if (!(await confirmAction({ title: 'Restore this backup?', body: 'It replaces the journal, photos, budget and other data currently on this device.', confirmLabel: 'Restore', danger: true }))) { e.target.value = ''; return; }
         const res = await restoreBackupFile(String(reader.result || ''));
         if (res.ok) {
           applyTheme();
@@ -11362,7 +11385,7 @@ function settingsScreen() {
   // reset
   wrap.append(h('div', { class: 'card' }, [
     h('button', { class: 'btn ghost block', onclick: () => {
-      if (confirm('Reset EVERYTHING on this device — including your journal and budget? This cannot be undone. Consider downloading a backup first.')) { resetAll(); applyTheme(); go('#home'); }
+      confirmAction({ title: 'Reset everything on this device?', body: 'This erases your journal, budget and saved places and cannot be undone. Consider downloading a backup first.', confirmLabel: 'Reset everything', danger: true }).then((ok) => { if (ok) { resetAll(); applyTheme(); go('#home'); } });
     } }, 'Reset everything'),
     h('p', { class: 'disclaimer' }, 'Your data is kept safe across app updates — an update never erases your journal, budget or saved places. This button is the only in-app way to wipe them, and clearing your browser storage would also remove them.'),
   ]));
