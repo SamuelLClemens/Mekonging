@@ -18,7 +18,9 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
 
 // Is there a device voice that can speak this BCP-47 locale (e.g. 'th-TH')?
 export function hasVoiceFor(locale) {
-  if (!locale || !voices.length) return false;
+  if (!locale) return false;
+  if (!voices.length) refresh();   // voices often load async on Chromium; re-read on demand
+  if (!voices.length) return false;
   const lang = locale.toLowerCase();
   const base = lang.split('-')[0];
   return voices.some((v) => {
@@ -36,7 +38,10 @@ function pickVoice(locale) {
 }
 
 // Speak `text` in the given locale. Returns true if speech was attempted.
-export function speak(text, locale) {
+// opts (optional): { rate } playback speed (default 0.9 — a touch slower so the listener can
+// follow); { onend } fired when this utterance finishes; { onerror } fired on failure. The
+// callbacks let a caller chain sentence chunks (the read-aloud reader) with per-chunk control.
+export function speak(text, locale, opts = {}) {
   if (!text || typeof window === 'undefined' || !window.speechSynthesis) return false;
   if (!voices.length) refresh();
   const voice = pickVoice(locale || '');
@@ -46,7 +51,9 @@ export function speak(text, locale) {
     const u = new SpeechSynthesisUtterance(text);
     u.voice = voice;
     u.lang = voice.lang || locale;
-    u.rate = 0.9; // a touch slower so the listener can follow
+    u.rate = opts.rate ? Math.min(4, Math.max(0.5, opts.rate)) : 0.9;
+    if (opts.onend) u.onend = opts.onend;
+    if (opts.onerror) u.onerror = opts.onerror;
     window.speechSynthesis.speak(u);
     return true;
   } catch {
@@ -100,8 +107,8 @@ export function speakOnline(text, locale) {
 
 // Best path to pronounce `text` in `locale`: device voice if installed (works offline),
 // otherwise the online fallback. Returns 'device' | 'online' | false.
-export async function say(text, locale) {
-  if (hasVoiceFor(locale) && speak(text, locale)) return 'device';
+export async function say(text, locale, opts = {}) {
+  if (hasVoiceFor(locale) && speak(text, locale, opts)) return 'device';
   try { await speakOnline(text, locale); return 'online'; } catch { return false; }
 }
 

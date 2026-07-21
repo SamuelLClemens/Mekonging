@@ -579,6 +579,13 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 }
 .one-hint-x:hover { opacity: 1; }
 
+/* Read-aloud reader: a play/pause button + a speed toggle. Compact so it sits under a
+   paragraph without dominating it. */
+.read-aloud { display: flex; gap: var(--sp-2); align-items: center; margin-top: var(--sp-2); flex-wrap: wrap; }
+.read-aloud .read-play { flex: 0 1 auto; }
+.read-aloud .read-rate { flex: 0 0 auto; min-width: 56px; font-variant-numeric: tabular-nums; }
+.read-aloud .read-play.playing { background: var(--orange); color: #fff; border-color: var(--orange); }
+
 /* --- places --- */
 .tier { font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
         padding: 3px var(--sp-2); border-radius: var(--r-pill); color: #fff; }

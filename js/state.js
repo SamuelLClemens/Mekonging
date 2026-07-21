@@ -55,6 +55,7 @@ function defaults() {
         hiddenSpots: [],      // places dismissed as "not interested" — dropped from suggestions
         recentSearches: [],   // last few committed search terms (most-recent first, capped) — Search launchpad
         hintsSeen: {},        // { 'home-phase': true, … } — one-time contextual hints the user has dismissed
+        readRate: 1,          // read-aloud playback speed (1 | 1.25 | 1.5 | 2) — remembered across reads
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
