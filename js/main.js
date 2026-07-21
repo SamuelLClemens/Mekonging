@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.278.0';
+const APP_VERSION = 'mk-v0.279.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -378,6 +378,24 @@ function topbar(title, backHash) {
     // bold red marker so it stands out from the neutral menu icons).
     onSos ? null : h('button', { class: 'topbar-sos', 'aria-label': 'Emergency help', title: 'Emergency help', onclick: () => go('#sos') }, '🆘'),
   ]);
+}
+
+// A one-time contextual hint: a small dismissible tip shown once at a surface, then never
+// again. NOT a spotlight/tour engine — each caller decides where to place its own hint, and
+// dismissing simply records the key. Returns null once the key has been seen (so callers can
+// `const t = oneTimeHint(...); if (t) node.append(t);`). Additive pref, no store bump.
+function oneTimeHint(key, text) {
+  const prefs = store.profile.prefs;
+  const seen = prefs.hintsSeen || (prefs.hintsSeen = {});
+  if (seen[key]) return null;
+  const el = h('div', { class: 'one-hint', role: 'note' }, [
+    h('span', { class: 'one-hint-ic' }, '💡'),
+    h('span', { class: 'grow' }, text),
+    h('button', { class: 'one-hint-x', 'aria-label': 'Got it — dismiss this tip', onclick: () => {
+      (prefs.hintsSeen || (prefs.hintsSeen = {}))[key] = true; save(); el.remove();
+    } }, '✕'),
+  ]);
+  return el;
 }
 
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
@@ -833,6 +851,7 @@ function rightNowSection() {
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
   card.append(tipEl, listWrap, footEl);
+  { const t = oneTimeHint('rightnow-picks', 'These picks are chosen for the time of day, the weather and your interests. Tap ✓ done or ✕ not-for-me on any card and a fresh one takes its place.'); if (t) card.append(t); }
 
   // When the picks are seeded from the country default (no GPS, nothing focused yet), keep a
   // gentle one-tap upgrade to real local picks — the invite is not lost just because we seeded.
@@ -1660,6 +1679,7 @@ function homeScreen() {
     storedPhase ? `You are ${PHASES[phase].stmt}` : `Looks like you are ${PHASES[phase].stmt}`));
   if (!storedPhase) wrap.append(h('p', { class: 'muted', style: 'margin:-2px 0 6px' }, 'Not right? Tap your stage below.'));
   wrap.append(phaseSelector(phase));
+  { const t = oneTimeHint('home-phase', 'Tap your stage above whenever it changes — Home reshapes itself around where you are in your trip.'); if (t) wrap.append(t); }
   // One prominent phase-aware next step, so a fresh traveller has a clear first action
   // above the (now-collapsed) tool decks rather than a wall of tiles.
   { const nb = phaseNextBest(phase, leadCC); if (nb) wrap.append(nb); }
@@ -3046,6 +3066,7 @@ function phrasebookScreen(lang) {
 
   // Most-needed phrases first (allergy/diet auto-injected), then the traveller's own pins.
   wrap.append(essentialsCard(code, book, repaint));
+  { const t = oneTimeHint('phrase-pin', 'Pin a phrase (📌) to keep it at the top, or hide ones you do not need. Your pin order is the order they show.'); if (t) wrap.append(t); }
   const pinsCard = phrasePinsCard(code, book, idx, repaint);
   if (pinsCard) wrap.append(pinsCard);
 
@@ -3435,6 +3456,7 @@ function placesScreen(arg) {
     : '';
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
+  { const t = oneTimeHint('places-view', 'Switch between List and Map, and sort by Nearest, to find what is around you right now.'); if (t) wrap.append(t); }
   if (scopeCity) {
     wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
       h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
@@ -4767,7 +4789,10 @@ function placeScreen(id) {
   const beach = beachInfoCard(p);
   if (beach) wrap.append(beach);
   const orient = orientationCard(p);
-  if (orient) wrap.append(orient);
+  if (orient) {
+    { const t = oneTimeHint('place-orient', 'Below, “Find it” gives the local name and how to recognise this spot on the ground — useful for a taxi or asking directions.'); if (t) wrap.append(t); }
+    wrap.append(orient);
+  }
   const transit = transitCard(p);
   if (transit) wrap.append(transit);
   const extCard = externalRatingsCard(p);

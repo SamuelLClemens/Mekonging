@@ -563,6 +563,22 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
   border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); margin-bottom: var(--sp-3);
 }
 
+/* One-time contextual hint: a quiet, dismissible tip. Softer than a banner so it reads as
+   a helper, not an alert. The ✕ records the hint as seen and removes it for good. */
+.one-hint {
+  display: flex; align-items: flex-start; gap: var(--sp-2);
+  background: var(--card); border: 1px dashed var(--line); color: var(--muted-ink, var(--ink));
+  border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm);
+  margin: var(--sp-2) 0 var(--sp-3);
+}
+.one-hint .grow { flex: 1; min-width: 0; }
+.one-hint-ic { flex: 0 0 auto; }
+.one-hint-x {
+  flex: 0 0 auto; min-width: 32px; min-height: 32px; border: none; background: transparent;
+  color: var(--ink); opacity: 0.6; font-size: 15px; cursor: pointer; border-radius: var(--r-sm);
+}
+.one-hint-x:hover { opacity: 1; }
+
 /* --- places --- */
 .tier { font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
         padding: 3px var(--sp-2); border-radius: var(--r-pill); color: #fff; }
