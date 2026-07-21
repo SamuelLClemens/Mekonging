@@ -113,6 +113,24 @@ function showUpdateToast() {
   document.body.append(toast);
 }
 
+// A reusable, non-blocking "undo" toast for REVERSIBLE actions (mark done / not interested):
+// the tap acts immediately and an accidental tap is recoverable, so a repeated triage gesture
+// no longer fires a blocking confirm. Only one shows at a time; it auto-dismisses after a few
+// seconds. Pinned above the tab bar and appended to <body>, so it survives a subtree redraw.
+let undoToastTimer = null;
+function showUndoToast(message, undoFn) {
+  document.querySelectorAll('.snack-toast').forEach((n) => n.remove());
+  if (undoToastTimer) { clearTimeout(undoToastTimer); undoToastTimer = null; }
+  const close = () => { if (undoToastTimer) { clearTimeout(undoToastTimer); undoToastTimer = null; } toast.remove(); };
+  const toast = h('div', { class: 'snack-toast', role: 'status' }, [
+    h('span', { class: 'grow' }, message),
+    h('button', { class: 'update-toast-btn', onclick: () => { try { undoFn(); } catch { /* noop */ } close(); } }, 'Undo'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: close }, '✕'),
+  ]);
+  document.body.append(toast);
+  undoToastTimer = setTimeout(close, 5000);
+}
+
 // Capture the Android/Chrome install prompt so the app can offer an "Install" button in
 // Settings (browsers only fire this once, and only when the PWA is installable). Cleared
 // once installed. iOS Safari never fires it, so Settings shows a Share-sheet hint instead.
@@ -195,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.273.0';
+const APP_VERSION = 'mk-v0.274.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -595,11 +613,10 @@ function suggestExcluded() {
   const p = store.profile.prefs;
   return new Set([...(p.doneSpots || []), ...(p.hiddenSpots || [])]);
 }
-// A single tap on ✓ (done) or ✕ (not interested) removes a place from the feed, so an
-// accidental tap silently loses a suggestion. Confirm the intent first. Undoing a mark
-// (tapping ✓ on an already-done row) never prompts — reversing is always safe.
-function confirmSpotDone(name) { return confirm(`Mark “${name}” as done? It will drop out of your suggestions.`); }
-function confirmSpotHide(name) { return confirm(`Not interested in “${name}”? It will stop appearing in your suggestions.`); }
+// A single tap on ✓ (done) or ✕ (not interested) removes a place from the feed. Rather than
+// gate a repeated triage gesture behind a blocking confirm, the tap acts immediately and an
+// "Undo" toast makes an accidental tap recoverable (see showUndoToast). unmark*/unhide* are the
+// inverse used by that Undo.
 function markSpotDone(id) {
   const p = store.profile.prefs;
   p.doneSpots = p.doneSpots || [];
@@ -621,6 +638,8 @@ function toggleSpotDone(id) {
   else { p.doneSpots.push(id); p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id); }
   save();
 }
+function unmarkSpotDone(id) { const p = store.profile.prefs; p.doneSpots = (p.doneSpots || []).filter((x) => x !== id); save(); }
+function unhideSpot(id) { const p = store.profile.prefs; p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id); save(); }
 function clearSuggestionMarks() { const p = store.profile.prefs; p.doneSpots = []; p.hiddenSpots = []; save(); }
 
 // Bend a place's "right now" score toward the traveller's SITUATION, so a family with a
@@ -852,8 +871,8 @@ function rightNowSection() {
             ]),
           ]),
           h('div', { class: 'rn-actions' }, [
-            h('button', { class: 'rn-act done', title: 'I did this — swap in something new', 'aria-label': `Mark ${p.name} as done`, onclick: () => { if (confirmSpotDone(p.name)) { markSpotDone(p.id); drawPicks(); } } }, '✓'),
-            h('button', { class: 'rn-act', title: 'Not interested — show me something else', 'aria-label': `Not interested in ${p.name}`, onclick: () => { if (confirmSpotHide(p.name)) { hideSpot(p.id); drawPicks(); } } }, '✕'),
+            h('button', { class: 'rn-act done', title: 'I did this — swap in something new', 'aria-label': `Mark ${p.name} as done`, onclick: () => { markSpotDone(p.id); drawPicks(); showUndoToast(`“${p.name}” marked done`, () => { unmarkSpotDone(p.id); drawPicks(); }); } }, '✓'),
+            h('button', { class: 'rn-act', title: 'Not interested — show me something else', 'aria-label': `Not interested in ${p.name}`, onclick: () => { hideSpot(p.id); drawPicks(); showUndoToast(`Hidden “${p.name}”`, () => { unhideSpot(p.id); drawPicks(); }); } }, '✕'),
           ]),
         ]));
       });
@@ -2488,8 +2507,8 @@ function nearbyScreen() {
             ]),
           ]),
           h('div', { class: 'rn-actions' }, [
-            h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { if (done || confirmSpotDone(p.name)) { toggleSpotDone(p.id); drawList(); } } }, '✓'),
-            h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { if (confirmSpotHide(p.name)) { hideSpot(p.id); drawList(); } } }, '✕'),
+            h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { const wasDone = done; toggleSpotDone(p.id); drawList(); if (!wasDone) showUndoToast(`“${p.name}” marked done`, () => { toggleSpotDone(p.id); drawList(); }); } }, '✓'),
+            h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { hideSpot(p.id); drawList(); showUndoToast(`Hidden “${p.name}”`, () => { unhideSpot(p.id); drawList(); }); } }, '✕'),
           ]),
         ]));
       }
