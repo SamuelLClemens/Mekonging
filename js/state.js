@@ -53,6 +53,7 @@ function defaults() {
         // same set. Both hold place ids. doneSpots is a light achievement log too.
         doneSpots: [],        // places the traveller has done — dropped from suggestions
         hiddenSpots: [],      // places dismissed as "not interested" — dropped from suggestions
+        recentSearches: [],   // last few committed search terms (most-recent first, capped) — Search launchpad
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
