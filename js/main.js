@@ -76,6 +76,7 @@ import { REGIONS_TH } from './data/regions.th.js';
 import { REGIONS_VI } from './data/regions.vi.js';
 import { REGIONS_KH } from './data/regions.kh.js';
 import { REGIONS_LA } from './data/regions.la.js';
+import { provinceInfo } from './data/regions.info.js';
 
 // ---- service worker + theme -------------------------------------------------
 // Register the service worker only in a secure web context (https / http localhost).
@@ -193,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.264.0';
+const APP_VERSION = 'mk-v0.265.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1804,6 +1805,23 @@ function regionScreen(arg) {
   if (cc === 'vi') {
     wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
       'Note: Vietnam reorganised its provinces in 2025. These outlines reflect the earlier boundaries until open map data is updated.'));
+  }
+
+  // Authored, web-verified province write-up (when we hold one) — mirrors the country
+  // history card so a region reads like a place, not just a bucket of pins.
+  const pinfo = provinceInfo(code);
+  if (pinfo && pinfo.blurb) {
+    const ic = h('div', { class: 'card history-card' }, [
+      h('h2', { style: 'margin-top:0' }, `About ${prov.name}`),
+      h('p', {}, pinfo.blurb),
+    ]);
+    const kf = knownForRow(pinfo.knownFor); if (kf) ic.append(kf);
+    if (pinfo.cultureTip) ic.append(h('p', { class: 'culture-tip' }, `🙏 ${pinfo.cultureTip}`));
+    const srcBits = [];
+    if (pinfo.sources && pinfo.sources.length) srcBits.push(`Sources: ${pinfo.sources.join(', ')}`);
+    if (pinfo.verified) srcBits.push(`Verified ${pinfo.verified}`);
+    if (srcBits.length) ic.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, srcBits.join(' · ')));
+    wrap.append(ic);
   }
 
   const inRegion = placesInProvince(cc, code);
