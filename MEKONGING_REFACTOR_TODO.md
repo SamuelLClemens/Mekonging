@@ -16,7 +16,7 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
 - [~] **2.5** (partial mk-v0.269.0: label honesty + caveat done; 90-min cap deferred pending verified corridor drive times) Near-Me: set `NEAR_MAX_MIN=90` (js/main.js:648), add data-driven `roadFactor` corridor override, soften `driveLabel` to disclose straight-line estimate + "mountain road, allow longer". [M]
 - [x] **2.1** (shipped mk-v0.270.0) Seed a default focus city for no-fix/no-focusSpotKey fresh profiles so `rightNowSection` shows real picks with honest "showing &lt;city&gt;" label (js/main.js:773, 778-790). [M]
 - [x] **2.2** (shipped mk-v0.271.0) Collapse both Home tool decks by default for fresh profiles (`profileIsSet()` js/main.js:3578); promote one phase-aware next-best-action via `phaseLead()` (1332). [S]
-- [ ] **2.3** Auto-infer + pre-select journey phase from GPS fix + `tripStartISO()` (js/main.js:1370); reframe heading as correctable statement. [M]
+- [x] **2.3** Auto-infer + pre-select journey phase from GPS fix + `tripStartISO()` (js/main.js:1370); reframe heading as correctable statement. [M] — shipped mk-v0.272.0 (inferPhase() reads dates+fix, never persists; heading now "You are…"/"Looks like you are…"; phaseSelector(active)).
 - [ ] **2.7** New `scamsScreen(cc)` / `#scams-<cc>`: aggregate existing scattered scam fields + curated web-verified top-list; link from SOS + arrival. [M]
 - [ ] **2.12** Drop pre-confirm on reversible done/skip (js/main.js:593-594); optimistic action + reusable "Undo" toast. [S]
 - [ ] **2.9** Search zero-state launchpad: example-query chips + capped-5 `prefs.recentSearches` (js/main.js:8554-8557). [S]
