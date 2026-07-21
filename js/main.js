@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.271.0';
+const APP_VERSION = 'mk-v0.272.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1331,18 +1331,20 @@ function familyCard(cc) {
 // (collapsed, never hidden). Phase is stored in prefs.phase and self-defaults.
 const PHASE_ORDER = ['planning', 'arrived', 'traveling', 'post'];
 const PHASES = {
-  planning: { emoji: '🗺️', label: 'Planning a trip', tagline: 'Research routes, visas and what fits you',
+  planning: { emoji: '🗺️', label: 'Planning a trip', stmt: 'planning a trip', tagline: 'Research routes, visas and what fits you',
     groups: ['Plan & remember', 'Get your bearings', 'Money & practical', 'Eat & do', 'Get around'] },
-  arrived: { emoji: '🛬', label: 'Just arrived', tagline: 'Get your bearings for the first hours',
+  arrived: { emoji: '🛬', label: 'Just arrived', stmt: 'just arrived', tagline: 'Get your bearings for the first hours',
     groups: ['Get your bearings', 'Get around', 'Money & practical', 'Eat & do', 'Plan & remember'] },
-  traveling: { emoji: '🧭', label: 'While travelling', tagline: 'Day-to-day on the road',
+  traveling: { emoji: '🧭', label: 'While travelling', stmt: 'travelling', tagline: 'Day-to-day on the road',
     groups: ['Eat & do', 'Get around', 'Get your bearings', 'Plan & remember', 'Money & practical'] },
-  post: { emoji: '📖', label: 'Post travel', tagline: 'Reflect and make something to keep',
+  post: { emoji: '📖', label: 'Post travel', stmt: 'back from your trip', tagline: 'Reflect and make something to keep',
     groups: ['Plan & remember', 'Money & practical', 'Eat & do', 'Get around', 'Get your bearings'] },
 };
 
-function phaseSelector() {
-  const cur = store.profile.prefs.phase || '';
+function phaseSelector(active) {
+  // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
+  // the stored choice everywhere else. Tapping a button is what actually saves the phase.
+  const cur = active || store.profile.prefs.phase || '';
   return h('div', { class: 'phase-seg', role: 'group', 'aria-label': 'Your journey phase' },
     PHASE_ORDER.map((k) => {
       const p = PHASES[k];
@@ -1403,6 +1405,29 @@ function phaseNextBest(phase, cc) {
   if (!primary) return null;
   return h('button', { class: 'btn block home-next-best', style: 'margin:8px 0 2px', onclick: () => go(primary.h) },
     `${primary.e} ${primary.t} →`);
+}
+
+// Best-guess journey stage when the traveller has NOT picked one, so Home opens on a sensible
+// phase instead of an unanswered question. Reads existing signals only — the earliest dated
+// trip stop and the last GPS fix — and never persists; tapping a phase button is what saves a
+// choice. Falls back to 'planning', the safe pre-signal default.
+const INFER_IN_REGION_KM = 300;   // within ~300 km of a Mekong-region city ⇒ on the ground
+function inferPhase() {
+  const start = tripStartISO();
+  if (start) {
+    const d = daysUntilISO(start);
+    if (d > 0) return 'planning';        // trip is still ahead
+    if (d >= -2) return 'arrived';       // start day or the first couple of days
+    if (d >= -30) return 'traveling';    // on the road
+    return 'post';                        // trip finished a while ago
+  }
+  // No dates: a recent fix near a region city implies they are travelling right now.
+  const gps = getLastFix();
+  if (gps) {
+    const near = nearestSpotGlobal(gps);
+    if (near && near.km <= INFER_IN_REGION_KM) return 'traveling';
+  }
+  return 'planning';
 }
 
 // ---- Journey companion: countdown (before you leave) + recap (after return) ----
@@ -1546,13 +1571,19 @@ function homeScreen() {
   // The four journey buttons sit at the very top with the active stage highlighted, so a
   // traveller sets or switches their phase in one tap. Home no longer hides the picker once
   // a phase is chosen, and the country map now lives on the Explore tab rather than here.
-  const phase = store.profile.prefs.phase || '';
+  const storedPhase = store.profile.prefs.phase || '';
+  const phase = storedPhase || inferPhase();   // infer a sensible stage until they choose one
   const leadCC = focusSpot().spot.country;
-  wrap.append(h('h2', { class: 'home-section' }, 'Where are you in your journey?'));
-  wrap.append(phaseSelector());
+  // A correctable statement rather than an open question: the traveller is not forced to
+  // self-classify before seeing value. When we inferred the stage we flag it as a guess and
+  // invite a correction; either way the buttons below change it.
+  wrap.append(h('h2', { class: 'home-section' },
+    storedPhase ? `You are ${PHASES[phase].stmt}` : `Looks like you are ${PHASES[phase].stmt}`));
+  if (!storedPhase) wrap.append(h('p', { class: 'muted', style: 'margin:-2px 0 6px' }, 'Not right? Tap your stage below.'));
+  wrap.append(phaseSelector(phase));
   // One prominent phase-aware next step, so a fresh traveller has a clear first action
   // above the (now-collapsed) tool decks rather than a wall of tiles.
-  if (phase) { const nb = phaseNextBest(phase, leadCC); if (nb) wrap.append(nb); }
+  { const nb = phaseNextBest(phase, leadCC); if (nb) wrap.append(nb); }
 
   // Search everything.
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
