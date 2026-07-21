@@ -873,6 +873,12 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
   padding: var(--sp-5) var(--sp-4) var(--sp-6); box-shadow: var(--shadow);
 }
 .sheet h3 { font-family: var(--font-display); margin: 0 0 var(--sp-3); color: var(--orange); text-transform: uppercase; letter-spacing: 0.03em; }
+/* Centered confirmation dialog (confirmAction) — reuses the sheet chrome but sits centred with
+   all corners rounded, rather than anchored to the bottom edge like the slide-up sheets. */
+.sheet-backdrop.center { align-items: center; padding: var(--sp-4); }
+.confirm-card { max-width: 440px; border-radius: var(--r-lg); }
+.confirm-actions { display: flex; gap: var(--sp-3); justify-content: flex-end; flex-wrap: wrap; }
+.btn.danger { background: var(--warn); border-color: var(--warn); color: #fff; }
 .coll-row {
   display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0;
   border-bottom: 1px dashed var(--line); cursor: pointer; font-weight: 600;
