@@ -29,13 +29,13 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
 - [x] **3.1** Multi-speed read-aloud reader: thread `{rate}` through `speak()/say()` (js/tts.js:49); reusable `readAloud(getText)` play/pause + 1.0/1.25/1.5/2.0x, sentence-chunked, cancel on nav; drop on history/guide/province/first-aid; persist rate. [M] — shipped mk-v0.280.0 (readAloudBar sentence-chunked w/ generation-token; stopAllReaders() in render() cancels on nav; prefs.readRate persists; on history/place-history/province/first-aid; tts.js opts{rate,onend,onerror} + lazy voice refresh).
 
 ## Priority 4 — Code Quality & Technical Debt
-- [ ] **4.1** Fix photo object-URL leak: revoke read-only thumbs on `img load` (js/main.js:4647,5784,5854,5865,5871,5952,6334); revoke editor thumbs (6059) via `liveCleanup` (11029). [S]
-- [ ] **4.2** Debounce localStorage `save()` (js/state.js:212-233) + drop per-save `JSON.parse` of prev blob; immediate flush on `pagehide`. [S]
-- [ ] **4.7** Build `confirmAction()` on `openModal()` (js/main.js:3048); route the ~20 destructive `window.confirm` sites through it. [M]
-- [ ] **4.4** Replace `uid()` with `crypto.randomUUID()` (js/state.js:504-509); injectable id source for tests. [S]
-- [ ] **4.5** Memoize `idb.open()` (js/idb.js:5-12) — one cached connection. [S]
+- [x] **4.1** Fix photo object-URL leak: revoke read-only thumbs on `img load` (js/main.js:4647,5784,5854,5865,5871,5952,6334); revoke editor thumbs (6059) via `liveCleanup` (11029). [S] — shipped mk-v0.282.0 (setBlobThumb() revokes on load/error across 7 read-only sites; journal-editor liveCleanup revokes st.photos urls).
+- [x] **4.2** Debounce localStorage `save()` (js/state.js:212-233) + drop per-save `JSON.parse` of prev blob; immediate flush on `pagehide`. [S] — shipped mk-v0.281.0 (200ms coalesced write via flushSave; backup fed from _lastWritten so no re-parse; pagehide/beforeunload/hidden flush; flushSaveNow() exported).
+- [x] **4.7** Build `confirmAction()` on `openModal()` (js/main.js:3048); route the ~20 destructive `window.confirm` sites through it. [M] — shipped mk-v0.283.0 (Promise-based confirmAction on openModal; all 18 window.confirm sites routed; danger styling; .confirm-card CSS; verified cancel-keeps/confirm-deletes).
+- [x] **4.4** Replace `uid()` with `crypto.randomUUID()` (js/state.js:504-509); injectable id source for tests. [S] — shipped mk-v0.281.0 (uid prefers crypto.randomUUID + monotonic -seq suffix; setIdSource(fn) for tests; deterministic fallback kept).
+- [x] **4.5** Memoize `idb.open()` (js/idb.js:5-12) — one cached connection. [S] — shipped mk-v0.281.0 (cached _dbPromise; cleared on error/close/versionchange).
 - [ ] **4.3** Country-scoped dynamic `import()` of `places.<cc>.ext.js`/prices/routes/food on country select, preload step (js/main.js:4-79; mirror map.js). [M]
-- [ ] **4.8** Extract reusable `foldable(summary, body, {open})` helper; replace inlined `<details>` blocks incrementally. [S]
+- [x] **4.8** Extract reusable `foldable(summary, body, {open})` helper; replace inlined `<details>` blocks incrementally. [S] — shipped mk-v0.284.0 (foldable() appends body as direct children so .filters-collapse CSS unchanged; converted country-hub history + More-for-country groups + history-screen city blocks; rest migrate incrementally).
 - [ ] **4.6** Incrementally split `main.js` monolith into `screens/*` + `ui/*` modules; add each to sw.js PRECACHE; sequence after 4.3. [L, multi-wave]
 
 ---
