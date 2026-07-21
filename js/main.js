@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.277.0';
+const APP_VERSION = 'mk-v0.278.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -7579,6 +7579,37 @@ function dailyStripCard(id) {
   const c = getCountry(id);
   const card = h('div', { class: 'card daily-strip' });
   card.append(h('h2', { style: 'margin-top:0' }, '🎒 Your day'));
+
+  // 0) Story-so-far anchor: once the trip has started, a gentle "which day am I on" line
+  //    plus a positive tally of what has happened. No streaks, no guilt — just orientation.
+  {
+    const startISO = tripStartISO();
+    if (startISO) {
+      const until = daysUntilISO(startISO);
+      if (until <= 0) {
+        const dayNum = 1 - until; // the start date itself is day 1
+        const dated = (store.trip.stops || []).map((s) => s.date).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '')).sort();
+        const lastISO = dated[dated.length - 1];
+        const span = lastISO && lastISO !== startISO
+          ? Math.round((new Date(lastISO + 'T00:00:00') - new Date(startISO + 'T00:00:00')) / 86400000) + 1
+          : null;
+        const dayLabel = (span && dayNum <= span) ? `Day ${dayNum} of ${span}` : `Day ${dayNum} of your trip`;
+        const explored = ((store.profile.prefs || {}).doneSpots || []).length;
+        const notes = ((store.journal || {}).entries || []).length;
+        const tally = [
+          explored ? `${explored} place${explored === 1 ? '' : 's'} explored` : null,
+          notes ? `${notes} journal note${notes === 1 ? '' : 's'}` : null,
+        ].filter(Boolean).join(' · ');
+        card.append(h('button', { class: 'btn ghost block strip-row', onclick: () => go('#journey'), 'aria-label': 'Your journey so far' }, [
+          h('span', { class: 'strip-ic' }, '📖'),
+          h('span', { class: 'grow strip-txt' }, [
+            h('div', { class: 'en' }, dayLabel),
+            h('div', { class: 'sci' }, tally || 'Your story so far — mark places done and add journal notes as you go.'),
+          ]),
+        ]));
+      }
+    }
+  }
 
   // 1) Next plan item — or a gentle nudge to add one.
   const item = nextPlanItem();
