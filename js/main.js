@@ -69,6 +69,7 @@ import { ESSENTIALS, getEssentials } from './data/essentials.js';
 import { ACCESSIBILITY, getAccessibility } from './data/accessibility.js';
 import { ARRIVAL, getArrival } from './data/arrival.js';
 import { VISA, getVisa } from './data/visa.js';
+import { scamsFor } from './data/scams.js';
 import { FAMILY, getFamily } from './data/family.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
@@ -194,7 +195,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.272.0';
+const APP_VERSION = 'mk-v0.273.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1210,6 +1211,64 @@ function visaCard(cc) {
   card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#visa-${cc}`) }, 'Open the entry guide'));
   return card;
+}
+
+// ---- COMMON SCAMS (per country) ----------------------------------------------
+// One place that gathers the scams travellers actually report, so they can be recognised
+// before they happen. The curated top-list (data/scams.js, web-verified) leads; the visa/
+// border scams already in VISA and the airport-transport scam already in ARRIVAL are folded
+// in below so nothing is duplicated across the app. Reassuring, not alarmist — these are money
+// tricks, not danger, and a calm "no, thank you" plus agreeing prices first avoids almost all.
+function scamsScreen(cc) {
+  // Snap to a sensible country: explicit arg wins, else the last GPS fix, else browsed country.
+  const fix = getLastFix();
+  const near = fix ? nearestSpotGlobal(fix) : null;
+  if (cc && getCountry(cc)) activeCountry = cc;
+  else if (near) activeCountry = near.spot.country;
+  const c = getCountry(activeCountry);
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('⚠️ Common scams', c ? `#country-${activeCountry}` : '#home'));
+  if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
+
+  wrap.append(h('p', { class: 'muted' }, `The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
+  wrap.append(countryChips((id) => go(`#scams-${id}`), activeCountry));
+
+  const s = scamsFor(activeCountry);
+  if (s && s.hotline) {
+    wrap.append(h('a', { class: 'btn block', style: 'margin:8px 0', href: `tel:${String(s.hotline.number).replace(/\s/g, '')}` }, `🚔 ${s.hotline.label}: ${s.hotline.number}`));
+  }
+
+  if (s && s.top && s.top.length) {
+    s.top.forEach((x) => {
+      wrap.append(h('div', { class: 'card scam-card' }, [
+        h('h3', { style: 'margin-top:0' }, x.title),
+        h('p', { class: 'scam-how', style: 'margin:4px 0' }, [h('strong', {}, '⚠ What happens: '), x.how]),
+        h('p', { class: 'scam-avoid', style: 'margin:4px 0 0' }, [h('strong', {}, '✓ Avoid it: '), x.avoid]),
+      ]));
+    });
+  } else {
+    wrap.append(h('p', { class: 'empty' }, 'A scams guide for this country is on the way.'));
+  }
+
+  // Fold in the visa/border scams already carried in VISA, with a link to the full guide.
+  const v = getVisa(activeCountry);
+  if (v && v.scams && v.scams.length) {
+    const vc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🛂 Visa & border scams')]);
+    v.scams.forEach((x) => vc.append(h('div', { class: 'warn-note' }, x)));
+    vc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#visa-${activeCountry}`) }, 'Open the entry & visa guide'));
+    wrap.append(vc);
+  }
+
+  // Point to the airport-transport scam note, which lives on the arrival hub.
+  wrap.append(h('div', { class: 'card' }, [
+    h('h3', { style: 'margin-top:0' }, '🚕 Getting from the airport'),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'The most common first-hour trick is an airport transport overcharge. The arrival guide lists the cheapest safe way into town for each gateway.'),
+    h('button', { class: 'btn ghost block', onclick: () => go(`#arrival-${activeCountry}`) }, '🛬 Open the arrival guide'),
+  ]));
+
+  if (s && s.sources && s.sources.length) wrap.append(sourcesNote(s.sources, s.asOf));
+  wrap.append(h('p', { class: 'disclaimer' }, 'Guidance only — scams change and situations vary. When something feels off, walk away. If you are cheated or threatened, contact the tourist police.'));
+  mount(wrap, '#home');
 }
 
 // ---- TRAVELLING WITH KIDS (schools, childcare, what to do with the kids) -----
@@ -2269,6 +2328,7 @@ function arrivalScreen(arg) {
   doCard.append(h('button', { class: 'btn ghost block', onclick: () => go('#map') }, '🏠 Save where I am staying on the map'));
   if (c && c.lang) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 First words — hello, thanks, numbers'));
   doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#sos-${cc}`) }, '🆘 Emergency numbers here'));
+  doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#scams-${cc}`) }, '⚠️ Common scams — and how to avoid them'));
   if (getVisa(cc)) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#visa-${cc}`) }, '🛂 Entry & visa rules'));
   doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#nearby') }, '📍 What’s near me right now'));
   wrap.append(doCard);
@@ -9126,6 +9186,7 @@ function sosScreen(cc) {
   if (phraseCard) wrap.append(phraseCard);
   if (safeCard) wrap.append(safeCard);
   wrap.append(solo);
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#scams-${activeCountry}`) }, '⚠️ Common scams here — and how to avoid them'));
 
   wrap.append(sourcesNote([...HOSP_SOURCES, ...FIRSTAID_SOURCES], 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English. First-aid guidance here is general and does not replace professional medical care.'));
@@ -11206,6 +11267,7 @@ function render() {
       case 'species': return speciesScreen(arg);
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
+      case 'scams': return scamsScreen(arg);
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);
       case 'trip': return tripScreen();

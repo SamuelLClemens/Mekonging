@@ -623,6 +623,13 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .warn-note { display: flex; gap: var(--sp-2); padding: var(--sp-2) 0; color: var(--warn); font-weight: 600; }
 .warn-note::before { content: "⚠"; }
 
+/* Common-scams cards: a left accent and colour-coded "what happens" / "avoid it" lines so a
+   traveller can scan the setup and the defence at a glance. */
+.scam-card { border-left: 4px solid var(--magenta); }
+.scam-card .scam-how { color: var(--warn); }
+.scam-card .scam-how strong { color: var(--warn); }
+.scam-card .scam-avoid strong { color: var(--teal, var(--green, var(--sun-deep))); }
+
 /* --- prices --- */
 .price-item { padding: var(--sp-3) 0; border-bottom: 1px dashed var(--line); }
 .price-item .fair { font-weight: 800; color: var(--teal-deep); }
