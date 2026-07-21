@@ -194,7 +194,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.266.0';
+const APP_VERSION = 'mk-v0.267.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2024,40 +2024,54 @@ function countryHubScreen(id) {
     wrap.append(explore);
   }
 
-  const tiles = [
-    { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${c.id}` },
-    { ic: ICON.chat, t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
-    { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
-    { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
-    { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
-    { ic: ICON.navarrow, t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
-    { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
-    { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
-    { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${c.id}` },
-    { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
-    { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
-    { ic: ICON.sun, t: 'Things to do', d: 'Picks for right now', hash: `#today-${c.id}` },
-    { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
-    { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
-    { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
-    { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-    { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${c.id}` },
-    { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-    { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
-    { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
-    { ic: ICON.volume, t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
-    { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
-    { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
-    { ic: ICON.alert, t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
-    { ic: ICON.temple, t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${c.id}` },
-    { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
+  // The full country toolkit, regrouped from one 26-tile wall into four labelled,
+  // collapsible sub-clusters so a traveller scans four intents, not a flat grid.
+  // The "identify what's around me" tools (nature + sounds) sit together under See & do.
+  const tileGroups = [
+    { label: 'Get oriented', tiles: [
+      { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${c.id}` },
+      { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
+      { ic: ICON.chat, t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
+      { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
+      { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
+      { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
+      { ic: ICON.alert, t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
+    ] },
+    { label: 'Getting around', tiles: [
+      { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
+      { ic: ICON.navarrow, t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
+      { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
+      { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
+      { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
+    ] },
+    { label: 'Eat & drink', tiles: [
+      { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
+      { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
+      { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${c.id}` },
+      { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
+    ] },
+    { label: 'See & do', tiles: [
+      { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
+      { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
+      { ic: ICON.sun, t: 'Things to do', d: 'Picks for right now', hash: `#today-${c.id}` },
+      { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${c.id}` },
+      { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
+      { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
+      { ic: ICON.temple, t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${c.id}` },
+      { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
+      { ic: ICON.volume, t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
+      { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
+    ] },
   ];
   // Collapsed by default: the city-first card, guide cards and Explore map cover the
-  // primary needs; the full country toolkit is one tap away, not a wall of tiles.
-  wrap.append(h('details', { class: 'filters-collapse' }, [
-    h('summary', {}, `More for ${c.name}`),
-    h('div', { class: 'grid' }, tiles.map(sectionTile)),
-  ]));
+  // primary needs; the full toolkit is four tappable intents, not a wall of tiles.
+  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
+  tileGroups.forEach((g) => {
+    wrap.append(h('details', { class: 'filters-collapse' }, [
+      h('summary', {}, g.label),
+      h('div', { class: 'grid' }, g.tiles.map(sectionTile)),
+    ]));
+  });
   mount(wrap, '#home');
 }
 
