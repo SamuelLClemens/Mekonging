@@ -59,6 +59,10 @@ function defaults() {
         tourSeen: false,      // has the walk-me tour auto-offered once (prevents re-nagging on Home)
         tourStep: 0,          // walk-me tour resume point — where a skipped tour left off
         showSetupRecap: false, // one-shot: after the value-first first run, Home shows a "here is what I set up" recap
+        // --- personal identifier: things the traveller pinned from the identify tools
+        // (dishes, market produce, wildlife). Flat list of "type:id" keys; pin order IS
+        // display order. Self-defaults via the migrate spread — no store-version bump.
+        idPins: [],           // ['dish:pad-thai', 'produce:mangosteen', 'species:tokay-gecko', …]
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this

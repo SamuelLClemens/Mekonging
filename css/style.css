@@ -1495,3 +1495,19 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
 .recap-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .recap-list li { display: flex; gap: 9px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
 .recap-list .recap-ic { flex: 0 0 auto; font-size: 17px; line-height: 1.3; }
+
+/* Personal identifier — save-to-identifier toggle + the YOU-hub saved list */
+.id-pin-btn { margin: 2px 0 8px; }
+.id-pin-btn.on { background: var(--sun, #E0A21A); border-color: var(--sun-deep, #C98A12); color: #241a03; }
+.id-saved-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+.id-saved-row:first-of-type { margin-top: 4px; }
+.id-saved-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left;
+  background: rgba(0,0,0,0.03); border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: var(--r-2, 10px);
+  padding: 9px 11px; cursor: pointer; font: inherit; color: inherit; }
+.id-saved-main:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
+.id-saved-emoji { flex: 0 0 auto; font-size: 22px; line-height: 1; }
+.id-saved-txt { display: flex; flex-direction: column; min-width: 0; }
+.id-saved-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.id-saved-sub { font-size: 12px; opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.id-remove { flex: 0 0 auto; align-self: center; }
