@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.286.0';
+const APP_VERSION = 'mk-v0.287.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -304,7 +304,7 @@ const SECTION_ACCENT = {
   // plan & memories
   plans: '#2FA0A0', foryou: '#E08A2E', trip: '#2FA0A0', checklist: '#6E8F3F',
   calendar: '#3E7CB1', journal: '#C25E3A', scrapbook: '#B0567F', contributions: '#C9902B',
-  saved: '#D98A3D', collection: '#D98A3D',
+  saved: '#D98A3D', collection: '#D98A3D', identified: '#C08A2A',
   // exchange / social / admin / safety
   exchange: '#9C5780', swap: '#9C5780', market: '#9C5780', board: '#C9902B',
   circle: '#4C79C0', vault: '#4C6B8A', donate: '#D64545', help: '#5B8CA0',
@@ -1864,6 +1864,19 @@ function homeScreen() {
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
   wrap.append(netStatusRow());
 
+  // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
+  // dangerous animals) plus the traveller's own saved finds. These used to live only in the
+  // country hub, so they were hard to find; surfaced here, always open, from the front door.
+  wrap.append(h('h2', { class: 'home-section' }, '🔎 Identify what’s around you'));
+  wrap.append(h('div', { class: 'grid' }, [
+    { ic: ICON.bowl, t: 'Food', d: 'Name a street dish', hash: '#food' },
+    { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
+    { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
+    { ic: ICON.volume, t: 'Sounds', d: 'What made that call?', hash: '#sounds' },
+    { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
+    { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Your saved finds', hash: '#identified' },
+  ].map(sectionTile)));
+
   // Time of day where you are — the live, place-and-moment picks, ABOVE "Your day".
   wrap.append(rightNowSection());
 
@@ -1978,6 +1991,7 @@ function meHubScreen() {
     { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
     { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log spend vs budget', hash: '#expenses' },
     { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#dictionary' },
+    { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Dishes, fruit & wildlife', hash: '#identified' },
     { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
     { ic: ICON.star, t: 'Saved places', d: 'Your collections', hash: '#saved' },
     { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
@@ -7202,6 +7216,38 @@ function foodCard(d) {
   ]);
 }
 
+// ---- PERSONAL IDENTIFIER ----------------------------------------------------
+// Things the traveller pinned from the identify tools (dishes, market produce and
+// wildlife), gathered in the YOU hub the same way the personal phrasebook gathers
+// pinned phrases. Keys are "type:id"; the stored order IS the display order.
+const ID_TYPES = {
+  dish:    { label: 'Dishes',   emoji: '🍜', get: getDish,    name: (o) => o.name,       hash: (id) => `#dish-${id}` },
+  produce: { label: 'Produce',  emoji: '🍈', get: getProduce, name: (o) => o.name,       hash: (id) => `#produce-${id}` },
+  species: { label: 'Wildlife', emoji: '🦎', get: getSpecies, name: (o) => o.commonName, hash: (id) => `#species-${id}` },
+};
+function idPinList() { const p = store.profile.prefs; if (!Array.isArray(p.idPins)) p.idPins = []; return p.idPins; }
+function idPinKey(type, id) { return `${type}:${id}`; }
+function isIdPinned(type, id) { return idPinList().includes(idPinKey(type, id)); }
+function toggleIdPin(type, id) {
+  const list = idPinList();
+  const key = idPinKey(type, id);
+  const i = list.indexOf(key);
+  if (i >= 0) list.splice(i, 1); else list.push(key);
+  save();
+  return i < 0;   // true when it is now pinned
+}
+function idPinCount() { return idPinList().length; }
+// A full-width save/remove toggle for an identify detail screen. Re-renders the current
+// screen on tap so the label flips immediately and the count stays honest.
+function idPinButton(type, id) {
+  const pinned = isIdPinned(type, id);
+  return h('button', {
+    class: 'btn block id-pin-btn' + (pinned ? ' on' : ''),
+    'aria-pressed': pinned ? 'true' : 'false',
+    onclick: () => { toggleIdPin(type, id); render(); },
+  }, pinned ? '★ Saved to your identifier — tap to remove' : '☆ Save to my identifier');
+}
+
 function foodScreen(country) {
   if (country) foodCountry = country;
   const wrap = h('div', { class: 'screen' });
@@ -7410,6 +7456,7 @@ function dishScreen(id) {
   if (d.whereToFind) { card.append(h('h3', {}, 'Where to find it')); card.append(h('p', {}, d.whereToFind)); }
   if (d.sources && d.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${d.sources.join('; ')}`));
   wrap.append(card);
+  wrap.append(idPinButton('dish', d.id));
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${d.name} ${d.localName || ''} food`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
   mount(wrap, '#home');
 }
@@ -7481,6 +7528,7 @@ function produceDetail(id) {
   if (p.price) card.append(h('p', { style: 'margin-top:10px' }, [h('strong', {}, 'Typical price: '), `${priceLine(p.price.low, p.price.high, p.price.currency)}${p.price.unit ? ' ' + p.price.unit : ''}`]));
   if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Sources: ${p.sources.join('; ')}`));
   wrap.append(card);
+  wrap.append(idPinButton('produce', p.id));
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${p.name} fruit vegetable`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
   mount(wrap, '#home');
 }
@@ -8488,8 +8536,71 @@ function speciesScreen(id) {
   }
   if (hasCall(s)) { card.append(h('h3', {}, 'Its call')); card.append(callControl(s)); }
   wrap.append(card);
+  wrap.append(idPinButton('species', s.id));
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${s.commonName} ${s.sciName || ''}`), target: '_blank', rel: 'noopener' }, 'Search photos to confirm ↗'));
   mount(wrap, '#home');
+}
+
+// The traveller's own collection of identified things — reached from the YOU hub, built
+// the same way the personal phrasebook gathers pinned phrases. Groups pins by type,
+// preserves each type's pin order, and offers one-tap removal + links back to the tools.
+function idSavedSub(type, o) {
+  if (type === 'species') return o.sciName || '';
+  if (type === 'dish') return o.countryName || '';
+  return o.season || (o.names && o.names.th) || '';
+}
+function myIdentifierScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('My identifier', '#me'));
+  const list = idPinList();
+  const exploreTiles = [
+    { ic: ICON.bowl, t: 'Food', d: 'Street dishes', hash: '#food' },
+    { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
+    { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
+    { ic: ICON.volume, t: 'Sounds', d: 'Animal calls', hash: '#sounds' },
+    { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
+  ];
+  if (!list.length) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('strong', {}, '🔎 Your personal identifier'),
+      h('p', { class: 'muted', style: 'margin:6px 0 10px' },
+        'Save any dish, fruit, or animal you identify and it collects here — offline, on your device. Nothing saved yet — start with a tool below.'),
+      h('div', { class: 'grid' }, exploreTiles.map(sectionTile)),
+    ]));
+    mount(wrap, '#me');
+    return;
+  }
+  wrap.append(h('p', { class: 'map-hint' },
+    'Everything you saved from the identify tools, gathered here and kept on your device. Tap to reopen, or remove what you no longer need.'));
+  Object.keys(ID_TYPES).forEach((type) => {
+    const spec = ID_TYPES[type];
+    const items = list
+      .filter((k) => k.slice(0, type.length + 1) === type + ':')
+      .map((k) => spec.get(k.slice(type.length + 1)))
+      .filter(Boolean);
+    if (!items.length) return;
+    const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [
+      h('h3', { style: 'margin-top:0' }, `${spec.emoji} ${spec.label} · ${items.length}`),
+    ]);
+    items.forEach((o) => {
+      const sub = idSavedSub(type, o);
+      card.append(h('div', { class: 'id-saved-row' }, [
+        h('button', { class: 'id-saved-main', onclick: () => go(spec.hash(o.id)) }, [
+          h('span', { class: 'id-saved-emoji' }, o.emoji || spec.emoji),
+          h('span', { class: 'id-saved-txt' }, [
+            h('span', { class: 'id-saved-name' }, spec.name(o)),
+            sub ? h('span', { class: 'id-saved-sub' }, sub) : null,
+          ]),
+        ]),
+        h('button', { class: 'chip id-remove', 'aria-label': `Remove ${spec.name(o)}`,
+          onclick: () => { toggleIdPin(type, o.id); render(); } }, '✕'),
+      ]));
+    });
+    wrap.append(card);
+  });
+  wrap.append(h('h2', { class: 'home-section' }, 'Identify more'));
+  wrap.append(h('div', { class: 'grid' }, exploreTiles.map(sectionTile)));
+  mount(wrap, '#me');
 }
 
 // ---- BEST OF / RECOMMENDATIONS ----------------------------------------------
@@ -11677,6 +11788,7 @@ function render() {
       case 'nature': return natureScreen();
       case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);
+      case 'identified': return myIdentifierScreen();
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
       case 'scams': return scamsScreen(arg);
