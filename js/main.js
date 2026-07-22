@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.290.0';
+const APP_VERSION = 'mk-v0.291.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1864,18 +1864,20 @@ function homeScreen() {
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
   wrap.append(netStatusRow());
 
+  // Journey companion — a planning-phase countdown or post-trip recap, placed directly under
+  // the phase header where it is most actionable. It is null (and so invisible) in the arrived
+  // and travelling phases, where the live "Right now" picks below correctly lead instead.
+  if (phase) {
+    const companion = journeyCompanionCard(phase, leadCC);
+    if (companion) wrap.append(companion);
+  }
+
   // Time of day where you are — the live, place-and-moment picks, ABOVE "Your day".
   wrap.append(rightNowSection());
 
   // Your day — next plan item + one-tap spend. (Phrase of the day now lives in Talk.)
   wrap.append(dailyStripCard(leadCC));
 
-  // Day/trip cards shown only when they have something to say: a trip countdown or return
-  // recap, upcoming reminders, and a one-time backup nudge.
-  if (phase) {
-    const companion = journeyCompanionCard(phase, leadCC);
-    if (companion) wrap.append(companion);
-  }
   // The full "Coming up" list lives on the YOU hub; Home carries only a one-line pointer to
   // the next reminder so the two tabs do not duplicate the same block.
   const up = reminders.upcoming(7);
