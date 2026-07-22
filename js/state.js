@@ -58,6 +58,7 @@ function defaults() {
         readRate: 1,          // read-aloud playback speed (1 | 1.25 | 1.5 | 2) — remembered across reads
         tourSeen: false,      // has the walk-me tour auto-offered once (prevents re-nagging on Home)
         tourStep: 0,          // walk-me tour resume point — where a skipped tour left off
+        showSetupRecap: false, // one-shot: after the value-first first run, Home shows a "here is what I set up" recap
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
