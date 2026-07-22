@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.285.0';
+const APP_VERSION = 'mk-v0.286.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1837,6 +1837,10 @@ function homeScreen() {
       h('span', { class: 'hero-badge' }, '✓ Free & private'),
     ]),
   ]));
+
+  // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
+  // value-first first run — proof that the few taps already personalised the app.
+  if (store.profile.prefs.showSetupRecap) wrap.append(setupRecapCard());
 
   // The four journey buttons sit at the very top with the active stage highlighted, so a
   // traveller sets or switches their phase in one tap. Home no longer hides the picker once
@@ -10427,99 +10431,176 @@ function prefChips(pairs, current, onPick) {
 // First run: understand who the traveller is, whether to use data, and (optionally)
 // where they are — then the whole app leads with what fits their situation, place and
 // moment. Short, skippable, editable later in "For you" and Settings. Fully offline.
+// NAV-1: a value-first stepped first run. Rather than a single wall of six cards, the
+// traveller answers three focused, high-leverage questions — one per step — then lands on
+// Home with a "here is what I set up for you" recap that proves the payoff. The richer,
+// lower-urgency fields (accessibility, budget, interests, location) live behind an optional
+// "Fine-tune" foldable on the last step, so nothing is lost but nothing is front-loaded.
+// welcomeStep is module state so Next/Back re-render the same focused flow without a route.
+let welcomeStep = 0;
 function welcomeScreen() {
   const prefs = store.profile.prefs;
+  const step = Math.min(Math.max(welcomeStep | 0, 0), 2);
   const wrap = h('div', { class: 'screen welcome' });
-  wrap.append(h('section', { class: 'hero' }, [
+
+  // Finishing = leave onboarding for a personalised Home. Show the recap only when the
+  // traveller actually personalised something, so a pure "just explore" skip lands clean.
+  const somethingSet = () => !!(prefs.party || prefs.withBaby || prefs.soloFemale
+    || (prefs.diet || []).length || (prefs.access || []).length || prefs.tripLength
+    || (prefs.interests || []).length || (prefs.budget && prefs.budget !== 'flexible'));
+  const finish = () => {
+    store.profile.seenWelcome = true;
+    prefs.geoAsked = true;
+    if (netMode() === 'ask') setNetMode('offline');
+    prefs.showSetupRecap = somethingSet();
+    welcomeStep = 0;
+    save();
+    go('#home');
+  };
+  const goStep = (n) => { welcomeStep = Math.min(Math.max(n, 0), 2); welcomeScreen(); };
+
+  // Compact header: small logo + a progress indicator so the traveller always knows where
+  // they are and that the flow is short (three steps).
+  wrap.append(h('section', { class: 'hero welcome-hero' }, [
     h('div', { class: 'logo-wrap', html: logoSVG() }),
-    h('p', {}, 'Set the app up in a few taps — or dive straight in and personalise as you go. Everything stays on your device.'),
+    h('p', { style: 'margin:0' }, 'A few quick taps and Home fits you — or skip and explore. Everything stays on your device.'),
   ]));
+  wrap.append(h('div', { class: 'welcome-progress', role: 'group', 'aria-label': `Step ${step + 1} of 3` },
+    [0, 1, 2].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
 
-  const finish = () => { store.profile.seenWelcome = true; store.profile.prefs.geoAsked = true; if (netMode() === 'ask') setNetMode('offline'); save(); go('#home'); };
-  // Straight into the app: a first-timer can skip the whole setup and personalise later (Settings,
-  // the For-you screen, the on-Home location invite). Setup is optional, never a gate.
-  wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:4px', onclick: finish }, '✨ Skip setup — just explore'));
-  wrap.append(h('p', { class: 'muted small', style: 'margin:0 2px 10px' }, 'Or set a few things up below. You can change all of it any time in Settings.'));
-
-  // 1 — Network choice FIRST: the app will not touch mobile data or Wi-Fi without it.
-  const netCard = h('div', { class: 'card' });
-  netCard.append(h('h2', { style: 'margin-top:0' }, '1 · Data, or fully offline?'));
-  netCard.append(h('p', { class: 'muted' }, 'This app works fully offline. It will not use mobile data or Wi-Fi unless you allow it — handy when you have no SIM. You can change this any time.'));
-  const netRow = h('div', { class: 'chips' });
-  [['online', '📶 Use data when I have it'], ['offline', '✈️ Stay fully offline']].forEach(([id, lbl]) =>
-    netRow.append(h('button', { class: 'chip', dataset: { n: id }, 'aria-pressed': netMode() === id ? 'true' : 'false',
-      onclick: () => { setNetMode(id); netRow.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.n === netMode() ? 'true' : 'false')); } }, lbl)));
-  netCard.append(netRow);
-  wrap.append(netCard);
-
-  // 2 — Who is travelling (+ baby)
-  const whoCard = h('div', { class: 'card' });
-  whoCard.append(h('h2', {}, '2 · Who is travelling?'));
-  whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
-  whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Bringing little ones?'));
-  const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
-    onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 Travelling with a baby or toddler');
-  whoCard.append(h('div', { class: 'chips' }, [babyChip]));
-  whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Travelling alone? We will surface tailored, non-alarmist safety notes.'));
-  const soloFemChip = h('button', { class: 'chip', 'aria-pressed': prefs.soloFemale ? 'true' : 'false',
-    onclick: (e) => { prefs.soloFemale = !prefs.soloFemale; save(); e.currentTarget.setAttribute('aria-pressed', prefs.soloFemale ? 'true' : 'false'); } }, '🧭 Solo female traveller');
-  whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
-  wrap.append(whoCard);
-
-  // 3 — Accessibility needs
-  const accCard = h('div', { class: 'card' });
-  accCard.append(h('h2', {}, '3 · Any accessibility needs?'));
-  accCard.append(h('p', { class: 'muted' }, 'We will surface honest, practical guidance for how these countries work for you. Pick any that apply, or none.'));
-  const accRow = h('div', { class: 'chips' });
-  [['mobility', '♿ Wheelchair / limited mobility'], ['vision', '🦯 Blind / low vision'], ['hearing', '🦻 Deaf / hard of hearing']].forEach(([id, lbl]) => {
-    const on = () => (prefs.access || []).includes(id);
-    accRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
-      onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
-  });
-  accCard.append(accRow);
-  accCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Text size'));
-  accCard.append(prefChips([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], store.profile.textScale || 'm', (v) => { store.profile.textScale = v; save(); applyTheme(); }));
-  wrap.append(accCard);
-
-  // 4 — Allergies & diet (drives food highlighting + pinned phrasebook phrases)
-  const dietCard = h('div', { class: 'card' });
-  dietCard.append(h('h2', {}, '4 · Any food allergies or diet?'));
-  dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
-  dietCard.append(dietPicker());
-  wrap.append(dietCard);
-
-  // 5 — How you like to travel (budget / length / interests)
-  const fitCard = h('div', { class: 'card' });
-  fitCard.append(h('h2', {}, '5 · How you like to travel'));
-  fitCard.append(h('p', { class: 'muted' }, 'Budget'));
-  fitCard.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
-  fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
-  fitCard.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
-  fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
-  const intRow = h('div', { class: 'chips' });
-  INTERESTS.forEach((it) => { const on = () => (prefs.interests || []).includes(it.id);
-    intRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
-      onclick: (e) => { prefs.interests = prefs.interests || []; const i = prefs.interests.indexOf(it.id); if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, `${it.emoji} ${it.label}`)); });
-  fitCard.append(intRow);
-  wrap.append(fitCard);
-
-  // 5 — Location (optional; sensors, not data)
-  const locCard = h('div', { class: 'card' });
-  locCard.append(h('h2', {}, '6 · Use your location? (optional)'));
-  locCard.append(h('p', { class: 'muted' }, 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
-  if (typeof navigator !== 'undefined' && navigator.geolocation) {
-    const lb = h('button', { class: 'btn ghost block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
-    lb.onclick = async () => { lb.textContent = 'Locating…'; lb.disabled = true; try { const p = await geolocate(); setLastFix(p); const nb = nearestSpotGlobal(p); if (nb) setFocusSpot(nb.spot); lb.textContent = '📍 Location is on'; } catch { lb.textContent = '📍 Location unavailable'; } lb.disabled = false; };
-    locCard.append(lb);
-  } else {
-    locCard.append(h('p', { class: 'muted' }, 'Location is not available on this device — you can still browse by country and city.'));
+  // ---- Step 1 — Network choice (the gate: no data touched without it) ----
+  if (step === 0) {
+    const netCard = h('div', { class: 'card' });
+    netCard.append(h('h2', { style: 'margin-top:0' }, 'Data, or fully offline?'));
+    netCard.append(h('p', { class: 'muted' }, 'This app works fully offline. It will not use mobile data or Wi-Fi unless you allow it — handy when you have no SIM. You can change this any time.'));
+    const netRow = h('div', { class: 'chips' });
+    [['online', '📶 Use data when I have it'], ['offline', '✈️ Stay fully offline']].forEach(([id, lbl]) =>
+      netRow.append(h('button', { class: 'chip', dataset: { n: id }, 'aria-pressed': netMode() === id ? 'true' : 'false',
+        onclick: () => { setNetMode(id); netRow.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.n === netMode() ? 'true' : 'false')); } }, lbl)));
+    netCard.append(netRow);
+    wrap.append(netCard);
+    wrap.append(h('div', { class: 'welcome-nav' }, [
+      h('button', { class: 'btn block', onclick: () => goStep(1) }, 'Next →'),
+    ]));
+    // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
+    wrap.append(h('button', { class: 'btn ghost block welcome-skip', onclick: finish }, 'Skip — just explore'));
   }
-  wrap.append(locCard);
 
-  wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: finish }, 'Start exploring →'));
+  // ---- Step 2 — Who is travelling (+ baby, solo female) ----
+  if (step === 1) {
+    const whoCard = h('div', { class: 'card' });
+    whoCard.append(h('h2', { style: 'margin-top:0' }, 'Who is travelling?'));
+    whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
+    whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Bringing little ones?'));
+    const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
+      onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 Travelling with a baby or toddler');
+    whoCard.append(h('div', { class: 'chips' }, [babyChip]));
+    whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Travelling alone? We will surface tailored, non-alarmist safety notes.'));
+    const soloFemChip = h('button', { class: 'chip', 'aria-pressed': prefs.soloFemale ? 'true' : 'false',
+      onclick: (e) => { prefs.soloFemale = !prefs.soloFemale; save(); e.currentTarget.setAttribute('aria-pressed', prefs.soloFemale ? 'true' : 'false'); } }, '🧭 Solo female traveller');
+    whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
+    wrap.append(whoCard);
+    wrap.append(h('div', { class: 'welcome-nav' }, [
+      h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
+      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
+    ]));
+  }
+
+  // ---- Step 3 — Food allergies / diet (the most visibly personalised surface) ----
+  if (step === 2) {
+    const dietCard = h('div', { class: 'card' });
+    dietCard.append(h('h2', { style: 'margin-top:0' }, 'Any food allergies or diet?'));
+    dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
+    dietCard.append(dietPicker());
+    wrap.append(dietCard);
+
+    // Everything else is optional and tucked away — reachable now for keen setters, invisible
+    // to travellers who just want to get moving. All fields also live in Settings.
+    wrap.append(foldable('⚙️ Fine-tune (optional): accessibility, budget, interests, location', () => {
+      const box = [];
+      // Accessibility + text size
+      const accCard = h('div', { class: 'card' });
+      accCard.append(h('h3', { style: 'margin-top:0' }, 'Accessibility needs'));
+      accCard.append(h('p', { class: 'muted' }, 'We will surface honest, practical guidance for how these countries work for you. Pick any that apply, or none.'));
+      const accRow = h('div', { class: 'chips' });
+      [['mobility', '♿ Wheelchair / limited mobility'], ['vision', '🦯 Blind / low vision'], ['hearing', '🦻 Deaf / hard of hearing']].forEach(([id, lbl]) => {
+        const on = () => (prefs.access || []).includes(id);
+        accRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
+          onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
+      });
+      accCard.append(accRow);
+      accCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Text size'));
+      accCard.append(prefChips([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], store.profile.textScale || 'm', (v) => { store.profile.textScale = v; save(); applyTheme(); }));
+      box.push(accCard);
+      // How you like to travel
+      const fitCard = h('div', { class: 'card' });
+      fitCard.append(h('h3', { style: 'margin-top:0' }, 'How you like to travel'));
+      fitCard.append(h('p', { class: 'muted' }, 'Budget'));
+      fitCard.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
+      fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
+      fitCard.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
+      fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
+      const intRow = h('div', { class: 'chips' });
+      INTERESTS.forEach((it) => { const on = () => (prefs.interests || []).includes(it.id);
+        intRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
+          onclick: (e) => { prefs.interests = prefs.interests || []; const i = prefs.interests.indexOf(it.id); if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, `${it.emoji} ${it.label}`)); });
+      fitCard.append(intRow);
+      box.push(fitCard);
+      // Location (sensors, not data)
+      const locCard = h('div', { class: 'card' });
+      locCard.append(h('h3', { style: 'margin-top:0' }, 'Use your location? (optional)'));
+      locCard.append(h('p', { class: 'muted' }, 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        const lb = h('button', { class: 'btn ghost block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
+        lb.onclick = async () => { lb.textContent = 'Locating…'; lb.disabled = true; try { const p = await geolocate(); setLastFix(p); const nb = nearestSpotGlobal(p); if (nb) setFocusSpot(nb.spot); lb.textContent = '📍 Location is on'; } catch { lb.textContent = '📍 Location unavailable'; } lb.disabled = false; };
+        locCard.append(lb);
+      } else {
+        locCard.append(h('p', { class: 'muted' }, 'Location is not available on this device — you can still browse by country and city.'));
+      }
+      box.push(locCard);
+      return box;
+    }, { cls: 'welcome-more' }));
+
+    wrap.append(h('div', { class: 'welcome-nav' }, [
+      h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
+      h('button', { class: 'btn', style: 'margin-left:auto', onclick: finish }, 'See what I set up →'),
+    ]));
+  }
+
   // No tab bar during first-run setup: onboarding is a focused flow with its own
-  // "Start exploring" / "Skip for now" exits, not something to wander out of mid-step.
+  // Next / Back / Skip exits, not something to wander out of mid-step.
   mount(wrap);
+}
+
+// NAV-1: the "here is what I set up for you" recap, shown once on the first Home render after
+// the value-first setup. It names each active personalisation and what it does, then points to
+// Settings for the rest. Dismissed (or "add more") clears the one-shot flag.
+function setupRecapCard() {
+  const p = store.profile.prefs;
+  const rows = [];
+  rows.push([netMode() === 'offline' ? '✈️' : '📶',
+    netMode() === 'offline' ? 'Fully offline' : 'Data when you have it',
+    netMode() === 'offline' ? 'The app will not use mobile data or Wi-Fi until you allow it.' : 'The app uses data only when a connection is available.']);
+  const partyLbl = { solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[p.party];
+  if (partyLbl || p.withBaby || p.soloFemale) {
+    const who = [partyLbl, p.withBaby && 'with a baby', p.soloFemale && 'solo female'].filter(Boolean).join(', ');
+    rows.push(['🧭', who, 'Safety notes and picks are tuned to who is travelling.']);
+  }
+  if ((p.diet || []).length) rows.push(['🍽️', p.diet.join(', '), 'Dishes are flagged for you, and your phrases are pinned at the top of Talk.']);
+  if ((p.access || []).length) rows.push(['♿', 'Accessibility: ' + p.access.join(', '), 'Honest, practical access guidance is surfaced for you.']);
+  const fit = [{ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[p.tripLength], { low: 'budget', mid: 'mid', high: 'higher-end' }[p.budget], (p.interests || []).length ? `${p.interests.length} ${p.interests.length > 1 ? 'interests' : 'interest'}` : ''].filter(Boolean).join(' · ');
+  if (fit) rows.push(['🎯', fit, 'Trip plans and the “For you” ranking match how you travel.']);
+
+  const dismiss = () => { p.showSetupRecap = false; save(); render(); };
+  const card = h('div', { class: 'card setup-recap' });
+  card.append(h('strong', {}, '✨ Here is what I set up for you'));
+  card.append(h('ul', { class: 'recap-list' }, rows.map(([ic, t, d]) =>
+    h('li', {}, [h('span', { class: 'recap-ic' }, ic), h('span', {}, [h('b', {}, t), h('span', { class: 'muted' }, ' — ' + d)])]))));
+  card.append(h('div', { class: 'row-between', style: 'margin-top:8px' }, [
+    h('button', { class: 'btn', onclick: () => { p.showSetupRecap = false; save(); go('#settings'); } }, 'Add more in Settings'),
+    h('button', { class: 'btn ghost', onclick: dismiss }, 'Got it'),
+  ]));
+  return card;
 }
 
 function foryouScreen() {
