@@ -1456,3 +1456,26 @@ html[data-theme="dark"], html[data-skin="night"], html[data-skin="psychnight"] {
 table.rent-price { border-collapse: collapse; width: 100%; margin: 6px 0 0; font-size: var(--fs-sm); }
 table.rent-price th, table.rent-price td { border: 1px solid var(--line, rgba(0,0,0,0.1)); padding: 5px 8px; text-align: left; }
 table.rent-price th { background: var(--bg); font-weight: 800; }
+
+/* ---- Guided "walk-me" tour (TUT-1) ---- */
+.tour { position: fixed; inset: 0; z-index: 5000; }
+.tour-dim { position: fixed; inset: 0; background: rgba(20, 26, 24, 0.72); }
+.tour-hole {
+  position: fixed; border-radius: var(--r-md, 12px); pointer-events: none;
+  box-shadow: 0 0 0 3px var(--sun, #E8A33D), 0 0 0 9999px rgba(20, 26, 24, 0.72);
+  transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease;
+}
+.tour-card {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  width: min(92vw, 360px); background: var(--card, #fff); color: var(--ink, #222);
+  border-radius: var(--r-lg, 16px); padding: 16px 18px; z-index: 5001;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.38);
+}
+.tour-card.center { top: 50%; transform: translate(-50%, -50%); }
+.tour-count { font-size: 12px; letter-spacing: 0.06em; font-weight: 700; color: var(--ink-soft, #888); }
+.tour-card h3 { margin: 3px 0 6px; font-size: 19px; color: var(--ink, #222); }
+.tour-card p { margin: 0 0 14px; font-size: 14.5px; line-height: 1.5; color: var(--ink-soft, #555); }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-actions .btn { min-height: 44px; }
+.tour-actions .tour-next { margin-left: auto; width: auto; padding-left: 20px; padding-right: 20px; }
+@media (prefers-reduced-motion: reduce) { .tour-hole { transition: none; } }
