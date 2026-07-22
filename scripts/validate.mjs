@@ -5,6 +5,11 @@
 // Run: node scripts/validate.mjs   (or: npm run validate)
 
 import { COUNTRIES, LANGUAGES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES } from '../js/data/regions.js';
+import { PRODUCE, PRODUCE_CATEGORIES } from '../js/data/produce.js';
+import { NATURE, NATURE_GROUPS } from '../js/data/nature.js';
+import { POOLS } from '../js/data/pools.js';
+import { ITINERARIES } from '../js/data/itineraries.js';
+import { PHOTOS } from '../js/data/photos.js';
 
 let checks = 0;
 const errors = [];
@@ -135,6 +140,68 @@ for (const d of allFood()) {
   warn(Array.isArray(d.sources) && d.sources.length > 0, `dish ${tag}: no sources listed`);
 }
 
+// --- produce -----------------------------------------------------------------
+const PRODUCE_CAT_IDS = new Set(PRODUCE_CATEGORIES.map((c) => c.id));
+const seenProduceIds = new Set();
+for (const p of PRODUCE) {
+  ok(p.id && !seenProduceIds.has(p.id), `produce: duplicate or missing id (${p.id})`);
+  seenProduceIds.add(p.id);
+  const tag = p.id || '<no-id>';
+  ok(typeof p.name === 'string' && p.name.trim(), `produce ${tag}: missing name`);
+  ok(PRODUCE_CAT_IDS.has(p.category), `produce ${tag}: bad category "${p.category}" (not a PRODUCE_CATEGORIES id)`);
+  ok(p.price && typeof p.price.low === 'number' && typeof p.price.high === 'number' && p.price.low <= p.price.high, `produce ${tag}: price.low/high must be numbers with low<=high`);
+  ok(p.price && typeof p.price.currency === 'string' && p.price.currency, `produce ${tag}: missing price.currency`);
+}
+
+// --- nature / species --------------------------------------------------------
+const NATURE_GROUP_IDS = new Set(NATURE_GROUPS.map((g) => g.id));
+const seenSpeciesIds = new Set();
+for (const s of NATURE) {
+  ok(s.id && !seenSpeciesIds.has(s.id), `species: duplicate or missing id (${s.id})`);
+  seenSpeciesIds.add(s.id);
+  const tag = s.id || '<no-id>';
+  ok(NATURE_GROUP_IDS.has(s.group), `species ${tag}: bad group "${s.group}" (not a NATURE_GROUPS id)`);
+  ok(typeof s.commonName === 'string' && s.commonName.trim(), `species ${tag}: missing commonName`);
+}
+
+// --- pools & itineraries -----------------------------------------------------
+const CC = new Set(COUNTRIES.map((c) => c.id));
+const seenPoolIds = new Set();
+for (const p of POOLS) {
+  ok(p.id && !seenPoolIds.has(p.id), `pool: duplicate or missing id (${p.id})`);
+  seenPoolIds.add(p.id);
+  const tag = p.id || '<no-id>';
+  ok(typeof p.name === 'string' && p.name.trim(), `pool ${tag}: missing name`);
+  ok(CC.has(p.country), `pool ${tag}: bad country "${p.country}"`);
+  if (p.price) ok(typeof p.price.low === 'number' && typeof p.price.high === 'number' && p.price.low <= p.price.high, `pool ${tag}: price.low/high must be numbers with low<=high`);
+}
+const seenItinIds = new Set();
+for (const it of ITINERARIES) {
+  ok(it.id && !seenItinIds.has(it.id), `itinerary: duplicate or missing id (${it.id})`);
+  seenItinIds.add(it.id);
+  const tag = it.id || '<no-id>';
+  ok(CC.has(it.country), `itinerary ${tag}: bad country "${it.country}"`);
+  ok(typeof it.days === 'number' && it.days > 0, `itinerary ${tag}: days must be a positive number`);
+  ok(Array.isArray(it.stops) && it.stops.length > 0, `itinerary ${tag}: no stops`);
+  for (const s of it.stops || []) ok(s.title && (s.nights == null || typeof s.nights === 'number'), `itinerary ${tag}: stop missing title or bad nights`);
+}
+
+// --- photos: every registered image must key to a real, surfaceable entity ---
+// PHOTOS is a global id->image registry consumed generically as PHOTOS[item.id] for
+// places, dishes, produce and species alike. A key that matches no entity id is a dead
+// image (it can never render) or — worse — a near-miss typo that hides a real photo from
+// a real place. This cross-reference check is the one that spans datasets.
+const ENTITY_IDS = new Set([
+  ...allPlaces().map((p) => p.id),
+  ...allFood().map((d) => d.id),
+  ...PRODUCE.map((p) => p.id),
+  ...NATURE.map((s) => s.id),
+  ...POOLS.map((p) => p.id),
+]);
+for (const key of Object.keys(PHOTOS)) {
+  ok(ENTITY_IDS.has(key), `PHOTOS key "${key}" matches no known entity id (place/dish/produce/species/pool) — the image can never render`);
+}
+
 // --- per-country prices / routes / info --------------------------------------
 for (const c of COUNTRIES) {
   if (c.prices) {
@@ -179,4 +246,4 @@ if (errors.length) {
   for (const e of errors) console.error('  ✗ ' + e);
   process.exit(1);
 }
-console.log(`VALIDATION PASS: ${checks}/${checks} checks across ${COUNTRIES.length} countries, ${Object.keys(LANGUAGES).length} languages and ${dishCount} dishes.`);
+console.log(`VALIDATION PASS: ${checks}/${checks} checks across ${COUNTRIES.length} countries, ${Object.keys(LANGUAGES).length} languages, ${dishCount} dishes, ${PRODUCE.length} produce, ${NATURE.length} species, ${POOLS.length} pools, ${ITINERARIES.length} itineraries and ${Object.keys(PHOTOS).length} photos.`);
