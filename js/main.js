@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.288.0';
+const APP_VERSION = 'mk-v0.289.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3324,7 +3324,7 @@ function phrasebookScreen(lang) {
 // and removal is confirmed — the "add / delete with verification" the user asked for.
 function dictionaryScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('My phrases'));
+  wrap.append(topbar('My phrases', '#me'));
   const repaint = () => dictionaryScreen();
 
   const pinsMap = store.profile.prefs.phrasePins || {};
@@ -5157,7 +5157,7 @@ function sourcesNote(sources, verified, place) {
 function pricesScreen(countryId) {
   if (countryId) activeCountry = countryId;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Fair prices'));
+  wrap.append(topbar('Fair prices', getCountry(activeCountry) ? `#country-${activeCountry}` : '#home'));
   wrap.append(countryChips((id) => go(`#prices-${id}`)));
 
   const country = getCountry(activeCountry);
@@ -5440,7 +5440,7 @@ function infoScreen(countryId) {
   if (countryId) activeCountry = countryId;
   const wrap = h('div', { class: 'screen' });
   const country = getCountry(activeCountry);
-  wrap.append(topbar(country ? `${country.name} guide` : 'Country guide', '#home'));
+  wrap.append(topbar(country ? `${country.name} guide` : 'Country guide', country ? `#country-${activeCountry}` : '#home'));
   wrap.append(countryChips((id) => go(`#info-${id}`)));
 
   const info = country && country.info;
@@ -7588,7 +7588,7 @@ function daySegments(hourly, date) {
 
 function weatherScreen(country) {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Weather & forecast', '#home'));
+  wrap.append(topbar('Weather & forecast', getCountry(country) ? `#country-${country}` : '#home'));
   // Seed the city from the country arg ONLY when first arriving at this route — otherwise
   // every render (e.g. a city-chip click, which calls render()) would overwrite the user's
   // choice back to the focus city. That was the "weather buttons do nothing" bug.
@@ -8065,7 +8065,7 @@ function daySuggestScreen(country) {
   todoFamily = 'all';   // fresh filter each visit, so a stale category never hides a new city's picks
   todoPlan = 'now';     // always open on "now"; planning ahead is an explicit, per-visit choice
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Things to do', '#home'));
+  wrap.append(topbar('Things to do', `#country-${id}`));
 
   // A compact header (scope + conditions + filters) sits above the list, but the list itself
   // starts near the top so the traveller never scrolls past chrome to reach what they can do now.
@@ -8287,7 +8287,7 @@ function eventsScreen(country) {
   // in their country lead instead of a four-country pile (they can still tap "All").
   else if (!eventsCountry) { const f = focusSpot(); if (f.spot && getCountry(f.spot.country)) eventsCountry = f.spot.country; }
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Festivals & events', '#home'));
+  wrap.append(topbar('Festivals & events', getCountry(eventsCountry) ? `#country-${eventsCountry}` : '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
@@ -8624,7 +8624,7 @@ function bestofScreen(countryId) {
 function bestListScreen(id) {
   const l = getBestList(id);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(l ? l.title : 'List', `#bestof-${l ? l.country : ''}`));
+  wrap.append(topbar(l ? l.title : 'List', l ? `#bestof-${l.country}` : '#bestof'));
   if (!l) { wrap.append(h('p', { class: 'empty' }, 'List not found.')); mount(wrap, '#home'); return; }
   if (l.blurb) wrap.append(h('p', { class: 'map-hint' }, l.blurb));
   (l.items || []).forEach((it, i) => {
