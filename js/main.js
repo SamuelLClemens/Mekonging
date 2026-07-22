@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.287.0';
+const APP_VERSION = 'mk-v0.288.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -585,11 +585,11 @@ const TAB_FOR_HEAD = {
   events: '#places', event: '#places', weather: '#places', today: '#places', prices: '#places',
   transport: '#places', route: '#places', crossings: '#places', schedules: '#places', visa: '#places',
   access: '#places', baby: '#places', family: '#places', streetfood: '#places', board: '#places',
-  setcity: '#places',
+  setcity: '#places', scams: '#places',
   phrasebook: '#phrasebook',
   // The personal hub ("YOU"/name) owns everything that is about the traveller themselves:
   // their calendar, memories, money, saved things, documents — and Settings.
-  me: '#me', dictionary: '#me', settings: '#me',
+  me: '#me', dictionary: '#me', settings: '#me', export: '#me', identified: '#me',
   saved: '#me', collection: '#me',
   journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
   trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
