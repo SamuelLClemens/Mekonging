@@ -4,7 +4,7 @@
 //
 // Run: node scripts/validate.mjs   (or: npm run validate)
 
-import { COUNTRIES, LANGUAGES, allPlaces } from '../js/data/regions.js';
+import { COUNTRIES, LANGUAGES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES } from '../js/data/regions.js';
 
 let checks = 0;
 const errors = [];
@@ -94,6 +94,47 @@ for (const p of allPlaces()) {
   }
 }
 
+// --- food / dishes -----------------------------------------------------------
+// Every dish is a diet-safety surface: its allergens[] tags drive the "you flagged this"
+// warnings on the food list and dish detail. A tag outside the FOOD_ALLERGENS vocabulary
+// (e.g. "treenut" instead of "tree nut") never matches a traveller's avoided set, so the
+// ⚠️ warning silently fails to fire — a false-negative in a safety feature. The vocabulary
+// check below makes that class of defect un-mergeable.
+const ALLERGEN_VOCAB = new Set(FOOD_ALLERGENS);
+const FOOD_CAT_IDS = new Set(FOOD_CATEGORIES.map((c) => c.id));
+const SPICE_LEVELS = ['none', 'mild', 'medium', 'hot'];
+const KNOWN_CURRENCIES = ['THB', 'VND', 'KHR', 'LAK', 'USD'];
+const seenDishIds = new Set();
+let dishCount = 0;
+for (const d of allFood()) {
+  dishCount++;
+  ok(d.id && !seenDishIds.has(d.id), `dish: duplicate or missing id (${d.id})`);
+  seenDishIds.add(d.id);
+  const tag = d.id || '<no-id>';
+  ok(typeof d.name === 'string' && d.name.trim(), `dish ${tag}: missing name`);
+  ok(typeof d.localName === 'string' && d.localName.trim(), `dish ${tag}: missing localName (native script)`);
+  ok(typeof d.roman === 'string' && d.roman.trim(), `dish ${tag}: missing roman`);
+  ok(typeof d.description === 'string' && d.description.trim(), `dish ${tag}: missing description`);
+  ok(FOOD_CAT_IDS.has(d.category), `dish ${tag}: bad category "${d.category}" (not a FOOD_CATEGORIES id)`);
+  ok(Array.isArray(d.ingredients) && d.ingredients.length > 0 && d.ingredients.every((x) => typeof x === 'string' && x.trim()),
+    `dish ${tag}: ingredients must be a non-empty array of strings`);
+  // Allergen vocabulary conformance — the safety-critical check. Empty allergens[] is valid
+  // (a genuinely allergen-free dish); every listed token must be a FOOD_ALLERGENS member.
+  ok(Array.isArray(d.allergens), `dish ${tag}: allergens must be an array`);
+  for (const a of d.allergens || []) {
+    ok(ALLERGEN_VOCAB.has(a), `dish ${tag}: allergen "${a}" is not in the FOOD_ALLERGENS vocabulary (${FOOD_ALLERGENS.join(', ')})`);
+  }
+  ok(!d.allergens || new Set(d.allergens).size === d.allergens.length, `dish ${tag}: duplicate allergen tokens`);
+  ok(typeof d.veg === 'string' && d.veg.trim(), `dish ${tag}: missing veg note`);
+  ok(SPICE_LEVELS.includes(d.spice), `dish ${tag}: bad spice "${d.spice}" (expected ${SPICE_LEVELS.join('/')})`);
+  ok(d.price && typeof d.price.low === 'number' && typeof d.price.high === 'number', `dish ${tag}: price.low/high must be numbers`);
+  ok(d.price && d.price.low <= d.price.high, `dish ${tag}: price low>high`);
+  ok(d.price && typeof d.price.currency === 'string' && d.price.currency, `dish ${tag}: missing price.currency`);
+  if (d.price && d.price.currency) warn(KNOWN_CURRENCIES.includes(d.price.currency), `dish ${tag}: unusual currency "${d.price.currency}"`);
+  ok(typeof d.whereToFind === 'string' && d.whereToFind.trim(), `dish ${tag}: missing whereToFind`);
+  warn(Array.isArray(d.sources) && d.sources.length > 0, `dish ${tag}: no sources listed`);
+}
+
 // --- per-country prices / routes / info --------------------------------------
 for (const c of COUNTRIES) {
   if (c.prices) {
@@ -138,4 +179,4 @@ if (errors.length) {
   for (const e of errors) console.error('  ✗ ' + e);
   process.exit(1);
 }
-console.log(`VALIDATION PASS: ${checks}/${checks} checks across ${COUNTRIES.length} countries and ${Object.keys(LANGUAGES).length} languages.`);
+console.log(`VALIDATION PASS: ${checks}/${checks} checks across ${COUNTRIES.length} countries, ${Object.keys(LANGUAGES).length} languages and ${dishCount} dishes.`);
