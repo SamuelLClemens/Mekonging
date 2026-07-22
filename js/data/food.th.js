@@ -38,7 +38,7 @@ export const FOOD_TH = {
     { "id": "th-massaman-curry", "name": "Massaman Curry", "localName": "แกงมัสมั่น", "roman": "kaeng matsaman", "category": "curry",
       "description": "Rich, mild Thai-Muslim curry with warm spices (cinnamon, cardamom, star anise), coconut, potatoes and peanuts, usually chicken or beef.",
       "ingredients": ["chicken or beef", "coconut milk", "potatoes", "onions", "peanuts", "tamarind", "fish sauce", "cardamom", "cinnamon", "star anise"],
-      "allergens": ["peanut", "treenut", "fish", "shellfish"],
+      "allergens": ["peanut", "tree nut", "fish", "shellfish"],
       "veg": "A tofu version is available and fish sauce/shrimp paste can be omitted for vegan. Ask 'massaman jay'. Nuts are core, so not nut-free.",
       "spice": "mild", "price": { "low": 50, "high": 90, "currency": "THB" },
       "whereToFind": "Curry-over-rice shops; more common in central/southern Thailand and Muslim-Thai eateries.",
