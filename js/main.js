@@ -213,7 +213,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.289.0';
+const APP_VERSION = 'mk-v0.290.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1864,19 +1864,6 @@ function homeScreen() {
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
   wrap.append(netStatusRow());
 
-  // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
-  // dangerous animals) plus the traveller's own saved finds. These used to live only in the
-  // country hub, so they were hard to find; surfaced here, always open, from the front door.
-  wrap.append(h('h2', { class: 'home-section' }, '🔎 Identify what’s around you'));
-  wrap.append(h('div', { class: 'grid' }, [
-    { ic: ICON.bowl, t: 'Food', d: 'Name a street dish', hash: '#food' },
-    { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-    { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
-    { ic: ICON.volume, t: 'Sounds', d: 'What made that call?', hash: '#sounds' },
-    { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
-    { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Your saved finds', hash: '#identified' },
-  ].map(sectionTile)));
-
   // Time of day where you are — the live, place-and-moment picks, ABOVE "Your day".
   wrap.append(rightNowSection());
 
@@ -1951,6 +1938,19 @@ function homeScreen() {
       h('div', { class: 'grid' }, g.items.map(tileBtn)),
     ]));
   });
+
+  // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
+  // dangerous animals) plus the traveller's own saved finds. Placed below the trip-planning
+  // decks: valuable once in-country, but not the first thing a planning traveller needs.
+  wrap.append(h('h2', { class: 'home-section' }, '🔎 Identify what’s around you'));
+  wrap.append(h('div', { class: 'grid' }, [
+    { ic: ICON.bowl, t: 'Food', d: 'Name a street dish', hash: '#food' },
+    { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
+    { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
+    { ic: ICON.volume, t: 'Sounds', d: 'What made that call?', hash: '#sounds' },
+    { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
+    { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Your saved finds', hash: '#identified' },
+  ].map(sectionTile)));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
   wrap.append(h('div', { class: 'card give-back', style: 'margin-top:10px' }, [
