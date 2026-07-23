@@ -214,7 +214,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.293.0';
+const APP_VERSION = 'mk-v0.294.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3181,6 +3181,14 @@ function essentialsCard(code, book, onChange) {
     card.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' },
       '⚠️ ' + (diet.length ? 'Your allergies & diet — show the cook' : 'Food allergy — show the cook')));
     allergy.forEach((p) => card.append(phraseRow(p, book.locale, { code, catId: 'allergies', onChange, noHide: true, essential: true })));
+    // Honest gap: some flagged allergens (currently sesame) have no verified phrase in ANY
+    // language yet — we never fabricate a safety-critical translation. Say so plainly so the
+    // general phrase above is not mistaken for full coverage. This line drops out on its own
+    // once a sourced phrase removes the allergen from PHRASE_PENDING_ALLERGENS.
+    const pending = diet.filter((id) => Diet.PHRASE_PENDING_ALLERGENS.includes(id))
+      .map((id) => (DIET_LABEL[id] || {}).label || id);
+    if (pending.length) card.append(h('p', { class: 'warn-note', role: 'note' },
+      `No verified ${joinList(pending)} phrase yet — the phrases above do not name ${pending.length > 1 ? 'them' : 'it'}. Show the dish’s red warning, point to it on a menu, or write the word down.`));
     if (!diet.length) card.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0 2px', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
   } else if (!diet.length) {
     card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' },
