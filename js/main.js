@@ -78,6 +78,7 @@ import { REGIONS_VI } from './data/regions.vi.js';
 import { REGIONS_KH } from './data/regions.kh.js';
 import { REGIONS_LA } from './data/regions.la.js';
 import { provinceInfo } from './data/regions.info.js';
+import * as Diet from './data/diet.js';
 
 // ---- service worker + theme -------------------------------------------------
 // Register the service worker only in a secure web context (https / http localhost).
@@ -213,7 +214,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.292.0';
+const APP_VERSION = 'mk-v0.293.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -319,11 +320,14 @@ function accentFor(hash) {
 // colour and icon are identical wherever it shows.
 function sectionTile(x) {
   const accent = accentFor(x.hash);
-  const attrs = { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.badge ? `${x.t} — ${x.badge} new` : x.t };
+  const base = x.badge ? `${x.t} — ${x.badge} new` : x.t;
+  // Fold the visible one-line hint into the accessible name so screen-reader users get the
+  // same description sighted users see; the icon is decorative.
+  const attrs = { class: 'tile', onclick: () => go(x.hash), 'aria-label': x.d ? `${base}. ${x.d}` : base };
   if (accent) attrs.style = `--tile-accent:${accent}`;
   return h('button', attrs, [
     x.badge ? h('span', { class: 'tile-badge', title: `${x.badge} new` }, x.badge > 99 ? '99+' : String(x.badge)) : null,
-    h('span', { class: 'ic', html: x.ic }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
+    h('span', { class: 'ic', html: x.ic, 'aria-hidden': 'true' }), h('span', { class: 't' }, x.t), h('span', { class: 'd' }, x.d),
   ]);
 }
 
@@ -6986,116 +6990,25 @@ function calendarFormScreen(editId, prefill) {
 }
 
 // ---- DIETARY PROFILE (allergies + diet) -------------------------------------
-// Powers the food-identifier highlighting and the pinned phrasebook allergy card.
-// SAFETY: the highlighting is guidance drawn from each dish's LISTED allergens, never a
-// guarantee. A green border means "nothing you avoid is listed", not "confirmed safe";
-// recipes and shared woks vary. The real safety tool is showing the cook the translated
-// allergy phrase (phrasebook). Diet choices the data cannot verify (halal, kosher,
-// no-pork/beef/alcohol) never colour a dish — they only pin the right phrases + guidance.
-const DIET_OPTIONS = [
-  { group: 'Allergies — flagged on dishes', items: [
-    { id: 'peanut', label: 'Peanuts', emoji: '🥜' },
-    { id: 'tree nut', label: 'Tree nuts', emoji: '🌰' },
-    { id: 'shellfish', label: 'Shellfish', emoji: '🦐' },
-    { id: 'fish', label: 'Fish', emoji: '🐟' },
-    { id: 'egg', label: 'Egg', emoji: '🥚' },
-    { id: 'dairy', label: 'Dairy / milk', emoji: '🥛' },
-    { id: 'soy', label: 'Soy', emoji: '🫘' },
-    { id: 'gluten', label: 'Gluten / wheat (celiac)', emoji: '🌾' },
-    { id: 'sesame', label: 'Sesame', emoji: '🫓' },
-  ] },
-  { group: 'Diet & beliefs', items: [
-    { id: 'vegetarian', label: 'Vegetarian', emoji: '🥗' },
-    { id: 'vegan', label: 'Vegan', emoji: '🌱' },
-    { id: 'pescatarian', label: 'Pescatarian', emoji: '🐠' },
-    { id: 'halal', label: 'Halal', emoji: '🕌' },
-    { id: 'kosher', label: 'Kosher', emoji: '✡️' },
-    { id: 'no-pork', label: 'No pork', emoji: '🐖' },
-    { id: 'no-beef', label: 'No beef', emoji: '🐄' },
-    { id: 'no-alcohol', label: 'No alcohol', emoji: '🚫' },
-    { id: 'no-msg', label: 'No MSG', emoji: '🧂' },
-    { id: 'no-chili', label: 'Not spicy at all', emoji: '🌶' },
-  ] },
-];
-const DIET_LABEL = Object.fromEntries(DIET_OPTIONS.flatMap((g) => g.items).map((it) => [it.id, it]));
-
-// The allergen keys (matching FOOD_ALLERGENS) a profile means to avoid — including the
-// ones implied by a vegetarian/vegan choice. Only these can colour a dish red.
-function dietAvoidAllergens(diet) {
-  const set = new Set();
-  for (const key of (diet || store.profile.prefs.diet || [])) {
-    if (FOOD_ALLERGENS.includes(key)) set.add(key);
-    if (key === 'vegetarian') { set.add('fish'); set.add('shellfish'); }
-    if (key === 'vegan') { set.add('fish'); set.add('shellfish'); set.add('egg'); set.add('dairy'); }
-  }
-  return set;
-}
-
-// Verdict for one dish vs. the saved profile: 'bad' (lists something to avoid), 'ok'
-// (nothing flagged — still confirm), or '' (no profile set → no border).
-function dishDietVerdict(d, avoid, diet) {
-  const dietArr = diet || store.profile.prefs.diet || [];
-  const av = avoid || dietAvoidAllergens(dietArr);
-  if (!dietEvaluable(dietArr, av)) return '';
-  return dishDietReasons(d, av, dietArr).length ? 'bad' : 'ok';
-}
-
-// --- Belief / preference diet flags (NOT allergens) --------------------------
-// Fish sauce, egg and dairy are caught via dietAvoidAllergens, but land meat, pork, beef and
-// alcohol carry no allergen tag. These helpers read the structured ingredients so the whole
-// "Diet & beliefs" group (vegetarian, vegan, pescatarian, halal, kosher, no-pork, no-beef,
-// no-alcohol) actually drives the red/green verdict — conservatively, using only unambiguous
-// signals so a dish is never misrepresented.
-function dietIsVeg(diet) {
-  const d = diet || store.profile.prefs.diet || [];
-  return d.includes('vegan') ? 'vegan' : d.includes('vegetarian') ? 'vegetarian' : '';
-}
-// Does this profile carry any flag we can actually evaluate against a dish?
-function dietEvaluable(dietArr, av) {
-  if (av && av.size) return true;
-  return (dietArr || []).some((f) => ['vegetarian', 'vegan', 'pescatarian', 'no-pork', 'no-beef', 'halal', 'kosher', 'no-alcohol'].includes(f));
-}
-const MEAT_TERMS = ['pork', 'beef', 'chicken', 'duck', 'buffalo', 'goat', 'lamb', 'bacon', 'ham', 'sausage', 'offal', 'liver'];
-const ALCOHOL_TERMS = ['beer', 'wine', 'sake', 'rum', 'whisky', 'whiskey', 'vodka', 'brandy', 'liquor', 'lao-lao', 'lao khao', 'rượu', 'shaoxing'];
-// Guard against mock/plant meats ("mock duck", "vegetarian chicken", "soy beef", "chicken free").
-function isMockMeat(s, t) {
-  return new RegExp(`(mock|vegan|vegetarian|plant|soy|imitation|faux)[ -]?(\\w+ )?${t}`).test(s)
-    || new RegExp(`${t}[ -](substitute|alternative|free)`).test(s);
-}
-// The land meats / poultry named in this dish's ingredients (deduped, human-readable).
-function dishMeatHits(d) {
-  const ings = (d.ingredients || []).map((i) => i.toLowerCase());
-  const hits = [];
-  for (const t of MEAT_TERMS) {
-    if (ings.some((s) => s.includes(t) && !isMockMeat(s, t)) && !hits.includes(t)) hits.push(t);
-  }
-  if (!hits.length && ings.some((s) => /\bmeat\b/.test(s) && !isMockMeat(s, 'meat'))) hits.push('meat');
-  return hits;
-}
-// True alcohol — excludes "rice wine vinegar" / "wine vinegar", which are non-alcoholic.
-function dishHasAlcohol(d) {
-  const ings = (d.ingredients || []).map((i) => i.toLowerCase());
-  return ings.some((s) => ALCOHOL_TERMS.some((t) => s.includes(t)) && !/vinegar/.test(s));
-}
-// The full, human-readable list of why a dish conflicts with the traveller's diet profile:
-// flagged allergens + meats + alcohol, according to which beliefs/preferences are set. Powers
-// the visible warning line and the badge label.
-function dishDietReasons(d, avoid, diet) {
-  const dietArr = diet || store.profile.prefs.diet || [];
-  const set = new Set(dietArr);
-  const av = avoid || dietAvoidAllergens(dietArr);
-  const reasons = [];
-  const add = (r) => { if (r && !reasons.includes(r)) reasons.push(r); };
-  (d.allergens || []).forEach((a) => { if (av.has(a)) add(a); });
-  const meat = dishMeatHits(d);
-  const pork = meat.filter((m) => ['pork', 'bacon', 'ham'].includes(m));
-  if (set.has('vegetarian') || set.has('vegan') || set.has('pescatarian')) meat.forEach(add);
-  if (set.has('no-pork') || set.has('halal') || set.has('kosher')) pork.forEach(add);
-  if (set.has('no-beef') && meat.includes('beef')) add('beef');
-  if (set.has('kosher') && (d.allergens || []).includes('shellfish')) add('shellfish');
-  if ((set.has('halal') || set.has('no-alcohol')) && dishHasAlcohol(d)) add('alcohol');
-  return reasons;
-}
+// Powers the food-identifier highlighting and the pinned phrasebook allergy card. The pure,
+// DOM-free verdict logic and all tables now live in js/data/diet.js (so scripts/validate.mjs
+// can behaviourally test them); the wrappers below inject the saved profile.
+//
+// SAFETY: the highlighting is guidance drawn from each dish's LISTED allergens/ingredients,
+// never a guarantee. A green border means "nothing you avoid is listed", not "confirmed
+// safe"; recipes and shared woks vary. The real safety tool is showing the cook the
+// translated allergy phrase (phrasebook). Belief flags vegetarian/vegan/pescatarian/halal/
+// kosher/no-pork/no-beef/no-alcohol DO drive the verdict via structured ingredient
+// inspection (land-meat and alcohol matching); no-chili (spice guidance) and no-msg
+// (undetectable from listed data) intentionally never colour a dish — both are phrasebook /
+// spice-note only.
+const { DIET_OPTIONS, DIET_LABEL, joinList, dishMeatHits } = Diet;
+// Thin wrappers injecting the saved profile (store.profile.prefs.diet) into the pure diet.js
+// functions, so every existing call site keeps working unchanged.
+function dietAvoidAllergens(diet) { return Diet.dietAvoidAllergens(diet || store.profile.prefs.diet || []); }
+function dietEvaluable(dietArr, av) { return Diet.dietEvaluable(dietArr || store.profile.prefs.diet || [], av); }
+function dishDietReasons(d, avoid, diet) { return Diet.dishDietReasons(d, avoid, diet || store.profile.prefs.diet || []); }
+function dishDietVerdict(d, avoid, diet) { return Diet.dishDietVerdict(d, avoid, diet || store.profile.prefs.diet || []); }
 
 // A gentle, non-safety spice note for travellers who said they are with a baby/kids or dislike
 // heat ("Not spicy at all"). This is guidance, NOT the red allergen verdict — Thai/Lao/Isan heat
@@ -7108,20 +7021,13 @@ function dishSpiceCaution(d, prefs) {
   if (d.spice === 'medium' && (prefs.withBaby || noChili)) return 'Can be spicy — you can ask for it milder';
   return '';
 }
-// "peanut", "peanut and shellfish", "peanut, shellfish and egg" — a natural inline list.
-function joinList(arr) {
-  if (arr.length <= 1) return arr[0] || '';
-  if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
-  return `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`;
-}
-
 // A reusable chip picker for the dietary profile. onChange() fires after each toggle.
 function dietPicker(onChange) {
   const sel = new Set(store.profile.prefs.diet || []);
   const box = h('div', {});
   DIET_OPTIONS.forEach((grp) => {
     box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, grp.group));
-    box.append(h('div', { class: 'chips' }, grp.items.map((it) =>
+    box.append(h('div', { class: 'chips', role: 'group', 'aria-label': grp.group }, grp.items.map((it) =>
       h('button', {
         class: 'chip', 'aria-pressed': sel.has(it.id) ? 'true' : 'false',
         onclick: (e) => {
@@ -7130,7 +7036,7 @@ function dietPicker(onChange) {
           e.currentTarget.setAttribute('aria-pressed', sel.has(it.id) ? 'true' : 'false');
           if (onChange) onChange();
         },
-      }, `${it.emoji} ${it.label}`))));
+      }, [h('span', { 'aria-hidden': 'true' }, `${it.emoji} `), it.label]))));
   });
   return box;
 }
@@ -7141,22 +7047,11 @@ function dietPicker(onChange) {
 function allergyPhrasesForProfile(code, diet) {
   const list = (ALLERGENS[code] && ALLERGENS[code].length) ? ALLERGENS[code] : [];
   if (!list.length) return [];
-  const RX = {
-    general: /food allergy/i, egg: /\begg/i, peanut: /peanut/i, treenut: /tree nut/i,
-    shellfish: /shellfish|seafood/i, fish: /^no fish/i, dairy: /dairy|milk/i, soy: /\bsoy/i,
-    gluten: /gluten|wheat/i, msg: /msg/i, chili: /chili|spicy/i,
-  };
-  const KEYS = {
-    egg: ['egg'], peanut: ['peanut'], 'tree nut': ['treenut'], shellfish: ['shellfish'],
-    fish: ['fish'], dairy: ['dairy'], soy: ['soy'], gluten: ['gluten'], sesame: [],
-    vegetarian: ['fish', 'shellfish'], vegan: ['fish', 'shellfish', 'egg', 'dairy'],
-    'no-msg': ['msg'], 'no-chili': ['chili'],
-  };
   const wanted = ['general'];
-  for (const id of (diet || store.profile.prefs.diet || [])) (KEYS[id] || []).forEach((k) => wanted.push(k));
+  for (const id of (diet || store.profile.prefs.diet || [])) (Diet.PHRASE_KEYS[id] || []).forEach((k) => wanted.push(k));
   const out = []; const seen = new Set();
   for (const k of wanted) {
-    const rx = RX[k]; if (!rx) continue;
+    const rx = Diet.PHRASE_RX[k]; if (!rx) continue;
     const found = list.find((p) => rx.test(p.en));
     if (found && !seen.has(found.en)) { seen.add(found.en); out.push(found); }
   }
@@ -7198,8 +7093,11 @@ function foodCard(d) {
     : 'Contains something you avoid';
   const okLabel = 'Nothing you avoid is listed — still confirm';
   const spiceNote = dishSpiceCaution(d, store.profile.prefs);
+  // Bad state: the visible .food-warn line below already names the flagged allergen, so hide
+  // the badge from the accessible name to avoid announcing it twice (keep the title for hover).
+  // Ok state: the badge has no accompanying visible text, so it keeps role=img + aria-label.
   const badge = verdict === 'bad'
-    ? h('span', { class: 'food-flag bad', role: 'img', 'aria-label': badLabel, title: badLabel }, '✕')
+    ? h('span', { class: 'food-flag bad', 'aria-hidden': 'true', title: badLabel }, '✕')
     : verdict === 'ok'
       ? h('span', { class: 'food-flag ok', role: 'img', 'aria-label': okLabel, title: okLabel }, '✓')
       : null;
@@ -7381,6 +7279,12 @@ function foodScreen(country) {
   }
 
   const listEl = h('div', {});
+  // Persistent visually-hidden status so screen readers hear the result count and safety
+  // summary when a filter, the search box, or an "Avoid" chip re-runs renderList (WCAG 4.1.3).
+  // It lives outside listEl (which is wiped each render) so its updates are announced, and it
+  // summarises rather than re-reading every card.
+  const listStatus = h('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+  wrap.append(listStatus);
   wrap.append(listEl);
   function renderList() {
     listEl.innerHTML = '';
@@ -7400,8 +7304,10 @@ function foodScreen(country) {
     if (foodFitOnly && evaluable) dishes = dishes.filter((d) => dishDietVerdict(d, avoid) !== 'bad');
     if (evaluable) dishes = dishes.slice().sort((a, b) =>
       (dishDietVerdict(a, avoid) === 'bad' ? 1 : 0) - (dishDietVerdict(b, avoid) === 'bad' ? 1 : 0));
-    if (!dishes.length) { listEl.append(h('p', { class: 'empty' }, 'No dishes match. Try clearing a filter.')); return; }
+    if (!dishes.length) { listEl.append(h('p', { class: 'empty' }, 'No dishes match. Try clearing a filter.')); listStatus.textContent = 'No dishes match. Try clearing a filter.'; return; }
     dishes.forEach((d) => listEl.append(foodCard(d)));
+    const bad = evaluable ? dishes.filter((d) => dishDietVerdict(d, avoid) === 'bad').length : 0;
+    listStatus.textContent = `${dishes.length} dish${dishes.length === 1 ? '' : 'es'}${bad ? `, ${bad} to avoid` : ''}`;
   }
   renderList();
   mount(wrap, '#home');
@@ -7441,12 +7347,17 @@ function dishScreen(id) {
   const dv = dishDietVerdict(d);
   if (dv === 'bad') {
     const flagged = dishDietReasons(d);
-    card.append(h('div', { class: 'diet-banner bad' }, flagged.length
+    card.append(h('div', { class: 'diet-banner bad', role: 'status' }, flagged.length
       ? `⚠️ Typically contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}. Recipes vary, so check the allergens below and confirm with the cook.`
       : '✕ This lists something you avoid — check the allergens below and confirm with the cook.'));
   } else if (dv === 'ok') {
-    card.append(h('div', { class: 'diet-banner ok' },
-      '✓ Nothing you avoid is listed for this dish. Recipes vary, so still confirm with the cook.'));
+    // Belief flags the data cannot fully verify (halal/kosher slaughter status): if the dish
+    // contains meat, do not present the green state as an endorsement — qualify it.
+    const beliefSet = new Set(store.profile.prefs.diet || []);
+    const beliefMeat = (beliefSet.has('halal') || beliefSet.has('kosher')) && dishMeatHits(d).length;
+    card.append(h('div', { class: 'diet-banner ok', role: 'status' }, beliefMeat
+      ? '✓ No pork or alcohol is listed, but this dish contains meat — confirm it is prepared halal/kosher.'
+      : '✓ Nothing you avoid is listed for this dish. Recipes vary, so still confirm with the cook.'));
   }
   card.append(h('h3', {}, 'Allergens'));
   if (d.allergens && d.allergens.length) {
@@ -7461,6 +7372,18 @@ function dishScreen(id) {
   wrap.append(idPinButton('dish', d.id));
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${d.name} ${d.localName || ''} food`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
   mount(wrap, '#home');
+  // Proactively announce the safety verdict through the persistent route announcer — a live
+  // region born inside this just-mounted subtree would not reliably speak. Sequenced after
+  // mount()'s own 60 ms heading write so it is not overwritten.
+  if (dv === 'bad' || dv === 'ok') {
+    const live = document.getElementById('route-announce');
+    if (live) {
+      const msg = dv === 'bad'
+        ? `Warning: ${d.name} typically contains ${joinList(dishDietReasons(d))} that you flagged. Check the allergens and confirm with the cook.`
+        : `${d.name}: nothing you avoid is listed. Still confirm with the cook.`;
+      setTimeout(() => { live.textContent = msg; }, 120);
+    }
+  }
 }
 
 // ---- MARKET PRODUCE GUIDE (fruit / vegetable / herb) ------------------------
