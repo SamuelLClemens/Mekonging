@@ -10,6 +10,11 @@ import { NATURE, NATURE_GROUPS } from '../js/data/nature.js';
 import { POOLS } from '../js/data/pools.js';
 import { ITINERARIES } from '../js/data/itineraries.js';
 import { PHOTOS } from '../js/data/photos.js';
+import {
+  DIET_OPTIONS, DIET_EVALUABLE_BELIEFS, VERDICT_INERT_DIET, PHRASE_PENDING_ALLERGENS,
+  PHRASE_RX, PHRASE_KEYS, ALCOHOL_TERMS,
+  dietAvoidAllergens, dishMeatHits, dishHasAlcohol, dishDietReasons, dishDietVerdict,
+} from '../js/data/diet.js';
 
 let checks = 0;
 const errors = [];
@@ -234,6 +239,60 @@ for (const c of COUNTRIES) {
     ok(Array.isArray(i.sources) && i.sources.length > 0, `info ${c.id}: missing sources`);
   }
 }
+
+// --- diet self-test (behavioural — imports the pure diet.js logic) -----------
+// Every selectable diet flag must have a DEFINED handling, and the safety-critical matchers
+// must behave. Because js/data/diet.js is DOM-free, we can call it directly here.
+const dietIds = DIET_OPTIONS.flatMap((g) => g.items).map((it) => it.id);
+// (a) coverage: every diet option is an allergen, an evaluable belief, or explicitly inert.
+for (const id of dietIds) {
+  const handled = FOOD_ALLERGENS.includes(id) || DIET_EVALUABLE_BELIEFS.includes(id) || VERDICT_INERT_DIET.includes(id);
+  ok(handled, `diet option "${id}" has no defined handling (allergen / evaluable belief / inert-whitelisted) — it would be silently inert`);
+}
+// classification lists must reference only real, selectable options (no dead ids).
+for (const id of [...DIET_EVALUABLE_BELIEFS, ...VERDICT_INERT_DIET])
+  ok(dietIds.includes(id), `classified diet id "${id}" is not a selectable DIET_OPTIONS id`);
+// (b) allergen parity: every FOOD_ALLERGEN is selectable, matched into the avoid set, and
+// resolves to a phrasebook phrase (or is on the explicit PHRASE_PENDING allowlist).
+for (const a of FOOD_ALLERGENS) {
+  ok(dietIds.includes(a), `FOOD_ALLERGEN "${a}" is not selectable in DIET_OPTIONS`);
+  ok(dietAvoidAllergens([a]).has(a), `FOOD_ALLERGEN "${a}" is not matched by dietAvoidAllergens`);
+  const keys = PHRASE_KEYS[a] || [];
+  const hasPhrase = keys.length > 0 && keys.every((k) => PHRASE_RX[k]);
+  ok(hasPhrase || PHRASE_PENDING_ALLERGENS.includes(a),
+    `FOOD_ALLERGEN "${a}" has no phrasebook mapping and is not on PHRASE_PENDING_ALLERGENS`);
+}
+ok(PHRASE_PENDING_ALLERGENS.length <= 1, `PHRASE_PENDING_ALLERGENS grew (${PHRASE_PENDING_ALLERGENS.join(', ')}) — add sourced phrases`);
+// (c) behavioural regression guards over real dishes + synthetic fixtures (no dish content added).
+const _dishes = allFood();
+// alcohol: fermented/distilled drinks named in name/roman must read as alcoholic and flag.
+for (const id of ['la-beerlao', 'la-lao-lao']) {
+  const drink = _dishes.find((x) => x.id === id);
+  if (drink) {
+    ok(dishHasAlcohol(drink), `${id}: dishHasAlcohol() must be true`);
+    ok(dishDietVerdict(drink, undefined, ['no-alcohol']) === 'bad', `${id}: verdict must be 'bad' for a no-alcohol profile`);
+  }
+}
+// any dish naming alcohol in name/roman is caught (mirrors the runtime matcher).
+for (const d of _dishes) {
+  const meta = [d.name, d.roman].filter(Boolean).join(' ').toLowerCase();
+  if (ALCOHOL_TERMS.some((t) => meta.includes(t)) && !/vinegar/.test(meta))
+    ok(dishHasAlcohol(d), `dish "${d.id}" names alcohol but dishHasAlcohol() is false`);
+}
+// 'nuoc cham' must not fabricate a 'ham' (pork) hit on a dish with no real ham.
+for (const d of _dishes)
+  if ((d.ingredients || []).some((i) => /nuoc cham/i.test(i)) && !(d.ingredients || []).some((i) => /\bham\b/i.test(i)))
+    ok(!dishMeatHits(d).includes('ham'), `dish "${d.id}": 'nuoc cham' produced a spurious 'ham' meat hit`);
+// synthetic fixtures — exercise the matcher edge cases without shipping any dish content.
+ok(dishMeatHits({ ingredients: ['soy-braised pork'] }).includes('pork'), 'fixture: soy-braised pork must still count as pork (no false-negative)');
+ok(dishMeatHits({ ingredients: ['eggplant', 'tofu'] }).length === 0, 'fixture: eggplant must not count as meat');
+ok(dishMeatHits({ ingredients: ['mock duck'] }).length === 0, 'fixture: mock duck must not count as meat');
+ok(dishMeatHits({ ingredients: ['buffalo milk'] }).length === 0, 'fixture: buffalo milk must not count as meat');
+ok(dishMeatHits({ ingredients: ['lard'] }).includes('lard'), 'fixture: lard must count as (pork-derived) meat');
+ok(dishDietReasons({ ingredients: ['lard'] }, undefined, ['halal']).includes('lard'), 'fixture: lard must flag for a halal profile');
+// inert flags never colour a dish when set alone.
+for (const id of VERDICT_INERT_DIET)
+  ok(_dishes.every((d) => dishDietVerdict(d, undefined, [id]) === ''), `inert diet flag "${id}" coloured a dish`);
 
 // --- report ------------------------------------------------------------------
 if (warnings.length) {
