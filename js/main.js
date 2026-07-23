@@ -214,7 +214,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.294.0';
+const APP_VERSION = 'mk-v0.295.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1830,9 +1830,65 @@ function signatureSightsStrip(cc) {
   ]);
 }
 
+// ---- Collapsing home hero ---------------------------------------------------
+// The hero (wordmark + tagline + reassurance badges) is full-size at the top of Home, then
+// minimises to a slim sticky bar the moment the traveller scrolls down, so the tools take the
+// screen. The tagline and selling-point badges fold away when collapsed; a chevron button (and
+// a tap anywhere on the slim bar) expands it for a peek, and scrolling down again re-collapses
+// it. Pure DOM class toggling — no re-render, so it stays smooth — with ONE passive scroll
+// listener bound once and inert on every screen that has no .hero.
+let heroPinned = false;         // the traveller tapped to expand while scrolled — hold it open
+let heroLastY = 0;
+let heroScrollBound = false;
+const HERO_COLLAPSE_AT = 40;    // px scrolled before the hero minimises
+
+function heroApply(collapsed) {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  const stuck = (window.scrollY || window.pageYOffset || 0) > HERO_COLLAPSE_AT;
+  hero.classList.toggle('is-collapsed', collapsed);
+  hero.classList.toggle('is-stuck', stuck);
+  const btn = hero.querySelector('.hero-toggle');
+  if (btn) {
+    btn.setAttribute('aria-expanded', String(!collapsed));
+    btn.setAttribute('aria-label', collapsed ? 'Expand the header' : 'Collapse the header');
+  }
+}
+
+function onHeroScroll() {
+  if (!document.querySelector('.hero')) return;   // not on Home — do nothing
+  const y = window.scrollY || window.pageYOffset || 0;
+  if (y <= HERO_COLLAPSE_AT) { heroPinned = false; heroApply(false); }
+  else {
+    if (y > heroLastY + 2) heroPinned = false;    // any further downward scroll cancels a peek
+    heroApply(!heroPinned);
+  }
+  heroLastY = y;
+}
+
+function toggleHero(e) {
+  if (e) e.stopPropagation();
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  if (hero.classList.contains('is-collapsed')) { heroPinned = true; heroApply(false); }
+  else { heroPinned = false; heroApply(true); }
+}
+
+function setupHeroScroll() {
+  heroPinned = false;
+  heroLastY = window.scrollY || window.pageYOffset || 0;
+  heroApply(false);              // Home always mounts at the top, so it starts expanded
+  if (!heroScrollBound) {
+    window.addEventListener('scroll', onHeroScroll, { passive: true });
+    heroScrollBound = true;
+  }
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(h('section', { class: 'hero' }, [
+  wrap.append(h('section', { class: 'hero', onclick: (e) => { if (e.currentTarget.classList.contains('is-collapsed')) toggleHero(); } }, [
+    h('button', { class: 'hero-toggle', type: 'button', 'aria-label': 'Collapse the header', 'aria-expanded': 'true', onclick: toggleHero },
+      [h('span', { class: 'chev', 'aria-hidden': 'true' }, '⌄')]),
     h('div', { class: 'logo-wrap', html: logoSVG() }),
     h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
     h('div', { class: 'hero-badges' }, [
@@ -1968,6 +2024,7 @@ function homeScreen() {
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
   mount(wrap, '#home');
+  setupHeroScroll();  // collapse the hero to a slim sticky bar once the traveller scrolls
   maybeOfferTour();   // first-run only: a quick walk-me tour once the traveller reaches Home
 }
 
