@@ -304,10 +304,11 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 
 /* --- home hero: psychedelic 60s/70s SE-Asia sunset --- */
 .hero {
-  position: relative; overflow: hidden; text-align: center; isolation: isolate;
+  position: sticky; top: 0; z-index: 6; overflow: hidden; text-align: center; isolation: isolate;
   padding: calc(var(--sp-6) + 30px) var(--sp-4) var(--sp-5);
   margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) var(--sp-5);
   border-radius: 0 0 34px 34px; box-shadow: var(--shadow-soft);
+  transition: padding var(--dur) var(--ease), border-radius var(--dur) var(--ease);
   background:
     radial-gradient(125% 100% at 50% -12%, rgba(242,169,59,0.55) 0%, rgba(232,99,42,0.34) 34%, rgba(214,51,108,0.20) 58%, rgba(106,76,147,0.10) 100%),
     repeating-conic-gradient(from 0deg at 50% -2%, rgba(232,99,42,0.16) 0deg 7deg, rgba(242,169,59,0) 7deg 14deg),
@@ -432,6 +433,38 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
   background: rgba(255,255,255,0.34); border: 1px solid var(--line); border-radius: var(--r-pill);
   padding: 4px 12px; backdrop-filter: blur(2px); }
 html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
+
+/* Collapsing home hero: full at the top, a slim sticky bar once scrolled. The wordmark
+   shrinks and the tagline + reassurance badges fold away so the tools take the screen; a
+   chevron (or a tap on the slim bar) expands it back for a peek, and scrolling down again
+   re-minimises it. State classes are toggled in JS (setupHeroScroll/toggleHero). */
+.hero::before { transition: opacity var(--dur) var(--ease); }
+.hero .logo { transition: width var(--dur) var(--ease), margin var(--dur) var(--ease); }
+.hero > p, .hero-badges { max-height: 160px; overflow: hidden;
+  transition: opacity var(--dur) var(--ease), max-height var(--dur) var(--ease), margin var(--dur) var(--ease); }
+.hero.is-collapsed { padding-top: var(--sp-3); padding-bottom: var(--sp-3); border-radius: 0 0 16px 16px; }
+.hero.is-collapsed::before { opacity: 0; }
+.hero.is-collapsed .logo { width: 132px; margin-bottom: 0; }
+.hero.is-collapsed > p, .hero.is-collapsed .hero-badges {
+  opacity: 0; max-height: 0; margin-top: 0; margin-bottom: 0; pointer-events: none; }
+.hero.is-stuck.is-collapsed { cursor: pointer; }
+
+/* Expand / collapse control — shown only once the hero is stuck to the top of the viewport. */
+.hero-toggle { position: absolute; top: 8px; right: 10px; z-index: 3; display: none;
+  width: 34px; height: 34px; align-items: center; justify-content: center; padding: 0;
+  border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  box-shadow: var(--shadow-soft); cursor: pointer; }
+.hero.is-stuck .hero-toggle { display: flex; }
+.hero-toggle .chev { font-size: 1.15rem; line-height: 1; transition: transform var(--dur) var(--ease); }
+.hero:not(.is-collapsed) .hero-toggle .chev { transform: rotate(180deg); }
+
+/* Smaller hero on phones (both the resting size and the collapsed bar). */
+@media (max-width: 560px) {
+  .hero { padding: calc(var(--sp-5) + 10px) var(--sp-4) var(--sp-4); }
+  .hero .logo { width: min(58vw, 230px); }
+  .hero > p { font-size: 1rem; }
+  .hero.is-collapsed .logo { width: 112px; }
+}
 
 .country-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .country-chip {
