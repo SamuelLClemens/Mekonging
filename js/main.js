@@ -223,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.299.0';
+const APP_VERSION = 'mk-v0.300.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -489,6 +489,23 @@ function foldable(summary, body, opts = {}) {
   det.append(h('summary', {}, summary));
   const content = typeof body === 'function' ? body() : body;
   (Array.isArray(content) ? content : [content]).forEach((n) => { if (n) det.append(n); });
+  return det;
+}
+
+// Turn an existing .card node (whose FIRST child is its <h2> heading) into a collapsible card:
+// the heading becomes the <summary> and the rest becomes the body, so any hub card can be
+// minimised/expanded without rewriting its builder. Open/closed persists under prefs[key]
+// (defaults open). A node with no leading <h2> is returned unchanged.
+function collapsibleCard(node, key) {
+  if (!node) return null;
+  const head = node.firstElementChild;
+  if (!head || head.tagName !== 'H2') return node;
+  const det = h('details', { class: (node.className || '') + ' foldcard' });
+  if (!key || store.profile.prefs[key] !== false) det.setAttribute('open', '');
+  det.append(h('summary', { class: 'foldcard-sum' }, head.textContent));
+  head.remove();
+  while (node.firstChild) det.append(node.firstChild);
+  if (key) det.addEventListener('toggle', () => { store.profile.prefs[key] = det.open; save(); });
   return det;
 }
 
@@ -2260,7 +2277,12 @@ function regionScreen(arg) {
   wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `${prov.name} — a region of ${c.name}. Tap another region on the map to jump there.`));
 
   const mini = regionsMap(cc, { activeCode: code, onPick: (nc) => go(`#region-${cc}-${nc}`) });
-  if (mini) wrap.append(h('div', { class: 'card', style: 'padding:8px' }, [mini]));
+  if (mini) {
+    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🗺 Province map'),
+      h('div', { style: 'padding:6px 0 0' }, [mini]), { open: store.profile.prefs.regionMapOpen !== false, cls: 'home-group-d' });
+    mapFold.addEventListener('toggle', () => { store.profile.prefs.regionMapOpen = mapFold.open; save(); });
+    wrap.append(mapFold);
+  }
 
   if (cc === 'vi') {
     wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
@@ -2282,7 +2304,7 @@ function regionScreen(arg) {
     if (pinfo.sources && pinfo.sources.length) srcBits.push(`Sources: ${pinfo.sources.join(', ')}`);
     if (pinfo.verified) srcBits.push(`Verified ${pinfo.verified}`);
     if (srcBits.length) ic.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, srcBits.join(' · ')));
-    wrap.append(ic);
+    wrap.append(collapsibleCard(ic, 'regionAboutOpen'));
   }
 
   const inRegion = placesInProvince(cc, code);
@@ -2293,13 +2315,13 @@ function regionScreen(arg) {
     const cityCard = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `🏙 Cities & towns in ${prov.name}`)]);
     cityCard.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a place to see everything mapped there.'));
     cityCard.append(cityPickGrid(cc, cities, cityCounts));
-    wrap.append(cityCard);
+    wrap.append(collapsibleCard(cityCard, 'regionCitiesOpen'));
   }
 
   if (inRegion.length) {
     const pc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `📍 ${inRegion.length} place${inRegion.length > 1 ? 's' : ''} in ${prov.name}`)]);
     inRegion.slice(0, 40).forEach((p) => pc.append(placeCard(p)));
-    wrap.append(pc);
+    wrap.append(collapsibleCard(pc, 'regionPlacesOpen'));
   } else {
     wrap.append(h('div', { class: 'card' }, [
       h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${prov.name} yet. Explore neighbouring regions on the map above, or browse all of ${c.name}.`),
@@ -2397,13 +2419,15 @@ function countryHubScreen(id) {
   // Regions map: tapping into a country shows its provinces outlined and coloured; each is
   // tappable through to a region view (its cities and mapped places).
   if (regionSetFor(id)) {
-    const regionsCard = h('div', { class: 'card region-card' }, [
-      h('h2', { style: 'margin-top:0' }, `🗺 Regions of ${c.name}`),
+    const rbody = h('div', {}, [
       h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a region to see its cities, places and how it fits into the country.'),
     ]);
     const rm = regionsMap(id, { onPick: (code) => go(`#region-${id}-${code}`) });
-    if (rm) regionsCard.append(rm);
-    wrap.append(regionsCard);
+    if (rm) rbody.append(rm);
+    const regionFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Regions of ${c.name}`),
+      rbody, { open: store.profile.prefs.hubRegionsOpen !== false, cls: 'home-group-d' });
+    regionFold.addEventListener('toggle', () => { store.profile.prefs.hubRegionsOpen = regionFold.open; save(); });
+    wrap.append(regionFold);
   }
 
   // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
@@ -2442,9 +2466,9 @@ function countryHubScreen(id) {
       h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${id}`) }, '📖 In-depth history & culture'),
     ])));
   }
-  const acc = accessCard(id); if (acc) wrap.append(acc);
-  const vc = visaCard(id); if (vc) wrap.append(vc);
-  const famc = familyCard(id); if (famc) wrap.append(famc);
+  const acc = accessCard(id); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen'));
+  const vc = visaCard(id); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen'));
+  const famc = familyCard(id); if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen'));
   if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
     wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
       h('strong', {}, '🧭 Travelling solo'),
@@ -2466,32 +2490,22 @@ function countryHubScreen(id) {
     const counts = {};
     cityPlaces.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
     const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-    const explore = h('div', { class: 'card' }, [h('h2', {}, `🗺 Explore ${c.name}`)]);
-    // City picker leads (compact, high-value). The photo sights already lead the hub above,
-    // so the heavy full-country map no longer double-leads: it is folded and only built when
-    // opened (avoids a 0-height render and the wasted MapLibre load when it stays closed).
+    const body = h('div', {});
     if (cities.length) {
-      explore.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
-      explore.append(cityPickGrid(id, cities.slice(0, 12), counts));
+      body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
+      body.append(cityPickGrid(id, cities.slice(0, 12), counts));
     }
+    // One living map for the whole app: link to the Places section rather than embedding a
+    // SECOND MapLibre map here — that duplicated the Places living map and cost a wasted
+    // WebGL load. The Places map already numbers, colours and filters every place.
     if (withCoords.length) {
-      const mapDetails = h('details', { class: 'filters-collapse', style: 'margin-top:8px' }, [
-        h('summary', {}, `Show all ${withCoords.length} places on the map`),
-      ]);
-      const mini = h('div', { class: 'mini-map', style: 'height:220px;border-radius:14px;overflow:hidden;position:relative;margin-top:8px' });
-      mapDetails.append(mini);
-      let mapInit = false;
-      mapDetails.addEventListener('toggle', () => {
-        if (!mapDetails.open || mapInit) return;
-        mapInit = true;
-        import('./map.js').then((m) => m.initPlacesMap(mini, withCoords, {
-          onOpen: (pid) => go(`#place-${pid}`),
-          onLocate: (f) => setLastFix(f),
-        })).then((ctrl) => { liveCleanup = () => { try { ctrl.dispose(); } catch { /* noop */ } }; }).catch(() => mini.remove());
-      });
-      explore.append(mapDetails);
+      body.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${id}`) },
+        [chipIcon('map'), ` See all ${withCoords.length} places on the map`]));
     }
-    wrap.append(explore);
+    const exploreFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Explore ${c.name} by city`),
+      body, { open: store.profile.prefs.hubCityOpen !== false, cls: 'home-group-d' });
+    exploreFold.addEventListener('toggle', () => { store.profile.prefs.hubCityOpen = exploreFold.open; save(); });
+    wrap.append(exploreFold);
   }
 
   // The full country toolkit, regrouped from one 26-tile wall into four labelled,

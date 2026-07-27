@@ -245,6 +245,14 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 }
 .explore-lead { border-left: 5px solid var(--ec, var(--teal)); }
 .explore-lead h2 { font-size: var(--fs-lg); }
+/* Collapsible card: an existing .card whose <h2> heading became the <summary>. */
+.foldcard > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; font-weight: 800; font-size: var(--fs-lg); color: var(--ink);
+}
+.foldcard > summary::-webkit-details-marker { display: none; }
+.foldcard > summary::after { content: '⌄'; font-size: 1.1em; opacity: 0.6; transition: transform var(--dur) var(--ease); }
+.foldcard[open] > summary::after { transform: rotate(180deg); }
 
 /* Phrase of the day — a compact daily highlight at the top of the phrasebook. */
 .potd-card { cursor: pointer; border-left: 5px solid var(--grape, #7A5FB0); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
