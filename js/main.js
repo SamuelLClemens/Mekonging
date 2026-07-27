@@ -86,7 +86,10 @@ import * as Diet from './data/diet.js';
 // run and is not needed (all assets are bundled on-device), so skip it there.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').then((reg) => {
+    // updateViaCache:'none' forces the browser to byte-check sw.js against the NETWORK on every
+    // update check, never serving a cached service-worker script — so a deploy is noticed even
+    // when the host sets cache headers on sw.js.
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
       // When a new version installs while the app is already open, offer a one-tap refresh
       // instead of silently letting a fresh cache serve into the currently-loaded modules.
       reg.addEventListener('updatefound', () => {
@@ -96,6 +99,12 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
           if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast();
         });
       });
+      // Proactively check for a new worker on launch and whenever the app returns to the
+      // foreground. An installed PWA can stay open for days without a navigation, so without
+      // this an already-open app would never notice a deploy; reg.update() forces the check.
+      const checkForUpdate = () => { try { reg.update(); } catch { /* offline or not ready */ } };
+      checkForUpdate();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
     }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
   });
 }
@@ -214,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.297.0';
+const APP_VERSION = 'mk-v0.298.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
