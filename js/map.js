@@ -556,25 +556,68 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
     el.textContent = num != null ? String(num) : '•';
     return el;
   }
+  function addSingle(p) {
+    if (!p.coords) return;
+    const color = colorFor(p);
+    const m = opts.numbered
+      ? new maplibregl.Marker({ element: numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
+      : new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+    const el = m.getElement();
+    el.style.cursor = 'pointer';
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', (p._num != null ? p._num + '. ' : '') + (p.name || 'place'));
+    const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
+    markers.push(m);
+  }
+  // Greedy pixel-space clustering so dense areas (e.g. Bangkok) stay readable when zoomed out:
+  // a point within CLUSTER_PX of an existing cluster centre joins it, else it starts a new one.
+  const CLUSTER_PX = 46;
+  function clusterByPixels(list) {
+    const clusters = [];
+    (list || []).forEach((p) => {
+      if (!p.coords) return;
+      let xy; try { xy = map.project([p.coords.lng, p.coords.lat]); } catch { return; }
+      let hit = null;
+      for (const c of clusters) { const dx = c.x - xy.x, dy = c.y - xy.y; if (dx * dx + dy * dy <= CLUSTER_PX * CLUSTER_PX) { hit = c; break; } }
+      if (hit) hit.members.push(p); else clusters.push({ x: xy.x, y: xy.y, members: [p] });
+    });
+    return clusters;
+  }
+  function addCluster(members) {
+    const first = members[0];
+    const el = document.createElement('div');
+    el.className = 'mk-cluster';
+    el.textContent = String(members.length);
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', members.length + ' places here — zoom in');
+    const m = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([first.coords.lng, first.coords.lat]).addTo(map);
+    const zoomIn = (ev) => {
+      if (ev) ev.stopPropagation();
+      const pts = members.map((p) => [p.coords.lng, p.coords.lat]);
+      try {
+        const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
+        pts.forEach((q) => b.extend(q));
+        map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 500 });
+      } catch { map.flyTo({ center: [first.coords.lng, first.coords.lat], zoom: Math.min(16, map.getZoom() + 2), duration: 500 }); }
+    };
+    el.addEventListener('click', zoomIn);
+    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') zoomIn(ev); });
+    markers.push(m);
+  }
   function drawMarkers(list) {
     markers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
     markers = [];
-    (list || []).forEach((p) => {
-      if (!p.coords) return;
-      const color = colorFor(p);
-      const m = opts.numbered
-        ? new maplibregl.Marker({ element: numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
-        : new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
-      const el = m.getElement();
-      el.style.cursor = 'pointer';
-      el.setAttribute('role', 'button');
-      el.setAttribute('tabindex', '0');
-      el.setAttribute('aria-label', (p._num != null ? p._num + '. ' : '') + (p.name || 'place'));
-      const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
-      el.addEventListener('click', open);
-      el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
-      markers.push(m);
-    });
+    // Cluster only when asked (the Places living map) and only while zoomed out enough that pins
+    // would overlap; past clusterMaxZoom every place shows as its own numbered pin.
+    if (opts.cluster && map.getZoom() < (opts.clusterMaxZoom || 11)) {
+      clusterByPixels(list).forEach((c) => { if (c.members.length > 1) addCluster(c.members); else addSingle(c.members[0]); });
+    } else {
+      (list || []).forEach((p) => addSingle(p));
+    }
   }
   function setPlaces(list) { lastList = list || []; drawMarkers(lastList); fit(lastList); }
   function setColorMode(mode) { colorMode = mode === 'category' ? 'category' : 'rating'; drawMarkers(lastList); }
@@ -591,6 +634,14 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
   // satellite layer) never finishes loading, so neither 'load' nor 'idle' ever fires. This is
   // the reliable trigger for the embedded offline map; guarded to run once.
   map.on('render', drawInitial);
+
+  // When clustering is on, re-run the split after the view settles so cluster counts and the
+  // pin/cluster boundary always match the current zoom. drawMarkers does not call fit(), so a
+  // fitBounds/flyTo → moveend → drawMarkers pass simply re-draws; it never loops.
+  if (opts.cluster) {
+    map.on('zoomend', () => drawMarkers(lastList));
+    map.on('moveend', () => drawMarkers(lastList));
+  }
 
   return {
     map,
