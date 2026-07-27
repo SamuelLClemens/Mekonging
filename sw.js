@@ -7,7 +7,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.297.0';
+const CACHE_VERSION = 'mk-v0.298.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -126,11 +126,16 @@ const PRECACHE = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_VERSION).then(async (c) => {
+      // Fetch every asset with {cache:'reload'} so the install BYPASSES the HTTP cache and
+      // stores FRESH bytes. Without this, a new worker (new CACHE_VERSION) can precache STALE
+      // copies served from the browser/CDN HTTP cache, leaving the offline app on old code
+      // even though the version bumped — the root cause of "offline shows the old version".
+      const fresh = (u) => new Request(u, { cache: 'reload' });
       // Critical shell must cache for the install to be useful; fail the install if it cannot.
-      await c.addAll(CRITICAL);
+      for (const u of CRITICAL) { await c.add(fresh(u)); }
       // The rest is best-effort: cache each file independently so one missing/renamed
       // asset cannot abort the entire offline install (the old atomic addAll did).
-      await Promise.all(PRECACHE.map((u) => c.add(u).catch(() => { /* skip this asset */ })));
+      await Promise.all(PRECACHE.map((u) => c.add(fresh(u)).catch(() => { /* skip this asset */ })));
       await self.skipWaiting();
     }),
   );
