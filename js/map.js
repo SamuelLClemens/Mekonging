@@ -522,6 +522,11 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
   // the app's canonical colour system). setColorMode() flips between them without re-fitting.
   let colorMode = opts.colorMode === 'category' ? 'category' : 'rating';
   const colorFor = (p) => {
+    // An explicit per-place colour (e.g. the app's category-bucket colour, so map pins match
+    // the numbered list rows exactly) wins over both colour modes.
+    if (typeof opts.markerColor === 'function') {
+      try { const c = opts.markerColor(p); if (c) return c; } catch { /* fall through */ }
+    }
     if (colorMode === 'category' && typeof opts.categoryColor === 'function') {
       try { const c = opts.categoryColor(p); if (c) return c; } catch { /* fall through to rating */ }
     }
@@ -542,17 +547,29 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
       map.fitBounds(b, { padding: 46, maxZoom: 14, duration: 400 });
     } catch { /* noop */ }
   }
+  // A numbered round badge marker (matches the numbered list rows) when opts.numbered is set;
+  // otherwise the default MapLibre teardrop. The badge shows p._num, coloured by colorFor.
+  function numPinEl(color, num) {
+    const el = document.createElement('div');
+    el.className = 'mk-numpin';
+    el.style.background = color;
+    el.textContent = num != null ? String(num) : '•';
+    return el;
+  }
   function drawMarkers(list) {
     markers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
     markers = [];
     (list || []).forEach((p) => {
       if (!p.coords) return;
-      const m = new maplibregl.Marker({ color: colorFor(p) }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+      const color = colorFor(p);
+      const m = opts.numbered
+        ? new maplibregl.Marker({ element: numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
+        : new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
       const el = m.getElement();
       el.style.cursor = 'pointer';
       el.setAttribute('role', 'button');
       el.setAttribute('tabindex', '0');
-      el.setAttribute('aria-label', p.name || 'place');
+      el.setAttribute('aria-label', (p._num != null ? p._num + '. ' : '') + (p.name || 'place'));
       const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
       el.addEventListener('click', open);
       el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
@@ -562,7 +579,18 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
   function setPlaces(list) { lastList = list || []; drawMarkers(lastList); fit(lastList); }
   function setColorMode(mode) { colorMode = mode === 'category' ? 'category' : 'rating'; drawMarkers(lastList); }
 
-  map.on('load', () => setPlaces(places));
+  // Draw the initial markers once the map settles. 'idle' is more reliable than 'load' for the
+  // glyph-free offline style embedded here (which can finish rendering without ever firing
+  // 'load'); it fires after the first render settle. Guarded to run once, and setPlaces is
+  // idempotent, so a later 'load' just redraws the same pins.
+  let drewInitial = false;
+  const drawInitial = () => { if (drewInitial) return; drewInitial = true; setPlaces(places); };
+  map.on('load', drawInitial);
+  map.on('idle', drawInitial);
+  // 'render' fires on the first painted frame even when a raster source (e.g. the hidden
+  // satellite layer) never finishes loading, so neither 'load' nor 'idle' ever fires. This is
+  // the reliable trigger for the embedded offline map; guarded to run once.
+  map.on('render', drawInitial);
 
   return {
     map,

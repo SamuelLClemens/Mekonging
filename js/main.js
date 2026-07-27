@@ -214,7 +214,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.296.0';
+const APP_VERSION = 'mk-v0.297.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3704,7 +3704,7 @@ function cityPickerCard(cc) {
 // "Closest to you" — the user's "first and foremost" ask. When a location fix is known,
 // the nearest few places (optionally within the scoped city) sit at the very top, open.
 // With no fix, a single quiet prompt to turn location on (never nags — no fix, one button).
-function closestPlacesCard(cc, scopeSlug) {
+function closestPlacesCard(cc, scopeSlug, numFor, poolSource) {
   const fix = getLastFix();
   if (!fix) {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
@@ -3717,15 +3717,15 @@ function closestPlacesCard(cc, scopeSlug) {
     card.append(btn);
     return card;
   }
-  let pool = allPlaces({ country: cc }).filter((p) => p.coords);
+  let pool = (Array.isArray(poolSource) ? poolSource : allPlaces({ country: cc })).filter((p) => p.coords);
   if (scopeSlug) pool = pool.filter((p) => citySlug(p.city || '') === scopeSlug);
   if (!pool.length) return null;
-  pool = pool.slice().sort((a, b) => haversineKm(fix, a.coords) - haversineKm(fix, b.coords)).slice(0, 4);
+  pool = pool.slice().sort((a, b) => haversineKm(fix, a.coords) - haversineKm(fix, b.coords)).slice(0, 5);
   const det = h('details', { class: 'place-cat-group closest-card', open: '', style: '--cat:#0F9D8C' }, [
-    h('summary', { class: 'place-cat-summary' }, '📍 Closest to you'),
+    h('summary', { class: 'place-cat-summary' }, `📍 Closest to you · ${pool.length}`),
   ]);
   const body = h('div', { class: 'place-cat-body' });
-  pool.forEach((p) => body.append(placeCard(p)));
+  pool.forEach((p) => body.append(placeCard(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null))));
   det.append(body);
   return det;
 }
@@ -3756,9 +3756,33 @@ function placesScreen(arg) {
     wrap.append(cityEssentials(activeCountry, scopeCity, scopeSlug));
   }
 
-  // "First and foremost, present places closest to you": the nearest few sit at the top.
-  const closest = closestPlacesCard(activeCountry, scopeSlug);
-  if (closest) wrap.append(closest);
+  // Living map + "closest to you" sit at the very top of the section (below any city context).
+  // The map is a minimise/maximise disclosure (state persisted); its mode bar and category-layer
+  // chips populate below. Both the map and the closest list are FILLED by renderList() once the
+  // filtered results and their shared numbering are known, so a list row and its map pin always
+  // carry the same number. Placeholders are appended now to lock DOM order.
+  const mapSection = h('details', { class: 'places-map-section', open: (store.profile.prefs.placesMapOpen !== false) ? '' : null });
+  mapSection.addEventListener('toggle', () => {
+    store.profile.prefs.placesMapOpen = mapSection.open;
+    save();
+    // A map created (or last drawn) while its <details> was closed has a zero-size container, so
+    // its markers never positioned. On open, resize the canvas to the now-real dimensions and
+    // redraw the pins so the living map appears immediately rather than after another interaction.
+    if (mapSection.open && placesCtrl) {
+      requestAnimationFrame(() => { try { placesCtrl.map.resize(); placesCtrl.setPlaces(mapPlaces()); } catch { /* noop */ } });
+    }
+  });
+  const modeBar = h('div', { class: 'places-mode-bar' });
+  const layerChipsRow = h('div', { class: 'layer-chips' });
+  const mapWrap = h('div', {});
+  const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
+  mapSection.append(
+    h('summary', {}, h('span', {}, '🗺 Map')),
+    modeBar, layerChipsRow, mapWrap, cap,
+  );
+  wrap.append(mapSection);
+  const closestSlot = h('div', { class: 'closest-slot' });
+  wrap.append(closestSlot);
   // Country level (no city chosen yet): drill down by city — tap a city and just its
   // places show, grouped into the collapsible category sections below.
   if (!scopeSlug) { const cp = cityPickerCard(activeCountry); if (cp) wrap.append(cp); }
@@ -3844,16 +3868,10 @@ function placesScreen(arg) {
     filterCard.append(h('div', { class: 'muted' }, 'Where to stay'), stayTypeChips, stayDurChips);
   }
 
-  // View + sort controls. The same filtered results can be scrolled as a list OR seen
-  // spatially on an offline map, and optionally ordered by distance from you. Both are
-  // remembered. This is the "put location things on a map + less scrolling" fix.
-  let viewMode = prefs.placesView === 'map' ? 'map' : 'list';
+  // Sort control — the map is now always present above and the list always below it, so the old
+  // list/map toggle is gone. "Nearest first" orders both by distance (asking for GPS once) and
+  // recentres the living map on you; otherwise "best for you" order.
   let sortMode = prefs.placesSort === 'near' ? 'near' : 'best';
-
-  const viewBtn = (mode, label) => h('button', {
-    class: 'chip', 'aria-pressed': viewMode === mode ? 'true' : 'false',
-    onclick: () => { if (viewMode === mode) return; prefs.placesView = mode; save(); render(); },
-  }, label);
   const nearChip = h('button', {
     class: 'chip', 'aria-pressed': sortMode === 'near' ? 'true' : 'false',
     onclick: async (e) => {
@@ -3866,12 +3884,45 @@ function placesScreen(arg) {
       }
       sortMode = 'near'; prefs.placesSort = 'near'; save();
       btn.setAttribute('aria-pressed', 'true'); btn.textContent = '📍 Nearest first'; renderList();
+      if (placesCtrl) placesCtrl.locate();
     },
   }, '📍 Nearest first');
-  wrap.append(h('div', { class: 'view-toggle', style: 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0' }, [
-    h('div', { class: 'chips', style: 'margin:0' }, [viewBtn('list', [chipIcon('checklist'), 'List']), viewBtn('map', [chipIcon('map'), 'Map'])]),
-    h('span', { style: 'flex:1' }), nearChip,
-  ]));
+
+  // Category LAYERS — pick any combination of place types to show on the map AND the list.
+  // An empty selection means "all layers". Persisted so a chosen set survives navigation.
+  const selLayers = new Set(Array.isArray(prefs.placesLayers) ? prefs.placesLayers : []);
+  const presentBuckets = new Set(allPlaces({ country: activeCountry }).map((p) => placeBucket(p)));
+  function buildLayerChips() {
+    layerChipsRow.innerHTML = '';
+    const allOn = selLayers.size === 0;
+    layerChipsRow.append(h('button', {
+      class: 'layer-chip', 'aria-pressed': allOn ? 'true' : 'false',
+      style: allOn ? 'background:var(--ink);border-color:transparent;color:var(--card)' : '',
+      onclick: () => { selLayers.clear(); prefs.placesLayers = []; save(); buildLayerChips(); renderList(); },
+    }, 'All'));
+    PLACE_BUCKETS.forEach(([key, label]) => {
+      if (!presentBuckets.has(key)) return;
+      const on = selLayers.has(key);
+      const color = BUCKET_COLOR[key] || BUCKET_COLOR.other;
+      layerChipsRow.append(h('button', {
+        class: 'layer-chip', 'aria-pressed': on ? 'true' : 'false',
+        style: on ? `background:${color};border-color:transparent` : '',
+        onclick: () => { if (selLayers.has(key)) selLayers.delete(key); else selLayers.add(key); prefs.placesLayers = [...selLayers]; save(); buildLayerChips(); renderList(); },
+      }, [h('span', { class: 'layer-dot', style: `background:${color}` }), label.replace(/^\S+\s/, '')]));
+    });
+  }
+  buildLayerChips();
+
+  // Mode bar: near-you vs a chosen city, with a one-tap return to where you actually are.
+  if (scopeSlug) {
+    modeBar.append(
+      h('span', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity || 'This city'}`),
+      h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, '↩ Back to near me'),
+    );
+  } else {
+    modeBar.append(h('span', { class: 'chip muted' }, getLastFix() ? '📍 Near you' : '📍 Whole country'));
+  }
+  modeBar.append(h('span', { style: 'flex:1' }), nearChip);
 
   // Results-first: the filter rows collapse into one tap so places show immediately
   // instead of being pushed below ~5 rows of chips. The summary shows how many filters
@@ -3902,22 +3953,17 @@ function placesScreen(arg) {
   ]));
 
   const listEl = h('div', {});
-  const mapWrap = h('div', {});
-  const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
-  wrap.append(viewMode === 'map' ? mapWrap : listEl);
-  // Map and Places are one section now: from the places map, reach the full offline map
-  // (GPS, layers, saved offline areas, measure) that used to have its own tab.
-  if (viewMode === 'map') {
-    wrap.append(h('button', { class: 'btn ghost block', style: 'margin:8px 0 2px', onclick: () => go('#map') },
-      [chipIcon('map'), ' Full map — offline areas, layers & measure']));
-  }
+  wrap.append(listEl);
+  // A link to the full offline map (GPS, extra layers, saved offline areas, measure).
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:8px 0 2px', onclick: () => go('#map') },
+    [chipIcon('map'), ' Full map — offline areas, layers & measure']));
 
   let placesCtrl = null;
   let currentResults = [];
   // The map shows the filtered curated results PLUS the traveller's own places that have
   // coordinates, so contributions appear spatially alongside the guide — like a map app.
   const userMapPins = () => (store.pins || []).filter((p) => p.coords).map((p) => resolveItem(p.id)).filter(Boolean);
-  const mapPlaces = () => currentResults.concat(userMapPins());
+  const mapPlaces = () => currentResults.concat(userMapPins()).filter((p) => p.coords);
 
   // Filtered + sorted results, or null when this country has no places yet.
   function computeResults() {
@@ -3925,6 +3971,7 @@ function placesScreen(arg) {
     if (!country || !Array.isArray(country.places)) return null;
     let results = allPlaces({ country: activeCountry, interests: [...selInterests], budget: selBudget });
     if (scopeSlug) results = results.filter((p) => citySlug(p.city) === scopeSlug);
+    if (selLayers.size) results = results.filter((p) => selLayers.has(placeBucket(p)));  // category layers
     if (selKids) results = results.filter((p) => p.kidFriendly === true);
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
     if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
@@ -3943,32 +3990,38 @@ function placesScreen(arg) {
     const country = getCountry(activeCountry);
     const computed = computeResults();
     currentResults = computed || [];
-    if (viewMode === 'map') {
-      const ml = mapPlaces();
-      const mine = userMapPins().length;
-      cap.textContent = ml.length
-        ? `${ml.filter((p) => p.coords).length} places on the map${mine ? ` (incl. ${mine} of yours)` : ''}${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — tap a pin`
-        : '';
-      if (placesCtrl) placesCtrl.setPlaces(ml);
-      return;
-    }
+    // Shared numbering: number every MAPPED place by its position in the displayed order, so a
+    // list row, the "closest to you" card and the map pin all carry the SAME number and colour.
+    const ml = mapPlaces();
+    ml.forEach((p, i) => { p._num = i + 1; });
+    const numFor = (id) => { const hit = ml.find((p) => p.id === id); return hit ? hit._num : null; };
+    const mine = userMapPins().length;
+    cap.textContent = ml.length
+      ? `${ml.length} on the map${mine ? ` (incl. ${mine} of yours)` : ''}${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — numbers match the list`
+      : '';
+    if (placesCtrl) placesCtrl.setPlaces(ml);
+    // "Closest to you" — the nearest few of the CURRENTLY shown (filtered) places, same numbers.
+    closestSlot.innerHTML = '';
+    const cz = closestPlacesCard(activeCountry, scopeSlug, numFor, currentResults);
+    if (cz) closestSlot.append(cz);
+
     listEl.innerHTML = '';
     if (computed === null) {
       listEl.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} places are coming soon. Thailand is fully covered in this build.`));
       return;
     }
-    if (!currentResults.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters. Try widening them.')); return; }
+    if (!currentResults.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters and layers. Try widening them.')); return; }
     // "Show more" expander: reveal the rest inline (no full re-render) to cut scrolling.
     const expander = (rest, label) => {
       if (!rest.length) return null;
       const btn = h('button', { class: 'btn ghost block', style: 'margin:2px 0 10px' }, label);
-      btn.onclick = () => { rest.forEach((p) => btn.before(placeCard(p))); btn.remove(); };
+      btn.onclick = () => { rest.forEach((p) => btn.before(placeCard(p, p._num))); btn.remove(); };
       return btn;
     };
     if (sortMode === 'near') {
       // proximity order matters — keep one flat list, capped, with a reveal.
       const CAP = 12;
-      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeCard(p)));
+      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeCard(p, p._num)));
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
@@ -3985,7 +4038,7 @@ function placesScreen(arg) {
         if (!arr || !arr.length) return;
         if (fix) arr = arr.slice().sort(byNear);
         const body = h('div', { class: 'place-cat-body' });
-        arr.slice(0, CAP).forEach((p) => body.append(placeCard(p)));
+        arr.slice(0, CAP).forEach((p) => body.append(placeCard(p, p._num)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
         listEl.append(h('details', { class: 'place-cat-group', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
@@ -3999,51 +4052,36 @@ function placesScreen(arg) {
   renderList();
   mount(wrap, '#places');
 
-  // In map mode, boot the embedded offline map with the current results. Filter changes
-  // call placesCtrl.setPlaces() (no WebGL rebuild); leaving the screen disposes it via
-  // liveCleanup so contexts don't leak.
-  if (viewMode === 'map') {
-    const mapList = mapPlaces();
-    if (!mapList.length) {
-      mapWrap.append(h('p', { class: 'empty' }, 'No mapped places for these filters yet — switch to List or widen the filters.'));
-    } else {
-      // Colour-by toggle: rating (default) or the site-wide category colours, with a matching
-      // legend so the map obeys the same colour language as the rest of the app when chosen.
-      const colorModeOf = () => (prefs.placesColor === 'category' ? 'category' : 'rating');
-      const RATING_KEY = [['#1E9E5A', 'Excellent'], ['#7DB23A', 'Great'], ['#F2A93B', 'Good'], ['#E8632A', 'Mixed'], ['#E0A100', 'Market'], ['#D62828', 'Local eat']];
-      const legendBox = h('div', {});
-      const renderMapLegend = () => {
-        legendBox.innerHTML = '';
-        const items = colorModeOf() === 'category'
-          ? CATEGORY_FAMILIES.filter((f) => f.key !== 'other').map((f) => [f.color, `${f.emoji} ${f.label}`])
-          : RATING_KEY;
-        legendBox.append(h('div', { class: 'cats', style: 'margin:2px 0 6px' },
-          items.map(([c, l]) => h('span', { class: 'cat-tag', style: `background:${c}` }, l))));
-      };
-      const colorToggle = h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
-        h('span', { class: 'muted small', style: 'align-self:center;margin-right:4px' }, 'Colour by:'),
-        ...[['rating', '⭐ Rating'], ['category', '🎨 Category']].map(([m, l]) =>
-          h('button', {
-            class: 'chip', 'aria-pressed': colorModeOf() === m ? 'true' : 'false', dataset: { cm: m },
-            onclick: () => {
-              prefs.placesColor = m; save();
-              colorToggle.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.cm === m ? 'true' : 'false'));
-              if (placesCtrl) placesCtrl.setColorMode(m);
-              renderMapLegend();
-            },
-          }, l)),
-      ]);
-      const canvas = h('div', { class: 'places-map', style: 'height:360px;border-radius:16px;overflow:hidden;position:relative' });
-      mapWrap.append(colorToggle, legendBox, cap, canvas);
-      renderMapLegend();
-      import('./map.js').then((m) => m.initPlacesMap(canvas, mapList, {
-        onOpen: (id) => go(`#place-${id}`),
-        onLocate: (fix) => setLastFix(fix),
-        colorMode: colorModeOf(),
-        categoryColor: placeCatColor,
-      })).then((c) => { placesCtrl = c; liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } }; })
-        .catch(() => { cap.textContent = ''; mapWrap.append(h('p', { class: 'muted' }, 'The map could not start here — switch to List view.')); });
-    }
+  // Boot the embedded MapLibre map into the always-present map section, numbered + coloured to
+  // match the list. setPlaces() (called by renderList on any filter/layer change) redraws the
+  // markers with no WebGL rebuild; leaving the screen disposes it via liveCleanup.
+  const canvas = h('div', { class: 'places-map' });
+  mapWrap.append(canvas);
+  const mapList0 = mapPlaces();
+  if (!mapList0.length) {
+    mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'No mapped places for these filters/layers yet — widen them, or add a place of your own.'));
+  } else {
+    import('./map.js').then((m) => m.initPlacesMap(canvas, mapList0, {
+      onOpen: (id) => go(`#place-${id}`),
+      onLocate: (fix) => setLastFix(fix),
+      numbered: true,
+      markerColor: (p) => bucketColor(p),
+    })).then((c) => {
+      placesCtrl = c;
+      liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } };
+      // The map is constructed inside a <details>, so its container can still be settling its
+      // real (340px) height when the controller first resolves. Drawing markers then leaves
+      // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out
+      // dimensions and redraw on the next frame(s) so the numbered pins appear on first paint
+      // rather than only after the traveller touches a filter. setPlaces is idempotent.
+      const paint = () => { try { c.map.resize(); c.setPlaces(mapPlaces()); } catch { /* noop */ } };
+      paint();
+      requestAnimationFrame(paint);
+      setTimeout(paint, 250);
+      const fix = getLastFix();
+      // Near-you (no city chosen): centre on the traveller so the numbered nearby pins frame them.
+      if (fix && !scopeSlug) { setTimeout(() => { try { c.map.flyTo({ center: [fix.lng, fix.lat], zoom: 12, duration: 500 }); } catch { /* noop */ } }, 350); }
+    }).catch(() => { mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'The map could not start here — the list below still works offline.')); });
   }
 }
 
@@ -4488,7 +4526,7 @@ function distanceChip(p) {
   return h('span', { class: 'dist-chip', title: 'From your last location' }, `📍 ${parts.join(' · ')}`);
 }
 
-function placeCard(p) {
+function placeCard(p, num) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   const hasPrice = p.priceRange && p.priceRange.currency;
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
@@ -4503,7 +4541,7 @@ function placeCard(p) {
   const thumb = src
     ? h('img', { class: 'pc-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
     : h('span', { class: 'pc-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
-  return h('div', { class: 'card place-card', style: `--cat:${accent}` }, [
+  const card = h('div', { class: 'card place-card' + (num != null ? ' has-num' : ''), style: `--cat:${accent}` }, [
     h('div', { class: 'pc-row' }, [
       thumb,
       h('div', { class: 'pc-body' }, [
@@ -4534,6 +4572,9 @@ function placeCard(p) {
       h('button', { class: 'btn ghost', onclick: () => saveSheet(p.id) }, '＋ Save'),
     ]),
   ]);
+  // A number badge matching the map pin, when the caller supplies a number.
+  if (num != null) card.prepend(h('span', { class: 'pc-num', 'aria-hidden': 'true', style: `background:${accent}` }, String(num)));
+  return card;
 }
 
 // Modal sheet: add an item to collections (and toggle favourite / create new).
