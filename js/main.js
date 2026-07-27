@@ -223,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.301.0';
+const APP_VERSION = 'mk-v0.302.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3283,6 +3283,7 @@ function essentialsCard(code, book, onChange) {
   };
   addRow(find(/^hello/i));
   addRow(find(/^thank you/i));
+  addRow(find(/^friend$/i));
   // allergy / diet — automatic, safety-critical (not hideable)
   const diet = store.profile.prefs.diet || [];
   const allergy = allergyPhrasesForProfile(code);

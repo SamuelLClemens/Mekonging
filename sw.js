@@ -7,7 +7,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.301.0';
+const CACHE_VERSION = 'mk-v0.302.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -160,7 +160,37 @@ self.addEventListener('fetch', (e) => {
   // responses are fine to store and replay through an <audio> element).
   if (url.hostname === TTS_HOST) { e.respondWith(handleTTS(req)); return; }
   if (url.origin !== self.location.origin) return;
-  // same-origin app shell: cache-first, then network (runtime-caches map libs too)
+
+  // App CODE (html/js/css/json/manifest + navigations) uses STALE-WHILE-REVALIDATE: serve the
+  // cached copy instantly (fast, works offline) AND fetch a fresh copy in the background to
+  // refresh the cache, so the NEXT launch — online or offline — reflects the latest deploy.
+  // This is what makes "offline shows the old version" self-heal without waiting for a full
+  // service-worker version bump to fully propagate. Heavy, rarely-changing assets (the map
+  // engine in lib/, images, fonts) stay pure cache-first so they are not re-downloaded every
+  // launch. Data lives in js/data/*.js, so it rides the .js path and refreshes with the code.
+  const p = url.pathname;
+  const isCode = req.mode === 'navigate' || /\.(js|css|json|webmanifest|html)$/.test(p);
+  const heavy = p.startsWith('/lib/') || /\.(png|jpe?g|webp|gif|svg|ico|woff2?|ttf|otf|geojson)$/.test(p);
+
+  if (isCode && !heavy) {
+    e.respondWith(
+      caches.open(CACHE_VERSION).then(async (cache) => {
+        const hit = await cache.match(req, { ignoreSearch: true });
+        const fetching = fetch(req).then((res) => {
+          if (res && res.ok) cache.put(req, res.clone()).catch(() => { /* storage full */ });
+          return res;
+        }).catch(() => null);
+        if (hit) { e.waitUntil(fetching); return hit; }          // serve cache, refresh in background
+        const res = await fetching;
+        if (res) return res;                                     // first sight of this file, online
+        if (req.mode === 'navigate') return (await cache.match('index.html')) || Response.error();
+        return new Response('offline and uncached: ' + req.url, { status: 504 });
+      }),
+    );
+    return;
+  }
+
+  // Heavy / immutable same-origin assets (map engine, images, fonts): cache-first, then network.
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       if (hit) return hit;
