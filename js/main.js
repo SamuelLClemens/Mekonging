@@ -223,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.300.0';
+const APP_VERSION = 'mk-v0.301.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3788,7 +3788,7 @@ function placesScreen(arg) {
     : '';
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
-  { const t = oneTimeHint('places-view', 'Switch between List and Map, and sort by Nearest, to find what is around you right now.'); if (t) wrap.append(t); }
+  { const t = oneTimeHint('places-living-map', 'The map and list stay in sync: tap the coloured category chips to show only what you want, and “Nearest first” to sort by what is around you right now.'); if (t) wrap.append(t); }
   if (scopeCity) {
     wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
       h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
@@ -3830,7 +3830,7 @@ function placesScreen(arg) {
   wrap.append(closestSlot);
   // Country level (no city chosen yet): drill down by city — tap a city and just its
   // places show, grouped into the collapsible category sections below.
-  if (!scopeSlug) { const cp = cityPickerCard(activeCountry); if (cp) wrap.append(cp); }
+  if (!scopeSlug) { const cp = cityPickerCard(activeCountry); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen')); }
 
   // Your own places live alongside the curated ones: add a location, then rate, review and
   // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
@@ -3958,14 +3958,18 @@ function placesScreen(arg) {
   }
   buildLayerChips();
 
-  // Mode bar: near-you vs a chosen city, with a one-tap return to where you actually are.
+  // Mode bar: a plain STATUS label on the left (what you are looking at) and the ACTION on the
+  // right (the "Nearest first" toggle), so the near-you / city / whole-country model reads
+  // clearly instead of two look-alike 📍 chips. When scoped to a city, a button returns to the
+  // whole country.
+  const countryName = (getCountry(activeCountry) || {}).name || 'the country';
   if (scopeSlug) {
     modeBar.append(
-      h('span', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity || 'This city'}`),
-      h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, '↩ Back to near me'),
+      h('span', { class: 'mode-state' }, `📍 Showing ${scopeCity || 'this city'}`),
+      h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `↩ All of ${countryName}`),
     );
   } else {
-    modeBar.append(h('span', { class: 'chip muted' }, getLastFix() ? '📍 Near you' : '📍 Whole country'));
+    modeBar.append(h('span', { class: 'mode-state' }, getLastFix() ? '📍 Showing places near you' : `🗺 Showing all of ${countryName}`));
   }
   modeBar.append(h('span', { style: 'flex:1' }), nearChip);
 
@@ -4110,6 +4114,7 @@ function placesScreen(arg) {
       onOpen: (id) => go(`#place-${id}`),
       onLocate: (fix) => setLastFix(fix),
       numbered: true,
+      cluster: true,
       markerColor: (p) => bucketColor(p),
     })).then((c) => {
       placesCtrl = c;
