@@ -223,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.298.0';
+const APP_VERSION = 'mk-v0.299.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2106,24 +2106,39 @@ function meHubScreen() {
 function exploreScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Explore'));
-  wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 10px' },
-    'Tap a country to explore its regions, cities, history and culture. It all works offline.'));
-  wrap.append(regionPicker());
 
-  // Whatever country the traveller is in (or last looked at) gets a prominent "keep going".
+  // Personalised lead: pick up where the traveller already is; otherwise a short prompt.
   const fs = focusSpot();
   const fcc = fs && fs.spot ? fs.spot.country : '';
   const fc = getCountry(fcc);
   if (fc) {
-    wrap.append(h('button', { class: 'btn block home-explore', style: 'margin:12px 0 2px', onclick: () => { activeCountry = fcc; go(`#country-${fcc}`); } },
-      `${fc.flag} Explore ${fc.name}`));
+    const city = (fs.source === 'gps' || fs.source === 'focus') && fs.spot ? fs.spot.city : '';
+    wrap.append(h('div', { class: 'card explore-lead', style: `--ec:${REGION_COLORS[fcc] || 'var(--teal)'}` }, [
+      h('h2', { style: 'margin:0 0 2px' }, `${fc.flag} Continue in ${fc.name}`),
+      h('p', { class: 'muted', style: 'margin:2px 0 8px' }, city ? `You’re around ${city} — pick up where you are.` : 'Pick up where you left off.'),
+      h('div', { class: 'chips' }, [
+        h('button', { class: 'chip', onclick: () => { activeCountry = fcc; go(`#country-${fcc}`); } }, [chipIcon('compass'), `Explore ${fc.name}`]),
+        h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Places near me']),
+      ]),
+    ]));
+  } else {
+    wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 10px' }, 'Choose where to explore — every country works fully offline.'));
   }
 
-  // Country cards — a large, tap-friendly alternative to the SVG map, each in its own
-  // colour so a country reads the same here as on the map above.
-  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, 'All four countries'));
+  // Hero chooser: the interactive four-country map, collapsible (open by default, persisted).
+  const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🗺 Choose on the map'),
+    regionPicker(), { open: store.profile.prefs.exploreMapOpen !== false, cls: 'home-group-d' });
+  mapFold.addEventListener('toggle', () => { store.profile.prefs.exploreMapOpen = mapFold.open; save(); });
+  wrap.append(mapFold);
+
+  // "At a glance": each country's real figures (mapped-place count, language, currency) and
+  // its top sourced "known for" tags — a comparison that helps a traveller CHOOSE, not just a
+  // launcher. Verified data only (counts from the datasets, tags from history.js). Collapsible.
   const grid = h('div', { class: 'explore-grid' });
   COUNTRIES.forEach((c) => {
+    const n = allPlaces({ country: c.id }).length;
+    const lang = getLanguage(c.lang);
+    const tags = ((countryHistory(c.id) || {}).knownFor || []).slice(0, 3);
     grid.append(h('button', {
       class: 'explore-card', style: `--ec:${REGION_COLORS[c.id] || 'var(--teal)'}`,
       onclick: () => { activeCountry = c.id; go(`#country-${c.id}`); },
@@ -2131,10 +2146,15 @@ function exploreScreen() {
     }, [
       h('span', { class: 'explore-flag' }, c.flag),
       h('span', { class: 'explore-name' }, c.name),
-      h('span', { class: 'explore-sub' }, 'Regions · cities · history · culture'),
+      h('span', { class: 'explore-facts' }, `${n} place${n === 1 ? '' : 's'} · ${lang ? lang.label : c.lang} · ${c.currency}`),
+      tags.length ? h('span', { class: 'explore-tags' }, tags.map((t) => h('span', { class: 'explore-tag' }, t))) : null,
     ]));
   });
-  wrap.append(grid);
+  const glanceFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🌏 Four countries at a glance'),
+    grid, { open: store.profile.prefs.exploreGlanceOpen !== false, cls: 'home-group-d' });
+  glanceFold.addEventListener('toggle', () => { store.profile.prefs.exploreGlanceOpen = glanceFold.open; save(); });
+  wrap.append(glanceFold);
+
   mount(wrap, '#explore');
 }
 
@@ -2519,7 +2539,9 @@ function countryHubScreen(id) {
   tileGroups.forEach((g) => {
     wrap.append(foldable(g.label, h('div', { class: 'grid' }, g.tiles.map(sectionTile))));
   });
-  mount(wrap, '#home');
+  // The country hub is the Explore drill-down (country → region → city), so it belongs to the
+  // Explore tab — highlight that, not Home, however the traveller arrived here.
+  mount(wrap, '#explore');
 }
 
 // ---- "NEAR ME" / JUST-ARRIVED HUB -------------------------------------------
