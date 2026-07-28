@@ -513,8 +513,38 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
   map.addControl(geo, 'top-right');
   try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left'); } catch { /* older build */ }
   geo.on('geolocate', (e) => { if (opts.onLocate) opts.onLocate({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }); });
-  // keep the embed offline-first and quick: hide the streaming satellite tiles.
-  map.on('style.load', () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', 'none'); } catch { /* noop */ } });
+  // Satellite imagery (Esri World Imagery). Every tile fetched while online is stored by the
+  // service worker (mk-tiles cache), so a viewed area stays available with no signal; missing
+  // tiles simply reveal the offline geometry basemap beneath. Default OFF for lightweight embeds
+  // (single-place mini-maps); the Places living map opts in with opts.satellite:true and gets a
+  // Map/Satellite toggle. The layer sits below the borders + Mekong so those stay legible on imagery.
+  let satOn = opts.satellite === true;
+  const applySatellite = () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', satOn ? 'visible' : 'none'); } catch { /* noop */ } };
+  const setSatellite = (on) => { satOn = !!on; applySatellite(); if (opts.onStyleChange) { try { opts.onStyleChange(satOn); } catch { /* noop */ } } };
+  map.on('style.load', applySatellite);
+  // In-map Map/Satellite toggle: a two-button segment so the current basemap is obvious and one
+  // tap flips it (persisted by the caller via opts.onStyleChange). HTML control — glyph-free GL
+  // style is unaffected. Fully usable offline (geometry always; satellite from cached tiles).
+  if (opts.styleToggle) {
+    const toggleCtrl = {
+      onAdd() {
+        const d = document.createElement('div');
+        d.className = 'maplibregl-ctrl maplibregl-ctrl-group mk-style-toggle';
+        const mk = (label, sat, title) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.textContent = label; b.title = title;
+          b.setAttribute('aria-label', title);
+          b.addEventListener('click', () => { setSatellite(sat); d.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); });
+          return b;
+        };
+        const bMap = mk('🗺', false, 'Map view'), bSat = mk('🛰', true, 'Satellite view');
+        bMap.setAttribute('aria-pressed', String(!satOn)); bSat.setAttribute('aria-pressed', String(satOn));
+        d.append(bMap, bSat); this._c = d; return d;
+      },
+      onRemove() { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); },
+    };
+    map.addControl(toggleCtrl, 'top-left');
+  }
 
   const MARKET = '#E0A100', LOCAL = '#D62828';
   // Two ways to colour a pin: by RATING (default — quality at a glance, markets gold / local
@@ -643,12 +673,40 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
     map.on('moveend', () => drawMarkers(lastList));
   }
 
+  // Keep the canvas matched to its container. The map is often created while its <details>/card
+  // is still settling its real size (or is briefly off-screen), leaving a zero-size viewport
+  // where map.project() cannot position markers and no tiles are requested — the "map does not
+  // render" bug. A one-shot timer race is unreliable; a ResizeObserver fires exactly when the box
+  // gains or changes size, so we resize + redraw precisely then. The first real size also frames
+  // the pins (setPlaces); later resizes only redraw so they never fight a user's pan/zoom.
+  let roFitted = false;
+  let ro = null;
+  if (typeof ResizeObserver !== 'undefined') {
+    // Resize synchronously in the callback (no requestAnimationFrame, which is paused while the
+    // tab is hidden). map.resize() only re-sizes the inner canvas to the container, which never
+    // changes the observed container's own box, so this cannot trigger an observer loop.
+    ro = new ResizeObserver(() => {
+      const r = containerEl.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return;   // still collapsed — wait for a real size
+      try {
+        map.resize();
+        if (!roFitted) { roFitted = true; setPlaces(lastList); }   // first real size: draw + frame
+        else drawMarkers(lastList);                                // later resizes: redraw only
+      } catch { /* noop */ }
+    });
+    try { ro.observe(containerEl); } catch { /* noop */ }
+  }
+
   return {
     map,
     setPlaces,
     setColorMode,
+    setSatellite,
     locate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
-    dispose: () => { try { map.remove(); } catch { /* already gone */ } },
+    dispose: () => {
+      try { if (ro) ro.disconnect(); } catch { /* noop */ }
+      try { map.remove(); } catch { /* already gone */ }
+    },
   };
 }
 
