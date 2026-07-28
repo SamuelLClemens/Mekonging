@@ -99,12 +99,16 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
           if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateToast();
         });
       });
-      // Proactively check for a new worker on launch and whenever the app returns to the
-      // foreground. An installed PWA can stay open for days without a navigation, so without
-      // this an already-open app would never notice a deploy; reg.update() forces the check.
+      // Proactively check for a new worker on launch, whenever the app returns to the foreground,
+      // AND the moment the device regains connectivity. An installed PWA can stay open for days
+      // without a navigation, so without this an already-open app would never notice a deploy;
+      // reg.update() forces the check. The `online` trigger matters most for travellers: the app
+      // often sits open while offline (plane, subway, remote area), so the instant signal returns
+      // it fetches any new build and — with the controllerchange reload below — adopts it silently.
       const checkForUpdate = () => { try { reg.update(); } catch { /* offline or not ready */ } };
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+      window.addEventListener('online', checkForUpdate);
     }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
 
     // When a NEW worker takes over (it calls skipWaiting + clients.claim on activate), reload the
@@ -237,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.306.0';
+const APP_VERSION = 'mk-v0.307.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
