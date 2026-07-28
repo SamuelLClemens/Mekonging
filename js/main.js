@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.309.0';
+const APP_VERSION = 'mk-v0.310.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -7989,6 +7989,187 @@ function daySegments(hourly, date) {
   }).filter(Boolean);
 }
 
+// ---- PLAN-AWARE WEATHER: multi-city forecasts + a trip calendar --------------
+// A "plan" is store.trip.stops — an ordered list of { id, title, country, date }.
+// Each stop resolves to a weather spot via spotForCity(); several stops may share a
+// spot. When a plan exists the weather section shows every plan city as its own
+// collapsible forecast (first city open, the rest closed, and each city's choice is
+// then remembered), plus a day-by-day calendar mapping each planned date to the city
+// the traveller will be in with that day's forecast where it is within the coming week.
+const WX_CC_ALL = ['th', 'vi', 'kh', 'la'];
+function stopSpot(stop) {
+  if (!stop || !stop.title) return null;
+  if (stop.country) { const s = spotForCity(stop.country, stop.title); if (s) return s; }
+  // A stop with no country (quick-add / shared import): try every country.
+  for (const cc of WX_CC_ALL) { const s = spotForCity(cc, stop.title); if (s) return s; }
+  return null;
+}
+function wxIsISO(d) { return /^\d{4}-\d{2}-\d{2}$/.test(d || ''); }
+// Date math is done entirely in UTC so slicing toISOString() cannot shift a day in
+// positive-offset timezones. (Weekday/short labels below stay local for display.)
+function wxAddDays(iso, n) { const dt = new Date(iso + 'T00:00:00Z'); dt.setUTCDate(dt.getUTCDate() + n); return dt.toISOString().slice(0, 10); }
+function wxDiffDays(a, b) { return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000); }
+function wxDayShort(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch { return d; } }
+function wxWeekdayNum(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }); } catch { return d; } }
+
+// Distinct plan cities in itinerary order (deduped by weather spot), each carrying the
+// stop dates that map to it, plus any stops whose title matched no weather station.
+function planCities() {
+  const stops = (store.trip && store.trip.stops) || [];
+  const seen = new Map();
+  const unresolved = [];
+  stops.forEach((st) => {
+    const spot = stopSpot(st);
+    if (!spot) { if (st && st.title) unresolved.push(st); return; }
+    const key = spotKey(spot);
+    if (!seen.has(key)) seen.set(key, { key, spot, title: st.title, dates: [] });
+    if (wxIsISO(st.date)) seen.get(key).dates.push(st.date);
+  });
+  return { cities: [...seen.values()], unresolved };
+}
+
+// A day-by-day calendar from the dated stops. Every day in [firstDate, lastDate] is
+// assigned to the most recent stop on or before it. Capped so an open-ended trip can
+// never render an unbounded list.
+function planCalendar() {
+  const stops = (store.trip && store.trip.stops) || [];
+  const dated = stops.filter((s) => wxIsISO(s.date))
+    .map((s) => ({ date: s.date, title: s.title, spot: stopSpot(s) }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  if (!dated.length) return { days: [], hasDates: false, truncated: false, capDays: 0 };
+  const start = dated[0].date;
+  const end = dated[dated.length - 1].date;
+  const CAP = 45;
+  let total = wxDiffDays(start, end) + 1;
+  const truncated = total > CAP;
+  if (truncated) total = CAP;
+  const days = [];
+  let cur = 0;
+  for (let i = 0; i < total; i++) {
+    const d = wxAddDays(start, i);
+    while (cur + 1 < dated.length && dated[cur + 1].date <= d) cur++;
+    days.push({ date: d, title: dated[cur].title, spot: dated[cur].spot });
+  }
+  return { days, hasDates: true, truncated, capDays: CAP };
+}
+
+function planCalendarCard() {
+  const cal = planCalendar();
+  const card = h('div', { class: 'card wx-cal' }, [h('h3', { style: 'margin-top:0' }, '🗓 Trip calendar')]);
+  if (!cal.hasDates) {
+    card.append(h('p', { class: 'muted', style: 'margin:0' },
+      'Add dates to your stops (Plan → My trip) to see a day-by-day calendar of where you will be, with each day’s forecast.'));
+    return card;
+  }
+  card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
+    'Where you plan to be each day. Forecasts show for dates within the coming week — check back closer to the day for the rest.'));
+  // Collapse consecutive same-city days into legs so a long trip stays scannable.
+  const groups = [];
+  cal.days.forEach((day) => {
+    const k = day.spot ? spotKey(day.spot) : '';
+    const last = groups[groups.length - 1];
+    if (last && last.title === day.title && last.key === k) last.days.push(day);
+    else groups.push({ title: day.title, spot: day.spot, key: k, days: [day] });
+  });
+  groups.forEach((g) => {
+    const rec = g.spot ? getCachedWeather(g.key) : null;
+    const cc = g.spot ? getCountry(g.spot.country) : null;
+    const range = g.days.length > 1
+      ? `${wxDayShort(g.days[0].date)} – ${wxDayShort(g.days[g.days.length - 1].date)}`
+      : wxDayShort(g.days[0].date);
+    const leg = h('div', { class: 'wx-cal-leg' }, [
+      h('div', { class: 'wx-cal-leghead' }, [
+        h('strong', {}, `${cc ? cc.flag + ' ' : ''}${g.title}`),
+        h('span', { class: 'muted' }, `${range} · ${g.days.length} ${g.days.length === 1 ? 'day' : 'days'}`),
+      ]),
+    ]);
+    g.days.forEach((day) => {
+      const dd = rec && Array.isArray(rec.daily) ? rec.daily.find((x) => x.date === day.date) : null;
+      const de = dd ? wmo(dd.code)[1] : '';
+      const dl = dd ? wmo(dd.code)[0] : '';
+      leg.append(h('div', { class: 'wx-cal-day' }, [
+        h('span', { class: 'wx-cal-date' }, wxWeekdayNum(day.date)),
+        h('span', { class: 'wx-cal-emoji' }, dd ? de : '·'),
+        h('span', { class: 'muted grow' }, dd
+          ? `${dl}${dd.rainProb != null ? ` · 💧${dd.rainProb}%` : ''}`
+          : (g.spot ? 'Forecast closer to the date' : 'No forecast station')),
+        dd ? h('span', { class: 'wx-cal-temp' }, `${fmtTemp(dd.tmin)} / ${fmtTemp(dd.tmax)}`) : null,
+      ]));
+    });
+    card.append(leg);
+  });
+  if (cal.truncated) card.append(h('p', { class: 'muted', style: 'margin:8px 0 0' }, `Showing the first ${cal.capDays} days of your trip.`));
+  return card;
+}
+
+function planCityPanels() {
+  const { cities, unresolved } = planCities();
+  const wrap = h('div', { class: 'wx-cities' });
+  if (!cities.length) {
+    if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin:4px 2px' },
+      `No forecast station matched your stops (${unresolved.map((s) => s.title).slice(0, 6).join(', ')}). Rename a stop to a nearby city to see its weather.`));
+    return wrap;
+  }
+  if (!store.profile.prefs.wxCityOpen || typeof store.profile.prefs.wxCityOpen !== 'object') store.profile.prefs.wxCityOpen = {};
+  const openMap = store.profile.prefs.wxCityOpen;
+  cities.forEach((c, i) => {
+    const det = h('details', { class: 'wx-city' });
+    // First plan city opens by default; the rest start closed. Once the traveller
+    // toggles a city, that explicit choice is remembered and wins on every return.
+    const open = (c.key in openMap) ? !!openMap[c.key] : (i === 0);
+    if (open) det.setAttribute('open', '');
+    det.addEventListener('toggle', () => { openMap[c.key] = det.open; save(); });
+    const sum = h('summary', { class: 'wx-city-sum' });
+    const bodyBox = h('div', { class: 'wx-city-body' });
+    det.append(sum, bodyBox);
+    const cc = getCountry(c.spot.country);
+    const ds = c.dates.slice().sort();
+    const dateLabel = ds.length ? (ds.length > 1 ? `${wxDayShort(ds[0])}–${wxDayShort(ds[ds.length - 1])}` : wxDayShort(ds[0])) : '';
+    const paintCity = (rec) => {
+      const cur = rec && rec.current;
+      const cemoji = cur ? wmo(cur.code)[1] : '🌡️';
+      const clabel = cur ? wmo(cur.code)[0] : '';
+      sum.innerHTML = '';
+      sum.append(
+        h('span', { class: 'wx-city-emoji' }, cemoji),
+        h('span', { class: 'wx-city-name' }, `${cc ? cc.flag + ' ' : ''}${c.title}`),
+        dateLabel ? h('span', { class: 'wx-city-dates muted' }, dateLabel) : null,
+        h('span', { class: 'wx-city-now' }, cur ? `${fmtTemp(cur.temp)} · 💧${cur.humidity}%` : 'No forecast'),
+      );
+      bodyBox.innerHTML = '';
+      if (!cur) {
+        bodyBox.append(h('p', { class: 'muted', style: 'margin:8px 0' },
+          'Connect once and tap Refresh below to download this city’s forecast for offline use.'));
+        return;
+      }
+      bodyBox.append(h('div', { class: 'muted', style: 'margin:8px 0 4px' },
+        `${clabel} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}`));
+      (rec.daily || []).slice(0, 7).forEach((d) => {
+        const de = wmo(d.code)[1];
+        const dl = wmo(d.code)[0];
+        const segs = daySegments(rec.hourly, d.date);
+        const hums = segs.map((s) => s.hum).filter((v) => v != null);
+        const dayHum = hums.length ? Math.round(hums.reduce((a, b) => a + b, 0) / hums.length) : null;
+        bodyBox.append(h('div', { class: 'row-between wx-city-day' }, [
+          h('span', { style: 'min-width:92px;font-weight:600' }, wxDayDate(d.date)),
+          h('span', { style: 'font-size:18px' }, de),
+          h('span', { class: 'muted grow', style: 'margin:0 8px' },
+            `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
+          h('span', { style: 'font-weight:700;white-space:nowrap' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
+        ]));
+      });
+      if (rec.fetchedAt) bodyBox.append(h('div', { class: 'muted', style: 'text-align:right;font-size:12px;margin-top:6px' }, `Updated ${wxAgo(rec.fetchedAt)}`));
+    };
+    paintCity(getCachedWeather(c.key));
+    // Background refresh only if the traveller has opted online; repaint if still here.
+    if (online()) refreshWeather(c.spot).then((r) => { if (r && (location.hash || '').startsWith('#weather')) paintCity(r); });
+    wrap.append(det);
+  });
+  if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin:6px 2px 0;font-size:12px' },
+    `Also on your calendar (no forecast station matched): ${unresolved.map((s) => s.title).slice(0, 6).join(', ')}.`));
+  return wrap;
+}
+
 function weatherScreen(country) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Weather & forecast', getCountry(country) ? `#country-${country}` : '#home'));
@@ -8004,12 +8185,26 @@ function weatherScreen(country) {
   const setTemp = (u) => { store.profile.wxTempUnit = u; save(); render(); };
   const setWind = (u) => { store.profile.wxWindUnit = u; save(); render(); };
   const unitChip = (label, active, onclick) => h('button', { class: 'chip', 'aria-pressed': active ? 'true' : 'false', onclick }, label);
-  wrap.append(h('div', { class: 'chips', style: 'margin-bottom:6px' }, [
+  wrap.append(h('div', { class: 'chips wx-units', style: 'margin-bottom:6px' }, [
+    h('span', { class: 'wx-units-label' }, 'Units'),
     unitChip('°C', wxTempU() === 'C', () => setTemp('C')),
     unitChip('°F', wxTempU() === 'F', () => setTemp('F')),
     unitChip('km/h', wxWindU() === 'kmh', () => setWind('kmh')),
     unitChip('mph', wxWindU() === 'mph', () => setWind('mph')),
   ]));
+
+  // Plan-aware section: when the traveller has a trip, show a day-by-day calendar and
+  // every plan city as its own collapsible forecast, ABOVE the single-city explorer.
+  const planStops = (store.trip && store.trip.stops) || [];
+  if (planStops.length) {
+    const pc = planCities();
+    if (pc.cities.length || planCalendar().hasDates) {
+      wrap.append(planCalendarCard());
+      wrap.append(h('h3', { class: 'wx-plan-h' }, 'Weather in your trip cities'));
+      wrap.append(planCityPanels());
+      wrap.append(h('h3', { class: 'wx-plan-h' }, 'Look up another city'));
+    }
+  }
 
   const curCountry = spot.country;
 
@@ -8100,7 +8295,7 @@ function weatherScreen(country) {
           h('div', { class: 'row-between' }, [
             h('span', { style: 'min-width:104px;font-weight:700' }, wxDayDate(d.date)),
             h('span', { style: 'font-size:20px' }, de),
-            h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}`),
+            h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
             h('span', { style: 'font-weight:700' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
             h('span', { class: 'muted', style: 'margin-left:6px' }, '⌄'),
           ]),
