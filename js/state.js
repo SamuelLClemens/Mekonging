@@ -91,8 +91,8 @@ function defaults() {
     // user's own take, shown alongside it colour-coded.
     placeData: {},
     trip: {
-      stops: [],                // { id, city, country, fromDate, toDate }
-      budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note }
+      stops: [],                // { id, title, country, date:'YYYY-MM-DD'(arrive), endDate:'YYYY-MM-DD'(leave, optional) }
+      budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note, category }
       notes: '',
     },
     // --- v4: travel journal + travel calendar (all on-device) ---
@@ -369,8 +369,10 @@ export function toggleChecklistItem(id) {
 }
 
 // --- trip planner (itinerary stops + budget log) -----------------------------
-export function addStop({ title, country = '', date = '' }) {
-  const s = { id: uid('stop'), title: String(title || '').slice(0, 80), country, date };
+export function addStop({ title, country = '', date = '', endDate = '' }) {
+  // `date` is the arrival day; `endDate` is an optional departure day so one stop can cover a
+  // range (e.g. ten days in one city) instead of a stop per day. Old stored stops have no endDate.
+  const s = { id: uid('stop'), title: String(title || '').slice(0, 80), country, date, endDate: endDate || '' };
   store.trip.stops.push(s); save(); return s;
 }
 export function removeStop(id) {
@@ -388,6 +390,7 @@ export function updateStop(id, patch = {}) {
   if (!s) return null;
   if (patch.title !== undefined) s.title = String(patch.title || s.title).slice(0, 80);
   if (patch.date !== undefined) s.date = patch.date;
+  if (patch.endDate !== undefined) s.endDate = patch.endDate || '';
   if (patch.country !== undefined) s.country = patch.country;
   save(); return s;
 }

@@ -30,6 +30,12 @@ const MEKONG_FC = { type: 'FeatureCollection', features: [{ type: 'Feature', pro
 // reuses the same source/attribution as the Nomadic Almanac map.
 const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const SATELLITE_ATTR = 'Imagery © Esri — Source: Esri, Maxar, Earthstar Geographics, USGS, NOAA';
+// Street basemap: Esri World Street Map raster (roads + place labels). Same host as the
+// satellite imagery, so it needs no new CSP entry and no API key. Shown when the user picks
+// "Map" instead of "Satellite"; like satellite it is cached to mk-tiles for offline reuse and
+// falls back to the self-hosted geometry basemap when a tile cannot load.
+const STREET_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+const STREET_ATTR = 'Streets © Esri — HERE, Garmin, USGS, © OpenStreetMap contributors';
 
 // Build the list of satellite-tile URLs covering `bounds` from the current zoom down a
 // few levels (capped) so the service worker can pre-cache the area for offline use.
@@ -161,12 +167,17 @@ function basemapStyle() {
       land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
       mekong: { type: 'geojson', data: MEKONG_FC },
       satellite: { type: 'raster', tiles: [SATELLITE_TILES], tileSize: 256, maxzoom: 19, attribution: SATELLITE_ATTR },
+      street: { type: 'raster', tiles: [STREET_TILES], tileSize: 256, maxzoom: 19, attribution: STREET_ATTR },
       borderlines: { type: 'geojson', data: BORDER_LINES },
     },
     layers: [
       { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
       { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
       { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
+      // Street raster sits above the geometry but below satellite: when satellite is hidden ("Map"
+      // view) the streets show through; when satellite is on it covers the streets. Toggled by the
+      // controllers' setSatellite (street visible === satellite hidden).
+      { id: 'street', source: 'street', type: 'raster', layout: { visibility: 'none' } },
       { id: 'satellite', source: 'satellite', type: 'raster', layout: { visibility: 'visible' } },
       { id: 'borders', source: 'borderlines', type: 'line', layout: { visibility: 'visible' },
         paint: { 'line-color': '#FF3B30', 'line-width': 2, 'line-dasharray': [2, 1.5], 'line-opacity': 0.95 } },
@@ -442,7 +453,7 @@ export async function initMap(containerEl, opts = {}) {
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
     setLayer: setLayerVisible,
     layers: ['stay', 'eat', 'localeat', 'go', 'market', 'pools', 'crossing'],
-    setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); },
+    setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); if (map.getLayer('street')) map.setLayoutProperty('street', 'visibility', on ? 'none' : 'visible'); },
     setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
     // GPS: reuse the single built-in GeolocateControl (one watcher, one blue dot).
     triggerLocate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
@@ -519,7 +530,7 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
   // (single-place mini-maps); the Places living map opts in with opts.satellite:true and gets a
   // Map/Satellite toggle. The layer sits below the borders + Mekong so those stay legible on imagery.
   let satOn = opts.satellite === true;
-  const applySatellite = () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', satOn ? 'visible' : 'none'); } catch { /* noop */ } };
+  const applySatellite = () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', satOn ? 'visible' : 'none'); if (map.getLayer('street')) map.setLayoutProperty('street', 'visibility', satOn ? 'none' : 'visible'); } catch { /* noop */ } };
   const setSatellite = (on) => { satOn = !!on; applySatellite(); if (opts.onStyleChange) { try { opts.onStyleChange(satOn); } catch { /* noop */ } } };
   map.on('style.load', applySatellite);
   // In-map Map/Satellite toggle: a two-button segment so the current basemap is obvious and one

@@ -1016,7 +1016,11 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 
 /* --- bottom tab bar --- */
 .tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: var(--tabbar-h);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  /* The home-indicator safe-area inset is ADDED to the bar height (not subtracted from the
+     content box, which border-box would otherwise do), so icon + label always fit on notched
+     phones instead of the label being clipped out of a collapsed 66px box. */
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
   display: flex; max-width: 720px; margin: 0 auto;
   background: var(--card); border-top: 3px solid transparent;
   border-image: var(--grad-sun) 1; padding-bottom: env(safe-area-inset-bottom);
@@ -1187,6 +1191,12 @@ html[data-theme="dark"] .countdown-num b { color: var(--teal); }
 /* trip planner + journal photo */
 .bestof-card { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); }
 .trip-stop { padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
+/* Arrive/leave date range for a stop: the two pickers sit side by side and each keeps a small
+   caption, wrapping to a stacked layout on narrow phones. */
+.trip-dates { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.trip-date-lbl { display: flex; flex-direction: column; gap: 2px; flex: 1 1 130px; min-width: 130px;
+  font-size: var(--fs-label); color: var(--ink-soft); }
+.trip-date-lbl input { width: 100%; }
 .entry-photo { width: 100%; border-radius: var(--r-md); margin: var(--sp-2) 0; display: block; border: 1px solid var(--line); }
 
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }
