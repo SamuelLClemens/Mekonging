@@ -1,13 +1,14 @@
-// Offline support: precache the app shell, serve cache-first. Bump CACHE_VERSION
-// per release. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON basemap
-// ARE precached so the offline map works from first launch with no connection.
+// Offline support: precache the app shell, then serve app CODE network-first (newest deploy
+// when online, last-cached copy when offline) and heavy/immutable assets cache-first. Bump
+// CACHE_VERSION per release. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON
+// basemap ARE precached so the offline map works from first launch with no connection.
 //
 // TILE_CACHE holds the raster satellite-tile byte ranges from the external tile source so the
 // map works offline once an area has been downloaded/viewed. The Cache API refuses
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.304.0';
+const CACHE_VERSION = 'mk-v0.305.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -161,13 +162,22 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname === TTS_HOST) { e.respondWith(handleTTS(req)); return; }
   if (url.origin !== self.location.origin) return;
 
-  // App CODE (html/js/css/json/manifest + navigations) uses STALE-WHILE-REVALIDATE: serve the
-  // cached copy instantly (fast, works offline) AND fetch a fresh copy in the background to
-  // refresh the cache, so the NEXT launch — online or offline — reflects the latest deploy.
-  // This is what makes "offline shows the old version" self-heal without waiting for a full
-  // service-worker version bump to fully propagate. Heavy, rarely-changing assets (the map
-  // engine in lib/, images, fonts) stay pure cache-first so they are not re-downloaded every
-  // launch. Data lives in js/data/*.js, so it rides the .js path and refreshes with the code.
+  // App CODE (html/js/css/json/manifest + navigations) uses NETWORK-FIRST. This is the fix for
+  // "offline / the app still shows the OLD version after a deploy". The previous strategy was
+  // stale-while-revalidate, which serves the CACHED (old) copy on the visible launch and only
+  // refreshes the cache in the background for NEXT time — so an online user saw the old build on
+  // the launch right after a deploy, and if they went offline in between, offline stayed old too.
+  //
+  // Network-first instead:
+  //   • ONLINE  → fetch the network copy with {cache:'no-cache'} (a conditional request, so the
+  //     host's own HTTP-cache max-age cannot serve a stale build; 304 when unchanged is cheap),
+  //     render the LATEST deploy immediately, and write it into the cache.
+  //   • OFFLINE → the fetch throws; serve the last copy cached from a previous online launch
+  //     (i.e. exactly what the traveller last saw with a connection). index.html is precached as
+  //     the navigation fallback so the app shell always opens with no signal.
+  // Heavy, rarely-changing assets (the map engine in lib/, images, fonts, the GeoJSON basemap)
+  // stay pure cache-first below, so they are never re-downloaded on a launch. Data lives in
+  // js/data/*.js, so it rides the .js path and refreshes together with the code.
   const p = url.pathname;
   const isCode = req.mode === 'navigate' || /\.(js|css|json|webmanifest|html)$/.test(p);
   const heavy = p.startsWith('/lib/') || /\.(png|jpe?g|webp|gif|svg|ico|woff2?|ttf|otf|geojson)$/.test(p);
@@ -175,16 +185,19 @@ self.addEventListener('fetch', (e) => {
   if (isCode && !heavy) {
     e.respondWith(
       caches.open(CACHE_VERSION).then(async (cache) => {
-        const hit = await cache.match(req, { ignoreSearch: true });
-        const fetching = fetch(req).then((res) => {
-          if (res && res.ok) cache.put(req, res.clone()).catch(() => { /* storage full */ });
+        try {
+          const res = await fetch(req, { cache: 'no-cache' });   // network-first: newest when online
+          // Cache same-origin sub-resources (js/css/json) for the next offline launch. Navigations
+          // are skipped so the cache does not accumulate one entry per ?query — index.html is the
+          // precached navigation fallback, matched below when offline.
+          if (res && res.ok && req.mode !== 'navigate') cache.put(req, res.clone()).catch(() => { /* storage full */ });
           return res;
-        }).catch(() => null);
-        if (hit) { e.waitUntil(fetching); return hit; }          // serve cache, refresh in background
-        const res = await fetching;
-        if (res) return res;                                     // first sight of this file, online
-        if (req.mode === 'navigate') return (await cache.match('index.html')) || Response.error();
-        return new Response('offline and uncached: ' + req.url, { status: 504 });
+        } catch (err) {
+          const hit = await cache.match(req, { ignoreSearch: true });
+          if (hit) return hit;                                   // offline: last copy seen online
+          if (req.mode === 'navigate') return (await cache.match('index.html')) || Response.error();
+          return new Response('offline and uncached: ' + req.url, { status: 504 });
+        }
       }),
     );
     return;
