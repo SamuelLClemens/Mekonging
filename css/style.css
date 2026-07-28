@@ -849,6 +849,36 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .od-temp { color: var(--ink-soft); }
 .od-rain { font-size: var(--fs-sm); text-align: right; white-space: nowrap; }
 
+/* Weather section: in-section unit toggle label, plan calendar, and per-city panels. */
+.wx-units { align-items: center; }
+.wx-units-label { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); margin-right: 4px; }
+.wx-plan-h { font-size: var(--fs-lg); font-weight: 800; color: var(--ink); margin: 18px 2px 8px; }
+
+.wx-cal { border-top: 4px solid var(--teal); }
+.wx-cal-leg { margin: 8px 0; }
+.wx-cal-leghead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding: 4px 0; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
+.wx-cal-leghead strong { font-size: var(--fs-body); color: var(--ink); }
+.wx-cal-day { display: grid; grid-template-columns: 4.8em 1.5em 1fr auto; align-items: center;
+  gap: var(--sp-2); padding: 3px 0; font-size: var(--fs-sm); }
+.wx-cal-date { font-weight: 700; color: var(--ink); }
+.wx-cal-emoji { text-align: center; font-size: 1.05rem; line-height: 1; }
+.wx-cal-temp { font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+.wx-cities { display: flex; flex-direction: column; gap: var(--sp-2); }
+.wx-city { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4); box-shadow: var(--shadow-soft); }
+.wx-city > summary { list-style: none; cursor: pointer; }
+.wx-city > summary::-webkit-details-marker { display: none; }
+.wx-city-sum { display: flex; align-items: center; gap: 8px; }
+.wx-city-emoji { font-size: 1.3rem; line-height: 1; flex: 0 0 auto; }
+.wx-city-name { font-weight: 800; color: var(--ink); }
+.wx-city-dates { font-size: var(--fs-label); }
+.wx-city-now { margin-left: auto; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.wx-city-sum::after { content: '⌄'; margin-left: 4px; opacity: 0.55; transition: transform var(--dur) var(--ease); }
+.wx-city[open] .wx-city-sum::after { transform: rotate(180deg); }
+.wx-city-day { padding: 4px 0; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+
 /* Colour-coded attribute / status chips (kids, rain, open/closed, fit, stay type, …).
    Category tags keep their family colours; these carry meaning by hue so the traveller reads
    status at a glance. Solid fills with white (or dark) text stay legible in light and dark. */
