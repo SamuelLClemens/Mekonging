@@ -105,7 +105,7 @@ export function parseShare(str) {
     data = { name: clean(raw.name, 40) || 'Shared list', items };
   } else if (k === 'trip') {
     const stops = Array.isArray(raw.stops) ? raw.stops.slice(0, 60)
-      .map((st) => ({ title: clean(st && st.t, 80), country: clean(st && st.c, 4), date: clean(st && st.d, 10) })).filter((st) => st.title) : [];
+      .map((st) => ({ title: clean(st && st.t, 80), country: clean(st && st.c, 4), date: clean(st && st.d, 10), endDate: clean(st && st.e, 10) })).filter((st) => st.title) : [];
     data = { stops, notes: clean(raw.notes, 200) };
   } else if (k === 'tip') {
     // a local-noticeboard tip: pinned to a country+city, with a topic + text

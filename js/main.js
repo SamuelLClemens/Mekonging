@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.310.0';
+const APP_VERSION = 'mk-v0.311.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2145,12 +2145,15 @@ function quickSpendRow(id) {
     (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
     const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', class: 'strip-amt', 'aria-label': 'Amount spent' });
     const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the spend was on' });
-    const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim() }); draw(); };
+    const cat = expCatPicker('other');
+    cat.style.marginTop = '6px';
+    const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim(), category: cat.get() }); draw(); };
     amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
     box.append(h('div', { class: 'strip-budget' }, [
       h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
       h('button', { class: 'btn strip-add', 'aria-label': 'Add spend', onclick: add }, '＋'),
     ]));
+    box.append(cat);
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
       spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend in one tap. ',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
@@ -2380,6 +2383,16 @@ function meHubScreen() {
         `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when}`));
     });
     wrap.append(rc);
+  }
+
+  // Spending at a glance: the by-category donut + budget progress right on the hub, so the
+  // traveller sees where money is going without opening the expenses screen. The card returns
+  // null until there is something to chart; tapping through opens the full log.
+  const spendCard = budgetSummaryCard();
+  if (spendCard) {
+    spendCard.style.marginTop = '12px';
+    spendCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') }, exN ? 'Log spend & see all →' : 'Log your first spend →'));
+    wrap.append(spendCard);
   }
 
   // --- Four collapsible groups mapping to the traveller's own priorities ---
@@ -6817,7 +6830,7 @@ function scrapbookScreen() {
   }
 
   const allDates = entries.map((e) => e.date || String(e.ts || '').slice(0, 10)).filter(Boolean)
-    .concat(stops.map((s) => s.fromDate).filter(Boolean)).sort();
+    .concat(stops.flatMap((s) => [s.date, s.endDate]).filter(Boolean)).sort();
   const range = allDates.length ? sbDateRange(allDates[0], allDates[allDates.length - 1]) : '';
 
   wrap.append(h('div', { class: 'card scrap-cover' }, [
@@ -6846,8 +6859,8 @@ function scrapbookScreen() {
   if (stops.length) {
     const s = h('div', { class: 'card' }, [h('h3', { class: 'scrap-h' }, '🧳 Where you went')]);
     stops.forEach((st) => s.append(h('div', { class: 'scrap-row' }, [
-      h('strong', {}, st.city || 'Stop'),
-      h('span', { class: 'muted' }, [st.country ? (getCountry(st.country) || {}).name : '', sbDateRange(st.fromDate, st.toDate)].filter(Boolean).join(' · ')),
+      h('strong', {}, st.title || 'Stop'),
+      h('span', { class: 'muted' }, [st.country ? (getCountry(st.country) || {}).name : '', sbDateRange(st.date, st.endDate)].filter(Boolean).join(' · ')),
     ])));
     wrap.append(s);
   }
@@ -7435,8 +7448,12 @@ function calendarFormScreen(editId, prefill) {
   const date = h('input', { 'aria-label': 'Date', type: 'date', value: existing ? existing.date : (pf.date || '') });
   const time = h('input', { 'aria-label': 'Time', type: 'time', value: existing ? (existing.time || '') : '' });
   const TYPES = [['plan', '🗓 Day plan'], ['stay', '🛏 Accommodation'], ['meal', '🍽 Meal'], ['activity', '🎟 Activity'], ['laundry', '🧺 Laundry day'], ['appointment', '📌 Appointment']];
-  const type = selectEl(TYPES, existing ? existing.type : (pf.type || 'plan'), () => {}, 'Entry type');
-  const title = h('input', { 'aria-label': 'Title', type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch', value: existing ? existing.title : '' });
+  // Some entry types carry a sensible default title so the traveller can log them in one tap; the
+  // title stays fully editable — it can be cleared and retyped, and switching type refills it only
+  // when it is still empty so a typed title is never overwritten.
+  const CAL_DEFAULT_TITLE = { laundry: 'Laundry day', appointment: 'Appointment' };
+  const type = selectEl(TYPES, existing ? existing.type : (pf.type || 'plan'), (val) => { if (!title.value.trim() && CAL_DEFAULT_TITLE[val]) title.value = CAL_DEFAULT_TITLE[val]; }, 'Entry type');
+  const title = h('input', { 'aria-label': 'Title', type: 'text', placeholder: 'e.g. Grand Palace visit / Bun cha lunch', value: existing ? existing.title : (CAL_DEFAULT_TITLE[pf.type] || '') });
   const place = h('input', { 'aria-label': 'Where', type: 'text', placeholder: 'Where', value: existing ? (existing.place || '') : '' });
   const cost = h('input', { 'aria-label': 'Cost', type: 'number', inputmode: 'decimal', placeholder: 'Cost', value: existing ? (existing.cost || '') : '' });
   const cur = selectEl(['THB', 'VND', 'KHR', 'LAK', 'USD', 'EUR', 'GBP', 'ILS'], existing ? (existing.currency || (c ? c.currency : 'THB')) : (c ? c.currency : 'THB'), () => {}, 'Currency');
@@ -7457,8 +7474,9 @@ function calendarFormScreen(editId, prefill) {
   ]));
   wrap.append(h('button', { class: 'btn block', onclick: () => {
     if (!date.value) { alert('Pick a date.'); return; }
-    if (!title.value.trim()) { alert('Add a title.'); return; }
-    const fields = { date: date.value, time: time.value, type: type.value, title: title.value.trim(), place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim(), remind: Number(remind.value) };
+    const finalTitle = title.value.trim() || CAL_DEFAULT_TITLE[type.value] || '';
+    if (!finalTitle) { alert('Add a title.'); return; }
+    const fields = { date: date.value, time: time.value, type: type.value, title: finalTitle, place: place.value.trim(), cost: cost.value, currency: cur.value, rating: st.rating, note: note.value.trim(), remind: Number(remind.value) };
     if (editing) updateCalendarItem(editId, fields); else addCalendarItem(fields);
     reminders.tick();
     go('#calendar');
@@ -8024,6 +8042,7 @@ function planCities() {
     const key = spotKey(spot);
     if (!seen.has(key)) seen.set(key, { key, spot, title: st.title, dates: [] });
     if (wxIsISO(st.date)) seen.get(key).dates.push(st.date);
+    if (wxIsISO(st.endDate)) seen.get(key).dates.push(st.endDate);
   });
   return { cities: [...seen.values()], unresolved };
 }
@@ -8034,11 +8053,14 @@ function planCities() {
 function planCalendar() {
   const stops = (store.trip && store.trip.stops) || [];
   const dated = stops.filter((s) => wxIsISO(s.date))
-    .map((s) => ({ date: s.date, title: s.title, spot: stopSpot(s) }))
+    .map((s) => ({ date: s.date, end: (wxIsISO(s.endDate) && s.endDate >= s.date) ? s.endDate : s.date, title: s.title, spot: stopSpot(s) }))
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   if (!dated.length) return { days: [], hasDates: false, truncated: false, capDays: 0 };
   const start = dated[0].date;
-  const end = dated[dated.length - 1].date;
+  // The trip ends on the latest departure day (a ranged stop extends past its own arrival), not
+  // merely the last arrival, so every day of a multi-day final stop still appears on the calendar.
+  let end = start;
+  dated.forEach((d) => { if (d.end > end) end = d.end; });
   const CAP = 45;
   let total = wxDiffDays(start, end) + 1;
   const truncated = total > CAP;
@@ -8458,7 +8480,7 @@ function dailyStripCard(id) {
       const until = daysUntilISO(startISO);
       if (until <= 0) {
         const dayNum = 1 - until; // the start date itself is day 1
-        const dated = (store.trip.stops || []).map((s) => s.date).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '')).sort();
+        const dated = (store.trip.stops || []).flatMap((s) => [s.date, s.endDate]).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '')).sort();
         const lastISO = dated[dated.length - 1];
         const span = lastISO && lastISO !== startISO
           ? Math.round((new Date(lastISO + 'T00:00:00') - new Date(startISO + 'T00:00:00')) / 86400000) + 1
@@ -9241,6 +9263,15 @@ function bestListScreen(id) {
 
 // ---- TRIP PLANNER (itinerary + budget) --------------------------------------
 let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
+// A stop's date line: a single arrival day, or an arrive→leave range with an inclusive day count
+// (so "10 days in Chiang Mai" reads as one entry). Tolerates old stops that carry only `date`.
+function stopDateLabel(s) {
+  if (!s) return '';
+  const from = s.date || '';
+  const to = (s.endDate && s.endDate >= from) ? s.endDate : '';
+  if (from && to && to !== from) return `${from} → ${to} · ${wxDiffDays(from, to) + 1} days`;
+  return from || to || '';
+}
 function tripScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('My Trip', '#home'));
@@ -9253,18 +9284,23 @@ function tripScreen() {
     // Inline editor when this stop is open for correction — fix a typo'd name or a wrong date.
     if (editStopId === s.id) {
       const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.title });
-      const dt = h('input', { 'aria-label': 'Stop date', type: 'date', value: s.date || '' });
+      const dt = h('input', { 'aria-label': 'Arrive date', type: 'date', value: s.date || '' });
+      const dt2 = h('input', { 'aria-label': 'Leave date', type: 'date', value: s.endDate || '' });
       itin.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
-        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t, dt]),
+        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t,
+          h('div', { class: 'trip-dates' }, [
+            h('label', { class: 'trip-date-lbl' }, ['Arrive', dt]),
+            h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', dt2]),
+          ])]),
         h('div', { class: 'chips' }, [
-          h('button', { class: 'btn', onclick: () => { updateStop(s.id, { title: t.value.trim() || s.title, date: dt.value }); editStopId = null; go('#trip'); } }, 'Save'),
+          h('button', { class: 'btn', onclick: () => { updateStop(s.id, { title: t.value.trim() || s.title, date: dt.value, endDate: dt2.value }); editStopId = null; go('#trip'); } }, 'Save'),
           h('button', { class: 'btn ghost', onclick: () => { editStopId = null; render(); } }, 'Cancel'),
         ]),
       ]));
       return;
     }
     itin.append(h('div', { class: 'row-between trip-stop' }, [
-      h('div', {}, [h('strong', {}, `${i + 1}. ${s.title}`), s.date ? h('div', { class: 'muted' }, s.date) : null]),
+      h('div', {}, [h('strong', {}, `${i + 1}. ${s.title}`), stopDateLabel(s) ? h('div', { class: 'muted' }, stopDateLabel(s)) : null]),
       h('div', { class: 'cats' }, [
         h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editStopId = s.id; render(); } }, '✎'),
         h('button', { class: 'chip', 'aria-label': 'Move up', disabled: i === 0 ? '' : null, onclick: () => { moveStop(s.id, -1); go('#trip'); } }, '↑'),
@@ -9274,9 +9310,15 @@ function tripScreen() {
     ]));
   });
   const stopName = h('input', { 'aria-label': 'Stop name', type: 'text', placeholder: 'Place or city' });
-  const stopDate = h('input', { 'aria-label': 'Stop date', type: 'date' });
-  itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName, stopDate,
-    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: activeCountry, date: stopDate.value }); go('#trip'); } } }, 'Add stop')]));
+  const stopDate = h('input', { 'aria-label': 'Arrive date', type: 'date' });
+  const stopEnd = h('input', { 'aria-label': 'Leave date', type: 'date' });
+  itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName,
+    h('div', { class: 'trip-dates' }, [
+      h('label', { class: 'trip-date-lbl' }, ['Arrive', stopDate]),
+      h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', stopEnd]),
+    ]),
+    h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
+    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: activeCountry, date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
   // quick add from saved
   const saved = store.favorites.map(resolveItem).filter(Boolean);
   if (saved.length) {
@@ -9290,7 +9332,7 @@ function tripScreen() {
     wrap.append(h('div', { class: 'card' }, [
       h('h3', {}, 'Share this trip'),
       h('p', { class: 'muted' }, 'Send your itinerary to a travel companion — they can copy the stops straight into their own trip.'),
-      shareButton('📤 Share my trip', 'My Mekong trip', () => shareUrl('in', encodeShare('trip', { stops: store.trip.stops.map((s) => ({ t: s.title, c: s.country, d: s.date })), notes: store.trip.notes || '' }, ensureMe()))),
+      shareButton('📤 Share my trip', 'My Mekong trip', () => shareUrl('in', encodeShare('trip', { stops: store.trip.stops.map((s) => ({ t: s.title, c: s.country, d: s.date, e: s.endDate })), notes: store.trip.notes || '' }, ensureMe()))),
     ]));
   }
 
@@ -9319,8 +9361,9 @@ function tripScreen() {
   const c = getCountry(activeCountry);
   const bCur = currencySelect(c ? c.currency : 'THB');
   const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what?' });
-  bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log a spend'), bAmt, bCur, bNote,
-    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim() }); go('#trip'); } } }, 'Add spend')]));
+  const bCat = expCatPicker('other');
+  bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log a spend'), bAmt, bCur, bNote, bCat,
+    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get() }); go('#trip'); } } }, 'Add spend')]));
   wrap.append(bud);
   mount(wrap, '#home');
 }
@@ -9419,11 +9462,11 @@ function tripSpanDays() {
   const parse = (d) => { const p = String(d).split('-').map(Number); return Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1); };
   const stops = (store.trip.stops || []);
   const dates = [];
-  stops.forEach((s) => { if (s.fromDate) dates.push(s.fromDate); if (s.toDate) dates.push(s.toDate); });
+  stops.forEach((s) => { if (s.date) dates.push(s.date); if (s.endDate) dates.push(s.endDate); });
   (store.trip.budgetLog || []).forEach((b) => { if (b.date) dates.push(b.date); });
   if (!dates.length) return null;
   const start = dates.slice().sort()[0];
-  const ends = stops.map((s) => s.toDate || s.fromDate).filter(Boolean).sort();
+  const ends = stops.map((s) => s.endDate || s.date).filter(Boolean).sort();
   const end = ends.length ? ends[ends.length - 1] : null;
   const today = todayKey();
   const dayMs = 86400000;
@@ -10958,7 +11001,7 @@ function importShareScreen(arg) {
   } else if (s.kind === 'trip') {
     box.append(h('h2', { style: 'margin-top:8px' }, 'A shared trip'));
     box.append(h('ol', {}, s.data.stops.slice(0, 40).map((st) => h('li', {}, st.title + (st.date ? ` — ${st.date}` : '')))));
-    box.append(h('button', { class: 'btn block', onclick: (e) => { s.data.stops.forEach((st) => addStop({ title: st.title, country: st.country, date: st.date })); e.currentTarget.textContent = '✓ Added to my trip'; } }, '＋ Add these stops to my trip'));
+    box.append(h('button', { class: 'btn block', onclick: (e) => { s.data.stops.forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, '＋ Add these stops to my trip'));
   } else if (s.kind === 'tip') {
     box.append(h('h2', { style: 'margin-top:8px' }, `Local tip — ${s.data.city}`));
     box.append(h('p', {}, s.data.text));
@@ -11039,7 +11082,7 @@ function inboxScreen() {
       ]),
       it.msg ? h('p', { style: 'margin-top:6px' }, it.msg) : null,
       (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,
-      (it.kind === 'trip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
+      (it.kind === 'trip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
       (it.kind === 'collection') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { const c = createCollection(it.data.name || 'Shared list', '📥'); let n = 0; (it.data.items || []).forEach((x) => { if (getPlace(x.id)) { togglePlaceInCollection(c.id, x.id); n++; } }); e.currentTarget.textContent = `✓ Saved (${n})`; } }, 'Save as a collection') : null,
       (it.kind === 'tip') ? h('p', { style: 'margin-top:6px' }, it.data.text || '') : null,
       (it.kind === 'tip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => {
@@ -11735,7 +11778,7 @@ async function exportPhotosZip() {
 }
 function expenseTable() {
   const log = (store.trip.budgetLog || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  return { headers: ['Date', 'Amount', 'Currency', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', b.note || '']) };
+  return { headers: ['Date', 'Amount', 'Currency', 'Category', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', (EXP_CAT[expCatOf(b)] || {}).label || 'Other', b.note || '']) };
 }
 
 // The headline export: ONE beautiful, self-contained web page a traveller can open on any
@@ -11761,8 +11804,8 @@ async function exportTravelBookHtml() {
   if (stops.length) {
     const countries = [...new Set(stops.map((s) => (getCountry(s.country) || {}).name).filter(Boolean))];
     if (countries.length) summaryBits.push(`Countries: ${countries.join(', ')}`);
-    const dates = stops.map((s) => s.date).filter(Boolean).sort();
-    if (dates.length) summaryBits.push(`Dates: ${dates[0]}${dates.length > 1 ? ` – ${dates[dates.length - 1]}` : ''}`);
+    const dates = stops.flatMap((s) => [s.date, s.endDate]).filter(Boolean).sort();
+    if (dates.length) summaryBits.push(`Dates: ${dates[0]}${dates.length > 1 && dates[dates.length - 1] !== dates[0] ? ` – ${dates[dates.length - 1]}` : ''}`);
     summaryBits.push(`${stops.length} stop${stops.length === 1 ? '' : 's'}`);
   }
   if (log.length && spend > 0) summaryBits.push(`Total spent: ${money(Math.round(spend), home)}${spendKnown ? '' : ' (partial — some currencies not converted)'}`);
@@ -11770,7 +11813,7 @@ async function exportTravelBookHtml() {
     parts.push(`<h2 class="book-section">My trip</h2><p class="lead">${summaryBits.map(esc).join(' · ')}</p>`);
     if (stops.length) {
       parts.push('<article>' + stops.map((s) =>
-        `<div>${esc(s.title || 'Stop')}${s.country ? ` · ${esc((getCountry(s.country) || {}).name || s.country)}` : ''}${s.date ? ` · ${esc(s.date)}` : ''}</div>`).join('') + '</article>');
+        `<div>${esc(s.title || 'Stop')}${s.country ? ` · ${esc((getCountry(s.country) || {}).name || s.country)}` : ''}${stopDateLabel(s) ? ` · ${esc(stopDateLabel(s))}` : ''}</div>`).join('') + '</article>');
     }
   }
 
