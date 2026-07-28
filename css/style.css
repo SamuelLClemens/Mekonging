@@ -464,14 +464,15 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .hero.is-collapsed .logo { width: 132px; margin-bottom: 0; }
 .hero.is-collapsed > p, .hero.is-collapsed .hero-badges {
   opacity: 0; max-height: 0; margin-top: 0; margin-bottom: 0; pointer-events: none; }
-.hero.is-stuck.is-collapsed { cursor: pointer; }
+.hero.is-collapsed { cursor: pointer; }
 
-/* Expand / collapse control — shown only once the hero is stuck to the top of the viewport. */
+/* Expand / collapse control — shown whenever the hero is slim (Home now starts collapsed, so
+   the chevron must be available even before the hero is stuck to the top of the viewport). */
 .hero-toggle { position: absolute; top: 8px; right: 10px; z-index: 3; display: none;
   width: 34px; height: 34px; align-items: center; justify-content: center; padding: 0;
   border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink);
   box-shadow: var(--shadow-soft); cursor: pointer; }
-.hero.is-stuck .hero-toggle { display: flex; }
+.hero.is-stuck .hero-toggle, .hero.is-collapsed .hero-toggle { display: flex; }
 .hero-toggle .chev { font-size: 1.15rem; line-height: 1; transition: transform var(--dur) var(--ease); }
 .hero:not(.is-collapsed) .hero-toggle .chev { transform: rotate(180deg); }
 
@@ -482,6 +483,31 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   .hero > p { font-size: 1rem; }
   .hero.is-collapsed .logo { width: 112px; }
 }
+
+/* --- Home top: compact phase switch, at-a-glance status, merged Right-now --- */
+/* Slim one-line phase switcher (replaces the tall 2×2 .phase-seg on Home). */
+.phase-switch { margin-bottom: var(--sp-3); }
+.phase-switch-lbl { display: block; font-size: var(--fs-label); font-weight: 800; color: var(--ink-soft);
+  text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 4px 2px; }
+.phase-seg.compact { display: flex; grid-template-columns: none; gap: 6px; margin-bottom: 0; }
+.phase-seg.compact .phase-btn { flex: 1 1 0; min-width: 0; min-height: 46px; padding: 5px 3px; gap: 2px;
+  flex-direction: column; justify-content: center; text-align: center; font-size: 11px; }
+.phase-seg.compact .phase-btn .phase-emoji { font-size: 1.15rem; }
+.phase-seg.compact .phase-btn .phase-lbl { line-height: 1.05; }
+
+/* At-a-glance status band: four one-tap chips (trip · next plan · spend · offline). */
+.home-status { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; margin: 0 0 var(--sp-3); }
+.status-chip { display: flex; align-items: center; gap: 7px; min-width: 0; cursor: pointer; text-align: left;
+  font-family: inherit; font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 6%, transparent); border: 1px solid var(--line);
+  border-radius: var(--r-2, 12px); padding: 8px 10px; transition: transform var(--dur-fast) var(--ease); }
+.status-chip:active { transform: scale(0.97); }
+.status-ic { flex: none; font-size: 1rem; }
+.status-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
+.right-now .now-line { margin: 4px 0 2px; text-align: left; }
+.right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
 
 .country-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .country-chip {

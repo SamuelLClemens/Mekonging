@@ -223,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.302.0';
+const APP_VERSION = 'mk-v0.303.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1884,11 +1884,8 @@ function heroApply(collapsed) {
 function onHeroScroll() {
   if (!document.querySelector('.hero')) return;   // not on Home — do nothing
   const y = window.scrollY || window.pageYOffset || 0;
-  if (y <= HERO_COLLAPSE_AT) { heroPinned = false; heroApply(false); }
-  else {
-    if (y > heroLastY + 2) heroPinned = false;    // any further downward scroll cancels a peek
-    heroApply(!heroPinned);
-  }
+  if (y > heroLastY + 2) heroPinned = false;      // any downward scroll cancels a peek
+  heroApply(!heroPinned);                          // slim by default; expanded only while pinned open
   heroLastY = y;
 }
 
@@ -1903,16 +1900,129 @@ function toggleHero(e) {
 function setupHeroScroll() {
   heroPinned = false;
   heroLastY = window.scrollY || window.pageYOffset || 0;
-  heroApply(false);              // Home always mounts at the top, so it starts expanded
+  heroApply(true);               // Home starts with a SLIM hero so status + tools lead; tap to expand
   if (!heroScrollBound) {
     window.addEventListener('scroll', onHeroScroll, { passive: true });
     heroScrollBound = true;
   }
 }
 
+// ---- Home top: compact phase switch · at-a-glance status · one "Right now" card ----
+// A slim one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
+// and the "Not right?" correction line, so actionable content leads instead of chrome.
+function phaseSwitchRow(active, stored) {
+  const short = { planning: 'Planning', arrived: 'Arrived', traveling: 'Travelling', post: 'Post' };
+  const seg = h('div', { class: 'phase-seg compact', role: 'group', 'aria-label': 'Your journey phase' },
+    PHASE_ORDER.map((k) => h('button', {
+      class: 'phase-btn', 'aria-pressed': active === k ? 'true' : 'false',
+      onclick: () => { store.profile.prefs.phase = k; save(); render(); },
+    }, [h('span', { class: 'phase-emoji' }, PHASES[k].emoji), h('span', { class: 'phase-lbl' }, short[k])])));
+  return h('div', { class: 'phase-switch' }, [
+    h('span', { class: 'phase-switch-lbl' }, stored ? 'Your stage' : 'Looks like'),
+    seg,
+  ]);
+}
+
+// Trip total spend expressed in the traveller's home currency (summing every logged currency).
+function tripSpendHome() {
+  const home = homeCurrency();
+  const totals = {};
+  (store.trip.budgetLog || []).forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
+  let sum = 0, any = false, allKnown = true;
+  for (const [c, v] of Object.entries(totals)) {
+    any = true;
+    if (c === home) { sum += v; continue; }
+    const conv = convert(v, c, home);
+    if (conv == null || isNaN(conv)) allKnown = false; else sum += conv;
+  }
+  return { sum, any, allKnown, home };
+}
+
+// At-a-glance status band: trip countdown/day · next plan · spend · offline — the traveller's
+// state in one glance, each chip a one-tap route into the screen that owns it.
+function homeStatusBand(phase, cc) {
+  const chip = (ic, lbl, onclick) => h('button', { class: 'status-chip', onclick },
+    [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, lbl)]);
+  const chips = [];
+  // trip / day
+  const startISO = tripStartISO();
+  let tripLbl;
+  if (startISO) { const d = daysUntilISO(startISO); tripLbl = d > 0 ? `${d} day${d === 1 ? '' : 's'} to go` : `Day ${1 - d}`; }
+  else tripLbl = 'No dates yet';
+  chips.push(chip('🗓', tripLbl, () => go('#trip')));
+  // next plan item
+  const item = nextPlanItem();
+  let nextLbl;
+  if (item) {
+    const t = todayISO();
+    const when = item.date === t ? 'Today' : (item.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(item.date));
+    nextLbl = `${(item.title || 'Planned').slice(0, 18)} · ${when}`;
+  } else nextLbl = 'No plans yet';
+  chips.push(chip('📍', nextLbl, () => go('#calendar')));
+  // spend so far, in home currency
+  const sp = tripSpendHome();
+  chips.push(chip('💸', sp.any && sp.sum > 0 ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : 'No spend yet', () => go('#expenses')));
+  // offline / online — tap toggles
+  const online = netMode() === 'online';
+  chips.push(chip(online ? '📶' : '✈️', online ? 'Online' : 'Offline', () => { setNetMode(online ? 'offline' : 'online'); render(); }));
+  return h('div', { class: 'card home-status', role: 'group', 'aria-label': 'Your trip at a glance' }, chips);
+}
+
+// One-tap "spend" logger (extracted from the old daily strip) for the merged Right-now card.
+function quickSpendRow(id) {
+  const c = getCountry(id);
+  const cur = (c && c.currency) || 'THB';
+  const t = todayISO();
+  const box = h('div', { class: 'now-spend' });
+  const draw = () => {
+    box.innerHTML = '';
+    let spent = 0;
+    (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
+    const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', class: 'strip-amt', 'aria-label': 'Amount spent' });
+    const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the spend was on' });
+    const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim() }); draw(); };
+    amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
+    box.append(h('div', { class: 'strip-budget' }, [
+      h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
+      h('button', { class: 'btn strip-add', 'aria-label': 'Add spend', onclick: add }, '＋'),
+    ]));
+    box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend in one tap. ',
+      h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
+    ]));
+  };
+  draw();
+  return box;
+}
+
+// The single, phase-aware "Right now" card: the live moment + picks (rightNowSection) with the
+// phase's primary action lifted on top and a one-tap spend at the foot — the four old blocks
+// (phaseNextBest, journey companion, right-now, daily strip) merged into one, with the
+// duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
+function homeNowCard(phase, cc) {
+  const card = rightNowSection();               // .right-now — moment header + live picks (or a location invite)
+  const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
+  const nb = phaseNextBest(phase, cc);
+  if (nb) { nb.style.margin = '10px 0 2px'; card.insertBefore(nb, head ? head.nextSibling : null); }
+  // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty
+  // state is intentionally omitted here — the status band already shows "No dates yet".
+  if (phase === 'planning') {
+    const startISO = tripStartISO();
+    if (startISO && daysUntilISO(startISO) > 0) {
+      const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
+      if (todo.length) {
+        card.insertBefore(h('button', { class: 'btn ghost block now-line', onclick: () => go(`#checklist-${cc}`) },
+          `☐ ${todo[0].title} · ${todo.length} left on your checklist →`), nb ? nb.nextSibling : (head ? head.nextSibling : null));
+      }
+    }
+  }
+  card.append(quickSpendRow(cc));                // one-tap spend at the foot (high-value daily action)
+  return card;
+}
+
 function homeScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(h('section', { class: 'hero', onclick: (e) => { if (e.currentTarget.classList.contains('is-collapsed')) toggleHero(); } }, [
+  wrap.append(h('section', { class: 'hero is-collapsed', onclick: (e) => { if (e.currentTarget.classList.contains('is-collapsed')) toggleHero(); } }, [
     h('button', { class: 'hero-toggle', type: 'button', 'aria-label': 'Collapse the header', 'aria-expanded': 'true', onclick: toggleHero },
       [h('span', { class: 'chev', 'aria-hidden': 'true' }, '⌄')]),
     h('div', { class: 'logo-wrap', html: logoSVG() }),
@@ -1934,46 +2044,21 @@ function homeScreen() {
   const storedPhase = store.profile.prefs.phase || '';
   const phase = storedPhase || inferPhase();   // infer a sensible stage until they choose one
   const leadCC = focusSpot().spot.country;
-  // A correctable statement rather than an open question: the traveller is not forced to
-  // self-classify before seeing value. When we inferred the stage we flag it as a guess and
-  // invite a correction; either way the buttons below change it.
-  wrap.append(h('h2', { class: 'home-section' },
-    storedPhase ? `You are ${PHASES[phase].stmt}` : `Looks like you are ${PHASES[phase].stmt}`));
-  if (!storedPhase) wrap.append(h('p', { class: 'muted', style: 'margin:-2px 0 6px' }, 'Not right? Tap your stage below.'));
-  wrap.append(phaseSelector(phase));
-  { const t = oneTimeHint('home-phase', 'Tap your stage above whenever it changes — Home reshapes itself around where you are in your trip.'); if (t) wrap.append(t); }
-  // One prominent phase-aware next step, so a fresh traveller has a clear first action
-  // above the (now-collapsed) tool decks rather than a wall of tiles.
-  { const nb = phaseNextBest(phase, leadCC); if (nb) wrap.append(nb); }
+
+  // Compact one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
+  // and the "Not right?" correction line, so status and actions lead the screen.
+  wrap.append(phaseSwitchRow(phase, storedPhase));
+
+  // At-a-glance status band: trip countdown/day · next plan · spend · offline, each a one-tap chip.
+  wrap.append(homeStatusBand(phase, leadCC));
+
+  // One merged, phase-aware "Right now" card: primary action + live moment/picks + one-tap spend.
+  // (Replaces the former separate phaseNextBest button, journey-companion, right-now and daily
+  // strip blocks, which repeated the same empty-state prompts.)
+  wrap.append(homeNowCard(phase, leadCC));
 
   // Search everything.
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
-  wrap.append(netStatusRow());
-
-  // Journey companion — a planning-phase countdown or post-trip recap, placed directly under
-  // the phase header where it is most actionable. It is null (and so invisible) in the arrived
-  // and travelling phases, where the live "Right now" picks below correctly lead instead.
-  if (phase) {
-    const companion = journeyCompanionCard(phase, leadCC);
-    if (companion) wrap.append(companion);
-  }
-
-  // Time of day where you are — the live, place-and-moment picks, ABOVE "Your day".
-  wrap.append(rightNowSection());
-
-  // Your day — next plan item + one-tap spend. (Phrase of the day now lives in Talk.)
-  wrap.append(dailyStripCard(leadCC));
-
-  // The full "Coming up" list lives on the YOU hub; Home carries only a one-line pointer to
-  // the next reminder so the two tabs do not duplicate the same block.
-  const up = reminders.upcoming(7);
-  if (up.length) {
-    const u0 = up[0];
-    const when0 = u0.eventAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (u0.item.time ? ` ${u0.item.time}` : '');
-    const more = up.length > 1 ? ` · +${up.length - 1} more` : '';
-    wrap.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:8px', onclick: () => go('#calendar') },
-      `🔔 Next: ${CAL_ICON[u0.item.type] || '🗓'} ${u0.item.title} · ${when0}${more} →`));
-  }
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
     wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--orange); margin-top:8px' }, [
       h('strong', {}, '⬇️ Back up your journal & budget'),
@@ -2016,12 +2101,13 @@ function homeScreen() {
     ] },
   ];
   const tileBtn = sectionTile;
-  // Both clusters render as minimise/maximise disclosures. They open by default for a
-  // returning/engaged traveller (profile set), but stay COLLAPSED for a fresh profile so the
-  // first impression is the hero + one next-best-action, not a wall of ~16 equal tiles.
-  const decksOpen = profileIsSet();
-  groups.forEach((g) => {
-    wrap.append(h('details', { class: 'home-group-d', open: decksOpen ? '' : null }, [
+  // Decks open by RELEVANCE to the current phase rather than all-or-nothing: before/after the
+  // trip a traveller plans and remembers, so the trip-planning deck (index 0) leads; on the
+  // ground the recognition tools lead (see the Identify deck below). This keeps exactly one
+  // deck open per phase instead of ~16 equal tiles or a mismatched default.
+  const planDeckOpen = (phase === 'planning' || phase === 'post');
+  groups.forEach((g, gi) => {
+    wrap.append(h('details', { class: 'home-group-d', open: (gi === 0 && planDeckOpen) ? '' : null }, [
       h('summary', { class: 'home-group' }, g.label),
       h('div', { class: 'grid' }, g.items.map(tileBtn)),
     ]));
@@ -2033,9 +2119,8 @@ function homeScreen() {
   // Identify what's around you — a minimise/maximise disclosure (same pattern as the decks
   // above) so a traveller can fold it away once done exploring. The open/closed choice persists
   // on-device via a self-defaulting pref (no store bump) and opens by default.
-  const identifyOpen = store.profile.prefs.identifyDeckOpen !== false;
-  wrap.append(h('details', { class: 'home-group-d', open: identifyOpen ? '' : null,
-    ontoggle: (e) => { store.profile.prefs.identifyDeckOpen = e.currentTarget.open; save(); } }, [
+  const identifyOpen = (phase === 'arrived' || phase === 'traveling');
+  wrap.append(h('details', { class: 'home-group-d', open: identifyOpen ? '' : null }, [
     h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, '🔎 Identify what’s around you')),
     h('div', { class: 'grid' }, [
       { ic: ICON.bowl, t: 'Food', d: 'Name a street dish', hash: '#food' },
