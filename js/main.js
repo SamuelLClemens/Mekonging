@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.307.0';
+const APP_VERSION = 'mk-v0.308.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -759,6 +759,68 @@ function contextNow() {
   return { fix, near, approx, seeded, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
 }
 
+// A compact 12-hour clock label from an hour number (0–23): 2 → "2am", 12 → "noon", 14 → "2pm".
+function fmtClock(hr) {
+  hr = ((Math.round(hr) % 24) + 24) % 24;
+  if (hr === 0) return '12am';
+  if (hr === 12) return 'noon';
+  return hr < 12 ? `${hr}am` : `${hr - 12}pm`;
+}
+
+// Forward-looking read of the focus city's cached forecast (hourly + daily). Turns "raining
+// now" into an honest, actionable line: when will it ease, when will it start, is it hot today?
+// Returns null when there is no usable forecast (offline with no cache) so callers fall back to
+// the time-of-day tip rather than inventing weather. `mode` is 'rainNow' | 'rainSoon' | 'hot' |
+// 'clear'; `hot` flags a heat day so the caller can offer a cool-off shortcut.
+function forecastOutlook(rec) {
+  if (!rec || !rec.current) return null;
+  const cur = rec.current;
+  const hours = Array.isArray(rec.hourly) ? rec.hourly : [];
+  const now = new Date();
+  const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+  let i = hours.findIndex((hn) => { const d = new Date(hn.t); return !isNaN(d) && d >= nowFloor; });
+  if (i < 0) i = 0;
+  const ahead = hours.slice(i, i + 10);   // roughly the next ten hours
+  const wetHour = (hn) => isWet(hn.code) || (hn.pp != null && hn.pp >= 55);
+  const today = rec.daily && rec.daily[0];
+  const tmax = today && today.tmax != null ? today.tmax : (cur.temp != null ? cur.temp : null);
+  const hot = tmax != null && tmax >= 33;
+  const rainNow = isWet(cur.code) || (cur.precip != null && cur.precip > 0.1) || (ahead[0] ? wetHour(ahead[0]) : false);
+  if (rainNow) {
+    const dryIdx = ahead.findIndex((hn, k) => k > 0 && !wetHour(hn));
+    if (dryIdx > 0) {
+      const hr = new Date(ahead[dryIdx].t).getHours();
+      return { mode: 'rainNow', hot, line: `Raining now, easing around ${fmtClock(hr)} — do an indoor morning, then head out.` };
+    }
+    return { mode: 'rainNow', hot, line: 'Rain around for a while — lean into indoor picks: markets, museums, a long lunch.' };
+  }
+  const rainIdx = ahead.findIndex((hn, k) => k > 0 && wetHour(hn));
+  if (rainIdx > 0) {
+    const hr = new Date(ahead[rainIdx].t).getHours();
+    return { mode: 'rainSoon', hot, line: `Dry now, but rain likely from around ${fmtClock(hr)} — get outdoor sights in first.` };
+  }
+  if (hot) return { mode: 'hot', hot: true, line: `Hot today (${fmtTemp(tmax)}) — do sights early, then cool off at a pool, waterfall or spring.` };
+  return { mode: 'clear', hot: false, line: 'A clear stretch ahead — great for viewpoints, nature and being outside.' };
+}
+
+// Home is offline-first and does not otherwise fetch weather. When the traveller has allowed
+// online use, pull the focus city's forecast once (skipped when a fresh copy is already cached,
+// and de-duplicated so repeated renders never stack fetches), then re-render Home so the outlook
+// and the "right now" forecast line fill in. Never fetches when offline or without consent.
+let _homeWxKey = '', _homeWxAt = 0;
+function ensureHomeWeather(spot) {
+  if (!spot || !online()) return;
+  const key = spotKey(spot);
+  const rec = getCachedWeather(key);
+  if (rec && rec.fetchedAt && (Date.now() - rec.fetchedAt) < 30 * 60 * 1000) return;   // fresh enough
+  if (_homeWxKey === key && (Date.now() - _homeWxAt) < 60 * 1000) return;               // recent / in-flight
+  _homeWxKey = key; _homeWxAt = Date.now();
+  refreshWeather(spot).then((r) => {
+    const hash = location.hash || '';
+    if (r && (hash === '' || hash === '#' || hash === '#home')) render();
+  }).catch(() => {});
+}
+
 // ---- "WHERE AM I NOW" RESOLVER ---------------------------------------------
 // One source of truth for the traveller's effective location, so weather and
 // recommendations follow WHERE THEY ARE — a live/last GPS fix wins; else the city
@@ -1030,6 +1092,10 @@ function rightNowSection() {
   const ctx = contextNow();
   const meta = PART_META[ctx.part];
   const card = h('div', { class: 'card right-now' });
+  // Forward-looking forecast for this city (from the cached hourly + daily), so the card tells
+  // the traveller what the weather is about to do — not just this minute — and plans accordingly.
+  const wxRec = ctx.near ? getCachedWeather(spotKey(ctx.near.spot)) : null;
+  const outlook = forecastOutlook(wxRec);
   const cityName = ctx.near ? ctx.near.spot.city : ((getCountry(ctx.country) || {}).name || 'you');
   // The temperature is a live link into the local forecast (nearest/focused city),
   // so "check the weather here" is one tap from the home hero instead of buried in a grid.
@@ -1046,6 +1112,17 @@ function rightNowSection() {
       ]),
     ]),
   ]));
+
+  // An honest, forward-looking weather line + a heat shortcut, shown whenever a forecast is
+  // cached (works before GPS too). "Raining now, easing around 2pm", "rain likely from 4pm",
+  // "hot today — cool off". Absent offline with no cache, so we never invent conditions.
+  if (outlook) {
+    card.append(h('div', { class: 'rn-forecast' }, [
+      h('span', { class: 'rn-fc-emoji' }, wxRec && wxRec.current ? wmo(wxRec.current.code)[1] : '🌤'),
+      h('span', {}, outlook.line),
+    ]));
+    if (outlook.hot) card.append(h('button', { class: 'btn ghost block rn-cooloff', style: 'margin:6px 0 0', onclick: () => go(`#pools-${ctx.country}`) }, '🏊 Cool off — pools, springs & waterfalls →'));
+  }
 
   if (!ctx.fix) {
     card.append(h('p', { style: 'margin:8px 0 6px' }, meta.tip));
@@ -1836,6 +1913,76 @@ function returnRecapCard() {
   return card;
 }
 
+// A multi-day destination outlook for the PLANNING stage — the focus city's forecast (next few
+// days: condition, temp range, rain chance), the days that best suit being outside, and a broad
+// pack note. All from the real cached/refreshed forecast; offline with no cache it invites one
+// connection rather than inventing conditions. ensureHomeWeather() re-renders Home when a fetch
+// lands, so this card rebuilds from fresh cache without its own refresh loop.
+function destinationOutlookCard(spot) {
+  const card = h('div', { class: 'card home-outlook' });
+  const cityName = spot ? spot.city : 'your destination';
+  card.append(h('h2', { style: 'margin-top:0' }, `🌤 ${cityName} outlook`));
+  const body = h('div', {});
+  card.append(body);
+  const dayName = (iso, k) => {
+    if (k === 0) return 'Today';
+    if (k === 1) return 'Tomorrow';
+    const dt = new Date(iso + 'T00:00:00');
+    return isNaN(dt) ? iso : dt.toLocaleDateString(undefined, { weekday: 'short' });
+  };
+  const days = spot ? ((getCachedWeather(spotKey(spot)) || {}).daily || []).slice(0, 6) : [];
+  if (!days.length) {
+    body.append(h('p', { class: 'muted', style: 'margin:0' }, online()
+      ? 'Loading the forecast…'
+      : 'Connect once and this shows a multi-day forecast for where you are going — the best days to be outside and what to pack. It then works offline.'));
+    return card;
+  }
+  const rows = h('div', { class: 'outlook-days' });
+  days.forEach((d, k) => rows.append(h('div', { class: 'outlook-day' }, [
+    h('span', { class: 'od-day' }, dayName(d.date, k)),
+    h('span', { class: 'od-emoji' }, wmo(d.code)[1]),
+    h('span', { class: 'od-temp' }, `${fmtTemp(d.tmin)}–${fmtTemp(d.tmax)}`),
+    h('span', { class: 'od-rain muted' }, d.rainProb != null ? `☔ ${d.rainProb}%` : ''),
+  ])));
+  body.append(rows);
+  const good = days.map((d, k) => ({ d, k })).filter(({ d }) => (d.rainProb == null || d.rainProb < 40) && (d.tmax == null || d.tmax < 36));
+  if (good.length) body.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' },
+    `Best for being outside: ${good.slice(0, 3).map(({ d, k }) => dayName(d.date, k).toLowerCase()).join(', ')}.`));
+  const anyWet = days.some((d) => (d.rainProb || 0) >= 50 || isWet(d.code));
+  const anyHeat = days.some((d) => (d.tmax != null && d.tmax >= 34) || (d.uv != null && d.uv >= 8));
+  const pack = [];
+  if (anyWet) pack.push('a light rain layer');
+  if (anyHeat) pack.push('sun protection and water');
+  if (pack.length) body.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, `Pack ${pack.join(' and ')}.`));
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#weather') }, 'Full forecast →'));
+  return card;
+}
+
+// PLANNING stage Home block — a planning hub in place of "what's near you": the days-to-go
+// countdown and remaining checklist, a multi-day destination weather outlook, and the plan /
+// "For you" actions (the traveller chose "all of the above" for this stage).
+function planningStageBlock(cc) {
+  const wrap = h('div', {});
+  wrap.append(tripCountdownCard(cc));
+  const spot = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
+  wrap.append(destinationOutlookCard(spot));
+  wrap.append(h('div', { class: 'home-actions', style: 'margin-top:10px' }, [
+    h('button', { class: 'btn', onclick: () => go('#plans') }, '🧭 Plan your trip'),
+    h('button', { class: 'btn ghost', onclick: () => go('#foryou') }, '🎯 Tune “For you”'),
+  ]));
+  return wrap;
+}
+
+// One stage-appropriate situational block for Home, replacing the old one-size "right now" card
+// that showed near-me picks in every stage. Planning gets the outlook/countdown hub; arrived and
+// travelling get the live, now forecast-aware near-me card; post gets the return recap. This is
+// the core of making Home relevant to the traveller's actual stage.
+function homeStageBlock(phase, cc) {
+  if (phase === 'planning') return planningStageBlock(cc);
+  if (phase === 'post') return returnRecapCard();
+  return homeNowCard(phase, cc);   // arrived / traveling: live near-me, now forecast-aware
+}
+
 // A photo-forward "Signature sights" showcase for Home: iconic, highly-rated, photographed
 // places across the four countries, interleaved so every country appears (≤3 each, one per
 // city). Inspiration on open and a warm, premium first impression — offline, self-hosted
@@ -2070,10 +2217,20 @@ function homeScreen() {
   // At-a-glance status band: trip countdown/day · next plan · spend · offline, each a one-tap chip.
   wrap.append(homeStatusBand(phase, leadCC));
 
-  // One merged, phase-aware "Right now" card: primary action + live moment/picks + one-tap spend.
-  // (Replaces the former separate phaseNextBest button, journey-companion, right-now and daily
-  // strip blocks, which repeated the same empty-state prompts.)
-  wrap.append(homeNowCard(phase, leadCC));
+  // One stage-appropriate situational block. Planning gets a forward-looking outlook +
+  // countdown + checklist hub (no near-me); arrived/travelling get the live, forecast-aware
+  // near-me card; post gets the return recap. This is what makes Home fit the traveller's
+  // actual stage instead of showing "what's near you" to someone still at home or already back.
+  wrap.append(homeStageBlock(phase, leadCC));
+  // On the first online visit, pull the relevant city's forecast once (respects offline &
+  // consent, de-duplicated) so the outlook and the "right now" forecast line populate.
+  {
+    const ctx0 = contextNow();
+    const phaseSpot = (phase === 'arrived' || phase === 'traveling')
+      ? (ctx0.near ? ctx0.near.spot : focusSpot().spot)
+      : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
+    ensureHomeWeather(phaseSpot);
+  }
 
   // Search everything.
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
