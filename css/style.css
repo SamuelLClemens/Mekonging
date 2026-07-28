@@ -822,6 +822,22 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .near-text { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .near-tags { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 
+/* Forward-looking weather line inside the "right now" card (arrived/travelling): what the
+   weather is about to do, so the traveller plans around it — not just this minute. */
+.rn-forecast { display: flex; align-items: flex-start; gap: var(--sp-2); margin: 8px 0 2px; font-size: var(--fs-sm); color: var(--ink-soft); }
+.rn-fc-emoji { flex: 0 0 auto; font-size: 1.1rem; line-height: 1.3; }
+.rn-cooloff { margin-top: 6px; }
+
+/* Planning-stage destination outlook: a compact multi-day forecast for where you are going. */
+.home-outlook { border-top: 4px solid var(--teal); }
+.outlook-days { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.outlook-day { display: grid; grid-template-columns: 4.5em 1.6em 1fr auto; align-items: center; gap: var(--sp-2); padding: 4px 0; border-bottom: 1px solid var(--line); }
+.outlook-day:last-child { border-bottom: none; }
+.od-day { font-weight: 700; color: var(--ink); }
+.od-emoji { font-size: 1.05rem; line-height: 1; text-align: center; }
+.od-temp { color: var(--ink-soft); }
+.od-rain { font-size: var(--fs-sm); text-align: right; white-space: nowrap; }
+
 /* Colour-coded attribute / status chips (kids, rain, open/closed, fit, stay type, …).
    Category tags keep their family colours; these carry meaning by hue so the traveller reads
    status at a glance. Solid fills with white (or dark) text stay legible in light and dark. */
