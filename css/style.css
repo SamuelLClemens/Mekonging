@@ -509,6 +509,15 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
 .right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
 
+/* --- YOU hub: resume lead --- */
+.me-lead { margin-bottom: var(--sp-3); }
+.me-lead-head { display: flex; align-items: center; gap: 12px; }
+.me-avatar { flex: none; width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 1.3rem; font-weight: 800; color: #fff; background: var(--grad-sun); box-shadow: var(--shadow-soft); }
+.me-lead-txt { min-width: 0; }
+.me-lead-name { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-h3); line-height: 1.1; }
+.me-lead-sub { font-size: var(--fs-sm); margin-top: 2px; }
+
 .country-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .country-chip {
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-family: inherit;

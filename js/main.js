@@ -223,7 +223,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.303.0';
+const APP_VERSION = 'mk-v0.304.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2166,22 +2166,33 @@ function meHubScreen() {
 
   const jN = store.journal.entries.length;
   const exN = store.trip.budgetLog.length;
+  const svN = (store.favorites || []).length;     // saved places
   const svP = countSavedPhrases();
-  const items = [
-    { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
-    { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
-    { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log spend vs budget', hash: '#expenses' },
-    { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#dictionary' },
-    { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Dishes, fruit & wildlife', hash: '#identified' },
-    { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
-    { ic: ICON.star, t: 'Saved places', d: 'Your collections', hash: '#saved' },
-    { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
-    { ic: ICON.heart, t: 'Give back', d: 'Support the region', hash: '#donate' },
-    { ic: ICON.gear, t: 'Settings', d: 'You, theme & journey', hash: '#settings' },
-  ];
+  const idN = idPinCount();
   const tileBtn = sectionTile;
-  wrap.append(h('h2', { class: 'home-section' }, 'Your space'));
-  wrap.append(h('div', { class: 'grid' }, items.map(tileBtn)));
+
+  // --- Resume lead: your story so far + one tap back into your own things ---
+  const statusBits = [
+    jN ? `${jN} journal ${jN === 1 ? 'entry' : 'entries'}` : null,
+    svN ? `${svN} saved ${svN === 1 ? 'place' : 'places'}` : null,
+    svP ? `${svP} ${svP === 1 ? 'phrase' : 'phrases'}` : null,
+  ].filter(Boolean);
+  const lead = h('div', { class: 'card me-lead' }, [
+    h('div', { class: 'me-lead-head' }, [
+      h('span', { class: 'me-avatar', 'aria-hidden': 'true' }, (name ? name[0].toUpperCase() : '🧳')),
+      h('div', { class: 'me-lead-txt' }, [
+        h('div', { class: 'me-lead-name' }, name || 'Your space'),
+        h('div', { class: 'me-lead-sub muted' }, statusBits.length ? statusBits.join(' · ') : 'Your journal, saved places and phrases live here.'),
+      ]),
+    ]),
+  ]);
+  const resume = [];
+  if (jN) resume.push(h('button', { class: 'chip', onclick: () => go('#journal') }, '📔 Open journal'));
+  else resume.push(h('button', { class: 'chip', onclick: () => go('#journal') }, '📔 Start your journal'));
+  if (svN) resume.push(h('button', { class: 'chip', onclick: () => go('#saved') }, '⭐ Saved places'));
+  if (svP) resume.push(h('button', { class: 'chip', onclick: () => go('#dictionary') }, '💬 My phrases'));
+  lead.append(h('div', { class: 'chips', style: 'margin-top:10px' }, resume));
+  wrap.append(lead);
 
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);
@@ -2196,8 +2207,46 @@ function meHubScreen() {
     wrap.append(rc);
   }
 
-  // "For you right now" lives on Home (the place-and-moment engine leads there); the YOU
-  // hub stays focused on the traveller's own things, so it is not duplicated here.
+  // --- Four collapsible groups mapping to the traveller's own priorities ---
+  const grp = (emoji, label, list, open) => h('details', { class: 'home-group-d', open: open ? '' : null }, [
+    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
+    h('div', { class: 'grid' }, list.map(tileBtn)),
+  ]);
+
+  // Your stuff — the traveller's own content, open by default so it leads.
+  wrap.append(grp('📔', 'Your stuff', [
+    { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
+    { ic: ICON.star, t: 'Saved places', d: svN ? `${svN} saved` : 'Your collections', hash: '#saved' },
+    { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#dictionary' },
+    { ic: ICON.star, t: 'My identifier', d: idN ? `${idN} saved` : 'Dishes, fruit & wildlife', hash: '#identified' },
+  ], true));
+
+  // Trip & money — the record-keeping surfaces.
+  wrap.append(grp('🎒', 'Trip & money', [
+    { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
+    { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log spend vs budget', hash: '#expenses' },
+    { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget', hash: '#trip' },
+    { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
+    { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
+  ], false));
+
+  // Progress & keepsakes — the trip story and achievements (previously only on Home).
+  const cPts = gamify.contributionPoints(store);
+  const cLvl = gamify.levelInfo(cPts);
+  wrap.append(grp('🏆', 'Progress & keepsakes', [
+    { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
+    { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
+    { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
+  ], false));
+
+  // You & settings — identity, preferences, privacy and support.
+  wrap.append(grp('⚙️', 'You & settings', [
+    { ic: ICON.gear, t: 'Settings', d: 'You, theme, backup & privacy', hash: '#settings' },
+    { ic: ICON.target, t: 'For you', d: 'Tune your personalised picks', hash: '#foryou' },
+    { ic: ICON.heart, t: 'Give back', d: 'Support the region', hash: '#donate' },
+    { ic: ICON.help, t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
+  ], false));
+
   wrap.append(h('p', { class: 'disclaimer' },
     'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));
   mount(wrap, '#me');
