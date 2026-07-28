@@ -106,6 +106,20 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
     }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
+
+    // When a NEW worker takes over (it calls skipWaiting + clients.claim on activate), reload the
+    // page ONCE so it immediately runs the new code. This collapses the usual two-launch update —
+    // where you SEE the new build online but the worker only swaps in for the NEXT launch — into a
+    // single launch, so the very next launch (online OR offline) is already the new build. Guarded
+    // by an existing controller so a first-ever install never reloads, and a flag prevents any loop.
+    if (navigator.serviceWorker.controller) {
+      let reloadingForUpdate = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloadingForUpdate) return;
+        reloadingForUpdate = true;
+        window.location.reload();
+      });
+    }
   });
 }
 
@@ -223,7 +237,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.305.0';
+const APP_VERSION = 'mk-v0.306.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
