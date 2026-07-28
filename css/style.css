@@ -746,6 +746,17 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
   font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer;
   font-family: var(--font-ui, system-ui, sans-serif); }
 
+/* On-map Map/Satellite basemap toggle (Places living map). A horizontal two-button segment; the
+   active basemap is highlighted. Sits in the map's top-left control stack. */
+.mk-style-toggle { display: flex; overflow: hidden; }
+.mk-style-toggle button { width: 34px; height: 30px; border: none; background: #fff; cursor: pointer;
+  font-size: 15px; line-height: 30px; padding: 0; }
+.mk-style-toggle button + button { border-left: 1px solid rgba(0,0,0,0.15); }
+.mk-style-toggle button[aria-pressed="true"] { background: var(--teal); }
+[data-theme="dark"] .mk-style-toggle button { background: #2a2140; }
+[data-theme="dark"] .mk-style-toggle button + button { border-left-color: rgba(255,255,255,0.15); }
+[data-theme="dark"] .mk-style-toggle button[aria-pressed="true"] { background: var(--teal); }
+
 /* The living map at the top of Places: a minimise/maximise disclosure holding the map, its
    layer chips and the mode/back control. */
 .places-map-section { margin: 4px 0 8px; }

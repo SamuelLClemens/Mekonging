@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.308.0';
+const APP_VERSION = 'mk-v0.309.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -4426,6 +4426,11 @@ function placesScreen(arg) {
       numbered: true,
       cluster: true,
       markerColor: (p) => bucketColor(p),
+      // Satellite imagery by default (works offline for viewed areas via the tile cache), with an
+      // on-map Map/Satellite toggle whose choice persists per traveller (self-defaulting pref).
+      satellite: store.profile.prefs.placesMapSat !== false,
+      styleToggle: true,
+      onStyleChange: (on) => { store.profile.prefs.placesMapSat = on; save(); },
     })).then((c) => {
       placesCtrl = c;
       liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } };
