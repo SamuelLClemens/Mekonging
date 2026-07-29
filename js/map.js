@@ -233,20 +233,22 @@ export async function initMap(containerEl, opts = {}) {
   // except markets, which use a distinct gold pin. Each marker is tagged with its
   // map layer (stay / eat / go / market) so the layer toggles can show or hide it.
   // User pins stay in grape and always show.
-  const markersByLayer = { stay: [], eat: [], localeat: [], go: [], market: [], pools: [], crossing: [] };
+  const markersByLayer = { stay: [], eat: [], localeat: [], go: [], market: [], pools: [], crossing: [], fuel: [] };
   const CROSSING_PIN = '#3B5BDB';
   const MARKET_PIN = '#E0A100';
   const POOL_PIN = '#0EA5C4';     // watery cyan for swimming pools
   const LOCAL_PIN = '#D62828';    // local (non-tourist) eateries — a distinct "eat local" red
+  const FUEL_PIN = '#0F9D8C';     // fuel / petrol stations — the "getting around" teal
   let stayMarker = null;          // the user's accommodation home marker (set live)
   function layerForCats(cats, isLocal) {
     cats = cats || [];
+    if (cats.includes('fuel')) return 'fuel';
     if (cats.includes('market')) return 'market';
     if (cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
     if (cats.some((c) => ['food', 'restaurant'].includes(c))) return isLocal ? 'localeat' : 'eat';
     return 'go';
   }
-  const layerOn = { stay: true, eat: true, localeat: true, go: true, market: true, pools: true, crossing: true };
+  const layerOn = { stay: true, eat: true, localeat: true, go: true, market: true, pools: true, crossing: true, fuel: true };
   const CITY_ZOOM = 8.5;        // below this, show city count-bubbles instead of pins
   const cityMarkers = [];       // { el, name, count }
   // Assign a place/pool to its nearest known city centre (within ~0.8°), else none.
@@ -294,7 +296,7 @@ export async function initMap(containerEl, opts = {}) {
     for (const p of allPlaces()) {
       if (!p.coords) continue;
       const layer = layerForCats(p.categories, p.isLocal);
-      const color = layer === 'market' ? MARKET_PIN : layer === 'localeat' ? LOCAL_PIN : ratingColor(effectiveRating(p.id, p.rating));
+      const color = layer === 'fuel' ? FUEL_PIN : layer === 'market' ? MARKET_PIN : layer === 'localeat' ? LOCAL_PIN : ratingColor(effectiveRating(p.id, p.rating));
       const m = new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
       const el = m.getElement();
       el.style.cursor = 'pointer';
@@ -452,7 +454,7 @@ export async function initMap(containerEl, opts = {}) {
     map,
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
     setLayer: setLayerVisible,
-    layers: ['stay', 'eat', 'localeat', 'go', 'market', 'pools', 'crossing'],
+    layers: ['stay', 'eat', 'localeat', 'go', 'market', 'pools', 'crossing', 'fuel'],
     setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); if (map.getLayer('street')) map.setLayoutProperty('street', 'visibility', on ? 'none' : 'visible'); },
     setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
     // GPS: reuse the single built-in GeolocateControl (one watcher, one blue dot).
