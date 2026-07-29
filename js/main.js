@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.318.0';
+const APP_VERSION = 'mk-v0.319.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -4564,7 +4564,7 @@ function placeBucket(p) {
   // Markets are their own section (the user asked for "food and markets" separately),
   // taken before the generic food bucket so a wet / night / weekend market reads as a market.
   if (isMarket(p)) return 'market';
-  if (cats.includes('rental')) return 'rental';
+  if (cats.includes('rental') || cats.includes('fuel')) return 'rental';
   for (const it of ['food', 'culture', 'nature', 'nightlife']) if (cats.includes(it)) return it;
   return 'other';
 }
@@ -4596,7 +4596,7 @@ const CAT_FAMILY = {
   market: 'market', shopping: 'market',
   stay: 'stay', hotel: 'stay', guesthouse: 'stay', homestay: 'stay', hostel: 'stay', resort: 'stay', apartment: 'stay', camping: 'stay', backpacker: 'stay', accommodation: 'stay',
   nightlife: 'nightlife', bars: 'nightlife', clubs: 'nightlife', cocktail: 'nightlife', rooftop: 'nightlife',
-  transport: 'transport', rental: 'transport',
+  transport: 'transport', rental: 'transport', fuel: 'transport',
   wellness: 'wellness', spa: 'wellness',
 };
 function catFamily(cat) { return CAT_FAMILY[cat] || 'other'; }
@@ -6241,11 +6241,11 @@ function mapScreen() {
   // controller once it initialises (mapCtrl). Markets are their own gold layer.
   let mapCtrl = null;
   // Layer visibility is remembered (store.profile.prefs.mapLayers).
-  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true });
+  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, fuel: true, satellite: true, borders: true });
   const TOGGLES = [
     ['satellite', '🛰️ Satellite imagery'], ['borders', '🗺️ Country borders'],
     ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['localeat', '🍲 Local restaurants'], ['market', '🛍️ Markets'],
-    ['stay', '🛏️ Places to stay'], ['pools', '🏊 Pools'], ['crossing', '🛂 Border crossings'],
+    ['stay', '🛏️ Places to stay'], ['pools', '🏊 Pools'], ['crossing', '🛂 Border crossings'], ['fuel', '⛽ Fuel stations'],
   ];
   function applyLayer(key, on) {
     if (!mapCtrl) return;
