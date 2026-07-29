@@ -333,8 +333,8 @@ export const PLACES_TH_EXT = [
     scamWarnings: [],
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ban Rak Thai Mae Hong Son", coords: { lat: 19.4900, lng: 98.0500 },
-    bookHint: "No booking; reach it by car/motorbike on the Mae Hong Son loop. Guesthouses bookable on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    bookHint: "No booking; reach it by car/motorbike on the Mae Hong Son loop. Guesthouses bookable on arrival.", verified: "2026-07",
+    sources: [{ org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Ban_Rak_Thai" }, { org: "Chiang Mai Traveller", url: "https://chiangmaitraveller.com/ban-rak-thai/" }, { org: "Olsen Tours", url: "https://olsentours.com/ban-rak-thai" }],
   },
   {
     id: "th-ext-koh-mak", name: "Koh Mak", city: "Trat", country: "th",
@@ -3118,7 +3118,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat Chong Sung Mae Sariang", coords: { lat: 18.162, lng: 97.930 },
     bookHint: "Open access; the town is the overnight base for this end of the loop.", verified: "2026-07",
-    sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/thailand/mae-hong-son-province/mae-sariang/attractions/wat-jong-sung-wat-si-bunruang/a/poi-sig/1244766/357730" }],
   },
   {
     id: "th-ext-salawin-mae-sam-laep", name: "Salawin River & Mae Sam Laep (Salween border)", city: "Mae Sariang", country: "th",
@@ -3169,7 +3169,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat Pa Daet Mae Chaem", coords: { lat: 18.485, lng: 98.365 },
     bookHint: "Open access.", verified: "2026-07",
-    sources: [{ org: "Bangkok Post — Summoning the past", url: "https://www.bangkokpost.com/life/travel/1872039/summoning-the-past" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Bangkok Post — Summoning the past", url: "https://www.bangkokpost.com/life/travel/1872039/summoning-the-past" }, { org: "Sawadee Discovery — Mae Chaem", url: "https://www.sawadiscovery.com/guide-thailand/destination/mae-chaem" }],
   },
   {
     id: "th-ext-mae-chaem-homestays", name: "Village homestays & guesthouses, Mae Chaem", city: "Mae Chaem", country: "th",
@@ -3185,7 +3185,7 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Chaem guesthouse homestay", coords: { lat: 18.500, lng: 98.363 },
     bookHint: "Walk-in or phone; few are listed online.", verified: "2026-07",
-    sources: [{ org: "Sawadee Discovery — Mae Chaem guide", url: "https://www.sawadiscovery.com/guide-thailand/destination/mae-chaem" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Sawadee Discovery — Mae Chaem", url: "https://www.sawadiscovery.com/guide-thailand/destination/mae-chaem" }, { org: "Northern Thailand — Ban Pa Bong Piang", url: "https://northernth.com/en/ban-pa-bong-piang/" }],
   },
   {
     id: "th-ext-mhs-loop-overview", name: "The Mae Hong Son Loop (Route 1095 & 108)", city: "Mae Hong Son", country: "th",
@@ -3202,7 +3202,7 @@ export const PLACES_TH_EXT = [
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Hong Son Loop Route 1095", coords: { lat: 19.300, lng: 98.100 },
     bookHint: "Rent in Chiang Mai or Pai; book vehicles ahead in the cool-season peak.", verified: "2026-07",
-    sources: [{ org: "Wikivoyage — Mae Hong Son", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Hong Son", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "Fan Club Thailand — MHS loop", url: "https://fanclubthailand.co.uk/chiang-mai-and-the-mae-hong-son-loop/" }],
   },
 
   // ==========================================================================
@@ -3277,7 +3277,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Hong Son morning market", coords: { lat: 19.2975, lng: 97.9660 },
     bookHint: "Just turn up; bring cash.", verified: "2026-07",
-    sources: [{ org: "Wikivoyage — Mae Hong Son", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Hong Son", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "Travelfish — Mae Hong Son eat", url: "https://www.travelfish.org/eatandmeet/thailand/northern_thailand/mae_hong_son/mae_hong_son/eat" }, { org: "Autour Asia — MHS specialities", url: "https://autourasia.com/what-to-eat-in-mae-hong-son-discover-the-top-6-local-specialties-b1545.html" }],
   },
 
   // ==========================================================================
@@ -3301,7 +3301,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Surin Waterfall Namtok Mae Surin National Park", coords: { lat: 19.141, lng: 98.033 },
     bookHint: "No booking; pay the park fee at the office and check access before setting out.", verified: "2026-07",
-    sources: [{ org: "Wikipedia — Namtok Mae Surin National Park", url: "https://en.wikipedia.org/wiki/Namtok_Mae_Surin_National_Park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Namtok Mae Surin National Park", url: "https://en.wikipedia.org/wiki/Namtok_Mae_Surin_National_Park" }, { org: "Travelfish — Mae Surin Waterfall", url: "https://www.travelfish.org/sight_profile/thailand/northern_thailand/mae_hong_son/khun_yuam/3362" }],
   },
   {
     id: "th-ext-ob-luang-national-park", name: "Ob Luang National Park (gorge & hot spring)", city: "Mae Chaem", country: "th",
@@ -3318,7 +3318,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Op Luang National Park Hot Chiang Mai", coords: { lat: 18.2231, lng: 98.4811 },
     bookHint: "Pay the park fee at the gate.", verified: "2026-07",
-    sources: [{ org: "Wikipedia — Op Luang National Park", url: "https://en.wikipedia.org/wiki/Ob_Luang_National_Park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Ob Luang National Park", url: "https://en.wikipedia.org/wiki/Ob_Luang_National_Park" }, { org: "The Nation Thailand", url: "https://www.nationthailand.com/thailand/tourism/40034254" }],
   },
   {
     id: "th-ext-pha-bong-hot-spring", name: "Pha Bong Hot Spring", city: "Mae Hong Son", country: "th",
@@ -3387,7 +3387,7 @@ export const PLACES_TH_EXT = [
     rating: 4.1, reviewSources: ["Google Maps consensus"],
     mapQuery: "Khun Yuam accommodation Highway 108", coords: { lat: 18.820, lng: 97.990 },
     bookHint: "Mostly walk-in; a few rooms listed on Booking or Agoda.", verified: "2026-07",
-    sources: [{ org: "My Chiang Mai Tour — Khun Yuam district", url: "https://mychiangmaitour.com/khunyuam/" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "My Chiang Mai Tour — Khun Yuam", url: "https://mychiangmaitour.com/khunyuam/" }, { org: "Mae Hong Son Loop — accommodation", url: "https://maehongsonloop.wordpress.com/visitor-information/accomodation/" }, { org: "Thailand Magazine — Khunyuam Resort", url: "https://thailandmagazine.com/mae-hong-son/accommodations/khunyuam-resort/" }],
   },
   {
     id: "th-ext-mae-sariang-food", name: "Mae Sariang night market & local food", city: "Mae Sariang", country: "th",
@@ -3404,7 +3404,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Google Maps consensus"],
     mapQuery: "Mae Sariang night market", coords: { lat: 18.162, lng: 97.929 },
     bookHint: "Just turn up; bring cash.", verified: "2026-07",
-    sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Travelfish — Mae Sariang eat", url: "https://www.travelfish.org/eatandmeet/thailand/northern_thailand/mae_hong_son/mae_sariang/eat" }, { org: "GT Rider — Mae Sariang restaurants", url: "https://www.thegtrider.com/tour-options/mae-hong-son/mae-sariang-district/mae-sariang-restaurants" }],
   },
 
   // ==========================================================================
