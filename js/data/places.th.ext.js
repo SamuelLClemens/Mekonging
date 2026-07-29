@@ -1708,7 +1708,7 @@ export const PLACES_TH_EXT = [
     sources: [{ org: "Travelfish" }, { org: "Lonely Planet Chiang Mai" }],
   },
   {
-    id: "th-chiang-mai-old-city-hostels",
+    id: "th-chiang-mai-old-city-hostels", sources: [{ org: "Wikivoyage — Chiang Mai", url: "https://en.wikivoyage.org/wiki/Chiang_Mai" }],
     name: "Hostels around the Old City moat",
     city: "Chiang Mai",
     country: "th",
@@ -1722,7 +1722,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-bangkok-khaosan-hostels",
+    id: "th-bangkok-khaosan-hostels", sources: [{ org: "Wikivoyage — Bangkok", url: "https://en.wikivoyage.org/wiki/Bangkok" }],
     name: "Backpacker hostels around Khao San Road",
     city: "Bangkok",
     country: "th",
@@ -1750,7 +1750,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-khaosok-jungle-glamping",
+    id: "th-khaosok-jungle-glamping", sources: [{ org: "Wikivoyage — Khao Sok National Park", url: "https://en.wikivoyage.org/wiki/Khao_Sok_National_Park" }],
     name: "Jungle glamping tents near Khao Sok",
     city: "Khao Sok",
     country: "th",
@@ -1764,7 +1764,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-kanchanaburi-river-kwai-rafthouses",
+    id: "th-kanchanaburi-river-kwai-rafthouses", sources: [{ org: "Wikivoyage — Kanchanaburi", url: "https://en.wikivoyage.org/wiki/Kanchanaburi" }],
     name: "Floating raft-house guesthouses on the River Kwai",
     city: "Kanchanaburi",
     country: "th",
@@ -1778,7 +1778,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-koh-tao-sairee-hostels",
+    id: "th-koh-tao-sairee-hostels", sources: [{ org: "Wikivoyage — Ko Tao", url: "https://en.wikivoyage.org/wiki/Ko_Tao" }],
     name: "Dive hostels along Sairee Beach",
     city: "Koh Tao",
     country: "th",
@@ -1792,7 +1792,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-koh-phangan-thongsala-hostels",
+    id: "th-koh-phangan-thongsala-hostels", sources: [{ org: "Wikivoyage — Ko Pha Ngan", url: "https://en.wikivoyage.org/wiki/Ko_Pha-ngan" }],
     name: "Social hostels around Thong Sala and Baan Tai",
     city: "Koh Phangan",
     country: "th",
@@ -1806,7 +1806,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-krabi-railay-tonsai-hostels",
+    id: "th-krabi-railay-tonsai-hostels", sources: [{ org: "Wikivoyage — Railay (Rai Leh)", url: "https://en.wikivoyage.org/wiki/Rai_Leh" }],
     name: "Climber hostels and bungalows at Tonsai and Railay",
     city: "Krabi",
     country: "th",
@@ -1820,7 +1820,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-ayutthaya-naresuan-guesthouses",
+    id: "th-ayutthaya-naresuan-guesthouses", sources: [{ org: "Wikivoyage — Ayutthaya", url: "https://en.wikivoyage.org/wiki/Ayutthaya" }],
     name: "Guesthouse cluster around Soi Naresuan",
     city: "Ayutthaya",
     country: "th",
@@ -1834,7 +1834,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-khao-yai-national-park-campsites",
+    id: "th-khao-yai-national-park-campsites", sources: [{ org: "Wikivoyage — Khao Yai National Park", url: "https://en.wikivoyage.org/wiki/Khao_Yai_National_Park" }],
     name: "National-park campsites at Khao Yai (Pha Kluai Mai / Lam Takhong)",
     city: "Nakhon Ratchasima (Isaan)",
     country: "th",
@@ -1848,7 +1848,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-koh-lanta-longbeach-hostels",
+    id: "th-koh-lanta-longbeach-hostels", sources: [{ org: "Wikivoyage — Ko Lanta", url: "https://en.wikivoyage.org/wiki/Ko_Lanta" }],
     name: "Beach hostels along Long Beach (Phra Ae)",
     city: "Koh Lanta",
     country: "th",
@@ -1862,7 +1862,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-nong-khai-mekong-guesthouses",
+    id: "th-nong-khai-mekong-guesthouses", sources: [{ org: "Wikivoyage — Nong Khai", url: "https://en.wikivoyage.org/wiki/Nong_Khai" }],
     name: "Mekong riverfront guesthouses",
     city: "Nong Khai",
     country: "th",
@@ -1876,7 +1876,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-bangkok-banglamphu-guesthouses",
+    id: "th-bangkok-banglamphu-guesthouses", sources: [{ org: "Wikivoyage — Bangkok", url: "https://en.wikivoyage.org/wiki/Bangkok" }],
     name: "Backpacker guesthouses around Banglamphu & Khaosan",
     city: "Bangkok",
     country: "th",
@@ -1890,7 +1890,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-chiang-mai-old-city-guesthouses",
+    id: "th-chiang-mai-old-city-guesthouses", sources: [{ org: "Wikivoyage — Chiang Mai", url: "https://en.wikivoyage.org/wiki/Chiang_Mai" }],
     name: "Guesthouses inside the Old City moat",
     city: "Chiang Mai",
     country: "th",
@@ -1904,7 +1904,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-chiang-mai-mae-kampong-homestays",
+    id: "th-chiang-mai-mae-kampong-homestays", sources: [{ org: "Wikivoyage — Chiang Mai", url: "https://en.wikivoyage.org/wiki/Chiang_Mai" }],
     name: "Homestays in Mae Kampong village",
     city: "Chiang Mai",
     country: "th",
@@ -1918,7 +1918,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-chiang-rai-hill-tribe-homestays",
+    id: "th-chiang-rai-hill-tribe-homestays", sources: [{ org: "Wikivoyage — Chiang Rai", url: "https://en.wikivoyage.org/wiki/Chiang_Rai" }],
     name: "Hill-tribe community homestays around Doi Mae Salong",
     city: "Chiang Rai",
     country: "th",
@@ -1946,7 +1946,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-sukhothai-old-city-guesthouses",
+    id: "th-sukhothai-old-city-guesthouses", sources: [{ org: "Wikivoyage — Sukhothai", url: "https://en.wikivoyage.org/wiki/Sukhothai" }],
     name: "Guesthouses near Sukhothai Historical Park",
     city: "Sukhothai",
     country: "th",
@@ -1960,7 +1960,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-krabi-ao-nang-guesthouses",
+    id: "th-krabi-ao-nang-guesthouses", sources: [{ org: "Wikivoyage — Ao Nang", url: "https://en.wikivoyage.org/wiki/Ao_Nang" }],
     name: "Budget guesthouses in Ao Nang backstreets",
     city: "Krabi",
     country: "th",
@@ -1974,7 +1974,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-koh-lanta-old-town-guesthouses",
+    id: "th-koh-lanta-old-town-guesthouses", sources: [{ org: "Wikivoyage — Ko Lanta", url: "https://en.wikivoyage.org/wiki/Ko_Lanta" }],
     name: "Stilted guesthouses in Lanta Old Town",
     city: "Koh Lanta",
     country: "th",
@@ -1988,7 +1988,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-koh-phangan-srithanu-guesthouses",
+    id: "th-koh-phangan-srithanu-guesthouses", sources: [{ org: "Wikivoyage — Ko Pha Ngan", url: "https://en.wikivoyage.org/wiki/Ko_Pha-ngan" }],
     name: "Budget guesthouses and bungalows around Srithanu",
     city: "Koh Phangan",
     country: "th",
@@ -2002,7 +2002,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-khao-sok-village-guesthouses",
+    id: "th-khao-sok-village-guesthouses", sources: [{ org: "Wikivoyage — Khao Sok National Park", url: "https://en.wikivoyage.org/wiki/Khao_Sok_National_Park" }],
     name: "Jungle guesthouses in Khao Sok village",
     city: "Khao Sok",
     country: "th",
@@ -2016,7 +2016,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-ubon-isaan-village-homestays",
+    id: "th-ubon-isaan-village-homestays", sources: [{ org: "Wikivoyage — Ubon Ratchathani", url: "https://en.wikivoyage.org/wiki/Ubon_Ratchathani" }],
     name: "Isaan village homestays around Ubon Ratchathani",
     city: "Ubon Ratchathani",
     country: "th",
@@ -2030,7 +2030,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-bangkok-sukhumvit-serviced-apartments",
+    id: "th-bangkok-sukhumvit-serviced-apartments", sources: [{ org: "Wikivoyage — Bangkok", url: "https://en.wikivoyage.org/wiki/Bangkok" }],
     name: "Serviced apartments & condos along Sukhumvit",
     city: "Bangkok",
     country: "th",
@@ -2044,7 +2044,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-bangkok-riverside-hotels",
+    id: "th-bangkok-riverside-hotels", sources: [{ org: "Wikivoyage — Bangkok", url: "https://en.wikivoyage.org/wiki/Bangkok" }],
     name: "Riverside luxury hotels along the Chao Phraya",
     city: "Bangkok",
     country: "th",
@@ -2058,7 +2058,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-chiangmai-nimman-apartments",
+    id: "th-chiangmai-nimman-apartments", sources: [{ org: "Wikivoyage — Chiang Mai", url: "https://en.wikivoyage.org/wiki/Chiang_Mai" }],
     name: "Serviced condos around Nimmanhaemin",
     city: "Chiang Mai",
     country: "th",
@@ -2072,7 +2072,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-chiangmai-oldcity-boutique-hotels",
+    id: "th-chiangmai-oldcity-boutique-hotels", sources: [{ org: "Wikivoyage — Chiang Mai", url: "https://en.wikivoyage.org/wiki/Chiang_Mai" }],
     name: "Boutique Lanna hotels inside the Old City moat",
     city: "Chiang Mai",
     country: "th",
@@ -2086,7 +2086,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-khaosok-jungle-resorts",
+    id: "th-khaosok-jungle-resorts", sources: [{ org: "Wikivoyage — Khao Sok National Park", url: "https://en.wikivoyage.org/wiki/Khao_Sok_National_Park" }],
     name: "Jungle & lakeside resorts around Khao Sok",
     city: "Khao Sok",
     country: "th",
@@ -2100,7 +2100,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-krabi-railay-beach-resorts",
+    id: "th-krabi-railay-beach-resorts", sources: [{ org: "Wikivoyage — Railay (Rai Leh)", url: "https://en.wikivoyage.org/wiki/Rai_Leh" }],
     name: "Beachfront resorts along Railay",
     city: "Krabi",
     country: "th",
@@ -2114,7 +2114,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-phuket-patong-hotels",
+    id: "th-phuket-patong-hotels", sources: [{ org: "Wikivoyage — Phuket", url: "https://en.wikivoyage.org/wiki/Phuket" }],
     name: "Beach hotels around Patong & Kata",
     city: "Phuket",
     country: "th",
@@ -2128,7 +2128,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-kohsamui-chaweng-bophut-resorts",
+    id: "th-kohsamui-chaweng-bophut-resorts", sources: [{ org: "Wikivoyage — Ko Samui", url: "https://en.wikivoyage.org/wiki/Ko_Samui" }],
     name: "Beach resorts along Chaweng & Bophut",
     city: "Koh Samui",
     country: "th",
@@ -2142,7 +2142,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-kohchang-whitesand-resorts",
+    id: "th-kohchang-whitesand-resorts", sources: [{ org: "Wikivoyage — Ko Chang", url: "https://en.wikivoyage.org/wiki/Ko_Chang" }],
     name: "Beach resorts along White Sand & Klong Prao",
     city: "Koh Chang",
     country: "th",
@@ -2156,7 +2156,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-huahin-beach-hotels",
+    id: "th-huahin-beach-hotels", sources: [{ org: "Wikivoyage — Hua Hin", url: "https://en.wikivoyage.org/wiki/Hua_Hin" }],
     name: "Seafront hotels & condos along Hua Hin beach",
     city: "Hua Hin",
     country: "th",
@@ -2170,7 +2170,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-kohlanta-longbeach-resorts",
+    id: "th-kohlanta-longbeach-resorts", sources: [{ org: "Wikivoyage — Ko Lanta", url: "https://en.wikivoyage.org/wiki/Ko_Lanta" }],
     name: "Beach resorts along Long Beach (Phra Ae)",
     city: "Koh Lanta",
     country: "th",
@@ -2184,7 +2184,7 @@ export const PLACES_TH_EXT = [
     verified: "2026-07",
   },
   {
-    id: "th-ayutthaya-riverside-hotels",
+    id: "th-ayutthaya-riverside-hotels", sources: [{ org: "Wikivoyage — Ayutthaya", url: "https://en.wikivoyage.org/wiki/Ayutthaya" }],
     name: "Riverside hotels around the historical park",
     city: "Ayutthaya",
     country: "th",
@@ -3134,7 +3134,7 @@ export const PLACES_TH_EXT = [
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }],
   },
   {
-    id: "th-ext-chaweng-beach",
+    id: "th-ext-chaweng-beach", sources: [{ org: "Wikivoyage — Ko Samui", url: "https://en.wikivoyage.org/wiki/Ko_Samui" }],
     name: "Chaweng Beach",
     city: "Koh Samui", country: "th",
     categories: ["beach", "nature"], budgetTier: "mid",
