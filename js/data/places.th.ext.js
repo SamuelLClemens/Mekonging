@@ -2343,17 +2343,8 @@ export const PLACES_TH_EXT = [
       "lng": 98.2711
     },
     "bookHint": "No advance booking; guides and lamps are arranged on arrival at the cave.",
-    "verified": "2026-06",
-    "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
-    ]
+    "verified": "2026-07",
+    "sources": [{"org": "Thailandee", "url": "https://www.thailandee.com/en/visit-thailand/lod-cave-mae-hong-son-558"}, {"org": "Siam Guides", "url": "https://www.siamguides.com/tham-lod-cave-thailand/"}]
   },
   {
     "id": "th-ext-ban-jabo-cliff-noodles",
@@ -2395,17 +2386,8 @@ export const PLACES_TH_EXT = [
       "lng": 98.2039
     },
     "bookHint": "No booking; walk-in only, cash.",
-    "verified": "2026-06",
-    "sources": [
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      },
-      {
-        "org": "Google Maps",
-        "url": "https://www.google.com/maps"
-      }
-    ]
+    "verified": "2026-07",
+    "sources": [{"org": "Olsen Tours", "url": "https://olsentours.com/ban-jabo-village"}, {"org": "Wanderlog", "url": "https://wanderlog.com/place/details/1919241/noodle-soup-house-ban-jabo"}]
   },
   {
     "id": "th-ext-pang-ung-reservoir",
@@ -2500,17 +2482,8 @@ export const PLACES_TH_EXT = [
       "lng": 97.9546
     },
     "bookHint": "No booking; short drive north of Mae Hong Son town, signposted off Highway 1095.",
-    "verified": "2026-06",
-    "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
-    ]
+    "verified": "2026-07",
+    "sources": [{"org": "Thailandee", "url": "https://www.thailandee.com/en/visit-thailand/su-thong-pae-bamboo-bridge-mae-hong-son-283"}, {"org": "Mae Hong Son Thailand (maehongsonthailand.com)", "url": "https://maehongsonthailand.com/su-tong-pae-bridge/"}]
   },
   {
     "id": "th-ext-pha-sua-waterfall",
@@ -2550,17 +2523,8 @@ export const PLACES_TH_EXT = [
       "lng": 97.9394
     },
     "bookHint": "No booking; roadside stop on the way to Pang Ung/Ban Rak Thai.",
-    "verified": "2026-06",
-    "sources": [
-      {
-        "org": "Department of National Parks (DNP)",
-        "url": "https://portal.dnp.go.th"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
-    ]
+    "verified": "2026-07",
+    "sources": [{"org": "Wikipedia — Tham Pla–Namtok Pha Suea National Park", "url": "https://en.wikipedia.org/wiki/Tham_Pla%E2%80%93Namtok_Pha_Suea_National_Park"}, {"org": "LoveThailand", "url": "https://www.lovethailand.org/travel/en/5-Mae-Hong-Son/606-Pha-Suea-Waterfall.html"}, {"org": "Wikivoyage — Mae Hong Son", "url": "https://en.wikivoyage.org/wiki/Mae_Hong_Son"}]
   },
   {
     "id": "th-ext-tham-pla-fish-cave",
@@ -2601,17 +2565,8 @@ export const PLACES_TH_EXT = [
       "lng": 97.9871
     },
     "bookHint": "No booking; on route 1095 northeast of Mae Hong Son town.",
-    "verified": "2026-06",
-    "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
-    ]
+    "verified": "2026-07",
+    "sources": [{"org": "Wikipedia — Tham Pla–Namtok Pha Suea National Park", "url": "https://en.wikipedia.org/wiki/Tham_Pla%E2%80%93Namtok_Pha_Suea_National_Park"}, {"org": "My Chiang Mai Tour", "url": "https://mychiangmaitour.com/tham_pla-namtok_pha_suea_national_park/"}, {"org": "Maehongson Greenmap", "url": "https://maehongsongreenmap.wordpress.com/mae-hong-son-local-compass/national-parks-in-the-area/tham-pla-pha-sua-national-park/"}]
   },
   {
     "id": "th-ext-cave-lodge-ban-tham",
@@ -2710,17 +2665,8 @@ export const PLACES_TH_EXT = [
       "lng": 98.0561
     },
     "bookHint": "No booking; visit only in the November bloom window, ideally midweek at dawn.",
-    "verified": "2026-06",
-    "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org/Attraction/bua-tong-field-doi-mae-u-kho"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
-    ]
+    "verified": "2026-07",
+    "sources": [{"org": "Thailandee", "url": "https://www.thailandee.com/en/visit-thailand/thung-bua-tong-fields-mae-hong-son-559"}, {"org": "MotoGirl in Thailand", "url": "https://motogirlthailand.com/bua-tong/"}, {"org": "Mae Hong Son Holidays", "url": "https://www.maehongsonholidays.com/bua-tong-blossom-festival/"}, {"org": "Nation Thailand", "url": "https://www.nationthailand.com/thailand/tourism/40032566"}]
   },
   {
     "id": "th-ext-khun-yuam-wwii-museum",
@@ -3859,5 +3805,87 @@ export const PLACES_TH_EXT = [
     mapQuery: "gas station Mae Chaem", coords: { lat: 18.5000, lng: 98.3630 },
     bookHint: "Just drive in.", verified: "2026-07",
     sources: [{ org: "Cat Motors — Mae Hong Son Loop guide", url: "https://catmotors.net/routes/mae-hong-son-loop/" }, { org: "Bangchak — retail oil prices", url: "https://www.bangchak.co.th/en/oilprice/historical" }],
-  }
+  },
+  {
+    id: "th-ext-kayan-longneck-villages-mae-hong-son", name: "Kayan (Karenni \"long-neck\") villages near Mae Hong Son — an ethical visit", city: "Mae Hong Son", country: "th",
+    localName: "บ้านห้วยปูแกง · Ban Huay Pu Keng",
+    categories: ["culture"],
+    budgetTier: "low",
+    kidFriendly: true,
+    blurb: "Three settlements near Mae Hong Son are home to Kayan (Karenni) families, whose women are known for the brass neck coils they wear. The residents are refugees who fled conflict and persecution in Kayah State, Myanmar, from the late 1980s onward, and who face restricted legal status and limited employment rights in Thailand. Tourism is a primary income source, which is precisely why the model you choose matters. Of the accessible options, Huay Pu Keng operates as a resident-run community-based tourism village where visitor spending reaches households directly.",
+    whyItFits: "This suits travellers who want honest cultural context rather than a staged photo stop, and who are willing to choose the community-run option over the more commercialised \"show village\" experience. It does not suit anyone seeking a quick tick-box attraction.",
+    priceRange: { low: 250, typical: 650, high: 1300, currency: "THB", note: "Village entrance is commonly 250 THB per person (widely reported as 200 THB to residents plus 50 THB for utilities and road upkeep). Huay Pu Keng is reached by long-tail boat: roughly 800 THB per boat (up to about 7 people) from Huai Dua pier, or a short 50 THB per-person crossing from Ban Tha Pong Daeng. Community-based activities such as weaving or carving workshops run about 300–500 THB per person, and homestays about 400 THB per person plus roughly 100 THB per meal. All figures are guidance only — confirm locally, as fees change and boat rates are negotiated per boat." },
+    hours: "Daytime visiting, roughly 08:00–17:00. The Huai Dua boat pier is reported to operate about 09:00–17:00. River access to Huay Pu Keng can be limited in the low-water months (around March–May) and during high flow (around September–October); confirm boat availability locally before travelling.",
+    tips: ["Choose Huay Pu Keng (also spelled Huay Phu Keng) for the resident-run community-based tourism model, where payment for workshops, crafts and homestays goes to villagers directly rather than to an intermediary operator.", "Huay Pu Keng lies on a bend of the Pai River about 20 km from Mae Hong Son town and is reached only by boat; drive to Ban Tha Pong Daeng or Huai Dua pier (roughly 5 km and about 3 km further south of town) and take a long-tail across.", "Huay Sua Tao is the easiest to reach — about a 30-minute drive southwest of Mae Hong Son on a sealed road, no boat required — but it reads as a more commercial \"show\" village than Huay Pu Keng.", "Ban Nai Soi (Nai Soi) sits beside the larger Ban Mai Nai Soi Karenni refugee camp northwest of town; access is administratively restricted and generally requires official permission, so treat it as the least casual-visitor-friendly of the three.", "Ask permission before photographing anyone, keep personal questions to the women in a restrained manner, and buy handwoven scarves or crafts directly from the maker as a fair exchange.", "With children: the calm village and craft workshops are manageable, and Huay Pu Keng's homestays offer shade, toilets and a slow pace; on the long-tail boat insist on life jackets, keep a firm hold of toddlers, and carry a young child rather than using a pram on the uneven riverbank and village paths."],
+    scamWarnings: ["Be clear on what your money covers: a package sold in Chiang Mai or by a town agent may bundle a hefty markup, whereas paying the village entrance and buying activities on site keeps more with residents.", "Agree the long-tail boat price and whether it is one-way or return before boarding, and confirm the per-boat versus per-person basis, as quotes vary and are negotiated.", "\"Long-neck village\" tours marketed from Chiang Mai or Chiang Rai are often heavily commercialised demonstration villages where little reaches the families; if ethics matter to you, prioritise the Mae Hong Son community-based option instead.", "Be sceptical of guides who discourage you from talking to residents or from choosing the community-run village; that framing usually protects a markup, not the community."],
+    rating: 4.2,
+    reviewSources: ["Wanderlog", "Travelfish", "Low Season Traveller"],
+    mapQuery: "Ban Huay Pu Keng Kayan Village, Mae Hong Son, Thailand",
+    coords: { lat: 19.2436, lng: 97.9247 },
+    bookHint: "No advance booking is needed to visit and pay the entrance fee on arrival; for a homestay or a specific workshop at Huay Pu Keng, arrange ahead through a responsible-tourism operator (for example Fair Tourism / Thailand Hilltribe Holidays) or contact the village community directly.",
+    verified: "2026-07",
+    sources: [{ org: "Thailand Hilltribe Holidays (Fair Tourism partner)", url: "https://www.thailandhilltribeholidays.com/huay-pu-keng-community-based-tourism-village-mae-hong-son/" }, { org: "Thailand Hilltribe Holidays", url: "https://www.thailandhilltribeholidays.com/visit-long-neck-village/" }, { org: "My Chiang Mai Tour", url: "https://mychiangmaitour.com/long_neck_village_ban_huay_sua_tao/" }, { org: "Thailande-et-Asie", url: "https://thailande-et-asie.com/en/ban-huay-pu-keng-immersion-au-coeur-dun-village-padaung" }, { org: "Wikipedia — Nai Soi", url: "https://en.wikipedia.org/wiki/Nai_Soi" }],
+  },
+  {
+    id: "th-ext-loop-transport-south-108-mae-sariang", name: "Getting around the loop by public transport: Southern route (Chiang Mai to Mae Hong Son via Mae Sariang, Route 108)", city: "Mae Hong Son", country: "th",
+    recognition: "Depart from Chiang Mai's Terminal 3 (Arcade area) at the Prempracha window; the southern service is signed via Hot and Mae Sariang. You arrive at the Mae Hong Son town bus station, about a 15-minute walk southwest of the centre.",
+    localName: "สถานีขนส่งแม่ฮ่องสอน · Sathani Khonsong Mae Hong Son",
+    categories: ["transport"],
+    budgetTier: "low",
+    kidFriendly: false,
+    blurb: "The southern arm of the loop follows Highway 108 through Hot, Mae Sariang and Khun Yuam before reaching Mae Hong Son. Wikivoyage puts this route at roughly 349 kilometres, longer in distance than the northern road but generally described as an easier drive with fewer of the punishing switchbacks. Prempracha Transport runs the main bus and minivan service, departing Chiang Mai's Terminal 3 several times daily. It is the practical option if you want to stop and explore Mae Sariang or Khun Yuam on the way rather than rush over the northern mountain road (Route 1095).",
+    whyItFits: "Best for travellers staging the loop through Mae Sariang and Khun Yuam who prefer a steadier ride over the shorter but tortuous northern road (Route 1095).",
+    priceRange: { low: 280, typical: 350, high: 450, currency: "THB", note: "Guidance only, confirm locally. A through Chiang Mai to Mae Hong Son ticket on the southern route is roughly 280 to 450 THB; shorter hops to Mae Sariang or Khun Yuam cost less. Buy at the counter with cash." },
+    hours: "Prempracha operates about six daily departures from Chiang Mai Terminal 3, roughly between 08:30 and 14:30. Journey time is long (commonly cited from about six hours up to seven or eight hours end to end because of the greater distance), so aim for a morning departure. Confirm the current timetable when booking.",
+    tips: ["Use this route if you intend to stop overnight in Mae Sariang or Khun Yuam; you can buy sector tickets and continue the next day.", "The drive is long: pack water, snacks and a sun-shade for the window, and plan a toilet stop strategy, as rest breaks are limited.", "Although less curvy than the northern (Route 1095) road, it is still a mountain highway; keep motion-sickness remedies to hand for children.", "Departures cluster in the morning and early afternoon, so a late-morning arrival at Terminal 3 still leaves options; do not count on evening buses.", "Confirm whether your service is a large bus or a minivan, as legroom and luggage space differ considerably."],
+    scamWarnings: ["Purchase from the official Prempracha counter at Terminal 3 rather than from touts; keep your ticket for any sector connections.", "Agree the total fare including luggage before boarding informal vans, especially for short hops between Mae Sariang and Mae Hong Son.", "Do not rely on a specific advertised arrival time; mechanical or weather delays on the mountain road are common, so avoid booking tight onward connections."],
+    rating: 4,
+    reviewSources: ["Wikivoyage", "BusOnlineTicket", "The Thaiger"],
+    mapQuery: "Mae Hong Son Bus Terminal",
+    coords: { lat: 19.3, lng: 97.97 },
+    bookHint: "Book Prempracha via BusOnlineTicket.co.th or 12Go, or buy at Chiang Mai Terminal 3; sector tickets to Mae Sariang or Khun Yuam are sold at the counter and let you break the journey.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "The Thaiger", url: "https://thethaiger.com/hot-news/transport/nok-air-makes-final-flight-to-mae-hong-son-in-northern-thailand" }, { org: "BusOnlineTicket", url: "https://www.busonlineticket.co.th/blog/chiang-mai-to-mae-hong-son/" }],
+  },
+  {
+    id: "th-ext-mhs-motorbike-rental", name: "Motorbike Rental in Mae Hong Son Town", city: "Mae Hong Son", country: "th",
+    categories: ["rental", "transport"],
+    budgetTier: "low",
+    kidFriendly: false,
+    blurb: "Mae Hong Son town has only a small handful of motorbike rental operators, clustered near Chong Kham Lake and on the road toward the airport and market. Automatic scooters and mid-size bikes are available by the day, and several operators will deliver to your hotel. This is the practical place to pick up a bike if you arrive by plane or bus rather than riding in from Chiang Mai.",
+    whyItFits: "Suits independent travellers who reached Mae Hong Son by air or bus and want to explore Ban Rak Thai, Pang Ung and the nearer loop by scooter. It is not appropriate for those uncomfortable on steep mountain curves.",
+    priceRange: { low: 200, typical: 350, high: 500, currency: "THB", note: "Roughly 200-500 THB per day in town for scooters and small bikes; larger geared or 300cc machines run higher (commonly 600-1400 THB elsewhere on the loop). Petrol is not included. Deposits reported between about 2,000 and 5,000 THB depending on the bike. Rates and deposits change and are negotiable for multi-day hire; confirm locally before committing." },
+    hours: "Most town shops operate roughly 08:00-18:00; some operators (for example the airport-road shop) arrange hotel meet-ups by phone rather than keeping fixed counter hours. Confirm locally.",
+    tips: ["Three main operators serve the town: a long-established shop (PR Motorbike Car Rent, formerly PA Car Rental and Tour, roughly 20 years in business) near Chong Kham Lake; JD Motorbike toward the airport, about a 10-minute walk from the airport and 5 minutes from the market, reachable on 084 037 26967 for a hotel meet-up; and a newer shop (KTY) with all-new bikes and hotel pickup.", "Film a slow walk-around video of the bike, with a staff member present, before you ride off. Capture existing scratches, the fuel gauge and the odometer to prevent disputes over pre-existing damage on return.", "Helmets are typically provided free; insist on one that fits and actually wear it. Helmets are legally required in Thailand and checkpoints do issue fines.", "Carry an International Driving Permit alongside your home licence. Riding without one can void insurance after a crash and has drawn on-the-spot fines of around 500 THB at checkpoints.", "Choose at least a 150cc machine for the mountain gradients; underpowered sub-125cc scooters struggle two-up on the climbs.", "Fuel is sparse between towns (gaps of 40-50 km on some passes). Fill up in every town and download offline maps, as mobile coverage drops in the interior.", "Not practical with young children: there is no safe way to carry a small child on a loop scooter. Families should look at car or van-with-driver hire instead."],
+    scamWarnings: ["Do not surrender your original passport as a deposit. A passport photocopy plus a cash deposit is the accepted, safer practice; walk away from any shop that demands the physical passport, as it leaves you with no leverage in a dispute.", "Photograph and video the entire bike before departure. Some operators try to charge returning renters for pre-existing scratches, dents or worn tyres.", "Read the damage and insurance clause before paying. At least one local listing states plainly that the operator 'does not acknowledge any accidents or damage issues', meaning you may carry full liability. Confirm exactly what any included insurance covers and buy additional cover if you need it.", "Confirm the deposit amount and refund conditions in writing, and check the fuel-return policy, before handing over money."],
+    rating: 4.2,
+    reviewSources: ["Mae Hong Son 4u", "Bikago", "Offbeat Explorers"],
+    mapQuery: "Chong Kham Lake Mae Hong Son",
+    coords: { lat: 19.2954, lng: 97.9686 },
+    bookHint: "Walk-in at the Chong Kham Lake shops, or phone ahead (JD/airport-road shop on 084 037 26967) for a hotel delivery. Book a day ahead in high season (November-January) as stock is limited.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "Mae Hong Son 4u", url: "https://maehongson4u.com/where-to-rent-a-motorbike/" }, { org: "Bikago", url: "https://www.bikago.com/blog/mae-hong-son-loop-motorbike-rental-guide-2025/" }, { org: "Offbeat Explorers", url: "https://offbeatexplorers.com/hire-bike-in-thailand-mae-hong-son-loop-motorbike-drive/" }, { org: "Cat Motors", url: "https://catmotors.net/routes/mae-hong-son-loop/" }],
+  },
+  {
+    id: "th-ext-mhs-car-rental", name: "Car Rental in Mae Hong Son Town", city: "Mae Hong Son", country: "th",
+    categories: ["rental", "transport"],
+    budgetTier: "mid",
+    kidFriendly: true,
+    blurb: "Car hire in Mae Hong Son centres on the small airport (HGN), where local operator P.A. Car Rent and national aggregators list eco cars, sedans, small SUVs, pickups and vans. A car is the comfortable, weatherproof way to drive the loop with luggage and children, and one-way rentals between Mae Hong Son and Chiang Mai are possible for a drop-off fee.",
+    whyItFits: "Best for families, older travellers, or anyone carrying luggage who wants the winding loop road handled in comfort rather than on two wheels. A van with driver is a further option for those who prefer not to drive the mountain curves themselves.",
+    priceRange: { low: 800, typical: 1000, high: 1500, currency: "THB", note: "Compact sedans and small SUVs commonly start around 800-1,200 THB per day, with larger SUVs, pickups and vans higher. A separate refundable deposit (usually on a credit card) applies, and one-way drop-off between Mae Hong Son and Chiang Mai adds a fee. Rates are seasonal; confirm locally when booking." },
+    hours: "Airport-counter and delivery hours vary by operator and are often tied to flight times; arrange pickup or hotel delivery in advance. Confirm locally.",
+    tips: ["P.A. Car Rent operates at Mae Hong Son Airport (HGN) and is bookable directly or through aggregators; the airport is only a short distance from the town centre and market.", "Bring your passport, an International Driving Permit (or an official English translation of your licence) and a credit card for the deposit; some local operators accept a cash or debit-card deposit, and a few ask to see your air ticket.", "Understand the insurance tiers before signing: CDW/LDW still leaves you paying an excess if at fault, whereas SCDW/ECDW is full cover with no excess. Buy the higher tier if you want zero liability on the mountain road.", "For one-way travel, select a different drop-off location at booking; the car can also be delivered to your hotel. Expect a drop-off surcharge for Mae Hong Son to Chiang Mai.", "A car comfortably fits child seats and luggage, making it the sensible family choice for the 1,864-curve route; bring or request a child seat in advance as they are not guaranteed.", "If nobody in your party wants to drive the curves, van-with-driver services on the loop include passenger accident insurance and remove the fatigue of the passes."],
+    scamWarnings: ["Inspect and photograph the car all round before driving off, noting every existing scratch, wheel scuff and the fuel level, and have staff acknowledge them, so pre-existing damage is not charged to you on return.", "Do not leave your original passport as security; a photocopy plus a card or cash deposit is standard. Confirm the deposit amount and how and when it is refunded.", "Read the excess and 'at-fault' terms of the included insurance carefully; the cheapest CDW/LDW can still leave a large excess payable after any incident.", "Confirm the fuel policy (usually full-to-full) and any one-way drop-off fee in writing before paying."],
+    rating: 4,
+    reviewSources: ["Rent Connected", "Cat Motors"],
+    mapQuery: "Mae Hong Son Airport",
+    coords: { lat: 19.3013, lng: 97.9756 },
+    bookHint: "Book P.A. Car Rent at Mae Hong Son Airport directly or via an aggregator such as Rent Connected; reserve ahead in high season and request hotel delivery or a one-way Chiang Mai drop-off when booking.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "Rent Connected", url: "https://www.rentconnected.com/en/Mae-Hong-Son-Airport-Car-Rental" }, { org: "Cat Motors", url: "https://catmotors.net/routes/mae-hong-son-loop/" }, { org: "The Broke Backpacker", url: "https://www.thebrokebackpacker.com/mae-hong-son-loop/" }],
+  },
 ];
