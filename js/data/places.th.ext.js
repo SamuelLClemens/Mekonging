@@ -322,7 +322,7 @@ export const PLACES_TH_EXT = [
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
-    id: "th-ext-ban-rak-thai", name: "Ban Rak Thai (Mae Aw)", city: "Mae Hong Son", country: "th",
+    id: "th-ext-ban-rak-thai", name: "Ban Rak Thai (Mae Aw)", city: "Mae Hong Son", country: "th", kidFriendly: true,
     access: { stepFree: "partial", note: "The flat lakeside tea-house promenade is relatively level, but the village sits at roughly 1,780m reached by steep hairpin mountain roads (Route 1219), with sharp inclines up to most shops and lodging; the lakeside surface itself is not independently confirmed as fully rollable." },
     categories: ["culture", "nature", "viewpoint"], budgetTier: "low",
     blurb: "A Yunnanese-Chinese tea-growing village settled by former Kuomintang soldiers, set around a misty lake high in the mountains near the Myanmar border, with terraced tea plantations, clay-walled guesthouses and pots of oolong served lakeside.",
@@ -2202,6 +2202,7 @@ export const PLACES_TH_EXT = [
     "name": "Wat Jong Kham & Wat Jong Klang (Nong Jong Kham Lake)",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "Two golden Shan-Burmese temples with tiered white-and-gold spires mirrored in the small Nong Jong Kham lake in the middle of town; floodlit and reflected across the water at night.",
     "categories": [
       "temple",
@@ -2255,6 +2256,7 @@ export const PLACES_TH_EXT = [
     "name": "Wat Phra That Doi Kong Mu",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "Twin white Shan-style chedis on a hilltop directly west of town, floodlit at night and reached by a steep switchback road; the terrace gives the widest view over Mae Hong Son and its airstrip.",
     "categories": [
       "temple",
@@ -2304,6 +2306,7 @@ export const PLACES_TH_EXT = [
     "name": "Tham Lod Cave (Nam Lang River Cave)",
     "city": "Soppong",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A vast river cave near Soppong where a local guide leads you in by gas lantern and you cross the underground Nam Lang stream on a bamboo raft; at dusk clouds of swifts pour in as bats stream out of the mouth.",
     "categories": [
       "cave",
@@ -2357,6 +2360,7 @@ export const PLACES_TH_EXT = [
     "name": "Ban Jabo Cliff Noodles (Lahu Village)",
     "city": "Soppong",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A ridge-top Lahu village south of Tham Lod where a tiny bamboo shophouse lets you sit on a plank bench with your legs dangling over a cloud-filled valley, a bowl of noodles in hand.",
     "categories": [
       "food",
@@ -2408,6 +2412,7 @@ export const PLACES_TH_EXT = [
     "name": "Pang Ung Reservoir",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A small pine-fringed reservoir near the Myanmar border where dawn mist rises off still water and rows of planted pines reflect - the reason it is nicknamed the 'Switzerland of Thailand'.",
     "categories": [
       "nature",
@@ -2461,6 +2466,7 @@ export const PLACES_TH_EXT = [
     "name": "Su Tong Pae Bamboo Bridge",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A long, humpbacked bamboo walkway snaking roughly 500m across paddy fields from Kung Mai Sang village to the forest temple of Wat Phu Sama - gold-green when the rice is high.",
     "categories": [
       "landmark",
@@ -2511,6 +2517,7 @@ export const PLACES_TH_EXT = [
     "name": "Pha Sua Waterfall",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A wide, multi-tier limestone cascade on the road north toward Pang Ung and Ban Rak Thai - thundering brown in the rains and gentle and clearer in the cool season.",
     "categories": [
       "waterfall",
@@ -2560,6 +2567,7 @@ export const PLACES_TH_EXT = [
     "name": "Tham Pla (Fish Cave)",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A shaded riverside park northeast of town where a spring pours from a cave mouth crowded with large sacred carp that locals feed but never eat; a small bridge and a guardian statue stand over the pool.",
     "categories": [
       "nature",
@@ -2610,6 +2618,7 @@ export const PLACES_TH_EXT = [
     "name": "Cave Lodge",
     "city": "Soppong",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A long-running timber-and-bamboo lodge in Ban Tham beside the Tham Lod turnoff, with a fire-lit common area, home cooking and hand-drawn caving maps on the walls.",
     "categories": [
       "stay",
@@ -2664,6 +2673,7 @@ export const PLACES_TH_EXT = [
     "name": "Doi Mae U-Kho Sunflower Fields (Thung Bua Tong)",
     "city": "Khun Yuam",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "Whole hillsides above Khun Yuam turning solid yellow with wild Mexican sunflowers for a few weeks in November, mist often pooling in the valleys below the ridges.",
     "categories": [
       "viewpoint",
@@ -2717,6 +2727,7 @@ export const PLACES_TH_EXT = [
     "name": "Khun Yuam WWII Museum (Thai-Japan Friendship Memorial Hall)",
     "city": "Khun Yuam",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "A modest two-storey memorial hall on route 108 in Khun Yuam displaying rusted trucks, helmets, utensils and photographs from the Japanese army's WWII retreat through the town.",
     "categories": [
       "museum",
@@ -2767,6 +2778,7 @@ export const PLACES_TH_EXT = [
     "name": "Mae Sariang Riverside Guesthouses",
     "city": "Mae Sariang",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "Wooden guesthouses and riverside restaurants strung along the Yuam River in a quiet market town in the far southwest of the loop, ringed by Shan temples and with far fewer tourists than Pai.",
     "categories": [
       "stay",
@@ -2821,6 +2833,7 @@ export const PLACES_TH_EXT = [
     "name": "Mae Hong Son Lakeside Guesthouses",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "Small family-run guesthouses and homestays within a few streets of Nong Jong Kham lake, many in teak Shan-style houses a short walk from the night market and morning market.",
     "categories": [
       "stay",
@@ -2874,6 +2887,7 @@ export const PLACES_TH_EXT = [
     "name": "Mae Hong Son Walking Street & Morning Market",
     "city": "Mae Hong Son",
     "country": "th",
+    "kidFriendly": true,
     "recognition": "An evening pedestrian strip along the lake lined with Shan and hill-tribe food stalls, plus a bustling dawn fresh-market a few blocks away where monks collect alms.",
     "categories": [
       "food",
@@ -3492,5 +3506,47 @@ export const PLACES_TH_EXT = [
     mapQuery: "Mae Sariang night market", coords: { lat: 18.162, lng: 97.929 },
     bookHint: "Just turn up; bring cash.", verified: "2026-07",
     sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+  },
+
+  // ==========================================================================
+  // LOOP DEPTH — stay options for the two thin legs (Pai–MHS midpoint, and the
+  // Doi Inthanon / Mae Chaem approach), written family-first. Web-verified;
+  // prices are GUIDANCE ("confirm on arrival"). Pai town remains excluded.
+  // --------------------------------------------------------------------------
+  {
+    id: "th-ext-soppong-guesthouses", name: "Soppong & Pang Mapha guesthouses (Pai–Mae Hong Son midpoint)", city: "Soppong", country: "th",
+    recognition: "Riverside guesthouses and small bungalows in and around Soppong (Pang Mapha), the quiet market town on Route 1095 roughly halfway between Pai and Mae Hong Son, near Tham Lod cave.",
+    localName: "ที่พักสบป่อง / ปางมะผ้า · Soppong / Pang Mapha",
+    categories: ["stay", "guesthouse"], budgetTier: "low",
+    kidFriendly: true, isLocal: true, stayType: "guesthouse", stayDuration: "short",
+    amenities: ["wifi", "fan", "hot-shower", "restaurant"],
+    blurb: "Soppong (officially Pang Mapha) is the natural place to break the long, winding Pai–Mae Hong Son leg. Beyond the well-known Cave Lodge, riverside guesthouses such as Soppong River Inn and Little Eden offer simple fan or air-con bungalows with private bathrooms above the Lang River — a calm, cool overnight near Tham Lod cave, the coffin caves and the Lisu and Shan villages.",
+    whyItFits: "A restful, inexpensive midpoint that turns the hardest driving day of the loop into two gentle halves — good for families and anyone prone to car sickness on the curves.",
+    priceRange: { low: 400, typical: 700, high: 1200, currency: "THB", note: "Per night for a fan-to-air-con bungalow with private bath; dorms are cheaper. Confirm on arrival." },
+    hours: "Check-in typically from 14:00.",
+    tips: ["Book ahead in the Nov–Feb cool-season peak and around Thai holidays.", "Cave Lodge has dorms and organises caving and treks; the river inns are quieter for families with young children.", "Fuel up in Soppong — it is a long, remote climb either side.", "Nights are cold in the cool season; check for hot water and blankets."],
+    scamWarnings: [],
+    rating: 4.4, reviewSources: ["Tripadvisor", "Travelfish", "Google Maps consensus"],
+    mapQuery: "Soppong guesthouse Pang Mapha", coords: { lat: 19.5167, lng: 98.2833 },
+    bookHint: "Soppong River Inn and several guesthouses list on Booking/Agoda; walk-in also works midweek.", verified: "2026-07",
+    sources: [{ org: "Travelfish — Where to stay in Soppong", url: "https://www.travelfish.org/accommodation/thailand/northern_thailand/mae_hong_son/soppong/all" }, { org: "Wikivoyage — Pang Mapha", url: "https://en.wikivoyage.org/wiki/Pangmapha" }],
+  },
+  {
+    id: "th-ext-mae-klang-luang-homestays", name: "Ban Mae Klang Luang — Karen homestays & coffee (Doi Inthanon)", city: "Chiang Mai", country: "th",
+    recognition: "A White Karen village on the lower slopes of Doi Inthanon, its wooden homestays and coffee huts set along stepped rice terraces beside the Mae Klang stream, about two hours south-west of Chiang Mai.",
+    localName: "บ้านแม่กลางหลวง · Ban Mae Klang Luang",
+    categories: ["stay", "guesthouse", "nature"], budgetTier: "low",
+    kidFriendly: true, isLocal: true, stayType: "homestay", stayDuration: "short",
+    amenities: ["hot-shower", "fan", "breakfast"],
+    blurb: "A White Karen community inside Doi Inthanon National Park where families open simple wooden homestays and bungalows overlooking terraced rice fields and small coffee plots. It is a gentle, genuinely local overnight on the loop's eastern approach through Mae Chaem — home-cooked meals, village coffee, short walks to the Pha Dok Siao and Rak Jang waterfalls, and easy paddling and swimming that suit children.",
+    whyItFits: "A calm, child-friendly, community-run base for Doi Inthanon and the Mae Chaem side of the loop — cool air, rice-terrace views and Karen hospitality rather than a resort strip.",
+    priceRange: { low: 500, typical: 1200, high: 2000, currency: "THB", note: "Per night; simple homestays are cheapest, view bungalows dearer. Meals extra and inexpensive. Confirm on arrival." },
+    hours: "Check-in typically from 14:00.",
+    tips: ["Book ahead in the cool season (Nov–Feb), when the terraces are green and rooms fill.", "Nights are genuinely cold at this altitude — bring warm layers, including for children and babies.", "The Doi Inthanon park entry fee is charged separately at the gate.", "A good, safe base for young kids — flat riverside paths and shallow water."],
+    scamWarnings: [],
+    rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
+    mapQuery: "Ban Mae Klang Luang homestay Doi Inthanon", coords: { lat: 18.5386, lng: 98.6167 },
+    bookHint: "Several homestays list on Booking/Agoda; others are walk-in or by phone.", verified: "2026-07",
+    sources: [{ org: "Green Trails — Ban Mae Klang Luang on Doi Inthanon", url: "https://www.green-trails.com/ban-mae-klang-luang-on-doi-inthanon/" }, { org: "Thailand Tidbits — Mae Klang Luang rice terraces", url: "https://thailandtidbits.com/2021/03/10/chiang-mai-rice-terraces-in-mae-klang-luang/" }],
   }
 ];
