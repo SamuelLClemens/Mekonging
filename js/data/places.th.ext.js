@@ -2239,16 +2239,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.9689
     },
     "bookHint": "No booking; walk-in, central to town.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Thaizer", "url": "https://www.thaizer.com/temples-on-the-lake-mae-hong-son-wat-chong-kham-and-wat-chong-klang/" },
+      { "org": "Travelfish", "url": "https://www.travelfish.org/sight_profile/thailand/northern_thailand/mae_hong_son/mae_hong_son/75" }
     ]
   },
   {
@@ -2289,16 +2283,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.9563
     },
     "bookHint": "No booking; independent by scooter/songthaew or a steep walk up.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Renown Travel", "url": "https://www.renown-travel.com/temples/wat-phra-that-doi-kong-mu.html" },
+      { "org": "Tripadvisor", "url": "https://www.tripadvisor.com/Attraction_Review-g297928-d460512-Reviews-Wat_Phra_That_Doi_Kong_Mu-Mae_Hong_Son_Mae_Hong_Son_Province.html" }
     ]
   },
   {
@@ -2431,16 +2419,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.8783
     },
     "bookHint": "On-site camping in season; otherwise day trip by scooter/charter from Mae Hong Son.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Guide to Thailand", "url": "https://guide2thailand.com/pang-ung-lake/" },
+      { "org": "Chiang Mai Traveller", "url": "https://www.chiangmaitraveller.com/pang-ung-mae-hong-son-thailand/" }
     ]
   },
   {
@@ -2611,16 +2593,11 @@ export const PLACES_TH_EXT = [
       "lng": 98.2703
     },
     "bookHint": "Book direct via the lodge's own website; walk-ins possible off-season.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Cave Lodge (official)",
-        "url": "https://www.cavelodge.com"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Travelfish", "url": "https://www.travelfish.org/accommodation_profile/thailand/northern_thailand/mae_hong_son/soppong/all/1860" },
+      { "org": "Cave Lodge (official)", "url": "https://www.cavelodge.com/" },
+      { "org": "The Seattle Times", "url": "https://www.seattletimes.com/life/travel/caves-kayaking-and-simple-comforts-in-thailand/" }
     ]
   },
   {
@@ -2707,16 +2684,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.9331
     },
     "bookHint": "No booking; walk-in on route 108 in Khun Yuam town.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Travelfish", "url": "https://www.travelfish.org/sight_profile/thailand/northern_thailand/mae_hong_son/khun_yuam/3363" },
+      { "org": "Lonely Planet", "url": "https://www.lonelyplanet.com/thailand/khun-yuam/attractions/thai-japan-friendship-memorial-hall/a/poi-sig/1244760/1324104" }
     ]
   },
   {
@@ -2762,16 +2733,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.9306
     },
     "bookHint": "Book a riverside guesthouse ahead in cool season; walk-in fine off-peak.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Wikipedia",
-        "url": "https://en.wikipedia.org/wiki/Mae_Sariang_district"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Mae_Sariang_district" },
+      { "org": "Wikivoyage", "url": "https://en.wikivoyage.org/wiki/Mae_Sariang" }
     ]
   },
   {
@@ -2816,16 +2781,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.9683
     },
     "bookHint": "Book direct or on major platforms; several walk-in options around the lake.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      },
-      {
-        "org": "Booking.com",
-        "url": "https://www.booking.com"
-      }
+      { "org": "Wikivoyage", "url": "https://en.wikivoyage.org/wiki/Mae_Hong_Son" },
+      { "org": "ThailandAddict", "url": "https://thailandaddict.com/en/review-sarm-mork-guest-house-mae-hong-son" }
     ]
   },
   {
@@ -2867,16 +2826,10 @@ export const PLACES_TH_EXT = [
       "lng": 97.9661
     },
     "bookHint": "No booking; wander the lake in the evening and the market at dawn.",
-    "verified": "2026-06",
+    "verified": "2026-07",
     "sources": [
-      {
-        "org": "Tourism Authority of Thailand",
-        "url": "https://www.tourismthailand.org"
-      },
-      {
-        "org": "Tripadvisor",
-        "url": "https://www.tripadvisor.com"
-      }
+      { "org": "Fan Club Thailand", "url": "https://fanclubthailand.co.uk/mae-hong-son/" },
+      { "org": "Travelfish", "url": "https://www.travelfish.org/eatandmeet/thailand/northern_thailand/mae_hong_son/mae_hong_son/eat" }
     ]
   },
   {
@@ -3887,5 +3840,111 @@ export const PLACES_TH_EXT = [
     isLocal: true,
     verified: "2026-07",
     sources: [{ org: "Rent Connected", url: "https://www.rentconnected.com/en/Mae-Hong-Son-Airport-Car-Rental" }, { org: "Cat Motors", url: "https://catmotors.net/routes/mae-hong-son-loop/" }, { org: "The Broke Backpacker", url: "https://www.thebrokebackpacker.com/mae-hong-son-loop/" }],
+  },
+  {
+    id: "th-ext-loop-health-pharmacies-mae-hong-son", name: "Staying healthy on the loop: hospitals, pharmacies and the real risks", city: "Mae Hong Son", country: "th",
+    categories: ["health"],
+    budgetTier: "low",
+    kidFriendly: true,
+    blurb: "The Mae Hong Son loop is remote mountain country, so plan for minor problems before they happen. The provincial hospital, Srisangwan Hospital, is in Mae Hong Son town on Singhanat Bamrung Road; smaller hospitals and clinics serve Pai, Mae Sariang and Khun Yuam, and most towns with a 7-Eleven also have a pharmacy for everyday remedies. Bring any specialist medication with you from Chiang Mai, as small-town pharmacies stock only basics. By a wide margin the biggest danger on the loop is a motorbike accident on the curves, not tropical disease.",
+    whyItFits: "One honest safety briefing so first-time loop riders and families know where help is and what actually goes wrong.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Government-hospital out-patient fees and pharmacy items are cheap, but a serious case means a long transfer to Chiang Mai. Guidance only; travel insurance with medical-evacuation cover is strongly advised and priced separately." },
+    hours: "Srisangwan Hospital emergency department is open 24 hours; town pharmacies typically run roughly 08:00-20:00. Confirm locally.",
+    tips: [
+      "Ride within your limits: the single biggest cause of injury here is a scooter crash on wet, gravel or steep sections. Wear the helmet, avoid riding at night on unlit passes, and never ride after drinking.",
+      "Carry travel insurance that explicitly covers motorbike riding and medical evacuation; a helicopter or fixed-wing transfer to Chiang Mai can cost tens of thousands of US dollars without cover.",
+      "Dengue, spread by a daytime-biting mosquito, is a more realistic risk than malaria for most visitors; use repellent, especially around dawn and dusk.",
+      "Stray dogs are common and rabies is present in Thailand. If bitten or scratched, wash the wound with soap under running water for about 15 minutes and get to a hospital for post-exposure treatment the same day.",
+      "Stick to bottled or filtered water and freshly cooked food, and carry a basic kit (rehydration salts, antiseptic, plasters and any personal medicines), as villages have little.",
+      "In the February-to-April burning season the smoke haze itself is a health issue for children, older travellers and anyone with asthma; check the when-to-go guide before timing a trip."
+    ],
+    scamWarnings: ["In a real emergency dial 1669 for a national ambulance (EMS) or 1155 for the Tourist Police; do not let an unlicensed 'clinic' tout divert you from the government hospital for serious injuries."],
+    rating: 4,
+    reviewSources: ["CDC Travelers' Health", "Government of Canada travel advice"],
+    mapQuery: "Srisangwan Hospital Mae Hong Son",
+    coords: { lat: 19.2971, lng: 97.9718 },
+    bookHint: "No booking; note the hospital location on arrival and save the 1669 ambulance number offline before you ride.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "CDC Travelers' Health", url: "https://wwwnc.cdc.gov/travel/destinations/traveler/none/thailand" }, { org: "Government of Canada", url: "https://travel.gc.ca/destinations/thailand" }, { org: "Expats Thailand", url: "https://expatsthai.com/cities/mae-hong-son/healthcare" }],
+  },
+  {
+    id: "th-ext-loop-cash-atms-baby-essentials", name: "Cash, ATMs and baby essentials on the loop", city: "Mae Hong Son", country: "th",
+    categories: ["money"],
+    budgetTier: "low",
+    kidFriendly: true,
+    blurb: "The loop runs on cash. Full-service banks and ATMs are reliable in Chiang Mai, Pai, Mae Hong Son town and Mae Sariang, and Krungthai Bank also has a branch in Khun Yuam; but homestays, village noodle stalls, cave guides and places such as Cave Lodge are effectively cash-only, and machines can be scarce or out of service in Soppong and the smaller villages. Draw enough baht in a proper town before heading into the quieter stretches. For families, everyday baby supplies are easy to buy in Chiang Mai and Mae Hong Son town but thin on the ground in between.",
+    whyItFits: "Two practical worries - running out of cash and running out of nappies - answered in one place for loop travellers with children.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "No cost to plan ahead. Thai ATMs charge a fixed foreign-card withdrawal fee (commonly around 220 THB) on top of your home bank's fees, so fewer, larger withdrawals in the towns are cheaper. Guidance only." },
+    hours: "Bank branches typically open roughly 08:30-16:30 on weekdays; ATMs and 7-Eleven convenience stores in the towns run late or 24 hours. Confirm locally.",
+    tips: [
+      "Withdraw a cushion of cash in Chiang Mai, Pai, Mae Hong Son town or Mae Sariang before the quiet legs; budget on the order of 750 THB per person per day and carry a reserve.",
+      "Assume homestays, camping pitches, village food stalls, cave-guide fees and adventure lodges are cash-only; do not rely on cards outside the bigger towns.",
+      "Keep small notes for stalls, parking and donations; breaking a 1,000 THB note in a village can be hard.",
+      "For a baby, stock nappies, wipes, formula and any specific baby food in Chiang Mai or Mae Hong Son town, where 7-Eleven and larger shops carry them; village shops rarely do.",
+      "Bottled water for making up formula is sold everywhere, but bring a travel kettle or ask guesthouses to boil water, and carry a small cool bag for the long drives.",
+      "A car rather than a scooter is the sensible way to carry a baby, luggage and supplies on the curves; see the car-rental guide."
+    ],
+    scamWarnings: ["Use ATMs attached to real bank branches in the towns and shield your PIN; free-standing machines in tourist spots may add higher surcharges.", "Decline the ATM's offer to 'convert to your home currency' (dynamic currency conversion) and always choose to be charged in Thai baht for a better rate."],
+    rating: 4,
+    reviewSources: ["Wikivoyage", "Krungthai Bank locations"],
+    mapQuery: "Krungthai Bank Mae Hong Son",
+    coords: { lat: 19.2985, lng: 97.9662 },
+    bookHint: "No booking; plan withdrawals and baby supplies in Chiang Mai or Mae Hong Son town before the remote sections.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son_Loop" }, { org: "Krungthai Bank", url: "https://krungthai.banks.info/thailand/mae-hong-son" }, { org: "Backpack Moments", url: "https://backpackmoments.com/mae-hong-son-loop-full-guide/" }],
+  },
+  {
+    id: "th-ext-loop-when-to-go-seasons-festivals", name: "When to go: seasons, the burning-season smoke warning and festivals", city: "Mae Hong Son", country: "th",
+    categories: ["culture", "seasonal"],
+    budgetTier: "low",
+    kidFriendly: true,
+    blurb: "Timing makes or breaks the loop. The cool season, roughly November to February, is the classic window: clearer air, mist-filled mornings at Pang Ung and Ban Jabo, the November sunflowers above Khun Yuam, and cold nights up high. From roughly late February into April is the burning season, when agricultural and forest fires blanket the north in smoke and Mae Hong Son records some of Thailand's worst air quality. The rains, about June to October, turn the hills green and the waterfalls full but bring landslips and leeches on the trails. The Shan (Tai Yai) calendar also shapes the year, above all Poy Sang Long around late March or April and the Jong Para (Chong Para) processions at the end of Buddhist Lent in October.",
+    whyItFits: "The single most important planning decision for the loop - and an honest warning about the smoke months many guides gloss over.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "No cost. Cool-season weekends and festival dates push accommodation prices up and fill rooms early; book ahead for November to January and for Poy Sang Long. Guidance only." },
+    hours: "Cool season Nov-Feb is the recommended window; burning-season haze peaks around March; green-season rains run roughly Jun-Oct.",
+    tips: [
+      "For the best weather and the famous mist and sunflowers, come November to February and bring genuinely warm layers for mountain nights that can approach freezing.",
+      "Think hard before visiting from late February to April: PM2.5 smoke levels in Mae Hong Son regularly reach unhealthy or hazardous readings, a real risk for young children, older travellers, pregnant women and anyone with asthma or a heart condition.",
+      "If you do travel in the smoke months, check a live air-quality index daily, carry well-fitting FFP2/N95 masks, and keep plans flexible in case a valley is socked in.",
+      "Green season (Jun-Oct) is lush, quiet and cheap, with the fullest waterfalls, but pack for downpours, watch for landslides on the passes and expect leeches on wet trails.",
+      "To catch Poy Sang Long, the Shan novice-ordination festival, aim for Mae Hong Son town around late March to early April (the ceremony fell on 31 March to 3 April in 2026); expect processions of costumed boys and full guesthouses.",
+      "The Jong Para (Chong Para) festival marks the end of Buddhist Lent in October, when bamboo-and-paper castles welcome the Buddha's return; Ok Phansa falls on 26 October in 2026."
+    ],
+    scamWarnings: ["Book rooms and transport well ahead for the November-January peak and for festival dates; last-minute prices in Mae Hong Son town spike and budget rooms sell out."],
+    rating: 4.5,
+    reviewSources: ["IQAir", "TAT Newsroom", "Thaizer"],
+    mapQuery: "Mae Hong Son town centre",
+    coords: { lat: 19.3009, lng: 97.9682 },
+    bookHint: "No booking for the season itself; reserve accommodation early for cool-season and festival dates, and avoid the March smoke peak if anyone in your party is vulnerable.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "IQAir", url: "https://www.iqair.com/thailand/mae-hong-son/mae-hong-son" }, { org: "TAT Newsroom", url: "https://www.tatnews.org/2025/09/october-2025-festivals-and-events-in-thailand/" }, { org: "TAGTHAi", url: "https://www.tagthai.com/explore/events/p/poy-sang-long-festival" }, { org: "Thaizer", url: "https://www.thaizer.com/chong-para-ceremony-and-festival-mae-hong-son/" }],
+  },
+  {
+    id: "th-ext-loop-cafes-coffee-mae-hong-son", name: "Coffee on the loop: cafes and hill-grown beans", city: "Mae Hong Son", country: "th",
+    categories: ["cafe", "food"],
+    budgetTier: "low",
+    kidFriendly: true,
+    blurb: "Northern Thailand is serious coffee country, and the loop is dotted with cafes pouring locally grown arabica. Much of it traces back to the Royal Project, which from 1969 encouraged hill communities to replace opium with coffee and other cash crops. In Mae Hong Son town, cafes cluster around Nong Jong Kham lake for a sunset-and-temple view, and traditional coffee-boran stalls in the morning market pour strong, sweet local brews. Up at the Pang Ung and Ban Rak Thai royal-project villages you can drink coffee grown, roasted and ground on the spot.",
+    whyItFits: "A gentle, all-ages thread through the loop - good coffee with a view, and a genuine local story behind the bean.",
+    priceRange: { low: 40, typical: 70, high: 120, currency: "THB", note: "A cup of local drip or espresso; lake-view cafes and specialty roasters sit at the higher end, market coffee-boran stalls at the lower. Cash is safest. Guidance only." },
+    hours: "Town cafes commonly open from mid-morning to early evening; market coffee stalls are a dawn affair. Individual hours vary; confirm locally.",
+    tips: [
+      "For the classic view, take a coffee at a lakeside cafe on Nong Jong Kham at sunset, when the twin temples light up across the water.",
+      "In the morning market, try a glass of coffee-boran (old-style filter coffee with condensed milk) alongside Shan noodles for a cheap local breakfast.",
+      "Around the Pang Ung royal project and Ban Rak Thai, look for growers selling their own single-origin arabica; it is some of the freshest coffee you will drink in Thailand.",
+      "Cafes are a good rain-or-smoke refuge and a comfortable stop with children on the long driving days.",
+      "Carry cash: village and market coffee stalls do not take cards."
+    ],
+    rating: 4.3,
+    reviewSources: ["Travelfish", "Wanderlog"],
+    mapQuery: "cafe Nong Jong Kham Mae Hong Son",
+    coords: { lat: 19.2959, lng: 97.9679 },
+    bookHint: "No booking; wander the lakeside for a view cafe, the morning market for coffee-boran, or the Pang Ung villages for grown-on-site beans.",
+    isLocal: true,
+    verified: "2026-07",
+    sources: [{ org: "Travelfish", url: "https://www.travelfish.org/eatandmeet/thailand/northern_thailand/mae_hong_son/mae_hong_son/eat" }, { org: "Wanderlog", url: "https://wanderlog.com/list/geoCategory/282727/best-coffee-shops-and-best-cafes-in-mae-hong-son" }, { org: "Chiang Mai a la carte", url: "https://www.chiangmai-alacarte.com/blog/the-coffee-culture-in-thailand/" }],
   },
 ];
