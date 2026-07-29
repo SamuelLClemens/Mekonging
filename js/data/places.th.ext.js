@@ -3205,7 +3205,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat Chong Sung Mae Sariang", coords: { lat: 18.162, lng: 97.930 },
     bookHint: "Open access; the town is the overnight base for this end of the loop.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-salawin-mae-sam-laep", name: "Salawin River & Mae Sam Laep (Salween border)", city: "Mae Sariang", country: "th",
@@ -3222,15 +3222,15 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Sam Laep Salween River", coords: { lat: 18.150, lng: 97.700 },
     bookHint: "Arrange boats with licensed operators in Mae Sariang or at the pier.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Salawin National Park", url: "https://en.wikipedia.org/wiki/Salawin_National_Park" }, { org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }],
   },
   {
     id: "th-ext-wat-to-phae", name: "Wat To Phae", city: "Khun Yuam", country: "th",
-    recognition: "An old Burmese-Shan temple by the river just outside Khun Yuam, with a tiered wooden roof, a revered white marble Buddha and antique religious textiles.",
+    recognition: "An old Tai Yai (Shan) temple in Ban To Phae village about 5km from Khun Yuam, with a Burmese-style wooden viharn, a Mon-style pagoda and rare antique Burmese textiles inside.",
     localName: "วัดต่อแพ · Wat To Phae",
     categories: ["culture"], budgetTier: "low",
     kidFriendly: true, activities: ["temple"],
-    blurb: "A century-old Tai Yai (Shan) temple near Khun Yuam with a graceful tiered roof, a white marble Buddha image brought from Myanmar, and rare woven-and-painted religious cloths — a quiet, authentic counterpoint to the busier temples of the north.",
+    blurb: "A Shan temple rebuilt in 1918–1920 by cross-border traders — its name means 'the temple where rafts are built', from the old Yuam-River trade down to Mae Sariang. Inside the wooden viharn hangs a roughly 150-year-old Burmese kalaga (sequined tapestry) and the jewelled 'Ruby Curtain'; the compound served as a Japanese headquarters during the 1945 retreat from Burma.",
     whyItFits: "A short, peaceful cultural stop that shows the Shan heritage running through the whole western loop; pairs with the WWII museum in town.",
     priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free; a small donation is welcome." },
     hours: "Daylight hours.",
@@ -3239,7 +3239,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat To Phae Khun Yuam", coords: { lat: 18.788, lng: 97.976 },
     bookHint: "Open access.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Lonely Planet — Wat To Phae", url: "https://www.lonelyplanet.com/points-of-interest/wat-to-phae/1244761" }, { org: "Bangkok Post — Turning full circle", url: "https://www.bangkokpost.com/life/travel/384387/turning-full-circle" }],
   },
   {
     id: "th-ext-mae-chaem-wat-pa-daet", name: "Wat Pa Daet & Mae Chaem old temples", city: "Mae Chaem", country: "th",
@@ -3247,7 +3247,7 @@ export const PLACES_TH_EXT = [
     localName: "วัดป่าแดด · แม่แจ่ม · Wat Pa Daet",
     categories: ["culture"], budgetTier: "low",
     kidFriendly: true, activities: ["temple"],
-    blurb: "In the broad rice valley of Mae Chaem, on the loop's back road between Doi Inthanon and Mae Sariang, Wat Pa Daet preserves a rare set of 19th-century Lanna temple murals — everyday scenes of Mae Chaem life painted on the walls of its old wooden viharn. The district is also known for hand-woven teen jok cloth.",
+    blurb: "In the broad rice valley of Mae Chaem, on the loop's back road between Doi Inthanon and Mae Sariang, Wat Pa Daet's wooden viharn (dated 1877) preserves a rare set of 19th-century Lanna murals — everyday scenes of Mae Chaem life across about 120m² of wall, restored under royal patronage in 2016–2020. The district is also known for hand-woven teen jok cloth.",
     whyItFits: "A quiet, authentic Lanna-culture stop on the least-travelled corner of the loop, pairing well with the descent from Doi Inthanon.",
     priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free; a small donation is welcome." },
     hours: "Daylight; a caretaker may open the mural hall on request.",
@@ -3256,7 +3256,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat Pa Daet Mae Chaem", coords: { lat: 18.485, lng: 98.365 },
     bookHint: "Open access.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Bangkok Post — Summoning the past", url: "https://www.bangkokpost.com/life/travel/1872039/summoning-the-past" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-mae-chaem-homestays", name: "Village homestays & guesthouses, Mae Chaem", city: "Mae Chaem", country: "th",
@@ -3272,7 +3272,7 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Chaem guesthouse homestay", coords: { lat: 18.500, lng: 98.363 },
     bookHint: "Walk-in or phone; few are listed online.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Sawadee Discovery — Mae Chaem guide", url: "https://www.sawadiscovery.com/guide-thailand/destination/mae-chaem" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-mhs-loop-overview", name: "The Mae Hong Son Loop (Route 1095 & 108)", city: "Mae Hong Son", country: "th",
@@ -3280,16 +3280,16 @@ export const PLACES_TH_EXT = [
     localName: "เส้นทางแม่ฮ่องสอนลูป · Route 1095 / 108",
     categories: ["nature", "viewpoint"], budgetTier: "low",
     kidFriendly: true, activities: ["road-trip", "motorbike"],
-    blurb: "Northern Thailand's classic road trip: a roughly 600km loop from Chiang Mai. Route 1095 climbs north-west through Pai, Soppong (Tham Lod) and on to Mae Hong Son; Route 108 returns south through Khun Yuam, Mae Sariang and Mae Chaem. The Pai–Mae Hong Son stretch is famously counted at around 1,864 curves. Allow at least three to four days.",
+    blurb: "Northern Thailand's classic road trip: a roughly 600km loop from Chiang Mai. Route 1095 climbs north-west through Pai, Soppong (Tham Lod) and on to Mae Hong Son (the northern arm, ~236km, famously counted at 1,864 curves); Route 108 returns south through Khun Yuam, Mae Sariang and Mae Chaem (the gentler arm, ~349km). Each direction is a 5–6 hour drive before stops; allow at least three to four days.",
     whyItFits: "The single best way to see this region — slow travel through cool mountains, caves, temples and viewpoints, doable by rental car, motorbike or minivan hops.",
     priceRange: { low: 200, typical: 900, high: 2500, currency: "THB", note: "Per day for a rented scooter or car plus fuel and a room; minivans link the towns cheaply." },
     hours: "Best Nov–Feb (cool, clear); rains Jun–Oct leave some stretches slick.",
-    tips: ["Ride it anti-clockwise (Pai first) or clockwise (Mae Sariang first) — both close the circuit.", "Fuel up at every town; stations are sparse on the passes.", "Never ride the curves at night or in the rain, and carry the licence or IDP your insurance requires.", "Break the long Pai–Mae Hong Son leg at Soppong."],
+    tips: ["Ride it anti-clockwise (Pai first) or clockwise (Mae Sariang first) — both close the circuit.", "Fuel up at every town; stations are sparse on the passes.", "Never ride the curves at night or in the rain, and carry the licence or IDP your insurance requires.", "Break the long Pai–Mae Hong Son leg at Soppong.", "With young children or a baby, drive it by car or take the town-to-town minivans rather than a motorbike, and keep each day's leg short — the curves bring on motion sickness."],
     scamWarnings: ["Never leave your passport as a rental deposit — use cash or a copy.", "Photograph any rental for existing damage before you ride off."],
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Hong Son Loop Route 1095", coords: { lat: 19.300, lng: 98.100 },
     bookHint: "Rent in Chiang Mai or Pai; book vehicles ahead in the cool-season peak.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Hong Son", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
 
   // ==========================================================================
@@ -3364,7 +3364,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mae Hong Son morning market", coords: { lat: 19.2975, lng: 97.9660 },
     bookHint: "Just turn up; bring cash.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Hong Son", url: "https://en.wikivoyage.org/wiki/Mae_Hong_Son" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
 
   // ==========================================================================
@@ -3474,7 +3474,7 @@ export const PLACES_TH_EXT = [
     rating: 4.1, reviewSources: ["Google Maps consensus"],
     mapQuery: "Khun Yuam accommodation Highway 108", coords: { lat: 18.820, lng: 97.990 },
     bookHint: "Mostly walk-in; a few rooms listed on Booking or Agoda.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "My Chiang Mai Tour — Khun Yuam district", url: "https://mychiangmaitour.com/khunyuam/" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-mae-sariang-food", name: "Mae Sariang night market & local food", city: "Mae Sariang", country: "th",
@@ -3482,7 +3482,7 @@ export const PLACES_TH_EXT = [
     localName: "ตลาดและอาหารพื้นเมืองแม่สะเรียง · Mae Sariang",
     categories: ["food", "market"], budgetTier: "low",
     kidFriendly: true, isLocal: true, activities: ["street-food", "market"],
-    blurb: "Mae Sariang's food is quiet and genuinely local — a small evening market and a scatter of riverside restaurants serving Shan (Tai Yai) and Karen-influenced dishes, northern khao soi, khanom jeen nam ngiao, grilled river fish and Lanna sweets, at prices well below the tourist towns.",
+    blurb: "Mae Sariang's food is quiet and genuinely local — evening stalls and riverside kitchens serving Shan (Tai Yai) and Karen-influenced dishes. Local specialities include salawin (Salween) fish cake and pad pong curry, alongside northern khao soi, khanom jeen nam ngiao and grilled river fish, at prices well below the tourist towns.",
     whyItFits: "The best-value, most authentic eating on the loop's southern anchor, and a relaxed way to spend the evening by the Yuam River.",
     priceRange: { low: 30, typical: 90, high: 200, currency: "THB", note: "Per dish to a full meal." },
     hours: "Evening market from ~17:00; riverside kitchens midday and evening.",
@@ -3491,6 +3491,6 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Google Maps consensus"],
     mapQuery: "Mae Sariang night market", coords: { lat: 18.162, lng: 97.929 },
     bookHint: "Just turn up; bring cash.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Mae Sariang", url: "https://en.wikivoyage.org/wiki/Mae_Sariang" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   }
 ];
