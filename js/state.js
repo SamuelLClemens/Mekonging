@@ -63,6 +63,10 @@ function defaults() {
         // (dishes, market produce, wildlife). Flat list of "type:id" keys; pin order IS
         // display order. Self-defaults via the migrate spread — no store-version bump.
         idPins: [],           // ['dish:pad-thai', 'produce:mangosteen', 'species:tokay-gecko', …]
+        // Per-pin organisation, keyed by the same "type:id" key. `tags` are the user's own
+        // categories (free text); `note` is a short personal note. Both optional and
+        // self-defaulting — a key only appears once the user tags or annotates that pin.
+        idPinMeta: {},        // { 'dish:pad-thai': { tags: ['Want to try'], note: 'stall by the market' } }
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this

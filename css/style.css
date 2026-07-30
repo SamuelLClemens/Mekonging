@@ -1699,3 +1699,40 @@ html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
 .id-saved-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .id-saved-sub { font-size: 12px; opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .id-remove { flex: 0 0 auto; align-self: center; }
+
+/* Quick-pin star on the identify browse cards (food / produce / wildlife). The card
+   becomes a flex row: a transparent main button + the star, so both stay real buttons. */
+.id-cardrow { gap: 4px; }
+.id-cardmain { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-3, 12px);
+  text-align: left; background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; }
+.id-cardmain:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: var(--r-2, 10px); }
+.id-star { flex: 0 0 auto; align-self: center; background: none; border: none; cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 6px 4px; color: var(--muted, #8A8F98); }
+.id-star.on { color: var(--sun, #E0A100); }
+.id-star:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+
+/* My identifier: per-row controls, tag chips, note, and the inline edit panel. */
+.id-viewtoggle { margin: 4px 0 10px; }
+.id-saved-block { margin-top: 8px; }
+.id-saved-block:first-of-type { margin-top: 4px; }
+.id-saved-block .id-saved-row { margin-top: 0; }
+.id-row-ctrls { flex: 0 0 auto; align-self: center; display: flex; align-items: center; gap: 4px; }
+.id-row-ctrls .chip { padding: 5px 8px; }
+.id-move[disabled] { opacity: .35; cursor: default; }
+.id-editbtn.on { background: var(--teal-deep); color: #fff; border-color: transparent; }
+.id-saved-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.id-tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 999px;
+  background: rgba(22,163,154,0.14); color: var(--teal-deep); white-space: nowrap; }
+html[data-theme="dark"] .id-tag { background: rgba(22,163,154,0.28); color: var(--teal, #38C6B4); }
+.id-saved-note { font-size: 12px; opacity: .8; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.id-edit-panel { margin: 6px 0 2px; padding: 10px 11px; border-radius: var(--r-2, 10px);
+  background: rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 6px; }
+html[data-theme="dark"] .id-edit-panel { background: rgba(255,255,255,0.06); }
+.id-edit-label { font-size: 11px; font-weight: 700; opacity: .65; text-transform: uppercase; letter-spacing: .03em; }
+.id-edit-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.id-tag.removable { cursor: pointer; border: none; font-size: 12px; padding: 3px 10px; }
+.id-tag.removable .x { margin-left: 6px; opacity: .7; }
+.id-tag-add { display: flex; gap: 6px; }
+.id-tag-addbtn { flex: 0 0 auto; }
+.id-tag-input, .id-note-input { flex: 1 1 auto; min-width: 0; padding: 8px 10px; border-radius: var(--r-2, 10px);
+  border: 1px solid var(--line, rgba(0,0,0,.12)); background: var(--card, #fff); color: inherit; font: inherit; }
