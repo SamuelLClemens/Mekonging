@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.323.0';
+const APP_VERSION = 'mk-v0.324.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -8997,15 +8997,16 @@ function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + e
 // Calls stream from iNaturalist over an <audio> element (its audio hosts are in the
 // page CSP media-src; the API host is in connect-src). We look up Creative-Commons
 // recordings by scientific name and play the top-voted one in-app, crediting the
-// recordist. If the network/API is unavailable or has no recording, we fall back to
-// opening a Xeno-canto page so the call is still reachable (a plain new-tab
-// navigation, not subject to CSP). No audio is bundled, so offline the control just
-// says it needs a connection. A species may optionally carry sound:{ xcQuery, page }
-// to override the sciName-derived lookup.
-const CALL_GROUPS = ['bird', 'mammal', 'insect', 'reptile', 'danger'];
-function hasCall(s) { return !!s && CALL_GROUPS.includes(s.group); }
+// recordist. No audio is bundled, so offline the control just says it needs a
+// connection; if no recording is found we say so in-app rather than navigating away.
+// A species may optionally carry sound:{ xcQuery } to override the sciName-derived lookup.
+//
+// A species is listed in the sounds tool only when it carries `call: true` — i.e. it
+// makes a distinctive sound worth identifying by ear (birds, frogs, cicadas, gibbons,
+// geckos…). Silent species (turtles, snakes, monitors, butterflies, beetles) are
+// deliberately excluded so the list never offers something that cannot play.
+function hasCall(s) { return !!(s && s.call === true); }
 function xcQuery(s) { return (s && s.sound && s.sound.xcQuery) || (s && s.sciName) || (s && s.commonName) || ''; }
-function xcPageUrl(s) { return (s && s.sound && s.sound.page) || `https://xeno-canto.org/explore?query=${encodeURIComponent(xcQuery(s))}`; }
 function inatSoundUrl(s) {
   return `https://api.inaturalist.org/v1/observations?taxon_name=${encodeURIComponent(xcQuery(s))}`
     + '&sounds=true&order_by=votes&per_page=12&license=cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc0';
@@ -9023,13 +9024,12 @@ async function playCall(s, btn, statusEl) {
     if (!snd) throw new Error('no recording');
     if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
     callAudio = new Audio(snd.file_url);
-    callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not stream here — opening a recording online…'; window.open(xcPageUrl(s), '_blank', 'noopener'); });
+    callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
     await callAudio.play();
     const credit = (snd.attribution || '').replace(/^\(c\)\s*/, '').replace(/,\s*some rights reserved.*$/i, '') || 'an iNaturalist contributor';
     statusEl.textContent = `♪ ${s.commonName} — ${credit} · via iNaturalist (CC)`;
   } catch (e) {
-    statusEl.textContent = 'Opening a recording online…';
-    window.open(xcPageUrl(s), '_blank', 'noopener');
+    statusEl.textContent = 'No recording is available for this one yet.';
   } finally {
     btn.disabled = false; btn.textContent = original;
   }
@@ -9043,21 +9043,37 @@ function callControl(s, label) {
 function soundsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Sounds around you', '#nature'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Hear a call and learn what makes it. Tap ▶ to play (streams online); tap a name for the full field guide. Calls stream from iNaturalist (Creative Commons); if none is found, a Xeno-canto page opens instead.'));
-  const GROUPS = [{ id: 'bird', label: 'Birds', emoji: '🐦' }, { id: 'mammal', label: 'Mammals', emoji: '🐘' }, { id: 'insect', label: 'Insects', emoji: '🦗' }, { id: 'reptile', label: 'Frogs & reptiles', emoji: '🐸' }];
-  let group = 'bird';
+  wrap.append(h('p', { class: 'map-hint' }, 'Heard something? Tap ▶ to play the call (streams online), or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings stream from iNaturalist (Creative Commons).'));
+
+  // Every callable species, computed once so the group chips can show live counts.
+  const callable = allSpecies().filter(hasCall);
+  const GROUPS = [
+    { id: '', label: 'All', emoji: '✶' },
+    { id: 'bird', label: 'Birds', emoji: '🐦' },
+    { id: 'mammal', label: 'Mammals', emoji: '🐘' },
+    { id: 'insect', label: 'Insects', emoji: '🦗' },
+    { id: 'reptile', label: 'Frogs & geckos', emoji: '🐸' },
+  ].map((g) => ({ ...g, n: g.id ? callable.filter((s) => s.group === g.id).length : callable.length }))
+    .filter((g) => g.n > 0);
+  let group = '';
+  let query = '';
+
+  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search sounds', placeholder: 'Search by name…',
+    oninput: debounce((e) => { query = e.target.value; renderList(); }, 120) });
+  wrap.append(search);
+
   const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
     h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
       onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
-      `${g.emoji} ${g.label}`)));
+      `${g.emoji} ${g.label} (${g.n})`)));
   wrap.append(chips);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) wrap.append(h('p', { class: 'muted' }, 'You are offline — playing a call needs a connection. The names and field guide still work.'));
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
     listEl.innerHTML = '';
-    const results = allSpecies({ group }).filter(hasCall);
-    if (!results.length) { listEl.append(h('p', { class: 'empty' }, 'No species in this group yet.')); return; }
+    const results = allSpecies({ group: group || undefined, q: query.trim() || undefined }).filter(hasCall);
+    if (!results.length) { listEl.append(h('p', { class: 'empty' }, query.trim() ? 'No calls match your search.' : 'No calls in this group yet.')); return; }
     results.forEach((s) => {
       const status = h('div', { class: 'muted', style: 'font-size:13px' });
       const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');

@@ -8,6 +8,7 @@ export const NATURE = [
   {
     "id": "nat-bird-white-throated-kingfisher",
     "group": "bird",
+    "call": true,
     "commonName": "White-throated Kingfisher",
     "sciName": "Halcyon smyrnensis",
     "localNames": [],
@@ -28,6 +29,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-kingfisher",
     "group": "bird",
+    "call": true,
     "commonName": "Common Kingfisher",
     "sciName": "Alcedo atthis",
     "localNames": [],
@@ -48,6 +50,7 @@ export const NATURE = [
   {
     "id": "nat-bird-oriental-pied-hornbill",
     "group": "bird",
+    "call": true,
     "commonName": "Oriental Pied Hornbill",
     "sciName": "Anthracoceros albirostris",
     "localNames": [],
@@ -68,6 +71,7 @@ export const NATURE = [
   {
     "id": "nat-bird-great-hornbill",
     "group": "bird",
+    "call": true,
     "commonName": "Great Hornbill",
     "sciName": "Buceros bicornis",
     "localNames": [],
@@ -88,6 +92,7 @@ export const NATURE = [
   {
     "id": "nat-bird-little-egret",
     "group": "bird",
+    "call": true,
     "commonName": "Little Egret",
     "sciName": "Egretta garzetta",
     "localNames": [],
@@ -108,6 +113,7 @@ export const NATURE = [
   {
     "id": "nat-bird-cattle-egret",
     "group": "bird",
+    "call": true,
     "commonName": "Eastern Cattle Egret",
     "sciName": "Bubulcus coromandus",
     "localNames": [],
@@ -128,6 +134,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-myna",
     "group": "bird",
+    "call": true,
     "commonName": "Common Myna",
     "sciName": "Acridotheres tristis",
     "localNames": [],
@@ -148,6 +155,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-hill-myna",
     "group": "bird",
+    "call": true,
     "commonName": "Common Hill Myna",
     "sciName": "Gracula religiosa",
     "localNames": [],
@@ -168,6 +176,7 @@ export const NATURE = [
   {
     "id": "nat-bird-olive-backed-sunbird",
     "group": "bird",
+    "call": true,
     "commonName": "Olive-backed Sunbird",
     "sciName": "Cinnyris jugularis",
     "localNames": [],
@@ -188,6 +197,7 @@ export const NATURE = [
   {
     "id": "nat-bird-crimson-sunbird",
     "group": "bird",
+    "call": true,
     "commonName": "Crimson Sunbird",
     "sciName": "Aethopyga siparaja",
     "localNames": [],
@@ -208,6 +218,7 @@ export const NATURE = [
   {
     "id": "nat-bird-black-drongo",
     "group": "bird",
+    "call": true,
     "commonName": "Black Drongo",
     "sciName": "Dicrurus macrocercus",
     "localNames": [],
@@ -228,6 +239,7 @@ export const NATURE = [
   {
     "id": "nat-bird-greater-racket-tailed-drongo",
     "group": "bird",
+    "call": true,
     "commonName": "Greater Racket-tailed Drongo",
     "sciName": "Dicrurus paradiseus",
     "localNames": [],
@@ -248,6 +260,7 @@ export const NATURE = [
   {
     "id": "nat-bird-green-bee-eater",
     "group": "bird",
+    "call": true,
     "commonName": "Asian Green Bee-eater",
     "sciName": "Merops orientalis",
     "localNames": [],
@@ -268,6 +281,7 @@ export const NATURE = [
   {
     "id": "nat-bird-blue-tailed-bee-eater",
     "group": "bird",
+    "call": true,
     "commonName": "Blue-tailed Bee-eater",
     "sciName": "Merops philippinus",
     "localNames": [],
@@ -930,6 +944,7 @@ export const NATURE = [
   {
     "id": "nat-insect-black-mountain-cicada",
     "group": "insect",
+    "call": true,
     "commonName": "Black Mountain Cicada",
     "sciName": "Cryptotympana aquila",
     "localNames": [],
@@ -950,6 +965,7 @@ export const NATURE = [
   {
     "id": "nat-insect-empress-cicada",
     "group": "insect",
+    "call": true,
     "commonName": "Empress Cicada",
     "sciName": "Megapomponia imperatoria",
     "localNames": [],
@@ -1120,6 +1136,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-long-tailed-macaque",
     "group": "mammal",
+    "call": true,
     "commonName": "Long-tailed Macaque",
     "sciName": "Macaca fascicularis",
     "localNames": [
@@ -1143,6 +1160,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-pig-tailed-macaque",
     "group": "mammal",
+    "call": true,
     "commonName": "Northern Pig-tailed Macaque",
     "sciName": "Macaca leonina",
     "localNames": [],
@@ -1163,6 +1181,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-white-handed-gibbon",
     "group": "mammal",
+    "call": true,
     "commonName": "White-handed (Lar) Gibbon",
     "sciName": "Hylobates lar",
     "localNames": [
@@ -1185,6 +1204,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-asian-elephant",
     "group": "mammal",
+    "call": true,
     "commonName": "Asian Elephant",
     "sciName": "Elephas maximus",
     "localNames": [
@@ -1231,6 +1251,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-sambar-deer",
     "group": "mammal",
+    "call": true,
     "commonName": "Sambar Deer",
     "sciName": "Rusa unicolor",
     "localNames": [
@@ -1253,6 +1274,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-common-muntjac",
     "group": "mammal",
+    "call": true,
     "commonName": "Northern Red Muntjac (Barking Deer)",
     "sciName": "Muntiacus vaginalis",
     "localNames": [
@@ -1386,6 +1408,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-variable-squirrel",
     "group": "mammal",
+    "call": true,
     "commonName": "Variable Squirrel",
     "sciName": "Callosciurus finlaysonii",
     "localNames": [
@@ -1408,6 +1431,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-dusky-leaf-monkey",
     "group": "mammal",
+    "call": true,
     "commonName": "Dusky Leaf Monkey (Spectacled Langur)",
     "sciName": "Trachypithecus obscurus",
     "localNames": [
@@ -1727,6 +1751,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-tokay-gecko",
     "group": "reptile",
+    "call": true,
     "commonName": "Tokay Gecko",
     "sciName": "Gekko gecko",
     "localNames": [
@@ -1750,6 +1775,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-common-house-gecko",
     "group": "reptile",
+    "call": true,
     "commonName": "Asian House Gecko",
     "sciName": "Hemidactylus frenatus",
     "localNames": [
@@ -1912,6 +1938,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-asian-common-toad",
     "group": "reptile",
+    "call": true,
     "commonName": "Asian Common Toad",
     "sciName": "Duttaphrynus melanostictus",
     "localNames": [
@@ -1935,6 +1962,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-banded-bullfrog",
     "group": "reptile",
+    "call": true,
     "commonName": "Banded Bullfrog",
     "sciName": "Kaloula pulchra",
     "localNames": [
@@ -1958,6 +1986,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-common-green-tree-frog",
     "group": "reptile",
+    "call": true,
     "commonName": "Common Tree Frog",
     "sciName": "Polypedates leucomystax",
     "localNames": [
@@ -1977,6 +2006,182 @@ export const NATURE = [
       "km": "",
       "lo": ""
     }
+  },
+  {
+    "id": "nat-bird-asian-koel",
+    "group": "bird",
+    "commonName": "Asian Koel",
+    "sciName": "Eudynamys scolopaceus",
+    "localNames": [],
+    "blurb": "A large cuckoo far more often heard than seen, famous for the male's loud, rising 'ko-EL' call repeated through the hot season.",
+    "idTips": "About 40 cm and slender with a long tail and a pale greenish bill. Males are glossy blue-black; females and young are dark brown heavily spotted and barred with white. The eye is deep red. It is usually detected by its far-carrying, escalating call from dense foliage.",
+    "habitat": "Wooded gardens, parks, plantations and forest edges, including in towns.",
+    "where": "Common across Thailand, Vietnam, Cambodia and Laos, especially in the hot months.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-greater-coucal",
+    "group": "bird",
+    "commonName": "Greater Coucal",
+    "sciName": "Centropus sinensis",
+    "localNames": [],
+    "blurb": "A big, heavy, crow-like bird of thickets, known for a deep, resonant 'coop-coop-coop' that carries a long way.",
+    "idTips": "Around 48 cm, all glossy black except for rich chestnut wings; long, broad black tail; heavy black bill and a red eye. Clambers low through dense cover rather than flying far. The low, hollow, accelerating hoot is distinctive.",
+    "habitat": "Dense scrub, tall grass, overgrown gardens, mangroves and forest edge.",
+    "where": "Widespread and common across the region in lowland thickets.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-zebra-dove",
+    "group": "bird",
+    "commonName": "Zebra Dove",
+    "sciName": "Geopelia striata",
+    "localNames": [],
+    "blurb": "A tiny, tame ground-dove whose soft, bubbling coo is one of the constant background sounds of towns and villages.",
+    "idTips": "Small and slim, about 20-23 cm, pale grey-brown with fine black-and-white barring on the neck and sides and a long tail. Walks tamely on lawns and roadsides. The gentle, rapid cooing is prized by songbird keepers.",
+    "habitat": "Gardens, parks, farmland, roadsides and open ground in towns.",
+    "where": "Abundant across the region, especially in Thailand where it is also widely caged.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🕊️",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-spotted-dove",
+    "group": "bird",
+    "commonName": "Spotted Dove",
+    "sciName": "Spilopelia chinensis",
+    "localNames": [],
+    "blurb": "A common medium dove recognised by the white-spotted black half-collar and a calm, repeated cooing.",
+    "idTips": "About 30 cm, warm pinkish-brown with a broad black patch finely spotted white across the back of the neck. A long white-cornered tail shows in flight. The soft 'croo-croo-croo' is a familiar garden sound.",
+    "habitat": "Gardens, farmland, scrub and open country, including towns.",
+    "where": "Very common throughout Thailand, Vietnam, Cambodia and Laos.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🕊️",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-oriental-magpie-robin",
+    "group": "bird",
+    "commonName": "Oriental Magpie-Robin",
+    "sciName": "Copsychus saularis",
+    "localNames": [],
+    "blurb": "A bold black-and-white garden songbird with a rich, varied, whistling song, often delivered from a high perch.",
+    "idTips": "About 20 cm with a long tail often cocked upright. Males are glossy black above and on the breast with a white belly and a long white wing stripe; females are greyer. Sings a loud, musical, improvised song, especially at dawn.",
+    "habitat": "Gardens, parks, villages, plantations and open woodland.",
+    "where": "Common and widespread across the region, including in towns.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-red-whiskered-bulbul",
+    "group": "bird",
+    "commonName": "Red-whiskered Bulbul",
+    "sciName": "Pycnonotus jocosus",
+    "localNames": [],
+    "blurb": "A perky crested bulbul with a red cheek-patch and a cheerful, chattering song, a favourite regional cage-bird.",
+    "idTips": "About 20 cm, brown above and white below with a tall pointed black crest, a red patch behind the eye and red under the tail. Lively and social, giving bright, rollicking calls from bushes and wires.",
+    "habitat": "Gardens, scrub, forest edge and cultivated land.",
+    "where": "Common across the region; heavily trapped for song contests, especially in Thailand.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-coppersmith-barbet",
+    "group": "bird",
+    "commonName": "Coppersmith Barbet",
+    "sciName": "Psilopogon haemacephalus",
+    "localNames": [],
+    "blurb": "A small green barbet named for its monotonous, metronomic 'tuk...tuk...tuk' call, like a coppersmith tapping metal.",
+    "idTips": "About 17 cm, stocky and mostly green with a red forehead and breast patch, yellow face patches and a heavy bill. More often heard than seen among foliage. The steady, far-carrying single note repeats for minutes on end in the heat.",
+    "habitat": "Gardens, parks, open woodland and fruiting trees, including in cities.",
+    "where": "Common across the region wherever there are fruiting trees.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-common-tailorbird",
+    "group": "bird",
+    "commonName": "Common Tailorbird",
+    "sciName": "Orthotomus sutorius",
+    "localNames": [],
+    "blurb": "A tiny, energetic warbler named for stitching leaves into a nest, with a surprisingly loud, ringing 'cheeup-cheeup' call.",
+    "idTips": "About 12 cm, olive-green above and whitish below with a rufous crown and a long tail often held cocked. Skulks in low bushes but calls loudly and persistently. It sews leaves together with plant fibre to hide its nest.",
+    "habitat": "Gardens, hedges, scrub and undergrowth, including in towns.",
+    "where": "Very common across the region in gardens and low cover.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-collared-scops-owl",
+    "group": "bird",
+    "commonName": "Collared Scops Owl",
+    "sciName": "Otus lettia",
+    "localNames": [],
+    "blurb": "A small, common night owl whose soft, single 'whoop' at regular intervals is a familiar after-dark sound of towns and gardens.",
+    "idTips": "About 24 cm, greyish to warm brown with fine markings, small ear-tufts, a pale nuchal collar and dark eyes. Roosts hidden against bark by day. Detected mainly by the quiet, evenly spaced hoot after dusk.",
+    "habitat": "Gardens, parks, groves and wooded edges, including in towns.",
+    "where": "Common but nocturnal across the region.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦉",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-bird-red-junglefowl",
+    "group": "bird",
+    "commonName": "Red Junglefowl",
+    "sciName": "Gallus gallus",
+    "localNames": [],
+    "blurb": "The wild ancestor of the domestic chicken, whose ringing dawn crow rises from forest edges across the region.",
+    "idTips": "The cockerel is spectacular with glossy golden-red neck hackles, dark green tail sickles, a red comb and grey legs; the hen is small and drab brown. It is shy in the wild, unlike village chickens. The crow is shorter and higher-pitched than a farmyard rooster's.",
+    "habitat": "Forest edge, bamboo, scrub and clearings, often near villages.",
+    "where": "Widespread across the region's forests and their margins.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐓",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
+  },
+  {
+    "id": "nat-mammal-pileated-gibbon",
+    "group": "mammal",
+    "commonName": "Pileated Gibbon",
+    "sciName": "Hylobates pileatus",
+    "localNames": [],
+    "blurb": "A tree-dwelling ape whose elaborate, whooping duet songs ring across the forest canopy at dawn.",
+    "idTips": "Long-armed and tailless, swinging hand-over-hand through the canopy. Males are black with white hands, feet and a white face-ring; females are pale buff-grey with a black cap and chest. Pairs sing loud, rising, bubbling duets, mostly in the early morning.",
+    "habitat": "Evergreen and semi-evergreen forest canopy.",
+    "where": "Southeast Thailand, western Cambodia and southwest Laos; heard far more often than seen.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐒",
+    "names": {"th": "", "vi": "", "km": "", "lo": ""},
+    "call": true
   }
 ];
 
