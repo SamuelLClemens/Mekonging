@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.324.0';
+const APP_VERSION = 'mk-v0.325.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -7597,7 +7597,7 @@ function foodCard(d) {
     : verdict === 'ok'
       ? h('span', { class: 'food-flag ok', role: 'img', 'aria-label': okLabel, title: okLabel }, '✓')
       : null;
-  return h('button', { class: cls, onclick: () => go(`#dish-${d.id}`) }, [
+  const main = h('button', { class: 'id-cardmain', onclick: () => go(`#dish-${d.id}`) }, [
     recogThumb(d, cat ? cat.emoji : '🍽'),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
@@ -7610,6 +7610,7 @@ function foodCard(d) {
     badge,
     h('span', { class: 'fair' }, d.price ? range(d.price.low, d.price.high, d.price.currency) : ''),
   ]);
+  return h('div', { class: cls + ' id-cardrow' }, [main, idPinStar('dish', d.id)]);
 }
 
 // ---- PERSONAL IDENTIFIER ----------------------------------------------------
@@ -7628,11 +7629,67 @@ function toggleIdPin(type, id) {
   const list = idPinList();
   const key = idPinKey(type, id);
   const i = list.indexOf(key);
-  if (i >= 0) list.splice(i, 1); else list.push(key);
+  if (i >= 0) { list.splice(i, 1); delete idPinMetaMap()[key]; } else list.push(key);
   save();
   return i < 0;   // true when it is now pinned
 }
 function idPinCount() { return idPinList().length; }
+
+// ---- pin organisation: tags (the user's own categories) + notes + reorder --------
+function idPinMetaMap() { const p = store.profile.prefs; if (!p.idPinMeta || typeof p.idPinMeta !== 'object') p.idPinMeta = {}; return p.idPinMeta; }
+function idMetaGet(key) { const m = idPinMetaMap()[key]; return { tags: (m && Array.isArray(m.tags)) ? m.tags : [], note: (m && m.note) || '' }; }
+function idMetaEnsure(key) { const map = idPinMetaMap(); if (!map[key] || typeof map[key] !== 'object') map[key] = { tags: [], note: '' }; if (!Array.isArray(map[key].tags)) map[key].tags = []; if (typeof map[key].note !== 'string') map[key].note = ''; return map[key]; }
+function idPruneMeta(key) { const map = idPinMetaMap(); const m = map[key]; if (m && (!m.tags || !m.tags.length) && !m.note) delete map[key]; }
+// Every tag currently in use across pinned items, de-duplicated (case-insensitive), in
+// first-seen (idPins) order — these are the user's custom categories.
+function idAllTags() {
+  const seen = new Map();
+  idPinList().forEach((key) => idMetaGet(key).tags.forEach((t) => { const k = t.toLowerCase(); if (!seen.has(k)) seen.set(k, t); }));
+  return [...seen.values()];
+}
+function idAddTag(key, raw) {
+  const tag = String(raw || '').trim().slice(0, 24);
+  if (!tag) return false;
+  const m = idMetaEnsure(key);
+  if (m.tags.some((t) => t.toLowerCase() === tag.toLowerCase())) return false;
+  if (m.tags.length >= 8) return false;   // keep it tidy
+  m.tags.push(tag); save(); return true;
+}
+function idRemoveTag(key, tag) {
+  const m = idMetaEnsure(key);
+  const i = m.tags.findIndex((t) => t.toLowerCase() === String(tag).toLowerCase());
+  if (i >= 0) { m.tags.splice(i, 1); save(); idPruneMeta(key); }
+}
+function idSetNote(key, raw) {
+  const note = String(raw || '').trim().slice(0, 160);
+  const m = idMetaEnsure(key); m.note = note; save(); idPruneMeta(key);
+}
+// Reorder within a display group: swap `key` with its neighbour among `groupKeys`
+// (the ordered keys shown in that group), writing the swap back into idPins so the
+// order persists. dir is -1 (up) or +1 (down).
+function idMovePin(key, dir, groupKeys) {
+  const gi = groupKeys.indexOf(key);
+  const gj = gi + dir;
+  if (gi < 0 || gj < 0 || gj >= groupKeys.length) return;
+  const list = idPinList();
+  const a = list.indexOf(key);
+  const b = list.indexOf(groupKeys[gj]);
+  if (a < 0 || b < 0) return;
+  list[a] = groupKeys[gj]; list[b] = key;
+  save();
+}
+// A compact save/remove star for the identify browse lists — quick-pin without opening
+// the detail page. Stops propagation so it never triggers the row's navigation.
+function idPinStar(type, id) {
+  const pinned = isIdPinned(type, id);
+  return h('button', {
+    class: 'id-star' + (pinned ? ' on' : ''),
+    'aria-pressed': pinned ? 'true' : 'false',
+    'aria-label': pinned ? 'Saved to my identifier — tap to remove' : 'Save to my identifier',
+    title: pinned ? 'Saved — tap to remove' : 'Save to my identifier',
+    onclick: (e) => { e.stopPropagation(); toggleIdPin(type, id); render(); },
+  }, pinned ? '★' : '☆');
+}
 // A full-width save/remove toggle for an identify detail screen. Re-renders the current
 // screen on tap so the label flips immediately and the count stays honest.
 function idPinButton(type, id) {
@@ -7887,13 +7944,14 @@ let produceQuery = '';
 let produceCat = '';
 function produceCard(p) {
   const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
-  return h('button', { class: 'card species-card', onclick: () => go(`#produce-${p.id}`) }, [
+  const main = h('button', { class: 'id-cardmain', onclick: () => go(`#produce-${p.id}`) }, [
     recogThumb(p, p.emoji || (cat ? cat.emoji : '🍈')),
     h('span', { class: 'grow' }, [
       h('div', { class: 'en' }, p.name),
       h('div', { class: 'sci' }, `${(p.names && p.names.th) || ''}${p.season ? ' · ' + p.season : ''}`),
     ]),
   ]);
+  return h('div', { class: 'card species-card id-cardrow' }, [main, idPinStar('produce', p.id)]);
 }
 function produceScreen() {
   const wrap = h('div', { class: 'screen' });
@@ -9134,11 +9192,12 @@ function natureScreen() {
 
 function speciesCard(s) {
   const g = NATURE_GROUPS.find((x) => x.id === s.group);
-  return h('button', { class: 'card species-card', onclick: () => go(`#species-${s.id}`) }, [
+  const main = h('button', { class: 'id-cardmain', onclick: () => go(`#species-${s.id}`) }, [
     recogThumb(s, s.emoji || (g && g.emoji) || '🔎'),
     h('span', { class: 'grow' }, [h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || '')]),
     s.dangerous ? h('span', { class: 'tier high' }, 'Caution') : null,
   ]);
+  return h('div', { class: 'card species-card id-cardrow' }, [main, idPinStar('species', s.id)]);
 }
 
 function speciesScreen(id) {
@@ -9185,6 +9244,58 @@ function idSavedSub(type, o) {
   if (type === 'dish') return o.countryName || '';
   return o.season || (o.names && o.names.th) || '';
 }
+let idViewMode = 'type';   // 'type' (auto groups) | 'tag' (the user's own categories)
+let idEditKey = null;      // "type:id" of the saved row whose edit panel is open, or null
+
+// One saved row: reopen (tap the name), reorder within its group (↑/↓), edit (✎ →
+// tags + note), and remove (✕). `groupKeys` is the ordered list of keys shown in this
+// group, so the move buttons know the row's position and where the swap lands.
+function idSavedRow(type, spec, o, groupKeys) {
+  const key = idPinKey(type, o.id);
+  const meta = idMetaGet(key);
+  const sub = idSavedSub(type, o);
+  const gi = groupKeys.indexOf(key);
+  const editing = idEditKey === key;
+
+  const main = h('button', { class: 'id-saved-main', onclick: () => go(spec.hash(o.id)) }, [
+    h('span', { class: 'id-saved-emoji' }, o.emoji || spec.emoji),
+    h('span', { class: 'id-saved-txt' }, [
+      h('span', { class: 'id-saved-name' }, spec.name(o)),
+      sub ? h('span', { class: 'id-saved-sub' }, sub) : null,
+      meta.tags.length ? h('span', { class: 'id-saved-tags' }, meta.tags.map((t) => h('span', { class: 'id-tag' }, t))) : null,
+      meta.note ? h('span', { class: 'id-saved-note' }, `📝 ${meta.note}`) : null,
+    ]),
+  ]);
+  const ctrls = h('div', { class: 'id-row-ctrls' }, [
+    h('button', { class: 'chip id-move', 'aria-label': `Move ${spec.name(o)} up`, disabled: gi <= 0 ? '' : null,
+      onclick: () => { idMovePin(key, -1, groupKeys); render(); } }, '↑'),
+    h('button', { class: 'chip id-move', 'aria-label': `Move ${spec.name(o)} down`, disabled: gi >= groupKeys.length - 1 ? '' : null,
+      onclick: () => { idMovePin(key, 1, groupKeys); render(); } }, '↓'),
+    h('button', { class: 'chip id-editbtn' + (editing ? ' on' : ''), 'aria-pressed': editing ? 'true' : 'false', 'aria-label': `Edit ${spec.name(o)}`,
+      onclick: () => { idEditKey = editing ? null : key; render(); } }, '✎'),
+    h('button', { class: 'chip id-remove', 'aria-label': `Remove ${spec.name(o)}`,
+      onclick: () => { if (idEditKey === key) idEditKey = null; toggleIdPin(type, o.id); render(); } }, '✕'),
+  ]);
+  const rowTop = h('div', { class: 'id-saved-row' }, [main, ctrls]);
+  if (!editing) return rowTop;
+
+  const tagChips = meta.tags.map((t) =>
+    h('button', { class: 'id-tag removable', 'aria-label': `Remove tag ${t}`, onclick: () => { idRemoveTag(key, t); render(); } }, [t, h('span', { class: 'x' }, '✕')]));
+  const tagInput = h('input', { class: 'id-tag-input', type: 'text', list: 'id-tags-datalist', placeholder: 'Add a category / tag…', maxlength: '24',
+    onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); if (idAddTag(key, e.target.value)) render(); } } });
+  const addBtn = h('button', { class: 'btn ghost id-tag-addbtn', onclick: () => { if (idAddTag(key, tagInput.value)) render(); } }, 'Add');
+  const noteInput = h('input', { class: 'id-note-input', type: 'text', value: meta.note, placeholder: 'Add a note (e.g. tried in Pai, loved it)…', maxlength: '160',
+    onchange: (e) => { idSetNote(key, e.target.value); } });
+  const panel = h('div', { class: 'id-edit-panel' }, [
+    h('div', { class: 'id-edit-label' }, 'Categories / tags'),
+    tagChips.length ? h('div', { class: 'id-edit-tags' }, tagChips) : h('div', { class: 'muted', style: 'font-size:13px;margin:2px 0' }, 'No tags yet — add one to file this into a category.'),
+    h('div', { class: 'id-tag-add' }, [tagInput, addBtn]),
+    h('div', { class: 'id-edit-label' }, 'Note'),
+    noteInput,
+  ]);
+  return h('div', { class: 'id-saved-block' }, [rowTop, panel]);
+}
+
 function myIdentifierScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('My identifier', '#me'));
@@ -9200,40 +9311,60 @@ function myIdentifierScreen() {
     wrap.append(h('div', { class: 'card' }, [
       h('strong', {}, '🔎 Your personal identifier'),
       h('p', { class: 'muted', style: 'margin:6px 0 10px' },
-        'Save any dish, fruit, or animal you identify and it collects here — offline, on your device. Nothing saved yet — start with a tool below.'),
+        'Save any dish, fruit, or animal you identify and it collects here — offline, on your device. Tap ☆ on any item in the identify tools, or ★ Save on its page. Nothing saved yet — start with a tool below.'),
       h('div', { class: 'grid' }, exploreTiles.map(sectionTile)),
     ]));
     mount(wrap, '#me');
     return;
   }
   wrap.append(h('p', { class: 'map-hint' },
-    'Everything you saved from the identify tools, gathered here and kept on your device. Tap to reopen, or remove what you no longer need.'));
-  Object.keys(ID_TYPES).forEach((type) => {
-    const spec = ID_TYPES[type];
-    const items = list
-      .filter((k) => k.slice(0, type.length + 1) === type + ':')
-      .map((k) => spec.get(k.slice(type.length + 1)))
-      .filter(Boolean);
-    if (!items.length) return;
-    const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [
-      h('h3', { style: 'margin-top:0' }, `${spec.emoji} ${spec.label} · ${items.length}`),
-    ]);
-    items.forEach((o) => {
-      const sub = idSavedSub(type, o);
-      card.append(h('div', { class: 'id-saved-row' }, [
-        h('button', { class: 'id-saved-main', onclick: () => go(spec.hash(o.id)) }, [
-          h('span', { class: 'id-saved-emoji' }, o.emoji || spec.emoji),
-          h('span', { class: 'id-saved-txt' }, [
-            h('span', { class: 'id-saved-name' }, spec.name(o)),
-            sub ? h('span', { class: 'id-saved-sub' }, sub) : null,
-          ]),
-        ]),
-        h('button', { class: 'chip id-remove', 'aria-label': `Remove ${spec.name(o)}`,
-          onclick: () => { toggleIdPin(type, o.id); render(); } }, '✕'),
-      ]));
+    'Everything you saved from the identify tools, kept on your device. Tap to reopen; use ✎ to file items into your own categories and add notes, and ↑ ↓ to reorder.'));
+
+  // Datalist of the categories already in use, so adding a tag can reuse them.
+  wrap.append(h('datalist', { id: 'id-tags-datalist' }, idAllTags().map((t) => h('option', { value: t }))));
+
+  const modes = [{ id: 'type', label: 'By type' }, { id: 'tag', label: 'By category' }];
+  wrap.append(h('div', { class: 'chips id-viewtoggle' }, modes.map((m) =>
+    h('button', { class: 'chip', 'aria-pressed': idViewMode === m.id ? 'true' : 'false',
+      onclick: () => { if (idViewMode !== m.id) { idViewMode = m.id; idEditKey = null; render(); } } }, m.label))));
+
+  if (idViewMode === 'type') {
+    Object.keys(ID_TYPES).forEach((type) => {
+      const spec = ID_TYPES[type];
+      const items = list
+        .filter((k) => k.slice(0, type.length + 1) === type + ':')
+        .map((k) => spec.get(k.slice(type.length + 1)))
+        .filter(Boolean);
+      if (!items.length) return;
+      const groupKeys = items.map((o) => idPinKey(type, o.id));
+      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [
+        h('h3', { style: 'margin-top:0' }, `${spec.emoji} ${spec.label} · ${items.length}`),
+      ]);
+      items.forEach((o) => card.append(idSavedRow(type, spec, o, groupKeys)));
+      wrap.append(card);
     });
-    wrap.append(card);
-  });
+  } else {
+    const cats = idAllTags();
+    if (!cats.length) {
+      wrap.append(h('div', { class: 'card' }, [
+        h('p', { class: 'muted', style: 'margin:0' }, 'No categories yet. Switch to “By type”, tap ✎ on any item, and add a tag — your categories appear here.'),
+      ]));
+    }
+    const resolve = (k) => { const type = k.slice(0, k.indexOf(':')); const spec = ID_TYPES[type]; const o = spec && spec.get(k.slice(type.length + 1)); return o ? { type, spec, o, key: k } : null; };
+    const groups = cats.map((tag) => ({ tag, keys: list.filter((k) => idMetaGet(k).tags.some((t) => t.toLowerCase() === tag.toLowerCase())) }));
+    const untagged = list.filter((k) => !idMetaGet(k).tags.length);
+    if (untagged.length) groups.push({ tag: null, keys: untagged });
+    groups.forEach(({ tag, keys }) => {
+      const resolved = keys.map(resolve).filter(Boolean);
+      if (!resolved.length) return;
+      const groupKeys = resolved.map((r) => r.key);
+      const header = tag ? `🏷 ${tag} · ${resolved.length}` : `• Untagged · ${resolved.length}`;
+      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [h('h3', { style: 'margin-top:0' }, header)]);
+      resolved.forEach((r) => card.append(idSavedRow(r.type, r.spec, r.o, groupKeys)));
+      wrap.append(card);
+    });
+  }
+
   wrap.append(h('h2', { class: 'home-section' }, 'Identify more'));
   wrap.append(h('div', { class: 'grid' }, exploreTiles.map(sectionTile)));
   mount(wrap, '#me');
