@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.327.0';
+const APP_VERSION = 'mk-v0.328.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2233,6 +2233,19 @@ function homeScreen() {
       ? (ctx0.near ? ctx0.near.spot : focusSpot().spot)
       : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
     ensureHomeWeather(phaseSpot);
+  }
+
+  // Budget at a glance, right on Home: the by-category pie against the total the traveller
+  // sets, plus spend-vs-budget and a one-tap "set a budget". Returns null until there is a
+  // spend or a target, so a fresh Home stays uncluttered; tapping through opens the full log.
+  {
+    const bc = budgetSummaryCard();
+    if (bc) {
+      bc.style.marginTop = '10px';
+      bc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') },
+        store.trip.budgetLog.length ? 'Log spend & see all →' : 'Log your first spend →'));
+      wrap.append(bc);
+    }
   }
 
   // Search everything.
