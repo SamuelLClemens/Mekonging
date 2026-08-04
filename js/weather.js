@@ -20,6 +20,8 @@ export const WEATHER_SPOTS = [
   { country: 'th', city: 'Chiang Mai', lat: 18.7883, lng: 98.9853 },
   { country: 'th', city: 'Chiang Rai', lat: 19.9105, lng: 99.8406 },
   { country: 'th', city: 'Pai', lat: 19.3583, lng: 98.4406 },
+  { country: 'th', city: 'Mae Hong Son', lat: 19.3020, lng: 97.9654 },
+  { country: 'th', city: 'Mae Sariang', lat: 18.1637, lng: 97.9316 },
   { country: 'th', city: 'Phuket', lat: 7.8804, lng: 98.3923 },
   { country: 'th', city: 'Krabi', lat: 8.0863, lng: 98.9063 },
   { country: 'th', city: 'Koh Samui', lat: 9.5120, lng: 100.0136 },
