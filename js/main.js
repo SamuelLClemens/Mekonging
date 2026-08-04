@@ -253,7 +253,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.336.0';
+const APP_VERSION = 'mk-v0.337.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2032,9 +2032,30 @@ function quickSpendRow(id) {
 // phase's primary action lifted on top and a one-tap spend at the foot — the four old blocks
 // (phaseNextBest, journey companion, right-now, daily strip) merged into one, with the
 // duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
+// Arrived-only: a 24h watch-face weather ring right at the top of Home, so "what's it doing
+// right now, right here" reads at a glance the moment you land — the same ring already used
+// on the Weather screen (wxHourlyRingSvg), just compact and tapping through to the full view.
+function homeWeatherRing() {
+  const ctx = contextNow();
+  const spot = ctx.near ? ctx.near.spot : null;
+  if (!spot) return null;
+  const rec = getCachedWeather(spotKey(spot));
+  if (!rec || !Array.isArray(rec.hourly) || !rec.hourly.length) return null;
+  const ring = wxHourlyRingSvg(rec, 'temp', spot.city);
+  if (!ring) return null;
+  return h('button', { class: 'home-wx-ring', 'aria-label': `Weather ring for ${spot.city} — open full forecast`, onclick: () => go('#weather') }, [
+    h('div', { class: 'wx-ring-wrap', html: ring }),
+    h('p', { class: 'muted small', style: 'text-align:center;margin:0' }, 'Next 24 hours · full forecast →'),
+  ]);
+}
+
 function homeNowCard(phase, cc) {
   const card = rightNowSection();               // .right-now — moment header + live picks (or a location invite)
   const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
+  if (phase === 'arrived') {
+    const ring = homeWeatherRing();
+    if (ring) card.insertBefore(ring, head || null);
+  }
   const nb = phaseNextBest(phase, cc);
   if (nb) { nb.style.margin = '10px 0 2px'; card.insertBefore(nb, head ? head.nextSibling : null); }
   // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty
@@ -2108,23 +2129,13 @@ function homeScreen() {
     if (bc) {
       bc.style.marginTop = '10px';
       bc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') },
-        store.trip.budgetLog.length ? 'Log spend & see all →' : 'Log your first spend →'));
+        store.trip.budgetLog.length ? 'Log expense & see all →' : 'Log your first expense →'));
       wrap.append(bc);
     }
   }
 
   // Search everything.
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
-  if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
-    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--orange); margin-top:8px' }, [
-      h('strong', {}, '⬇️ Back up your journal & budget'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Save a copy to your phone so you never lose your entries — updates keep them safe, and a backup protects you if the device is lost.'),
-      h('div', { class: 'row-between' }, [
-        h('button', { class: 'btn', onclick: () => go('#settings') }, 'Back up now'),
-        h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
-      ]),
-    ]));
-  }
 
   wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
 
@@ -2132,8 +2143,6 @@ function homeScreen() {
   // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
   // focused country's hub (the "Explore" button above), so there is one menu per context
   // instead of Home and the hub duplicating each other.
-  const cPts = gamify.contributionPoints(store);
-  const cLvl = gamify.levelInfo(cPts);
   const groups = [
     { label: 'Plan your trip', items: [
       { ic: ICON.route, t: 'Trip plans', d: 'Routes that fit you', hash: '#plans' },
@@ -2142,7 +2151,6 @@ function homeScreen() {
       { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
       { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + map', hash: '#journal' },
       { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
-      { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
       { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
       { ic: ICON.star, t: 'Saved & collections', d: 'Organise by theme', hash: '#saved' },
     ] },
@@ -2250,6 +2258,19 @@ function meHubScreen() {
   lead.append(h('div', { class: 'chips', style: 'margin-top:10px' }, resume));
   wrap.append(lead);
 
+  // A gentle nudge to back up once there is something worth protecting — lives here rather
+  // than on Home, since this hub already holds the journal/budget it is protecting.
+  if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
+    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--orange); margin-top:12px' }, [
+      h('strong', {}, '⬇️ Back up your journal & budget'),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Save a copy to your phone so you never lose your entries — updates keep them safe, and a backup protects you if the device is lost.'),
+      h('div', { class: 'row-between' }, [
+        h('button', { class: 'btn', onclick: () => go('#settings') }, 'Back up now'),
+        h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
+      ]),
+    ]));
+  }
+
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);
   if (up.length) {
@@ -2269,7 +2290,7 @@ function meHubScreen() {
   const spendCard = budgetSummaryCard();
   if (spendCard) {
     spendCard.style.marginTop = '12px';
-    spendCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') }, exN ? 'Log spend & see all →' : 'Log your first spend →'));
+    spendCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') }, exN ? 'Log expense & see all →' : 'Log your first expense →'));
     wrap.append(spendCard);
   }
 
@@ -2290,7 +2311,7 @@ function meHubScreen() {
   // Trip & money — the record-keeping surfaces.
   wrap.append(grp('🎒', 'Trip & money', [
     { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
-    { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log spend vs budget', hash: '#expenses' },
+    { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log expense vs budget', hash: '#expenses' },
     { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget', hash: '#trip' },
     { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
     { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
@@ -9499,7 +9520,7 @@ function tripScreen() {
   const bCur = currencySelect(c ? c.currency : 'THB');
   const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what?' });
   const bCat = expCatPicker('other');
-  bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log a spend'), bAmt, bCur, bNote, bCat,
+  bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log an expense'), bAmt, bCur, bNote, bCat,
     h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get() }); go('#trip'); } } }, 'Add spend')]));
   wrap.append(bud);
   mount(wrap, '#home');
@@ -9574,18 +9595,51 @@ const EXP_CATS = [
 const EXP_CAT = Object.fromEntries(EXP_CATS.map((c) => [c.id, c]));
 function expCatOf(b) { return (b && EXP_CAT[b.category]) ? b.category : 'other'; }
 
-// Segmented category picker. Reflects the choice in place and exposes .get().
+// Segmented category picker. Reflects the choice in place and exposes .get()/.set().
 function expCatPicker(current) {
   let val = EXP_CAT[current] ? current : 'other';
   const row = h('div', { class: 'chips exp-cat-pick' });
+  const apply = () => { [...row.children].forEach((x, i) => { const on = EXP_CATS[i].id === val; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); }); };
   EXP_CATS.forEach((c) => {
     row.append(h('button', {
       type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
-      onclick: () => { val = c.id; [...row.children].forEach((x, i) => { const on = EXP_CATS[i].id === val; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); }); },
+      onclick: () => { val = c.id; apply(); },
     }, `${c.emoji} ${c.label}`));
   });
   row.get = () => val;
+  row.set = (id) => { if (EXP_CAT[id]) { val = id; apply(); } };
   return row;
+}
+
+// Titles ("On what?") the traveller has typed two or more times before, most-used first —
+// offered as one-tap chips so a repeat expense (the daily coffee, the nightly room) never
+// needs retyping. Each remembers the category most often paired with that exact title, so
+// tapping the chip fills in both the name and the right bucket in one go.
+function frequentExpenseTitles() {
+  const counts = new Map();   // key: lowercased title -> { title, n, cats: Map<category,count> }
+  (store.trip.budgetLog || []).forEach((b) => {
+    const t = (b.note || '').trim();
+    if (!t) return;
+    const key = t.toLowerCase();
+    const rec = counts.get(key) || { title: t, n: 0, cats: new Map() };
+    rec.n++;
+    const cat = expCatOf(b);
+    rec.cats.set(cat, (rec.cats.get(cat) || 0) + 1);
+    counts.set(key, rec);
+  });
+  return [...counts.values()]
+    .filter((r) => r.n >= 2)
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 6)
+    .map((r) => ({ title: r.title, category: [...r.cats.entries()].sort((a, b) => b[1] - a[1])[0][0] }));
+}
+// A row of quick-pick chips for frequent expense titles; filling `noteEl` (and, when given,
+// selecting the matching bucket on `catPicker`) in one tap. Returns null if nothing qualifies.
+function expTitleChips(noteEl, catPicker) {
+  const freq = frequentExpenseTitles();
+  if (!freq.length) return null;
+  return h('div', { class: 'chips exp-title-chips' }, freq.map((f) =>
+    h('button', { type: 'button', class: 'chip ghost', onclick: () => { noteEl.value = f.title; if (catPicker) catPicker.set(f.category); } }, f.title)));
 }
 
 // Budget target in home currency, per whole trip or per day. Stored in prefs so it
@@ -9700,29 +9754,48 @@ function budgetTargetEditor() {
   return det;
 }
 
+// A short, locale-aware date label for the expense list ("Today", "Yesterday", or a short date).
+function fmtLogDate(iso) {
+  if (!iso) return '';
+  const t = todayISO();
+  if (iso === t) return 'Today';
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  if (iso === `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`) return 'Yesterday';
+  const d = new Date(`${iso}T00:00`);
+  return isNaN(d) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 function budgetLogRow(b) {
   if (editExpenseId === b.id) {
     const amt = h('input', { type: 'number', inputmode: 'decimal', value: b.amount });
     const cur = currencySelect(b.currency || 'THB');
+    const dt = h('input', { type: 'date', value: b.date || todayISO() });
     const note = h('input', { type: 'text', value: b.note || '', placeholder: 'On what?' });
     const cat = expCatPicker(expCatOf(b));
+    const chips = expTitleChips(note, cat);
     return h('div', { class: 'card', style: 'margin:6px 0' }, [
-      field('Amount', amt), field('Currency', cur), field('On what?', note), field('Category', cat),
+      h('div', { style: 'display:flex;gap:10px' }, [field('Amount', amt), field('Currency', cur)]),
+      field('On what?', note), chips, field('Category', cat), field('Date', dt),
       h('div', { class: 'row-between', style: 'margin-top:6px' }, [
         h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
-        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), category: cat.get() }); editExpenseId = null; render(); } }, 'Save'),
+        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), category: cat.get(), date: dt.value || b.date }); editExpenseId = null; render(); } }, 'Save'),
       ]),
     ]);
   }
   const approx = approxHome(b.amount, b.currency);
   const cat = EXP_CAT[expCatOf(b)];
-  return h('div', { class: 'row-between price-item' }, [
-    h('span', {}, [h('span', { class: 'exp-cat-dot', style: `background:${cat.color}`, title: cat.label }), `${b.date} · ${b.note || 'spend'}`]),
-    h('span', {}, [
+  return h('div', { class: 'exp-row' }, [
+    h('span', { class: 'exp-row-cat', style: `background:${cat.color}22;color:${cat.color}`, title: cat.label }, cat.emoji),
+    h('div', { class: 'exp-row-mid' }, [
+      h('div', { class: 'exp-row-note' }, b.note || cat.label),
+      h('div', { class: 'exp-row-date muted' }, fmtLogDate(b.date)),
+    ]),
+    h('div', { class: 'exp-row-amt' }, [
       h('strong', {}, `${b.amount} ${b.currency}`),
-      approx ? h('span', { class: 'muted', style: 'font-size:12px' }, ` ${approx}`) : null, ' ',
-      h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editExpenseId = b.id; render(); } }, '✎'), ' ',
-      h('button', { class: 'chip', 'aria-label': 'Delete', onclick: () => { confirmAction({ title: 'Delete this spend?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteBudgetItem(b.id); render(); } }); } }, '✕'),
+      approx ? h('span', { class: 'muted exp-row-approx' }, approx) : null,
+    ]),
+    h('div', { class: 'exp-row-actions' }, [
+      h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editExpenseId = b.id; render(); } }, '✎'),
+      h('button', { class: 'chip', 'aria-label': 'Delete', onclick: () => { confirmAction({ title: 'Delete this expense?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteBudgetItem(b.id); render(); } }); } }, '✕'),
     ]),
   ]);
 }
@@ -9742,12 +9815,15 @@ function expensesScreen() {
 
   const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const bCur = currencySelect(c ? c.currency : 'THB');
+  const bDate = h('input', { 'aria-label': 'Date', type: 'date', value: todayISO() });
   const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
   const bCat = expCatPicker('other');
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Log a spend'),
-    field('Amount', bAmt), field('Currency', bCur), field('On what?', bNote), field('Category', bCat),
-    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get() }); go('#expenses'); } } }, '＋ Add expense'),
+  const bChips = expTitleChips(bNote, bCat);
+  wrap.append(h('div', { class: 'card exp-add-card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Log an expense'),
+    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
+    field('On what?', bNote), bChips, field('Category', bCat), field('Date', bDate),
+    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date: bDate.value }); go('#expenses'); } } }, '＋ Add expense'),
   ]));
 
   const log = store.trip.budgetLog.slice().reverse();

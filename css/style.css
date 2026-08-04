@@ -619,6 +619,26 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .budget-set summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
 .exp-cat-pick .chip.on { background: var(--sun); color: var(--ink); border-color: transparent; font-weight: 700; }
 .exp-cat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
+/* Modernised expense form + log row */
+.exp-add-card .field { margin-top: var(--sp-3); }
+.exp-title-chips { margin: 2px 0 var(--sp-2); }
+.exp-title-chips .chip { font-size: var(--fs-xs, 0.78rem); padding-top: 4px; padding-bottom: 4px; }
+.exp-row {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-2); border-radius: var(--r-lg);
+  border-bottom: 1px solid var(--line);
+}
+.exp-row:last-child { border-bottom: none; }
+.exp-row-cat {
+  flex: none; width: 34px; height: 34px; border-radius: var(--r-pill);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.exp-row-mid { flex: 1 1 auto; min-width: 0; }
+.exp-row-note { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-row-date { font-size: var(--fs-xs, 0.78rem); margin-top: 1px; }
+.exp-row-amt { flex: none; text-align: right; font-size: var(--fs-sm); }
+.exp-row-approx { display: block; font-size: var(--fs-xs, 0.78rem); }
+.exp-row-actions { flex: none; display: flex; gap: 4px; }
 
 /* "Show to a local": full-screen, very large native script */
 .bigphrase {
@@ -1747,6 +1767,9 @@ html[data-theme="dark"] .id-edit-panel { background: rgba(255,255,255,0.06); }
 .wx-ring-sub { font-size: 13px; font-weight: 600; fill: var(--ink, #2A2118); }
 .wx-ring-sub2 { font-size: 10px; fill: var(--muted, #8a8a8a); letter-spacing: .1em; }
 html[data-theme="dark"] .wx-ring-val, html[data-theme="dark"] .wx-ring-sub { fill: #F3ECDD; }
+/* Compact watch-ring on Home (Arrived phase) — same ring, smaller and tappable through to Weather */
+.home-wx-ring { display: block; width: 100%; background: none; border: none; padding: 0; margin: 0 0 10px; cursor: pointer; }
+.home-wx-ring .wx-ring { width: min(52vw, 190px); }
 .wx-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .wx-cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted, #8a8a8a); padding-bottom: 2px; }
 .wx-cal-cell { min-height: 46px; border-radius: 8px; background: rgba(0,0,0,0.045); padding: 3px 2px;
