@@ -138,7 +138,7 @@ export async function refreshWeather(spot) {
     + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,apparent_temperature'
     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,'
     + 'precipitation_probability_max,precipitation_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
-    + '&timezone=auto&forecast_days=7';
+    + '&timezone=auto&forecast_days=16';
   try {
     const res = await fetch(url);
     const d = await res.json();

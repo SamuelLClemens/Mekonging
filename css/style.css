@@ -1736,3 +1736,27 @@ html[data-theme="dark"] .id-edit-panel { background: rgba(255,255,255,0.06); }
 .id-tag-addbtn { flex: 0 0 auto; }
 .id-tag-input, .id-note-input { flex: 1 1 auto; min-width: 0; padding: 8px 10px; border-radius: var(--r-2, 10px);
   border: 1px solid var(--line, rgba(0,0,0,.12)); background: var(--card, #fff); color: inherit; font: inherit; }
+
+/* Weather visualisation — hourly watch-face ring + month calendar (mk-v0.327.0) */
+.wx-viz .wx-metric-row { margin: 2px 0 8px; justify-content: center; }
+.wx-ring-wrap { display: flex; justify-content: center; margin: 2px 0; }
+.wx-ring { width: min(80vw, 290px); height: auto; }
+.wx-ring-lbl { font-size: 11px; fill: var(--muted, #7a7a7a); font-weight: 600; }
+.wx-ring-now { fill: var(--accent, #C0431A); }
+.wx-ring-val { font-size: 30px; font-weight: 800; fill: var(--ink, #2A2118); }
+.wx-ring-sub { font-size: 13px; font-weight: 600; fill: var(--ink, #2A2118); }
+.wx-ring-sub2 { font-size: 10px; fill: var(--muted, #8a8a8a); letter-spacing: .1em; }
+html[data-theme="dark"] .wx-ring-val, html[data-theme="dark"] .wx-ring-sub { fill: #F3ECDD; }
+.wx-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.wx-cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted, #8a8a8a); padding-bottom: 2px; }
+.wx-cal-cell { min-height: 46px; border-radius: 8px; background: rgba(0,0,0,0.045); padding: 3px 2px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+.wx-cal-cell.empty { background: none; }
+.wx-cal-cell.nodata { background: rgba(0,0,0,0.03); }
+.wx-cal-cell.today { outline: 2px solid var(--accent, #C0431A); outline-offset: -1px; }
+.wx-cal-num { font-size: 11px; font-weight: 700; color: #1e1e1e; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+.wx-cal-emo { font-size: 15px; line-height: 1.15; }
+.wx-cal-v { font-size: 10px; font-weight: 700; color: #1e1e1e; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+.wx-cal-cell.nodata .wx-cal-num { color: var(--muted, #8a8a8a); text-shadow: none; }
+html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
+html[data-theme="dark"] .wx-cal-cell.nodata { background: rgba(255,255,255,0.035); }

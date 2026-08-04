@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.326.0';
+const APP_VERSION = 'mk-v0.327.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -8342,11 +8342,12 @@ function weatherScreen(country) {
       ]));
       body.append(h('div', { class: 'card' }, [airBlock(spot)]));
       if (rec.daily && rec.daily[0]) { const uvn = uvLineNode(rec.daily[0].uv, { advice: true }); if (uvn) body.append(h('div', { class: 'card' }, [uvn])); }
+      if (rec.hourly && rec.hourly.length) body.append(wxVizCard(rec, spot));
       const fc = h('div', { class: 'card' }, [
         h('h3', { style: 'margin-top:0' }, '7-day forecast'),
         h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
       ]);
-      rec.daily.forEach((d) => {
+      rec.daily.slice(0, 7).forEach((d) => {
         const [dl, de] = wmo(d.code);
         const detail = h('div', { style: 'display:none;margin-top:6px' });
         const segs = daySegments(rec.hourly, d.date);
@@ -8408,6 +8409,119 @@ function weatherScreen(country) {
   ]));
 
   mount(wrap, '#home');
+}
+
+// ---- Weather visualisation: hourly watch-face ring + month calendar ----------
+// Reads the already-cached hourly/daily records (no extra network). One metric at a
+// time — temperature, rain chance, humidity, feels-like or wind — shown around a
+// 24-hour clock-face ring and across a month calendar. wxMetric persists for the session.
+let wxMetric = 'temp';
+const WX_METRICS = {
+  temp:  { label: '🌡 Temp',     hourly: (x) => x.temp, daily: (d) => d.tmax,     fmt: (v) => (v == null ? '–' : fmtTemp(v)) },
+  rain:  { label: '💧 Rain',     hourly: (x) => x.pp,   daily: (d) => d.rainProb, fmt: (v) => (v == null ? '–' : Math.round(v) + '%'), min: 0, max: 100 },
+  hum:   { label: '💦 Humidity', hourly: (x) => x.hum,  daily: null,              fmt: (v) => (v == null ? '–' : Math.round(v) + '%'), min: 0, max: 100 },
+  feels: { label: '🥵 Feels',    hourly: (x) => x.app,  daily: (d) => d.appMax,   fmt: (v) => (v == null ? '–' : fmtTemp(v)) },
+  wind:  { label: '💨 Wind',     hourly: (x) => x.wind, daily: (d) => d.windMax,  fmt: (v) => (v == null ? '–' : fmtWind(v)) },
+};
+function wxMetricColor(metric, v, lo, hi) {
+  if (v == null) return 'rgba(140,140,150,0.20)';
+  const t = hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0.5;
+  if (metric === 'rain' || metric === 'hum') return `hsl(205, ${35 + t * 55}%, ${90 - t * 48}%)`;
+  if (metric === 'wind') return `hsl(${140 - t * 110}, 62%, ${68 - t * 20}%)`;
+  return `hsl(${(1 - t) * 214}, 72%, ${61 - t * 7}%)`;   // temp / feels: blue → red
+}
+function wxArcWedge(cx, cy, rIn, rOut, a0, a1) {
+  const P = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  const [xo0, yo0] = P(rOut, a0), [xo1, yo1] = P(rOut, a1), [xi1, yi1] = P(rIn, a1), [xi0, yi0] = P(rIn, a0);
+  const large = (a1 - a0) > Math.PI ? 1 : 0;
+  return `M${xo0.toFixed(1)},${yo0.toFixed(1)} A${rOut},${rOut} 0 ${large} 1 ${xo1.toFixed(1)},${yo1.toFixed(1)} L${xi1.toFixed(1)},${yi1.toFixed(1)} A${rIn},${rIn} 0 ${large} 0 ${xi0.toFixed(1)},${yi0.toFixed(1)} Z`;
+}
+function wxHourlyRingSvg(rec, metric, city) {
+  const cfg = WX_METRICS[metric];
+  const hrs = Array.isArray(rec.hourly) ? rec.hourly : [];
+  const now = new Date();
+  const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+  let start = hrs.findIndex((x) => { const d = new Date(x.t); return !isNaN(d) && d >= nowFloor; });
+  if (start < 0) start = 0;
+  const win = hrs.slice(start, start + 24);
+  if (!win.length) return '';
+  const vals = win.map(cfg.hourly).filter((v) => v != null);
+  if (!vals.length) return '';
+  const lo = cfg.min != null ? cfg.min : Math.min(...vals);
+  const hi = cfg.max != null ? cfg.max : Math.max(...vals);
+  const cx = 120, cy = 120, rOut = 106, rIn = 66, gap = 0.010, step = (2 * Math.PI) / 24;
+  let wedges = '';
+  win.forEach((x, i) => {
+    const a0 = i * step - Math.PI / 2 + gap;
+    const a1 = (i + 1) * step - Math.PI / 2 - gap;
+    wedges += `<path d="${wxArcWedge(cx, cy, rIn, rOut, a0, a1)}" fill="${wxMetricColor(metric, cfg.hourly(x), lo, hi)}"><title>${fmtClock(new Date(x.t).getHours())}: ${cfg.fmt(cfg.hourly(x))}</title></path>`;
+  });
+  let labels = '';
+  [0, 6, 12, 18].forEach((i) => {
+    if (i >= win.length) return;
+    const a = i * step - Math.PI / 2;
+    const lr = rOut + 13;
+    const lx = cx + lr * Math.cos(a), ly = cy + lr * Math.sin(a) + 4;
+    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" class="wx-ring-lbl">${fmtClock(new Date(win[i].t).getHours())}</text>`;
+  });
+  const nowMark = `<circle cx="${cx}" cy="${(cy - rOut - 3).toFixed(1)}" r="3.4" class="wx-ring-now"/>`;
+  const center = `<text x="${cx}" y="${cy - 6}" text-anchor="middle" class="wx-ring-val">${cfg.fmt(cfg.hourly(win[0]))}</text>`
+    + `<text x="${cx}" y="${cy + 15}" text-anchor="middle" class="wx-ring-sub">${esc(city)}</text>`
+    + `<text x="${cx}" y="${cy + 32}" text-anchor="middle" class="wx-ring-sub2">now</text>`;
+  return `<svg viewBox="0 0 240 240" class="wx-ring" role="img" aria-label="Next 24 hours ${metric}" xmlns="http://www.w3.org/2000/svg">${wedges}${labels}${nowMark}${center}</svg>`;
+}
+function wxDayHumAvg(rec, date) {
+  const hs = (rec.hourly || []).filter((x) => String(x.t).slice(0, 10) === date && x.hum != null);
+  return hs.length ? Math.round(hs.reduce((a, b) => a + b.hum, 0) / hs.length) : null;
+}
+function wxMonthCalendarNode(rec, metric) {
+  const cfg = WX_METRICS[metric];
+  const daily = Array.isArray(rec.daily) ? rec.daily : [];
+  const byDate = {};
+  daily.forEach((d) => { byDate[d.date] = d; });
+  const base = daily[0] ? new Date(daily[0].date + 'T00:00') : new Date();
+  const year = base.getFullYear(), month = base.getMonth();
+  const daysIn = new Date(year, month + 1, 0).getDate();
+  const startDow = (new Date(year, month, 1).getDay() + 6) % 7;   // Monday-first
+  const valOf = (d) => { if (!d) return null; if (metric === 'hum') return wxDayHumAvg(rec, d.date); return cfg.daily ? cfg.daily(d) : null; };
+  const vals = daily.map(valOf).filter((v) => v != null);
+  const lo = cfg.min != null ? cfg.min : (vals.length ? Math.min(...vals) : 0);
+  const hi = cfg.max != null ? cfg.max : (vals.length ? Math.max(...vals) : 1);
+  const grid = h('div', { class: 'wx-cal' });
+  ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach((d) => grid.append(h('div', { class: 'wx-cal-dow' }, d)));
+  for (let i = 0; i < startDow; i++) grid.append(h('div', { class: 'wx-cal-cell empty' }));
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  for (let day = 1; day <= daysIn; day++) {
+    const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const d = byDate[ds];
+    const v = valOf(d);
+    const cell = h('div', { class: 'wx-cal-cell' + (d ? '' : ' nodata') + (ds === todayStr ? ' today' : '') });
+    if (d && v != null) cell.style.background = wxMetricColor(metric, v, lo, hi);
+    cell.append(h('div', { class: 'wx-cal-num' }, String(day)));
+    if (d) {
+      cell.append(h('div', { class: 'wx-cal-emo' }, wmo(d.code)[1]));
+      cell.append(h('div', { class: 'wx-cal-v' }, cfg.fmt(v)));
+    }
+    grid.append(cell);
+  }
+  return h('div', {}, [
+    grid,
+    h('p', { class: 'muted small', style: 'margin:6px 2px 0' }, daily.length ? `Forecast covers the next ${daily.length} day${daily.length === 1 ? '' : 's'}; later days fill in as the forecast extends.` : 'Connect once to load the forecast.'),
+  ]);
+}
+function wxVizCard(rec, spot) {
+  const card = h('div', { class: 'card wx-viz' });
+  card.append(h('div', { class: 'chips wx-metric-row' }, Object.keys(WX_METRICS).map((m) =>
+    h('button', { class: 'chip', 'aria-pressed': wxMetric === m ? 'true' : 'false', onclick: () => { wxMetric = m; render(); } }, WX_METRICS[m].label))));
+  const ring = wxHourlyRingSvg(rec, wxMetric, spot.city);
+  if (ring) {
+    card.append(h('div', { class: 'wx-ring-wrap', html: ring }));
+    card.append(h('p', { class: 'muted small', style: 'text-align:center;margin:0 0 8px' }, 'Next 24 hours · tap a metric above'));
+  }
+  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:6px 0' }, 'This month'));
+  card.append(wxMonthCalendarNode(rec, wxMetric));
+  return card;
 }
 
 // ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------
