@@ -47,6 +47,12 @@ import * as gamify from './gamify.js';
 // Server-free reminders (per-entry lead time + daily journal nudge; in-app + best-effort notifications).
 import * as reminders from './reminders.js';
 import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
+import {
+  haversineKm, distanceChip, driveLabel, estDriveMin, withinNear, withinDayTrip, DAYTRIP_MAX_MIN,
+  attrClass, attrTag, starsStr, isMarket, placeBucket,
+  CATEGORY_FAMILIES, FAMILY_COLOR, FAMILY_META, catFamily, catColor, placeCatColor, tierColor, swatch,
+  wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip,
+} from './render-utils.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
@@ -241,7 +247,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.330.0';
+const APP_VERSION = 'mk-v0.331.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -963,61 +969,6 @@ function profileFitAdj(p, prefs) {
   if (interests.length && cats.some((c) => interests.includes(c))) s += 10;     // a gentle nudge, never a filter
   return s;
 }
-
-// "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
-// understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
-// crow flies but a 3-hour mountain drive — so a flat km cap would still call Chiang Mai "near
-// Pai". We convert straight-line km to an estimated road drive (a winding-road multiplier and a
-// realistic effective speed) and cap "near you" at about an hour give or take. Places just
-// beyond that, up to a ~3-hour day trip, surface separately as "Further afield".
-const ROAD_FACTOR = 1.35;       // straight-line km -> likely road km (curves, terrain, towns)
-const DRIVE_KMH = 50;           // effective road speed incl. towns, stops, slow sections
-// Kept conservative at 75 min rather than raised to 90: because the estimate is straight-line
-// derived, a 90-min ceiling would pull genuine 3-hour mountain routes (e.g. Pai->Chiang Mai,
-// est. ~89 min) into "near you". Raising it safely needs verified corridor/terrain drive times.
-const NEAR_MAX_MIN = 75;        // "within an hour give or take" — the near-me ceiling (~46 km)
-const DAYTRIP_MAX_MIN = 180;    // "further afield / next destinations" — up to a ~3-hour trip
-function estDriveMin(km) { return km == null ? null : Math.round((km * ROAD_FACTOR) / DRIVE_KMH * 60); }
-function withinNear(km) { const m = estDriveMin(km); return m != null && m <= NEAR_MAX_MIN; }
-function withinDayTrip(km) { const m = estDriveMin(km); return m != null && m > NEAR_MAX_MIN && m <= DAYTRIP_MAX_MIN; }
-// Human label: a walk time under ~2.5 km, otherwise a ROUGH road estimate. The estimate is
-// derived from straight-line distance, so it is deliberately framed as approximate ("by road
-// (est.)") with coarse granularity and a "+" on longer trips — a switchback mountain route can
-// take far longer than the number suggests, and false precision would mislead a traveller.
-function driveLabel(km) {
-  if (km == null) return null;
-  if (km <= 2.5) return `~${Math.max(1, Math.round((km / 4.8) * 60))} min walk`;
-  const m = estDriveMin(km);
-  if (m < 60) return `~${Math.max(5, Math.round(m / 5) * 5)} min by road (est.)`;
-  // Coarse half-hour steps + a trailing "+" so a straight-line estimate is never read as a
-  // precise routed time.
-  const half = Math.round(m / 30) * 30;
-  const hrs = Math.floor(half / 60), rem = half % 60;
-  return `~${rem ? `${hrs}h ${rem}m` : `${hrs}h`}+ by road (est.)`;
-}
-
-// ---- Colour-coded attribute/status chips ------------------------------------
-// Category tags are already family-coloured (catTag). These are the OTHER little tags —
-// "Good with kids", "Good in the rain", "Open now", stay type, "may not suit you" — which
-// used to be one flat colour. attrClass() maps a chip's text/emoji to a semantic colour
-// class so every kind of tag on the site reads at a glance. attrTag() builds the pill.
-function attrClass(text) {
-  const t = String(text).toLowerCase();
-  if (/may not suit|not a good fit|⚠/.test(t)) return 'at-warn';
-  if (/closed/.test(t)) return 'at-closed';
-  if (/open now/.test(t)) return 'at-open';
-  if (/kids|family|👨‍👩‍👧/.test(t)) return 'at-kids';
-  if (/rain|☔|indoor/.test(t)) return 'at-rain';
-  if (/cool off|🏊|heat|❄/.test(t)) return 'at-heat';
-  if (/market|🛍|🧺/.test(t)) return 'at-market';
-  if (/step[- ]free|wheelchair|accessible|♿|walking|steps|mobility/.test(t)) return 'at-access';
-  if (/veg|vegan|kosher|halal/.test(t)) return 'at-veg';
-  if (/morning|cool-hours|🌅|clear weather|☀/.test(t)) return 'at-cool';
-  if (/sunset|evening|🌇|rooftop|buzzing|street-food|night|🌙/.test(t)) return 'at-evening';
-  if (/hostel|hotel|guesthouse|homestay|resort|apartment|short stay|long stay|stay/.test(t)) return 'at-stay';
-  return 'at-info';
-}
-function attrTag(text, base) { return h('span', { class: `${base || 'attr-tag'} ${attrClass(text)}` }, text); }
 
 // Best-effort open/closed at the current local hour (null when hours are unknown/unparseable,
 // so we never wrongly call an unknown place "closed").
@@ -4521,8 +4472,6 @@ function personalScore(p) {
   return s;
 }
 
-function starsStr(n) { const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return '★'.repeat(r) + '☆'.repeat(5 - r); }
-
 // A unified, LAWFUL rating: a synthesised score from multiple cited public sources
 // (no scraping), plus a deep link to live Google reviews. The user's own rating
 // lives separately in yourLayer().
@@ -4570,68 +4519,12 @@ const BUCKET_COLOR = {
   nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
 };
 function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
-function placeBucket(p) {
-  const cats = Array.isArray(p.categories) ? p.categories : [];
-  if (p.stayType || cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
-  // Markets are their own section (the user asked for "food and markets" separately),
-  // taken before the generic food bucket so a wet / night / weekend market reads as a market.
-  if (isMarket(p)) return 'market';
-  if (cats.includes('rental') || cats.includes('fuel')) return 'rental';
-  for (const it of ['food', 'culture', 'nature', 'nightlife']) if (cats.includes(it)) return it;
-  return 'other';
-}
 
-// ---- CANONICAL CATEGORY COLOUR SYSTEM ---------------------------------------
-// One fixed hue per category "family", used EVERYWHERE a category appears (tags on
-// cards and detail, filters, the colour key) so the colour means the same thing all
-// over the app. Every one of the ~30 fine categories in the data maps to a family.
-// Fixed hues (not CSS vars) so they read as an accent on both light and dark themes.
-const CATEGORY_FAMILIES = [
-  { key: 'culture',   label: 'Culture & history',   emoji: '🏛', color: '#8A5CC0' },
-  { key: 'nature',    label: 'Nature & outdoors',   emoji: '🌿', color: '#2E8B57' },
-  { key: 'beach',     label: 'Beaches & water',     emoji: '🏖', color: '#0EA5C4' },
-  { key: 'food',      label: 'Food & drink',        emoji: '🍜', color: '#E8632A' },
-  { key: 'market',    label: 'Markets & shopping',  emoji: '🛍', color: '#E0A100' },
-  { key: 'stay',      label: 'Places to stay',      emoji: '🛏', color: '#2C7DA0' },
-  { key: 'nightlife', label: 'Nightlife & social',  emoji: '🌃', color: '#D6336C' },
-  { key: 'transport', label: 'Getting around',      emoji: '🛵', color: '#0F9D8C' },
-  { key: 'wellness',  label: 'Wellness & spa',      emoji: '💆', color: '#7048E8' },
-  { key: 'other',     label: 'More to see',         emoji: '📌', color: '#8A8F98' },
-];
-const FAMILY_COLOR = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.key, f.color]));
-const FAMILY_META = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.key, f]));
-const CAT_FAMILY = {
-  culture: 'culture', temple: 'culture', museum: 'culture', spectacle: 'culture', history: 'culture', wat: 'culture', heritage: 'culture',
-  nature: 'nature', hike: 'nature', waterfall: 'nature', viewpoint: 'nature', park: 'nature', wildlife: 'nature', hotspring: 'nature', sunset: 'nature', riverside: 'nature', garden: 'nature', cave: 'nature', outdoors: 'nature',
-  beach: 'beach', island: 'beach', water: 'beach', dive: 'beach', snorkel: 'beach',
-  food: 'food', streetfood: 'food', seafood: 'food', restaurant: 'food', cafe: 'food',
-  market: 'market', shopping: 'market',
-  stay: 'stay', hotel: 'stay', guesthouse: 'stay', homestay: 'stay', hostel: 'stay', resort: 'stay', apartment: 'stay', camping: 'stay', backpacker: 'stay', accommodation: 'stay',
-  nightlife: 'nightlife', bars: 'nightlife', clubs: 'nightlife', cocktail: 'nightlife', rooftop: 'nightlife',
-  transport: 'transport', rental: 'transport', fuel: 'transport',
-  wellness: 'wellness', spa: 'wellness',
-};
-function catFamily(cat) { return CAT_FAMILY[cat] || 'other'; }
-function catColor(cat) { return FAMILY_COLOR[catFamily(cat)] || FAMILY_COLOR.other; }
-// The single most identifying category colour for a whole place (beach beats nature,
-// culture beats park, etc.) — used to colour map pins by category.
-function placeCatColor(p) {
-  const cats = p.categories || [];
-  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport'];
-  for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return FAMILY_COLOR[fam];
-  return FAMILY_COLOR.other;
-}
 // A category chip coloured by its family, with the family name as a tooltip.
 function catTag(cat, label) {
   const fam = catFamily(cat);
   return h('span', { class: 'cat-tag', style: `background:${FAMILY_COLOR[fam]}`, title: FAMILY_META[fam].label }, label || cat);
 }
-
-// Budget-tier colours — one source of truth shared by badges, chips and the key.
-const TIER_COLOR = { low: 'var(--tier-low)', mid: 'var(--tier-mid)', high: 'var(--tier-high)', any: 'var(--grape)', flexible: 'var(--grape)' };
-function tierColor(tier) { return TIER_COLOR[tier] || 'var(--grape)'; }
-// A small round colour swatch (used to colour filter chips consistently with the key).
-function swatch(color) { return h('span', { class: 'swatch', 'aria-hidden': 'true', style: `background:${color}` }); }
 
 // The site-wide colour key: what each category colour and budget colour means. Shown
 // (collapsed) on Places and the Map so the colour language is always explained.
@@ -4652,10 +4545,6 @@ function colorKeyCard() {
 // means daily. These helpers drive the "on today?" line, card chip and ranking so a
 // Sunday-only market is not surfaced as "near you now" on a Tuesday.
 const DOW_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-function isMarket(p) {
-  return !!(p && (p.marketType || (Array.isArray(p.marketDays) && p.marketDays.length)
-    || (Array.isArray(p.categories) && p.categories.includes('market'))));
-}
 // Returns the sorted unique open-days array, or null when the market runs daily.
 function marketOpenDays(p) {
   const d = Array.isArray(p.marketDays) ? p.marketDays.filter((n) => Number.isInteger(n) && n >= 0 && n <= 6) : [];
@@ -4900,20 +4789,6 @@ function beachInfoCard(p) {
   card.append(h('p', { class: 'muted small' }, 'No real-time jellyfish warning exists anywhere in the region. Always obey the beach flags — a red flag means do not swim — and ask lifeguards or locals about recent sightings.'));
   card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#danger') }, '🩹 Sting & marine first aid'));
   return card;
-}
-
-// "1.2 km · ~15 min walk away" from the user's last GPS fix, when known. Offline,
-// pure maths (haversine + ~4.8 km/h walking pace); walk time only for close spots.
-// Returns a chip node or null. Reused on cards, detail and the near-me experiences.
-function distanceChip(p) {
-  const fix = getLastFix();
-  if (!fix || !p || !p.coords) return null;
-  const km = haversineKm(fix, p.coords);
-  const parts = [fmtDistance(km)];
-  const t = driveLabel(km);            // walk time if close, else estimated road-drive time
-  if (t) parts.push(t);
-  parts.push(`${compass(bearing(fix, p.coords))}`);
-  return h('span', { class: 'dist-chip', title: 'From your last location' }, `📍 ${parts.join(' · ')}`);
 }
 
 function placeCard(p, num) {
@@ -8176,14 +8051,6 @@ function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(undefined, 
 function projLL(lng, lat) { const P = REGION_PROJ; return [P.pad + (lng - P.minlng) * P.kx * P.scale, P.pad + (P.maxlat - lat) * P.scale]; }
 function wxTempVal(c) { return wxTempU() === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c); }
 
-// Unit preferences persist in the profile (default metric). Data is always stored
-// metric, so toggling converts on display without any re-fetch.
-function wxTempU() { return (store.profile && store.profile.wxTempUnit) || 'C'; }
-function wxWindU() { return (store.profile && store.profile.wxWindUnit) || 'kmh'; }
-function fmtTemp(c) { if (c == null) return '–'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
-function fmtWind(kmh) { if (kmh == null) return '–'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
-function fmtPrecip(mm) { if (mm == null) return '–'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
-
 // Split a day's hourly readings into parts of the day so the forecast can say, e.g.,
 // "rain in the afternoon". Code = the most significant (max WMO) hour in the window.
 const WX_SEGMENTS = [
@@ -8737,11 +8604,6 @@ function schedulesScreen(country) {
 let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
 let todoFamily = 'all';  // active category filter on the Things-to-do screen
 let todoPlan = 'now';    // "plan ahead" scenario for the Things-to-do ranking
-function haversineKm(a, b) {
-  const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
-  const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(s));
-}
 function moodLine(m) {
   return m === 'wet' ? 'a good day for indoor culture, markets and cafes.'
     : m === 'hot' ? 'do outdoor sights early, then escape the midday heat indoors.'
