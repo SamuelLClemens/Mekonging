@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.328.0';
+const APP_VERSION = 'mk-v0.329.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -6722,11 +6722,16 @@ function journalEntryScreen(id) {
     page.insertBefore(img, page.children[1 + i]);
     setBlobThumb(img, k);
   });
+  if (e.audioKey) {
+    const au = h('audio', { class: 'entry-audio', controls: '' });
+    getBlob(e.audioKey).then((b) => { if (b) au.src = URL.createObjectURL(b); }).catch(() => { /* recording missing */ });
+    page.append(h('div', { class: 'entry-audio-wrap' }, [h('div', { class: 'muted tiny', style: 'margin:8px 0 2px' }, '🎙 Your recording'), au]));
+  }
   wrap.append(page);
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
   wrap.append(h('div', { class: 'row-between', style: 'margin-top:10px' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
-    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', body: 'This removes the journal entry and its photos from this device.', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { entryPhotoKeys(e).forEach((k) => delBlob(k)); deleteJournalEntry(e.id); go('#journal-open'); } }); } }, 'Delete'),
+    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', body: 'This removes the journal entry and its photos from this device.', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { entryPhotoKeys(e).forEach((k) => delBlob(k)); if (e.audioKey) delBlob(e.audioKey); deleteJournalEntry(e.id); go('#journal-open'); } }); } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
   ]));
   mount(wrap, '#home');
@@ -7000,11 +7005,81 @@ function journalFormScreen(editId) {
   libIn.onchange = () => addFiles(libIn);
   renderThumbs();
 
+  // Voice note: record audio and, where the browser supports it, live-transcribe speech into
+  // the entry text — which stays fully editable. The original recording is kept on-device
+  // (IndexedDB) and plays back on the entry, so the traveller has both the written version and
+  // the original audio. Denial of the microphone degrades to typing with no loss.
+  const SR = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  st.audio = (existing && existing.audioKey) ? { key: existing.audioKey, url: null } : null;
+  const recStatus = h('div', { class: 'muted tiny', style: 'margin:4px 0' }, '');
+  const audioBox = h('div', { class: 'jr-audio-box' });
+  const drawAudio = () => {
+    audioBox.innerHTML = '';
+    if (st.audio && (st.audio.url || st.audio.key)) {
+      const au = h('audio', { class: 'entry-audio', controls: '' });
+      if (st.audio.url) au.src = st.audio.url;
+      else if (st.audio.key) getBlob(st.audio.key).then((b) => { if (b) { st.audio.url = URL.createObjectURL(b); au.src = st.audio.url; } }).catch(() => { /* missing */ });
+      audioBox.append(au, h('button', { class: 'btn ghost', style: 'margin-top:4px', onclick: () => {
+        if (st.audio && st.audio.url) { try { URL.revokeObjectURL(st.audio.url); } catch { /* noop */ } }
+        st.audio = null; drawAudio(); recBtn.style.display = ''; recStatus.textContent = '';
+      } }, '🗑 Remove recording'));
+    }
+  };
+  let mediaRec = null, chunks = [], sr = null, recording = false;
+  const recBtn = h('button', { class: 'chip', onclick: () => startRec() }, '🎙 Record a voice note');
+  const stopBtn = h('button', { class: 'chip jr-rec-stop', style: 'display:none', onclick: () => stopRec() }, '⏹ Stop');
+  async function startRec() {
+    if (recording) return;
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch { recStatus.textContent = 'Microphone unavailable or blocked — you can still type your entry.'; return; }
+    try {
+      chunks = [];
+      mediaRec = new MediaRecorder(stream);
+      mediaRec.ondataavailable = (ev) => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+      mediaRec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: mediaRec.mimeType || 'audio/webm' });
+        if (st.audio && st.audio.url) { try { URL.revokeObjectURL(st.audio.url); } catch { /* noop */ } }
+        st.audio = { blob, url: URL.createObjectURL(blob) };
+        drawAudio();
+      };
+      mediaRec.start();
+      recording = true; recBtn.style.display = 'none'; stopBtn.style.display = '';
+      recStatus.textContent = '● Recording… speak now.' + (SR ? ' Transcribing into your entry below.' : ' (This device cannot auto-transcribe — the audio is saved; type your notes.)');
+      if (SR) {
+        try {
+          sr = new SR(); sr.continuous = true; sr.interimResults = true; sr.lang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+          let base = text.value ? (text.value.replace(/\s*$/, '') + '\n') : '';
+          sr.onresult = (ev) => {
+            let finalTxt = '';
+            for (let i = ev.resultIndex; i < ev.results.length; i++) { if (ev.results[i].isFinal) finalTxt += ev.results[i][0].transcript; }
+            if (finalTxt) { base += finalTxt.replace(/^\s+/, '') + ' '; text.value = base; }
+          };
+          sr.onerror = () => { /* keep recording audio even if transcription drops */ };
+          sr.start();
+        } catch { sr = null; }
+      }
+    } catch { recStatus.textContent = 'Recording is not supported on this device — you can still type.'; try { stream.getTracks().forEach((t) => t.stop()); } catch { /* noop */ } }
+  }
+  function stopRec() {
+    recording = false; recBtn.style.display = ''; stopBtn.style.display = 'none';
+    try { if (mediaRec && mediaRec.state !== 'inactive') mediaRec.stop(); } catch { /* noop */ }
+    try { if (sr) sr.stop(); } catch { /* noop */ }
+    sr = null;
+    recStatus.textContent = 'Saved — play it back below, and edit the transcribed text freely.';
+  }
+  drawAudio();
+  const voiceField = field('Voice note (optional)', h('div', {}, [
+    h('div', { class: 'chips' }, [recBtn, stopBtn]), recStatus, audioBox,
+  ]));
+
   const locOut = h('p', { class: 'muted' }, st.coords
     ? `Stamped at ${st.coords.lat.toFixed(4)}, ${st.coords.lng.toFixed(4)}`
     : 'Entry is stamped with the current date and time automatically.');
   const card = h('div', { class: 'card' }, [
     field('Title', title), field('Your entry', text),
+    voiceField,
     field('Place (editable)', place),
     field('Weather (auto — editable)', weather),
     field('Location', h('div', {}, [
@@ -7032,7 +7107,7 @@ function journalFormScreen(editId) {
   ]);
   wrap.append(card);
   wrap.append(h('button', { class: 'btn block', onclick: async () => {
-    if (!title.value.trim() && !text.value.trim()) { alert('Write something first.'); return; }
+    if (!title.value.trim() && !text.value.trim() && !st.audio) { alert('Write something, or record a voice note, first.'); return; }
     const origKeys = entryPhotoKeys(existing);
     const finalKeys = [];
     let n = 0;
@@ -7041,14 +7116,27 @@ function journalFormScreen(editId) {
       if (p.file) { const nk = `jrphoto-${Date.now()}-${n++}-${Math.floor(Math.random() * 1e6)}`; try { await putBlob(nk, p.file); finalKeys.push(nk); } catch { /* skip this one */ } }
     }
     origKeys.filter((k) => !finalKeys.includes(k)).forEach((k) => delBlob(k)); // free removed blobs
-    const fields = { title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKeys: finalKeys, weather: weather.value.trim() };
+    // Persist the voice recording: a new blob gets a fresh key; an unchanged one is kept; a
+    // removed one is dropped and its blob freed. The original audio never leaves the device.
+    let audioKey = existing ? (existing.audioKey || null) : null;
+    if (st.audio && st.audio.blob) {
+      const ak = `jraudio-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+      try { await putBlob(ak, st.audio.blob); audioKey = ak; } catch { audioKey = existing ? (existing.audioKey || null) : null; }
+    } else if (st.audio && st.audio.key) { audioKey = st.audio.key; } else { audioKey = null; }
+    if (existing && existing.audioKey && existing.audioKey !== audioKey) delBlob(existing.audioKey);
+    const fields = { title: title.value.trim() || 'Untitled', text: text.value, place: place.value.trim(), coords: st.coords, photoKeys: finalKeys, weather: weather.value.trim(), audioKey };
     if (editing) { updateJournalEntry(editId, fields); go(`#journal-entry-${editId}`); }
     else { addJournalEntry(fields); go('#journal-open'); }
   } }, editing ? 'Save changes' : 'Save to journal'));
   // Editable thumbnails hold live object URLs (they must survive re-renders while picking), so
   // revoke them when the editor screen is torn down rather than on img-load. render() runs this
   // before the next screen builds.
-  liveCleanup = () => { (st.photos || []).forEach((p) => { if (p.url) { try { URL.revokeObjectURL(p.url); } catch { /* noop */ } p.url = null; } }); };
+  liveCleanup = () => {
+    (st.photos || []).forEach((p) => { if (p.url) { try { URL.revokeObjectURL(p.url); } catch { /* noop */ } p.url = null; } });
+    if (st.audio && st.audio.url) { try { URL.revokeObjectURL(st.audio.url); } catch { /* noop */ } }
+    try { if (mediaRec && mediaRec.state && mediaRec.state !== 'inactive') mediaRec.stop(); } catch { /* noop */ }
+    try { if (sr) sr.stop(); } catch { /* noop */ }
+  };
   mount(wrap, '#home');
 }
 

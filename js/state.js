@@ -421,12 +421,13 @@ export function updateBudgetItem(id, patch = {}) {
 }
 
 // --- travel journal ----------------------------------------------------------
-export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null, photoKeys = null, weather = '' }) {
+export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null, photoKeys = null, weather = '', audioKey = null }) {
   const when = ts || new Date().toISOString();
   const keys = Array.isArray(photoKeys) ? photoKeys.filter(Boolean) : (photoKey ? [photoKey] : []);
   const e = { id: uid('jr'), ts: when, date: when.slice(0, 10),
     title: String(title || 'Untitled').slice(0, 120), text: String(text || ''), place, coords,
     photoKeys: keys, photoKey: keys[0] || null,   // photoKey kept = first photo, for older readers
+    audioKey: audioKey || null,                   // IndexedDB key of the original voice recording
     weather: String(weather || '').slice(0, 80) };
   store.journal.entries.push(e);
   store.journal.entries.sort((a, b) => (a.ts < b.ts ? -1 : 1));
@@ -442,6 +443,7 @@ export function updateJournalEntry(id, patch = {}) {
   if (patch.photoKeys !== undefined) { e.photoKeys = Array.isArray(patch.photoKeys) ? patch.photoKeys.filter(Boolean) : []; e.photoKey = e.photoKeys[0] || null; }
   else if (patch.photoKey !== undefined) { e.photoKey = patch.photoKey; e.photoKeys = patch.photoKey ? [patch.photoKey] : []; }
   if (patch.weather !== undefined) e.weather = String(patch.weather || '').slice(0, 80);
+  if (patch.audioKey !== undefined) e.audioKey = patch.audioKey || null;
   e.editedAt = new Date().toISOString();
   save(); return e;
 }

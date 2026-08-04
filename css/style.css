@@ -1760,3 +1760,9 @@ html[data-theme="dark"] .wx-ring-val, html[data-theme="dark"] .wx-ring-sub { fil
 .wx-cal-cell.nodata .wx-cal-num { color: var(--muted, #8a8a8a); text-shadow: none; }
 html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
 html[data-theme="dark"] .wx-cal-cell.nodata { background: rgba(255,255,255,0.035); }
+
+/* Journal voice notes (mk-v0.329.0) */
+.entry-audio { width: 100%; margin: 4px 0; }
+.jr-audio-box { margin-top: 6px; }
+.entry-audio-wrap { margin-top: 8px; }
+.jr-rec-stop { background: var(--magenta, #C0431A); color: #fff; border-color: transparent; }
