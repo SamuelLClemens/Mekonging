@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.325.0';
+const APP_VERSION = 'mk-v0.326.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2451,7 +2451,9 @@ function exploreScreen() {
   const fcc = fs && fs.spot ? fs.spot.country : '';
   const fc = getCountry(fcc);
   if (fc) {
-    const city = (fs.source === 'gps' || fs.source === 'focus') && fs.spot ? fs.spot.city : '';
+    const gpsFix = getLastFix();
+    const wai = gpsFix ? whereAmI(gpsFix) : null;
+    const city = wai ? wai.name : ((fs.source === 'focus') && fs.spot ? fs.spot.city : '');
     wrap.append(h('div', { class: 'card explore-lead', style: `--ec:${REGION_COLORS[fcc] || 'var(--teal)'}` }, [
       h('h2', { style: 'margin:0 0 2px' }, `${fc.flag} Continue in ${fc.name}`),
       h('p', { class: 'muted', style: 'margin:2px 0 8px' }, city ? `You’re around ${city} — pick up where you are.` : 'Pick up where you left off.'),
@@ -3049,12 +3051,9 @@ function nearbyScreen() {
     .catch(() => { if (!fix) noLocation(); });
 
   function nearestCityInfo(f) {
-    let best = null; let bestKm = Infinity;
-    for (const s of WEATHER_SPOTS) {
-      const km = haversineKm(f, { lat: s.lat, lng: s.lng });
-      if (km < bestKm) { bestKm = km; best = s; }
-    }
-    return best ? { city: best.city, country: best.country, km: bestKm } : null;
+    const w = whereAmI(f);
+    if (w) return { city: w.name, country: w.country, km: w.km != null ? w.km : 0, near: !!w.approx };
+    return null;
   }
 
   function noLocation() {
@@ -3075,7 +3074,7 @@ function nearbyScreen() {
     const cName = getCountry(country) ? getCountry(country).name : '';
     status.innerHTML = '';
     status.append(
-      h('strong', {}, info ? `You are near ${info.city}` : 'You are here'),
+      h('strong', {}, info ? `You are ${info.near ? 'near' : 'in'} ${info.city}` : 'You are here'),
       (info && cName) ? h('span', { class: 'muted' }, ` · ${cName}${info.km > 60 ? ` (${fmtDistance(info.km)} away)` : ''}`) : null,
     );
 
@@ -3301,7 +3300,7 @@ function swapCalcNodes(a, have, want) {
 // Best-effort nearest town name (for pre-filling a listing's "where"), else the country.
 function guessCityName() {
   const fix = getLastFix();
-  if (fix) { try { const s = nearestSpot(fix, activeCountry); if (s && s.city) return s.city; } catch { /* noop */ } }
+  if (fix) { try { const w = whereAmI(fix); if (w && w.name) return w.name; } catch { /* noop */ } }
   const c = getCountry(activeCountry); return c ? c.name : '';
 }
 
@@ -10274,6 +10273,74 @@ function nearestSpotGlobal(fix) {
   return best ? { spot: best, km: bestD } : null;
 }
 
+// ---- WHERE AM I (place naming, distinct from weather-hub snapping) -----------
+// Names the traveller's ACTUAL locality — the nearest listed town within ~15 km, or
+// the containing province (authoritative ADM1), refined to a nearby curated town when
+// one sits within a few km. Weather deliberately snaps to the nearest hub (nearestSpot);
+// naming must NOT, or a traveller in Mae Hong Son is wrongly told they are in Pai (the
+// closest listed hub). Memoised per ~100 m cell so per-render calls stay cheap.
+let _waiCache = { key: '', val: null };
+function whereAmI(fix) {
+  if (!fix || fix.lat == null || fix.lng == null) return null;
+  const key = fix.lat.toFixed(3) + ',' + fix.lng.toFixed(3);
+  if (_waiCache.key === key) return _waiCache.val;
+  let best = null, bestKm = Infinity;
+  for (const p of allPlaces()) {
+    if (!p.coords || typeof p.coords.lat !== 'number' || typeof p.coords.lng !== 'number') continue;
+    const km = haversineKm(fix, p.coords);
+    if (km != null && km < bestKm) { bestKm = km; best = p; }
+  }
+  const hub = nearestSpotGlobal(fix);
+  let province = null, provCc = null;
+  for (const cc of ['th', 'vi', 'kh', 'la']) {
+    const set = regionSetFor(cc);
+    if (!set || !Array.isArray(set.provinces)) continue;
+    const pr = set.provinces.find((p) => pointInProvince(p, fix.lng, fix.lat));
+    if (pr) { province = pr.name; provCc = cc; break; }
+  }
+  let val;
+  if (best && bestKm <= 6 && best.city) val = { name: best.city, province, country: best.country || provCc, km: bestKm, source: 'town', approx: false };
+  else if (hub && hub.km <= 15) val = { name: hub.spot.city, province, country: hub.spot.country, km: hub.km, source: 'hub-town', approx: false };
+  else if (province) val = { name: province, province, country: provCc, km: null, source: 'province', approx: false };
+  else if (best) val = { name: best.city || best.name, country: best.country, km: bestKm, source: 'place-far', approx: true };
+  else val = hub ? { name: hub.spot.city, country: hub.spot.country, km: hub.km, source: 'hub', approx: true } : null;
+  _waiCache = { key, val };
+  return val;
+}
+
+// ---- Location on from the start --------------------------------------------
+// Request a live fix as the app opens (the browser permission prompt still gates it)
+// and keep it current with watchPosition, so "where you are", near-me and distances
+// track the traveller. Denial degrades silently to the manual city picker. The fix
+// never leaves the device.
+let _geoWatchId = null;
+function startLocationWatch() {
+  if (typeof navigator === 'undefined' || !navigator.geolocation || _geoWatchId != null) return;
+  try {
+    _geoWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const prev = getLastFix();
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+        setLastFix(next);
+        const moved = !prev || (haversineKm(prev, next) || 0) > 0.4;
+        const hash = location.hash || '';
+        if (moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) render();
+      },
+      () => { /* denied / unavailable — the manual picker path remains */ },
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 15000 },
+    );
+  } catch { /* noop */ }
+}
+function initLocation() {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+  const begin = () => { if (!store.profile.prefs.geoAsked) { store.profile.prefs.geoAsked = true; save(); } startLocationWatch(); };
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' })
+      .then((st) => { if (st.state !== 'denied') begin(); try { st.onchange = () => { if (st.state === 'granted') startLocationWatch(); }; } catch { /* noop */ } })
+      .catch(() => begin());
+  } else { begin(); }
+}
+
 function sosScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Emergency', '#home'));
@@ -10287,7 +10354,7 @@ function sosScreen(cc) {
 
   const c = getCountry(activeCountry);
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
-  if (!cc && near) wrap.append(h('p', { class: 'sos-loc' }, `📍 You appear to be near ${near.spot.city}. Showing ${c.name} — not right? Pick your country:`));
+  if (!cc && near) { const wai = whereAmI(fix); wrap.append(h('p', { class: 'sos-loc' }, `📍 You appear to be near ${(wai && wai.name) || near.spot.city}. Showing ${c.name} — not right? Pick your country:`)); }
   wrap.append(countryChips((id) => go(`#sos-${id}`)));
 
   // ORDER OF OPERATIONS. If something happens the traveller needs, in this order:
@@ -12644,6 +12711,10 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   }); } catch { /* older API */ }
 }
 render();
+
+// Location on from the start: request a live fix immediately (browser permission still
+// gates it) and keep it current; denial degrades to the manual city picker.
+try { initLocation(); } catch { /* best-effort */ }
 
 // Durability, best-effort: request evict-resistant storage, and if localStorage came back
 // empty (cleared/blocked) recover the whole store from the IndexedDB mirror, then re-render.
