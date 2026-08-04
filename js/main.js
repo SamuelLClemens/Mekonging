@@ -26,6 +26,7 @@ import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
 import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
+import { SOUNDS } from './data/sounds.js';
 import { CROSSINGS } from './data/borders.js';
 import { TRANSPORT_HUBS, TRANSIT_SOURCES, GET_AROUND } from './data/transit.js';
 import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
@@ -252,7 +253,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.334.0';
+const APP_VERSION = 'mk-v0.335.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -9024,13 +9025,14 @@ let natureQuery = '';
 let natureGroup = '';
 function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
 
-// ---- ANIMAL SOUNDS (streamed online; iNaturalist — public, no key) ----------
-// Calls stream from iNaturalist over an <audio> element (its audio hosts are in the
-// page CSP media-src; the API host is in connect-src). We look up Creative-Commons
-// recordings by scientific name and play the top-voted one in-app, crediting the
-// recordist. No audio is bundled, so offline the control just says it needs a
-// connection; if no recording is found we say so in-app rather than navigating away.
-// A species may optionally carry sound:{ xcQuery } to override the sciName-derived lookup.
+// ---- ANIMAL SOUNDS (bundled offline; falls back to iNaturalist online) -----
+// Every species with `call: true` has a self-hosted recording in the SOUNDS registry
+// (js/data/sounds.js) — sourced from Xeno-canto (birds) or iNaturalist (everything else),
+// Creative-Commons licensed, credited in-app. Bundled calls play instantly offline. A
+// species added to nature.js with `call: true` before a recording is sourced for it
+// falls back to a live iNaturalist lookup by scientific name (needs a connection); if
+// neither has a recording we say so in-app rather than navigating away. A species may
+// optionally carry sound:{ xcQuery } to override the sciName-derived live-lookup query.
 //
 // A species is listed in the sounds tool only when it carries `call: true` — i.e. it
 // makes a distinctive sound worth identifying by ear (birds, frogs, cicadas, gibbons,
@@ -9044,8 +9046,24 @@ function inatSoundUrl(s) {
 }
 let callAudio = null;   // one shared element so starting a call stops the previous one
 async function playCall(s, btn, statusEl) {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
+  const bundled = s && s.id && SOUNDS[s.id];
   const original = btn.textContent;
+  if (bundled) {
+    btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+    try {
+      if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
+      callAudio = new Audio(bundled.src);
+      callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not play the recording here.'; });
+      await callAudio.play();
+      statusEl.textContent = `♪ ${s.commonName} — ${bundled.credit}`;
+    } catch (e) {
+      statusEl.textContent = 'Could not play the recording here.';
+    } finally {
+      btn.disabled = false; btn.textContent = original;
+    }
+    return;
+  }
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
   btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
   try {
     const res = await fetch(inatSoundUrl(s));
@@ -9074,7 +9092,7 @@ function callControl(s, label) {
 function soundsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Sounds around you', '#nature'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Heard something? Tap ▶ to play the call (streams online), or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings stream from iNaturalist (Creative Commons).'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   // Every callable species, computed once so the group chips can show live counts.
   const callable = allSpecies().filter(hasCall);
@@ -9098,7 +9116,6 @@ function soundsScreen() {
       onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
       `${g.emoji} ${g.label} (${g.n})`)));
   wrap.append(chips);
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) wrap.append(h('p', { class: 'muted' }, 'You are offline — playing a call needs a connection. The names and field guide still work.'));
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
