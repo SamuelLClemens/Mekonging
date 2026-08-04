@@ -241,7 +241,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.329.0';
+const APP_VERSION = 'mk-v0.330.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -4399,13 +4399,13 @@ function placesScreen(arg) {
     const expander = (rest, label) => {
       if (!rest.length) return null;
       const btn = h('button', { class: 'btn ghost block', style: 'margin:2px 0 10px' }, label);
-      btn.onclick = () => { rest.forEach((p) => btn.before(placeCard(p, p._num))); btn.remove(); };
+      btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, p._num))); btn.remove(); };
       return btn;
     };
     if (sortMode === 'near') {
       // proximity order matters — keep one flat list, capped, with a reveal.
       const CAP = 12;
-      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeCard(p, p._num)));
+      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeQuickRow(p, p._num)));
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
@@ -4422,7 +4422,7 @@ function placesScreen(arg) {
         if (!arr || !arr.length) return;
         if (fix) arr = arr.slice().sort(byNear);
         const body = h('div', { class: 'place-cat-body' });
-        arr.slice(0, CAP).forEach((p) => body.append(placeCard(p, p._num)));
+        arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, p._num)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
         listEl.append(h('details', { class: 'place-cat-group', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
@@ -4965,6 +4965,51 @@ function placeCard(p, num) {
   // A number badge matching the map pin, when the caller supplies a number.
   if (num != null) card.prepend(h('span', { class: 'pc-num', 'aria-hidden': 'true', style: `background:${accent}` }, String(num)));
   return card;
+}
+
+// A collapsed QUICK-VIEW row for the places list: the summary shows just what a traveller
+// scans for — name, distance from them, rating, price, a budget badge and the category —
+// and expands IN PLACE (an accordion) to the photo, blurb, traveller fit and actions, so
+// the list reads as a short menu instead of a wall of full cards. Full detail stays one tap
+// further on the place page.
+function placeQuickRow(p, num) {
+  const cats = Array.isArray(p.categories) ? p.categories : [];
+  const hasPrice = p.priceRange && p.priceRange.currency;
+  const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
+  const accent = bucketColor(p);
+  const dchip = distanceChip(p);
+  const meta = h('div', { class: 'pqr-meta' }, [
+    dchip || null,
+    p.rating ? h('span', { class: 'pqr-rating' }, `★ ${Number(p.rating).toFixed(1)}`) : null,
+    priceStr ? h('span', { class: 'pqr-price' }, priceStr) : null,
+    (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+    cats.length ? catTag(cats[0]) : null,
+  ]);
+  const summary = h('summary', { class: 'pqr-summary' }, [
+    num != null ? h('span', { class: 'pqr-num', style: `background:${accent}` }, String(num)) : null,
+    h('div', { class: 'pqr-main' }, [
+      h('div', { class: 'pqr-name' }, `${p.isPin ? '📌 ' : ''}${p.name}`),
+      meta,
+    ]),
+    h('button', {
+      class: 'pqr-star', 'aria-label': 'Quick save', title: 'Quick save',
+      onclick: (e) => { e.preventDefault(); e.stopPropagation(); const on = toggleFavorite(p.id); e.currentTarget.textContent = on ? '★' : '☆'; },
+    }, isFavorite(p.id) ? '★' : '☆'),
+    h('span', { class: 'pqr-chev', 'aria-hidden': 'true' }, '⌄'),
+  ]);
+  const src = placePhotoSrc(p);
+  const body = h('div', { class: 'pqr-body' }, [
+    src ? h('img', { class: 'pqr-photo', src, alt: '', loading: 'lazy', decoding: 'async' }) : null,
+    cats.length ? h('div', { class: 'cats' }, cats.map((c) => catTag(c))) : null,
+    travelerChips(p),
+    p.blurb ? h('p', { style: 'margin:6px 0' }, p.blurb) : null,
+    h('p', { class: 'muted', style: 'margin:2px 0' }, [p.city, priceStr].filter(Boolean).join(' · ')),
+    h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+      h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); go(`#place-${p.id}`); } }, 'Full details'),
+      h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); saveSheet(p.id); } }, '＋ Save'),
+    ]),
+  ]);
+  return h('details', { class: 'place-qrow', style: `--cat:${accent}` }, [summary, body]);
 }
 
 // Modal sheet: add an item to collections (and toggle favourite / create new).
