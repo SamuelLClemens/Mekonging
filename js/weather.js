@@ -135,7 +135,7 @@ export async function refreshWeather(spot) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedWeather(key);
   const url = `${ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}`
     + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,is_day'
-    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,apparent_temperature'
+    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,apparent_temperature,uv_index'
     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,'
     + 'precipitation_probability_max,precipitation_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
     + '&timezone=auto&forecast_days=16';
@@ -163,6 +163,7 @@ export async function refreshWeather(spot) {
           t, temp: H.temperature_2m[i], code: H.weather_code[i],
           pp: H.precipitation_probability[i], precip: H.precipitation[i],
           wind: H.wind_speed_10m[i], hum: H.relative_humidity_2m[i], app: H.apparent_temperature[i],
+          uv: H.uv_index ? H.uv_index[i] : null,
         })),
       };
       try { localStorage.setItem(PREFIX + key, JSON.stringify(rec)); } catch { /* storage full */ }
