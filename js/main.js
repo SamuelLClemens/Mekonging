@@ -253,7 +253,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.338.0';
+const APP_VERSION = 'mk-v0.339.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3536,25 +3536,6 @@ function essentialsCard(code, book, onChange) {
   return card;
 }
 
-// The "Your pins" card: the phrases the traveller pinned, in their own order (↑ ↓ · 📌 removes).
-function phrasePinsCard(code, book, idx, onChange) {
-  const keys = phrasePinsFor(code).filter((k) => idx.has(k) && !isPhraseHidden(code, k));
-  if (!keys.length) return null;
-  const card = h('div', { class: 'card pins-card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '📌 Your pins'));
-  card.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, 'Your saved phrases, in your order. Use ↑ ↓ to reorder · 📌 to remove.'));
-  keys.forEach((k, i) => {
-    const { p, catId } = idx.get(k);
-    const row = phraseRow(p, book.locale, { code, catId, onChange, noHide: true });
-    const up = h('button', { class: 'speak', 'aria-label': `Move ${p.en} up`, title: 'Move up', disabled: i === 0 ? '' : null, onclick: () => { movePhrasePin(code, k, -1); if (onChange) onChange(); } }, '↑');
-    const down = h('button', { class: 'speak', 'aria-label': `Move ${p.en} down`, title: 'Move down', disabled: i === keys.length - 1 ? '' : null, onclick: () => { movePhrasePin(code, k, 1); if (onChange) onChange(); } }, '↓');
-    const ctrls = row.querySelector('.phrase-ctrls');
-    if (ctrls) ctrls.prepend(down, up);
-    card.append(row);
-  });
-  return card;
-}
-
 function phrasebookScreen(lang) {
   const code = lang || store.profile.defaultLang || langForCountry(activeCountry);
   const book = getLanguage(code);
@@ -3582,7 +3563,14 @@ function phrasebookScreen(lang) {
     ]));
   }
 
-  const repaint = () => phrasebookScreen(code);
+  // Repaints the whole screen (pin/hide/reorder all touch several cards at once — the
+  // essentials list, "Your pins" and the row itself — so a full repaint is simplest) but
+  // keeps the traveller's scroll position, since mount() itself always jumps to the top.
+  const repaint = () => {
+    const y = window.scrollY;
+    phrasebookScreen(code);
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  };
 
   // Full category set incl. the allergens-module category (used by the pin index + list).
   const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
@@ -3590,11 +3578,9 @@ function phrasebookScreen(lang) {
   const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
   const idx = phraseIndexFor(categories, code);
 
-  // Most-needed phrases first (allergy/diet auto-injected), then the traveller's own pins.
+  // Most-needed phrases first (allergy/diet auto-injected).
   wrap.append(essentialsCard(code, book, repaint));
-  { const t = oneTimeHint('phrase-pin', 'Pin a phrase (📌) to keep it at the top, or hide ones you do not need. Your pin order is the order they show.'); if (t) wrap.append(t); }
-  const pinsCard = phrasePinsCard(code, book, idx, repaint);
-  if (pinsCard) wrap.append(pinsCard);
+  { const t = oneTimeHint('phrase-pin', 'Pin a phrase (📌) to save it to your dictionary in the You section, or hide (✕) ones you do not need.'); if (t) wrap.append(t); }
 
   const voiceOk = hasVoiceFor(book.locale);
   if (!voiceOk) {
@@ -3664,7 +3650,8 @@ function phrasebookScreen(lang) {
 // and removal is confirmed — the "add / delete with verification" the user asked for.
 function dictionaryScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('My phrases', '#me'));
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s dictionary` : 'Your dictionary', '#me'));
   const repaint = () => dictionaryScreen();
 
   const pinsMap = store.profile.prefs.phrasePins || {};
@@ -3683,7 +3670,7 @@ function dictionaryScreen() {
   }
 
   wrap.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 10px' },
-    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${langCodes.length} ${langCodes.length === 1 ? 'language' : 'languages'}. Tap a line to show it large · 📝 add a note · 🗑 remove.`));
+    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${langCodes.length} ${langCodes.length === 1 ? 'language' : 'languages'}. Use ↑ ↓ to reorder · tap a line to show it large · 📝 add a note · 🗑 remove.`));
 
   langCodes.forEach((code) => {
     const book = getLanguage(code);
@@ -3697,7 +3684,7 @@ function dictionaryScreen() {
 
     const card = h('div', { class: 'card dict-card' });
     card.append(h('h2', { style: 'margin-top:0' }, book.label));
-    keys.forEach((k) => {
+    keys.forEach((k, i) => {
       const { p, catId } = idx.get(k);
       const row = phraseRow(p, book.locale, { code, catId, onChange: repaint, noHide: true });
       const ctrls = row.querySelector('.phrase-ctrls');
@@ -3705,9 +3692,11 @@ function dictionaryScreen() {
       // instant-unpin 📌 with a confirmed 🗑 remove, and add a note control.
       const pinBtn = ctrls && ctrls.querySelector('.pin');
       if (pinBtn) pinBtn.remove();
+      const up = h('button', { class: 'speak', 'aria-label': `Move ${p.en} up`, title: 'Move up', disabled: i === 0 ? '' : null, onclick: () => { movePhrasePin(code, k, -1); repaint(); } }, '↑');
+      const down = h('button', { class: 'speak', 'aria-label': `Move ${p.en} down`, title: 'Move down', disabled: i === keys.length - 1 ? '' : null, onclick: () => { movePhrasePin(code, k, 1); repaint(); } }, '↓');
       const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${p.en}`, title: 'Add or edit a note' }, '📝');
       const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { confirmAction({ title: 'Remove phrase?', body: `Remove “${p.en}” from your saved phrases?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { togglePhrasePin(code, k); repaint(); } }); } }, '🗑');
-      if (ctrls) ctrls.append(noteBtn, rm);
+      if (ctrls) ctrls.append(up, down, noteBtn, rm);
       card.append(row);
 
       // Note: shown beneath the row when set; the 📝 button reveals an inline editor.
@@ -3930,7 +3919,7 @@ function closestPlacesCard(cc, scopeSlug, numFor, poolSource) {
     h('summary', { class: 'place-cat-summary' }, `📍 Closest to you · ${pool.length}`),
   ]);
   const body = h('div', { class: 'place-cat-body' });
-  pool.forEach((p) => body.append(placeCard(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null))));
+  pool.forEach((p) => body.append(placeQuickRow(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null))));
   det.append(body);
   return det;
 }
