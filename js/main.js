@@ -253,7 +253,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.337.0';
+const APP_VERSION = 'mk-v0.338.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -7920,7 +7920,7 @@ function wxAgo(ts) {
 }
 function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return d; } }
 function wxDayDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }); } catch { return d; } }
-function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : '–'; } }
+function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : 'N/A'; } }
 // Project lng/lat onto the same map as the landing-page country outlines.
 function projLL(lng, lat) { const P = REGION_PROJ; return [P.pad + (lng - P.minlng) * P.kx * P.scale, P.pad + (P.maxlat - lat) * P.scale]; }
 function wxTempVal(c) { return wxTempU() === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c); }
@@ -8145,7 +8145,7 @@ function weatherScreen(country) {
   const curHash = location.hash || '#weather';
   if (country && weatherSeededHash !== curHash) { weatherKey = spotKey(focusSpot(country).spot); weatherSeededHash = curHash; }
   if (!weatherKey) weatherKey = spotKey(focusSpot().spot);
-  const spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
+  let spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
 
   // Unit toggles (°C/°F, km/h/mph) — persist in the profile and re-render.
   const setTemp = (u) => { store.profile.wxTempUnit = u; save(); render(); };
@@ -8172,7 +8172,7 @@ function weatherScreen(country) {
     }
   }
 
-  const curCountry = spot.country;
+  let curCountry = spot.country;
 
   // Forecast map: the region with this country's cities plotted, each showing its
   // current temperature (one batched fetch), tappable to switch city.
@@ -8197,7 +8197,7 @@ function weatherScreen(country) {
     const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather map" xmlns="http://www.w3.org/2000/svg">${paths}${dots}</svg>`;
     mapBox.innerHTML = '';
     const box = h('div', { class: 'region-map', html: svg });
-    box.querySelectorAll('.wx-dot').forEach((g) => g.addEventListener('click', () => { weatherKey = g.getAttribute('data-key'); render(); }));
+    box.querySelectorAll('.wx-dot').forEach((g) => g.addEventListener('click', () => switchSpot(g.getAttribute('data-key'))));
     box.append(h('span', { class: 'region-cap' }, many ? 'Tap a city for its full forecast' : 'Connect once to load city temperatures'));
     mapBox.append(box);
   }
@@ -8241,7 +8241,7 @@ function weatherScreen(country) {
         const dayHums = segs.map((s) => s.hum).filter((v) => v != null);
         const dayHum = dayHums.length ? Math.round(dayHums.reduce((a, b) => a + b, 0) / dayHums.length) : null;
         detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
-          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : '–'}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : '–'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
+          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : 'N/A'}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : 'N/A'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         if (segs.length) {
           segs.forEach((s) => {
             const [sl, se] = wmo(s.code);
@@ -8280,20 +8280,45 @@ function weatherScreen(country) {
     body.append(refreshBtn);
   }
 
-  const cached = getCachedWeather(weatherKey);
-  paint(cached, !cached && online());
-  // Background refresh only if the traveller has opted online; repaint if still here.
-  if (online()) {
-    refreshWeather(spot).then((r) => {
-      if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
-    });
+  // Loads the cached reading for the CURRENT spot, paints it, then refreshes in the
+  // background if online. The background refresh's own repaint is left exactly as it
+  // always was — a quiet in-place update of `body`, no scroll handling — since a same-city
+  // refresh rarely changes the page's height enough to move the scroll position, and this
+  // path already ran on every visit without complaint. switchSpot() (below) is the one
+  // that needs to guard scroll: it never calls the global render() (which would jump the
+  // page to the top via mount()'s window.scrollTo(0,0)), but it does deliberately swap in a
+  // whole new city's cards, so it restores the traveller's scroll position afterwards.
+  function loadAndPaint() {
+    const cached = getCachedWeather(weatherKey);
+    paint(cached, !cached && online());
+    if (online()) {
+      refreshWeather(spot).then((r) => {
+        if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
+      });
+    }
   }
+  function switchSpot(key) {
+    if (!key || key === weatherKey) return;
+    const y = window.scrollY;
+    weatherKey = key;
+    spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || spot;
+    // The dropdown (unlike the map) can jump to a city in a different country — the map
+    // must then redraw for THAT country, and its cities' current temps need their own fetch
+    // (the cached "many" batch was fetched for the old country's cities).
+    const countryChanged = spot.country !== curCountry;
+    if (countryChanged) curCountry = spot.country;
+    renderMap(getCachedMany() && getCachedMany().data);
+    if (countryChanged && online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && spot.country === curCountry) renderMap(r.data); });
+    citySelect.value = weatherKey;
+    loadAndPaint();
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
+  loadAndPaint();
 
   // City switcher lives BELOW the map + forecast: tap the map, or pick from this dropdown
   // (defaults to the city currently shown, which starts at where the traveller is).
-  wrap.append(h('div', { class: 'card' }, [
-    field('See another city', locationSelect(weatherKey, (key) => { weatherKey = key; render(); })),
-  ]));
+  const citySelect = locationSelect(weatherKey, (key) => switchSpot(key));
+  wrap.append(h('div', { class: 'card' }, [field('See another city', citySelect)]));
 
   mount(wrap, '#home');
 }
@@ -8304,14 +8329,26 @@ function weatherScreen(country) {
 // 24-hour clock-face ring and across a month calendar. wxMetric persists for the session.
 let wxMetric = 'temp';
 const WX_METRICS = {
-  temp:  { label: '🌡 Temp',     hourly: (x) => x.temp, daily: (d) => d.tmax,     fmt: (v) => (v == null ? '–' : fmtTemp(v)) },
-  rain:  { label: '💧 Rain',     hourly: (x) => x.pp,   daily: (d) => d.rainProb, fmt: (v) => (v == null ? '–' : Math.round(v) + '%'), min: 0, max: 100 },
-  hum:   { label: '💦 Humidity', hourly: (x) => x.hum,  daily: null,              fmt: (v) => (v == null ? '–' : Math.round(v) + '%'), min: 0, max: 100 },
-  feels: { label: '🥵 Feels',    hourly: (x) => x.app,  daily: (d) => d.appMax,   fmt: (v) => (v == null ? '–' : fmtTemp(v)) },
-  wind:  { label: '💨 Wind',     hourly: (x) => x.wind, daily: (d) => d.windMax,  fmt: (v) => (v == null ? '–' : fmtWind(v)) },
+  temp:  { label: '🌡 Temp',     hourly: (x) => x.temp, daily: (d) => d.tmax,     fmt: (v) => (v == null ? 'N/A' : fmtTemp(v)) },
+  rain:  { label: '💧 Rain',     hourly: (x) => x.pp,   daily: (d) => d.rainProb, fmt: (v) => (v == null ? 'N/A' : Math.round(v) + '%'), min: 0, max: 100 },
+  hum:   { label: '💦 Humidity', hourly: (x) => x.hum,  daily: null,              fmt: (v) => (v == null ? 'N/A' : Math.round(v) + '%'), min: 0, max: 100 },
+  uv:    { label: '☀ UV',       hourly: (x) => x.uv,   daily: (d) => d.uv,       fmt: (v) => (v == null ? 'N/A' : String(Math.round(v))), min: 0, max: 12 },
+  feels: { label: '🥵 Feels',    hourly: (x) => x.app,  daily: (d) => d.appMax,   fmt: (v) => (v == null ? 'N/A' : fmtTemp(v)) },
+  wind:  { label: '💨 Wind',     hourly: (x) => x.wind, daily: (d) => d.windMax,  fmt: (v) => (v == null ? 'N/A' : fmtWind(v)) },
 };
+// UV uses the internationally-recognised index bands (green/yellow/orange/red/purple),
+// not a smooth gradient — a UV reading is meaningful in absolute terms, not relative to
+// that single day's own min/max, so it ignores the passed lo/hi range entirely.
+function wxUvColor(v) {
+  if (v <= 2) return '#4CAF50';
+  if (v <= 5) return '#FBC02D';
+  if (v <= 7) return '#FB8C00';
+  if (v <= 10) return '#E53935';
+  return '#8E24AA';
+}
 function wxMetricColor(metric, v, lo, hi) {
   if (v == null) return 'rgba(140,140,150,0.20)';
+  if (metric === 'uv') return wxUvColor(v);
   const t = hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0.5;
   if (metric === 'rain' || metric === 'hum') return `hsl(205, ${35 + t * 55}%, ${90 - t * 48}%)`;
   if (metric === 'wind') return `hsl(${140 - t * 110}, 62%, ${68 - t * 20}%)`;
@@ -8389,6 +8426,10 @@ function wxMonthCalendarNode(rec, metric) {
     if (d) {
       cell.append(h('div', { class: 'wx-cal-emo' }, wmo(d.code)[1]));
       cell.append(h('div', { class: 'wx-cal-v' }, cfg.fmt(v)));
+    } else {
+      // Beyond the fetched forecast horizon — say so plainly rather than leaving the
+      // cell blank, so "no data" always reads the same way across the whole calendar.
+      cell.append(h('div', { class: 'wx-cal-v muted' }, 'N/A'));
     }
     grid.append(cell);
   }
@@ -8397,17 +8438,50 @@ function wxMonthCalendarNode(rec, metric) {
     h('p', { class: 'muted small', style: 'margin:6px 2px 0' }, daily.length ? `Forecast covers the next ${daily.length} day${daily.length === 1 ? '' : 's'}; later days fill in as the forecast extends.` : 'Connect once to load the forecast.'),
   ]);
 }
+// `onChange`, when given, is called after a metric switch instead of the global render() —
+// letting the caller repaint just this card in place so switching Temp/Rain/Humidity/UV/
+// Feels/Wind never jumps the page back to the top (mount() always scrolls to 0,0).
+// Fully self-contained: switching metric (Temp/Rain/Humidity/UV/Feels/Wind) only ever
+// repaints the small ring+calendar slots below, never the card's own chip row and never
+// the enclosing screen — so it can never trigger the "whole body cleared, then rebuilt"
+// scroll jump that a wider repaint (or the old wxMetric=m;render()) caused.
 function wxVizCard(rec, spot) {
   const card = h('div', { class: 'card wx-viz' });
-  card.append(h('div', { class: 'chips wx-metric-row' }, Object.keys(WX_METRICS).map((m) =>
-    h('button', { class: 'chip', 'aria-pressed': wxMetric === m ? 'true' : 'false', onclick: () => { wxMetric = m; render(); } }, WX_METRICS[m].label))));
-  const ring = wxHourlyRingSvg(rec, wxMetric, spot.city);
-  if (ring) {
-    card.append(h('div', { class: 'wx-ring-wrap', html: ring }));
-    card.append(h('p', { class: 'muted small', style: 'text-align:center;margin:0 0 8px' }, 'Next 24 hours · tap a metric above'));
+  const chipsRow = h('div', { class: 'chips wx-metric-row' });
+  const ringSlot = h('div', {});
+  const monthHead = h('h3', { class: 'wx-cal-h', style: 'margin:6px 0' }, 'This month');
+  const calSlot = h('div', {});
+
+  function paintMetric() {
+    ringSlot.innerHTML = '';
+    const ring = wxHourlyRingSvg(rec, wxMetric, spot.city);
+    if (ring) {
+      ringSlot.append(h('div', { class: 'wx-ring-wrap', html: ring }));
+      ringSlot.append(h('button', {
+        class: 'linklike wx-ring-jump', style: 'display:block;width:100%;text-align:center;margin:0 0 8px',
+        onclick: () => monthHead.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      }, 'Next 24 hours · see this month ↓'));
+    }
+    calSlot.innerHTML = '';
+    calSlot.append(wxMonthCalendarNode(rec, wxMetric));
   }
-  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:6px 0' }, 'This month'));
-  card.append(wxMonthCalendarNode(rec, wxMetric));
+
+  Object.keys(WX_METRICS).forEach((m) => {
+    chipsRow.append(h('button', {
+      class: 'chip', 'aria-pressed': wxMetric === m ? 'true' : 'false',
+      onclick: () => {
+        wxMetric = m;
+        chipsRow.querySelectorAll('.chip').forEach((c, i) => {
+          const on = Object.keys(WX_METRICS)[i] === m;
+          c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        paintMetric();
+      },
+    }, WX_METRICS[m].label));
+  });
+
+  card.append(chipsRow, ringSlot, monthHead, calSlot);
+  paintMetric();
   return card;
 }
 

@@ -1781,6 +1781,7 @@ html[data-theme="dark"] .wx-ring-val, html[data-theme="dark"] .wx-ring-sub { fil
 .wx-cal-emo { font-size: 15px; line-height: 1.15; }
 .wx-cal-v { font-size: 10px; font-weight: 700; color: #1e1e1e; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
 .wx-cal-cell.nodata .wx-cal-num { color: var(--muted, #8a8a8a); text-shadow: none; }
+.wx-cal-cell.nodata .wx-cal-v { color: var(--muted, #8a8a8a); text-shadow: none; }
 html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
 html[data-theme="dark"] .wx-cal-cell.nodata { background: rgba(255,255,255,0.035); }
 

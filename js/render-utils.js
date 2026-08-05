@@ -153,6 +153,6 @@ export function swatch(color) { return h('span', { class: 'swatch', 'aria-hidden
 // metric, so toggling converts on display without any re-fetch.
 export function wxTempU() { return (store.profile && store.profile.wxTempUnit) || 'C'; }
 export function wxWindU() { return (store.profile && store.profile.wxWindUnit) || 'kmh'; }
-export function fmtTemp(c) { if (c == null) return '–'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
-export function fmtWind(kmh) { if (kmh == null) return '–'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
-export function fmtPrecip(mm) { if (mm == null) return '–'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
+export function fmtTemp(c) { if (c == null) return 'N/A'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
+export function fmtWind(kmh) { if (kmh == null) return 'N/A'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
+export function fmtPrecip(mm) { if (mm == null) return 'N/A'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
