@@ -546,8 +546,8 @@ Larger than Home. Ship in order, each independently verifiable:
 
 - **E1** — merge the two screens behind one renderer; `#explore` and `#country-<cc>` both
   route to it; country switcher replaces the chooser when anchored. *No new content yet —
-  pure structure, so a regression is obvious.*
-- **E2** — conditional landing (anchor detection + chooser fallback).
+  pure structure, so a regression is obvious.* **SHIPPED.**
+- **E2** — conditional landing (anchor detection + chooser fallback). **SHIPPED.**
 - **E3** — phase-rank the 26 tiles (reuse Home's pattern directly).
 - **E4** — "Fits your trip": filter existing best-of lists and itineraries by real prefs;
   add the `forWho: 'nomads'` labels to itineraries that already earn them.
@@ -565,6 +565,44 @@ Larger than Home. Ship in order, each independently verifiable:
 - No section renders an empty shell: each omits itself when it has nothing real to show.
 - Explore paints before any country data loads, and works fully offline.
 - Nothing removed from navigation — all 26 tiles still reachable.
+
+#### E1 + E2 build notes — SHIPPED as mk-v0.343.0
+
+`exploreScreen(argCc)` now serves all three routes: bare `#explore` (falls through to
+`anchorCountry()`), `#country-<cc>` (explicit, always wins — all 21 existing links verified
+working unchanged), and a new `#explore-all` (forces the four-country chooser even while
+anchored — without it, an anchored traveller could never reach the comparison view again,
+since bare `#explore` now always lands on their country). `countryHubScreen` no longer
+exists; its entire body — hero, regions map, focus-city card, history, access/visa/family
+cards, solo-safety note, signature sights, city picker, the 26-tile toolkit — is now the
+scoped branch of the merged function, unchanged content-wise.
+
+**Root-tab consequence, deliberate and noted:** the old country hub's "‹ Back → Home" button
+is gone. Explore is a bottom-tab screen now, not a sub-screen reached from Home, so it
+behaves like Home/Places/Talk/You — no back button. Getting to a different country or the
+four-country view is the switcher (four flags + "🌏 All"), one tap, always visible when
+scoped.
+
+**A correctness gap found and fixed during build, not left to review.** `#country-<cc>` is
+gated by the router's F1 lazy-load table (`NEEDS_COUNTRY_DATA` already included `'country'`),
+so that route's data is always loaded before the screen runs. Bare `#explore` is deliberately
+**not** gated (so it never blocks on all four countries loading) — but `anchorCountry()` can
+now land on a country nothing has loaded yet (e.g. a dated trip stop set for a country never
+opened this session), which the old exploreScreen never rendered country-scoped content for
+and so never needed to handle. Added the same background-load-and-quietly-repaint idiom
+already used for the chooser's per-country counts and for Home's country load, keyed to
+whichever hash is current (`explore` or `country`) so it repaints correctly either way.
+
+**Verified:** anchor detection landed correctly on Thailand from a dated trip stop set
+earlier this session; `#explore-all` correctly forces the chooser while still anchored;
+`#country-vi`, `#country-kh`, `#country-la` all render their full scoped view (hero, 8
+signature sights, region map, city grid, 4 tile decks) with zero console errors; the
+switcher correctly re-scopes without a page reload. **True offline test**: killed the dev
+server, hard-reloaded on `#country-th` — the merged screen, 🆘, the switcher and the
+signature-sights strip all rendered from Service Worker Cache Storage alone, zero errors.
+
+E3 (phase-ranking the 26 tiles) and the discovery sections (E4–E7) are deliberately queued
+for the next round, per the plan to review the merged structure first.
 
 ### Places — *pending*
 ### Talk — *pending*
