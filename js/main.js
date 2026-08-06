@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.342.0';
+const APP_VERSION = 'mk-v0.343.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2178,78 +2178,31 @@ function meHubScreen() {
 
 // Explore tab: the geographic front door. A tap on a country opens that country's hub —
 // country-wide history, culture, guide and cities — and (from Wave 2) its regions map.
-function exploreScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Explore'));
-
-  // Personalised lead: pick up where the traveller already is; otherwise a short prompt.
+// Explore E1/E2 (OVERHAUL.md section 11): a REAL signal, not just a stored default, that
+// tells Explore which country to land on without asking. Home's inferPhase() established
+// the same convention (INFER_IN_REGION_KM) — deliberately stricter than getActiveCountry(),
+// which always holds a value (defaults to 'th' via detectCountryId()) and so would never
+// correctly signal "no anchor, show the chooser". Checked in order: a GPS fix within the
+// region, an explicitly chosen focus city, then a dated trip stop (soonest upcoming, else
+// most recent past — either is a real trip signal). Returns null — the four-country
+// chooser — only when none of these hold, e.g. planning from home with nothing set yet.
+function anchorCountry() {
+  const gps = getLastFix();
+  if (gps) {
+    const near = nearestSpotGlobal(gps);
+    if (near && near.km <= INFER_IN_REGION_KM) return near.spot.country;
+  }
   const fs = focusSpot();
-  const fcc = fs && fs.spot ? fs.spot.country : '';
-  const fc = getCountry(fcc);
-  if (fc) {
-    const gpsFix = getLastFix();
-    const wai = gpsFix ? whereAmI(gpsFix) : null;
-    const city = wai ? wai.name : ((fs.source === 'focus') && fs.spot ? fs.spot.city : '');
-    wrap.append(h('div', { class: 'card explore-lead', style: `--ec:${REGION_COLORS[fcc] || 'var(--teal)'}` }, [
-      h('h2', { style: 'margin:0 0 2px' }, `${fc.flag} Continue in ${fc.name}`),
-      h('p', { class: 'muted', style: 'margin:2px 0 8px' }, city ? `You’re around ${city} — pick up where you are.` : 'Pick up where you left off.'),
-      h('div', { class: 'chips' }, [
-        h('button', { class: 'chip', onclick: () => { setActiveCountry(fcc); go(`#country-${fcc}`); } }, [chipIcon('compass'), `Explore ${fc.name}`]),
-        h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Places near me']),
-      ]),
-    ]));
-  } else {
-    wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 10px' }, 'Choose where to explore — every country works fully offline.'));
+  if (fs && fs.source === 'focus' && fs.spot) return fs.spot.country;
+  const dated = (store.trip.stops || []).filter((s) => s.date && s.country);
+  if (dated.length) {
+    const t = todayISO();
+    const upcoming = dated.filter((s) => s.date >= t).sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+    if (upcoming) return upcoming.country;
+    const past = dated.slice().sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+    if (past) return past.country;
   }
-
-  // Hero chooser: the interactive four-country map, collapsible (open by default, persisted).
-  const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🗺 Choose on the map'),
-    regionPicker(), { open: store.profile.prefs.exploreMapOpen !== false, cls: 'home-group-d' });
-  mapFold.addEventListener('toggle', () => { store.profile.prefs.exploreMapOpen = mapFold.open; save(); });
-  wrap.append(mapFold);
-
-  // "At a glance": each country's real figures (mapped-place count, language, currency) and
-  // its top sourced "known for" tags — a comparison that helps a traveller CHOOSE, not just a
-  // launcher. Verified data only (counts from the datasets, tags from history.js). Collapsible.
-  // Explore itself must never block on all four countries loading (that would defeat lazy
-  // loading for the common case of one country); a country not yet loaded briefly reads 0
-  // here, so kick each missing one off in the background and quietly repaint Explore in
-  // place (scroll preserved) as each lands, so the counts correct themselves.
-  const unloaded = COUNTRIES.filter((c) => !isCountryLoaded(c.id));
-  if (unloaded.length) {
-    unloaded.forEach((c) => {
-      loadCountry(c.id).then(() => {
-        const headRoute = (location.hash || '').slice(1).split('-')[0];
-        if (headRoute === 'explore' && isCountryLoaded(c.id)) {
-          const y = window.scrollY;
-          exploreScreen();
-          requestAnimationFrame(() => window.scrollTo(0, y));
-        }
-      }).catch(() => { /* offline with nothing cached yet — leave today's 0 up */ });
-    });
-  }
-  const grid = h('div', { class: 'explore-grid' });
-  COUNTRIES.forEach((c) => {
-    const n = allPlaces({ country: c.id }).length;
-    const lang = getLanguage(c.lang);
-    const tags = ((countryHistory(c.id) || {}).knownFor || []).slice(0, 3);
-    grid.append(h('button', {
-      class: 'explore-card', style: `--ec:${REGION_COLORS[c.id] || 'var(--teal)'}`,
-      onclick: () => { setActiveCountry(c.id); go(`#country-${c.id}`); },
-      'aria-label': `Explore ${c.name}`,
-    }, [
-      h('span', { class: 'explore-flag' }, c.flag),
-      h('span', { class: 'explore-name' }, c.name),
-      h('span', { class: 'explore-facts' }, `${n} place${n === 1 ? '' : 's'} · ${lang ? lang.label : c.lang} · ${c.currency}`),
-      tags.length ? h('span', { class: 'explore-tags' }, tags.map((t) => h('span', { class: 'explore-tag' }, t))) : null,
-    ]));
-  });
-  const glanceFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🌏 Four countries at a glance'),
-    grid, { open: store.profile.prefs.exploreGlanceOpen !== false, cls: 'home-group-d' });
-  glanceFold.addEventListener('toggle', () => { store.profile.prefs.exploreGlanceOpen = glanceFold.open; save(); });
-  wrap.append(glanceFold);
-
-  mount(wrap, '#explore');
+  return null;
 }
 
 // Region/province drill-down. The full implementation — an outlined, clickable province
@@ -2474,12 +2427,111 @@ function countryHeroBand(c) {
   ]);
 }
 
-function countryHubScreen(id) {
-  const c = getCountry(id);
-  if (c) setActiveCountry(id);
+// Explore E1 (OVERHAUL.md section 11): Explore and the country hub were the same section
+// split across two screens — the old bare #explore was a thin chooser (73 lines, no
+// photography, no curated content) while everything a traveller actually wants (hero photo,
+// signature sights, regions, cities, the full toolkit) lived one tap deeper, only reachable
+// via #country-<cc>. Merged into one renderer. #explore and #country-<cc> BOTH route here —
+// 21 existing links point at #country-<cc> and must keep working unchanged.
+//
+// argCc: an explicit country id from #country-<cc> (always wins), 'all' from #explore-all
+// (forces the four-country view even when anchored), or undefined from a bare #explore
+// (falls through to anchorCountry() — E2's landing logic).
+//
+// Root-tab note: unlike the old countryHubScreen, this never shows a "‹ Back" button —
+// Explore is a bottom-tab screen like Home/Places, not a sub-screen you navigate into, and
+// the four-country view is one tap away via the "🌏 All" chip in the switcher below,
+// consistent with rank-collapse-never-remove.
+function exploreScreen(argCc) {
+  const forceAll = argCc === 'all';
+  const cc = (!forceAll && argCc && getCountry(argCc)) ? argCc : (forceAll ? null : anchorCountry());
+  const c = cc ? getCountry(cc) : null;
+
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Country', '#home'));
-  if (!c) { wrap.append(h('p', { class: 'empty' }, 'Unknown country.')); mount(wrap, '#home'); return; }
+  wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Explore'));
+
+  if (!c) {
+    // No explicit country and no real anchor — the four-country comparison view. Reached by
+    // tapping the Explore tab with nothing yet to land on, or explicitly via #explore-all.
+    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🗺 Choose on the map'),
+      regionPicker(), { open: store.profile.prefs.exploreMapOpen !== false, cls: 'home-group-d' });
+    mapFold.addEventListener('toggle', () => { store.profile.prefs.exploreMapOpen = mapFold.open; save(); });
+    wrap.append(mapFold);
+
+    // "At a glance": each country's real figures (mapped-place count, language, currency) and
+    // its top sourced "known for" tags — a comparison that helps a traveller CHOOSE. Explore
+    // itself must never block on all four countries loading (that would defeat lazy loading
+    // for the common case of one country); a country not yet loaded briefly reads 0 here, so
+    // kick each missing one off in the background and quietly repaint in place as each lands.
+    const unloaded = COUNTRIES.filter((x) => !isCountryLoaded(x.id));
+    if (unloaded.length) {
+      unloaded.forEach((x) => {
+        loadCountry(x.id).then(() => {
+          const headRoute = (location.hash || '').slice(1).split('-')[0];
+          if (headRoute === 'explore' && isCountryLoaded(x.id)) {
+            const y = window.scrollY;
+            exploreScreen(argCc);
+            requestAnimationFrame(() => window.scrollTo(0, y));
+          }
+        }).catch(() => { /* offline with nothing cached yet — leave today's 0 up */ });
+      });
+    }
+    const grid = h('div', { class: 'explore-grid' });
+    COUNTRIES.forEach((x) => {
+      const n = allPlaces({ country: x.id }).length;
+      const lang = getLanguage(x.lang);
+      const tags = ((countryHistory(x.id) || {}).knownFor || []).slice(0, 3);
+      grid.append(h('button', {
+        class: 'explore-card', style: `--ec:${REGION_COLORS[x.id] || 'var(--teal)'}`,
+        onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
+        'aria-label': `Explore ${x.name}`,
+      }, [
+        h('span', { class: 'explore-flag' }, x.flag),
+        h('span', { class: 'explore-name' }, x.name),
+        h('span', { class: 'explore-facts' }, `${n} place${n === 1 ? '' : 's'} · ${lang ? lang.label : x.lang} · ${x.currency}`),
+        tags.length ? h('span', { class: 'explore-tags' }, tags.map((t) => h('span', { class: 'explore-tag' }, t))) : null,
+      ]));
+    });
+    const glanceFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🌏 Four countries at a glance'),
+      grid, { open: store.profile.prefs.exploreGlanceOpen !== false, cls: 'home-group-d' });
+    glanceFold.addEventListener('toggle', () => { store.profile.prefs.exploreGlanceOpen = glanceFold.open; save(); });
+    wrap.append(glanceFold);
+
+    mount(wrap, '#explore');
+    return;
+  }
+
+  // Scoped to a country — an explicit choice (#country-<cc>, a switcher tap, a flag on the
+  // map/glance view above) or a real anchor from anchorCountry(). Either way this is now the
+  // traveller's active country.
+  setActiveCountry(cc);
+
+  // Bare #explore / anchor-driven landing is NOT gated by the router (only #country-<cc> is —
+  // see NEEDS_COUNTRY_DATA in render()), so an anchor pointing at a country nothing has loaded
+  // yet (e.g. a dated stop set for a country never opened this session) would otherwise render
+  // sparse forever. Background-load + quietly repaint, same idiom as the chooser above and as
+  // Home's own country-load block — never block first paint, never silently stay empty.
+  if (!isCountryLoaded(cc)) {
+    loadCountry(cc).then(() => {
+      const headRoute = (location.hash || '').slice(1).split('-')[0];
+      if (headRoute === 'explore' || headRoute === 'country') {
+        const y = window.scrollY;
+        exploreScreen(argCc);
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      }
+    }).catch(() => { /* offline with nothing cached yet — sparse view stays up */ });
+  }
+
+  // Compact switcher: change country or drop back to the four-country view in one tap.
+  // Replaces both the old full-screen chooser and the hub's separate identity — this IS
+  // Explore now, just scoped.
+  const switcherChips = COUNTRIES.map((x) => h('button', {
+    class: 'chip' + (x.id === cc ? ' active' : ''), 'aria-pressed': x.id === cc ? 'true' : 'false',
+    onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
+  }, `${x.flag} ${x.name}`));
+  switcherChips.push(h('button', { class: 'chip', onclick: () => go('#explore-all') }, '🌏 All'));
+  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 10px', role: 'group', 'aria-label': 'Country' }, switcherChips));
+
   const hero = countryHeroBand(c);
   if (hero) wrap.append(hero);
   const lang = getLanguage(c.lang);
@@ -2488,18 +2540,18 @@ function countryHubScreen(id) {
   wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 8px' }, [
     lang ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, [chipIcon('chat'), 'Phrasebook']) : null,
     h('button', { class: 'chip', onclick: () => go('#currency') }, [chipIcon('coins'), 'Currency']),
-    h('button', { class: 'chip', onclick: () => go(`#places-${id}`) }, [chipIcon('pin'), 'Places']),
+    h('button', { class: 'chip', onclick: () => go(`#places-${cc}`) }, [chipIcon('pin'), 'Places']),
     h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('map'), 'Map']),
     h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
   ]));
 
   // Regions map: tapping into a country shows its provinces outlined and coloured; each is
   // tappable through to a region view (its cities and mapped places).
-  if (regionSetFor(id)) {
+  if (regionSetFor(cc)) {
     const rbody = h('div', {}, [
       h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a region to see its cities, places and how it fits into the country.'),
     ]);
-    const rm = regionsMap(id, { onPick: (code) => go(`#region-${id}-${code}`) });
+    const rm = regionsMap(cc, { onPick: (code) => go(`#region-${cc}-${code}`) });
     if (rm) rbody.append(rm);
     const regionFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Regions of ${c.name}`),
       rbody, { open: store.profile.prefs.hubRegionsOpen !== false, cls: 'home-group-d' });
@@ -2510,58 +2562,58 @@ function countryHubScreen(id) {
   // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
   // this country, surface that city first and let them widen to the whole country. Only
   // when it is a real signal (GPS or a chosen focus), never the capital default.
-  const fs = focusSpot(id);
+  const fs = focusSpot(cc);
   const fcity = (fs && (fs.source === 'gps' || fs.source === 'focus') && fs.spot) ? fs.spot.city : null;
   if (fcity) {
     const slug = citySlug(fcity);
-    const here = allPlaces({ country: id }).filter((p) => citySlug(p.city || '') === slug).length;
+    const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === slug).length;
     wrap.append(h('div', { class: 'card access-focus' }, [
       h('h2', { style: 'margin-top:0' }, `📍 You’re around ${fcity}`),
       h('p', { class: 'muted', style: 'margin:4px 0 8px' },
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
-      here ? h('button', { class: 'btn block', onclick: () => go(`#places-${id}-${slug}`) }, `Places in ${fcity}`) : null,
+      here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${slug}`) }, `Places in ${fcity}`) : null,
       h('div', { class: 'chips', style: 'margin-top:6px' }, [
         h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
-        h('button', { class: 'chip', onclick: () => go(`#weather-${id}`) }, [chipIcon('cloud'), 'Weather']),
-        h('button', { class: 'chip', onclick: () => go(`#setcity-${id}`) }, [chipIcon('pin'), 'Not here? Change city']),
+        h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, [chipIcon('cloud'), 'Weather']),
+        h('button', { class: 'chip', onclick: () => go(`#setcity-${cc}`) }, [chipIcon('pin'), 'Not here? Change city']),
       ]),
     ]));
   } else {
     // No location signal (offline / GPS off): let them SET where they are so distances,
     // weather and "near me" all match. Fully offline — no GPS required.
-    wrap.append(whereAmICard(id));
+    wrap.append(whereAmICard(cc));
   }
 
   // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
   // it is not something a traveller reads every day, so it should not be the first thing.
-  const hi = countryHistory(id);
+  const hi = countryHistory(cc);
   if (hi && hi.blurb) {
     wrap.append(foldable('History & culture', h('div', {}, [
       h('p', {}, hi.blurb),
       knownForRow(hi.knownFor),
       hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
-      h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${id}`) }, '📖 In-depth history & culture'),
+      h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${cc}`) }, '📖 In-depth history & culture'),
     ])));
   }
-  const acc = accessCard(id); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen'));
-  const vc = visaCard(id); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen'));
-  const famc = familyCard(id); if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen'));
+  const acc = accessCard(cc); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen'));
+  const vc = visaCard(cc); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen'));
+  const famc = familyCard(cc); if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen'));
   if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
     wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
       h('strong', {}, '🧭 Travelling solo'),
       h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
-      h('button', { class: 'btn block', onclick: () => go(`#sos-${id}`) }, 'See solo & women’s safety'),
+      h('button', { class: 'btn block', onclick: () => go(`#sos-${cc}`) }, 'See solo & women’s safety'),
     ]));
   }
 
   // Photo-forward lead: this country's iconic sights, before the map/city picker.
-  const hubSights = signatureSightsStrip(id);
+  const hubSights = signatureSightsStrip(cc);
   if (hubSights) wrap.append(hubSights);
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
   // (which then browses as a short list or a map).
-  const cityPlaces = allPlaces({ country: id });
+  const cityPlaces = allPlaces({ country: cc });
   if (cityPlaces.length) {
     const withCoords = cityPlaces.filter((p) => p.coords);
     const counts = {};
@@ -2570,13 +2622,13 @@ function countryHubScreen(id) {
     const body = h('div', {});
     if (cities.length) {
       body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
-      body.append(cityPickGrid(id, cities.slice(0, 12), counts));
+      body.append(cityPickGrid(cc, cities.slice(0, 12), counts));
     }
     // One living map for the whole app: link to the Places section rather than embedding a
     // SECOND MapLibre map here — that duplicated the Places living map and cost a wasted
     // WebGL load. The Places map already numbers, colours and filters every place.
     if (withCoords.length) {
-      body.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${id}`) },
+      body.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) },
         [chipIcon('map'), ` See all ${withCoords.length} places on the map`]));
     }
     const exploreFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Explore ${c.name} by city`),
@@ -2586,52 +2638,51 @@ function countryHubScreen(id) {
   }
 
   // The full country toolkit, regrouped from one 26-tile wall into four labelled,
-  // collapsible sub-clusters so a traveller scans four intents, not a flat grid.
-  // The "identify what's around me" tools (nature + sounds) sit together under See & do.
+  // collapsible sub-clusters so a traveller scans four intents, not a flat grid. Phase-
+  // ranking these (the deck matching the current trip phase opens, the rest collapse) is
+  // E3 — deliberately deferred to the next slice so this merge stays structure-only and any
+  // regression is obvious. The "identify what's around me" tools sit together under See & do.
   const tileGroups = [
     { label: 'Get oriented', tiles: [
-      { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${c.id}` },
-      { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${c.id}` },
+      { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
+      { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${cc}` },
       { ic: ICON.chat, t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
-      { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${c.id}` },
+      { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${cc}` },
       { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
-      { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${c.id}` },
+      { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${cc}` },
       { ic: ICON.alert, t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
     ] },
     { label: 'Getting around', tiles: [
-      { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${c.id}` },
+      { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${cc}` },
       { ic: ICON.navarrow, t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
-      { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${c.id}` },
+      { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${cc}` },
       { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
       { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
     ] },
     { label: 'Eat & drink', tiles: [
-      { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${c.id}` },
+      { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${cc}` },
       { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-      { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${c.id}` },
+      { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${cc}` },
       { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
     ] },
     { label: 'See & do', tiles: [
-      { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${c.id}` },
-      { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${c.id}` },
-      { ic: ICON.sun, t: 'Things to do', d: 'Picks for right now', hash: `#today-${c.id}` },
-      { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${c.id}` },
-      { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${c.id}` },
-      { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${c.id}` },
-      { ic: ICON.temple, t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${c.id}` },
+      { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${cc}` },
+      { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${cc}` },
+      { ic: ICON.sun, t: 'Things to do', d: 'Picks for right now', hash: `#today-${cc}` },
+      { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${cc}` },
+      { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${cc}` },
+      { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${cc}` },
+      { ic: ICON.temple, t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${cc}` },
       { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
       { ic: ICON.volume, t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
       { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
     ] },
   ];
-  // Collapsed by default: the city-first card, guide cards and Explore map cover the
-  // primary needs; the full toolkit is four tappable intents, not a wall of tiles.
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
   tileGroups.forEach((g) => {
     wrap.append(foldable(g.label, h('div', { class: 'grid' }, g.tiles.map(sectionTile))));
   });
-  // The country hub is the Explore drill-down (country → region → city), so it belongs to the
-  // Explore tab — highlight that, not Home, however the traveller arrived here.
+
   mount(wrap, '#explore');
 }
 
@@ -12597,8 +12648,8 @@ function render() {
       case '': case 'home': return homeScreen();
       case 'me': return meHubScreen();
       case 'welcome': return welcomeScreen();
-      case 'explore': return exploreScreen();
-      case 'country': return countryHubScreen(arg);
+      case 'explore': return exploreScreen(arg);   // arg is usually undefined; 'all' forces the four-country view
+      case 'country': return exploreScreen(arg);   // arg is always a valid country id — 21 existing links
       case 'region': return regionScreen(arg);
       case 'nearby': return nearbyScreen();
       case 'currency': return currencyScreen();
