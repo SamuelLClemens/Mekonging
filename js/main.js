@@ -72,6 +72,7 @@ import {
   boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
+  loadCountry, isCountryLoaded,
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
@@ -253,7 +254,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.339.0';
+const APP_VERSION = 'mk-v0.340.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2075,6 +2076,22 @@ function homeNowCard(phase, cc) {
 }
 
 function homeScreen() {
+  // "Right now" picks below need this country's place data; Home itself must never block
+  // on it — the router's lazy-load gate (render()) deliberately excludes 'home' so first
+  // paint stays instant even before any country has loaded. Kick the load off here in the
+  // background instead, and quietly repaint Home in place (scroll position preserved) once
+  // it lands, so the picks correct themselves rather than reading empty all session.
+  if (!isCountryLoaded(activeCountry)) {
+    const cc = activeCountry;
+    loadCountry(cc).then(() => {
+      const headRoute = (location.hash || '#home').slice(1).split('-')[0];
+      if ((headRoute === '' || headRoute === 'home') && isCountryLoaded(cc)) {
+        const y = window.scrollY;
+        homeScreen();
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      }
+    }).catch(() => { /* offline with nothing cached yet — leave today's honest fallback tip up */ });
+  }
   const wrap = h('div', { class: 'screen' });
   wrap.append(h('section', { class: 'hero is-collapsed', onclick: (e) => { if (e.currentTarget.classList.contains('is-collapsed')) toggleHero(); } }, [
     h('button', { class: 'hero-toggle', type: 'button', 'aria-label': 'Collapse the header', 'aria-expanded': 'true', onclick: toggleHero },
@@ -2374,6 +2391,23 @@ function exploreScreen() {
   // "At a glance": each country's real figures (mapped-place count, language, currency) and
   // its top sourced "known for" tags — a comparison that helps a traveller CHOOSE, not just a
   // launcher. Verified data only (counts from the datasets, tags from history.js). Collapsible.
+  // Explore itself must never block on all four countries loading (that would defeat lazy
+  // loading for the common case of one country); a country not yet loaded briefly reads 0
+  // here, so kick each missing one off in the background and quietly repaint Explore in
+  // place (scroll preserved) as each lands, so the counts correct themselves.
+  const unloaded = COUNTRIES.filter((c) => !isCountryLoaded(c.id));
+  if (unloaded.length) {
+    unloaded.forEach((c) => {
+      loadCountry(c.id).then(() => {
+        const headRoute = (location.hash || '').slice(1).split('-')[0];
+        if (headRoute === 'explore' && isCountryLoaded(c.id)) {
+          const y = window.scrollY;
+          exploreScreen();
+          requestAnimationFrame(() => window.scrollTo(0, y));
+        }
+      }).catch(() => { /* offline with nothing cached yet — leave today's 0 up */ });
+    });
+  }
   const grid = h('div', { class: 'explore-grid' });
   COUNTRIES.forEach((c) => {
     const n = allPlaces({ country: c.id }).length;
@@ -12672,6 +12706,20 @@ function settingsScreen() {
   mount(wrap, '#settings');
 }
 
+// A brief, honest, one-time-per-country loading state — shown only the first time a
+// route needs data that has not been fetched yet this session (see the lazy country
+// data gate in render() below). Never a blank screen, never a silent hang.
+function countryLoadingScreen(ccs) {
+  const names = ccs.map((id) => { const c = getCountry(id); return c ? `${c.flag} ${c.name}` : id; }).join(', ');
+  return h('div', { class: 'screen' }, [
+    h('div', { class: 'card', style: 'text-align:center;margin-top:15vh' }, [
+      h('div', { style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
+      h('h2', { style: 'margin:0 0 4px' }, `Loading ${names}…`),
+      h('p', { class: 'muted' }, 'One-time — this stays on your device after.'),
+    ]),
+  ]);
+}
+
 // ---- router -----------------------------------------------------------------
 let liveMapCtrl = null;   // the map controller for the current #map view, if any
 let liveCleanup = null;   // per-screen teardown (e.g. release the screen wake lock)
@@ -12686,6 +12734,43 @@ function render() {
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
+
+  // ---- Lazy country data gate --------------------------------------------------
+  // See js/data/regions.js: COUNTRIES ships as metadata only; loadCountry(cc) fetches
+  // one country's places/food/prices/routes/info/guide/events + local boards on first
+  // real need, so a traveller's first paint never parses the other three countries'
+  // data (~1.5 MB combined). This is the ONE choke point — every screen below reads
+  // that data fully synchronously and UNCHANGED, because by the time a gated screen
+  // runs, its country is guaranteed loaded. Falls straight through at zero added cost
+  // once loaded (isCountryLoaded is a plain property read); fires at most once per
+  // country per session. If you add a screen that reads allPlaces/getFood/getEvents/
+  // c.prices/c.routes/c.info/c.guide/boardsForCountry, add its route below.
+  const ALL_CC = ['th', 'vi', 'kh', 'la'];
+  const NEEDS_COUNTRY_DATA = new Set([
+    'country', 'region', 'nearby', 'places', 'place', 'prices', 'transport',
+    'calendar', 'events', 'event', 'today', 'food', 'dish', 'board', 'streetfood',
+    'sos', 'foryou',
+  ]);
+  // Read across every country at once: universal search; the full multi-country map
+  // (NOT the small embedded per-country Places map, which is caller-scoped via a
+  // supplied list and unaffected); the cross-border route/journey planner (its route
+  // graph memoises forever on first build, so it must never run while only partly
+  // loaded); and a traveller's own saved places/collections, which may span any
+  // country they have visited.
+  const NEEDS_ALL_COUNTRIES = new Set(['search', 'map', 'route', 'journey', 'saved', 'collection']);
+  if (NEEDS_COUNTRY_DATA.has(head) || NEEDS_ALL_COUNTRIES.has(head)) {
+    const wantAll = NEEDS_ALL_COUNTRIES.has(head);
+    const prefix = arg ? arg.split('-')[0] : null;
+    const argCc = ALL_CC.includes(arg) ? arg : (ALL_CC.includes(prefix) ? prefix : null);
+    const neededCcs = wantAll ? ALL_CC : [argCc || activeCountry];
+    const pending = neededCcs.filter((cc) => !isCountryLoaded(cc));
+    if (pending.length) {
+      pending.forEach((cc) => { loadCountry(cc).then(render, render); });
+      mount(countryLoadingScreen(neededCcs), true);
+      return;
+    }
+  }
+
   try {
     // First run: learn the traveller before dropping them on the menu. Only intercepts the
     // home route, so any deep link (a shared place/board) still opens directly.
