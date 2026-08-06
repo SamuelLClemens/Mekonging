@@ -601,8 +601,57 @@ switcher correctly re-scopes without a page reload. **True offline test**: kille
 server, hard-reloaded on `#country-th` — the merged screen, 🆘, the switcher and the
 signature-sights strip all rendered from Service Worker Cache Storage alone, zero errors.
 
-E3 (phase-ranking the 26 tiles) and the discovery sections (E4–E7) are deliberately queued
-for the next round, per the plan to review the merged structure first.
+E3 (phase-ranking the 26 tiles) and the discovery sections (E4–E7) shipped in the following
+round, once the merge above was reviewed.
+
+#### E3–E7 build notes — SHIPPED as mk-v0.344.0
+
+- **E3 — phase-ranked tiles.** `homeStatusBand`'s exact rule, reused directly: one deck
+  (`Get oriented` for planning/arrived, `See & do` for traveling) opens by default; `post`
+  has no strong single fit among these four decks, so it opens none, unchanged from before
+  E3. Not persisted per-deck — like Home, phase always decides on the next visit, never a
+  sticky manual override.
+- **E4 — "Fits your trip".** Reuses `suggestPlans()` (already scores itineraries by the
+  traveller's real `party`/`budget`/`tripLength`) and filters `bestForCountry()`'s lists by
+  `forWho`: universal lists (`everyone`/`firsttimers`) always show; `families`/`budget`
+  lists only show when the traveller's own profile actually matches. Added the one real
+  `tags: ["nomads"]` label this data supports — Thailand's "A slow month up north"
+  itinerary (Nimman coworking, monthly apartment rates) — a labelling change only, no new
+  content invented, per the spec's explicit scope.
+- **E5 — seasonal fit.** Wet/dry from `WET_MONTHS`, any dated festival within 45 days from
+  `events.*.js`, and the current city's `bestTime` line from `history.js` when one exists.
+  Loosened during build: an early draft required 2+ lines before showing anything, which
+  silently hid the wet/dry fact whenever no festival fell in the window — but that fact
+  alone is real, sourced content and directly answers "best for this season" (one of the
+  traveller's own asks), so it now shows on its own.
+- **E6 — "Where next".** Real transport options to every other hub in journey.js's route
+  graph, ranked by shortest travel time (reuses the exact `totalHrs`/`changes` fields
+  `planRouteScreen` already renders). Same F1/H4 constraint as Home's next-stop card:
+  `isRouteNode()`/`planRoutes()` must never run before `loadAllCountries()` resolves, since
+  the route graph memoises permanently on first build — cache-only, never called inline.
+  **A real bug found and fixed during verification, not left to review:** the first cut
+  called `loadAllCountries()` without ever importing it into main.js (`loadCountry,
+  isCountryLoaded` were imported from `data/regions.js`, but `loadAllCountries` was not —
+  nothing in main.js had needed it before, since the router's own all-country gate loops
+  `loadCountry` manually instead of calling it). Threw "loadAllCountries is not defined" and
+  fell through to the app's error boundary on first live test. Fixed by adding it to the
+  import line; re-verified clean on every country afterward.
+- **E7 — "You might not know".** Highly-rated places (≥4.3) in cities with no saved
+  favourite yet, one per city, ranked by rating. Deliberately uses only saved places as the
+  "already knows about" signal — journal entries carry a free-text place name too unreliable
+  to match safely against a city field, so that signal was left out rather than guessed at.
+- Reordered the scoped screen so E4–E7 (plus the pre-existing signature-sights strip) lead
+  right after the "where you are" card, ahead of the regions map / history / access-visa-
+  family cards / tile decks — Explore's actual theme is discovery, so inspiration now
+  surfaces before reference reading rather than being buried under it.
+
+**Verified:** all four countries clean; a family-profile test correctly surfaced the two
+family-specific best-of lists in addition to the universal one; a Chiang-Mai focus
+correctly drove both the seasonal `bestTime` line and a real 5-destination "Where next" list
+(including a genuine cross-border option, Phnom Penh, 2 changes) computed from the actual
+route graph. **True offline test**: killed the dev server, hard-reloaded on `#country-th` —
+🆘, signature sights, and all four new discovery sections rendered from Service Worker
+Cache Storage alone, zero console errors.
 
 ### Places — *pending*
 ### Talk — *pending*
