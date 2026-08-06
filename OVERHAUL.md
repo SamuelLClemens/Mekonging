@@ -456,7 +456,116 @@ localStorage but not the IndexedDB backup mirror the app deliberately keeps so d
 localStorage being cleared — so a reset silently restores itself on next load. Unrelated to
 Home; spawned as its own task rather than fixed here.
 
-### Explore — *pending*
+### Explore — *spec complete, ready to build*
+
+**Theme:** *Where?* — discovery and inspiration. Interviewed 2026-08-06 against the real
+screen at 375×812.
+
+#### What the interview found on the live screen
+
+- **Explore is a country picker, not a discovery surface.** The entire screen is 73 lines:
+  a resume card, a four-country SVG map, four text cards. No photography, no curated
+  content, no regions, no cities, no sights.
+- **All the inspiration sits one level down.** `countryHubScreen` carries the hero photo,
+  an eight-photo signature-sights strip, the regions map and twelve cities with place
+  counts — and runs **4.1 screens** with **26 tiles across four collapsed decks**.
+- **The best editorial content is buried two levels deep.** The 12 curated best-of lists
+  live inside a collapsed "See & do" deck on the hub. Nothing on Explore points to them.
+- The hub already ends with `mount(wrap, '#explore')` — it *is* Explore, just split in two.
+
+The inversion is the finding: **Explore is too thin, the hub is too deep.**
+
+Ruled out, not a bug: the hub's hero image looked blank in a first screenshot — a
+lazy-load timing artifact only; it renders correctly.
+
+#### Decisions (interview round 3)
+
+- **Landing is conditional.** Open directly on the traveller's country when there is a
+  *real* anchor to one; fall back to the four-country chooser when there is not. Note
+  `getActiveCountry()` is **not** a valid test — it always holds a value (defaults to `'th'`
+  via `detectCountryId()`), so it would never fall back. Anchor = any of: a GPS fix within
+  `INFER_IN_REGION_KM` of a region city (`nearestSpotGlobal`), an explicitly chosen focus
+  city (`focusSpot().source === 'focus'`), or a dated trip stop in that country. Someone
+  planning from abroad with no signals gets the chooser; someone on the ground never
+  re-picks their country.
+- **Merge Explore and the country hub into one screen.** Removes a whole navigation level.
+  **`#country-<cc>` must keep working — 21 inbound links point at it.** Both routes render
+  the same screen; `#country-<cc>` simply pre-scopes it to that country. Zero link changes.
+- **The 26 tiles rank by trip phase**, exactly as Home does: the deck matching the current
+  phase opens, the rest collapse to one-line rows in place. Nothing removed.
+- **Discovery must answer four questions, not one** (from the traveller's own words):
+  where you *are*, where to go *next*, places you *did not know* you wanted, and places
+  that *fit your trip* (with kids, in this season, as a nomad).
+
+#### Data audit — what is real, and what is not
+
+Checked before speccing, because "not enough real content" was a stated failure mode and
+inventing filters with no backing data would repeat it.
+
+| Ask | Status | Source |
+|---|---|---|
+| Signature sights (photos) | **Real, already built** | `signatureSightsStrip()` — 8 self-hosted photos |
+| Best-of lists | **Real** | `bestof.js` — 12 lists, `forWho`: `firsttimers` / `families` / `budget` / `everyone` |
+| Cities with counts | **Real, already built** | 12 cities per country from place data |
+| Regions map | **Real, already built** | `REGIONS_BY_CC` + `REGION_PATHS` |
+| Best with kids | **Real** | `forWho: 'families'` lists + `party: ['family']` itineraries |
+| Best for this season | **Real, but derived** | `events.*.js` (dated, sourced, lunar-flagged), `bestTime` on 63 cities in `history.js`, `WET_MONTHS` — no prebuilt "seasonal" list exists; it must be computed |
+| Best for digital nomads | **Content yes, label no** | The content exists (e.g. "A slow month up north" — *"Nimman cafés + coworking, monthly apartment rates"*), but there is no `nomads` tag. Add `forWho: 'nomads'` to the itineraries/lists that already earn it — a labelling job, not a sourcing job. Do **not** invent new nomad content here; that is Session 8. |
+| Where to go next | **Buildable, nothing exists yet** | `routeNodes()` / `planRoutes()` give what is reachable and how long; city place-counts and ratings give what is worth it |
+| Serendipity | **Buildable, nothing exists yet** | Highly-rated places in cities the traveller has not saved, visited or marked done |
+
+Place-level `bestTime` does **not** exist (0 occurrences in `places.th.js`); only
+city-level, in `history.js`. Seasonal fit must therefore be city-scoped, not place-scoped.
+
+#### Target structure — one merged Explore screen
+
+1. **Slim bar** — `topbar()`, same as Home now uses.
+2. **Country switcher** — compact four-flag row, current country marked. Replaces both the
+   old full-screen chooser and the hub's separate identity. Tapping switches scope in place.
+3. **Hero + "Where you are"** — the country hero photo and its history blurb.
+4. **Discovery, ranked** — the four questions above, each a section:
+   - **Signature sights** (photo strip, existing)
+   - **Fits your trip** — best-of lists and itineraries filtered by the traveller's own
+     `prefs.party` / `prefs.budget` / `prefs.interests`, plus a season chip driven by
+     today's date against `events` + `bestTime` + `WET_MONTHS`
+   - **Where next** — reachable destinations from the current city with rough travel time,
+     ranked by fit. Must use the F1/H4 background-load pattern: `planRoutes()`/`isRouteNode()`
+     may **never** be called before `loadAllCountries()` resolves, or the route graph
+     memoises permanently incomplete.
+   - **You might not know** — high-rated places in cities the traveller has no history with
+5. **Regions map** — collapsible, geography-first browsing for those who want it.
+6. **Cities** — the twelve-city list with counts.
+7. **The 26 tiles** — four decks, phase-ranked per the decision above.
+
+When there is no country anchor, steps 3–7 are replaced by the four-country chooser (the
+existing map + at-a-glance cards), which keeps its own value as a comparison view.
+
+#### Build slices
+
+Larger than Home. Ship in order, each independently verifiable:
+
+- **E1** — merge the two screens behind one renderer; `#explore` and `#country-<cc>` both
+  route to it; country switcher replaces the chooser when anchored. *No new content yet —
+  pure structure, so a regression is obvious.*
+- **E2** — conditional landing (anchor detection + chooser fallback).
+- **E3** — phase-rank the 26 tiles (reuse Home's pattern directly).
+- **E4** — "Fits your trip": filter existing best-of lists and itineraries by real prefs;
+  add the `forWho: 'nomads'` labels to itineraries that already earn them.
+- **E5** — seasonal chip computed from `events` + `bestTime` + `WET_MONTHS`.
+- **E6** — "Where next" (background-loaded, per the F1/H4 constraint).
+- **E7** — "You might not know" serendipity section.
+
+#### Acceptance criteria
+
+- `#country-th`, `#country-vi`, `#country-kh`, `#country-la` all still resolve — all 21
+  inbound links verified working after the merge.
+- A traveller with a GPS anchor never sees the country chooser; one with no anchor always
+  does.
+- Curated best-of content is reachable from Explore in **one tap**, not three.
+- No section renders an empty shell: each omits itself when it has nothing real to show.
+- Explore paints before any country data loads, and works fully offline.
+- Nothing removed from navigation — all 26 tiles still reachable.
+
 ### Places — *pending*
 ### Talk — *pending*
 ### You — *pending*
