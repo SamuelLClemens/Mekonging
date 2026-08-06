@@ -21,6 +21,15 @@ import {
   getBoardPosts, addBoardPost, deleteBoardPost,
   getAudioPacks, hasAudioPack, addAudioPack,
 } from './state.js';
+import {
+  getActiveCountry, setActiveCountry,
+  getLiveMapCtrl, setLiveMapCtrl, getLiveCleanup, setLiveCleanup, teardownLiveScreen,
+} from './app-state.js';
+// Home is the Great Split's proof case (OVERHAUL.md section 9, F2) — the first screen
+// physically moved out of main.js. It reaches back in for shared helpers (a circular
+// import, safe because every one of them is only read inside a function body, never at
+// module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
+import { homeScreen } from './screens/home.js';
 import { suggestPlans } from './data/itineraries.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
@@ -249,12 +258,12 @@ function detectCountryId() {
   return 'th';
 }
 function langForCountry(id) { const c = getCountry(id); return c ? c.lang : 'th'; }
-let activeCountry = detectCountryId();   // current destination context (country id)
+setActiveCountry(detectCountryId());   // current destination context (country id) — see js/app-state.js
 let pendingPinCoords = null; // coords captured by tapping the map, consumed by #addpin
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.340.0';
+const APP_VERSION = 'mk-v0.341.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -312,7 +321,7 @@ const ICON_PATH = {
   temple: '<path d="M12 3 4 7v2h16V7z"/><path d="M6 9v8M10 9v8M14 9v8M18 9v8"/><path d="M3 17h18v3H3z"/>',
   me: '<circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
 };
-const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
+export const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 // A leading line-icon for an action chip; inherits the chip's text colour (incl. the
 // white of a pressed chip) via stroke:currentColor, so it recolours with every theme.
 const chipIcon = (name) => h('span', { class: 'chip-ic', html: ICON[name] || '' });
@@ -358,7 +367,7 @@ function accentFor(hash) {
 // The one true tile: a section-coloured icon badge + title + hint, with an optional badge
 // count. Every tile grid (Home tools, personal hub, country hub) uses this so a section's
 // colour and icon are identical wherever it shows.
-function sectionTile(x) {
+export function sectionTile(x) {
   const accent = accentFor(x.hash);
   const base = x.badge ? `${x.t} — ${x.badge} new` : x.t;
   // Fold the visible one-line hint into the accessible name so screen-reader users get the
@@ -379,7 +388,7 @@ const TABS = [
   { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel(); Settings lives inside this hub
 ];
 
-function go(hash) {
+export function go(hash) {
   if (location.hash === hash) render();
   else location.hash = hash;
 }
@@ -539,7 +548,7 @@ function startTour(fromStep) {
   draw();
 }
 // Offer the tour once, automatically, the first time a set-up traveller lands on Home.
-function maybeOfferTour() {
+export function maybeOfferTour() {
   const prefs = store.profile.prefs;
   if (prefs.tourSeen) return;
   prefs.tourSeen = true; save();
@@ -593,7 +602,7 @@ function tabbar() {
     }, [h('span', { class: 'ic', html: t.svg }), h('span', {}, t.hash === '#me' ? meTabLabel() : t.label)])));
 }
 
-function mount(node, showTabbar) {
+export function mount(node, showTabbar) {
   const app = document.getElementById('app');
   app.innerHTML = '';
   app.append(node);
@@ -612,7 +621,7 @@ function mount(node, showTabbar) {
 }
 
 // ---- HOME (open with a country-picker map) ----------------------------------
-function logoSVG() {
+export function logoSVG() {
   return `<svg class="logo" viewBox="0 0 360 122" role="img" aria-label="Mekonging" xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="mkgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="0.5" style="stop-color:var(--sun-deep)"/><stop offset="1" style="stop-color:var(--magenta)"/></linearGradient></defs>
     <g transform="translate(150 6)"><circle cx="30" cy="30" r="18" fill="url(#mkgh)"/>
@@ -660,7 +669,7 @@ function isOpenNow(hours, hour) {
   return close < open ? (hour >= open || hour < close) : (hour >= open && hour < close);
 }
 
-function contextNow() {
+export function contextNow() {
   const gps = getLastFix();
   let near = gps ? nearestSpotGlobal(gps) : null;
   let fix = gps, approx = false, seeded = false;
@@ -674,14 +683,14 @@ function contextNow() {
     // Fresh profile — no GPS and nothing focused yet: seed the country's default city so the
     // home "right now" strip shows real picks immediately (honestly labelled "showing <city>")
     // instead of only a permission prompt. Turning on location upgrades it to where they are.
-    const ds = defaultSpot(activeCountry || 'th');
+    const ds = defaultSpot(getActiveCountry() || 'th');
     if (ds) { near = { spot: ds, km: 0 }; fix = { lat: ds.lat, lng: ds.lng }; approx = true; seeded = true; }
   }
   const now = new Date();
   const hour = now.getHours();
   const dow = now.getDay();
   const part = partOfDay(hour);
-  const country = near ? near.spot.country : activeCountry;
+  const country = near ? near.spot.country : getActiveCountry();
   let wx = null, raining = false;
   if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
   const wet = (WET_MONTHS[country] || []).includes(now.getMonth());
@@ -738,7 +747,7 @@ function forecastOutlook(rec) {
 // and de-duplicated so repeated renders never stack fetches), then re-render Home so the outlook
 // and the "right now" forecast line fill in. Never fetches when offline or without consent.
 let _homeWxKey = '', _homeWxAt = 0;
-function ensureHomeWeather(spot) {
+export function ensureHomeWeather(spot) {
   if (!spot || !online()) return;
   const key = spotKey(spot);
   const rec = getCachedWeather(key);
@@ -764,12 +773,12 @@ function focusCitySpot() {
 function setFocusSpot(spot) {
   if (!spot) return;
   const k = spotKey(spot);
-  if (store.profile.prefs.focusSpotKey === k && activeCountry === spot.country) return;
+  if (store.profile.prefs.focusSpotKey === k && getActiveCountry() === spot.country) return;
   store.profile.prefs.focusSpotKey = k;
-  if (spot.country) activeCountry = spot.country;
+  if (spot.country) setActiveCountry(spot.country);
   save();
 }
-function focusSpot(explicitCountry) {
+export function focusSpot(explicitCountry) {
   const gps = getLastFix();
   const near = gps ? nearestSpotGlobal(gps) : null;
   const focus = focusCitySpot();
@@ -782,7 +791,7 @@ function focusSpot(explicitCountry) {
   }
   if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km };
   if (focus) return { spot: focus, source: 'focus' };
-  return { spot: defaultSpot(activeCountry || 'th'), source: 'default' };
+  return { spot: defaultSpot(getActiveCountry() || 'th'), source: 'default' };
 }
 // Map a scoped city (by display name) to its nearest listed weather city, so browsing a
 // city page quietly makes that city the traveller's focus for weather + picks.
@@ -1425,17 +1434,17 @@ function scamsScreen(cc) {
   // Snap to a sensible country: explicit arg wins, else the last GPS fix, else browsed country.
   const fix = getLastFix();
   const near = fix ? nearestSpotGlobal(fix) : null;
-  if (cc && getCountry(cc)) activeCountry = cc;
-  else if (near) activeCountry = near.spot.country;
-  const c = getCountry(activeCountry);
+  if (cc && getCountry(cc)) setActiveCountry(cc);
+  else if (near) setActiveCountry(near.spot.country);
+  const c = getCountry(getActiveCountry());
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('⚠️ Common scams', c ? `#country-${activeCountry}` : '#home'));
+  wrap.append(topbar('⚠️ Common scams', c ? `#country-${getActiveCountry()}` : '#home'));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
 
   wrap.append(h('p', { class: 'muted' }, `The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
-  wrap.append(countryChips((id) => go(`#scams-${id}`), activeCountry));
+  wrap.append(countryChips((id) => go(`#scams-${id}`), getActiveCountry()));
 
-  const s = scamsFor(activeCountry);
+  const s = scamsFor(getActiveCountry());
   if (s && s.hotline) {
     wrap.append(h('a', { class: 'btn block', style: 'margin:8px 0', href: `tel:${String(s.hotline.number).replace(/\s/g, '')}` }, `🚔 ${s.hotline.label}: ${s.hotline.number}`));
   }
@@ -1453,11 +1462,11 @@ function scamsScreen(cc) {
   }
 
   // Fold in the visa/border scams already carried in VISA, with a link to the full guide.
-  const v = getVisa(activeCountry);
+  const v = getVisa(getActiveCountry());
   if (v && v.scams && v.scams.length) {
     const vc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🛂 Visa & border scams')]);
     v.scams.forEach((x) => vc.append(h('div', { class: 'warn-note' }, x)));
-    vc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#visa-${activeCountry}`) }, 'Open the entry & visa guide'));
+    vc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#visa-${getActiveCountry()}`) }, 'Open the entry & visa guide'));
     wrap.append(vc);
   }
 
@@ -1465,7 +1474,7 @@ function scamsScreen(cc) {
   wrap.append(h('div', { class: 'card' }, [
     h('h3', { style: 'margin-top:0' }, '🚕 Getting from the airport'),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'The most common first-hour trick is an airport transport overcharge. The arrival guide lists the cheapest safe way into town for each gateway.'),
-    h('button', { class: 'btn ghost block', onclick: () => go(`#arrival-${activeCountry}`) }, '🛬 Open the arrival guide'),
+    h('button', { class: 'btn ghost block', onclick: () => go(`#arrival-${getActiveCountry()}`) }, '🛬 Open the arrival guide'),
   ]));
 
   if (s && s.sources && s.sources.length) wrap.append(sourcesNote(s.sources, s.asOf));
@@ -1673,7 +1682,7 @@ function phaseNextBest(phase, cc) {
 // trip stop and the last GPS fix — and never persists; tapping a phase button is what saves a
 // choice. Falls back to 'planning', the safe pre-signal default.
 const INFER_IN_REGION_KM = 300;   // within ~300 km of a Mekong-region city ⇒ on the ground
-function inferPhase() {
+export function inferPhase() {
   const start = tripStartISO();
   if (start) {
     const d = daysUntilISO(start);
@@ -1843,7 +1852,7 @@ function planningStageBlock(cc) {
 // that showed near-me picks in every stage. Planning gets the outlook/countdown hub; arrived and
 // travelling get the live, now forecast-aware near-me card; post gets the return recap. This is
 // the core of making Home relevant to the traveller's actual stage.
-function homeStageBlock(phase, cc) {
+export function homeStageBlock(phase, cc) {
   if (phase === 'planning') return planningStageBlock(cc);
   if (phase === 'post') return returnRecapCard();
   return homeNowCard(phase, cc);   // arrived / traveling: live near-me, now forecast-aware
@@ -1920,7 +1929,7 @@ function onHeroScroll() {
   heroLastY = y;
 }
 
-function toggleHero(e) {
+export function toggleHero(e) {
   if (e) e.stopPropagation();
   const hero = document.querySelector('.hero');
   if (!hero) return;
@@ -1928,7 +1937,7 @@ function toggleHero(e) {
   else { heroPinned = false; heroApply(true); }
 }
 
-function setupHeroScroll() {
+export function setupHeroScroll() {
   heroPinned = false;
   heroLastY = window.scrollY || window.pageYOffset || 0;
   heroApply(true);               // Home starts with a SLIM hero so status + tools lead; tap to expand
@@ -1941,7 +1950,7 @@ function setupHeroScroll() {
 // ---- Home top: compact phase switch · at-a-glance status · one "Right now" card ----
 // A slim one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
 // and the "Not right?" correction line, so actionable content leads instead of chrome.
-function phaseSwitchRow(active, stored) {
+export function phaseSwitchRow(active, stored) {
   const short = { planning: 'Planning', arrived: 'Arrived', traveling: 'Travelling', post: 'Post' };
   const seg = h('div', { class: 'phase-seg compact', role: 'group', 'aria-label': 'Your journey phase' },
     PHASE_ORDER.map((k) => h('button', {
@@ -1971,7 +1980,7 @@ function tripSpendHome() {
 
 // At-a-glance status band: trip countdown/day · next plan · spend · offline — the traveller's
 // state in one glance, each chip a one-tap route into the screen that owns it.
-function homeStatusBand(phase, cc) {
+export function homeStatusBand(phase, cc) {
   const chip = (ic, lbl, onclick) => h('button', { class: 'status-chip', onclick },
     [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, lbl)]);
   const chips = [];
@@ -2075,157 +2084,8 @@ function homeNowCard(phase, cc) {
   return card;
 }
 
-function homeScreen() {
-  // "Right now" picks below need this country's place data; Home itself must never block
-  // on it — the router's lazy-load gate (render()) deliberately excludes 'home' so first
-  // paint stays instant even before any country has loaded. Kick the load off here in the
-  // background instead, and quietly repaint Home in place (scroll position preserved) once
-  // it lands, so the picks correct themselves rather than reading empty all session.
-  if (!isCountryLoaded(activeCountry)) {
-    const cc = activeCountry;
-    loadCountry(cc).then(() => {
-      const headRoute = (location.hash || '#home').slice(1).split('-')[0];
-      if ((headRoute === '' || headRoute === 'home') && isCountryLoaded(cc)) {
-        const y = window.scrollY;
-        homeScreen();
-        requestAnimationFrame(() => window.scrollTo(0, y));
-      }
-    }).catch(() => { /* offline with nothing cached yet — leave today's honest fallback tip up */ });
-  }
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(h('section', { class: 'hero is-collapsed', onclick: (e) => { if (e.currentTarget.classList.contains('is-collapsed')) toggleHero(); } }, [
-    h('button', { class: 'hero-toggle', type: 'button', 'aria-label': 'Collapse the header', 'aria-expanded': 'true', onclick: toggleHero },
-      [h('span', { class: 'chev', 'aria-hidden': 'true' }, '⌄')]),
-    h('div', { class: 'logo-wrap', html: logoSVG() }),
-    h('p', {}, 'Travel Thailand, Vietnam, Cambodia & Laos like an expert.'),
-    h('div', { class: 'hero-badges' }, [
-      h('span', { class: 'hero-badge' }, '✓ Works offline'),
-      h('span', { class: 'hero-badge' }, '✓ No account'),
-      h('span', { class: 'hero-badge' }, '✓ Free & private'),
-    ]),
-  ]));
-
-  // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
-  // value-first first run — proof that the few taps already personalised the app.
-  if (store.profile.prefs.showSetupRecap) wrap.append(setupRecapCard());
-
-  // The four journey buttons sit at the very top with the active stage highlighted, so a
-  // traveller sets or switches their phase in one tap. Home no longer hides the picker once
-  // a phase is chosen, and the country map now lives on the Explore tab rather than here.
-  const storedPhase = store.profile.prefs.phase || '';
-  const phase = storedPhase || inferPhase();   // infer a sensible stage until they choose one
-  const leadCC = focusSpot().spot.country;
-
-  // Compact one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
-  // and the "Not right?" correction line, so status and actions lead the screen.
-  wrap.append(phaseSwitchRow(phase, storedPhase));
-
-  // At-a-glance status band: trip countdown/day · next plan · spend · offline, each a one-tap chip.
-  wrap.append(homeStatusBand(phase, leadCC));
-
-  // One stage-appropriate situational block. Planning gets a forward-looking outlook +
-  // countdown + checklist hub (no near-me); arrived/travelling get the live, forecast-aware
-  // near-me card; post gets the return recap. This is what makes Home fit the traveller's
-  // actual stage instead of showing "what's near you" to someone still at home or already back.
-  wrap.append(homeStageBlock(phase, leadCC));
-  // On the first online visit, pull the relevant city's forecast once (respects offline &
-  // consent, de-duplicated) so the outlook and the "right now" forecast line populate.
-  {
-    const ctx0 = contextNow();
-    const phaseSpot = (phase === 'arrived' || phase === 'traveling')
-      ? (ctx0.near ? ctx0.near.spot : focusSpot().spot)
-      : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
-    ensureHomeWeather(phaseSpot);
-  }
-
-  // Budget at a glance, right on Home: the by-category pie against the total the traveller
-  // sets, plus spend-vs-budget and a one-tap "set a budget". Returns null until there is a
-  // spend or a target, so a fresh Home stays uncluttered; tapping through opens the full log.
-  {
-    const bc = budgetSummaryCard();
-    if (bc) {
-      bc.style.marginTop = '10px';
-      bc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') },
-        store.trip.budgetLog.length ? 'Log expense & see all →' : 'Log your first expense →'));
-      wrap.append(bc);
-    }
-  }
-
-  // Search everything.
-  wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
-
-  wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
-
-  // Home now carries only TRIP-WIDE tools (planning, memories, money, admin). Everything
-  // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
-  // focused country's hub (the "Explore" button above), so there is one menu per context
-  // instead of Home and the hub duplicating each other.
-  const groups = [
-    { label: 'Plan your trip', items: [
-      { ic: ICON.route, t: 'Trip plans', d: 'Routes that fit you', hash: '#plans' },
-      { ic: ICON.target, t: 'For you', d: 'Your personalised picks', hash: '#foryou' },
-      { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
-      { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
-      { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + map', hash: '#journal' },
-      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
-      { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
-      { ic: ICON.star, t: 'Saved & collections', d: 'Organise by theme', hash: '#saved' },
-    ] },
-    { label: 'Money & tools', items: [
-      { ic: ICON.coins, t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
-      { ic: ICON.suitcase, t: 'Log expenses', d: 'Track spend vs your budget', hash: '#expenses' },
-      { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
-      { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
-      { ic: ICON.tag, t: 'Traveller board', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
-      { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
-      { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
-    ] },
-  ];
-  const tileBtn = sectionTile;
-  // Decks open by RELEVANCE to the current phase rather than all-or-nothing: before/after the
-  // trip a traveller plans and remembers, so the trip-planning deck (index 0) leads; on the
-  // ground the recognition tools lead (see the Identify deck below). This keeps exactly one
-  // deck open per phase instead of ~16 equal tiles or a mismatched default.
-  const planDeckOpen = (phase === 'planning' || phase === 'post');
-  groups.forEach((g, gi) => {
-    wrap.append(h('details', { class: 'home-group-d', open: (gi === 0 && planDeckOpen) ? '' : null }, [
-      h('summary', { class: 'home-group' }, g.label),
-      h('div', { class: 'grid' }, g.items.map(tileBtn)),
-    ]));
-  });
-
-  // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
-  // dangerous animals) plus the traveller's own saved finds. Placed below the trip-planning
-  // decks: valuable once in-country, but not the first thing a planning traveller needs.
-  // Identify what's around you — a minimise/maximise disclosure (same pattern as the decks
-  // above) so a traveller can fold it away once done exploring. The open/closed choice persists
-  // on-device via a self-defaulting pref (no store bump) and opens by default.
-  const identifyOpen = (phase === 'arrived' || phase === 'traveling');
-  wrap.append(h('details', { class: 'home-group-d', open: identifyOpen ? '' : null }, [
-    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, '🔎 Identify what’s around you')),
-    h('div', { class: 'grid' }, [
-      { ic: ICON.bowl, t: 'Food', d: 'Name a street dish', hash: '#food' },
-      { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-      { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
-      { ic: ICON.volume, t: 'Sounds', d: 'What made that call?', hash: '#sounds' },
-      { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
-      { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Your saved finds', hash: '#identified' },
-    ].map(sectionTile)),
-  ]));
-
-  // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
-  wrap.append(h('div', { class: 'card give-back', style: 'margin-top:10px' }, [
-    h('strong', {}, '❤️ Give back to the region'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
-    h('button', { class: 'btn block', onclick: () => go('#donate') }, 'See causes to support'),
-  ]));
-
-  wrap.append(h('p', { class: 'disclaimer' },
-    'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
-  mount(wrap, '#home');
-  setupHeroScroll();  // collapse the hero to a slim sticky bar once the traveller scrolls
-  maybeOfferTour();   // first-run only: a quick walk-me tour once the traveller reaches Home
-}
+// homeScreen() now lives in js/screens/home.js — the Great Split's proof case (OVERHAUL.md
+// section 9, F2). Imported at the top of this file.
 
 // ---- "M" — the personal hub ("your space") ---------------------------------
 // Everything that is about the traveller themselves, gathered behind one tab so it is
@@ -2374,7 +2234,7 @@ function exploreScreen() {
       h('h2', { style: 'margin:0 0 2px' }, `${fc.flag} Continue in ${fc.name}`),
       h('p', { class: 'muted', style: 'margin:2px 0 8px' }, city ? `You’re around ${city} — pick up where you are.` : 'Pick up where you left off.'),
       h('div', { class: 'chips' }, [
-        h('button', { class: 'chip', onclick: () => { activeCountry = fcc; go(`#country-${fcc}`); } }, [chipIcon('compass'), `Explore ${fc.name}`]),
+        h('button', { class: 'chip', onclick: () => { setActiveCountry(fcc); go(`#country-${fcc}`); } }, [chipIcon('compass'), `Explore ${fc.name}`]),
         h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Places near me']),
       ]),
     ]));
@@ -2415,7 +2275,7 @@ function exploreScreen() {
     const tags = ((countryHistory(c.id) || {}).knownFor || []).slice(0, 3);
     grid.append(h('button', {
       class: 'explore-card', style: `--ec:${REGION_COLORS[c.id] || 'var(--teal)'}`,
-      onclick: () => { activeCountry = c.id; go(`#country-${c.id}`); },
+      onclick: () => { setActiveCountry(c.id); go(`#country-${c.id}`); },
       'aria-label': `Explore ${c.name}`,
     }, [
       h('span', { class: 'explore-flag' }, c.flag),
@@ -2518,7 +2378,7 @@ function regionsMap(cc, opts = {}) {
 function regionScreen(arg) {
   const raw = String(arg || '');
   const dash = raw.indexOf('-');
-  const cc = dash >= 0 ? raw.slice(0, dash) : (raw || activeCountry);
+  const cc = dash >= 0 ? raw.slice(0, dash) : (raw || getActiveCountry());
   const code = dash >= 0 ? raw.slice(dash + 1) : '';
   const c = getCountry(cc);
   const prov = findProvince(cc, code);
@@ -2529,7 +2389,7 @@ function regionScreen(arg) {
     mount(wrap, '#explore');
     return;
   }
-  activeCountry = cc;
+  setActiveCountry(cc);
   wrap.append(topbar(prov.name, `#country-${cc}`));
   wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `${prov.name} — a region of ${c.name}. Tap another region on the map to jump there.`));
 
@@ -2630,7 +2490,7 @@ function regionPicker() {
   const box = h('div', { class: 'region-map', html: svg });
   box.querySelectorAll('.ctry-group').forEach((g) => {
     const id = g.getAttribute('data-country');
-    const enter = () => { activeCountry = id; go(`#country-${id}`); };
+    const enter = () => { setActiveCountry(id); go(`#country-${id}`); };
     g.addEventListener('click', enter);
     g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); } });
   });
@@ -2656,7 +2516,7 @@ function countryHeroBand(c) {
 
 function countryHubScreen(id) {
   const c = getCountry(id);
-  if (c) activeCountry = id;
+  if (c) setActiveCountry(id);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Country', '#home'));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Unknown country.')); mount(wrap, '#home'); return; }
@@ -3001,8 +2861,8 @@ function nearbyScreen() {
 
   function paint(f) {
     const info = nearestCityInfo(f);
-    const country = info ? info.country : activeCountry;
-    activeCountry = country;
+    const country = info ? info.country : getActiveCountry();
+    setActiveCountry(country);
     const nb = nearestSpotGlobal(f); if (nb) setFocusSpot(nb.spot);   // remember where they are for weather/today
     const cName = getCountry(country) ? getCountry(country).name : '';
     status.innerHTML = '';
@@ -3117,7 +2977,7 @@ function nearbyScreen() {
 
 // ---- CURRENCY CONVERTER -----------------------------------------------------
 function currencyScreen() {
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   const local = c ? c.currency : 'THB';
   const home = store.profile.homeCurrency || 'USD';
   const wrap = h('div', { class: 'screen' });
@@ -3230,7 +3090,7 @@ function swapCalcNodes(a, have, want) {
 function guessCityName() {
   const fix = getLastFix();
   if (fix) { try { const w = whereAmI(fix); if (w && w.name) return w.name; } catch { /* noop */ } }
-  const c = getCountry(activeCountry); return c ? c.name : '';
+  const c = getCountry(getActiveCountry()); return c ? c.name : '';
 }
 
 // A "paste a shared link" importer: opens the payload exactly as tapping the link would.
@@ -3285,7 +3145,7 @@ function listingCard(it) {
 
 // A category-adaptive "post to the board" form. Re-created when the category changes.
 function buildBBForm(cat) {
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   const meta = bbCat(cat);
   const card = h('div', { class: 'card' });
   card.append(h('h2', { style: 'margin-top:0' }, `${meta.emoji} Post: ${meta.label}`));
@@ -3427,7 +3287,7 @@ function approxHome(amount, currency) {
   return `≈ ${money(v, home)}`;
 }
 
-function countryChips(onPick, selected = activeCountry) {
+function countryChips(onPick, selected = getActiveCountry()) {
   return h('div', { class: 'country-row' }, COUNTRIES.map((c) =>
     h('button', {
       class: 'country-chip', 'aria-pressed': c.id === selected ? 'true' : 'false',
@@ -3571,7 +3431,7 @@ function essentialsCard(code, book, onChange) {
 }
 
 function phrasebookScreen(lang) {
-  const code = lang || store.profile.defaultLang || langForCountry(activeCountry);
+  const code = lang || store.profile.defaultLang || langForCountry(getActiveCountry());
   const book = getLanguage(code);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Phrasebook'));
@@ -3961,13 +3821,13 @@ function closestPlacesCard(cc, scopeSlug, numFor, poolSource) {
 function placesScreen(arg) {
   // arg is "<cc>" or "<cc>-<citySlug>" (e.g. "th" or "th-chiang-mai").
   const parts = String(arg || '').split('-');
-  const cc = parts.shift() || activeCountry;
+  const cc = parts.shift() || getActiveCountry();
   const scopeSlug = parts.join('-');
-  if (cc) activeCountry = cc;
+  if (cc) setActiveCountry(cc);
   const wrap = h('div', { class: 'screen' });
   // Resolve the scoped city's display name from the data (fall back to the slug).
   const scopeCity = scopeSlug
-    ? (allPlaces({ country: activeCountry }).map((p) => p.city).find((c) => citySlug(c) === scopeSlug) || titleCase(scopeSlug.replace(/-/g, ' ')))
+    ? (allPlaces({ country: getActiveCountry() }).map((p) => p.city).find((c) => citySlug(c) === scopeSlug) || titleCase(scopeSlug.replace(/-/g, ' ')))
     : '';
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
@@ -3975,13 +3835,13 @@ function placesScreen(arg) {
   if (scopeCity) {
     wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
       h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
-      h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `Show all of ${getCountry(activeCountry) ? getCountry(activeCountry).name : 'country'}`),
+      h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, `Show all of ${getCountry(getActiveCountry()) ? getCountry(getActiveCountry()).name : 'country'}`),
     ]));
     // Browsing a city makes it the traveller's focus, so weather + "today" + "right now"
     // follow this city (not the capital) until GPS or another city overrides it.
-    const cSpot = spotForCity(activeCountry, scopeCity); if (cSpot) setFocusSpot(cSpot);
-    const ac = cityAboutCard(activeCountry, scopeSlug); if (ac) wrap.append(ac);
-    wrap.append(cityEssentials(activeCountry, scopeCity, scopeSlug));
+    const cSpot = spotForCity(getActiveCountry(), scopeCity); if (cSpot) setFocusSpot(cSpot);
+    const ac = cityAboutCard(getActiveCountry(), scopeSlug); if (ac) wrap.append(ac);
+    wrap.append(cityEssentials(getActiveCountry(), scopeCity, scopeSlug));
   }
 
   // Living map + "closest to you" sit at the very top of the section (below any city context).
@@ -4013,7 +3873,7 @@ function placesScreen(arg) {
   wrap.append(closestSlot);
   // Country level (no city chosen yet): drill down by city — tap a city and just its
   // places show, grouped into the collapsible category sections below.
-  if (!scopeSlug) { const cp = cityPickerCard(activeCountry); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen')); }
+  if (!scopeSlug) { const cp = cityPickerCard(getActiveCountry()); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen')); }
 
   // Your own places live alongside the curated ones: add a location, then rate, review and
   // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
@@ -4069,7 +3929,7 @@ function placesScreen(arg) {
   // Step-free filter appears when the traveller has a mobility need or the country has any
   // place tagged step-free — so the option is there for those who need it, unobtrusive otherwise.
   let selStepFree = false;
-  const showStepFree = (store.profile.prefs.access || []).includes('mobility') || allPlaces({ country: activeCountry }).some((p) => p.access && p.access.stepFree);
+  const showStepFree = (store.profile.prefs.access || []).includes('mobility') || allPlaces({ country: getActiveCountry() }).some((p) => p.access && p.access.stepFree);
   const stepFreeChip = showStepFree ? h('button', {
     class: 'chip', 'aria-pressed': 'false',
     onclick: (e) => { selStepFree = !selStepFree; e.currentTarget.setAttribute('aria-pressed', selStepFree ? 'true' : 'false'); renderList(); },
@@ -4083,7 +3943,7 @@ function placesScreen(arg) {
 
   // Stay filters appear only when this country has accommodation tagged, so the UI
   // stays clean until stays exist for a country (remembered in prefs).
-  const hasStays = allPlaces({ country: activeCountry }).some((p) => p.stayType);
+  const hasStays = allPlaces({ country: getActiveCountry() }).some((p) => p.stayType);
   if (hasStays) {
     const stayTypes = [['any', 'Any'], ['tent', '⛺ Camp'], ['hostel', 'Hostel'], ['guesthouse', 'Guesthouse'], ['homestay', 'Homestay'], ['hotel', 'Hotel'], ['resort', 'Resort'], ['apartment', 'Apartment']];
     const stayTypeChips = h('div', { class: 'chips' }, stayTypes.map(([id, lbl]) =>
@@ -4119,7 +3979,7 @@ function placesScreen(arg) {
   // Category LAYERS — pick any combination of place types to show on the map AND the list.
   // An empty selection means "all layers". Persisted so a chosen set survives navigation.
   const selLayers = new Set(Array.isArray(prefs.placesLayers) ? prefs.placesLayers : []);
-  const presentBuckets = new Set(allPlaces({ country: activeCountry }).map((p) => placeBucket(p)));
+  const presentBuckets = new Set(allPlaces({ country: getActiveCountry() }).map((p) => placeBucket(p)));
   function buildLayerChips() {
     layerChipsRow.innerHTML = '';
     const allOn = selLayers.size === 0;
@@ -4145,11 +4005,11 @@ function placesScreen(arg) {
   // right (the "Nearest first" toggle), so the near-you / city / whole-country model reads
   // clearly instead of two look-alike 📍 chips. When scoped to a city, a button returns to the
   // whole country.
-  const countryName = (getCountry(activeCountry) || {}).name || 'the country';
+  const countryName = (getCountry(getActiveCountry()) || {}).name || 'the country';
   if (scopeSlug) {
     modeBar.append(
       h('span', { class: 'mode-state' }, `📍 Showing ${scopeCity || 'this city'}`),
-      h('button', { class: 'chip', onclick: () => go(`#places-${activeCountry}`) }, `↩ All of ${countryName}`),
+      h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, `↩ All of ${countryName}`),
     );
   } else {
     modeBar.append(h('span', { class: 'mode-state' }, getLastFix() ? '📍 Showing places near you' : `🗺 Showing all of ${countryName}`));
@@ -4199,9 +4059,9 @@ function placesScreen(arg) {
 
   // Filtered + sorted results, or null when this country has no places yet.
   function computeResults() {
-    const country = getCountry(activeCountry);
+    const country = getCountry(getActiveCountry());
     if (!country || !Array.isArray(country.places)) return null;
-    let results = allPlaces({ country: activeCountry, interests: [...selInterests], budget: selBudget });
+    let results = allPlaces({ country: getActiveCountry(), interests: [...selInterests], budget: selBudget });
     if (scopeSlug) results = results.filter((p) => citySlug(p.city) === scopeSlug);
     if (selLayers.size) results = results.filter((p) => selLayers.has(placeBucket(p)));  // category layers
     if (selKids) results = results.filter((p) => p.kidFriendly === true);
@@ -4219,7 +4079,7 @@ function placesScreen(arg) {
   }
 
   function renderList() {
-    const country = getCountry(activeCountry);
+    const country = getCountry(getActiveCountry());
     const computed = computeResults();
     currentResults = computed || [];
     // Shared numbering: number every MAPPED place by its position in the displayed order, so a
@@ -4234,7 +4094,7 @@ function placesScreen(arg) {
     if (placesCtrl) placesCtrl.setPlaces(ml);
     // "Closest to you" — the nearest few of the CURRENTLY shown (filtered) places, same numbers.
     closestSlot.innerHTML = '';
-    const cz = closestPlacesCard(activeCountry, scopeSlug, numFor, currentResults);
+    const cz = closestPlacesCard(getActiveCountry(), scopeSlug, numFor, currentResults);
     if (cz) closestSlot.append(cz);
 
     listEl.innerHTML = '';
@@ -4306,7 +4166,7 @@ function placesScreen(arg) {
       onStyleChange: (on) => { store.profile.prefs.placesMapSat = on; save(); },
     })).then((c) => {
       placesCtrl = c;
-      liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } };
+      setLiveCleanup(() => { try { c.dispose(); } catch { /* noop */ } });
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out
@@ -5079,8 +4939,8 @@ function orientationCard(p) {
       onLocate: (f) => setLastFix(f),
     })).then((c) => {
       // dispose the mini-map when leaving the screen (chain with any existing cleanup).
-      const prev = liveCleanup;
-      liveCleanup = () => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } };
+      const prev = getLiveCleanup();
+      setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } });
     }).catch(() => { mini.remove(); });
     card.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsDirUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
   }
@@ -5481,12 +5341,12 @@ function sourcesNote(sources, verified, place) {
 
 // ---- PRICES -----------------------------------------------------------------
 function pricesScreen(countryId) {
-  if (countryId) activeCountry = countryId;
+  if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Fair prices', getCountry(activeCountry) ? `#country-${activeCountry}` : '#home'));
+  wrap.append(topbar('Fair prices', getCountry(getActiveCountry()) ? `#country-${getActiveCountry()}` : '#home'));
   wrap.append(countryChips((id) => go(`#prices-${id}`)));
 
-  const country = getCountry(activeCountry);
+  const country = getCountry(getActiveCountry());
   const data = country && country.prices;
   if (!data) {
     wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} prices are coming soon. Thailand is fully covered in this build.`));
@@ -5601,16 +5461,16 @@ function getAroundSection(cc) {
 }
 
 function transportScreen(countryId) {
-  if (countryId) activeCountry = countryId;
+  if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Getting around', '#home'));
   wrap.append(countryChips((id) => go(`#transport-${id}`)));
   wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:12px', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
   // Rent & ride, tickets and schedules — always shown, even where intercity routes are sparse.
-  const ga = getAroundSection(activeCountry);
+  const ga = getAroundSection(getActiveCountry());
   if (ga) wrap.append(ga);
 
-  const country = getCountry(activeCountry);
+  const country = getCountry(getActiveCountry());
   const routes = country && country.routes;
   if (!routes) {
     wrap.append(h('p', { class: 'empty' }, `Intercity routes for ${country ? country.name : 'this country'} are not listed yet — use “Plan a whole journey” above, or open any place to see its nearest transport connections.`));
@@ -5642,7 +5502,7 @@ function transportScreen(countryId) {
 
   // Context-first: lead with journeys leaving the city you are in (or focused on); the
   // rest of the country network collapses behind one tap instead of a long scroll.
-  const fs = focusSpot(activeCountry);
+  const fs = focusSpot(getActiveCountry());
   const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
   const here = focusCity ? routes.filter((r) => citySlug(r.from) === citySlug(focusCity)) : [];
   const rest = routes.filter((r) => !here.includes(r));
@@ -5724,7 +5584,7 @@ function planRouteScreen() {
 
   const nodes = routeNodes();
   const opts = [['', 'Choose…'], ...nodes.map((n) => [n, n])];
-  if (!planFrom) { const cap = CAPITAL[activeCountry]; if (cap && nodes.includes(cap)) planFrom = cap; }
+  if (!planFrom) { const cap = CAPITAL[getActiveCountry()]; if (cap && nodes.includes(cap)) planFrom = cap; }
 
   const results = h('div', { class: 'plan-results' });
   const fromSel = selectEl(opts, planFrom, (v) => { planFrom = v; renderResults(); });
@@ -5763,10 +5623,10 @@ function planRouteScreen() {
 
 // ---- COUNTRY INFO -----------------------------------------------------------
 function infoScreen(countryId) {
-  if (countryId) activeCountry = countryId;
+  if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
-  const country = getCountry(activeCountry);
-  wrap.append(topbar(country ? `${country.name} guide` : 'Country guide', country ? `#country-${activeCountry}` : '#home'));
+  const country = getCountry(getActiveCountry());
+  wrap.append(topbar(country ? `${country.name} guide` : 'Country guide', country ? `#country-${getActiveCountry()}` : '#home'));
   wrap.append(countryChips((id) => go(`#info-${id}`)));
 
   const info = country && country.info;
@@ -6049,7 +5909,7 @@ function mapScreen() {
   const onVis = () => { if (wantWake && wakeLock === null && document.visibilityState === 'visible') acquireWake().catch(() => { /* denied */ }); };
   document.addEventListener('visibilitychange', onVis);
   // release the lock + detach the listener when the user leaves the map screen
-  liveCleanup = () => { wantWake = false; document.removeEventListener('visibilitychange', onVis); if (wakeLock) { try { wakeLock.release(); } catch { /* noop */ } wakeLock = null; } };
+  setLiveCleanup(() => { wantWake = false; document.removeEventListener('visibilitychange', onVis); if (wakeLock) { try { wakeLock.release(); } catch { /* noop */ } wakeLock = null; } });
   const storageOut = h('p', { class: 'map-hint' }, '');
   async function showStorage() {
     const m = await import('./map.js'); const e = await m.storageEstimate();
@@ -6345,7 +6205,7 @@ function mapScreen() {
     onOpenPool: () => go('#pools'),
     onShowKey: () => { keyCard.open = true; keyCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
   })).then((ctrl) => {
-    mapCtrl = ctrl; liveMapCtrl = ctrl; showStorage();
+    mapCtrl = ctrl; setLiveMapCtrl(ctrl); showStorage();
     const applyAll = () => Object.keys(ML).forEach((k) => applyLayer(k, ML[k] !== false));
     applyAll();
     ctrl.map.once('idle', applyAll);            // re-apply once markers (added on style.load) exist
@@ -6467,7 +6327,7 @@ function journalDispatch(arg) {
 }
 
 function regionTitle() {
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   return c ? c.name : 'Southeast Asia';
 }
 
@@ -6948,12 +6808,12 @@ function journalFormScreen(editId) {
   // Editable thumbnails hold live object URLs (they must survive re-renders while picking), so
   // revoke them when the editor screen is torn down rather than on img-load. render() runs this
   // before the next screen builds.
-  liveCleanup = () => {
+  setLiveCleanup(() => {
     (st.photos || []).forEach((p) => { if (p.url) { try { URL.revokeObjectURL(p.url); } catch { /* noop */ } p.url = null; } });
     if (st.audio && st.audio.url) { try { URL.revokeObjectURL(st.audio.url); } catch { /* noop */ } }
     try { if (mediaRec && mediaRec.state && mediaRec.state !== 'inactive') mediaRec.stop(); } catch { /* noop */ }
     try { if (sr) sr.stop(); } catch { /* noop */ }
-  };
+  });
   mount(wrap, '#home');
 }
 
@@ -7360,7 +7220,7 @@ function calendarFormScreen(editId, prefill) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(editing ? 'Edit calendar entry' : 'Add to calendar', '#calendar'));
   if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   const st = { rating: existing ? (existing.rating || 0) : 0 };
   const date = h('input', { 'aria-label': 'Date', type: 'date', value: existing ? existing.date : (pf.date || '') });
   const time = h('input', { 'aria-label': 'Time', type: 'time', value: existing ? (existing.time || '') : '' });
@@ -7550,7 +7410,7 @@ function toggleIdPin(type, id) {
   save();
   return i < 0;   // true when it is now pinned
 }
-function idPinCount() { return idPinList().length; }
+export function idPinCount() { return idPinList().length; }
 
 // ---- pin organisation: tags (the user's own categories) + notes + reorder --------
 function idPinMetaMap() { const p = store.profile.prefs; if (!p.idPinMeta || typeof p.idPinMeta !== 'object') p.idPinMeta = {}; return p.idPinMeta; }
@@ -7670,7 +7530,7 @@ function foodScreen(country) {
     profBox.append(h('p', { style: 'margin:0 0 8px' }, 'Tell the app your allergies and diet and it highlights dishes that fit — green for safe, red to avoid.'));
     profBox.append(h('button', { class: 'btn ghost block', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
   }
-  const foodLangCC = getCountry(foodCountry) ? foodCountry : (activeCountry || 'th');
+  const foodLangCC = getCountry(foodCountry) ? foodCountry : (getActiveCountry() || 'th');
   const foodLang = (getCountry(foodLangCC) && getCountry(foodLangCC).lang) || 'th';
   profBox.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
   wrap.append(profBox);
@@ -8527,7 +8387,7 @@ function scheduleCard(s) {
   ]);
 }
 function schedulesScreen(country) {
-  if (country && getCountry(country)) { activeCountry = country; schedCountry = country; }
+  if (country && getCountry(country)) { setActiveCountry(country); schedCountry = country; }
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Transport schedules', '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
@@ -8827,11 +8687,11 @@ function todoDistLabel(dist) {
 
 function daySuggestScreen(country) {
   const explicit = country && getCountry(country) ? country : null;
-  if (explicit) activeCountry = explicit;
+  if (explicit) setActiveCountry(explicit);
   const fs = focusSpot(explicit || undefined);
   const spot = fs.spot;
-  const id = getCountry(spot.country) ? spot.country : (getCountry(activeCountry) ? activeCountry : 'th');
-  activeCountry = id;
+  const id = getCountry(spot.country) ? spot.country : (getCountry(getActiveCountry()) ? getActiveCountry() : 'th');
+  setActiveCountry(id);
   todoFamily = 'all';   // fresh filter each visit, so a stale category never hides a new city's picks
   todoPlan = 'now';     // always open on "now"; planning ahead is an explicit, per-visit choice
   const wrap = h('div', { class: 'screen' });
@@ -9481,11 +9341,11 @@ function myIdentifierScreen() {
 // ---- BEST OF / RECOMMENDATIONS ----------------------------------------------
 const FORWHO_EMOJI = { families: '👨‍👩‍👧', couples: '💑', everyone: '⭐', budget: '🪙', foodies: '🍜', adventure: '🧗', nightlife: '🍸', firsttimers: '🧭' };
 function bestofScreen(countryId) {
-  if (countryId) activeCountry = countryId;
+  if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Best of', '#home'));
   wrap.append(countryChips((id) => go(`#bestof-${id}`)));
-  const lists = bestForCountry(activeCountry);
+  const lists = bestForCountry(getActiveCountry());
   if (!lists.length) { wrap.append(h('p', { class: 'empty' }, 'Top picks are being prepared — reconnect once to download them.')); mount(wrap, '#home'); return; }
   // family lists first
   const ordered = lists.slice().sort((a, b) => (a.forWho === 'families' ? -1 : 0) - (b.forWho === 'families' ? -1 : 0));
@@ -9573,7 +9433,7 @@ function tripScreen() {
       h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', stopEnd]),
     ]),
     h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
-    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: activeCountry, date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
+    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: getActiveCountry(), date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
   // quick add from saved
   const saved = store.favorites.map(resolveItem).filter(Boolean);
   if (saved.length) {
@@ -9613,7 +9473,7 @@ function tripScreen() {
   }
   store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));
   const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   const bCur = currencySelect(c ? c.currency : 'THB');
   const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what?' });
   const bCat = expCatPicker('other');
@@ -9633,7 +9493,7 @@ const BARGAIN = {
 function bargainScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Bargain helper', '#home'));
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   const price = h('input', { 'aria-label': 'Asking price', type: 'number', inputmode: 'decimal', placeholder: 'Asking price' });
   const cur = currencySelect(c ? c.currency : 'THB');
   const ctx = selectEl(Object.entries(BARGAIN).map(([k, v]) => [k, v.label]), 'market', () => {}, 'What you are bargaining for');
@@ -9646,7 +9506,7 @@ function bargainScreen() {
     out.append(h('h3', {}, 'Suggested counter'));
     out.append(h('p', { class: 'fx-result' }, `Open at ${Math.round(v * b.open).toLocaleString()} ${cur.value}, aim for about ${Math.round(v * b.aim).toLocaleString()} ${cur.value}.`));
     out.append(h('p', {}, b.tip));
-    out.append(h('button', { class: 'btn ghost', onclick: () => go(`#prices-${activeCountry}`) }, 'Check fair prices'));
+    out.append(h('button', { class: 'btn ghost', onclick: () => go(`#prices-${getActiveCountry()}`) }, 'Check fair prices'));
   }
   price.addEventListener('input', debounce(recompute, 120));
   cur.addEventListener('change', recompute); ctx.addEventListener('change', recompute);
@@ -9655,7 +9515,7 @@ function bargainScreen() {
   recompute();
 
   // Where to buy the everyday essentials cheapest, anchored to where the traveller is.
-  const fc = focusSpot().spot.country || activeCountry;
+  const fc = focusSpot().spot.country || getActiveCountry();
   const fcName = (getCountry(fc) || {}).name || '';
   const ess = getEssentials(fc);
   if (ess && ess.items && ess.items.length) {
@@ -9777,7 +9637,7 @@ function donutSVG(segs, centerTop, centerSub) {
 }
 
 // The budget picture: donut + legend, remaining vs a target, and a spend-trend projection.
-function budgetSummaryCard() {
+export function budgetSummaryCard() {
   const log = store.trip.budgetLog || [];
   const target = budgetTarget();
   if (!log.length && !target) return null;
@@ -9903,7 +9763,7 @@ function expensesScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Expenses & budget', '#me'));
   wrap.append(h('p', { class: 'muted' }, 'Log what you spend as you go — it converts to your home currency, sorts by category, and tracks you against your budget.'));
-  const fc = focusSpot().spot.country || activeCountry;
+  const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
 
   // The budget picture first: donut, remaining, and an over/under-budget projection.
@@ -9964,11 +9824,11 @@ function checklistFor(cc) {
   return base.concat(extra).filter((it) => matchesProfile(it.iff, prefs));
 }
 function checklistScreen(countryId) {
-  if (countryId) activeCountry = countryId;
+  if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Pre-trip checklist', '#home'));
   wrap.append(countryChips((id) => go(`#checklist-${id}`)));
-  const items = checklistFor(activeCountry);
+  const items = checklistFor(getActiveCountry());
   if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'The checklist is being prepared — reconnect once to download it.')); mount(wrap, '#home'); return; }
   const done = items.filter((it) => isChecked(it.id)).length;
   wrap.append(h('div', { class: 'banner' }, `${done} of ${items.length} done`));
@@ -10082,7 +9942,7 @@ function searchScreen() {
       }
       section('Fair prices', pr);
       section('Countries', COUNTRIES.filter((c) => c.name.toLowerCase().includes(q))
-        .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { activeCountry = c.id; })));
+        .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { setActiveCountry(c.id); })));
     }
     if (!out.children.length) {
       if (q.length < 2 && cat === 'all') {
@@ -10513,10 +10373,10 @@ function sosScreen(cc) {
   // infer the country from the last GPS fix. Falls back to the browsed country with no fix.
   const fix = getLastFix();
   const near = fix ? nearestSpotGlobal(fix) : null;
-  if (cc) activeCountry = cc;
-  else if (near) activeCountry = near.spot.country;
+  if (cc) setActiveCountry(cc);
+  else if (near) setActiveCountry(near.spot.country);
 
-  const c = getCountry(activeCountry);
+  const c = getCountry(getActiveCountry());
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
   if (!cc && near) { const wai = whereAmI(fix); wrap.append(h('p', { class: 'sos-loc' }, `📍 You appear to be near ${(wai && wai.name) || near.spot.city}. Showing ${c.name} — not right? Pick your country:`)); }
   wrap.append(countryChips((id) => go(`#sos-${id}`)));
@@ -10549,7 +10409,7 @@ function sosScreen(cc) {
   // Reputable hospitals in the country, nearest first, tagged so a family can find an ER,
   // a children's ward or maternity care fast. The map link routes to the exact door; call
   // ahead — in a life-threatening emergency use the number above.
-  const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === activeCountry), fix);
+  const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === getActiveCountry()), fix);
   if (localHosp.length) {
     hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, `Trusted hospitals in ${c.name}, nearest first — for adults, children, babies and pregnancy. Most have English-speaking staff.`));
     localHosp.forEach((x) => {
@@ -10609,7 +10469,7 @@ function sosScreen(cc) {
   }
 
   // Preventive / background info — kept below the live emergency flow.
-  const safe = SAFETY[activeCountry];
+  const safe = SAFETY[getActiveCountry()];
   const safeCard = safe ? h('div', { class: 'card' }, [
     h('h2', {}, 'Water & food safety'),
     h('p', { style: 'margin:6px 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
@@ -10626,7 +10486,7 @@ function sosScreen(cc) {
   ]);
   const sInner = h('div', {});
   sInner.append(h('ul', { class: 'sos-aid' }, SOLO_SAFETY.general.map((li) => h('li', {}, li))));
-  const cSolo = SOLO_SAFETY[activeCountry];
+  const cSolo = SOLO_SAFETY[getActiveCountry()];
   if (cSolo) {
     sInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, `In ${c.name}`)]));
     sInner.append(h('ul', { class: 'sos-aid' }, cSolo.map((li) => h('li', {}, li))));
@@ -10643,7 +10503,7 @@ function sosScreen(cc) {
   if (phraseCard) wrap.append(phraseCard);
   if (safeCard) wrap.append(safeCard);
   wrap.append(solo);
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#scams-${activeCountry}`) }, '⚠️ Common scams here — and how to avoid them'));
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#scams-${getActiveCountry()}`) }, '⚠️ Common scams here — and how to avoid them'));
 
   wrap.append(sourcesNote([...HOSP_SOURCES, ...FIRSTAID_SOURCES], 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English. First-aid guidance here is general and does not replace professional medical care.'));
@@ -10725,9 +10585,9 @@ function worshipScreen(cc) {
   wrap.append(topbar('Places of worship', '#home'));
   const fix = getLastFix();
   const near = fix ? nearestSpotGlobal(fix) : null;
-  if (cc) activeCountry = cc;
-  else if (near) activeCountry = near.spot.country;
-  const c = getCountry(activeCountry);
+  if (cc) setActiveCountry(cc);
+  else if (near) setActiveCountry(near.spot.country);
+  const c = getCountry(getActiveCountry());
   wrap.append(countryChips((id) => go(`#worship-${id}`)));
   wrap.append(h('p', { class: 'map-hint' }, 'Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
 
@@ -10738,7 +10598,7 @@ function worshipScreen(cc) {
       h('a', { class: 'chip', href: mapsSearch(`${WORSHIP_SEARCH[f]} near me`), target: '_blank', rel: 'noopener' }, `${WORSHIP_FAITH[f]} ↗`))),
   ]));
 
-  const local = nearestFirst(WORSHIP.filter((w) => !c || w.cc === activeCountry), fix);
+  const local = nearestFirst(WORSHIP.filter((w) => !c || w.cc === getActiveCountry()), fix);
   if (!local.length) { wrap.append(h('p', { class: 'empty' }, 'No landmarks listed for this country yet — use the search above to find one near you.')); mount(wrap, '#home'); return; }
   const byCity = {};
   local.forEach((w) => { (byCity[w.city] = byCity[w.city] || []).push(w); });
@@ -11705,7 +11565,7 @@ function welcomeScreen() {
 // NAV-1: the "here is what I set up for you" recap, shown once on the first Home render after
 // the value-first setup. It names each active personalisation and what it does, then points to
 // Settings for the rest. Dismissed (or "add more") clears the one-shot flag.
-function setupRecapCard() {
+export function setupRecapCard() {
   const p = store.profile.prefs;
   const rows = [];
   rows.push([netMode() === 'offline' ? '✈️' : '📶',
@@ -11776,18 +11636,18 @@ function foryouScreen() {
 
   {
     // top personalised picks in the active country
-    const picks = allPlaces({ country: activeCountry }).slice().sort((a, b) => personalScore(b) - personalScore(a)).slice(0, 5);
-    const c = getCountry(activeCountry);
+    const picks = allPlaces({ country: getActiveCountry() }).slice().sort((a, b) => personalScore(b) - personalScore(a)).slice(0, 5);
+    const c = getCountry(getActiveCountry());
     if (picks.length) {
       const pk = h('div', { class: 'card' });
       pk.append(h('h2', {}, `Top picks for you${c ? ' — ' + c.name : ''}`));
       picks.forEach((p) => pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${p.id}`) },
         `${starsStr(Math.round(effectiveRating(p.id, p.rating)))} ${p.name}`)));
-      pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${activeCountry}`) }, 'See all places, ranked for you'));
+      pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${getActiveCountry()}`) }, 'See all places, ranked for you'));
       wrap.append(pk);
     }
     // the best-matching plan
-    const plans = suggestPlans({ country: activeCountry, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
+    const plans = suggestPlans({ country: getActiveCountry(), tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
     if (plans.length) {
       const pl = plans[0];
       wrap.append(h('div', { class: 'card' }, [
@@ -11813,8 +11673,8 @@ function plansScreen() {
       h('button', { class: 'btn block', onclick: () => go('#foryou') }, '🎯 Set up "For you"'),
     ]));
   }
-  wrap.append(countryChips((id) => { activeCountry = id; go('#plans'); }));
-  const plans = suggestPlans({ country: activeCountry, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
+  wrap.append(countryChips((id) => { setActiveCountry(id); go('#plans'); }));
+  const plans = suggestPlans({ country: getActiveCountry(), tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
   const PARTY_LBL = { solo: '🎒 solo', couple: '👫 couples', family: '👨‍👩‍👧 families', group: '👥 groups' };
   plans.forEach((pl, idx) => {
     const card = h('div', { class: 'card' });
@@ -11853,8 +11713,8 @@ function boardScreen(arg) {
     // picker: country chips + city list
     wrap.append(topbar('Local noticeboard', '#home'));
     wrap.append(h('p', { class: 'muted' }, 'Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
-    const selected = cc || activeCountry;
-    wrap.append(countryChips((id) => { activeCountry = id; go(`#board-${id}`); }, selected));
+    const selected = cc || getActiveCountry();
+    wrap.append(countryChips((id) => { setActiveCountry(id); go(`#board-${id}`); }, selected));
     const boards = boardsForCountry(selected);
     if (!boards.length) wrap.append(h('p', { class: 'empty' }, 'No boards for this country yet — more cities are being added.'));
     boards.forEach((b) => wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city}`)));
@@ -11966,12 +11826,12 @@ function streetfoodScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Street food', '#home'));
   wrap.append(h('p', { class: 'muted' }, 'The local stalls and food streets worth queueing for — with your own ratings and takes, kept on-device and shown first. Rate a stall and your score drives its colour on the map too.'));
-  wrap.append(countryChips((id) => { activeCountry = id; go('#streetfood'); }));
+  wrap.append(countryChips((id) => { setActiveCountry(id); go('#streetfood'); }));
 
   // rateable street-food places (curated local eats) — as a rate-list or on a map.
   const prefs = store.profile.prefs;
   const sview = prefs.streetView === 'map' ? 'map' : 'list';
-  const places = allPlaces({ country: activeCountry }).filter((p) => p.isLocal === true || (p.categories || []).includes('streetfood'));
+  const places = allPlaces({ country: getActiveCountry() }).filter((p) => p.isLocal === true || (p.categories || []).includes('streetfood'));
   const mappable = places.filter((p) => p.coords);
   if (places.length) {
     if (mappable.length) {
@@ -11988,7 +11848,7 @@ function streetfoodScreen() {
       wrap.append(canvas);
       import('./map.js').then((m) => m.initPlacesMap(canvas, mappable, {
         onOpen: (id) => go(`#place-${id}`), onLocate: (f) => setLastFix(f),
-      })).then((c) => { liveCleanup = () => { try { c.dispose(); } catch { /* noop */ } }; }).catch(() => { /* list still below */ });
+      })).then((c) => { setLiveCleanup(() => { try { c.dispose(); } catch { /* noop */ } }); }).catch(() => { /* list still below */ });
     } else {
       const card = h('div', { class: 'card' });
       card.append(h('h2', {}, 'Rate the classics'));
@@ -12012,7 +11872,7 @@ function streetfoodScreen() {
   }
 
   // street-food areas from the local boards (browse + jump to the board)
-  const boards = boardsForCountry(activeCountry).filter((b) => (b.streetFood || []).length);
+  const boards = boardsForCountry(getActiveCountry()).filter((b) => (b.streetFood || []).length);
   if (boards.length) {
     const card = h('div', { class: 'card' });
     card.append(h('h2', {}, 'Where to graze, city by city'));
@@ -12721,14 +12581,12 @@ function countryLoadingScreen(ccs) {
 }
 
 // ---- router -----------------------------------------------------------------
-let liveMapCtrl = null;   // the map controller for the current #map view, if any
-let liveCleanup = null;   // per-screen teardown (e.g. release the screen wake lock)
 function render() {
   applyTheme();
   // Tear down any live map before rendering the next screen (frees the WebGL context
-  // and stops the GPS watcher — prevents the map dying after repeated visits).
-  if (liveMapCtrl) { try { liveMapCtrl.dispose(); } catch { /* noop */ } liveMapCtrl = null; }
-  if (liveCleanup) { try { liveCleanup(); } catch { /* noop */ } liveCleanup = null; }
+  // and stops the GPS watcher — prevents the map dying after repeated visits). See
+  // js/app-state.js for the liveMapCtrl/liveCleanup protocol itself.
+  teardownLiveScreen();
   stopAllReaders();   // cancel any in-progress read-aloud before the screen changes
   endTour(false);     // close the walk-me tour overlay when the traveller navigates away
   const hash = location.hash || '#home';
@@ -12762,7 +12620,7 @@ function render() {
     const wantAll = NEEDS_ALL_COUNTRIES.has(head);
     const prefix = arg ? arg.split('-')[0] : null;
     const argCc = ALL_CC.includes(arg) ? arg : (ALL_CC.includes(prefix) ? prefix : null);
-    const neededCcs = wantAll ? ALL_CC : [argCc || activeCountry];
+    const neededCcs = wantAll ? ALL_CC : [argCc || getActiveCountry()];
     const pending = neededCcs.filter((cc) => !isCountryLoaded(cc));
     if (pending.length) {
       pending.forEach((cc) => { loadCountry(cc).then(render, render); });
