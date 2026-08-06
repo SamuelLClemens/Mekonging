@@ -48,7 +48,7 @@ export const ITINERARIES = [
   },
   {
     id: "it-th-slow-month", country: "th", title: "A slow month up north", days: 30, pace: "relaxed",
-    party: ["solo", "couple"], budget: ["low", "mid"],
+    party: ["solo", "couple"], budget: ["low", "mid"], tags: ["nomads"],
     summary: "Base yourself in Chiang Mai on a monthly rate, day-trip the region, and take an unhurried Pai + Chiang Rai loop.",
     stops: [
       { title: "Chiang Mai (base)", nights: 20, why: "Nimman cafés + coworking, monthly apartment rates" },

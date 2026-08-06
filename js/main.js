@@ -81,7 +81,7 @@ import {
   boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
-  loadCountry, isCountryLoaded,
+  loadCountry, isCountryLoaded, loadAllCountries,
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
 import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.343.0';
+const APP_VERSION = 'mk-v0.344.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2205,6 +2205,138 @@ function anchorCountry() {
   return null;
 }
 
+// Explore E4 ("Fits your trip"): the traveller's own real prefs (party/budget/tripLength),
+// nothing invented. Best-of lists whose forWho tag actually matches, plus the top itinerary
+// from suggestPlans() (already scores by these exact prefs — reused rather than
+// re-implemented). Universal lists ('everyone'/'firsttimers') always show; 'families'/
+// 'budget' lists only show when the traveller's own profile actually matches, so this never
+// claims relevance it cannot back up. Omits itself entirely if nothing qualifies.
+function fitsYourTripSection(cc) {
+  const prefs = store.profile.prefs;
+  const lists = bestForCountry(cc).filter((l) => l.forWho === 'everyone' || l.forWho === 'firsttimers'
+    || (l.forWho === 'families' && prefs.party === 'family')
+    || (l.forWho === 'budget' && prefs.budget === 'low'));
+  const plans = suggestPlans({ country: cc, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
+  if (!lists.length && !plans.length) return null;
+  const body = h('div', {});
+  if (lists.length) {
+    body.append(h('div', { class: 'grid' }, lists.slice(0, 4).map((l) => h('button', { class: 'card bestof-card', onclick: () => go(`#bestlist-${l.id}`) }, [
+      h('strong', {}, l.title),
+      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, l.blurb),
+    ]))));
+  }
+  if (plans.length) {
+    const top = plans[0];
+    body.append(h('div', { class: 'card', style: 'margin-top:8px' }, [
+      h('div', { class: 'row-between' }, [h('strong', {}, top.title), h('span', { class: 'muted tiny' }, `~${top.days}d`)]),
+      h('p', { class: 'muted tiny', style: 'margin:4px 0 8px' }, top.summary),
+      h('button', { class: 'btn ghost block', onclick: () => go('#plans') }, plans.length > 1 ? `See all ${plans.length} matching trip plans →` : 'See this trip plan →'),
+    ]));
+  }
+  return h('section', {}, [h('h2', { class: 'home-section' }, '🎯 Fits your trip'), body]);
+}
+
+// Explore E5 (seasonal fit): the wet/dry read from WET_MONTHS (already used by contextNow())
+// plus any real, dated festival within the next ~45 days from events.*.js, and the current
+// city's own bestTime line from history.js when one exists — bestTime is city-scoped only
+// (no place-level equivalent exists in the data), so this never claims a country-wide season
+// fit it cannot support. Omits itself if there is nothing dated or sourced to say.
+function seasonalFitSection(cc, cityName, slug) {
+  const now = new Date();
+  const wet = (WET_MONTHS[cc] || []).includes(now.getMonth());
+  const lines = [];
+  lines.push(wet ? '🌧 Wet season — expect afternoon showers; mornings are usually clear.' : '☀️ Dry season — generally reliable weather for sightseeing.');
+  const soon = getEvents(cc).filter((e) => {
+    if (!e.start) return false;
+    const d = Math.round((new Date(e.start + 'T00:00:00') - now) / 86400000);
+    return d >= 0 && d <= 45;
+  }).sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, 2);
+  soon.forEach((e) => lines.push(`🎉 ${e.name} — ${evShort(e.start)}${e.lunar ? ' (movable date)' : ''}.`));
+  const hi = slug ? cityHistory(cc, slug) : null;
+  if (hi && hi.bestTime && cityName) lines.push(`🗓 Best time for ${cityName}: ${hi.bestTime}`);
+  // The wet/dry line alone is still real, sourced content (not a guess) and directly answers
+  // "best for this season" — one of the traveller's own explicit asks — so it is enough to
+  // show on its own; this only ever omits if WET_MONTHS somehow held nothing for cc, which
+  // cannot happen for any of the four countries this app covers.
+  if (!lines.length) return null;
+  return h('section', {}, [
+    h('h2', { class: 'home-section' }, '📅 Right now, seasonally'),
+    h('div', { class: 'card' }, lines.map((t) => h('p', { style: 'margin:4px 0' }, t))),
+    soon.length ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#events-${cc}`) }, 'All festivals & holidays →') : null,
+  ]);
+}
+
+// Explore E6 ("Where next"): real transport options from the current city to every other
+// hub in journey.js's route graph, ranked by shortest travel time — genuinely reachable next
+// stops, not a guess. journey.js's route graph walks every country's routes and memoises
+// PERMANENTLY on first build, so isRouteNode()/planRoutes() must never be called before all
+// four countries are loaded (the same constraint documented in Home's next-stop card, F1).
+// Cache-only: the first check for a given city always defers to loadAllCountries().then(),
+// never inline, so a fresh session never risks freezing the graph incomplete.
+const _whereNextCache = {};
+function computeWhereNext(fromCity) {
+  if (!isRouteNode(fromCity)) return [];
+  const scored = routeNodes().filter((n) => n !== fromCity).map((n) => {
+    const plans = planRoutes(fromCity, n);
+    return plans.length ? { name: n, hrs: plans[0].totalHrs, changes: plans[0].changes } : null;
+  }).filter(Boolean);
+  scored.sort((a, b) => (a.hrs[0] || 99) - (b.hrs[0] || 99));
+  return scored.slice(0, 5);
+}
+function whereNextSection(argCc, fromCity) {
+  if (!fromCity) return null;
+  if (!(fromCity in _whereNextCache)) {
+    loadAllCountries().then(() => {
+      _whereNextCache[fromCity] = computeWhereNext(fromCity);
+      const headRoute = (location.hash || '').slice(1).split('-')[0];
+      if (headRoute === 'explore' || headRoute === 'country') {
+        const y = window.scrollY;
+        exploreScreen(argCc);
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      }
+    }).catch(() => { /* offline with nothing cached yet — omitted for this session */ });
+    return null;   // nothing to show until the check above resolves — never a placeholder
+  }
+  const results = _whereNextCache[fromCity];
+  if (!results.length) return null;
+  return h('section', {}, [
+    h('h2', { class: 'home-section' }, `🚌 Where next, from ${fromCity}`),
+    h('div', { class: 'grid' }, results.map((r) => h('div', { class: 'card' }, [
+      h('strong', {}, r.name),
+      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' },
+        `${r.hrs[1] ? `~${r.hrs[0]}–${r.hrs[1]}h` : ''} · ${r.changes === 0 ? 'Direct' : `${r.changes} change${r.changes > 1 ? 's' : ''}`}`),
+    ]))),
+    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#route') }, 'Full journey planner →'),
+  ]);
+}
+
+// Explore E7 ("You might not know"): highly-rated places in cities the traveller has no
+// saved place in yet — real serendipity from the actual data, not a random pick. Only
+// SAVED PLACES are used as the "already knows about" signal (a reliable, structured field);
+// journal entries are free-text city names and too unreliable to match safely. Omits itself
+// if nothing qualifies.
+function mightNotKnowSection(cc) {
+  const known = new Set();
+  (store.favorites || []).forEach((id) => { const p = getPlace(id); if (p && p.city) known.add(p.city); });
+  const candidates = allPlaces({ country: cc })
+    .filter((p) => placeBucket(p) !== 'stay' && (Number(p.rating) || 0) >= 4.3 && p.city && !known.has(p.city))
+    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+  const seenCities = new Set(); const picks = [];
+  for (const p of candidates) {
+    if (seenCities.has(p.city)) continue;
+    seenCities.add(p.city); picks.push(p);
+    if (picks.length >= 4) break;
+  }
+  if (!picks.length) return null;
+  return h('section', {}, [
+    h('h2', { class: 'home-section' }, '✨ You might not know'),
+    h('div', { class: 'grid' }, picks.map((p) => h('button', { class: 'card', onclick: () => go(`#place-${p.id}`) }, [
+      h('strong', {}, p.name),
+      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, `${p.city} · ${p.rating}★`),
+    ]))),
+  ]);
+}
+
 // Region/province drill-down. The full implementation — an outlined, clickable province
 // map plus per-region content — lands in Wave 2. Until then the route falls back to the
 // country hub so it never dead-ends.
@@ -2564,14 +2696,14 @@ function exploreScreen(argCc) {
   // when it is a real signal (GPS or a chosen focus), never the capital default.
   const fs = focusSpot(cc);
   const fcity = (fs && (fs.source === 'gps' || fs.source === 'focus') && fs.spot) ? fs.spot.city : null;
+  const fslug = fcity ? citySlug(fcity) : null;
   if (fcity) {
-    const slug = citySlug(fcity);
-    const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === slug).length;
+    const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === fslug).length;
     wrap.append(h('div', { class: 'card access-focus' }, [
       h('h2', { style: 'margin-top:0' }, `📍 You’re around ${fcity}`),
       h('p', { class: 'muted', style: 'margin:4px 0 8px' },
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
-      here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${slug}`) }, `Places in ${fcity}`) : null,
+      here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${fslug}`) }, `Places in ${fcity}`) : null,
       h('div', { class: 'chips', style: 'margin-top:6px' }, [
         h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
         h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, [chipIcon('cloud'), 'Weather']),
@@ -2583,6 +2715,17 @@ function exploreScreen(argCc) {
     // weather and "near me" all match. Fully offline — no GPS required.
     wrap.append(whereAmICard(cc));
   }
+
+  // Explore E4–E7: discovery leads, before the reference/admin cards below (regions map,
+  // history, access/visa/family, the tile decks) — this is Explore's actual theme
+  // ("Where?"), so inspiration surfaces first rather than being buried under reference
+  // reading. Each section independently omits itself when it has nothing real to show.
+  const hubSights = signatureSightsStrip(cc);
+  if (hubSights) wrap.append(hubSights);
+  const fits = fitsYourTripSection(cc); if (fits) wrap.append(fits);
+  const seasonal = seasonalFitSection(cc, fcity, fslug); if (seasonal) wrap.append(seasonal);
+  const whereNext = whereNextSection(argCc, fcity); if (whereNext) wrap.append(whereNext);
+  const notKnow = mightNotKnowSection(cc); if (notKnow) wrap.append(notKnow);
 
   // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
   // it is not something a traveller reads every day, so it should not be the first thing.
@@ -2605,10 +2748,6 @@ function exploreScreen(argCc) {
       h('button', { class: 'btn block', onclick: () => go(`#sos-${cc}`) }, 'See solo & women’s safety'),
     ]));
   }
-
-  // Photo-forward lead: this country's iconic sights, before the map/city picker.
-  const hubSights = signatureSightsStrip(cc);
-  if (hubSights) wrap.append(hubSights);
 
   // Explore by city: a spatial overview of the whole country's places plus a city
   // picker, so a traveller sees WHERE things are and can scope straight to one city
@@ -2638,10 +2777,8 @@ function exploreScreen(argCc) {
   }
 
   // The full country toolkit, regrouped from one 26-tile wall into four labelled,
-  // collapsible sub-clusters so a traveller scans four intents, not a flat grid. Phase-
-  // ranking these (the deck matching the current trip phase opens, the rest collapse) is
-  // E3 — deliberately deferred to the next slice so this merge stays structure-only and any
-  // regression is obvious. The "identify what's around me" tools sit together under See & do.
+  // collapsible sub-clusters so a traveller scans four intents, not a flat grid. The
+  // "identify what's around me" tools sit together under See & do.
   const tileGroups = [
     { label: 'Get oriented', tiles: [
       { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
@@ -2678,9 +2815,17 @@ function exploreScreen(argCc) {
       { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
     ] },
   ];
+  // E3: rank the four decks by trip phase, same rule as Home (homeScreen's planDeckOpen) —
+  // the deck matching the current phase opens, the rest collapse. Nothing removed, nothing
+  // persisted per-deck: like Home, phase always decides what's open on the next visit, not a
+  // sticky manual override. 'post' has no strong single fit among these four (unlike Home's
+  // own decks) so it opens none, same as the pre-E3 default.
+  const explorePhase = store.profile.prefs.phase || inferPhase();
+  const PHASE_DECK = { planning: 'Get oriented', arrived: 'Get oriented', traveling: 'See & do', post: null };
+  const openDeck = PHASE_DECK[explorePhase];
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
   tileGroups.forEach((g) => {
-    wrap.append(foldable(g.label, h('div', { class: 'grid' }, g.tiles.map(sectionTile))));
+    wrap.append(foldable(g.label, h('div', { class: 'grid' }, g.tiles.map(sectionTile)), { open: g.label === openDeck }));
   });
 
   mount(wrap, '#explore');
