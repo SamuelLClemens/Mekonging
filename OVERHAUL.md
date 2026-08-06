@@ -318,7 +318,7 @@ same-tab cached error from mid-fix was ruled out via a fresh tab. `main.js` drop
 
 Filled in as each section's interview completes.
 
-### Home — *spec complete, ready to build*
+### Home — *BUILT and SHIPPED as mk-v0.342.0*
 
 **Theme:** *What now?* — the present moment. Home answers one question and defers everything
 else. Interviewed 2026-08-06 against the real screen at 375×812 (phone).
@@ -407,6 +407,55 @@ countries are loaded, or the route graph is permanently incomplete for the sessi
 - Planning shows exactly **one** "add your dates" prompt, not three.
 - Home renders fully offline, and paints before any country data has loaded.
 - Nothing is removed from navigation — folded items stay one tap away.
+
+#### Build notes (H1–H7) — SHIPPED as mk-v0.342.0
+
+All six pieces shipped in `js/screens/home.js` + `js/main.js` and were verified against
+every acceptance criterion above before shipping:
+
+- **H1 (slim bar).** The old collapsing hero (`heroApply`/`onHeroScroll`/`toggleHero`/
+  `setupHeroScroll` and its module state) was deleted outright rather than left dead —
+  `welcomeScreen()`'s own hero never used that machinery, so nothing else depended on it.
+  Home now opens with `topbar('📍 {city} · {date}', null)`, which brings 🆘, Saved and
+  Settings for free. Measured: first real recommendation moved from **474px to 376px** at
+  375×812.
+- **H2 (Trip status row).** `homeStatusBand()` was changed to skip any chip without a real
+  value (no more "No dates yet" / "No plans yet" / "No spend yet") instead of always
+  rendering all four; `phaseSwitchRow()` gained a `withLabel` parameter so the row can embed
+  just the segmented control without repeating its own "Your stage" caption. Collapsed by
+  default via a self-defaulting pref, same pattern as the tool decks.
+- **H3 (situation line)** and **H5 (where-you-are)** are new, Home-only logic written
+  directly in `js/screens/home.js` rather than added to main.js's export surface — the
+  deeper decomposition this session already committed to deferring elsewhere. `topbar`,
+  `citySlug`, `cityAboutCard`, `todayISO`, `addDaysISO`, `daysUntilISO`, `budgetTarget`,
+  `tripSpanDays` and `homeCurrency` were exported from main.js to support them.
+- **H4 (next-stop card) — a real bug found and fixed during verification, not just during
+  design.** The first implementation called `isRouteNode()` synchronously before
+  `loadAllCountries()` resolved, exactly the trap F1 documented: journey.js's route graph
+  memoises permanently on first build, so checking a route on a fresh session (Home is
+  always the first screen) would have frozen the graph incomplete for the rest of the
+  session. Fixed by deferring every `isRouteNode()`/`planRoutes()` call inside
+  `loadAllCountries().then()`, never inline; the card renders from a local cache only,
+  returns `null` (never a "checking…" placeholder) until the check resolves.
+- **H6** required no separate code — it was a direct consequence of H2's chip-filtering
+  fix. Planning's three visually-competing empty states (four empty status chips, plus
+  `tripCountdownCard`'s own "📅 Add your travel dates" card) collapse to exactly one once
+  the empty chips stop rendering.
+
+**Verified:** real data (a trip stop 2 days out, a logged expense, real weather cache)
+renders correctly in the situation line, next-stop card (a genuine Phnom Penh → Chiang Mai
+route, 2 changes, ~5–7h) and where-you-are card; a genuinely empty trip (stops and spend log
+cleared, re-rendered in place) shows zero placeholder chips and omits the situation line and
+next-stop card entirely, exactly as designed. **True offline test**: killed the dev server
+process entirely, hard-reloaded — Home, 🆘, the collapsed trip status row, the situation
+line and the next-stop card all rendered correctly from Service Worker Cache Storage alone,
+zero console errors. Planning phase confirmed showing exactly one "add your dates" prompt.
+
+**Discovered, out of scope, flagged separately:** `resetAll()` in `js/state.js` clears
+localStorage but not the IndexedDB backup mirror the app deliberately keeps so data survives
+localStorage being cleared — so a reset silently restores itself on next load. Unrelated to
+Home; spawned as its own task rather than fixed here.
+
 ### Explore — *pending*
 ### Places — *pending*
 ### Talk — *pending*
