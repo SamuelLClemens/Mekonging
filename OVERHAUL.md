@@ -318,7 +318,144 @@ same-tab cached error from mid-fix was ruled out via a fresh tab. `main.js` drop
 
 Filled in as each section's interview completes.
 
-### Home — *pending interview*
+### Home — *BUILT and SHIPPED as mk-v0.342.0*
+
+**Theme:** *What now?* — the present moment. Home answers one question and defers everything
+else. Interviewed 2026-08-06 against the real screen at 375×812 (phone).
+
+#### What the interview found on the live screen
+
+- **Home is the only screen with no 🆘 button.** Every other screen gets it from `topbar()`
+  (`js/main.js:432`); Home replaces the top bar with the marketing hero, so the app's
+  fastest path to emergency help is missing from its most-visited screen. Not a question —
+  fix regardless.
+- **On the ground, 309px of an 812px phone screen is chrome** before any content: hero
+  (115px), four stage buttons, four status chips. The first real recommendation lands at
+  474px — 58% down. This is the "too much on screen" failure mode, measured.
+- **In Planning, the entire first screen is empty states**: "No dates yet", "No plans yet",
+  "No spend yet", plus two cards describing what they *would* show. Three separate cards
+  each say "add your dates".
+- The Arrived content itself is **good and stays**: "Afternoon in Hanoi · Thursday · wet
+  season" with ranked picks carrying open-now status, distance and category colour.
+
+#### Decisions (interview round 2)
+
+Three overlapping status surfaces were requested. Resolved by giving each a distinct **time
+horizon**, so no value is ever rendered twice:
+
+| Surface | Horizon | Carries | Visibility |
+|---|---|---|---|
+| **Slim bar** | Identity + safety | `📍 city · date` + 🆘 | Permanent, replaces the hero |
+| **Situation line** | Right now / today | weather now · spend *today* · next-stop nudge | On the ground only |
+| **Trip status row** | The whole trip | stage · dates · plans · *total* spend · offline | Collapsed by default |
+
+City appears in the slim bar only. Today's spend in the situation line only. Trip-total spend
+in the status row only. The full-brand hero moves to the welcome/first-run screen, which is
+where branding belongs.
+
+#### Target structure — on the ground (Arrived / Travelling)
+
+1. **Slim bar** — reuse `topbar()` with no `backHash`; title becomes `📍 Hanoi · Thu 6 Aug`.
+   Brings 🆘, saved and settings for free and closes the emergency gap in the same change.
+2. **Trip status row** — collapsed to `▸ Trip status · 🛬 Arrived`. Expands to the existing
+   four-stage picker plus the four chips. Rank-collapse-never-remove: nothing is deleted,
+   only folded.
+3. **Situation line** — three compact tappable cells, each a live value, not a placeholder:
+   - `🌤 28° · rain 4pm` → `#weather`
+   - `💸 ฿420 / ฿1,200 today` → `#expenses`
+   - `🚌 Next: Sapa in 2 days` → the next-stop card (cell omitted entirely when no next stop)
+4. **"Right now" picks card** — existing `homeNowCard()`, unchanged. This is the good part.
+5. **Next-stop card** — only when `store.trip.stops` holds a future stop. Real options, cost
+   and duration from `planRoutes(from, to)`.
+6. **"Where you are" context card** — `cityHistory(cc, slug)` blurb + `knownFor`, collapsible.
+   Note: `whereAmICard()` is a city *picker*, not this. Use `cityAboutCard()` (`main.js:1175`).
+7. **Plan & tools decks** — existing, phase-ranked. Unchanged this pass.
+8. **Give back + disclaimer** — unchanged.
+
+#### Target structure — Planning
+
+No situation line (the traveller is not on the ground). The three competing "add your dates"
+empty states collapse to **one** setup card. Countdown and destination outlook stay.
+
+#### Data — all four "today needs" already exist, nothing new to source
+
+- **Spend today vs daily budget** — `store.trip.budgetLog` entries carry `date` (defaulted to
+  `todayKey()` in `state.js:402`). `budgetTarget()` (`main.js:9604`) already returns
+  `{ amount, per: 'day' | 'trip' }`; when `per === 'trip'`, derive the daily allowance from
+  `tripSpanDays().total`. Show nothing rather than a guess when neither is set.
+- **Getting to your next stop** — next stop is `store.trip.stops` sorted by `date`;
+  `planRoutes(from, to)` (`journey.js:131`) returns real options.
+- **Where you are** — `HISTORY.cities["<cc>-<slug>"]` → `{ name, blurb, knownFor, bestTime }`.
+  Real, sourced, already written.
+- **Weather** — `getCachedWeather` / `forecastOutlook()` / `homeWeatherRing()`.
+
+#### Constraint carried from F1 — the next-stop card must never block
+
+`planRoutes()` calls `graph()` in `journey.js`, which walks `c.routes` across **all four**
+countries and **memoises forever on first call**. Home must never block on that. The
+next-stop card therefore loads in the background via `loadAllCountries()` and appears when
+ready, reusing the exact background-load-and-repaint-in-place idiom already built for Home
+and Explore in F1 (scroll position preserved). Never call `planRoutes()` before all four
+countries are loaded, or the route graph is permanently incomplete for the session.
+
+#### Acceptance criteria
+
+- 🆘 reachable in one tap from Home, on phone and desktop.
+- On the ground, the first real recommendation sits **above 400px** on a 375×812 phone
+  (currently 474px).
+- No placeholder chip anywhere on Home: a status cell either carries a real value or is absent.
+- Planning shows exactly **one** "add your dates" prompt, not three.
+- Home renders fully offline, and paints before any country data has loaded.
+- Nothing is removed from navigation — folded items stay one tap away.
+
+#### Build notes (H1–H7) — SHIPPED as mk-v0.342.0
+
+All six pieces shipped in `js/screens/home.js` + `js/main.js` and were verified against
+every acceptance criterion above before shipping:
+
+- **H1 (slim bar).** The old collapsing hero (`heroApply`/`onHeroScroll`/`toggleHero`/
+  `setupHeroScroll` and its module state) was deleted outright rather than left dead —
+  `welcomeScreen()`'s own hero never used that machinery, so nothing else depended on it.
+  Home now opens with `topbar('📍 {city} · {date}', null)`, which brings 🆘, Saved and
+  Settings for free. Measured: first real recommendation moved from **474px to 376px** at
+  375×812.
+- **H2 (Trip status row).** `homeStatusBand()` was changed to skip any chip without a real
+  value (no more "No dates yet" / "No plans yet" / "No spend yet") instead of always
+  rendering all four; `phaseSwitchRow()` gained a `withLabel` parameter so the row can embed
+  just the segmented control without repeating its own "Your stage" caption. Collapsed by
+  default via a self-defaulting pref, same pattern as the tool decks.
+- **H3 (situation line)** and **H5 (where-you-are)** are new, Home-only logic written
+  directly in `js/screens/home.js` rather than added to main.js's export surface — the
+  deeper decomposition this session already committed to deferring elsewhere. `topbar`,
+  `citySlug`, `cityAboutCard`, `todayISO`, `addDaysISO`, `daysUntilISO`, `budgetTarget`,
+  `tripSpanDays` and `homeCurrency` were exported from main.js to support them.
+- **H4 (next-stop card) — a real bug found and fixed during verification, not just during
+  design.** The first implementation called `isRouteNode()` synchronously before
+  `loadAllCountries()` resolved, exactly the trap F1 documented: journey.js's route graph
+  memoises permanently on first build, so checking a route on a fresh session (Home is
+  always the first screen) would have frozen the graph incomplete for the rest of the
+  session. Fixed by deferring every `isRouteNode()`/`planRoutes()` call inside
+  `loadAllCountries().then()`, never inline; the card renders from a local cache only,
+  returns `null` (never a "checking…" placeholder) until the check resolves.
+- **H6** required no separate code — it was a direct consequence of H2's chip-filtering
+  fix. Planning's three visually-competing empty states (four empty status chips, plus
+  `tripCountdownCard`'s own "📅 Add your travel dates" card) collapse to exactly one once
+  the empty chips stop rendering.
+
+**Verified:** real data (a trip stop 2 days out, a logged expense, real weather cache)
+renders correctly in the situation line, next-stop card (a genuine Phnom Penh → Chiang Mai
+route, 2 changes, ~5–7h) and where-you-are card; a genuinely empty trip (stops and spend log
+cleared, re-rendered in place) shows zero placeholder chips and omits the situation line and
+next-stop card entirely, exactly as designed. **True offline test**: killed the dev server
+process entirely, hard-reloaded — Home, 🆘, the collapsed trip status row, the situation
+line and the next-stop card all rendered correctly from Service Worker Cache Storage alone,
+zero console errors. Planning phase confirmed showing exactly one "add your dates" prompt.
+
+**Discovered, out of scope, flagged separately:** `resetAll()` in `js/state.js` clears
+localStorage but not the IndexedDB backup mirror the app deliberately keeps so data survives
+localStorage being cleared — so a reset silently restores itself on next load. Unrelated to
+Home; spawned as its own task rather than fixed here.
+
 ### Explore — *pending*
 ### Places — *pending*
 ### Talk — *pending*

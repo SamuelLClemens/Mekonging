@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.341.0';
+const APP_VERSION = 'mk-v0.342.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -415,7 +415,7 @@ function goBack(fallback) {
 }
 
 // ---- shell ------------------------------------------------------------------
-function topbar(title, backHash) {
+export function topbar(title, backHash) {
   const hash = location.hash || '';
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
   const onSos = hash.startsWith('#sos');
@@ -1172,7 +1172,7 @@ function historyScreen(cc) {
   mount(wrap, 'home');
 }
 
-function cityAboutCard(cc, slug) {
+export function cityAboutCard(cc, slug) {
   const hi = cityHistory(cc, slug);
   if (!hi || !hi.blurb) return null;
   const card = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, `About ${hi.name}`)]);
@@ -1707,7 +1707,7 @@ function tripStartISO() {
   dates.sort();
   return dates[0] || null;
 }
-function daysUntilISO(iso) {
+export function daysUntilISO(iso) {
   const target = new Date(iso + 'T00:00:00');
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1896,67 +1896,25 @@ function signatureSightsStrip(cc) {
   ]);
 }
 
-// ---- Collapsing home hero ---------------------------------------------------
-// The hero (wordmark + tagline + reassurance badges) is full-size at the top of Home, then
-// minimises to a slim sticky bar the moment the traveller scrolls down, so the tools take the
-// screen. The tagline and selling-point badges fold away when collapsed; a chevron button (and
-// a tap anywhere on the slim bar) expands it for a peek, and scrolling down again re-collapses
-// it. Pure DOM class toggling — no re-render, so it stays smooth — with ONE passive scroll
-// listener bound once and inert on every screen that has no .hero.
-let heroPinned = false;         // the traveller tapped to expand while scrolled — hold it open
-let heroLastY = 0;
-let heroScrollBound = false;
-const HERO_COLLAPSE_AT = 40;    // px scrolled before the hero minimises
-
-function heroApply(collapsed) {
-  const hero = document.querySelector('.hero');
-  if (!hero) return;
-  const stuck = (window.scrollY || window.pageYOffset || 0) > HERO_COLLAPSE_AT;
-  hero.classList.toggle('is-collapsed', collapsed);
-  hero.classList.toggle('is-stuck', stuck);
-  const btn = hero.querySelector('.hero-toggle');
-  if (btn) {
-    btn.setAttribute('aria-expanded', String(!collapsed));
-    btn.setAttribute('aria-label', collapsed ? 'Expand the header' : 'Collapse the header');
-  }
-}
-
-function onHeroScroll() {
-  if (!document.querySelector('.hero')) return;   // not on Home — do nothing
-  const y = window.scrollY || window.pageYOffset || 0;
-  if (y > heroLastY + 2) heroPinned = false;      // any downward scroll cancels a peek
-  heroApply(!heroPinned);                          // slim by default; expanded only while pinned open
-  heroLastY = y;
-}
-
-export function toggleHero(e) {
-  if (e) e.stopPropagation();
-  const hero = document.querySelector('.hero');
-  if (!hero) return;
-  if (hero.classList.contains('is-collapsed')) { heroPinned = true; heroApply(false); }
-  else { heroPinned = false; heroApply(true); }
-}
-
-export function setupHeroScroll() {
-  heroPinned = false;
-  heroLastY = window.scrollY || window.pageYOffset || 0;
-  heroApply(true);               // Home starts with a SLIM hero so status + tools lead; tap to expand
-  if (!heroScrollBound) {
-    window.addEventListener('scroll', onHeroScroll, { passive: true });
-    heroScrollBound = true;
-  }
-}
+// The collapsing-hero mechanism (full wordmark banner that minimised on scroll) that used to
+// live here was removed when Home's H1 rebuild replaced the hero with a permanent slim bar
+// (topbar() — see js/screens/home.js). welcomeScreen's own hero never used this machinery (no
+// is-collapsed class, no hero-toggle button, no scroll listener), so nothing else depended on it.
 
 // ---- Home top: compact phase switch · at-a-glance status · one "Right now" card ----
 // A slim one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
 // and the "Not right?" correction line, so actionable content leads instead of chrome.
-export function phaseSwitchRow(active, stored) {
+export function phaseSwitchRow(active, stored, withLabel = true) {
   const short = { planning: 'Planning', arrived: 'Arrived', traveling: 'Travelling', post: 'Post' };
   const seg = h('div', { class: 'phase-seg compact', role: 'group', 'aria-label': 'Your journey phase' },
     PHASE_ORDER.map((k) => h('button', {
       class: 'phase-btn', 'aria-pressed': active === k ? 'true' : 'false',
       onclick: () => { store.profile.prefs.phase = k; save(); render(); },
     }, [h('span', { class: 'phase-emoji' }, PHASES[k].emoji), h('span', { class: 'phase-lbl' }, short[k])])));
+  // withLabel=false: just the segmented control, no "Looks like"/"Your stage" caption — used
+  // inside the collapsed Trip status row on Home, where the summary line already names the
+  // stage, so the caption would repeat it.
+  if (!withLabel) return seg;
   return h('div', { class: 'phase-switch' }, [
     h('span', { class: 'phase-switch-lbl' }, stored ? 'Your stage' : 'Looks like'),
     seg,
@@ -1979,30 +1937,32 @@ function tripSpendHome() {
 }
 
 // At-a-glance status band: trip countdown/day · next plan · spend · offline — the traveller's
-// state in one glance, each chip a one-tap route into the screen that owns it.
+// state in one glance, each chip a one-tap route into the screen that owns it. A chip only
+// renders when it has a real value — no "No dates yet" / "No plans yet" / "No spend yet"
+// placeholder text, per the Home spec's "no placeholder chip anywhere" rule. The connectivity
+// chip is the one exception: online/offline is always a real, current fact, never a placeholder.
 export function homeStatusBand(phase, cc) {
   const chip = (ic, lbl, onclick) => h('button', { class: 'status-chip', onclick },
     [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, lbl)]);
   const chips = [];
-  // trip / day
+  // trip / day — only once dates exist
   const startISO = tripStartISO();
-  let tripLbl;
-  if (startISO) { const d = daysUntilISO(startISO); tripLbl = d > 0 ? `${d} day${d === 1 ? '' : 's'} to go` : `Day ${1 - d}`; }
-  else tripLbl = 'No dates yet';
-  chips.push(chip('🗓', tripLbl, () => go('#trip')));
-  // next plan item
+  if (startISO) {
+    const d = daysUntilISO(startISO);
+    const tripLbl = d > 0 ? `${d} day${d === 1 ? '' : 's'} to go` : `Day ${1 - d}`;
+    chips.push(chip('🗓', tripLbl, () => go('#trip')));
+  }
+  // next plan item — only once one exists
   const item = nextPlanItem();
-  let nextLbl;
   if (item) {
     const t = todayISO();
     const when = item.date === t ? 'Today' : (item.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(item.date));
-    nextLbl = `${(item.title || 'Planned').slice(0, 18)} · ${when}`;
-  } else nextLbl = 'No plans yet';
-  chips.push(chip('📍', nextLbl, () => go('#calendar')));
-  // spend so far, in home currency
+    chips.push(chip('📍', `${(item.title || 'Planned').slice(0, 18)} · ${when}`, () => go('#calendar')));
+  }
+  // trip spend so far, in home currency — only once something is logged
   const sp = tripSpendHome();
-  chips.push(chip('💸', sp.any && sp.sum > 0 ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : 'No spend yet', () => go('#expenses')));
-  // offline / online — tap toggles
+  if (sp.any && sp.sum > 0) chips.push(chip('💸', `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}`, () => go('#expenses')));
+  // offline / online — always real, tap toggles
   const online = netMode() === 'online';
   chips.push(chip(online ? '📶' : '✈️', online ? 'Online' : 'Offline', () => { setNetMode(online ? 'offline' : 'online'); render(); }));
   return h('div', { class: 'card home-status', role: 'group', 'aria-label': 'Your trip at a glance' }, chips);
@@ -3024,7 +2984,7 @@ function currencyScreen() {
 }
 
 // The traveller's home currency (set in Settings; defaults to USD).
-function homeCurrency() { return (store.profile && store.profile.homeCurrency) || 'USD'; }
+export function homeCurrency() { return (store.profile && store.profile.homeCurrency) || 'USD'; }
 
 // ---- TRAVELLER BOARD (backendless bulletin board) ---------------------------
 // One peer board that fits the app's no-server, no-PII model: swap leftover cash,
@@ -3738,7 +3698,7 @@ function liveTranslateBox(code, label, locale) {
 
 // ---- PLACES -----------------------------------------------------------------
 // "Chiang Mai" -> "chiang-mai" for city-scoped Places routes (#places-<cc>-<slug>).
-function citySlug(name) {
+export function citySlug(name) {
   return String(name || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
@@ -8852,8 +8812,8 @@ function daySuggestScreen(country) {
 }
 
 // ---- FESTIVALS & EVENTS -----------------------------------------------------
-function todayISO() { try { return new Date().toISOString().slice(0, 10); } catch { return '2026-01-01'; } }
-function addDaysISO(iso, n) {
+export function todayISO() { try { return new Date().toISOString().slice(0, 10); } catch { return '2026-01-01'; } }
+export function addDaysISO(iso, n) {
   try { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
   catch { return iso; }
 }
@@ -9601,12 +9561,12 @@ function expTitleChips(noteEl, catPicker) {
 
 // Budget target in home currency, per whole trip or per day. Stored in prefs so it
 // self-persists; null means "no target set yet".
-function budgetTarget() { const t = store.profile.prefs.budgetCap; return (t && +t.amount > 0) ? { amount: +t.amount, per: t.per === 'day' ? 'day' : 'trip' } : null; }
+export function budgetTarget() { const t = store.profile.prefs.budgetCap; return (t && +t.amount > 0) ? { amount: +t.amount, per: t.per === 'day' ? 'day' : 'trip' } : null; }
 function setBudgetTarget(amount, per) { store.profile.prefs.budgetCap = { amount: +amount || 0, per: per === 'day' ? 'day' : 'trip' }; save(); }
 
 // Trip span in whole days from any known dates (stops + logged spends). elapsed = start→today;
 // total = start→last planned stop date (null if no stop end date). Returns null if no dates.
-function tripSpanDays() {
+export function tripSpanDays() {
   const parse = (d) => { const p = String(d).split('-').map(Number); return Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1); };
   const stops = (store.trip.stops || []);
   const dates = [];
