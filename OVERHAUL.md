@@ -268,6 +268,34 @@ regression from this change.
 2. Extract Home into `js/screens/home.js` as the proof case; add it to `sw.js` `PRECACHE`.
 3. Confirm the pattern, then repeat per section as each is reached.
 
+**Status: SHIPPED as mk-v0.341.0.** `js/app-state.js` now owns both pieces of state.
+`activeCountry` was read or written at 103 sites across `main.js` (99 distinct lines, several
+with 2–3 hits each) — all converted mechanically (`activeCountry = X` → `setActiveCountry(X)`,
+every bare read → `getActiveCountry()`) and individually re-inspected, including every
+comparison, default-parameter, and multi-hit line, before shipping. `liveMapCtrl`/
+`liveCleanup`'s 8 sites moved the same way, with the router's own teardown block collapsed to
+one `teardownLiveScreen()` call.
+
+`homeScreen()` (the actual route handler, ~150 lines) is the only function physically
+relocated into `js/screens/home.js`. Its own helper cluster (`phaseSwitchRow`,
+`homeStageBlock`, `ensureHomeWeather`, `budgetSummaryCard`, `sectionTile`, `ICON`, `go`,
+`mount`, etc. — 18 names in total) stays in `main.js`, now `export`ed, and `home.js` imports
+them back via a circular import (`home.js` → `main.js` → `home.js`). This is safe for the
+same reason F1's lazy country data is safe: every one of those 18 names is only read inside a
+function body (`homeScreen()`'s own), never at module-evaluation time, and ES module function
+declarations are instantiated across the whole graph before any module's top-level code runs
+— so the cycle never observes an uninitialised binding. Untangling Home's own helper cluster
+into fully independent, physically-owned code is deliberately deferred to Home's own UX-pass
+session (section 10), where the screen is rebuilt anyway rather than decomposed twice.
+
+Verified in-browser: Home, Explore, the full map (`#map`, the all-country gate), the You hub
+(`#me`), a first-ever visit to Vietnam's Places screen, and — the emergency-critical check —
+a first-ever visit to `#sos-la` this session, which correctly lazy-loaded Laos and rendered
+its real `tel:` numbers (Police 1191, Ambulance 1195, Fire 1190, Tourist Police Vientiane)
+sourced from `js/data/info.la.js`. Zero console errors across all of the above once a stale,
+same-tab cached error from mid-fix was ruled out via a fresh tab. `main.js` dropped from
+12,911 to 12,769 lines.
+
 ### F3 — Resume system
 
 1. A real back-stack surviving cross-section navigation.
