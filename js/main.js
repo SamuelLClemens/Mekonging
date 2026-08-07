@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.354.0';
+const APP_VERSION = 'mk-v0.355.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -475,96 +475,10 @@ function setBlobThumb(img, key) {
   }).catch(() => {});
 }
 
-// ---- Guided "walk-me" tour (TUT-1) -----------------------------------------
-// A CSP-safe coach-mark overlay that orients a first-time traveller: a short,
-// skippable, resumable sequence spotlighting the five tabs, the always-present
-// SOS button, and the app's signature offline nature. Built with h() and appended
-// to <body> (above the shell); no inline script, no external dependency.
-//   • prefs.tourSeen  — auto-offer the tour once, on the first Home render.
-//   • prefs.tourStep  — resume point, so a skipped tour picks up where it left off.
-// endTour() runs from render()'s teardown, so navigating away closes it cleanly.
-const TOUR_STEPS = [
-  { title: 'Welcome to Mekonging', body: 'A 20-second look at how to get around. You can skip anytime.' },
-  { sel: '.tabbar button:nth-child(1)', title: 'Home', body: 'Your day at a glance — what fits right now, and where you are in the trip.' },
-  { sel: '.tabbar button:nth-child(2)', title: 'Explore', body: 'Dive into each country: places, food, culture and guides.' },
-  { sel: '.tabbar button:nth-child(3)', title: 'Places & map', body: 'Everything on one map. Sort by nearest, or switch to a list.' },
-  { sel: '.tabbar button:nth-child(4)', title: 'Talk', body: 'A phrasebook in eight languages. Pin the phrases you use most.' },
-  { sel: '.tabbar button:nth-child(5)', title: 'Your space', body: 'Your trip, journal, budget, saved places and settings live here.' },
-  { sel: '.topbar-sos', title: 'Emergency help', body: 'One tap for first aid and local emergency numbers — from every screen.' },
-  { title: 'Works fully offline', body: 'Once loaded, everything runs with no signal and stays on your device. Reopen this tour anytime from Help.' },
-];
-let tourOverlay = null;
-let tourKeyHandler = null;
-let tourResizeHandler = null;
-function endTour(completed) {
-  if (tourResizeHandler) { window.removeEventListener('resize', tourResizeHandler); tourResizeHandler = null; }
-  if (tourKeyHandler) { window.removeEventListener('keydown', tourKeyHandler); tourKeyHandler = null; }
-  if (tourOverlay) { try { tourOverlay.remove(); } catch { /* noop */ } tourOverlay = null; }
-  if (completed) { store.profile.prefs.tourStep = 0; save(); }
-}
-function startTour(fromStep) {
-  if (typeof document === 'undefined') return;
-  endTour(false);                                   // never stack two overlays
-  const steps = TOUR_STEPS;
-  let i = Math.min(Math.max(fromStep | 0, 0), steps.length - 1);
-  const overlay = h('div', { class: 'tour', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'App tour' });
-  tourOverlay = overlay;
-  document.body.appendChild(overlay);
-  const goStep = (n) => { i = Math.min(Math.max(n, 0), steps.length - 1); store.profile.prefs.tourStep = i; save(); draw(); };
-  function draw() {
-    if (!tourOverlay) return;
-    overlay.innerHTML = '';
-    const step = steps[i];
-    const last = i === steps.length - 1;
-    const target = step.sel ? document.querySelector(step.sel) : null;
-    const r = target ? target.getBoundingClientRect() : null;
-    // Spotlight: a transparent hole whose huge box-shadow dims everything else. Centred
-    // steps (no target) get a plain full-screen dim instead.
-    if (r && r.width && r.height) {
-      overlay.append(h('div', { class: 'tour-hole', style:
-        `top:${Math.round(r.top - 6)}px;left:${Math.round(r.left - 6)}px;width:${Math.round(r.width + 12)}px;height:${Math.round(r.height + 12)}px` }));
-    } else {
-      overlay.append(h('div', { class: 'tour-dim' }));
-    }
-    const nextBtn = h('button', { class: 'btn block tour-next', onclick: () => (last ? endTour(true) : goStep(i + 1)) }, last ? 'Get started' : 'Next');
-    const card = h('div', { class: 'tour-card' + (r ? '' : ' center') }, [
-      h('div', { class: 'tour-count' }, `${i + 1} / ${steps.length}`),
-      h('h3', {}, step.title),
-      h('p', {}, step.body),
-      h('div', { class: 'tour-actions' }, [
-        h('button', { class: 'btn ghost tour-skip', onclick: () => endTour(false) }, last ? 'Close' : 'Skip'),
-        i > 0 ? h('button', { class: 'btn ghost tour-back', onclick: () => goStep(i - 1) }, 'Back') : null,
-        nextBtn,
-      ]),
-    ]);
-    overlay.append(card);
-    // A bottom-anchored target (the tab bar) gets the card above it; a top target (SOS)
-    // gets it below; centred steps are placed by CSS.
-    if (r) {
-      if (r.top > window.innerHeight / 2) card.style.bottom = `${Math.round(window.innerHeight - r.top + 14)}px`;
-      else card.style.top = `${Math.round(r.bottom + 14)}px`;
-    }
-    try { nextBtn.focus({ preventScroll: true }); } catch { /* noop */ }
-  }
-  tourKeyHandler = (e) => {
-    if (e.key === 'Escape') { e.preventDefault(); endTour(false); }
-    else if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); if (i === steps.length - 1) endTour(true); else goStep(i + 1); }
-    else if (e.key === 'ArrowLeft') { e.preventDefault(); goStep(i - 1); }
-  };
-  tourResizeHandler = () => draw();
-  window.addEventListener('keydown', tourKeyHandler);
-  window.addEventListener('resize', tourResizeHandler);
-  draw();
-}
-// Offer the tour once, automatically, the first time a set-up traveller lands on Home.
-export function maybeOfferTour() {
-  const prefs = store.profile.prefs;
-  if (prefs.tourSeen) return;
-  prefs.tourSeen = true; save();
-  // Defer so the tab bar is laid out and its rects are measurable; bail if the traveller
-  // has already navigated elsewhere by then.
-  setTimeout(() => { if ((location.hash || '#home') === '#home') startTour(0); }, 350);
-}
+// The guided "walk-me" tour overlay (TUT-1) was removed — first-run coach marks over
+// the tab bar and SOS button, offered once from Home and replayable from Help. Removed
+// per user request ("remove the help windows"); every destination it pointed at is
+// still reachable via the tabs/Help & FAQ themselves.
 
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
 // under Places; trip planning, memories, money, social, safety and admin group under Home;
@@ -2619,20 +2533,17 @@ function exploreScreen(argCc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Explore'));
 
-  // Country select — one row, every country plus "All", never wrapping to a second line
-  // (horizontal scroll instead if it does not all fit) so as many countries as possible
-  // show on the same row regardless of screen width. The one consistent way to pick a
-  // country from Explore now, in both branches below — replaces the old scoped-only chip
-  // switcher and the unscoped grid-of-cards as two parallel, inconsistent pickers.
-  const selectChips = COUNTRIES.map((x) => h('button', {
-    class: 'chip' + (x.id === cc ? ' active' : ''), 'aria-pressed': x.id === cc ? 'true' : 'false',
-    onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
-  }, [x.flag, ' ', x.name]));
-  selectChips.push(h('button', {
-    class: 'chip' + (!cc ? ' active' : ''), 'aria-pressed': !cc ? 'true' : 'false',
-    onclick: () => go('#explore-all'),
-  }, '🌏 All'));
-  wrap.append(h('div', { class: 'chips country-select-row', role: 'group', 'aria-label': 'Country' }, selectChips));
+  // Country select — a single dropdown covering every country plus "All". The one
+  // consistent way to pick a country from Explore now, in both branches below —
+  // replaces the old scoped-only chip switcher and the unscoped grid-of-cards as two
+  // parallel, inconsistent pickers (and, before that, a horizontally-scrolling chip row).
+  const countrySelect = selectEl(
+    [['all', '🌏 All countries']].concat(COUNTRIES.map((x) => [x.id, `${x.flag} ${x.name}`])),
+    cc || 'all',
+    (v) => { if (v === 'all') { go('#explore-all'); } else { setActiveCountry(v); go(`#country-${v}`); } },
+    'Country',
+  );
+  wrap.append(h('div', { class: 'country-select-row' }, [countrySelect]));
 
   if (!c) {
     // No explicit country and no real anchor — the four-country comparison view. Reached by
@@ -11550,12 +11461,6 @@ function helpScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Help & FAQ', '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'New here?'),
-    h('p', { class: 'muted' }, 'A 20-second walk-me tour of the tabs, emergency help and how the app stays offline.'),
-    h('button', { class: 'btn block', onclick: () => startTour(store.profile.prefs.tourStep || 0) },
-      (store.profile.prefs.tourStep || 0) > 0 ? 'Resume the tour' : 'Take a quick tour'),
-  ]));
   const faq = (q, a) => h('details', { class: 'card' }, [h('summary', {}, q), typeof a === 'string' ? h('p', {}, a) : a]);
 
   wrap.append(faq('What works offline, and what needs internet?', h('div', {}, [
@@ -13223,7 +13128,6 @@ function render() {
   // js/app-state.js for the liveMapCtrl/liveCleanup protocol itself.
   teardownLiveScreen();
   stopAllReaders();   // cancel any in-progress read-aloud before the screen changes
-  endTour(false);     // close the walk-me tour overlay when the traveller navigates away
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
