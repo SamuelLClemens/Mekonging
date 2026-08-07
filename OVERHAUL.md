@@ -1671,3 +1671,54 @@ calendar/partner flow confirmed end-to-end as described above.
 **Ship note (mk-v0.356.0):** this bump covers the You chip conversion + new feature chips,
 the Weather restructure (trip-calendar removal, reorder, new city search, `.wx-cal` CSS
 collision fix), and the Places/Calendar verification passes above — one version, one commit.
+
+### Home phase merge, "Just arrived" chip & expense-logging unification (mk-v0.357.0)
+
+- **"Arrived" and "Travelling" merged into one trip stage.** Per direct request ("arrived
+  and traveling should be combined"), the four-stage journey model (`PHASE_ORDER`/`PHASES`,
+  `js/main.js`) is now three: Planning → On the ground → Post. They differed only in
+  emphasis (both were "on the ground"); every place that branched on the two separately
+  (`phaseLead`, `phaseNextBest`, `inferPhase`, `phaseSwitchRow`'s short labels, the Explore
+  `PHASE_DECK`, and the Places/Talk phase-fit ranking functions `rankedPlaceBuckets`/
+  `rankedPhraseCats`) now has one merged `'traveling'` branch — for the two ranking
+  functions, a union of both phases' old boosts, so nothing that used to rank first
+  silently stopped mattering. The on-Home 24h weather ring (`homeWeatherRing`), previously
+  gated to the old `'arrived'` phase only, now shows for the whole merged on-the-ground
+  phase instead of just the first couple of days.
+- **"Just arrived" is now its own dismissible Home chip, not a whole trip stage.** What made
+  the old "Arrived" phase distinct — the first-hour arrival guide — is `justArrivedChip()`
+  (`js/screens/home.js`): a chip reading "🛬 Just arrived — first-hour guide" that opens
+  `arrivalScreen` (`#arrival-{country}`, already keyed to the traveller's actual
+  gateway/city, so one chip covers "arrival info for each place"). It carries its own ✕,
+  which asks for confirmation first (`confirmAction`, not a silent one-tap dismiss, since
+  hiding this is bigger than dismissing a one-line tip) before setting the new
+  `prefs.justArrivedHidden` pref and disappearing from Home. It is never gone for good:
+  Settings → Journey phase (`settingsScreen`) grows a "🛬 Show the 'Just arrived' chip
+  again" button whenever the pref is set, and the arrival guide itself stays reachable
+  regardless via Explore's own "Just arrived" tile and the near-me screen's "Full arrival
+  guide" button. `arrivalEssentials()`'s open-by-default ("featured") state on the near-me
+  screen — previously tied to the now-removed `'arrived'` phase value — now tracks this same
+  signal (on the ground AND not yet dismissed).
+- **Expense logging now looks and works identically everywhere.** Per direct request ("the
+  logging expenses should look the way it does inside the budget section consistently and
+  that should be the master"), a single shared `expenseAddCard()` (`js/main.js`) — Amount +
+  Currency row, "On what?" with smart frequent-title chips, Category, Date, one full-width
+  "＋ Add expense" button — replaces three separately-drifting forms: Expenses & budget
+  (`#expenses`, the master reference), My Trip's "Budget log" add block (previously no date
+  field and no title chips), and Home's one-tap "Right now" spend row (`quickSpendRow`,
+  previously a compact icon-only strip with no date or title chips). All three now render
+  the exact same card and share one `addBudgetItem()` call path.
+
+**Verified:** all of the above checked live in the browser (console-clean throughout except
+one pre-existing, unrelated sandbox geolocation warning) — phase merge confirmed on Home,
+Explore, Places, Talk and the near-me screen; the full "Just arrived" round-trip (chip →
+arrival guide → back → ✕ → confirm modal → Hide → chip gone → Settings → "Show again" →
+chip back) walked end to end; a real expense logged from My Trip's shared card was
+confirmed to appear identically on Expenses & budget and to roll into Home's "spent today"
+line, then deleted. **True offline test:** dev server killed, full render from Service
+Worker Cache Storage on `#home`, `#me` and `#settings`, zero console errors, "Just arrived"
+chip and shared expense card both present.
+
+**Ship note (mk-v0.357.0):** this bump covers the Home phase merge (planning/on-the-ground/
+post), the new dismissible "Just arrived" chip with its Settings restore control, and the
+expense-logging unification (`expenseAddCard()`) — one version, one commit.

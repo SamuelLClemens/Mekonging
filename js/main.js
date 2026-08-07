@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.356.0';
+const APP_VERSION = 'mk-v0.357.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1519,19 +1519,20 @@ function familyCard(cc) {
 }
 
 // ---- JOURNEY PHASES ---------------------------------------------------------
-// The four stages of a trip. The chosen phase reshapes Home so the traveller
+// The three stages of a trip. The chosen phase reshapes Home so the traveller
 // leads with what matters right now, while everything else is one tap away
 // (collapsed, never hidden). Phase is stored in prefs.phase and self-defaults.
-const PHASE_ORDER = ['planning', 'arrived', 'traveling', 'post'];
+// "Arrived" and "Travelling" used to be two separate stages that differed only in
+// emphasis (both are just "on the ground"), so they are merged into one 'traveling'
+// stage. What made "Just arrived" distinct — the first-hour arrival guide — is now its
+// own dismissible chip on Home (justArrivedChip(), below) rather than a whole trip
+// stage, so it can be dismissed once bearings are found without losing the rest of the
+// on-the-ground Home layout.
+const PHASE_ORDER = ['planning', 'traveling', 'post'];
 const PHASES = {
-  planning: { emoji: '🗺️', label: 'Planning a trip', stmt: 'planning a trip', tagline: 'Research routes, visas and what fits you',
-    groups: ['Plan & remember', 'Get your bearings', 'Money & practical', 'Eat & do', 'Get around'] },
-  arrived: { emoji: '🛬', label: 'Just arrived', stmt: 'just arrived', tagline: 'Get your bearings for the first hours',
-    groups: ['Get your bearings', 'Get around', 'Money & practical', 'Eat & do', 'Plan & remember'] },
-  traveling: { emoji: '🧭', label: 'While travelling', stmt: 'travelling', tagline: 'Day-to-day on the road',
-    groups: ['Eat & do', 'Get around', 'Get your bearings', 'Plan & remember', 'Money & practical'] },
-  post: { emoji: '📖', label: 'Post travel', stmt: 'back from your trip', tagline: 'Reflect and make something to keep',
-    groups: ['Plan & remember', 'Money & practical', 'Eat & do', 'Get around', 'Get your bearings'] },
+  planning: { emoji: '🗺️', label: 'Planning a trip', stmt: 'planning a trip', tagline: 'Research routes, visas and what fits you' },
+  traveling: { emoji: '🧭', label: 'On the ground', stmt: 'on the ground', tagline: 'Arrival, day-to-day and everything in between' },
+  post: { emoji: '📖', label: 'Post travel', stmt: 'back from your trip', tagline: 'Reflect and make something to keep' },
 };
 
 function phaseSelector(active) {
@@ -1557,12 +1558,11 @@ function phaseLead(phase, cc) {
       { e: '🛂', t: 'Entry & visa', h: `#visa-${cc}` },
       { e: '✅', t: 'Pre-trip checklist', h: '#checklist' },
     ],
-    arrived: [
-      { e: '📍', t: 'What’s near me', h: '#nearby', primary: true },
-      { e: '🛬', t: 'Arrival guide', h: '#arrival' },
-      { e: '🗺', t: 'Offline map', h: '#map' },
-      { e: '🆘', t: 'Emergency', h: '#sos', danger: true },
-    ],
+    // Was two separate arrays (arrived / traveling) before the phase merge. Arrived's own
+    // distinct entries (Arrival guide, Emergency, Offline map) all stay one tap away without
+    // a lead slot here: Arrival guide is now Home's dismissible "Just arrived" chip (and an
+    // Explore tile), Emergency lives in the topbar on every screen, and Offline map is an
+    // Explore "Getting around" tile.
     traveling: [
       { e: '🧭', t: 'Things to do', h: `#today-${cc}`, primary: true },
       { e: '📍', t: 'Near me', h: '#nearby' },
@@ -1591,7 +1591,6 @@ function phaseLead(phase, cc) {
 function phaseNextBest(phase, cc) {
   const primary = {
     planning: { e: '🧭', t: 'Plan your trip', h: '#plans' },
-    arrived: { e: '📍', t: 'See what’s near me', h: '#nearby' },
     traveling: { e: '🧭', t: 'Things to do right now', h: `#today-${cc}` },
     post: { e: '📖', t: 'Build your scrapbook', h: '#scrapbook' },
   }[phase];
@@ -1610,8 +1609,7 @@ export function inferPhase() {
   if (start) {
     const d = daysUntilISO(start);
     if (d > 0) return 'planning';        // trip is still ahead
-    if (d >= -2) return 'arrived';       // start day or the first couple of days
-    if (d >= -30) return 'traveling';    // on the road
+    if (d >= -30) return 'traveling';    // start day through the rest of being on the road
     return 'post';                        // trip finished a while ago
   }
   // No dates: a recent fix near a region city implies they are travelling right now.
@@ -1665,8 +1663,8 @@ function tripCountdownCard(cc) {
     }
   } else {
     card.append(h('div', { class: 'countdown-num' }, days === 0 ? '🎉 Today’s the day!' : '🛬 Your trip has started'));
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Switch Home to “Just arrived” for near-me help, arrival tips and emergency info.'));
-    card.append(h('button', { class: 'btn', onclick: () => { store.profile.prefs.phase = 'arrived'; save(); render(); } }, 'I have arrived →'));
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Switch Home to “On the ground” for near-me help, arrival tips and emergency info.'));
+    card.append(h('button', { class: 'btn', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, 'I have arrived →'));
   }
   return card;
 }
@@ -1828,7 +1826,7 @@ function signatureSightsStrip(cc) {
 // A slim one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
 // and the "Not right?" correction line, so actionable content leads instead of chrome.
 export function phaseSwitchRow(active, stored, withLabel = true) {
-  const short = { planning: 'Planning', arrived: 'Arrived', traveling: 'Travelling', post: 'Post' };
+  const short = { planning: 'Planning', traveling: 'On the ground', post: 'Post' };
   const seg = h('div', { class: 'phase-seg compact', role: 'group', 'aria-label': 'Your journey phase' },
     PHASE_ORDER.map((k) => h('button', {
       class: 'phase-btn', 'aria-pressed': active === k ? 'true' : 'false',
@@ -1866,7 +1864,11 @@ export function tripSpendHome() {
 // quickAccessRow() (js/screens/home.js): the day-count folds into the Calendar chip, the
 // next-plan-item folds into Calendar's sub-label, and online/offline is its own chip there.
 
-// One-tap "spend" logger (extracted from the old daily strip) for the merged Right-now card.
+// One-tap "spend" logger for the merged Right-now card — the same shared "Log an expense"
+// card used everywhere a spend can be logged (expenseAddCard; Expenses & budget is the
+// master), plus a slim "spent today" line beneath it. Used to be its own compact inline
+// row (amount/note/category only, no date, no title chips) that looked and behaved
+// differently from every other place an expense gets logged — unified per user request.
 function quickSpendRow(id) {
   const c = getCountry(id);
   const cur = (c && c.currency) || 'THB';
@@ -1876,19 +1878,9 @@ function quickSpendRow(id) {
     box.innerHTML = '';
     let spent = 0;
     (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
-    const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', class: 'strip-amt', 'aria-label': 'Amount spent' });
-    const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the spend was on' });
-    const cat = expCatPicker('other');
-    cat.style.marginTop = '6px';
-    const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim(), category: cat.get() }); draw(); };
-    amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
-    box.append(h('div', { class: 'strip-budget' }, [
-      h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
-      h('button', { class: 'btn strip-add', 'aria-label': 'Add spend', onclick: add }, '＋'),
-    ]));
-    box.append(cat);
+    box.append(expenseAddCard({ currency: cur, afterAdd: draw }));
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend in one tap. ',
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend above. ',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
   };
@@ -1900,9 +1892,10 @@ function quickSpendRow(id) {
 // phase's primary action lifted on top and a one-tap spend at the foot — the four old blocks
 // (phaseNextBest, journey companion, right-now, daily strip) merged into one, with the
 // duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
-// Arrived-only: a 24h watch-face weather ring right at the top of Home, so "what's it doing
-// right now, right here" reads at a glance the moment you land — the same ring already used
-// on the Weather screen (wxHourlyRingSvg), just compact and tapping through to the full view.
+// On-the-ground only: a 24h watch-face weather ring right at the top of Home, so "what's it
+// doing right now, right here" reads at a glance — the same ring already used on the Weather
+// screen (wxHourlyRingSvg), just compact and tapping through to the full view. Used to be
+// arrived-phase-only; now shows for the whole (merged) on-the-ground phase.
 function homeWeatherRing() {
   const ctx = contextNow();
   const spot = ctx.near ? ctx.near.spot : null;
@@ -1920,7 +1913,7 @@ function homeWeatherRing() {
 function homeNowCard(phase, cc) {
   const card = rightNowSection();               // .right-now — moment header + live picks (or a location invite)
   const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
-  if (phase === 'arrived') {
+  if (phase === 'traveling') {
     const ring = homeWeatherRing();
     if (ring) card.insertBefore(ring, head || null);
   }
@@ -2754,7 +2747,7 @@ function exploreScreen(argCc) {
   // sticky manual override. 'post' has no strong single fit among these four (unlike Home's
   // own decks) so it opens none, same as the pre-E3 default.
   const explorePhase = store.profile.prefs.phase || inferPhase();
-  const PHASE_DECK = { planning: 'Get oriented', arrived: 'Get oriented', traveling: 'See & do', post: null };
+  const PHASE_DECK = { planning: 'Get oriented', traveling: 'See & do', post: null };
   const openDeck = PHASE_DECK[explorePhase];
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
   tileGroups.forEach((g) => {
@@ -2968,7 +2961,12 @@ function nearbyScreen() {
       .map((p) => ({ p, km: haversineKm(f, p.coords) })).sort((a, b) => a.km - b.km);
 
     body.innerHTML = '';
-    body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'arrived'));
+    // Featured (open by default) while still "fresh off the plane": on the ground and the
+    // Just arrived chip has not been dismissed. Used to check the now-removed 'arrived'
+    // phase value directly; the dismissible chip (justArrivedChip, js/screens/home.js) is
+    // the new, narrower signal for "just landed" now that the phase itself only has one
+    // merged on-the-ground stage.
+    body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'traveling' && !store.profile.prefs.justArrivedHidden));
     body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
       h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, [chipIcon('map'), 'See on the map']),
@@ -3610,8 +3608,9 @@ function rankedPhraseCats(categories, phase, part) {
   const fit = (id) => {
     let s = 0;
     if (phase === 'planning') { if (id === 'basics' || id === 'questions') s += 3; if (id === 'stay') s += 2; }
-    else if (phase === 'arrived') { if (id === 'stay' || id === 'tickets' || id === 'directions') s += 3; }
-    else if (phase === 'traveling') { if (id === 'food' || id === 'market' || id === 'directions' || id === 'essentials') s += 3; }
+    // 'arrived' and 'traveling' used to be separate phases with separate boosts here; merged
+    // into one 'traveling' boost set (union of both) since they are now one phase.
+    else if (phase === 'traveling') { if (id === 'food' || id === 'directions') s += 3; if (id === 'stay' || id === 'tickets' || id === 'market' || id === 'essentials') s += 2; }
     if ((part === 'morning' || part === 'earlyMorning') && (id === 'food' || id === 'essentials' || id === 'tickets')) s += 2;
     if ((part === 'midday' || part === 'afternoon') && (id === 'market' || id === 'directions')) s += 2;
     if ((part === 'evening' || part === 'night') && (id === 'food' || id === 'essentials')) s += 2;
@@ -4749,8 +4748,9 @@ function rankedPlaceBuckets(phase, part) {
   const fit = (key) => {
     let s = 0;
     if (phase === 'planning') { if (key === 'culture' || key === 'nature') s += 3; if (key === 'stay') s += 2; }
-    else if (phase === 'arrived') { if (key === 'food' || key === 'stay' || key === 'rental') s += 3; }
-    else if (phase === 'traveling') { if (key === 'food' || key === 'culture' || key === 'nature') s += 3; if (key === 'market') s += 2; }
+    // 'arrived' and 'traveling' used to be separate phases with separate boosts here; merged
+    // into one 'traveling' boost set (union of both) since they are now one phase.
+    else if (phase === 'traveling') { if (key === 'food') s += 3; if (key === 'stay' || key === 'rental' || key === 'culture' || key === 'nature' || key === 'market') s += 2; }
     if ((part === 'morning' || part === 'earlyMorning') && (key === 'food' || key === 'market')) s += 2;
     if ((part === 'midday' || part === 'afternoon') && (key === 'culture' || key === 'nature')) s += 2;
     if ((part === 'evening' || part === 'night') && (key === 'food' || key === 'nightlife')) s += 2;
@@ -9899,14 +9899,11 @@ function tripScreen() {
     }
   }
   store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));
-  const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
-  const c = getCountry(getActiveCountry());
-  const bCur = currencySelect(c ? c.currency : 'THB');
-  const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what?' });
-  const bCat = expCatPicker('other');
-  bud.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Log an expense'), bAmt, bCur, bNote, bCat,
-    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get() }); go('#trip'); } } }, 'Add spend')]));
   wrap.append(bud);
+  // Same "Log an expense" card as Expenses & budget (#expenses) — that screen is the master;
+  // this used to be its own, slightly different inline form (no date, no smart title chips).
+  const c = getCountry(getActiveCountry());
+  wrap.append(expenseAddCard({ currency: c ? c.currency : 'THB', afterAdd: () => go('#trip') }));
   mount(wrap, '#home');
 }
 
@@ -10024,6 +10021,32 @@ function expTitleChips(noteEl, catPicker) {
   if (!freq.length) return null;
   return h('div', { class: 'chips exp-title-chips' }, freq.map((f) =>
     h('button', { type: 'button', class: 'chip ghost', onclick: () => { noteEl.value = f.title; if (catPicker) catPicker.set(f.category); } }, f.title)));
+}
+
+// The one "Log an expense" card, used everywhere a spend can be logged — Expenses & budget
+// (#expenses) is the master; My Trip's budget log and Home's one-tap spend (quickSpendRow)
+// both reuse this exact function now instead of their own, slightly different inline forms,
+// so logging an expense looks and works identically no matter where you tap in from.
+// `opts.currency` seeds the currency picker (falls back to THB); `opts.afterAdd(item)` runs
+// after a successful add — typically a re-render/navigation back to the calling screen.
+function expenseAddCard(opts = {}) {
+  const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
+  const bCur = currencySelect(opts.currency || 'THB');
+  const bDate = h('input', { 'aria-label': 'Date', type: 'date', value: todayISO() });
+  const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
+  const bCat = expCatPicker('other');
+  const bChips = expTitleChips(bNote, bCat);
+  const add = () => {
+    if (!bAmt.value) return;
+    const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date: bDate.value });
+    if (opts.afterAdd) opts.afterAdd(item);
+  };
+  return h('div', { class: 'card exp-add-card' }, [
+    h('h2', { style: 'margin-top:0' }, 'Log an expense'),
+    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
+    field('On what?', bNote), bChips, field('Category', bCat), field('Date', bDate),
+    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: add }, '＋ Add expense'),
+  ]);
 }
 
 // Budget target in home currency, per whole trip or per day. Stored in prefs so it
@@ -10203,18 +10226,7 @@ function expensesScreen() {
   const summary = budgetSummaryCard();
   if (summary) wrap.append(summary);
 
-  const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
-  const bCur = currencySelect(c ? c.currency : 'THB');
-  const bDate = h('input', { 'aria-label': 'Date', type: 'date', value: todayISO() });
-  const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
-  const bCat = expCatPicker('other');
-  const bChips = expTitleChips(bNote, bCat);
-  wrap.append(h('div', { class: 'card exp-add-card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Log an expense'),
-    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
-    field('On what?', bNote), bChips, field('Category', bCat), field('Date', bDate),
-    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => { if (bAmt.value) { addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date: bDate.value }); go('#expenses'); } } }, '＋ Add expense'),
-  ]));
+  wrap.append(expenseAddCard({ currency: c ? c.currency : 'THB', afterAdd: () => go('#expenses') }));
 
   const log = store.trip.budgetLog.slice().reverse();
   if (log.length) {
@@ -12789,11 +12801,20 @@ function settingsScreen() {
 
   // Journey phase — always switchable here, so Home never has to drag the traveller
   // back to the picker once they have chosen a stage.
-  wrap.append(h('div', { class: 'card' }, [
+  const phaseCard = h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Journey phase'),
     h('p', { class: 'muted', style: 'margin-top:0' }, 'Switch any time — this reshapes Home for the stage you are in.'),
     phaseSelector(),
-  ]));
+  ]);
+  // The "Just arrived" chip (Home, on the ground) is only ever hidden by an explicit,
+  // confirmed X — never silently — so this is the one place it can be brought back.
+  if (store.profile.prefs.justArrivedHidden) {
+    phaseCard.append(h('button', {
+      class: 'btn ghost block', style: 'margin-top:10px',
+      onclick: () => { store.profile.prefs.justArrivedHidden = false; save(); render(); },
+    }, '🛬 Show the “Just arrived” chip again'));
+  }
+  wrap.append(phaseCard);
 
   const card = h('div', { class: 'card' });
 
@@ -13052,7 +13073,7 @@ function countryLoadingScreen(ccs) {
 }
 
 // ---- router -----------------------------------------------------------------
-function render() {
+export function render() {
   applyTheme();
   // Tear down any live map before rendering the next screen (frees the WebGL context
   // and stops the GPS watcher — prevents the map dying after repeated visits). See

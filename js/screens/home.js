@@ -34,8 +34,9 @@ import { getActiveCountry } from '../app-state.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
+import { confirmAction } from '../ui-widgets.js';
 import {
-  go, mount, topbar, ICON, contextNow, setupRecapCard,
+  go, mount, topbar, ICON, contextNow, setupRecapCard, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock,
   ensureHomeWeather, idPinCount, sectionTile, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
@@ -69,7 +70,10 @@ export function homeScreen() {
   const phase = storedPhase || inferPhase();   // infer a sensible stage until they choose one
   const focus = focusSpot();
   const leadCC = focus.spot.country;
-  const onGround = (phase === 'arrived' || phase === 'traveling');
+  // 'arrived' used to be its own phase (separate from 'traveling'); merged into one
+  // on-the-ground phase — see js/main.js PHASES. "Just arrived" now lives as its own
+  // dismissible chip (justArrivedChip(), below) rather than a whole trip stage.
+  const onGround = (phase === 'traveling');
 
   // H1 — slim identity + safety bar, replaces the old collapsing hero. Reusing topbar() (no
   // backHash — Home is a root tab) brings the 🆘 emergency button, Saved and Settings icons for
@@ -89,8 +93,16 @@ export function homeScreen() {
   const ctx = contextNow();
   wrap.append(quickAccessRow(phase, storedPhase, ctx));
 
+  // "Just arrived" — a dismissible chip to the first-hour arrival guide. Only while on the
+  // ground and not yet dismissed; X'd out with a confirm, then hidden until brought back
+  // from Settings → Journey phase (settingsScreen, main.js) — never gone for good.
+  if (onGround) {
+    const ja = justArrivedChip(leadCC);
+    if (ja) wrap.append(ja);
+  }
+
   // One stage-appropriate situational block. Planning gets a forward-looking outlook +
-  // countdown + checklist hub (no near-me); arrived/travelling get the live, forecast-aware
+  // countdown + checklist hub (no near-me); travelling gets the live, forecast-aware
   // near-me card; post gets the return recap. This is what makes Home fit the traveller's
   // actual stage instead of showing "what's near you" to someone still at home or already back.
   wrap.append(homeStageBlock(phase, leadCC));
@@ -198,6 +210,35 @@ export function homeScreen() {
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
   mount(wrap, '#home');
+}
+
+// "Just arrived" — a standalone dismissible chip (not one of quickAccessRow's grid chips,
+// since it alone needs an X) leading to the first-hour arrival guide (arrivalScreen,
+// main.js — already keyed to the traveller's actual gateway/city, so this one chip covers
+// "arrival info for each place"). X-ing it out asks for confirmation (this hides a whole
+// prompt, not a one-line tip — a plain tap-to-dismiss risks an accidental miss-tap losing
+// it), then sets prefs.justArrivedHidden so it does not reappear on its own. It is never
+// gone for good: Settings → Journey phase (settingsScreen, main.js) can always turn it back
+// on, and the arrival guide itself stays reachable regardless via Explore's "Just arrived"
+// tile and the near-me screen's own "Full arrival guide" button.
+function justArrivedChip(cc) {
+  if (store.profile.prefs.justArrivedHidden) return null;
+  return h('div', { class: 'just-arrived-chip' }, [
+    h('button', { class: 'ja-main', onclick: () => go(`#arrival-${cc}`) }, [
+      h('span', { class: 'status-ic' }, '🛬'),
+      h('span', { class: 'status-lbl' }, 'Just arrived — first-hour guide'),
+    ]),
+    h('button', {
+      class: 'ja-x', 'aria-label': 'Hide the Just arrived chip',
+      onclick: () => {
+        confirmAction({
+          title: 'Hide “Just arrived”?',
+          body: 'It disappears from Home. Bring it back any time from Settings → Journey phase.',
+          confirmLabel: 'Hide',
+        }).then((ok) => { if (ok) { store.profile.prefs.justArrivedHidden = true; save(); render(); } });
+      },
+    }, '✕'),
+  ]);
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every
