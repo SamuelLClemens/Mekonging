@@ -63,7 +63,7 @@ export const PHRASEBOOK_HMN = {
       { en: "Can I leave my bags here?", script: "Kuv puas tau tso kuv lub hnab ntawm no?", roman: "koo pua tao tsaw koo loo hnah ndao naw?", note: "\"tso ... ntawm no\" = leave ... here; \"hnab\" = bag." },
       { en: "Is there hot water?", script: "Puas muaj dej kub?", roman: "pua mua deng koo?", note: "\"dej kub\" = hot water." },
     ] },
-    { id: "health", name: "Health & pharmacy", phrases: [
+    { id: "emergency", name: "Emergency & health", phrases: [
       { en: "I need a doctor", script: "Kuv xav tau ib tug kws kho mob.", roman: "koo sah tao ee too koo khaw maw.", note: "\"kws kho mob\" = doctor (healer of illness); \"xav tau\" = need." },
       { en: "Where is the nearest pharmacy?", script: "Lub khw muag tshuaj uas nyob ze tshaj nyob qhov twg?", roman: "loo khaw mua chua ua nyaw ze cha nyaw kaw-doo?", note: "\"khw muag tshuaj\" = pharmacy (medicine shop); \"ze tshaj\" = nearest; \"qhov twg\" = where." },
       { en: "Where is the nearest hospital?", script: "Tsev kho mob uas nyob ze tshaj nyob qhov twg?", roman: "tseng khaw maw ua nyaw ze cha nyaw kaw-doo?", note: "\"tsev kho mob\" = hospital; \"qhov twg\" = where." },

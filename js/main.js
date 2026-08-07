@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.346.0';
+const APP_VERSION = 'mk-v0.347.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3586,6 +3586,33 @@ function essentialsCard(code, book, onChange) {
   return card;
 }
 
+// Talk T2: fold + rank the phrase categories by trip phase and time of day — same shape as
+// Places' rankedPlaceBuckets (js/main.js, Places section). Unrecognised ids (e.g. the
+// synthetic "allergies" category, or any category id a future book introduces) score 0, so
+// the stable sort leaves them in their existing order rather than guessing at them. Emergency
+// & health is pulled out and reinserted at a fixed, always-reachable slot — its position must
+// never depend on the ranking, since it can be needed regardless of trip phase or time of day.
+function rankedPhraseCats(categories, phase, part) {
+  const fit = (id) => {
+    let s = 0;
+    if (phase === 'planning') { if (id === 'basics' || id === 'questions') s += 3; if (id === 'stay') s += 2; }
+    else if (phase === 'arrived') { if (id === 'stay' || id === 'tickets' || id === 'directions') s += 3; }
+    else if (phase === 'traveling') { if (id === 'food' || id === 'market' || id === 'directions' || id === 'essentials') s += 3; }
+    if ((part === 'morning' || part === 'earlyMorning') && (id === 'food' || id === 'essentials' || id === 'tickets')) s += 2;
+    if ((part === 'midday' || part === 'afternoon') && (id === 'market' || id === 'directions')) s += 2;
+    if ((part === 'evening' || part === 'night') && (id === 'food' || id === 'essentials')) s += 2;
+    return s;
+  };
+  const emergencyCat = categories.find((c) => c.id === 'emergency');
+  const rest = categories.filter((c) => c.id !== 'emergency');
+  const ranked = rest
+    .map((c, i) => ({ c, i, s: fit(c.id) }))
+    .sort((a, b) => b.s - a.s || a.i - b.i)
+    .map((x) => x.c);
+  if (emergencyCat) ranked.splice(Math.min(1, ranked.length), 0, emergencyCat);
+  return ranked;
+}
+
 function phrasebookScreen(lang) {
   const code = lang || store.profile.defaultLang || langForCountry(getActiveCountry());
   const book = getLanguage(code);
@@ -3600,18 +3627,6 @@ function phrasebookScreen(lang) {
     }, b.label))));
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
-
-  // Phrase of the day — one phrase to have ready today (moved here from Home's "Your day").
-  const pod = phraseOfTheDay(code);
-  if (pod) {
-    const openPod = () => showBigPhrase(pod.p, pod.locale);
-    wrap.append(h('div', { class: 'card potd-card', role: 'button', tabindex: '0', onclick: openPod,
-      onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPod(); } } }, [
-      h('div', { class: 'potd-lbl' }, '💬 Phrase of the day'),
-      h('div', { class: 'potd-en' }, pod.p.en),
-      h('div', { class: 'potd-sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
-    ]));
-  }
 
   // Repaints the whole screen (pin/hide/reorder all touch several cards at once — the
   // essentials list, "Your pins" and the row itself — so a full repaint is simplest) but
@@ -3628,26 +3643,17 @@ function phrasebookScreen(lang) {
   const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
   const idx = phraseIndexFor(categories, code);
 
-  // Most-needed phrases first (allergy/diet auto-injected).
+  // Talk T4: the "most-needed phrases first" promise stays literally first on screen, with
+  // search and the category jump chips directly under it. Everything that used to sit above
+  // the phrase list — phrase of the day, translate, offline audio, politeness note — is still
+  // here (nothing removed), just demoted below the list itself; see the bottom of this
+  // function.
   wrap.append(essentialsCard(code, book, repaint));
   { const t = oneTimeHint('phrase-pin', 'Pin a phrase (📌) to save it to your dictionary in the You section, or hide (✕) ones you do not need.'); if (t) wrap.append(t); }
 
-  const voiceOk = hasVoiceFor(book.locale);
-  if (!voiceOk) {
-    wrap.append(h('div', { class: 'banner' },
-      `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
-  }
-  if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
-
-  // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
-  // no signal — essential for Khmer/Lao, which have no device voice on most phones.
-  const audioCard = audioPackControl(code, book);
-  if (audioCard) wrap.append(audioCard);
-
-  // Say-it tool: type or speak English, get the local text + spoken pronunciation.
-  wrap.append(liveTranslateBox(code, book.label, book.locale));
-
-  // search
+  // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
+  // always has. A jump-chip row sits right under it — one tap clears any active search and
+  // scrolls straight to that category's fold, opening it.
   wrap.append(h('h2', { class: 'cat-title' }, 'All phrases'));
   const search = h('input', {
     class: 'search', type: 'search', 'aria-label': 'Search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
@@ -3655,13 +3661,34 @@ function phrasebookScreen(lang) {
   });
   wrap.append(search);
 
+  const phase = store.profile.prefs.phase || inferPhase();
+  const part = contextNow().part;
+  const jumpRow = h('div', { class: 'chips phrase-jump' }, rankedPhraseCats(categories, phase, part).map((cat) => h('button', {
+    class: 'chip' + (cat.id === 'emergency' ? ' chip-sos' : ''),
+    onclick: () => {
+      // renderPhrases() is fully synchronous (innerHTML reset + direct appends), so the fold
+      // already exists in the DOM the moment this call returns — no frame needs waiting for.
+      phraseQuery = ''; search.value = '';
+      renderPhrases();
+      const el = document.getElementById(`phrase-cat-${cat.id}`);
+      if (el) { el.setAttribute('open', ''); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    },
+  }, (cat.id === 'emergency' ? '🆘 ' : '') + cat.name)));
+  wrap.append(jumpRow);
+
   const listEl = h('div', {});
   wrap.append(listEl);
 
   function renderPhrases() {
     listEl.innerHTML = '';
     const q = phraseQuery.trim().toLowerCase();
-    for (const cat of categories) {
+    // Talk T2: folded groups, ranked by trip phase + time of day (rankedPhraseCats). A live
+    // search opens every matching fold (so results are actually visible); with no search,
+    // only the single top-ranked fold starts open — rank/collapse/never-remove applies to
+    // ORDER and visibility-by-default here, not to what exists: every phrase is still one
+    // tap away via its fold or a jump chip.
+    let firstOpenDone = false;
+    for (const cat of rankedPhraseCats(categories, phase, part)) {
       // A query matches the whole category when its name matches (so "taxi"
       // surfaces the Taxi & directions phrases), else it matches per phrase.
       const catNameMatch = !q || cat.name.toLowerCase().includes(q);
@@ -3670,8 +3697,14 @@ function phrasebookScreen(lang) {
         return catNameMatch || p.en.toLowerCase().includes(q) || (p.roman || '').toLowerCase().includes(q) || (p.script || '').includes(phraseQuery);
       });
       if (!matches.length) continue;
-      listEl.append(h('h2', { class: 'cat-title' }, cat.name));
-      for (const p of matches) listEl.append(phraseRow(p, book.locale, { code, catId: cat.id, onChange: repaint }));
+      const isOpen = q ? true : !firstOpenDone;
+      firstOpenDone = true;
+      const body = h('div', { class: 'phrase-cat-body' });
+      for (const p of matches) body.append(phraseRow(p, book.locale, { code, catId: cat.id, onChange: repaint }));
+      listEl.append(h('details', { class: 'phrase-cat-group', id: `phrase-cat-${cat.id}`, open: isOpen ? '' : null }, [
+        h('summary', { class: 'phrase-cat-summary' }, `${cat.name} · ${matches.length}`),
+        body,
+      ]));
     }
     if (!listEl.children.length) listEl.append(h('p', { class: 'empty' }, 'No phrases match your search.'));
     // Hidden phrases: a collapsible reveal so nothing is lost, only tucked away.
@@ -3691,6 +3724,36 @@ function phrasebookScreen(lang) {
     }
   }
   renderPhrases();
+
+  // --- below the list: phrase of the day, translate, offline audio, politeness note ---
+  // (Talk T4 — nothing removed, only demoted; the "most-needed first" promise above still
+  // covers what a traveller reaches for most, so these are welcome but no longer load-bearing.)
+  const pod = phraseOfTheDay(code);
+  if (pod) {
+    const openPod = () => showBigPhrase(pod.p, pod.locale);
+    wrap.append(h('div', { class: 'card potd-card', role: 'button', tabindex: '0', onclick: openPod,
+      onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPod(); } } }, [
+      h('div', { class: 'potd-lbl' }, '💬 Phrase of the day'),
+      h('div', { class: 'potd-en' }, pod.p.en),
+      h('div', { class: 'potd-sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
+    ]));
+  }
+
+  // Say-it tool: type or speak English, get the local text + spoken pronunciation.
+  wrap.append(liveTranslateBox(code, book.label, book.locale));
+
+  // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
+  // no signal — essential for Khmer/Lao, which have no device voice on most phones.
+  const audioCard = audioPackControl(code, book);
+  if (audioCard) wrap.append(audioCard);
+
+  if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
+  const voiceOk = hasVoiceFor(book.locale);
+  if (!voiceOk) {
+    wrap.append(h('div', { class: 'banner' },
+      `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
+  }
+
   mount(wrap, '#phrasebook');
 }
 
@@ -3848,7 +3911,10 @@ function liveTranslateBox(code, label, locale) {
   ]);
   const srcSel = selectEl([['en', 'From English'], ['he', 'From Hebrew (עברית)']], 'en', () => {});
   srcSel.setAttribute('aria-label', 'Language you are translating from');
-  const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'e.g. Where is the bus station?' });
+  // Talk T3: its own class distinct from the phrase-filter '.search' input below it on this
+  // same screen — the two were previously visually identical, which caused real confusion
+  // during the UX interview (typing a test query into the wrong box).
+  const input = h('input', { class: 'search translate-input', type: 'text', 'aria-label': 'Translate from English', placeholder: 'e.g. Where is the bus station?' });
   const out = h('div', { class: 'tr-out', style: 'margin-top:10px' });
 
   const doTranslate = async () => {

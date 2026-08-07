@@ -551,6 +551,19 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .lang-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }
 .cat-title { font-size: var(--fs-h3); color: var(--magenta); margin: var(--sp-4) 0 var(--sp-2);
   text-transform: uppercase; letter-spacing: 0.04em; }
+/* Talk T2: folded, ranked phrase categories — same visual pattern as Places' rank/collapse
+   fold (.place-cat-group etc.), reused here under its own name for clarity in this section. */
+.place-cat-group, .phrase-cat-group { border: 1px solid var(--line); border-left: 4px solid var(--cat, var(--ink-soft)); border-radius: var(--r-lg); margin: var(--sp-2) 0; overflow: hidden; }
+.place-cat-summary, .phrase-cat-summary { cursor: pointer; list-style: none; user-select: none; font-weight: 800; color: var(--ink); background: var(--card); padding: var(--sp-4); display: flex; align-items: center; justify-content: space-between; }
+.place-cat-summary::-webkit-details-marker, .phrase-cat-summary::-webkit-details-marker { display: none; }
+.place-cat-summary::after, .phrase-cat-summary::after { content: '▾'; color: var(--ink-soft); font-size: var(--fs-sm); margin-left: var(--sp-2); }
+.place-cat-group[open] > .place-cat-summary::after, .phrase-cat-group[open] > .phrase-cat-summary::after { content: '▴'; }
+.place-cat-summary:hover, .phrase-cat-summary:hover { filter: brightness(0.98); }
+.place-cat-body, .phrase-cat-body { padding: var(--sp-2) var(--sp-2) var(--sp-4); }
+/* Talk T3: jump-chip row above the phrase list; the Emergency chip gets a coral accent so it
+   reads as the "reach it fast" one, matching the app's existing SOS colour language. */
+.phrase-jump { margin-bottom: var(--sp-2); }
+.chip-sos { border-color: var(--coral); color: var(--coral); font-weight: 800; }
 .phrase {
   display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0;
   border-bottom: 1px dashed var(--line);

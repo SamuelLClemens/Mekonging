@@ -67,7 +67,7 @@ export const PHRASEBOOK_MS = {
       { en: "Can I leave my bags here?", script: "Boleh saya tinggalkan beg di sini?", roman: "Boleh saya tinggalkan beg di sini?", note: "'Beg' covers bags/luggage in everyday speech; 'tinggalkan' = leave (something). Polite." },
       { en: "Is there hot water?", script: "Ada air panas?", roman: "Ada air panas?", note: "Straightforward and natural; 'air panas' = hot water." },
     ] },
-    { id: "health", name: "Health & pharmacy", phrases: [
+    { id: "emergency", name: "Emergency & health", phrases: [
       { en: "I need a doctor", script: "Saya perlukan doktor", roman: "Saya perlukan doktor", note: "Polite and clear. Spoken urgent form: 'Saya nak jumpa doktor' (I want to see a doctor)." },
       { en: "Where is the nearest pharmacy?", script: "Di mana farmasi terdekat?", roman: "Di mana farmasi terdekat?", note: "'Farmasi' is the standard word. 'Kedai ubat' (medicine shop) is also widely understood." },
       { en: "Where is the nearest hospital?", script: "Di mana hospital terdekat?", roman: "Di mana hospital terdekat?", note: "'Hospital' is the standard loanword; universally understood." },
