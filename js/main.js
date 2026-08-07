@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.351.0';
+const APP_VERSION = 'mk-v0.352.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2082,10 +2082,10 @@ function meHubScreen() {
   const idN = idPinCount();
   const tileBtn = sectionTile;
 
-  // --- Resume lead: identity + live counts + ONE prominent action back into your own things.
-  // (You Y2 — the old three-equal-chips row is now a single primary action, picked by what
-  // actually has content; anything else with content still gets a smaller chip below it, so
-  // nothing is removed, only re-ranked.)
+  // --- Identity lead: who you are + a live one-line summary. (You Y2's old single dynamic
+  // "resume" button + a picked-over secondary chip row is gone — replaced below with a fixed
+  // quick-access chip row, same status-chip look as Home's, so every one of these shows its
+  // own live status at a glance instead of only the one thing that happened to have content.)
   const statusBits = [
     jN ? `${jN} journal ${jN === 1 ? 'entry' : 'entries'}` : null,
     svN ? `${svN} saved ${svN === 1 ? 'place' : 'places'}` : null,
@@ -2100,18 +2100,54 @@ function meHubScreen() {
       ]),
     ]),
   ]);
-  const resumeTarget = jN ? { ic: '📔', label: 'Continue your journal', hash: '#journal' }
-    : svN ? { ic: '⭐', label: 'See your saved places', hash: '#saved' }
-    : svP ? { ic: '💬', label: 'Review your phrases', hash: '#dictionary' }
-    : { ic: '📔', label: 'Start your journal', hash: '#journal' };
-  lead.append(h('button', { class: 'btn block me-resume', style: 'margin-top:10px', onclick: () => go(resumeTarget.hash) },
-    `${resumeTarget.ic} ${resumeTarget.label}`));
-  const secondary = [];
-  if (svN && resumeTarget.hash !== '#saved') secondary.push(h('button', { class: 'chip', onclick: () => go('#saved') }, '⭐ Saved places'));
-  if (svP && resumeTarget.hash !== '#dictionary') secondary.push(h('button', { class: 'chip', onclick: () => go('#dictionary') }, '💬 My phrases'));
-  if (jN && resumeTarget.hash !== '#journal') secondary.push(h('button', { class: 'chip', onclick: () => go('#journal') }, '📔 Open journal'));
-  if (secondary.length) lead.append(h('div', { class: 'chips', style: 'margin-top:10px' }, secondary));
   wrap.append(lead);
+
+  // Quick access chips — Calendar, My Dictionary, Budget and Journal lead (the four asked
+  // for), then Documents, My trip, Buy or sell and For you promoted to chips too, so the
+  // whole "Trip tools" set has an at-a-glance status here, not just a tile-tap away below
+  // (rank-collapse-never-remove: the Trip tools tiles stay, this is a faster second path to
+  // the same destinations). Calendar and Budget reuse Home's exact live logic — a bare label
+  // until the trip actually starts / a target is actually set, then a day count and a live
+  // percentage with the same green/on-track, yellow/tight, red/over colour ring.
+  const chip = (ic, label, sub, onclick, extraClass) => h('button', {
+    class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick,
+  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
+
+  const startISO = tripStartISO();
+  const calLabel = (startISO && daysUntilISO(startISO) <= 0) ? `Day ${1 - daysUntilISO(startISO)}` : 'Calendar';
+
+  const sp = tripSpendHome();
+  const target = budgetTarget();
+  let budgetLabel = 'Budget';
+  let budgetSub = (sp.any && sp.sum > 0) ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : null;
+  let budgetClass = '';
+  if (target && sp.sum > 0) {
+    const span = tripSpanDays();
+    const dailyRate = span && span.elapsed > 0 ? sp.sum / span.elapsed : sp.sum;
+    if (target.per === 'trip') {
+      const pct = Math.round(sp.sum / target.amount * 100);
+      budgetLabel = `${pct}% spent`; budgetSub = null;
+      if (sp.sum > target.amount) budgetClass = 'budget-red';
+      else if (span && span.total) budgetClass = (dailyRate * span.total > target.amount) ? 'budget-yellow' : 'budget-green';
+      else budgetClass = pct >= 90 ? 'budget-yellow' : 'budget-green';
+    } else {
+      const pct = Math.round(dailyRate / target.amount * 100);
+      budgetLabel = `${pct}% of daily budget`; budgetSub = null;
+      if (dailyRate > target.amount) budgetClass = 'budget-red';
+      else budgetClass = dailyRate >= target.amount * 0.9 ? 'budget-yellow' : 'budget-green';
+    }
+  }
+
+  wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
+    chip('📅', calLabel, null, () => go('#calendar')),
+    chip('💬', 'My Dictionary', svP ? `${svP} saved` : null, () => go('#dictionary')),
+    chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
+    chip('📔', 'Journal', jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null, () => go('#journal')),
+    chip('🔒', 'Documents', null, () => go('#vault')),
+    chip('🧳', 'My trip', null, () => go('#trip')),
+    chip('🏷️', 'Buy or sell', null, () => go('#exchange')),
+    chip('🎯', 'For you', null, () => go('#foryou')),
+  ]));
 
   // Trip in numbers — see tripNumbersStrip() above; omitted entirely on a fresh profile.
   const numbers = tripNumbersStrip();
@@ -3609,18 +3645,19 @@ function phraseChip(p, locale, opts) {
 // The "Essentials" fold: the traveller's most-needed phrases, first — Hello, Thank you,
 // Friend, Sorry, How much, question words and numbers, as compact wrapping chips (as many
 // per line as the screen fits), plus their allergy/diet phrases automatically. A real
-// <details> fold now, like every other category — first in the list and open by default,
-// but collapsible like everything else. Allergy phrases are the one exception to the compact
-// layout: they are exactly what gets shown to a cook, so script + roman + note stay directly
-// visible as full rows rather than one tap away, and they come from the ALLERGENS module
-// (never fabricated), re-deriving from the saved profile every render. onChange() repaints
-// after a pin/hide toggle.
-function essentialsCard(code, book, onChange) {
+// <details> fold now, like every other category — first in the list, but closed by default
+// like every other category too (the caller passes `open`, tracked per-language via
+// talkCatOpen prefs so a traveller who opens it stays opened). Allergy phrases are the one
+// exception to the compact layout: they are exactly what gets shown to a cook, so script +
+// roman + note stay directly visible as full rows rather than one tap away, and they come
+// from the ALLERGENS module (never fabricated), re-deriving from the saved profile every
+// render. onChange() repaints after a pin/hide toggle.
+function essentialsCard(code, book, onChange, open) {
   const cats = book.categories;
   const flat = cats.flatMap((c) => c.phrases.map((p) => ({ p, catId: c.id })));
   const find = (rx) => flat.find((x) => rx.test(x.p.en));
 
-  const details = h('details', { class: 'phrase-cat-group essentials-cat', id: 'phrase-cat-essentials', open: '' });
+  const details = h('details', { class: 'phrase-cat-group essentials-cat', id: 'phrase-cat-essentials', open: open ? '' : null });
   details.append(h('summary', { class: 'phrase-cat-summary' }, '⭐ Essentials'));
   const body = h('div', { class: 'phrase-cat-body' });
   body.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' },
@@ -3740,7 +3777,8 @@ function phrasebookScreen(lang) {
   // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
   // always has. A jump-chip row sits right under it — one tap clears any active search and
   // scrolls straight to that category's fold, opening it. Essentials (below) is the "most-
-  // needed phrases first" promise — always the first fold in the list, open by default.
+  // needed phrases first" promise — always the first fold in the list (closed by default,
+  // like every other category, until the traveller opens it).
   wrap.append(h('h2', { class: 'cat-title' }, 'All phrases'));
   const search = h('input', {
     class: 'search', type: 'search', 'aria-label': 'Search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
@@ -3748,15 +3786,29 @@ function phrasebookScreen(lang) {
   });
   wrap.append(search);
 
+  // Every category fold (incl. Essentials) starts CLOSED — the traveller opens what they
+  // want, and it stays open only because they opened it. Tracked per language + category so
+  // it survives a search, a pin/hide repaint, and returning to this screen later; a category
+  // matched by an active search still shows open (otherwise the results would be invisible),
+  // but that does not by itself persist as "opened" — only an actual tap on the fold does.
+  const catOpenKey = (catId) => `${code}|${catId}`;
+  const isCatOpen = (catId) => !!(store.profile.prefs.talkCatOpen || {})[catOpenKey(catId)];
+  const setCatOpen = (catId, val) => {
+    const map = store.profile.prefs.talkCatOpen || (store.profile.prefs.talkCatOpen = {});
+    if (val) map[catOpenKey(catId)] = true; else delete map[catOpenKey(catId)];
+    save();
+  };
+
   const phase = store.profile.prefs.phase || inferPhase();
   const part = contextNow().part;
   const jumpToCat = (id) => {
     // renderPhrases() is fully synchronous (innerHTML reset + direct appends), so the fold
     // already exists in the DOM the moment this call returns — no frame needs waiting for.
     phraseQuery = ''; search.value = '';
+    setCatOpen(id, true);
     renderPhrases();
     const el = document.getElementById(`phrase-cat-${id}`);
-    if (el) { el.setAttribute('open', ''); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const jumpRow = h('div', { class: 'chips phrase-jump' }, [
     h('button', { class: 'chip', onclick: () => jumpToCat('essentials') }, '⭐ Essentials'),
@@ -3772,14 +3824,19 @@ function phrasebookScreen(lang) {
 
   function renderPhrases() {
     listEl.innerHTML = '';
-    listEl.append(essentialsCard(code, book, repaint));
+    const es = essentialsCard(code, book, repaint, isCatOpen('essentials'));
+    // Tracked off the summary's click, not the details' toggle event: a search forcing a
+    // fold open below sets the `open` attribute directly, which some browsers still fire a
+    // toggle event for — that would wrongly persist a search-driven open as if the traveller
+    // had tapped it themselves. A click on the summary only ever happens from a real tap.
+    es.querySelector('summary').addEventListener('click', () => setCatOpen('essentials', !es.open));
+    listEl.append(es);
     const q = phraseQuery.trim().toLowerCase();
     // Talk T2: folded groups, ranked by trip phase + time of day (rankedPhraseCats). A live
     // search opens every matching fold (so results are actually visible); with no search,
-    // only the single top-ranked fold starts open — rank/collapse/never-remove applies to
-    // ORDER and visibility-by-default here, not to what exists: every phrase is still one
-    // tap away via its fold or a jump chip.
-    let firstOpenDone = false;
+    // every fold starts CLOSED unless the traveller opened it themselves (isCatOpen) —
+    // rank/collapse/never-remove applies to ORDER here, not to what exists: every phrase is
+    // still one tap away via its fold or a jump chip.
     for (const cat of rankedPhraseCats(categories, phase, part)) {
       // A query matches the whole category when its name matches (so "taxi"
       // surfaces the Taxi & directions phrases), else it matches per phrase.
@@ -3789,14 +3846,18 @@ function phrasebookScreen(lang) {
         return catNameMatch || p.en.toLowerCase().includes(q) || (p.roman || '').toLowerCase().includes(q) || (p.script || '').includes(phraseQuery);
       });
       if (!matches.length) continue;
-      const isOpen = q ? true : !firstOpenDone;
-      firstOpenDone = true;
+      const isOpen = q ? true : isCatOpen(cat.id);
       const body = h('div', { class: 'phrase-cat-body' });
       for (const p of matches) body.append(phraseRow(p, book.locale, { code, catId: cat.id, onChange: repaint }));
-      listEl.append(h('details', { class: 'phrase-cat-group', id: `phrase-cat-${cat.id}`, open: isOpen ? '' : null }, [
+      const det = h('details', { class: 'phrase-cat-group', id: `phrase-cat-${cat.id}`, open: isOpen ? '' : null }, [
         h('summary', { class: 'phrase-cat-summary' }, `${cat.name} · ${matches.length}`),
         body,
-      ]));
+      ]);
+      // See the Essentials fold above for why this listens on the summary's click rather
+      // than the details' toggle event (a search force-opening this fold must not itself
+      // count as "the traveller opened it").
+      det.querySelector('summary').addEventListener('click', () => setCatOpen(cat.id, !det.open));
+      listEl.append(det);
     }
     if (!listEl.children.length) listEl.append(h('p', { class: 'empty' }, 'No phrases match your search.'));
     // Hidden phrases: a collapsible reveal so nothing is lost, only tucked away.
@@ -4119,9 +4180,12 @@ function cityPickerCard(cc) {
 }
 
 // "Closest to you" — the user's "first and foremost" ask. When a location fix is known,
-// the nearest few places (optionally within the scoped city) sit at the very top, open.
+// the nearest few places (optionally within the scoped city) sit right under the map, folded
+// like everything else on Places now (`open`/`onToggle` let the caller remember the traveller's
+// own choice across a filter/search re-render, without the map itself ever being the one that
+// remembers — the map is the one section that is never collapsible at all).
 // With no fix, a single quiet prompt to turn location on (never nags — no fix, one button).
-function closestPlacesCard(cc, scopeSlug, numFor, poolSource, compareCtl) {
+function closestPlacesCard(cc, scopeSlug, numFor, poolSource, compareCtl, open, onToggle) {
   const fix = getLastFix();
   if (!fix) {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
@@ -4135,9 +4199,10 @@ function closestPlacesCard(cc, scopeSlug, numFor, poolSource, compareCtl) {
   if (scopeSlug) pool = pool.filter((p) => citySlug(p.city || '') === scopeSlug);
   if (!pool.length) return null;
   pool = pool.slice().sort((a, b) => haversineKm(fix, a.coords) - haversineKm(fix, b.coords)).slice(0, 5);
-  const det = h('details', { class: 'place-cat-group closest-card', open: '', style: '--cat:#0F9D8C' }, [
+  const det = h('details', { class: 'place-cat-group closest-card', open: open ? '' : null, style: '--cat:#0F9D8C' }, [
     h('summary', { class: 'place-cat-summary' }, `📍 Closest to you · ${pool.length}`),
   ]);
+  if (onToggle) det.addEventListener('toggle', () => onToggle(det.open));
   const body = h('div', { class: 'place-cat-body' });
   pool.forEach((p) => body.append(placeQuickRow(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null), compareCtl)));
   det.append(body);
@@ -4166,32 +4231,30 @@ function placesScreen(arg) {
     // Browsing a city makes it the traveller's focus, so weather + "today" + "right now"
     // follow this city (not the capital) until GPS or another city overrides it.
     const cSpot = spotForCity(getActiveCountry(), scopeCity); if (cSpot) setFocusSpot(cSpot);
-    const ac = cityAboutCard(getActiveCountry(), scopeSlug); if (ac) wrap.append(ac);
-    wrap.append(cityEssentials(getActiveCountry(), scopeCity, scopeSlug));
+    // Reference material, not results — collapsed by default so the map above stays the
+    // focus; rank-collapse-never-remove: both stay one tap away, just no longer in the way.
+    const ac = cityAboutCard(getActiveCountry(), scopeSlug);
+    if (ac) wrap.append(collapsibleCard(ac, null, false));
+    wrap.append(h('details', { class: 'filters-collapse' }, [
+      h('summary', {}, '🕒 Right now'),
+      cityEssentials(getActiveCountry(), scopeCity, scopeSlug),
+    ]));
   }
 
-  // Living map + "closest to you" sit at the very top of the section (below any city context).
-  // The map is a minimise/maximise disclosure (state persisted); its mode bar and category-layer
-  // chips populate below. Both the map and the closest list are FILLED by renderList() once the
-  // filtered results and their shared numbering are known, so a list row and its map pin always
-  // carry the same number. Placeholders are appended now to lock DOM order.
-  const mapSection = h('details', { class: 'places-map-section', open: (store.profile.prefs.placesMapOpen !== false) ? '' : null });
-  mapSection.addEventListener('toggle', () => {
-    store.profile.prefs.placesMapOpen = mapSection.open;
-    save();
-    // A map created (or last drawn) while its <details> was closed has a zero-size container, so
-    // its markers never positioned. On open, resize the canvas to the now-real dimensions and
-    // redraw the pins so the living map appears immediately rather than after another interaction.
-    if (mapSection.open && placesCtrl) {
-      requestAnimationFrame(() => { try { placesCtrl.map.resize(); placesCtrl.setPlaces(mapPlaces()); } catch { /* noop */ } });
-    }
-  });
+  // The living map sits at the very top of the section (below any city context) and is the
+  // one thing on this whole screen that never collapses — Places is a map-first browse, so it
+  // stays always visible and draws bigger (see .places-map-section .places-map in style.css).
+  // Its mode bar and category-layer chips populate below. Both the map and the closest list are
+  // FILLED by renderList() once the filtered results and their shared numbering are known, so a
+  // list row and its map pin always carry the same number. Placeholders are appended now to
+  // lock DOM order.
+  const mapSection = h('div', { class: 'places-map-section' });
   const modeBar = h('div', { class: 'places-mode-bar' });
   const layerChipsRow = h('div', { class: 'layer-chips' });
   const mapWrap = h('div', {});
   const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
   mapSection.append(
-    h('summary', {}, h('span', {}, '🗺 Map')),
+    h('div', { class: 'places-map-head' }, '🗺 Map'),
     modeBar, layerChipsRow, mapWrap, cap,
   );
   wrap.append(mapSection);
@@ -4406,7 +4469,7 @@ function placesScreen(arg) {
   // still one tap away, just no longer standing between the traveller and a real place.
   // Country level (no city chosen yet): drill down by city — tap a city and just its
   // places show, grouped into the collapsible category sections above.
-  if (!scopeSlug) { const cp = cityPickerCard(getActiveCountry()); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen')); }
+  if (!scopeSlug) { const cp = cityPickerCard(getActiveCountry()); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen', false)); }
 
   // Your own places live alongside the curated ones: add a location, then rate, review and
   // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
@@ -4432,6 +4495,13 @@ function placesScreen(arg) {
 
   let placesCtrl = null;
   let currentResults = [];
+  // Places is map-first now — the map is the only section that never collapses, so everything
+  // below it (closest-to-you, each category group) starts closed and only opens because the
+  // traveller opened it. Tracked locally for this visit only (renderList() rebuilds these
+  // <details> on every filter/search change, so without this a keystroke would re-collapse
+  // whatever the traveller just opened).
+  let closestOpen = false;
+  const openBuckets = new Set();
 
   // Compare tray — per-visit only (never persisted, never carried between countries/cities):
   // a traveller comparing 2-3 places is mid-decision right now, not setting a standing
@@ -4562,7 +4632,8 @@ function placesScreen(arg) {
     if (placesCtrl) placesCtrl.setPlaces(ml);
     // "Closest to you" — the nearest few of the CURRENTLY shown (filtered) places, same numbers.
     closestSlot.innerHTML = '';
-    const cz = closestPlacesCard(getActiveCountry(), scopeSlug, numFor, currentResults, compareCtl);
+    const cz = closestPlacesCard(getActiveCountry(), scopeSlug, numFor, currentResults, compareCtl,
+      closestOpen, (v) => { closestOpen = v; });
     if (cz) closestSlot.append(cz);
 
     listEl.innerHTML = '';
@@ -4590,11 +4661,12 @@ function placesScreen(arg) {
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
-      // Group by category — every group OPEN (rank/collapse/never-remove applies to ORDER
-      // here, not visibility, since "which one?" fails if a real place is never on screen).
-      // Groups are ranked so the ones fitting this trip phase and time of day lead; nothing
-      // is removed or hidden, only reordered. Inside each, closest-to-you first when a
-      // location fix is known.
+      // Group by category — every group starts CLOSED now (the map above is the one section
+      // that stays always open); rank/collapse/never-remove still applies to ORDER, since
+      // "which one?" fails if a real place is never reachable. Groups are ranked so the ones
+      // fitting this trip phase and time of day lead; nothing is removed or hidden, only
+      // reordered and, by default, folded. Inside each, closest-to-you first when a location
+      // fix is known.
       const groups = {};
       currentResults.forEach((p) => { const b = placeBucket(p); (groups[b] = groups[b] || []).push(p); });
       const fix = getLastFix();
@@ -4610,10 +4682,12 @@ function placesScreen(arg) {
         arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, p._num, compareCtl)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
-        listEl.append(h('details', { class: 'place-cat-group', open: '', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
+        const det = h('details', { class: 'place-cat-group', open: openBuckets.has(key) ? '' : null, style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
           h('summary', { class: 'place-cat-summary' }, `${label} · ${arr.length}`),
           body,
-        ]));
+        ]);
+        det.addEventListener('toggle', () => { if (det.open) openBuckets.add(key); else openBuckets.delete(key); });
+        listEl.append(det);
       });
     }
   }
