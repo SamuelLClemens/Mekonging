@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.347.1';
+const APP_VERSION = 'mk-v0.348.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2060,6 +2060,32 @@ function countSavedPhrases() {
   return n;
 }
 
+// You Y2: a compact "trip in numbers" strip beneath the identity card — days travelled,
+// places explored, journal entries, phrases saved, total spend. Same no-placeholder rule as
+// Home's homeStatusBand: a figure with no real value simply does not render, and the whole
+// strip is omitted (not an empty card) on a fresh profile. Plain cells, not buttons — this is
+// the trip as a record, distinct in purpose from the resume action and tiles below it, which
+// already provide the tappable navigation.
+function tripNumbersStrip() {
+  const cells = [];
+  const startISO = tripStartISO();
+  if (startISO) {
+    const until = daysUntilISO(startISO);
+    if (until <= 0) cells.push({ ic: '📅', label: `Day ${1 - until}` });
+  }
+  const explored = (store.profile.prefs.doneSpots || []).length;
+  if (explored) cells.push({ ic: '📍', label: `${explored} place${explored === 1 ? '' : 's'}` });
+  const jN = store.journal.entries.length;
+  if (jN) cells.push({ ic: '📔', label: `${jN} ${jN === 1 ? 'entry' : 'entries'}` });
+  const svP = countSavedPhrases();
+  if (svP) cells.push({ ic: '💬', label: `${svP} ${svP === 1 ? 'phrase' : 'phrases'}` });
+  const sp = tripSpendHome();
+  if (sp.any && sp.sum > 0) cells.push({ ic: '💸', label: `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` });
+  if (!cells.length) return null;
+  return h('div', { class: 'card home-status trip-numbers', role: 'group', 'aria-label': 'Your trip in numbers' },
+    cells.map((c) => h('div', { class: 'status-chip static' }, [h('span', { class: 'status-ic' }, c.ic), h('span', { class: 'status-lbl' }, c.label)])));
+}
+
 function meHubScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
@@ -2072,7 +2098,10 @@ function meHubScreen() {
   const idN = idPinCount();
   const tileBtn = sectionTile;
 
-  // --- Resume lead: your story so far + one tap back into your own things ---
+  // --- Resume lead: identity + live counts + ONE prominent action back into your own things.
+  // (You Y2 — the old three-equal-chips row is now a single primary action, picked by what
+  // actually has content; anything else with content still gets a smaller chip below it, so
+  // nothing is removed, only re-ranked.)
   const statusBits = [
     jN ? `${jN} journal ${jN === 1 ? 'entry' : 'entries'}` : null,
     svN ? `${svN} saved ${svN === 1 ? 'place' : 'places'}` : null,
@@ -2087,26 +2116,22 @@ function meHubScreen() {
       ]),
     ]),
   ]);
-  const resume = [];
-  if (jN) resume.push(h('button', { class: 'chip', onclick: () => go('#journal') }, '📔 Open journal'));
-  else resume.push(h('button', { class: 'chip', onclick: () => go('#journal') }, '📔 Start your journal'));
-  if (svN) resume.push(h('button', { class: 'chip', onclick: () => go('#saved') }, '⭐ Saved places'));
-  if (svP) resume.push(h('button', { class: 'chip', onclick: () => go('#dictionary') }, '💬 My phrases'));
-  lead.append(h('div', { class: 'chips', style: 'margin-top:10px' }, resume));
+  const resumeTarget = jN ? { ic: '📔', label: 'Continue your journal', hash: '#journal' }
+    : svN ? { ic: '⭐', label: 'See your saved places', hash: '#saved' }
+    : svP ? { ic: '💬', label: 'Review your phrases', hash: '#dictionary' }
+    : { ic: '📔', label: 'Start your journal', hash: '#journal' };
+  lead.append(h('button', { class: 'btn block me-resume', style: 'margin-top:10px', onclick: () => go(resumeTarget.hash) },
+    `${resumeTarget.ic} ${resumeTarget.label}`));
+  const secondary = [];
+  if (svN && resumeTarget.hash !== '#saved') secondary.push(h('button', { class: 'chip', onclick: () => go('#saved') }, '⭐ Saved places'));
+  if (svP && resumeTarget.hash !== '#dictionary') secondary.push(h('button', { class: 'chip', onclick: () => go('#dictionary') }, '💬 My phrases'));
+  if (jN && resumeTarget.hash !== '#journal') secondary.push(h('button', { class: 'chip', onclick: () => go('#journal') }, '📔 Open journal'));
+  if (secondary.length) lead.append(h('div', { class: 'chips', style: 'margin-top:10px' }, secondary));
   wrap.append(lead);
 
-  // A gentle nudge to back up once there is something worth protecting — lives here rather
-  // than on Home, since this hub already holds the journal/budget it is protecting.
-  if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
-    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--orange); margin-top:12px' }, [
-      h('strong', {}, '⬇️ Back up your journal & budget'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Save a copy to your phone so you never lose your entries — updates keep them safe, and a backup protects you if the device is lost.'),
-      h('div', { class: 'row-between' }, [
-        h('button', { class: 'btn', onclick: () => go('#settings') }, 'Back up now'),
-        h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
-      ]),
-    ]));
-  }
+  // Trip in numbers — see tripNumbersStrip() above; omitted entirely on a fresh profile.
+  const numbers = tripNumbersStrip();
+  if (numbers) { numbers.style.marginTop = '10px'; wrap.append(numbers); }
 
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);
@@ -2121,55 +2146,60 @@ function meHubScreen() {
     wrap.append(rc);
   }
 
-  // Spending at a glance: the by-category donut + budget progress right on the hub, so the
-  // traveller sees where money is going without opening the expenses screen. The card returns
-  // null until there is something to chart; tapping through opens the full log.
-  const spendCard = budgetSummaryCard();
-  if (spendCard) {
-    spendCard.style.marginTop = '12px';
-    spendCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') }, exN ? 'Log expense & see all →' : 'Log your first expense →'));
-    wrap.append(spendCard);
-  }
+  // (You Y3 — the by-category spend donut used to render again here, identical to Home's own
+  // copy of budgetSummaryCard(). Dropped as a duplicated CARD, not a duplicated destination:
+  // spend still shows in the numbers strip above and stays one tap away via the Money tile
+  // below; the donut itself still renders on Home.)
 
-  // --- Four collapsible groups mapping to the traveller's own priorities ---
+  // --- Three collapsible groups: content the traveller created, then trip logistics that
+  // Home already links to (folded here, not removed), then settings. (You Y3)
   const grp = (emoji, label, list, open) => h('details', { class: 'home-group-d', open: open ? '' : null }, [
     h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
     h('div', { class: 'grid' }, list.map(tileBtn)),
   ]);
 
-  // Your stuff — the traveller's own content, open by default so it leads.
+  // Your stuff — everything the traveller made or curated themselves. Open by default: this is
+  // what makes You worth a separate tab from Home, so it leads.
+  const cPts = gamify.contributionPoints(store);
+  const cLvl = gamify.levelInfo(cPts);
   wrap.append(grp('📔', 'Your stuff', [
     { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
     { ic: ICON.star, t: 'Saved places', d: svN ? `${svN} saved` : 'Your collections', hash: '#saved' },
     { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#dictionary' },
     { ic: ICON.star, t: 'My identifier', d: idN ? `${idN} saved` : 'Dishes, fruit & wildlife', hash: '#identified' },
+    { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
+    { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
   ], true));
 
-  // Trip & money — the record-keeping surfaces.
-  wrap.append(grp('🎒', 'Trip & money', [
+  // Trip tools — the logistics Home already links to from its own decks. Folded (not removed):
+  // every one of these tiles is a genuine duplicate destination, kept one tap away rather than
+  // competing with the traveller's own content above.
+  wrap.append(grp('🎒', 'Trip tools', [
     { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
     { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log expense vs budget', hash: '#expenses' },
     { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget', hash: '#trip' },
     { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
     { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
-  ], false));
-
-  // Progress & keepsakes — the trip story and achievements (previously only on Home).
-  const cPts = gamify.contributionPoints(store);
-  const cLvl = gamify.levelInfo(cPts);
-  wrap.append(grp('🏆', 'Progress & keepsakes', [
-    { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
-    { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
     { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
+    { ic: ICON.target, t: 'For you', d: 'Tune your personalised picks', hash: '#foryou' },
   ], false));
 
   // You & settings — identity, preferences, privacy and support.
   wrap.append(grp('⚙️', 'You & settings', [
     { ic: ICON.gear, t: 'Settings', d: 'You, theme, backup & privacy', hash: '#settings' },
-    { ic: ICON.target, t: 'For you', d: 'Tune your personalised picks', hash: '#foryou' },
     { ic: ICON.heart, t: 'Give back', d: 'Support the region', hash: '#donate' },
     { ic: ICON.help, t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
   ], false));
+
+  // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
+  // quiet dismissible line near the foot. Same trigger (a single expense is still "something
+  // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
+  if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
+    wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top:14px' }, [
+      h('button', { class: 'btn ghost', style: 'flex:1;text-align:left', onclick: () => go('#settings') }, '⬇️ Back up your journal & budget'),
+      h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
+    ]));
+  }
 
   wrap.append(h('p', { class: 'disclaimer' },
     'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));

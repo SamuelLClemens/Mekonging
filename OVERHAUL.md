@@ -1008,4 +1008,173 @@ language and every reload, across the whole slice.
 
 Talk is now feature-complete against its acceptance criteria.
 
-### You — *pending*
+### You — *SHIPPED as mk-v0.348.0*
+
+**Theme:** *What is mine?* — the traveller's own record. Interviewed 2026-08-07 against the
+live `#me` screen, measured in the browser, with the tile inventory compared destination-by-
+destination against Home.
+
+#### What the interview found on the live screen
+
+Measured on `#me` (720px viewport). **Caveat stated up front:** the test profile is essentially
+empty — 0 journal entries, 0 saved places, 0 pinned phrases, 0 identifier pins, 1 logged
+expense, no name — so these are new-user measurements. A populated profile is taller, but the
+structure does not change with content.
+
+- **1,127px total — about 1.5 viewports.** Three of the four tile groups are closed by default.
+  This is the *opposite* of the Talk problem: You is not overloaded, it is thin and derivative.
+- **The first two thirds of the opening viewport belong to the app, not the traveller.** Lead
+  card at 75px (carrying no real content for a new user) → backup nudge at 211px (a chore) →
+  duplicated budget card at 347px → the traveller's own material finally at 483px.
+- **The backup nudge fires on almost nothing.** Its condition is
+  `journal.entries.length || trip.budgetLog.length`, so a single 7-USD expense with zero journal
+  entries raises a full-width card urging the traveller to protect their data.
+- **`budgetSummaryCard()` renders on both Home and You**, identically, each appending its own
+  "Log expense & see all →" button.
+
+#### The headline: twelve of sixteen tiles duplicate Home
+
+Compared by destination rather than by label:
+
+| Destination | Name on Home | Name on You |
+|---|---|---|
+| `#journal` | Travel journal | Journal |
+| `#saved` | Saved & collections | Saved places |
+| `#calendar` | Travel calendar | Calendar |
+| `#expenses` | Log expenses | Money |
+| `#vault` | Secure documents | Documents |
+| `#exchange` | Traveller board | Buy or sell |
+| `#trip` `#scrapbook` `#circle` `#foryou` `#help` `#identified` | *identical label* | *identical label* |
+
+Six destinations answer to **two different names** depending on which tab the traveller arrived
+from; six more carry the identical label on both. Only three tiles are genuinely unique to You:
+**My phrases** (`#dictionary`), **Your contributions** (`#contributions`) and **Settings**
+(`#settings`).
+
+Precedent worth recording: task #36 already removed one duplicated tile ("Your contributions")
+from Home. That call was made once, for a single tile; the remaining twelve were never swept.
+
+#### Decisions (interview round 6)
+
+- **You leads with the traveller's content; the Home-shared logistics fold.** The split is
+  *content the traveller created* versus *trip logistics*, not *unique* versus *duplicate* —
+  Journal, Saved places and My identifier are duplicated on Home yet clearly belong to You.
+  Nothing is deleted: the logistics tiles collapse into one folded group, one tap away.
+- **Lead = enhanced identity card + a trip-in-numbers strip.** The user selected options 2 and 3
+  together. The avatar/name card is retained and given live counts plus a prominent resume
+  action; a distinct compact numbers strip sits directly beneath it. Recent journal entries are
+  **not** rendered inline as rows — that option was explicitly not chosen.
+- **Short names everywhere.** Journal, Calendar, Money, Documents, Saved places, Buy or sell —
+  applied identically on both tabs, so one screen never answers to two names.
+- **Backup nudge demoted to a quiet line.** The low trigger threshold stays; the nudge becomes a
+  single dismissible line near the foot instead of a full-width card in second position.
+
+#### Target structure
+
+```
+topbar · Your space · 🆘 · saved · settings
+[identity card] avatar · name · live counts · ▶ continue where you left off
+[trip in numbers] days · places · entries · phrases · spend      (real figures only)
+📔 Your stuff              (OPEN — content the traveller created)
+   Journal · Saved places · My phrases · My identifier · Trip scrapbook · Your contributions
+🎒 Trip tools              (FOLDED — the Home-shared logistics)
+   Calendar · Money · My trip · Documents · Buy or sell · Travel circle · For you
+⚙️ You & settings          (FOLDED)
+   Settings · Give back · Help & FAQ
+--- foot ---
+quiet dismissible backup line · disclaimer
+```
+
+#### Build slices
+
+- **Y1 — Unify the six split names** across Home and You (`js/screens/home.js` tile lists and
+  `meHubScreen` in `js/main.js`). Mechanical, low risk, done first so later slices move already-
+  correct labels. Watch one wording collision: Home's "Money & tools" group would then contain a
+  tile named "Money"; the tile subtitle ("Track spend vs your budget") disambiguates, but confirm
+  it reads cleanly.
+- **Y2 — Rebuild the lead.** Identity card keeps avatar and name, gains live counts and a
+  prominent resume action; add a compact trip-in-numbers strip beneath it. Every figure renders
+  only when it has a real value — the same no-placeholder rule Home's status band already
+  follows. No zeroes on a fresh profile.
+- **Y3 — Regroup the tiles.** "Your stuff" leads open and absorbs Trip scrapbook and Your
+  contributions; the Home-shared logistics collapse into one folded "Trip tools" group; Settings,
+  Give back and Help & FAQ fold into "You & settings". Drop the duplicated budget donut from You
+  in favour of the numbers strip's spend figure — **note this is a genuine removal of a duplicated
+  card, not of a navigation destination**: spend stays reachable from You via the numbers strip
+  and the Money tile, and the donut still renders on Home.
+- **Y4 — Backup nudge** becomes a single quiet dismissible line near the foot.
+- **Y5 — Verify + ship.** Empty profile and populated profile, offline run, version bump, merge.
+
+#### Acceptance criteria
+
+1. No destination is named two different ways across Home and You.
+2. You opens with the traveller's own content; the Home-shared logistics tiles are folded but
+   reachable in one tap.
+3. Nothing is removed from navigation — every destination reachable from You today is still
+   reachable from You.
+4. The identity card carries live counts and a working resume action.
+5. The numbers strip shows real figures only; a figure with no data does not render.
+6. The budget donut renders once across the Home/You pair, not twice, and spend stays reachable
+   from You.
+7. The backup nudge is a single quiet dismissible line near the foot, not a card in second place.
+8. Full offline render, zero console errors, on both an empty and a populated profile.
+
+#### Y1–Y5 build notes — SHIPPED as mk-v0.348.0
+
+**Y1 — rename sweep.** All six unifications landed on the Home side only (`js/screens/home.js`):
+`#journal` → Journal, `#saved` → Saved places, `#calendar` → Calendar, `#expenses` → Money,
+`#vault` → Documents, `#exchange` → Buy or sell. `meHubScreen` (`js/main.js`) already used every
+one of these short names — the interview's own audit table was, in effect, measuring Home's
+drift from a naming convention You already had. Checked the one flagged collision live (Home's
+"Money & tools" group now contains a tile named "Money"): reads cleanly — the subtitle "Track
+spend vs your budget" and the Currency-converter tile between the group header and the Money
+tile both disambiguate it.
+
+**Y2 — lead rebuild.** The `.me-lead` identity card keeps its avatar/name but the old row of
+three equal-weight resume chips became one primary action (`.btn.block`) picked by what
+actually has content — journal first, then saved places, then phrases, falling back to "Start
+your journal" on a fresh profile — with whichever of the other two still have content kept as
+smaller secondary chips beneath it. New `tripNumbersStrip()` renders directly below: day count
+(from the same `tripStartISO()`/`daysUntilISO()` math the existing "Your day" card already
+uses), places explored (`doneSpots.length`), journal entries, saved phrases, and total spend
+(`tripSpendHome()`, already used by Home's own status band) — each cell omitted individually
+when it has no real value, and the whole strip omitted (not an empty card) when none do. Cells
+are plain `div`s reusing `.status-chip`'s visual language with a `.static` modifier (no pointer
+cursor, no press animation) — a record, not a control, deliberately distinct from the resume
+button and the tiles below.
+
+**Y3 — regroup.** Split is content-the-traveller-made vs. trip-logistics, not unique-vs-
+duplicate — confirmed this matters because Journal, Saved places and My identifier are
+themselves among the twelve Home duplicates yet clearly belong under "Your stuff." Final
+grouping: **Your stuff** (open) — Journal, Saved places, My phrases, My identifier, Trip
+scrapbook, Your contributions (absorbing the old "Progress & keepsakes" group entire).
+**Trip tools** (folded) — Calendar, Money, My trip, Documents, Buy or sell, Travel circle, For
+you. **You & settings** (folded) — Settings, Give back, Help & FAQ. Verified by direct
+enumeration: all 16 original You destinations are still present post-regroup (6 + 7 + 3 = 16),
+none dropped. Removed the duplicated `budgetSummaryCard()` call — confirmed it was rendering
+byte-for-byte the same donut Home already shows; spend now reaches You only via the numbers
+strip and the Money tile, never a duplicated card.
+
+**Y4 — backup nudge.** Same trigger condition (`journal.entries.length || trip.budgetLog.length`
+and `!dataBackupDone`), same dismiss behaviour (writes `dataBackupDone` via `save()`), same
+"Back up now" → `#settings` destination — only the markup changed, from a bordered `.card` in
+second position to a plain `.row-between` line moved to the foot, just above the disclaimer.
+
+**Verified (Y5):** empty profile (0 journal/saved/phrases/doneSpots, 1 pre-existing logged
+expense) shows only the "💸 7 USD" cell in the numbers strip and "📔 Start your journal" as the
+resume action — no zero-placeholders anywhere. Seeded a populated profile (3 journal entries, 2
+saved places, 2 phrase pins, 4 done-spots, a dated trip start) live via `localStorage` and
+confirmed every figure updated correctly — "Day 3 · 4 places · 3 entries · 2 phrases · 7 USD" —
+and the resume action correctly promoted to "📔 Continue your journal" with the other two as
+secondary chips. Home re-checked after the Y1 rename sweep touched `js/screens/home.js`: renders
+clean. True offline test: forced a Service Worker update (`mk-v0.348.0` confirmed in
+`caches.keys()`), killed the dev server, hard-reloaded — You rendered fully from Cache Storage,
+identical structure to the online render. Zero console errors throughout, on every profile state
+and every reload.
+
+Two stale-tab artifacts hit during this build (documented pattern in this project, not new):
+`navigate({force:true})` on an already-loaded tab did not reflect the Y1 rename or a
+`localStorage` seed until the tab was closed and reopened fresh — same fix as every previous
+occurrence.
+
+You is now feature-complete against its acceptance criteria.
