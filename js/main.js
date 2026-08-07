@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.350.0';
+const APP_VERSION = 'mk-v0.351.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3524,7 +3524,49 @@ function phrasePinsFor(code) { const m = store.profile.prefs.phrasePins || (stor
 function phraseHiddenFor(code) { const m = store.profile.prefs.phraseHidden || (store.profile.prefs.phraseHidden = {}); return m[code] || (m[code] = []); }
 function isPhrasePinned(code, key) { return phrasePinsFor(code).includes(key); }
 function isPhraseHidden(code, key) { return phraseHiddenFor(code).includes(key); }
-function togglePhrasePin(code, key) { const a = phrasePinsFor(code); const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); save(); }
+function togglePhrasePin(code, key) {
+  const a = phrasePinsFor(code);
+  const i = a.indexOf(key);
+  if (i >= 0) { a.splice(i, 1); }               // unpinning is per-language only — never cascades
+  else { a.push(key); propagatePinAcrossLanguages(code, key); }
+  save();
+}
+// Talk redesign: pinning a phrase in one language auto-pins the SAME phrase in every OTHER
+// language too, wherever a matching one exists — pin "Friend" in Thai and it is also pinned in
+// Lao, Vietnamese, etc. Unpinning never cascades ("unless the user unpins it themselves" —
+// see togglePhrasePin above), so each language's pins stay independently editable afterwards,
+// and the dictionary keeps every language's saved phrases in its own section (state.js already
+// stores phrasePins per language code; this only changes what gets ADDED on a pin).
+// Matching is by the phrase's English text (phraseSlug — case/punctuation-insensitive),
+// searched across the OTHER language's entire phrasebook regardless of category id: the 8
+// phrasebooks do not share one taxonomy (e.g. Lao's "essentials" category covers ground Thai
+// splits across "food" and "directions"), so restricting the search to the same category id
+// would miss real matches. This is honest, not fabricated, coverage: a phrase worded
+// differently across two books (Thai's "Excuse me / Sorry" vs Lao's "Sorry / Excuse me") will
+// not cross-match until the wording is aligned — it only pins where the English text is
+// genuinely the same phrase, never a guess.
+function propagatePinAcrossLanguages(fromCode, key) {
+  const parts = key.split('|');
+  if (parts.length < 3) return;
+  const slug = parts[2];
+  for (const otherCode of Object.keys(LANGUAGES)) {
+    if (otherCode === fromCode) continue;
+    const book = LANGUAGES[otherCode];
+    if (!book) continue;
+    const allergyCat = (ALLERGENS[otherCode] && ALLERGENS[otherCode].length)
+      ? { id: 'allergies', name: 'Allergies & dietary', phrases: ALLERGENS[otherCode] } : null;
+    const cats = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
+    for (const cat of cats) {
+      const match = cat.phrases.find((p) => phraseSlug(p.en) === slug);
+      if (match) {
+        const otherKey = phraseKey(otherCode, cat.id, match);
+        const arr = phrasePinsFor(otherCode);
+        if (!arr.includes(otherKey)) arr.push(otherKey);
+        break;   // one matching phrase per language is enough
+      }
+    }
+  }
+}
 // Hiding a phrase also drops it from the pins so the two lists never disagree.
 function togglePhraseHide(code, key) {
   const a = phraseHiddenFor(code); const i = a.indexOf(key);
@@ -3545,59 +3587,84 @@ function phraseNotesMap() { return store.profile.prefs.phraseNotes || (store.pro
 function phraseNoteFor(key) { return phraseNotesMap()[key] || ''; }
 function setPhraseNote(key, text) { const m = phraseNotesMap(); const t = String(text || '').trim(); if (t) m[key] = t; else delete m[key]; save(); }
 
-// The "Essentials" card: the traveller's most-needed phrases, first — Hello, Thank you,
-// then their allergy/diet phrases automatically, then Sorry, How much, question words and
-// numbers. Allergy phrases come from the ALLERGENS module (never fabricated) and re-derive
-// from the saved profile every render. onChange() repaints after a pin/hide toggle.
+// The compact "as many phrases on one line as possible" chip: same tap-to-show-large
+// interaction as a full phraseRow, just dense — used by Essentials (a wall of full rows for
+// Hello/Thank you/Friend/Sorry/How much/questions/numbers would be exactly the "overwhelming"
+// the traveller asked to avoid). Pin/hide/copy move into the enlarged view (showBigPhrase)
+// instead of living on the chip itself; a pinned phrase carries a small 📌 so it stands out
+// without needing its own button.
+function phraseChip(p, locale, opts) {
+  opts = opts || {};
+  const { code, catId } = opts;
+  const key = (code && catId) ? phraseKey(code, catId, p) : null;
+  const pinned = key ? isPhrasePinned(code, key) : false;
+  return h('button', {
+    class: 'chip phrase-chip' + (pinned ? ' pinned' : ''),
+    title: 'Tap to show large' + (pinned ? ' · pinned' : ''),
+    onclick: () => showBigPhrase(p, locale, opts),
+  }, [pinned ? h('span', { class: 'chip-pin-dot', 'aria-hidden': 'true' }, '📌') : null,
+      h('b', {}, p.en), ' ', h('span', { lang: locale }, p.script)]);
+}
+
+// The "Essentials" fold: the traveller's most-needed phrases, first — Hello, Thank you,
+// Friend, Sorry, How much, question words and numbers, as compact wrapping chips (as many
+// per line as the screen fits), plus their allergy/diet phrases automatically. A real
+// <details> fold now, like every other category — first in the list and open by default,
+// but collapsible like everything else. Allergy phrases are the one exception to the compact
+// layout: they are exactly what gets shown to a cook, so script + roman + note stay directly
+// visible as full rows rather than one tap away, and they come from the ALLERGENS module
+// (never fabricated), re-deriving from the saved profile every render. onChange() repaints
+// after a pin/hide toggle.
 function essentialsCard(code, book, onChange) {
   const cats = book.categories;
   const flat = cats.flatMap((c) => c.phrases.map((p) => ({ p, catId: c.id })));
   const find = (rx) => flat.find((x) => rx.test(x.p.en));
-  const card = h('div', { class: 'card essentials-card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '⭐ Essentials'));
-  card.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' },
-    'Your most-needed phrases, first. Tap a line to show it large · 📌 pin · ✕ hide.'));
-  const addRow = (x) => {
+
+  const details = h('details', { class: 'phrase-cat-group essentials-cat', id: 'phrase-cat-essentials', open: '' });
+  details.append(h('summary', { class: 'phrase-cat-summary' }, '⭐ Essentials'));
+  const body = h('div', { class: 'phrase-cat-body' });
+  body.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' },
+    'Your most-needed phrases, first. Tap one to show it large — pin, hide and copy from there.'));
+
+  const chipsRow = h('div', { class: 'chips phrase-chips' });
+  const addChip = (x) => {
     if (!x || isPhraseHidden(code, phraseKey(code, x.catId, x.p))) return;
-    card.append(phraseRow(x.p, book.locale, { code, catId: x.catId, onChange, essential: true }));
+    chipsRow.append(phraseChip(x.p, book.locale, { code, catId: x.catId, onChange }));
   };
-  addRow(find(/^hello/i));
-  addRow(find(/^thank you/i));
-  addRow(find(/^friend$/i));
-  // allergy / diet — automatic, safety-critical (not hideable)
+  addChip(find(/^hello/i));
+  addChip(find(/^thank you/i));
+  addChip(find(/^friend$/i));
+  addChip(find(/excuse me|^sorry/i));
+  addChip(find(/how much/i));
+  const qCat = cats.find((c) => c.id === 'questions');
+  if (qCat) qCat.phrases.forEach((p) => { if (!isPhraseHidden(code, phraseKey(code, 'questions', p))) chipsRow.append(phraseChip(p, book.locale, { code, catId: 'questions', onChange })); });
+  const nCat = cats.find((c) => c.id === 'numbers');
+  if (nCat) nCat.phrases.forEach((p) => { if (!isPhraseHidden(code, phraseKey(code, 'numbers', p))) chipsRow.append(phraseChip(p, book.locale, { code, catId: 'numbers', onChange })); });
+  body.append(chipsRow);
+
+  // allergy / diet — automatic, safety-critical, kept as full rows (see header comment above)
   const diet = store.profile.prefs.diet || [];
   const allergy = allergyPhrasesForProfile(code);
   if (allergy.length) {
-    card.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' },
+    body.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' },
       '⚠️ ' + (diet.length ? 'Your allergies & diet — show the cook' : 'Food allergy — show the cook')));
-    allergy.forEach((p) => card.append(phraseRow(p, book.locale, { code, catId: 'allergies', onChange, noHide: true, essential: true })));
+    allergy.forEach((p) => body.append(phraseRow(p, book.locale, { code, catId: 'allergies', onChange, noHide: true, essential: true })));
     // Honest gap: some flagged allergens (currently sesame) have no verified phrase in ANY
     // language yet — we never fabricate a safety-critical translation. Say so plainly so the
     // general phrase above is not mistaken for full coverage. This line drops out on its own
     // once a sourced phrase removes the allergen from PHRASE_PENDING_ALLERGENS.
     const pending = diet.filter((id) => Diet.PHRASE_PENDING_ALLERGENS.includes(id))
       .map((id) => (DIET_LABEL[id] || {}).label || id);
-    if (pending.length) card.append(h('p', { class: 'warn-note', role: 'note' },
+    if (pending.length) body.append(h('p', { class: 'warn-note', role: 'note' },
       `No verified ${joinList(pending)} phrase yet — the phrases above do not name ${pending.length > 1 ? 'them' : 'it'}. Show the dish’s red warning, point to it on a menu, or write the word down.`));
-    if (!diet.length) card.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0 2px', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
+    if (!diet.length) body.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0 2px', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
   } else if (!diet.length) {
-    card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' },
+    body.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' },
       'Have an allergy? Set it in Settings and your exact phrase appears here automatically.'));
   }
-  addRow(find(/excuse me|^sorry/i));
-  addRow(find(/how much/i));
-  // question words
-  const qCat = cats.find((c) => c.id === 'questions');
-  if (qCat) qCat.phrases.forEach((p) => { if (!isPhraseHidden(code, phraseKey(code, 'questions', p))) card.append(phraseRow(p, book.locale, { code, catId: 'questions', onChange, essential: true })); });
-  // numbers — compact tappable chips (tap to show large)
-  const nCat = cats.find((c) => c.id === 'numbers');
-  if (nCat) {
-    card.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' }, '🔢 Numbers'));
-    card.append(h('div', { class: 'chips num-chips' }, nCat.phrases.map((p) =>
-      h('button', { class: 'chip', title: 'Show large', onclick: () => showBigPhrase(p, book.locale) },
-        [h('b', {}, p.en), ' ', h('span', { lang: book.locale }, p.script)]))));
-  }
-  return card;
+
+  details.append(body);
+  return details;
 }
 
 // Talk T2: fold + rank the phrase categories by trip phase and time of day — same shape as
@@ -3633,12 +3700,15 @@ function phrasebookScreen(lang) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Phrasebook'));
 
-  // language tabs
-  wrap.append(h('div', { class: 'lang-tabs' }, Object.values(LANGUAGES).map((b) =>
-    h('button', {
-      class: 'chip', 'aria-pressed': b.lang === code ? 'true' : 'false',
-      onclick: () => { phraseQuery = ''; go(`#phrasebook-${b.lang}`); },
-    }, b.label))));
+  // Language + My Dictionary: a compact dropdown replaces the old row of 8 language chips
+  // (a wall of buttons to save space on and not overwhelm with), paired with a direct route
+  // to the cross-language dictionary — already reachable via You, but one tap closer from here.
+  const langSelect = selectEl(Object.values(LANGUAGES).map((b) => [b.lang, b.label]), code,
+    (val) => { phraseQuery = ''; go(`#phrasebook-${val}`); }, 'Language');
+  wrap.append(h('div', { class: 'talk-top-row' }, [
+    langSelect,
+    h('button', { class: 'btn ghost', onclick: () => go('#dictionary') }, '📖 My Dictionary'),
+  ]));
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
 
@@ -3657,17 +3727,20 @@ function phrasebookScreen(lang) {
   const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
   const idx = phraseIndexFor(categories, code);
 
-  // Talk T4: the "most-needed phrases first" promise stays literally first on screen, with
-  // search and the category jump chips directly under it. Everything that used to sit above
-  // the phrase list — phrase of the day, translate, offline audio, politeness note — is still
-  // here (nothing removed), just demoted below the list itself; see the bottom of this
-  // function.
-  wrap.append(essentialsCard(code, book, repaint));
   { const t = oneTimeHint('phrase-pin', 'Pin a phrase (📌) to save it to your dictionary in the You section, or hide (✕) ones you do not need.'); if (t) wrap.append(t); }
+
+  // Say-it / live translate needs a live connection end to end — it calls an online
+  // translation + speech service, and unlike the phrasebook itself there is no offline
+  // fallback for arbitrary typed English. Showing a control that can only fail offline is
+  // worse than no control at all, so it renders only when actually online — and, since it is
+  // the one thing on this whole screen that truly cannot work without a connection, it leads
+  // (right after the header row, before the always-usable search below).
+  if (online()) wrap.append(liveTranslateBox(code, book.label, book.locale));
 
   // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
   // always has. A jump-chip row sits right under it — one tap clears any active search and
-  // scrolls straight to that category's fold, opening it.
+  // scrolls straight to that category's fold, opening it. Essentials (below) is the "most-
+  // needed phrases first" promise — always the first fold in the list, open by default.
   wrap.append(h('h2', { class: 'cat-title' }, 'All phrases'));
   const search = h('input', {
     class: 'search', type: 'search', 'aria-label': 'Search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
@@ -3677,17 +3750,21 @@ function phrasebookScreen(lang) {
 
   const phase = store.profile.prefs.phase || inferPhase();
   const part = contextNow().part;
-  const jumpRow = h('div', { class: 'chips phrase-jump' }, rankedPhraseCats(categories, phase, part).map((cat) => h('button', {
-    class: 'chip' + (cat.id === 'emergency' ? ' chip-sos' : ''),
-    onclick: () => {
-      // renderPhrases() is fully synchronous (innerHTML reset + direct appends), so the fold
-      // already exists in the DOM the moment this call returns — no frame needs waiting for.
-      phraseQuery = ''; search.value = '';
-      renderPhrases();
-      const el = document.getElementById(`phrase-cat-${cat.id}`);
-      if (el) { el.setAttribute('open', ''); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    },
-  }, (cat.id === 'emergency' ? '🆘 ' : '') + cat.name)));
+  const jumpToCat = (id) => {
+    // renderPhrases() is fully synchronous (innerHTML reset + direct appends), so the fold
+    // already exists in the DOM the moment this call returns — no frame needs waiting for.
+    phraseQuery = ''; search.value = '';
+    renderPhrases();
+    const el = document.getElementById(`phrase-cat-${id}`);
+    if (el) { el.setAttribute('open', ''); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  };
+  const jumpRow = h('div', { class: 'chips phrase-jump' }, [
+    h('button', { class: 'chip', onclick: () => jumpToCat('essentials') }, '⭐ Essentials'),
+    ...rankedPhraseCats(categories, phase, part).map((cat) => h('button', {
+      class: 'chip' + (cat.id === 'emergency' ? ' chip-sos' : ''),
+      onclick: () => jumpToCat(cat.id),
+    }, (cat.id === 'emergency' ? '🆘 ' : '') + cat.name)),
+  ]);
   wrap.append(jumpRow);
 
   const listEl = h('div', {});
@@ -3695,6 +3772,7 @@ function phrasebookScreen(lang) {
 
   function renderPhrases() {
     listEl.innerHTML = '';
+    listEl.append(essentialsCard(code, book, repaint));
     const q = phraseQuery.trim().toLowerCase();
     // Talk T2: folded groups, ranked by trip phase + time of day (rankedPhraseCats). A live
     // search opens every matching fold (so results are actually visible); with no search,
@@ -3739,9 +3817,11 @@ function phrasebookScreen(lang) {
   }
   renderPhrases();
 
-  // --- below the list: phrase of the day, translate, offline audio, politeness note ---
+  // --- below the list: phrase of the day, offline audio, politeness note ---
   // (Talk T4 — nothing removed, only demoted; the "most-needed first" promise above still
-  // covers what a traveller reaches for most, so these are welcome but no longer load-bearing.)
+  // covers what a traveller reaches for most, so these are welcome but no longer load-bearing.
+  // Say-it/translate used to sit here too — moved above the list, see the top of this
+  // function, since it now only ever renders when online.)
   const pod = phraseOfTheDay(code);
   if (pod) {
     const openPod = () => showBigPhrase(pod.p, pod.locale);
@@ -3752,9 +3832,6 @@ function phrasebookScreen(lang) {
       h('div', { class: 'potd-sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
     ]));
   }
-
-  // Say-it tool: type or speak English, get the local text + spoken pronunciation.
-  wrap.append(liveTranslateBox(code, book.label, book.locale));
 
   // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
   // no signal — essential for Khmer/Lao, which have no device voice on most phones.
@@ -3861,8 +3938,8 @@ function phraseRow(p, locale, opts) {
     h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman]),
     p.note ? h('div', { class: 'note' }, p.note) : null,
   ]);
-  grow.addEventListener('click', () => showBigPhrase(p, locale));
-  grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale); } });
+  grow.addEventListener('click', () => showBigPhrase(p, locale, opts));
+  grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale, opts); } });
   const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${p.en}`, title: 'Copy the local text', onclick: () => copyText(p.script, copyBtn) }, '⧉');
   const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: able ? null : '' }, '🔊');
   speakBtn.addEventListener('click', async () => {
@@ -3888,20 +3965,36 @@ const SCRIPT_LANG = { th: 'th', vi: 'vi', kh: 'km', la: 'lo' };
 function scriptLang(country) { return SCRIPT_LANG[country] || null; }
 
 // Full-screen, very large native script to point at a taxi driver / pharmacist / local.
-function showBigPhrase(p, locale) {
+// opts (optional, same shape as phraseRow's): { code, catId, onChange, noHide } add
+// Pin / Hide alongside Speak / Copy — the compact phraseChip has nowhere on the chip itself
+// for those controls, so they live here instead; a phraseRow passes them through too, for a
+// consistent set of actions wherever a phrase is shown large.
+function showBigPhrase(p, locale, opts) {
+  opts = opts || {};
+  const { code, catId, onChange, noHide } = opts;
+  const key = (code && catId) ? phraseKey(code, catId, p) : null;
   const able = canSay(locale);
   const overlay = h('div', { class: 'bigphrase', role: 'dialog', 'aria-label': 'Show to a local' });
   let close = () => overlay.remove();
   overlay.addEventListener('click', () => close());
+  const actions = [
+    able ? h('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); say(p.script, locale); } }, '🔊 Speak') : null,
+    h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); copyText(p.script); } }, '⧉ Copy'),
+  ];
+  if (key) {
+    const pinned = isPhrasePinned(code, key);
+    actions.push(h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); togglePhrasePin(code, key); if (onChange) onChange(); close(); } }, pinned ? '📌 Unpin' : '📌 Pin'));
+    if (!noHide) {
+      actions.push(h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); togglePhraseHide(code, key); if (onChange) onChange(); close(); } }, '✕ Hide'));
+    }
+  }
+  actions.push(h('button', { class: 'btn ghost', onclick: () => close() }, 'Close'));
   const inner = h('div', { class: 'bigphrase-inner' }, [
     h('div', { class: 'bp-en' }, p.en),
     h('div', { class: 'bp-script', lang: locale }, p.script),
     h('div', { class: 'bp-roman' }, p.roman),
     p.note ? h('div', { class: 'bp-note' }, p.note) : null,
-    h('div', { class: 'bp-actions' }, [
-      able ? h('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); say(p.script, locale); } }, '🔊 Speak') : null,
-      h('button', { class: 'btn ghost', onclick: () => close() }, 'Close'),
-    ]),
+    h('div', { class: 'bp-actions' }, actions),
     h('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Show this screen to a local · tap anywhere to close'),
   ]);
   inner.addEventListener('click', (e) => e.stopPropagation());

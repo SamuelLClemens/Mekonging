@@ -1088,6 +1088,54 @@ language and every reload, across the whole slice.
 
 Talk is now feature-complete against its acceptance criteria.
 
+#### Addendum — dropdown language picker, cross-language pins, compact Essentials, SHIPPED as mk-v0.351.0
+
+Requested directly, two follow-up messages: (1) the language picker should be a dropdown, not
+a row of 8 chips; two quick-access buttons (Language, My Dictionary) at the top; a phrase
+pinned in one language should auto-pin in every other language too, unless individually
+unpinned; Essentials should be the first category, collapsible, with phrases packed many-per-
+line; (2) anything that needs a live connection (Say-it/translate) should only appear when
+online, positioned before the search box.
+
+- **Language dropdown + My Dictionary button** (`talk-top-row`, `phrasebookScreen`): replaces
+  the old `lang-tabs` chip row with `selectEl()` (already used elsewhere in the app) plus a
+  direct `#dictionary` shortcut — already reachable via You, now one tap closer from Talk too.
+- **Cross-language pin propagation** (`propagatePinAcrossLanguages()`, main.js): pinning a
+  phrase auto-pins the same phrase (matched by English text, via `phraseSlug`) in every other
+  language's book, searched across ALL of that language's categories — the 8 phrasebooks do
+  not share one category taxonomy (Lao's "essentials" category covers ground Thai splits
+  across "food"/"directions"), so matching only within the same category id would miss real
+  matches. Unpinning is per-language only and never cascades. Coverage is honest, not
+  fabricated: a phrase worded differently across two books (Thai's "Excuse me / Sorry" vs
+  Lao's "Sorry / Excuse me") will not cross-match until the wording is aligned.
+- **Essentials is now the first collapsible category** (`phrase-cat-essentials`, open by
+  default), phrased as compact wrapping chips (`phraseChip()`) instead of full detail rows —
+  "as many on one line as possible." Allergy/diet phrases are the one exception, kept as full
+  rows since they are exactly what gets shown to a cook. `showBigPhrase()` (the tap-to-enlarge
+  view) now carries Pin/Hide/Copy actions, since the compact chip has nowhere on the chip
+  itself for those controls — a `phraseRow` passes the same actions through too, for
+  consistency wherever a phrase is shown large. Other categories are unchanged (still full
+  rows, already collapsible from Talk T2).
+- **Say-it / live translate** now renders only when `online()` is true, moved from the foot of
+  the screen to right after the header row — before the search box — since it is the one
+  control on this screen with zero offline value (a real online translation + speech API call,
+  no cached fallback), unlike the phrasebook itself.
+
+**Verified:** language dropdown + My Dictionary button confirmed live; pinning "Hello" in Thai
+confirmed cascading to all 7 other languages (Vietnamese, Khmer, Lao, Chinese, Burmese, Malay,
+Hmong) with each keyed under its own language in the dictionary; unpinning it in Lao only
+confirmed NOT cascading (the other 7 stayed pinned); Essentials confirmed as a real collapsible
+`<details>`, first in the jump-chip row and the category list, all 30 of its chips compact and
+wrapping (both desktop and 375px mobile widths, light and dark theme), allergy phrases kept as
+full rows; a real (non-Essentials) category confirmed still rendering full detail rows,
+unaffected; search still narrows correctly and Essentials stays visible regardless of query;
+translate box confirmed absent while offline and present (positioned before search) once
+toggled online via the topbar network icon. True offline test: forced a Service Worker update
+(`mk-v0.351.0` confirmed in `caches.keys()`), killed the dev server, hard-reloaded — full
+render from Cache Storage, dropdown/dictionary button/Essentials chips all intact, translate
+box correctly still absent (offline). Zero console errors throughout. Spot-checked Home and You
+after the shared `topbar()`/main.js edits — clean.
+
 ### You — *SHIPPED as mk-v0.348.0*
 
 **Theme:** *What is mine?* — the traveller's own record. Interviewed 2026-08-07 against the

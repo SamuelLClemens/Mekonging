@@ -559,7 +559,15 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .search-launch { gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-3); }
 
 /* --- phrasebook --- */
-.lang-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+/* Talk redesign: language dropdown + My Dictionary shortcut, replacing the old row of 8
+   language chips (lang-tabs) — a wall of buttons to save space on and not overwhelm with. */
+.talk-top-row { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); flex-wrap: wrap; }
+.talk-top-row select {
+  flex: 1 1 auto; min-width: 0; min-height: 44px; font-family: inherit; font-size: var(--fs-base);
+  border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3);
+  background: var(--card); color: var(--ink);
+}
+.talk-top-row .btn { flex: none; }
 .cat-title { font-size: var(--fs-h3); color: var(--magenta); margin: var(--sp-4) 0 var(--sp-2);
   text-transform: uppercase; letter-spacing: 0.04em; }
 /* Talk T2: folded, ranked phrase categories — same visual pattern as Places' rank/collapse
@@ -598,12 +606,16 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .phrase .grow.tappable:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
 /* Personal phrasebook: essentials, pins, and per-row pin/hide/reorder controls */
-.essentials-card { border: 1px solid var(--teal); }
+.essentials-cat { border-left-color: var(--teal); }
 .pins-card { border: 1px dashed var(--grape); }
 .phrase.essential { border-bottom-style: solid; }
-.num-chips { gap: var(--sp-1); }
-.num-chips .chip { display: inline-flex; gap: 4px; align-items: baseline; }
-.num-chips .chip [lang] { font-size: 1.05rem; }
+.num-chips, .phrase-chips { gap: var(--sp-1); }
+.num-chips .chip, .phrase-chips .chip { display: inline-flex; gap: 4px; align-items: baseline; }
+.num-chips .chip [lang], .phrase-chips .chip [lang] { font-size: 1.05rem; }
+/* Talk redesign: a pinned phrase's compact chip carries a small marker so it stands out
+   without needing its own pin button (pin/hide/copy live in the tap-to-show-large view). */
+.phrase-chip.pinned { border-color: var(--sun); }
+.chip-pin-dot { font-size: 0.85rem; }
 /* Secondary controls (pin, hide, reorder, restore) sit quieter than copy/speak. */
 .speak.pin, .speak.hide, .phrase-ctrls .speak[title="Move up"], .phrase-ctrls .speak[title="Move down"], .phrase-ctrls .speak[title="Restore"] {
   width: 34px; height: 34px; font-size: 0.95rem; background: transparent; color: var(--ink-soft); border: 1px solid var(--line);
