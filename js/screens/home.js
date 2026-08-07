@@ -234,7 +234,7 @@ function tripStatusRow(phase, stored, cc) {
 // needs no route data (the fuller H4 card below adds real transport options when they exist).
 // Each cell renders only with a real value; the whole line is omitted if nothing applies.
 function situationLine(ctx, cc) {
-  const cells = [weatherCell(ctx), spendTodayCell(), nextStopCell()].filter(Boolean);
+  const cells = [spendTodayCell(), nextStopCell(), weatherCell(ctx)].filter(Boolean);
   if (!cells.length) return null;
   return h('div', { class: 'card home-status situation-line', role: 'group', 'aria-label': 'Right now' },
     cells.map((c) => h('button', { class: 'status-chip', onclick: c.onclick },
