@@ -9,12 +9,15 @@
 // is deleted from navigation, an empty cell just does not draw until it has something to say).
 //
 // Chip consolidation pass: the old situation line (weather · spend today · next stop, ground
-// phases only) and the separate budget donut card are both gone. In their place, a single
-// "Quick access" row — quickAccessRow() below — carries Calendar / Budget / Weather (or
-// Scrapbook, post phase) / Journal in every phase, collapsible in its own right and separate
-// from the Trip status collapsible above it (which keeps its phase switcher, day countdown,
-// next-plan-item and online/offline chips — only its trip-spend chip moved, so budget shows
-// exactly once on Home instead of three times).
+// phases only) and the separate budget donut card are both gone. Follow-up merge: Trip status
+// and Quick access — two separate collapsibles, both just full of chips about the trip — are
+// now one collapsible, quickAccessRow() below. It carries the phase switcher plus Calendar
+// (bare label pre-trip, a running day count once the trip starts, next-plan-item folded into
+// its sub) / Budget (percentage-of-budget + a green/yellow/red pace ring once a target and
+// spend both exist, plain spent total otherwise) / Weather (or Scrapbook, post phase) /
+// Journal — every phase, one box, nothing duplicated. Online/offline used to be a fifth chip
+// here too; it now lives in the shared topbar() (main.js) instead, next to Saved/Settings/
+// Emergency, reachable from every screen rather than one tap into Home's own collapsible.
 //
 // This is also the Great Split's proof case (OVERHAUL.md section 9, F2): most of Home's own
 // helpers (phaseSwitchRow, homeStageBlock, ensureHomeWeather, topbar, cityAboutCard, etc.)
@@ -33,17 +36,11 @@ import { fmtTemp } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import {
   go, mount, topbar, ICON, contextNow, setupRecapCard, maybeOfferTour,
-  inferPhase, focusSpot, phaseSwitchRow, homeStatusBand, homeStageBlock,
+  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock,
   ensureHomeWeather, idPinCount, sectionTile, nextPlanItem, evShort, tripSpendHome,
-  citySlug, cityAboutCard, todayISO, addDaysISO,
+  citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
+  budgetTarget, tripSpanDays,
 } from '../main.js';
-
-const PHASE_META = {
-  planning: { emoji: '🗺️', label: 'Planning' },
-  arrived: { emoji: '🛬', label: 'Arrived' },
-  traveling: { emoji: '🧭', label: 'Travelling' },
-  post: { emoji: '📖', label: 'Post' },
-};
 
 export function homeScreen() {
   // "Right now" picks below need this country's place data; Home itself must never block
@@ -84,16 +81,13 @@ export function homeScreen() {
   // value-first first run — proof that the few taps already personalised the app.
   if (store.profile.prefs.showSetupRecap) wrap.append(setupRecapCard());
 
-  // H2 — Trip status: the whole-trip view (stage, dates, next plan, total spend, offline),
+  // H2/H3 — Quick access: phase switcher + Calendar / Budget / Weather (Scrapbook, post) /
+  // Journal / Online-offline, every phase — see quickAccessRow() below. One collapsible,
   // collapsed by default so it never competes with today's content. Collapsing removes
   // nothing from navigation — every value here still has its own full screen — an individual
-  // chip simply does not render until it has a real value (see homeStatusBand in main.js).
-  wrap.append(tripStatusRow(phase, storedPhase, leadCC));
-
-  // H3 — Quick access: Calendar / Budget / Weather (Scrapbook, post) / Journal, every phase —
-  // see quickAccessRow() below. Its own collapsible, separate from Trip status above it.
+  // chip simply does not render until it has a real value.
   const ctx = contextNow();
-  wrap.append(quickAccessRow(phase, ctx));
+  wrap.append(quickAccessRow(phase, storedPhase, ctx));
 
   // One stage-appropriate situational block. Planning gets a forward-looking outlook +
   // countdown + checklist hub (no near-me); arrived/travelling get the live, forecast-aware
@@ -207,59 +201,72 @@ export function homeScreen() {
   maybeOfferTour();   // first-run only: a quick walk-me tour once the traveller reaches Home
 }
 
-// H2 — collapsed by default ("▸ Trip status · 🛬 Arrived"); expands to the stage picker plus
-// whichever status chips currently hold a real value. A self-defaulting pref remembers the
-// traveller's own open/closed choice per device, same pattern as the tool decks below.
-function tripStatusRow(phase, stored, cc) {
-  const meta = PHASE_META[phase] || PHASE_META.planning;
-  const open = !!store.profile.prefs.tripStatusOpen;
-  const details = h('details', { class: 'home-group-d trip-status', open: open ? '' : null });
-  details.addEventListener('toggle', () => { store.profile.prefs.tripStatusOpen = details.open; save(); });
-  details.append(h('summary', { class: 'home-group' }, `${meta.emoji} Trip status · ${meta.label}`));
-  const body = h('div', { style: 'padding-top:8px' });
-  body.append(phaseSwitchRow(phase, stored, false));   // the segmented control only — no repeated caption
-  const chips = homeStatusBand(phase, cc);
-  chips.style.marginTop = '8px';
-  body.append(chips);
-  details.append(body);
-  return details;
-}
+// H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every
+// phase-appropriate status chip. Trip status and Quick access used to be two separate
+// collapsibles; merging them recognises that both were just "chips about the trip," so
+// splitting them was itself a kind of duplication. No chip is ever a placeholder — one with
+// nothing to say just shows its bare label (rank-collapse-never-remove: nothing here is a
+// distinct destination, every value still has its own full screen one tap away).
+function quickAccessRow(phase, stored, ctx) {
+  const chip = (ic, label, sub, onclick, extraClass) => h('button', {
+    class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick,
+  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
 
-// H3 — Quick access: four phase-appropriate shortcut chips, each carrying a live value when
-// one exists (never a placeholder — a chip with nothing to say just shows its bare label).
-// Every phase gets Calendar and Budget; Weather fills the third slot in planning/arrived/
-// traveling (post has nothing "right now" to report weather-wise) and Scrapbook takes that
-// slot in post instead, matching the trip's own arc. Journal is always last. This is the one
-// place spend shows on Home now — Trip status above it dropped its own spend chip, and the
-// standalone budget donut card is gone — so budget shows exactly once, not three times.
-function quickAccessRow(phase, ctx) {
-  const chip = (ic, label, sub, hash) => h('button', { class: 'status-chip', onclick: () => go(hash) },
-    [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
-
-  // Calendar — next plan item's timing only (title + full detail already lives in Trip
-  // status's own 📍 chip just above; repeating the title here would be pure duplication).
+  // Calendar — bare label until the trip actually starts (tripStartISO); once it has, a
+  // running day count (Day 1, Day 2…) replaces "Calendar" instead. The old Trip status
+  // "X days to go" pre-trip countdown is dropped in favour of just naming the destination
+  // screen — the day count is the one thing worth surfacing once a trip is actually under
+  // way. The next plan item's own title + timing rides along as the sub-label, folded in from
+  // the old, now-removed, standalone 📍 chip.
+  const startISO = tripStartISO();
+  let calLabel = 'Calendar';
+  if (startISO && daysUntilISO(startISO) <= 0) calLabel = `Day ${1 - daysUntilISO(startISO)}`;
   const calItem = nextPlanItem();
   let calSub = null;
   if (calItem) {
     const t = todayISO();
-    calSub = calItem.date === t ? 'Today' : (calItem.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(calItem.date));
+    const when = calItem.date === t ? 'Today' : (calItem.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(calItem.date));
+    calSub = `${(calItem.title || 'Planned').slice(0, 18)} · ${when}`;
   }
 
-  // Budget — trip spend so far, in home currency (same figure Trip status used to show).
+  // Budget — with no target set, the plain spent total (unchanged — "how much has been
+  // spent" is the honest answer when there is nothing to grade against). Once a target
+  // exists AND at least one expense is logged, the label promotes to a live
+  // percentage-of-budget and the chip takes a colour ring: green on track to land under
+  // budget, yellow if the current pace projects going over, red if already over.
   const sp = tripSpendHome();
-  const budgetSub = (sp.any && sp.sum > 0) ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : null;
+  const target = budgetTarget();
+  let budgetLabel = 'Budget';
+  let budgetSub = (sp.any && sp.sum > 0) ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : null;
+  let budgetClass = '';
+  if (target && sp.sum > 0) {
+    const span = tripSpanDays();
+    const dailyRate = span && span.elapsed > 0 ? sp.sum / span.elapsed : sp.sum;
+    if (target.per === 'trip') {
+      const pct = Math.round(sp.sum / target.amount * 100);
+      budgetLabel = `${pct}% spent`; budgetSub = null;
+      if (sp.sum > target.amount) budgetClass = 'budget-red';
+      else if (span && span.total) budgetClass = (dailyRate * span.total > target.amount) ? 'budget-yellow' : 'budget-green';
+      else budgetClass = pct >= 90 ? 'budget-yellow' : 'budget-green';
+    } else {
+      const pct = Math.round(dailyRate / target.amount * 100);
+      budgetLabel = `${pct}% of daily budget`; budgetSub = null;
+      if (dailyRate > target.amount) budgetClass = 'budget-red';
+      else budgetClass = dailyRate >= target.amount * 0.9 ? 'budget-yellow' : 'budget-green';
+    }
+  }
 
   // Journal — entry count.
   const jN = store.journal.entries.length;
   const journalSub = jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null;
 
   const chips = [
-    chip('📅', 'Calendar', calSub, '#calendar'),
-    chip('💰', 'Budget', budgetSub, '#expenses'),
+    chip('📅', calLabel, calSub, () => go('#calendar')),
+    chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
   ];
 
   if (phase === 'post') {
-    chips.push(chip('🏆', 'Scrapbook', null, '#scrapbook'));
+    chips.push(chip('🏆', 'Scrapbook', null, () => go('#scrapbook')));
   } else {
     let wxIc = '🌤', wxSub = null;
     if (ctx.wx && ctx.wx.temp != null) {
@@ -276,16 +283,21 @@ function quickAccessRow(phase, ctx) {
         wxSub = `${temp}${rainNote}`;
       }
     }
-    chips.push(chip(wxIc, 'Weather', wxSub, '#weather'));
+    chips.push(chip(wxIc, 'Weather', wxSub, () => go('#weather')));
   }
 
-  chips.push(chip('📔', 'Journal', journalSub, '#journal'));
+  chips.push(chip('📔', 'Journal', journalSub, () => go('#journal')));
+  // Online/offline used to be a fifth chip here too — moved to the shared topbar() (main.js),
+  // next to Saved/Settings/Emergency, so it is reachable from every screen, not just Home.
 
   const open = !!store.profile.prefs.quickAccessOpen;
   const details = h('details', { class: 'home-group-d quick-access', open: open ? '' : null });
   details.addEventListener('toggle', () => { store.profile.prefs.quickAccessOpen = details.open; save(); });
   details.append(h('summary', { class: 'home-group' }, '⚡ Quick access'));
-  details.append(h('div', { class: 'card home-status', style: 'margin-top:8px', role: 'group', 'aria-label': 'Quick access' }, chips));
+  const body = h('div', { style: 'padding-top:8px' });
+  body.append(phaseSwitchRow(phase, stored, false));   // the segmented control only — no repeated caption
+  body.append(h('div', { class: 'card home-status', style: 'margin-top:8px', role: 'group', 'aria-label': 'Quick access' }, chips));
+  details.append(body);
   return details;
 }
 

@@ -486,6 +486,56 @@ edits — clean. True offline test: forced a Service Worker update (`mk-v0.349.0
 Storage, both collapsibles and all four Quick access chips intact. Zero console errors
 throughout, across every phase and every reload.
 
+#### Addendum 2 — Trip status merge, budget health, online/offline → topbar, SHIPPED as mk-v0.350.0
+
+Requested directly, three follow-up asks in one message: (1) fold Trip status's remaining
+chips into Quick access rather than keeping two separate boxes both full of "chips about the
+trip"; (2) make the Calendar and Budget chips carry more meaning instead of bare labels; (3)
+put per-category budget stats (and the donut) somewhere real. A later same-turn message added
+a fourth: move the online/offline toggle out of a chip and into the shared top bar.
+
+- **Merged** Trip status and Quick access into one collapsible (`quickAccessRow()`,
+  `js/screens/home.js`) — phase switcher plus every status chip, one box instead of two.
+  `tripStatusRow()` and main.js's `homeStatusBand()` are both deleted; `tripStartISO()` is now
+  exported so home.js can read it directly.
+- **Calendar chip:** bare `Calendar` label until the trip actually starts (`tripStartISO()`),
+  then a running day count (`Day 1`, `Day 2`…) replaces the label instead — the old "X days to
+  go" pre-trip countdown is dropped in favour of just naming the destination. The next plan
+  item's title + timing (previously its own standalone 📍 chip) now rides along as the
+  Calendar chip's sub-label instead of being repeated elsewhere.
+- **Budget chip:** with no target set, unchanged — the plain spent total. Once a target exists
+  *and* at least one expense is logged, the label promotes to a live percentage (`46% spent` for
+  a whole-trip target, `99% of daily budget` for a per-day one) and the chip takes a colour
+  ring — green on track to land under budget, yellow if the current pace projects going over,
+  red if already over. Trip targets with known trip-end dates use a real pace projection
+  (`dailyRate × totalDays` vs the target); without an end date, or for per-day targets, it
+  falls back to straightforward thresholds. New CSS: `.status-chip.budget-green/yellow/red`
+  (`css/style.css`).
+- **Budget section (`#expenses`, `budgetSummaryCard()` in main.js):** the per-category legend
+  now shows each category's share of total spend next to its amount (`33 USD · 62%`), sorted
+  biggest-category-first. Donut, remaining-vs-target bar, and the over/under-budget projection
+  message were already there from before — this closes the "stats on what percentage of
+  spending is on each category" ask directly against the existing budget picture rather than
+  building a second one.
+- **Online/offline moved to the shared `topbar()`** (main.js) — a small icon button
+  (📶 / ✈️) next to Saved / Settings / Emergency, so it is reachable from *every* screen, not
+  one tap into Home's own collapsible. New CSS: `.topbar-net`. Home's Quick access row lost its
+  fifth (online/offline) chip as a result — now exactly four: Calendar, Budget, Weather (or
+  Scrapbook, post phase), Journal.
+
+**Verified:** all three budget-health colours confirmed live for both target types (green /
+yellow / red × whole-trip and per-day — six combinations, e.g. a whole-trip target where actual
+spend is a modest 46% but the pace projects finishing over budget correctly shows yellow, not
+green); the plain-spent-total no-target fallback still shows `Budget · N USD`; Calendar
+confirmed bare pre-trip and `Day N` once started, with the next-plan item's title+timing
+riding on the sub-label; post-phase Scrapbook swap intact; the topbar network icon confirmed
+present (and independently toggleable) on Home, Explore and Settings, and correctly hidden only
+where Settings's own gear icon self-hides — never conditionally hidden itself, since it belongs
+everywhere. `#expenses` legend confirmed sorted biggest-first with correct percentages. True
+offline test repeated after every code change (forced Service Worker update, `mk-v0.350.0`
+confirmed in `caches.keys()`, dev server killed, hard-reloaded — full render from Cache
+Storage, chips and topbar icon both intact) — zero console errors throughout.
+
 ### Explore — *spec complete, ready to build*
 
 **Theme:** *Where?* — discovery and inspiration. Interviewed 2026-08-06 against the real

@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.349.0';
+const APP_VERSION = 'mk-v0.350.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -422,9 +422,18 @@ export function topbar(title, backHash) {
   const onSettings = hash.startsWith('#settings');
   const iconBtn = (label, target, svg) =>
     h('button', { class: 'topbar-ic', 'aria-label': label, title: label, onclick: () => go(target), html: svg });
+  // Online/offline: one tap flips it and re-renders in place, from every screen — moved here
+  // (Home chip-merge follow-up) instead of living only inside Home's own Quick access row, so
+  // it sits alongside the other always-available controls (Saved, Settings, Emergency) no
+  // matter where in the app a traveller happens to be.
+  const netOnline = netMode() === 'online';
   return h('header', { class: 'topbar' }, [
     backHash ? h('button', { class: 'back', onclick: () => goBack(backHash) }, '‹ Back') : null,
     h('h1', {}, title),
+    h('button', {
+      class: 'topbar-ic topbar-net', 'aria-label': netOnline ? 'Online — tap to go offline' : 'Offline — tap to go online',
+      title: netOnline ? 'Online' : 'Offline', onclick: () => { setNetMode(netOnline ? 'offline' : 'online'); render(); },
+    }, netOnline ? '📶' : '✈️'),
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     onSettings ? null : iconBtn('Settings', '#settings', ICON.gear),
     // Persistent safety anchor: emergency help one tap from every screen (kept as the
@@ -1702,7 +1711,7 @@ export function inferPhase() {
 
 // ---- Journey companion: countdown (before you leave) + recap (after return) ----
 // Trip start = the earliest dated stop the traveller has planned (no separate date field).
-function tripStartISO() {
+export function tripStartISO() {
   const dates = (store.trip.stops || []).map((s) => s.date).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || ''));
   dates.sort();
   return dates[0] || null;
@@ -1936,37 +1945,12 @@ export function tripSpendHome() {
   return { sum, any, allKnown, home };
 }
 
-// At-a-glance status band: trip countdown/day · next plan · spend · offline — the traveller's
-// state in one glance, each chip a one-tap route into the screen that owns it. A chip only
-// renders when it has a real value — no "No dates yet" / "No plans yet" / "No spend yet"
-// placeholder text, per the Home spec's "no placeholder chip anywhere" rule. The connectivity
-// chip is the one exception: online/offline is always a real, current fact, never a placeholder.
-export function homeStatusBand(phase, cc) {
-  const chip = (ic, lbl, onclick) => h('button', { class: 'status-chip', onclick },
-    [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, lbl)]);
-  const chips = [];
-  // trip / day — only once dates exist
-  const startISO = tripStartISO();
-  if (startISO) {
-    const d = daysUntilISO(startISO);
-    const tripLbl = d > 0 ? `${d} day${d === 1 ? '' : 's'} to go` : `Day ${1 - d}`;
-    chips.push(chip('🗓', tripLbl, () => go('#trip')));
-  }
-  // next plan item — only once one exists
-  const item = nextPlanItem();
-  if (item) {
-    const t = todayISO();
-    const when = item.date === t ? 'Today' : (item.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(item.date));
-    chips.push(chip('📍', `${(item.title || 'Planned').slice(0, 18)} · ${when}`, () => go('#calendar')));
-  }
-  // Trip spend used to have its own chip here too — dropped (Home chip consolidation): the
-  // new Quick access row's Budget chip (js/screens/home.js) is now the one place spend shows
-  // on Home, so it is not duplicated across Trip status and Quick access.
-  // offline / online — always real, tap toggles
-  const online = netMode() === 'online';
-  chips.push(chip(online ? '📶' : '✈️', online ? 'Online' : 'Offline', () => { setNetMode(online ? 'offline' : 'online'); render(); }));
-  return h('div', { class: 'card home-status', role: 'group', 'aria-label': 'Your trip at a glance' }, chips);
-}
+// homeStatusBand (trip countdown/day · next plan · spend · offline) used to live here as its
+// own card under a separate "Trip status" collapsible. Removed — Home chip merge follow-up:
+// Trip status and Quick access were two boxes both full of "chips about your trip," which was
+// itself a kind of duplication. Every one of its chips now lives in the single merged
+// quickAccessRow() (js/screens/home.js): the day-count folds into the Calendar chip, the
+// next-plan-item folds into Calendar's sub-label, and online/offline is its own chip there.
 
 // One-tap "spend" logger (extracted from the old daily strip) for the merged Right-now card.
 function quickSpendRow(id) {
@@ -10083,12 +10067,18 @@ export function budgetSummaryCard() {
   card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
 
   const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, spent > 0 ? Math.round(spent).toLocaleString() : '—', home) });
+  // Legend rows sort biggest-first and carry each category's share of total spend alongside
+  // its amount — "what percentage of spending is on each category," the fun/informative
+  // per-category stat requested for the budget section, right next to the donut it explains.
   const legend = h('div', { class: 'budget-legend' });
-  EXP_CATS.filter((c) => sums[c.id] > 0).forEach((c) => legend.append(h('div', { class: 'blg-row' }, [
-    h('span', { class: 'blg-dot', style: `background:${c.color}` }),
-    h('span', { class: 'blg-lbl' }, `${c.emoji} ${c.label}`),
-    h('span', { class: 'blg-val' }, `${Math.round(sums[c.id]).toLocaleString()} ${home}`),
-  ])));
+  EXP_CATS.filter((c) => sums[c.id] > 0).sort((a, b) => sums[b.id] - sums[a.id]).forEach((c) => {
+    const pct = spent > 0 ? Math.round(sums[c.id] / spent * 100) : 0;
+    legend.append(h('div', { class: 'blg-row' }, [
+      h('span', { class: 'blg-dot', style: `background:${c.color}` }),
+      h('span', { class: 'blg-lbl' }, `${c.emoji} ${c.label}`),
+      h('span', { class: 'blg-val' }, `${Math.round(sums[c.id]).toLocaleString()} ${home} · ${pct}%`),
+    ]));
+  });
   if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin:0' }, 'Log a few spends to see the breakdown.'));
   card.append(h('div', { class: 'budget-head' }, [donut, legend]));
 
