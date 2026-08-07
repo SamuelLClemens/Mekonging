@@ -290,7 +290,9 @@ function quickAccessRow(phase, stored, ctx) {
   // Online/offline used to be a fifth chip here too — moved to the shared topbar() (main.js),
   // next to Saved/Settings/Emergency, so it is reachable from every screen, not just Home.
 
-  const open = !!store.profile.prefs.quickAccessOpen;
+  // Open by default — it only ever collapses because the traveller closed it themselves
+  // (prefs.quickAccessOpen explicitly false); an unset/undefined pref still means "open".
+  const open = store.profile.prefs.quickAccessOpen !== false;
   const details = h('details', { class: 'home-group-d quick-access', open: open ? '' : null });
   details.addEventListener('toggle', () => { store.profile.prefs.quickAccessOpen = details.open; save(); });
   details.append(h('summary', { class: 'home-group' }, '⚡ Quick access'));

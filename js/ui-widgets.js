@@ -77,14 +77,18 @@ export function foldable(summary, body, opts = {}) {
 
 // Turn an existing .card node (whose FIRST child is its <h2> heading) into a collapsible card:
 // the heading becomes the <summary> and the rest becomes the body, so any hub card can be
-// minimised/expanded without rewriting its builder. Open/closed persists under prefs[key]
-// (defaults open). A node with no leading <h2> is returned unchanged.
-export function collapsibleCard(node, key) {
+// minimised/expanded without rewriting its builder. Open/closed persists under prefs[key] once
+// the traveller has actually toggled it; until then it falls back to `defaultOpen` (defaults to
+// true, matching every existing caller). Pass `key: null` for a fold with no persistence at all
+// (always just `defaultOpen`, e.g. Places' reference cards, which reset closed each visit by
+// design). A node with no leading <h2> is returned unchanged.
+export function collapsibleCard(node, key, defaultOpen = true) {
   if (!node) return null;
   const head = node.firstElementChild;
   if (!head || head.tagName !== 'H2') return node;
   const det = h('details', { class: (node.className || '') + ' foldcard' });
-  if (!key || store.profile.prefs[key] !== false) det.setAttribute('open', '');
+  const pref = key ? store.profile.prefs[key] : undefined;
+  if (pref === undefined ? defaultOpen : pref) det.setAttribute('open', '');
   det.append(h('summary', { class: 'foldcard-sum' }, head.textContent));
   head.remove();
   while (node.firstChild) det.append(node.firstChild);

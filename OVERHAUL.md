@@ -536,6 +536,18 @@ offline test repeated after every code change (forced Service Worker update, `mk
 confirmed in `caches.keys()`, dev server killed, hard-reloaded — full render from Cache
 Storage, chips and topbar icon both intact) — zero console errors throughout.
 
+#### Addendum 3 — Quick access defaults open, SHIPPED as mk-v0.352.0
+
+The Quick access `<details>` (`js/screens/home.js`) previously defaulted CLOSED on a fresh
+profile (`!!store.profile.prefs.quickAccessOpen` is `false` when the pref has never been set)
+and only opened once the traveller had expanded it at least once. Flipped to default OPEN —
+`store.profile.prefs.quickAccessOpen !== false` — so it now only ever collapses because the
+traveller closed it themselves; the existing `toggle` listener already persisted whichever
+state it was left in, so no other change was needed. Verified: cleared the pref directly on the
+live in-memory `store` (not just `localStorage` — see the Talk addendum below for why the
+distinction matters) and confirmed the fold rendered open on a fresh load; manually collapsing
+it persisted `false` and stayed collapsed across a reload.
+
 ### Explore — *spec complete, ready to build*
 
 **Theme:** *Where?* — discovery and inspiration. Interviewed 2026-08-06 against the real
@@ -932,6 +944,34 @@ RESULTS — groups open, ranked best-fitting first
   breaking anything, consistent with the project's own CDN/offline rule.
 - Places is now feature-complete against its acceptance criteria (1-8, section above).
 
+#### Addendum — map-first: bigger, never-collapsible, everything else folded closed, SHIPPED as mk-v0.352.0
+
+Three changes, all in `placesScreen()` (`js/main.js`): (1) the map's `<details>` wrapper is gone
+— it is now a plain `<div>`, always visible, never collapsible (the one section on this whole
+screen that is not a fold), and its CSS height went from 130px to 320px (420px from 700px
+viewport width up) so it reads as the actual focus rather than a strip above the real content.
+(2) Everything else on the screen now starts closed instead of open: the city-scoped "About"
+and "Right now" cards (new closed-by-default folds), the city picker (`collapsibleCard`'s
+`defaultOpen` param, now `false` here), "Closest to you", and every best-sort category group.
+(3) Because `renderList()` rebuilds the closest-card and category `<details>` on every
+filter/search keystroke, their open state is tracked in local per-visit variables
+(`closestOpen`, `openBuckets`) rather than re-derived from scratch each time — otherwise typing
+in the search box would silently re-collapse whatever the traveller had just opened. This is
+deliberately NOT persisted to `prefs` across a full navigation away and back (unlike Home's
+Quick access or Talk's categories) — Places' own ask was "collapsed by default," not "remembers
+across visits," so it resets closed the next time the screen is opened, matching two existing
+un-persisted folds already on this same screen ("Your places", "Colour key"). `collapsibleCard`
+(`js/ui-widgets.js`) gained the `defaultOpen` parameter itself, backward-compatible — its six
+existing Explore-hub callers are unaffected (`defaultOpen` defaults to `true`).
+
+**Verified:** map confirmed a `<div>` (not `<details>`), 320px tall, always visible with no
+disclosure control; on a fresh profile every fold (About, Right now, city picker, closest-to-
+you, all 7-8 category groups) confirmed closed; opening one, then typing in search, confirmed it
+does not silently re-collapse; true offline test — killed the dev server, hard-reloaded on
+`#places-th-chiang-mai` — map, folds and category chips all rendered from Cache Storage, only
+error was the expected benign "failed to update Service Worker" (network-dependent update check
+failing offline, not a real defect — documented pattern).
+
 ### Talk — *SHIPPED as mk-v0.347.0*
 
 **Theme:** *How do I say it?* — communication. Interviewed 2026-08-07 against the real screen,
@@ -1136,6 +1176,41 @@ render from Cache Storage, dropdown/dictionary button/Essentials chips all intac
 box correctly still absent (offline). Zero console errors throughout. Spot-checked Home and You
 after the shared `topbar()`/main.js edits — clean.
 
+#### Addendum 2 — every category (incl. Essentials) closed by default, SHIPPED as mk-v0.352.0
+
+Essentials previously had a hardcoded `open: ''`, and with no active search the single top-
+ranked category (by trip phase + time of day) auto-opened too. Both removed: every fold in
+`phrasebookScreen` now starts closed, tracked per-language via a new `talkCatOpen` pref
+(`{ 'th|food': true, … }`) so a category the traveller actually opens stays open — across a
+search, a pin/hide repaint, and a later visit to this screen. A live search still force-opens
+whichever categories match (otherwise the results would be invisible), but that alone must never
+count as "the traveller opened it" — closing the search should return to whatever was actually,
+manually opened, nothing more. This turned out to need a specific fix: the natural approach
+(persist on the `<details>` element's `toggle` event) is wrong, because setting the `open`
+attribute programmatically — exactly what a search force-open does — still fires a `toggle`
+event in this browser, which would have wrongly saved the search-driven state as if it were a
+real tap. Fixed by tracking a `click` listener on the `<summary>` instead (predicting the new
+state as `!details.open`, read before the browser's own default toggle action applies) — a real
+tap is the only thing that ever fires a summary click.
+
+**Verified**, and this surfaced a second, unrelated harness issue worth recording: editing
+`localStorage` directly while the app tab stays open does not reliably stick, because this
+project's `pagehide`/`beforeunload` autosave (`js/state.js`) flushes the tab's OWN in-memory
+`store` back over any external edit the instant that tab reloads or unloads — even a `reload()`
+called right after the edit loses it. `location.reload()` is a real navigation and fires exactly
+that unload handler on the OLD document before the new one loads. The reliable fix used here:
+`await import('/js/state.js')` from the page's own console context resolves to the SAME
+already-loaded module instance (browsers cache ES module instances per URL), so mutating
+`store.profile.prefs` directly and calling the exported `flushSaveNow()` edits the live object
+itself rather than racing it — confirmed this way that every category (Essentials included)
+starts closed on a clean profile, a manual click on Essentials persists and survives a reload,
+and a search match (typed via a native `input` event, not a raw `value` set, so the real
+`oninput` debounce path runs) opens a category WITHOUT persisting it — clearing the search
+returns every category to closed again. Also re-confirmed here: the Service Worker's own
+`CACHE_VERSION` must actually change for a `reg.update()`/reload to pick up new code at all —
+mid-session testing against the still-`mk-v0.351.0` cache silently ran stale (pre-fix) code
+until the version bump below made `caches.keys()` show `mk-v0.352.0`.
+
 ### You — *SHIPPED as mk-v0.348.0*
 
 **Theme:** *What is mine?* — the traveller's own record. Interviewed 2026-08-07 against the
@@ -1306,3 +1381,29 @@ Two stale-tab artifacts hit during this build (documented pattern in this projec
 occurrence.
 
 You is now feature-complete against its acceptance criteria.
+
+#### Addendum — resume section replaced with a fixed quick-access chip row, SHIPPED as mk-v0.352.0
+
+The Y2 "resume" button (one dynamic primary action picked by what had content, plus up to two
+smaller secondary chips for whatever else did) is gone from `meHubScreen` (`js/main.js`) —
+replaced with a fixed 8-chip row in the same `.status-chip` visual language as Home's Quick
+access: Calendar, My Dictionary, Budget, Journal, then Documents, My trip, Buy or sell and For
+you promoted to chips too (previously tile-only, inside the "Trip tools" fold below — which
+still exists unchanged, rank-collapse-never-remove: the tiles stay as a second path to the same
+six destinations already duplicated between Home and You). Calendar and Budget reuse Home's
+exact live logic verbatim (bare label pre-trip / `Day N` once started; plain spent total with no
+target, live percentage + green/yellow/red pace ring once one is set) rather than a simplified
+copy, so the two screens never show conflicting numbers for the same trip.
+
+**Verified:** fresh profile shows exactly the 8 chips, no `.me-resume` button anywhere in the
+DOM; Budget chip confirmed correctly bare (`Budget`) with no target set, then set a target live
+via the in-memory `store` (see the Talk addendum for the technique) and confirmed it promoted to
+`76% spent` with a `budget-yellow` ring, matching Home's own colour rule exactly. Screenshot
+confirmed the 2-column chip grid renders cleanly in both the populated and empty states. True
+offline test passed (see the Places addendum above — same session, same forced Service Worker
+update to `mk-v0.352.0`).
+
+**Ship note (mk-v0.352.0):** this version bump covers all four changes shipped together in this
+round — Home's Quick access default-open, Talk's default-closed categories, Places' map-first
+layout, and this chip row — one version, one commit, one verification pass across all four
+screens.

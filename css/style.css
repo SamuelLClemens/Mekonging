@@ -813,15 +813,14 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 [data-theme="dark"] .mk-style-toggle button + button { border-left-color: rgba(255,255,255,0.15); }
 [data-theme="dark"] .mk-style-toggle button[aria-pressed="true"] { background: var(--teal); }
 
-/* The living map at the top of Places: a minimise/maximise disclosure holding the map, its
-   layer chips and the mode/back control. */
+/* The living map at the top of Places — the one section on the whole screen that is never
+   collapsible, drawn big since it is the focus. Its layer chips and the mode/back control sit
+   right below it. */
 .places-map-section { margin: 4px 0 8px; }
-.places-map-section > summary { list-style: none; cursor: pointer; display: flex; align-items: center;
-  justify-content: space-between; gap: var(--sp-2); padding: var(--sp-2) 0; margin: 0; font-weight: 800; color: var(--ink); }
-.places-map-section > summary::-webkit-details-marker { display: none; }
-.places-map-section > summary::after { content: '⌄'; font-size: 1.1rem; color: var(--ink-soft); transition: transform var(--dur) var(--ease); }
-.places-map-section[open] > summary::after { transform: rotate(180deg); }
-.places-map-section .places-map { height: 130px; border-radius: 16px; overflow: hidden; position: relative; }
+.places-map-section > .places-map-head { display: flex; align-items: center;
+  padding: var(--sp-2) 0; margin: 0; font-weight: 800; color: var(--ink); }
+.places-map-section .places-map { height: 320px; border-radius: 16px; overflow: hidden; position: relative; }
+@media (min-width: 700px) { .places-map-section .places-map { height: 420px; } }
 .layer-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .layer-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--card);
   color: var(--ink); border-radius: var(--r-pill); padding: 4px 10px; font-weight: 700; font-size: var(--fs-sm); cursor: pointer; }
