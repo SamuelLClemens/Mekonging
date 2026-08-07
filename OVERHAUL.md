@@ -653,6 +653,163 @@ route graph. **True offline test**: killed the dev server, hard-reloaded on `#co
 🆘, signature sights, and all four new discovery sections rendered from Service Worker
 Cache Storage alone, zero console errors.
 
-### Places — *pending*
+### Places — *spec complete, ready to build*
+
+**Theme:** *Which one?* — concrete choices. Interviewed 2026-08-07 against the real screen,
+measured in the browser rather than read from source.
+
+#### What the interview found on the live screen
+
+Measured on `#places` (Thailand, default state, 720px viewport, 2,244px document):
+
+- **Zero places are visible anywhere on the screen.** All eight `place-cat-group` folds
+  render `open: false`. The first place row sits at **1,568px** — 2.2 viewport heights — and
+  even scrolling there shows only closed summaries. The section whose entire job is
+  "which one?" answers with nothing.
+- **Filtering does not rescue it.** Tapping the **Food** layer chip correctly narrowed the
+  map to 23 pins and the list to one group — *still collapsed*, at 1,553px. The traveller
+  does the work of choosing and is shown no places at all.
+- **~785px of chrome sits between the map and the list**: the GPS empty-state card (139px),
+  the city picker open by default (511px), "Add a place" (48px), "Filters" (48px),
+  "Colour key" (39px).
+- **The caption overstates the list.** `cap` reads "214 on the map — numbers match the
+  list", but `renderList()` caps each group at `CAP = 5` behind a "Show all N" expander.
+  The *numbering* matches; the list does not contain 214 rows.
+- **Category-filter state is invisible where it is acted on.** `countFilters()` (4180) counts
+  only the sheet's filters, never `selLayers`. With Food-only active the button still read
+  plain "⚙ Filters"; the sole indicator was a layer chip ~1,300px above. `prefs.placesLayers`
+  persists, so the filter silently followed navigation into `#places-th-chiang-mai`.
+- **The ranking already exists and is hidden.** `computeResults()` (4231) already sorts by
+  `personalScore()` when a profile is set. The app knows which place fits this traveller —
+  and buries that answer inside a collapsed accordion.
+
+What is already good and must not regress: pin↔row shared numbering (`_num`, 4244), genuine
+map/list sync through the single `computeResults()` path, the `contextNow()` "Right now" card
+on city views, `cityAboutCard` + `cityEssentials` scoping, and the quick-view row itself —
+rating, real `priceRange` with conversion, `budgetTier`, traveller chips, photo, blurb, Save
+and Full details. The per-place content is strong; only the path to it is broken.
+
+#### Decisions (interview round 4)
+
+- **Map stays first; the list moves directly beneath it, with every category group open.**
+  (User's choice, option 3.) The accordion-of-closed-folds is removed. Rows stay collapsed
+  quick-views — a scannable one-line result each — so "open" means the *groups*, not the rows.
+- **Category groups are ranked, best-fitting first.** (User's choice, option 2, layered on
+  top of the above.) Order comes from `inferPhase()` and `contextNow().part`, never from a
+  fixed list. Nothing is removed — every bucket still renders, in its ranked position.
+- **Build the compare tray.** (User's choice.) The section theme is "filter, compare,
+  decide" and there is no compare affordance at all today.
+- **Add a Places-scoped search**, not the global one — scope to the current country/city is
+  the point.
+- **Everything demoted moves below the list, nothing is deleted** (house rule: rank,
+  collapse, never remove). City picker, add-a-place, your-places and colour key sink below
+  the results. The Filters button stays directly above the list, since it acts on the list
+  and opens a sheet rather than pushing content down.
+
+#### Data — all comparable fields already exist, nothing to source
+
+| Compare column | Field | Status |
+|---|---|---|
+| Distance | `p.coords` + `getLastFix()` via `haversineKm` | real, GPS-dependent |
+| Rating | `p.rating` | real |
+| Price | `p.priceRange {low, high, currency}` via `priceLine()` | real |
+| Budget tier | `p.budgetTier` | real |
+| Good for kids | `p.kidFriendly` | real |
+| Step-free | `p.access.stepFree` | real, sparse |
+| City | `p.city` | real |
+
+#### Target structure
+
+```
+topbar · country chips · one-time hint
+[city scope: chips · About · Right now · essentials]
+🗺 Map  (details, persisted open state — modeBar, layer chips, canvas, caption)
+closest-to-you   (collapses to ONE line when no GPS fix)
+🔎 search box  ·  active-filter pills (✕)  ·  ⚙ Filters · N on
+RESULTS — groups open, ranked best-fitting first
+  🍜 Food · 23        [5 rows + "Show all 23"]
+  🏛 Culture · 37     [5 rows + "Show all 37"]
+  ...
+[compare tray docks at the bottom once 2+ places are ticked]
+--- below the results ---
+🗺 Choose a city  ·  ➕ Add a place  ·  📌 Your places  ·  🎨 Colour key  ·  Full map
+```
+
+#### Build slices
+
+- **P1 — Reorder.** Move `listEl` and its controls directly beneath `closestSlot`; push city
+  picker, add-a-place, your-places and colour key below it. Collapse the GPS empty state to
+  one line. Trim the map canvas so the first result clears the fold on a 720px viewport
+  (isolated CSS change, trivially revertible).
+- **P2 — Open + rank the groups.** Render each `place-cat-group` open. Replace the fixed
+  `PLACE_BUCKETS` iteration order in `renderList()` with a ranked order from `inferPhase()`
+  + `contextNow().part`. Buckets absent from the ranking keep their existing relative order.
+- **P3 — Filter honesty.** Count `selLayers` into `countFilters()`; render active-filter
+  pills with ✕ directly above the list; fix the caption to state what the list actually
+  shows.
+- **P4 — Search.** Filter-as-you-type box feeding `computeResults()`, so map, caption,
+  numbering and list all narrow through the one existing path. Not persisted — a search is a
+  momentary act, unlike a filter.
+- **P5 — Compare tray.** Tick control on each quick row; a docked tray comparing 2–3 places
+  across the table above; clear + open-detail actions. Selection is per-visit, not persisted.
+- **P6 — Verify + ship.** All four countries, a city-scoped view, a GPS-on run, an offline
+  run, then bump `APP_VERSION` + `CACHE_VERSION` and merge.
+
+#### Acceptance criteria
+
+1. On a cold `#places` at 720px, **at least one real place row is visible without scrolling**,
+   and every category group is open.
+2. Selecting a single category chip shows that category's places immediately — no fold to open.
+3. Any active category filter is visible within the results area, and clearable there.
+4. The caption never claims more rows than the list contains.
+5. Typing in search narrows the map, the caption and the list together, with numbering intact.
+6. Two ticked places produce a side-by-side comparison of real fields, no invented data.
+7. Nothing is removed: city picker, add-a-place, your-places and colour key all still reachable.
+8. Full offline render, zero console errors, on every country.
+
+#### P1–P3 build notes — SHIPPED as mk-v0.345.0
+
+- **P1 reorder**: `listEl` and its controls (search slot, filter pills, Filters button) now sit
+  directly beneath `closestSlot`. City picker, add-a-place, your-places and colour key all moved
+  below the results — nothing removed, all still one tap away. The GPS "closest to you" empty
+  state collapsed from a ~140px card (heading + paragraph + full-width button) to a single chip
+  row. The living map's canvas (`.places-map`) was trimmed from 340px to 130px so a real place
+  row clears the fold on a cold 720px load — a genuine trade-off, not a hidden one: on the
+  literal first-ever visit, with the one-time hint still showing, ~8px of the first row peeks
+  above the fold rather than a full row; the hint is dismissed permanently after one tap, and
+  every visit after that clears the fold with room to spare. Shrinking the map further to
+  guarantee the cold case too was rejected — a map that small stops being a usable interactive
+  element, and the section already has a dedicated "Full map" screen for serious map use.
+- **P2 rank + open**: added `rankedPlaceBuckets(phase, part)` — scores each of the 8 category
+  buckets against `inferPhase()`/`store.profile.prefs.phase` and `contextNow().part`, stable-sorts
+  `PLACE_BUCKETS` by that score so ties keep today's original order. Every `place-cat-group` now
+  renders `open`. Verified live: phase `traveling` → Food, Culture, Nature, Markets, Stay,
+  Nightlife, Rentals, More; switching to `planning` (verified via a live re-render, not a page
+  reload — see note below) → Culture, Nature, Stay, Food, Markets, Nightlife, Rentals, More,
+  exactly matching the hand-computed scores. Nothing is hidden — only reordered.
+- **P3 filter honesty**: `countFilters()` now counts `selLayers` (previously silently excluded),
+  so an active category filter shows on the Filters button ("⚙ Filters · 1 on") instead of
+  reading as if nothing were applied. Added a pills row directly above the results listing every
+  active filter (layer, interest, budget, kids, step-free, stay type/duration); each pill's ✕
+  clears by clicking the exact source control it mirrors (`layerChipsRow`/`interestChips`/
+  `budgetChips`/etc. via `dataset` lookups), so pill and chip state can never drift apart. The
+  map caption no longer overstates: "214 on the map — numbers match the list" (implying 214 rows
+  were on screen) became "214 places match — same numbers on the map and in the list."
+- **Found during verification, not a code regression**: navigating a fresh dev-reload straight to
+  a phase change showed the OLD ranking despite the store already reading the new phase value —
+  traced to the pre-existing IndexedDB store-mirror restore racing the first render on a hard
+  page reload, unrelated to anything touched this slice. Re-tested by changing phase and
+  triggering a live re-render (clicking a filter chip) without reloading, which confirmed the
+  ranking logic itself is correct and fully reactive. Not fixed here — pre-existing app
+  bootstrap behaviour, out of scope for a Places slice.
+- **Verified**: all four countries (Thailand, Vietnam, Cambodia, Laos) render clean with the new
+  layout, ranked-open groups and honest captions; a city-scoped view (`#places-th-chiang-mai`)
+  keeps add-a-place/colour-key reachable and correctly omits the city picker (already scoped);
+  filter-pill add/clear round-tripped correctly through the Filters button, the layer chip's
+  `aria-pressed` state, and back to all 8 groups. True offline test: killed the dev server, hard
+  reloaded on `#places` — 🆘, the map, all 8 ranked-open groups and the honest caption rendered
+  from Service Worker Cache Storage alone, zero console errors.
+- **Not yet built**: P4 (scoped search) and P5 (compare tray) — next.
+
 ### Talk — *pending*
 ### You — *pending*

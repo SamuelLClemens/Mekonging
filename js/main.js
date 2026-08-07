@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.344.0';
+const APP_VERSION = 'mk-v0.345.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3952,14 +3952,11 @@ function closestPlacesCard(cc, scopeSlug, numFor, poolSource) {
   const fix = getLastFix();
   if (!fix) {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
-    const card = h('div', { class: 'card closest-prompt' }, [
-      h('strong', {}, '📍 See what’s closest to you'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn on location and the nearest places rise to the top. It stays on your device.'),
-    ]);
-    const btn = h('button', { class: 'btn block' }, '📍 Use my location');
+    // Collapsed to one row (was a full card) — a quiet, single-line invitation rather than
+    // ~140px standing between the traveller and the results below.
+    const btn = h('button', { class: 'chip', style: 'margin:2px 0 4px' }, '📍 Turn on location — see what’s closest');
     btn.onclick = async () => { btn.textContent = 'Locating…'; try { setLastFix(await geolocate()); render(); } catch { btn.textContent = '📍 Location unavailable'; } };
-    card.append(btn);
-    return card;
+    return btn;
   }
   let pool = (Array.isArray(poolSource) ? poolSource : allPlaces({ country: cc })).filter((p) => p.coords);
   if (scopeSlug) pool = pool.filter((p) => citySlug(p.city || '') === scopeSlug);
@@ -4027,24 +4024,6 @@ function placesScreen(arg) {
   wrap.append(mapSection);
   const closestSlot = h('div', { class: 'closest-slot' });
   wrap.append(closestSlot);
-  // Country level (no city chosen yet): drill down by city — tap a city and just its
-  // places show, grouped into the collapsible category sections below.
-  if (!scopeSlug) { const cp = cityPickerCard(getActiveCountry()); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen')); }
-
-  // Your own places live alongside the curated ones: add a location, then rate, review and
-  // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0', onclick: () => go('#addpin') }, '➕ Add a place of your own'));
-  if ((store.pins || []).length) {
-    const yp = h('details', { class: 'filters-collapse' }, [h('summary', {}, `📌 Your places · ${store.pins.length}`)]);
-    store.pins.forEach((pin) => {
-      const pd = getPlaceData(pin.id);
-      const kind = (pin.tags && pin.tags[0]) ? titleCase(pin.tags[0]) : 'Place';
-      const meta = [kind, pd.rating ? starsStr(pd.rating) : null, (placePhotoKeys(pin.id).length ? `📷 ${placePhotoKeys(pin.id).length}` : null)].filter(Boolean).join(' · ');
-      yp.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) },
-        `📌 ${pin.name} — ${meta}`));
-    });
-    wrap.append(yp);
-  }
 
   // interest filters (seeded from saved prefs the first time)
   const prefs = store.profile.prefs;
@@ -4056,7 +4035,7 @@ function placesScreen(arg) {
 
   const interestChips = h('div', { class: 'chips' }, INTERESTS.map((it) =>
     h('button', {
-      class: 'chip', 'aria-pressed': selInterests.has(it.id) ? 'true' : 'false',
+      class: 'chip', 'aria-pressed': selInterests.has(it.id) ? 'true' : 'false', dataset: { it: it.id },
       onclick: (e) => {
         if (selInterests.has(it.id)) selInterests.delete(it.id); else selInterests.add(it.id);
         e.currentTarget.setAttribute('aria-pressed', selInterests.has(it.id) ? 'true' : 'false');
@@ -4100,13 +4079,16 @@ function placesScreen(arg) {
   // Stay filters appear only when this country has accommodation tagged, so the UI
   // stays clean until stays exist for a country (remembered in prefs).
   const hasStays = allPlaces({ country: getActiveCountry() }).some((p) => p.stayType);
+  // Declared outside the `if` so the active-filter pills below (built once, regardless of
+  // whether this country has stays) can still look up their labels and "clear" targets.
+  const stayTypes = [['any', 'Any'], ['tent', '⛺ Camp'], ['hostel', 'Hostel'], ['guesthouse', 'Guesthouse'], ['homestay', 'Homestay'], ['hotel', 'Hotel'], ['resort', 'Resort'], ['apartment', 'Apartment']];
+  const stayDurs = [['any', 'Any length'], ['short', 'Short stay'], ['long', 'Long stay']];
+  let stayTypeChips = null, stayDurChips = null;
   if (hasStays) {
-    const stayTypes = [['any', 'Any'], ['tent', '⛺ Camp'], ['hostel', 'Hostel'], ['guesthouse', 'Guesthouse'], ['homestay', 'Homestay'], ['hotel', 'Hotel'], ['resort', 'Resort'], ['apartment', 'Apartment']];
-    const stayTypeChips = h('div', { class: 'chips' }, stayTypes.map(([id, lbl]) =>
+    stayTypeChips = h('div', { class: 'chips' }, stayTypes.map(([id, lbl]) =>
       h('button', { class: 'chip', 'aria-pressed': selStayType === id ? 'true' : 'false', dataset: { s: id },
         onclick: (e) => { selStayType = id; stayTypeChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.s === id ? 'true' : 'false')); prefs.stayType = id; save(); renderList(); } }, lbl)));
-    const stayDurs = [['any', 'Any length'], ['short', 'Short stay'], ['long', 'Long stay']];
-    const stayDurChips = h('div', { class: 'chips' }, stayDurs.map(([id, lbl]) =>
+    stayDurChips = h('div', { class: 'chips' }, stayDurs.map(([id, lbl]) =>
       h('button', { class: 'chip', 'aria-pressed': selStayDur === id ? 'true' : 'false', dataset: { d: id },
         onclick: (e) => { selStayDur = id; stayDurChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.d === id ? 'true' : 'false')); prefs.stayDuration = id; save(); renderList(); } }, lbl)));
     filterCard.append(h('div', { class: 'muted' }, 'Where to stay'), stayTypeChips, stayDurChips);
@@ -4149,7 +4131,7 @@ function placesScreen(arg) {
       const on = selLayers.has(key);
       const color = BUCKET_COLOR[key] || BUCKET_COLOR.other;
       layerChipsRow.append(h('button', {
-        class: 'layer-chip', 'aria-pressed': on ? 'true' : 'false',
+        class: 'layer-chip', 'aria-pressed': on ? 'true' : 'false', dataset: { layer: key },
         style: on ? `background:${color};border-color:transparent` : '',
         onclick: () => { if (selLayers.has(key)) selLayers.delete(key); else selLayers.add(key); prefs.placesLayers = [...selLayers]; save(); buildLayerChips(); renderList(); },
       }, [h('span', { class: 'layer-dot', style: `background:${color}` }), label.replace(/^\S+\s/, '')]));
@@ -4174,10 +4156,13 @@ function placesScreen(arg) {
 
   // Results-first: the filter rows collapse into one tap so places show immediately
   // instead of being pushed below ~5 rows of chips. The summary shows how many filters
-  // are active, so a returning traveller still sees their choices are applied.
+  // are active, so a returning traveller still sees their choices are applied. Category
+  // LAYERS count here too — before this, an active layer filter (set via the chips above
+  // the map) was invisible everywhere near the results, and silently followed navigation
+  // into a scoped city view.
   // Filters live in a spring-up bottom sheet so the results stay on top and the controls are
   // one tap away, rather than pushing the list down. The count on the button re-reads live.
-  const countFilters = () => selInterests.size + (selBudget !== 'flexible' ? 1 : 0)
+  const countFilters = () => selLayers.size + selInterests.size + (selBudget !== 'flexible' ? 1 : 0)
     + (selKids ? 1 : 0) + (selStepFree ? 1 : 0)
     + (selStayType !== 'any' ? 1 : 0) + (selStayDur !== 'any' ? 1 : 0);
   const filterLabel = () => (countFilters() ? `⚙ Filters · ${countFilters()} on` : '⚙ Filters');
@@ -4194,14 +4179,68 @@ function placesScreen(arg) {
     backdrop.append(sheet);
     document.body.append(backdrop);
   };
+
+  // Active-filter pills sit directly above the results — every filter clears from here,
+  // by triggering the exact control it mirrors (same click handler, no duplicated logic),
+  // so state can never drift between a pill and its source chip.
+  const pillsRow = h('div', { class: 'chips', style: 'margin:2px 0 4px' });
+  function renderActivePills() {
+    pillsRow.innerHTML = '';
+    const pill = (label, onClear) => h('button', { class: 'chip', 'aria-pressed': 'true', onclick: onClear }, [label, ' ✕']);
+    selLayers.forEach((key) => {
+      const b = PLACE_BUCKETS.find((x) => x[0] === key);
+      if (b) pillsRow.append(pill(b[1].replace(/^\S+\s/, ''), () => layerChipsRow.querySelector(`[data-layer="${key}"]`)?.click()));
+    });
+    selInterests.forEach((id) => {
+      const it = INTERESTS.find((x) => x.id === id);
+      if (it) pillsRow.append(pill(`${it.emoji} ${it.label}`, () => interestChips.querySelector(`[data-it="${id}"]`)?.click()));
+    });
+    if (selBudget !== 'flexible') {
+      const b = budgets.find(([id]) => id === selBudget);
+      pillsRow.append(pill(b ? b[1] : selBudget, () => budgetChips.querySelector('[data-b="flexible"]')?.click()));
+    }
+    if (selKids) pillsRow.append(pill('👨‍👩‍👧 Kids OK', () => kidsChip.click()));
+    if (selStepFree) pillsRow.append(pill('♿ Step-free', () => stepFreeChip && stepFreeChip.click()));
+    if (selStayType !== 'any') {
+      const s = stayTypes.find(([id]) => id === selStayType);
+      pillsRow.append(pill(s ? s[1] : selStayType, () => stayTypeChips && stayTypeChips.querySelector('[data-s="any"]')?.click()));
+    }
+    if (selStayDur !== 'any') {
+      const d = stayDurs.find(([id]) => id === selStayDur);
+      pillsRow.append(pill(d ? d[1] : selStayDur, () => stayDurChips && stayDurChips.querySelector('[data-d="any"]')?.click()));
+    }
+    pillsRow.style.display = pillsRow.children.length ? '' : 'none';
+  }
+  wrap.append(pillsRow);
   wrap.append(filterBtn);
+
+  const listEl = h('div', {});
+  wrap.append(listEl);
+
+  // Everything below here is reference material, not results — rank/collapse/never-remove:
+  // still one tap away, just no longer standing between the traveller and a real place.
+  // Country level (no city chosen yet): drill down by city — tap a city and just its
+  // places show, grouped into the collapsible category sections above.
+  if (!scopeSlug) { const cp = cityPickerCard(getActiveCountry()); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen')); }
+
+  // Your own places live alongside the curated ones: add a location, then rate, review and
+  // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0', onclick: () => go('#addpin') }, '➕ Add a place of your own'));
+  if ((store.pins || []).length) {
+    const yp = h('details', { class: 'filters-collapse' }, [h('summary', {}, `📌 Your places · ${store.pins.length}`)]);
+    store.pins.forEach((pin) => {
+      const pd = getPlaceData(pin.id);
+      const kind = (pin.tags && pin.tags[0]) ? titleCase(pin.tags[0]) : 'Place';
+      const meta = [kind, pd.rating ? starsStr(pd.rating) : null, (placePhotoKeys(pin.id).length ? `📷 ${placePhotoKeys(pin.id).length}` : null)].filter(Boolean).join(' · ');
+      yp.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) },
+        `📌 ${pin.name} — ${meta}`));
+    });
+    wrap.append(yp);
+  }
   wrap.append(h('details', { class: 'filters-collapse' }, [
     h('summary', {}, '🎨 Colour key'),
     colorKeyCard(),
   ]));
-
-  const listEl = h('div', {});
-  wrap.append(listEl);
   // A link to the full offline map (GPS, extra layers, saved offline areas, measure).
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin:8px 0 2px', onclick: () => go('#map') },
     [chipIcon('map'), ' Full map — offline areas, layers & measure']));
@@ -4244,9 +4283,15 @@ function placesScreen(arg) {
     ml.forEach((p, i) => { p._num = i + 1; });
     const numFor = (id) => { const hit = ml.find((p) => p.id === id); return hit ? hit._num : null; };
     const mine = userMapPins().length;
+    // Honest about what the list actually contains: each category caps at 5 rows behind a
+    // "Show all" expander, so the count below is real places matched — not a claim that all
+    // of them are already on screen as rows. The shared numbering IS exact, so that much
+    // stands: the same number always means the same place on both the map and the list.
     cap.textContent = ml.length
-      ? `${ml.length} on the map${mine ? ` (incl. ${mine} of yours)` : ''}${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — numbers match the list`
+      ? `${ml.length} place${ml.length === 1 ? '' : 's'} match${mine ? ` (incl. ${mine} of yours)` : ''}${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — same numbers on the map and in the list`
       : '';
+    filterBtn.textContent = filterLabel();
+    renderActivePills();
     if (placesCtrl) placesCtrl.setPlaces(ml);
     // "Closest to you" — the nearest few of the CURRENTLY shown (filtered) places, same numbers.
     closestSlot.innerHTML = '';
@@ -4273,15 +4318,19 @@ function placesScreen(arg) {
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
-      // Group by category, each a COLLAPSIBLE section (minimised until the traveller opens
-      // it), so the screen reads as a short menu — Food, Markets, Stay… — instead of one long
-      // scroll. Inside each, closest-to-you first when a location fix is known.
+      // Group by category — every group OPEN (rank/collapse/never-remove applies to ORDER
+      // here, not visibility, since "which one?" fails if a real place is never on screen).
+      // Groups are ranked so the ones fitting this trip phase and time of day lead; nothing
+      // is removed or hidden, only reordered. Inside each, closest-to-you first when a
+      // location fix is known.
       const groups = {};
       currentResults.forEach((p) => { const b = placeBucket(p); (groups[b] = groups[b] || []).push(p); });
       const fix = getLastFix();
       const byNear = (a, b) => (a.coords ? haversineKm(fix, a.coords) : Infinity) - (b.coords ? haversineKm(fix, b.coords) : Infinity);
       const CAP = 5;
-      PLACE_BUCKETS.forEach(([key, label]) => {
+      const phase = store.profile.prefs.phase || inferPhase();
+      const part = contextNow().part;
+      rankedPlaceBuckets(phase, part).forEach(([key, label]) => {
         let arr = groups[key];
         if (!arr || !arr.length) return;
         if (fix) arr = arr.slice().sort(byNear);
@@ -4289,7 +4338,7 @@ function placesScreen(arg) {
         arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, p._num)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
-        listEl.append(h('details', { class: 'place-cat-group', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
+        listEl.append(h('details', { class: 'place-cat-group', open: '', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
           h('summary', { class: 'place-cat-summary' }, `${label} · ${arr.length}`),
           body,
         ]));
@@ -4431,6 +4480,24 @@ const BUCKET_COLOR = {
   food: '#E8632A', market: '#E0A100', stay: '#2C7DA0', culture: '#8A5CC0',
   nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
 };
+
+// Rank/collapse/never-remove applied to Places' category groups: every bucket still
+// renders, but the ones that fit the traveller's trip phase and time of day sit first.
+// A stable sort keeps ties in PLACE_BUCKETS' original order, so an untouched phase/time
+// combination reproduces today's order exactly.
+function rankedPlaceBuckets(phase, part) {
+  const fit = (key) => {
+    let s = 0;
+    if (phase === 'planning') { if (key === 'culture' || key === 'nature') s += 3; if (key === 'stay') s += 2; }
+    else if (phase === 'arrived') { if (key === 'food' || key === 'stay' || key === 'rental') s += 3; }
+    else if (phase === 'traveling') { if (key === 'food' || key === 'culture' || key === 'nature') s += 3; if (key === 'market') s += 2; }
+    if ((part === 'morning' || part === 'earlyMorning') && (key === 'food' || key === 'market')) s += 2;
+    if ((part === 'midday' || part === 'afternoon') && (key === 'culture' || key === 'nature')) s += 2;
+    if ((part === 'evening' || part === 'night') && (key === 'food' || key === 'nightlife')) s += 2;
+    return s;
+  };
+  return PLACE_BUCKETS.slice().sort((a, b) => fit(b[0]) - fit(a[0]));
+}
 function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
 
 // A category chip coloured by its family, with the family name as a tooltip.

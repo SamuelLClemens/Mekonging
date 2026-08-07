@@ -785,7 +785,7 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .places-map-section > summary::-webkit-details-marker { display: none; }
 .places-map-section > summary::after { content: '⌄'; font-size: 1.1rem; color: var(--ink-soft); transition: transform var(--dur) var(--ease); }
 .places-map-section[open] > summary::after { transform: rotate(180deg); }
-.places-map-section .places-map { height: 340px; border-radius: 16px; overflow: hidden; position: relative; }
+.places-map-section .places-map { height: 130px; border-radius: 16px; overflow: hidden; position: relative; }
 .layer-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .layer-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--card);
   color: var(--ink); border-radius: var(--r-pill); padding: 4px 10px; font-weight: 700; font-size: var(--fs-sm); cursor: pointer; }
