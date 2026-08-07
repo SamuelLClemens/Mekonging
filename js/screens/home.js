@@ -8,13 +8,21 @@
 // cell either carries a real value or is simply absent (rank-collapse-never-remove — nothing
 // is deleted from navigation, an empty cell just does not draw until it has something to say).
 //
+// Chip consolidation pass: the old situation line (weather · spend today · next stop, ground
+// phases only) and the separate budget donut card are both gone. In their place, a single
+// "Quick access" row — quickAccessRow() below — carries Calendar / Budget / Weather (or
+// Scrapbook, post phase) / Journal in every phase, collapsible in its own right and separate
+// from the Trip status collapsible above it (which keeps its phase switcher, day countdown,
+// next-plan-item and online/offline chips — only its trip-spend chip moved, so budget shows
+// exactly once on Home instead of three times).
+//
 // This is also the Great Split's proof case (OVERHAUL.md section 9, F2): most of Home's own
-// helpers (phaseSwitchRow, homeStageBlock, ensureHomeWeather, budgetSummaryCard, topbar,
-// cityAboutCard, etc.) still live in main.js — exported from there and imported back here via
-// a circular import, safe because every one is only read inside a function body, never at
-// module-evaluation time. New Home-specific logic introduced by this rebuild (the trip status
-// row, the situation line, the next-stop card) is written directly in this file instead,
-// since it belongs to Home alone.
+// helpers (phaseSwitchRow, homeStageBlock, ensureHomeWeather, topbar, cityAboutCard, etc.)
+// still live in main.js — exported from there and imported back here via a circular import,
+// safe because every one is only read inside a function body, never at module-evaluation
+// time. New Home-specific logic introduced by this rebuild (the trip status row, the quick
+// access row, the next-stop card) is written directly in this file instead, since it belongs
+// to Home alone.
 
 import { store, save, unreadInboxCount } from '../state.js';
 import { h } from '../util.js';
@@ -22,13 +30,12 @@ import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../d
 import { getActiveCountry } from '../app-state.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp } from '../render-utils.js';
-import { convert } from '../currency.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import {
   go, mount, topbar, ICON, contextNow, setupRecapCard, maybeOfferTour,
   inferPhase, focusSpot, phaseSwitchRow, homeStatusBand, homeStageBlock,
-  ensureHomeWeather, budgetSummaryCard, idPinCount, sectionTile,
-  citySlug, cityAboutCard, todayISO, addDaysISO, daysUntilISO, budgetTarget, tripSpanDays, homeCurrency,
+  ensureHomeWeather, idPinCount, sectionTile, nextPlanItem, evShort, tripSpendHome,
+  citySlug, cityAboutCard, todayISO, addDaysISO,
 } from '../main.js';
 
 const PHASE_META = {
@@ -83,14 +90,10 @@ export function homeScreen() {
   // chip simply does not render until it has a real value (see homeStatusBand in main.js).
   wrap.append(tripStatusRow(phase, storedPhase, leadCC));
 
-  // H3 — situation line: right-now weather, spend TODAY (not the trip total — that is the
-  // status row's job), and a next-stop nudge. Ground phases only; a traveller still planning
-  // or looking back has no "right now" to report.
+  // H3 — Quick access: Calendar / Budget / Weather (Scrapbook, post) / Journal, every phase —
+  // see quickAccessRow() below. Its own collapsible, separate from Trip status above it.
   const ctx = contextNow();
-  if (onGround) {
-    const line = situationLine(ctx, leadCC);
-    if (line) wrap.append(line);
-  }
+  wrap.append(quickAccessRow(phase, ctx));
 
   // One stage-appropriate situational block. Planning gets a forward-looking outlook +
   // countdown + checklist hub (no near-me); arrived/travelling get the live, forecast-aware
@@ -122,18 +125,9 @@ export function homeScreen() {
     ensureHomeWeather(phaseSpot);
   }
 
-  // Budget at a glance, right on Home: the by-category pie against the total the traveller
-  // sets, plus spend-vs-budget and a one-tap "set a budget". Returns null until there is a
-  // spend or a target, so a fresh Home stays uncluttered; tapping through opens the full log.
-  {
-    const bc = budgetSummaryCard();
-    if (bc) {
-      bc.style.marginTop = '10px';
-      bc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#expenses') },
-        store.trip.budgetLog.length ? 'Log expense & see all →' : 'Log your first expense →'));
-      wrap.append(bc);
-    }
-  }
+  // The by-category budget donut used to render here too — dropped as a duplicated CARD (Home
+  // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
+  // Budget chip above, still one tap from the full breakdown on #expenses.
 
   // Search everything.
   wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
@@ -231,58 +225,68 @@ function tripStatusRow(phase, stored, cc) {
   return details;
 }
 
-// H3 — right-now weather (not a forecast — what it is doing now, and whether rain is likely
-// today), spend TODAY against today's daily allowance (derived from a per-day cap, or a
-// per-trip cap divided across the known trip length), and a plain-text next-stop nudge that
-// needs no route data (the fuller H4 card below adds real transport options when they exist).
-// Each cell renders only with a real value; the whole line is omitted if nothing applies.
-function situationLine(ctx, cc) {
-  const cells = [spendTodayCell(), nextStopCell(), weatherCell(ctx)].filter(Boolean);
-  if (!cells.length) return null;
-  return h('div', { class: 'card home-status situation-line', role: 'group', 'aria-label': 'Right now' },
-    cells.map((c) => h('button', { class: 'status-chip', onclick: c.onclick },
-      [h('span', { class: 'status-ic' }, c.ic), h('span', { class: 'status-lbl' }, c.label)])));
-}
+// H3 — Quick access: four phase-appropriate shortcut chips, each carrying a live value when
+// one exists (never a placeholder — a chip with nothing to say just shows its bare label).
+// Every phase gets Calendar and Budget; Weather fills the third slot in planning/arrived/
+// traveling (post has nothing "right now" to report weather-wise) and Scrapbook takes that
+// slot in post instead, matching the trip's own arc. Journal is always last. This is the one
+// place spend shows on Home now — Trip status above it dropped its own spend chip, and the
+// standalone budget donut card is gone — so budget shows exactly once, not three times.
+function quickAccessRow(phase, ctx) {
+  const chip = (ic, label, sub, hash) => h('button', { class: 'status-chip', onclick: () => go(hash) },
+    [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
 
-function weatherCell(ctx) {
-  if (!ctx.wx || ctx.wx.temp == null) return null;
-  const temp = fmtTemp(ctx.wx.temp);
-  if (!temp) return null;
-  let rainNote = '';
-  const spot = ctx.near ? ctx.near.spot : null;
-  if (spot) {
-    const rec = getCachedWeather(spotKey(spot));
-    const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;
-    if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${today.rainProb}%`;
+  // Calendar — next plan item's timing only (title + full detail already lives in Trip
+  // status's own 📍 chip just above; repeating the title here would be pure duplication).
+  const calItem = nextPlanItem();
+  let calSub = null;
+  if (calItem) {
+    const t = todayISO();
+    calSub = calItem.date === t ? 'Today' : (calItem.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(calItem.date));
   }
-  const emoji = (wmo(ctx.wx.code) || [])[1] || '🌤';
-  return { ic: emoji, label: `${temp}${rainNote}`, onclick: () => go('#weather') };
-}
 
-function spendTodayCell() {
-  const home = homeCurrency();
-  const t = todayISO();
-  let sum = 0, any = false, allKnown = true;
-  (store.trip.budgetLog || []).forEach((b) => {
-    if (b.date !== t) return;
-    const amt = parseFloat(b.amount) || 0; if (!amt) return;
-    any = true;
-    const cc = b.currency || home;
-    if (cc === home) { sum += amt; return; }
-    const conv = convert(amt, cc, home);
-    if (conv == null || isNaN(conv)) allKnown = false; else sum += conv;
-  });
-  if (!any) return null;
-  const target = budgetTarget();
-  let allowance = null;
-  if (target) {
-    if (target.per === 'day') allowance = target.amount;
-    else { const span = tripSpanDays(); if (span && span.total) allowance = target.amount / span.total; }
+  // Budget — trip spend so far, in home currency (same figure Trip status used to show).
+  const sp = tripSpendHome();
+  const budgetSub = (sp.any && sp.sum > 0) ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : null;
+
+  // Journal — entry count.
+  const jN = store.journal.entries.length;
+  const journalSub = jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null;
+
+  const chips = [
+    chip('📅', 'Calendar', calSub, '#calendar'),
+    chip('💰', 'Budget', budgetSub, '#expenses'),
+  ];
+
+  if (phase === 'post') {
+    chips.push(chip('🏆', 'Scrapbook', null, '#scrapbook'));
+  } else {
+    let wxIc = '🌤', wxSub = null;
+    if (ctx.wx && ctx.wx.temp != null) {
+      const temp = fmtTemp(ctx.wx.temp);
+      if (temp) {
+        wxIc = (wmo(ctx.wx.code) || [])[1] || '🌤';
+        let rainNote = '';
+        const spot = ctx.near ? ctx.near.spot : null;
+        if (spot) {
+          const rec = getCachedWeather(spotKey(spot));
+          const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;
+          if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${today.rainProb}%`;
+        }
+        wxSub = `${temp}${rainNote}`;
+      }
+    }
+    chips.push(chip(wxIc, 'Weather', wxSub, '#weather'));
   }
-  const label = allowance
-    ? `${Math.round(sum).toLocaleString()}/${Math.round(allowance).toLocaleString()} ${home} today`
-    : `${Math.round(sum).toLocaleString()} ${home}${allKnown ? '' : '+'} today`;
-  return { ic: '💸', label, onclick: () => go('#expenses') };
+
+  chips.push(chip('📔', 'Journal', journalSub, '#journal'));
+
+  const open = !!store.profile.prefs.quickAccessOpen;
+  const details = h('details', { class: 'home-group-d quick-access', open: open ? '' : null });
+  details.addEventListener('toggle', () => { store.profile.prefs.quickAccessOpen = details.open; save(); });
+  details.append(h('summary', { class: 'home-group' }, '⚡ Quick access'));
+  details.append(h('div', { class: 'card home-status', style: 'margin-top:8px', role: 'group', 'aria-label': 'Quick access' }, chips));
+  return details;
 }
 
 // The traveller's next planned stop from today onward (store.trip.stops), independent of
@@ -293,14 +297,6 @@ function nextStop() {
     .filter((s) => s.date && s.date >= t)
     .slice()
     .sort((a, b) => (a.date < b.date ? -1 : 1))[0] || null;
-}
-
-function nextStopCell() {
-  const stop = nextStop();
-  if (!stop) return null;
-  const days = daysUntilISO(stop.date);
-  const when = days <= 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days}d`;
-  return { ic: '🚌', label: `Next: ${stop.title} ${when}`, onclick: () => go('#trip') };
 }
 
 // H4 — real transport options to the next stop. journey.js's route graph walks every

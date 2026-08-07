@@ -456,6 +456,36 @@ localStorage but not the IndexedDB backup mirror the app deliberately keeps so d
 localStorage being cleared — so a reset silently restores itself on next load. Unrelated to
 Home; spawned as its own task rather than fixed here.
 
+#### Addendum — chip consolidation, SHIPPED as mk-v0.349.0
+
+Requested directly (not a fresh interview cycle): budget was showing on Home in three places
+at once (Trip status's "spend so far" chip, the situation line's "spend today" chip, and a
+standalone by-category donut card), and weather sat in its own floating card instead of with
+the other status chips.
+
+- **Removed:** the situation line entirely (weather/spend-today/next-stop — ground phases
+  only), the standalone `budgetSummaryCard()` donut on Home, and Trip status's own spend chip.
+- **Added:** a new **Quick access** collapsible (`quickAccessRow()`, `js/screens/home.js`) —
+  its own `<details>`, separate from Trip status and collapsible in the same self-defaulting-
+  pref pattern as every other section on Home. Four phase-appropriate shortcut chips, each
+  carrying a live value when one exists (never a placeholder): **Calendar** (next plan item's
+  timing), **Budget** (trip spend so far — the one place spend now shows on Home), **Weather**
+  (current temp + rain chance) in planning/arrived/traveling, swapped for **Scrapbook** in
+  post, and **Journal** (entry count) always last — exactly the four-per-phase set requested.
+- Exported three main.js helpers (`nextPlanItem`, `evShort`, `tripSpendHome`) that already
+  existed but were previously only called from within main.js itself, so `js/screens/home.js`
+  could reuse the identical logic rather than duplicating it.
+
+**Verified:** all four phases checked live (planning/arrived/traveling: Calendar · Budget ·
+Weather · Journal; post: Calendar · Budget · Scrapbook · Journal), Trip status confirmed to
+have lost only its spend chip (day countdown, next-plan, online/offline all intact), no budget
+donut anywhere on Home, Quick access's open/closed toggle persists via
+`store.profile.prefs.quickAccessOpen`. Spot-checked You (`#me`) after the shared `main.js`
+edits — clean. True offline test: forced a Service Worker update (`mk-v0.349.0` confirmed in
+`caches.keys()`), killed the dev server, hard-reloaded — Home rendered fully from Cache
+Storage, both collapsibles and all four Quick access chips intact. Zero console errors
+throughout, across every phase and every reload.
+
 ### Explore — *spec complete, ready to build*
 
 **Theme:** *Where?* — discovery and inspiration. Interviewed 2026-08-06 against the real
