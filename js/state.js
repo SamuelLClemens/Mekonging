@@ -26,7 +26,12 @@ function defaults() {
         diet: [],               // e.g. ['peanut','shellfish','vegetarian','halal','gluten']
         tripLength: '',         // '' | 'short' (≤1wk) | 'medium' (2–3wk) | 'long' (1mo+)
         // Journey phase: shapes what Home leads with. '' = not chosen yet (Home prompts).
-        phase: '',              // '' | 'planning' | 'arrived' | 'traveling' | 'post'
+        // 'arrived' used to be its own phase, merged into 'traveling' (see js/main.js PHASES).
+        phase: '',              // '' | 'planning' | 'traveling' | 'post'
+        // Home's dismissible "Just arrived" chip (arrival guide) — X'd out with a confirm,
+        // then hidden until brought back from Settings. Not gone for good: rank-collapse-
+        // never-remove — the arrival guide itself stays reachable via Explore either way.
+        justArrivedHidden: false,
         // Network consent: the app must never use mobile data / Wi-Fi silently. 'ask' = do
         // not auto-fetch until the traveller chooses; 'online' = use data when available;
         // 'offline' = stay fully offline. Set in onboarding, changeable any time.

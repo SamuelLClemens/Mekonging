@@ -509,6 +509,19 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .status-chip.budget-yellow { border-color: var(--sun-deep); border-width: 2px; background: color-mix(in srgb, var(--sun-deep) 12%, transparent); }
 .status-chip.budget-red { border-color: var(--magenta); border-width: 2px; background: color-mix(in srgb, var(--magenta) 12%, transparent); }
 
+/* Home's dismissible "Just arrived" chip: a .status-chip-styled main button (arrival guide)
+   plus a small ✕ (same look as .one-hint-x) that hides it — confirmed first, and reachable
+   again from Settings, so it is never a one-tap accidental loss. */
+.just-arrived-chip { display: flex; align-items: stretch; gap: 6px; margin: 0 0 var(--sp-3); }
+.just-arrived-chip .ja-main { flex: 1 1 auto; display: flex; align-items: center; gap: 7px; min-width: 0;
+  cursor: pointer; text-align: left; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); color: var(--ink);
+  background: color-mix(in srgb, var(--orange) 12%, transparent); border: 1px solid var(--orange);
+  border-radius: var(--r-2, 12px); padding: 8px 10px; transition: transform var(--dur-fast) var(--ease); }
+.just-arrived-chip .ja-main:active { transform: scale(0.97); }
+.just-arrived-chip .ja-x { flex: 0 0 auto; min-width: 44px; min-height: 44px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); opacity: 0.7; font-size: 15px; cursor: pointer; border-radius: var(--r-sm); }
+.just-arrived-chip .ja-x:hover { opacity: 1; }
+
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
 .right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
