@@ -852,5 +852,160 @@ RESULTS — groups open, ranked best-fitting first
   breaking anything, consistent with the project's own CDN/offline rule.
 - Places is now feature-complete against its acceptance criteria (1-8, section above).
 
-### Talk — *pending*
+### Talk — *SHIPPED as mk-v0.347.0*
+
+**Theme:** *How do I say it?* — communication. Interviewed 2026-08-07 against the real screen,
+measured in the browser, with the phrasebook data audited across all eight languages.
+
+#### What the interview found on the live screen
+
+Measured on `#phrasebook` (Thai, default state, 720px viewport):
+
+- **~14,200px — about 20 viewport heights.** The longest screen in the app by a wide margin.
+- **The phrase list alone is 11,700px**: 98 phrases, every one expanded, and the 11 category
+  headings are plain `<h2>` elements. **Nothing collapses.** This is the exact inverse of the
+  Places problem — there every group was folded shut, here nothing folds at all.
+- **Search sits at 2,425px**, 3.4 screens down. It works very well — typing "help" cut the
+  document from 14,195px to 2,737px and surfaced Emergency & health immediately. The cure for
+  the screen's length is buried underneath the length.
+- **"Emergency & health" is at 8,722px; "Health & pharmacy" at 10,533px** — 12 and 14.6
+  viewports down. "Numbers & money" (20 of the 98 phrases, ~2,340px) sits directly above them.
+
+**On "safety-critical phrases never buried" — the app is in better shape than that sounds.**
+🆘 is in the topbar of every screen, and `sosScreen` (verified live, not just read) renders real
+emergency numbers, a nearest-hospital card, trusted hospitals, an "At the hospital: say it in
+Thai" phrase card, and an offline **"Show 'I need a hospital' to a local"** button. None of that
+should be disturbed.
+
+**The real gap is that medical phrases are split across two categories.** `sosScreen` reads only
+`cat.id === 'emergency'`, so the separate `health` category never reaches it — including
+**"Please call an ambulance"**, "Where is the nearest pharmacy?", "I have a fever", "I have
+diarrhoea".
+
+#### Data audit — all eight phrasebooks
+
+| Book | `emergency` | `health` | Exact duplicates across the two |
+|---|---|---|---|
+| Thai | 6 | 9 | "I need a doctor", "It hurts here" |
+| Vietnamese | 6 | 9 | "I need a doctor", "It hurts here" |
+| Khmer | 7 | 9 | "I need a doctor" |
+| Lao | 7 | 9 | "I need a doctor" |
+| Chinese | 4 | 9 | "I need a doctor" |
+| Hmong | **0** | 9 | — |
+| Malay | **0** | 10 | — |
+| Burmese | **0** | 9 | — |
+
+Plus near-duplicates: "Hospital" vs "Where is the nearest hospital?", and "I am allergic to…"
+vs "I am allergic to penicillin".
+
+**Three books — Hmong, Malay and Burmese — have no `emergency` category at all**; their
+emergency content sits only under "Health & pharmacy". Checked and worth stating precisely:
+this does **not** break any SOS screen, because the four countries map to `th`/`vi`/`km`/`lo`
+(`regions.js`), all of which do have the category. Those three are supplementary phrasebooks
+not wired to a country. The effect is confined to the Talk screen itself — but the merge below
+fixes it uniformly anyway.
+
+#### Decisions (interview round 5)
+
+- **Fold + rank + search on top.** The 11 categories become collapsible groups ranked by trip
+  phase and time of day, with the most relevant open; search and a category jump bar move above
+  the list. Same rank/collapse/never-remove rule as Places, applied to the opposite starting
+  condition.
+- **Merge `health` into `emergency` and dedupe.** One medical category per book, keeping the id
+  `emergency` so SOS picks up the full set **with no change to `sosScreen` at all**. Gives all
+  eight books an emergency category.
+- **Essentials + search lead; the rest goes below the list.** Phrase-of-the-day, the politeness
+  banner and the offline-audio card are demoted beneath the phrase list — present, not blocking.
+
+#### Target structure
+
+```
+topbar · language tabs
+⭐ Essentials            (the "most-needed first" promise, kept at top)
+🔎 search  ·  [Basics][Taxi][Food][Money][🆘 Emergency] jump chips
+PHRASES — folded groups, ranked, most relevant open
+  ▼ 🍜 Food & ordering · 7      (open)
+  ▶ 🚕 Taxi & directions · 7
+  ▶ 🆘 Emergency & health · 13  (merged)
+--- below the list ---
+💬 Phrase of the day · 🗣 Say it in … (translate) · 🔊 Offline audio · politeness banner
+```
+
+#### Build slices
+
+- **T1 — Data merge.** Fold each book's `health` phrases into `emergency`, dropping exact and
+  near duplicates; keep id `emergency`, rename to cover both. Eight files. Verify per-book
+  counts before/after, and that SOS gains "call an ambulance" with zero code change.
+- **T2 — Fold + rank the list.** Categories become `<details>`; ranking by `inferPhase()` +
+  `contextNow().part`, reusing the shape of Places' `rankedPlaceBuckets`. Emergency never
+  ranked away — it keeps a fixed reachable position and a jump chip.
+- **T3 — Search + jump bar above the list**, both feeding the existing `renderPhrases()`.
+- **T4 — Reorder the top**; demote phrase-of-day, politeness banner and offline audio below.
+- **T5 — Verify + ship.** All 8 languages, all 4 country SOS screens, offline run, version bump.
+
+#### Acceptance criteria
+
+1. A cold `#phrasebook` is a small number of viewports, not twenty, and at least one real
+   phrase is visible without scrolling.
+2. Search is reachable without scrolling, and still narrows the list as it does today.
+3. Emergency phrases are reachable in one tap from the top of Talk, in every one of the 8 books.
+4. Every book has exactly one medical category, with no phrase appearing in it twice.
+5. The 🆘 SOS screen shows the full merged medical set — including "Please call an ambulance" —
+   on all four countries, with `sosScreen` itself unchanged.
+6. Nothing is removed: phrase-of-day, translate, offline audio, politeness note all still present.
+7. Tap-to-show-large, copy, speak, pin and hide all still work on every row.
+8. Full offline render, zero console errors.
+
+#### Note for the build
+
+Two inputs on this screen both carry `class="search"` — the translate box (`type=text`) and the
+phrase filter (`type=search`). This cost real time during the interview: a query typed into the
+first was briefly misread as a broken filter. Give the translate input its own class while in
+the area.
+
+#### T1–T5 build notes — SHIPPED as mk-v0.347.0
+
+**T1 — data merge.** Wrote a line-span parser (Python, one-off) rather than hand-editing eight
+files with heavy Unicode escaping — each category is exactly one header line, N one-line phrase
+entries, one closer line, so the merge was: drop any `emergency` phrase whose `en` text exactly
+matches a `health` phrase, keep the `health` copy (richer notes), append the rest of `health`
+after the deduped `emergency` phrases, delete the `health` block. For the three books with no
+`emergency` category at all (Hmong, Malay, Burmese), renamed `health` → `emergency` in place —
+no dedup needed since there was nothing to collide with. Verified per book: Thai 13, Vietnamese
+13, Khmer 15, Lao 15, Chinese 12, Hmong 9, Malay 9, Burmese 9 — all `sosScreen`-reachable, all
+containing "Please call an ambulance", zero internal duplicate phrases, brace-balance clean.
+
+**T2 — fold + rank.** New `rankedPhraseCats(categories, phase, part)`, same shape as Places'
+`rankedPlaceBuckets`: a phase/time-of-day fit score per category id, unrecognised ids (the
+synthetic `allergies` category, or anything a future book introduces) default to 0 so the stable
+sort leaves them where they were. Emergency & health is pulled out of the ranking entirely and
+reinserted at a fixed second slot — its position never depends on trip phase or time of day,
+since it can be needed regardless of either. Every category is a `<details>`; only the top-ranked
+fold opens by default, all others start folded but are one tap away.
+
+**T3 — search + jump bar.** Moved the existing search input (unchanged `renderPhrases()`/
+`phraseQuery` logic) directly under Essentials. Added a jump-chip row, one chip per category in
+ranked order, Emergency prefixed 🆘 and given a coral accent (`--coral`, matching the app's
+existing SOS colour language). A chip click clears any active search, re-renders, then opens and
+scrolls to that category's fold — all synchronous, since `renderPhrases()` is itself synchronous
+(no `requestAnimationFrame` needed; an earlier draft used one and it was fragile for no benefit).
+Also gave the translate box's input its own `translate-input` class alongside `search`, fixing
+the two-inputs-one-class collision noted above.
+
+**T4 — reorder.** Essentials now leads the screen (measured: search box top at 424px, inside a
+720px first viewport — reachable with zero scrolling). Phrase-of-day, translate, offline audio
+and the politeness/voice banners all still render, unchanged, just moved below the phrase list —
+confirmed present via a live DOM check, not just visual inspection.
+
+**Verified (T5):** all 8 languages render with exactly one open fold and Emergency fixed at jump
+position 2; all four wired SOS screens (`th`/`vi`/`kh`/`la`) show 13/13/15/15 phrases including
+"Please call an ambulance", `sosScreen` itself untouched; pin/unpin round-tripped cleanly inside
+the new fold structure with no drift; search narrows and auto-opens matching folds; a query
+cleared via a jump chip restores the full ranked list. True offline test: forced a Service Worker
+update (`mk-v0.347.0` confirmed in `caches.keys()`), killed the dev server, hard-reloaded —
+Talk and SOS both rendered fully from Cache Storage. Zero console errors throughout, on every
+language and every reload, across the whole slice.
+
+Talk is now feature-complete against its acceptance criteria.
+
 ### You — *pending*
