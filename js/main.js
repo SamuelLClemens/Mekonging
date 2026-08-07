@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.355.0';
+const APP_VERSION = 'mk-v0.356.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1958,31 +1958,10 @@ function countSavedPhrases() {
   return n;
 }
 
-// You Y2: a compact "trip in numbers" strip beneath the identity card — days travelled,
-// places explored, journal entries, phrases saved, total spend. Same no-placeholder rule as
-// Home's homeStatusBand: a figure with no real value simply does not render, and the whole
-// strip is omitted (not an empty card) on a fresh profile. Plain cells, not buttons — this is
-// the trip as a record, distinct in purpose from the resume action and tiles below it, which
-// already provide the tappable navigation.
-function tripNumbersStrip() {
-  const cells = [];
-  const startISO = tripStartISO();
-  if (startISO) {
-    const until = daysUntilISO(startISO);
-    if (until <= 0) cells.push({ ic: '📅', label: `Day ${1 - until}` });
-  }
-  const explored = (store.profile.prefs.doneSpots || []).length;
-  if (explored) cells.push({ ic: '📍', label: `${explored} place${explored === 1 ? '' : 's'}` });
-  const jN = store.journal.entries.length;
-  if (jN) cells.push({ ic: '📔', label: `${jN} ${jN === 1 ? 'entry' : 'entries'}` });
-  const svP = countSavedPhrases();
-  if (svP) cells.push({ ic: '💬', label: `${svP} ${svP === 1 ? 'phrase' : 'phrases'}` });
-  const sp = tripSpendHome();
-  if (sp.any && sp.sum > 0) cells.push({ ic: '💸', label: `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` });
-  if (!cells.length) return null;
-  return h('div', { class: 'card home-status trip-numbers', role: 'group', 'aria-label': 'Your trip in numbers' },
-    cells.map((c) => h('div', { class: 'status-chip static' }, [h('span', { class: 'status-ic' }, c.ic), h('span', { class: 'status-lbl' }, c.label)])));
-}
+// The "trip in numbers" strip (days travelled, places explored, journal entries, phrases
+// saved, total spend) that used to sit directly under the quick-access chip row was removed
+// — it duplicated that row's own Calendar/Journal/Budget figures a second time. See
+// meHubScreen() below.
 
 function meHubScreen() {
   const wrap = h('div', { class: 'screen' });
@@ -1993,7 +1972,6 @@ function meHubScreen() {
   const svN = (store.favorites || []).length;     // saved places
   const svP = countSavedPhrases();
   const idN = idPinCount();
-  const tileBtn = sectionTile;
 
   // --- Identity lead: who you are + a live one-line summary. (You Y2's old single dynamic
   // "resume" button + a picked-over secondary chip row is gone — replaced below with a fixed
@@ -2068,9 +2046,10 @@ function meHubScreen() {
     chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
   ]));
 
-  // Trip in numbers — see tripNumbersStrip() above; omitted entirely on a fresh profile.
-  const numbers = tripNumbersStrip();
-  if (numbers) { numbers.style.marginTop = '10px'; wrap.append(numbers); }
+  // (The old "Trip in numbers" strip — a second, static status-chip row directly below this
+  // one, duplicating its Calendar day-count/Journal-entries/Budget-spend figures a second
+  // time — is gone. Removed as a duplicate CHIP ROW, not a duplicate destination: every
+  // figure it showed still shows live on the one chip above that already owns it.)
 
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);
@@ -2090,38 +2069,49 @@ function meHubScreen() {
   // spend still shows in the numbers strip above and stays one tap away via the Money tile
   // below; the donut itself still renders on Home.)
 
-  // --- Two collapsible groups: content the traveller created, then settings. (The third,
-  // "Trip tools", was folded logistics Home also links to — now fully covered by the chip
-  // row above instead, so the group itself is gone; see the comment further down.)
-  const grp = (emoji, label, list, open) => h('details', { class: 'home-group-d', open: open ? '' : null }, [
+  // --- Everything else in You, as chips too: every group below is a `chips` row (the exact
+  // same status-chip look as the quick-access row above), not a tile grid, per direct
+  // request ("turn all the your stuff in you into chips ... so users can reach everything
+  // from you"). A plain destination chip (no live sub-status) reuses the same chip() helper
+  // from the quick-access row above, just without a sub-line.
+  const flatChip = (ic, label, hash) => chip(ic, label, null, () => go(hash));
+  const chipGrp = (emoji, label, chips, open) => h('details', { class: 'home-group-d', open: open ? '' : null }, [
     h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
-    h('div', { class: 'grid' }, list.map(tileBtn)),
+    h('div', { class: 'chips' }, chips),
   ]);
 
-  // Your stuff — everything the traveller made or curated themselves. Open by default: this is
-  // what makes You worth a separate tab from Home, so it leads. "My phrases" dropped from
-  // here — the chip row above already covers it (💬 My Dictionary), and a bare duplicate tile
-  // right under a chip that says the same thing added nothing.
+  // Your stuff — content the traveller made or curated themselves. Open by default: this is
+  // what makes You worth a separate tab from Home, so it leads. Journal is not repeated here
+  // (same reasoning that already dropped "My phrases" from this group) — the chip row above
+  // already covers it. Journey map (previously only reachable from deep inside Journal
+  // itself) is added here: it is exactly this kind of "content you made" feature.
   const cPts = gamify.contributionPoints(store);
   const cLvl = gamify.levelInfo(cPts);
-  wrap.append(grp('📔', 'Your stuff', [
-    { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
-    { ic: ICON.star, t: 'Saved places', d: svN ? `${svN} saved` : 'Your collections', hash: '#saved' },
-    { ic: ICON.star, t: 'My identifier', d: idN ? `${idN} saved` : 'Dishes, fruit & wildlife', hash: '#identified' },
-    { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
-    { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
+  wrap.append(chipGrp('📔', 'Your stuff', [
+    flatChip('⭐', svN ? `Saved places · ${svN}` : 'Saved places', '#saved'),
+    flatChip('🔍', idN ? `My identifier · ${idN}` : 'My identifier', '#identified'),
+    flatChip('🗺', 'Journey map', '#journey'),
+    flatChip('📸', 'Trip scrapbook', '#scrapbook'),
+    flatChip('🏅', `Your contributions · ${cLvl.emoji} ${cLvl.title}`, '#contributions'),
   ], true));
 
-  // Trip tools — used to be a fifth tile group here (My trip, Documents, Traveller board,
-  // Travel circle, For you). Every one of those is now its own chip in the quick-access row
-  // above, so the group was a five-tile wall of pure duplicates and is gone — not a removed
-  // destination, just a removed second path to ones that already have a faster first path.
-  //
-  // You & settings — identity, preferences, privacy and support.
-  wrap.append(grp('⚙️', 'You & settings', [
-    { ic: ICON.gear, t: 'Settings', d: 'You, theme, backup & privacy', hash: '#settings' },
-    { ic: ICON.heart, t: 'Give back', d: 'Support the region', hash: '#donate' },
-    { ic: ICON.help, t: 'Help & FAQ', d: 'How to use, offline vs online', hash: '#help' },
+  // Plan & prepare — Home's own "Planning" tools, now also one tap from You: previously these
+  // three lived on Home only, with no path to them from here at all.
+  wrap.append(chipGrp('🧭', 'Plan & prepare', [
+    flatChip('🧭', 'Trip plans', '#plans'),
+    flatChip('✅', 'Pre-trip checklist', '#checklist'),
+    flatChip('🏷️', 'Bargain helper', '#bargain'),
+  ], false));
+
+  // You & settings — identity, preferences, privacy, support, and two more global features
+  // that used to have no direct path from You: Search (already on Home, now here too) and
+  // Export & backup (previously two taps deep inside Settings, now one).
+  wrap.append(chipGrp('⚙️', 'You & settings', [
+    flatChip('⚙️', 'Settings', '#settings'),
+    flatChip('🔎', 'Search everything', '#search'),
+    flatChip('📤', 'Export & backup', '#export'),
+    flatChip('❤️', 'Give back', '#donate'),
+    flatChip('❓', 'Help & FAQ', '#help'),
   ], false));
 
   // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
@@ -8376,83 +8366,10 @@ function planCities() {
   return { cities: [...seen.values()], unresolved };
 }
 
-// A day-by-day calendar from the dated stops. Every day in [firstDate, lastDate] is
-// assigned to the most recent stop on or before it. Capped so an open-ended trip can
-// never render an unbounded list.
-function planCalendar() {
-  const stops = (store.trip && store.trip.stops) || [];
-  const dated = stops.filter((s) => wxIsISO(s.date))
-    .map((s) => ({ date: s.date, end: (wxIsISO(s.endDate) && s.endDate >= s.date) ? s.endDate : s.date, title: s.title, spot: stopSpot(s) }))
-    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  if (!dated.length) return { days: [], hasDates: false, truncated: false, capDays: 0 };
-  const start = dated[0].date;
-  // The trip ends on the latest departure day (a ranged stop extends past its own arrival), not
-  // merely the last arrival, so every day of a multi-day final stop still appears on the calendar.
-  let end = start;
-  dated.forEach((d) => { if (d.end > end) end = d.end; });
-  const CAP = 45;
-  let total = wxDiffDays(start, end) + 1;
-  const truncated = total > CAP;
-  if (truncated) total = CAP;
-  const days = [];
-  let cur = 0;
-  for (let i = 0; i < total; i++) {
-    const d = wxAddDays(start, i);
-    while (cur + 1 < dated.length && dated[cur + 1].date <= d) cur++;
-    days.push({ date: d, title: dated[cur].title, spot: dated[cur].spot });
-  }
-  return { days, hasDates: true, truncated, capDays: CAP };
-}
-
-function planCalendarCard() {
-  const cal = planCalendar();
-  const card = h('div', { class: 'card wx-cal' }, [h('h3', { style: 'margin-top:0' }, '🗓 Trip calendar')]);
-  if (!cal.hasDates) {
-    card.append(h('p', { class: 'muted', style: 'margin:0' },
-      'Add dates to your stops (Plan → My trip) to see a day-by-day calendar of where you will be, with each day’s forecast.'));
-    return card;
-  }
-  card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
-    'Where you plan to be each day. Forecasts show for dates within the coming week — check back closer to the day for the rest.'));
-  // Collapse consecutive same-city days into legs so a long trip stays scannable.
-  const groups = [];
-  cal.days.forEach((day) => {
-    const k = day.spot ? spotKey(day.spot) : '';
-    const last = groups[groups.length - 1];
-    if (last && last.title === day.title && last.key === k) last.days.push(day);
-    else groups.push({ title: day.title, spot: day.spot, key: k, days: [day] });
-  });
-  groups.forEach((g) => {
-    const rec = g.spot ? getCachedWeather(g.key) : null;
-    const cc = g.spot ? getCountry(g.spot.country) : null;
-    const range = g.days.length > 1
-      ? `${wxDayShort(g.days[0].date)} – ${wxDayShort(g.days[g.days.length - 1].date)}`
-      : wxDayShort(g.days[0].date);
-    const leg = h('div', { class: 'wx-cal-leg' }, [
-      h('div', { class: 'wx-cal-leghead' }, [
-        h('strong', {}, `${cc ? cc.flag + ' ' : ''}${g.title}`),
-        h('span', { class: 'muted' }, `${range} · ${g.days.length} ${g.days.length === 1 ? 'day' : 'days'}`),
-      ]),
-    ]);
-    g.days.forEach((day) => {
-      const dd = rec && Array.isArray(rec.daily) ? rec.daily.find((x) => x.date === day.date) : null;
-      const de = dd ? wmo(dd.code)[1] : '';
-      const dl = dd ? wmo(dd.code)[0] : '';
-      leg.append(h('div', { class: 'wx-cal-day' }, [
-        h('span', { class: 'wx-cal-date' }, wxWeekdayNum(day.date)),
-        h('span', { class: 'wx-cal-emoji' }, dd ? de : '·'),
-        h('span', { class: 'muted grow' }, dd
-          ? `${dl}${dd.rainProb != null ? ` · 💧${dd.rainProb}%` : ''}`
-          : (g.spot ? 'Forecast closer to the date' : 'No forecast station')),
-        dd ? h('span', { class: 'wx-cal-temp' }, `${fmtTemp(dd.tmin)} / ${fmtTemp(dd.tmax)}`) : null,
-      ]));
-    });
-    card.append(leg);
-  });
-  if (cal.truncated) card.append(h('p', { class: 'muted', style: 'margin:8px 0 0' }, `Showing the first ${cal.capDays} days of your trip.`));
-  return card;
-}
-
+// The day-by-day trip-itinerary calendar (planCalendar/planCalendarCard) that used to lead
+// the Weather screen was removed — the weather "Upcoming forecast" calendar (wxVizCard,
+// below) is now this screen's one calendar. planCities()/planCityPanels() (still used for
+// "Weather in your trip cities") are unaffected.
 function planCityPanels() {
   const { cities, unresolved } = planCities();
   const wrap = h('div', { class: 'wx-cities' });
@@ -8544,51 +8461,12 @@ function weatherScreen(country) {
     unitChip('mph', wxWindU() === 'mph', () => setWind('mph')),
   ]));
 
-  // Plan-aware section: when the traveller has a trip, show a day-by-day calendar and
-  // every plan city as its own collapsible forecast, ABOVE the single-city explorer.
-  const planStops = (store.trip && store.trip.stops) || [];
-  if (planStops.length) {
-    const pc = planCities();
-    if (pc.cities.length || planCalendar().hasDates) {
-      wrap.append(planCalendarCard());
-      wrap.append(h('h3', { class: 'wx-plan-h' }, 'Weather in your trip cities'));
-      wrap.append(planCityPanels());
-      wrap.append(h('h3', { class: 'wx-plan-h' }, 'Look up another city'));
-    }
-  }
-
   let curCountry = spot.country;
 
-  // Forecast map: the region with this country's cities plotted, each showing its
-  // current temperature (one batched fetch), tappable to switch city.
-  const mapBox = h('div', {});
-  wrap.append(mapBox);
-  function renderMap(many) {
-    const cities = spotsForCountry(curCountry);
-    const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
-      ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1.5" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
-    const dots = cities.map((s) => {
-      const [x, y] = projLL(s.lng, s.lat);
-      const w = many && many[spotKey(s)];
-      const sel = spotKey(s) === weatherKey;
-      const temp = w ? `${wxTempVal(w.temp)}°` : '';
-      const emo = w ? wmo(w.code)[1] : '';
-      return `<g class="wx-dot" data-key="${spotKey(s)}" style="cursor:pointer">
-          <text x="${x}" y="${y - 14}" text-anchor="middle" style="font-size:24px">${emo}</text>
-          <circle cx="${x}" cy="${y}" r="${sel ? 9 : 6}" fill="${sel ? '#C0431A' : '#2C7DA0'}" stroke="#FFFDF5" stroke-width="2.5"/>
-          <text x="${x}" y="${y + 26}" text-anchor="middle" style="font-size:21px;font-weight:800;fill:#2A2118;paint-order:stroke;stroke:rgba(255,253,245,0.9);stroke-width:5px">${esc(s.city)} ${temp}</text>
-        </g>`;
-    }).join('');
-    const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather map" xmlns="http://www.w3.org/2000/svg">${paths}${dots}</svg>`;
-    mapBox.innerHTML = '';
-    const box = h('div', { class: 'region-map', html: svg });
-    box.querySelectorAll('.wx-dot').forEach((g) => g.addEventListener('click', () => switchSpot(g.getAttribute('data-key'))));
-    box.append(h('span', { class: 'region-cap' }, many ? 'Tap a city for its full forecast' : 'Connect once to load city temperatures'));
-    mapBox.append(box);
-  }
-  renderMap(getCachedMany() && getCachedMany().data);
-  if (online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
-
+  // Current city detail leads the screen: Right now, then Next 24 hours + Upcoming
+  // forecast calendar (wxVizCard, in that order), then the 7-day list and Refresh.
+  // This is now the screen's own top "calendar" — the old day-by-day TRIP-itinerary
+  // calendar that used to occupy this spot is gone (see below).
   const body = h('div', {});
   wrap.append(body);
 
@@ -8694,23 +8572,76 @@ function weatherScreen(country) {
     const y = window.scrollY;
     weatherKey = key;
     spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || spot;
-    // The dropdown (unlike the map) can jump to a city in a different country — the map
-    // must then redraw for THAT country, and its cities' current temps need their own fetch
-    // (the cached "many" batch was fetched for the old country's cities).
+    // Switching (unlike the map's own country) can jump to a city in a different country —
+    // the map must then redraw for THAT country, and its cities' current temps need their
+    // own fetch (the cached "many" batch was fetched for the old country's cities).
     const countryChanged = spot.country !== curCountry;
     if (countryChanged) curCountry = spot.country;
     renderMap(getCachedMany() && getCachedMany().data);
     if (countryChanged && online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && spot.country === curCountry) renderMap(r.data); });
-    citySelect.value = weatherKey;
     loadAndPaint();
     requestAnimationFrame(() => window.scrollTo(0, y));
   }
   loadAndPaint();
 
-  // City switcher lives BELOW the map + forecast: tap the map, or pick from this dropdown
-  // (defaults to the city currently shown, which starts at where the traveller is).
-  const citySelect = locationSelect(weatherKey, (key) => switchSpot(key));
-  wrap.append(h('div', { class: 'card' }, [field('See another city', citySelect)]));
+  // Weather in your trip cities — every dated stop's own collapsible forecast. No leading
+  // itinerary calendar here any more (that "Trip calendar" used to sit at the very top of
+  // this whole screen; the weather calendar above is now this screen's one calendar).
+  const planStops = (store.trip && store.trip.stops) || [];
+  const pc = planCities();
+  if (planStops.length && (pc.cities.length || pc.unresolved.length)) {
+    wrap.append(h('h3', { class: 'wx-plan-h' }, 'Weather in your trip cities'));
+    wrap.append(planCityPanels());
+  }
+
+  // Look up another city — tap the map, or type/pick any city across all four countries.
+  wrap.append(h('h3', { class: 'wx-plan-h' }, 'Look up another city'));
+
+  // Forecast map: the region with this country's cities plotted, each showing its
+  // current temperature (one batched fetch), tappable to switch city.
+  const mapBox = h('div', {});
+  wrap.append(mapBox);
+  function renderMap(many) {
+    const cities = spotsForCountry(curCountry);
+    const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
+      ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1.5" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
+    const dots = cities.map((s) => {
+      const [x, y] = projLL(s.lng, s.lat);
+      const w = many && many[spotKey(s)];
+      const sel = spotKey(s) === weatherKey;
+      const temp = w ? `${wxTempVal(w.temp)}°` : '';
+      const emo = w ? wmo(w.code)[1] : '';
+      return `<g class="wx-dot" data-key="${spotKey(s)}" style="cursor:pointer">
+          <text x="${x}" y="${y - 14}" text-anchor="middle" style="font-size:24px">${emo}</text>
+          <circle cx="${x}" cy="${y}" r="${sel ? 9 : 6}" fill="${sel ? '#C0431A' : '#2C7DA0'}" stroke="#FFFDF5" stroke-width="2.5"/>
+          <text x="${x}" y="${y + 26}" text-anchor="middle" style="font-size:21px;font-weight:800;fill:#2A2118;paint-order:stroke;stroke:rgba(255,253,245,0.9);stroke-width:5px">${esc(s.city)} ${temp}</text>
+        </g>`;
+    }).join('');
+    const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather map" xmlns="http://www.w3.org/2000/svg">${paths}${dots}</svg>`;
+    mapBox.innerHTML = '';
+    const box = h('div', { class: 'region-map', html: svg });
+    box.querySelectorAll('.wx-dot').forEach((g) => g.addEventListener('click', () => switchSpot(g.getAttribute('data-key'))));
+    box.append(h('span', { class: 'region-cap' }, many ? 'Tap a city for its full forecast' : 'Connect once to load city temperatures'));
+    mapBox.append(box);
+  }
+  renderMap(getCachedMany() && getCachedMany().data);
+  if (online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
+
+  // Free-text search across every city in all four countries — a native datalist (offline,
+  // no extra library) types ahead as the traveller types and jumps straight to that city's
+  // forecast on an exact match, exactly like tapping it on the map above.
+  const cityDatalistId = 'wx-city-list';
+  const citySearchInput = h('input', {
+    type: 'text', class: 'search', list: cityDatalistId, placeholder: '🔎 Search any city…',
+    onchange: (e) => {
+      const val = e.target.value.trim().toLowerCase();
+      const hit = WEATHER_SPOTS.find((s) => `${s.city}, ${(getCountry(s.country) || {}).name || s.country}`.toLowerCase() === val || s.city.toLowerCase() === val);
+      if (hit) switchSpot(spotKey(hit));
+    },
+  });
+  const cityDatalist = h('datalist', { id: cityDatalistId },
+    WEATHER_SPOTS.map((s) => h('option', { value: `${s.city}, ${(getCountry(s.country) || {}).name || s.country}` })));
+  wrap.append(h('div', { class: 'card' }, [field('Search any city', citySearchInput), cityDatalist]));
 
   mount(wrap, '#home');
 }
