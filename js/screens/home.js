@@ -35,7 +35,7 @@ import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import {
-  go, mount, topbar, ICON, contextNow, setupRecapCard, maybeOfferTour,
+  go, mount, topbar, ICON, contextNow, setupRecapCard,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock,
   ensureHomeWeather, idPinCount, sectionTile, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
@@ -198,7 +198,6 @@ export function homeScreen() {
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
   mount(wrap, '#home');
-  maybeOfferTour();   // first-run only: a quick walk-me tour once the traveller reaches Home
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every

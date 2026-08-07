@@ -1589,3 +1589,28 @@ Explore's country-select-row + map-first landing, Talk's phrase-of-day removal a
 auto-add-on-search, You's chip-row dedup and Travel Circle build-out, and this Weather
 clean-up — one version, one commit, one combined verification pass (including a true offline
 test) across all five screens.
+
+### Housekeeping — help/onboarding cleanup and Explore country picker (mk-v0.355.0)
+
+- **Removed the guided "walk-me" tour overlay entirely.** The first-run coach-mark dialog
+  (spotlighting the tab bar and SOS button, auto-offered once from Home and replayable from
+  Help & FAQ as "Take a quick tour") was removed per direct request ("remove the help
+  windows") — `TOUR_STEPS`, `startTour`/`endTour`/`maybeOfferTour`, the tour overlay's `.tour*`
+  CSS, the "New here?" card on the Help screen, the `endTour(false)` call in the router's
+  teardown, and the now-unused `tourSeen`/`tourStep` prefs were all deleted. Every screen it
+  pointed at remains reachable via the tab bar and Help & FAQ themselves, so nothing it
+  covered became unreachable.
+- **Explore's country picker is now a dropdown, not a chip row.** The `.country-select-row`
+  horizontal-scrolling chip row (this round's own earlier fix for "every country fitting on
+  one line") is replaced by a single native `<select>` (via the existing `selectEl()`
+  helper) listing "🌏 All countries" plus each of the four countries — simpler, no
+  horizontal-scroll discovery problem, and it doubles as a clear "you are here" indicator
+  since the select's value always reflects the current country.
+
+**Verified:** confirmed via direct DOM inspection that the tour's CSS classes, JS functions,
+and prefs keys have zero remaining references anywhere in `js/` or `css/`; confirmed the
+Help screen no longer shows the "New here?" card; exercised the new Explore dropdown's
+`onchange` end-to-end (selecting "Thailand" navigated to `#country-th` and the select
+reflected the new value on both the unscoped and scoped views); **true offline test**: killed
+the dev server, hard-reloaded on `#explore-all` — full render from Service Worker Cache
+Storage, dropdown present and functional, zero console errors.

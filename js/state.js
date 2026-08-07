@@ -56,8 +56,6 @@ function defaults() {
         recentSearches: [],   // last few committed search terms (most-recent first, capped) — Search launchpad
         hintsSeen: {},        // { 'home-phase': true, … } — one-time contextual hints the user has dismissed
         readRate: 1,          // read-aloud playback speed (1 | 1.25 | 1.5 | 2) — remembered across reads
-        tourSeen: false,      // has the walk-me tour auto-offered once (prevents re-nagging on Home)
-        tourStep: 0,          // walk-me tour resume point — where a skipped tour left off
         showSetupRecap: false, // one-shot: after the value-first first run, Home shows a "here is what I set up" recap
         // --- personal identifier: things the traveller pinned from the identify tools
         // (dishes, market produce, wildlife). Flat list of "type:id" keys; pin order IS
