@@ -150,18 +150,21 @@ export function homeScreen() {
       { ic: ICON.target, t: 'For you', d: 'Your personalised picks', hash: '#foryou' },
       { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
       { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
-      { ic: ICON.book, t: 'Travel journal', d: 'Stamped entries + map', hash: '#journal' },
+      // Talk-section-style unify (You Y1): six destinations used to answer to two different
+      // names depending on which tab you arrived from. The short name now matches meHubScreen
+      // (js/main.js) on every one of these — see OVERHAUL.md's You section for the audit.
+      { ic: ICON.book, t: 'Journal', d: 'Stamped entries + map', hash: '#journal' },
       { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
-      { ic: ICON.calendar, t: 'Travel calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
-      { ic: ICON.star, t: 'Saved & collections', d: 'Organise by theme', hash: '#saved' },
+      { ic: ICON.calendar, t: 'Calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
+      { ic: ICON.star, t: 'Saved places', d: 'Organise by theme', hash: '#saved' },
     ] },
     { label: 'Money & tools', items: [
       { ic: ICON.coins, t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
-      { ic: ICON.suitcase, t: 'Log expenses', d: 'Track spend vs your budget', hash: '#expenses' },
+      { ic: ICON.suitcase, t: 'Money', d: 'Track spend vs your budget', hash: '#expenses' },
       { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
       { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
-      { ic: ICON.tag, t: 'Traveller board', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
-      { ic: ICON.lock, t: 'Secure documents', d: 'Encrypted on-device', hash: '#vault' },
+      { ic: ICON.tag, t: 'Buy or sell', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
+      { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
       { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
     ] },
   ];

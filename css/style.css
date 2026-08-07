@@ -504,6 +504,10 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .status-chip:active { transform: scale(0.97); }
 .status-ic { flex: none; font-size: 1rem; }
 .status-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* You Y2: the trip-in-numbers strip reuses .status-chip's look on a plain (non-button) div —
+   a record, not a control, so no pointer cursor or press animation. */
+.status-chip.static { cursor: default; }
+.status-chip.static:active { transform: none; }
 
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
