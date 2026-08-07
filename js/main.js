@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.345.0';
+const APP_VERSION = 'mk-v0.346.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3948,7 +3948,7 @@ function cityPickerCard(cc) {
 // "Closest to you" — the user's "first and foremost" ask. When a location fix is known,
 // the nearest few places (optionally within the scoped city) sit at the very top, open.
 // With no fix, a single quiet prompt to turn location on (never nags — no fix, one button).
-function closestPlacesCard(cc, scopeSlug, numFor, poolSource) {
+function closestPlacesCard(cc, scopeSlug, numFor, poolSource, compareCtl) {
   const fix = getLastFix();
   if (!fix) {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
@@ -3966,7 +3966,7 @@ function closestPlacesCard(cc, scopeSlug, numFor, poolSource) {
     h('summary', { class: 'place-cat-summary' }, `📍 Closest to you · ${pool.length}`),
   ]);
   const body = h('div', { class: 'place-cat-body' });
-  pool.forEach((p) => body.append(placeQuickRow(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null))));
+  pool.forEach((p) => body.append(placeQuickRow(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null), compareCtl)));
   det.append(body);
   return det;
 }
@@ -4032,6 +4032,9 @@ function placesScreen(arg) {
   let selKids = !!prefs.kids;
   let selStayType = prefs.stayType || 'any';
   let selStayDur = prefs.stayDuration || 'any';
+  // Finding one named place is a "which one?" job in its own right — a momentary act, not a
+  // standing preference, so (unlike every filter above) this is never persisted to prefs.
+  let searchTerm = '';
 
   const interestChips = h('div', { class: 'chips' }, INTERESTS.map((it) =>
     h('button', {
@@ -4187,6 +4190,7 @@ function placesScreen(arg) {
   function renderActivePills() {
     pillsRow.innerHTML = '';
     const pill = (label, onClear) => h('button', { class: 'chip', 'aria-pressed': 'true', onclick: onClear }, [label, ' ✕']);
+    if (searchTerm.trim()) pillsRow.append(pill(`🔎 “${searchTerm.trim()}”`, () => { searchTerm = ''; searchBox.value = ''; renderList(); }));
     selLayers.forEach((key) => {
       const b = PLACE_BUCKETS.find((x) => x[0] === key);
       if (b) pillsRow.append(pill(b[1].replace(/^\S+\s/, ''), () => layerChipsRow.querySelector(`[data-layer="${key}"]`)?.click()));
@@ -4211,6 +4215,14 @@ function placesScreen(arg) {
     }
     pillsRow.style.display = pillsRow.children.length ? '' : 'none';
   }
+  // Scoped to whatever's already on screen (country, or city once drilled down) via the same
+  // computeResults() every other control feeds — a momentary act, so never persisted.
+  const searchBox = h('input', {
+    type: 'search', class: 'search', 'aria-label': 'Search places',
+    placeholder: `🔎 Search places${scopeCity ? ` in ${scopeCity}` : ''}…`,
+    oninput: (e) => { searchTerm = e.target.value; renderList(); },
+  });
+  wrap.append(searchBox);
   wrap.append(pillsRow);
   wrap.append(filterBtn);
 
@@ -4247,6 +4259,84 @@ function placesScreen(arg) {
 
   let placesCtrl = null;
   let currentResults = [];
+
+  // Compare tray — per-visit only (never persisted, never carried between countries/cities):
+  // a traveller comparing 2-3 places is mid-decision right now, not setting a standing
+  // preference. Docked with position:fixed as a CHILD of `wrap`, so mount()'s app.innerHTML
+  // reset on the next screen removes it for free — no explicit teardown needed.
+  const compareSet = new Set();
+  const compareCap = 3;
+  const compareCtl = { has: (id) => compareSet.has(id), toggle: (id) => toggleCompare(id) };
+  const compareTray = h('div', { class: 'compare-tray' });
+  wrap.append(compareTray);
+  function compareLabel(p) { return p.name.length > 20 ? `${p.name.slice(0, 19)}…` : p.name; }
+  function renderCompareTray() {
+    compareTray.innerHTML = '';
+    if (!compareSet.size) { compareTray.style.display = 'none'; return; }
+    compareTray.style.display = '';
+    const row = h('div', { class: 'chips', style: 'margin-bottom:6px' });
+    [...compareSet].forEach((id) => {
+      const p = resolveItem(id);
+      if (!p) { compareSet.delete(id); return; }
+      row.append(h('button', { class: 'chip', 'aria-pressed': 'true', onclick: () => toggleCompare(id) }, [compareLabel(p), ' ✕']));
+    });
+    compareTray.append(row);
+    compareTray.append(h('div', { class: 'row-between' }, [
+      h('button', { class: 'btn ghost', onclick: () => { compareSet.clear(); renderCompareTray(); renderList(); } }, 'Clear'),
+      h('button', {
+        class: 'btn', disabled: compareSet.size < 2 ? '' : null,
+        onclick: () => openCompareSheet(),
+      }, `Compare (${compareSet.size})`),
+    ]));
+  }
+  function toggleCompare(id) {
+    if (compareSet.has(id)) { compareSet.delete(id); }
+    else { if (compareSet.size >= compareCap) return; compareSet.add(id); }
+    renderCompareTray();
+    renderList(); // refreshes each row's tick state
+  }
+  function openCompareSheet() {
+    if (compareSet.size < 2) return;
+    const places = [...compareSet].map((id) => resolveItem(id)).filter(Boolean);
+    const fix = getLastFix();
+    const fields = [
+      ['City', (p) => p.city || '—'],
+      ['Distance', (p) => (fix && p.coords) ? `${haversineKm(fix, p.coords).toFixed(1)} km` : '—'],
+      ['Rating', (p) => (p.rating ? `★ ${Number(p.rating).toFixed(1)}` : '—')],
+      ['Price', (p) => {
+        const hasPrice = p.priceRange && p.priceRange.currency;
+        return hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '—';
+      }],
+      ['Budget', (p) => (p.budgetTier ? titleCase(p.budgetTier) : '—')],
+      ['Kids OK', (p) => (p.kidFriendly === true ? '✅ Yes' : (p.kidFriendly === false ? '— No' : '? Unknown'))],
+      ['Step-free', (p) => (p.access && p.access.stepFree ? titleCase(String(p.access.stepFree)) : '—')],
+    ];
+    const backdrop = h('div', { class: 'sheet-backdrop' });
+    const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Compare places' });
+    sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
+    sheet.append(h('h3', {}, 'Compare'));
+    const table = h('div', { class: 'compare-table' });
+    table.append(h('div', { class: 'compare-row compare-head' }, [
+      h('div', { class: 'compare-label' }, ''),
+      ...places.map((p) => h('div', { class: 'compare-cell' }, [h('strong', {}, compareLabel(p))])),
+    ]));
+    fields.forEach(([label, fn]) => {
+      table.append(h('div', { class: 'compare-row' }, [
+        h('div', { class: 'compare-label muted' }, label),
+        ...places.map((p) => h('div', { class: 'compare-cell' }, fn(p))),
+      ]));
+    });
+    sheet.append(table);
+    const openRow = h('div', { class: 'chips', style: 'margin-top:10px' });
+    places.forEach((p) => openRow.append(h('button', { class: 'btn ghost', onclick: () => { backdrop.remove(); go(`#place-${p.id}`); } }, `Open ${compareLabel(p)}`)));
+    sheet.append(openRow);
+    sheet.append(h('button', { class: 'btn block', style: 'margin-top:10px', onclick: () => backdrop.remove() }, 'Close'));
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
+    backdrop.append(sheet);
+    document.body.append(backdrop);
+  }
+  renderCompareTray();
+
   // The map shows the filtered curated results PLUS the traveller's own places that have
   // coordinates, so contributions appear spatially alongside the guide — like a map app.
   const userMapPins = () => (store.pins || []).filter((p) => p.coords).map((p) => resolveItem(p.id)).filter(Boolean);
@@ -4263,6 +4353,10 @@ function placesScreen(arg) {
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
     if (selStayDur !== 'any') results = results.filter((p) => p.stayDuration === selStayDur || p.stayDuration === 'both');
     if (selStepFree) results = results.filter((p) => p.access && (p.access.stepFree === 'yes' || p.access.stepFree === 'partial'));
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      results = results.filter((p) => (p.name || '').toLowerCase().includes(q) || (p.city || '').toLowerCase().includes(q));
+    }
     const fix = getLastFix();
     if (sortMode === 'near' && fix) {
       const d = (p) => (p.coords ? haversineKm(fix, p.coords) : Infinity);
@@ -4295,7 +4389,7 @@ function placesScreen(arg) {
     if (placesCtrl) placesCtrl.setPlaces(ml);
     // "Closest to you" — the nearest few of the CURRENTLY shown (filtered) places, same numbers.
     closestSlot.innerHTML = '';
-    const cz = closestPlacesCard(getActiveCountry(), scopeSlug, numFor, currentResults);
+    const cz = closestPlacesCard(getActiveCountry(), scopeSlug, numFor, currentResults, compareCtl);
     if (cz) closestSlot.append(cz);
 
     listEl.innerHTML = '';
@@ -4303,18 +4397,23 @@ function placesScreen(arg) {
       listEl.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} places are coming soon. Thailand is fully covered in this build.`));
       return;
     }
-    if (!currentResults.length) { listEl.append(h('p', { class: 'empty' }, 'No places match these filters and layers. Try widening them.')); return; }
+    if (!currentResults.length) {
+      listEl.append(h('p', { class: 'empty' }, searchTerm.trim()
+        ? `Nothing matches “${searchTerm.trim()}” with these filters. Try a different search, or widen the filters.`
+        : 'No places match these filters and layers. Try widening them.'));
+      return;
+    }
     // "Show more" expander: reveal the rest inline (no full re-render) to cut scrolling.
     const expander = (rest, label) => {
       if (!rest.length) return null;
       const btn = h('button', { class: 'btn ghost block', style: 'margin:2px 0 10px' }, label);
-      btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, p._num))); btn.remove(); };
+      btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, p._num, compareCtl))); btn.remove(); };
       return btn;
     };
     if (sortMode === 'near') {
       // proximity order matters — keep one flat list, capped, with a reveal.
       const CAP = 12;
-      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeQuickRow(p, p._num)));
+      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeQuickRow(p, p._num, compareCtl)));
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
@@ -4335,7 +4434,7 @@ function placesScreen(arg) {
         if (!arr || !arr.length) return;
         if (fix) arr = arr.slice().sort(byNear);
         const body = h('div', { class: 'place-cat-body' });
-        arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, p._num)));
+        arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, p._num, compareCtl)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
         listEl.append(h('details', { class: 'place-cat-group', open: '', style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
@@ -4827,7 +4926,7 @@ function placeCard(p, num) {
 // and expands IN PLACE (an accordion) to the photo, blurb, traveller fit and actions, so
 // the list reads as a short menu instead of a wall of full cards. Full detail stays one tap
 // further on the place page.
-function placeQuickRow(p, num) {
+function placeQuickRow(p, num, compareCtl) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   const hasPrice = p.priceRange && p.priceRange.currency;
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
@@ -4840,7 +4939,16 @@ function placeQuickRow(p, num) {
     (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     cats.length ? catTag(cats[0]) : null,
   ]);
+  // Compare tick — optional: only Places' own grouped/near/closest rows pass a controller,
+  // so every other caller of this row (Explore's serendipity cards, etc.) is unaffected.
+  const compareTick = compareCtl ? h('button', {
+    class: 'pqr-compare', 'aria-pressed': compareCtl.has(p.id) ? 'true' : 'false',
+    'aria-label': compareCtl.has(p.id) ? `Remove ${p.name} from compare` : `Add ${p.name} to compare`,
+    title: 'Compare',
+    onclick: (e) => { e.preventDefault(); e.stopPropagation(); compareCtl.toggle(p.id); },
+  }, compareCtl.has(p.id) ? '☑' : '☐') : null;
   const summary = h('summary', { class: 'pqr-summary' }, [
+    compareTick,
     num != null ? h('span', { class: 'pqr-num', style: `background:${accent}` }, String(num)) : null,
     h('div', { class: 'pqr-main' }, [
       h('div', { class: 'pqr-name' }, `${p.isPin ? '📌 ' : ''}${p.name}`),

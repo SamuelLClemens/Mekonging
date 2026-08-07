@@ -1810,3 +1810,22 @@ html[data-theme="dark"] .place-qrow { background: rgba(255,255,255,0.045); box-s
 .place-qrow[open] .pqr-chev { transform: rotate(180deg); }
 .pqr-body { padding: 0 12px 12px; }
 .pqr-photo { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin: 4px 0 8px; }
+.pqr-compare { flex: 0 0 auto; background: none; border: none; font-size: 17px; line-height: 1; cursor: pointer;
+  color: var(--ink-soft, #7a7a7a); padding: 2px; }
+.pqr-compare[aria-pressed="true"] { color: var(--orange); }
+
+/* Compare tray (Places) — docked above the tab bar, only visible once >=1 place is ticked. */
+.compare-tray {
+  position: fixed; left: 0; right: 0; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  z-index: 11; max-width: 720px; margin: 0 auto;
+  background: var(--card); border-top: 3px solid transparent; border-image: var(--grad-sun) 1;
+  padding: var(--sp-3) var(--sp-4); box-shadow: 0 -2px 14px rgba(58, 36, 21, 0.14);
+}
+html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
+.compare-table { display: flex; flex-direction: column; gap: 0; overflow-x: auto; }
+.compare-row { display: grid; grid-template-columns: 84px repeat(auto-fit, minmax(0, 1fr)); gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.compare-row:last-child { border-bottom: none; }
+.compare-row.compare-head { border-bottom: 2px solid var(--line); }
+.compare-label { font-size: 12px; }
+.compare-cell { font-size: 13px; word-break: break-word; }

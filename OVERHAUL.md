@@ -809,7 +809,48 @@ RESULTS — groups open, ranked best-fitting first
   `aria-pressed` state, and back to all 8 groups. True offline test: killed the dev server, hard
   reloaded on `#places` — 🆘, the map, all 8 ranked-open groups and the honest caption rendered
   from Service Worker Cache Storage alone, zero console errors.
-- **Not yet built**: P4 (scoped search) and P5 (compare tray) — next.
+
+#### P4–P5 build notes — SHIPPED as mk-v0.346.0
+
+- **P4 search**: a filter-as-you-type box (`.search` input, matching the existing pattern used
+  by phrasebook/sounds/food) sits above the active-filter pills, scoped automatically to
+  whatever's already on screen — country or, once drilled down, city — since it feeds the same
+  `computeResults()` every other control feeds. Matches name and city, case-insensitive.
+  Deliberately **not persisted** to `prefs` (unlike every filter above it): finding one named
+  place is a momentary act, not a standing preference. Produces its own clearable pill
+  (`🔎 "term" ✕`) alongside the filter pills, and a distinct empty-state message when a search
+  narrows to nothing ("Nothing matches "…" with these filters…") rather than the generic
+  filters-only wording.
+- **P5 compare tray**: `placeQuickRow` takes an optional third `compareCtl` argument — every one
+  of Places' four call sites (grouped rows, near-mode flat list, "show all" expander, and
+  `closestPlacesCard`'s rows) now passes it, but the parameter is optional specifically so
+  nothing outside Places is affected. Ticking a row's new ☐/☑ control adds it (cap 3 — a 4th
+  tick is a deliberate no-op, not a replace, since silently swapping a traveller's earlier pick
+  would be more surprising than declining the extra) to a per-visit `Set`, never persisted or
+  carried between screens. A tray docks above the tab bar (`position:fixed`, appended as a
+  child of the screen's own `wrap` rather than `document.body` — `mount()`'s `app.innerHTML = ''`
+  on the next screen change removes it for free, no explicit teardown needed) showing each
+  selected place as a removable chip, "Clear", and "Compare (N)" (disabled below 2). The sheet
+  it opens is a real side-by-side table — city, distance (real, GPS-gated), rating, price
+  (with currency conversion), budget tier, kids-OK, step-free — every field pulled from data
+  already on the place object, nothing invented, plus an "Open" button per place into its full
+  detail page.
+- **Verified**: typing a query narrowed map/caption/list together with numbering intact, and
+  cleared correctly via its pill; ticking 2 places produced a correct real-field comparison,
+  ticking a 3rd worked, a 4th was correctly rejected (tray stayed at 3, the row's own tick
+  stayed unpressed); "Clear" reset both the tray and every row's tick state; navigating to Home
+  and back to Places confirmed the tray is gone from the DOM (not just hidden) after leaving
+  and starts empty on return — genuinely per-visit. All four countries verified clean, including
+  confirming compare/search state resets on switching country (fresh screen instance, by
+  design, same as every other Places filter). True offline test: killed the dev server, hard
+  reloaded on `#places` — search box, all 8 ranked-open groups, and a working compare tray
+  (tick two rows → tray appears with real data) all rendered from Service Worker Cache Storage,
+  zero JavaScript/application console errors. Noted, not fixed here (pre-existing, unrelated to
+  this slice): a handful of place *photos* fail to fetch offline, since only code/data files are
+  in the Service Worker's precache list, not the photo library — the row still renders in full
+  (name, rating, price, blurb) without its thumbnail, so this degrades gracefully rather than
+  breaking anything, consistent with the project's own CDN/offline rule.
+- Places is now feature-complete against its acceptance criteria (1-8, section above).
 
 ### Talk — *pending*
 ### You — *pending*
