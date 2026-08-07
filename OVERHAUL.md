@@ -745,6 +745,53 @@ route graph. **True offline test**: killed the dev server, hard-reloaded on `#co
 🆘, signature sights, and all four new discovery sections rendered from Service Worker
 Cache Storage alone, zero console errors.
 
+#### Addendum — country-select row + map-first landing, SHIPPED as mk-v0.354.0
+
+Traveller feedback: remove the hero photo, fit as many countries as possible on one row in
+the country-select strip, drop the phrasebook/currency/places/map/emergency quick-link row,
+and lead with the map right after country select — defaulting to the traveller's anchored
+country, or the four-country chooser if not yet anchored anywhere.
+
+- **One country-select row, both branches.** `countryHeroBand()` (the per-country "chapter
+  opener" photo) and the old scoped-only chip switcher / unscoped grid-of-cards (two
+  parallel, inconsistent pickers) are replaced by one `.chips.country-select-row` — every
+  country plus "All", `flex-wrap: nowrap` with horizontal scroll instead of wrapping to a
+  second line, so as many as fit show on one row at any width, mobile included. Renders
+  identically whether or not a country is scoped, immediately under the topbar.
+- **`countryHeroBand()` removed entirely** — zero call sites once the hero photo left; its
+  `.country-hero*` CSS removed alongside it.
+- **Map leads, plainly, in both branches** — the unscoped branch's "Choose on the map"
+  (`regionPicker()`) and the scoped branch's "Regions of Country" (`regionsMap()`) render as
+  plain, always-visible blocks right after country select, no collapsible fold — the same
+  "map is the focus" treatment Places' own Addendum (above) established for its living map.
+  Country defaulting needed no new logic: `anchorCountry()` (GPS in-region, then focus city,
+  then dated trip stop, else null) already returns exactly "the country the traveller is in,
+  or null if not yet in one" — Explore's unscoped branch already is the four-country
+  chooser, so this alone satisfies the request.
+- **Quick-link row removed, no destination lost** — Phrasebook/Currency/Places/Map/Emergency
+  used to sit as a row of chips right under the (now-removed) hero photo. Every one of those
+  destinations is still reachable: Phrasebook and Currency via their tiles in the "Get
+  oriented" tile group further down this same screen (unchanged), Places via its own bottom
+  tab and the "See all N places" buttons throughout Explore, Map via the Places tab's living
+  map and this screen's own new map-first block, Emergency via the shared topbar's SOS icon.
+- **A real bug found and fixed during verification, not left to review:** removing the old
+  quick-link chip row also removed its `const lang = getLanguage(c.lang);` declaration — but
+  the "Get oriented" tile group's Phrasebook tile (further down the same function) still
+  reads `lang.label` for its subtitle. Threw nothing visibly on the two branches tested
+  first (both took the unscoped early-return path), but would have thrown `lang is not
+  defined` the moment a scoped country screen actually rendered that tile group. Caught by
+  reading the full function body rather than trusting the first two screenshots; fixed by
+  re-adding the declaration immediately before the tile group that needs it.
+- **CSS:** `.country-select-row { flex-wrap: nowrap; overflow-x: auto; }` overriding the base
+  `.chips` wrap behaviour, plus `flex: 0 0 auto` on its chips so they never shrink to fit.
+
+**Verified:** all four countries plus "All" fit on one row at both desktop (1280px) and
+mobile widths with no wrapping; the `lang` fix confirmed live (Phrasebook tile correctly
+reads "Thai" for Thailand); no hero photo, no quick-link row, map renders immediately after
+country select in both the scoped and unscoped cases. **True offline test**: killed the dev
+server, reloaded on `#explore-all` and `#country-th` — both rendered fully from Service
+Worker Cache Storage, zero console errors.
+
 ### Places — *spec complete, ready to build*
 
 **Theme:** *Which one?* — concrete choices. Interviewed 2026-08-07 against the real screen,
@@ -1211,6 +1258,49 @@ returns every category to closed again. Also re-confirmed here: the Service Work
 mid-session testing against the still-`mk-v0.351.0` cache silently ran stale (pre-fix) code
 until the version bump below made `caches.keys()` show `mk-v0.352.0`.
 
+#### Addendum 3 — "Phrase of the day" removed, SHIPPED as mk-v0.354.0
+
+Traveller feedback: remove it outright. `phraseOfTheDay(code)` and its now-orphaned helper
+`dayIndex()` (confirmed via grep to have no other callers) are deleted entirely, along with
+the card that rendered them inside `phrasebookScreen` and their `.potd-*` CSS. No destination
+lost: every phrase it rotated through daily is still reachable via Essentials or its own
+category — it only ever surfaced one phrase a day from the same pool the list already shows
+in full.
+
+#### Addendum 4 — searching a phrase yourself adds it to your dictionary, SHIPPED as mk-v0.354.0
+
+Traveller feedback: anything a user searches for themselves should be added to their
+dictionary automatically — no separate pin tap should be required.
+
+- **`ensurePhrasePinned(code, key)`** — an idempotent, never-unpins sibling to the existing
+  `togglePhrasePin()`, reusing the same `propagatePinAcrossLanguages()` so an auto-pin
+  propagates to the phrase's counterpart in every other language exactly like a manual pin
+  does. Returns whether it actually added anything new, so the caller only says something
+  when there is something to say.
+- **A second, much longer debounce on the search box** (900ms, independent of the existing
+  120ms live-filter debounce), firing only once typing has genuinely settled. This is the
+  load-bearing design decision: debouncing on every keystroke at the *filter* speed would
+  auto-pin a wall of one-letter matches while a word is still being typed ("h", "he", "hel"…)
+  — most of which stop matching once the word is finished. Only the settled query's matches
+  ever get pinned.
+- **Category-name matches do not count.** The existing filter treats a query matching a
+  *category's name* (e.g. "taxi" matches every phrase in Taxi & directions) as a match for
+  every phrase in it, so the visible list stays useful for browsing by category. Auto-pin
+  deliberately uses a stricter check — only phrases whose own English/romanised/script text
+  actually contains the query — so browsing a category by name never floods the dictionary
+  with everything in it; only what was actually searched for does. Verified live: searching
+  "taxi" (a pure category-name match) added nothing, while searching "hospital" added the two
+  phrases whose own text matches, propagated across all eight languages.
+- A brief inline status line ("✓ Added N phrases to your dictionary") confirms what happened,
+  and the list repaints so the 📌 icon itself visibly reflects the new pinned state — nothing
+  is a silent, invisible side effect of typing.
+
+**Verified:** typing "hospital" in Thai auto-pinned "Hospital" and "Where is the nearest
+hospital" in Thai and propagated to all seven other languages; typing "taxi" immediately
+after added nothing further (category-name match correctly excluded). **True offline test**:
+killed the dev server, hard-reloaded on `#phrasebook-th` — full render from Service Worker
+Cache Storage, zero console errors.
+
 ### You — *SHIPPED as mk-v0.348.0*
 
 **Theme:** *What is mine?* — the traveller's own record. Interviewed 2026-08-07 against the
@@ -1407,3 +1497,95 @@ update to `mk-v0.352.0`).
 round — Home's Quick access default-open, Talk's default-closed categories, Places' map-first
 layout, and this chip row — one version, one commit, one verification pass across all four
 screens.
+
+#### Addendum 2 — Trip tools fold removed (fully covered by chips), Travel circle built out, SHIPPED as mk-v0.354.0
+
+Traveller feedback: (1) anything already in the chip row above should not also sit in the
+Trip tools fold below it; (2) Travel circle should be built out so a traveller can connect to
+or invite anyone to join via WhatsApp contacts or phone contacts; (3) Travel circle and
+Traveller board should themselves be chips.
+
+- **Two more chips promoted, one renamed.** The chip row gains **Travel circle** (`#circle`,
+  showing an unread-inbox count with the same `budget-red` ring Budget uses for "needs
+  attention" when the count is non-zero). The existing **Buy or sell** chip/tile is renamed
+  **Traveller board** to match the name the destination screen itself already used
+  everywhere else it appeared (its own topbar, and an existing "🤝 Traveller board" chip
+  inside Explore) — one name for one place, not two names for the same screen.
+- **The "Trip tools" tile group is removed entirely**, not merely trimmed. Every single one
+  of its five tiles (My trip, Documents, Traveller board, Travel circle, For you) is now also
+  a chip in the row above — so the group had become a five-tile wall of pure duplicates.
+  Rank-collapse-never-remove still holds: nothing lost a destination, each one just has a
+  faster first path (a tap on the chip row) instead of two competing paths to the same place.
+  "Your stuff" and "You & settings" groups are unchanged.
+- **Travel Circle invite build-out** (`circleScreen`, `js/main.js`) — the existing "Share your
+  card" card is renamed **"Invite a friend"** and gains two explicit invite paths alongside
+  its existing OS-share-sheet and copy-link buttons:
+  - **💬 Invite via WhatsApp** — `https://wa.me/?text=<invite message + card link>` with no
+    phone number opens WhatsApp's *own* "choose a chat" picker (the same thing tapping "New
+    chat" inside WhatsApp does), so picking who to invite is entirely WhatsApp's native
+    contact list — nothing this app can or does see.
+  - **📇 Invite from phone contacts** — the Contact Picker API (`navigator.contacts.select`),
+    feature-detected (`'contacts' in navigator && 'ContactsManager' in window`) since it is
+    Chrome/Android-only; the button simply does not render elsewhere. Each tap opens the
+    native OS contact picker fresh — a one-off, user-initiated selection, no standing access
+    granted. Each picked contact gets its own WhatsApp (`wa.me/<digits>`) and SMS
+    (`sms:+<digits>?body=…` / `&body=` on iOS) button.
+  - This app has no server and no accounts (its own stated architecture) — a real WhatsApp
+    Business API integration or a contacts-sync backend is out of scope and was not
+    attempted; the wa.me + Contact Picker approach is the honest, fully client-side ceiling
+    of what "invite via WhatsApp/phone contacts" can mean for a backendless static PWA. Every
+    invite link opens the target app with the message *pre-filled, never auto-sent* — the
+    traveller still taps send themselves, same as the pre-existing `navigator.share` flow.
+
+**Verified:** fresh profile shows the 9-chip row (Calendar, My Dictionary, Budget, Journal,
+Documents, My trip, Traveller board, For you, Travel circle) and no "Trip tools" heading
+anywhere in the DOM; "Your stuff" and "You & settings" unchanged. WhatsApp invite button
+confirmed to build the correct `wa.me` URL (intercepted `window.open` rather than actually
+navigating away, since this is an external site). Contact Picker button confirmed correctly
+absent in this browser context (no `navigator.contacts`) — graceful feature-detection, not a
+bug. **True offline test**: killed the dev server, hard-reloaded on `#me` and `#circle` —
+both rendered fully from Service Worker Cache Storage, zero console errors.
+
+### Weather & forecast — cross-cutting, cleaned up as part of this round (mk-v0.354.0)
+
+Reached from Home, Explore and Places, not owned by any one section. Traveller feedback: the
+weather/forecast screen needed a general clean-up, and both the daily and hourly forecast
+should be as detailed as realistically possible.
+
+- **"Right now" consolidated into one card.** Current conditions, air quality and UV used to
+  be three separate stacked `.card`s each saying "this is the situation right now" in a
+  different box. Now one `.wx-now` card with a thin `.wx-now-div` divider between the three —
+  same information, a third of the visual weight.
+- **A real hour-by-hour list, not just the ring.** The existing watch-face ring
+  (`wxHourlyRingSvg`) shows one metric at a time by design — that is what makes it readable
+  as a shape — but that meant seeing temp *and* rain *and* wind for the same hour needed
+  flipping through all 6 metric chips. New `wxHourlyListNode()` adds a scrollable strip of
+  the next 24 hours, each showing time, icon, temp, rain % and wind all at once — the ring's
+  "as detailed as possible" companion, not a replacement.
+- **The "This month" calendar's N/A wall fixed.** It rendered a full calendar-month grid, so
+  every day before today *and* every day past the ~16-day forecast horizon (often more than
+  half the grid, on the day this was checked) showed a bare "N/A" cell — reading as broken,
+  not just empty. `wxMonthCalendarNode()` now renders exactly one cell per *real* forecast
+  day (renamed "Upcoming forecast," since it is no longer month-bounded) — only the leading
+  blank cells needed to line the first real day up under its weekday remain, and those are
+  empty, not labelled "N/A". A single legitimate "this one field is missing for this one day"
+  case (the API's own last-day edge, sometimes short a value) can still show its metric as
+  "N/A" — that is honest, not the structural padding bug this fixes.
+- Removed the now-orphaned "Next 24 hours · see this month ↓" jump link and the `.nodata`
+  CSS rules it needed, along with the dead-code cleanup that came with both.
+- The 7-day forecast list (already detailed — per-day morning/afternoon/evening/night
+  breakdown) is unchanged; it already was the detailed daily forecast the request asked for.
+
+**Verified:** consolidated "Right now" card confirmed rendering (temp/conditions, divider,
+air quality, divider, UV, all one card) for Bangkok live. Hourly list confirmed showing 24
+real entries (time/icon/temp/rain%/wind) alongside the ring. Upcoming-forecast grid
+confirmed down to a single legitimate "N/A" (the API's own last-day gap) versus roughly 14
+padding N/A cells before the fix. **True offline test**: killed the dev server, hard-reloaded
+on `#weather-th` — full render from Service Worker Cache Storage (cached forecast data
+included), zero console errors.
+
+**Ship note (mk-v0.354.0):** this version bump covers everything in this round together —
+Explore's country-select-row + map-first landing, Talk's phrase-of-day removal and
+auto-add-on-search, You's chip-row dedup and Travel Circle build-out, and this Weather
+clean-up — one version, one commit, one combined verification pass (including a true offline
+test) across all five screens.

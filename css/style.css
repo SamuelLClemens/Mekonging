@@ -255,13 +255,6 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .foldcard > summary::after { content: '⌄'; font-size: 1.1em; opacity: 0.6; transition: transform var(--dur) var(--ease); }
 .foldcard[open] > summary::after { transform: rotate(180deg); }
 
-/* Phrase of the day — a compact daily highlight at the top of the phrasebook. */
-.potd-card { cursor: pointer; border-left: 5px solid var(--grape, #7A5FB0); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
-.potd-card:hover, .potd-card:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(58, 36, 21, 0.12); outline: none; }
-.potd-lbl { font-size: var(--fs-sm); color: var(--ink-soft); font-weight: 700; }
-.potd-en { font-size: var(--fs-lg); font-weight: 800; margin-top: 2px; }
-.potd-sci { color: var(--ink-soft); margin-top: 2px; }
-
 /* Region/province maps: clickable coloured provinces (pure offline SVG). */
 .regions-map { width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
 .regions-svg { width: 100%; height: auto; display: block; max-height: 62vh; }
@@ -540,6 +533,10 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 
 /* --- chips / filters --- */
 .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-4); }
+/* Explore's country picker: as many countries as possible on one row — never wrap to a
+   second line, scroll horizontally instead if they don't all fit. */
+.country-select-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.country-select-row .chip { flex: 0 0 auto; }
 .chip {
   cursor: pointer; font-family: inherit; border: 1px solid var(--line); background: var(--card);
   color: var(--ink); border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3);
@@ -1810,15 +1807,27 @@ html[data-theme="dark"] .wx-ring-val, html[data-theme="dark"] .wx-ring-sub { fil
 .wx-cal-cell { min-height: 46px; border-radius: 8px; background: rgba(0,0,0,0.045); padding: 3px 2px;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
 .wx-cal-cell.empty { background: none; }
-.wx-cal-cell.nodata { background: rgba(0,0,0,0.03); }
 .wx-cal-cell.today { outline: 2px solid var(--accent, #C0431A); outline-offset: -1px; }
 .wx-cal-num { font-size: 11px; font-weight: 700; color: #1e1e1e; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
 .wx-cal-emo { font-size: 15px; line-height: 1.15; }
 .wx-cal-v { font-size: 10px; font-weight: 700; color: #1e1e1e; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
-.wx-cal-cell.nodata .wx-cal-num { color: var(--muted, #8a8a8a); text-shadow: none; }
-.wx-cal-cell.nodata .wx-cal-v { color: var(--muted, #8a8a8a); text-shadow: none; }
 html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
-html[data-theme="dark"] .wx-cal-cell.nodata { background: rgba(255,255,255,0.035); }
+
+/* "Right now" card: current conditions + air quality + UV, one card with thin dividers
+   instead of three stacked cards saying the same "this is now" in three different boxes. */
+.wx-now-div { height: 1px; background: var(--line, rgba(0,0,0,.12)); margin: 10px 0; }
+
+/* Hourly detail strip: next 24 hours, all metrics (temp/rain/wind) at once — the ring above
+   shows one metric at a time by design, this is its detailed, scrollable companion. */
+.wx-hourly-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 2px 0 4px; }
+.wx-hourly-row { display: flex; gap: 8px; padding-bottom: 4px; }
+.wx-hourly-cell { flex: 0 0 auto; min-width: 58px; text-align: center; padding: 8px 4px;
+  border-radius: var(--r-md); background: rgba(0,0,0,0.045); }
+.wx-hourly-t { font-size: var(--fs-label); font-weight: 700; color: var(--ink-soft); }
+.wx-hourly-emo { font-size: 1.3rem; line-height: 1.3; margin: 2px 0; }
+.wx-hourly-temp { font-weight: 800; color: var(--ink); font-size: var(--fs-sm); }
+.wx-hourly-pp, .wx-hourly-wind { font-size: 10px; color: var(--muted, #8a8a8a); }
+html[data-theme="dark"] .wx-hourly-cell { background: rgba(255,255,255,0.06); }
 
 /* Journal voice notes (mk-v0.329.0) */
 .entry-audio { width: 100%; margin: 4px 0; }

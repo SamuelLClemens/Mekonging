@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.352.0';
+const APP_VERSION = 'mk-v0.354.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -2076,7 +2076,6 @@ function meHubScreen() {
   wrap.append(topbar(name ? `${name}’s space` : 'Your space'));
 
   const jN = store.journal.entries.length;
-  const exN = store.trip.budgetLog.length;
   const svN = (store.favorites || []).length;     // saved places
   const svP = countSavedPhrases();
   const idN = idPinCount();
@@ -2103,12 +2102,16 @@ function meHubScreen() {
   wrap.append(lead);
 
   // Quick access chips — Calendar, My Dictionary, Budget and Journal lead (the four asked
-  // for), then Documents, My trip, Buy or sell and For you promoted to chips too, so the
-  // whole "Trip tools" set has an at-a-glance status here, not just a tile-tap away below
-  // (rank-collapse-never-remove: the Trip tools tiles stay, this is a faster second path to
-  // the same destinations). Calendar and Budget reuse Home's exact live logic — a bare label
-  // until the trip actually starts / a target is actually set, then a day count and a live
-  // percentage with the same green/on-track, yellow/tight, red/over colour ring.
+  // for), then Documents, My trip, Traveller board, For you and Travel circle promoted to
+  // chips too, so the whole "Trip tools" set has an at-a-glance status here. Every one of
+  // these is now ALSO a chip, so the "Trip tools" tile group that used to sit below is gone
+  // entirely (rank-collapse-never-remove: nothing here loses a destination — it is now
+  // reached exactly one tap away, from this row, instead of two). Calendar and Budget reuse
+  // Home's exact live logic — a bare label until the trip actually starts / a target is
+  // actually set, then a day count and a live percentage with the same green/on-track,
+  // yellow/tight, red/over colour ring. "Buy or sell" is renamed "Traveller board" here to
+  // match the name the destination screen itself already uses everywhere else (its own
+  // topbar, and the "🤝 Traveller board" chip inside Explore) — one name for one place.
   const chip = (ic, label, sub, onclick, extraClass) => h('button', {
     class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick,
   }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
@@ -2138,6 +2141,7 @@ function meHubScreen() {
     }
   }
 
+  const unread = unreadInboxCount();
   wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
     chip('📅', calLabel, null, () => go('#calendar')),
     chip('💬', 'My Dictionary', svP ? `${svP} saved` : null, () => go('#dictionary')),
@@ -2145,8 +2149,9 @@ function meHubScreen() {
     chip('📔', 'Journal', jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null, () => go('#journal')),
     chip('🔒', 'Documents', null, () => go('#vault')),
     chip('🧳', 'My trip', null, () => go('#trip')),
-    chip('🏷️', 'Buy or sell', null, () => go('#exchange')),
+    chip('🤝', 'Traveller board', null, () => go('#exchange')),
     chip('🎯', 'For you', null, () => go('#foryou')),
+    chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
   ]));
 
   // Trip in numbers — see tripNumbersStrip() above; omitted entirely on a fresh profile.
@@ -2171,39 +2176,33 @@ function meHubScreen() {
   // spend still shows in the numbers strip above and stays one tap away via the Money tile
   // below; the donut itself still renders on Home.)
 
-  // --- Three collapsible groups: content the traveller created, then trip logistics that
-  // Home already links to (folded here, not removed), then settings. (You Y3)
+  // --- Two collapsible groups: content the traveller created, then settings. (The third,
+  // "Trip tools", was folded logistics Home also links to — now fully covered by the chip
+  // row above instead, so the group itself is gone; see the comment further down.)
   const grp = (emoji, label, list, open) => h('details', { class: 'home-group-d', open: open ? '' : null }, [
     h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
     h('div', { class: 'grid' }, list.map(tileBtn)),
   ]);
 
   // Your stuff — everything the traveller made or curated themselves. Open by default: this is
-  // what makes You worth a separate tab from Home, so it leads.
+  // what makes You worth a separate tab from Home, so it leads. "My phrases" dropped from
+  // here — the chip row above already covers it (💬 My Dictionary), and a bare duplicate tile
+  // right under a chip that says the same thing added nothing.
   const cPts = gamify.contributionPoints(store);
   const cLvl = gamify.levelInfo(cPts);
   wrap.append(grp('📔', 'Your stuff', [
     { ic: ICON.book, t: 'Journal', d: jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : 'Start your story', hash: '#journal' },
     { ic: ICON.star, t: 'Saved places', d: svN ? `${svN} saved` : 'Your collections', hash: '#saved' },
-    { ic: ICON.chat, t: 'My phrases', d: svP ? `${svP} saved` : 'Save phrases you need', hash: '#dictionary' },
     { ic: ICON.star, t: 'My identifier', d: idN ? `${idN} saved` : 'Dishes, fruit & wildlife', hash: '#identified' },
     { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
     { ic: ICON.badge, t: 'Your contributions', d: `${cLvl.emoji} ${cLvl.title} · ${cPts} pts`, hash: '#contributions' },
   ], true));
 
-  // Trip tools — the logistics Home already links to from its own decks. Folded (not removed):
-  // every one of these tiles is a genuine duplicate destination, kept one tap away rather than
-  // competing with the traveller's own content above.
-  wrap.append(grp('🎒', 'Trip tools', [
-    { ic: ICON.calendar, t: 'Calendar', d: 'Plans, stays & reminders', hash: '#calendar' },
-    { ic: ICON.coins, t: 'Money', d: exN ? 'Spend vs your budget' : 'Log expense vs budget', hash: '#expenses' },
-    { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget', hash: '#trip' },
-    { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
-    { ic: ICON.tag, t: 'Buy or sell', d: 'Cash, rides, rooms & gear', hash: '#exchange' },
-    { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
-    { ic: ICON.target, t: 'For you', d: 'Tune your personalised picks', hash: '#foryou' },
-  ], false));
-
+  // Trip tools — used to be a fifth tile group here (My trip, Documents, Traveller board,
+  // Travel circle, For you). Every one of those is now its own chip in the quick-access row
+  // above, so the group was a five-tile wall of pure duplicates and is gone — not a removed
+  // destination, just a removed second path to ones that already have a faster first path.
+  //
   // You & settings — identity, preferences, privacy and support.
   wrap.append(grp('⚙️', 'You & settings', [
     { ic: ICON.gear, t: 'Settings', d: 'You, theme, backup & privacy', hash: '#settings' },
@@ -2594,20 +2593,8 @@ function regionPicker() {
 }
 
 // Per-country hub reached after picking a country.
-// A slim "chapter opener" photo band for the country hub: the country's top-rated
-// photographed sight, name overlaid. Self-hosted, lazy; returns null if none maps.
-function countryHeroBand(c) {
-  const top = allPlaces({ country: c.id })
-    .filter((p) => placeBucket(p) !== 'stay' && placePhotoSrc(p))
-    .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))[0];
-  const src = top ? placePhotoSrc(top) : null;
-  if (!src) return null;
-  return h('div', { class: 'country-hero' }, [
-    h('img', { class: 'country-hero-img', src, alt: '', loading: 'lazy', decoding: 'async' }),
-    h('span', { class: 'country-hero-grad', 'aria-hidden': 'true' }),
-    h('span', { class: 'country-hero-cap' }, `${c.flag} ${c.name}`),
-  ]);
-}
+// (The "chapter opener" hero photo band that used to sit here — countryHeroBand() — was
+// removed: Explore now leads with the map, not a photo, so it had zero call sites left.)
 
 // Explore E1 (OVERHAUL.md section 11): Explore and the country hub were the same section
 // split across two screens — the old bare #explore was a thin chooser (73 lines, no
@@ -2632,13 +2619,28 @@ function exploreScreen(argCc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Explore'));
 
+  // Country select — one row, every country plus "All", never wrapping to a second line
+  // (horizontal scroll instead if it does not all fit) so as many countries as possible
+  // show on the same row regardless of screen width. The one consistent way to pick a
+  // country from Explore now, in both branches below — replaces the old scoped-only chip
+  // switcher and the unscoped grid-of-cards as two parallel, inconsistent pickers.
+  const selectChips = COUNTRIES.map((x) => h('button', {
+    class: 'chip' + (x.id === cc ? ' active' : ''), 'aria-pressed': x.id === cc ? 'true' : 'false',
+    onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
+  }, [x.flag, ' ', x.name]));
+  selectChips.push(h('button', {
+    class: 'chip' + (!cc ? ' active' : ''), 'aria-pressed': !cc ? 'true' : 'false',
+    onclick: () => go('#explore-all'),
+  }, '🌏 All'));
+  wrap.append(h('div', { class: 'chips country-select-row', role: 'group', 'aria-label': 'Country' }, selectChips));
+
   if (!c) {
     // No explicit country and no real anchor — the four-country comparison view. Reached by
     // tapping the Explore tab with nothing yet to land on, or explicitly via #explore-all.
-    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🗺 Choose on the map'),
-      regionPicker(), { open: store.profile.prefs.exploreMapOpen !== false, cls: 'home-group-d' });
-    mapFold.addEventListener('toggle', () => { store.profile.prefs.exploreMapOpen = mapFold.open; save(); });
-    wrap.append(mapFold);
+    // Lead with the map: plain and always visible (no anchor to default to yet, so "choose
+    // on the map" IS the default view here) — not a collapsible fold, the map is the focus.
+    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, '🗺 Choose on the map'));
+    wrap.append(regionPicker());
 
     // "At a glance": each country's real figures (mapped-place count, language, currency) and
     // its top sourced "known for" tags — a comparison that helps a traveller CHOOSE. Explore
@@ -2704,41 +2706,20 @@ function exploreScreen(argCc) {
     }).catch(() => { /* offline with nothing cached yet — sparse view stays up */ });
   }
 
-  // Compact switcher: change country or drop back to the four-country view in one tap.
-  // Replaces both the old full-screen chooser and the hub's separate identity — this IS
-  // Explore now, just scoped.
-  const switcherChips = COUNTRIES.map((x) => h('button', {
-    class: 'chip' + (x.id === cc ? ' active' : ''), 'aria-pressed': x.id === cc ? 'true' : 'false',
-    onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
-  }, `${x.flag} ${x.name}`));
-  switcherChips.push(h('button', { class: 'chip', onclick: () => go('#explore-all') }, '🌏 All'));
-  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 10px', role: 'group', 'aria-label': 'Country' }, switcherChips));
-
-  const hero = countryHeroBand(c);
-  if (hero) wrap.append(hero);
-  const lang = getLanguage(c.lang);
-  // Most-used tools first: language, money, places, map, help — reached every day.
-  // Reference reading (history, guides) is collapsed lower down, not the first thing.
-  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 8px' }, [
-    lang ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, [chipIcon('chat'), 'Phrasebook']) : null,
-    h('button', { class: 'chip', onclick: () => go('#currency') }, [chipIcon('coins'), 'Currency']),
-    h('button', { class: 'chip', onclick: () => go(`#places-${cc}`) }, [chipIcon('pin'), 'Places']),
-    h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('map'), 'Map']),
-    h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
-  ]));
-
-  // Regions map: tapping into a country shows its provinces outlined and coloured; each is
-  // tappable through to a region view (its cities and mapped places).
+  // Lead with the map: this country's regions, right after country select — plain and
+  // always visible, not a collapsible fold, the same "map is the focus" treatment as the
+  // unscoped branch above (and as Places' own living map). Country defaulting is already
+  // handled above (cc = the traveller's anchored country, or null → the "All" branch), so
+  // this alone satisfies "default to the country the traveller is in, or all if not yet in
+  // one." The old hero photo and the phrasebook/currency/places/map/emergency quick-link
+  // row that used to sit here are gone — every one of those destinations is still reachable
+  // via its own bottom tab or another existing link, never removed, just no longer a
+  // redundant row competing with the map for the lead position.
   if (regionSetFor(cc)) {
-    const rbody = h('div', {}, [
-      h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a region to see its cities, places and how it fits into the country.'),
-    ]);
+    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, `🗺 Regions of ${c.name}`));
+    wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a region to see its cities, places and how it fits into the country.'));
     const rm = regionsMap(cc, { onPick: (code) => go(`#region-${cc}-${code}`) });
-    if (rm) rbody.append(rm);
-    const regionFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Regions of ${c.name}`),
-      rbody, { open: store.profile.prefs.hubRegionsOpen !== false, cls: 'home-group-d' });
-    regionFold.addEventListener('toggle', () => { store.profile.prefs.hubRegionsOpen = regionFold.open; save(); });
-    wrap.append(regionFold);
+    if (rm) wrap.append(rm);
   }
 
   // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
@@ -2829,6 +2810,7 @@ function exploreScreen(argCc) {
   // The full country toolkit, regrouped from one 26-tile wall into four labelled,
   // collapsible sub-clusters so a traveller scans four intents, not a flat grid. The
   // "identify what's around me" tools sit together under See & do.
+  const lang = getLanguage(c.lang);
   const tileGroups = [
     { label: 'Get oriented', tiles: [
       { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
@@ -3603,6 +3585,19 @@ function propagatePinAcrossLanguages(fromCode, key) {
     }
   }
 }
+// Auto-add-on-search: looking a phrase up yourself is already a strong signal of interest —
+// it goes straight into the dictionary without a separate pin tap. Idempotent (never
+// unpins) and returns whether it actually added anything new, so a caller can decide
+// whether it is worth telling the traveller. Cross-language propagation still applies,
+// same as a manual pin.
+function ensurePhrasePinned(code, key) {
+  const a = phrasePinsFor(code);
+  if (a.includes(key)) return false;
+  a.push(key);
+  propagatePinAcrossLanguages(code, key);
+  save();
+  return true;
+}
 // Hiding a phrase also drops it from the pins so the two lists never disagree.
 function togglePhraseHide(code, key) {
   const a = phraseHiddenFor(code); const i = a.indexOf(key);
@@ -3780,11 +3775,37 @@ function phrasebookScreen(lang) {
   // needed phrases first" promise — always the first fold in the list (closed by default,
   // like every other category, until the traveller opens it).
   wrap.append(h('h2', { class: 'cat-title' }, 'All phrases'));
+  const searchStatus = h('p', { class: 'tiny muted', style: 'margin:2px 0 0;min-height:1.2em' });
+  const filterNow = debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120);
+  // Searching for a phrase yourself is already a strong enough signal that it belongs in
+  // your dictionary — added automatically, no separate pin tap required (the traveller's
+  // own request). Debounced much longer than the live filter above: only once typing has
+  // actually SETTLED, so pausing mid-word ("h", "he", "hel"…) never pins a wall of
+  // one-letter matches — only the phrase(s) the finished query really matches. A bare
+  // category-name match (typing "taxi" browses the whole Taxi category) does not count;
+  // only phrases the query itself actually matches do.
+  const autoPinSettled = debounce((raw) => {
+    const q = raw.trim().toLowerCase();
+    if (q.length < 2) return;
+    let added = 0;
+    categories.forEach((cat) => {
+      cat.phrases.forEach((p) => {
+        const key = phraseKey(code, cat.id, p);
+        if (isPhraseHidden(code, key)) return;
+        const hit = p.en.toLowerCase().includes(q) || (p.roman || '').toLowerCase().includes(q) || (p.script || '').includes(raw.trim());
+        if (hit && ensurePhrasePinned(code, key)) added += 1;
+      });
+    });
+    if (added) {
+      searchStatus.textContent = `✓ Added ${added} ${added === 1 ? 'phrase' : 'phrases'} to your dictionary`;
+      renderPhrases();
+    }
+  }, 900);
   const search = h('input', {
     class: 'search', type: 'search', 'aria-label': 'Search', placeholder: `Search ${book.label} phrases…`, value: phraseQuery,
-    oninput: debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120),
+    oninput: (e) => { searchStatus.textContent = ''; filterNow(e); autoPinSettled(e.target.value); },
   });
-  wrap.append(search);
+  wrap.append(search, searchStatus);
 
   // Every category fold (incl. Essentials) starts CLOSED — the traveller opens what they
   // want, and it stays open only because they opened it. Tracked per language + category so
@@ -3878,21 +3899,13 @@ function phrasebookScreen(lang) {
   }
   renderPhrases();
 
-  // --- below the list: phrase of the day, offline audio, politeness note ---
+  // --- below the list: offline audio, politeness note ---
   // (Talk T4 — nothing removed, only demoted; the "most-needed first" promise above still
   // covers what a traveller reaches for most, so these are welcome but no longer load-bearing.
   // Say-it/translate used to sit here too — moved above the list, see the top of this
-  // function, since it now only ever renders when online.)
-  const pod = phraseOfTheDay(code);
-  if (pod) {
-    const openPod = () => showBigPhrase(pod.p, pod.locale);
-    wrap.append(h('div', { class: 'card potd-card', role: 'button', tabindex: '0', onclick: openPod,
-      onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPod(); } } }, [
-      h('div', { class: 'potd-lbl' }, '💬 Phrase of the day'),
-      h('div', { class: 'potd-en' }, pod.p.en),
-      h('div', { class: 'potd-sci', lang: pod.locale }, `${pod.p.script || ''}${pod.p.roman ? ' · ' + pod.p.roman : ''}`),
-    ]));
-  }
+  // function, since it now only ever renders when online. "Phrase of the day" used to sit
+  // here too — removed at the traveller's request; every phrase it rotated through is still
+  // reachable via Essentials or its own category.)
 
   // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
   // no signal — essential for Khmer/Lao, which have no device voice on most phones.
@@ -8676,8 +8689,11 @@ function weatherScreen(country) {
         h('p', { class: 'muted' }, 'Connect to the internet once and tap Refresh to download it. The forecast is then stored on your device for offline viewing.'),
       ]));
     } else {
+      // "Right now" — temp, air quality and UV used to be three separate stacked cards
+      // saying the same thing ("this is the current situation") in three different boxes.
+      // One card, thin dividers between the three lines, reads as one answer instead of three.
       const [clabel, cemoji] = wmo(rec.current.code);
-      body.append(h('div', { class: 'card' }, [
+      const rightNow = h('div', { class: 'card wx-now' }, [
         h('div', { class: 'row-between' }, [
           h('span', { style: 'font-size:44px;line-height:1' }, cemoji),
           h('div', { style: 'text-align:right' }, [
@@ -8687,9 +8703,13 @@ function weatherScreen(country) {
         ]),
         h('div', { class: 'muted', style: 'margin-top:8px' },
           `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
-      ]));
-      body.append(h('div', { class: 'card' }, [airBlock(spot)]));
-      if (rec.daily && rec.daily[0]) { const uvn = uvLineNode(rec.daily[0].uv, { advice: true }); if (uvn) body.append(h('div', { class: 'card' }, [uvn])); }
+      ]);
+      rightNow.append(h('div', { class: 'wx-now-div' }), airBlock(spot));
+      if (rec.daily && rec.daily[0]) {
+        const uvn = uvLineNode(rec.daily[0].uv, { advice: true });
+        if (uvn) rightNow.append(h('div', { class: 'wx-now-div' }), uvn);
+      }
+      body.append(rightNow);
       if (rec.hourly && rec.hourly.length) body.append(wxVizCard(rec, spot));
       const fc = h('div', { class: 'card' }, [
         h('h3', { style: 'margin-top:0' }, '7-day forecast'),
@@ -8859,44 +8879,62 @@ function wxDayHumAvg(rec, date) {
   const hs = (rec.hourly || []).filter((x) => String(x.t).slice(0, 10) === date && x.hum != null);
   return hs.length ? Math.round(hs.reduce((a, b) => a + b.hum, 0) / hs.length) : null;
 }
+// A genuinely detailed hour-by-hour strip: time, icon, temp, rain chance and wind for each
+// of the next 24 hours, scrollable, ALL metrics at once. The ring above is deliberately one
+// metric at a time (that is what makes it readable as a shape); this is its "as detailed as
+// possible" companion so nothing about the next 24 hours needs a metric switch to see.
+function wxHourlyListNode(rec) {
+  const hrs = Array.isArray(rec.hourly) ? rec.hourly : [];
+  const now = new Date();
+  const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+  let start = hrs.findIndex((x) => { const d = new Date(x.t); return !isNaN(d) && d >= nowFloor; });
+  if (start < 0) start = 0;
+  const win = hrs.slice(start, start + 24);
+  if (!win.length) return null;
+  const row = h('div', { class: 'wx-hourly-row' });
+  win.forEach((x, i) => {
+    const [label, emo] = wmo(x.code);
+    row.append(h('div', { class: 'wx-hourly-cell' }, [
+      h('div', { class: 'wx-hourly-t' }, i === 0 ? 'Now' : fmtClock(new Date(x.t).getHours())),
+      h('div', { class: 'wx-hourly-emo', title: label }, emo),
+      h('div', { class: 'wx-hourly-temp' }, fmtTemp(x.temp)),
+      x.pp != null ? h('div', { class: 'wx-hourly-pp' }, `💧${Math.round(x.pp)}%`) : null,
+      x.wind != null ? h('div', { class: 'wx-hourly-wind' }, fmtWind(x.wind)) : null,
+    ]));
+  });
+  return h('div', { class: 'wx-hourly-scroll' }, [row]);
+}
+// A rolling "upcoming days" grid — every cell holds a REAL forecast day, no calendar-month
+// padding. It used to lay out a full calendar month, which meant every day before today AND
+// every day past the ~16-day forecast horizon rendered as a bare "N/A" cell — often more N/A
+// cells than real ones. Only the leading blank cells needed to line the first real day up
+// under its actual weekday remain, and those are empty, not labelled "N/A".
 function wxMonthCalendarNode(rec, metric) {
   const cfg = WX_METRICS[metric];
   const daily = Array.isArray(rec.daily) ? rec.daily : [];
-  const byDate = {};
-  daily.forEach((d) => { byDate[d.date] = d; });
-  const base = daily[0] ? new Date(daily[0].date + 'T00:00') : new Date();
-  const year = base.getFullYear(), month = base.getMonth();
-  const daysIn = new Date(year, month + 1, 0).getDate();
-  const startDow = (new Date(year, month, 1).getDay() + 6) % 7;   // Monday-first
-  const valOf = (d) => { if (!d) return null; if (metric === 'hum') return wxDayHumAvg(rec, d.date); return cfg.daily ? cfg.daily(d) : null; };
+  if (!daily.length) return h('p', { class: 'muted small' }, 'Connect once to load the forecast.');
+  const valOf = (d) => (metric === 'hum' ? wxDayHumAvg(rec, d.date) : (cfg.daily ? cfg.daily(d) : null));
   const vals = daily.map(valOf).filter((v) => v != null);
   const lo = cfg.min != null ? cfg.min : (vals.length ? Math.min(...vals) : 0);
   const hi = cfg.max != null ? cfg.max : (vals.length ? Math.max(...vals) : 1);
   const grid = h('div', { class: 'wx-cal' });
   ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach((d) => grid.append(h('div', { class: 'wx-cal-dow' }, d)));
+  const startDow = (new Date(daily[0].date + 'T00:00').getDay() + 6) % 7;   // Monday-first
   for (let i = 0; i < startDow; i++) grid.append(h('div', { class: 'wx-cal-cell empty' }));
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  for (let day = 1; day <= daysIn; day++) {
-    const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const d = byDate[ds];
+  daily.forEach((d) => {
     const v = valOf(d);
-    const cell = h('div', { class: 'wx-cal-cell' + (d ? '' : ' nodata') + (ds === todayStr ? ' today' : '') });
-    if (d && v != null) cell.style.background = wxMetricColor(metric, v, lo, hi);
-    cell.append(h('div', { class: 'wx-cal-num' }, String(day)));
-    if (d) {
-      cell.append(h('div', { class: 'wx-cal-emo' }, wmo(d.code)[1]));
-      cell.append(h('div', { class: 'wx-cal-v' }, cfg.fmt(v)));
-    } else {
-      // Beyond the fetched forecast horizon — say so plainly rather than leaving the
-      // cell blank, so "no data" always reads the same way across the whole calendar.
-      cell.append(h('div', { class: 'wx-cal-v muted' }, 'N/A'));
-    }
+    const cell = h('div', { class: 'wx-cal-cell' + (d.date === todayStr ? ' today' : '') });
+    if (v != null) cell.style.background = wxMetricColor(metric, v, lo, hi);
+    cell.append(h('div', { class: 'wx-cal-num' }, String(Number(d.date.slice(8, 10)))));
+    cell.append(h('div', { class: 'wx-cal-emo' }, wmo(d.code)[1]));
+    cell.append(h('div', { class: 'wx-cal-v' }, cfg.fmt(v)));
     grid.append(cell);
-  }
+  });
   return h('div', {}, [
     grid,
-    h('p', { class: 'muted small', style: 'margin:6px 2px 0' }, daily.length ? `Forecast covers the next ${daily.length} day${daily.length === 1 ? '' : 's'}; later days fill in as the forecast extends.` : 'Connect once to load the forecast.'),
+    h('p', { class: 'muted small', style: 'margin:6px 2px 0' }, `Forecast covers the next ${daily.length} day${daily.length === 1 ? '' : 's'}; later days fill in as the forecast extends.`),
   ]);
 }
 // `onChange`, when given, is called after a metric switch instead of the global render() —
@@ -8910,19 +8948,12 @@ function wxVizCard(rec, spot) {
   const card = h('div', { class: 'card wx-viz' });
   const chipsRow = h('div', { class: 'chips wx-metric-row' });
   const ringSlot = h('div', {});
-  const monthHead = h('h3', { class: 'wx-cal-h', style: 'margin:6px 0' }, 'This month');
   const calSlot = h('div', {});
 
   function paintMetric() {
     ringSlot.innerHTML = '';
     const ring = wxHourlyRingSvg(rec, wxMetric, spot.city);
-    if (ring) {
-      ringSlot.append(h('div', { class: 'wx-ring-wrap', html: ring }));
-      ringSlot.append(h('button', {
-        class: 'linklike wx-ring-jump', style: 'display:block;width:100%;text-align:center;margin:0 0 8px',
-        onclick: () => monthHead.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-      }, 'Next 24 hours · see this month ↓'));
-    }
+    if (ring) ringSlot.append(h('div', { class: 'wx-ring-wrap', html: ring }));
     calSlot.innerHTML = '';
     calSlot.append(wxMonthCalendarNode(rec, wxMetric));
   }
@@ -8941,7 +8972,10 @@ function wxVizCard(rec, spot) {
     }, WX_METRICS[m].label));
   });
 
-  card.append(chipsRow, ringSlot, monthHead, calSlot);
+  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:0 0 6px' }, 'Next 24 hours'), chipsRow, ringSlot);
+  const hourly = wxHourlyListNode(rec);
+  if (hourly) card.append(hourly);
+  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:14px 0 6px' }, 'Upcoming forecast'), calSlot);
   paintMetric();
   return card;
 }
@@ -9020,38 +9054,12 @@ function moodLine(m) {
 }
 
 // ---- Daily-habit morning strip (the traveller's day, at a glance) ------------
-// A day-of-year index so the "phrase of the day" rotates once per day yet stays
-// stable within a day. (Browser Date is fine here — this is runtime, not a build.)
-function dayIndex() {
-  const now = new Date();
-  return Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-}
 // The next thing on the traveller's own calendar — today or later — i.e. their plan.
 export function nextPlanItem() {
   const t = todayISO();
   return calItems().find((it) => it.date && it.date >= t) || null;
 }
-// One phrase to have ready today: rotates through the traveller's pins if they have
-// any, otherwise through the Essentials concepts — always in the local language.
-function phraseOfTheDay(code) {
-  const book = getLanguage(code);
-  if (!book || !book.categories) return null;
-  const cats = book.categories;
-  const notHidden = (x) => !!x && !isPhraseHidden(code, phraseKey(code, x.catId, x.p));
-  const idx = phraseIndexFor(cats, code);
-  const pinned = phrasePinsFor(code).map((k) => idx.get(k)).filter(Boolean)
-    .map((x) => ({ p: x.p, catId: x.catId })).filter(notHidden);
-  const flat = cats.flatMap((c) => c.phrases.map((p) => ({ p, catId: c.id })));
-  const find = (rx) => flat.find((x) => rx.test(x.p.en));
-  const essentials = [find(/^hello/i), find(/^thank you/i), find(/excuse me|^sorry/i), find(/how much/i)].filter(Boolean);
-  const qCat = cats.find((c) => c.id === 'questions');
-  if (qCat) qCat.phrases.forEach((p) => essentials.push({ p, catId: 'questions' }));
-  const cands = (pinned.length ? pinned : essentials).filter(notHidden);
-  if (!cands.length) return null;
-  const pick = cands[dayIndex() % cands.length];
-  return { p: pick.p, catId: pick.catId, locale: book.locale };
-}
-// The compact "Your day" card: next plan item · phrase of the day · one-tap spend.
+// The compact "Your day" card: next plan item · one-tap spend.
 // Weather-independent, so it is rendered once (outside the weather repaint) and a
 // half-typed budget amount never gets wiped by a live-weather refresh.
 function dailyStripCard(id) {
@@ -9107,7 +9115,6 @@ function dailyStripCard(id) {
   ]));
 
   // 2) Budget quick-add — logs in one tap and shows today's running spend.
-  //    (Phrase of the day moved to the phrasebook — see phraseOfTheDayCard.)
   const budBox = h('div', { style: 'margin-top:10px' });
   const cur = (c && c.currency) || 'THB';
   const renderBud = () => {
@@ -11690,14 +11697,58 @@ function circleScreen() {
     h('button', { class: 'btn', onclick: () => { setMe({ name: nameIn.value, avatar: avIn.value, bio: bioIn.value }); go('#circle'); } }, 'Save card'),
   ]));
 
-  // --- share your card ---
+  // --- invite a friend (share your card) ---
+  // Every path here hands off to an app the traveller already has (WhatsApp, Messages, or
+  // the OS share sheet) with the invite link pre-filled — never sent automatically, the
+  // traveller still taps send themselves. No account, no server: the link IS the invite.
   const status = h('p', { class: 'muted' });
   const buildUrl = () => shareUrl('add', encodeCard(ensureMe()));
+  const inviteMsg = () => `Join me on Mekonging — a free, offline travel app for Thailand, Vietnam, Cambodia & Laos. Add me: ${buildUrl()}`;
   const shareCard = h('div', { class: 'card' });
-  shareCard.append(h('h2', {}, 'Share your card'));
-  shareCard.append(h('p', { class: 'muted' }, 'Send this to another Mekonging traveller. When they open it, you are added to each other’s circle. On a phone, “Share” can send it over AirDrop or Nearby Share with no internet at all.'));
+  shareCard.append(h('h2', { style: 'margin-top:0' }, '➕ Invite a friend'));
+  shareCard.append(h('p', { class: 'muted' }, 'Send this to another traveller. When they open it, you are added to each other’s circle. On a phone, “Share” can send it over AirDrop or Nearby Share with no internet at all.'));
+
+  // WhatsApp — wa.me with no number opens WhatsApp's OWN "choose a chat" picker (exactly
+  // like tapping New chat inside WhatsApp), so picking who to invite is entirely WhatsApp's
+  // native contact list, not anything this app can or does see.
+  shareCard.append(h('button', { class: 'btn block', onclick: () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(inviteMsg())}`, '_blank', 'noopener');
+  } }, '💬 Invite via WhatsApp'));
+
+  // Phone contacts — Contact Picker API (Chrome/Android; feature-detected, most other
+  // browsers simply never show this button). Each tap is a one-off native picker the
+  // traveller explicitly opens and chooses from — no standing access, nothing auto-read.
+  const contactPickerOk = typeof navigator !== 'undefined' && 'contacts' in navigator
+    && typeof window !== 'undefined' && 'ContactsManager' in window;
+  if (contactPickerOk) {
+    const pickedBox = h('div', {});
+    shareCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+      let picked;
+      try { picked = await navigator.contacts.select(['name', 'tel'], { multiple: true }); }
+      catch { return; } // cancelled, or the browser/user denied the picker
+      pickedBox.replaceChildren();
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+      (picked || []).forEach((p) => {
+        const nm = (p.name && p.name[0]) || 'Contact';
+        const tel = (p.tel && p.tel[0]) || '';
+        if (!tel) return;
+        const digits = tel.replace(/[^\d]/g, '');
+        const smsUrl = `sms:+${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(inviteMsg())}`;
+        pickedBox.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+          h('span', {}, nm),
+          h('div', { class: 'cats' }, [
+            h('button', { class: 'chip', onclick: () => window.open(`https://wa.me/${digits}?text=${encodeURIComponent(inviteMsg())}`, '_blank', 'noopener') }, '💬 WhatsApp'),
+            h('button', { class: 'chip', onclick: () => { window.location.href = smsUrl; } }, '✉️ SMS'),
+          ]),
+        ]));
+      });
+      if (!pickedBox.children.length) pickedBox.append(h('p', { class: 'tiny muted' }, 'No phone number on that contact.'));
+    } }, '📇 Invite from phone contacts'));
+    shareCard.append(pickedBox);
+  }
+
   if (typeof navigator !== 'undefined' && navigator.share) {
-    shareCard.append(h('button', { class: 'btn block', onclick: async () => {
+    shareCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
       try { await navigator.share({ title: 'Add me on Mekonging', text: `${ensureMe().name || 'A traveller'} on Mekonging`, url: buildUrl() }); status.textContent = 'Shared — they can open it to connect.'; }
       catch { /* cancelled */ }
     } }, '📤 Share my card…'));
