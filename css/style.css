@@ -186,6 +186,7 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
   line-height: 1; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-pill); flex: none;
 }
 .topbar-sos:hover { background: rgba(214, 51, 108, 0.16); }
+.topbar-net { font-size: 1.15rem; }
 .rn-wx-link {
   border: none; background: none; padding: 0; cursor: pointer; font: inherit;
   color: var(--teal-deep); font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
@@ -508,6 +509,12 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    a record, not a control, so no pointer cursor or press animation. */
 .status-chip.static { cursor: default; }
 .status-chip.static:active { transform: none; }
+
+/* Home Quick access — Budget chip pace ring, once a target + spend both exist: green on
+   track to land under budget, yellow if the current pace projects going over, red if over. */
+.status-chip.budget-green { border-color: var(--good); border-width: 2px; background: color-mix(in srgb, var(--good) 10%, transparent); }
+.status-chip.budget-yellow { border-color: var(--sun-deep); border-width: 2px; background: color-mix(in srgb, var(--sun-deep) 12%, transparent); }
+.status-chip.budget-red { border-color: var(--magenta); border-width: 2px; background: color-mix(in srgb, var(--magenta) 12%, transparent); }
 
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
