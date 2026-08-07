@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.348.0';
+const APP_VERSION = 'mk-v0.349.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1922,7 +1922,7 @@ export function phaseSwitchRow(active, stored, withLabel = true) {
 }
 
 // Trip total spend expressed in the traveller's home currency (summing every logged currency).
-function tripSpendHome() {
+export function tripSpendHome() {
   const home = homeCurrency();
   const totals = {};
   (store.trip.budgetLog || []).forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
@@ -1959,9 +1959,9 @@ export function homeStatusBand(phase, cc) {
     const when = item.date === t ? 'Today' : (item.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(item.date));
     chips.push(chip('📍', `${(item.title || 'Planned').slice(0, 18)} · ${when}`, () => go('#calendar')));
   }
-  // trip spend so far, in home currency — only once something is logged
-  const sp = tripSpendHome();
-  if (sp.any && sp.sum > 0) chips.push(chip('💸', `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}`, () => go('#expenses')));
+  // Trip spend used to have its own chip here too — dropped (Home chip consolidation): the
+  // new Quick access row's Budget chip (js/screens/home.js) is now the one place spend shows
+  // on Home, so it is not duplicated across Trip status and Quick access.
   // offline / online — always real, tap toggles
   const online = netMode() === 'online';
   chips.push(chip(online ? '📶' : '✈️', online ? 'Online' : 'Offline', () => { setNetMode(online ? 'offline' : 'online'); render(); }));
@@ -8876,7 +8876,7 @@ function dayIndex() {
   return Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
 }
 // The next thing on the traveller's own calendar — today or later — i.e. their plan.
-function nextPlanItem() {
+export function nextPlanItem() {
   const t = todayISO();
   return calItems().find((it) => it.date && it.date >= t) || null;
 }
@@ -9284,7 +9284,7 @@ export function addDaysISO(iso, n) {
   try { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
   catch { return iso; }
 }
-function evShort(d) {
+export function evShort(d) {
   try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
   catch { return d; }
 }
