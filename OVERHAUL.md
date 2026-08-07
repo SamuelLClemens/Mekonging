@@ -1614,3 +1614,60 @@ Help screen no longer shows the "New here?" card; exercised the new Explore drop
 reflected the new value on both the unscoped and scoped views); **true offline test**: killed
 the dev server, hard-reloaded on `#explore-all` — full render from Service Worker Cache
 Storage, dropdown present and functional, zero console errors.
+
+### Places, You & Weather round (mk-v0.356.0)
+
+- **Places — confirmed already correct.** Direct DOM inspection of `#places-th` confirmed
+  the screen already leads with the map, then "Closest to you," then the category groups
+  (established in the earlier Places P1/P6 work) — no change needed.
+- **You — the "Trip in numbers" strip removed.** This second, static status-chip row sat
+  directly under the quick-access chip row and duplicated its own Calendar day-count,
+  Journal-entry-count and spend/budget figures a second time. Removed along with its now-dead
+  `tripNumbersStrip()` function — every figure it showed still shows live on the one chip
+  above that already owns it.
+- **You — every remaining tile group is now chips, and three previously-unreachable global
+  features were added.** Per direct request ("turn all the your stuff in you into chips ...
+  so users can reach everything from you"): the "Your stuff" and "You & settings" tile grids
+  are now `chips` rows using the same `status-chip` look as the quick-access row above
+  (Journal dropped from "Your stuff" — same reasoning that already dropped "My phrases": the
+  chip row above already covers it). A new "Journey map" chip was added to "Your stuff" (it
+  was previously reachable only from deep inside a Journal entry). A new "Plan & prepare"
+  group brings Home's own Trip plans / Pre-trip checklist / Bargain helper to You for the
+  first time — previously these had no path from You at all. "You & settings" gained Search
+  everything (already on Home, now here too) and Export & backup (previously two taps deep
+  inside Settings, now one). Deliberately NOT added: the ~30 country-scoped content screens
+  (weather, places, food, transport, etc.) — those remain Explore/Places' job and stay
+  reachable there; mirroring all of them into You would rebuild the exact "wall of tiles"
+  clutter this round (and the last several) worked to remove.
+- **Weather — the top trip-itinerary calendar is gone, and the screen is fully reordered.**
+  `planCalendarCard()`/`planCalendar()` (the "🗓 Trip calendar" that used to lead the whole
+  screen with a day-by-day itinerary) are deleted entirely. New order: Right now → Next 24
+  hours → Upcoming forecast calendar (the screen's one calendar now) → 7-day forecast →
+  Refresh, THEN "Weather in your trip cities" (unchanged per-city panels, just with no
+  leading itinerary calendar above them), THEN "Look up another city" — the existing map
+  plus a new free-text search (a native `<datalist>` of all 39 cities across all four
+  countries, offline, no extra library) that jumps to a city on an exact match exactly like
+  tapping it on the map. The old bottom "See another city" dropdown is gone, folded into this
+  one section. Also fixed a real, pre-existing CSS bug found along the way: two unrelated
+  `.wx-cal` rules collided (the deleted trip-calendar card's `border-top` rule and the
+  forecast-calendar grid's `display:grid` rule shared one class name), which had been
+  quietly bleeding a teal top-border onto the forecast calendar grid.
+- **Calendar — partner-naming and per-partner orgasm tracking already exists; verified, not
+  rebuilt.** The private calendar's intimacy tracker (`js/main.js`'s `personalEncounterForm` +
+  `js/personal.js`) already does exactly what was asked: typing a name into "Or a new partner
+  name" and saving calls `personal.addPartner()`, which immediately appears as a "Partner"
+  dropdown option on every future entry, and each entry has its own "Orgasms" number field.
+  It is off by default (behind "Turn on private calendar" on the Calendar screen) — a
+  deliberate privacy default, not a bug — which is likely why it read as missing. Verified
+  live: enabling it, adding a partner named "Alex" with 3 orgasms logged the entry correctly
+  and "Alex" immediately appeared in the Partner dropdown for next time; both the entry and
+  the test partner were then removed.
+
+**Verified:** all of the above checked live in the browser (console-clean throughout);
+Weather's new order and trip-cities section confirmed against a real added trip stop; the
+new city search confirmed against all 39 cities and a live switch (Bangkok → Pai); the
+calendar/partner flow confirmed end-to-end as described above.
+
+**Ship note (mk-v0.356.0):** this bump covers the You chip conversion + new feature chips,
+the Weather restructure (trip-calendar removal, reorder, new city search, `.wx-cal` CSS
+collision fix), and the Places/Calendar verification passes above — one version, one commit.
