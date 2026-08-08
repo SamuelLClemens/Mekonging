@@ -111,7 +111,10 @@ export function homeScreen() {
   // countdown + checklist hub (no near-me); travelling gets the live, forecast-aware
   // near-me card; post gets the return recap. This is what makes Home fit the traveller's
   // actual stage instead of showing "what's near you" to someone still at home or already back.
-  wrap.append(homeStageBlock(phase, leadCC));
+  // Kept as a variable (rather than appended inline) because the planning phase needs to
+  // insert Search everything into its middle, below — see that block's comment.
+  const stageBlock = homeStageBlock(phase, leadCC);
+  wrap.append(stageBlock);
 
   // H4 — next-stop card: real transport options between where you are and your next planned
   // stop. Background-loads all four countries' route data (journey.js's route graph memoises
@@ -147,6 +150,16 @@ export function homeScreen() {
   if (onGround) {
     const ring = homeWeatherRing();
     if (ring) wrap.append(h('div', { class: 'card home-wx-card' }, [ring]));
+  } else if (phase === 'planning') {
+    // Reorder per direct request: "I have arrived" (inside the countdown card, top of
+    // stageBlock above) → Search everything → "Plan your trip"/"Tune 'For you'" — so Search
+    // is inserted directly into stageBlock's own DOM, right before its trailing actions row,
+    // rather than trailing the whole stage block as it does in every other phase. stageBlock
+    // itself is built in main.js (planningStageBlock); Search everything lives only here, in
+    // home.js, so DOM insertion is how the two meet without a cross-file rewrite.
+    const actions = stageBlock.querySelector('.home-actions');
+    if (actions) actions.before(searchEverythingBtn());
+    else wrap.append(searchEverythingBtn());
   } else {
     wrap.append(searchEverythingBtn());
   }
@@ -157,31 +170,40 @@ export function homeScreen() {
   // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
   // focused country's hub (the "Explore" button above), so there is one menu per context
   // instead of Home and the hub duplicating each other.
+  //
+  // Both groups render as chip rows now, not a tile grid, per direct request ("turn all the
+  // things in home plan your trip and money and tools into chips") — the same .status-chip
+  // look already used by quickAccessRow above and by You's own tile→chip conversion
+  // (meHubScreen's chipGrp/flatChip, main.js): icon + label only (the tile descriptions are
+  // dropped, same call as that earlier conversion), plus the same live " · N unread" sub and
+  // red accent on Travel circle as meHubScreen's own copy of that chip.
+  const chip = (ic, label, hash, badge) => h('button', {
+    class: 'status-chip' + (badge ? ' budget-red' : ''), onclick: () => go(hash),
+  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, badge ? `${label} · ${badge} unread` : label)]);
   const groups = [
     { label: 'Plan your trip', items: [
-      { ic: ICON.route, t: 'Trip plans', d: 'Routes that fit you', hash: '#plans' },
-      { ic: ICON.target, t: 'For you', d: 'Your personalised picks', hash: '#foryou' },
-      { ic: ICON.suitcase, t: 'My trip', d: 'Itinerary + budget log', hash: '#trip' },
-      { ic: ICON.checklist, t: 'Pre-trip checklist', d: 'Visa, health, packing', hash: '#checklist' },
       // Talk-section-style unify (You Y1): six destinations used to answer to two different
       // names depending on which tab you arrived from. The short name now matches meHubScreen
       // (js/main.js) on every one of these — see OVERHAUL.md's You section for the audit.
-      { ic: ICON.book, t: 'Journal', d: 'Stamped entries + map', hash: '#journal' },
-      { ic: ICON.trophy, t: 'Trip scrapbook', d: 'Photo album of your trip', hash: '#scrapbook' },
-      { ic: ICON.calendar, t: 'Calendar', d: 'Stays, meals & ratings', hash: '#calendar' },
-      { ic: ICON.star, t: 'Saved places', d: 'Organise by theme', hash: '#saved' },
+      chip('🧭', 'Trip plans', '#plans'),
+      chip('🎯', 'For you', '#foryou'),
+      chip('🧳', 'My trip', '#trip'),
+      chip('✅', 'Pre-trip checklist', '#checklist'),
+      chip('📔', 'Journal', '#journal'),
+      chip('📸', 'Trip scrapbook', '#scrapbook'),
+      chip('📅', 'Calendar', '#calendar'),
+      chip('⭐', 'Saved places', '#saved'),
     ] },
     { label: 'Money & tools', items: [
-      { ic: ICON.coins, t: 'Currency converter', d: 'Live rates, works offline', hash: '#currency' },
-      { ic: ICON.suitcase, t: 'Money', d: 'Track spend vs your budget', hash: '#expenses' },
-      { ic: ICON.tag, t: 'Bargain helper', d: 'Counter-offers + cheapest essentials', hash: '#bargain' },
-      { ic: ICON.users, t: 'Travel circle', d: 'Share, connect & message', hash: '#circle', badge: unreadInboxCount() },
-      { ic: ICON.tag, t: 'Buy or sell', d: 'Swap cash, rides, rooms & gear', hash: '#exchange' },
-      { ic: ICON.lock, t: 'Documents', d: 'Encrypted on-device', hash: '#vault' },
-      { ic: ICON.help, t: 'Help & FAQ', d: 'Offline vs online, how to use', hash: '#help' },
+      chip('💱', 'Currency converter', '#currency'),
+      chip('💰', 'Money', '#expenses'),
+      chip('🏷️', 'Bargain helper', '#bargain'),
+      chip('👥', 'Travel circle', '#circle', unreadInboxCount()),
+      chip('🤝', 'Buy or sell', '#exchange'),
+      chip('🔒', 'Documents', '#vault'),
+      chip('❓', 'Help & FAQ', '#help'),
     ] },
   ];
-  const tileBtn = sectionTile;
   // Decks open by RELEVANCE to the current phase rather than all-or-nothing: before/after the
   // trip a traveller plans and remembers, so the trip-planning deck (index 0) leads; on the
   // ground the recognition tools lead (see the Identify deck below). This keeps exactly one
@@ -190,7 +212,7 @@ export function homeScreen() {
   groups.forEach((g, gi) => {
     wrap.append(h('details', { class: 'home-group-d', open: (gi === 0 && planDeckOpen) ? '' : null }, [
       h('summary', { class: 'home-group' }, g.label),
-      h('div', { class: 'grid' }, g.items.map(tileBtn)),
+      h('div', { class: 'chips' }, g.items),
     ]));
   });
 

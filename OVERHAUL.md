@@ -1829,3 +1829,76 @@ a matching `title` attribute — the 5-tab bar layout did not break. Cleared the
 Settings and confirmed the prompt reappeared on You and the tab reverted to "YOU" — reversible
 in both directions. True offline test (dev server killed): full render from Service Worker
 Cache Storage on `#me`, zero console errors.
+
+### Danger screen reorder, Home planning-phase reorder, Plan/Money chips, dictionary rebuild (mk-v0.363.0)
+
+Four direct requests, verified and shipped together:
+
+**Health & wildlife hazards — mosquitoes/dengue moved to the end.** `dangerScreen()`
+(`js/main.js`) used to lead with `mosquitoCard()`, before the dangerous-animal groups
+(snakes, in the sea, scorpions & centipedes, larger animals). Per direct request it now
+renders last, after the wildlife groups' own sources note and disclaimer — it carries its
+own sources note and disclaimer already, so it reads as a self-contained closing section
+rather than the screen's lead.
+
+**Home planning phase: "Plan your trip" and "Money & tools" are now chip rows, not tile
+grids.** Per direct request ("turn all the things in home plan your trip and money and
+tools into chips"), both groups in `homeScreen()` (`js/screens/home.js`) now render as
+`.chips` rows of `.status-chip` buttons — the same look already used by `quickAccessRow()`
+above them and by You's own tile→chip conversion (`meHubScreen`'s `chipGrp`/`flatChip`,
+`js/main.js`, mk-v0.348.0). Icon + label only, same call as that earlier conversion (the
+old tile descriptions are dropped); Travel circle keeps its live " · N unread" sub and red
+accent, identical to meHubScreen's own copy of that chip. The "🔎 Identify what's around
+you" group below is unchanged — still a `.tile` grid — since it was not part of the request.
+
+**Home planning phase reorder:** per direct request ("first I have arrived butoon and then
+search everything and then plan your trip and tune 'for you'"), the planning-phase stage
+block now reads: the countdown card (which shows an "I have arrived →" button once the trip
+has started) → 🔎 Search everything → the "🧭 Plan your trip" / "🎯 Tune 'For you'" actions
+row. Search everything used to trail the whole "Plan & tools" menu much further down;
+`homeStageBlock()`'s return value (built in `main.js`, opaque to `home.js`) is now kept as a
+variable in `homeScreen()` and, for the planning phase only, Search everything is inserted
+via `Element.before()` directly ahead of its `.home-actions` row — the same `.before()`/
+`insertBefore()` DOM-splicing pattern already used elsewhere in `main.js` (e.g. `keyCard`
+before `layersCard`), needed here because Search everything is defined in `home.js` while
+the stage block it needs to land inside is composed in `main.js`. Other phases (traveling,
+post) are unaffected — Search still trails there, as before.
+
+**My Dictionary rebuilt: language dropdown, one merged alphabetical list, collapsible.** Per
+direct request:
+- **Dropdown, not stacked cards.** With more than one language holding saved phrases,
+  `dictionaryScreen()` now shows a `field('Language', selectEl(...))` dropdown (reusing
+  `ui-widgets.js`'s existing `selectEl`, the same helper other screens' language/location
+  pickers already use) and renders only the selected language, instead of every language's
+  card stacked one after another. One language: the dropdown is skipped entirely. The
+  selection itself (`dictLangSel`, a new module-level variable, same pattern as the
+  calendar's `calSelDate`) is a view choice, not trip data, so it is not persisted to the
+  store — it resets to the first available language on a fresh load.
+- **One merged, alphabetical list per language**, not book-pinned phrases followed by a
+  "📝 Your own translations" sub-heading. Book phrases and custom ("Say it") translations
+  are combined into one array and sorted by their English text (`localeCompare`, case-
+  insensitive) before rendering — a phrase's origin no longer affects where it sits.
+- **Collapsible.** Each language's list is now a `<details class="filters-collapse">`
+  (open by default — this screen's whole point — but foldable like every other card group
+  in the app), wrapped in a `.card.dict-card` so the pill-styled summary sits on a card
+  surface, the same nesting `dangerScreen()`'s first-aid entries already use.
+- Manual reordering (↑ ↓, `movePhrasePin`/`moveCustomPhrase`) is retired: with the list now
+  always alphabetical, those controls would silently do nothing, so they and the two
+  now-dead helper functions are removed. Copy, speak, note and remove are unchanged.
+
+**Verified (all four, live in the browser, via the accessibility tree and direct DOM
+inspection — screenshots included for the chip/dropdown/merge views):** mosquito card
+confirmed as the last child of `#danger`'s screen div, after the wildlife sources/
+disclaimer. Home's planning-phase stage block confirmed in DOM order: `card companion-card`
+→ `card home-outlook` → `btn ... home-search` → `home-actions`; "Plan your trip" and "Money
+& tools" confirmed rendering 8 and 7 `.status-chip` buttons respectively inside `.chips`
+(the "Identify" group beside them still `.tile`/`.grid`, untouched). Dictionary: pinned one
+phrase (auto-propagated to all 8 languages), translated a second phrase via "Say it" (auto-
+saved as a custom phrase), and confirmed the dropdown listed all 8 languages; switching
+languages re-rendered the correct single collapsible with that language's own phrases;
+Thai's list showed "Delicious food" (custom) interleaved correctly between "Excuse me /
+Sorry" and "Hello" (both book phrases) with no sub-heading — proving the merge and the A–Z
+sort together. Note-add, note-save and remove (with its confirm dialog) all worked
+correctly post-rebuild. Zero console errors throughout. True offline test (dev server
+killed, `caches.keys()` confirmed on `mk-v0.363.0`): `#danger`, `#home` and `#dictionary`
+all rendered correctly from Service Worker Cache Storage with zero console errors.
