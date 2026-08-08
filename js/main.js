@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.362.0';
+const APP_VERSION = 'mk-v0.363.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3522,13 +3522,17 @@ function togglePhraseHide(code, key) {
   if (i >= 0) { a.splice(i, 1); } else { a.push(key); const p = phrasePinsFor(code); const j = p.indexOf(key); if (j >= 0) p.splice(j, 1); }
   save();
 }
-function movePhrasePin(code, key, dir) { const a = phrasePinsFor(code); const i = a.indexOf(key); const j = i + dir; if (i < 0 || j < 0 || j >= a.length) return; const t = a[i]; a[i] = a[j]; a[j] = t; save(); }
+// (Manual reorder — movePhrasePin — used to live here. Removed: the dictionary now sorts
+// every saved phrase alphabetically instead of a hand-arranged order, per direct request,
+// so a "move up/down" control would silently do nothing. See dictionaryScreen below.)
 
 // --- custom phrases: saved from live translate ("Say it in X"), not the static phrasebook.
 // A free-text translation has no category to derive a phraseKey from, so it gets its own
 // per-language list (state.js) instead of phrasePins — same key SHAPE though (code|catId|slug,
 // with a synthetic 'custom' catId no real category ever uses), so phraseNoteFor/setPhraseNote
-// below (keyed by a plain string) work unchanged. Order is display order, oldest first.
+// below (keyed by a plain string) work unchanged. Order is display order, oldest first — see
+// the dictionary-sorts-alphabetically note above; this list's stored order now only matters
+// as an iteration order before that sort, never shown directly.
 function customPhrasesFor(code) { const m = store.profile.prefs.customPhrases || (store.profile.prefs.customPhrases = {}); return m[code] || (m[code] = []); }
 // Translating something yourself is as strong a signal as searching the phrasebook — auto-
 // saved with no separate tap, same spirit as ensurePhrasePinned above. Idempotent by the
@@ -3548,14 +3552,6 @@ function removeCustomPhrase(code, key) {
   const a = customPhrasesFor(code);
   const i = a.findIndex((c) => c.key === key);
   if (i >= 0) { a.splice(i, 1); save(); }
-}
-function moveCustomPhrase(code, key, dir) {
-  const a = customPhrasesFor(code);
-  const i = a.findIndex((c) => c.key === key);
-  const j = i + dir;
-  if (i < 0 || j < 0 || j >= a.length) return;
-  const t = a[i]; a[i] = a[j]; a[j] = t;
-  save();
 }
 // Map every phrase (incl. the allergens category) to its derived key, so pinned/hidden
 // keys can be resolved back to the phrase object regardless of which category it lives in.
@@ -3898,10 +3894,11 @@ function attachDictNote(card, key, label, noteBtn, repaint) {
 }
 
 // A saved live-translation ("Say it in X") row in the dictionary — same look as a book
-// phraseRow (en / native script / speak / copy) but its own reorder/remove controls, since it
-// lives in customPhrases, not the book's pin/hide system phraseRow's controls are wired to.
-// No roman line (the translate service returns script text only, never a transliteration).
-function customPhraseRow(code, entry, locale, index, total, repaint) {
+// phraseRow (en / native script / speak / copy) but its own remove control, since it lives in
+// customPhrases, not the book's pin/hide system phraseRow's controls are wired to. No roman
+// line (the translate service returns script text only, never a transliteration). No
+// reorder control — the dictionary is sorted alphabetically now, so entries never need one.
+function customPhraseRow(code, entry, locale, repaint) {
   const able = canSay(locale);
   const grow = h('div', { class: 'grow tappable', role: 'button', tabindex: '0', 'aria-label': `Show large: ${entry.en}`, title: 'Tap to show large to a local' }, [
     h('div', { class: 'en' }, entry.en),
@@ -3916,8 +3913,6 @@ function customPhraseRow(code, entry, locale, index, total, repaint) {
     const ok = await say(entry.script, locale);
     if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
   });
-  const up = h('button', { class: 'speak', 'aria-label': `Move ${entry.en} up`, title: 'Move up', disabled: index === 0 ? '' : null, onclick: () => { moveCustomPhrase(code, entry.key, -1); repaint(); } }, '↑');
-  const down = h('button', { class: 'speak', 'aria-label': `Move ${entry.en} down`, title: 'Move down', disabled: index === total - 1 ? '' : null, onclick: () => { moveCustomPhrase(code, entry.key, 1); repaint(); } }, '↓');
   const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${entry.en}`, title: 'Add or edit a note' }, '📝');
   const rm = h('button', {
     class: 'speak hide', 'aria-label': `Remove ${entry.en}`, title: 'Remove from your phrases',
@@ -3926,9 +3921,14 @@ function customPhraseRow(code, entry, locale, index, total, repaint) {
         .then((ok) => { if (ok) { removeCustomPhrase(code, entry.key); repaint(); } });
     },
   }, '🗑');
-  return { row: h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [copyBtn, speakBtn, up, down, noteBtn, rm])]), noteBtn };
+  return { row: h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [copyBtn, speakBtn, noteBtn, rm])]), noteBtn };
 }
 
+// Which language's dictionary is showing, when more than one has saved phrases — a plain
+// module-level variable (same pattern as calSelDate for the calendar's selected day above)
+// rather than a stored pref, since it is just a view choice, not trip data worth persisting
+// across sessions. Reset to a valid code below whenever the current one no longer has any.
+let dictLangSel = null;
 function dictionaryScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
@@ -3960,9 +3960,23 @@ function dictionaryScreen() {
   }
 
   wrap.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 10px' },
-    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${allCodes.length} ${allCodes.length === 1 ? 'language' : 'languages'}. Use ↑ ↓ to reorder · tap a line to show it large · 📝 add a note · 🗑 remove.`));
+    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${allCodes.length} ${allCodes.length === 1 ? 'language' : 'languages'}. Sorted A–Z · tap a line to show it large · 📝 add a note · 🗑 remove.`));
 
-  allCodes.forEach((code) => {
+  // More than one language in play: a dropdown picks which one to view, instead of every
+  // language's list stacked one after another — per direct request. One language: skip the
+  // dropdown entirely and just show it.
+  if (!dictLangSel || !allCodes.includes(dictLangSel)) dictLangSel = allCodes[0];
+  if (allCodes.length > 1) {
+    wrap.append(field('Language', selectEl(
+      allCodes.map((c) => [c, (getLanguage(c) || {}).label || c]),
+      dictLangSel,
+      (v) => { dictLangSel = v; repaint(); },
+      'Choose a language',
+    )));
+  }
+  const codesToShow = allCodes.length > 1 ? [dictLangSel] : allCodes;
+
+  codesToShow.forEach((code) => {
     const book = getLanguage(code);
     if (!book) return;
     const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
@@ -3973,36 +3987,46 @@ function dictionaryScreen() {
     const customEntries = customMap[code] || [];
     if (!keys.length && !customEntries.length) return;
 
-    const card = h('div', { class: 'card dict-card' });
-    card.append(h('h2', { style: 'margin-top:0' }, book.label));
-    keys.forEach((k, i) => {
-      const { p, catId } = idx.get(k);
-      const row = phraseRow(p, book.locale, { code, catId, onChange: repaint, noHide: true });
-      const ctrls = row.querySelector('.phrase-ctrls');
-      // In the dictionary the pin is implicit (everything here is saved); replace the
-      // instant-unpin 📌 with a confirmed 🗑 remove, and add a note control.
-      const pinBtn = ctrls && ctrls.querySelector('.pin');
-      if (pinBtn) pinBtn.remove();
-      const up = h('button', { class: 'speak', 'aria-label': `Move ${p.en} up`, title: 'Move up', disabled: i === 0 ? '' : null, onclick: () => { movePhrasePin(code, k, -1); repaint(); } }, '↑');
-      const down = h('button', { class: 'speak', 'aria-label': `Move ${p.en} down`, title: 'Move down', disabled: i === keys.length - 1 ? '' : null, onclick: () => { movePhrasePin(code, k, 1); repaint(); } }, '↓');
-      const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${p.en}`, title: 'Add or edit a note' }, '📝');
-      const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { confirmAction({ title: 'Remove phrase?', body: `Remove “${p.en}” from your saved phrases?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { togglePhrasePin(code, k); repaint(); } }); } }, '🗑');
-      if (ctrls) ctrls.append(up, down, noteBtn, rm);
-      card.append(row);
-      attachDictNote(card, k, p.en, noteBtn, repaint);
-    });
+    // One flat, alphabetical dictionary — book-pinned phrases and the traveller's own live
+    // translations merged into a single list sorted by English text, not split into two
+    // groups by where each phrase came from, per direct request.
+    const merged = [
+      ...keys.map((k) => ({ kind: 'book', key: k, ...idx.get(k) })),
+      ...customEntries.map((entry) => ({ kind: 'custom', entry, en: entry.en })),
+    ].sort((a, b) => (a.p ? a.p.en : a.en).localeCompare(b.p ? b.p.en : b.en, undefined, { sensitivity: 'base' }));
 
-    // Your own live translations — kept as their own labelled group beneath any book-pinned
-    // phrases, since they came from "Say it" rather than the phrasebook list.
-    if (customEntries.length) {
-      if (keys.length) card.append(h('h3', { style: 'margin:14px 0 4px' }, '📝 Your own translations'));
-      customEntries.forEach((entry, i) => {
-        const { row, noteBtn } = customPhraseRow(code, entry, book.locale, i, customEntries.length, repaint);
-        card.append(row);
-        attachDictNote(card, entry.key, entry.en, noteBtn, repaint);
-      });
-    }
-    wrap.append(card);
+    // Collapsible per direct request — defaults open since it is this screen's whole point,
+    // but folds away like every other card group in the app once a traveller wants it out
+    // of the way (e.g. after switching languages via the dropdown above). Same nesting as
+    // dangerScreen's first-aid entries: a plain .card wraps the pill-styled .filters-collapse
+    // <details>, so the pill sits on the card surface rather than the bare page background.
+    const dd = h('details', { class: 'filters-collapse dict-lang-d', open: '' }, [
+      h('summary', {}, `${book.label} · ${merged.length} ${merged.length === 1 ? 'phrase' : 'phrases'}`),
+    ]);
+    const inner = h('div', { class: 'dict-lang-inner' });
+    merged.forEach((m) => {
+      if (m.kind === 'book') {
+        const { p, catId, key } = m;
+        const row = phraseRow(p, book.locale, { code, catId, onChange: repaint, noHide: true });
+        const ctrls = row.querySelector('.phrase-ctrls');
+        // In the dictionary the pin is implicit (everything here is saved); replace the
+        // instant-unpin 📌 with a confirmed 🗑 remove, and add a note control.
+        const pinBtn = ctrls && ctrls.querySelector('.pin');
+        if (pinBtn) pinBtn.remove();
+        const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${p.en}`, title: 'Add or edit a note' }, '📝');
+        const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { confirmAction({ title: 'Remove phrase?', body: `Remove “${p.en}” from your saved phrases?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { togglePhrasePin(code, key); repaint(); } }); } }, '🗑');
+        if (ctrls) ctrls.append(noteBtn, rm);
+        inner.append(row);
+        attachDictNote(inner, key, p.en, noteBtn, repaint);
+      } else {
+        const { entry } = m;
+        const { row, noteBtn } = customPhraseRow(code, entry, book.locale, repaint);
+        inner.append(row);
+        attachDictNote(inner, entry.key, entry.en, noteBtn, repaint);
+      }
+    });
+    dd.append(inner);
+    wrap.append(h('div', { class: 'card dict-card' }, [dd]));
   });
 
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#phrasebook') }, '💬 Add more from the phrasebook'));
@@ -11120,7 +11144,6 @@ function mosquitoCard() {
 function dangerScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Health & wildlife hazards', '#sos'));
-  wrap.append(mosquitoCard());
   wrap.append(h('p', { class: 'map-hint' }, 'Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
   const list = allSpecies().filter((s) => s.dangerous);
   const groups = [
@@ -11142,6 +11165,10 @@ function dangerScreen() {
   if (!list.length) wrap.append(h('p', { class: 'empty' }, 'The wildlife library is still downloading — reconnect once to fetch it.'));
   wrap.append(sourcesNote(DANGER_SOURCES, 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Most animals leave you alone if you leave them alone. Wear shoes at night, do not reach into holes or thick leaf litter, and never handle or corner wildlife.'));
+  // Mosquitoes & dengue — moved to the end of this screen per direct request (was the
+  // lead card). It carries its own sources note and disclaimer already, so it reads as a
+  // self-contained closing section rather than needing to borrow the wildlife groups'.
+  wrap.append(mosquitoCard());
   mount(wrap, '#sos');
 }
 
