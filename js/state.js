@@ -53,6 +53,11 @@ function defaults() {
         phrasePins: {},       // { th: ['th|basics|hello', …] } — pin order IS the display order
         phraseHidden: {},     // { th: [key, …] } — phrases tucked away from the lists
         phraseNotes: {},      // { 'th|basics|hello': 'wave when you say it' } — your notes, by phrase key
+        // Live-translated ("Say it in X") phrases the traveller typed themselves, auto-saved
+        // to the dictionary the same way searching the phrasebook auto-pins a match — these
+        // have no static category to belong to, so they get their own per-language list
+        // instead of phrasePins. { th: [{ key, en, script, ts }, …] } — order IS display order.
+        customPhrases: {},
         // --- "things to do near me" suggestion rotation. Marking a suggestion Done or Not
         // interested removes it so a fresh one takes its place; suggestions never repeat the
         // same set. Both hold place ids. doneSpots is a light achievement log too.

@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.359.0';
+const APP_VERSION = 'mk-v0.361.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -3504,6 +3504,40 @@ function togglePhraseHide(code, key) {
   save();
 }
 function movePhrasePin(code, key, dir) { const a = phrasePinsFor(code); const i = a.indexOf(key); const j = i + dir; if (i < 0 || j < 0 || j >= a.length) return; const t = a[i]; a[i] = a[j]; a[j] = t; save(); }
+
+// --- custom phrases: saved from live translate ("Say it in X"), not the static phrasebook.
+// A free-text translation has no category to derive a phraseKey from, so it gets its own
+// per-language list (state.js) instead of phrasePins — same key SHAPE though (code|catId|slug,
+// with a synthetic 'custom' catId no real category ever uses), so phraseNoteFor/setPhraseNote
+// below (keyed by a plain string) work unchanged. Order is display order, oldest first.
+function customPhrasesFor(code) { const m = store.profile.prefs.customPhrases || (store.profile.prefs.customPhrases = {}); return m[code] || (m[code] = []); }
+// Translating something yourself is as strong a signal as searching the phrasebook — auto-
+// saved with no separate tap, same spirit as ensurePhrasePinned above. Idempotent by the
+// english text typed (re-translating an already-saved phrase never duplicates it); returns
+// whether it actually added anything new, so the caller can decide whether to tell the traveller.
+function addCustomPhrase(code, en, script) {
+  const text = String(en || '').trim();
+  if (!text || !script) return false;
+  const key = `${code}|custom|${phraseSlug(text)}`;
+  const a = customPhrasesFor(code);
+  if (a.some((c) => c.key === key)) return false;
+  a.push({ key, en: text, script, ts: Date.now() });
+  save();
+  return true;
+}
+function removeCustomPhrase(code, key) {
+  const a = customPhrasesFor(code);
+  const i = a.findIndex((c) => c.key === key);
+  if (i >= 0) { a.splice(i, 1); save(); }
+}
+function moveCustomPhrase(code, key, dir) {
+  const a = customPhrasesFor(code);
+  const i = a.findIndex((c) => c.key === key);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= a.length) return;
+  const t = a[i]; a[i] = a[j]; a[j] = t;
+  save();
+}
 // Map every phrase (incl. the allergens category) to its derived key, so pinned/hidden
 // keys can be resolved back to the phrase object regardless of which category it lives in.
 function phraseIndexFor(categories, code) {
@@ -3826,6 +3860,56 @@ function phrasebookScreen(lang) {
 // Every phrase the traveller saved, across all languages, gathered in one place. Built
 // from the pins (tap 📌 on any phrase to add it). Each entry can carry a personal note,
 // and removal is confirmed — the "add / delete with verification" the user asked for.
+// Shared by both dictionary sections (book-pinned phrases and custom live translations):
+// the 📝 note editor beneath a saved row, toggled by that row's own note button.
+function attachDictNote(card, key, label, noteBtn, repaint) {
+  const noteText = phraseNoteFor(key);
+  const noteWrap = h('div', { class: 'dict-note-wrap' });
+  const disp = h('div', { class: 'dict-note', hidden: noteText ? null : '' }, noteText ? `📝 ${noteText}` : '');
+  const ta = h('textarea', { class: 'dict-note-edit', hidden: '', rows: '2', placeholder: 'Your note — e.g. “say it softly”, “use with elders”', 'aria-label': `Note for ${label}` });
+  ta.value = noteText;
+  const saveNote = h('button', { class: 'btn ghost dict-note-save', hidden: '', onclick: () => { setPhraseNote(key, ta.value); repaint(); } }, 'Save note');
+  noteBtn.addEventListener('click', () => {
+    const hidden = ta.hasAttribute('hidden');
+    if (hidden) { ta.removeAttribute('hidden'); saveNote.removeAttribute('hidden'); ta.focus(); }
+    else { ta.setAttribute('hidden', ''); saveNote.setAttribute('hidden', ''); }
+  });
+  noteWrap.append(disp, ta, saveNote);
+  card.append(noteWrap);
+}
+
+// A saved live-translation ("Say it in X") row in the dictionary — same look as a book
+// phraseRow (en / native script / speak / copy) but its own reorder/remove controls, since it
+// lives in customPhrases, not the book's pin/hide system phraseRow's controls are wired to.
+// No roman line (the translate service returns script text only, never a transliteration).
+function customPhraseRow(code, entry, locale, index, total, repaint) {
+  const able = canSay(locale);
+  const grow = h('div', { class: 'grow tappable', role: 'button', tabindex: '0', 'aria-label': `Show large: ${entry.en}`, title: 'Tap to show large to a local' }, [
+    h('div', { class: 'en' }, entry.en),
+    h('div', { class: 'native', lang: locale }, entry.script),
+  ]);
+  const showLarge = () => showBigPhrase({ en: entry.en, script: entry.script }, locale, {});
+  grow.addEventListener('click', showLarge);
+  grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showLarge(); } });
+  const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${entry.en}`, title: 'Copy the local text', onclick: () => copyText(entry.script, copyBtn) }, '⧉');
+  const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${entry.en}`, disabled: able ? null : '' }, '🔊');
+  speakBtn.addEventListener('click', async () => {
+    const ok = await say(entry.script, locale);
+    if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
+  });
+  const up = h('button', { class: 'speak', 'aria-label': `Move ${entry.en} up`, title: 'Move up', disabled: index === 0 ? '' : null, onclick: () => { moveCustomPhrase(code, entry.key, -1); repaint(); } }, '↑');
+  const down = h('button', { class: 'speak', 'aria-label': `Move ${entry.en} down`, title: 'Move down', disabled: index === total - 1 ? '' : null, onclick: () => { moveCustomPhrase(code, entry.key, 1); repaint(); } }, '↓');
+  const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${entry.en}`, title: 'Add or edit a note' }, '📝');
+  const rm = h('button', {
+    class: 'speak hide', 'aria-label': `Remove ${entry.en}`, title: 'Remove from your phrases',
+    onclick: () => {
+      confirmAction({ title: 'Remove translation?', body: `Remove “${entry.en}” from your saved phrases?`, confirmLabel: 'Remove', danger: true })
+        .then((ok) => { if (ok) { removeCustomPhrase(code, entry.key); repaint(); } });
+    },
+  }, '🗑');
+  return { row: h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [copyBtn, speakBtn, up, down, noteBtn, rm])]), noteBtn };
+}
+
 function dictionaryScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
@@ -3834,13 +3918,22 @@ function dictionaryScreen() {
 
   const pinsMap = store.profile.prefs.phrasePins || {};
   const langCodes = Object.keys(pinsMap).filter((c) => (pinsMap[c] || []).length);
-  const total = langCodes.reduce((n, c) => n + pinsMap[c].length, 0);
+  const pinTotal = langCodes.reduce((n, c) => n + pinsMap[c].length, 0);
+
+  // Custom phrases: live translations ("Say it in X") the traveller typed and saved
+  // themselves — a language can appear here even with zero book-pinned phrases, so the
+  // language list below is the UNION of both, not just langCodes.
+  const customMap = store.profile.prefs.customPhrases || {};
+  const customCodes = Object.keys(customMap).filter((c) => (customMap[c] || []).length);
+  const customTotal = customCodes.reduce((n, c) => n + customMap[c].length, 0);
+  const allCodes = Array.from(new Set([...langCodes, ...customCodes]));
+  const total = pinTotal + customTotal;
 
   if (!total) {
     wrap.append(h('div', { class: 'card', style: 'text-align:center' }, [
       h('div', { style: 'font-size:2.4rem;margin-bottom:6px' }, '📖'),
       h('h2', { style: 'margin:0 0 4px' }, 'No saved phrases yet'),
-      h('p', { class: 'muted', style: 'margin:0 0 12px' }, 'Open the phrasebook, then tap 📌 on any phrase to save it here — build your own pocket dictionary of the words you actually use.'),
+      h('p', { class: 'muted', style: 'margin:0 0 12px' }, 'Open the phrasebook, then tap 📌 on any phrase to save it here — or translate something in "Say it" and it saves itself. Build your own pocket dictionary of the words you actually use.'),
       h('button', { class: 'btn block', onclick: () => go('#phrasebook') }, '💬 Browse phrases'),
     ]));
     mount(wrap, '#me');
@@ -3848,9 +3941,9 @@ function dictionaryScreen() {
   }
 
   wrap.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 10px' },
-    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${langCodes.length} ${langCodes.length === 1 ? 'language' : 'languages'}. Use ↑ ↓ to reorder · tap a line to show it large · 📝 add a note · 🗑 remove.`));
+    `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${allCodes.length} ${allCodes.length === 1 ? 'language' : 'languages'}. Use ↑ ↓ to reorder · tap a line to show it large · 📝 add a note · 🗑 remove.`));
 
-  langCodes.forEach((code) => {
+  allCodes.forEach((code) => {
     const book = getLanguage(code);
     if (!book) return;
     const allergyCat = (ALLERGENS[code] && ALLERGENS[code].length)
@@ -3858,7 +3951,8 @@ function dictionaryScreen() {
     const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
     const idx = phraseIndexFor(categories, code);
     const keys = phrasePinsFor(code).filter((k) => idx.has(k));
-    if (!keys.length) return;
+    const customEntries = customMap[code] || [];
+    if (!keys.length && !customEntries.length) return;
 
     const card = h('div', { class: 'card dict-card' });
     card.append(h('h2', { style: 'margin-top:0' }, book.label));
@@ -3876,22 +3970,19 @@ function dictionaryScreen() {
       const rm = h('button', { class: 'speak hide', 'aria-label': `Remove ${p.en}`, title: 'Remove from your phrases', onclick: () => { confirmAction({ title: 'Remove phrase?', body: `Remove “${p.en}” from your saved phrases?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { togglePhrasePin(code, k); repaint(); } }); } }, '🗑');
       if (ctrls) ctrls.append(up, down, noteBtn, rm);
       card.append(row);
-
-      // Note: shown beneath the row when set; the 📝 button reveals an inline editor.
-      const noteText = phraseNoteFor(k);
-      const noteWrap = h('div', { class: 'dict-note-wrap' });
-      const disp = h('div', { class: 'dict-note', hidden: noteText ? null : '' }, noteText ? `📝 ${noteText}` : '');
-      const ta = h('textarea', { class: 'dict-note-edit', hidden: '', rows: '2', placeholder: 'Your note — e.g. “say it softly”, “use with elders”', 'aria-label': `Note for ${p.en}` });
-      ta.value = noteText;
-      const saveNote = h('button', { class: 'btn ghost dict-note-save', hidden: '', onclick: () => { setPhraseNote(k, ta.value); repaint(); } }, 'Save note');
-      noteBtn.addEventListener('click', () => {
-        const hidden = ta.hasAttribute('hidden');
-        if (hidden) { ta.removeAttribute('hidden'); saveNote.removeAttribute('hidden'); ta.focus(); }
-        else { ta.setAttribute('hidden', ''); saveNote.setAttribute('hidden', ''); }
-      });
-      noteWrap.append(disp, ta, saveNote);
-      card.append(noteWrap);
+      attachDictNote(card, k, p.en, noteBtn, repaint);
     });
+
+    // Your own live translations — kept as their own labelled group beneath any book-pinned
+    // phrases, since they came from "Say it" rather than the phrasebook list.
+    if (customEntries.length) {
+      if (keys.length) card.append(h('h3', { style: 'margin:14px 0 4px' }, '📝 Your own translations'));
+      customEntries.forEach((entry, i) => {
+        const { row, noteBtn } = customPhraseRow(code, entry, book.locale, i, customEntries.length, repaint);
+        card.append(row);
+        attachDictNote(card, entry.key, entry.en, noteBtn, repaint);
+      });
+    }
     wrap.append(card);
   });
 
@@ -3966,7 +4057,9 @@ function showBigPhrase(p, locale, opts) {
   const inner = h('div', { class: 'bigphrase-inner' }, [
     h('div', { class: 'bp-en' }, p.en),
     h('div', { class: 'bp-script', lang: locale }, p.script),
-    h('div', { class: 'bp-roman' }, p.roman),
+    // Custom live-translated phrases carry no romanisation (the translate service returns
+    // script text only) — omit the line rather than show "say:" with nothing after it.
+    p.roman ? h('div', { class: 'bp-roman' }, p.roman) : null,
     p.note ? h('div', { class: 'bp-note' }, p.note) : null,
     h('div', { class: 'bp-actions' }, actions),
     h('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Show this screen to a local · tap anywhere to close'),
@@ -4012,6 +4105,16 @@ function liveTranslateBox(code, label, locale) {
       out.append(speakBtn);
       if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
       else say(res, locale);   // best-effort auto-play; the button always works (direct tap)
+      // Translating something yourself is as strong a signal it belongs in the dictionary as
+      // searching the phrasebook (which already auto-pins) — saved with no separate tap.
+      // Idempotent (re-translating the same text again is a no-op), so this never spams a
+      // repeat lookup — only a genuinely new phrase gets the confirmation line.
+      if (addCustomPhrase(code, text, res)) {
+        out.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
+          '✓ Saved to your dictionary · ',
+          h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'View →'),
+        ]));
+      }
     } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
   };
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(); } });
