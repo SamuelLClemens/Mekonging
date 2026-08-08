@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.358.0';
+const APP_VERSION = 'mk-v0.359.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1892,11 +1892,13 @@ function quickSpendRow(id) {
 // phase's primary action lifted on top and a one-tap spend at the foot — the four old blocks
 // (phaseNextBest, journey companion, right-now, daily strip) merged into one, with the
 // duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
-// On-the-ground only: a 24h watch-face weather ring right at the top of Home, so "what's it
-// doing right now, right here" reads at a glance — the same ring already used on the Weather
-// screen (wxHourlyRingSvg), just compact and tapping through to the full view. Used to be
-// arrived-phase-only; now shows for the whole (merged) on-the-ground phase.
-function homeWeatherRing() {
+// On-the-ground only: a 24h watch-face weather ring, so "what's it doing right now, right
+// here" reads at a glance — the same ring already used on the Weather screen (wxHourlyRingSvg),
+// just compact and tapping through to the full view. Used to be arrived-phase-only; now shows
+// for the whole (merged) on-the-ground phase. Used to render nested at the top of the "Right
+// now" card; now rendered by home.js as its own standalone card, swapped in placement with
+// "Search everything" per direct request — exported so home.js can call it directly.
+export function homeWeatherRing() {
   const ctx = contextNow();
   const spot = ctx.near ? ctx.near.spot : null;
   if (!spot) return null;
@@ -1913,10 +1915,8 @@ function homeWeatherRing() {
 function homeNowCard(phase, cc) {
   const card = rightNowSection();               // .right-now — moment header + live picks (or a location invite)
   const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
-  if (phase === 'traveling') {
-    const ring = homeWeatherRing();
-    if (ring) card.insertBefore(ring, head || null);
-  }
+  // The weather ring used to insert itself here (top of this card) — now rendered by home.js
+  // as its own standalone card, swapped in placement with "Search everything" instead.
   const nb = phaseNextBest(phase, cc);
   if (nb) { nb.style.margin = '10px 0 2px'; card.insertBefore(nb, head ? head.nextSibling : null); }
   // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty

@@ -1733,3 +1733,21 @@ hint on the countdown card ("Switch Home to 'Traveling' for near-me help..."). V
 Settings → Journey phase and the phase segment both show "Traveling", console-clean, and a
 true offline test (dev server killed, full render from Service Worker Cache Storage on
 `#settings`) confirmed the new label ships correctly with zero console errors.
+
+### Swap "Search everything" and the weather ring's placement, on Home while Traveling (mk-v0.359.0)
+
+Per direct request, Home's "Search everything" button and the 24h weather ring swap positions
+in the traveling phase only. Previously the weather ring rendered nested at the top of the
+"Right now" card (leading, right after Quick access/"Just arrived") while "Search everything"
+sat much further down, just before the "Plan & tools" menu. Now: "Search everything" leads
+(moved up, right after "Just arrived") and the weather ring — extracted out of the "Right now"
+card into its own standalone `.card` — takes Search's old trailing spot instead, just before
+"Plan & tools". `homeWeatherRing()` (`js/main.js`) is now exported so `js/screens/home.js` can
+render it directly; `homeNowCard()` no longer inserts it into the card itself. The button
+markup itself is deduplicated into a single `searchEverythingBtn()` helper (`js/screens/
+home.js`) shared by both of its call sites (leading for traveling, trailing for planning/post,
+which never had a ring to swap with, so their layout is unchanged). Verified live: phase set to
+Traveling, console-clean, DOM order confirmed via the accessibility tree ("🔎 Search
+everything" ahead of the "Right now" card, "Weather ring for Bangkok — open full forecast"
+after "Where you are"); true offline test (dev server killed) confirmed the same order renders
+correctly from Service Worker Cache Storage with zero console errors.
