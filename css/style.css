@@ -646,6 +646,11 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .dict-note[hidden] { display: none; }
 .dict-note-edit { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2); font: inherit; margin-top: 4px; background: var(--card); color: var(--ink); }
 .dict-note-save { width: auto; padding: 6px 14px; margin-top: 4px; }
+/* .btn sets display:inline-flex at the same specificity as the [hidden] UA default, which
+   wins the cascade and defeats it — pre-existing bug (every note editor's "Save note" button
+   stayed visible even with the hidden attribute set), noticed while building the custom-
+   translation note editor above; same fix pattern as .dict-note[hidden] just above. */
+.dict-note-save[hidden] { display: none; }
 
 /* Expenses vs budget: donut, legend, progress bar, projection, category chips. */
 .budget-head { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }

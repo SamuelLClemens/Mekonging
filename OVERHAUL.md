@@ -1751,3 +1751,41 @@ Traveling, console-clean, DOM order confirmed via the accessibility tree ("🔎 
 everything" ahead of the "Right now" card, "Weather ring for Bangkok — open full forecast"
 after "Where you are"); true offline test (dev server killed) confirmed the same order renders
 correctly from Service Worker Cache Storage with zero console errors.
+
+### Talk: searching "Say it" auto-saves the translation to your dictionary (mk-v0.361.0)
+
+Per direct request ("if a user searches something in [Talk], what they search should be added
+to their dictionary"), this closes the one gap the earlier phrasebook-search auto-pin
+(mk-v0.35x) didn't cover: the "Say it in X" live-translate box. Typing an arbitrary phrase
+there and translating it has no static category/phrase object to pin (unlike the phrasebook's
+own fixed phrase list), so it gets its own storage: `customPhrases` (`js/state.js`, self-
+defaults via the migrate spread — no version bump), a `{ th: [{ key, en, script, ts }] }` map
+alongside `phrasePins`. `addCustomPhrase()`/`removeCustomPhrase()`/`moveCustomPhrase()`
+(`js/main.js`) manage it, keyed `${code}|custom|${slug}` — same shape as a book `phraseKey`
+with a synthetic `'custom'` catId no real category ever uses, so the existing note system
+(`phraseNoteFor`/`setPhraseNote`) works unchanged. `liveTranslateBox()`'s `doTranslate()` now
+calls `addCustomPhrase(code, text, res)` after every successful translation — idempotent (re-
+translating an already-saved phrase is a no-op, no duplicate), so only a genuinely new phrase
+gets a "✓ Saved to your dictionary · View →" confirmation line.
+
+`dictionaryScreen()` grows a "📝 Your own translations" section per language (below any book-
+pinned phrases, using a new `customPhraseRow()` — same look, its own reorder/remove controls
+since it isn't part of the book's pin/hide system) and its language list is now the union of
+book-pinned and custom-phrase codes, so a language with ONLY custom translations still gets
+its own card; the empty-state and total count both account for custom phrases too, so "no
+saved phrases yet" no longer shows incorrectly once one exists.
+
+**Found and fixed in passing:** `.dict-note-save`'s `hidden` attribute was being defeated by
+`.btn`'s `display: inline-flex` (equal specificity, author beats the UA default at that tie) —
+the "Save note" button was showing even when it should be hidden, on EVERY note editor in the
+dictionary (book-pinned or custom), not just the new one. Added `.dict-note-save[hidden] {
+display: none; }` (`css/style.css`), the same pattern already used for `.dict-note[hidden]`
+right above it.
+
+**Verified:** translated "Where is the nearest pharmacy?" in Thai, confirmed the save
+confirmation line, the dictionary entry (correct text, no roman line since the translate
+service returns script only), a note saved and displayed correctly with the note editor now
+correctly hidden by default, re-translating the same phrase confirmed idempotent (no
+duplicate, no repeat confirmation), and Remove (with its confirm modal) correctly cleared it
+back to the empty state. True offline test (dev server killed): full render from Service
+Worker Cache Storage on `#phrasebook-th`, zero console errors.
