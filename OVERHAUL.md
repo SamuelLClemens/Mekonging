@@ -1789,3 +1789,43 @@ correctly hidden by default, re-translating the same phrase confirmed idempotent
 duplicate, no repeat confirmation), and Remove (with its confirm modal) correctly cleared it
 back to the empty state. True offline test (dev server killed): full render from Service
 Worker Cache Storage on `#phrasebook-th`, zero console errors.
+
+### You: named by the traveller, chips lead, name-entry prompt at the top until set (mk-v0.362.0)
+
+Per direct request, the "YOU" tab/section is now identified by whatever name the traveller
+enters, in full, regardless of length:
+
+- **`meTabLabel()`** (`js/main.js`) no longer falls back to "YOU" once a name exceeds 3
+  characters — that length cap is gone. The tab bar's own CSS (`.tabbar button >
+  span:last-child`) already ellipsis-truncates long labels without ever wrapping or breaking
+  the 5-tab bar's layout, so a long name just truncates visually (with a `title` attribute
+  carrying the full name for hover/accessibility) instead of silently reverting to "YOU".
+- **`nameEntryCard()`** (new, `js/main.js`): a one-tap "👋 What should we call you?" prompt
+  that leads `meHubScreen()` (You) until a name is set — no more trip to Settings required.
+  Saves as the traveller types (mirrors Settings' own name field) but only re-renders — which
+  is what makes the prompt, the tab label and the topbar title all update — once they actually
+  commit it (Enter, or moving on), never on every keystroke, so typing is never interrupted by
+  a mid-word repaint. Steps aside for good the moment a name is saved; clearing the name back
+  to empty (from here while unset, or from Settings once set) brings it back, so it is never a
+  one-way door.
+- **The old identity "lead" card is gone** — per direct request ("the name and how many
+  phrases should be removed and the chips should start the you section"). It used to show a
+  big avatar + the name a second time + a one-line stat summary (journal entries · saved
+  places · phrases) directly below the topbar, which already carries the name; every stat it
+  summarised already shows live on one of the chips just below anyway (Journal's entry count,
+  "Saved places · N" in Your stuff, My Dictionary's phrase count) — rank-collapse-never-remove,
+  a duplicated CARD removed, not a duplicated destination. The quick-access chip row is now
+  the first thing in You once a name is set (or the first thing after the name prompt, until
+  one is).
+- Dead CSS (`.me-lead`, `.me-lead-head`, `.me-avatar`, `.me-lead-txt`, `.me-lead-name`,
+  `.me-lead-sub`) removed from `css/style.css`, replaced with the small `.name-entry-card`
+  rule the new prompt needs.
+
+**Verified:** with no name set, the prompt led You, chips came immediately after, tab read
+"YOU". Typed "Alexandria Montgomery-Smith" (27 characters) and committed it: the topbar title
+showed the full name, the prompt disappeared with chips now truly leading, and the tab
+correctly showed the full name text (confirmed via the DOM, not just the visual ellipsis) with
+a matching `title` attribute — the 5-tab bar layout did not break. Cleared the name from
+Settings and confirmed the prompt reappeared on You and the tab reverted to "YOU" — reversible
+in both directions. True offline test (dev server killed): full render from Service Worker
+Cache Storage on `#me`, zero console errors.
