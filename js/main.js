@@ -263,14 +263,16 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.361.0';
+const APP_VERSION = 'mk-v0.362.0';
 
-// The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
-// Once set, it shows that name IF it is short enough to fit the tab; a longer name would
-// wrap or get truncated, so it falls back to "YOU" rather than showing a truncated name.
+// The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
+// request, once set it shows the FULL name regardless of length: the tab bar's own CSS
+// (`.tabbar button > span:last-child`) already ellipsis-truncates long labels without ever
+// wrapping or breaking the bar's layout, so a long name just truncates visually instead of
+// silently falling back to "YOU".
 function meTabLabel() {
   const name = (store.profile.name || '').trim();
-  return name && name.length <= 3 ? name : 'YOU';
+  return name || 'YOU';
 }
 
 // Tabs are anchored to what a traveller reaches for most on the ground: where they
@@ -522,7 +524,7 @@ function tabbar() {
     h('button', {
       'aria-current': active === t.hash ? 'page' : null,
       onclick: () => go(t.hash),
-    }, [h('span', { class: 'ic', html: t.svg }), h('span', {}, t.hash === '#me' ? meTabLabel() : t.label)])));
+    }, [h('span', { class: 'ic', html: t.svg }), h('span', { title: t.hash === '#me' ? meTabLabel() : null }, t.hash === '#me' ? meTabLabel() : t.label)])));
 }
 
 export function mount(node, showTabbar) {
@@ -1956,35 +1958,52 @@ function countSavedPhrases() {
 // — it duplicated that row's own Calendar/Journal/Budget figures a second time. See
 // meHubScreen() below.
 
+// The one-tap "add your name" prompt that leads You until a name is set (meHubScreen, below).
+// Saves as the traveller types (same as Settings' own name field) but only re-renders — which
+// is what makes the tab label, the topbar title and this very prompt disappear — once they
+// actually commit it (Enter, or moving on), never on every keystroke, so typing is never
+// interrupted by a mid-word repaint. Re-typing the exact same (or still-empty) value is a
+// no-op, so leaving the field without changing anything never re-renders for nothing.
+function nameEntryCard() {
+  const input = h('input', {
+    type: 'text', placeholder: 'e.g. Sam, Alex, Nok…', 'aria-label': 'Your name', value: store.profile.name || '',
+  });
+  const commit = () => {
+    const v = input.value.trim();
+    if (v === (store.profile.name || '').trim()) return;
+    store.profile.name = v;
+    save();
+    if (v) render();
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
+  input.addEventListener('blur', commit);
+  return h('div', { class: 'card name-entry-card' }, [
+    h('h2', { style: 'margin-top:0' }, '👋 What should we call you?'),
+    h('p', { class: 'muted', style: 'margin-top:0' }, 'Personalises this section and your journal exports. Optional — skip any time; add it later from here or Settings.'),
+    input,
+  ]);
+}
+
 function meHubScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
   wrap.append(topbar(name ? `${name}’s space` : 'Your space'));
 
+  // Per direct request: the name (and the identity card's live stats, incl. phrase count) no
+  // longer show as their own lead card here — the name now IDENTIFIES this whole section
+  // instead (the tab label above, meTabLabel(), and the topbar title just above read the
+  // name directly), and every stat that card used to summarise already shows live on one of
+  // the chips below (Journal's entry count, "Saved places · N", My Dictionary's phrase count)
+  // — rank-collapse-never-remove, nothing here is a lost destination, only a duplicated card.
+  // Until a name is set, this is where the option to add one leads instead — one tap, right
+  // at the top, rather than a trip to Settings — and it steps aside for good the moment a
+  // name is saved, so the chips below become the true lead.
+  if (!name) wrap.append(nameEntryCard());
+
   const jN = store.journal.entries.length;
   const svN = (store.favorites || []).length;     // saved places
   const svP = countSavedPhrases();
   const idN = idPinCount();
-
-  // --- Identity lead: who you are + a live one-line summary. (You Y2's old single dynamic
-  // "resume" button + a picked-over secondary chip row is gone — replaced below with a fixed
-  // quick-access chip row, same status-chip look as Home's, so every one of these shows its
-  // own live status at a glance instead of only the one thing that happened to have content.)
-  const statusBits = [
-    jN ? `${jN} journal ${jN === 1 ? 'entry' : 'entries'}` : null,
-    svN ? `${svN} saved ${svN === 1 ? 'place' : 'places'}` : null,
-    svP ? `${svP} ${svP === 1 ? 'phrase' : 'phrases'}` : null,
-  ].filter(Boolean);
-  const lead = h('div', { class: 'card me-lead' }, [
-    h('div', { class: 'me-lead-head' }, [
-      h('span', { class: 'me-avatar', 'aria-hidden': 'true' }, (name ? name[0].toUpperCase() : '🧳')),
-      h('div', { class: 'me-lead-txt' }, [
-        h('div', { class: 'me-lead-name' }, name || 'Your space'),
-        h('div', { class: 'me-lead-sub muted' }, statusBits.length ? statusBits.join(' · ') : 'Your journal, saved places and phrases live here.'),
-      ]),
-    ]),
-  ]);
-  wrap.append(lead);
 
   // Quick access chips — Calendar, My Dictionary, Budget and Journal lead (the four asked
   // for), then Documents, My trip, Traveller board, For you and Travel circle promoted to
