@@ -37,7 +37,7 @@ import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction } from '../ui-widgets.js';
 import {
   go, mount, topbar, ICON, contextNow, setupRecapCard, render,
-  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock,
+  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherRing,
   ensureHomeWeather, idPinCount, sectionTile, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   budgetTarget, tripSpanDays,
@@ -101,6 +101,12 @@ export function homeScreen() {
     if (ja) wrap.append(ja);
   }
 
+  // Search everything — while travelling, this leads (moved up from its old spot just before
+  // "Plan & tools") and the weather ring moves down to take its place instead, further below —
+  // a straight placement swap per direct request. Other phases (no weather ring to swap with)
+  // keep Search in its original trailing spot, appended near "Plan & tools" below.
+  if (onGround) wrap.append(searchEverythingBtn());
+
   // One stage-appropriate situational block. Planning gets a forward-looking outlook +
   // countdown + checklist hub (no near-me); travelling gets the live, forecast-aware
   // near-me card; post gets the return recap. This is what makes Home fit the traveller's
@@ -135,8 +141,15 @@ export function homeScreen() {
   // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
   // Budget chip above, still one tap from the full breakdown on #expenses.
 
-  // Search everything.
-  wrap.append(h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything'));
+  // Weather ring — while travelling, this now sits here (Search everything's old spot,
+  // swapped up above) instead of nested at the top of the "Right now" card. Other phases never
+  // had a ring, so they keep Search everything here as before.
+  if (onGround) {
+    const ring = homeWeatherRing();
+    if (ring) wrap.append(h('div', { class: 'card home-wx-card' }, [ring]));
+  } else {
+    wrap.append(searchEverythingBtn());
+  }
 
   wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
 
@@ -239,6 +252,12 @@ function justArrivedChip(cc) {
       },
     }, '✕'),
   ]);
+}
+
+// Shared by both of the placements it can appear in (see the swap with the weather ring in
+// homeScreen above) so the button itself is defined once regardless of where it lands.
+function searchEverythingBtn() {
+  return h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything');
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every
