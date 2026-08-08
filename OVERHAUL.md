@@ -1722,3 +1722,14 @@ chip and shared expense card both present.
 **Ship note (mk-v0.357.0):** this bump covers the Home phase merge (planning/on-the-ground/
 post), the new dismissible "Just arrived" chip with its Settings restore control, and the
 expense-logging unification (`expenseAddCard()`) — one version, one commit.
+
+### Rename "On the ground" → "Traveling" (mk-v0.358.0)
+
+Per direct request, the merged trip stage's user-facing label changes from "On the ground"
+to "Traveling" (internal key `'traveling'`, `PHASE_ORDER`/`PHASES` in `js/main.js`, unchanged
+from the v0.357.0 merge above — only the display strings move). Four occurrences updated:
+`PHASES.traveling.label`/`.stmt`, `phaseSwitchRow`'s short-label map, and the post-trip-start
+hint on the countdown card ("Switch Home to 'Traveling' for near-me help..."). Verified live:
+Settings → Journey phase and the phase segment both show "Traveling", console-clean, and a
+true offline test (dev server killed, full render from Service Worker Cache Storage on
+`#settings`) confirmed the new label ships correctly with zero console errors.

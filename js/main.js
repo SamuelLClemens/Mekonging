@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.357.0';
+const APP_VERSION = 'mk-v0.358.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name in Settings.
 // Once set, it shows that name IF it is short enough to fit the tab; a longer name would
@@ -1531,7 +1531,7 @@ function familyCard(cc) {
 const PHASE_ORDER = ['planning', 'traveling', 'post'];
 const PHASES = {
   planning: { emoji: '🗺️', label: 'Planning a trip', stmt: 'planning a trip', tagline: 'Research routes, visas and what fits you' },
-  traveling: { emoji: '🧭', label: 'On the ground', stmt: 'on the ground', tagline: 'Arrival, day-to-day and everything in between' },
+  traveling: { emoji: '🧭', label: 'Traveling', stmt: 'traveling', tagline: 'Arrival, day-to-day and everything in between' },
   post: { emoji: '📖', label: 'Post travel', stmt: 'back from your trip', tagline: 'Reflect and make something to keep' },
 };
 
@@ -1663,7 +1663,7 @@ function tripCountdownCard(cc) {
     }
   } else {
     card.append(h('div', { class: 'countdown-num' }, days === 0 ? '🎉 Today’s the day!' : '🛬 Your trip has started'));
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Switch Home to “On the ground” for near-me help, arrival tips and emergency info.'));
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Switch Home to “Traveling” for near-me help, arrival tips and emergency info.'));
     card.append(h('button', { class: 'btn', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, 'I have arrived →'));
   }
   return card;
@@ -1826,7 +1826,7 @@ function signatureSightsStrip(cc) {
 // A slim one-line phase switcher — replaces the tall 2×2 selector, the persistent tip banner
 // and the "Not right?" correction line, so actionable content leads instead of chrome.
 export function phaseSwitchRow(active, stored, withLabel = true) {
-  const short = { planning: 'Planning', traveling: 'On the ground', post: 'Post' };
+  const short = { planning: 'Planning', traveling: 'Traveling', post: 'Post' };
   const seg = h('div', { class: 'phase-seg compact', role: 'group', 'aria-label': 'Your journey phase' },
     PHASE_ORDER.map((k) => h('button', {
       class: 'phase-btn', 'aria-pressed': active === k ? 'true' : 'false',
