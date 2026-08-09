@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.369.0';
+const APP_VERSION = 'mk-v0.370.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2321,48 +2321,118 @@ function seasonalFitSection(cc, cityName, slug) {
   ]);
 }
 
-// Explore E6 ("Where next"): real transport options from the current city to every other
-// hub in journey.js's route graph, ranked by shortest travel time — genuinely reachable next
-// stops, not a guess. journey.js's route graph walks every country's routes and memoises
-// PERMANENTLY on first build, so isRouteNode()/planRoutes() must never be called before all
-// four countries are loaded (the same constraint documented in Home's next-stop card, F1).
-// Cache-only: the first check for a given city always defers to loadAllCountries().then(),
-// never inline, so a fresh session never risks freezing the graph incomplete.
-const _whereNextCache = {};
-function computeWhereNext(fromCity) {
+// Explore E6 ("Where next"): a mini itinerary builder, not just a static list — tap a real,
+// reachable next city and it becomes the new tail, so up to 3 taps chains a genuine mini
+// route (e.g. Chiang Mai → Pai → Luang Prabang), with the running travel time the actual sum
+// of planRoutes() legs, never invented. Capped at 3 added stops on purpose: this is "what's
+// next", not a whole-trip build — for that, see the curated Trip plans (#plans) or the Full
+// journey planner (#route) linked at the foot of this section for any two specific points.
+// journey.js's route graph memoises PERMANENTLY on first build, so isRouteNode()/planRoutes()
+// must never run before all four countries are loaded (the same constraint documented in
+// Home's next-stop card, F1) — gated on _routeGraphLoaded below, set once, never inline.
+let _routeGraphLoaded = false;
+function ensureRouteGraph(onReady) {
+  if (_routeGraphLoaded) { onReady(); return; }
+  loadAllCountries().then(() => { _routeGraphLoaded = true; onReady(); })
+    .catch(() => { /* offline with nothing cached yet — this session stays without it */ });
+}
+function computeWhereNext(fromCity, exclude) {
   if (!isRouteNode(fromCity)) return [];
-  const scored = routeNodes().filter((n) => n !== fromCity).map((n) => {
+  const skip = new Set([fromCity, ...(exclude || [])]);
+  const scored = routeNodes().filter((n) => !skip.has(n)).map((n) => {
     const plans = planRoutes(fromCity, n);
     return plans.length ? { name: n, hrs: plans[0].totalHrs, changes: plans[0].changes } : null;
   }).filter(Boolean);
   scored.sort((a, b) => (a.hrs[0] || 99) - (b.hrs[0] || 99));
   return scored.slice(0, 5);
 }
+// Which loaded country actually has a place tagged with this city — needed to hand addStop()
+// the right country when a chained mini-itinerary crosses a border.
+function countryForCityName(name) {
+  const slug = citySlug(name);
+  for (const x of COUNTRIES) {
+    if (isCountryLoaded(x.id) && allPlaces({ country: x.id }).some((p) => citySlug(p.city || '') === slug)) return x.id;
+  }
+  return '';
+}
+// The chain itself, and the anchor city it was built from — module state (same idiom as
+// planRouteScreen's planFrom/planTo) so it survives this section re-rendering as the
+// traveller keeps tapping, and resets the moment the anchor city changes.
+let _nextChain = [];
+let _nextChainFrom = '';
 function whereNextSection(argCc, fromCity) {
   if (!fromCity) return null;
-  if (!(fromCity in _whereNextCache)) {
-    loadAllCountries().then(() => {
-      _whereNextCache[fromCity] = computeWhereNext(fromCity);
+  if (_nextChainFrom !== fromCity) { _nextChainFrom = fromCity; _nextChain = []; }
+  if (!_routeGraphLoaded) {
+    ensureRouteGraph(() => {
       const headRoute = (location.hash || '').slice(1).split('-')[0];
       if (headRoute === 'explore' || headRoute === 'country') {
         const y = window.scrollY;
         exploreScreen(argCc);
         requestAnimationFrame(() => window.scrollTo(0, y));
       }
-    }).catch(() => { /* offline with nothing cached yet — omitted for this session */ });
-    return null;   // nothing to show until the check above resolves — never a placeholder
+    });
+    return null;   // nothing to show until the graph above resolves — never a placeholder
   }
-  const results = _whereNextCache[fromCity];
-  if (!results.length) return null;
-  return h('section', {}, [
-    h('h2', { class: 'home-section' }, `🚌 Where next, from ${fromCity}`),
-    h('div', { class: 'grid' }, results.map((r) => h('div', { class: 'card' }, [
+  if (!isRouteNode(fromCity)) return null;
+
+  const rerender = () => {
+    const y = window.scrollY;
+    exploreScreen(argCc);
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  };
+
+  const tail = _nextChain.length ? _nextChain[_nextChain.length - 1] : fromCity;
+  // Exclude the trip's own starting point too, not just the chain built so far — otherwise
+  // once you've chained one hop away, "back to where you started" reappears as a "next stop".
+  const candidates = computeWhereNext(tail, [fromCity, ..._nextChain]);
+  if (!candidates.length && !_nextChain.length) return null;   // nothing reachable at all
+
+  const body = h('div', {});
+
+  if (_nextChain.length) {
+    let totLo = 0, totHi = 0, changes = 0, prev = fromCity;
+    for (const city of _nextChain) {
+      const p = planRoutes(prev, city)[0];
+      if (p) { totLo += p.totalHrs[0] || 0; totHi += p.totalHrs[1] || p.totalHrs[0] || 0; changes += p.changes; }
+      prev = city;
+    }
+    body.append(h('p', { style: 'margin:0 0 4px' }, `${fromCity} → ${_nextChain.join(' → ')}`));
+    body.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
+      `~${totLo}–${totHi}h of travel across ${_nextChain.length} stop${_nextChain.length > 1 ? 's' : ''} · ${changes} change${changes === 1 ? '' : 's'}`));
+    body.append(h('div', { class: 'chips', style: 'margin-bottom:8px' }, [
+      h('button', { class: 'chip', onclick: () => { _nextChain.pop(); rerender(); } }, '↶ Remove last'),
+      h('button', { class: 'chip', onclick: () => { _nextChain = []; rerender(); } }, 'Clear'),
+    ]));
+  }
+
+  if (_nextChain.length < 3 && candidates.length) {
+    body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' },
+      _nextChain.length ? `Next, from ${tail}:` : 'Tap a city to start building your next few stops:'));
+    body.append(h('div', { class: 'grid' }, candidates.map((r) => h('button', {
+      class: 'card', style: 'text-align:left', onclick: () => { _nextChain.push(r.name); rerender(); },
+    }, [
       h('strong', {}, r.name),
       h('p', { class: 'muted tiny', style: 'margin:2px 0 0' },
         `${r.hrs[1] ? `~${r.hrs[0]}–${r.hrs[1]}h` : ''} · ${r.changes === 0 ? 'Direct' : `${r.changes} change${r.changes > 1 ? 's' : ''}`}`),
-    ]))),
-    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#route') }, 'Full journey planner →'),
-  ]);
+    ]))));
+  }
+
+  if (_nextChain.length) {
+    body.append(h('button', {
+      class: 'btn block', style: 'margin-top:4px',
+      onclick: (e) => {
+        _nextChain.forEach((city) => addStop({ title: city, country: countryForCityName(city) }));
+        e.currentTarget.textContent = '✓ Added — open My Trip to edit';
+        e.currentTarget.disabled = true;
+        e.currentTarget.onclick = null;
+      },
+    }, `＋ Add ${_nextChain.length === 1 ? 'this stop' : `these ${_nextChain.length} stops`} to My Trip`));
+  }
+
+  body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#route') }, 'Full journey planner →'));
+
+  return h('section', {}, [h('h2', { class: 'home-section' }, `🚌 Where next, from ${fromCity}`), body]);
 }
 
 // Explore E7 ("You might not know"): highly-rated places in cities the traveller has no
@@ -2750,75 +2820,16 @@ function exploreScreen(argCc) {
     wrap.append(whereAmICard(cc));
   }
 
-  // Explore E4–E7: discovery leads, before the reference/admin cards below (regions map,
-  // history, access/visa/family, the tile decks) — this is Explore's actual theme
-  // ("Where?"), so inspiration surfaces first rather than being buried under reference
-  // reading. Each section independently omits itself when it has nothing real to show.
-  const hubSights = signatureSightsStrip(cc);
-  if (hubSights) wrap.append(hubSights);
-  const fits = fitsYourTripSection(cc); if (fits) wrap.append(fits);
-  const seasonal = seasonalFitSection(cc, fcity, fslug); if (seasonal) wrap.append(seasonal);
-  const whereNext = whereNextSection(argCc, fcity); if (whereNext) wrap.append(whereNext);
-  const notKnow = mightNotKnowSection(cc); if (notKnow) wrap.append(notKnow);
-
-  // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
-  // it is not something a traveller reads every day, so it should not be the first thing.
-  const hi = countryHistory(cc);
-  if (hi && hi.blurb) {
-    wrap.append(foldable('History & culture', h('div', {}, [
-      h('p', {}, hi.blurb),
-      knownForRow(hi.knownFor),
-      hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
-      h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${cc}`) }, '📖 In-depth history & culture'),
-    ])));
-  }
-  const acc = accessCard(cc); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen'));
-  const vc = visaCard(cc); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen'));
-  const famc = familyCard(cc); if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen'));
-  if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
-    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
-      h('strong', {}, '🧭 Travelling solo'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
-      h('button', { class: 'btn block', onclick: () => go(`#sos-${cc}`) }, 'See solo & women’s safety'),
-    ]));
-  }
-
-  // Explore by city: a spatial overview of the whole country's places plus a city
-  // picker, so a traveller sees WHERE things are and can scope straight to one city
-  // (which then browses as a short list or a map).
-  const cityPlaces = allPlaces({ country: cc });
-  if (cityPlaces.length) {
-    const withCoords = cityPlaces.filter((p) => p.coords);
-    const counts = {};
-    cityPlaces.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
-    const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-    const body = h('div', {});
-    if (cities.length) {
-      body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
-      body.append(cityPickGrid(cc, cities.slice(0, 12), counts));
-    }
-    // One living map for the whole app: link to the Places section rather than embedding a
-    // SECOND MapLibre map here — that duplicated the Places living map and cost a wasted
-    // WebGL load. The Places map already numbers, colours and filters every place.
-    if (withCoords.length) {
-      body.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) },
-        [chipIcon('map'), ` See all ${withCoords.length} places on the map`]));
-    }
-    const exploreFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Explore ${c.name} by city`),
-      body, { open: store.profile.prefs.hubCityOpen !== false, cls: 'home-group-d' });
-    exploreFold.addEventListener('toggle', () => { store.profile.prefs.hubCityOpen = exploreFold.open; save(); });
-    wrap.append(exploreFold);
-  }
-
-  // The full country toolkit, regrouped from one 26-tile wall into four labelled,
-  // collapsible sub-clusters so a traveller scans four intents, not a flat grid. The
-  // "identify what's around me" tools sit together under See & do. Rendered as chip rows
-  // (icon + label), not tiles, per direct request ("explore all the tools should be made
-  // chips like the home section") — same .status-chip/.chips classes and home-group-d
-  // collapsible as Home's own Tools/Identify groups, not a look-alike, the SAME components.
-  // Each tile's one-line hint (d) still reaches screen readers via aria-label even though a
-  // chip has no room to show it, same "fold the hint into the accessible name" idiom
-  // sectionTile itself already used.
+  // "More for {country}" (the full toolkit, as chip decks) moved to directly after the
+  // location card and above Signature sights, per direct request. Regrouped from one
+  // 26-tile wall into four labelled, collapsible sub-clusters so a traveller scans four
+  // intents, not a flat grid; the "identify what's around me" tools sit together under See
+  // & do. Rendered as chip rows (icon + label), not tiles, per an earlier direct request
+  // ("explore all the tools should be made chips like the home section") — same
+  // .status-chip/.chips classes and home-group-d collapsible as Home's own Tools/Identify
+  // groups, not a look-alike, the SAME components. Each tile's one-line hint (d) still
+  // reaches screen readers via aria-label even though a chip has no room to show it, same
+  // "fold the hint into the accessible name" idiom sectionTile itself already used.
   const lang = getLanguage(c.lang);
   const tileGroups = [
     { label: 'Get oriented', tiles: [
@@ -2856,25 +2867,91 @@ function exploreScreen(argCc) {
       { ic: '⭐', t: 'Saved', d: 'Your collections', hash: '#saved' },
     ] },
   ];
-  // E3: rank the four decks by trip phase, same rule as Home (homeScreen's planDeckOpen) —
-  // the deck matching the current phase opens, the rest collapse. Nothing removed, nothing
-  // persisted per-deck: like Home, phase always decides what's open on the next visit, not a
-  // sticky manual override. 'post' has no strong single fit among these four (unlike Home's
-  // own decks) so it opens none, same as the pre-E3 default.
+  // E3: "Get oriented" / "Getting around" / "Eat & drink" default EXPANDED always, per direct
+  // request — these are the day-to-day decks a traveller reaches for regardless of trip phase.
+  // "See & do" alone stays phase-ranked (opens while 'traveling', the phase it fits best);
+  // planning/post no longer force a single deck open since three of the four are already open.
+  // Nothing persisted per-deck: like Home, this always recomputes on render, not a sticky
+  // manual override — a traveller can still collapse one for the moment by tapping it.
   const explorePhase = store.profile.prefs.phase || inferPhase();
-  const PHASE_DECK = { planning: 'Get oriented', traveling: 'See & do', post: null };
-  const openDeck = PHASE_DECK[explorePhase];
+  const ALWAYS_OPEN_DECKS = new Set(['Get oriented', 'Getting around', 'Eat & drink']);
+  const openDeck = explorePhase === 'traveling' ? 'See & do' : null;
   const toolChip = (x) => h('button', {
     class: 'status-chip', onclick: () => go(x.hash), 'aria-label': x.d ? `${x.t}. ${x.d}` : x.t,
   }, [h('span', { class: 'status-ic' }, x.ic), h('span', { class: 'status-lbl' }, x.t)]);
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
   tileGroups.forEach((g) => {
-    const details = h('details', { class: 'home-group-d', open: g.label === openDeck ? '' : null }, [
+    const shouldOpen = ALWAYS_OPEN_DECKS.has(g.label) || g.label === openDeck;
+    const details = h('details', { class: 'home-group-d', open: shouldOpen ? '' : null }, [
       h('summary', { class: 'home-group' }, g.label),
       h('div', { class: 'chips' }, g.tiles.map(toolChip)),
     ]);
     wrap.append(details);
   });
+
+  // Explore E4–E7: discovery leads, then the reference/admin cards — Signature sights leads
+  // ("What's here"), then Where next ("What's after this"), then the more occasional reads
+  // (Fits your trip / seasonal / You might not know / solo note / Explore by city), then
+  // History & culture last of the discovery run before the reference cards. Each section
+  // independently omits itself when it has nothing real to show.
+  const hubSights = signatureSightsStrip(cc);
+  if (hubSights) wrap.append(hubSights);
+  const whereNext = whereNextSection(argCc, fcity); if (whereNext) wrap.append(whereNext);
+  const fits = fitsYourTripSection(cc); if (fits) wrap.append(fits);
+  const seasonal = seasonalFitSection(cc, fcity, fslug); if (seasonal) wrap.append(seasonal);
+  const notKnow = mightNotKnowSection(cc); if (notKnow) wrap.append(notKnow);
+  if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
+    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
+      h('strong', {}, '🧭 Travelling solo'),
+      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
+      h('button', { class: 'btn block', onclick: () => go(`#sos-${cc}`) }, 'See solo & women’s safety'),
+    ]));
+  }
+
+  // Explore by city: a spatial overview of the whole country's places plus a city
+  // picker, so a traveller sees WHERE things are and can scope straight to one city
+  // (which then browses as a short list or a map).
+  const cityPlaces = allPlaces({ country: cc });
+  if (cityPlaces.length) {
+    const withCoords = cityPlaces.filter((p) => p.coords);
+    const counts = {};
+    cityPlaces.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
+    const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    const body = h('div', {});
+    if (cities.length) {
+      body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
+      body.append(cityPickGrid(cc, cities.slice(0, 12), counts));
+    }
+    // One living map for the whole app: link to the Places section rather than embedding a
+    // SECOND MapLibre map here — that duplicated the Places living map and cost a wasted
+    // WebGL load. The Places map already numbers, colours and filters every place.
+    if (withCoords.length) {
+      body.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) },
+        [chipIcon('map'), ` See all ${withCoords.length} places on the map`]));
+    }
+    const exploreFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Explore ${c.name} by city`),
+      body, { open: store.profile.prefs.hubCityOpen !== false, cls: 'home-group-d' });
+    exploreFold.addEventListener('toggle', () => { store.profile.prefs.hubCityOpen = exploreFold.open; save(); });
+    wrap.append(exploreFold);
+  }
+
+  // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
+  // it is not something a traveller reads every day, so it should not be the first thing.
+  const hi = countryHistory(cc);
+  if (hi && hi.blurb) {
+    wrap.append(foldable('History & culture', h('div', {}, [
+      h('p', {}, hi.blurb),
+      knownForRow(hi.knownFor),
+      hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
+      h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${cc}`) }, '📖 In-depth history & culture'),
+    ])));
+  }
+  // Accessibility / Entry & visa / Travelling with kids default MINIMISED (defaultOpen=false)
+  // per direct request — reference material a traveller dips into, not something to read
+  // every visit; still one tap away, never removed.
+  const acc = accessCard(cc); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen', false));
+  const vc = visaCard(cc); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen', false));
+  const famc = familyCard(cc); if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen', false));
 
   mount(wrap, '#explore');
 }
