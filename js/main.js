@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.367.0';
+const APP_VERSION = 'mk-v0.368.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -903,8 +903,12 @@ function whyNow(p, ctx) {
   return null;
 }
 
-function rightNowSection() {
-  const ctx = contextNow();
+// H3a — "{Time of day} near {city}": the moment header (emoji/label/day) plus the forward-
+// looking forecast line and, with no fix yet, the location invite. Its own piece (rather than
+// one non-collapsible card with the picks list below) so the weather/time-of-day context can
+// be tucked away independently of the "Nearby picks" list below — see homeNowCard, which wraps
+// this and rightNowPicksCard in their own foldables.
+function rightNowHeaderCard(ctx) {
   const meta = PART_META[ctx.part];
   const card = h('div', { class: 'card right-now' });
   // Forward-looking forecast for this city (from the cached hourly + daily), so the card tells
@@ -950,9 +954,17 @@ function rightNowSection() {
         render();
       } }, '📍 Use my location'));
     }
-    return card;
   }
+  return card;
+}
 
+// H3b — "Nearby picks": the ranked picks list, its own foldable so it can be tucked away
+// independently of the weather/time-of-day header above it (rightNowHeaderCard). Only called
+// once a location fix exists (see homeNowCard) — with none, the header's own invite is the
+// whole story and there is nothing yet to rank.
+function rightNowPicksCard(ctx) {
+  const meta = PART_META[ctx.part];
+  const card = h('div', { class: 'card right-now' });
   // Rank every candidate once; drawPicks() then shows the top few MINUS anything marked
   // Done or Not-interested, so dismissing one instantly promotes the next-best in its place.
   const ranked = allPlaces({ country: ctx.country })
@@ -1936,9 +1948,11 @@ function quickSpendRow(id) {
   return box;
 }
 
-// The single, phase-aware "Right now" card: the live moment + picks (rightNowSection) with the
-// phase's primary action lifted on top and a one-tap spend at the foot — the four old blocks
-// (phaseNextBest, journey companion, right-now, daily strip) merged into one, with the
+// The phase-aware "Right now" pieces: the live moment (rightNowHeaderCard) with the phase's
+// primary action lifted on top, the picks list (rightNowPicksCard) and a one-tap spend at the
+// foot — the four old blocks (phaseNextBest, journey companion, right-now, daily strip) merged
+// into one, then (per direct request) split back into three independently collapsible
+// foldables — see homeNowCard/homeFold — so each can be tucked away on its own, with the
 // duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
 // On-the-ground only: the SAME rich weather widget as the Weather screen itself — wxVizCard
 // (metric chips to switch "layers" — Temp/Rain/Humidity/UV/Feels/Wind, the 24h watch-face
@@ -1962,13 +1976,29 @@ export function homeWeatherCard() {
   return card;
 }
 
+// Shared collapsible wrapper for Home's stage-block pieces — same home-group-d visual
+// language as Tools/Identify/Quick access/Where you are, so collapsibility reads as one
+// consistent site-wide pattern rather than a one-off look for these three. Defaults OPEN
+// (nothing here was hidden before this split existed); once a traveller actually toggles
+// one, that choice persists under its own pref, exactly like Quick access/Where you are do.
+function homeFold(label, inner, prefKey) {
+  const open = store.profile.prefs[prefKey] !== false;
+  const det = h('details', { class: 'home-group-d', open: open ? '' : null });
+  det.addEventListener('toggle', () => { store.profile.prefs[prefKey] = det.open; save(); });
+  det.append(h('summary', { class: 'home-group' }, label), inner);
+  return det;
+}
+
 function homeNowCard(phase, cc) {
-  const card = rightNowSection();               // .right-now — moment header + live picks (or a location invite)
-  const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
+  const ctx = contextNow();
+  const wrap = h('div', {});
+
+  const headerCard = rightNowHeaderCard(ctx);
+  const head = headerCard.firstChild;             // .rn-head; the primary action slots in just below it
   // The weather ring used to insert itself here (top of this card) — now rendered by home.js
-  // as its own standalone card, swapped in placement with "Search everything" instead.
+  // as its own standalone foldable, swapped in placement with "Search everything" instead.
   const nb = phaseNextBest(phase, cc);
-  if (nb) { nb.style.margin = '10px 0 2px'; card.insertBefore(nb, head ? head.nextSibling : null); }
+  if (nb) { nb.style.margin = '10px 0 2px'; headerCard.insertBefore(nb, head ? head.nextSibling : null); }
   // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty
   // state is intentionally omitted here — the status band already shows "No dates yet".
   if (phase === 'planning') {
@@ -1976,13 +2006,25 @@ function homeNowCard(phase, cc) {
     if (startISO && daysUntilISO(startISO) > 0) {
       const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
       if (todo.length) {
-        card.insertBefore(h('button', { class: 'btn ghost block now-line', onclick: () => go(`#checklist-${cc}`) },
+        headerCard.insertBefore(h('button', { class: 'btn ghost block now-line', onclick: () => go(`#checklist-${cc}`) },
           `☐ ${todo[0].title} · ${todo.length} left on your checklist →`), nb ? nb.nextSibling : (head ? head.nextSibling : null));
       }
     }
   }
-  card.append(quickSpendRow(cc));                // one-tap spend at the foot (high-value daily action)
-  return card;
+  // Three independently collapsible pieces, per direct request ("all the sections need to be
+  // collapsible including widgets like weather and time of day near you, things to do right
+  // now and budget") — replacing the one non-collapsible "Right now" card that used to stack
+  // all three. The picks group is labelled "Nearby picks", not "Things to do right now" —
+  // phaseNextBest's own button (nb, inserted just above, into headerCard) already reads
+  // "Things to do right now →" and links to the fuller #today screen; reusing that exact text
+  // for this group's own summary right underneath it would be the same duplicate-heading
+  // problem as the old "Plan & tools" heading this whole rebuild started from. The picks group
+  // only exists once a fix resolves (rightNowHeaderCard's own invite is the whole story before
+  // that — there is nothing yet to rank).
+  wrap.append(homeFold('🕒 Right now', headerCard, 'rightNowHeadOpen'));
+  if (ctx.fix) wrap.append(homeFold('📍 Nearby picks', rightNowPicksCard(ctx), 'rightNowPicksOpen'));
+  wrap.append(homeFold('💰 Budget', quickSpendRow(cc), 'homeBudgetOpen'));   // one-tap spend (high-value daily action)
+  return wrap;
 }
 
 // homeScreen() now lives in js/screens/home.js — the Great Split's proof case (OVERHAUL.md
@@ -2770,42 +2812,48 @@ function exploreScreen(argCc) {
 
   // The full country toolkit, regrouped from one 26-tile wall into four labelled,
   // collapsible sub-clusters so a traveller scans four intents, not a flat grid. The
-  // "identify what's around me" tools sit together under See & do.
+  // "identify what's around me" tools sit together under See & do. Rendered as chip rows
+  // (icon + label), not tiles, per direct request ("explore all the tools should be made
+  // chips like the home section") — same .status-chip/.chips classes and home-group-d
+  // collapsible as Home's own Tools/Identify groups, not a look-alike, the SAME components.
+  // Each tile's one-line hint (d) still reaches screen readers via aria-label even though a
+  // chip has no room to show it, same "fold the hint into the accessible name" idiom
+  // sectionTile itself already used.
   const lang = getLanguage(c.lang);
   const tileGroups = [
     { label: 'Get oriented', tiles: [
-      { ic: ICON.arrive, t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
-      { ic: ICON.compass, t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${cc}` },
-      { ic: ICON.chat, t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
-      { ic: ICON.tag, t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${cc}` },
-      { ic: ICON.coins, t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
-      { ic: ICON.cloud, t: 'Weather', d: '7-day forecast', hash: `#weather-${cc}` },
-      { ic: ICON.alert, t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
+      { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
+      { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${cc}` },
+      { ic: '💬', t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
+      { ic: '💵', t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${cc}` },
+      { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
+      { ic: '🌤', t: 'Weather', d: '7-day forecast', hash: `#weather-${cc}` },
+      { ic: '🆘', t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
     ] },
     { label: 'Getting around', tiles: [
-      { ic: ICON.route, t: 'Getting around', d: 'Best way to next place', hash: `#transport-${cc}` },
-      { ic: ICON.navarrow, t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
-      { ic: ICON.clock, t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${cc}` },
-      { ic: ICON.navarrow, t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
-      { ic: ICON.map, t: 'Map', d: 'Offline + GPS', hash: '#map' },
+      { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${cc}` },
+      { ic: '🛂', t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
+      { ic: '📋', t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${cc}` },
+      { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
+      { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
     ] },
     { label: 'Eat & drink', tiles: [
-      { ic: ICON.bowl, t: 'Food', d: 'Dishes & ingredients', hash: `#food-${cc}` },
-      { ic: ICON.bowl, t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-      { ic: ICON.board, t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${cc}` },
-      { ic: ICON.fruit, t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
+      { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${cc}` },
+      { ic: '🍢', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
+      { ic: '📌', t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${cc}` },
+      { ic: '🍈', t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
     ] },
     { label: 'See & do', tiles: [
-      { ic: ICON.pin, t: 'Places', d: 'For your taste & budget', hash: `#places-${cc}` },
-      { ic: ICON.trophy, t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${cc}` },
-      { ic: ICON.sun, t: 'Things to do', d: 'Picks for right now', hash: `#today-${cc}` },
-      { ic: ICON.users, t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${cc}` },
-      { ic: ICON.ticket, t: 'Festivals', d: 'Dates & holidays', hash: `#events-${cc}` },
-      { ic: ICON.waves, t: 'Pools', d: 'Swims & day passes', hash: `#pools-${cc}` },
-      { ic: ICON.temple, t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${cc}` },
-      { ic: ICON.leaf, t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
-      { ic: ICON.volume, t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
-      { ic: ICON.star, t: 'Saved', d: 'Your collections', hash: '#saved' },
+      { ic: '📍', t: 'Places', d: 'For your taste & budget', hash: `#places-${cc}` },
+      { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${cc}` },
+      { ic: '🕒', t: 'Things to do', d: 'Picks for right now', hash: `#today-${cc}` },
+      { ic: '👪', t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${cc}` },
+      { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${cc}` },
+      { ic: '🏊', t: 'Pools', d: 'Swims & day passes', hash: `#pools-${cc}` },
+      { ic: '🙏', t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${cc}` },
+      { ic: '🌿', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
+      { ic: '🔊', t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
+      { ic: '⭐', t: 'Saved', d: 'Your collections', hash: '#saved' },
     ] },
   ];
   // E3: rank the four decks by trip phase, same rule as Home (homeScreen's planDeckOpen) —
@@ -2816,9 +2864,16 @@ function exploreScreen(argCc) {
   const explorePhase = store.profile.prefs.phase || inferPhase();
   const PHASE_DECK = { planning: 'Get oriented', traveling: 'See & do', post: null };
   const openDeck = PHASE_DECK[explorePhase];
+  const toolChip = (x) => h('button', {
+    class: 'status-chip', onclick: () => go(x.hash), 'aria-label': x.d ? `${x.t}. ${x.d}` : x.t,
+  }, [h('span', { class: 'status-ic' }, x.ic), h('span', { class: 'status-lbl' }, x.t)]);
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
   tileGroups.forEach((g) => {
-    wrap.append(foldable(g.label, h('div', { class: 'grid' }, g.tiles.map(sectionTile)), { open: g.label === openDeck }));
+    const details = h('details', { class: 'home-group-d', open: g.label === openDeck ? '' : null }, [
+      h('summary', { class: 'home-group' }, g.label),
+      h('div', { class: 'chips' }, g.tiles.map(toolChip)),
+    ]);
+    wrap.append(details);
   });
 
   mount(wrap, '#explore');
@@ -9219,7 +9274,12 @@ function todoHasCat(p, list) { return (p.categories || []).some((c) => list.incl
 function todoContext(rec, spot) {
   const now = new Date();
   const hr = now.getHours();
-  const daypart = hr < 11 ? 'morning' : hr < 15 ? 'midday' : hr < 18 ? 'afternoon' : hr < 22 ? 'evening' : 'night';
+  // hr < 5 must read as 'night', not fall through to the general "hr < 11 → morning" bucket —
+  // 1am/2am is deep night (bars/nightlife are the fit, TODO_NIGHT), not the cool sightseeing
+  // "morning" that 6am-10am actually means. Getting this wrong used to boost temples/museums/
+  // nature (TODO_CLOSED_AT_NIGHT would have applied instead) as "morning" picks at 2am while
+  // ranking genuinely-open bars below them — the opposite of what "right now" should suggest.
+  const daypart = hr < 5 ? 'night' : hr < 11 ? 'morning' : hr < 15 ? 'midday' : hr < 18 ? 'afternoon' : hr < 22 ? 'evening' : 'night';
   const dow = now.getDay();
   const today = rec && rec.daily && rec.daily[0];
   let weather = 'clear';

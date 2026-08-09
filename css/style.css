@@ -525,6 +525,11 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
 .right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+/* Budget is now its own home-group-d foldable (see homeFold, js/main.js) rather than nested
+   at the foot of the Right-now card — .now-spend sits directly under its <summary> with
+   nothing above it, so the divider line the merged-card layout needed would just be a stray
+   hairline right under the group heading. */
+.home-group-d > summary + .now-spend { margin-top: 8px; border-top: none; padding-top: 0; }
 
 /* --- YOU hub: name-entry prompt (shown only until a name is set — see nameEntryCard()) --- */
 .name-entry-card input { font-size: var(--fs-h3); font-family: var(--font-display); font-weight: 700; }
