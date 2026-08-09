@@ -1996,3 +1996,51 @@ killed, `caches.keys()` confirmed on `mk-v0.365.0`): `#home` in both planning an
 phases, including the full weather widget, rendered correctly from Service Worker Cache
 Storage with zero console errors (only the expected harmless "failed to update the
 ServiceWorker" background-check noise while the origin was unreachable).
+
+### Home: Plan/Money chips merge into one default-open Tools group; ring hour-labels no longer clipped; post phase leads with Search, recap gets a gamification level + rating (mk-v0.366.0)
+
+Three direct requests:
+
+**Tools merge** — "make all the plan and tools chips and the money and tools chips
+combined into one tools section and default it expanded": Home's "Plan your trip" (8 chips)
+and "Money & tools" (7 chips) collapsibles (`js/screens/home.js`) are now one — "🧰 Tools"
+— with all 15 chips concatenated in their original order. It defaults open in every phase
+now (previously "Plan your trip" only opened by default in planning/post); "🔎 Identify
+what's around you" is untouched and keeps its own on-the-ground-only auto-open rule.
+
+**Ring label clipping** — "Make the numbers on the circle weather section all clear and
+visable and not obstructed": `wxHourlyRingSvg()`'s hour labels (added last round) sat at a
+radius that put the south label's baseline 3 units past the bottom of the old 240×240
+viewBox, and the east/west labels' centred text hung half off those edges — genuinely
+clipped, not just visually tight (this predates last round's change; adding 4 more labels
+only made it more noticeable). Fixed at the geometry level: the ring now draws inside a
+280×280 box with the centre shifted to (140,140) — the wedge/ring radii themselves
+(`rIn`/`rOut`) are unchanged, so the ring's own size and look on screen do not change, only
+the margin around it. Verified with `getBBox()` against the SVG's `viewBox`: all 8 labels
+now fit fully inside on both axes, on both Home and the Weather screen (same shared
+function).
+
+**Post-phase reorder + recap additions** — "in home post section: start with search
+everything then welcome back section which should have the gamification level and rating
+there": post used to show the "📖 Welcome back" recap card before Search everything; Search
+now leads (`js/screens/home.js` — the on-the-ground Search condition now also covers
+`phase === 'post'`, and the old post-only trailing `else` that used to append it after the
+recap is gone, since nothing else reaches that branch). `returnRecapCard()` (`js/main.js`)
+now opens with a level badge — the same on-device points/level system already shown in full
+on `#contributions` (`gamify.contributionPoints`/`levelInfo`), tapping through there — in
+both the empty and populated states (a level exists from the first point, so nothing to
+gate on). The existing stats row (journal entries, places loved, stops) gains a "places
+rated" count alongside "places loved", giving the "rating" side of the request a real
+number rather than folding it into the existing loved-places stat, which is a subset of it.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.366.0`.
+
+**Verified:** DOM inspection confirmed the Tools group renders 15 `.status-chip`s and stays
+open regardless of phase (checked in traveling and post). Switched to post via the real
+phase button and confirmed the screen's child order: Quick access → Search everything →
+Welcome back (with the level badge reading "🌱 Newcomer · Level 1 →" and the recap stats)
+→ Tools → Identify (correctly closed, not on the ground). `getBBox()` against the ring's
+`viewBox` confirmed all 8 hour labels fit fully on-screen with no clipping on the Weather
+screen. Zero console errors. True offline test (dev server killed, `caches.keys()`
+confirmed on `mk-v0.366.0`): `#home` rendered the Tools group (open, 15 chips) correctly
+from Service Worker Cache Storage with zero console errors.
