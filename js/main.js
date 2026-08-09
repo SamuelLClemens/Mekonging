@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.365.0';
+const APP_VERSION = 'mk-v0.366.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1674,6 +1674,12 @@ function returnRecapCard() {
   const jEntries = (store.journal.entries || []).length;
   const stops = (store.trip.stops || []).length;
   const loved = Object.entries(store.placeData || {}).filter(([, d]) => d && (d.rating || 0) >= 4).length;
+  const ratedN = Object.values(store.placeData || {}).filter((d) => d && (d.rating || 0) > 0).length;
+  // Gamification level — the same on-device points/level system shown in full on
+  // #contributions (Your contributions), surfaced here too per direct request ("welcome
+  // back... should have the gamification level and rating there").
+  const cPts = gamify.contributionPoints(store);
+  const cLvl = gamify.levelInfo(cPts);
   const home = homeCurrency();
   const totals = {};
   (store.trip.budgetLog || []).forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
@@ -1684,19 +1690,28 @@ function returnRecapCard() {
     const conv = convert(v, c, home);
     if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
   }
+  // Shown in both the empty and populated states below — a level exists from the very first
+  // point (Level 1, "Newcomer"), so there is nothing to gate on.
+  const levelBadge = () => h('button', { class: 'recap-level', onclick: () => go('#contributions') }, [
+    h('span', { class: 'recap-level-emoji' }, cLvl.emoji),
+    h('span', {}, [h('b', {}, cLvl.title), ` · Level ${cLvl.level} →`]),
+  ]);
   if (!jEntries && !stops && !loved && !any) {
     return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
       h('strong', {}, '📖 Welcome back'),
+      levelBadge(),
       h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
       h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
     ]);
   }
   const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
   card.append(h('strong', {}, '📖 Welcome back'));
+  card.append(levelBadge());
   const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
   const stats = [];
   if (jEntries) stats.push(stat(jEntries, jEntries === 1 ? 'journal entry' : 'journal entries'));
   if (loved) stats.push(stat(loved, loved === 1 ? 'place loved' : 'places loved'));
+  if (ratedN) stats.push(stat(ratedN, ratedN === 1 ? 'place rated' : 'places rated'));
   if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
   if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
   if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, `Spent ≈ ${Math.round(homeSum).toLocaleString()} ${home}${allKnown ? '' : ' (some rates unknown)'}`));
@@ -8847,7 +8862,14 @@ function wxHourlyRingSvg(rec, metric, city) {
   if (!vals.length) return '';
   const lo = cfg.min != null ? cfg.min : Math.min(...vals);
   const hi = cfg.max != null ? cfg.max : Math.max(...vals);
-  const cx = 120, cy = 120, rOut = 106, rIn = 66, gap = 0.010, step = (2 * Math.PI) / 24;
+  // cx/cy sit at the centre of a 280x280 box (not 240x240 — the ring geometry itself,
+  // rIn/rOut, is unchanged) so the outer hour labels have real margin to the edge: at the
+  // old 240x240 size, the label radius (rOut+13) put the south label's baseline PAST the
+  // bottom edge (120+119+4 = 243 > 240) and the east/west labels' text (anchor=middle) hung
+  // half off the left/right edges — obstructed/clipped exactly as reported. The extra 20px
+  // of padding on every side is enough for any 4-character label at this font size to sit
+  // fully inside the box on all 8 sides.
+  const cx = 140, cy = 140, rOut = 106, rIn = 66, gap = 0.010, step = (2 * Math.PI) / 24;
   let wedges = '';
   win.forEach((x, i) => {
     const a0 = i * step - Math.PI / 2 + gap;
@@ -8874,7 +8896,7 @@ function wxHourlyRingSvg(rec, metric, city) {
   const center = `<text x="${cx}" y="${cy - 6}" text-anchor="middle" class="wx-ring-val">${cfg.fmt(cfg.hourly(win[0]))}</text>`
     + `<text x="${cx}" y="${cy + 15}" text-anchor="middle" class="wx-ring-sub">${esc(city)}</text>`
     + `<text x="${cx}" y="${cy + 32}" text-anchor="middle" class="wx-ring-sub2">now</text>`;
-  return `<svg viewBox="0 0 240 240" class="wx-ring" role="img" aria-label="Next 24 hours ${metric}" xmlns="http://www.w3.org/2000/svg">${wedges}${labels}${nowMark}${center}</svg>`;
+  return `<svg viewBox="0 0 280 280" class="wx-ring" role="img" aria-label="Next 24 hours ${metric}" xmlns="http://www.w3.org/2000/svg">${wedges}${labels}${nowMark}${center}</svg>`;
 }
 function wxDayHumAvg(rec, date) {
   const hs = (rec.hourly || []).filter((x) => String(x.t).slice(0, 10) === date && x.hum != null);

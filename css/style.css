@@ -1244,6 +1244,14 @@ html[data-theme="dark"] .for-you-tag { color: var(--teal); }
 .countdown-num b { font-size: 1.6em; color: var(--teal-deep); }
 html[data-theme="dark"] .countdown-num b { color: var(--teal); }
 .companion-todo { padding: 3px 0; color: var(--ink-soft); }
+/* Gamification level badge on the Welcome-back recap — links through to the full
+   Your-contributions breakdown, same level system used there. */
+.recap-level { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  margin: 6px 0 4px; padding: 8px 10px; border-radius: var(--r-2, 10px);
+  border: 1px solid var(--line, rgba(0,0,0,.12)); background: rgba(0,0,0,0.035);
+  font: inherit; color: inherit; cursor: pointer; }
+.recap-level-emoji { font-size: 1.6rem; line-height: 1; }
+html[data-theme="dark"] .recap-level { background: rgba(255,255,255,0.06); }
 .recap-stats { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); margin: 6px 0 2px; }
 .recap-stat { font-size: var(--fs-sm); color: var(--ink-soft); }
 .recap-stat b { font-size: 1.3em; color: var(--ink); }

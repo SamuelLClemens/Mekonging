@@ -103,9 +103,11 @@ export function homeScreen() {
 
   // Search everything — while travelling, this leads (moved up from its old spot just before
   // "Plan & tools") and the weather widget moves down to take its place instead, further below —
-  // a straight placement swap per direct request. Other phases (no weather widget to swap with)
-  // keep Search in its original trailing spot, appended near "Plan & tools" below.
-  if (onGround) wrap.append(searchEverythingBtn());
+  // a straight placement swap per direct request. Post also leads with Search now, ahead of
+  // the "Welcome back" recap below, per direct request ("start with search everything then
+  // welcome back section"). Planning is the only phase where Search still trails (spliced
+  // into the middle of its own stage block instead — see the planning branch below).
+  if (onGround || phase === 'post') wrap.append(searchEverythingBtn());
 
   // One stage-appropriate situational block. Planning gets a forward-looking outlook +
   // countdown + checklist hub (no near-me); travelling gets the live, forecast-aware
@@ -163,9 +165,10 @@ export function homeScreen() {
     const actions = stageBlock.querySelector('.home-actions');
     if (actions) actions.before(searchEverythingBtn());
     else wrap.append(searchEverythingBtn());
-  } else {
-    wrap.append(searchEverythingBtn());
   }
+  // Post already got its Search everything button above, ahead of stageBlock (the "Welcome
+  // back" recap) — the only three phases are planning/traveling/post, and both of those are
+  // handled explicitly above, so there is nothing left to fall through to here.
 
   wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
 
@@ -188,7 +191,11 @@ export function homeScreen() {
   const unread = unreadInboxCount();
   const idN = idPinCount();
   const groups = [
-    { label: 'Plan your trip', items: [
+    // "Plan your trip" and "Money & tools" combined into one Tools section per direct
+    // request ("make all the plan and tools chips and the money and tools chips combined
+    // into one tools section and default it expanded") — was two separate collapsibles,
+    // now one, with every chip from both concatenated in their original order.
+    { label: '🧰 Tools', items: [
       // Talk-section-style unify (You Y1): six destinations used to answer to two different
       // names depending on which tab you arrived from. The short name now matches meHubScreen
       // (js/main.js) on every one of these — see OVERHAUL.md's You section for the audit.
@@ -200,8 +207,6 @@ export function homeScreen() {
       chip('📸', 'Trip scrapbook', null, '#scrapbook'),
       chip('📅', 'Calendar', null, '#calendar'),
       chip('⭐', 'Saved places', null, '#saved'),
-    ] },
-    { label: 'Money & tools', items: [
       chip('💱', 'Currency converter', null, '#currency'),
       chip('💰', 'Money', null, '#expenses'),
       chip('🏷️', 'Bargain helper', null, '#bargain'),
@@ -224,17 +229,12 @@ export function homeScreen() {
       chip('🔍', 'My identifier', idN ? `${idN} saved` : null, '#identified'),
     ] },
   ];
-  // Decks open by RELEVANCE to the current phase rather than all-or-nothing: before/after the
-  // trip a traveller plans and remembers, so the trip-planning deck (index 0) leads; on the
-  // ground the recognition tools (Identify, index 2) lead instead. This keeps exactly one
-  // deck open per phase instead of ~16 equal chips or a mismatched default. Identify used to
-  // be its own separate <details> below the other two, with its own distinct summary style
-  // (a plain .home-section span rather than the small-caps .home-group label the other two
-  // groups use) — folded into the same `groups` array/loop now, per direct request ("the site
-  // should be consistent in that way"), so all three collapsibles look and behave identically.
-  const planDeckOpen = (phase === 'planning' || phase === 'post');
+  // Tools (index 0) now always defaults expanded, in every phase, per direct request
+  // ("default it expanded") — it no longer gates on phase at all, unlike before the merge
+  // when "Plan your trip" only opened by default in planning/post. Identify (index 1,
+  // unaffected by the merge) keeps its own phase-relevance rule: it leads on the ground.
   groups.forEach((g, gi) => {
-    const open = (gi === 0 && planDeckOpen) || (gi === 2 && onGround);
+    const open = (gi === 0) || (gi === 1 && onGround);
     wrap.append(h('details', { class: 'home-group-d', open: open ? '' : null }, [
       h('summary', { class: 'home-group' }, g.label),
       h('div', { class: 'chips' }, g.items),
