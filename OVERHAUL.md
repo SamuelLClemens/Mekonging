@@ -1902,3 +1902,42 @@ sort together. Note-add, note-save and remove (with its confirm dialog) all work
 correctly post-rebuild. Zero console errors throughout. True offline test (dev server
 killed, `caches.keys()` confirmed on `mk-v0.363.0`): `#danger`, `#home` and `#dictionary`
 all rendered correctly from Service Worker Cache Storage with zero console errors.
+
+### Home: "Identify what's around you" becomes chips too, for consistency (mk-v0.364.0)
+
+Direct follow-up ("make identify whats around me section elements chips as well the site
+should be consistent in that way"): the one remaining tile grid on Home — "🔎 Identify
+what's around you" (Food, Produce, Nature, Sounds, Dangerous, My identifier) — is now a
+chip row too, folded into the same `groups` array/loop as "Plan your trip" and "Money &
+tools" (`js/screens/home.js`) instead of its own separately-styled `<details>` below them.
+It previously had a visibly different summary (a plain `.home-section` span) from the other
+two groups' small-caps `.home-group` label; it now uses the exact same summary markup, so
+all three collapsibles look and behave identically, closing the inconsistency the request
+was about.
+
+The shared `chip()` helper (added last round for Plan/Money) is generalised to the same
+`(ic, label, sub, onclick, extraClass)` shape `quickAccessRow()` and `meHubScreen()`'s own
+chip already use, rather than the narrower one-off `(ic, label, hash, badge)` shape it had —
+this is what lets "My identifier" show its live "· N saved" count (previously baked into
+the tile's `d` description) the same way Travel circle already shows its live "· N unread"
+badge, instead of inventing a second mechanism. Icons were chosen to match each
+destination's own established emoji elsewhere rather than new ones: 🍜 (Food/dish, `catEmoji`/
+`ID_TYPES`), 🍈 (Produce, `ID_TYPES`), 🔍 (My identifier, meHubScreen's own chip for the same
+destination). Nature (🌿), Sounds (🔊) and Dangerous (⚠️) had no prior chip-emoji precedent,
+so were picked to match their existing SVG tile icon's meaning (leaf, speaker, warning
+triangle). `ICON`/`sectionTile` are no longer imported in `home.js` — this was their last
+use in the file.
+
+Open-by-default logic carries over unchanged in spirit: the Identify group (now index 2)
+opens automatically on the ground (`onGround`), same as its old standalone `identifyOpen`
+did; Plan-your-trip (index 0) still opens automatically in planning/post.
+
+**Verified:** confirmed via direct DOM inspection that all four of Home's collapsibles
+(Quick access, Plan your trip, Money & tools, Identify) now share the identical `summary`
+class, and that Identify renders 6 `.status-chip` buttons inside a `.chips` div (previously
+6 `.tile` buttons inside a `.grid`) with the correct labels and live "My identifier" count
+sub. Switched to the Traveling phase via the real phase-switcher button and confirmed
+Identify auto-opens while Plan-your-trip/Money-and-tools auto-close, matching the prior
+open/closed behaviour exactly. Zero console errors. True offline test (dev server killed,
+`caches.keys()` confirmed on `mk-v0.364.0`): `#home` in both planning and traveling phases
+rendered the correct chip groups from Service Worker Cache Storage with zero console errors.
