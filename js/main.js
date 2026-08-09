@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.368.0';
+const APP_VERSION = 'mk-v0.369.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1710,16 +1710,24 @@ function tripCountdownCard(cc) {
   }
   return card;
 }
+// Gamification level badge — the same on-device points/level system shown in full on
+// #contributions (Your contributions). Exported (rather than nested in returnRecapCard)
+// per direct request ("gamification level should move to before tools in home post
+// section") — home.js now renders it as its own standalone element directly before the
+// Tools group, not buried inside the middle of the Welcome-back recap card.
+export function gamifyLevelBadge() {
+  const pts = gamify.contributionPoints(store);
+  const lvl = gamify.levelInfo(pts);
+  return h('button', { class: 'recap-level', onclick: () => go('#contributions') }, [
+    h('span', { class: 'recap-level-emoji' }, lvl.emoji),
+    h('span', {}, [h('b', {}, lvl.title), ` · Level ${lvl.level} →`]),
+  ]);
+}
 function returnRecapCard() {
   const jEntries = (store.journal.entries || []).length;
   const stops = (store.trip.stops || []).length;
   const loved = Object.entries(store.placeData || {}).filter(([, d]) => d && (d.rating || 0) >= 4).length;
   const ratedN = Object.values(store.placeData || {}).filter((d) => d && (d.rating || 0) > 0).length;
-  // Gamification level — the same on-device points/level system shown in full on
-  // #contributions (Your contributions), surfaced here too per direct request ("welcome
-  // back... should have the gamification level and rating there").
-  const cPts = gamify.contributionPoints(store);
-  const cLvl = gamify.levelInfo(cPts);
   const home = homeCurrency();
   const totals = {};
   (store.trip.budgetLog || []).forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
@@ -1730,23 +1738,15 @@ function returnRecapCard() {
     const conv = convert(v, c, home);
     if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
   }
-  // Shown in both the empty and populated states below — a level exists from the very first
-  // point (Level 1, "Newcomer"), so there is nothing to gate on.
-  const levelBadge = () => h('button', { class: 'recap-level', onclick: () => go('#contributions') }, [
-    h('span', { class: 'recap-level-emoji' }, cLvl.emoji),
-    h('span', {}, [h('b', {}, cLvl.title), ` · Level ${cLvl.level} →`]),
-  ]);
   if (!jEntries && !stops && !loved && !any) {
     return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
       h('strong', {}, '📖 Welcome back'),
-      levelBadge(),
       h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
       h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
     ]);
   }
   const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
   card.append(h('strong', {}, '📖 Welcome back'));
-  card.append(levelBadge());
   const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
   const stats = [];
   if (jEntries) stats.push(stat(jEntries, jEntries === 1 ? 'journal entry' : 'journal entries'));

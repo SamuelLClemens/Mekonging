@@ -2199,3 +2199,29 @@ throughout (aside from the long-standing, unrelated Service-Worker-update-check 
 established as harmless in every prior round). True offline test (dev server killed,
 `caches.keys()` confirmed `["mk-v0.368.0"]`): Home rendered all eight groups correctly, with
 5 items in Nearby picks, entirely from Service Worker Cache Storage with zero console errors.
+
+### Home post: gamification level badge moved to its own standalone element before Tools (mk-v0.369.0)
+
+**"Gamification level should move to before tools in home post section"** — the level badge
+(🌱/🏆-style emoji + title + "Level N →", linking to `#contributions`) was the second line
+*inside* the post-phase "📖 Welcome back" recap card (`returnRecapCard`, main.js), ahead of
+the stats/spend line and the "Build your scrapbook"/"Save & share" buttons that follow it in
+the same card — so while the recap card as a whole already sat directly before Tools, the
+level itself was buried partway through it, not the thing immediately preceding Tools.
+Extracted it into its own exported `gamifyLevelBadge()` (no longer nested inside
+`returnRecapCard`, which now only builds stats/spend/scrapbook/export) and render it as a
+standalone element in `js/screens/home.js`, appended only for `phase === 'post'`, directly
+before the Tools/Identify chip groups — the same "own distinct element right before Tools"
+treatment "Where you are" got in the previous round. Unaffected: `#contributions` (Your
+contributions) and the "You" hub's own "🏅 Your contributions" chip, which read the same
+`gamify.levelInfo()` independently and never went through `returnRecapCard`.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.369.0`.
+
+**Verified:** DOM inspection on the live Home screen (post phase) confirmed the render order
+is now `.card.companion-card` (Welcome back, no level line inside it) → `.recap-level`
+(standalone) → `.home-group-d` (Tools) — the level sits directly between the recap card and
+Tools, with nothing in between. Screenshot confirmed the same visually. Zero console errors.
+True offline test (dev server killed, `caches.keys()` confirmed `["mk-v0.369.0"]`): Home's
+post-phase layout, including the standalone level badge, rendered correctly entirely from
+Service Worker Cache Storage.
