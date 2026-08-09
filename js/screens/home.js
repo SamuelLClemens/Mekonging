@@ -36,9 +36,9 @@ import { fmtTemp } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction } from '../ui-widgets.js';
 import {
-  go, mount, topbar, ICON, contextNow, setupRecapCard, render,
+  go, mount, topbar, contextNow, setupRecapCard, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherRing,
-  ensureHomeWeather, idPinCount, sectionTile, nextPlanItem, evShort, tripSpendHome,
+  ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   budgetTarget, tripSpanDays,
 } from '../main.js';
@@ -171,69 +171,72 @@ export function homeScreen() {
   // focused country's hub (the "Explore" button above), so there is one menu per context
   // instead of Home and the hub duplicating each other.
   //
-  // Both groups render as chip rows now, not a tile grid, per direct request ("turn all the
-  // things in home plan your trip and money and tools into chips") — the same .status-chip
-  // look already used by quickAccessRow above and by You's own tile→chip conversion
-  // (meHubScreen's chipGrp/flatChip, main.js): icon + label only (the tile descriptions are
-  // dropped, same call as that earlier conversion), plus the same live " · N unread" sub and
-  // red accent on Travel circle as meHubScreen's own copy of that chip.
-  const chip = (ic, label, hash, badge) => h('button', {
-    class: 'status-chip' + (badge ? ' budget-red' : ''), onclick: () => go(hash),
-  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, badge ? `${label} · ${badge} unread` : label)]);
+  // Every group below renders as chip rows, not a tile grid, per direct request ("turn all
+  // the things in home plan your trip and money and tools into chips" and, this round,
+  // "make identify what's around me section elements chips as well the site should be
+  // consistent in that way") — the same .status-chip look already used by quickAccessRow
+  // above and by You's own tile→chip conversion (meHubScreen's chipGrp/flatChip, main.js).
+  // Same signature as those two: icon + label, an optional live "· sub" second line, an
+  // optional accent class — so Travel circle's unread badge and My identifier's live count
+  // both work exactly as they already do in meHubScreen, instead of a one-off shape here.
+  const chip = (ic, label, sub, hash, extraClass) => h('button', {
+    class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick: () => go(hash),
+  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
+  const unread = unreadInboxCount();
+  const idN = idPinCount();
   const groups = [
     { label: 'Plan your trip', items: [
       // Talk-section-style unify (You Y1): six destinations used to answer to two different
       // names depending on which tab you arrived from. The short name now matches meHubScreen
       // (js/main.js) on every one of these — see OVERHAUL.md's You section for the audit.
-      chip('🧭', 'Trip plans', '#plans'),
-      chip('🎯', 'For you', '#foryou'),
-      chip('🧳', 'My trip', '#trip'),
-      chip('✅', 'Pre-trip checklist', '#checklist'),
-      chip('📔', 'Journal', '#journal'),
-      chip('📸', 'Trip scrapbook', '#scrapbook'),
-      chip('📅', 'Calendar', '#calendar'),
-      chip('⭐', 'Saved places', '#saved'),
+      chip('🧭', 'Trip plans', null, '#plans'),
+      chip('🎯', 'For you', null, '#foryou'),
+      chip('🧳', 'My trip', null, '#trip'),
+      chip('✅', 'Pre-trip checklist', null, '#checklist'),
+      chip('📔', 'Journal', null, '#journal'),
+      chip('📸', 'Trip scrapbook', null, '#scrapbook'),
+      chip('📅', 'Calendar', null, '#calendar'),
+      chip('⭐', 'Saved places', null, '#saved'),
     ] },
     { label: 'Money & tools', items: [
-      chip('💱', 'Currency converter', '#currency'),
-      chip('💰', 'Money', '#expenses'),
-      chip('🏷️', 'Bargain helper', '#bargain'),
-      chip('👥', 'Travel circle', '#circle', unreadInboxCount()),
-      chip('🤝', 'Buy or sell', '#exchange'),
-      chip('🔒', 'Documents', '#vault'),
-      chip('❓', 'Help & FAQ', '#help'),
+      chip('💱', 'Currency converter', null, '#currency'),
+      chip('💰', 'Money', null, '#expenses'),
+      chip('🏷️', 'Bargain helper', null, '#bargain'),
+      chip('👥', 'Travel circle', unread ? `${unread} unread` : null, '#circle', unread ? 'budget-red' : ''),
+      chip('🤝', 'Buy or sell', null, '#exchange'),
+      chip('🔒', 'Documents', null, '#vault'),
+      chip('❓', 'Help & FAQ', null, '#help'),
+    ] },
+    // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
+    // dangerous animals) plus the traveller's own saved finds. Icons picked to match each
+    // destination's own established emoji elsewhere (🍜 dish/food, 🍈 produce, 🔍 My
+    // identifier — all three from ID_TYPES/meHubScreen, main.js) rather than inventing new
+    // ones, so the same feature always reads the same way wherever it shows as a chip.
+    { label: '🔎 Identify what’s around you', items: [
+      chip('🍜', 'Food', null, '#food'),
+      chip('🍈', 'Produce', null, '#produce'),
+      chip('🌿', 'Nature', null, '#nature'),
+      chip('🔊', 'Sounds', null, '#sounds'),
+      chip('⚠️', 'Dangerous', null, '#danger'),
+      chip('🔍', 'My identifier', idN ? `${idN} saved` : null, '#identified'),
     ] },
   ];
   // Decks open by RELEVANCE to the current phase rather than all-or-nothing: before/after the
   // trip a traveller plans and remembers, so the trip-planning deck (index 0) leads; on the
-  // ground the recognition tools lead (see the Identify deck below). This keeps exactly one
-  // deck open per phase instead of ~16 equal tiles or a mismatched default.
+  // ground the recognition tools (Identify, index 2) lead instead. This keeps exactly one
+  // deck open per phase instead of ~16 equal chips or a mismatched default. Identify used to
+  // be its own separate <details> below the other two, with its own distinct summary style
+  // (a plain .home-section span rather than the small-caps .home-group label the other two
+  // groups use) — folded into the same `groups` array/loop now, per direct request ("the site
+  // should be consistent in that way"), so all three collapsibles look and behave identically.
   const planDeckOpen = (phase === 'planning' || phase === 'post');
   groups.forEach((g, gi) => {
-    wrap.append(h('details', { class: 'home-group-d', open: (gi === 0 && planDeckOpen) ? '' : null }, [
+    const open = (gi === 0 && planDeckOpen) || (gi === 2 && onGround);
+    wrap.append(h('details', { class: 'home-group-d', open: open ? '' : null }, [
       h('summary', { class: 'home-group' }, g.label),
       h('div', { class: 'chips' }, g.items),
     ]));
   });
-
-  // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
-  // dangerous animals) plus the traveller's own saved finds. Placed below the trip-planning
-  // decks: valuable once in-country, but not the first thing a planning traveller needs.
-  // Identify what's around you — a minimise/maximise disclosure (same pattern as the decks
-  // above) so a traveller can fold it away once done exploring. The open/closed choice persists
-  // on-device via a self-defaulting pref (no store bump) and opens by default.
-  const identifyOpen = onGround;
-  wrap.append(h('details', { class: 'home-group-d', open: identifyOpen ? '' : null }, [
-    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, '🔎 Identify what’s around you')),
-    h('div', { class: 'grid' }, [
-      { ic: ICON.bowl, t: 'Food', d: 'Name a street dish', hash: '#food' },
-      { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-      { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
-      { ic: ICON.volume, t: 'Sounds', d: 'What made that call?', hash: '#sounds' },
-      { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
-      { ic: ICON.star, t: 'My identifier', d: idPinCount() ? `${idPinCount()} saved` : 'Your saved finds', hash: '#identified' },
-    ].map(sectionTile)),
-  ]));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
   wrap.append(h('div', { class: 'card give-back', style: 'margin-top:10px' }, [
