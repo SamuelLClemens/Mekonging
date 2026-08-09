@@ -2225,3 +2225,68 @@ Tools, with nothing in between. Screenshot confirmed the same visually. Zero con
 True offline test (dev server killed, `caches.keys()` confirmed `["mk-v0.369.0"]`): Home's
 post-phase layout, including the standalone level badge, rendered correctly entirely from
 Service Worker Cache Storage.
+
+### Explore: default states, section reorder, and "Where next" becomes a mini itinerary builder (mk-v0.370.0)
+
+Three requests, clarified via a short back-and-forth (the user explicitly invited questions:
+"interview me if needed"), then all implemented:
+
+**Default open/closed states.** "Get oriented" / "Getting around" / "Eat & drink" (three of
+Explore's four tool-chip decks) now render open by default on every visit, regardless of trip
+phase — previously only one deck opened, chosen by `PHASE_DECK` (planning→Get oriented,
+traveling→See & do, post→none). "See & do" alone stays phase-ranked (opens while
+`'traveling'`). Separately, the Accessibility / Entry & visa / Travelling with kids cards
+(`accessCard`/`visaCard`/`familyCard`, wrapped by `collapsibleCard`) now default **closed**
+(`defaultOpen: false`) instead of open — reference material a traveller dips into, not
+something to read every visit; still one tap away via their own `hubAccessOpen`/
+`hubVisaOpen`/`hubFamilyOpen` prefs, exactly as before.
+
+**Section reorder.** "More for {country}" (the tile-chip decks) moved from the very foot of
+the screen to directly after the location card ("You're around Pai" / "Where am I"), now
+leading, above Signature sights — per direct request. Confirmed with the user which of the
+other, unnamed sections (Fits your trip / Right now-seasonally / You might not know / the
+solo-traveller safety note / Explore-by-city) should move too: all five are kept, slotted in
+between "Where next" and "History & culture", in their existing relative order — nothing
+removed. Final order: More for {country} → Signature sights → Where next → Fits your trip →
+Right now, seasonally → You might not know → Travelling solo (if applicable) → Explore by
+city → History & culture → Accessibility / Entry & visa / Travelling with kids.
+
+**"Where next" rebuilt as a mini itinerary builder.** Previously a static list of the 5
+nearest reachable cities from the traveller's current city (`computeWhereNext`, ranked by
+real `planRoutes()` travel time — journey.js's route graph). Per a follow-up question ("turn
+'Where next' into a mini itinerary builder" vs. "promote the existing curated Trip plans
+instead"), the user chose the itinerary builder. Tapping a candidate city now chains it as
+the new tail — up to 3 stops — with the running total (`~X–Yh across N stops · Z changes`)
+computed as the actual sum of `planRoutes()` legs between consecutive stops, never invented.
+"↶ Remove last" / "Clear" undo the chain; "＋ Add these N stops to My Trip" calls the existing
+`addStop()` once per chained city (resolving each city's country via a new
+`countryForCityName()` helper, so a chain that crosses a border still tags each stop
+correctly), matching the exact pattern the curated Trip-plans screen already uses (title +
+country, no invented dates). The "Full journey planner →" link (`#route`, for a detailed
+two-point route with borders/prices/legs) stays, for whenever more depth than "which cities
+next" is wanted. Capped at 3 stops on purpose — this is "what's next", not a whole-trip
+build. Caught and fixed during interactive verification: the chain's own starting city could
+reappear as a suggested "next stop" one hop later (e.g. Pai → Chiang Mai → **Pai**); the
+candidate-exclusion set now always includes the trip's origin, not just the stops added so
+far.
+
+**Left unchanged, on request:** Places (map + category-layer chips + "Nearest first" sort +
+interest/budget/kids/step-free filters) — the user did not have a concrete gap to point to
+when asked ("not sure"), so nothing was changed there rather than guessing at a redesign.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.370.0`.
+
+**Verified:** Python brace-balance check clean. DOM inspection on `#country-th` (focus set to
+Pai) confirmed the exact new section order end-to-end, and confirmed `Get oriented` /
+`Getting around` / `Eat & drink` open with `phase='planning'` (previously only `Get oriented`
+would) while `See & do` stayed closed, and confirmed the three foldcards default closed with
+fresh (unset) prefs. Interactive click-through of the itinerary builder: tapped Chiang Mai
+then Bangkok, confirmed the breadcrumb ("Pai → Chiang Mai → Bangkok"), the cumulative travel
+line, that Pai correctly stopped appearing as a next-stop suggestion after the fix, and that
+"Add these 2 stops to My Trip" wrote both stops to `store.trip.stops` with `country: 'th'` and
+correctly disabled itself afterwards (test stops removed afterward). Zero console errors
+(aside from the long-standing, unrelated Service-Worker-update-check noise already
+established as harmless in every prior round). True offline test (dev server killed,
+`caches.keys()` confirmed `["mk-v0.370.0"]`): the full reordered Explore screen, all default
+states, and the itinerary builder's static (pre-interaction) view rendered correctly entirely
+from Service Worker Cache Storage.
