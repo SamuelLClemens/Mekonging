@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.364.0';
+const APP_VERSION = 'mk-v0.365.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1757,17 +1757,20 @@ function destinationOutlookCard(spot) {
 }
 
 // PLANNING stage Home block — a planning hub in place of "what's near you": the days-to-go
-// countdown and remaining checklist, a multi-day destination weather outlook, and the plan /
-// "For you" actions (the traveller chose "all of the above" for this stage).
+// countdown and remaining checklist, the plan / "For you" actions, then the multi-day
+// destination weather outlook trailing at the end. Order per direct request: "Your trip has
+// started" (inside the countdown card) → Search everything (spliced in by home.js, directly
+// before the actions row below) → "Plan your trip"/"Tune 'For you'" → the weather outlook —
+// the outlook used to sit between the countdown and the actions; it now trails both instead.
 function planningStageBlock(cc) {
   const wrap = h('div', {});
   wrap.append(tripCountdownCard(cc));
-  const spot = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
-  wrap.append(destinationOutlookCard(spot));
   wrap.append(h('div', { class: 'home-actions', style: 'margin-top:10px' }, [
     h('button', { class: 'btn', onclick: () => go('#plans') }, '🧭 Plan your trip'),
     h('button', { class: 'btn ghost', onclick: () => go('#foryou') }, '🎯 Tune “For you”'),
   ]));
+  const spot = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
+  wrap.append(destinationOutlookCard(spot));
   return wrap;
 }
 
@@ -1894,24 +1897,26 @@ function quickSpendRow(id) {
 // phase's primary action lifted on top and a one-tap spend at the foot — the four old blocks
 // (phaseNextBest, journey companion, right-now, daily strip) merged into one, with the
 // duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
-// On-the-ground only: a 24h watch-face weather ring, so "what's it doing right now, right
-// here" reads at a glance — the same ring already used on the Weather screen (wxHourlyRingSvg),
-// just compact and tapping through to the full view. Used to be arrived-phase-only; now shows
-// for the whole (merged) on-the-ground phase. Used to render nested at the top of the "Right
-// now" card; now rendered by home.js as its own standalone card, swapped in placement with
-// "Search everything" per direct request — exported so home.js can call it directly.
-export function homeWeatherRing() {
+// On-the-ground only: the SAME rich weather widget as the Weather screen itself — wxVizCard
+// (metric chips to switch "layers" — Temp/Rain/Humidity/UV/Feels/Wind, the 24h watch-face
+// ring, the detailed hour-by-hour strip, and the upcoming-forecast calendar) — rather than a
+// small compact ring fixed to one metric, per direct request ("the weather widget should look
+// like the larger one in the weather section with layers"). Used to be arrived-phase-only;
+// now shows for the whole (merged) on-the-ground phase. Used to render nested at the top of
+// the "Right now" card; now rendered by home.js as its own standalone card, swapped in
+// placement with "Search everything" per an earlier direct request — exported so home.js can
+// call it directly. wxVizCard already returns a full `.card`, so this needs no extra wrapper;
+// a trailing "Full forecast →" button is appended (wxVizCard itself has no built-in link out)
+// so tapping through to the full Weather screen still works exactly as the old ring did.
+export function homeWeatherCard() {
   const ctx = contextNow();
   const spot = ctx.near ? ctx.near.spot : null;
   if (!spot) return null;
   const rec = getCachedWeather(spotKey(spot));
   if (!rec || !Array.isArray(rec.hourly) || !rec.hourly.length) return null;
-  const ring = wxHourlyRingSvg(rec, 'temp', spot.city);
-  if (!ring) return null;
-  return h('button', { class: 'home-wx-ring', 'aria-label': `Weather ring for ${spot.city} — open full forecast`, onclick: () => go('#weather') }, [
-    h('div', { class: 'wx-ring-wrap', html: ring }),
-    h('p', { class: 'muted small', style: 'text-align:center;margin:0' }, 'Next 24 hours · full forecast →'),
-  ]);
+  const card = wxVizCard(rec, spot);
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#weather') }, 'Full forecast →'));
+  return card;
 }
 
 function homeNowCard(phase, cc) {
@@ -8849,13 +8854,21 @@ function wxHourlyRingSvg(rec, metric, city) {
     const a1 = (i + 1) * step - Math.PI / 2 - gap;
     wedges += `<path d="${wxArcWedge(cx, cy, rIn, rOut, a0, a1)}" fill="${wxMetricColor(metric, cfg.hourly(x), lo, hi)}"><title>${fmtClock(new Date(x.t).getHours())}: ${cfg.fmt(cfg.hourly(x))}</title></path>`;
   });
+  // Hour labels — every 3 hours (8 around the ring) rather than every 6 (4), plus a short
+  // tick connecting each label to its wedge, so it reads clearly which segment is which hour
+  // at a glance instead of needing to interpolate between four widely-spaced labels. The
+  // "now" label (the very first wedge, always at the top) gets its own accent class to anchor
+  // the reading, matching the separate "now" dot/centre text already drawn below.
   let labels = '';
-  [0, 6, 12, 18].forEach((i) => {
+  [0, 3, 6, 9, 12, 15, 18, 21].forEach((i) => {
     if (i >= win.length) return;
     const a = i * step - Math.PI / 2;
+    const t0x = cx + (rOut + 2) * Math.cos(a), t0y = cy + (rOut + 2) * Math.sin(a);
+    const t1x = cx + (rOut + 7) * Math.cos(a), t1y = cy + (rOut + 7) * Math.sin(a);
+    labels += `<line x1="${t0x.toFixed(1)}" y1="${t0y.toFixed(1)}" x2="${t1x.toFixed(1)}" y2="${t1y.toFixed(1)}" class="wx-ring-tick"/>`;
     const lr = rOut + 13;
     const lx = cx + lr * Math.cos(a), ly = cy + lr * Math.sin(a) + 4;
-    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" class="wx-ring-lbl">${fmtClock(new Date(win[i].t).getHours())}</text>`;
+    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" class="wx-ring-lbl${i === 0 ? ' wx-ring-lbl-now' : ''}">${fmtClock(new Date(win[i].t).getHours())}</text>`;
   });
   const nowMark = `<circle cx="${cx}" cy="${(cy - rOut - 3).toFixed(1)}" r="3.4" class="wx-ring-now"/>`;
   const center = `<text x="${cx}" y="${cy - 6}" text-anchor="middle" class="wx-ring-val">${cfg.fmt(cfg.hourly(win[0]))}</text>`

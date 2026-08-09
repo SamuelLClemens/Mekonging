@@ -1941,3 +1941,58 @@ Identify auto-opens while Plan-your-trip/Money-and-tools auto-close, matching th
 open/closed behaviour exactly. Zero console errors. True offline test (dev server killed,
 `caches.keys()` confirmed on `mk-v0.364.0`): `#home` in both planning and traveling phases
 rendered the correct chip groups from Service Worker Cache Storage with zero console errors.
+
+### Home planning: weather outlook trails the actions; Home traveling: weather widget upgraded to the full Weather-screen view; ring hour labels clarified (mk-v0.365.0)
+
+Two direct requests, both about Home's weather presentation:
+
+**Planning-phase reorder** — "after Your trip has started then search everything button
+then plan your trip and tune for you and then the weather": `planningStageBlock()`
+(`js/main.js`) used to append the destination weather outlook (`destinationOutlookCard`)
+between the countdown card and the "Plan your trip"/"Tune 'For you'" actions row; it now
+appends the actions row first and the outlook last. Since home.js's Search-everything
+splice (`stageBlock.querySelector('.home-actions').before(...)`) targets the actions row by
+selector rather than position, it needed no change — Search still lands directly before
+the actions row regardless of where the outlook falls. Final order: countdown ("🛬 Your
+trip has started" once the trip's underway) → Search everything → Plan your trip/Tune "For
+you" → 🌤 destination outlook.
+
+**Traveling-phase weather widget** — "the weather widget should look like the larger one
+in the weather section with layers and hours need to be much clearer in the wheel to know
+when. and that should be in the weather section too": Home's on-the-ground weather card
+used to be `homeWeatherRing()`, a small (max 190px) button wrapping just the 24h ring fixed
+to the Temp metric. It is now `homeWeatherCard()` (renamed, same export point), which
+builds and returns `wxVizCard(rec, spot)` — the exact same widget the Weather screen's own
+"Right now" view uses: the metric chip row ("layers" — Temp/Rain/Humidity/UV/Feels/Wind),
+the 24h watch-face ring at full size, the detailed hour-by-hour scroll strip, and the
+upcoming-forecast month calendar. `wxVizCard` already returns a styled `.card`, so home.js
+appends it directly rather than wrapping it in another card div as the old ring needed; a
+trailing "Full forecast →" button is appended (the old ring's whole surface was itself the
+tap-through; `wxVizCard` has no built-in link out) so tapping through to `#weather` still
+works. The now-unused `.home-wx-ring`/`.home-wx-card` classes are removed from
+`css/style.css` and `homeWeatherRing`'s old export name is gone (renamed throughout, one
+call site in `home.js`).
+
+**Ring hour-label clarity** — `wxHourlyRingSvg()` (`js/main.js`) is the one function behind
+both the old compact ring and the full `wxVizCard`, on both Home and the Weather screen, so
+fixing it here fixes it everywhere it is used. It labelled only every 6th hour (4 labels —
+N/E/S/W) at 11px in muted grey; it now labels every 3rd hour (8 labels), each with a short
+radial tick connecting it to its wedge, at 12px/700-weight in full ink contrast instead of
+muted, and the "now" label (the first wedge, always at the top) gets its own accent-coloured
+class to anchor the reading. This reads noticeably more clearly at a glance which segment is
+which hour, on both the (now much larger) Home widget and the Weather screen's own ring.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.365.0`.
+
+**Verified:** direct DOM inspection confirmed the planning-phase stage block's child order
+is countdown → search button → actions row (Plan your trip/Tune "For you") → outlook card,
+screenshot-confirmed visually as well. Switched to Traveling via the real phase button and
+confirmed `.wx-viz` renders on Home with all 6 metric chips, 8 ring labels (`7pm 10pm 1am
+4am 7am 10am 1pm 4pm` for the tested time), 8 ticks, the hourly scroll strip, the month
+calendar, and a trailing "Full forecast →" button that navigates to `#weather` on click;
+confirmed the Weather screen's own ring shows the identical 8 labels/8 ticks, proving the
+shared-function fix reached both places. Zero console errors. True offline test (dev server
+killed, `caches.keys()` confirmed on `mk-v0.365.0`): `#home` in both planning and traveling
+phases, including the full weather widget, rendered correctly from Service Worker Cache
+Storage with zero console errors (only the expected harmless "failed to update the
+ServiceWorker" background-check noise while the origin was unreachable).
