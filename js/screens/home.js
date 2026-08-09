@@ -37,7 +37,7 @@ import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction } from '../ui-widgets.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
-  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherRing,
+  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
   ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   budgetTarget, tripSpanDays,
@@ -102,8 +102,8 @@ export function homeScreen() {
   }
 
   // Search everything — while travelling, this leads (moved up from its old spot just before
-  // "Plan & tools") and the weather ring moves down to take its place instead, further below —
-  // a straight placement swap per direct request. Other phases (no weather ring to swap with)
+  // "Plan & tools") and the weather widget moves down to take its place instead, further below —
+  // a straight placement swap per direct request. Other phases (no weather widget to swap with)
   // keep Search in its original trailing spot, appended near "Plan & tools" below.
   if (onGround) wrap.append(searchEverythingBtn());
 
@@ -144,12 +144,15 @@ export function homeScreen() {
   // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
   // Budget chip above, still one tap from the full breakdown on #expenses.
 
-  // Weather ring — while travelling, this now sits here (Search everything's old spot,
-  // swapped up above) instead of nested at the top of the "Right now" card. Other phases never
-  // had a ring, so they keep Search everything here as before.
+  // Weather — while travelling, this now sits here (Search everything's old spot, swapped up
+  // above) instead of nested at the top of the "Right now" card. It is the same rich widget as
+  // the Weather screen itself (wxVizCard, via homeWeatherCard — see main.js), not a small ring,
+  // per direct request; the card returned already carries its own `.card` styling, so it is
+  // appended as-is rather than wrapped again. Other phases never had this widget, so they keep
+  // Search everything here as before.
   if (onGround) {
-    const ring = homeWeatherRing();
-    if (ring) wrap.append(h('div', { class: 'card home-wx-card' }, [ring]));
+    const wxCard = homeWeatherCard();
+    if (wxCard) wrap.append(wxCard);
   } else if (phase === 'planning') {
     // Reorder per direct request: "I have arrived" (inside the countdown card, top of
     // stageBlock above) → Search everything → "Plan your trip"/"Tune 'For you'" — so Search
