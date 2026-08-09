@@ -888,7 +888,7 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-title { font-weight: 800; font-size: var(--fs-lg); color: var(--ink); }
 .rn-sub { font-size: var(--fs-sm); }
 .rn-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-2); }
-.rn-item { display: flex; align-items: stretch; gap: var(--sp-2); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.rn-item { display: flex; align-items: stretch; gap: var(--sp-2); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; border-left: 4px solid var(--cat, var(--line)); }
 .rn-open { flex: 1; min-width: 0; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: none; border: none; padding: var(--sp-2) var(--sp-3); }
 .rn-open:active { transform: scale(0.99); }
 /* Small recognition thumbnail on "near me" rows (arrival hub + Home right-now). */
