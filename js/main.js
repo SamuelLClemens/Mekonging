@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.366.0';
+const APP_VERSION = 'mk-v0.367.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -837,6 +837,12 @@ function placeFitReason(p, prefs) {
 
 function scoreForNow(p, ctx) {
   if (!p.coords) return -Infinity;
+  // Only real "go visit this" places count as a "right now" pick — not a stay, a rental/
+  // transport hub, or one of the orientation/practical "info" cards (e.g. "Pai practical:
+  // cash, health & road safety") that exist to be read on a place's own page, not suggested
+  // as somewhere to go. Same whitelist daySuggestScreen already uses, so the two surfaces
+  // that offer "what to do right now" never disagree about what counts as a thing to do.
+  if (!todoDoable(p)) return -Infinity;
   const km = haversineKm(ctx.fix, p.coords);
   if (!withinNear(km)) return -Infinity;         // ~1-hour-drive "near you" ceiling — see NEAR_MAX_MIN
   const cats = p.categories || [];
@@ -850,8 +856,12 @@ function scoreForNow(p, ctx) {
     else s -= 30;
   }
   if (ctx.raining) {
-    if (cats.some((c) => INDOOR_CATS.includes(c))) s += 16;
+    // 'market' is deliberately excluded from the blanket indoor treatment below: most
+    // night/walking-street markets in the region are open-air stalls, not shelter from rain
+    // (see marketCovered) — only a genuinely covered market should read as rain-friendly.
+    if (cats.some((c) => INDOOR_CATS.includes(c) && c !== 'market')) s += 16;
     if (cats.some((c) => OUTDOOR_CATS.includes(c))) s -= 22;
+    if (cats.includes('market')) s += marketCovered(p) ? 16 : -18;
   }
   if (ctx.part === 'midday' && !ctx.raining) {
     if (cats.includes('hike')) s -= 10;
@@ -876,7 +886,12 @@ function whyNow(p, ctx) {
   // kid-friendly place (which profileFitAdj boosted), say so — the "made for you" reason.
   const prefs = store.profile.prefs;
   if ((prefs.withBaby || prefs.kids || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
-  if (ctx.raining && cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
+  if (ctx.raining) {
+    // A market only reads as rain-friendly when it is actually covered — an open-air night
+    // market does not get "Good in the rain" just because it also happens to serve food.
+    if (cats.includes('market')) { if (marketCovered(p)) return 'Covered market — good in the rain'; }
+    else if (cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
+  }
   if (cats.includes('market') && marketOpenDays(p) && marketOnToday(p, ctx.dow)) return 'Market on today';
   if (ctx.isWeekend && cats.includes('market')) return 'Weekend market';
   if (evening && cats.includes('nightlife')) return 'Buzzing now';
@@ -974,16 +989,29 @@ function rightNowSection() {
       picks.forEach(({ p }) => {
         const reason = whyNow(p, ctx);
         const km = haversineKm(ctx.fix, p.coords);
-        listWrap.append(h('div', { class: 'rn-item' }, [
+        const cats = p.categories || [];
+        const er = effectiveRating(p.id, p.rating || 0);
+        const dl = driveLabel(km);
+        // Category + budget-tier tags use the same catTag()/tierBadge() components as every
+        // other list on the site (nearby, best-of, day-suggest) — one colour vocabulary
+        // everywhere a category or price tier appears, not a Home-only look.
+        listWrap.append(h('div', { class: 'rn-item', style: `--cat:${placeCatColor(p)}` }, [
           h('button', { class: 'rn-open has-thumb', onclick: () => go(`#place-${p.id}`) }, [
             rnThumb(p),
             h('div', { class: 'rn-textcol' }, [
               h('div', { class: 'rn-item-main' }, [
                 h('span', { class: 'rn-name' }, p.name),
+                er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
+              ]),
+              h('div', { class: 'row-between', style: 'margin:2px 0' }, [
+                h('div', { class: 'cats' }, cats.slice(0, 3).map((c) => catTag(c))),
+                (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+              ]),
+              h('div', { class: 'rn-item-main' }, [
                 (() => { const fit = placeFitReason(p, store.profile.prefs); return fit ? attrTag('⚠️ ' + fit) : null; })(),
                 reason ? attrTag(reason) : null,
               ]),
-              h('div', { class: 'rn-meta muted' }, `${titleCase((p.categories || [])[0] || 'Place')} · ${fmtDistance(km)} · ${p.city}`),
+              h('div', { class: 'rn-meta muted' }, `${dl ? `${fmtDistance(km)} · ${dl}` : fmtDistance(km)} · ${p.city}`),
             ]),
           ]),
           h('div', { class: 'rn-actions' }, [
@@ -4958,6 +4986,16 @@ function marketOpenDays(p) {
   return [...new Set(d)].sort((a, b) => a - b);
 }
 function marketOnToday(p, dow) { const d = marketOpenDays(p); return !d || d.includes(dow); }
+// Best-effort "is this actually shelter from rain?" — most night/walking-street/floating
+// markets in the region are open-air stalls, not weatherproof, so a market is only treated
+// as rain-friendly when its own text says so (a covered hall, a tin/corrugated roof, "market
+// building"). No structured covered/indoor field exists in the data, so this reads the same
+// free text a traveller would: marketType, blurb, recognition and tips. Under-detects rather
+// than over-detects on purpose — an unmarked market defaults to "gets wet", the honest guess.
+function marketCovered(p) {
+  const text = [p.marketType, p.blurb, p.recognition, ...(p.tips || [])].filter(Boolean).join(' ');
+  return /covered market|market hall|tin[- ]roofed|corrugated roof|under.{0,25}roofs?/i.test(text);
+}
 function formatMarketDays(p) {
   const d = marketOpenDays(p);
   if (!d) return 'Daily';
@@ -9197,9 +9235,14 @@ function todoScore(p, ctx, prefs, anchor) {
   const er = effectiveRating(p.id, p.rating || 0);
   let s = er || 3;
   const reasons = [];
-  // Weather
+  // Weather. Markets are judged on their own (covered vs open-air) rather than lumped in with
+  // TODO_RAIN_BAD/generic-good-in-the-rain — most night/walking-street/floating markets here
+  // are open-air stalls, not shelter (see marketCovered).
   if (ctx.weather === 'wet') {
-    if (todoHasCat(p, TODO_RAIN_BAD)) s -= 1.8;
+    if (isMarket(p)) {
+      if (marketCovered(p)) { s += 0.5; reasons.push('☔ Covered market — good in the rain'); }
+      else s -= 1.8;
+    } else if (todoHasCat(p, TODO_RAIN_BAD)) s -= 1.8;
     else { s += 0.5; reasons.push('☔ Good in the rain'); }
   } else if (ctx.weather === 'hot') {
     if (todoHasCat(p, ['beach', 'island', 'water', 'waterfall', 'hotspring'])) { s += 0.7; reasons.push('🏊 Cool off from the heat'); }
@@ -9276,7 +9319,10 @@ function todoCard(x, maxReasons) {
         h('h2', {}, p.name),
         er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
       ]),
-      h('div', { class: 'cats', style: 'margin:2px 0' }, cats.slice(0, 3).map((c) => catTag(c))),
+      h('div', { class: 'row-between', style: 'margin:2px 0' }, [
+        h('div', { class: 'cats' }, cats.slice(0, 3).map((c) => catTag(c))),
+        (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+      ]),
       rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
       h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, todoDistLabel(dist)].filter(Boolean).join(' · ')),
     ]),
@@ -9419,18 +9465,28 @@ function daySuggestScreen(country) {
       listBody.innerHTML = '';
       let pool = scored.filter((x) => tierOf(x));
       if (todoFamily !== 'all') pool = pool.filter((x) => x.cats.some((c) => catFamily(c) === todoFamily));
-      // Annotate each pick with fit + open status. "Closed now" only applies when planning for
-      // NOW (a place shut this minute is irrelevant when you are planning tonight/tomorrow).
+      // Annotate each pick with fit + open status, then DROP known-closed places outright when
+      // planning for NOW — a shut restaurant is a dead end, not a suggestion, so it no longer
+      // just sinks to the bottom tagged; it is hidden, with a one-line note so nothing feels
+      // silently removed. "Closed now" only applies to the NOW plan — a place shut this minute
+      // is irrelevant when planning for tonight or tomorrow, and unknown hours are never treated
+      // as closed (we only ever act on what the data actually says).
       const nowPlan = todoPlan === 'now';
       pool.forEach((x) => { x._fit = placeFitReason(x.p, prefs); x._closed = nowPlan && openStateNow(x.p) === false; });
-      // Good fits that are open lead; poor fits and closed sink (but stay, tagged) — then score.
-      const fitKey = (x) => (x._fit ? 2 : 0) + (x._closed ? 1 : 0);
+      const closedNow = nowPlan ? pool.filter((x) => x._closed).length : 0;
+      if (nowPlan) pool = pool.filter((x) => !x._closed);
+      // Good fits lead; poor fits sink (but stay, tagged) — then score.
+      const fitKey = (x) => (x._fit ? 1 : 0);
       pool.sort((a, b) => fitKey(a) - fitKey(b) || b.s - a.s);
       let rendered = 0;
       TIERS.forEach((t) => {
         const items = pool.filter((x) => tierOf(x) === t.key);
         if (items.length) { renderTier(t.label, items); rendered += items.length; }
       });
+      if (closedNow) {
+        listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' },
+          `${closedNow} more ${closedNow === 1 ? 'is' : 'are'} closed right now, so ${closedNow === 1 ? "it's" : "they're"} hidden — see “Plan for a different time” above.`));
+      }
       if (!rendered) {
         // Nothing trustworthy nearby: fall back to the nearest we can measure — but still only
         // within about an hour's drive, so we never pad a "near you" list with a 3-hour trip.

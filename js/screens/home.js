@@ -170,8 +170,10 @@ export function homeScreen() {
   // back" recap) — the only three phases are planning/traveling/post, and both of those are
   // handled explicitly above, so there is nothing left to fall through to here.
 
-  wrap.append(h('h2', { class: 'home-section' }, 'Plan & tools'));
-
+  // No separate "Plan & tools" heading — it duplicated the merged group's own "🧰 Tools"
+  // summary text directly below with nothing distinguishing them. The group heading alone
+  // is the title now.
+  //
   // Home now carries only TRIP-WIDE tools (planning, memories, money, admin). Everything
   // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
   // focused country's hub (the "Explore" button above), so there is one menu per context

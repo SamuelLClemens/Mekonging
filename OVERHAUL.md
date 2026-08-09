@@ -2044,3 +2044,85 @@ Welcome back (with the level badge reading "🌱 Newcomer · Level 1 →" and th
 screen. Zero console errors. True offline test (dev server killed, `caches.keys()`
 confirmed on `mk-v0.366.0`): `#home` rendered the Tools group (open, 15 chips) correctly
 from Service Worker Cache Storage with zero console errors.
+
+### Home: drop the "Plan & tools" heading; right-now suggestions get a real upgrade — info cards excluded, colour-consistent tags, budget tiers, rain-aware markets, closed places actually hidden (mk-v0.367.0)
+
+Five direct requests, all about the quality of Home's "right now" suggestions and the
+duplicate heading above the merged Tools group:
+
+**"Plan and tools title can go away and tools just have the tools title that already is
+there"** — the merged Tools collapsible (shipped last round) still sat under a separate
+`<h2>Plan & tools</h2>` (`js/screens/home.js`) that duplicated its own "🧰 Tools" summary
+text right below it. The heading is gone; the group's own summary is the only title now.
+
+**"Practical: cash, health and road safety does not belong here"** — traced to a real data/
+logic mismatch, not a one-off. `js/data/places.th.ext.js` and `places.vi.ext.js` carry a
+handful of orientation/practical "info" cards (e.g. `th-ext-pai-cash-health-safety`, "Pai
+practical: cash, health & road safety", `categories: ["health","money","info"]`) — written
+to be read on a place's own page, never meant to be suggested as somewhere to go.
+`daySuggestScreen`'s `todoDoable()` whitelist already excluded these correctly, but Home's
+own "right now" card (`rightNowSection` → `scoreForNow`, `js/main.js`) had no equivalent
+filter, so an info card with a decent rating and nearby coordinates could still surface as
+a go-do pick. `scoreForNow` now runs the exact same `todoDoable()` whitelist, so the two
+surfaces that offer "what to do right now" can no longer disagree about what counts as a
+thing to do.
+
+**"The color coding for food and history and all that should be color coded with a
+consistency in the site" / "budget and midlevel and all that should also be tagged here and
+color coded with consistency across the site"** — Home's right-now picks (`rn-item` rows)
+showed only a plain-text category label and no budget tier at all, while every other list on
+the site (`todoCard`, place-card rows) already uses one canonical colour system: `catTag()`
+(family-hued category pills, `FAMILY_COLOR`/`CATEGORY_FAMILIES`, `render-utils.js`) and
+`tierBadge()` (Budget/Mid/Higher-end pills, `TIER_COLOR`). Home's picks now show up to 3
+`catTag()` pills plus a `tierBadge()` when a budget tier exists, a star rating, and a
+category-coloured left accent bar (`--cat` custom property, same technique `place-card`
+already uses) — the exact same components, not a parallel Home-only look. `todoCard()`
+(the fuller `daySuggestScreen` list) gained the same `tierBadge()` too, since it was missing
+there as well — budget tier is now visible and consistently coloured everywhere a place
+card appears.
+
+**"At midnight it shouldn't be suggesting restaurants that are closed... important to
+always suggest places that are not obviously closed"** — Home's `scoreForNow` already
+excluded known-closed places outright (`open === false → -Infinity`); the actual gap was
+`daySuggestScreen`'s `drawList()`, which only sank closed-now places to the bottom of their
+tier, tagged "🔒 Closed now" — still shown, not hidden. Closed-now places (when planning for
+"Now" specifically; irrelevant when planning for a different time) are now filtered out of
+the pool entirely, with a one-line transparency note ("N more are closed right now, so
+they're hidden — see 'Plan for a different time' above") so nothing feels silently removed.
+Unknown/unparseable hours are still never treated as closed — only what the data actually
+says.
+
+**"When raining it should [not] suggest the night outdoor markets unless they are truly good
+in the rain"** — a real scoring bug: `INDOOR_CATS` (`scoreForNow`) bundled `market` in with
+genuinely indoor categories (culture, food, wellness), so every market — including open-air
+walking-street and floating markets — got the rain bonus and a "Good in the rain" reason.
+`todoScore` (`daySuggestScreen`) had the same shape of bug from the other direction: markets
+weren't in `TODO_RAIN_BAD` at all, so they fell into the generic "else" branch and got
+"☔ Good in the rain" regardless. Added `marketCovered(p)` — a best-effort text scan
+(`marketType`/`blurb`/`recognition`/`tips` for "covered market", "market hall", "tin-roofed",
+"corrugated roof", "under ... roof(s)") since no structured indoor/covered field exists in
+the data. Verified against the real Thailand dataset (13 market entries): Chatuchak Weekend
+Market correctly reads as covered (its recognition text says "under corrugated roofs");
+every walking-street, floating and railway market (Damnoen Saduak, Maeklong, Chiang Mai's
+Sunday/Saturday walking streets, Asiatique, Mae Hong Son/Mae Sariang night markets) correctly
+reads as open-air. Both `scoreForNow`/`whyNow` (Home) and `todoScore` (daySuggestScreen) now
+judge a market on its own covered-or-not status rather than lumping it in with unrelated
+categories — an uncovered market is penalised like any other outdoor pick in the rain; a
+covered one still gets the rain-friendly bonus and a specific "Covered market — good in the
+rain" reason.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.367.0`.
+
+**Verified:** DOM inspection on the live Home right-now card (traveling phase, Bangkok)
+confirmed all 5 picks now render colour-matched category pills, tier badges ("Budget" /
+"Mid" / "Higher-end") and a matching left accent bar (e.g. food → `rgb(232,99,42)`, matching
+`FAMILY_COLOR.food`; nightlife → `rgb(214,51,108)`, matching `FAMILY_COLOR.nightlife`) — a
+screenshot confirmed the same visually. Dynamically imported `js/data/regions.js` in the
+live page to confirm the Pai practical/info card resolves `todoDoable() === false` (so it is
+excluded from both surfaces), and ran the exact `marketCovered()` regex against all 13 real
+Thai market entries, matching the analysis above exactly. On `#today-th`, confirmed 9 cards
+rendered across 3 tiers with zero "Closed now" tags visible and a note reading "13 more are
+closed right now, so they're hidden — see 'Plan for a different time' above." Zero console
+errors throughout. True offline test (dev server killed, `caches.keys()` confirmed
+`["mk-v0.367.0"]`): Home's right-now card (5 items) and the Tools group rendered correctly
+from Service Worker Cache Storage with zero console errors.
