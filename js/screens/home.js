@@ -40,7 +40,7 @@ import {
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
   ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
-  budgetTarget, tripSpanDays,
+  budgetTarget, tripSpanDays, gamifyLevelBadge,
 } from '../main.js';
 
 export function homeScreen() {
@@ -178,6 +178,11 @@ export function homeScreen() {
     const about = whereYouAreCard(leadCC, ctx.near ? ctx.near.spot.city : focus.spot.city);
     if (about) wrap.append(about);
   }
+
+  // Post only: the gamification level badge, moved out of the middle of the Welcome-back
+  // recap card (stageBlock above) to its own standalone element directly before Tools, per
+  // direct request ("gamification level should move to before tools in home post section").
+  if (phase === 'post') wrap.append(gamifyLevelBadge());
 
   // No separate "Plan & tools" heading — it duplicated the merged group's own "🧰 Tools"
   // summary text directly below with nothing distinguishing them. The group heading alone
