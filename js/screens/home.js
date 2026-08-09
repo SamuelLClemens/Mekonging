@@ -127,11 +127,11 @@ export function homeScreen() {
     if (card) wrap.append(card);
   }
 
-  // H5 — "Where you are": real, sourced city history and context, collapsed by default.
-  if (onGround) {
-    const about = whereYouAreCard(leadCC, ctx.near ? ctx.near.spot.city : focus.spot.city);
-    if (about) wrap.append(about);
-  }
+  // H5 — "Where you are": real, sourced city history and context, collapsed by default. Moved
+  // to directly before the Tools group, below, per direct request ("where you are should be
+  // moved to before the tools") — it used to sit here, with the weather widget and (in
+  // planning) Search everything landing after it and before Tools; now nothing but Tools
+  // itself follows it.
 
   // On the first online visit, pull the relevant city's forecast once (respects offline &
   // consent, de-duplicated) so the outlook and the "right now" forecast line populate.
@@ -149,12 +149,14 @@ export function homeScreen() {
   // Weather — while travelling, this now sits here (Search everything's old spot, swapped up
   // above) instead of nested at the top of the "Right now" card. It is the same rich widget as
   // the Weather screen itself (wxVizCard, via homeWeatherCard — see main.js), not a small ring,
-  // per direct request; the card returned already carries its own `.card` styling, so it is
-  // appended as-is rather than wrapped again. Other phases never had this widget, so they keep
-  // Search everything here as before.
+  // per direct request. Wrapped in its own collapsible (same home-group-d pattern as every
+  // other Home section) per direct request ("all the sections need to be collapsible including
+  // widgets like weather") — homeWeatherCard's own `.card` styling becomes the foldable's body,
+  // same technique whereYouAreCard already uses for cityAboutCard's `.card` below. Other
+  // phases never had this widget, so they keep Search everything here as before.
   if (onGround) {
     const wxCard = homeWeatherCard();
-    if (wxCard) wrap.append(wxCard);
+    if (wxCard) wrap.append(weatherFold(wxCard));
   } else if (phase === 'planning') {
     // Reorder per direct request: "I have arrived" (inside the countdown card, top of
     // stageBlock above) → Search everything → "Plan your trip"/"Tune 'For you'" — so Search
@@ -169,6 +171,13 @@ export function homeScreen() {
   // Post already got its Search everything button above, ahead of stageBlock (the "Welcome
   // back" recap) — the only three phases are planning/traveling/post, and both of those are
   // handled explicitly above, so there is nothing left to fall through to here.
+
+  // H5 — "Where you are": moved to directly before Tools, per direct request — the last
+  // situational card before the trip-wide chip groups below.
+  if (onGround) {
+    const about = whereYouAreCard(leadCC, ctx.near ? ctx.near.spot.city : focus.spot.city);
+    if (about) wrap.append(about);
+  }
 
   // No separate "Plan & tools" heading — it duplicated the merged group's own "🧰 Tools"
   // summary text directly below with nothing distinguishing them. The group heading alone
@@ -450,6 +459,19 @@ function whereYouAreCard(cc, cityName) {
   const details = h('details', { class: 'home-group-d', open: open ? '' : null });
   details.addEventListener('toggle', () => { store.profile.prefs.whereYouAreOpen = details.open; save(); });
   details.append(h('summary', { class: 'home-group' }, '📍 Where you are'));
+  details.append(inner);
+  return details;
+}
+
+// The big weather widget (homeWeatherCard, main.js) as its own collapsible — same home-group-d
+// pattern as every other Home section, open by default (it was always visible before this
+// split existed; a traveller who collapses it keeps it collapsed next visit, same as Where you
+// are/Quick access already do).
+function weatherFold(inner) {
+  const open = store.profile.prefs.homeWeatherOpen !== false;
+  const details = h('details', { class: 'home-group-d', open: open ? '' : null });
+  details.addEventListener('toggle', () => { store.profile.prefs.homeWeatherOpen = details.open; save(); });
+  details.append(h('summary', { class: 'home-group' }, '🌦 Weather'));
   details.append(inner);
   return details;
 }

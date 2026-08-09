@@ -2126,3 +2126,76 @@ closed right now, so they're hidden — see 'Plan for a different time' above." 
 errors throughout. True offline test (dev server killed, `caches.keys()` confirmed
 `["mk-v0.367.0"]`): Home's right-now card (5 items) and the Tools group rendered correctly
 from Service Worker Cache Storage with zero console errors.
+
+### Home: every section collapsible, "Where you are" moved before Tools, night suggestions no longer go empty when bars are open, Explore's tool tiles become chips (mk-v0.368.0)
+
+Five direct requests, all continuing straight on from the previous round's Home work:
+
+**"All the sections need to be collapsible including widgets like weather and time of day
+near you, things to do right now and budget"** — the merged "Right now" card (`homeNowCard`,
+via `rightNowSection`) stacked the time-of-day/forecast header, the ranked picks list and the
+one-tap spend logger into one non-collapsible `.card`. Split `rightNowSection` into
+`rightNowHeaderCard` (moment header + forecast outlook + location invite) and
+`rightNowPicksCard` (the ranked list, events strip, "See more near me") — each now wraps in
+its own `home-group-d` foldable (`homeFold`, new), same visual language as every other Home
+group (Tools/Identify/Quick access/Where you are). The picks group is labelled "📍 Nearby
+picks" rather than "Things to do right now" — `phaseNextBest`'s own primary-action button
+(inserted directly above it, inside the header foldable) already reads "Things to do right
+now →" and links to the fuller `#today` screen; reusing that exact text for the group heading
+directly underneath would recreate the same duplicate-heading problem the previous round's
+"Plan & tools" fix started from. The one-tap spend logger (`quickSpendRow`) gets its own
+"💰 Budget" foldable. The big weather widget (`homeWeatherCard`, the full `wxVizCard` with
+metric layers) gets a matching "🌦 Weather" foldable in `js/screens/home.js` (`weatherFold`,
+new). All four default OPEN — nothing here was hidden before this split existed — and persist
+under their own prefs (`rightNowHeadOpen`/`rightNowPicksOpen`/`homeBudgetOpen`/
+`homeWeatherOpen`) once a traveller actually toggles one, exactly like Quick access/Where you
+are already do.
+
+**"Where you are should be moved to before the tools"** — it already rendered ahead of the
+Tools group structurally, but with the weather widget (and, in planning, Search everything)
+still landing after it and before Tools. Moved its append call in `homeScreen()`
+(`js/screens/home.js`) to directly precede the Tools/Identify groups, so nothing but Tools
+itself follows it now.
+
+**"It is okay to not suggest things in the things to do right now if right now is the middle
+of the night and there is nothing to do, but there should be bars and things like that that
+should be suggested"** — Home's own `scoreForNow`/`whyNow` already handled this correctly
+(`PART_META.lateNight.cats` already favours `nightlife`/`food`, and known-closed places are
+already excluded outright). The real bug was on the fuller `daySuggestScreen`/`todoScore`
+side: `todoContext()`'s local `daypart` bucketing used `hr < 11 ? 'morning' : …`, which
+silently swallowed true dead-of-night hours (midnight through 4am) into the same "morning"
+bucket as 6am–10am. At 2am this meant temples/museums/nature spots (`TODO_CLOSED_AT_NIGHT`)
+wrongly received the "🌅 Best in the cool morning" bonus instead of being penalised, while
+genuinely-open bars/nightlife (`TODO_NIGHT`) missed the "🌙 Good tonight" bonus they should
+have gotten — ranking closed-feeling sightseeing above open bars at the worst possible hour.
+Fixed the boundary: `hr < 5 ? 'night' : hr < 11 ? 'morning' : …`, matching the boundary
+`partOfDay()` (Home's own bucketing) already used. Verified live at the real current hour
+(evening, Chiang Mai): both Home's "Nearby picks" and `#today-th` correctly surface
+"Nimmanhaemin Road bar scene" (nightlife/bars/cocktail) alongside night markets and food
+stalls, not pushed out by wrongly-boosted daytime categories.
+
+**"Explore all the tools should be made chips like the home section"** — `exploreScreen`'s
+four tool sub-clusters (Get oriented / Getting around / Eat & drink / See & do) rendered as
+`sectionTile` tiles in a `.grid` inside a generic `filters-collapse` fold. Converted all four
+groups to `.status-chip` rows inside `.chips`, the exact same components (not a look-alike)
+Home's own Tools/Identify groups use, and switched their collapsible to `home-group-d` to
+match Home's fold style too. Each tile's one-line hint still reaches screen readers via
+`aria-label` even though a chip has no room to show it — the same "fold the hint into the
+accessible name" idiom `sectionTile` itself already used.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.368.0`.
+
+**Verified:** DOM inspection on the live Home screen (traveling phase, Chiang Mai, real local
+night-time) confirmed all four new/moved foldables (`🕒 Right now`, `📍 Nearby picks`,
+`💰 Budget`, `🌦 Weather`) render open by default with the right content inside each (5 ranked
+picks with colour tags/tier badges in Nearby picks; the expense-log card in Budget), and that
+`📍 Where you are` now sits directly before `🧰 Tools` in DOM order. Toggling `🌦 Weather`
+closed and reloading confirmed the collapsed state persists (survives reload) while the
+other groups keep their own independent defaults. Confirmed `#today-th` unaffected/still
+correct after the `todoContext` daypart fix (9 cards across tiers, bars included). Confirmed
+Explore's four tool groups (`#country-th`) render 0 tiles / all chips, with the phase-ranked
+deck ("See & do" while traveling) still opening by default as before. Zero console errors
+throughout (aside from the long-standing, unrelated Service-Worker-update-check noise already
+established as harmless in every prior round). True offline test (dev server killed,
+`caches.keys()` confirmed `["mk-v0.368.0"]`): Home rendered all eight groups correctly, with
+5 items in Nearby picks, entirely from Service Worker Cache Storage with zero console errors.
