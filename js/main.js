@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.372.0';
+const APP_VERSION = 'mk-v0.373.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1929,16 +1929,27 @@ export function tripSpendHome() {
 // master), plus a slim "spent today" line beneath it. Used to be its own compact inline
 // row (amount/note/category only, no date, no title chips) that looked and behaved
 // differently from every other place an expense gets logged — unified per user request.
+// Per a later request ("tighter, less space, but don't minimize text"), this Home instance
+// of the card renders `compact` (see .exp-add-compact — tighter field spacing only, no
+// text shortened or hidden) and gains one quiet reference line above the form: your home
+// currency against the local one, so a figure in your head can be sanity-checked before
+// typing an amount, without opening the full converter on #expenses.
 function quickSpendRow(id) {
   const c = getCountry(id);
   const cur = (c && c.currency) || 'THB';
+  const home = homeCurrency();
   const t = todayISO();
   const box = h('div', { class: 'now-spend' });
   const draw = () => {
     box.innerHTML = '';
     let spent = 0;
     (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
-    box.append(expenseAddCard({ currency: cur, afterAdd: draw }));
+    if (home !== cur) {
+      const r = convert(1, home, cur);
+      if (r != null) box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' },
+        `1 ${home} ≈ ${r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 })} ${cur}`));
+    }
+    box.append(expenseAddCard({ currency: cur, afterAdd: draw, compact: true }));
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
       spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log an expense above. ',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
@@ -9862,7 +9873,7 @@ function expenseAddCard(opts = {}) {
     const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date: bDate.value });
     if (opts.afterAdd) opts.afterAdd(item);
   };
-  return h('div', { class: 'card exp-add-card' }, [
+  return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
     h('h2', { style: 'margin-top:0' }, 'Log an expense'),
     h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
     field('On what?', bNote), bChips, field('Category', bCat), field('Date', bDate),

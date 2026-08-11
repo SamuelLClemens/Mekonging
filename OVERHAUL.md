@@ -2398,3 +2398,37 @@ family string remains anywhere in `main.js`. The one console error surfaced by
 buffer artifact already established as harmless in the prior Weather-extraction round — the
 converter's own live math, rendered moments after that message, is proof `main.js` executed
 correctly.
+
+### Home Budget widget: tighter spacing + a 1-line currency reference (mk-v0.373.0)
+
+Direct request: "make the sections a bit tighter and take up less space ... but I don't want
+to minimize text and I want to add 1 line that allows the user to see their chosen currency
+converted into the local currency." Scoped to exactly the widget named — Home's own "💰 Budget"
+fold (`quickSpendRow`, inside `homeNowCard`, shown on-the-ground only) — not the standalone
+Expenses & budget screen (`#expenses`), which keeps its original spacing untouched.
+
+**Tighter, without cutting text.** `expenseAddCard()` (the shared "Log an expense" card used
+on Home, `#expenses`, and My Trip's budget log) gained an opt-in `compact` flag; only Home's
+call site passes it. A new `.exp-add-compact` CSS class tightens card padding (16px → 12px)
+and field-to-field/label-to-input gaps (12–16px → 8px / 4px → 2px) — every label, placeholder,
+button, and field is still the full original wording; only the vertical rhythm shrank.
+`#expenses` and My Trip continue to render the same card with its original, more generous
+spacing (verified: `isCompact: false`, unchanged 16px padding there).
+
+**One quiet reference line.** Above the (now tighter) form, `quickSpendRow` adds a single
+non-interactive line — "1 USD ≈ 33 THB" — your home currency against the local one, backed by
+the same `convert()` cached rate as the standalone converter (no new fetch, no new state).
+Hidden when home currency already equals the local one (nothing to convert). Deliberately just
+the one line, not a form — the interactive from/to/swap converter already lives one tap away
+on the Budget screen's own fold (mk-v0.372.0).
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.373.0`. No new files.
+
+**Verified:** brace-balance clean. Logged three test expenses (THB, mixed categories) via the
+Home widget — confirmed the Quick-access Budget chip, the Budget donut/legend (Food + Other
+summed correctly, not duplicated per-entry), and "Spent today" all updated correctly, and the
+Recent list on `#expenses` showed all three as separate transactions (expected — a transaction
+log, not a category tally). Confirmed via computed styles: Home's card carries
+`.exp-add-compact` with 12px padding / 8px field margins / 4px heading margin; `#expenses`'s
+card does not, unchanged at 16px / 12px. Confirmed the reference line renders correctly
+("1 USD ≈ 33 THB") with full, untruncated text throughout the rest of the widget.
