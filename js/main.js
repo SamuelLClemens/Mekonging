@@ -263,7 +263,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.371.0';
+const APP_VERSION = 'mk-v0.372.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1940,7 +1940,7 @@ function quickSpendRow(id) {
     (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
     box.append(expenseAddCard({ currency: cur, afterAdd: draw }));
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend above. ',
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log an expense above. ',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
   };
@@ -8762,15 +8762,15 @@ function dailyStripCard(id) {
     let spent = 0;
     (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
     const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', class: 'strip-amt', 'aria-label': 'Amount spent' });
-    const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the spend was on' });
+    const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the expense was on' });
     const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim() }); renderBud(); };
     amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
     budBox.append(h('div', { class: 'strip-budget' }, [
       h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
-      h('button', { class: 'btn strip-add', 'aria-label': 'Add spend', onclick: add }, '＋'),
+      h('button', { class: 'btn strip-add', 'aria-label': 'Add expense', onclick: add }, '＋'),
     ]));
     budBox.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log a spend in one tap. ',
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log an expense in one tap. ',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
   };
@@ -9854,7 +9854,7 @@ function expenseAddCard(opts = {}) {
   const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const bCur = currencySelect(opts.currency || 'THB');
   const bDate = h('input', { 'aria-label': 'Date', type: 'date', value: todayISO() });
-  const bNote = h('input', { 'aria-label': 'What the spend was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
+  const bNote = h('input', { 'aria-label': 'What the expense was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
   const bCat = expCatPicker('other');
   const bChips = expTitleChips(bNote, bCat);
   const add = () => {
@@ -9939,7 +9939,7 @@ export function budgetSummaryCard() {
       h('span', { class: 'blg-val' }, `${Math.round(sums[c.id]).toLocaleString()} ${home} · ${pct}%`),
     ]));
   });
-  if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin:0' }, 'Log a few spends to see the breakdown.'));
+  if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin:0' }, 'Log a few expenses to see the breakdown.'));
   card.append(h('div', { class: 'budget-head' }, [donut, legend]));
 
   if (target) {
@@ -9968,9 +9968,49 @@ export function budgetSummaryCard() {
       if (spent > 0) card.append(h('p', { class: 'budget-proj ' + (overUnder > 0 ? 'over' : 'under') }, overUnder > 0 ? `⚠️ About ${Math.round(overUnder).toLocaleString()} ${home}/day over budget at this rate.` : `✓ About ${Math.round(-overUnder).toLocaleString()} ${home}/day under budget — nicely on track.`));
     }
   }
-  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some spends use a currency with no cached rate — refresh in Currency to include them.'));
+  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some expenses use a currency with no cached rate — refresh in Currency to include them.'));
   card.append(budgetTargetEditor());
+  card.append(budgetFxCard());
   return card;
+}
+
+// A compact currency-converter fold nested right inside the Budget card — same amount/from/
+// to/swap/result shape as the standalone Currency screen (#currency) and backed by the exact
+// same cached rates (convert()/getRates() from currency.js), just enough to check a figure
+// while logging an expense without leaving this screen. Defaults mirror the standalone
+// screen's own default direction (home currency → the currency you're spending in here).
+function budgetFxCard() {
+  const home = homeCurrency();
+  const fc = focusSpot().spot.country || getActiveCountry();
+  const c = getCountry(fc);
+  const local = c ? c.currency : 'THB';
+  const det = h('details', { class: 'budget-set' });
+  det.append(h('summary', {}, '💱 Currency converter'));
+  const rates = getRates();
+  const amount = h('input', { type: 'number', value: '1', inputmode: 'decimal', 'aria-label': 'Amount to convert' });
+  const fromSel = currencySelect(home);
+  const toSel = currencySelect(local);
+  const out = h('p', { class: 'fx-result', style: 'margin:8px 0 0' }, '');
+  function recompute() {
+    const v = parseFloat(amount.value) || 0;
+    const r = convert(v, fromSel.value, toSel.value);
+    out.textContent = r == null ? 'Rate unavailable for this pair'
+      : `${v.toLocaleString()} ${fromSel.value} = ${r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 })} ${toSel.value}`;
+  }
+  amount.addEventListener('input', recompute);
+  fromSel.addEventListener('change', recompute);
+  toSel.addEventListener('change', recompute);
+  det.append(
+    field('Amount', amount),
+    field('From', fromSel),
+    h('button', { class: 'btn ghost', type: 'button', style: 'margin:2px 0', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '⇅ Swap'),
+    field('To', toSel),
+    out,
+    h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh in the full converter to update.'),
+    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#currency') }, 'Full converter, quick guide & cash-swap →'),
+  );
+  recompute();
+  return det;
 }
 
 function budgetTargetEditor() {
@@ -10039,7 +10079,7 @@ function budgetLogRow(b) {
 function expensesScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Expenses & budget', '#me'));
-  wrap.append(h('p', { class: 'muted' }, 'Log what you spend as you go — it converts to your home currency, sorts by category, and tracks you against your budget.'));
+  wrap.append(h('p', { class: 'muted' }, 'Log each expense as you go — it converts to your home currency, sorts by category, and tracks you against your budget.'));
   const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
 
@@ -12403,7 +12443,7 @@ ${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
 <tbody>${body}${spend > 0 ? `<tr class="total"><td>Total</td><td>${esc(String(Math.round(spend)))}</td><td>${esc(home)}</td><td>in your home currency${spendKnown ? '' : ' (partial)'}</td></tr>` : ''}</tbody></table>`);
   }
 
-  if (!parts.length) parts.push('<p>Your travel book is empty for now. Add a journal entry, rate a place, or log a spend and it will appear here.</p>');
+  if (!parts.length) parts.push('<p>Your travel book is empty for now. Add a journal entry, rate a place, or log an expense and it will appear here.</p>');
   return htmlDoc('My travel book', parts.join('\n'));
 }
 
@@ -12463,7 +12503,7 @@ function exportScreen() {
   // Expenses — both a true Excel workbook and a CSV, as requested.
   wrap.append(h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, '💸 Expenses'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'spend' : 'spends'} — as a spreadsheet.`),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'expense' : 'expenses'} — as a spreadsheet.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Excel (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
     saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
     sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share expenses (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
