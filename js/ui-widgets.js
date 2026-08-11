@@ -100,6 +100,14 @@ export function collapsibleCard(node, key, defaultOpen = true) {
 // dialog, and restore focus to whatever was focused before it opened. `rootEl` is the
 // backdrop appended to <body>; the element carrying role="dialog" (rootEl itself or a
 // descendant) gets aria-modal and receives initial focus. Returns an idempotent close().
+// Every currently-open modal's close() is tracked here so a route change can force them
+// all shut. A modal's backdrop lives on <body>, a sibling of #app — the router's normal
+// screen re-render never touches it, so without this an open sheet would survive
+// navigation as an orphaned full-screen overlay. Called once from main.js's hashchange
+// listener; harmless (empty set) when nothing is open.
+const _openModals = new Set();
+export function closeAllModals() { [..._openModals].forEach((fn) => fn()); }
+
 export function openModal(rootEl, onClose) {
   const dialog = rootEl.matches('[role="dialog"]') ? rootEl : (rootEl.querySelector('[role="dialog"]') || rootEl);
   dialog.setAttribute('aria-modal', 'true');
@@ -109,6 +117,7 @@ export function openModal(rootEl, onClose) {
   let closed = false;
   function close() {
     if (closed) return; closed = true;
+    _openModals.delete(close);
     document.removeEventListener('keydown', onKey, true);
     rootEl.remove();
     try { if (prev && prev.focus) prev.focus(); } catch { /* noop */ }
@@ -124,6 +133,7 @@ export function openModal(rootEl, onClose) {
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
   }
+  _openModals.add(close);
   document.addEventListener('keydown', onKey, true);
   document.body.append(rootEl);
   setTimeout(() => { const f = focusables(); (f[0] || dialog).focus(); }, 0);

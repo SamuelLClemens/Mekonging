@@ -64,7 +64,7 @@ import {
   wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip,
 } from './render-utils.js';
 import {
-  field, selectEl, foldable, collapsibleCard, openModal, confirmAction,
+  field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
   online, netMode, setNetMode,
 } from './ui-widgets.js';
@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.375.0';
+const APP_VERSION = 'mk-v0.376.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4751,6 +4751,7 @@ function placesScreen(arg) {
       onclick: (e) => {
         if (selInterests.has(it.id)) selInterests.delete(it.id); else selInterests.add(it.id);
         e.currentTarget.setAttribute('aria-pressed', selInterests.has(it.id) ? 'true' : 'false');
+        prefs.interests = [...selInterests]; save();
         renderList();
       },
     }, [swatch(catColor(it.id)), ` ${it.emoji} ${it.label}`])));
@@ -4763,6 +4764,7 @@ function placesScreen(arg) {
         selBudget = id;
         budgetChips.querySelectorAll('.chip').forEach((c) =>
           c.setAttribute('aria-pressed', c.dataset.b === id ? 'true' : 'false'));
+        prefs.budget = id; save();
         renderList();
       },
     }, [swatch(tierColor(id)), ` ${lbl}`])));
@@ -4882,14 +4884,17 @@ function placesScreen(arg) {
   filterBtn.onclick = () => {
     const backdrop = h('div', { class: 'sheet-backdrop' });
     const sheet = h('div', { class: 'sheet filter-sheet', role: 'dialog', 'aria-label': 'Filters' });
-    const close = () => { backdrop.remove(); filterBtn.textContent = filterLabel(); };
+    // openModal appends to <body> itself and gives this sheet Escape-to-close, a focus trap,
+    // and (via closeAllModals in the hashchange listener) auto-close on navigation — the same
+    // behaviour every other sheet in the app gets, instead of a hand-rolled backdrop click only.
+    let close;
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
     sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
     sheet.append(h('h3', {}, 'Filters'));
     sheet.append(filterCard);
-    sheet.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: close }, 'Show results'));
+    sheet.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: () => close() }, 'Show results'));
     backdrop.append(sheet);
-    document.body.append(backdrop);
+    close = openModal(backdrop, () => { filterBtn.textContent = filterLabel(); });
   };
 
   // Active-filter pills sit directly above the results — every filter clears from here,
@@ -5029,6 +5034,9 @@ function placesScreen(arg) {
     ];
     const backdrop = h('div', { class: 'sheet-backdrop' });
     const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Compare places' });
+    // Routed through openModal (see filterBtn above) for the same Escape/focus-trap/
+    // close-on-navigate behaviour, instead of a hand-rolled backdrop-click-only close.
+    let close;
     sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
     sheet.append(h('h3', {}, 'Compare'));
     const table = h('div', { class: 'compare-table' });
@@ -5044,12 +5052,12 @@ function placesScreen(arg) {
     });
     sheet.append(table);
     const openRow = h('div', { class: 'chips', style: 'margin-top:10px' });
-    places.forEach((p) => openRow.append(h('button', { class: 'btn ghost', onclick: () => { backdrop.remove(); go(`#place-${p.id}`); } }, `Open ${compareLabel(p)}`)));
+    places.forEach((p) => openRow.append(h('button', { class: 'btn ghost', onclick: () => { close(); go(`#place-${p.id}`); } }, `Open ${compareLabel(p)}`)));
     sheet.append(openRow);
-    sheet.append(h('button', { class: 'btn block', style: 'margin-top:10px', onclick: () => backdrop.remove() }, 'Close'));
-    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
+    sheet.append(h('button', { class: 'btn block', style: 'margin-top:10px', onclick: () => close() }, 'Close'));
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
     backdrop.append(sheet);
-    document.body.append(backdrop);
+    close = openModal(backdrop);
   }
   renderCompareTray();
 
@@ -5089,9 +5097,15 @@ function placesScreen(arg) {
     currentResults = computed || [];
     // Shared numbering: number every MAPPED place by its position in the displayed order, so a
     // list row, the "closest to you" card and the map pin all carry the SAME number and colour.
-    const ml = mapPlaces();
-    ml.forEach((p, i) => { p._num = i + 1; });
-    const numFor = (id) => { const hit = ml.find((p) => p.id === id); return hit ? hit._num : null; };
+    // Numbers live in a local id->num lookup, never written onto the shared, cached place
+    // objects (allPlaces() hands back the same singleton records every screen reads — writing
+    // a view-local number straight onto one would leak this screen's numbering into whatever
+    // reads that object next). map.js still reads its pin badge off p._num, so map places get
+    // their own shallow copy carrying that one field; the underlying cached place is untouched.
+    const rawMl = mapPlaces();
+    const numById = new Map(rawMl.map((p, i) => [p.id, i + 1]));
+    const ml = rawMl.map((p) => ({ ...p, _num: numById.get(p.id) }));
+    const numFor = (id) => numById.get(id) || null;
     const mine = userMapPins().length;
     // Honest about what the list actually contains: each category caps at 5 rows behind a
     // "Show all" expander, so the count below is real places matched — not a claim that all
@@ -5124,13 +5138,13 @@ function placesScreen(arg) {
     const expander = (rest, label) => {
       if (!rest.length) return null;
       const btn = h('button', { class: 'btn ghost block', style: 'margin:2px 0 10px' }, label);
-      btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, p._num, compareCtl))); btn.remove(); };
+      btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, numFor(p.id), compareCtl))); btn.remove(); };
       return btn;
     };
     if (sortMode === 'near') {
       // proximity order matters — keep one flat list, capped, with a reveal.
       const CAP = 12;
-      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeQuickRow(p, p._num, compareCtl)));
+      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeQuickRow(p, numFor(p.id), compareCtl)));
       const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
       if (more) listEl.append(more);
     } else {
@@ -5152,7 +5166,7 @@ function placesScreen(arg) {
         if (!arr || !arr.length) return;
         if (fix) arr = arr.slice().sort(byNear);
         const body = h('div', { class: 'place-cat-body' });
-        arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, p._num, compareCtl)));
+        arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, numFor(p.id), compareCtl)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
         const det = h('details', { class: 'place-cat-group', open: openBuckets.has(key) ? '' : null, style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
@@ -11522,7 +11536,7 @@ function helpScreen() {
   wrap.append(faq('How do ratings work?', 'Each place shows a guidebook score synthesised from public sources, plus an “Across the web” card with snapshots from sites such as TripAdvisor — each stamped with the month it was checked — and live links to compare and book. Your own rating always counts first: rate a place and it becomes the headline score and colours its pin on the map.'));
   wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, budget, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
   wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device; if you forget the passcode you can still get back in with the one-time recovery code shown at setup, or by restoring an encrypted backup. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
-  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), Places, Map and Saved. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
+  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Explore, Places, Talk (phrasebook) and You. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map (inside Places) you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
 
   // Site-wide source register. Individual screens also cite their own sources inline
   // (via the same "Sources:" line), so every claim is traceable to a primary source.
@@ -13320,6 +13334,7 @@ export function render() {
 }
 
 window.addEventListener('hashchange', () => {
+  closeAllModals();
   stopSpeak();
   // Record where we came from for history-aware Back, unless this change WAS a Back.
   if (poppingBack) { poppingBack = false; }

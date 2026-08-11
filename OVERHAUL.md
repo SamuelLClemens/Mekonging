@@ -2545,3 +2545,56 @@ none of those fields. Family + mobility on Lumphini Park, which does carry both:
 "✓ Step-free" — positives appear when the data exists. Solo female on the same place: no invented
 safety verdict, only "Closed right now" and "No verified safety reporting for this place". The
 line reads back the profile correctly in each case and links to the editor.
+
+### Audit pass: four real bugs found by review, fixed before moving on (mk-v0.376.0)
+
+Before starting the Places rework (the "decide-now near me" half of the Explore/Places split),
+a background review of the whole app had already surfaced several concrete defects. Four were
+real, scoped, and cheap to fix correctly — so they shipped first rather than being carried
+forward into a bigger change.
+
+**Places' Interest and Budget filters were never persisted.** `selKids`, `selStayType`,
+`selStayDur` and the category-layer chips all wrote back to `store.profile.prefs` and called
+`save()` on every toggle — `selInterests` and `selBudget`, seeded from those same prefs, did
+not, so a chosen interest or budget filter silently reset on every navigation while every
+sibling filter survived. Both now persist the same way as their neighbours.
+
+**The Filters and Compare sheets bypassed the app's own modal helper.** Every other overlay in
+the app (the big-phrase view, the collections picker) opens through `openModal()` — Escape to
+close, a focus trap, focus restored on close. These two hand-rolled a backdrop with only a
+"tap outside to close" handler, so they had neither. Both now open through `openModal()`. While
+in there, the actual root cause got fixed once instead of per-sheet: a modal's backdrop is
+appended to `<body>`, a sibling of `#app`, so the router's normal screen re-render never
+touched it — an open sheet survived a hash change (back button, tapping a bottom tab) as an
+orphaned full-screen overlay. `openModal()` now tracks every open modal's `close()` in a
+module-level set in `js/ui-widgets.js`, exported as `closeAllModals()`, and the global
+`hashchange` listener calls it once. Fixes all sheets, not just these two.
+
+**Place numbering was written onto the shared, cached place records.** `allPlaces()` hands back
+the same singleton objects every screen reads; `renderList()` was writing `p._num = i + 1`
+straight onto them so a list row and its map pin could share one number. Harmless today only
+because nothing else currently reads `_num` between renders — but a mutable side-channel on
+shared data is exactly the kind of thing that breaks silently the next time something else
+touches the same object. Numbers now live in a local `id -> num` lookup; `map.js`'s pin-badge
+contract (it reads `p._num` off what `setPlaces()` hands it) is kept intact by handing it
+shallow copies, never the real cached place.
+
+**The Help screen's own "Finding your way around" entry named the wrong tabs** — it said "Home,
+Talk, Places, Map and Saved"; the real tab bar (`TABS`, `main.js`) is Home, Explore, Places,
+Talk and You. Corrected.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.376.0`. No new files (`sw.js` `PRECACHE` already
+covered the two edited modules).
+
+**Verified in-browser**, reading real DOM/state rather than trusting the console (this
+environment's console buffer has a known history of showing stale errors — see prior entries):
+toggled a Places interest and budget chip, confirmed `localStorage`'s `mk.store` held
+`prefs.interests`/`prefs.budget` after the debounce flushed, then navigated to Home and back —
+the Filters button read "2 on" immediately and the sheet reopened with both pre-checked.
+Confirmed the Filters sheet renders as a true `role="dialog"` with correct geometry (fixed
+full-viewport backdrop, centred sheet, all four interest chips present) — Escape closed it,
+and re-opening it and then changing the hash removed the backdrop with no manual close, for
+both the Filters and the Compare sheet. Confirmed list rows number 1, 2, 3… sequentially and
+match real place names; the small number of map pins that instead show a plain "•" are the
+existing pixel-space cluster markers merging several places into one dot at a zoomed-out view,
+unrelated to this change (a cluster, by definition, cannot carry a single place's number).
