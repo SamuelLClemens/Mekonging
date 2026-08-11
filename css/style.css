@@ -675,6 +675,16 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 /* Modernised expense form + log row */
 .exp-add-card .field { margin-top: var(--sp-3); }
 .exp-title-chips { margin: 2px 0 var(--sp-2); }
+/* Compact variant: same fields, same labels, same placeholder text — only the vertical
+   rhythm tightens (card padding, field-to-field gaps, label-to-input gap). Used on Home's
+   "Budget" fold, where this same shared card sits inside an already-scrolling stack of
+   collapsibles and should take up less room without shortening a single word of copy. */
+.exp-add-compact { padding: var(--sp-3); }
+.exp-add-compact h2 { margin: 0 0 var(--sp-1); }
+.exp-add-compact .field { margin-top: var(--sp-2); margin-bottom: var(--sp-2); }
+.exp-add-compact .field label { margin-bottom: 2px; }
+.exp-add-compact .exp-title-chips { margin: 2px 0 var(--sp-1); }
+.exp-add-compact .btn.block { margin-top: var(--sp-2); }
 .exp-title-chips .chip { font-size: var(--fs-xs, 0.78rem); padding-top: 4px; padding-bottom: 4px; }
 .exp-row {
   display: flex; align-items: center; gap: var(--sp-3);
