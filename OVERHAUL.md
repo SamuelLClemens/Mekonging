@@ -2290,3 +2290,63 @@ established as harmless in every prior round). True offline test (dev server kil
 `caches.keys()` confirmed `["mk-v0.370.0"]`): the full reordered Explore screen, all default
 states, and the itinerary builder's static (pre-interaction) view rendered correctly entirely
 from Service Worker Cache Storage.
+
+### Module split, slice 2 — Weather screen extracted to js/screens/weather.js (mk-v0.371.0)
+
+Continuation of the token-cost refactor (`js/render-utils.js` and `js/ui-widgets.js` were the
+first two slices; see the plan this round followed). `main.js` had grown back from 12,990 to
+13,637 lines despite that prior work — a direct regression on the original cost problem —so
+this was resumed as Run 1 of the newer "deep content" plan. Places was the originally-planned
+next extraction target, but hands-on dependency mapping (grep/`sed` closure analysis, not a
+full-file read) found it far more entangled than the master audit assumed: 20+ cross-section
+call-ins, several sitting in mislabeled sections (a "MARKETS: day-of-week awareness" section
+that is actually place-detail-card and beach/jellyfish rendering, not day-of-week logic).
+Extracting it now would have multiplied manual-verification cost — there is no automated test
+suite — exactly when the goal is to spend fewer tokens. Weather was substituted: same line-
+count win, confirmed self-contained (one clean, contiguous 555-line block; only one external
+caller, the Home screen's `wxVizCard` widget).
+
+**What moved:** the WEATHER + FORECAST section (`weatherScreen`, `wxVizCard`, and their full
+supporting cast — `wxDay*`/`wxTime`/`WX_SEGMENTS`/`daySegments`/`wxHourlyRingSvg`/
+`wxMonthCalendarNode`/`planCityPanels`/etc., ~555 lines) into a new `js/screens/weather.js`.
+The data-fetch layer (`js/weather.js` — `WEATHER_SPOTS`, `getCachedWeather`, `refreshWeather`)
+is untouched and imported normally; this new file is rendering-only. It imports several
+helpers back from `main.js` (`topbar`, `mount`, `focusSpot`, `fmtClock`, `spotForCity`,
+`airBlock`, `uvLineNode`) via the same circular-import pattern `js/screens/home.js` already
+established — safe because ES module function declarations are hoisted and these names are
+only read inside function bodies, never at module-evaluation time.
+
+**Real coupling caught and fixed, not papered over:** `weatherNearbyCard` — a place-detail
+widget that stays behind in `main.js` — used to set the module-level `weatherKey` directly so
+that opening the full forecast lands on the right city. Once `weatherKey` became private state
+inside the new module, a plain import can no longer write it. Fixed with an exported setter,
+`seedWeatherKey(key)`, following this codebase's existing convention (same pattern already
+used for `activeCountry`/`liveMapCtrl`) — export a setter, do not duplicate the state.
+
+Two real bugs surfaced and fixed via the browser's own console-error loop while wiring the new
+file's imports (not guessed at, not silently patched — each error named the exact missing
+export/import): `airBlock`, `uvLineNode`, `fmtClock`, `spotForCity` were plain, non-exported
+functions in `main.js` and needed `export` added; the new file's dependency scan had missed
+that the same slice also uses `REGION_PATHS`/`REGION_VIEWBOX`, not just `REGION_PROJ`, for a
+small region mini-map SVG.
+
+`main.js`: 13,637 → 13,083 lines. Added `'js/screens/weather.js'` to `sw.js`'s `PRECACHE`
+array — required per this project's own static-site rule (a missing local module must never
+silently break offline UI). Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.371.0`.
+
+**Verified:** Python brace-balance check clean on `main.js`, `js/screens/weather.js`, and
+`sw.js`. Confirmed via dynamic `import()` that `main.js` now actually exports `airBlock`
+(`typeof === 'function'`) — the one console error that persisted after both fixes were applied
+was confirmed to be `read_console_messages`' own stale cross-navigation buffer, not a live bug
+(a full Service-Worker unregister + cache wipe + reload still showed the identical historical
+message, while the live-rendered Weather screen showed real fetched content — "🌫️ Air
+quality: 21 US AQI — Good" — that only a working `airBlock()` call could produce). Confirmed
+both call sites render: the standalone Weather screen (`#weather-th` — units toggle, current
+conditions, 4 SVGs including the hourly ring and region mini-map, "Upcoming forecast" month
+calendar, all 15 Thai hub-town chips with live temps) and the Home screen's own weather widget
+(`wxVizCard`, unaffected — Home renders cleanly end-to-end with zero regressions elsewhere in
+the Tools/Quick-access chip rows).
+
+Budget/expenses extraction (also confirmed clean and contiguous during the original audit) was
+not attempted this round — deferred to its own slice, same reasoning as Places: ship each
+extraction independently so a regression is trivially bisectable.
