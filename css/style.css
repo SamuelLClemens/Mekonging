@@ -263,6 +263,35 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .prov-group:hover .prov, .prov-group:focus-visible .prov { fill-opacity: 0.9 !important; }
 .prov-group.active .prov { stroke: var(--ink); stroke-width: 1.4; }
 .prov-group:focus-visible .prov { stroke: var(--ink); stroke-width: 1.4; }
+/* Travel regions (js/data/zones.js): a zone is drawn as one shape made of its provinces'
+   paths, so the country reads as 4-6 tappable areas rather than 184. Same interaction
+   affordances as .prov-group, applied to the grouped shape. */
+.zone-group { cursor: pointer; outline: none; }
+.zone { stroke: var(--card); stroke-width: 0.8; transition: fill-opacity var(--dur) var(--ease); }
+.zone-group:hover .zone, .zone-group:focus-visible .zone { fill-opacity: 0.92 !important; }
+.zone-group.active .zone { stroke: var(--ink); stroke-width: 1.4; }
+.zone-group:focus-visible .zone { stroke: var(--ink); stroke-width: 1.4; }
+/* The region chooser: one tappable row per region, carrying its tagline and live counts. */
+.zone-list { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-3) 0; }
+.zone-row {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  padding: var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); color: inherit; font: inherit; cursor: pointer;
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.zone-row:hover, .zone-row:focus-visible { border-color: var(--teal); transform: translateY(-1px); }
+.zone-emoji { flex: none; font-size: 1.5rem; line-height: 1; }
+.zone-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.zone-name { font-weight: 800; }
+.zone-tag { font-size: var(--fs-sm); opacity: .85; }
+.zone-count { font-size: var(--fs-xs, 0.78rem); }
+.zone-go { flex: none; opacity: .5; font-size: 1.2rem; }
+/* The region facts block: a definition grid, deliberately terse — label left, fact right. */
+.zone-lead { margin: 0 0 var(--sp-3); font-weight: 600; }
+.zone-dl { display: grid; grid-template-columns: minmax(84px, auto) 1fr; gap: var(--sp-1) var(--sp-3); margin: 0; }
+.zone-dl dt { font-size: var(--fs-sm); font-weight: 700; opacity: .62; }
+.zone-dl dd { margin: 0; font-size: var(--fs-sm); }
+
 
 /* Home "Signature sights" — a photo-forward horizontal showcase of iconic places. */
 .sights-strip { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }

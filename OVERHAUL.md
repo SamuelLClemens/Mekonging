@@ -2432,3 +2432,65 @@ log, not a category tally). Confirmed via computed styles: Home's card carries
 `.exp-add-compact` with 12px padding / 8px field margins / 4px heading margin; `#expenses`'s
 card does not, unchanged at 16px / 12px. Confirmed the reference line renders correctly
 ("1 USD ≈ 33 THB") with full, untruncated text throughout the rest of the widget.
+
+### Explore rebuilt region-first: 184 provinces become 19 travel regions (mk-v0.374.0)
+
+Answer to "how do we rework Places and Explore so they are useful given the app can never
+hold Google-Maps-scale options." The honest framing, agreed before building: Maps wins on
+inventory and always will; it cannot do judgement, context or offline. Every place record
+here already carries `whyItFits`, `recognition`, `tips`, `scamWarnings`, a real `priceRange`,
+a `verified` date and cited `sources` — none of which Maps has. So the app stops presenting
+itself as a directory (where 574 places looks poor beside Maps) and presents itself as a
+shortlist (where eight argued picks beat two hundred unranked pins). Agreed split, by the
+QUESTION each screen answers: **Explore = "where should I go"**, **Places = "what should I do
+right now, near here"**. This round delivers the Explore half.
+
+**The structural problem.** Explore browsed by ADM1 province: 77 in Thailand, 64 Vietnam, 25
+Cambodia, 18 Laos — 184 units for ~132 towns that actually hold places. Most taps landed on
+an empty province. Regions fix the ratio: 6 + 5 + 4 + 4 = **19 regions**, each holding roughly
+25–65 places, which is a browsable unit.
+
+**No new geometry.** A region is a GROUP of provinces (new `js/data/zones.js`), so it draws as
+the union of its provinces' existing polygons — `zonesMap()` reuses `provincePathD()` and the
+same projection, giving one fill and one hit target per region. Province outlines remain the
+geometry; they are simply no longer a browse step. Coverage is exhaustive and machine-checked:
+every one of the 184 provinces belongs to exactly one region (`zoneCoverageGaps()` reports
+`missing: [] duplicated: []` for all four countries).
+
+**Place → region assignment, cached and gap-free.** Two problems with the naive approach.
+Cost: testing every place against every province, repeated per region, is O(provinces × places)
+per region, and Explore asks for all of them just to print the counts. Correctness:
+point-in-polygon alone loses islands — the outlines are simplified, so 11 of Thailand's 214
+places (Railay, the Similans, Koh Kradan, Freedom Beach, Ang Thong marine park, Bang Bao pier…)
+sat in NO province and would have silently vanished from region browse. `zoneAssignment(cc)`
+therefore computes one cached `placeId → regionId` map per country: point-in-province first,
+then **nearest province centroid** for anything unmatched, which for a coastal or island point
+is always the mainland province it belongs to. Verified live in all four countries: assigned
+places now equal total places exactly (TH 214/214, VI 149/149, KH 149/149, LA 171/171), with
+zero places matching two provinces. The islands came back — Thailand's South went 37→46 places
+and 13→15 towns, the East 4→6 and 4→5.
+
+**What a region page carries.** Facts, not prose, as a terse definition grid read in one
+glance: what it is · good for · **not for** · best months · avoid · how long · getting around ·
+arrive at. `notFor` is the honest counterweight a guidebook will not print, and is usually the
+fastest way to rule a region in or out. Then the region highlighted on the country map (rest
+muted, still tappable), its towns with place counts, and its places. Region-level claims only —
+anything specific enough to change (prices, schedules, hours) stays on the place record with
+its own source.
+
+**Redundancy removed.** The flat "Explore {country} by city" fold — a 12-city grid plus a link
+to the Places map — is gone. Towns are now reached through the region that contains them, which
+gives each one context instead of a bare name, and that same city grid was already being
+rendered a second time by Places' own city picker.
+
+**Old links still land.** `#region-<cc>-<PROVINCE-CODE>` (e.g. `#region-th-TH-58`) resolves to
+the region now containing that province, so bookmarks and cached links survive; an unknown code
+still shows the graceful not-found card.
+
+Added `js/data/zones.js` to `sw.js` `PRECACHE`. Bumped `APP_VERSION`/`CACHE_VERSION` to
+`mk-v0.374.0`.
+
+**Verified:** brace-balance clean; province coverage 184/184 with no duplicates; all four
+country hubs render the region map and list with live counts; region detail renders facts grid,
+active map highlight, 9 towns and 40 place cards for Thailand's North; old province links
+redirect correctly and bad codes fail gracefully.

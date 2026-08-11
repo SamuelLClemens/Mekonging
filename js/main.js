@@ -100,6 +100,7 @@ import { REGIONS_VI } from './data/regions.vi.js';
 import { REGIONS_KH } from './data/regions.kh.js';
 import { REGIONS_LA } from './data/regions.la.js';
 import { provinceInfo } from './data/regions.info.js';
+import { zonesFor, getZone, zoneForProvince } from './data/zones.js';
 import * as Diet from './data/diet.js';
 
 // ---- service worker + theme -------------------------------------------------
@@ -263,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.373.0';
+const APP_VERSION = 'mk-v0.374.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2553,6 +2554,148 @@ function regionsMap(cc, opts = {}) {
   return box;
 }
 
+// ---- Travel regions (zones): the browse layer above provinces --------------------
+// A "region" a traveller navigates is a GROUP of provinces (js/data/zones.js) — 4-6 per
+// country instead of 184 ADM1 units, most of which hold no places at all. Nothing new is
+// drawn: a zone reuses its provinces' existing polygons and is filled as one shape, and its
+// places/towns are derived live from placesInProvince(), so adding a place cannot make this
+// stale. Provinces remain the geometry; they are no longer a browse step.
+
+// Place -> zone assignment for one country, computed ONCE and cached.
+//
+// Two reasons this is a single cached pass rather than a per-zone scan. First cost: testing
+// every place against every province, repeated for each of 4-6 zones, is O(provinces x places)
+// per zone and Explore asks for all of them just to print the counts. Second correctness:
+// point-in-polygon alone loses islands and headlands. The province outlines are simplified,
+// so 11 of Thailand's 214 places — Railay, the Similans, Koh Kradan, Freedom Beach and other
+// coastal or marine-park points — land in NO province and would silently disappear from
+// region browse. Anything unmatched therefore falls back to its NEAREST province by centroid,
+// which for a coastal point is always the mainland province it belongs to.
+const _zoneAssign = {};      // cc -> { byPlace: Map(placeId -> zoneId), n }
+function provinceCentroids(set) {
+  if (set._centroids) return set._centroids;
+  set._centroids = set.provinces.map((pr) => {
+    let sx = 0, sy = 0, n = 0;
+    pr.polys.forEach((poly) => poly[0].forEach(([lng, lat]) => { sx += lng; sy += lat; n++; }));
+    return { code: pr.code, lng: n ? sx / n : 0, lat: n ? sy / n : 0 };
+  });
+  return set._centroids;
+}
+function zoneAssignment(cc) {
+  const cached = _zoneAssign[cc];
+  const places = allPlaces({ country: cc });
+  if (cached && cached.n === places.length) return cached.byPlace;   // invalidates if data grows
+  const set = regionSetFor(cc);
+  const byPlace = new Map();
+  if (set) {
+    const provZone = {};
+    zonesFor(cc).forEach((z) => z.provinces.forEach((code) => { provZone[code] = z.id; }));
+    const cents = provinceCentroids(set);
+    places.forEach((pl) => {
+      if (!pl.coords || typeof pl.coords.lng !== 'number' || typeof pl.coords.lat !== 'number') return;
+      const hit = set.provinces.find((pr) => pointInProvince(pr, pl.coords.lng, pl.coords.lat));
+      if (hit) { if (provZone[hit.code]) byPlace.set(pl.id, provZone[hit.code]); return; }
+      // Unmatched (island / simplified coastline): nearest province centroid wins.
+      let best = null, bestD = Infinity;
+      cents.forEach((ct) => {
+        const dx = ct.lng - pl.coords.lng, dy = ct.lat - pl.coords.lat;
+        const d = dx * dx + dy * dy;
+        if (d < bestD) { bestD = d; best = ct.code; }
+      });
+      if (best && provZone[best]) byPlace.set(pl.id, provZone[best]);
+    });
+  }
+  _zoneAssign[cc] = { byPlace, n: places.length };
+  return byPlace;
+}
+
+// Every place in a zone. One map lookup per place, no polygon maths at call time.
+function placesInZone(cc, zoneId) {
+  const byPlace = zoneAssignment(cc);
+  return allPlaces({ country: cc }).filter((pl) => byPlace.get(pl.id) === zoneId);
+}
+
+// Towns in a zone, ranked by how many places each holds. Returns [{ city, n }].
+function townsInZone(cc, zoneId) {
+  const counts = {};
+  placesInZone(cc, zoneId).forEach((pl) => { if (pl.city) counts[pl.city] = (counts[pl.city] || 0) + 1; });
+  return Object.keys(counts).sort((a, b) => counts[b] - counts[a]).map((city) => ({ city, n: counts[city] }));
+}
+
+// The zone map: same SVG projection and province paths as regionsMap, but every province of
+// a zone shares one fill and one hit target, so the country reads as 4-6 tappable areas.
+// opts.activeId highlights one; opts.onPick(zoneId) fires on tap/Enter.
+function zonesMap(cc, opts = {}) {
+  const set = regionSetFor(cc);
+  const zones = zonesFor(cc);
+  if (!set || !zones.length) return null;
+  const proj = set.proj;
+  const byCode = {};
+  set.provinces.forEach((pr) => { byCode[pr.code] = pr; });
+  const shapes = zones.map((z, i) => {
+    const active = opts.activeId && z.id === opts.activeId;
+    const fill = (opts.activeId && !active) ? '#8A94A6' : REGION_PALETTE[i % REGION_PALETTE.length];
+    const op = active ? 0.98 : (opts.activeId ? 0.5 : 0.68);
+    const d = z.provinces.map((code) => (byCode[code] ? provincePathD(byCode[code], proj) : '')).filter(Boolean).join(' ');
+    if (!d) return '';
+    return `<g class="zone-group${active ? ' active' : ''}" data-zone="${esc(z.id)}" role="button" tabindex="0" aria-label="${esc(z.name)}">`
+      + `<path class="zone" d="${d}" fill="${fill}" fill-opacity="${op}"/></g>`;
+  }).join('');
+  const cName = (getCountry(cc) || {}).name || '';
+  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Regions of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
+  const box = h('div', { class: 'regions-map', html: svg });
+  box.querySelectorAll('.zone-group').forEach((g) => {
+    const id = g.getAttribute('data-zone');
+    const pick = () => { if (opts.onPick) opts.onPick(id); };
+    g.addEventListener('click', pick);
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  });
+  return box;
+}
+
+// The region chooser used on Explore: one row per region with its own facts, live town and
+// place counts, so a traveller can see where the depth actually is before tapping in.
+function zonePickList(cc) {
+  const zones = zonesFor(cc);
+  if (!zones.length) return null;
+  const list = h('div', { class: 'zone-list' });
+  zones.forEach((z) => {
+    const n = placesInZone(cc, z.id).length;
+    const towns = townsInZone(cc, z.id).length;
+    list.append(h('button', { class: 'zone-row', onclick: () => go(`#region-${cc}-${z.id}`) }, [
+      h('span', { class: 'zone-emoji' }, z.emoji || '📍'),
+      h('span', { class: 'zone-text' }, [
+        h('span', { class: 'zone-name' }, z.name),
+        h('span', { class: 'zone-tag' }, z.tagline),
+        h('span', { class: 'zone-count muted' }, `${towns} town${towns === 1 ? '' : 's'} · ${n} place${n === 1 ? '' : 's'}`),
+      ]),
+      h('span', { class: 'zone-go' }, '›'),
+    ]));
+  });
+  return list;
+}
+
+// The region's facts as a compact definition grid — deliberately terse rows, not prose, so
+// the whole orientation reads in one glance. `notFor` is the honest counterweight: what this
+// region is NOT good for, which is usually the fastest way to rule a place in or out.
+function zoneFactsCard(z) {
+  const rows = [
+    ['Good for', z.suits],
+    ['Not for', z.notFor],
+    ['Best months', z.bestMonths],
+    ['Avoid', z.avoidMonths],
+    ['How long', z.howLong],
+    ['Getting around', z.gettingAround],
+    ['Arrive at', z.gateway],
+  ].filter(([, v]) => v);
+  const card = h('div', { class: 'card zone-facts' }, [h('h2', { style: 'margin-top:0' }, `${z.emoji || '📍'} ${z.name}`)]);
+  card.append(h('p', { class: 'zone-lead' }, z.tagline));
+  const dl = h('dl', { class: 'zone-dl' });
+  rows.forEach(([k, v]) => { dl.append(h('dt', {}, k), h('dd', {}, v)); });
+  card.append(dl);
+  return card;
+}
+
 // Region detail: arg is "<cc>-<CODE>" (the ISO code itself contains a hyphen, e.g.
 // "th-TH-50"), so split on the FIRST hyphen only. Lists the region's cities and mapped
 // places, keeps the province map one tap from its neighbours, and links up to the country.
@@ -2560,71 +2703,64 @@ function regionScreen(arg) {
   const raw = String(arg || '');
   const dash = raw.indexOf('-');
   const cc = dash >= 0 ? raw.slice(0, dash) : (raw || getActiveCountry());
-  const code = dash >= 0 ? raw.slice(dash + 1) : '';
+  let id = dash >= 0 ? raw.slice(dash + 1) : '';
   const c = getCountry(cc);
-  const prov = findProvince(cc, code);
+  // Back-compatibility: links minted before regions replaced provinces carry an ISO province
+  // code (e.g. "#region-th-TH-50"). Resolve those to the region that now contains them so an
+  // old bookmark, a saved link or a stale cache still lands somewhere true.
+  if (c && id && !getZone(cc, id)) {
+    const owner = zoneForProvince(cc, id);
+    if (owner) id = owner.id;
+  }
+  const z = getZone(cc, id);
   const wrap = h('div', { class: 'screen' });
-  if (!c || !prov) {
+  if (!c || !z) {
     wrap.append(topbar('Region', `#country-${cc}`));
     wrap.append(h('p', { class: 'empty' }, 'That region could not be found.'));
     mount(wrap, '#explore');
     return;
   }
   setActiveCountry(cc);
-  wrap.append(topbar(prov.name, `#country-${cc}`));
-  wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `${prov.name} — a region of ${c.name}. Tap another region on the map to jump there.`));
+  wrap.append(topbar(z.name, `#country-${cc}`));
 
-  const mini = regionsMap(cc, { activeCode: code, onPick: (nc) => go(`#region-${cc}-${nc}`) });
+  // Facts first — what this region is, who it suits, who it does not, when to come. Every
+  // row is one line; the whole orientation is meant to be read in a glance, not studied.
+  wrap.append(zoneFactsCard(z));
+
+  const mini = zonesMap(cc, { activeId: z.id, onPick: (nid) => go(`#region-${cc}-${nid}`) });
   if (mini) {
-    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🗺 Province map'),
+    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 ${c.name} by region`),
       h('div', { style: 'padding:6px 0 0' }, [mini]), { open: store.profile.prefs.regionMapOpen !== false, cls: 'home-group-d' });
     mapFold.addEventListener('toggle', () => { store.profile.prefs.regionMapOpen = mapFold.open; save(); });
     wrap.append(mapFold);
   }
 
-  if (cc === 'vi') {
-    wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
-      'Note: Vietnam reorganised its provinces in 2025. These outlines reflect the earlier boundaries until open map data is updated.'));
-  }
-
-  // Authored, web-verified province write-up (when we hold one) — mirrors the country
-  // history card so a region reads like a place, not just a bucket of pins.
-  const pinfo = provinceInfo(code);
-  if (pinfo && pinfo.blurb) {
-    const ic = h('div', { class: 'card history-card' }, [
-      h('h2', { style: 'margin-top:0' }, `About ${prov.name}`),
-      h('p', {}, pinfo.blurb),
-    ]);
-    const kf = knownForRow(pinfo.knownFor); if (kf) ic.append(kf);
-    if (pinfo.cultureTip) ic.append(h('p', { class: 'culture-tip' }, `🙏 ${pinfo.cultureTip}`));
-    { const rd = readAloudBar(() => [pinfo.blurb, pinfo.cultureTip].filter(Boolean).join('. ')); if (rd) ic.append(rd); }
-    const srcBits = [];
-    if (pinfo.sources && pinfo.sources.length) srcBits.push(`Sources: ${pinfo.sources.join(', ')}`);
-    if (pinfo.verified) srcBits.push(`Verified ${pinfo.verified}`);
-    if (srcBits.length) ic.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, srcBits.join(' · ')));
-    wrap.append(collapsibleCard(ic, 'regionAboutOpen'));
-  }
-
-  const inRegion = placesInProvince(cc, code);
-  const cityCounts = {};
-  inRegion.forEach((p) => { if (p.city) cityCounts[p.city] = (cityCounts[p.city] || 0) + 1; });
-  const cities = Object.keys(cityCounts).sort((a, b) => cityCounts[b] - cityCounts[a]);
-  if (cities.length) {
-    const cityCard = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `🏙 Cities & towns in ${prov.name}`)]);
-    cityCard.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a place to see everything mapped there.'));
-    cityCard.append(cityPickGrid(cc, cities, cityCounts));
+  const inZone = placesInZone(cc, z.id);
+  const towns = townsInZone(cc, z.id);
+  if (towns.length) {
+    const counts = {}; towns.forEach((t) => { counts[t.city] = t.n; });
+    const cityCard = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `🏙 ${towns.length} town${towns.length === 1 ? '' : 's'} in ${z.name}`)]);
+    cityCard.append(cityPickGrid(cc, towns.map((t) => t.city), counts));
     wrap.append(collapsibleCard(cityCard, 'regionCitiesOpen'));
   }
 
-  if (inRegion.length) {
-    const pc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `📍 ${inRegion.length} place${inRegion.length > 1 ? 's' : ''} in ${prov.name}`)]);
-    inRegion.slice(0, 40).forEach((p) => pc.append(placeCard(p)));
-    wrap.append(collapsibleCard(pc, 'regionPlacesOpen'));
+  if (inZone.length) {
+    const pc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `📍 ${inZone.length} place${inZone.length > 1 ? 's' : ''} in ${z.name}`)]);
+    inZone.slice(0, 40).forEach((pl) => pc.append(placeCard(pl)));
+    if (inZone.length > 40) {
+      pc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) }, `See all ${inZone.length} on the map →`));
+    }
+    wrap.append(collapsibleCard(pc, 'regionPlacesOpen', false));
   } else {
     wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${prov.name} yet. Explore neighbouring regions on the map above, or browse all of ${c.name}.`),
+      h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${z.name} yet. Tap another region on the map above, or browse all of ${c.name}.`),
       h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) }, `All places in ${c.name}`),
     ]));
+  }
+
+  if (cc === 'vi') {
+    wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
+      'Note: Vietnam reorganised its provinces in 2025. The region outlines reflect the earlier boundaries until open map data is updated.'));
   }
 
   wrap.append(h('div', { class: 'chips', style: 'margin-top:6px' }, [
@@ -2634,6 +2770,7 @@ function regionScreen(arg) {
   ]));
   mount(wrap, '#explore');
 }
+
 
 // The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
 // four countries is a distinct colour and is tappable to enter its hub. No tiles, no
@@ -2799,11 +2936,16 @@ function exploreScreen(argCc) {
   // row that used to sit here are gone — every one of those destinations is still reachable
   // via its own bottom tab or another existing link, never removed, just no longer a
   // redundant row competing with the map for the lead position.
-  if (regionSetFor(cc)) {
-    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, `🗺 Regions of ${c.name}`));
-    wrap.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a region to see its cities, places and how it fits into the country.'));
-    const rm = regionsMap(cc, { onPick: (code) => go(`#region-${cc}-${code}`) });
-    if (rm) wrap.append(rm);
+  // Explore's spine: 4-6 travel REGIONS, not 184 provinces. Each row carries what the
+  // region is and how much is actually mapped there, so a traveller can judge where the
+  // depth is before tapping. The map and the list drive the same route — the map for people
+  // who think geographically, the list for people who read.
+  if (zonesFor(cc).length) {
+    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, `🗺 ${c.name} by region`));
+    const zm = zonesMap(cc, { onPick: (zid) => go(`#region-${cc}-${zid}`) });
+    if (zm) wrap.append(zm);
+    const zl = zonePickList(cc);
+    if (zl) wrap.append(zl);
   }
 
   // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
@@ -2919,33 +3061,10 @@ function exploreScreen(argCc) {
     ]));
   }
 
-  // Explore by city: a spatial overview of the whole country's places plus a city
-  // picker, so a traveller sees WHERE things are and can scope straight to one city
-  // (which then browses as a short list or a map).
-  const cityPlaces = allPlaces({ country: cc });
-  if (cityPlaces.length) {
-    const withCoords = cityPlaces.filter((p) => p.coords);
-    const counts = {};
-    cityPlaces.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
-    const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-    const body = h('div', {});
-    if (cities.length) {
-      body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' }, 'Tap a city to see just its places — as a short list or on the map:'));
-      body.append(cityPickGrid(cc, cities.slice(0, 12), counts));
-    }
-    // One living map for the whole app: link to the Places section rather than embedding a
-    // SECOND MapLibre map here — that duplicated the Places living map and cost a wasted
-    // WebGL load. The Places map already numbers, colours and filters every place.
-    if (withCoords.length) {
-      body.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) },
-        [chipIcon('map'), ` See all ${withCoords.length} places on the map`]));
-    }
-    const exploreFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 Explore ${c.name} by city`),
-      body, { open: store.profile.prefs.hubCityOpen !== false, cls: 'home-group-d' });
-    exploreFold.addEventListener('toggle', () => { store.profile.prefs.hubCityOpen = exploreFold.open; save(); });
-    wrap.append(exploreFold);
-  }
-
+  // The flat "Explore {country} by city" fold used to sit here: a 12-city grid plus a link
+  // to the Places map. Both jobs moved — towns are now reached through the region that
+  // contains them (above), which gives each one context instead of a bare name, and the
+  // same city grid was already being rendered a second time by Places' own city picker.
   // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
   // it is not something a traveller reads every day, so it should not be the first thing.
   const hi = countryHistory(cc);
