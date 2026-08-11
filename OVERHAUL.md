@@ -2350,3 +2350,51 @@ the Tools/Quick-access chip rows).
 Budget/expenses extraction (also confirmed clean and contiguous during the original audit) was
 not attempted this round — deferred to its own slice, same reasoning as Places: ship each
 extraction independently so a regression is trivially bisectable.
+
+### Budget: inline currency converter, and "log a spend" wording finished its migration to "expense" (mk-v0.372.0)
+
+Two direct requests. First: "add a simple but elegant currency converter to the budget
+widget." Rather than a new screen or a new data source, `budgetFxCard()` nests a compact
+amount/from/to/swap/result converter directly inside the existing Budget card (`expensesScreen`
+→ `budgetSummaryCard`), as a `<details class="budget-set">` fold — the exact same visual
+pattern already used one row above it for "＋ Set a budget" / "✎ Change budget", so it reads as
+part of the same widget rather than a bolted-on extra. It is backed by the same cached-rate
+primitives the standalone Currency screen (`#currency`) already uses — `convert()`/`getRates()`
+from `currency.js`, `currencySelect()` from `ui-widgets.js` — so a figure here always agrees
+with the full screen; nothing new to fetch, cache, or keep in sync. Defaults mirror the
+standalone screen's own default direction (home currency → the currency you're spending in
+here, e.g. USD → THB), with a swap button for the other way, and a "Full converter, quick
+guide & cash-swap →" link out to `#currency` for the quick-reference table, rate refresh, and
+the peer cash-swap tool — deliberately NOT duplicated here, so this stays "simple."
+
+Second: "always call it logging an expense and not logging a spend" — task #38 had already
+renamed the primary CTA button, but the sweep this round found eight more user-facing strings
+still saying "spend"/"spends" as the logging-action noun: two Home right-now-card fallback
+prompts ("Log a spend above/in one tap" → "Log an expense..."), two input `aria-label`s ("What
+the spend was on" → "What the expense was on", on both the Home quick-add strip and the shared
+`expenseAddCard`), the "Add spend" button `aria-label`, the empty-legend prompt ("Log a few
+spends" → "...expenses"), the no-cached-rate note ("Some spends use..." → "Some expenses
+use..."), the Expenses screen's own intro line ("Log what you spend as you go" → "Log each
+expense as you go"), the travel-book empty state, and the spreadsheet-export row count
+("N logged spend(s)" → "...expense(s)"). Left alone, deliberately: internal identifiers
+(`quickSpendRow`, `tripSpendHome`, the `now-spend` CSS class — not user-facing, renaming them
+is pure churn with real breakage risk for zero visible benefit) and unrelated senses of the
+word "spend" that aren't about the logging action — the giving calculator's "% of trip spend"
+(a distinct feature, a total-spend-based donation percentage), the two visa/tax notes about
+"spending 180+/183+ days" (days, not money), and the Budget donut/legend's general "Spending
+by category" framing.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.372.0`. `main.js` gained ~35 lines net (the new
+`budgetFxCard()` function); no new files, so no `sw.js` `PRECACHE` change needed.
+
+**Verified:** Python brace-balance check clean. Interactive click-through on `#expenses`:
+confirmed the collapsed-by-default "▶ 💱 Currency converter" fold sits directly under
+"＋ Set a budget" inside the Budget card, opens to the same layout as the standalone screen,
+defaults to USD → THB with a live "1 USD = 33 THB" (real cached rate, not invented), typing
+500 recomputed instantly to "500 USD = 16,501 THB," and Swap correctly flipped both the
+direction and the figure ("500 THB = 15.15 USD"). Confirmed via `grep` that no "log a spend"-
+family string remains anywhere in `main.js`. The one console error surfaced by
+`read_console_messages` (`airBlock` export) was reconfirmed as the same stale cross-navigation
+buffer artifact already established as harmless in the prior Weather-extraction round — the
+converter's own live math, rendered moments after that message, is proof `main.js` executed
+correctly.
