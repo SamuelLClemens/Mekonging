@@ -291,6 +291,28 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .zone-dl { display: grid; grid-template-columns: minmax(84px, auto) 1fr; gap: var(--sp-1) var(--sp-3); margin: 0; }
 .zone-dl dt { font-size: var(--fs-sm); font-weight: 700; opacity: .62; }
 .zone-dl dd { margin: 0; font-size: var(--fs-sm); }
+/* "Travelling as" — one line that both states the active profile and edits it. Deliberately
+   a single row, not a chip row: the profile rarely changes once set, so a permanent control
+   would cost space on every screen for something almost nobody taps twice. */
+.travas {
+  display: flex; align-items: center; gap: var(--sp-2); width: 100%;
+  margin: var(--sp-2) 0; padding: var(--sp-2) var(--sp-3);
+  border: 1px dashed var(--line); border-radius: var(--r-pill);
+  background: transparent; color: inherit; font: inherit; font-size: var(--fs-sm);
+  text-align: left; cursor: pointer;
+}
+.travas:hover, .travas:focus-visible { border-color: var(--teal); border-style: solid; }
+.travas.unset { border-color: var(--orange); color: var(--orange); }
+.travas-txt { flex: 1 1 auto; min-width: 0; }
+.travas-edit { flex: none; opacity: .7; }
+/* Profile fit on a place page: what suits, what does not, and what is simply not recorded. */
+.fit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.fit-list li { font-size: var(--fs-sm); padding-left: 1.4em; text-indent: -1.4em; }
+.fit-good::before { content: '\2713\00a0 '; color: var(--teal-deep, var(--teal)); font-weight: 800; }
+.fit-warn::before { content: '\26a0\fe0f\00a0 '; }
+.fit-unknown { opacity: .72; }
+.fit-unknown::before { content: '\2014\00a0 '; }
+
 
 
 /* Home "Signature sights" — a photo-forward horizontal showcase of iconic places. */

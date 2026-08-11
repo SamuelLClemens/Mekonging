@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.374.0';
+const APP_VERSION = 'mk-v0.375.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -818,6 +818,108 @@ function profileFitAdj(p, prefs) {
   const interests = prefs.interests || [];
   if (interests.length && cats.some((c) => interests.includes(c))) s += 10;     // a gentle nudge, never a filter
   return s;
+}
+
+// ---- Travelling as: the profile lens -------------------------------------------------
+// One place decides what a place means for WHO the traveller is. Ranking still lives in
+// profileFitAdj()/personalScore(); this is the DISPLAY truth, so every surface says the same
+// thing about the same place.
+//
+// The hard rule: never invent a suitability or safety verdict. Measured across the 586 place
+// records, the data supports some dimensions and not others — kidFriendly is set on 316,
+// access/stepFree on 137, scamWarnings on 567, but per-venue safety, women's-safety and
+// baby-facility fields are effectively absent. So an unrecorded field returns an `unknown`
+// entry that the UI prints as "not recorded", which is more useful than silence and far
+// safer than a false negative: a traveller must be able to tell "no step-free access" from
+// "nobody has checked". Those gaps are being filled with sourced data, not inference.
+//
+// Returns { good: [], warn: [], unknown: [] } of short strings, already filtered to the
+// dimensions this traveller actually asked about.
+function profileFit(p, prefs = store.profile.prefs) {
+  const cats = p.categories || [];
+  const good = [], warn = [], unknown = [];
+  const family = prefs.withBaby || prefs.kids || prefs.party === 'family';
+
+  if (family) {
+    if (p.kidFriendly === true) good.push('Kid-friendly');
+    else if (p.kidFriendly === false) warn.push('May not suit kids');
+    else unknown.push('Kid-suitability not recorded');
+    if (cats.includes('nightlife')) warn.push('Bar / nightlife venue');
+    if (prefs.withBaby) {
+      if (cats.includes('hike') || cats.includes('waterfall')) warn.push('Hard going with a pram or infant');
+      if (!(p.access && p.access.toilet)) unknown.push('Baby-change facilities not recorded');
+    }
+  }
+
+  if ((prefs.access || []).includes('mobility')) {
+    const sf = p.access && p.access.stepFree;
+    if (sf === 'yes') good.push('Step-free');
+    else if (sf === 'partial') warn.push('Only partly step-free');
+    else if (sf === 'no') warn.push('Not step-free');
+    else unknown.push('Step-free access not recorded');
+    if (!sf && (cats.includes('hike') || cats.includes('waterfall'))) warn.push('Rough ground or steps likely');
+    if (p.access && p.access.toilet) good.push('Accessible toilet reported');
+  }
+
+  // Solo and solo-female. There is NO per-venue safety data in this app and none is invented
+  // here. What is real: scamWarnings (recorded on 567 of 586 places) and opening hours. Those
+  // are surfaced as concrete, checkable facts; the judgement stays with the traveller, and the
+  // country-level solo guidance is one tap away from the same card.
+  if (prefs.soloFemale || prefs.party === 'solo') {
+    if ((p.scamWarnings || []).length) warn.push(`${p.scamWarnings.length} reported scam${p.scamWarnings.length > 1 ? 's' : ''} here`);
+    if (cats.includes('nightlife')) warn.push('Night venue — plan how you get back');
+    if (openStateNow(p) === false) warn.push('Closed right now');
+    unknown.push('No verified safety reporting for this place');
+  }
+
+  // Diet and allergies are recorded on DISHES, never on venues — a restaurant cannot honestly
+  // be called peanut-safe from the data held here. Say so, and point at what does exist.
+  if ((prefs.diet || []).length && (cats.includes('food') || cats.includes('market'))) {
+    unknown.push('Per-venue allergen info not recorded — check dishes and use your allergy card');
+  }
+
+  return { good, warn, unknown };
+}
+
+// The one-line "Travelling as" summary that is also the edit control. Deliberately ONE line
+// rather than a persistent chip row: the profile rarely changes once set, so a permanent row
+// would cost space on every screen for a control almost nobody taps twice. It appears only
+// where the profile is actively shaping what is shown, and always links to the same editor
+// (#foryou), so there is never a second place to change the same setting.
+function travellingAsLine() {
+  const p = store.profile.prefs;
+  const bits = [];
+  if (p.soloFemale) bits.push('solo female');
+  else if (p.party) bits.push({ solo: 'solo', couple: 'a couple', family: 'a family', group: 'a group' }[p.party] || p.party);
+  if (p.withBaby) bits.push('with a baby');
+  else if (p.kids) bits.push('with kids');
+  if ((p.access || []).includes('mobility')) bits.push('step-free needs');
+  if ((p.diet || []).length) bits.push(`${p.diet.length} dietary need${p.diet.length > 1 ? 's' : ''}`);
+  const set = bits.length > 0;
+  return h('button', {
+    class: 'travas' + (set ? '' : ' unset'),
+    onclick: () => go('#foryou'),
+    'aria-label': set ? `Travelling as ${bits.join(', ')} — change` : 'Set who you are travelling as',
+  }, [
+    h('span', { class: 'travas-txt' }, set ? `Travelling as ${bits.join(' · ')}` : 'Tell us who you’re travelling as — results adapt'),
+    h('span', { class: 'travas-edit' }, set ? '✎' : '→'),
+  ]);
+}
+
+// Profile fit on a place's own page: what suits, what does not, and — stated plainly — what
+// nobody has recorded yet. Renders nothing when the traveller has set no profile at all.
+function profileFitCard(p) {
+  const f = profileFit(p);
+  if (!f.good.length && !f.warn.length && !f.unknown.length) return null;
+  const card = h('div', { class: 'card fit-card' }, [h('h3', { style: 'margin-top:0' }, '🧭 For how you’re travelling')]);
+  const ul = h('ul', { class: 'fit-list' });
+  f.good.forEach((t) => ul.append(h('li', { class: 'fit-good' }, t)));
+  f.warn.forEach((t) => ul.append(h('li', { class: 'fit-warn' }, t)));
+  f.unknown.forEach((t) => ul.append(h('li', { class: 'fit-unknown' }, t)));
+  card.append(ul);
+  card.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, 'Not recorded means nobody has checked it yet — not that the answer is no. Verify anything that matters on the day.'));
+  card.append(travellingAsLine());
+  return card;
 }
 
 // Best-effort open/closed at the current local hour (null when hours are unknown/unparseable,
@@ -4592,6 +4694,8 @@ function placesScreen(arg) {
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
   { const t = oneTimeHint('places-living-map', 'The map and list stay in sync: tap the coloured category chips to show only what you want, and “Nearest first” to sort by what is around you right now.'); if (t) wrap.append(t); }
+  // Who these results are being ranked and tagged for (one line, also the edit control).
+  wrap.append(travellingAsLine());
   if (scopeCity) {
     wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
       h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
@@ -6137,6 +6241,10 @@ function placeScreen(id) {
   wrap.append(card);
   const accBlock = placeAccessBlock(p);
   if (accBlock) wrap.append(accBlock);
+  // What this place means for who the traveller IS — including, stated plainly, what nobody
+  // has recorded yet. Sits right after accessibility so the two read as one honest block.
+  const fitCard = profileFitCard(p);
+  if (fitCard) wrap.append(fitCard);
   const mkt = marketInfoCard(p);
   if (mkt) wrap.append(mkt);
   const beach = beachInfoCard(p);
@@ -9101,7 +9209,10 @@ function daySuggestScreen(country) {
     if (ctx.aqi != null) { const ab = aqiBand(ctx.aqi); if (ab) cond.push(`AQI ${Math.round(ctx.aqi)}`); }
     header.append(h('div', { class: 'todo-cond' }, cond.map((b) => h('span', { class: 'todo-cond-chip' }, b))));
     header.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, today ? moodLine(ctx.weather) : 'Connect once for weather-aware picks; meanwhile these are ranked by rating and distance.'));
-    if (!profileIsSet()) header.append(h('button', { class: 'linklike', style: 'display:block;margin:6px 0 0', onclick: () => go('#foryou') }, '⚙ Personalise these picks →'));
+    // Always show WHO these picks are ranked for — not just a prompt when unset. One line,
+    // doubling as the edit control, so the traveller can always see and correct the app's
+    // assumption about them from the surface that assumption is shaping.
+    header.append(travellingAsLine());
 
     // --- Rank the doable pool for RIGHT NOW, then keep only what is actually reachable. ---
     const anchor = dayUserLoc || ((gps && getLastFix()) ? getLastFix() : { lat: spot.lat, lng: spot.lng });

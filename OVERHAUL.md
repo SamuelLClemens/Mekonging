@@ -2494,3 +2494,54 @@ Added `js/data/zones.js` to `sw.js` `PRECACHE`. Bumped `APP_VERSION`/`CACHE_VERS
 country hubs render the region map and list with live counts; region detail renders facts grid,
 active map highlight, 9 towns and 40 place cards for Thailand's North; old province links
 redirect correctly and bad codes fail gracefully.
+
+### "Travelling as": the traveller-profile lens, built on what the data can honestly support (mk-v0.375.0)
+
+Request: the traveller should know where they are, what to do nearby, and how to plan next —
+all framed by who they are travelling as (solo, solo female, family, family with a baby, an
+allergy, and so on). This is the strongest differentiator available: it is precisely the
+judgement Google Maps cannot do.
+
+**The data was measured before anything was designed.** Across the 586 place records:
+`scamWarnings` 567 (97%), `kidFriendly` 316 (54%), `access`/`stepFree` 137 (23%), toilets 26,
+safety 21, women 10, solo 9, per-venue diet/allergen 3. So family and mobility can be served
+properly today; **solo-female safety cannot** — there is essentially no underlying data, and
+generating safety claims about real places from inference would be the most harmful thing this
+app could do. That constraint shaped the whole design rather than being worked around.
+
+**`profileFit(p, prefs)`** is now the single display truth — what a place means for who the
+traveller is — returning `{ good, warn, unknown }`. Ranking still lives in `profileFitAdj()`
+and `personalScore()`; this governs what is SAID, so every surface says the same thing about
+the same place. Per dimension: family reads `kidFriendly` and nightlife/pram-hostile
+categories; mobility reads `access.stepFree`/`access.toilet`; **solo and solo-female surface no
+invented verdict at all** — instead the real, checkable facts (recorded scam reports, night-venue
+category, closed-right-now) plus an explicit "no verified safety reporting for this place";
+diet states plainly that per-venue allergen data is not held (it lives on dishes) and points to
+the dish data and the traveller's allergy card.
+
+**Unrecorded is shown, not hidden.** Chosen deliberately over silence: a traveller must be able
+to tell "not step-free" from "nobody has checked", and that distinction matters most exactly
+where the stakes are highest. Unknowns render dimmed with an em-dash and the card closes with
+"Not recorded means nobody has checked it yet — not that the answer is no." The gaps are being
+filled with sourced data, not inference (see the profile-fit data task).
+
+**One line, not a chip row.** The profile rarely changes once set, so a permanent chip row
+would spend space on every screen for a control almost nobody taps twice — against this
+project's own "do not waste space" rule. `travellingAsLine()` is a single row that both states
+the active profile ("Travelling as a family · with a baby · step-free needs · 1 dietary need")
+and IS the edit control, linking to the one existing editor (`#foryou`) so there is never a
+second place to change the same setting. It appears only where the profile is actively shaping
+what is shown: Home's right-now picks, the Places results list, and the foot of a place's own
+fit card. On Home it replaces the old one-way "⚙ Personalise these picks →" nudge, which
+appeared only when the profile was UNSET and so never let a traveller see or correct what the
+app already assumed about them.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.375.0`.
+
+**Verified in-browser across three profiles.** Family + baby + mobility on Bua Tong Waterfall:
+two warnings ("Hard going with a pram or infant", "Rough ground or steps likely") and three
+honest unknowns (kid-suitability, baby-change, step-free) — correct, since that record carries
+none of those fields. Family + mobility on Lumphini Park, which does carry both: "✓ Kid-friendly",
+"✓ Step-free" — positives appear when the data exists. Solo female on the same place: no invented
+safety verdict, only "Closed right now" and "No verified safety reporting for this place". The
+line reads back the profile correctly in each case and links to the editor.
