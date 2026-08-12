@@ -10,7 +10,7 @@ import {
   getAlbum, addAlbumPhoto, updateAlbumPhoto, deleteAlbumPhoto,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
-  addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem,
+  addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem, addWithdrawal, deleteWithdrawal,
   setMyStay, getMyStay, clearMyStay,
   getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.377.0';
+const APP_VERSION = 'mk-v0.378.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1074,9 +1074,23 @@ function rightNowPicksCard(ctx) {
     .map((p) => ({ p, s: scoreForNow(p, ctx) }))
     .filter((x) => x.s > -Infinity)
     .sort((a, b) => b.s - a.s);
-  const tipEl = h('p', { class: 'muted', style: 'margin:6px 0 10px' }, meta.tip);
+  // Compact, single-line category filter — a <select>, not a chip row, so narrowing this list
+  // never costs more than one short line of height. Only offered when there is a real choice;
+  // options are whichever families this exact ranked pool actually contains (the same
+  // CATEGORY_FAMILIES/catFamily vocabulary catTag() and daySuggestScreen already use), minus
+  // stay/transport/other which are not "things to do right now" categories.
+  const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key))
+    .filter((f) => ranked.some((x) => (x.p.categories || []).some((c) => catFamily(c) === f.key)));
+  let famFilter = 'all';
+  const tipEl = h('p', { class: 'muted', style: 'margin:4px 0 8px' }, meta.tip);
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
+  if (famsPresent.length > 1) {
+    card.append(h('div', { class: 'rn-filter-row' }, [
+      selectEl([['all', 'All categories'], ...famsPresent.map((f) => [f.key, `${f.emoji} ${f.label}`])], 'all',
+        (v) => { famFilter = v; drawPicks(); }, 'Filter nearby picks by category'),
+    ]));
+  }
   card.append(tipEl, listWrap, footEl);
   { const t = oneTimeHint('rightnow-picks', 'These picks are chosen for the time of day, the weather and your interests. Tap ✓ done or ✕ not-for-me on any card and a fresh one takes its place.'); if (t) card.append(t); }
 
@@ -1093,12 +1107,16 @@ function rightNowPicksCard(ctx) {
 
   function drawPicks() {
     const ex = suggestExcluded();
-    const picks = ranked.filter((x) => !ex.has(x.p.id)).slice(0, 5);
+    const pool = famFilter === 'all' ? ranked : ranked.filter((x) => (x.p.categories || []).some((c) => catFamily(c) === famFilter));
+    const picks = pool.filter((x) => !ex.has(x.p.id)).slice(0, 5);
     listWrap.innerHTML = ''; footEl.innerHTML = '';
     if (!picks.length) {
-      tipEl.textContent = ranked.length
-        ? `${meta.tip} That is everything nearby for now — reset below to see them again.`
-        : `${meta.tip} Nothing is mapped very close — try “What’s near me”.`;
+      const famLbl = famFilter === 'all' ? '' : ` for ${(famsPresent.find((f) => f.key === famFilter) || {}).label || 'that category'}`;
+      tipEl.textContent = pool.length
+        ? `${meta.tip} That is everything nearby${famLbl} for now — reset below to see them again.`
+        : (famFilter === 'all'
+          ? `${meta.tip} Nothing is mapped very close — try “What’s near me”.`
+          : `Nothing nearby matches${famLbl} right now — try a different category.`);
     } else {
       tipEl.textContent = meta.tip;
       picks.forEach(({ p }) => {
@@ -3494,35 +3512,48 @@ function nearbyScreen() {
 }
 
 // ---- CURRENCY CONVERTER -----------------------------------------------------
-function currencyScreen() {
-  const c = getCountry(getActiveCountry());
-  const local = c ? c.currency : 'THB';
-  const home = store.profile.homeCurrency || 'USD';
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Currency', '#home'));
+// Shared amount/currency <-> amount/currency control: "[1][USD▾] = [x][THB▾]", the middle "="
+// doubling as the swap button so direction flips in one tap without a second control eating
+// space. Both the standalone Currency screen and the compact card inside Budget build on this
+// so the shape, the maths and the live/offline note never drift apart between them — only the
+// two starting currencies are the caller's job.
+function fxConverterControl(fromDefault, toDefault) {
+  const amount = h('input', { type: 'number', value: '1', inputmode: 'decimal', 'aria-label': 'Amount' });
+  const fromSel = currencySelect(fromDefault);
+  const toSel = currencySelect(toDefault);
+  const out = h('input', { type: 'text', readonly: '', tabindex: '-1', class: 'fx-out', 'aria-label': 'Converted amount', 'aria-live': 'polite' });
   const rates = getRates();
-  wrap.append(h('div', { class: 'banner' }, rates.live
-    ? `Live mid-market rates as of ${rates.date}.`
-    : 'Approximate rates (offline baseline). Connect to the internet and refresh to update.'));
-
-  const amount = h('input', { type: 'number', value: '1', inputmode: 'decimal' });
-  const fromSel = currencySelect(home);
-  const toSel = currencySelect(local);
-  const out = h('p', { class: 'fx-result' }, '');
   function recompute() {
     const v = parseFloat(amount.value) || 0;
     const r = convert(v, fromSel.value, toSel.value);
-    out.textContent = r == null ? 'Rate unavailable for this pair'
-      : `${v.toLocaleString()} ${fromSel.value} = ${r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 })} ${toSel.value}`;
+    out.value = r == null ? '—' : r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 });
   }
   amount.addEventListener('input', recompute);
   fromSel.addEventListener('change', recompute);
   toSel.addEventListener('change', recompute);
-  wrap.append(h('div', { class: 'card' }, [
-    field('Amount', amount), field('From', fromSel),
-    h('button', { class: 'btn ghost', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '⇅ Swap'),
-    field('To', toSel), out,
-  ]));
+  const wrap = h('div', { class: 'fx-widget' }, [
+    h('div', { class: 'fx-row' }, [
+      h('div', { class: 'fx-side' }, [amount, fromSel]),
+      h('button', { type: 'button', class: 'fx-eq', title: 'Swap currencies', 'aria-label': 'Swap currencies', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '='),
+      h('div', { class: 'fx-side' }, [out, toSel]),
+    ]),
+    h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
+  ]);
+  recompute();
+  return wrap;
+}
+
+function currencyScreen() {
+  // focusSpot(), not the last-viewed Explore tab — "the country the traveller is in or headed
+  // to," same resolver Places/Weather/Budget already anchor on, so this default is right even
+  // if the last country tab they browsed was a different one.
+  const fc = focusSpot().spot.country || getActiveCountry();
+  const c = getCountry(fc);
+  const local = c ? c.currency : 'THB';
+  const home = homeCurrency();
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('Currency', '#home'));
+  wrap.append(h('div', { class: 'card' }, [fxConverterControl(home, local)]));
 
   const quick = h('div', { class: 'card' }, [h('h2', {}, `Quick guide: ${home} → ${local}`)]);
   [1, 5, 10, 20, 50, 100].forEach((n) => {
@@ -3538,7 +3569,6 @@ function currencyScreen() {
   wrap.append(h('button', { class: 'btn block', onclick: async () => { await refreshRates(); go('#currency'); } }, 'Refresh rates (needs internet)'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Indicative mid-market values for guidance; money changers and cards apply their own spread.'));
   mount(wrap, '#home');
-  recompute();
 }
 
 // The traveller's home currency (set in Settings; defaults to USD).
@@ -9976,8 +10006,12 @@ function bargainScreen() {
 // every logged spend can be corrected (amount, currency, note), not only deleted.
 let editExpenseId = null;
 // ---- expenses: categories, budget target, donut chart, projection ----------
-// A small, fixed taxonomy so spends roll up into a clear picture. Colours are distinct
-// and readable on both themes; they drive the donut and the legend dots.
+// The 5 built-ins are fixed; the traveller can add their own on top of them, stored in prefs
+// so they persist and survive backup/restore. A custom category is never a second, separate
+// list — expCatsAll() is what every picker, sum, and label actually iterates, so a custom
+// category is exactly as first-class as Food or Stay everywhere one appears. (This is the fix
+// for the "categories don't join" report: there was no way to add one before, so whatever
+// prompted that report had nowhere to go but silently fold into Other.)
 const EXP_CATS = [
   { id: 'food', label: 'Food', emoji: '🍜', color: '#E0A100' },
   { id: 'stay', label: 'Stay', emoji: '🛏', color: '#9C5780' },
@@ -9986,21 +10020,68 @@ const EXP_CATS = [
   { id: 'other', label: 'Other', emoji: '•', color: '#8A8A8A' },
 ];
 const EXP_CAT = Object.fromEntries(EXP_CATS.map((c) => [c.id, c]));
-function expCatOf(b) { return (b && EXP_CAT[b.category]) ? b.category : 'other'; }
+const EXP_CUSTOM_MAX = 6;
+const EXP_CUSTOM_PALETTE = ['#B15C2E', '#4E7A51', '#7A5CB1', '#2E7AB1', '#B15C8E', '#6B7A2E'];
+function customExpCats() { const p = store.profile.prefs; return Array.isArray(p.customExpCats) ? p.customExpCats : []; }
+function expCatsAll() { return [...EXP_CATS, ...customExpCats()]; }
+function expCatLookup(id) { return expCatsAll().find((c) => c.id === id) || EXP_CAT.other; }
+function expCatOf(b) { return (b && b.category && expCatsAll().some((c) => c.id === b.category)) ? b.category : 'other'; }
+// Adds a custom category (name only; colour auto-assigned from a fixed palette so it stays
+// distinct from the 5 built-ins and from other custom ones) and returns it, or null if the
+// name is empty or the cap is already reached.
+function addCustomExpCat(label) {
+  const name = String(label || '').trim().slice(0, 20);
+  if (!name) return null;
+  const cats = customExpCats();
+  if (cats.length >= EXP_CUSTOM_MAX) return null;
+  const existing = new Set(expCatsAll().map((c) => c.id));
+  const base = 'c_' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '').slice(0, 24) || 'custom');
+  let id = base, n = 2; while (existing.has(id)) id = `${base}-${n++}`;
+  const cat = { id, label: name, emoji: '🏷', color: EXP_CUSTOM_PALETTE[cats.length % EXP_CUSTOM_PALETTE.length] };
+  cats.push(cat); store.profile.prefs.customExpCats = cats; save();
+  return cat;
+}
+// Removes a custom category; any expense already logged under it folds back to Other rather
+// than pointing at a category that no longer exists (mirrors idPruneMeta's tidy-up-after-self).
+function removeCustomExpCat(id) {
+  store.profile.prefs.customExpCats = customExpCats().filter((c) => c.id !== id);
+  (store.trip.budgetLog || []).forEach((b) => { if (b.category === id) b.category = 'other'; });
+  save();
+}
 
-// Segmented category picker. Reflects the choice in place and exposes .get()/.set().
+// Segmented category picker: the fixed 5 plus any the traveller has added, in one row — a
+// custom category is never a second list. The trailing "+ Add" opens a one-line name field in
+// place (Enter to commit), mirroring the identifier screen's own tag-add idiom rather than a
+// native prompt(). Rebuilds itself locally (never the global render()) so it stays safe to use
+// mid-form, before the rest of the expense has been saved. Reflects the choice in place and
+// exposes .get()/.set().
 function expCatPicker(current) {
-  let val = EXP_CAT[current] ? current : 'other';
+  let val = expCatsAll().some((c) => c.id === current) ? current : 'other';
+  let adding = false;
   const row = h('div', { class: 'chips exp-cat-pick' });
-  const apply = () => { [...row.children].forEach((x, i) => { const on = EXP_CATS[i].id === val; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); }); };
-  EXP_CATS.forEach((c) => {
-    row.append(h('button', {
-      type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
-      onclick: () => { val = c.id; apply(); },
-    }, `${c.emoji} ${c.label}`));
-  });
+  function build() {
+    row.replaceChildren();
+    expCatsAll().forEach((c) => {
+      row.append(h('button', {
+        type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
+        onclick: () => { val = c.id; build(); },
+      }, `${c.emoji} ${c.label}`));
+    });
+    if (customExpCats().length < EXP_CUSTOM_MAX) {
+      if (adding) {
+        const input = h('input', { type: 'text', class: 'exp-cat-new', placeholder: 'Category name', maxlength: '20', 'aria-label': 'New category name' });
+        const commit = () => { const cat = addCustomExpCat(input.value); adding = false; if (cat) val = cat.id; build(); };
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { adding = false; build(); } });
+        row.append(input, h('button', { type: 'button', class: 'chip', 'aria-label': 'Add this category', onclick: commit }, '✓'));
+        setTimeout(() => input.focus(), 0);
+      } else {
+        row.append(h('button', { type: 'button', class: 'chip ghost', onclick: () => { adding = true; build(); } }, '＋ Add'));
+      }
+    }
+  }
+  build();
   row.get = () => val;
-  row.set = (id) => { if (EXP_CAT[id]) { val = id; apply(); } };
+  row.set = (id) => { if (expCatsAll().some((c) => c.id === id)) { val = id; build(); } };
   return row;
 }
 
@@ -10048,15 +10129,30 @@ function expenseAddCard(opts = {}) {
   const bNote = h('input', { 'aria-label': 'What the expense was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
   const bCat = expCatPicker('other');
   const bChips = expTitleChips(bNote, bCat);
+  const dateField = field('Date', bDate);
+  // A rent payment or a month-long SIM plan does not belong to one day — checking this swaps
+  // the day picker for a month picker (native <input type=month>) and the logged date
+  // normalises to that month's 1st, tagged monthly:true so the log/exports can label it
+  // "August 2026" instead of a single day (see fmtLogDateFor).
+  const bMonthly = h('input', { type: 'checkbox' });
+  bMonthly.addEventListener('change', () => {
+    const monthly = bMonthly.checked;
+    bDate.type = monthly ? 'month' : 'date';
+    bDate.value = monthly ? todayISO().slice(0, 7) : todayISO();
+    dateField.firstElementChild.textContent = monthly ? 'Month' : 'Date';
+  });
+  const monthlyToggle = h('label', { class: 'exp-monthly-toggle' }, [bMonthly, ' 🗓 Monthly expense (rent, SIM plan…)']);
   const add = () => {
-    if (!bAmt.value) return;
-    const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date: bDate.value });
+    if (!bAmt.value || !bDate.value) return;
+    const monthly = bMonthly.checked;
+    const date = monthly ? `${bDate.value}-01` : bDate.value;
+    const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date, monthly });
     if (opts.afterAdd) opts.afterAdd(item);
   };
   return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
     h('h2', { style: 'margin-top:0' }, 'Log an expense'),
     h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
-    field('On what?', bNote), bChips, field('Category', bCat), field('Date', bDate),
+    field('On what?', bNote), bChips, field('Category', bCat), monthlyToggle, dateField,
     h('button', { class: 'btn block', style: 'margin-top:8px', onclick: add }, '＋ Add expense'),
   ]);
 }
@@ -10104,7 +10200,8 @@ export function budgetSummaryCard() {
   const target = budgetTarget();
   if (!log.length && !target) return null;
   const home = homeCurrency();
-  const sums = {}; EXP_CATS.forEach((c) => { sums[c.id] = 0; });
+  const cats = expCatsAll();
+  const sums = {}; cats.forEach((c) => { sums[c.id] = 0; });
   let spent = 0, unknown = false;
   log.forEach((b) => {
     const amt = parseFloat(b.amount) || 0; if (!amt) return;
@@ -10113,7 +10210,7 @@ export function budgetSummaryCard() {
     if (conv == null || isNaN(conv)) { unknown = true; return; }
     sums[expCatOf(b)] += conv; spent += conv;
   });
-  const segs = EXP_CATS.map((c) => ({ value: sums[c.id], color: c.color }));
+  const segs = cats.map((c) => ({ value: sums[c.id], color: c.color }));
   const card = h('div', { class: 'card budget-card' });
   card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
 
@@ -10121,8 +10218,10 @@ export function budgetSummaryCard() {
   // Legend rows sort biggest-first and carry each category's share of total spend alongside
   // its amount — "what percentage of spending is on each category," the fun/informative
   // per-category stat requested for the budget section, right next to the donut it explains.
+  // cats includes any custom categories the traveller has added — they show up here exactly
+  // like the 5 built-ins, never in a separate list.
   const legend = h('div', { class: 'budget-legend' });
-  EXP_CATS.filter((c) => sums[c.id] > 0).sort((a, b) => sums[b.id] - sums[a.id]).forEach((c) => {
+  cats.filter((c) => sums[c.id] > 0).sort((a, b) => sums[b.id] - sums[a.id]).forEach((c) => {
     const pct = spent > 0 ? Math.round(sums[c.id] / spent * 100) : 0;
     legend.append(h('div', { class: 'blg-row' }, [
       h('span', { class: 'blg-dot', style: `background:${c.color}` }),
@@ -10161,47 +10260,145 @@ export function budgetSummaryCard() {
   }
   if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some expenses use a currency with no cached rate — refresh in Currency to include them.'));
   card.append(budgetTargetEditor());
-  card.append(budgetFxCard());
+  const catMgr = budgetCategoryManager(); if (catMgr) card.append(catMgr);
   return card;
 }
 
-// A compact currency-converter fold nested right inside the Budget card — same amount/from/
-// to/swap/result shape as the standalone Currency screen (#currency) and backed by the exact
-// same cached rates (convert()/getRates() from currency.js), just enough to check a figure
-// while logging an expense without leaving this screen. Defaults mirror the standalone
-// screen's own default direction (home currency → the currency you're spending in here).
+// A compact currency-converter card for the Budget screen — same fxConverterControl() as the
+// standalone Currency screen, backed by the exact same cached rates (convert()/getRates() from
+// currency.js). Defaults mirror the standalone screen's own default direction (home currency →
+// wherever focusSpot() says the traveller actually is). Rendered unconditionally at the top of
+// Expenses & budget (see expensesScreen) — unlike the summary/donut below it, this is useful
+// the moment you land here, before anything has ever been logged.
 function budgetFxCard() {
   const home = homeCurrency();
   const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
   const local = c ? c.currency : 'THB';
-  const det = h('details', { class: 'budget-set' });
-  det.append(h('summary', {}, '💱 Currency converter'));
-  const rates = getRates();
-  const amount = h('input', { type: 'number', value: '1', inputmode: 'decimal', 'aria-label': 'Amount to convert' });
-  const fromSel = currencySelect(home);
-  const toSel = currencySelect(local);
-  const out = h('p', { class: 'fx-result', style: 'margin:8px 0 0' }, '');
-  function recompute() {
-    const v = parseFloat(amount.value) || 0;
-    const r = convert(v, fromSel.value, toSel.value);
-    out.textContent = r == null ? 'Rate unavailable for this pair'
-      : `${v.toLocaleString()} ${fromSel.value} = ${r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 })} ${toSel.value}`;
+  return h('div', { class: 'card' }, [
+    h('h2', { style: 'margin-top:0' }, '💱 Currency converter'),
+    fxConverterControl(home, local),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#currency') }, 'Full converter, quick guide & cash-swap →'),
+  ]);
+}
+
+// A quick visual read on spending trend — one bar per day for the last 14 days, tallest bar
+// sets the scale. Purely a glance-and-go on top of the precise numbers in the legend above;
+// gated on a handful of entries so a brand-new trip is not shown a meaningless flat chart.
+// Monthly-flagged entries (see expenseAddCard) are excluded — a whole month's rent would
+// otherwise dwarf the scale and flatten every real daily bar to nothing.
+function budgetTrendCard() {
+  const log = (store.trip.budgetLog || []).filter((b) => !b.monthly);
+  if (log.length < 3) return null;
+  const home = homeCurrency();
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
   }
-  amount.addEventListener('input', recompute);
-  fromSel.addEventListener('change', recompute);
-  toSel.addEventListener('change', recompute);
+  const byDay = Object.fromEntries(days.map((d) => [d, 0]));
+  let any = false;
+  log.forEach((b) => {
+    if (!(b.date in byDay)) return;
+    const amt = parseFloat(b.amount) || 0; if (!amt) return;
+    const cc = b.currency || home;
+    const conv = cc === home ? amt : convert(amt, cc, home);
+    if (conv == null || isNaN(conv)) return;
+    byDay[b.date] += conv; any = true;
+  });
+  if (!any) return null;
+  const max = Math.max(...Object.values(byDay), 1);
+  const bars = days.map((d) => {
+    const v = byDay[d];
+    const pct = v > 0 ? Math.max(4, Math.round(v / max * 100)) : 0;
+    const dObj = new Date(`${d}T00:00`);
+    const lbl = `${isNaN(dObj) ? d : dObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${Math.round(v).toLocaleString()} ${home}`;
+    return h('div', { class: 'spark-bar', title: lbl, 'aria-label': lbl }, [h('span', { style: `height:${pct}%` })]);
+  });
+  const card = h('div', { class: 'card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '📈 Daily spend, last 14 days'));
+  card.append(h('div', { class: 'spark-row' }, bars));
+  return card;
+}
+
+// A second, separate way to read "how much of my budget is gone" — cash withdrawn/drawn
+// against the trip, tracked independently of the itemised per-category log above. Day-to-day
+// spending usually comes out of exactly this cash, but logging every small purchase is
+// unrealistic in practice while remembering "I took out 10,000 THB at that ATM" usually is not
+// — so this is often the more honest number, and it is kept as its own wheel rather than folded
+// into the category donut so neither reading masks the other. Deliberately not surfaced on
+// Home — see budgetSummaryCard/quickSpendRow there — this lives only in the Budget screen.
+function budgetWithdrawalsCard() {
+  const home = homeCurrency();
+  const target = budgetTarget();
+  const list = (store.trip.withdrawals || []).slice();
+  let total = 0, unknown = false;
+  list.forEach((w) => {
+    const amt = parseFloat(w.amount) || 0; if (!amt) return;
+    const cc = w.currency || home;
+    const conv = cc === home ? amt : convert(amt, cc, home);
+    if (conv == null || isNaN(conv)) { unknown = true; return; }
+    total += conv;
+  });
+  const WD_COLOR = '#B15C2E';
+  const card = h('div', { class: 'card budget-card withdrawals-card' });
+  card.append(h('h2', { style: 'margin-top:0' }, '🏧 Cash withdrawals'));
+  card.append(h('p', { class: 'muted', style: 'margin:4px 0 10px' },
+    'What you have actually pulled out or drawn against your budget — a second, more honest read on where you stand, alongside the itemised categories above.'));
+
+  if (target && target.per === 'trip' && target.amount > 0) {
+    const remaining = Math.max(0, target.amount - total);
+    const segs = [{ value: total, color: WD_COLOR }, { value: remaining, color: 'var(--line)' }];
+    const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, total > 0 ? Math.round(total).toLocaleString() : '—', home) });
+    const legend = h('div', { class: 'budget-legend' }, [
+      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: `background:${WD_COLOR}` }), h('span', { class: 'blg-lbl' }, 'Withdrawn'), h('span', { class: 'blg-val' }, `${Math.round(total).toLocaleString()} ${home} · ${Math.round(total / target.amount * 100)}%`)]),
+      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, `${Math.round(remaining).toLocaleString()} ${home}`)]),
+    ]);
+    card.append(h('div', { class: 'budget-head' }, [donut, legend]));
+  } else {
+    card.append(h('p', { style: 'margin:0 0 10px' }, [
+      h('strong', {}, `${total.toLocaleString()} ${home}`), h('span', { class: 'muted' }, ' withdrawn so far'),
+    ]));
+    card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' }, 'Set a whole-trip budget above to see this as a share of the total.'));
+  }
+  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' }, 'Some withdrawals use a currency with no cached rate — refresh in Currency to include them.'));
+
+  const wAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', 'aria-label': 'Withdrawal amount' });
+  const wCur = currencySelect(home);
+  const wDate = h('input', { type: 'date', value: todayISO() });
+  const wNote = h('input', { type: 'text', placeholder: 'e.g. Bangkok airport ATM', 'aria-label': 'Note' });
+  const det = h('details', { class: 'budget-set' });
+  det.append(h('summary', {}, '＋ Log a withdrawal'));
   det.append(
-    field('Amount', amount),
-    field('From', fromSel),
-    h('button', { class: 'btn ghost', type: 'button', style: 'margin:2px 0', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '⇅ Swap'),
-    field('To', toSel),
-    out,
-    h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh in the full converter to update.'),
-    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#currency') }, 'Full converter, quick guide & cash-swap →'),
+    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', wAmt), field('Currency', wCur)]),
+    field('Note (optional)', wNote), field('Date', wDate),
+    h('button', { class: 'btn block', style: 'margin-top:6px', onclick: () => { if (!wAmt.value) return; addWithdrawal({ amount: wAmt.value, currency: wCur.value, date: wDate.value, note: wNote.value.trim() }); render(); } }, '＋ Add withdrawal'),
   );
-  recompute();
-  return det;
+  card.append(det);
+
+  if (list.length) {
+    const recent = h('div', {});
+    recent.append(h('h3', { style: 'margin:12px 0 4px' }, 'Recent withdrawals'));
+    list.slice().reverse().slice(0, 20).forEach((w) => {
+      const approx = approxHome(w.amount, w.currency);
+      recent.append(h('div', { class: 'exp-row' }, [
+        h('span', { class: 'exp-row-cat', style: `background:${WD_COLOR}22;color:${WD_COLOR}` }, '🏧'),
+        h('div', { class: 'exp-row-mid' }, [
+          h('div', { class: 'exp-row-note' }, w.note || 'Withdrawal'),
+          h('div', { class: 'exp-row-date muted' }, fmtLogDate(w.date)),
+        ]),
+        h('div', { class: 'exp-row-amt' }, [
+          h('strong', {}, `${w.amount} ${w.currency}`),
+          approx ? h('span', { class: 'muted exp-row-approx' }, approx) : null,
+        ]),
+        h('div', { class: 'exp-row-actions' }, [
+          h('button', { class: 'chip', 'aria-label': 'Delete this withdrawal', onclick: () => { confirmAction({ title: 'Delete this withdrawal?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteWithdrawal(w.id); render(); } }); } }, '✕'),
+        ]),
+      ]));
+    });
+    card.append(recent);
+  }
+  return card;
 }
 
 function budgetTargetEditor() {
@@ -10219,6 +10416,24 @@ function budgetTargetEditor() {
   return det;
 }
 
+// Lets the traveller remove a custom category they added by mistake — deliberately separate
+// from the fast-path picker (expCatPicker) so a stray tap while logging an expense can never
+// delete one. Removing reassigns any already-logged expenses back to Other (removeCustomExpCat)
+// rather than leaving them pointing at a category that no longer exists. Only rendered once at
+// least one custom category exists.
+function budgetCategoryManager() {
+  const cats = customExpCats();
+  if (!cats.length) return null;
+  const det = h('details', { class: 'budget-set' });
+  det.append(h('summary', {}, '🏷 Manage your categories'));
+  const row = h('div', { class: 'chips' }, cats.map((c) => h('button', {
+    type: 'button', class: 'exp-cat-chip removable', 'aria-label': `Remove category ${c.label}`,
+    onclick: () => { confirmAction({ title: `Remove “${c.label}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeCustomExpCat(c.id); render(); } }); },
+  }, [`${c.emoji} ${c.label}`, h('span', { class: 'x' }, '✕')])));
+  det.append(row);
+  return det;
+}
+
 // A short, locale-aware date label for the expense list ("Today", "Yesterday", or a short date).
 function fmtLogDate(iso) {
   if (!iso) return '';
@@ -10228,6 +10443,16 @@ function fmtLogDate(iso) {
   if (iso === `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`) return 'Yesterday';
   const d = new Date(`${iso}T00:00`);
   return isNaN(d) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+// Same, but a monthly-flagged item (rent, a SIM plan — logged against the whole month rather
+// than one day, see expenseAddCard's "monthly expense" toggle) reads as "August 2026", not the
+// 1st of the month it is actually stored against.
+function fmtLogDateFor(b) {
+  if (b && b.monthly && b.date) {
+    const d = new Date(`${b.date}T00:00`);
+    if (!isNaN(d)) return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  }
+  return fmtLogDate(b ? b.date : '');
 }
 function budgetLogRow(b) {
   if (editExpenseId === b.id) {
@@ -10247,12 +10472,12 @@ function budgetLogRow(b) {
     ]);
   }
   const approx = approxHome(b.amount, b.currency);
-  const cat = EXP_CAT[expCatOf(b)];
+  const cat = expCatLookup(expCatOf(b));
   return h('div', { class: 'exp-row' }, [
     h('span', { class: 'exp-row-cat', style: `background:${cat.color}22;color:${cat.color}`, title: cat.label }, cat.emoji),
     h('div', { class: 'exp-row-mid' }, [
       h('div', { class: 'exp-row-note' }, b.note || cat.label),
-      h('div', { class: 'exp-row-date muted' }, fmtLogDate(b.date)),
+      h('div', { class: 'exp-row-date muted' }, fmtLogDateFor(b)),
     ]),
     h('div', { class: 'exp-row-amt' }, [
       h('strong', {}, `${b.amount} ${b.currency}`),
@@ -10274,9 +10499,20 @@ function expensesScreen() {
   const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
 
-  // The budget picture first: donut, remaining, and an over/under-budget projection.
+  // The currency converter leads, its own separate section — useful the moment you land here,
+  // long before anything has been logged or a budget target set (unlike the cards below, which
+  // only exist once there is something to summarise).
+  wrap.append(collapsibleCard(budgetFxCard(), 'budgetFxOpen', true));
+
+  // The day-to-day picture next: donut, remaining, and an over/under-budget projection.
   const summary = budgetSummaryCard();
   if (summary) wrap.append(summary);
+
+  const trend = budgetTrendCard(); if (trend) wrap.append(trend);
+
+  // Cash withdrawals: a separate wheel and log, deliberately not the same card as the
+  // categorised summary above (see budgetWithdrawalsCard for why).
+  wrap.append(budgetWithdrawalsCard());
 
   wrap.append(expenseAddCard({ currency: c ? c.currency : 'THB', afterAdd: () => go('#expenses') }));
 
@@ -12554,7 +12790,7 @@ async function exportPhotosZip() {
 }
 function expenseTable() {
   const log = (store.trip.budgetLog || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  return { headers: ['Date', 'Amount', 'Currency', 'Category', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', (EXP_CAT[expCatOf(b)] || {}).label || 'Other', b.note || '']) };
+  return { headers: ['Date', 'Amount', 'Currency', 'Category', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', expCatLookup(expCatOf(b)).label, b.note || '']) };
 }
 
 // The headline export: ONE beautiful, self-contained web page a traveller can open on any
