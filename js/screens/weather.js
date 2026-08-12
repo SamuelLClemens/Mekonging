@@ -421,14 +421,20 @@ function wxArcWedge(cx, cy, rIn, rOut, a0, a1) {
   const large = (a1 - a0) > Math.PI ? 1 : 0;
   return `M${xo0.toFixed(1)},${yo0.toFixed(1)} A${rOut},${rOut} 0 ${large} 1 ${xo1.toFixed(1)},${yo1.toFixed(1)} L${xi1.toFixed(1)},${yi1.toFixed(1)} A${rIn},${rIn} 0 ${large} 0 ${xi0.toFixed(1)},${yi0.toFixed(1)} Z`;
 }
-function wxHourlyRingSvg(rec, metric, city) {
-  const cfg = WX_METRICS[metric];
+// The next 24 hourly records from "now" (floored to the current hour) — shared by the ring
+// and its click-to-inspect detail panel so both always index the exact same window.
+function wxNext24h(rec) {
   const hrs = Array.isArray(rec.hourly) ? rec.hourly : [];
   const now = new Date();
   const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
   let start = hrs.findIndex((x) => { const d = new Date(x.t); return !isNaN(d) && d >= nowFloor; });
   if (start < 0) start = 0;
-  const win = hrs.slice(start, start + 24);
+  return hrs.slice(start, start + 24);
+}
+// `selectedIdx` (0-23, or null) highlights that one wedge with an accent outline and swaps the
+// centre readout from "now" to that hour — tapping a wedge (see wxVizCard) is how it gets set.
+function wxHourlyRingSvg(win, metric, city, selectedIdx) {
+  const cfg = WX_METRICS[metric];
   if (!win.length) return '';
   const vals = win.map(cfg.hourly).filter((v) => v != null);
   if (!vals.length) return '';
@@ -446,7 +452,8 @@ function wxHourlyRingSvg(rec, metric, city) {
   win.forEach((x, i) => {
     const a0 = i * step - Math.PI / 2 + gap;
     const a1 = (i + 1) * step - Math.PI / 2 - gap;
-    wedges += `<path d="${wxArcWedge(cx, cy, rIn, rOut, a0, a1)}" fill="${wxMetricColor(metric, cfg.hourly(x), lo, hi)}"><title>${fmtClock(new Date(x.t).getHours())}: ${cfg.fmt(cfg.hourly(x))}</title></path>`;
+    const sel = i === selectedIdx ? ' wx-wedge-sel' : '';
+    wedges += `<path d="${wxArcWedge(cx, cy, rIn, rOut, a0, a1)}" fill="${wxMetricColor(metric, cfg.hourly(x), lo, hi)}" class="wx-wedge${sel}" data-i="${i}"><title>${fmtClock(new Date(x.t).getHours())}: ${cfg.fmt(cfg.hourly(x))}</title></path>`;
   });
   // Hour labels — every 3 hours (8 around the ring) rather than every 6 (4), plus a short
   // tick connecting each label to its wedge, so it reads clearly which segment is which hour
@@ -465,10 +472,28 @@ function wxHourlyRingSvg(rec, metric, city) {
     labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" class="wx-ring-lbl${i === 0 ? ' wx-ring-lbl-now' : ''}">${fmtClock(new Date(win[i].t).getHours())}</text>`;
   });
   const nowMark = `<circle cx="${cx}" cy="${(cy - rOut - 3).toFixed(1)}" r="3.4" class="wx-ring-now"/>`;
-  const center = `<text x="${cx}" y="${cy - 6}" text-anchor="middle" class="wx-ring-val">${cfg.fmt(cfg.hourly(win[0]))}</text>`
+  // Centre readout follows the selection: a tapped wedge takes over from "now" until cleared
+  // (tap it again) or another wedge is tapped.
+  const focusIdx = selectedIdx != null ? selectedIdx : 0;
+  const focusX = win[focusIdx];
+  const center = `<text x="${cx}" y="${cy - 6}" text-anchor="middle" class="wx-ring-val">${cfg.fmt(cfg.hourly(focusX))}</text>`
     + `<text x="${cx}" y="${cy + 15}" text-anchor="middle" class="wx-ring-sub">${esc(city)}</text>`
-    + `<text x="${cx}" y="${cy + 32}" text-anchor="middle" class="wx-ring-sub2">now</text>`;
+    + `<text x="${cx}" y="${cy + 32}" text-anchor="middle" class="wx-ring-sub2">${selectedIdx != null ? esc(fmtClock(new Date(focusX.t).getHours())) : 'now'}</text>`;
   return `<svg viewBox="0 0 280 280" class="wx-ring" role="img" aria-label="Next 24 hours ${metric}" xmlns="http://www.w3.org/2000/svg">${wedges}${labels}${nowMark}${center}</svg>`;
+}
+// All-layers detail for one tapped hour — the ring is deliberately one metric's colour at a
+// time; this answers "what about every OTHER layer at that same hour" in one glance, right
+// under the ring rather than a navigation away from it.
+function wxHourDetailCard(x) {
+  const [label, emo] = wmo(x.code);
+  const rows = Object.values(WX_METRICS).map((cfg) => h('div', { class: 'wx-detail-row' }, [
+    h('span', { class: 'wx-detail-lbl' }, cfg.label),
+    h('span', { class: 'wx-detail-val' }, cfg.fmt(cfg.hourly(x))),
+  ]));
+  return h('div', { class: 'wx-hour-detail' }, [
+    h('div', { class: 'wx-detail-head' }, [h('strong', {}, fmtClock(new Date(x.t).getHours())), ` · ${emo} ${label}`]),
+    ...rows,
+  ]);
 }
 function wxDayHumAvg(rec, date) {
   const hs = (rec.hourly || []).filter((x) => String(x.t).slice(0, 10) === date && x.hum != null);
@@ -543,15 +568,35 @@ export function wxVizCard(rec, spot) {
   const card = h('div', { class: 'card wx-viz' });
   const chipsRow = h('div', { class: 'chips wx-metric-row' });
   const ringSlot = h('div', {});
+  const detailSlot = h('div', {});
   const calSlot = h('div', {});
+  const win = wxNext24h(rec);
+  let selectedIdx = null;
 
-  function paintMetric() {
+  // Ring + detail panel only — cheap, so a wedge tap never has to also rebuild the calendar.
+  function paintRing() {
     ringSlot.innerHTML = '';
-    const ring = wxHourlyRingSvg(rec, wxMetric, spot.city);
+    const ring = wxHourlyRingSvg(win, wxMetric, spot.city, selectedIdx);
     if (ring) ringSlot.append(h('div', { class: 'wx-ring-wrap', html: ring }));
+    detailSlot.innerHTML = '';
+    if (selectedIdx != null && win[selectedIdx]) detailSlot.append(wxHourDetailCard(win[selectedIdx]));
+  }
+  function paintMetric() {
+    paintRing();
     calSlot.innerHTML = '';
     calSlot.append(wxMonthCalendarNode(rec, wxMetric));
   }
+  // Tap a wedge to pin that hour: highlights it on the ring and lists every layer's value for
+  // that exact hour in detailSlot, not just whichever single metric the ring is coloured by.
+  // Tapping the same wedge again clears the selection back to "now". One delegated listener
+  // survives every ringSlot.innerHTML repaint, so it is attached once, outside paintRing.
+  ringSlot.addEventListener('click', (e) => {
+    const path = e.target.closest('path[data-i]');
+    if (!path) return;
+    const i = Number(path.dataset.i);
+    selectedIdx = selectedIdx === i ? null : i;
+    paintRing();
+  });
 
   Object.keys(WX_METRICS).forEach((m) => {
     chipsRow.append(h('button', {
@@ -567,7 +612,7 @@ export function wxVizCard(rec, spot) {
     }, WX_METRICS[m].label));
   });
 
-  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:0 0 6px' }, 'Next 24 hours'), chipsRow, ringSlot);
+  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:0 0 6px' }, 'Next 24 hours'), chipsRow, ringSlot, detailSlot);
   const hourly = wxHourlyListNode(rec);
   if (hourly) card.append(hourly);
   card.append(h('h3', { class: 'wx-cal-h', style: 'margin:14px 0 6px' }, 'Upcoming forecast'), calSlot);
