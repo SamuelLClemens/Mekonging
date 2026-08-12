@@ -2750,3 +2750,66 @@ twice in the preview tool does not itself fire the app's `hashchange`-driven re-
 router behaviour — the hash genuinely did not change), which briefly looked like a stale budget
 target during manual verification. Routing through a different hash and back re-renders
 correctly, matching how a real user would actually move between screens.
+
+### Budget & Expenses: rename, reorder, colour-coded trend, honest pace, and two minimizeable logs (mk-v0.379.0)
+
+Direct user request, one screen, six changes.
+
+**Renamed "Expenses & budget" → "Budget & Expenses"** — matches how the request referred to it
+throughout, and the new order below is now literally accurate: the budget overview leads,
+expenses come after. Dropped the "Log each expense as you go — it converts to your home
+currency..." intro line entirely; the screen explains itself.
+
+**Reordered top-to-bottom**: `budgetSummaryCard()` (donut/legend/target/projection) now leads,
+immediately followed by `budgetTrendCard()` — together "the budget section" — then
+`budgetFxCard()`, then `expenseAddCard()` ("Log an expense"), then a foldable Recent-expenses
+list, then `budgetWithdrawalsCard()` last. Two direct constraints drove this: "start with budget
+section then currency converter" and "cash withdrawals should come after log an expense." The
+currency converter also lost its `collapsibleCard` fold — nothing in a 5-field
+"[1][USD] = [33.12][THB]" widget needs hiding, and removing the fold affordance is the actual
+content of "simple, lean and elegant," not a restyle.
+
+**Daily spend, colour-coded by category**: `budgetTrendCard()`'s bars were a single flat colour;
+each of the 14 bars is now a stack of category segments (the same hex colours as
+`expCatsAll()`, so it reads directly against the legend above it), built bottom-up in a fixed
+category order via `flex-direction: column-reverse` so the same category always occupies the
+same band from one day's bar to the next. Zero-spend days keep the old faint `var(--line)`
+baseline tick rather than vanishing outright. A one-line caption points back at the legend above
+rather than duplicating it.
+
+**Withdrawals: brief help text + an honest pace read.** Cut the two-clause help paragraph down
+to one short line. Added a pace comparison — % of the trip elapsed vs. % of the whole-trip
+budget withdrawn, from `tripSpanDays()` and `budgetTarget()` — as two slim reused `.budget-bar`
+tracks plus a one-line verdict ("✓ right on pace," "⚠️ withdrawing faster than the trip is
+passing (+N pts)," "✓ under pace"). Only appears once a trip span (an end date somewhere) and a
+whole-trip target both exist; silently omitted otherwise rather than explaining its own absence.
+
+**Withdrawals are now editable, and both Recent logs minimize.** Added `updateWithdrawal()` to
+state.js (mirrors `updateBudgetItem`) and `withdrawalRow()` in main.js (mirrors
+`budgetLogRow`'s flip-to-inline-editor pattern) — a withdrawal's amount, currency, note, and
+date can now be corrected, not only deleted. "Recent expenses" and "Recent withdrawals" are both
+wrapped in `collapsibleCard`, matching the pattern already used elsewhere on this screen; the
+withdrawals one nests inside the withdrawals card itself rather than standing alone, so folding
+it never hides the donut or the log-a-withdrawal form above it.
+
+**Categories together — re-verified, not re-built.** The request repeated "make sure all the
+categories are together... also users that already have categories of their own," but this was
+already true: `expenseAddCard()` is the single shared "Log an expense" card used by `#expenses`,
+My Trip's budget log, and Home's one-tap quick-spend row alike, and its `expCatPicker()` always
+reads `expCatsAll()` (the 5 built-ins plus whatever the traveller has added) — there is no
+second, hardcoded category list anywhere in the app to fall out of sync. No code changed here;
+confirmed by re-reading every call site.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.379.0`. No new files.
+
+**Verified in-browser**: seeded a whole-trip stop (giving `tripSpanDays()` a real span) plus
+expenses spanning several categories and days, including two categories logged on the same day.
+Confirmed card order top-to-bottom (Budget → Daily spend → Currency converter → Log an expense →
+Recent expenses → Cash withdrawals); confirmed one trend bar rendered two distinct
+category-coloured segments; confirmed the pace row showed the correct elapsed/withdrawn
+percentages and flipped to the "ahead of pace" wording and magenta fill past an 8-point gap;
+edited a withdrawal's amount via the ✎ button end-to-end (value pre-filled, changed, saved) and
+watched the total, the row, and the pace numbers all recompute live; toggled the
+Recent-withdrawals fold closed and confirmed the open state persisted to prefs; spot-checked
+dark mode (pace/trend colours all stay legible, `.over` correctly overrides to magenta). Console
+clean throughout; brace-balance clean on `main.js` and `state.js`.

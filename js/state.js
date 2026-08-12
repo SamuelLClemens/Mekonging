@@ -448,6 +448,17 @@ export function deleteWithdrawal(id) {
   const i = list.findIndex((x) => x.id === id);
   if (i >= 0) { list.splice(i, 1); save(); }
 }
+export function updateWithdrawal(id, patch = {}) {
+  const list = store.trip.withdrawals || [];
+  const w = list.find((x) => x.id === id);
+  if (!w) return null;
+  if (patch.amount !== undefined) w.amount = patch.amount;
+  if (patch.currency !== undefined) w.currency = patch.currency;
+  if (patch.note !== undefined) w.note = patch.note;
+  if (patch.date !== undefined) w.date = patch.date;
+  list.sort((a, c) => (a.date < c.date ? -1 : 1));
+  save(); return w;
+}
 
 // --- travel journal ----------------------------------------------------------
 export function addJournalEntry({ title, text, place = '', coords = null, ts = null, photoKey = null, photoKeys = null, weather = '', audioKey = null }) {

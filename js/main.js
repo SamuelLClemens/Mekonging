@@ -10,7 +10,7 @@ import {
   getAlbum, addAlbumPhoto, updateAlbumPhoto, deleteAlbumPhoto,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
-  addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem, addWithdrawal, deleteWithdrawal,
+  addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem, addWithdrawal, deleteWithdrawal, updateWithdrawal,
   setMyStay, getMyStay, clearMyStay,
   getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.378.0';
+const APP_VERSION = 'mk-v0.379.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2046,7 +2046,7 @@ export function tripSpendHome() {
 // next-plan-item folds into Calendar's sub-label, and online/offline is its own chip there.
 
 // One-tap "spend" logger for the merged Right-now card — the same shared "Log an expense"
-// card used everywhere a spend can be logged (expenseAddCard; Expenses & budget is the
+// card used everywhere a spend can be logged (expenseAddCard; Budget & Expenses is the
 // master), plus a slim "spent today" line beneath it. Used to be its own compact inline
 // row (amount/note/category only, no date, no title chips) that looked and behaved
 // differently from every other place an expense gets logged — unified per user request.
@@ -9942,7 +9942,7 @@ function tripScreen() {
   }
   store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));
   wrap.append(bud);
-  // Same "Log an expense" card as Expenses & budget (#expenses) — that screen is the master;
+  // Same "Log an expense" card as Budget & Expenses (#expenses) — that screen is the master;
   // this used to be its own, slightly different inline form (no date, no smart title chips).
   const c = getCountry(getActiveCountry());
   wrap.append(expenseAddCard({ currency: c ? c.currency : 'THB', afterAdd: () => go('#trip') }));
@@ -10005,6 +10005,8 @@ function bargainScreen() {
 // A budget-log row that flips to an inline editor — used on both Expenses and My Trip so
 // every logged spend can be corrected (amount, currency, note), not only deleted.
 let editExpenseId = null;
+// Same idea for a logged cash withdrawal — see withdrawalRow.
+let editWithdrawalId = null;
 // ---- expenses: categories, budget target, donut chart, projection ----------
 // The 5 built-ins are fixed; the traveller can add their own on top of them, stored in prefs
 // so they persist and survive backup/restore. A custom category is never a second, separate
@@ -10116,7 +10118,7 @@ function expTitleChips(noteEl, catPicker) {
     h('button', { type: 'button', class: 'chip ghost', onclick: () => { noteEl.value = f.title; if (catPicker) catPicker.set(f.category); } }, f.title)));
 }
 
-// The one "Log an expense" card, used everywhere a spend can be logged — Expenses & budget
+// The one "Log an expense" card, used everywhere a spend can be logged — Budget & Expenses
 // (#expenses) is the master; My Trip's budget log and Home's one-tap spend (quickSpendRow)
 // both reuse this exact function now instead of their own, slightly different inline forms,
 // so logging an expense looks and works identically no matter where you tap in from.
@@ -10267,9 +10269,9 @@ export function budgetSummaryCard() {
 // A compact currency-converter card for the Budget screen — same fxConverterControl() as the
 // standalone Currency screen, backed by the exact same cached rates (convert()/getRates() from
 // currency.js). Defaults mirror the standalone screen's own default direction (home currency →
-// wherever focusSpot() says the traveller actually is). Rendered unconditionally at the top of
-// Expenses & budget (see expensesScreen) — unlike the summary/donut below it, this is useful
-// the moment you land here, before anything has ever been logged.
+// wherever focusSpot() says the traveller actually is). Sits right after the budget summary in
+// Budget & Expenses (see expensesScreen), rendered plainly with no fold — nothing here needs
+// hiding — per direct request to keep it "simple, lean and elegant."
 function budgetFxCard() {
   const home = homeCurrency();
   const fc = focusSpot().spot.country || getActiveCountry();
@@ -10282,21 +10284,26 @@ function budgetFxCard() {
   ]);
 }
 
-// A quick visual read on spending trend — one bar per day for the last 14 days, tallest bar
-// sets the scale. Purely a glance-and-go on top of the precise numbers in the legend above;
-// gated on a handful of entries so a brand-new trip is not shown a meaningless flat chart.
-// Monthly-flagged entries (see expenseAddCard) are excluded — a whole month's rent would
-// otherwise dwarf the scale and flatten every real daily bar to nothing.
+// A quick visual read on spending trend — one stacked bar per day for the last 14 days,
+// segmented and colour-coded by category (the exact same colours as the donut/legend above,
+// via expCatsAll()) so a glance shows not just how much but on what. Tallest day's total sets
+// the scale. Purely a glance-and-go on top of the precise numbers in the legend above; gated
+// on a handful of entries so a brand-new trip is not shown a meaningless flat chart. Monthly-
+// flagged entries (see expenseAddCard) are excluded — a whole month's rent would otherwise
+// dwarf the scale and flatten every real daily bar to nothing.
 function budgetTrendCard() {
   const log = (store.trip.budgetLog || []).filter((b) => !b.monthly);
   if (log.length < 3) return null;
   const home = homeCurrency();
+  const cats = expCatsAll();
   const days = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
     days.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
   }
-  const byDay = Object.fromEntries(days.map((d) => [d, 0]));
+  // Per day, per category — same shape budgetSummaryCard sums across the whole trip, just
+  // sliced one day at a time so each bar can stack its own category segments.
+  const byDay = Object.fromEntries(days.map((d) => [d, {}]));
   let any = false;
   log.forEach((b) => {
     if (!(b.date in byDay)) return;
@@ -10304,22 +10311,37 @@ function budgetTrendCard() {
     const cc = b.currency || home;
     const conv = cc === home ? amt : convert(amt, cc, home);
     if (conv == null || isNaN(conv)) return;
-    byDay[b.date] += conv; any = true;
+    const cat = expCatOf(b);
+    byDay[b.date][cat] = (byDay[b.date][cat] || 0) + conv; any = true;
   });
   if (!any) return null;
-  const max = Math.max(...Object.values(byDay), 1);
+  const dayTotal = (sums) => Object.values(sums).reduce((s, v) => s + v, 0);
+  const max = Math.max(...days.map((d) => dayTotal(byDay[d])), 1);
   const bars = days.map((d) => {
-    const v = byDay[d];
-    const pct = v > 0 ? Math.max(4, Math.round(v / max * 100)) : 0;
+    const sums = byDay[d];
+    const total = dayTotal(sums);
     const dObj = new Date(`${d}T00:00`);
-    const lbl = `${isNaN(dObj) ? d : dObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${Math.round(v).toLocaleString()} ${home}`;
-    return h('div', { class: 'spark-bar', title: lbl, 'aria-label': lbl }, [h('span', { style: `height:${pct}%` })]);
+    const dLbl = isNaN(dObj) ? d : dObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    // Stacked bottom-up in a fixed category order (column-reverse in CSS) so the same
+    // category always occupies the same band across every bar, day to day.
+    const segs = cats.filter((c) => sums[c.id] > 0).map((c) => h('span', {
+      style: `height:${Math.max(2, sums[c.id] / max * 100)}%;background:${c.color}`,
+      title: `${dLbl} · ${c.emoji} ${c.label}: ${Math.round(sums[c.id]).toLocaleString()} ${home}`,
+    }));
+    return h('div', { class: 'spark-bar', 'aria-label': `${dLbl}: ${Math.round(total).toLocaleString()} ${home}` },
+      segs.length ? segs : [h('span', { style: 'height:0;background:var(--line)' })]);
   });
   const card = h('div', { class: 'card' });
   card.append(h('h2', { style: 'margin-top:0' }, '📈 Daily spend, last 14 days'));
   card.append(h('div', { class: 'spark-row' }, bars));
+  card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'Colour-coded by category — same colours as the breakdown above.'));
   return card;
 }
+
+// Shared accent for anything to do with cash withdrawals — the donut segment, the row icon,
+// the "Withdrawn" legend dot — so it reads as one consistent, distinct colour wherever it
+// shows up, never confusable with a category colour from expCatsAll().
+const WD_COLOR = '#B15C2E';
 
 // A second, separate way to read "how much of my budget is gone" — cash withdrawn/drawn
 // against the trip, tracked independently of the itemised per-category log above. Day-to-day
@@ -10340,11 +10362,9 @@ function budgetWithdrawalsCard() {
     if (conv == null || isNaN(conv)) { unknown = true; return; }
     total += conv;
   });
-  const WD_COLOR = '#B15C2E';
   const card = h('div', { class: 'card budget-card withdrawals-card' });
   card.append(h('h2', { style: 'margin-top:0' }, '🏧 Cash withdrawals'));
-  card.append(h('p', { class: 'muted', style: 'margin:4px 0 10px' },
-    'What you have actually pulled out or drawn against your budget — a second, more honest read on where you stand, alongside the itemised categories above.'));
+  card.append(h('p', { class: 'muted', style: 'margin:4px 0 10px' }, 'Cash pulled out, tracked separately from itemised spending.'));
 
   if (target && target.per === 'trip' && target.amount > 0) {
     const remaining = Math.max(0, target.amount - total);
@@ -10355,6 +10375,27 @@ function budgetWithdrawalsCard() {
       h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, `${Math.round(remaining).toLocaleString()} ${home}`)]),
     ]);
     card.append(h('div', { class: 'budget-head' }, [donut, legend]));
+
+    // Pace: the same percentage read on two different clocks — how far through the trip vs.
+    // how far through the withdrawn budget — so it is obvious at a glance whether cash is
+    // going out faster or slower than the trip itself is passing. Needs a known trip span
+    // (an end date somewhere), so it only appears once that exists.
+    const span = tripSpanDays();
+    if (span && span.total) {
+      const elapsedPct = Math.min(100, Math.round(span.elapsed / span.total * 100));
+      const withdrawnPct = Math.round(total / target.amount * 100);
+      const diff = withdrawnPct - elapsedPct;
+      card.append(h('div', { class: 'pace-row' }, [
+        h('span', { class: 'pace-lbl' }, `${elapsedPct}% of trip elapsed`),
+        h('div', { class: 'budget-bar pace-bar' }, [h('span', { class: 'budget-bar-fill pace-fill-trip', style: `width:${elapsedPct}%` })]),
+      ]));
+      card.append(h('div', { class: 'pace-row' }, [
+        h('span', { class: 'pace-lbl' }, `${Math.min(999, withdrawnPct)}% of budget withdrawn`),
+        h('div', { class: 'budget-bar pace-bar' }, [h('span', { class: 'budget-bar-fill pace-fill-wd' + (diff > 8 ? ' over' : ''), style: `width:${Math.min(100, withdrawnPct)}%` })]),
+      ]));
+      card.append(h('p', { class: 'budget-proj ' + (diff > 8 ? 'over' : 'under'), style: 'margin:4px 0 10px' },
+        Math.abs(diff) <= 8 ? '✓ right on pace with the trip.' : diff > 8 ? `⚠️ withdrawing faster than the trip is passing (+${diff} pts).` : `✓ under pace — ${-diff} pts of runway to spare.`));
+    }
   } else {
     card.append(h('p', { style: 'margin:0 0 10px' }, [
       h('strong', {}, `${total.toLocaleString()} ${home}`), h('span', { class: 'muted' }, ' withdrawn so far'),
@@ -10376,29 +10417,49 @@ function budgetWithdrawalsCard() {
   );
   card.append(det);
 
+  // Editable and minimizeable — same idiom as Recent expenses (collapsibleCard over an
+  // h2-led block), just nested inside this card instead of standing alone.
   if (list.length) {
-    const recent = h('div', {});
-    recent.append(h('h3', { style: 'margin:12px 0 4px' }, 'Recent withdrawals'));
-    list.slice().reverse().slice(0, 20).forEach((w) => {
-      const approx = approxHome(w.amount, w.currency);
-      recent.append(h('div', { class: 'exp-row' }, [
-        h('span', { class: 'exp-row-cat', style: `background:${WD_COLOR}22;color:${WD_COLOR}` }, '🏧'),
-        h('div', { class: 'exp-row-mid' }, [
-          h('div', { class: 'exp-row-note' }, w.note || 'Withdrawal'),
-          h('div', { class: 'exp-row-date muted' }, fmtLogDate(w.date)),
-        ]),
-        h('div', { class: 'exp-row-amt' }, [
-          h('strong', {}, `${w.amount} ${w.currency}`),
-          approx ? h('span', { class: 'muted exp-row-approx' }, approx) : null,
-        ]),
-        h('div', { class: 'exp-row-actions' }, [
-          h('button', { class: 'chip', 'aria-label': 'Delete this withdrawal', onclick: () => { confirmAction({ title: 'Delete this withdrawal?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteWithdrawal(w.id); render(); } }); } }, '✕'),
-        ]),
-      ]));
-    });
-    card.append(recent);
+    const recent = h('div', {}, [h('h2', { style: 'margin:12px 0 4px' }, 'Recent withdrawals')]);
+    list.slice().reverse().slice(0, 20).forEach((w) => recent.append(withdrawalRow(w)));
+    card.append(collapsibleCard(recent, 'budgetRecentWithdrawalsOpen', true));
   }
   return card;
+}
+
+// A withdrawal row that flips to an inline editor — mirrors budgetLogRow so a mis-entered
+// amount, currency, note, or date can be corrected, not only deleted.
+function withdrawalRow(w) {
+  if (editWithdrawalId === w.id) {
+    const amt = h('input', { type: 'number', inputmode: 'decimal', value: w.amount });
+    const cur = currencySelect(w.currency || homeCurrency());
+    const dt = h('input', { type: 'date', value: w.date || todayISO() });
+    const note = h('input', { type: 'text', value: w.note || '', placeholder: 'e.g. Bangkok airport ATM' });
+    return h('div', { class: 'card', style: 'margin:6px 0' }, [
+      h('div', { style: 'display:flex;gap:10px' }, [field('Amount', amt), field('Currency', cur)]),
+      field('Note (optional)', note), field('Date', dt),
+      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+        h('button', { class: 'btn ghost', onclick: () => { editWithdrawalId = null; render(); } }, 'Cancel'),
+        h('button', { class: 'btn', onclick: () => { updateWithdrawal(w.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), date: dt.value || w.date }); editWithdrawalId = null; render(); } }, 'Save'),
+      ]),
+    ]);
+  }
+  const approx = approxHome(w.amount, w.currency);
+  return h('div', { class: 'exp-row' }, [
+    h('span', { class: 'exp-row-cat', style: `background:${WD_COLOR}22;color:${WD_COLOR}` }, '🏧'),
+    h('div', { class: 'exp-row-mid' }, [
+      h('div', { class: 'exp-row-note' }, w.note || 'Withdrawal'),
+      h('div', { class: 'exp-row-date muted' }, fmtLogDate(w.date)),
+    ]),
+    h('div', { class: 'exp-row-amt' }, [
+      h('strong', {}, `${w.amount} ${w.currency}`),
+      approx ? h('span', { class: 'muted exp-row-approx' }, approx) : null,
+    ]),
+    h('div', { class: 'exp-row-actions' }, [
+      h('button', { class: 'chip', 'aria-label': 'Edit this withdrawal', onclick: () => { editWithdrawalId = w.id; render(); } }, '✎'),
+      h('button', { class: 'chip', 'aria-label': 'Delete this withdrawal', onclick: () => { confirmAction({ title: 'Delete this withdrawal?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteWithdrawal(w.id); render(); } }); } }, '✕'),
+    ]),
+  ]);
 }
 
 function budgetTargetEditor() {
@@ -10494,36 +10555,36 @@ function budgetLogRow(b) {
 // spends logged here show up there and roll into the home-currency total.
 function expensesScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Expenses & budget', '#me'));
-  wrap.append(h('p', { class: 'muted' }, 'Log each expense as you go — it converts to your home currency, sorts by category, and tracks you against your budget.'));
+  wrap.append(topbar('Budget & Expenses', '#me'));
   const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
 
-  // The currency converter leads, its own separate section — useful the moment you land here,
-  // long before anything has been logged or a budget target set (unlike the cards below, which
-  // only exist once there is something to summarise).
-  wrap.append(collapsibleCard(budgetFxCard(), 'budgetFxOpen', true));
-
-  // The day-to-day picture next: donut, remaining, and an over/under-budget projection.
+  // Budget section leads — donut, remaining/projection, and the spend trend right beneath it —
+  // per direct request ("start with budget section then currency converter").
   const summary = budgetSummaryCard();
   if (summary) wrap.append(summary);
-
   const trend = budgetTrendCard(); if (trend) wrap.append(trend);
 
-  // Cash withdrawals: a separate wheel and log, deliberately not the same card as the
-  // categorised summary above (see budgetWithdrawalsCard for why).
-  wrap.append(budgetWithdrawalsCard());
+  // Currency converter next: its own separate, simple section — no fold, nothing to hide —
+  // still useful before anything has ever been logged.
+  wrap.append(budgetFxCard());
 
   wrap.append(expenseAddCard({ currency: c ? c.currency : 'THB', afterAdd: () => go('#expenses') }));
 
   const log = store.trip.budgetLog.slice().reverse();
   if (log.length) {
-    const list = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Recent')]);
+    const list = h('div', { class: 'card' }, [h('h2', {}, 'Recent expenses')]);
     log.slice(0, 50).forEach((b) => list.append(budgetLogRow(b)));
-    wrap.append(list);
+    wrap.append(collapsibleCard(list, 'budgetRecentOpen', true));
   } else {
     wrap.append(h('p', { class: 'empty' }, 'No expenses logged yet — add your first above.'));
   }
+
+  // Cash withdrawals come after logging an expense, deliberately last — a second, separate
+  // wheel and log, not the same card as the categorised summary above (see
+  // budgetWithdrawalsCard for why).
+  wrap.append(budgetWithdrawalsCard());
+
   wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#trip') }, 'See full trip & budget'));
   mount(wrap, '#me');
 }
