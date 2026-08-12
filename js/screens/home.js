@@ -99,6 +99,8 @@ export function homeScreen() {
   if (onGround) {
     const ja = justArrivedChip(leadCC);
     if (ja) wrap.append(ja);
+    const nsn = nextStopNudgeChip();
+    if (nsn) wrap.append(nsn);
   }
 
   // Search everything — while travelling, this leads (moved up from its old spot just before
@@ -293,6 +295,35 @@ function justArrivedChip(cc) {
           body: 'It disappears from Home. Bring it back any time from Settings → Journey phase.',
           confirmLabel: 'Hide',
         }).then((ok) => { if (ok) { store.profile.prefs.justArrivedHidden = true; save(); render(); } });
+      },
+    }, '✕'),
+  ]);
+}
+
+// "Planning your next stop" — same dismissible-chip shape as Just arrived, filling the gap
+// left when nextStop() (below) has nothing to report. H4's real "🚌 Getting to X" card
+// (nextStopCard, below) only ever appears once a next stop already exists; while travelling
+// with no dated stop queued for today onward, Home otherwise says nothing here at all — this
+// nudges the traveller to My trip to add one instead of leaving that silent. Self-clears the
+// moment a next stop exists again, same as any other "nothing to say yet" cell in this file;
+// X-ing it out (for travellers deliberately not planning that far ahead) sets
+// prefs.nextStopNudgeHidden — never gone for good, restored from Settings → Journey phase,
+// same recovery path as Just arrived.
+function nextStopNudgeChip() {
+  if (store.profile.prefs.nextStopNudgeHidden || nextStop()) return null;
+  return h('div', { class: 'just-arrived-chip' }, [
+    h('button', { class: 'ja-main', onclick: () => go('#trip') }, [
+      h('span', { class: 'status-ic' }, '🧭'),
+      h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
+    ]),
+    h('button', {
+      class: 'ja-x', 'aria-label': 'Hide the planning-your-next-stop chip',
+      onclick: () => {
+        confirmAction({
+          title: 'Hide this chip?',
+          body: 'It disappears from Home. Bring it back any time from Settings → Journey phase.',
+          confirmLabel: 'Hide',
+        }).then((ok) => { if (ok) { store.profile.prefs.nextStopNudgeHidden = true; save(); render(); } });
       },
     }, '✕'),
   ]);

@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.380.0';
+const APP_VERSION = 'mk-v0.381.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1814,14 +1814,29 @@ function tripCountdownCard(cc) {
   }
   const days = daysUntilISO(start);
   // Once the trip has started (days <= 0), the "which phase am I in" nudge collapses to one
-  // tight chip — the exact shape of Home's "Just arrived" chip below it — instead of a full
-  // card with its own heading, paragraph and button underneath. Tapping it IS the action.
+  // tight chip — the exact shape AND dismiss behaviour of Home's "Just arrived" chip
+  // (justArrivedChip, js/screens/home.js) — instead of a full card with its own heading,
+  // paragraph and button underneath. Tapping the main button IS the action; X-ing it out asks
+  // for confirmation (same reasoning as Just arrived: this hides a whole prompt, not a
+  // one-line tip) and sets prefs.tripStartedHidden so it does not reappear on its own. Never
+  // gone for good — Settings → Journey phase can always turn it back on.
   if (days <= 0) {
+    if (store.profile.prefs.tripStartedHidden) return null;
     return h('div', { class: 'just-arrived-chip', style: 'margin-top:8px' }, [
       h('button', { class: 'ja-main', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, [
         h('span', { class: 'status-ic' }, days === 0 ? '🎉' : '🛬'),
         h('span', { class: 'status-lbl' }, days === 0 ? 'Today’s the day — switch to Traveling' : 'Trip started — switch to Traveling'),
       ]),
+      h('button', {
+        class: 'ja-x', 'aria-label': 'Hide the trip-started chip',
+        onclick: () => {
+          confirmAction({
+            title: 'Hide this chip?',
+            body: 'It disappears from Home. Bring it back any time from Settings → Journey phase.',
+            confirmLabel: 'Hide',
+          }).then((ok) => { if (ok) { store.profile.prefs.tripStartedHidden = true; save(); render(); } });
+        },
+      }, '✕'),
     ]);
   }
   const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
@@ -1945,7 +1960,8 @@ function destinationOutlookCard(spot) {
 // the outlook used to sit between the countdown and the actions; it now trails both instead.
 function planningStageBlock(cc) {
   const wrap = h('div', {});
-  wrap.append(tripCountdownCard(cc));
+  const tc = tripCountdownCard(cc);   // null once X'd out past trip-start — see tripCountdownCard
+  if (tc) wrap.append(tc);
   wrap.append(h('div', { class: 'home-actions', style: 'margin-top:10px' }, [
     h('button', { class: 'btn', onclick: () => go('#plans') }, '🧭 Plan your trip'),
     h('button', { class: 'btn ghost', onclick: () => go('#foryou') }, '🎯 Tune “For you”'),
@@ -13251,6 +13267,19 @@ function settingsScreen() {
       class: 'btn ghost block', style: 'margin-top:10px',
       onclick: () => { store.profile.prefs.justArrivedHidden = false; save(); render(); },
     }, '🛬 Show the “Just arrived” chip again'));
+  }
+  // Same "never gone for good" recovery for the other two dismissible Home chips.
+  if (store.profile.prefs.tripStartedHidden) {
+    phaseCard.append(h('button', {
+      class: 'btn ghost block', style: 'margin-top:10px',
+      onclick: () => { store.profile.prefs.tripStartedHidden = false; save(); render(); },
+    }, '🎉 Show the “Trip started” chip again'));
+  }
+  if (store.profile.prefs.nextStopNudgeHidden) {
+    phaseCard.append(h('button', {
+      class: 'btn ghost block', style: 'margin-top:10px',
+      onclick: () => { store.profile.prefs.nextStopNudgeHidden = false; save(); render(); },
+    }, '🧭 Show the “Planning your next stop” chip again'));
   }
   wrap.append(phaseCard);
 

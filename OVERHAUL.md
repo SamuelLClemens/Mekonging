@@ -2882,3 +2882,39 @@ Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.380.0`. No new files.
 A full site-wide sweep for verbose/wordy help text (per the standing "keep UI copy brief"
 preference from the previous round) was run separately and is queued as the next pass, not
 folded into this one.
+
+### Home: dismissible "Trip started" chip + a "Planning your next stop" nudge (mk-v0.381.0)
+
+Two direct requests, both about Home's dismissible-chip row.
+
+**"Trip started" is now dismissible.** `tripCountdownCard()`'s post-departure chip (added
+mk-v0.380.0) had the visual shape of "Just arrived" but not its behaviour — no way to X it out.
+It now matches exactly: a sibling `.ja-x` button opens the same `confirmAction()` dialog, sets
+the new `prefs.tripStartedHidden`, and the chip returns `null` while that pref is set (its caller,
+`planningStageBlock()`, was unguarded against a null return before this — fixed alongside it).
+Never gone for good: Settings → Journey phase gained a matching "🎉 Show the 'Trip started' chip
+again" button, shown only while the pref is set, right next to the existing Just-arrived one.
+
+**New: "Planning your next stop…" nudge.** While travelling, Home already has a real "🚌 Getting
+to X" card once a next stop is planned (`nextStopCard`, via `nextStop()` reading dated stops from
+today onward) — but when nothing is queued, that slot simply stayed silent. Added
+`nextStopNudgeChip()` (js/screens/home.js) in the same `.just-arrived-chip` shape, rendered above
+"Search everything" only while travelling: `if (store.profile.prefs.nextStopNudgeHidden ||
+nextStop()) return null;`. Tapping it opens My trip (`#trip`) to add one; it needs no manual
+dismissal in the common case since it self-clears the moment a next stop exists again — the X is
+there anyway for travellers deliberately not planning that far ahead, X'd out with the same
+confirm + `prefs.nextStopNudgeHidden` + Settings-restore pattern as the other two chips.
+
+**Verified live** (mk.store's rolling `.bak` key held richer data from earlier test sessions and
+kept winning over a plain `localStorage.setItem` edit + reload — `state.js`'s `hasUserData()`
+check doesn't look at `trip.stops`, so an edit that only touches `stops` never counts as "real"
+user data and the backup silently wins; switched to mutating the live `store` module import
+directly + `save()`, avoiding the reload/backup race entirely). Confirmed end to end: the
+trip-started chip's X → confirm → hidden → Settings restore → reappears, with the exact same
+main-button behaviour (switch to Traveling) preserved throughout. Confirmed the next-stop nudge
+renders above Search everything only in Traveling, taps through to My trip's "Add stop" screen,
+X/confirm/hide/Settings-restore all work, and it disappears on its own the instant a future-dated
+stop is added — with "Just arrived" alongside it unaffected either way. Screenshotted at 375px:
+both chips stack cleanly above Search everything, no overflow, console clean.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.381.0`. No new files.
