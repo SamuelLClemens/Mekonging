@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.376.0';
+const APP_VERSION = 'mk-v0.377.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3400,7 +3400,7 @@ function nearbyScreen() {
     body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'traveling' && !store.profile.prefs.justArrivedHidden));
     body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
-      h('button', { class: 'chip', onclick: () => { store.profile.prefs.placesView = 'map'; store.profile.prefs.placesSort = 'near'; save(); go(`#places-${country}`); } }, [chipIcon('map'), 'See on the map']),
+      h('button', { class: 'chip', onclick: () => go(`#places-${country}`) }, [chipIcon('map'), 'See on the map']),
       h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('pin'), 'Set my stay']),
       h('button', { class: 'chip', onclick: () => go('#exchange') }, '🤝 Traveller board'),
       h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
@@ -4633,51 +4633,14 @@ function cityPickGrid(cc, cities, counts) {
   return grid;
 }
 
-// "Choose a city" drill-down for the country level of Places for you: tap a country, its
-// featured cities show (with a photo + count); tap one and that city's categories open.
-function cityPickerCard(cc) {
-  const country = getCountry(cc);
-  const places = allPlaces({ country: cc });
-  if (!places.length) return null;
-  const counts = {};
-  places.forEach((p) => { if (p.city) counts[p.city] = (counts[p.city] || 0) + 1; });
-  const cities = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-  if (!cities.length) return null;
-  const card = h('div', { class: 'card' });
-  card.append(h('h2', { style: 'margin-top:0' }, `🗺 Choose a city in ${country ? country.name : 'this country'}`));
-  card.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Tap a city to see just its places, grouped by category.'));
-  card.append(cityPickGrid(cc, cities.slice(0, 12), counts));
-  return card;
-}
-
-// "Closest to you" — the user's "first and foremost" ask. When a location fix is known,
-// the nearest few places (optionally within the scoped city) sit right under the map, folded
-// like everything else on Places now (`open`/`onToggle` let the caller remember the traveller's
-// own choice across a filter/search re-render, without the map itself ever being the one that
-// remembers — the map is the one section that is never collapsible at all).
-// With no fix, a single quiet prompt to turn location on (never nags — no fix, one button).
-function closestPlacesCard(cc, scopeSlug, numFor, poolSource, compareCtl, open, onToggle) {
-  const fix = getLastFix();
-  if (!fix) {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
-    // Collapsed to one row (was a full card) — a quiet, single-line invitation rather than
-    // ~140px standing between the traveller and the results below.
-    const btn = h('button', { class: 'chip', style: 'margin:2px 0 4px' }, '📍 Turn on location — see what’s closest');
-    btn.onclick = async () => { btn.textContent = 'Locating…'; try { setLastFix(await geolocate()); render(); } catch { btn.textContent = '📍 Location unavailable'; } };
-    return btn;
-  }
-  let pool = (Array.isArray(poolSource) ? poolSource : allPlaces({ country: cc })).filter((p) => p.coords);
-  if (scopeSlug) pool = pool.filter((p) => citySlug(p.city || '') === scopeSlug);
-  if (!pool.length) return null;
-  pool = pool.slice().sort((a, b) => haversineKm(fix, a.coords) - haversineKm(fix, b.coords)).slice(0, 5);
-  const det = h('details', { class: 'place-cat-group closest-card', open: open ? '' : null, style: '--cat:#0F9D8C' }, [
-    h('summary', { class: 'place-cat-summary' }, `📍 Closest to you · ${pool.length}`),
-  ]);
-  if (onToggle) det.addEventListener('toggle', () => onToggle(det.open));
-  const body = h('div', { class: 'place-cat-body' });
-  pool.forEach((p) => body.append(placeQuickRow(p, numFor ? numFor(p.id) : (p._num != null ? p._num : null), compareCtl)));
-  det.append(body);
-  return det;
+// Closes the tail this guide does not (yet) curate: a live Google Maps search centred on
+// wherever Places is anchored right now, via the same mapsUrl() deep link every place-detail
+// page already uses for "Open in Google Maps".
+function placesMapsFallback(anchor, label) {
+  return h('a', {
+    class: 'btn ghost block', style: 'margin:10px 0 4px',
+    href: mapsUrl({ coords: anchor }), target: '_blank', rel: 'noopener',
+  }, `🗺 Not seeing it? Search near ${label} on Google Maps →`);
 }
 
 function placesScreen(arg) {
@@ -4693,17 +4656,21 @@ function placesScreen(arg) {
     : '';
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
-  { const t = oneTimeHint('places-living-map', 'The map and list stay in sync: tap the coloured category chips to show only what you want, and “Nearest first” to sort by what is around you right now.'); if (t) wrap.append(t); }
+  { const t = oneTimeHint('places-living-map', 'This is your decide-now shortlist: what is near you, tiered by how far it is, best matches first. The map and list stay in sync — tap the coloured category chips to show only what you want. Looking to browse a whole country or region instead? That is what Explore is for.'); if (t) wrap.append(t); }
   // Who these results are being ranked and tagged for (one line, also the edit control).
   wrap.append(travellingAsLine());
+  // Places anchors on where the traveller actually is, and never offers a "browse all of the
+  // country" mode any more — that whole-country, grouped-by-category browsing now lives on
+  // Explore. An explicit city scope (tapped from Explore, or a "Places in X" link) always wins
+  // over GPS — that is a "show me near THIS city" request, not a "where am I" one. Otherwise a
+  // live GPS fix wins, falling back to the same focus-spot/capital chain "Things to do" and
+  // weather already use, so every screen agrees on "here" even with no location at all.
+  let cSpot = null;
   if (scopeCity) {
-    wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, [
-      h('button', { class: 'chip', 'aria-pressed': 'true' }, `📍 ${scopeCity}`),
-      h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, `Show all of ${getCountry(getActiveCountry()) ? getCountry(getActiveCountry()).name : 'country'}`),
-    ]));
     // Browsing a city makes it the traveller's focus, so weather + "today" + "right now"
     // follow this city (not the capital) until GPS or another city overrides it.
-    const cSpot = spotForCity(getActiveCountry(), scopeCity); if (cSpot) setFocusSpot(cSpot);
+    cSpot = spotForCity(getActiveCountry(), scopeCity);
+    if (cSpot) setFocusSpot(cSpot);
     // Reference material, not results — collapsed by default so the map above stays the
     // focus; rank-collapse-never-remove: both stay one tap away, just no longer in the way.
     const ac = cityAboutCard(getActiveCountry(), scopeSlug);
@@ -4713,11 +4680,22 @@ function placesScreen(arg) {
       cityEssentials(getActiveCountry(), scopeCity, scopeSlug),
     ]));
   }
+  let anchor, anchorLabel, usingGps = false;
+  if (scopeCity && cSpot) {
+    anchor = { lat: cSpot.lat, lng: cSpot.lng };
+    anchorLabel = scopeCity;
+  } else {
+    const fsAnchor = focusSpot(getActiveCountry());
+    const gpsFix = getLastFix();
+    usingGps = !!gpsFix && fsAnchor.source === 'gps';
+    anchor = usingGps ? gpsFix : { lat: fsAnchor.spot.lat, lng: fsAnchor.spot.lng };
+    anchorLabel = scopeCity || fsAnchor.spot.city;
+  }
 
   // The living map sits at the very top of the section (below any city context) and is the
   // one thing on this whole screen that never collapses — Places is a map-first browse, so it
   // stays always visible and draws bigger (see .places-map-section .places-map in style.css).
-  // Its mode bar and category-layer chips populate below. Both the map and the closest list are
+  // Its mode bar and category-layer chips populate below. Both the map and the list are
   // FILLED by renderList() once the filtered results and their shared numbering are known, so a
   // list row and its map pin always carry the same number. Placeholders are appended now to
   // lock DOM order.
@@ -4731,8 +4709,6 @@ function placesScreen(arg) {
     modeBar, layerChipsRow, mapWrap, cap,
   );
   wrap.append(mapSection);
-  const closestSlot = h('div', { class: 'closest-slot' });
-  wrap.append(closestSlot);
 
   // interest filters (seeded from saved prefs the first time)
   const prefs = store.profile.prefs;
@@ -4808,26 +4784,6 @@ function placesScreen(arg) {
     filterCard.append(h('div', { class: 'muted' }, 'Where to stay'), stayTypeChips, stayDurChips);
   }
 
-  // Sort control — the map is now always present above and the list always below it, so the old
-  // list/map toggle is gone. "Nearest first" orders both by distance (asking for GPS once) and
-  // recentres the living map on you; otherwise "best for you" order.
-  let sortMode = prefs.placesSort === 'near' ? 'near' : 'best';
-  const nearChip = h('button', {
-    class: 'chip', 'aria-pressed': sortMode === 'near' ? 'true' : 'false',
-    onclick: async (e) => {
-      const btn = e.currentTarget;
-      if (sortMode === 'near') { sortMode = 'best'; prefs.placesSort = 'best'; save(); btn.setAttribute('aria-pressed', 'false'); btn.textContent = '📍 Nearest first'; renderList(); return; }
-      if (!getLastFix()) {
-        btn.textContent = 'Locating…';
-        try { setLastFix(await geolocate()); }
-        catch { btn.textContent = '📍 Turn on location'; setTimeout(() => { btn.textContent = '📍 Nearest first'; }, 1800); return; }
-      }
-      sortMode = 'near'; prefs.placesSort = 'near'; save();
-      btn.setAttribute('aria-pressed', 'true'); btn.textContent = '📍 Nearest first'; renderList();
-      if (placesCtrl) placesCtrl.locate();
-    },
-  }, '📍 Nearest first');
-
   // Category LAYERS — pick any combination of place types to show on the map AND the list.
   // An empty selection means "all layers". Persisted so a chosen set survives navigation.
   const selLayers = new Set(Array.isArray(prefs.placesLayers) ? prefs.placesLayers : []);
@@ -4853,20 +4809,22 @@ function placesScreen(arg) {
   }
   buildLayerChips();
 
-  // Mode bar: a plain STATUS label on the left (what you are looking at) and the ACTION on the
-  // right (the "Nearest first" toggle), so the near-you / city / whole-country model reads
-  // clearly instead of two look-alike 📍 chips. When scoped to a city, a button returns to the
-  // whole country.
-  const countryName = (getCountry(getActiveCountry()) || {}).name || 'the country';
+  // Mode bar: a plain STATUS label (where "near" is centred) on the left, and — since a scoped
+  // city already has its own "↩" escape hatch below, this only ever needs ONE further action —
+  // either "drop the city scope, use my location" or "get a precise GPS fix" on the right.
+  modeBar.append(h('span', { class: 'mode-state' }, `📍 Near ${anchorLabel}`));
+  modeBar.append(h('span', { style: 'flex:1' }));
   if (scopeSlug) {
-    modeBar.append(
-      h('span', { class: 'mode-state' }, `📍 Showing ${scopeCity || 'this city'}`),
-      h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, `↩ All of ${countryName}`),
-    );
-  } else {
-    modeBar.append(h('span', { class: 'mode-state' }, getLastFix() ? '📍 Showing places near you' : `🗺 Showing all of ${countryName}`));
+    modeBar.append(h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, '↩ Use my location instead'));
+  } else if (!usingGps && typeof navigator !== 'undefined' && navigator.geolocation) {
+    const locBtn = h('button', { class: 'chip' }, '📍 Use my location');
+    locBtn.onclick = async () => {
+      locBtn.textContent = 'Locating…';
+      try { setLastFix(await geolocate()); render(); }
+      catch { locBtn.textContent = '📍 Location unavailable'; setTimeout(() => { locBtn.textContent = '📍 Use my location'; }, 1800); }
+    };
+    modeBar.append(locBtn);
   }
-  modeBar.append(h('span', { style: 'flex:1' }), nearChip);
 
   // Results-first: the filter rows collapse into one tap so places show immediately
   // instead of being pushed below ~5 rows of chips. The summary shows how many filters
@@ -4945,9 +4903,7 @@ function placesScreen(arg) {
 
   // Everything below here is reference material, not results — rank/collapse/never-remove:
   // still one tap away, just no longer standing between the traveller and a real place.
-  // Country level (no city chosen yet): drill down by city — tap a city and just its
-  // places show, grouped into the collapsible category sections above.
-  if (!scopeSlug) { const cp = cityPickerCard(getActiveCountry()); if (cp) wrap.append(collapsibleCard(cp, 'placesCityPickOpen', false)); }
+  // Browsing a whole city or country by name lives on Explore now, not here.
 
   // Your own places live alongside the curated ones: add a location, then rate, review and
   // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
@@ -4973,13 +4929,13 @@ function placesScreen(arg) {
 
   let placesCtrl = null;
   let currentResults = [];
-  // Places is map-first now — the map is the only section that never collapses, so everything
-  // below it (closest-to-you, each category group) starts closed and only opens because the
-  // traveller opened it. Tracked locally for this visit only (renderList() rebuilds these
-  // <details> on every filter/search change, so without this a keystroke would re-collapse
-  // whatever the traveller just opened).
-  let closestOpen = false;
-  const openBuckets = new Set();
+  // Places is map-first now — the map is the only section that never collapses. The distance
+  // tiers below it default to open for "Right here"/"Nearby" (the immediately actionable ones)
+  // and folded for "Worth a day trip"/"Further afield" — this set holds only the tiers the
+  // traveller has explicitly flipped AWAY from that default, for this visit only (renderList()
+  // rebuilds these <details> on every filter/search change, so without this a keystroke would
+  // undo whatever the traveller just toggled).
+  const tierToggled = new Set();
 
   // Compare tray — per-visit only (never persisted, never carried between countries/cities):
   // a traveller comparing 2-3 places is mid-decision right now, not setting a standing
@@ -5019,10 +4975,11 @@ function placesScreen(arg) {
   function openCompareSheet() {
     if (compareSet.size < 2) return;
     const places = [...compareSet].map((id) => resolveItem(id)).filter(Boolean);
-    const fix = getLastFix();
     const fields = [
       ['City', (p) => p.city || '—'],
-      ['Distance', (p) => (fix && p.coords) ? `${haversineKm(fix, p.coords).toFixed(1)} km` : '—'],
+      // Distance from the same anchor the map and tiers use — always set now, so this is
+      // never blank the way it was when it only showed a real GPS fix.
+      ['Distance', (p) => p.coords ? `${haversineKm(anchor, p.coords).toFixed(1)} km` : '—'],
       ['Rating', (p) => (p.rating ? `★ ${Number(p.rating).toFixed(1)}` : '—')],
       ['Price', (p) => {
         const hasPrice = p.priceRange && p.priceRange.currency;
@@ -5066,12 +5023,14 @@ function placesScreen(arg) {
   const userMapPins = () => (store.pins || []).filter((p) => p.coords).map((p) => resolveItem(p.id)).filter(Boolean);
   const mapPlaces = () => currentResults.concat(userMapPins()).filter((p) => p.coords);
 
-  // Filtered + sorted results, or null when this country has no places yet.
+  // Filtered + sorted results, or null when this country has no places yet. No hard city
+  // filter even when scoped: scoping a city moves the ANCHOR there (see the top of this
+  // function), and distance tiering at render time does the rest — a place just outside the
+  // city's own tag boundary but genuinely walkable should never be lost to a tag mismatch.
   function computeResults() {
     const country = getCountry(getActiveCountry());
     if (!country || !Array.isArray(country.places)) return null;
     let results = allPlaces({ country: getActiveCountry(), interests: [...selInterests], budget: selBudget });
-    if (scopeSlug) results = results.filter((p) => citySlug(p.city) === scopeSlug);
     if (selLayers.size) results = results.filter((p) => selLayers.has(placeBucket(p)));  // category layers
     if (selKids) results = results.filter((p) => p.kidFriendly === true);
     if (selStayType !== 'any') results = results.filter((p) => p.stayType === selStayType);
@@ -5081,14 +5040,28 @@ function placesScreen(arg) {
       const q = searchTerm.trim().toLowerCase();
       results = results.filter((p) => (p.name || '').toLowerCase().includes(q) || (p.city || '').toLowerCase().includes(q));
     }
-    const fix = getLastFix();
-    if (sortMode === 'near' && fix) {
-      const d = (p) => (p.coords ? haversineKm(fix, p.coords) : Infinity);
-      results = results.slice().sort((a, b) => d(a) - d(b));
-    } else if (profileIsSet()) {
-      results = results.slice().sort((a, b) => personalScore(b) - personalScore(a));
-    }
+    // Best-for-you leads; personalScore degrades to a plain rating-first order with no profile
+    // set, so this is always a sensible default, not just a post-profile upgrade. Distance
+    // tiering (walk/near/day-trip/further) is applied at render time from the same `anchor`.
+    results = results.slice().sort((a, b) => personalScore(b) - personalScore(a));
     return results;
+  }
+
+  // Distance tiers, reusing the exact "near"/"day trip" thresholds (withinNear/withinDayTrip)
+  // and vocabulary "Things to do" already uses, so the two surfaces never disagree about what
+  // "near" means. Nothing is ever hidden for being far — rank/collapse/never-remove, same
+  // principle as everywhere else in this app — the Google Maps link at the foot covers
+  // whatever this guide does not (yet) curate at all.
+  const PLACE_TIERS = [
+    ['walk', '🚶 Right here', true],
+    ['near', '📍 Nearby', true],
+    ['trip', '🚌 Worth a day trip', false],
+    ['far', '🗺 Further afield', false],
+  ];
+  function tierOf(p) {
+    if (!p.coords) return 'near';
+    const km = haversineKm(anchor, p.coords);
+    return km <= 2.5 ? 'walk' : withinNear(km) ? 'near' : withinDayTrip(km) ? 'trip' : 'far';
   }
 
   function renderList() {
@@ -5096,32 +5069,27 @@ function placesScreen(arg) {
     const computed = computeResults();
     currentResults = computed || [];
     // Shared numbering: number every MAPPED place by its position in the displayed order, so a
-    // list row, the "closest to you" card and the map pin all carry the SAME number and colour.
-    // Numbers live in a local id->num lookup, never written onto the shared, cached place
-    // objects (allPlaces() hands back the same singleton records every screen reads — writing
-    // a view-local number straight onto one would leak this screen's numbering into whatever
-    // reads that object next). map.js still reads its pin badge off p._num, so map places get
-    // their own shallow copy carrying that one field; the underlying cached place is untouched.
+    // list row and the map pin carry the SAME number and colour. Numbers live in a local
+    // id->num lookup, never written onto the shared, cached place objects (allPlaces() hands
+    // back the same singleton records every screen reads — writing a view-local number
+    // straight onto one would leak this screen's numbering into whatever reads that object
+    // next). map.js still reads its pin badge off p._num, so map places get their own shallow
+    // copy carrying that one field; the underlying cached place is untouched.
     const rawMl = mapPlaces();
     const numById = new Map(rawMl.map((p, i) => [p.id, i + 1]));
     const ml = rawMl.map((p) => ({ ...p, _num: numById.get(p.id) }));
     const numFor = (id) => numById.get(id) || null;
     const mine = userMapPins().length;
-    // Honest about what the list actually contains: each category caps at 5 rows behind a
+    // Honest about what the list actually contains: each tier caps at 6 rows behind a
     // "Show all" expander, so the count below is real places matched — not a claim that all
     // of them are already on screen as rows. The shared numbering IS exact, so that much
     // stands: the same number always means the same place on both the map and the list.
     cap.textContent = ml.length
-      ? `${ml.length} place${ml.length === 1 ? '' : 's'} match${mine ? ` (incl. ${mine} of yours)` : ''}${sortMode === 'near' && getLastFix() ? ' · nearest first' : ''} — same numbers on the map and in the list`
+      ? `${ml.length} place${ml.length === 1 ? '' : 's'} match${mine ? ` (incl. ${mine} of yours)` : ''} — same numbers on the map and in the list`
       : '';
     filterBtn.textContent = filterLabel();
     renderActivePills();
     if (placesCtrl) placesCtrl.setPlaces(ml);
-    // "Closest to you" — the nearest few of the CURRENTLY shown (filtered) places, same numbers.
-    closestSlot.innerHTML = '';
-    const cz = closestPlacesCard(getActiveCountry(), scopeSlug, numFor, currentResults, compareCtl,
-      closestOpen, (v) => { closestOpen = v; });
-    if (cz) closestSlot.append(cz);
 
     listEl.innerHTML = '';
     if (computed === null) {
@@ -5132,6 +5100,7 @@ function placesScreen(arg) {
       listEl.append(h('p', { class: 'empty' }, searchTerm.trim()
         ? `Nothing matches “${searchTerm.trim()}” with these filters. Try a different search, or widen the filters.`
         : 'No places match these filters and layers. Try widening them.'));
+      listEl.append(placesMapsFallback(anchor, anchorLabel));
       return;
     }
     // "Show more" expander: reveal the rest inline (no full re-render) to cut scrolling.
@@ -5141,41 +5110,26 @@ function placesScreen(arg) {
       btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, numFor(p.id), compareCtl))); btn.remove(); };
       return btn;
     };
-    if (sortMode === 'near') {
-      // proximity order matters — keep one flat list, capped, with a reveal.
-      const CAP = 12;
-      currentResults.slice(0, CAP).forEach((p) => listEl.append(placeQuickRow(p, numFor(p.id), compareCtl)));
-      const more = expander(currentResults.slice(CAP), `Show ${currentResults.length - CAP} more`);
-      if (more) listEl.append(more);
-    } else {
-      // Group by category — every group starts CLOSED now (the map above is the one section
-      // that stays always open); rank/collapse/never-remove still applies to ORDER, since
-      // "which one?" fails if a real place is never reachable. Groups are ranked so the ones
-      // fitting this trip phase and time of day lead; nothing is removed or hidden, only
-      // reordered and, by default, folded. Inside each, closest-to-you first when a location
-      // fix is known.
-      const groups = {};
-      currentResults.forEach((p) => { const b = placeBucket(p); (groups[b] = groups[b] || []).push(p); });
-      const fix = getLastFix();
-      const byNear = (a, b) => (a.coords ? haversineKm(fix, a.coords) : Infinity) - (b.coords ? haversineKm(fix, b.coords) : Infinity);
-      const CAP = 5;
-      const phase = store.profile.prefs.phase || inferPhase();
-      const part = contextNow().part;
-      rankedPlaceBuckets(phase, part).forEach(([key, label]) => {
-        let arr = groups[key];
-        if (!arr || !arr.length) return;
-        if (fix) arr = arr.slice().sort(byNear);
+    {
+      const CAP = 6;
+      PLACE_TIERS.forEach(([key, label, openByDefault]) => {
+        const arr = currentResults.filter((p) => tierOf(p) === key);
+        if (!arr.length) return;
         const body = h('div', { class: 'place-cat-body' });
         arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, numFor(p.id), compareCtl)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
         if (more) body.append(more);
-        const det = h('details', { class: 'place-cat-group', open: openBuckets.has(key) ? '' : null, style: `--cat:${BUCKET_COLOR[key] || BUCKET_COLOR.other}` }, [
+        const isOpen = tierToggled.has(key) ? !openByDefault : openByDefault;
+        const det = h('details', { class: 'place-cat-group', open: isOpen ? '' : null, style: '--cat:#0F9D8C' }, [
           h('summary', { class: 'place-cat-summary' }, `${label} · ${arr.length}`),
           body,
         ]);
-        det.addEventListener('toggle', () => { if (det.open) openBuckets.add(key); else openBuckets.delete(key); });
+        det.addEventListener('toggle', () => {
+          if (det.open === openByDefault) tierToggled.delete(key); else tierToggled.add(key);
+        });
         listEl.append(det);
       });
+      listEl.append(placesMapsFallback(anchor, anchorLabel));
     }
   }
 
@@ -5214,9 +5168,9 @@ function placesScreen(arg) {
       paint();
       requestAnimationFrame(paint);
       setTimeout(paint, 250);
-      const fix = getLastFix();
-      // Near-you (no city chosen): centre on the traveller so the numbered nearby pins frame them.
-      if (fix && !scopeSlug) { setTimeout(() => { try { c.map.flyTo({ center: [fix.lng, fix.lat], zoom: 12, duration: 500 }); } catch { /* noop */ } }, 350); }
+      // Always centre on the anchor (GPS fix, scoped city, or the focus-spot/capital fallback) —
+      // Places has no more un-anchored "browsing the whole country" state to leave uncentred.
+      setTimeout(() => { try { c.map.flyTo({ center: [anchor.lng, anchor.lat], zoom: 12, duration: 500 }); } catch { /* noop */ } }, 350);
     }).catch(() => { mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'The map could not start here — the list below still works offline.')); });
   }
 }
@@ -5314,24 +5268,6 @@ const BUCKET_COLOR = {
   nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
 };
 
-// Rank/collapse/never-remove applied to Places' category groups: every bucket still
-// renders, but the ones that fit the traveller's trip phase and time of day sit first.
-// A stable sort keeps ties in PLACE_BUCKETS' original order, so an untouched phase/time
-// combination reproduces today's order exactly.
-function rankedPlaceBuckets(phase, part) {
-  const fit = (key) => {
-    let s = 0;
-    if (phase === 'planning') { if (key === 'culture' || key === 'nature') s += 3; if (key === 'stay') s += 2; }
-    // 'arrived' and 'traveling' used to be separate phases with separate boosts here; merged
-    // into one 'traveling' boost set (union of both) since they are now one phase.
-    else if (phase === 'traveling') { if (key === 'food') s += 3; if (key === 'stay' || key === 'rental' || key === 'culture' || key === 'nature' || key === 'market') s += 2; }
-    if ((part === 'morning' || part === 'earlyMorning') && (key === 'food' || key === 'market')) s += 2;
-    if ((part === 'midday' || part === 'afternoon') && (key === 'culture' || key === 'nature')) s += 2;
-    if ((part === 'evening' || part === 'night') && (key === 'food' || key === 'nightlife')) s += 2;
-    return s;
-  };
-  return PLACE_BUCKETS.slice().sort((a, b) => fit(b[0]) - fit(a[0]));
-}
 function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
 
 // A category chip coloured by its family, with the family name as a tooltip.
