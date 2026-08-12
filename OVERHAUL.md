@@ -2656,3 +2656,97 @@ Vietnam (`#places-vi`) independently anchored on Hanoi with its own 149-place co
 correctly. Confirmed the compare sheet's Distance column now reads from the same anchor and so
 is never blank pre-GPS. Confirmed the Google Maps link's href and visible city name are correct
 in both the results-found and no-results states. Brace-balance clean.
+
+### Home: a filter that doesn't cost space; Budget: a converter that looks like one, real
+category joining, and two honest ways to read spend (mk-v0.378.0)
+
+Direct user request, two screens.
+
+**Home — Nearby picks.** The picks list had no way to narrow by category at all: five ranked
+cards and a done/not-interested cycle, full stop. Added one `<select>` — not a chip row — right
+inside the (already-open-by-default) card, options limited to whichever `CATEGORY_FAMILIES` the
+current ranked pool actually contains (minus stay/transport/other, the same exclusion
+`daySuggestScreen`'s own family filter already uses). Chosen deliberately over chips: a single
+line costs one row of height regardless of how many families exist, where a chip row can wrap
+to two or three on a narrow phone — the literal ask was a filter that "doesn't take up a lot of
+space." Redraws through the card's own existing local `drawPicks()`, not the global `render()`,
+so it costs nothing structurally. Also tightened the section itself per the general "tighten
+this up" ask: `.rn-list`'s gap and bottom margin dropped from `--sp-2` (8px) to `--sp-1` (4px);
+the 44px done/not-interested tap targets are untouched since they size independently.
+
+**Budget — the exchange-rate widget, rebuilt to look like the ask.** The converter existed
+(mk-v0.373.0) but as one editable amount and a sentence of result text ("1 USD = 33,120 THB"),
+folded shut by default inside the summary card — invisible until you had already logged
+something. Rebuilt as `fxConverterControl()`: two boxes either side of a round "=" that doubles
+as the swap button — `[1][USD▾] = [33.12][THB▾]` — closer to the literal "blank ... = blank that
+fills in" description than a result sentence ever was. `currencyScreen()` (`#currency`) and the
+Budget card both now build on this one function so the shape can't drift between them again;
+`currencyScreen()` also gained the same `focusSpot()`-based default `currencyScreen` and
+`budgetFxCard` used to disagree on (the standalone screen was defaulting off the last-viewed
+Explore tab, not "where the traveller actually is"). **Kept as its own separate card, per
+direct instruction** — not merged into the category donut — and moved to always render, open,
+at the very top of Expenses & budget, ahead of the summary: unlike the donut, it is useful
+before a single expense has ever been logged.
+
+**Budget — categories that actually join (closes #145).** There was no way to add a custom
+expense category before this — whatever the original "categories don't join" report described,
+it had nowhere to go but silently fold into Other. Added one: `expCatsAll()` merges the 5
+built-ins with `store.profile.prefs.customExpCats` (capped at 6, colour auto-assigned from a
+small fixed palette) and is now what the picker, the donut/legend sums, and every category
+label actually iterate — a custom category is exactly as first-class as Food or Stay, in the
+same row, never a second list. The picker's trailing "+ Add" opens an in-place name field
+(Enter to commit), mirroring the identifier screen's own tag-add idiom rather than a native
+`prompt()`; a small "Manage your categories" fold (only shown once one exists) lets a mistaken
+one be removed, reassigning any already-logged expenses back to Other first so nothing points at
+a category that no longer exists.
+
+**Budget — a monthly option for the date field.** A rent payment or a month-long SIM plan does
+not belong to one day. `expenseAddCard`'s date field gained a "Monthly expense" checkbox that
+swaps the native `<input>` between `type=date` and `type=month`; on save the date normalises to
+that month's 1st with `monthly:true` alongside it, and the log/exports read that flag
+(`fmtLogDateFor`) to show "August 2026" instead of "Aug 1." Additive only — every existing
+budgetLog entry is `monthly:false` by default and every existing date-based calculation
+(sorting, `tripSpanDays`, CSV export) keeps reading the same `YYYY-MM-DD` shape unchanged.
+
+**Budget — cash withdrawals, a second and separate wheel.** Direct request: day-to-day spend
+usually comes out of cash actually withdrawn, and itemising every purchase is unrealistic in a
+way that remembering "I took out 10,000 THB at that ATM" usually is not — arguably the more
+honest number. Added `store.trip.withdrawals` (mirrors `budgetLog`'s shape minus category) and
+`budgetWithdrawalsCard()`: its own `donutSVG` ring — withdrawn vs. left-in-budget, a distinct
+rust colour so it never reads as the same wheel as the category donut above it — once a
+whole-trip target is set, else a plain running total with a nudge to set one; a "Log a
+withdrawal" fold; a recent list with delete. **Deliberately not surfaced on Home** (Home's own
+budget fold stays exactly the quick-spend row it was) — this lives only in Expenses & budget, a
+second read on the same question, never blended into the first.
+
+**Budget — one visual, chosen over an open-ended list.** The request also asked for "other cool
+financial tools and visuals" without specifying which — rather than guess at several, added one
+well-scoped addition: `budgetTrendCard()`, a 14-day daily-spend bar chart (inline CSS bars, no
+new dependency), excluding monthly-flagged entries so one rent payment can't flatten the scale
+of every real daily bar. Gated on at least 3 logged entries so a brand-new trip isn't shown a
+meaningless flat chart.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.378.0`. No new files.
+
+**Verified in-browser** (Thailand, live rates): the Nearby picks filter lists exactly the
+families present in the current ranked pool, correctly excludes stay/transport/other, and
+narrowing to one family leaves only matching cards on screen; `.rn-list`'s computed gap
+confirmed 4px (was 8px). On Expenses & budget: the converter card renders first, separate from
+the category summary, open by default, correct USD→THB defaults, and the "=" button swaps both
+currencies; added a custom "Souvenirs" category — appeared merged into the same chip row,
+survived a full screen re-render (confirmed persisted, not in-memory-only), logged an expense
+under it and watched it appear in the donut legend by name; removed it via the management fold
+and confirmed the affected expense fell back to Other automatically; the monthly checkbox
+correctly swapped the date input to a month picker and back, and a logged monthly item displayed
+as "August 2026" in the log; the withdrawals card showed the plain-total fallback with no budget
+target set, then correctly switched to the donut-and-legend view (including a >100%
+over-withdrawn case rendering with "left in budget" clamped to 0, not negative) once a
+whole-trip target was set; the trend sparkline rendered proportional bars from seeded log data.
+Confirmed neither the withdrawals card nor the trend card nor the fx widget appear anywhere on
+Home. Console clean; brace-balance clean on `main.js` and `state.js`.
+
+One test-methodology note for the record, not a product bug: `navigate`-ing to the *same* hash
+twice in the preview tool does not itself fire the app's `hashchange`-driven re-render (correct
+router behaviour — the hash genuinely did not change), which briefly looked like a stale budget
+target during manual verification. Routing through a different hash and back re-renders
+correctly, matching how a real user would actually move between screens.

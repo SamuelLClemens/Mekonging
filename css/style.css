@@ -723,6 +723,20 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .budget-set summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
 .exp-cat-pick .chip.on { background: var(--sun); color: var(--ink); border-color: transparent; font-weight: 700; }
 .exp-cat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
+/* Custom expense categories: the in-place "+ Add" text field inside expCatPicker, and the
+   removable chips in budgetCategoryManager (mirrors .id-tag.removable's shape). */
+.exp-cat-new { font-family: inherit; font-size: var(--fs-sm); padding: 5px 10px; border: 1px solid var(--line); border-radius: var(--r-pill, 999px); background: var(--card); color: var(--ink); min-width: 0; width: 120px; }
+.exp-cat-chip.removable { cursor: pointer; }
+.exp-cat-chip.removable .x { margin-left: 6px; opacity: .7; }
+.exp-monthly-toggle { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--sp-2) 0; cursor: pointer; }
+.exp-monthly-toggle input { margin: 0; }
+/* Cash withdrawals: its own accent so the wheel reads as a distinct tool from the day-to-day
+   category donut just above it, plus the 14-day spend sparkline. */
+.withdrawals-card { border-top: 4px solid #B15C2E; }
+.spark-row { display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 4px; }
+.spark-bar { flex: 1 1 0; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+.spark-bar span { display: block; width: 100%; background: var(--teal-deep); border-radius: 3px 3px 0 0; min-height: 2px; }
+html[data-theme="dark"] .spark-bar span { background: var(--teal); }
 /* Modernised expense form + log row */
 .exp-add-card .field { margin-top: var(--sp-3); }
 .exp-title-chips { margin: 2px 0 var(--sp-2); }
@@ -953,7 +967,9 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-emoji { font-size: 30px; line-height: 1; }
 .rn-title { font-weight: 800; font-size: var(--fs-lg); color: var(--ink); }
 .rn-sub { font-size: var(--fs-sm); }
-.rn-list { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.rn-list { display: flex; flex-direction: column; gap: var(--sp-1); margin-bottom: var(--sp-1); }
+.rn-filter-row { display: flex; justify-content: flex-end; margin: 0 0 var(--sp-2); }
+.rn-filter-row select { font-size: var(--fs-sm); padding: 4px var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); color: var(--ink); max-width: 65%; }
 .rn-item { display: flex; align-items: stretch; gap: var(--sp-2); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; border-left: 4px solid var(--cat, var(--line)); }
 .rn-open { flex: 1; min-width: 0; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: none; border: none; padding: var(--sp-2) var(--sp-3); }
 .rn-open:active { transform: scale(0.99); }
@@ -1239,6 +1255,16 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 
 .fx-result { font-weight: 800; font-size: var(--fs-h2); color: var(--teal-deep); margin-top: var(--sp-3); }
 html[data-theme="dark"] .fx-result { color: var(--teal); }
+/* Shared amount/currency <-> amount/currency control (fxConverterControl): two compact stacked
+   boxes either side of a round "=" button that doubles as swap, used by both the standalone
+   Currency screen and the Budget fold. */
+.fx-row { display: flex; align-items: center; gap: var(--sp-2); }
+.fx-side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fx-side input, .fx-side select { width: 100%; font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
+.fx-side .fx-out { font-weight: 800; color: var(--teal-deep); }
+html[data-theme="dark"] .fx-side .fx-out { color: var(--teal); }
+.fx-eq { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-weight: 800; font-size: 1.1rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.fx-eq:hover { background: var(--sun); border-color: transparent; }
 
 /* --- map --- */
 #map-canvas {

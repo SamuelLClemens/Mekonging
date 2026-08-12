@@ -104,7 +104,11 @@ function defaults() {
     placeData: {},
     trip: {
       stops: [],                // { id, title, country, date:'YYYY-MM-DD'(arrive), endDate:'YYYY-MM-DD'(leave, optional) }
-      budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note, category }
+      budgetLog: [],            // { id, date:'YYYY-MM-DD', amount, currency, note, category, monthly:bool }
+      // Cash withdrawn/drawn against the overall trip budget — tracked separately from the
+      // itemised, per-category budgetLog above (see budgetWithdrawalsCard in main.js): a
+      // coarser but often more honest second read on "how much of my budget is actually gone."
+      withdrawals: [],          // { id, date:'YYYY-MM-DD', amount, currency, note }
       notes: '',
     },
     // --- v4: travel journal + travel calendar (all on-device) ---
@@ -406,8 +410,8 @@ export function updateStop(id, patch = {}) {
   if (patch.country !== undefined) s.country = patch.country;
   save(); return s;
 }
-export function addBudgetItem({ date, amount, currency, note, category }) {
-  const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '', category: category || 'other' };
+export function addBudgetItem({ date, amount, currency, note, category, monthly }) {
+  const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '', category: category || 'other', monthly: !!monthly };
   store.trip.budgetLog.push(b);
   store.trip.budgetLog.sort((a, c) => (a.date < c.date ? -1 : 1));
   save(); return b;
@@ -424,8 +428,25 @@ export function updateBudgetItem(id, patch = {}) {
   if (patch.note !== undefined) b.note = patch.note;
   if (patch.date !== undefined) b.date = patch.date;
   if (patch.category !== undefined) b.category = patch.category;
+  if (patch.monthly !== undefined) b.monthly = !!patch.monthly;
   store.trip.budgetLog.sort((a, c) => (a.date < c.date ? -1 : 1));
   save(); return b;
+}
+
+// Cash withdrawn/drawn against the overall trip budget — see the withdrawals note on the trip
+// schema above. Deliberately simpler than a budget-log item (no category): mirrors
+// addBudgetItem/deleteBudgetItem exactly otherwise.
+export function addWithdrawal({ date, amount, currency, note }) {
+  const w = { id: uid('wd'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '' };
+  store.trip.withdrawals = store.trip.withdrawals || [];
+  store.trip.withdrawals.push(w);
+  store.trip.withdrawals.sort((a, c) => (a.date < c.date ? -1 : 1));
+  save(); return w;
+}
+export function deleteWithdrawal(id) {
+  const list = store.trip.withdrawals || [];
+  const i = list.findIndex((x) => x.id === id);
+  if (i >= 0) { list.splice(i, 1); save(); }
 }
 
 // --- travel journal ----------------------------------------------------------
