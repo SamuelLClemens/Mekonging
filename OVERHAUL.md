@@ -2813,3 +2813,72 @@ watched the total, the row, and the pace numbers all recompute live; toggled the
 Recent-withdrawals fold closed and confirmed the open state persisted to prefs; spot-checked
 dark mode (pace/trend colours all stay legible, `.over` correctly overrides to magenta). Console
 clean throughout; brace-balance clean on `main.js` and `state.js`.
+
+### Real bug fix (categories), Home brevity, mobile topbar, and Budget/Weather follow-ups (mk-v0.380.0)
+
+Follow-up round after direct user feedback that the categories fix from mk-v0.379.0 was **not**
+actually unified on their phone. Investigated by rendering the real screen at a 375px mobile
+viewport instead of trusting the code alone — the earlier claim ("already fully true") was
+wrong: `budgetCategoryManager()`, a *second*, separately-headed "🏷 Manage your categories" fold
+sitting right under the donut, was still there. The picker itself was correctly unified; this
+second fold was not, and reads exactly like a second categories list. This is a correction, not
+a restatement — the earlier "no code change needed" conclusion in the mk-v0.379.0 entry was
+incorrect.
+
+**Categories, actually merged this time.** Deleted `budgetCategoryManager()` and its call site
+entirely. A custom category's chip in `expCatPicker()` now carries its own inline ✕ — two
+sibling `<button>`s inside one pill (a select area + a small remove button, never a button
+nested in a button), so removing a category needs no second list anywhere on the screen, full
+stop. Confirmed via a real click-through: add, appears merged in the picker; tap ✕, confirm,
+gone — no separate fold, no separate heading, ever.
+
+**Mobile topbar title wrap.** Separately spotted while checking the above: `.topbar h1` used a
+fixed `var(--fs-h1)` regardless of viewport, so "BUDGET & EXPENSES" (same length as the old
+"EXPENSES & BUDGET") wrapped to three lines on a 375px phone, pushing all page content down.
+Pre-existing gap, never caught because every earlier verification this project has done was at
+desktop width. Fixed with `font-size: clamp(1rem, 4.8vw, var(--fs-h1))` plus `min-width:0` (a
+flex-item text-wrapping prerequisite) — now wraps to two lines cleanly. Noting for future
+verification passes: check topbar titles at mobile width, not just desktop.
+
+**Home: "Your trip has started" tightened to a chip.** `tripCountdownCard()`'s post-departure
+state was a full `.companion-card` (heading + paragraph + button); it is now the exact shape of
+Home's "Just arrived" chip — reuses `.just-arrived-chip`/`.ja-main` directly — one line, tap to
+switch to Traveling. Verified live: tapping it flips the phase and Home correctly swaps in the
+real "Just arrived" chip in its place.
+
+**Budget & Expenses: three real feature adds**, all direct requests:
+- Both "Recent expenses" and "Recent withdrawals" now default **closed** (`collapsibleCard`'s
+  `defaultOpen` flipped to `false`) — confirmed against a cleared pref (a genuinely fresh user),
+  not just a browser that had already been toggled open earlier in testing.
+- A cash-withdrawal budget can now be set **separately** from the whole-trip spending budget
+  (`withdrawalTarget()`/`setWithdrawalTarget()`, prefs.withdrawalCap) — optional; with nothing
+  set it falls back to the whole-trip target exactly as before, so nothing regresses. A small
+  "＋ Set a separate cash budget" fold lives in `budgetWithdrawalsCard()` itself.
+- Trip start/end dates can now be set **directly in Budget** (`budgetSetupEditor()`, prefs
+  .tripDates), with an "Undecided" checkbox for the end date — no need to plan stop-by-stop in
+  My Trip first. `tripSpanDays()` now prefers this pref when set, falling back to stops/logged-
+  expense dates otherwise. When the end is undecided, `span.total` is `null` and the withdrawals
+  pace row correctly shows only "% of budget withdrawn," never a meaningless "% of trip elapsed"
+  — verified by setting a manual start with no end and confirming the elapsed-side stat and its
+  comparison verdict both disappear, leaving the withdrawn-side stat alone.
+  `budgetSummaryCard()` no longer returns `null` with nothing logged yet — it now always shows
+  at minimum a short prompt + the setup fold, so the one place to set a budget and trip dates is
+  reachable before a traveller ever logs an expense, not only after.
+
+**Weather ring: tap a wedge to inspect it.** `wxHourlyRingSvg()`'s wedges now carry `data-i`; one
+delegated click listener on `wxVizCard`'s ring slot highlights the tapped wedge (`.wx-wedge-sel`,
+an accent outline) and swaps the ring's centre readout from "now" to that hour, while a new
+`wxHourDetailCard()` lists every layer's value (temp/rain/humidity/UV/feels/wind) for that exact
+hour just below the ring — answering "what about all the other layers at this same hour" without
+leaving the ring or switching metrics. The selection survives a metric-chip switch (the same
+hour stays meaningful across layers) and clears on a second tap of the same wedge. Extracted
+`wxNext24h()` so the ring and the detail panel always index the identical 24-hour window.
+Verified live: tapped hour 5, got the highlight + a 6-row all-metrics panel + centre swapped to
+"5pm"; switched the metric chip to Rain, selection held; tapped the same wedge again, everything
+cleared back to "now".
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.380.0`. No new files.
+
+A full site-wide sweep for verbose/wordy help text (per the standing "keep UI copy brief"
+preference from the previous round) was run separately and is queued as the next pass, not
+folded into this one.

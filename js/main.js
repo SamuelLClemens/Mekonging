@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.379.0';
+const APP_VERSION = 'mk-v0.380.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1813,21 +1813,26 @@ function tripCountdownCard(cc) {
     ]);
   }
   const days = daysUntilISO(start);
+  // Once the trip has started (days <= 0), the "which phase am I in" nudge collapses to one
+  // tight chip — the exact shape of Home's "Just arrived" chip below it — instead of a full
+  // card with its own heading, paragraph and button underneath. Tapping it IS the action.
+  if (days <= 0) {
+    return h('div', { class: 'just-arrived-chip', style: 'margin-top:8px' }, [
+      h('button', { class: 'ja-main', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, [
+        h('span', { class: 'status-ic' }, days === 0 ? '🎉' : '🛬'),
+        h('span', { class: 'status-lbl' }, days === 0 ? 'Today’s the day — switch to Traveling' : 'Trip started — switch to Traveling'),
+      ]),
+    ]);
+  }
   const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
-  if (days > 0) {
-    card.append(h('div', { class: 'countdown-num' }, [h('b', {}, String(days)), ` day${days === 1 ? '' : 's'} to go`]));
-    const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
-    if (todo.length) {
-      card.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
-      todo.slice(0, 3).forEach((it) => card.append(h('div', { class: 'companion-todo' }, `☐ ${it.title}`)));
-      card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
-    } else {
-      card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
-    }
+  card.append(h('div', { class: 'countdown-num' }, [h('b', {}, String(days)), ` day${days === 1 ? '' : 's'} to go`]));
+  const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
+  if (todo.length) {
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
+    todo.slice(0, 3).forEach((it) => card.append(h('div', { class: 'companion-todo' }, `☐ ${it.title}`)));
+    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
   } else {
-    card.append(h('div', { class: 'countdown-num' }, days === 0 ? '🎉 Today’s the day!' : '🛬 Your trip has started'));
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Switch Home to “Traveling” for near-me help, arrival tips and emergency info.'));
-    card.append(h('button', { class: 'btn', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, 'I have arrived →'));
+    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
   }
   return card;
 }
@@ -10052,7 +10057,10 @@ function removeCustomExpCat(id) {
 }
 
 // Segmented category picker: the fixed 5 plus any the traveller has added, in one row — a
-// custom category is never a second list. The trailing "+ Add" opens a one-line name field in
+// custom category is never a second list, and (per direct report — a "Manage your categories"
+// fold elsewhere on the screen still read as a second, separate categories list) neither is
+// removing one: a custom chip carries its own small inline ✕ right here, so there is exactly
+// one place categories live, full stop. The trailing "+ Add" opens a one-line name field in
 // place (Enter to commit), mirroring the identifier screen's own tag-add idiom rather than a
 // native prompt(). Rebuilds itself locally (never the global render()) so it stays safe to use
 // mid-form, before the rest of the expense has been saved. Reflects the choice in place and
@@ -10063,11 +10071,31 @@ function expCatPicker(current) {
   const row = h('div', { class: 'chips exp-cat-pick' });
   function build() {
     row.replaceChildren();
+    const customIds = new Set(customExpCats().map((c) => c.id));
     expCatsAll().forEach((c) => {
-      row.append(h('button', {
-        type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
-        onclick: () => { val = c.id; build(); },
-      }, `${c.emoji} ${c.label}`));
+      if (!customIds.has(c.id)) {
+        row.append(h('button', {
+          type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
+          onclick: () => { val = c.id; build(); },
+        }, `${c.emoji} ${c.label}`));
+        return;
+      }
+      // A custom category: the same pill, but split into a select area and a small ✕ that
+      // removes it on the spot (confirmed first — a stray tap while logging an expense must
+      // never silently delete one). Two sibling buttons, never a button nested in a button.
+      row.append(h('span', { class: 'chip exp-cat-chip-custom' + (c.id === val ? ' on' : '') }, [
+        h('button', {
+          type: 'button', class: 'exp-cat-sel', 'aria-pressed': c.id === val ? 'true' : 'false',
+          onclick: () => { val = c.id; build(); },
+        }, `${c.emoji} ${c.label}`),
+        h('button', {
+          type: 'button', class: 'exp-cat-rm', 'aria-label': `Remove category ${c.label}`,
+          onclick: () => {
+            confirmAction({ title: `Remove “${c.label}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true })
+              .then((ok) => { if (ok) { removeCustomExpCat(c.id); if (val === c.id) val = 'other'; build(); } });
+          },
+        }, '✕'),
+      ]));
     });
     if (customExpCats().length < EXP_CUSTOM_MAX) {
       if (adding) {
@@ -10164,18 +10192,29 @@ function expenseAddCard(opts = {}) {
 export function budgetTarget() { const t = store.profile.prefs.budgetCap; return (t && +t.amount > 0) ? { amount: +t.amount, per: t.per === 'day' ? 'day' : 'trip' } : null; }
 function setBudgetTarget(amount, per) { store.profile.prefs.budgetCap = { amount: +amount || 0, per: per === 'day' ? 'day' : 'trip' }; save(); }
 
-// Trip span in whole days from any known dates (stops + logged spends). elapsed = start→today;
-// total = start→last planned stop date (null if no stop end date). Returns null if no dates.
+// Trip span in whole days. A start/end set directly in Budget (prefs.tripDates — see
+// budgetSetupEditor) wins when present, so a traveller gets budget/withdrawal stats without
+// ever having to plan stop-by-stop in My Trip; otherwise falls back to whatever the stops +
+// logged spends imply, as before. elapsed = start→today; total = start→end, or null if no end
+// is known yet (including an explicitly "undecided" end — see budgetSetupEditor). Returns null
+// only if no start date exists anywhere.
 export function tripSpanDays() {
   const parse = (d) => { const p = String(d).split('-').map(Number); return Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1); };
-  const stops = (store.trip.stops || []);
-  const dates = [];
-  stops.forEach((s) => { if (s.date) dates.push(s.date); if (s.endDate) dates.push(s.endDate); });
-  (store.trip.budgetLog || []).forEach((b) => { if (b.date) dates.push(b.date); });
-  if (!dates.length) return null;
-  const start = dates.slice().sort()[0];
-  const ends = stops.map((s) => s.endDate || s.date).filter(Boolean).sort();
-  const end = ends.length ? ends[ends.length - 1] : null;
+  const manual = store.profile.prefs.tripDates;
+  let start, end;
+  if (manual && manual.start) {
+    start = manual.start;
+    end = manual.end || null;
+  } else {
+    const stops = (store.trip.stops || []);
+    const dates = [];
+    stops.forEach((s) => { if (s.date) dates.push(s.date); if (s.endDate) dates.push(s.endDate); });
+    (store.trip.budgetLog || []).forEach((b) => { if (b.date) dates.push(b.date); });
+    if (!dates.length) return null;
+    start = dates.slice().sort()[0];
+    const ends = stops.map((s) => s.endDate || s.date).filter(Boolean).sort();
+    end = ends.length ? ends[ends.length - 1] : null;
+  }
   const today = todayKey();
   const dayMs = 86400000;
   const elapsed = Math.max(1, Math.round((parse(today) - parse(start)) / dayMs) + 1);
@@ -10200,7 +10239,16 @@ function donutSVG(segs, centerTop, centerSub) {
 export function budgetSummaryCard() {
   const log = store.trip.budgetLog || [];
   const target = budgetTarget();
-  if (!log.length && !target) return null;
+  const dates = store.profile.prefs.tripDates;
+  if (!log.length && !target && !(dates && dates.start)) {
+    // Nothing to summarise yet — still surface the one place to set a budget and trip dates,
+    // rather than making the traveller log an expense first just to find it.
+    const card = h('div', { class: 'card budget-card' });
+    card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
+    card.append(h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Log an expense below, or set a budget and your trip dates here to see stats before you do.'));
+    card.append(budgetSetupEditor());
+    return card;
+  }
   const home = homeCurrency();
   const cats = expCatsAll();
   const sums = {}; cats.forEach((c) => { sums[c.id] = 0; });
@@ -10261,8 +10309,7 @@ export function budgetSummaryCard() {
     }
   }
   if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some expenses use a currency with no cached rate — refresh in Currency to include them.'));
-  card.append(budgetTargetEditor());
-  const catMgr = budgetCategoryManager(); if (catMgr) card.append(catMgr);
+  card.append(budgetSetupEditor());
   return card;
 }
 
@@ -10343,6 +10390,32 @@ function budgetTrendCard() {
 // shows up, never confusable with a category colour from expCatsAll().
 const WD_COLOR = '#B15C2E';
 
+// Optional cash-withdrawal budget, independent of the whole-trip spending target above — a
+// traveller who wants to say "I only plan to withdraw 1,500 USD in cash" without that number
+// getting tangled up in total trip spending can set one here. Falls back to the whole-trip
+// target (when it applies per-trip, not per-day) so nothing regresses for anyone who never
+// touches this — the withdrawals wheel simply keeps working exactly as it did before.
+function withdrawalTarget() {
+  const custom = store.profile.prefs.withdrawalCap;
+  if (custom && +custom.amount > 0) return { amount: +custom.amount, custom: true };
+  const bt = budgetTarget();
+  return (bt && bt.per === 'trip') ? { amount: bt.amount, custom: false } : null;
+}
+function setWithdrawalTarget(amount) { store.profile.prefs.withdrawalCap = amount ? { amount: +amount || 0 } : null; save(); }
+function withdrawalTargetEditor() {
+  const home = homeCurrency();
+  const custom = store.profile.prefs.withdrawalCap;
+  const det = h('details', { class: 'budget-set' });
+  det.append(h('summary', {}, custom ? '✎ Change cash budget' : '＋ Set a separate cash budget'));
+  const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: `Amount in ${home}`, value: custom ? custom.amount : '' });
+  det.append(field(`Cash budget (${home})`, amt));
+  det.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+    custom ? h('button', { class: 'btn ghost', onclick: () => { setWithdrawalTarget(null); render(); } }, 'Clear') : h('span', {}, ''),
+    h('button', { class: 'btn', onclick: () => { if (amt.value) { setWithdrawalTarget(amt.value); render(); } } }, 'Save'),
+  ]));
+  return det;
+}
+
 // A second, separate way to read "how much of my budget is gone" — cash withdrawn/drawn
 // against the trip, tracked independently of the itemised per-category log above. Day-to-day
 // spending usually comes out of exactly this cash, but logging every small purchase is
@@ -10352,7 +10425,7 @@ const WD_COLOR = '#B15C2E';
 // Home — see budgetSummaryCard/quickSpendRow there — this lives only in the Budget screen.
 function budgetWithdrawalsCard() {
   const home = homeCurrency();
-  const target = budgetTarget();
+  const wTarget = withdrawalTarget();
   const list = (store.trip.withdrawals || []).slice();
   let total = 0, unknown = false;
   list.forEach((w) => {
@@ -10366,24 +10439,26 @@ function budgetWithdrawalsCard() {
   card.append(h('h2', { style: 'margin-top:0' }, '🏧 Cash withdrawals'));
   card.append(h('p', { class: 'muted', style: 'margin:4px 0 10px' }, 'Cash pulled out, tracked separately from itemised spending.'));
 
-  if (target && target.per === 'trip' && target.amount > 0) {
-    const remaining = Math.max(0, target.amount - total);
+  if (wTarget) {
+    const remaining = Math.max(0, wTarget.amount - total);
     const segs = [{ value: total, color: WD_COLOR }, { value: remaining, color: 'var(--line)' }];
     const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, total > 0 ? Math.round(total).toLocaleString() : '—', home) });
     const legend = h('div', { class: 'budget-legend' }, [
-      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: `background:${WD_COLOR}` }), h('span', { class: 'blg-lbl' }, 'Withdrawn'), h('span', { class: 'blg-val' }, `${Math.round(total).toLocaleString()} ${home} · ${Math.round(total / target.amount * 100)}%`)]),
+      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: `background:${WD_COLOR}` }), h('span', { class: 'blg-lbl' }, 'Withdrawn'), h('span', { class: 'blg-val' }, `${Math.round(total).toLocaleString()} ${home} · ${Math.round(total / wTarget.amount * 100)}%`)]),
       h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, `${Math.round(remaining).toLocaleString()} ${home}`)]),
     ]);
     card.append(h('div', { class: 'budget-head' }, [donut, legend]));
+    if (!wTarget.custom) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Using your whole-trip budget above — set a separate cash budget below to track this on its own.'));
 
     // Pace: the same percentage read on two different clocks — how far through the trip vs.
-    // how far through the withdrawn budget — so it is obvious at a glance whether cash is
-    // going out faster or slower than the trip itself is passing. Needs a known trip span
-    // (an end date somewhere), so it only appears once that exists.
+    // how far through this budget's been withdrawn. "% of trip elapsed" needs a known trip
+    // length (see tripSpanDays/budgetSetupEditor); with no end date, or an explicitly
+    // "undecided" one, only the withdrawn share shows — a percentage of an unknown-length trip
+    // is not a real number.
     const span = tripSpanDays();
+    const withdrawnPct = Math.round(total / wTarget.amount * 100);
     if (span && span.total) {
       const elapsedPct = Math.min(100, Math.round(span.elapsed / span.total * 100));
-      const withdrawnPct = Math.round(total / target.amount * 100);
       const diff = withdrawnPct - elapsedPct;
       card.append(h('div', { class: 'pace-row' }, [
         h('span', { class: 'pace-lbl' }, `${elapsedPct}% of trip elapsed`),
@@ -10395,14 +10470,20 @@ function budgetWithdrawalsCard() {
       ]));
       card.append(h('p', { class: 'budget-proj ' + (diff > 8 ? 'over' : 'under'), style: 'margin:4px 0 10px' },
         Math.abs(diff) <= 8 ? '✓ right on pace with the trip.' : diff > 8 ? `⚠️ withdrawing faster than the trip is passing (+${diff} pts).` : `✓ under pace — ${-diff} pts of runway to spare.`));
+    } else {
+      card.append(h('div', { class: 'pace-row', style: 'margin-bottom:8px' }, [
+        h('span', { class: 'pace-lbl' }, `${Math.min(999, withdrawnPct)}% of budget withdrawn`),
+        h('div', { class: 'budget-bar pace-bar' }, [h('span', { class: 'budget-bar-fill pace-fill-wd', style: `width:${Math.min(100, withdrawnPct)}%` })]),
+      ]));
     }
   } else {
     card.append(h('p', { style: 'margin:0 0 10px' }, [
       h('strong', {}, `${total.toLocaleString()} ${home}`), h('span', { class: 'muted' }, ' withdrawn so far'),
     ]));
-    card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' }, 'Set a whole-trip budget above to see this as a share of the total.'));
+    card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' }, 'Set a budget below to see this as a share of a total.'));
   }
   if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' }, 'Some withdrawals use a currency with no cached rate — refresh in Currency to include them.'));
+  card.append(withdrawalTargetEditor());
 
   const wAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', 'aria-label': 'Withdrawal amount' });
   const wCur = currencySelect(home);
@@ -10422,7 +10503,7 @@ function budgetWithdrawalsCard() {
   if (list.length) {
     const recent = h('div', {}, [h('h2', { style: 'margin:12px 0 4px' }, 'Recent withdrawals')]);
     list.slice().reverse().slice(0, 20).forEach((w) => recent.append(withdrawalRow(w)));
-    card.append(collapsibleCard(recent, 'budgetRecentWithdrawalsOpen', true));
+    card.append(collapsibleCard(recent, 'budgetRecentWithdrawalsOpen', false));
   }
   return card;
 }
@@ -10462,36 +10543,41 @@ function withdrawalRow(w) {
   ]);
 }
 
-function budgetTargetEditor() {
+// Asks for both things the budget/withdrawals stats actually need — a spending target AND the
+// trip's start/end dates — in one fold, since neither is much use without the other and a
+// traveller should not have to plan stop-by-stop in My Trip just to see a spend projection.
+// End date has its own "Undecided" checkbox: tripSpanDays() then knows the trip length is
+// unknown rather than treating a blank end as "ends today," so pace stats correctly drop any
+// "% of trip elapsed" reading instead of showing a meaningless one (see budgetWithdrawalsCard).
+function budgetSetupEditor() {
   const home = homeCurrency();
   const t = budgetTarget();
+  const dates = store.profile.prefs.tripDates || {};
   const det = h('details', { class: 'budget-set' });
-  det.append(h('summary', {}, t ? '✎ Change budget' : '＋ Set a budget'));
+  det.append(h('summary', {}, (t || dates.start) ? '✎ Change budget & dates' : '＋ Set your budget & trip dates'));
   const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: `Amount in ${home}`, value: t ? t.amount : '' });
   const per = selectEl(['Whole trip', 'Per day'], t && t.per === 'day' ? 'Per day' : 'Whole trip', () => {}, 'Budget applies to');
-  det.append(field(`Budget (${home})`, amt), field('Applies to', per));
+  const startEl = h('input', { type: 'date', value: dates.start || '' });
+  const isUndecided = !!(dates.start && !dates.end);
+  const endEl = h('input', { type: 'date', value: dates.end || '', disabled: isUndecided ? '' : null });
+  const undecided = h('input', { type: 'checkbox', checked: isUndecided });
+  undecided.addEventListener('change', () => { endEl.disabled = undecided.checked; if (undecided.checked) endEl.value = ''; });
+  det.append(
+    field(`Budget (${home})`, amt), field('Applies to', per),
+    field('Trip start', startEl), field('Trip end', endEl),
+    h('label', { class: 'exp-monthly-toggle' }, [undecided, ' End date undecided']),
+  );
   det.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
-    t ? h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear your budget target?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { store.profile.prefs.budgetCap = null; save(); render(); } }); } }, 'Clear') : h('span', {}, ''),
-    h('button', { class: 'btn', onclick: () => { if (amt.value) { setBudgetTarget(amt.value, per.value === 'Per day' ? 'day' : 'trip'); render(); } } }, 'Save budget'),
+    (t || dates.start) ? h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear budget & trip dates?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { store.profile.prefs.budgetCap = null; store.profile.prefs.tripDates = null; save(); render(); } }); } }, 'Clear') : h('span', {}, ''),
+    h('button', {
+      class: 'btn',
+      onclick: () => {
+        if (amt.value) setBudgetTarget(amt.value, per.value === 'Per day' ? 'day' : 'trip');
+        if (startEl.value) store.profile.prefs.tripDates = { start: startEl.value, end: undecided.checked ? null : (endEl.value || null) };
+        save(); render();
+      },
+    }, 'Save'),
   ]));
-  return det;
-}
-
-// Lets the traveller remove a custom category they added by mistake — deliberately separate
-// from the fast-path picker (expCatPicker) so a stray tap while logging an expense can never
-// delete one. Removing reassigns any already-logged expenses back to Other (removeCustomExpCat)
-// rather than leaving them pointing at a category that no longer exists. Only rendered once at
-// least one custom category exists.
-function budgetCategoryManager() {
-  const cats = customExpCats();
-  if (!cats.length) return null;
-  const det = h('details', { class: 'budget-set' });
-  det.append(h('summary', {}, '🏷 Manage your categories'));
-  const row = h('div', { class: 'chips' }, cats.map((c) => h('button', {
-    type: 'button', class: 'exp-cat-chip removable', 'aria-label': `Remove category ${c.label}`,
-    onclick: () => { confirmAction({ title: `Remove “${c.label}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeCustomExpCat(c.id); render(); } }); },
-  }, [`${c.emoji} ${c.label}`, h('span', { class: 'x' }, '✕')])));
-  det.append(row);
   return det;
 }
 
@@ -10575,7 +10661,7 @@ function expensesScreen() {
   if (log.length) {
     const list = h('div', { class: 'card' }, [h('h2', {}, 'Recent expenses')]);
     log.slice(0, 50).forEach((b) => list.append(budgetLogRow(b)));
-    wrap.append(collapsibleCard(list, 'budgetRecentOpen', true));
+    wrap.append(collapsibleCard(list, 'budgetRecentOpen', false));
   } else {
     wrap.append(h('p', { class: 'empty' }, 'No expenses logged yet — add your first above.'));
   }

@@ -168,7 +168,7 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
   padding: var(--sp-4) var(--sp-4) var(--sp-3); background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
-.topbar h1 { font-size: var(--fs-h1); margin: 0; flex: 1; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); }
+.topbar h1 { font-size: clamp(1rem, 4.8vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); }
 .topbar .back {
   border: none; background: var(--teal); color: #fff; cursor: pointer;
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
@@ -722,12 +722,16 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .budget-set { margin-top: var(--sp-3); }
 .budget-set summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
 .exp-cat-pick .chip.on { background: var(--sun); color: var(--ink); border-color: transparent; font-weight: 700; }
+/* A custom category's chip in the picker itself: a select area + its own small ✕, so removing
+   one never needs a second, separate "manage categories" list elsewhere on the screen. */
+.exp-cat-chip-custom { padding: 0; overflow: hidden; }
+.exp-cat-chip-custom .exp-cat-sel { background: none; border: none; color: inherit; font: inherit; font-weight: inherit; padding: 0 var(--sp-3); min-height: 44px; cursor: pointer; }
+.exp-cat-chip-custom .exp-cat-rm { background: none; border: none; border-left: 1px solid currentColor; opacity: 0.55; color: inherit; font-size: 0.82em; padding: 0 10px; min-height: 44px; min-width: 32px; cursor: pointer; }
+.exp-cat-chip-custom .exp-cat-rm:hover, .exp-cat-chip-custom .exp-cat-rm:active { opacity: 1; }
 .exp-cat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
-/* Custom expense categories: the in-place "+ Add" text field inside expCatPicker, and the
-   removable chips in budgetCategoryManager (mirrors .id-tag.removable's shape). */
+/* Custom expense categories: the in-place "+ Add" text field inside expCatPicker (mirrors
+   .id-tag's shape). */
 .exp-cat-new { font-family: inherit; font-size: var(--fs-sm); padding: 5px 10px; border: 1px solid var(--line); border-radius: var(--r-pill, 999px); background: var(--card); color: var(--ink); min-width: 0; width: 120px; }
-.exp-cat-chip.removable { cursor: pointer; }
-.exp-cat-chip.removable .x { margin-left: 6px; opacity: .7; }
 .exp-monthly-toggle { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--sp-2) 0; cursor: pointer; }
 .exp-monthly-toggle input { margin: 0; }
 /* Cash withdrawals: its own accent so the wheel reads as a distinct tool from the day-to-day
@@ -1904,6 +1908,17 @@ html[data-theme="dark"] .id-edit-panel { background: rgba(255,255,255,0.06); }
 .wx-ring-sub2 { font-size: 10px; fill: var(--muted, #8a8a8a); letter-spacing: .1em; }
 html[data-theme="dark"] .wx-ring-lbl { fill: #F3ECDD; }
 html[data-theme="dark"] .wx-ring-val, html[data-theme="dark"] .wx-ring-sub { fill: #F3ECDD; }
+/* Tap-to-inspect: each hour wedge is clickable; the selected one gets an accent outline and
+   its full-layer breakdown appears in .wx-hour-detail, just below the ring. */
+.wx-wedge { cursor: pointer; }
+.wx-wedge:hover { opacity: 0.85; }
+.wx-wedge-sel { stroke: var(--accent, #C0431A); stroke-width: 2.5; }
+.wx-hour-detail { margin: 8px 0 4px; padding: 10px 12px; border-radius: var(--r-md, 10px); background: rgba(0,0,0,0.045); }
+html[data-theme="dark"] .wx-hour-detail { background: rgba(255,255,255,0.06); }
+.wx-detail-head { margin-bottom: 6px; font-size: var(--fs-sm); }
+.wx-detail-row { display: flex; justify-content: space-between; font-size: var(--fs-sm); padding: 2px 0; }
+.wx-detail-lbl { color: var(--ink-soft); }
+.wx-detail-val { font-weight: 700; }
 .wx-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .wx-cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted, #8a8a8a); padding-bottom: 2px; }
 .wx-cal-cell { min-height: 46px; border-radius: 8px; background: rgba(0,0,0,0.045); padding: 3px 2px;
