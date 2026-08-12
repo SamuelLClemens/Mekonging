@@ -2598,3 +2598,61 @@ both the Filters and the Compare sheet. Confirmed list rows number 1, 2, 3… se
 match real place names; the small number of map pins that instead show a plain "•" are the
 existing pixel-space cluster markers merging several places into one dot at a zoomed-out view,
 unrelated to this change (a cluster, by definition, cannot carry a single place's number).
+
+### Places: the other half of the Explore/Places split — a decide-now shortlist, not a second browse (mk-v0.377.0)
+
+Explore already became the whole-country/region browse layer (mk-v0.374.0). Places still had
+its own, overlapping version of that: a country flag-row, a "choose a city" drill-down, and a
+"browse every category" grouped list with no location behind any of it. This closes the gap the
+user named directly: *"Places = near me; Explore = all browsing."*
+
+**Removed:** the "choose a city" drill-down (`cityPickerCard`, pure geographic browsing — that
+is Explore's job now); the "closest to you" fold (redundant once the whole list already is
+"near you"); the category-grouped-with-folds list (Food/Markets/Culture/…, built for scanning
+an entire country); the manual "Nearest first" sort toggle; two now-dead prefs (`placesView`,
+never read since the map-always-visible redesign; `placesSort`, dead the moment the toggle it
+drove was removed) at their one remaining write site.
+
+**Added — an anchor, always.** Places no longer has an "un-anchored, browsing the whole
+country" state at all. It resolves to a single point every time: an explicit city scope (tapped
+from Explore, or a "Places in X" link) wins first — that is a "show me near THIS city" request,
+not a "where am I" one; otherwise a live GPS fix wins; otherwise the same focus-spot/capital
+fallback chain "Things to do" and weather already use, so every screen agrees on "here" even
+pre-GPS. The mode bar states it plainly ("📍 Near Chiang Mai") with exactly one further action —
+drop the city scope, or get a precise fix — never two look-alike buttons.
+
+**Added — distance tiers, not a category taxonomy.** Results are grouped 🚶 Right here / 📍
+Nearby / 🚌 Worth a day trip / 🗺 Further afield, reusing the exact `withinNear`/`withinDayTrip`
+thresholds "Things to do" already uses — the two surfaces now share one vocabulary for what
+"near" means instead of quietly disagreeing. Nothing is ever hidden for being far —
+rank/collapse/never-remove, same principle as everywhere else in this app — Right here/Nearby
+open by default, the two further tiers folded; a traveller's own toggle is remembered for the
+visit the same way the old category folds were.
+
+**Added — a Maps link for the tail.** Every render of the list, found-or-empty, ends with a
+live Google Maps search centred on the same anchor, via the same `mapsUrl()` deep link every
+place-detail page already uses for "Open in Google Maps." This is the honest acknowledgement
+that a curated guide will never carry Google's inventory — the tail is one tap away instead of
+the screen just running out of results.
+
+**Deliberately untouched: `daySuggestScreen` ("Things to do," `#today`).** It already owns
+weather/time-of-day/plan-ahead context ranking with its own reason chips, and is cross-linked
+from several places on Home — a heavily-used, actively-tuned feature, not a redundant twin to
+retire. Places' job is a different one and stays that way: a map you can filter and compare on,
+not a re-ranked single list. Reusing its `withinNear`/`withinDayTrip` distance thresholds (not
+its scoring) is what keeps the two thematically consistent without merging them.
+
+Bumped `APP_VERSION`/`CACHE_VERSION` to `mk-v0.377.0`. No new files.
+
+**Verified in-browser** across two countries (code path is fully country-agnostic — no
+country-specific logic exists anywhere in the new code): Thailand with no GPS fix correctly
+anchored on the persisted focus city, all four tiers rendered with the right open/closed
+defaults and counts summing to the total match count; a city-scoped URL
+(`#places-th-chiang-mai`) correctly re-anchored on that city instead, mode bar switched to the
+"↩ Use my location instead" affordance, and re-tiered around the new anchor; a manually
+opened/closed tier survived a search re-render (confirmed the `toggle` event — which is
+asynchronous, not synchronous with the click, in this browser — had time to fire first);
+Vietnam (`#places-vi`) independently anchored on Hanoi with its own 149-place count tiered
+correctly. Confirmed the compare sheet's Distance column now reads from the same anchor and so
+is never blank pre-GPS. Confirmed the Google Maps link's href and visible city name are correct
+in both the results-found and no-results states. Brace-balance clean.
