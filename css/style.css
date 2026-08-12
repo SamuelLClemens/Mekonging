@@ -731,12 +731,23 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .exp-monthly-toggle { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--sp-2) 0; cursor: pointer; }
 .exp-monthly-toggle input { margin: 0; }
 /* Cash withdrawals: its own accent so the wheel reads as a distinct tool from the day-to-day
-   category donut just above it, plus the 14-day spend sparkline. */
+   category donut just above it, plus the 14-day spend sparkline. A fold nested inside this
+   card (Recent withdrawals) still wants the same breathing room .budget-set gets above it. */
 .withdrawals-card { border-top: 4px solid #B15C2E; }
+.withdrawals-card .foldcard { margin-top: var(--sp-3); }
+/* Trip-elapsed vs. budget-withdrawn pace: two slim reused .budget-bar tracks, each with its
+   own fill colour so the two clocks stay visually distinct at a glance. */
+.pace-row { margin-top: var(--sp-3); }
+.pace-lbl { display: block; font-size: var(--fs-xs, 0.78rem); color: var(--ink-soft); }
+.pace-row .budget-bar.pace-bar { margin-top: 3px; }
+.pace-fill-trip { background: var(--ink-soft); }
+.pace-fill-wd { background: #B15C2E; }
+/* Daily spend trend: each bar stacks one segment per category (colour from expCatsAll()),
+   bottom-up in a fixed order via column-reverse, so the same category always occupies the
+   same band from one day's bar to the next. */
 .spark-row { display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 4px; }
-.spark-bar { flex: 1 1 0; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
-.spark-bar span { display: block; width: 100%; background: var(--teal-deep); border-radius: 3px 3px 0 0; min-height: 2px; }
-html[data-theme="dark"] .spark-bar span { background: var(--teal); }
+.spark-bar { flex: 1 1 0; height: 100%; display: flex; flex-direction: column-reverse; min-width: 0; border-radius: 3px 3px 0 0; overflow: hidden; }
+.spark-bar span { display: block; width: 100%; min-height: 2px; }
 /* Modernised expense form + log row */
 .exp-add-card .field { margin-top: var(--sp-3); }
 .exp-title-chips { margin: 2px 0 var(--sp-2); }
