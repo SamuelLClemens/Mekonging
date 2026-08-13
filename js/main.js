@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.382.0';
+const APP_VERSION = 'mk-v0.383.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -383,12 +383,14 @@ export function sectionTile(x) {
   ]);
 }
 
+// Order is home, talk, you, places, explore — You sits in the centre slot, the easiest
+// thumb reach on a phone. See UX_OVERHAUL_PROMPT.md §5 W5a.
 const TABS = [
   { hash: '#home', label: 'Home', svg: ICON.home },
-  { hash: '#explore', label: 'Explore', svg: ICON.compass },
-  { hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
   { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
   { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel(); Settings lives inside this hub
+  { hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
+  { hash: '#explore', label: 'Explore', svg: ICON.compass },
 ];
 
 export function go(hash) {
@@ -2003,13 +2005,23 @@ function signatureSightsStrip(cc) {
   if (picks.length < (cc ? 3 : 4)) return null;
   const strip = h('div', { class: 'sights-strip' });
   picks.slice(0, cc ? 10 : 12).forEach(({ p, flag }) => {
-    strip.append(h('button', { class: 'sight-card', 'aria-label': `${p.name}, ${p.city || ''}`, onclick: () => go(`#place-${p.id}`) }, [
-      h('img', { class: 'sight-photo', src: placePhotoSrc(p), alt: '', loading: 'lazy', decoding: 'async' }),
-      h('span', { class: 'sight-grad', 'aria-hidden': 'true' }),
-      h('span', { class: 'sight-cap' }, [
-        h('span', { class: 'sight-name' }, p.name),
-        h('span', { class: 'sight-city' }, `${flag} ${p.city || ''}`.trim()),
+    // The card itself stays a single tap-through <button> (native keyboard/AT support, no
+    // change in behaviour); the save action is a sibling button in a plain wrapper div rather
+    // than nested inside it, since a <button> may not contain another interactive control.
+    const saveBtn = h('button', {
+      class: 'sight-save', 'aria-label': isFavorite(p.id) ? `Remove ${p.name} from favourites` : `Save ${p.name}`, title: 'Save',
+      onclick: () => saveSheet(p.id),
+    }, isFavorite(p.id) ? '★' : '☆');
+    strip.append(h('div', { class: 'sight-card-wrap' }, [
+      h('button', { class: 'sight-card', 'aria-label': `${p.name}, ${p.city || ''}`, onclick: () => go(`#place-${p.id}`) }, [
+        h('img', { class: 'sight-photo', src: placePhotoSrc(p), alt: '', loading: 'lazy', decoding: 'async' }),
+        h('span', { class: 'sight-grad', 'aria-hidden': 'true' }),
+        h('span', { class: 'sight-cap' }, [
+          h('span', { class: 'sight-name' }, p.name),
+          h('span', { class: 'sight-city' }, `${flag} ${p.city || ''}`.trim()),
+        ]),
       ]),
+      saveBtn,
     ]));
   });
   const c = cc ? getCountry(cc) : null;
@@ -3151,7 +3163,7 @@ function exploreScreen(argCc) {
       { ic: '🍈', t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
     ] },
     { label: 'See & do', tiles: [
-      { ic: '📍', t: 'Places', d: 'For your taste & budget', hash: `#places-${cc}` },
+      { ic: '📍', t: 'Places', d: 'For your taste & price', hash: `#places-${cc}` },
       { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${cc}` },
       { ic: '🕒', t: 'Things to do', d: 'Picks for right now', hash: `#today-${cc}` },
       { ic: '👪', t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${cc}` },
@@ -4788,7 +4800,7 @@ function placesScreen(arg) {
       },
     }, [swatch(catColor(it.id)), ` ${it.emoji} ${it.label}`])));
 
-  const budgets = [['flexible', 'Any budget'], ['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end']];
+  const budgets = [['flexible', PRICE_TIER_LABEL.flexible], ['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high]];
   const budgetChips = h('div', { class: 'chips' }, budgets.map(([id, lbl]) =>
     h('button', {
       class: 'chip', 'aria-pressed': selBudget === id ? 'true' : 'false', dataset: { b: id },
@@ -4818,7 +4830,7 @@ function placesScreen(arg) {
 
   const filterCard = h('div', {}, [
     h('div', { class: 'muted' }, 'Interests'), interestChips,
-    h('div', { class: 'muted' }, 'Budget'), budgetChips,
+    h('div', { class: 'muted' }, 'Price'), budgetChips,
     h('div', { class: 'muted' }, 'Travelling with'), h('div', { class: 'chips' }, [kidsChip, stepFreeChip]),
   ]);
 
@@ -5041,7 +5053,7 @@ function placesScreen(arg) {
         const hasPrice = p.priceRange && p.priceRange.currency;
         return hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '—';
       }],
-      ['Budget', (p) => (p.budgetTier ? titleCase(p.budgetTier) : '—')],
+      ['Price tier', (p) => (p.budgetTier ? (PRICE_TIER_LABEL[p.budgetTier] || titleCase(p.budgetTier)) : '—')],
       ['Kids OK', (p) => (p.kidFriendly === true ? '✅ Yes' : (p.kidFriendly === false ? '— No' : '? Unknown'))],
       ['Step-free', (p) => (p.access && p.access.stepFree ? titleCase(String(p.access.stepFree)) : '—')],
     ];
@@ -5231,8 +5243,16 @@ function placesScreen(arg) {
   }
 }
 
+// Display labels for a place's price tier — deliberately never the word "budget" anywhere in
+// the UI. That word is reserved for the expense tracker (EXP_CATS, trip.budgetLog); two chip
+// rows both reading "Budget" in different sections was the site's most-repeated report. The
+// stored tier keys (low/mid/high/any/flexible) are unchanged — this is a label map only, so
+// no data migration is needed. Shared by every screen that shows a tier: the Places filter,
+// the compare sheet, the colour key, onboarding, and Settings.
+const PRICE_TIER_LABEL = { flexible: 'Any price', any: 'Any price', low: '$', mid: '$$', high: '$$$' };
+
 function tierBadge(tier) {
-  const lbl = { low: 'Budget', mid: 'Mid', high: 'Higher-end', any: 'Any' }[tier] || tier;
+  const lbl = PRICE_TIER_LABEL[tier] || tier;
   return h('span', { class: `tier ${tier}` }, lbl);
 }
 
@@ -5339,8 +5359,8 @@ function colorKeyCard() {
   wrap.append(h('div', { class: 'muted', style: 'margin:2px 0 4px' }, 'Category colours'));
   wrap.append(h('div', { class: 'cats' }, CATEGORY_FAMILIES.filter((f) => f.key !== 'other').map((f) =>
     h('span', { class: 'cat-tag', style: `background:${f.color}`, title: f.label }, `${f.emoji} ${f.label}`))));
-  wrap.append(h('div', { class: 'muted', style: 'margin:10px 0 4px' }, 'Budget'));
-  wrap.append(h('div', { class: 'cats' }, [['low', 'Budget'], ['mid', 'Mid-range'], ['high', 'Higher-end'], ['any', 'Any']].map(([t, l]) =>
+  wrap.append(h('div', { class: 'muted', style: 'margin:10px 0 4px' }, 'Price'));
+  wrap.append(h('div', { class: 'cats' }, [['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['any', PRICE_TIER_LABEL.any]].map(([t, l]) =>
     h('span', { class: `tier ${t}` }, l))));
   return wrap;
 }
@@ -9097,7 +9117,7 @@ function todoScore(p, ctx, prefs, anchor) {
   // Profile
   if ((prefs.interests || []).some((i) => cats.includes(i))) { s += 0.6; reasons.push('❤️ Matches your interests'); }
   if ((prefs.party === 'family' || prefs.withBaby) && p.kidFriendly === true) { s += 0.6; reasons.push('👨‍👩‍👧 Good with kids'); }
-  if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) { s += 0.3; reasons.push('💰 Fits your budget'); }
+  if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) { s += 0.3; reasons.push('💰 Fits your price range'); }
   // Distance
   const dist = (anchor && p.coords) ? haversineKm(anchor, p.coords) : null;
   if (dist != null) s -= Math.min(dist, 200) / 90;
@@ -11874,9 +11894,9 @@ function helpScreen() {
     h('button', { class: 'btn ghost', onclick: () => go('#trip') }, 'Open My trip'),
   ])));
   wrap.append(faq('How do ratings work?', 'Each place shows a guidebook score synthesised from public sources, plus an “Across the web” card with snapshots from sites such as TripAdvisor — each stamped with the month it was checked — and live links to compare and book. Your own rating always counts first: rate a place and it becomes the headline score and colours its pin on the map.'));
-  wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, budget, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
+  wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, price, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
   wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device; if you forget the passcode you can still get back in with the one-time recovery code shown at setup, or by restoring an encrypted backup. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
-  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Explore, Places, Talk (phrasebook) and You. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map (inside Places) you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
+  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), You, Places and Explore. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map (inside Places) you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
 
   // Site-wide source register. Individual screens also cite their own sources inline
   // (via the same "Sources:" line), so every claim is traceable to a primary source.
@@ -12448,7 +12468,7 @@ function welcomeScreen() {
 
     // Everything else is optional and tucked away — reachable now for keen setters, invisible
     // to travellers who just want to get moving. All fields also live in Settings.
-    wrap.append(foldable('⚙️ Fine-tune (optional): accessibility, budget, interests, location', () => {
+    wrap.append(foldable('⚙️ Fine-tune (optional): accessibility, price, interests, location', () => {
       const box = [];
       // Accessibility + text size
       const accCard = h('div', { class: 'card' });
@@ -12467,8 +12487,8 @@ function welcomeScreen() {
       // How you like to travel
       const fitCard = h('div', { class: 'card' });
       fitCard.append(h('h3', { style: 'margin-top:0' }, 'How you like to travel'));
-      fitCard.append(h('p', { class: 'muted' }, 'Budget'));
-      fitCard.append(prefChips([['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end'], ['flexible', 'Flexible']], prefs.budget, (v) => { prefs.budget = v; save(); }));
+      fitCard.append(h('p', { class: 'muted' }, 'Price'));
+      fitCard.append(prefChips([['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['flexible', PRICE_TIER_LABEL.flexible]], prefs.budget, (v) => { prefs.budget = v; save(); }));
       fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
       fitCard.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
       fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
@@ -12520,7 +12540,7 @@ export function setupRecapCard() {
   }
   if ((p.diet || []).length) rows.push(['🍽️', p.diet.join(', '), 'Dishes are flagged for you, and your phrases are pinned at the top of Talk.']);
   if ((p.access || []).length) rows.push(['♿', 'Accessibility: ' + p.access.join(', '), 'Honest, practical access guidance is surfaced for you.']);
-  const fit = [{ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[p.tripLength], { low: 'budget', mid: 'mid', high: 'higher-end' }[p.budget], (p.interests || []).length ? `${p.interests.length} ${p.interests.length > 1 ? 'interests' : 'interest'}` : ''].filter(Boolean).join(' · ');
+  const fit = [{ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[p.tripLength], PRICE_TIER_LABEL[p.budget], (p.interests || []).length ? `${p.interests.length} ${p.interests.length > 1 ? 'interests' : 'interest'}` : ''].filter(Boolean).join(' · ');
   if (fit) rows.push(['🎯', fit, 'Trip plans and the “For you” ranking match how you travel.']);
 
   const dismiss = () => { p.showSetupRecap = false; save(); render(); };
@@ -12553,7 +12573,7 @@ function foryouScreen() {
     prefs.party && ({ solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[prefs.party]),
     prefs.withBaby && 'with a baby',
     prefs.tripLength && ({ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[prefs.tripLength]),
-    prefs.budget && ({ low: 'budget', mid: 'mid', high: 'higher-end', flexible: 'flexible budget' }[prefs.budget]),
+    prefs.budget && PRICE_TIER_LABEL[prefs.budget],
     (prefs.diet && prefs.diet.length) && `${prefs.diet.length} diet ${prefs.diet.length > 1 ? 'flags' : 'flag'}`,
   ].filter(Boolean).join(' · ');
   wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap:8px' }, [
@@ -12566,7 +12586,7 @@ function foryouScreen() {
   const missing = [
     !prefs.party && "Who's travelling",
     !prefs.tripLength && 'Trip length',
-    (!prefs.budget || prefs.budget === 'flexible') && 'Budget',
+    (!prefs.budget || prefs.budget === 'flexible') && 'Price',
     !(prefs.interests || []).length && 'Interests',
     !(prefs.diet || []).length && 'Diet & allergies',
   ].filter(Boolean);
@@ -12611,7 +12631,7 @@ function plansScreen() {
   wrap.append(h('p', { class: 'muted' }, 'Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to My Trip and edit it there.'));
   if (!profileIsSet()) {
     wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted' }, 'Set your budget, party and trip length first and these plans sort themselves to fit you.'),
+      h('p', { class: 'muted' }, 'Set your price range, party and trip length first and these plans sort themselves to fit you.'),
       h('button', { class: 'btn block', onclick: () => go('#foryou') }, '🎯 Set up "For you"'),
     ]));
   }
@@ -13301,7 +13321,7 @@ function settingsScreen() {
     selectEl([['', 'Auto — match where I am']].concat(Object.values(LANGUAGES).map((b) => [b.lang, b.label])), p.defaultLang,
       (v) => { p.defaultLang = v; save(); })));
 
-  card.append(field('Budget', selectEl([['flexible', 'Any / flexible'], ['low', 'Budget'], ['mid', 'Mid'], ['high', 'Higher-end']],
+  card.append(field('Price', selectEl([['flexible', PRICE_TIER_LABEL.flexible], ['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high]],
     p.prefs.budget, (v) => { p.prefs.budget = v; save(); })));
 
   // interests
