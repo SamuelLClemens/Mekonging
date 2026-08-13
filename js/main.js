@@ -66,7 +66,7 @@ import {
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
-  online, netMode, setNetMode,
+  online, netMode, setNetMode, infoTip,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.383.0';
+const APP_VERSION = 'mk-v0.384.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1008,12 +1008,16 @@ function whyNow(p, ctx) {
   return null;
 }
 
-// H3a — "{Time of day} near {city}": the moment header (emoji/label/day) plus the forward-
-// looking forecast line and, with no fix yet, the location invite. Its own piece (rather than
-// one non-collapsible card with the picks list below) so the weather/time-of-day context can
-// be tucked away independently of the "Nearby picks" list below — see homeNowCard, which wraps
-// this and rightNowPicksCard in their own foldables.
-function rightNowHeaderCard(ctx) {
+// H3 — merged "Right now" card: the live weather/time-of-day moment, a compact filter (what
+// kind of place, and roughly what it costs), and the ranked picks list — one card, one fold,
+// where two used to double the standing cost of a single idea. See UX_OVERHAUL_PROMPT.md W1.
+//
+// The filter defaults from the traveller's own travel profile (prefs.interests, prefs.budget)
+// but is local to this card, not written back to it: tweaking it here is a "show me something
+// else right now" moment, not a redecision of who they are as a traveller, so it re-derives
+// from the profile fresh on every mount — exactly like the single category dropdown it
+// replaces already did (that, too, reset to 'all' on every mount rather than persisting).
+function homeRightNowCard(ctx) {
   const meta = PART_META[ctx.part];
   const card = h('div', { class: 'card right-now' });
   // Forward-looking forecast for this city (from the cached hourly + daily), so the card tells
@@ -1049,8 +1053,10 @@ function rightNowHeaderCard(ctx) {
   }
 
   if (!ctx.fix) {
-    card.append(h('p', { style: 'margin:8px 0 6px' }, meta.tip));
-    card.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, 'Turn on location and this becomes live picks for right where you are. It stays on your device — nothing is sent anywhere.'));
+    // Nothing to rank yet — the location invite is the whole story. The privacy detail moves
+    // behind ⓘ instead of standing as its own sentence (site-wide copy purge, W3).
+    card.append(h('p', { style: 'margin:8px 0 2px' }, meta.tip));
+    card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, ['Turn on location for live picks nearby.', infoTip('Nothing is sent anywhere — this stays on your device.')]));
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       card.append(h('button', { class: 'btn block', onclick: async (e) => {
         store.profile.prefs.geoAsked = true; save();
@@ -1059,42 +1065,56 @@ function rightNowHeaderCard(ctx) {
         render();
       } }, '📍 Use my location'));
     }
+    return card;   // nothing below this point applies until a fix resolves
   }
-  return card;
-}
 
-// H3b — "Nearby picks": the ranked picks list, its own foldable so it can be tucked away
-// independently of the weather/time-of-day header above it (rightNowHeaderCard). Only called
-// once a location fix exists (see homeNowCard) — with none, the header's own invite is the
-// whole story and there is nothing yet to rank.
-function rightNowPicksCard(ctx) {
-  const meta = PART_META[ctx.part];
-  const card = h('div', { class: 'card right-now' });
   // Rank every candidate once; drawPicks() then shows the top few MINUS anything marked
   // Done or Not-interested, so dismissing one instantly promotes the next-best in its place.
   const ranked = allPlaces({ country: ctx.country })
     .map((p) => ({ p, s: scoreForNow(p, ctx) }))
     .filter((x) => x.s > -Infinity)
     .sort((a, b) => b.s - a.s);
-  // Compact, single-line category filter — a <select>, not a chip row, so narrowing this list
-  // never costs more than one short line of height. Only offered when there is a real choice;
-  // options are whichever families this exact ranked pool actually contains (the same
-  // CATEGORY_FAMILIES/catFamily vocabulary catTag() and daySuggestScreen already use), minus
-  // stay/transport/other which are not "things to do right now" categories.
+  // Category chips + a price select — both only offered when there is a real choice; options
+  // are whichever this exact ranked pool actually contains (the same CATEGORY_FAMILIES/
+  // catFamily vocabulary catTag() and daySuggestScreen already use), minus stay/transport/
+  // other which are not "things to do right now" categories.
   const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key))
     .filter((f) => ranked.some((x) => (x.p.categories || []).some((c) => catFamily(c) === f.key)));
-  let famFilter = 'all';
+  const tiersPresent = ['low', 'mid', 'high'].filter((t) => ranked.some((x) => x.p.budgetTier === t));
+  // Smart default: which of these families the traveller already told us they like, in
+  // Settings — "Food & markets" covers both the food and market families, matching the one
+  // onboarding option that names both. Falls back to showing everything when no profile is
+  // set yet, or when none of their interests are actually present in this exact pool — never
+  // a filter that silently hides everything.
+  const catSet = new Set();
+  (store.profile.prefs.interests || []).forEach((i) => {
+    if (famsPresent.some((f) => f.key === i)) catSet.add(i);
+    if (i === 'food' && famsPresent.some((f) => f.key === 'market')) catSet.add('market');
+  });
+  let tierFilter = tiersPresent.includes(store.profile.prefs.budget) ? store.profile.prefs.budget : 'all';
   const tipEl = h('p', { class: 'muted', style: 'margin:4px 0 8px' }, meta.tip);
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
-  if (famsPresent.length > 1) {
+  if (famsPresent.length > 1 || tiersPresent.length > 1) {
+    const allChip = h('button', { class: 'chip', 'aria-pressed': catSet.size ? 'false' : 'true', onclick: () => { catSet.clear(); refreshChips(); drawPicks(); } }, 'All');
+    const famChips = famsPresent.map((f) => h('button', {
+      class: 'chip', 'aria-pressed': catSet.has(f.key) ? 'true' : 'false',
+      onclick: () => { if (catSet.has(f.key)) catSet.delete(f.key); else catSet.add(f.key); refreshChips(); drawPicks(); },
+    }, [swatch(FAMILY_COLOR[f.key]), ` ${f.emoji} ${f.label}`]));
+    function refreshChips() {
+      allChip.setAttribute('aria-pressed', catSet.size ? 'false' : 'true');
+      famChips.forEach((btn, i) => btn.setAttribute('aria-pressed', catSet.has(famsPresent[i].key) ? 'true' : 'false'));
+    }
     card.append(h('div', { class: 'rn-filter-row' }, [
-      selectEl([['all', 'All categories'], ...famsPresent.map((f) => [f.key, `${f.emoji} ${f.label}`])], 'all',
-        (v) => { famFilter = v; drawPicks(); }, 'Filter nearby picks by category'),
+      h('div', { class: 'chips' }, [allChip, ...famChips]),
+      tiersPresent.length > 1 ? selectEl(
+        [['all', 'Any price'], ...tiersPresent.map((t) => [t, PRICE_TIER_LABEL[t]])], tierFilter,
+        (v) => { tierFilter = v; drawPicks(); }, 'Filter nearby picks by price',
+      ) : null,
     ]));
   }
   card.append(tipEl, listWrap, footEl);
-  { const t = oneTimeHint('rightnow-picks', 'These picks are chosen for the time of day, the weather and your interests. Tap ✓ done or ✕ not-for-me on any card and a fresh one takes its place.'); if (t) card.append(t); }
+  { const t = oneTimeHint('rightnow-picks', 'Picks match the time of day, weather and the filters above — tweak them anytime. ✓ done or ✕ skip swaps in a new one.'); if (t) card.append(t); }
 
   // When the picks are seeded from the country default (no GPS, nothing focused yet), keep a
   // gentle one-tap upgrade to real local picks — the invite is not lost just because we seeded.
@@ -1109,16 +1129,23 @@ function rightNowPicksCard(ctx) {
 
   function drawPicks() {
     const ex = suggestExcluded();
-    const pool = famFilter === 'all' ? ranked : ranked.filter((x) => (x.p.categories || []).some((c) => catFamily(c) === famFilter));
+    // A place with no tier at all (a free viewpoint, a public trail) or tagged 'any' always
+    // passes the price filter — same convention scoreForNow's own profileFitAdj already uses,
+    // so "fits your price range" means the same thing everywhere in the app.
+    const pool = ranked.filter((x) => {
+      if (catSet.size && !(x.p.categories || []).some((c) => catSet.has(catFamily(c)))) return false;
+      if (tierFilter !== 'all' && x.p.budgetTier && x.p.budgetTier !== 'any' && x.p.budgetTier !== tierFilter) return false;
+      return true;
+    });
     const picks = pool.filter((x) => !ex.has(x.p.id)).slice(0, 5);
     listWrap.innerHTML = ''; footEl.innerHTML = '';
+    const filtered = catSet.size > 0 || tierFilter !== 'all';
     if (!picks.length) {
-      const famLbl = famFilter === 'all' ? '' : ` for ${(famsPresent.find((f) => f.key === famFilter) || {}).label || 'that category'}`;
       tipEl.textContent = pool.length
-        ? `${meta.tip} That is everything nearby${famLbl} for now — reset below to see them again.`
-        : (famFilter === 'all'
-          ? `${meta.tip} Nothing is mapped very close — try “What’s near me”.`
-          : `Nothing nearby matches${famLbl} right now — try a different category.`);
+        ? `${meta.tip} That is everything matching for now — reset below to see them again.`
+        : (filtered
+          ? 'Nothing nearby matches this filter right now — try widening it.'
+          : `${meta.tip} Nothing is mapped very close — try “What’s near me”.`);
     } else {
       tipEl.textContent = meta.tip;
       picks.forEach(({ p }) => {
@@ -2115,12 +2142,11 @@ function quickSpendRow(id) {
   return box;
 }
 
-// The phase-aware "Right now" pieces: the live moment (rightNowHeaderCard) with the phase's
-// primary action lifted on top, the picks list (rightNowPicksCard) and a one-tap spend at the
-// foot — the four old blocks (phaseNextBest, journey companion, right-now, daily strip) merged
-// into one, then (per direct request) split back into three independently collapsible
-// foldables — see homeNowCard/homeFold — so each can be tucked away on its own, with the
-// duplicated empty-state prompts dropped (the status band already carries dates/plan/spend).
+// The phase-aware "Right now" pieces: the live moment, filter and picks list (all one card,
+// homeRightNowCard — merged from two separate collapsibles, W1) with the phase's primary
+// action lifted on top, and a one-tap spend at the foot in its own fold — see homeNowCard/
+// homeFold — so each idea is tucked away independently, with the duplicated empty-state
+// prompts dropped (the status band already carries dates/plan/spend).
 // On-the-ground only: the SAME rich weather widget as the Weather screen itself — wxVizCard
 // (metric chips to switch "layers" — Temp/Rain/Humidity/UV/Feels/Wind, the 24h watch-face
 // ring, the detailed hour-by-hour strip, and the upcoming-forecast calendar) — rather than a
@@ -2160,12 +2186,12 @@ function homeNowCard(phase, cc) {
   const ctx = contextNow();
   const wrap = h('div', {});
 
-  const headerCard = rightNowHeaderCard(ctx);
-  const head = headerCard.firstChild;             // .rn-head; the primary action slots in just below it
+  const card = homeRightNowCard(ctx);
+  const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
   // The weather ring used to insert itself here (top of this card) — now rendered by home.js
   // as its own standalone foldable, swapped in placement with "Search everything" instead.
   const nb = phaseNextBest(phase, cc);
-  if (nb) { nb.style.margin = '10px 0 2px'; headerCard.insertBefore(nb, head ? head.nextSibling : null); }
+  if (nb) { nb.style.margin = '10px 0 2px'; card.insertBefore(nb, head ? head.nextSibling : null); }
   // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty
   // state is intentionally omitted here — the status band already shows "No dates yet".
   if (phase === 'planning') {
@@ -2173,23 +2199,20 @@ function homeNowCard(phase, cc) {
     if (startISO && daysUntilISO(startISO) > 0) {
       const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
       if (todo.length) {
-        headerCard.insertBefore(h('button', { class: 'btn ghost block now-line', onclick: () => go(`#checklist-${cc}`) },
+        card.insertBefore(h('button', { class: 'btn ghost block now-line', onclick: () => go(`#checklist-${cc}`) },
           `☐ ${todo[0].title} · ${todo.length} left on your checklist →`), nb ? nb.nextSibling : (head ? head.nextSibling : null));
       }
     }
   }
-  // Three independently collapsible pieces, per direct request ("all the sections need to be
-  // collapsible including widgets like weather and time of day near you, things to do right
-  // now and budget") — replacing the one non-collapsible "Right now" card that used to stack
-  // all three. The picks group is labelled "Nearby picks", not "Things to do right now" —
-  // phaseNextBest's own button (nb, inserted just above, into headerCard) already reads
-  // "Things to do right now →" and links to the fuller #today screen; reusing that exact text
-  // for this group's own summary right underneath it would be the same duplicate-heading
-  // problem as the old "Plan & tools" heading this whole rebuild started from. The picks group
-  // only exists once a fix resolves (rightNowHeaderCard's own invite is the whole story before
-  // that — there is nothing yet to rank).
-  wrap.append(homeFold('🕒 Right now', headerCard, 'rightNowHeadOpen'));
-  if (ctx.fix) wrap.append(homeFold('📍 Nearby picks', rightNowPicksCard(ctx), 'rightNowPicksOpen'));
+  // Migrate the two old independent fold prefs (from when "Right now" and "Nearby picks" were
+  // separate collapsibles) into this merged card's single pref, once — an existing traveller's
+  // choice is honoured (open if either was open), never silently reset. See W1.
+  if (store.profile.prefs.homeRightNowOpen === undefined
+      && (store.profile.prefs.rightNowHeadOpen !== undefined || store.profile.prefs.rightNowPicksOpen !== undefined)) {
+    store.profile.prefs.homeRightNowOpen = (store.profile.prefs.rightNowHeadOpen !== false) || (store.profile.prefs.rightNowPicksOpen !== false);
+    save();
+  }
+  wrap.append(homeFold('🕒 Right now', card, 'homeRightNowOpen'));
   wrap.append(homeFold('💰 Budget', quickSpendRow(cc), 'homeBudgetOpen'));   // one-tap spend (high-value daily action)
   return wrap;
 }
