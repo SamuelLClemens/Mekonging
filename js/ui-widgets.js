@@ -140,6 +140,19 @@ export function openModal(rootEl, onClose) {
   return close;
 }
 
+// A tiny inline "ⓘ" help affordance: a <details> whose <summary> is just the icon, so it
+// costs no standing space until tapped. Reuses the existing disclosure mechanism (same as
+// foldable/collapsibleCard above) rather than inventing a new component, per the UX brief's
+// explicit instruction. Place it inline next to a heading or label; the text drops in below
+// on open. aria-expanded is kept in sync manually since native <details> does not expose it.
+export function infoTip(text) {
+  const det = h('details', { class: 'info-tip' });
+  const sum = h('summary', { 'aria-label': 'More info', 'aria-expanded': 'false' }, 'ⓘ');
+  det.append(sum, h('p', { class: 'tiny muted' }, text));
+  det.addEventListener('toggle', () => sum.setAttribute('aria-expanded', det.open ? 'true' : 'false'));
+  return det;
+}
+
 // Promise-based confirmation built on openModal — the styled, focus-trapped, in-app
 // replacement for the native blocking window.confirm. Resolves true on confirm and false on
 // cancel / Escape / backdrop tap. opts: { title, body, confirmLabel, cancelLabel, danger }.

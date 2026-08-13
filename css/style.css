@@ -208,6 +208,18 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .filters-collapse > summary:hover { filter: brightness(0.98); }
 .filters-collapse > div { margin-top: var(--sp-2); }
 
+/* Inline "ⓘ" help disclosure (js/ui-widgets.js infoTip()) — the <summary> is only the icon,
+   so it costs no standing space until the traveller taps it. */
+.info-tip { display: inline-block; vertical-align: middle; margin-left: var(--sp-2); }
+.info-tip > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; color: var(--ink-soft); font-size: 0.85rem; user-select: none;
+}
+.info-tip > summary::-webkit-details-marker { display: none; }
+.info-tip > summary:hover { color: var(--ink); }
+.info-tip[open] > summary { color: var(--teal); }
+.info-tip > p { margin: 4px 0 0; }
+
 /* Places for you — collapsible category sections + city drill-down */
 .place-cat-group { border: 1px solid var(--line); border-left: 4px solid var(--cat, var(--ink-soft)); border-radius: var(--r-lg); margin: var(--sp-2) 0; overflow: hidden; }
 .place-cat-summary { cursor: pointer; list-style: none; user-select: none; font-weight: 800; color: var(--ink); background: var(--card); padding: var(--sp-4); display: flex; align-items: center; justify-content: space-between; }
@@ -317,12 +329,19 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 
 /* Home "Signature sights" — a photo-forward horizontal showcase of iconic places. */
 .sights-strip { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-.sight-card { position: relative; flex: 0 0 auto; width: 158px; height: 200px; border-radius: 16px; overflow: hidden; border: none; padding: 0; cursor: pointer; scroll-snap-align: start; background: var(--line); }
+.sight-card-wrap { position: relative; flex: 0 0 auto; scroll-snap-align: start; }
+.sight-card { position: relative; display: block; width: 158px; height: 200px; border-radius: 16px; overflow: hidden; border: none; padding: 0; cursor: pointer; background: var(--line); }
 .sight-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sight-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.74) 0%, rgba(0,0,0,.18) 46%, rgba(0,0,0,0) 72%); }
 .sight-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px; text-align: left; display: flex; flex-direction: column; gap: 1px; }
 .sight-name { color: #fff; font-weight: 800; font-size: 0.95rem; line-height: 1.15; text-shadow: 0 1px 3px rgba(0,0,0,.55); }
 .sight-city { color: rgba(255,255,255,.92); font-size: 0.78rem; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+.sight-save {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: rgba(0,0,0,.45); color: #fff; font-size: 1.05rem; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.sight-save:hover { background: rgba(0,0,0,.6); }
 
 /* Country hub "chapter opener" hero band. */
 .country-hero { position: relative; width: 100%; height: 140px; border-radius: 16px; overflow: hidden; margin: 2px 0 8px; background: var(--line); }
