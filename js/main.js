@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.389.0';
+const APP_VERSION = 'mk-v0.390.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -8247,8 +8247,7 @@ function calendarScreen() {
   wrap.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: () => go(`#calendar-add-${calSelDate}`) }, '＋ Add to this day'));
 
   // ===== Layer toggles — placed AFTER the calendar display, as requested. =====
-  wrap.append(h('h3', { class: 'cat-title', style: 'margin-top:18px' }, 'Show on the calendar'));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 6px' }, 'Turn any layer on or off — your choices are remembered.'));
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top:18px' }, [h('h3', { class: 'cat-title', style: 'margin:0' }, 'Show on the calendar'), infoTip('Your choices are remembered.')]));
   wrap.append(h('div', { class: 'chips' }, CAL_LAYERS.map((ly) =>
     h('button', { class: 'chip', 'aria-pressed': L[ly.key] ? 'true' : 'false',
       onclick: () => { const cur = calLayerState(); store.profile.prefs.calLayers = { ...cur, [ly.key]: !cur[ly.key] }; save(); render(); } },
@@ -8270,7 +8269,7 @@ function calendarScreen() {
 // All on-device; see js/personal.js. Everything here is editable and removable.
 function personalDayCard(date) {
   if (personal.hasPin() && !personal.isUnlocked()) {
-    return h('div', { class: 'card' }, [h('p', { class: 'muted' }, '🔒 Your private log is locked. Enter your PIN in “Private calendar” below to view and edit it.')]);
+    return h('div', { class: 'card' }, [h('p', { class: 'muted' }, '🔒 Locked. Enter your PIN in “Private calendar” below to unlock.')]);
   }
   const g = personal.dayGlyphs(date);
   const day = personal.getDay(date);
@@ -8340,7 +8339,7 @@ function personalControlCard() {
   if (!personal.isEnabled()) {
     card.append(
       h('h3', {}, '🔒 Private calendar (optional)'),
-      h('p', { class: 'muted' }, 'A private space for your body and personal life while you travel: your period & cycle, mood and symptoms, intimacy and partners, and a pregnancy tracker. It stays on this device only, is never uploaded, never judges, and can be locked with a PIN. Turning it on adds its layers to the calendar above.'),
+      h('p', { class: 'muted' }, 'Tracks your cycle, mood, symptoms, intimacy and pregnancy — private to this device, never uploaded, never judged, and lockable with a PIN.'),
       h('button', { class: 'btn block', onclick: () => { personal.setEnabled(true); render(); } }, 'Turn on private calendar'),
     );
     return card;
@@ -8350,7 +8349,7 @@ function personalControlCard() {
     const err = h('p', { class: 'warn-note', style: 'display:none' });
     const submit = async () => { if (await personal.verifyPin(pin.value)) render(); else { err.textContent = 'Incorrect PIN.'; err.style.display = ''; } };
     pin.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
-    card.append(h('h3', {}, '🔒 Private calendar'), h('p', { class: 'muted' }, 'Enter your PIN to view and edit your private log.'), field('PIN', pin), err,
+    card.append(h('h3', {}, '🔒 Private calendar'), h('p', { class: 'muted' }, 'Enter your PIN to unlock.'), field('PIN', pin), err,
       h('button', { class: 'btn block', onclick: submit }, 'Unlock'));
     return card;
   }
@@ -8437,7 +8436,7 @@ function calendarFormScreen(editId, prefill) {
     reminders.tick();
     go('#calendar');
   } }, editing ? 'Save changes' : 'Save'));
-  wrap.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'Reminders show on the “Coming up” card on Home, and — if you allow notifications in Settings — as a device alert while the app is open or when you next open it. Background alerts when the app is fully closed are not available (there is no server), so the Home card is the reliable reminder.'));
+  wrap.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'Shows on the “Coming up” card on Home. Device alerts need notifications allowed and the app open — not fully closed, so Home is the reliable one.'));
   mount(wrap, '#home');
 }
 
