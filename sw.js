@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.385.0';
+const CACHE_VERSION = 'mk-v0.386.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -32,6 +32,7 @@ const PRECACHE = [
   'js/app-state.js',
   'js/screens/home.js',
   'js/screens/weather.js',
+  'js/screens/nextstop.js',
   'js/render-utils.js',
   'js/ui-widgets.js',
   'js/state.js',
