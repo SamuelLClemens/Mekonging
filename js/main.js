@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.390.0';
+const APP_VERSION = 'mk-v0.391.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7956,6 +7956,7 @@ function journalFormScreen(editId) {
         h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
         h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Add pictures'),
       ]),
+      h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Saved with this entry once you tap Save below — then gathers into your scrapbook automatically.'),
       camIn, libIn,
     ])),
   ]);
