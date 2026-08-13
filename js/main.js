@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.381.0';
+const APP_VERSION = 'mk-v0.382.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2086,11 +2086,13 @@ function quickSpendRow(id) {
     box.innerHTML = '';
     let spent = 0;
     (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
-    if (home !== cur) {
-      const r = convert(1, home, cur);
-      if (r != null) box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' },
-        `1 ${home} ≈ ${r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 })} ${cur}`));
-    }
+    // A working mini-converter in place of the old one-way "1 USD ≈ 36 THB" caption: the same
+    // shared fxConverterControl the Currency and Budget screens use, compact (no rates
+    // footnote) so it costs barely more height than the static line it replaces. Always
+    // rendered — per direct request it must be visible while Traveling — so on the rare
+    // occasion the home and local currencies match, the target falls back to another major
+    // rather than showing a currency converted into itself.
+    box.append(fxConverterControl(home, home !== cur ? cur : (home === 'USD' ? 'EUR' : 'USD'), { compact: true }));
     box.append(expenseAddCard({ currency: cur, afterAdd: draw, compact: true }));
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
       spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log an expense above. ',
@@ -3538,7 +3540,10 @@ function nearbyScreen() {
 // space. Both the standalone Currency screen and the compact card inside Budget build on this
 // so the shape, the maths and the live/offline note never drift apart between them — only the
 // two starting currencies are the caller's job.
-function fxConverterControl(fromDefault, toDefault) {
+// `opts.compact` drops the live/offline rates footnote — Home's budget fold is the tightest
+// surface in the app and already carries its own status line, so the note would be a third
+// stacked caption in one small card. The Currency and Budget screens keep it.
+function fxConverterControl(fromDefault, toDefault, opts = {}) {
   const amount = h('input', { type: 'number', value: '1', inputmode: 'decimal', 'aria-label': 'Amount' });
   const fromSel = currencySelect(fromDefault);
   const toSel = currencySelect(toDefault);
@@ -3558,7 +3563,7 @@ function fxConverterControl(fromDefault, toDefault) {
       h('button', { type: 'button', class: 'fx-eq', title: 'Swap currencies', 'aria-label': 'Swap currencies', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '='),
       h('div', { class: 'fx-side' }, [out, toSel]),
     ]),
-    h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
+    opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
   ]);
   recompute();
   return wrap;
