@@ -30,6 +30,7 @@ import {
 // import, safe because every one of them is only read inside a function body, never at
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import { homeScreen } from './screens/home.js';
+import { nextStopScreen } from './screens/nextstop.js';
 import { suggestPlans } from './data/itineraries.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
@@ -264,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.385.0';
+const APP_VERSION = 'mk-v0.386.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2550,12 +2551,17 @@ function ensureRouteGraph(onReady) {
   loadAllCountries().then(() => { _routeGraphLoaded = true; onReady(); })
     .catch(() => { /* offline with nothing cached yet — this session stays without it */ });
 }
+// Binary floating-point noise (e.g. 1.2 + 1.2 = 2.4000000000000004) surfaces the moment two
+// legs' hour ranges are summed — harmless as a number, but an unrounded string this long has
+// no natural break point and forces its grid track wider than the card, overflowing the
+// viewport. Round to one decimal at display time everywhere a summed range is shown.
+function round1(n) { return Math.round(n * 10) / 10; }
 function computeWhereNext(fromCity, exclude) {
   if (!isRouteNode(fromCity)) return [];
   const skip = new Set([fromCity, ...(exclude || [])]);
   const scored = routeNodes().filter((n) => !skip.has(n)).map((n) => {
     const plans = planRoutes(fromCity, n);
-    return plans.length ? { name: n, hrs: plans[0].totalHrs, changes: plans[0].changes } : null;
+    return plans.length ? { name: n, hrs: [round1(plans[0].totalHrs[0]), round1(plans[0].totalHrs[1])], changes: plans[0].changes } : null;
   }).filter(Boolean);
   scored.sort((a, b) => (a.hrs[0] || 99) - (b.hrs[0] || 99));
   return scored.slice(0, 5);
@@ -2574,27 +2580,38 @@ function countryForCityName(name) {
 // traveller keeps tapping, and resets the moment the anchor city changes.
 let _nextChain = [];
 let _nextChainFrom = '';
-function whereNextSection(argCc, fromCity) {
+// Read-only accessor for whichever screen wants to know "what has the traveller picked in
+// the Where-next builder for this city" without reaching into its private chain array — used
+// by #nextstop (screens/nextstop.js) to key its Getting there / What is there / Commit
+// sections off the same selection whereNextSection itself renders.
+export function nextChainTail(fromCity) {
+  if (_nextChainFrom !== fromCity || !_nextChain.length) return null;
+  const name = _nextChain[_nextChain.length - 1];
+  // The immediately preceding city on this chain — the original fromCity for a single hop,
+  // the second-to-last chained city once the traveller has chained more than one. #nextstop's
+  // Getting there section routes from here, not from fromCity, so a 2-3 hop chain shows the
+  // actual last leg rather than a direct-from-origin route that ignores the stops between.
+  const from = _nextChain.length > 1 ? _nextChain[_nextChain.length - 2] : fromCity;
+  return { name, country: countryForCityName(name), from };
+}
+export function whereNextSection(argCc, fromCity, onChange) {
   if (!fromCity) return null;
   if (_nextChainFrom !== fromCity) { _nextChainFrom = fromCity; _nextChain = []; }
+  // A caller may supply its own re-render (#nextstop re-rendering itself instead of
+  // Explore) — defaults to the original Explore-scroll-preserving behaviour, unchanged.
+  const rerender = onChange || (() => {
+    const y = window.scrollY;
+    exploreScreen(argCc);
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  });
   if (!_routeGraphLoaded) {
     ensureRouteGraph(() => {
       const headRoute = (location.hash || '').slice(1).split('-')[0];
-      if (headRoute === 'explore' || headRoute === 'country') {
-        const y = window.scrollY;
-        exploreScreen(argCc);
-        requestAnimationFrame(() => window.scrollTo(0, y));
-      }
+      if (headRoute === 'explore' || headRoute === 'country' || headRoute === 'nextstop') rerender();
     });
     return null;   // nothing to show until the graph above resolves — never a placeholder
   }
   if (!isRouteNode(fromCity)) return null;
-
-  const rerender = () => {
-    const y = window.scrollY;
-    exploreScreen(argCc);
-    requestAnimationFrame(() => window.scrollTo(0, y));
-  };
 
   const tail = _nextChain.length ? _nextChain[_nextChain.length - 1] : fromCity;
   // Exclude the trip's own starting point too, not just the chain built so far — otherwise
@@ -2613,7 +2630,7 @@ function whereNextSection(argCc, fromCity) {
     }
     body.append(h('p', { style: 'margin:0 0 4px' }, `${fromCity} → ${_nextChain.join(' → ')}`));
     body.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
-      `~${totLo}–${totHi}h of travel across ${_nextChain.length} stop${_nextChain.length > 1 ? 's' : ''} · ${changes} change${changes === 1 ? '' : 's'}`));
+      `~${round1(totLo)}–${round1(totHi)}h of travel across ${_nextChain.length} stop${_nextChain.length > 1 ? 's' : ''} · ${changes} change${changes === 1 ? '' : 's'}`));
     body.append(h('div', { class: 'chips', style: 'margin-bottom:8px' }, [
       h('button', { class: 'chip', onclick: () => { _nextChain.pop(); rerender(); } }, '↶ Remove last'),
       h('button', { class: 'chip', onclick: () => { _nextChain = []; rerender(); } }, 'Clear'),
@@ -5322,7 +5339,7 @@ function profileIsSet() {
   const p = store.profile.prefs;
   return !!(p.party || p.tripLength || (p.budget && p.budget !== 'flexible') || (p.interests || []).length);
 }
-function personalScore(p) {
+export function personalScore(p) {
   const prefs = store.profile.prefs;
   const r = Number(p.rating) || 0;
   let s = r || 3;
@@ -5674,7 +5691,7 @@ function beachInfoCard(p) {
   return card;
 }
 
-function placeCard(p, num) {
+export function placeCard(p, num) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   const hasPrice = p.priceRange && p.priceRange.currency;
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
@@ -6672,7 +6689,7 @@ function transportScreen(countryId) {
 const CAPITAL = { th: 'Bangkok', vi: 'Hanoi', kh: 'Phnom Penh', la: 'Vientiane' };
 let planFrom = '', planTo = '';
 
-function twelveGoUrl(from, to) {
+export function twelveGoUrl(from, to) {
   const slug = (s) => encodeURIComponent(String(s).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
   return `https://12go.asia/en/travel/${slug(from)}/${slug(to)}`;
 }
@@ -6697,7 +6714,7 @@ function planLegRow(l, i) {
   return box;
 }
 
-function planCard(pl, primary) {
+export function planCard(pl, primary) {
   const chain = [pl.legs[0].from, ...pl.legs.map((l) => l.to)];
   const priceStr = Object.entries(pl.priceByCcy).map(([c, v]) => priceLine(v.low, v.high, c)).filter(Boolean).join(' + ');
   const timeStr = pl.totalHrs[1] ? `~${pl.totalHrs[0]}–${pl.totalHrs[1]} h moving` : '';
@@ -13650,7 +13667,7 @@ export function render() {
   // graph memoises forever on first build, so it must never run while only partly
   // loaded); and a traveller's own saved places/collections, which may span any
   // country they have visited.
-  const NEEDS_ALL_COUNTRIES = new Set(['search', 'map', 'route', 'journey', 'saved', 'collection']);
+  const NEEDS_ALL_COUNTRIES = new Set(['search', 'map', 'route', 'journey', 'saved', 'collection', 'nextstop']);
   if (NEEDS_COUNTRY_DATA.has(head) || NEEDS_ALL_COUNTRIES.has(head)) {
     const wantAll = NEEDS_ALL_COUNTRIES.has(head);
     const prefix = arg ? arg.split('-')[0] : null;
@@ -13687,6 +13704,7 @@ export function render() {
       case 'prices': return pricesScreen(arg);
       case 'transport': return transportScreen(arg);
       case 'route': return planRouteScreen();
+      case 'nextstop': return nextStopScreen(arg);
       case 'info': return infoScreen(arg);
       case 'saved': return savedScreen();
       case 'collection': return collectionScreen(arg);

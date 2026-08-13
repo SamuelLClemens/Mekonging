@@ -304,7 +304,8 @@ function justArrivedChip(cc) {
 // left when nextStop() (below) has nothing to report. H4's real "🚌 Getting to X" card
 // (nextStopCard, below) only ever appears once a next stop already exists; while travelling
 // with no dated stop queued for today onward, Home otherwise says nothing here at all — this
-// nudges the traveller to My trip to add one instead of leaving that silent. Self-clears the
+// nudges the traveller to #nextstop (screens/nextstop.js) to plan and add one instead of
+// leaving that silent — the real tool W2 built, not the bare My Trip form. Self-clears the
 // moment a next stop exists again, same as any other "nothing to say yet" cell in this file;
 // X-ing it out (for travellers deliberately not planning that far ahead) sets
 // prefs.nextStopNudgeHidden — never gone for good, restored from Settings → Journey phase,
@@ -312,7 +313,7 @@ function justArrivedChip(cc) {
 function nextStopNudgeChip() {
   if (store.profile.prefs.nextStopNudgeHidden || nextStop()) return null;
   return h('div', { class: 'just-arrived-chip' }, [
-    h('button', { class: 'ja-main', onclick: () => go('#trip') }, [
+    h('button', { class: 'ja-main', onclick: () => go('#nextstop') }, [
       h('span', { class: 'status-ic' }, '🧭'),
       h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
     ]),
