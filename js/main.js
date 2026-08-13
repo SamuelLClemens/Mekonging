@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.387.0';
+const APP_VERSION = 'mk-v0.388.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7324,7 +7324,7 @@ function mapScreen() {
   ]);
   const subhead = (t) => h('div', { class: 'key-subhead' }, t);
 
-  const keyCard = h('details', { class: 'card map-key', open: '' }, [
+  const keyCard = h('details', { class: 'card map-key' }, [
     h('summary', {}, 'Map key — what every pin and line means'),
 
     subhead('Pins'),
@@ -13352,16 +13352,16 @@ function settingsScreen() {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
     const ic = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '📲 Install the app')]);
     if (deferredInstallPrompt) {
-      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Add Mekonging to your home screen so it opens like an app and stays available offline.'));
+      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Keeps Mekonging offline and one tap away.'));
       ic.append(h('button', { class: 'btn', onclick: async () => {
         const dp = deferredInstallPrompt; if (!dp) return;
         dp.prompt(); try { await dp.userChoice; } catch { /* dismissed */ }
         deferredInstallPrompt = null; render();
       } }, '➕ Install app'));
     } else if (isIOS) {
-      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'On iPhone or iPad: tap the Share button in Safari, then “Add to Home Screen”, to keep Mekonging one tap away and fully offline.'));
+      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Tap Share in Safari → “Add to Home Screen”.'));
     } else {
-      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Use your browser menu → “Install app” or “Add to Home Screen” to keep Mekonging on your home screen and available offline.'));
+      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Browser menu → “Install app” or “Add to Home Screen”.'));
     }
     wrap.append(ic);
   }
@@ -13370,7 +13370,7 @@ function settingsScreen() {
   // back to the picker once they have chosen a stage.
   const phaseCard = h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Journey phase'),
-    h('p', { class: 'muted', style: 'margin-top:0' }, 'Switch any time — this reshapes Home for the stage you are in.'),
+    h('p', { class: 'muted', style: 'margin-top:0' }, 'Reshapes Home for your stage.'),
     phaseSelector(),
   ]);
   // The "Just arrived" chip (Home, on the ground) is only ever hidden by an explicit,
@@ -13454,7 +13454,7 @@ function settingsScreen() {
   // them once. These also drive "For you" and the baby / accessibility shortcuts.
   const who = h('div', { class: 'card' }, [
     h('h2', {}, 'Who’s travelling'),
-    h('p', { class: 'muted', style: 'margin-top:0' }, 'Set once — this tailors picks, plans and the help the app surfaces for you.'),
+    h('p', { class: 'muted', style: 'margin-top:0' }, 'Tailors picks, plans and help to you.'),
   ]);
   who.append(field('Travelling as', selectEl([['', 'Not set'], ['solo', 'Solo'], ['couple', 'Couple'], ['family', 'Family'], ['group', 'Group']],
     p.prefs.party || '', (v) => { p.prefs.party = v; save(); })));
@@ -13469,12 +13469,15 @@ function settingsScreen() {
         e.currentTarget.setAttribute('aria-pressed', selAcc.has(id) ? 'true' : 'false');
       } }, lbl)));
   who.append(field('Accessibility needs', accChips));
-  who.append(h('p', { class: 'muted', style: 'margin:14px 0 0' }, 'Allergies & dietary restrictions'));
-  who.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 0' }, 'Highlights dishes that fit you in “Identify food”, and pins your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person.'));
+  who.append(h('p', { class: 'muted', style: 'margin:14px 0 0' }, [
+    'Allergies & dietary restrictions',
+    infoTip('Highlights dishes that fit you in “Identify food”, and pins your exact phrases at the top of the phrasebook to show a cook.'),
+  ]));
+  who.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 0' }, 'Guidance only — always confirm in person.'));
   who.append(dietPicker());
   who.append(field('Trip length', selectEl([['', 'Not set'], ['short', 'Short (≤1 week)'], ['medium', '2–3 weeks'], ['long', '1 month+']],
     p.prefs.tripLength || '', (v) => { p.prefs.tripLength = v; save(); })));
-  who.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Budget and interests are set in the profile card above.'));
+  who.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Budget and interests are set above.'));
   // The guides that go WITH this profile (family/kids, baby supplies, accessibility) live
   // right here in Settings too, resolved to where the traveller is focused — so "travelling
   // with baby and kids and all that" is set AND opened from one place.
@@ -13491,8 +13494,11 @@ function settingsScreen() {
 
   // live translate
   const tcard = h('div', { class: 'card' }, [
-    h('h2', {}, 'Live translate'),
-    h('p', { class: 'muted' }, 'Translation already works with no setup, using a free online service — just type or speak English on the Talk screen. The phrasebook itself works fully offline. The advanced fields below are optional: point the app at your own LibreTranslate-compatible server for higher volume or full privacy. Your endpoint and key stay on this device, and the server origin must also be added to the page Content-Security-Policy (connect-src) in index.html.'),
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, 'Live translate'),
+      infoTip('Translation already works with no setup, using a free online service on the Talk screen — the phrasebook itself works fully offline regardless. Your own endpoint and key stay on this device, but the server origin must also be added to index.html’s Content-Security-Policy (connect-src).'),
+    ]),
+    h('p', { class: 'muted' }, 'Optional — your own server, for volume or privacy.'),
   ]);
   tcard.append(field('Translate endpoint URL', h('input', {
     type: 'url', placeholder: 'https://your-endpoint/translate', value: p.translateEndpoint,
@@ -13505,21 +13511,27 @@ function settingsScreen() {
 
   // help & feedback
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Help & feedback'),
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, 'Help & feedback'),
+      infoTip('Leave this blank and the feedback screen uses your device share sheet or clipboard instead.'),
+    ]),
     h('button', { class: 'btn ghost block', onclick: () => go('#help') }, '❓ Help & FAQ'),
     field('Feedback address (optional)', h('input', {
       type: 'email', placeholder: 'where “Email feedback” is sent', value: p.feedbackTo || '',
       oninput: (e) => { p.feedbackTo = e.target.value.trim(); save(); },
     })),
-    h('p', { class: 'disclaimer' }, 'Set an address to collect feedback by email; otherwise the feedback screen uses your device share sheet or clipboard. This stays on your device and is never committed to the app.'),
+    h('p', { class: 'disclaimer' }, 'Stays on this device — never committed to the app.'),
   ]));
 
   // Reminders — server-free: per-entry lead time on the calendar + an optional daily
   // journal nudge. Always in-app on Home; device notifications are opt-in + best-effort.
   const rset = reminders.settings();
   const remCard = h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Reminders'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Set a reminder on any calendar entry, with its own lead time. Reminders always appear on the “Coming up” card on Home. Allow notifications for a device alert while the app is open or when you next open it — background alerts when the app is fully closed are not available, because there is no server.'),
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, 'Reminders'),
+      infoTip('Set a reminder on any calendar entry, with its own lead time — it always appears on the “Coming up” card on Home too. Allow notifications for a device alert while the app is open or when you next open it.'),
+    ]),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'No background alerts once fully closed — there is no server.'),
   ]);
   remCard.append(h('button', { class: 'btn ghost block',
     onclick: async () => { const ok = await reminders.requestNotify(); reminders.tick(); alert(ok ? 'Device notifications are on.' : 'Notifications are off — you can enable them for this site in your browser settings.'); render(); } },
@@ -13533,8 +13545,11 @@ function settingsScreen() {
 
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Your data'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Everything you create — journal entries and photos, ratings and reviews, trip, budget, calendar, saved places and collections — stays on this device and is kept safe across app updates. It is written to three places on your device after every change (two in app storage, one in a separate database), so a single glitch can never wipe it. The one thing this app cannot do on its own is survive losing or wiping the device — so download a copy to keep somewhere safe. Nothing is ever uploaded.'),
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, 'Your data'),
+      infoTip('Everything you create — journal, photos, ratings, trip, budget, calendar, saved places and collections — is written to three places on this device after every change, so a single glitch can never wipe it.'),
+    ]),
+    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Kept safe across updates. Nothing is ever uploaded — download a copy below.'),
   ]);
   // On-device durability status — filled in asynchronously (persisted flag + space used).
   const statusP = h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Checking on-device storage…');
