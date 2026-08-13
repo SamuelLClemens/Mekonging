@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.386.0';
+const APP_VERSION = 'mk-v0.387.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -513,19 +513,33 @@ function setBlobThumb(img, key) {
 // Which bottom tab owns each route head. Destination discovery + on-the-ground info group
 // under Places; trip planning, memories, money, social, safety and admin group under Home;
 // Settings now lives inside the YOU hub, so its route maps to #me. Anything unlisted → Home.
+//
+// S5 re-triage (2026-08-13): Places used to also claim 23 country-wide REFERENCE screens
+// (visa rules, accessibility, food/dish guides, festival calendars, best-of lists…) even
+// though placesScreen itself never links to any of them — read start to finish, it is only
+// ever the living map, its filters, an individual place, adding a pin, and the full map.
+// Every one of those 23 is already reachable from Explore's own "More for X" tile decks
+// (tasks #58-60, #136-139), so this was purely a tab-highlight mislabel — a traveller who
+// tapped into one of them from Explore saw Places light up as active instead. Re-triaged
+// under the user's own definitions: Places = what is around you right now, Explore = where
+// could I go / country-wide reference. No screen moved, no link changed — only which bottom
+// tab claims it. See UX_OVERHAUL_PROMPT.md W5b, task #194.
 const TAB_FOR_HEAD = {
   // Explore = the geographic drill-down: country → region → city, plus the country-wide
-  // reading (history, culture, country guide) reached by tapping into a country.
+  // reading (history, culture, country guide) reached by tapping into a country, plus every
+  // country-wide reference screen re-triaged out of Places below.
   explore: '#explore', country: '#explore', region: '#explore', history: '#explore', info: '#explore',
-  // Places = finding specific things on the ground, AND the full offline map (merged in:
-  // map/addpin used to be their own tab). One section, one icon.
+  bestof: '#explore', bestlist: '#explore', food: '#explore', dish: '#explore', produce: '#explore',
+  nature: '#explore', sounds: '#explore', species: '#explore', pools: '#explore', events: '#explore',
+  event: '#explore', prices: '#explore', transport: '#explore', route: '#explore', crossings: '#explore',
+  schedules: '#explore', visa: '#explore', access: '#explore', baby: '#explore', family: '#explore',
+  streetfood: '#explore', board: '#explore', scams: '#explore',
+  // Places = what is around you right now: the living map and its filtered list, one place's
+  // own page, adding your own pin, the full offline map, setting where you are when GPS can't,
+  // and the two screens tied to this exact moment (today's weather, today's picks) rather than
+  // the country at large.
   places: '#places', place: '#places', map: '#places', addpin: '#places', nearby: '#places',
-  arrival: '#places', bestof: '#places', bestlist: '#places', food: '#places', dish: '#places',
-  produce: '#places', nature: '#places', sounds: '#places', species: '#places', pools: '#places',
-  events: '#places', event: '#places', weather: '#places', today: '#places', prices: '#places',
-  transport: '#places', route: '#places', crossings: '#places', schedules: '#places', visa: '#places',
-  access: '#places', baby: '#places', family: '#places', streetfood: '#places', board: '#places',
-  setcity: '#places', scams: '#places',
+  arrival: '#places', weather: '#places', today: '#places', setcity: '#places',
   phrasebook: '#phrasebook',
   // The personal hub ("YOU"/name) owns everything that is about the traveller themselves:
   // their calendar, memories, money, saved things, documents — and Settings.
@@ -534,6 +548,11 @@ const TAB_FOR_HEAD = {
   journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
   trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
   exchange: '#me', swap: '#me', market: '#me',
+  // #nextstop (S3, task #190) never got a TAB_FOR_HEAD entry, so it fell through to the
+  // #home default — caught while re-triaging this same table for S5. It belongs here, not
+  // Home or Explore: like trip/journey/calendar, it commits directly to store.trip.stops,
+  // the traveller's own data, not a suggestion to browse (that's #plans, which stays Home).
+  nextstop: '#me',
   home: '#home', '': '#home', welcome: '#home', search: '#home', checklist: '#home',
   plans: '#home', help: '#home', feedback: '#home',
   circle: '#home', add: '#home', in: '#home', inbox: '#home', thread: '#home', msg: '#home', sos: '#home',
