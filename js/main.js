@@ -264,7 +264,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.384.0';
+const APP_VERSION = 'mk-v0.385.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -400,15 +400,39 @@ export function go(hash) {
 
 // In-app back stack so "‹ Back" returns to the screen you actually came FROM, not a
 // hardcoded parent (fixes "I opened this from Search and Back sent me somewhere I never
-// saw"). The per-screen backHash is kept as the FALLBACK for a fresh load / deep link.
-let navStack = [];
+// saw"). The per-screen backHash is kept as the FALLBACK for a fresh load / deep link —
+// and it is the fallback, not the usual case: navStack is checked first and wins whenever
+// it has anything, so the fallback is cosmetic during normal in-app browsing.
+//
+// Persisted to sessionStorage (per-tab, not per-device — this is navigation history, not
+// data) so a reload, a shared link opened fresh, or iOS discarding a backgrounded tab no
+// longer wipes it. That gap — not the per-screen fallback hashes — was the actual defect
+// behind most real "Back sent me to the wrong place" reports: goBack() already preferred
+// navStack over the fallback every time it had one, so the fallback only ever mattered once
+// navStack was empty, which used to happen on every fresh load. Every access is defensive;
+// sessionStorage can throw in some contexts (private browsing with storage disabled).
+function loadNavState() {
+  try {
+    const stack = JSON.parse(sessionStorage.getItem('mk-navstack') || '[]');
+    return { stack: Array.isArray(stack) ? stack : [], hash: sessionStorage.getItem('mk-lasthash') };
+  } catch { return { stack: [], hash: null }; }
+}
+function saveNavState() {
+  try {
+    sessionStorage.setItem('mk-navstack', JSON.stringify(navStack));
+    sessionStorage.setItem('mk-lasthash', lastHash);
+  } catch { /* noop */ }
+}
+const _navInit = loadNavState();
+let navStack = _navInit.stack;
 let poppingBack = false;
-let lastHash = (typeof location !== 'undefined' && location.hash) || '#home';
+let lastHash = _navInit.hash || (typeof location !== 'undefined' && location.hash) || '#home';
 function goBack(fallback) {
   // Always return to the PREVIOUS page — never jump to Home (there is a Home tab for that).
   if (navStack.length) {
     poppingBack = true;
     const target = navStack.pop();
+    saveNavState();
     if (location.hash === target) { poppingBack = false; render(); }
     else location.hash = target;
     return;
@@ -2393,7 +2417,7 @@ function meHubScreen() {
     flatChip('🧭', 'Trip plans', '#plans'),
     flatChip('✅', 'Pre-trip checklist', '#checklist'),
     flatChip('🏷️', 'Bargain helper', '#bargain'),
-  ], false));
+  ], true));
 
   // You & settings — identity, preferences, privacy, support, and two more global features
   // that used to have no direct path from You: Search (already on Home, now here too) and
@@ -2404,7 +2428,7 @@ function meHubScreen() {
     flatChip('📤', 'Export & backup', '#export'),
     flatChip('❤️', 'Give back', '#donate'),
     flatChip('❓', 'Help & FAQ', '#help'),
-  ], false));
+  ], true));
 
   // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
   // quiet dismissible line near the foot. Same trigger (a single expense is still "something
@@ -7448,7 +7472,8 @@ function regionTitle() {
 
 function journalCover() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Journal', '#home'));
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s journal` : 'Your journal', '#me'));
   const n = journalEntries().length;
   const book = h('button', { class: 'book closed', 'aria-label': 'Open journal', onclick: () => go('#journal-open') }, [
     h('div', { class: 'book-spine' }),
@@ -7466,7 +7491,8 @@ function journalCover() {
 
 function journalTOC() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Adventures', '#journal'));
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s adventures` : 'Your adventures', '#journal'));
   const entries = journalEntries();
   const spread = h('div', { class: 'book-open page-enter' }, [
     h('div', { class: 'page page-left' }, [
@@ -7614,7 +7640,7 @@ function scrapAlbumSection() {
 
 function scrapbookScreen() {
   const wrap = h('div', { class: 'screen scrapbook' });
-  wrap.append(topbar('Trip scrapbook', '#home'));
+  wrap.append(topbar('Trip scrapbook', '#me'));
 
   const entries = (store.journal.entries || []).slice()
     .sort((a, b) => String(a.ts || a.date || '').localeCompare(String(b.ts || b.date || '')));
@@ -7935,7 +7961,8 @@ function journalFormScreen(editId) {
 // ---- JOURNEY MAP (Indiana-Jones dotted line + moving vehicle) ----------------
 function journeyScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Your journey', '#journal-open'));
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s journey` : 'Your journey', '#me'));
   const pts = journalEntries().filter((e) => e.coords);
   if (pts.length < 2) {
     wrap.append(h('p', { class: 'empty' }, 'Add at least two journal entries with a stamped location to draw your journey line.'));
@@ -8047,7 +8074,8 @@ function calMonthGrid(y, m, byDate, sel, onSelect) {
 
 function calendarScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Travel calendar', '#home'));
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s travel calendar` : 'Your travel calendar', '#me'));
   const L = calLayerState();
   const now = new Date();
   if (!calView) calView = { y: now.getFullYear(), m: now.getMonth() };
@@ -9927,7 +9955,8 @@ function stopDateLabel(s) {
 }
 function tripScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('My Trip', '#home'));
+  const name = (store.profile.name || '').trim();
+  wrap.append(topbar(name ? `${name}’s trip` : 'Your trip', '#me'));
 
   // itinerary
   const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);
@@ -13736,6 +13765,7 @@ window.addEventListener('hashchange', () => {
   if (poppingBack) { poppingBack = false; }
   else if (lastHash && lastHash !== location.hash) { navStack.push(lastHash); if (navStack.length > 60) navStack.shift(); }
   lastHash = location.hash;
+  saveNavState();
   render();
 });
 // Auto day/night flips as the user navigates (applyTheme runs each render); this keeps a
