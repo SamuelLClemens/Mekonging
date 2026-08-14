@@ -178,7 +178,9 @@ function planCityPanels() {
 
 export function weatherScreen(country) {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Weather & forecast', getCountry(country) ? `#country-${country}` : '#home'));
+  // "Weather" alone matches every chip that links here (Home, the country-scoped chip) — the
+  // old title was the only place adding "& forecast", and it 3-line-wrapped on mobile besides.
+  wrap.append(topbar('Weather', getCountry(country) ? `#country-${country}` : '#home'));
   // Seed the city from the country arg ONLY when first arriving at this route — otherwise
   // every render (e.g. a city-chip click, which calls render()) would overwrite the user's
   // choice back to the focus city. That was the "weather buttons do nothing" bug.

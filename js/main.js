@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.396.0';
+const APP_VERSION = 'mk-v0.397.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2446,7 +2446,7 @@ function meHubScreen() {
     flatChip('⚙️', 'Settings', '#settings'),
     flatChip('🔎', 'Search everything', '#search'),
     flatChip('🗂️', 'All features', '#everything'),
-    flatChip('📤', 'Export & share', '#export'),
+    flatChip('📤', 'Export', '#export'),
     flatChip('❤️', 'Give back', '#donate'),
     flatChip('❓', 'Help & FAQ', '#help'),
   ], true));
@@ -2559,7 +2559,7 @@ function everythingScreen() {
   wrap.append(grp('⚙️', 'You & settings', [
     chip('⚙️', 'Settings', '#settings'),
     chip('🔒', 'Documents', '#vault'),
-    chip('📤', 'Export & share', '#export'),
+    chip('📤', 'Export', '#export'),
     chip('🔎', 'Search everything', '#search'),
     chip('✉️', 'Send feedback', '#feedback'),
     chip('❓', 'Help & FAQ', '#help'),
@@ -9643,7 +9643,9 @@ function eventsScreen(country) {
   // in their country lead instead of a four-country pile (they can still tap "All").
   else if (!eventsCountry) { const f = focusSpot(); if (f.spot && getCountry(f.spot.country)) eventsCountry = f.spot.country; }
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Festivals & events', getCountry(eventsCountry) ? `#country-${eventsCountry}` : '#home'));
+  // "Festivals" alone — matches the "🎉 N festivals" link that points here, and fits on one
+  // line; the full "Festivals & events" phrase 3-line-wrapped on mobile.
+  wrap.append(topbar('Festivals', getCountry(eventsCountry) ? `#country-${eventsCountry}` : '#home'));
   wrap.append(h('p', { class: 'map-hint' }, 'Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
@@ -11684,7 +11686,11 @@ function mosquitoCard() {
 
 function dangerScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Health & wildlife hazards', '#sos'));
+  // "Dangerous" matches what every chip/link pointing here already calls this screen
+  // (Home/Explore's "⚠️ Dangerous" chip, the "🩹 Health & hazards" and "Sting & marine first
+  // aid" buttons elsewhere) — the old title was the only place still saying something else,
+  // and at 25 characters it was also the worst of the topbar 3-line-wrap family (4 lines here).
+  wrap.append(topbar('Dangerous', '#sos'));
   wrap.append(h('p', { class: 'map-hint' }, 'Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
   const list = allSpecies().filter((s) => s.dangerous);
   const groups = [
@@ -13277,7 +13283,9 @@ ${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
 
 function exportScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Export & share', '#settings'));
+  // "Export" alone (was "Export & share") — matches the two chips below once they're renamed
+  // to match, and fits on one line; the full phrase 3-line-wrapped on mobile.
+  wrap.append(topbar('Export', '#settings'));
   wrap.append(h('p', { class: 'muted' }, 'Save your own contributions as files you can read on any phone or computer, and share them however you like. Each type comes out in a fitting format. Everything is made on your device — nothing is uploaded.'));
 
   const jCount = (store.journal.entries || []).length;
