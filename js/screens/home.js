@@ -27,7 +27,7 @@
 // access row, the next-stop card) is written directly in this file instead, since it belongs
 // to Home alone.
 
-import { store, save, unreadInboxCount } from '../state.js';
+import { store, save, unreadInboxCount, unreadMessagesCount } from '../state.js';
 import { h } from '../util.js';
 import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
@@ -206,7 +206,9 @@ export function homeScreen() {
   const chip = (ic, label, sub, hash, extraClass) => h('button', {
     class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick: () => go(hash),
   }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
-  const unread = unreadInboxCount();
+  // Shared-with-you items AND circle messages both count as "things waiting for you in
+  // Travel circle" — one badge, so a new chat reply is just as visible as a new shared place.
+  const unread = unreadInboxCount() + unreadMessagesCount();
   const idN = idPinCount();
   const name = (store.profile.name || '').trim();
   const groups = [

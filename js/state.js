@@ -798,10 +798,23 @@ export function getThread(userId) {
 }
 export function addMessage(userId, { from, text, name = '' }) {
   if (!userId || !text) return null;
-  const msg = { from: from === 'me' ? 'me' : 'them', text: String(text).slice(0, 800), name: String(name || '').slice(0, 40), at: todayKey() };
+  const mine = from === 'me';
+  // Your own messages start read (you just wrote them); theirs start unread so the circle
+  // badge below can surface "you have a message you haven't opened" without a server.
+  const msg = { from: mine ? 'me' : 'them', text: String(text).slice(0, 800), name: String(name || '').slice(0, 40), at: todayKey(), read: mine };
   getThread(userId).push(msg); save(); return msg;
 }
 export function threadUserIds() { const t = store.social.threads || {}; return Object.keys(t).filter((k) => Array.isArray(t[k]) && t[k].length); }
+export function markThreadRead(userId) {
+  const th = getThread(userId);
+  let changed = false;
+  th.forEach((m) => { if (!m.read) { m.read = true; changed = true; } });
+  if (changed) save();
+}
+// from !== 'me' guards threads saved before this field existed: an old sent-by-you message
+// has no `read` flag at all, and should never count as an unread notification for yourself.
+export function unreadThreadCount(userId) { return getThread(userId).filter((m) => m.from !== 'me' && !m.read).length; }
+export function unreadMessagesCount() { return threadUserIds().reduce((n, id) => n + unreadThreadCount(id), 0); }
 
 // --- local noticeboard: the user's own posts per city --------------------------
 export function getBoardPosts(key) {

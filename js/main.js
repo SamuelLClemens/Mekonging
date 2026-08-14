@@ -17,7 +17,7 @@ import {
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
   getListings, addListing, removeListing,
-  getThread, addMessage,
+  getThread, addMessage, markThreadRead, unreadThreadCount, unreadMessagesCount,
   getBoardPosts, addBoardPost, deleteBoardPost,
   getAudioPacks, hasAudioPack, addAudioPack,
 } from './state.js';
@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.397.0';
+const APP_VERSION = 'mk-v0.399.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2369,7 +2369,9 @@ function meHubScreen() {
     }
   }
 
-  const unread = unreadInboxCount();
+  // Shared-with-you items AND circle messages both count as "things waiting for you in
+  // Travel circle" — one badge, so a new chat reply is just as visible as a new shared place.
+  const unread = unreadInboxCount() + unreadMessagesCount();
   wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
     chip('📅', calLabel, null, () => go('#calendar')),
     chip('💬', name ? `${name}’s dictionary` : 'My Dictionary', svP ? `${svP} saved` : null, () => go('#dictionary')),
@@ -12214,6 +12216,13 @@ function contactRow(c, actionEl) {
     actionEl || null,
   ]);
 }
+// Own-card render mode: false = the saved card as a read-only summary (matches how
+// every OTHER contact's card renders via contactRow), true = the editable form.
+// Module state, not a route — Save/Edit/Cancel just flip this and re-render #circle
+// in place, same pattern as editWithdrawalId. Fixes a real bug: this used to always
+// render the raw inputs, pre-filled from the just-saved values, so tapping "Save
+// card" appeared to do nothing (the form you were still looking at never changed).
+let editingMyCard = false;
 function circleScreen() {
   const me = ensureMe();
   const wrap = h('div', { class: 'screen' });
@@ -12230,16 +12239,28 @@ function circleScreen() {
     h('button', { class: 'btn ghost block', onclick: () => go('#exchange') }, `🧭 Open the board${nListings ? ` (${nListings})` : ''}`),
   ]));
 
-  // --- your card (editable) ---
-  const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', value: me.name || '' });
-  const avIn = h('input', { type: 'text', maxlength: '4', 'aria-label': 'Your emoji', value: me.avatar || '🧭', style: 'width:64px; text-align:center' });
-  const bioIn = h('textarea', { class: 'ta', maxlength: '160', rows: '2', placeholder: 'One line about you (optional)' }, me.bio || '');
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Your traveller card'),
-    h('div', { class: 'field' }, [h('label', {}, 'Emoji & name'), h('div', { style: 'display:flex; gap:8px' }, [avIn, nameIn])]),
-    field('Short bio', bioIn),
-    h('button', { class: 'btn', onclick: () => { setMe({ name: nameIn.value, avatar: avIn.value, bio: bioIn.value }); go('#circle'); } }, 'Save card'),
-  ]));
+  // --- your card: read-only summary once saved, editable form on request ---
+  const cardBox = h('div', { class: 'card' });
+  if (editingMyCard || !me.name) {
+    const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', value: me.name || '' });
+    const avIn = h('input', { type: 'text', maxlength: '4', 'aria-label': 'Your emoji', value: me.avatar || '🧭', style: 'width:64px; text-align:center' });
+    const bioIn = h('textarea', { class: 'ta', maxlength: '160', rows: '2', placeholder: 'One line about you (optional)' }, me.bio || '');
+    cardBox.append(
+      h('h2', {}, 'Your traveller card'),
+      h('div', { class: 'field' }, [h('label', {}, 'Emoji & name'), h('div', { style: 'display:flex; gap:8px' }, [avIn, nameIn])]),
+      field('Short bio', bioIn),
+      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+        me.name ? h('button', { class: 'btn ghost', onclick: () => { editingMyCard = false; go('#circle'); } }, 'Cancel') : h('span', {}),
+        h('button', { class: 'btn', onclick: () => { setMe({ name: nameIn.value, avatar: avIn.value, bio: bioIn.value }); editingMyCard = false; go('#circle'); } }, 'Save card'),
+      ]),
+    );
+  } else {
+    cardBox.append(
+      h('h2', { style: 'margin-top:0' }, 'Your traveller card'),
+      contactRow(me, h('button', { class: 'chip', 'aria-label': 'Edit your traveller card', onclick: () => { editingMyCard = true; go('#circle'); } }, '✎ Edit')),
+    );
+  }
+  wrap.append(cardBox);
 
   // --- invite a friend (share your card) ---
   // Every path here hands off to an app the traveller already has (WhatsApp, Messages, or
@@ -12313,8 +12334,9 @@ function circleScreen() {
     listCard.append(h('p', { class: 'muted' }, 'No one yet. Share your card, or open a friend’s link to add them.'));
   } else {
     contacts.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((c) => {
+      const cUnread = unreadThreadCount(c.userId);
       listCard.append(contactRow(c, h('div', { class: 'cats' }, [
-        h('button', { class: 'chip', onclick: () => go('#thread-' + c.userId) }, '💬 Message'),
+        h('button', { class: 'chip' + (cUnread ? ' budget-red' : ''), onclick: () => go('#thread-' + c.userId) }, cUnread ? `💬 ${cUnread} new` : '💬 Message'),
         h('button', { class: 'chip', 'aria-label': `Remove ${c.name || 'this contact'} from your circle`, onclick: () => { confirmAction({ title: 'Remove contact?', body: `Remove ${c.name || 'this contact'} from your circle?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeContact(c.userId); go('#circle'); } }); } }, '✕'),
       ])));
     });
@@ -12519,7 +12541,14 @@ function inboxScreen() {
 
 // Async message thread with one contact. "Sending" records the note locally and
 // produces a link to hand over — the reply comes back as another #msg- link.
-function threadScreen(userId, fallbackCard) {
+// justImported=true only for the one render importMessageScreen does immediately after
+// adding a brand-new incoming message: without it, that single call would both create the
+// unread message AND instantly clear it in the same synchronous pass (this screen is the
+// only place a message ever gets viewed, so "just added it" and "about to mark it read"
+// would otherwise always happen together and the badge could never show anything). Every
+// other way of reaching this screen — the circle list's "💬 Message" chip, a direct
+// #thread- reload — is a deliberate, separate visit and marks read as normal.
+function threadScreen(userId, fallbackCard, justImported = false) {
   const wrap = h('div', { class: 'screen' });
   const contact = getContact(userId) || fallbackCard || null;
   const name = contact ? contact.name : 'Traveller';
@@ -12532,6 +12561,7 @@ function threadScreen(userId, fallbackCard) {
     ]));
   }
   const th = getThread(userId);
+  if (!justImported) markThreadRead(userId);   // opening the thread IS reading it — clears this contact's badge
   const list = h('div', { class: 'card thread' });
   if (!th.length) list.append(h('p', { class: 'muted' }, 'No messages yet — write the first note below.'));
   else th.forEach((m) => list.append(h('div', { class: 'bubble ' + (m.from === 'me' ? 'me' : 'them') }, [
@@ -12584,7 +12614,7 @@ function importMessageScreen(arg) {
   if (!(last && last.from === 'them' && last.text === m.text)) addMessage(uid, { from: 'them', text: m.text, name: m.from.name });
   // rewrite the URL so a refresh does not re-import, then show the conversation
   try { history.replaceState(null, '', '#thread-' + uid); } catch { /* noop */ }
-  return threadScreen(uid, m.from);
+  return threadScreen(uid, m.from, true);
 }
 
 // ---- FOR YOU (traveller profile + personalised picks) -----------------------
