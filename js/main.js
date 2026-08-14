@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.391.0';
+const APP_VERSION = 'mk-v0.392.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3227,8 +3227,7 @@ function exploreScreen(argCc) {
       { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
       { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${cc}` },
       { ic: '💬', t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
-      { ic: '💵', t: 'Fair prices', d: 'Avoid overcharging', hash: `#prices-${cc}` },
-      { ic: '💱', t: 'Currency', d: `Convert to ${c.currency}`, hash: '#currency' },
+      { ic: '💱', t: 'Money & prices', d: `Convert to ${c.currency}, avoid overcharging`, hash: `#prices-${cc}` },
       { ic: '🌤', t: 'Weather', d: '7-day forecast', hash: `#weather-${cc}` },
       { ic: '🆘', t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
     ] },
@@ -6518,10 +6517,25 @@ function sourcesNote(sources, verified, place) {
 function pricesScreen(countryId) {
   if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
+  // Heading stays "Fair prices" (proven single-line at 375px) even though the Explore tile now
+  // reads "Money & prices" — "Money & prices" measured 3 lines here (task #176's regression
+  // threshold), and the converter card immediately below already makes the currency half obvious.
   wrap.append(topbar('Fair prices', getCountry(getActiveCountry()) ? `#country-${getActiveCountry()}` : '#home'));
   wrap.append(countryChips((id) => go(`#prices-${id}`)));
 
   const country = getCountry(getActiveCountry());
+  // Live converter — merged in from the old standalone "Currency" Explore tile (now one
+  // combined destination). The fuller currency screen (#currency: quick-reference table,
+  // cash-swap link, manual refresh) stays reachable from here and from Home Tools.
+  if (country) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', { style: 'margin:0 0 8px' }, `💱 ${homeCurrency()} → ${country.currency}`),
+      fxConverterControl(homeCurrency(), country.currency, { compact: true }),
+      h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#currency') }, 'More currency tools →'),
+    ]));
+  }
+  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top:14px' }, '🏷 Fair prices'));
+
   const data = country && country.prices;
   if (!data) {
     wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} prices are coming soon. Thailand is fully covered in this build.`));
