@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.393.0';
+const APP_VERSION = 'mk-v0.394.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2445,6 +2445,7 @@ function meHubScreen() {
   wrap.append(chipGrp('⚙️', 'You & settings', [
     flatChip('⚙️', 'Settings', '#settings'),
     flatChip('🔎', 'Search everything', '#search'),
+    flatChip('🗂️', 'All features', '#everything'),
     flatChip('📤', 'Export & backup', '#export'),
     flatChip('❤️', 'Give back', '#donate'),
     flatChip('❓', 'Help & FAQ', '#help'),
@@ -2462,6 +2463,108 @@ function meHubScreen() {
 
   wrap.append(h('p', { class: 'disclaimer' },
     'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));
+  mount(wrap, '#me');
+}
+
+// A full, browsable index of every feature on the site, organized into clean categories —
+// per direct request ("the you section should have a chip to get to every feature in the
+// site organized nicely and cleanly"). Two deliberate omissions, both because they are
+// already never more than one tap away regardless: the five bottom tabs themselves (Home,
+// Talk, You, Places, Explore), and Emergency/SOS (pinned in the topbar on every screen).
+// Also omitted: pure detail/parameterised screens reached FROM a feature rather than
+// browsed TO directly (a specific place, event, species, message thread, saved collection).
+// Country-scoped destinations use the currently active country — the same convention
+// Explore's own tile grid already uses for identical links.
+function everythingScreen() {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('All features', '#me'));
+  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' },
+    'Every feature on the site in one place. The five tabs at the bottom — Home, Talk, You, Places, Explore — are always one tap away, so they are not repeated here.'));
+
+  const cc = getActiveCountry();
+  const name = (store.profile.name || '').trim();
+  const chip = (ic, label, hash) => h('button', { class: 'status-chip', onclick: () => go(hash) },
+    [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, label)]);
+  const grp = (emoji, label, chips) => h('details', { class: 'home-group-d' }, [
+    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
+    h('div', { class: 'chips' }, chips),
+  ]);
+
+  wrap.append(grp('🧭', 'Trip & planning', [
+    chip('🧭', 'Trip plans', '#plans'),
+    chip('🧳', name ? `${name}’s trip` : 'My trip', '#trip'),
+    chip('✅', 'Pre-trip checklist', '#checklist'),
+    chip('🎯', 'Tune "For you"', '#foryou'),
+    chip('👣', 'Plan your next stop', '#nextstop'),
+    chip('🧭', 'Full journey planner', '#route'),
+    chip('🏆', 'Best of', `#bestof-${cc}`),
+  ]));
+  wrap.append(grp('💰', 'Money', [
+    chip('💱', 'Money & prices', `#prices-${cc}`),
+    chip('💰', 'Budget & Expenses', '#expenses'),
+    chip('💱', 'Currency converter', '#currency'),
+    chip('🏷️', 'Bargain helper', '#bargain'),
+    chip('🤝', 'Cash swap', '#swap'),
+    chip('🎒', 'Gear market', '#market'),
+  ]));
+  wrap.append(grp('📍', 'Places & map', [
+    chip('🗺️', 'Map', '#map'),
+    chip('⭐', 'Saved places', '#saved'),
+    chip('📍', 'Near me', '#nearby'),
+    chip('🛂', 'Border crossings', '#crossings'),
+    chip('🏊', 'Swimming spots', `#pools-${cc}`),
+    chip('🍢', 'Street food', '#streetfood'),
+    chip('🙏', 'Places of worship', `#worship-${cc}`),
+  ]));
+  wrap.append(grp('📔', 'Content you made', [
+    chip('📔', 'Journal', '#journal'),
+    chip('📸', 'Trip scrapbook', '#scrapbook'),
+    chip('🗺', 'Journey map', '#journey'),
+    chip('🔍', 'My identifier', '#identified'),
+    chip('💬', name ? `${name}’s dictionary` : 'My Dictionary', '#dictionary'),
+    chip('🏅', 'Your contributions', '#contributions'),
+  ]));
+  wrap.append(grp('🔎', 'Identify what’s around you', [
+    chip('🍜', 'Food', '#food'),
+    chip('🍈', 'Produce', '#produce'),
+    chip('🌿', 'Nature', '#nature'),
+    chip('🔊', 'Sounds', '#sounds'),
+    chip('⚠️', 'Dangerous', '#danger'),
+  ]));
+  wrap.append(grp('☀️', 'Weather & dates', [
+    chip('🌤', 'Weather', `#weather-${cc}`),
+    chip('🕒', 'Things to do today', `#today-${cc}`),
+    chip('📅', 'Travel calendar', '#calendar'),
+    chip('🎉', 'Festivals & holidays', `#events-${cc}`),
+  ]));
+  wrap.append(grp('🛂', 'Country & safety info', [
+    chip('🧭', 'Country guide', `#info-${cc}`),
+    chip('🛂', 'Entry & visa', `#visa-${cc}`),
+    chip('🛬', 'Just arrived', `#arrival-${cc}`),
+    chip('⚠️', 'Scams to know', `#scams-${cc}`),
+    chip('♿', 'Accessibility', `#access-${cc}`),
+    chip('🍼', 'Traveling with a baby', `#baby-${cc}`),
+    chip('👪', 'Traveling with kids', `#family-${cc}`),
+    chip('📜', 'History & culture', `#history-${cc}`),
+    chip('🚌', 'Getting around', `#transport-${cc}`),
+    chip('📋', 'Transport schedules', `#schedules-${cc}`),
+  ]));
+  wrap.append(grp('👥', 'People & sharing', [
+    chip('👥', 'Travel circle', '#circle'),
+    chip('🤝', 'Traveller board', '#exchange'),
+    chip('📌', 'Local noticeboard', `#board-${cc}`),
+    chip('📥', 'Inbox', '#inbox'),
+    chip('❤️', 'Give back', '#donate'),
+  ]));
+  wrap.append(grp('⚙️', 'You & settings', [
+    chip('⚙️', 'Settings', '#settings'),
+    chip('🔒', 'Documents', '#vault'),
+    chip('📤', 'Export & backup', '#export'),
+    chip('🔎', 'Search everything', '#search'),
+    chip('✉️', 'Send feedback', '#feedback'),
+    chip('❓', 'Help & FAQ', '#help'),
+  ]));
+
   mount(wrap, '#me');
 }
 
@@ -3201,9 +3304,13 @@ function exploreScreen(argCc) {
       h('p', { class: 'muted', style: 'margin:4px 0 8px' },
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
       here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${fslug}`) }, `Places in ${fcity}`) : null,
+      // Weather dropped from this row — it duplicated the "Get oriented" deck's own Weather
+      // tile just below, same label, same destination, both visible on this screen at once
+      // (found in the sitewide duplicate-chip audit). "Get oriented" is the fuller reference
+      // list, so it keeps Weather; this row stays focused on the two truly location-specific
+      // actions (what's near THIS spot, is this even the right city).
       h('div', { class: 'chips', style: 'margin-top:6px' }, [
         h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
-        h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, [chipIcon('cloud'), 'Weather']),
         h('button', { class: 'chip', onclick: () => go(`#setcity-${cc}`) }, [chipIcon('pin'), 'Not here? Change city']),
       ]),
     ]));
@@ -13741,6 +13848,7 @@ export function render() {
     switch (head) {
       case '': case 'home': return homeScreen();
       case 'me': return meHubScreen();
+      case 'everything': return everythingScreen();
       case 'welcome': return welcomeScreen();
       case 'explore': return exploreScreen(arg);   // arg is usually undefined; 'all' forces the four-country view
       case 'country': return exploreScreen(arg);   // arg is always a valid country id — 21 existing links
