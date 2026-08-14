@@ -224,23 +224,29 @@ export function homeScreen() {
       // post"): `hidePost` marks anything whose whole purpose is preparing for, or being
       // physically present on, a trip that — in this phase — has already ended: planning a
       // route, the pre-trip checklist, tuning recommendations for picking where to go, and the
-      // two on-the-ground-only tools (bargaining, the local buy/sell board). Everything else
-      // still genuinely serves a returned traveller (reviewing the trip/spend, journal,
-      // scrapbook, calendar, saved places, currency, documents, help) and stays in every phase.
+      // on-the-ground-only marketplace. Everything else still genuinely serves a returned
+      // traveller (reviewing the trip/spend, scrapbook, saved places, currency, documents,
+      // help) and stays in every phase.
+      //
+      // Journal / Calendar / Money dropped entirely, per the sitewide duplicate-chip audit:
+      // quickAccessRow (above) already carries all three, with a LIVE status sub-label
+      // (entry count, day count, spend %) this flat list never had — so those were pure
+      // redundant repeats of the exact same destination on the exact same screen, not a
+      // deliberate CTA/reference-list split. "Buy or sell" renamed to "Traveller board" to
+      // match the destination screen's own title and every other chip that links to it
+      // (meHubScreen, nearbyScreen, circleScreen all already used the correct name — this was
+      // the one place still on the old label).
       ...[
         { ic: '🧭', label: 'Trip plans', hash: '#plans', hidePost: true },
         { ic: '🎯', label: 'For you', hash: '#foryou', hidePost: true },
         { ic: '🧳', label: name ? `${name}’s trip` : 'My trip', hash: '#trip' },
         { ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', hidePost: true },
-        { ic: '📔', label: 'Journal', hash: '#journal' },
         { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook' },
-        { ic: '📅', label: 'Calendar', hash: '#calendar' },
         { ic: '⭐', label: 'Saved places', hash: '#saved' },
         { ic: '💱', label: 'Currency converter', hash: '#currency' },
-        { ic: '💰', label: 'Money', hash: '#expenses' },
         { ic: '🏷️', label: 'Bargain helper', hash: '#bargain', hidePost: true },
         { ic: '👥', label: 'Travel circle', sub: unread ? `${unread} unread` : null, hash: '#circle', cls: unread ? 'budget-red' : '' },
-        { ic: '🤝', label: 'Buy or sell', hash: '#exchange', hidePost: true },
+        { ic: '🤝', label: 'Traveller board', hash: '#exchange', hidePost: true },
         { ic: '🔒', label: 'Documents', hash: '#vault' },
         { ic: '❓', label: 'Help & FAQ', hash: '#help' },
       ].filter((t) => !(t.hidePost && phase === 'post'))
