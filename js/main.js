@@ -266,7 +266,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.407.0';
+const APP_VERSION = 'mk-v0.408.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4983,6 +4983,154 @@ function placesScreen(arg) {
   );
   wrap.append(mapSection);
 
+  // Declared here (rather than down by the map-boot code, where it used to live) because
+  // the My-accommodation/Saved-areas cards immediately below read it synchronously at
+  // render time (to decide whether to show their map-dependent controls yet); the map.js
+  // controller itself still only actually resolves later, via the async import near the
+  // end of this function, same as before.
+  let placesCtrl = null;
+
+  // ---- My accommodation + saved offline areas ------------------------------------
+  // Task #196 Phase 2 slice 1: now that map.js's "way back" line, my-accommodation marker
+  // and offline-area tile helpers are mode-independent (see map.js), Places' own embedded
+  // map can offer the same things #map does, without leaving this screen. placesCtrl (below)
+  // only resolves a moment after this runs (async import), so every action here checks it is
+  // set before touching it — harmless no-ops (or a hidden button) until then.
+  // A details/summary wrapper matching collapsibleCard's visual output (card+foldcard classes,
+  // foldcard-sum summary) but — unlike collapsibleCard, which MOVES a card's children into the
+  // new <details> once and discards the now-empty original node — keeps `bodyEl` itself as the
+  // live child. Needed here because both cards below re-render their own content repeatedly
+  // (once placesCtrl resolves, on stay/area changes, live GPS updates); collapsibleCard's
+  // one-shot child-extraction would silently orphan every later re-render from the visible DOM.
+  function foldedCard(title, bodyEl, key, defaultOpen) {
+    const det = h('details', { class: 'card foldcard' });
+    const pref = key ? store.profile.prefs[key] : undefined;
+    if (pref === undefined ? defaultOpen : pref) det.setAttribute('open', '');
+    det.append(h('summary', { class: 'foldcard-sum' }, title), bodyEl);
+    if (key) det.addEventListener('toggle', () => { store.profile.prefs[key] = det.open; save(); });
+    return det;
+  }
+  const stayBannerP = h('p', { style: 'margin:4px 0;font-weight:700' }, '');
+  const stayCard = h('div', { class: 'card' });
+  let stayFixP = null;
+  function updateStayBannerP() {
+    const stay = getMyStay();
+    if (!stay || !stay.coords) return;
+    stayBannerP.textContent = stayFixP
+      ? `${fmtDistance(haversineKm(stayFixP, stay.coords))} · ${compass(bearing(stayFixP, stay.coords))} to your stay`
+      : 'Tap the ⊕ locate button on the map to see distance and direction back.';
+  }
+  async function setStayHereP() {
+    stayBannerP.textContent = 'Getting your location…';
+    try {
+      const pos = await geolocate();
+      const s = setMyStay({ name: (getMyStay() || {}).name || 'My stay', coords: { lat: pos.lat, lng: pos.lng } });
+      if (placesCtrl) { placesCtrl.setMyStay(s.coords); if (stayFixP) placesCtrl.setWayback(stayFixP, s.coords); }
+      renderStayCard();
+    } catch (err) { stayBannerP.textContent = 'Could not get your location: ' + err.message; }
+  }
+  function renderStayCard() {
+    stayCard.textContent = '';
+    const stay = getMyStay();
+    if (stay && stay.coords) {
+      stayCard.append(
+        h('p', {}, [h('strong', {}, stay.name || 'My stay'), h('span', { class: 'muted' }, ` · ${stay.coords.lat.toFixed(4)}, ${stay.coords.lng.toFixed(4)}`)]),
+        stayBannerP,
+        h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:6px' }, [
+          h('button', { class: 'btn', onclick: () => {
+            if (placesCtrl && stayFixP) { placesCtrl.setWayback(stayFixP, stay.coords); placesCtrl.frameBoth(stayFixP, stay.coords); }
+            else if (placesCtrl) { placesCtrl.goToStay(stay.coords); }
+          } }, '🧭 Show the way back'),
+          h('a', { class: 'btn ghost', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'),
+          h('button', { class: 'btn ghost', onclick: () => { if (placesCtrl) placesCtrl.goToStay(stay.coords); } }, 'Show on map'),
+          h('button', { class: 'btn ghost', onclick: setStayHereP }, 'Move to here'),
+          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (placesCtrl) { placesCtrl.setMyStay(null); placesCtrl.setWayback(null, null); } renderStayCard(); } }, 'Clear'),
+        ]),
+      );
+      updateStayBannerP();
+    } else {
+      stayCard.append(
+        h('p', { class: 'muted' }, 'Save where you are staying and the map will always show the distance and direction back to it — even offline.'),
+        h('button', { class: 'btn block', onclick: setStayHereP }, '📍 Set my stay to my current location'),
+      );
+    }
+  }
+  renderStayCard();
+  wrap.append(foldedCard('🏠 My accommodation', stayCard, 'placesStayOpen', false));
+
+  const areasStatusP = h('p', { class: 'muted', style: 'margin:4px 0;font-size:13px' }, '');
+  const areasCard = h('div', { class: 'card' });
+  const swAvailableP = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
+  function estimateAreaP() {
+    if (!placesCtrl) { areasStatusP.textContent = 'The map is still loading — try again in a moment.'; return; }
+    const urls = placesCtrl.getDownloadTiles(1000);
+    if (!urls.length) { areasStatusP.textContent = 'Nothing to save at this view — zoom in to an area first.'; return; }
+    const viewInfo = placesCtrl.getViewInfo();
+    const mbNum = urls.length * 0.018;
+    const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
+    areasStatusP.textContent = '';
+    areasStatusP.append(
+      `This view is about ${urls.length} satellite tiles (~${mb} MB). `,
+      h('button', { class: 'linklike', onclick: () => downloadAreaP(urls, viewInfo) }, 'Download now'),
+      ' · ',
+      h('button', { class: 'linklike', onclick: () => { areasStatusP.textContent = ''; } }, 'Cancel'),
+    );
+  }
+  async function downloadAreaP(urls, viewInfo) {
+    areasStatusP.textContent = `Saving ${urls.length} map tiles for offline…`;
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.type === 'PREFETCH_PROGRESS') { areasStatusP.textContent = `Saving map tiles… ${d.done}/${d.total}`; return; }
+      if (d.type !== 'PREFETCH_DONE') return;
+      navigator.serviceWorker.removeEventListener('message', onMsg);
+      if (d.quotaHit) { areasStatusP.textContent = `Storage is full — saved ${d.ok} tiles before stopping. Remove a saved area below, then try a smaller view.`; return; }
+      if (d.ok > 0 && viewInfo) {
+        const def = (placesCtrl && placesCtrl.nearestCityName && placesCtrl.nearestCityName()) || 'Saved area';
+        const name = (prompt('Name this offline area:', def) || def).trim() || def;
+        addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.floor(viewInfo.zoom), count: d.ok });
+      }
+      areasStatusP.textContent = '';
+      renderAreasCard();
+    };
+    navigator.serviceWorker.addEventListener('message', onMsg);
+    let protect = [];
+    try { protect = getSavedAreas().flatMap((a) => (placesCtrl && placesCtrl.tileUrlsForArea) ? placesCtrl.tileUrlsForArea(a.bounds, a.z) : []); } catch { /* best-effort */ }
+    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls, protect });
+  }
+  function deleteAreaP(a) {
+    removeSavedArea(a.id); renderAreasCard();
+    if (placesCtrl && swAvailableP && a.bounds && navigator.serviceWorker.controller) {
+      const urls = placesCtrl.tileUrlsForArea(a.bounds, a.z || 12, 1000);
+      const onMsg = (e) => { if ((e.data || {}).type === 'DELETE_DONE') { navigator.serviceWorker.removeEventListener('message', onMsg); renderAreasCard(); } };
+      navigator.serviceWorker.addEventListener('message', onMsg);
+      navigator.serviceWorker.controller.postMessage({ type: 'DELETE_TILES', urls });
+    }
+  }
+  function renderAreasCard() {
+    areasCard.textContent = '';
+    const dlBtn = h('button', { class: 'btn ghost', onclick: estimateAreaP }, '⬇ Save this map view for offline');
+    if (!swAvailableP || !placesCtrl) dlBtn.style.display = 'none';
+    areasCard.append(dlBtn, areasStatusP);
+    const areas = getSavedAreas();
+    if (!areas.length) {
+      areasCard.append(h('p', { class: 'muted' }, 'Save the view above to use the satellite map with no signal. Each area you save is listed here and can be removed on its own.'));
+      return;
+    }
+    areas.forEach((a) => {
+      const mbNum = (a.count || 0) * 0.018;
+      const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
+      areasCard.append(h('div', { class: 'row-between price-item' }, [
+        h('div', {}, [h('strong', {}, a.name), h('div', { class: 'muted', style: 'font-size:12px' }, `${a.count || 0} tiles · ~${mb} MB · saved ${a.savedAt}`)]),
+        h('div', { class: 'cats' }, [
+          h('button', { class: 'chip', title: 'Show on map', 'aria-label': `Show ${a.name} on map`, onclick: () => { if (placesCtrl && a.center) placesCtrl.flyTo(a.center.lng, a.center.lat, a.z || 12); } }, '◎'),
+          h('button', { class: 'chip', 'aria-label': `Delete ${a.name}`, onclick: () => deleteAreaP(a) }, '✕'),
+        ]),
+      ]));
+    });
+  }
+  renderAreasCard();
+  wrap.append(foldedCard('🗂️ Saved offline areas', areasCard, 'placesAreasOpen', false));
+
   // interest filters (seeded from saved prefs the first time)
   const prefs = store.profile.prefs;
   const selInterests = new Set(prefs.interests || []);
@@ -5196,11 +5344,11 @@ function placesScreen(arg) {
     h('summary', {}, '🎨 Colour key'),
     colorKeyCard(),
   ]));
-  // A link to the full offline map (GPS, extra layers, saved offline areas, measure).
+  // A link to the full offline map (GPS, extra layers, measure — My accommodation and
+  // saved offline areas now live right here too, see above).
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin:8px 0 2px', onclick: () => go('#map') },
-    [chipIcon('map'), ' Full map — offline areas, layers & measure']));
+    [chipIcon('map'), ' Full map — extra layers & measure tool']));
 
-  let placesCtrl = null;
   let currentResults = [];
   // Places is map-first now — the map is the only section that never collapses. The distance
   // tiers below it default to open for "Right here"/"Nearby" (the immediately actionable ones)
@@ -5445,6 +5593,16 @@ function placesScreen(arg) {
       // Always centre on the anchor (GPS fix, scoped city, or the focus-spot/capital fallback) —
       // Places has no more un-anchored "browsing the whole country" state to leave uncentred.
       setTimeout(() => { try { c.map.flyTo({ center: [anchor.lng, anchor.lat], zoom: 12, duration: 500 }); } catch { /* noop */ } }, 350);
+      // My-accommodation/saved-areas controls only work once the controller exists — show
+      // them now (a no-op if the traveller already opened the cards and saw them hidden).
+      renderAreasCard();
+      // A second, independent geolocate listener (map.js supports many) so the way-back
+      // line and distance banner update live here too, exactly like the standalone map.
+      c.onLocate((fix) => {
+        stayFixP = fix; updateStayBannerP();
+        const st = getMyStay();
+        if (st && st.coords) c.setWayback(fix, st.coords);
+      });
     }).catch(() => { mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'The map could not start here — the list below still works offline.')); });
   }
 }
