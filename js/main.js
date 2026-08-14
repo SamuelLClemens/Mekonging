@@ -266,7 +266,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.403.0';
+const APP_VERSION = 'mk-v0.404.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -894,7 +894,10 @@ function profileFit(p, prefs = store.profile.prefs) {
     if (cats.includes('nightlife')) warn.push('Bar / nightlife venue');
     if (prefs.withBaby) {
       if (cats.includes('hike') || cats.includes('waterfall')) warn.push('Hard going with a pram or infant');
-      if (!(p.access && p.access.toilet)) unknown.push('Baby-change facilities not recorded');
+      // A wheelchair-accessible toilet and a baby-change table are not the same fact — kept as
+      // its own field (access.babyChange) rather than overloading access.toilet for both.
+      if (p.access && p.access.babyChange) good.push('Baby-change facilities reported');
+      else unknown.push('Baby-change facilities not recorded');
     }
   }
 
@@ -916,6 +919,13 @@ function profileFit(p, prefs = store.profile.prefs) {
     if ((p.scamWarnings || []).length) warn.push(`${p.scamWarnings.length} reported scam${p.scamWarnings.length > 1 ? 's' : ''} here`);
     if (cats.includes('nightlife')) warn.push('Night venue — plan how you get back');
     if (openStateNow(p) === false) warn.push('Closed right now');
+    // afterDark is a CHECKABLE OPERATIONAL FACT (does the site/road stay open or lit past
+    // dusk) sourced per-place — never a safety verdict. Surfaced as a plain fact; the
+    // judgement (and the "no verified safety reporting" line below) stays unchanged.
+    if (p.afterDark) {
+      if (p.afterDark.openAfterDark === false) good.push('Closes before dark');
+      else if (p.afterDark.openAfterDark === true) warn.push(p.afterDark.lit === true ? 'Open after dark — lit' : 'Open after dark — lighting not recorded');
+    }
     unknown.push('No verified safety reporting for this place');
   }
 

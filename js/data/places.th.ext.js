@@ -533,6 +533,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-maekampong-homestay", name: "Mae Kampong village homestay", city: "Chiang Mai", country: "th",
+    access: { stepFree: "no", note: "A hillside eco-village at roughly 1,300m elevation, reached by mountain road, with built stone steps connecting the streams, waterfalls and homestay houses. No ramps or step-free routes are documented; terrain throughout is hilly." },
     categories: ["stay", "nature", "culture"], budgetTier: "low",
     kidFriendly: true, stayType: "homestay", stayDuration: "short",
     activities: ["homestay", "village-life", "coffee", "hiking", "waterfalls"],
@@ -1948,6 +1949,8 @@ export const PLACES_TH_EXT = [
     name: "Chiang Dao Cave (Tham Chiang Dao)",
     city: "Chiang Mai",
     country: "th",
+    access: { stepFree: "no", note: "Deeper passages are dark, low, damp and slippery, explored on foot with a lantern guide; no ramps or step-free route through the cave system is documented." },
+    afterDark: { openAfterDark: false, note: "Open daily roughly 08:00-17:00 (own listing); not accessible after dark." },
     recognition: "A cave temple at the foot of a sheer jungle-clad limestone massif, with a Buddha-filled illuminated cavern giving way to dark passages lit only by a guide's lantern.",
     localName: "ถ้ำเชียงดาว · Tham Chiang Dao",
     categories: ["nature", "culture", "hike"],
@@ -3760,6 +3763,8 @@ export const PLACES_TH_EXT = [
   // --------------------------------------------------------------------------
   {
     id: "th-ext-doi-inthanon-summit-pagodas", name: "Doi Inthanon summit & the twin royal pagodas", city: "Chiang Mai", country: "th",
+    access: { stepFree: "partial", note: "The Ang Ka nature trail at the summit is a flat boardwalk suitable for most mobility levels, but the twin pagodas themselves require an escalator followed by a further flight of stairs to reach the towers — not fully step-free." },
+    afterDark: { openAfterDark: false, note: "Park hours are roughly 05:30-18:00 (own listing); not accessible after dark." },
     recognition: "The cloud-wrapped roof of Thailand at about 2,565m, where a short boardwalk loops the mossy summit forest and, just below at km 41.5, two great royal chedis stand on facing ridges above terraced gardens.",
     localName: "ยอดดอยอินทนนท์ · พระมหาธาตุนภเมทนีดล / นภพลภูมิสิริ",
     categories: ["viewpoint", "nature", "culture"], budgetTier: "low",
@@ -3851,6 +3856,8 @@ export const PLACES_TH_EXT = [
   // --------------------------------------------------------------------------
   {
     id: "th-ext-wat-hua-wiang", name: "Wat Hua Wiang & the Phra Chao Phara Lakhaeng Buddha", city: "Mae Hong Son", country: "th",
+    access: { stepFree: "partial", note: "General travel guides describe the ground-level temple area as wheelchair accessible, though the exact terrain and any steps to specific shrine buildings are not independently confirmed." },
+    afterDark: { openAfterDark: false, note: "Listed as daylight hours only; not open after dark." },
     recognition: "A Shan-Burmese temple beside the morning market in the middle of Mae Hong Son, its dark teak viharn sheltering the town's most revered bronze Buddha.",
     localName: "วัดหัวเวียง · พระเจ้าพาราละแข่ง · Wat Hua Wiang",
     categories: ["culture"], budgetTier: "low",
@@ -4065,6 +4072,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-kayan-longneck-villages-mae-hong-son", name: "Kayan (Karenni \"long-neck\") villages near Mae Hong Son — an ethical visit", city: "Mae Hong Son", country: "th",
+    afterDark: { openAfterDark: false, note: "Visiting is daytime only, roughly 08:00-17:00, and dependent on river-boat access to some villages — not an after-dark destination." },
     localName: "บ้านห้วยปูแกง · Ban Huay Pu Keng",
     categories: ["culture"],
     budgetTier: "low",
@@ -4253,6 +4261,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pai-white-buddha", name: "Wat Phra That Mae Yen (the White Buddha)", city: "Pai", country: "th",
+    access: { stepFree: "partial", note: "The main route is a roughly 353-step Naga staircase; a paved road also climbs partway up the mountain for visitors who cannot manage the stairs, though some walking from the road's end to the summit terrace likely remains (not independently confirmed)." },
+    afterDark: { openAfterDark: false, note: "Own listed hours are roughly 06:00-18:00, with visitors advised to arrive about an hour before sunset — not intended for after-dark visits." },
     localName: 'วัดพระธาตุแม่เย็น · Wat Phra That Mae Yen',
     categories: ["temple", "viewpoint"], budgetTier: "low", kidFriendly: true,
     blurb: "A large white seated Buddha crowns a hill about 2 km east of town, reached by a staircase of 353 painted concrete steps. It faces west over the Pai valley, so the platform doubles as the town's favourite free sunset spot.",
@@ -4297,6 +4307,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pai-memorial-bridge", name: "Tha Pai Memorial Bridge (WWII)", city: "Pai", country: "th",
+    afterDark: { openAfterDark: true, note: "Own listing describes it as \"open access\" with no closing time, unlike most nearby sites — physically reachable after dark, though lighting and path safety after dusk are not documented." },
     localName: 'สะพานประวัติศาสตร์ · Saphan Prawatsat',
     categories: ["history", "culture"], budgetTier: "low", kidFriendly: true,
     blurb: "A steel pedestrian truss bridge over the Pai River just east of town, marking the wartime route the Japanese army pushed through toward Burma. Their original timber bridge was burned in the 1944 retreat; the steel span you cross today is the old Nawarat Bridge, moved here from Chiang Mai in the mid-1970s after floods destroyed the rebuild.",
@@ -4340,6 +4351,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pai-santichon-yunlai", name: "Santichon Yunnan village & Yun Lai viewpoint", city: "Pai", country: "th",
+    access: { stepFree: "no", note: "Yun Lai viewpoint is reached via a steep, bumpy unpaved road and bamboo-deck platforms; Santichon village's own market street is comparatively level, but the combined site is not step-free." },
+    afterDark: { openAfterDark: true, note: "Yun Lai's own listed hours run to about 20:00, after typical local sunset — genuinely open into darkness, though it is best known and safest as a dawn/sunrise spot; lighting after dusk is not documented." },
     localName: 'บ้านสันติชน / จุดชมวิวหยุนหลาย · Ban Santichon / Yun Lai',
     categories: ["viewpoint", "culture", "village"], budgetTier: "low", kidFriendly: true,
     blurb: "Ban Santichon is a Yunnanese Chinese village founded by KMT-descended settlers, with clay-and-straw houses, tea tasting and a big swing. Just above it, the Yun Lai viewpoint looks out over the valley - the classic spot to watch the cool-season 'sea of mist' burn off at sunrise.",

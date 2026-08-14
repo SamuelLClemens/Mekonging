@@ -11,6 +11,18 @@
 //   amenities: [string]          — facilities for stays (e.g. 'wifi', 'kitchen', 'pool')
 //   externalRatings: [{ site, score, scale, count?, url, asOf:'YYYY-MM' }]  — verified snapshots from other sites
 //   externalPrices:  [{ site, from, currency, url, asOf:'YYYY-MM' }]        — last-checked "from" prices (deep-link for live)
+//   access: { stepFree:'yes'|'partial'|'no', toilet:true, babyChange:true, note }
+//     — stepFree/note are a pair, always set together. toilet and babyChange are each ONLY ever
+//     set to `true` (never `false`) — absence means "not confirmed", not "no". babyChange is
+//     deliberately separate from toilet: a wheelchair-accessible toilet and a baby-change table
+//     are not the same fact and must not be conflated.
+//   afterDark: { openAfterDark:true|false, lit:true|false, note }
+//     — CHECKABLE OPERATIONAL FACTS ONLY (does the site/road stay open or lit past dusk),
+//     never a safety verdict. Set only from a genuine source (the entry's own `hours`, an
+//     official park/tourism page, a dated on-the-ground account) — if no such source exists,
+//     omit the field entirely rather than infer or guess. This app deliberately carries no
+//     per-venue "is it safe here" rating (see profileFit() in main.js); afterDark must never
+//     become one by the back door.
 export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
