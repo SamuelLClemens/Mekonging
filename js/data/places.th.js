@@ -1,6 +1,10 @@
 // Bangkok places (slice). Each entry is tagged by interest categories and a budget
 // tier so the UI can filter to what fits the traveller. Prices are GUIDANCE ranges
-// with a verified stamp; confirm locally. categories: food | culture | nature | nightlife.
+// with a verified stamp; confirm locally. Fine-grained categories roll up into one
+// family each (CATEGORY_FAMILIES / catFamily(), js/render-utils.js): culture, nature,
+// beach, food, market, stay, nightlife, transport, wellness, practical (money, health,
+// sim/atm/laundry errands, and orientation "info" cards such as "Pai practical: cash,
+// health & road safety" — guidance to read, not a sight to visit), else 'other'.
 //
 // Optional traveller-fit fields (all safe to omit; the UI shows them only when set):
 //   kidFriendly: true|false      — good with children
