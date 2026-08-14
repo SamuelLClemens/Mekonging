@@ -31,6 +31,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-wat-pho', name: 'Wat Pho (Reclining Buddha)', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", note: "Ramps connect much of the grounds, but there is no ramp into the main hall, so reaching the Reclining Buddha requires assistance up steep steps." },
+    afterDark: { openAfterDark: false, note: "Own listed hours are 08:00-18:30, closing at or shortly after typical Bangkok dusk (roughly 17:45-18:45 depending on season) — not set up for after-dark visits." },
     recognition: 'Long white perimeter walls by Tha Tien pier on the east bank of the river; inside are the huge gold Reclining Buddha hall and a cluster of coloured-tile spires. It adjoins the Grand Palace to the south.',
     localName: 'วัดโพธิ์ · Wát Phoh',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -52,6 +53,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-grand-palace', name: 'Grand Palace & Wat Phra Kaew', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", toilet: true, note: "Outer courtyards and the paved route past the chedi and Royal Pantheon are step-free, with free loan wheelchairs and signed accessible toilets near the front gate, but the Emerald Buddha hall (Wat Phra Kaew) has a raised threshold requiring staff assistance with a portable ramp." },
+    afterDark: { openAfterDark: false, note: "Own listed hours are 08:30-15:30, closing well before dusk — not open for after-dark visits." },
     recognition: 'Vast gleaming-white crenellated walls beside Sanam Luang park, with the golden spires of Wat Phra Kaew rising above them. A dress-code check and crowds mark the Na Phra Lan gate.',
     localName: 'พระบรมมหาราชวัง · Phrá Boròm Mahǎ Râatchawang',
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -73,6 +75,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-wat-arun', name: 'Wat Arun (Temple of Dawn)', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", toilet: true, note: "The riverside courtyard, ordination hall and surrounding terraces are paved and step-free with a signed accessible toilet near the ticket booth, but the central prang is reached only by very steep staircases and is not wheelchair navigable." },
+    afterDark: { openAfterDark: false, note: "Own listed hours are 08:00-18:00, closing at or shortly after typical Bangkok dusk — the grounds are not set up for after-dark visits." },
     recognition: 'The tall Khmer-style prang (spire) covered in porcelain shards, on the Thonburi (west) bank — most recognisable from across the river or the cross-river ferry from Tha Tien.',
     localName: 'วัดอรุณ · Wát Àrun',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -91,6 +94,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", toilet: true, note: "Outdoor main lanes are flat and paved and rollable, but the market was not designed for accessibility: many sub-sois (alleys) are narrow, weekend crowds are dense, vendor goods cause occasional obstructions, and some stalls have a step at the door." },
+    afterDark: { openAfterDark: false, note: "Main Saturday-Sunday hours are 09:00-18:00, closing at or before typical Bangkok dusk; the market's own 'some areas Friday evening' exception is a partial, non-standard extension, not a general after-dark opening." },
     externalRatings: [
       { site: "Google", score: 4.4, scale: 5, count: 54826, asOf: "2026-07" },
     ],
@@ -112,6 +116,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", note: "A wheelchair-user report confirms the main Chinatown sidewalks are mostly smooth with curb cuts, but they are packed with people and street-food vendors (hard to roll in places), some stretches are uneven, several intersections lack dropped curbs, and many eateries have a step at the entrance." },
+    afterDark: { openAfterDark: true, lit: true, note: "The stalls are at their best from roughly 18:00, when the street's neon shop signs switch on for the evening food scene — genuinely an after-dark destination, not just tolerant of one." },
     recognition: 'The neon-signed main road of Chinatown; gold shops by day, then charcoal grills and seafood stalls spill onto the pavements after dark. Look for the big Chinese-character arches.',
     localName: 'เยาวราช · Yao-wárâat',
     rating: 4.6, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -125,7 +130,7 @@ export const PLACES_TH = [
     scamWarnings: [],
     mapQuery: 'Yaowarat Road Bangkok', coords: { lat: 13.74, lng: 100.509 },
     bookHint: 'Just turn up; bring cash.', verified: '2026-06',
-    sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }],
+    sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }, { org: 'Time Out Bangkok', url: 'https://timeout.com/bangkok/attractions/chinatown' }],
   },
   {
     id: 'th-bkk-jay-fai', name: 'Jay Fai', city: 'Bangkok', country: 'th',
@@ -148,6 +153,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-lumpini', name: 'Lumphini Park', city: 'Bangkok', country: 'th',
     access: { stepFree: "yes", note: "Flat paved loop paths throughout (roughly 2.5km main circuit), MRT at the gate, and wheelchair/mobility-scooter rental on site. A Universal-Design 'Green Bridge' elevated walkway (ramps and lifts, slip-resistant surface) connects to Benjakitti Park. Genuinely step-free terrain in the park itself." },
+    afterDark: { openAfterDark: true, note: "Own listed hours run to 21:00, well past typical Bangkok dusk; it is a popular evening jogging/exercise spot with security patrols during opening hours, and the roads bordering it (Silom, Ratchadamri, Wireless, Sathorn) stay well-lit and busy into the night — though visitors are advised to keep to well-lit areas rather than isolated spots after dark." },
     rating: 4.5, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nature'], budgetTier: 'low',
     kidFriendly: true, activities: ['walk', 'boating', 'wildlife'],
@@ -159,11 +165,12 @@ export const PLACES_TH = [
     scamWarnings: [],
     mapQuery: 'Lumphini Park Bangkok', coords: { lat: 13.7307, lng: 100.5418 },
     bookHint: 'Open access.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'North of Known — Lumpini Park guide', url: 'https://www.northofknown.com/lumpini-park-bangkok-guide/' }],
   },
   {
     id: 'th-bkk-khaosan', name: 'Khaosan Road', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", note: "A 410m paved pedestrian walking street (rebuilt by the city in 2020 with proper drainage), which a wheelchair user navigated with some maneuvering. Heavy evening crowds, uneven patches and spilled drinks make it work; some spots remain blocked by steps or uneven surfaces. Easiest by day." },
+    afterDark: { openAfterDark: true, lit: true, note: "An evening/night destination by design (own listed hours 'evenings until late'), already described in this entry's own recognition text as a strip of neon bars." },
     recognition: 'One short pedestrian street of neon bars, stalls and hostels off Ratchadamnoen Klang — listen for the music before you spot the sign.',
     localName: 'ถนนข้าวสาร · Thanon Khao San',
     rating: 4.0, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
@@ -181,6 +188,8 @@ export const PLACES_TH = [
   },
   {
     id: 'th-bkk-rooftop', name: 'Rooftop bar (Vertigo / Sky Bar)', city: 'Bangkok', country: 'th',
+    access: { stepFree: "partial", note: "Sky Bar (Lebua State Tower) is reached by elevator to the 63rd floor and offers wheelchair rental on site, but the open-air terrace itself is reported to have some structural limitations for wheelchair users — confirm specific access needs with the venue directly. (Vertigo, the other rooftop named in this entry, has not been independently checked.)" },
+    afterDark: { openAfterDark: true, lit: true, note: "Sky Bar's own listed hours are roughly 17:00-00:30 — an evening/night-only venue by design, and its signature skyline views are inherently an after-dark, illuminated experience." },
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['nightlife'], budgetTier: 'high',
     kidFriendly: false, activities: ['cocktails', 'views'],
@@ -192,7 +201,7 @@ export const PLACES_TH = [
     scamWarnings: [],
     mapQuery: 'Vertigo Rooftop Bar Bangkok', coords: { lat: 13.7223, lng: 100.5167 },
     bookHint: 'Reserve a table for sunset on weekends.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'The Rooftop Guide — Sky Bar by Lebua', url: 'https://www.therooftopguide.com/rooftop-bars-in-bangkok/sky-bar-lebua-at-state-tower.html' }],
   },
 
   // --- Where to stay (area guidance) -----------------------------------------
