@@ -11,6 +11,7 @@ import {
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem, addWithdrawal, deleteWithdrawal, updateWithdrawal,
+  addPlaceVisit, removePlaceVisit, visitsForStop, unscheduledVisits,
   setMyStay, getMyStay, clearMyStay,
   getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
@@ -265,7 +266,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.400.0';
+const APP_VERSION = 'mk-v0.401.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5862,9 +5863,10 @@ export function placeCard(p, num) {
           h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
       ]),
     ]),
-    h('div', { class: 'row-between' }, [
+    h('div', { class: 'row-between', style: 'flex-wrap:wrap' }, [
       h('button', { class: 'btn ghost', onclick: () => go(`#place-${p.id}`) }, 'Details'),
       h('button', { class: 'btn ghost', onclick: () => saveSheet(p.id) }, '＋ Save'),
+      h('button', { class: 'btn ghost', onclick: () => tripVisitSheet(p.id) }, '🧭 Trip'),
     ]),
   ]);
   // A number badge matching the map pin, when the caller supplies a number.
@@ -5918,9 +5920,10 @@ function placeQuickRow(p, num, compareCtl) {
     travelerChips(p),
     p.blurb ? h('p', { style: 'margin:6px 0' }, p.blurb) : null,
     h('p', { class: 'muted', style: 'margin:2px 0' }, [p.city, priceStr].filter(Boolean).join(' · ')),
-    h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+    h('div', { class: 'row-between', style: 'margin-top:6px;flex-wrap:wrap' }, [
       h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); go(`#place-${p.id}`); } }, 'Full details'),
       h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); saveSheet(p.id); } }, '＋ Save'),
+      h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); tripVisitSheet(p.id); } }, '🧭 Trip'),
     ]),
   ]);
   return h('details', { class: 'place-qrow', style: `--cat:${accent}` }, [summary, body]);
@@ -5976,6 +5979,43 @@ function collRow(emoji, label, checked, onToggle) {
     h('input', { type: 'checkbox', checked: checked ? '' : null, onchange: onToggle }),
     h('span', {}, `${emoji} ${label}`),
   ]);
+}
+
+// Modal sheet: tag a place to a trip leg (S4). A stop and a place are not 1:1, so this just
+// toggles membership in store.trip.placeVisits — same reused pattern as saveSheet above.
+// With no matching leg yet (or no stops at all) "Not scheduled yet" is always available —
+// nothing blocks adding a place before its city has a stop.
+function tripVisitSheet(placeId) {
+  const backdrop = h('div', { class: 'sheet-backdrop' });
+  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Add to my trip' });
+  let close = () => backdrop.remove();
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+
+  const body = h('div', {});
+  function rebuild() {
+    body.innerHTML = '';
+    body.append(h('h3', {}, 'Add to my trip'));
+    const mine = store.trip.placeVisits.filter((v) => v.placeId === placeId);
+    if (store.trip.stops.length) {
+      body.append(h('p', { class: 'muted' }, 'Which stop is this for?'));
+      store.trip.stops.forEach((s) => {
+        const tagged = mine.find((v) => v.stopId === s.id);
+        const label = s.title + (stopDateLabel(s) ? ` — ${stopDateLabel(s)}` : '');
+        body.append(collRow('📍', label, !!tagged,
+          () => { if (tagged) removePlaceVisit(tagged.id); else addPlaceVisit({ placeId, stopId: s.id }); rebuild(); }));
+      });
+    } else {
+      body.append(h('p', { class: 'muted' }, 'No trip stops yet — this will sit unscheduled until you add one.'));
+    }
+    const unsched = mine.find((v) => !v.stopId);
+    body.append(collRow('🗒️', 'Not scheduled yet', !!unsched,
+      () => { if (unsched) removePlaceVisit(unsched.id); else addPlaceVisit({ placeId, stopId: null }); rebuild(); }));
+    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:12px', onclick: close }, 'Done'));
+  }
+  rebuild();
+  sheet.append(body);
+  backdrop.append(sheet);
+  close = openModal(backdrop);
 }
 
 // Self-hosted, openly-licensed identify photo. `item.photo` is a repo-relative
@@ -6448,6 +6488,7 @@ function placeScreen(id) {
   const actions = h('div', { class: 'card' }, [
     (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
     h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => tripVisitSheet(p.id) }, '🧭 Add to my trip'),
     !p.isPin ? shareButton('📤 Recommend to a friend', `Check out ${p.name}`, () => shareUrl('in', encodeShare('place', { id: p.id, n: p.name }, ensureMe()))) : null,
     !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
     collStrip,
@@ -9094,7 +9135,7 @@ function produceDetail(id) {
   mount(wrap, '#home');
 }
 
-import { weatherScreen, wxVizCard, seedWeatherKey } from './screens/weather.js';
+import { weatherScreen, wxVizCard, seedWeatherKey, wxDiffDays } from './screens/weather.js';
 
 
 // ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------
@@ -10108,6 +10149,7 @@ function bestListScreen(id) {
 
 // ---- TRIP PLANNER (itinerary + budget) --------------------------------------
 let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
+let placePickerOpenFor = null;  // stop id currently showing its "+ Add a place" saved-places picker, or null
 // A stop's date line: a single arrival day, or an arrive→leave range with an inclusive day count
 // (so "10 days in Chiang Mai" reads as one entry). Tolerates old stops that carry only `date`.
 function stopDateLabel(s) {
@@ -10125,6 +10167,9 @@ function tripScreen() {
   // itinerary
   const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);
   const stops = store.trip.stops;
+  // Hoisted above the loop: reused both for the existing "quick-add a stop" chips further down
+  // and for each stop's own "+ Add a place" picker (S4 — place-linked trip stops) below.
+  const saved = store.favorites.map(resolveItem).filter(Boolean);
   if (!stops.length) itin.append(h('p', { class: 'muted' }, 'Add the places or cities you plan to visit, in order.'));
   stops.forEach((s, i) => {
     // Inline editor when this stop is open for correction — fix a typo'd name or a wrong date.
@@ -10154,7 +10199,42 @@ function tripScreen() {
         h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { confirmAction({ title: 'Remove this stop?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeStop(s.id); go('#trip'); } }); } }, '✕'),
       ]),
     ]));
+    // S4 — places tagged to this leg (a stop and a place are not 1:1, so this is its own list;
+    // see addPlaceVisit in state.js). Tagged from placeScreen / Explore / Places cards.
+    const visits = visitsForStop(s.id).map((v) => ({ visit: v, place: resolveItem(v.placeId) })).filter((x) => x.place);
+    if (visits.length) {
+      itin.append(h('p', { class: 'muted', style: 'margin:6px 0 2px 22px;font-size:12px' }, 'Things to see here:'));
+      itin.append(h('div', { class: 'trip-visits' }, visits.map(({ visit, place }) => h('div', { class: 'row-between trip-visit' }, [
+        h('button', { class: 'linklike', onclick: () => go(`#place-${place.id}`) }, `📍 ${place.name}`),
+        h('button', { class: 'chip', 'aria-label': `Remove ${place.name} from this stop`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
+      ]))));
+    }
+    if (placePickerOpenFor === s.id) {
+      const pickable = saved.filter((sp) => !visits.some((x) => x.place.id === sp.id));
+      itin.append(h('div', { class: 'trip-visit' }, pickable.length
+        ? h('div', { class: 'chips' }, pickable.map((sp) => h('button', {
+            class: 'chip', onclick: () => { addPlaceVisit({ placeId: sp.id, stopId: s.id }); placePickerOpenFor = null; go('#trip'); },
+          }, sp.name)))
+        : h('p', { class: 'muted', style: 'font-size:12px;margin:2px 0' }, 'Nothing saved yet — save places from Explore or Places, then add them here.')));
+    } else {
+      itin.append(h('button', { class: 'chip', style: 'margin:4px 0 4px 22px', onclick: () => { placePickerOpenFor = s.id; render(); } }, '+ Add a place'));
+    }
   });
+  // S4 — places added from Explore/a place page before this trip has a matching leg yet
+  // (or left unscheduled on purpose). Nothing is ever blocked on a leg existing first.
+  const unscheduled = unscheduledVisits().map((v) => ({ visit: v, place: resolveItem(v.placeId) })).filter((x) => x.place);
+  if (unscheduled.length) {
+    itin.append(h('div', { class: 'trip-stop' }, [
+      h('strong', {}, '📍 Not scheduled yet'),
+      h('div', { class: 'trip-visits' }, unscheduled.map(({ visit, place }) => h('div', { class: 'row-between trip-visit' }, [
+        h('button', { class: 'linklike', onclick: () => go(`#place-${place.id}`) }, place.name),
+        h('div', { class: 'chips' }, [
+          stops.length ? h('button', { class: 'chip', onclick: () => tripVisitSheet(place.id) }, '→ Assign') : null,
+          h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
+        ]),
+      ]))),
+    ]));
+  }
   const stopName = h('input', { 'aria-label': 'Stop name', type: 'text', placeholder: 'Place or city' });
   const stopDate = h('input', { 'aria-label': 'Arrive date', type: 'date' });
   const stopEnd = h('input', { 'aria-label': 'Leave date', type: 'date' });
@@ -10165,8 +10245,7 @@ function tripScreen() {
     ]),
     h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
     h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: getActiveCountry(), date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
-  // quick add from saved
-  const saved = store.favorites.map(resolveItem).filter(Boolean);
+  // quick add from saved (`saved` is hoisted above the stops loop — see comment there)
   if (saved.length) {
     itin.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Quick-add from saved:'));
     itin.append(h('div', { class: 'chips' }, saved.slice(0, 12).map((p) => h('button', { class: 'chip', onclick: () => { addStop({ title: p.name, country: p.country }); go('#trip'); } }, p.name))));

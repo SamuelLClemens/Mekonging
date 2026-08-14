@@ -83,7 +83,7 @@ function wxIsISO(d) { return /^\d{4}-\d{2}-\d{2}$/.test(d || ''); }
 // Date math is done entirely in UTC so slicing toISOString() cannot shift a day in
 // positive-offset timezones. (Weekday/short labels below stay local for display.)
 function wxAddDays(iso, n) { const dt = new Date(iso + 'T00:00:00Z'); dt.setUTCDate(dt.getUTCDate() + n); return dt.toISOString().slice(0, 10); }
-function wxDiffDays(a, b) { return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000); }
+export function wxDiffDays(a, b) { return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000); }
 function wxDayShort(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch { return d; } }
 function wxWeekdayNum(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }); } catch { return d; } }
 

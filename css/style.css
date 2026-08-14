@@ -1425,6 +1425,10 @@ html[data-theme="dark"] .recap-level { background: rgba(255,255,255,0.06); }
 .trip-date-lbl { display: flex; flex-direction: column; gap: 2px; flex: 1 1 130px; min-width: 130px;
   font-size: var(--fs-label); color: var(--ink-soft); }
 .trip-date-lbl input { width: 100%; }
+/* S4 — places tagged to a trip leg (or left unscheduled): a quiet, indented sub-list so it
+   reads as nested under its stop rather than as another top-level itinerary row. */
+.trip-visits { margin: 2px 0; }
+.trip-visit { padding: 4px 0 4px 22px; align-items: flex-start; }
 .entry-photo { width: 100%; border-radius: var(--r-md); margin: var(--sp-2) 0; display: block; border: 1px solid var(--line); }
 
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }

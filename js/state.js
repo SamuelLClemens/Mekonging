@@ -109,6 +109,11 @@ function defaults() {
       // itemised, per-category budgetLog above (see budgetWithdrawalsCard in main.js): a
       // coarser but often more honest second read on "how much of my budget is actually gone."
       withdrawals: [],          // { id, date:'YYYY-MM-DD', amount, currency, note }
+      // v13: a place (curated or a user pin) tagged to a trip leg — a stop is a dated city-leg,
+      // a place is a point of interest inside one, and they are not 1:1, so this is its own
+      // list rather than a property on the stop. `stopId: null` means "not scheduled to a leg
+      // yet" (e.g. added from Explore before that city has a stop) — never blocked, never forced.
+      placeVisits: [],          // { id, placeId, stopId:string|null, note, addedAt }
       notes: '',
     },
     // --- v4: travel journal + travel calendar (all on-device) ---
@@ -393,7 +398,13 @@ export function addStop({ title, country = '', date = '', endDate = '' }) {
 }
 export function removeStop(id) {
   const i = store.trip.stops.findIndex((x) => x.id === id);
-  if (i >= 0) { store.trip.stops.splice(i, 1); save(); }
+  if (i >= 0) {
+    store.trip.stops.splice(i, 1);
+    // Places tagged to this leg fall back to "unscheduled" rather than vanishing with it —
+    // consistent with this file's non-destructive-by-design data philosophy (see migrate()).
+    store.trip.placeVisits.forEach((v) => { if (v.stopId === id) v.stopId = null; });
+    save();
+  }
 }
 export function moveStop(id, dir) {
   const a = store.trip.stops; const i = a.findIndex((x) => x.id === id);
@@ -409,6 +420,36 @@ export function updateStop(id, patch = {}) {
   if (patch.endDate !== undefined) s.endDate = patch.endDate || '';
   if (patch.country !== undefined) s.country = patch.country;
   save(); return s;
+}
+
+// --- trip planner: place visits (S4 — a place tagged to a leg, or left unscheduled) --------
+// A stop is a dated city-leg; a place is a point of interest inside one, and the two are not
+// 1:1 (a leg can hold many places; a place can be of interest before any matching leg exists) —
+// so a visit is its own small record rather than a property folded onto the stop.
+export function addPlaceVisit({ placeId, stopId = null, note = '' }) {
+  if (!placeId) return null;
+  // Already tagged to this exact leg (or already unscheduled, if stopId is null) — no duplicate.
+  const dupe = store.trip.placeVisits.find((v) => v.placeId === placeId && v.stopId === (stopId || null));
+  if (dupe) return dupe;
+  const v = { id: uid('visit'), placeId, stopId: stopId || null, note: String(note || '').slice(0, 160), addedAt: todayKey() };
+  store.trip.placeVisits.push(v); save(); return v;
+}
+export function removePlaceVisit(id) {
+  const i = store.trip.placeVisits.findIndex((x) => x.id === id);
+  if (i >= 0) { store.trip.placeVisits.splice(i, 1); save(); }
+}
+export function updatePlaceVisit(id, patch = {}) {
+  const v = store.trip.placeVisits.find((x) => x.id === id);
+  if (!v) return null;
+  if (patch.stopId !== undefined) v.stopId = patch.stopId || null;
+  if (patch.note !== undefined) v.note = String(patch.note || '').slice(0, 160);
+  save(); return v;
+}
+export function visitsForStop(stopId) {
+  return store.trip.placeVisits.filter((v) => v.stopId === stopId);
+}
+export function unscheduledVisits() {
+  return store.trip.placeVisits.filter((v) => !v.stopId);
 }
 export function addBudgetItem({ date, amount, currency, note, category, monthly }) {
   const b = { id: uid('bud'), date: date || todayKey(), amount: amount || '', currency: currency || '', note: note || '', category: category || 'other', monthly: !!monthly };
