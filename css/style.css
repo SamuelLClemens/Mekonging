@@ -567,7 +567,10 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   border-radius: var(--r-2, 12px); padding: 8px 10px; transition: transform var(--dur-fast) var(--ease); }
 .status-chip:active { transform: scale(0.97); }
 .status-ic { flex: none; font-size: 1rem; }
-.status-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Wraps to a second line rather than truncating or shrinking — a personalised label
+   ("Chittraporn's dictionary") needs to stay fully readable at the same font size,
+   not get cut to "Chittraporn's …" or squeezed smaller to force one line. */
+.status-lbl { min-width: 0; overflow-wrap: break-word; }
 /* You Y2: the trip-in-numbers strip reuses .status-chip's look on a plain (non-button) div —
    a record, not a control, so no pointer cursor or press animation. */
 .status-chip.static { cursor: default; }

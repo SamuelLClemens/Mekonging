@@ -208,6 +208,7 @@ export function homeScreen() {
   }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
   const unread = unreadInboxCount();
   const idN = idPinCount();
+  const name = (store.profile.name || '').trim();
   const groups = [
     // "Plan your trip" and "Money & tools" combined into one Tools section per direct
     // request ("make all the plan and tools chips and the money and tools chips combined
@@ -217,21 +218,33 @@ export function homeScreen() {
       // Talk-section-style unify (You Y1): six destinations used to answer to two different
       // names depending on which tab you arrived from. The short name now matches meHubScreen
       // (js/main.js) on every one of these — see OVERHAUL.md's You section for the audit.
-      chip('🧭', 'Trip plans', null, '#plans'),
-      chip('🎯', 'For you', null, '#foryou'),
-      chip('🧳', 'My trip', null, '#trip'),
-      chip('✅', 'Pre-trip checklist', null, '#checklist'),
-      chip('📔', 'Journal', null, '#journal'),
-      chip('📸', 'Trip scrapbook', null, '#scrapbook'),
-      chip('📅', 'Calendar', null, '#calendar'),
-      chip('⭐', 'Saved places', null, '#saved'),
-      chip('💱', 'Currency converter', null, '#currency'),
-      chip('💰', 'Money', null, '#expenses'),
-      chip('🏷️', 'Bargain helper', null, '#bargain'),
-      chip('👥', 'Travel circle', unread ? `${unread} unread` : null, '#circle', unread ? 'budget-red' : ''),
-      chip('🤝', 'Buy or sell', null, '#exchange'),
-      chip('🔒', 'Documents', null, '#vault'),
-      chip('❓', 'Help & FAQ', null, '#help'),
+      //
+      // Post-phase filter, per direct request ("in home post travel ... all the things that
+      // are not for post travel should be removed and only things for post travel should be in
+      // post"): `hidePost` marks anything whose whole purpose is preparing for, or being
+      // physically present on, a trip that — in this phase — has already ended: planning a
+      // route, the pre-trip checklist, tuning recommendations for picking where to go, and the
+      // two on-the-ground-only tools (bargaining, the local buy/sell board). Everything else
+      // still genuinely serves a returned traveller (reviewing the trip/spend, journal,
+      // scrapbook, calendar, saved places, currency, documents, help) and stays in every phase.
+      ...[
+        { ic: '🧭', label: 'Trip plans', hash: '#plans', hidePost: true },
+        { ic: '🎯', label: 'For you', hash: '#foryou', hidePost: true },
+        { ic: '🧳', label: name ? `${name}’s trip` : 'My trip', hash: '#trip' },
+        { ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', hidePost: true },
+        { ic: '📔', label: 'Journal', hash: '#journal' },
+        { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook' },
+        { ic: '📅', label: 'Calendar', hash: '#calendar' },
+        { ic: '⭐', label: 'Saved places', hash: '#saved' },
+        { ic: '💱', label: 'Currency converter', hash: '#currency' },
+        { ic: '💰', label: 'Money', hash: '#expenses' },
+        { ic: '🏷️', label: 'Bargain helper', hash: '#bargain', hidePost: true },
+        { ic: '👥', label: 'Travel circle', sub: unread ? `${unread} unread` : null, hash: '#circle', cls: unread ? 'budget-red' : '' },
+        { ic: '🤝', label: 'Buy or sell', hash: '#exchange', hidePost: true },
+        { ic: '🔒', label: 'Documents', hash: '#vault' },
+        { ic: '❓', label: 'Help & FAQ', hash: '#help' },
+      ].filter((t) => !(t.hidePost && phase === 'post'))
+        .map((t) => chip(t.ic, t.label, t.sub || null, t.hash, t.cls || '')),
     ] },
     // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
     // dangerous animals) plus the traveller's own saved finds. Icons picked to match each
