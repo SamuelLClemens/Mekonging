@@ -135,18 +135,18 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       window.addEventListener('online', checkForUpdate);
     }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
 
-    // When a NEW worker takes over (it calls skipWaiting + clients.claim on activate), reload the
-    // page ONCE so it immediately runs the new code. This collapses the usual two-launch update —
-    // where you SEE the new build online but the worker only swaps in for the NEXT launch — into a
-    // single launch, so the very next launch (online OR offline) is already the new build. Guarded
-    // by an existing controller so a first-ever install never reloads, and a flag prevents any loop.
+    // A NEW worker taking control used to force an immediate window.location.reload() here, to
+    // collapse the usual two-launch update (you SEE the new build online, but the worker only
+    // swaps in for the NEXT launch) into one. Removed: controllerchange can fire at any moment,
+    // including right after the native photo/file picker closes (closing it backgrounds then
+    // re-foregrounds the page, which retriggers checkForUpdate() above) — an unconditional
+    // reload there silently wiped whatever the traveller was mid-typing (a journal entry, a
+    // staged photo pick, any open form), with no error shown at all. showUpdateToast() — already
+    // triggered above, at the 'installed' state, before this worker ever takes control — is now
+    // the ONLY user-facing update path: tapping Refresh reloads when the traveller chooses to,
+    // never mid-input.
     if (navigator.serviceWorker.controller) {
-      let reloadingForUpdate = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (reloadingForUpdate) return;
-        reloadingForUpdate = true;
-        window.location.reload();
-      });
+      navigator.serviceWorker.addEventListener('controllerchange', () => showUpdateToast());
     }
   });
 }
@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.392.0';
+const APP_VERSION = 'mk-v0.393.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2372,11 +2372,11 @@ function meHubScreen() {
   const unread = unreadInboxCount();
   wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
     chip('📅', calLabel, null, () => go('#calendar')),
-    chip('💬', 'My Dictionary', svP ? `${svP} saved` : null, () => go('#dictionary')),
+    chip('💬', name ? `${name}’s dictionary` : 'My Dictionary', svP ? `${svP} saved` : null, () => go('#dictionary')),
     chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
     chip('📔', 'Journal', jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null, () => go('#journal')),
     chip('🔒', 'Documents', null, () => go('#vault')),
-    chip('🧳', 'My trip', null, () => go('#trip')),
+    chip('🧳', name ? `${name}’s trip` : 'My trip', null, () => go('#trip')),
     chip('🤝', 'Traveller board', null, () => go('#exchange')),
     chip('🎯', 'For you', null, () => go('#foryou')),
     chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
@@ -2669,15 +2669,17 @@ export function whereNextSection(argCc, fromCity, onChange) {
   }
 
   if (_nextChain.length) {
+    const tripName = (store.profile.name || '').trim();
+    const tripLabel = tripName ? `${tripName}’s trip` : 'My Trip';
     body.append(h('button', {
       class: 'btn block', style: 'margin-top:4px',
       onclick: (e) => {
         _nextChain.forEach((city) => addStop({ title: city, country: countryForCityName(city) }));
-        e.currentTarget.textContent = '✓ Added — open My Trip to edit';
+        e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
         e.currentTarget.disabled = true;
         e.currentTarget.onclick = null;
       },
-    }, `＋ Add ${_nextChain.length === 1 ? 'this stop' : `these ${_nextChain.length} stops`} to My Trip`));
+    }, `＋ Add ${_nextChain.length === 1 ? 'this stop' : `these ${_nextChain.length} stops`} to ${tripLabel}`));
   }
 
   body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#route') }, 'Full journey planner →'));
@@ -4248,9 +4250,10 @@ function phrasebookScreen(lang) {
   // to the cross-language dictionary — already reachable via You, but one tap closer from here.
   const langSelect = selectEl(Object.values(LANGUAGES).map((b) => [b.lang, b.label]), code,
     (val) => { phraseQuery = ''; go(`#phrasebook-${val}`); }, 'Language');
+  const dictName = (store.profile.name || '').trim();
   wrap.append(h('div', { class: 'talk-top-row' }, [
     langSelect,
-    h('button', { class: 'btn ghost', onclick: () => go('#dictionary') }, '📖 My Dictionary'),
+    h('button', { class: 'btn ghost', onclick: () => go('#dictionary') }, dictName ? `📖 ${dictName}’s dictionary` : '📖 My Dictionary'),
   ]));
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
@@ -12728,9 +12731,11 @@ function foryouScreen() {
 // ---- TRIP PLANS (suggested routes matched to the profile) --------------------
 function plansScreen() {
   const prefs = store.profile.prefs;
+  const tripName = (store.profile.name || '').trim();
+  const tripLabel = tripName ? `${tripName}’s trip` : 'My Trip';
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Trip plans', '#home'));
-  wrap.append(h('p', { class: 'muted' }, 'Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to My Trip and edit it there.'));
+  wrap.append(h('p', { class: 'muted' }, `Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to ${tripLabel} and edit it there.`));
   if (!profileIsSet()) {
     wrap.append(h('div', { class: 'card' }, [
       h('p', { class: 'muted' }, 'Set your price range, party and trip length first and these plans sort themselves to fit you.'),
@@ -12749,8 +12754,8 @@ function plansScreen() {
     (pl.tips || []).forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
     card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: (e) => {
       pl.stops.forEach((s) => addStop({ title: s.title, country: pl.country }));
-      e.currentTarget.textContent = '✓ Added — open My Trip to edit';
-    } }, '＋ Add this plan to My Trip'));
+      e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
+    } }, `＋ Add this plan to ${tripLabel}`));
     card.append(sourcesNote(pl.sources, null));
     wrap.append(card);
   });
