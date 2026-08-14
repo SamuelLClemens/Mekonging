@@ -42,6 +42,7 @@ export const PLACES_LA = [
     whyItFits: "Suits first-time visitors who want the single most iconic landmark in the capital.",
     priceRange: { low: 0, typical: 30000, high: 30000, currency: "LAK", note: "Small entry fee to the inner cloister; the plaza outside is free." },
     hours: "08:00-12:00, 13:00-16:00 daily",
+    afterDark: { openAfterDark: false, note: "Closes at 16:00, well before dark." },
     tips: ["Dress modestly with shoulders and knees covered, as this is an active religious site."],
     scamWarnings: ["Decline unsolicited \"guides\" who attach themselves at the gate and then demand a fee."],
     mapQuery: "Pha That Luang Vientiane",
@@ -63,13 +64,14 @@ export const PLACES_LA = [
     whyItFits: "Suits budget travellers who want a cheap, lively evening with grilled snacks and a river breeze.",
     priceRange: { low: 10000, typical: 60000, high: 150000, currency: "LAK", note: "Per-person cost for a few snacks and a drink." },
     hours: "Approximately 17:00-22:00 daily",
+    afterDark: { openAfterDark: true, lit: true, note: "An evening-only market — lit with bright bulbs (generator-powered) along the riverside promenade, and one of the city's busiest, most regularly-patrolled public spaces after dark." },
     tips: ["Walk to the riverbank food stalls behind the market for grilled fish and cold Beerlao."],
     scamWarnings: ["Agree the price before ordering at unmarked stalls, as some quote a higher rate to foreigners."],
     mapQuery: "Vientiane Riverside Night Market Chao Anouvong Park",
     coords: { lat: 17.9587, lng: 102.6094 },
     bookHint: "Just turn up in the early evening.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Travel Authentic Asia", url: "https://travelauthenticasia.com/guides/laos/a-nighttime-experience-at-vientiane-night-market.aspx" }]
   },
   {
     id: "la-vte-buddha-park",
@@ -89,6 +91,7 @@ export const PLACES_LA = [
     whyItFits: "Suits curious travellers happy to take a short trip out of the city for an offbeat photo spot near the Thai border.",
     priceRange: { low: 15000, typical: 30000, high: 60000, currency: "LAK", note: "Entry plus a small camera fee; transport is extra." },
     hours: "08:00-17:00 daily",
+    afterDark: { openAfterDark: false, note: "Closes at 17:00, before dark; also 25km outside the city, not somewhere to be visiting after hours." },
     tips: ["It sits about 25 km from the centre near the Friendship Bridge, so combine it with a border-area trip or hire a tuk-tuk for the round journey."],
     scamWarnings: [],
     mapQuery: "Buddha Park Xieng Khuan Vientiane",
@@ -142,13 +145,14 @@ export const PLACES_LA = [
     whyItFits: "Suits travellers who want textiles, lanterns and a cheap buffet-style dinner in one relaxed walk.",
     priceRange: { low: 15000, typical: 50000, high: 120000, currency: "LAK", note: "Per-person cost for the vegetarian buffet alley plus a drink." },
     hours: "Approximately 17:00-22:00 daily",
+    afterDark: { openAfterDark: true, lit: true, note: "An evening-only market — lit by lanterns along Sisavangvong Road, though visitors and guides describe it as more dimly and atmospherically lit than a typical brightly-lit SE Asian night market, quiet and laid-back rather than a large, harshly-lit strip." },
     tips: ["Duck into the side alley off the main strip for the famous fill-your-plate vegetarian buffet."],
     scamWarnings: ["Haggle politely on handicrafts, as opening prices are inflated for tourists."],
     mapQuery: "Luang Prabang Night Market Sisavangvong Road",
     coords: { lat: 19.8909, lng: 102.1357 },
     bookHint: "Just walk the strip after dusk.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Luang Prabang View", url: "https://www.luangprabangview.com/post/the-ultimate-guide-to-the-luang-prabang-night-market-what-to-buy-eat-see" }]
   },
   {
     id: "la-lpb-mekong-slow-boat",
