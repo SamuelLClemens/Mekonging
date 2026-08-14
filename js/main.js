@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.395.0';
+const APP_VERSION = 'mk-v0.396.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -10632,9 +10632,8 @@ function budgetTrendCard() {
       segs.length ? segs : [h('span', { style: 'height:0;background:var(--line)' })]);
   });
   const card = h('div', { class: 'card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '📈 Daily spend, last 14 days'));
+  card.append(h('div', { class: 'row-between' }, [h('h2', { style: 'margin:0' }, '📈 Daily spend, last 14 days'), infoTip('Colour-coded by category — same colours as the breakdown above.')]));
   card.append(h('div', { class: 'spark-row' }, bars));
-  card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'Colour-coded by category — same colours as the breakdown above.'));
   return card;
 }
 
@@ -10701,7 +10700,7 @@ function budgetWithdrawalsCard() {
       h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, `${Math.round(remaining).toLocaleString()} ${home}`)]),
     ]);
     card.append(h('div', { class: 'budget-head' }, [donut, legend]));
-    if (!wTarget.custom) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Using your whole-trip budget above — set a separate cash budget below to track this on its own.'));
+    if (!wTarget.custom) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Using your whole-trip budget — set a separate one below to track this on its own.'));
 
     // Pace: the same percentage read on two different clocks — how far through the trip vs.
     // how far through this budget's been withdrawn. "% of trip elapsed" needs a known trip
@@ -10894,7 +10893,7 @@ function budgetLogRow(b) {
 // spends logged here show up there and roll into the home-currency total.
 function expensesScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Budget & Expenses', '#me'));
+  wrap.append(topbar('Budget', '#me'));
   const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
 
