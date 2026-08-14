@@ -235,13 +235,16 @@ export function homeScreen() {
       // deliberate CTA/reference-list split. "Buy or sell" renamed to "Traveller board" to
       // match the destination screen's own title and every other chip that links to it
       // (meHubScreen, nearbyScreen, circleScreen all already used the correct name — this was
-      // the one place still on the old label).
+      // the one place still on the old label). `hidePost` on Trip scrapbook is the same
+      // quick-access-already-covers-it reasoning, not the prepare-for-a-trip reasoning above:
+      // quickAccessRow's own 4th chip is "Scrapbook" ONLY in post phase (Weather otherwise),
+      // so post is the one phase where Tools' copy is a pure repeat too.
       ...[
         { ic: '🧭', label: 'Trip plans', hash: '#plans', hidePost: true },
         { ic: '🎯', label: 'For you', hash: '#foryou', hidePost: true },
         { ic: '🧳', label: name ? `${name}’s trip` : 'My trip', hash: '#trip' },
         { ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', hidePost: true },
-        { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook' },
+        { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook', hidePost: true },
         { ic: '⭐', label: 'Saved places', hash: '#saved' },
         { ic: '💱', label: 'Currency converter', hash: '#currency' },
         { ic: '🏷️', label: 'Bargain helper', hash: '#bargain', hidePost: true },
