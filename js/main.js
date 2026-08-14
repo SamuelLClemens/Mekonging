@@ -266,7 +266,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.406.0';
+const APP_VERSION = 'mk-v0.407.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5418,7 +5418,8 @@ function placesScreen(arg) {
   if (!mapList0.length) {
     mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'No mapped places for these filters/layers yet — widen them, or add a place of your own.'));
   } else {
-    import('./map.js').then((m) => m.initPlacesMap(canvas, mapList0, {
+    import('./map.js').then((m) => m.initMap(canvas, {
+      places: mapList0,
       onOpen: (id) => go(`#place-${id}`),
       onLocate: (fix) => setLastFix(fix),
       numbered: true,
@@ -6266,7 +6267,8 @@ function orientationCard(p) {
   if (p.coords) {
     const mini = h('div', { class: 'mini-map', style: 'height:210px;border-radius:14px;overflow:hidden;position:relative' });
     card.append(mini);
-    import('./map.js').then((m) => m.initPlacesMap(mini, [p], {
+    import('./map.js').then((m) => m.initMap(mini, {
+      places: [p],
       onOpen: () => { /* already on this place */ },
       onLocate: (f) => setLastFix(f),
     })).then((c) => {
@@ -12487,7 +12489,8 @@ function streetfoodScreen() {
       wrap.append(h('p', { class: 'muted', style: 'margin:2px 2px 6px' }, `${mappable.length} stalls & food streets on the map — tap a pin`));
       const canvas = h('div', { class: 'places-map', style: 'height:340px;border-radius:16px;overflow:hidden;position:relative' });
       wrap.append(canvas);
-      import('./map.js').then((m) => m.initPlacesMap(canvas, mappable, {
+      import('./map.js').then((m) => m.initMap(canvas, {
+        places: mappable,
         onOpen: (id) => go(`#place-${id}`), onLocate: (f) => setLastFix(f),
       })).then((c) => { setLiveCleanup(() => { try { c.dispose(); } catch { /* noop */ } }); }).catch(() => { /* list still below */ });
     } else {

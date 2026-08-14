@@ -176,7 +176,7 @@ function basemapStyle() {
       { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
       // Street raster sits above the geometry but below satellite: when satellite is hidden ("Map"
       // view) the streets show through; when satellite is on it covers the streets. Toggled by the
-      // controllers' setSatellite (street visible === satellite hidden).
+      // controller's setSatellite (street visible === satellite hidden).
       { id: 'street', source: 'street', type: 'raster', layout: { visibility: 'none' } },
       { id: 'satellite', source: 'satellite', type: 'raster', layout: { visibility: 'visible' } },
       { id: 'borders', source: 'borderlines', type: 'line', layout: { visibility: 'visible' },
@@ -187,12 +187,22 @@ function basemapStyle() {
   };
 }
 
-// Initialise the map into containerEl. Returns a controller with helpers for the
-// toolbar. Rejects if the libraries cannot load (caller shows a fallback).
+// Initialise the map into containerEl. ONE unified controller for both the full,
+// standalone experience (#map: routes, the "way back" line, measure, offline-area
+// saving, my-accommodation, the 8 typed marker layers, offline search) and the
+// lighter, caller-supplied-list embed used by Places and the place-detail/street-food
+// mini-maps (numbered/clustered pins, rating-or-category colouring, an optional
+// built-in Map/Satellite toggle). `opts.places` is the mode switch: pass an array to
+// embed exactly that list; omit it entirely for the full all-4-countries map with
+// every layer. Returns one controller exposing the union of both former APIs — a
+// caller only ever calls the methods relevant to its own mode, so no existing call
+// site needs to change how it talks to the map, only which function it imports.
+// Rejects if the libraries cannot load (caller shows a fallback).
 export async function initMap(containerEl, opts = {}) {
   await loadLibs();
   const maplibregl = window.maplibregl;
   if (!maplibregl) throw new Error('map library unavailable');
+  const embed = !!opts.places; // embed mode (Places / mini-maps) vs full mode (#map)
 
   const start = opts.center || { lng: 104.5, lat: 13.5 }; // centre on the region
   const map = new maplibregl.Map({
@@ -202,17 +212,20 @@ export async function initMap(containerEl, opts = {}) {
     zoom: opts.zoom || 5.4,
     attributionControl: true,
   });
-  // Compass enabled so the map can be rotated and reset to north for orientation;
-  // a metric scale bar so distances can be judged offline (both glyph-free, no fetch).
+  // Compass enabled so the map can be rotated and reset to north for orientation; a metric
+  // scale bar so distances can be judged offline (both glyph-free, no fetch). Full mode keeps
+  // the scale top-left (clear of the toolbar above); embed mode keeps it bottom-left — each
+  // mode's original placement, preserved so neither map's layout shifts under this merge.
   map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
   const geo = new maplibregl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true }, trackUserLocation: true,
     showUserLocation: true, showUserHeading: true,
   });
   map.addControl(geo, 'top-right');
-  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 130, unit: 'metric' }), 'top-left'); } catch { /* older build */ }
-  // "Key" button on the map itself: opens + scrolls to the legend so it is reachable
-  // while looking at the map (HTML control, not a GL text layer — glyph-free is unaffected).
+  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: embed ? 120 : 130, unit: 'metric' }), embed ? 'bottom-left' : 'top-left'); } catch { /* older build */ }
+  // "Key" button on the map itself (full mode): opens + scrolls to the legend so it is
+  // reachable while looking at the map (HTML control, not a GL text layer — glyph-free is
+  // unaffected).
   if (opts.onShowKey) {
     const keyCtrl = {
       onAdd() {
@@ -229,315 +242,28 @@ export async function initMap(containerEl, opts = {}) {
     map.addControl(keyCtrl, 'top-right');
   }
 
-  // markers: curated places coloured by EFFECTIVE rating (your own rating wins),
-  // except markets, which use a distinct gold pin. Each marker is tagged with its
-  // map layer (stay / eat / go / market) so the layer toggles can show or hide it.
-  // User pins stay in grape and always show.
-  const markersByLayer = { stay: [], eat: [], localeat: [], go: [], market: [], pools: [], crossing: [], fuel: [] };
-  const CROSSING_PIN = '#3B5BDB';
-  const MARKET_PIN = '#E0A100';
-  const POOL_PIN = '#0EA5C4';     // watery cyan for swimming pools
-  const LOCAL_PIN = '#D62828';    // local (non-tourist) eateries — a distinct "eat local" red
-  const FUEL_PIN = '#0F9D8C';     // fuel / petrol stations — the "getting around" teal
-  let stayMarker = null;          // the user's accommodation home marker (set live)
-  function layerForCats(cats, isLocal) {
-    cats = cats || [];
-    if (cats.includes('fuel')) return 'fuel';
-    if (cats.includes('market')) return 'market';
-    if (cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
-    if (cats.some((c) => ['food', 'restaurant'].includes(c))) return isLocal ? 'localeat' : 'eat';
-    return 'go';
-  }
-  const layerOn = { stay: true, eat: true, localeat: true, go: true, market: true, pools: true, crossing: true, fuel: true };
-  const CITY_ZOOM = 8.5;        // below this, show city count-bubbles instead of pins
-  const cityMarkers = [];       // { el, name, count }
-  // Assign a place/pool to its nearest known city centre (within ~0.8°), else none.
-  function nearestCity(coords) {
-    let best = null, bestD = Infinity;
-    for (const name in CITY_COORDS) {
-      const d = (coords.lng - CITY_COORDS[name][0]) ** 2 + (coords.lat - CITY_COORDS[name][1]) ** 2;
-      if (d < bestD) { bestD = d; best = name; }
-    }
-    return bestD <= 0.64 ? best : null;
-  }
-  // Clustering, glyph-free: at region zoom show ONE count bubble per city
-  // ("Bangkok 9") instead of ~200 overlapping pins; the bubbles become small place-name
-  // labels and the individual pins appear as you zoom in. (User pins + home always show.)
-  function refreshMarkers() {
-    const cityMode = map.getZoom() < CITY_ZOOM;
-    for (const layer of Object.keys(markersByLayer)) {
-      const on = !cityMode && layerOn[layer] !== false;
-      markersByLayer[layer].forEach((el) => { el.style.display = on ? '' : 'none'; });
-    }
-    for (const c of cityMarkers) {
-      c.el.className = 'mk-city ' + (cityMode ? 'bubble' : 'label');
-      c.el.textContent = cityMode ? `${c.name}  ${c.count}` : c.name;
-    }
-  }
-  function setLayerVisible(layer, on) { layerOn[layer] = on; refreshMarkers(); }
-  // One HTML marker per city: a count bubble (low zoom) / name label (high zoom).
-  function addCityMarkers() {
-    const counts = {};
-    const tally = (coords) => { if (!coords) return; const c = nearestCity(coords); if (c) counts[c] = (counts[c] || 0) + 1; };
-    for (const p of allPlaces()) tally(p.coords);
-    for (const p of POOLS) tally(p.coords);
-    for (const name in CITY_COORDS) {
-      const count = counts[name] || 0;
-      if (!count) continue;                 // skip cities with no curated places
-      const el = document.createElement('div');
-      el.className = 'mk-city bubble';
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', (ev) => { ev.stopPropagation(); map.flyTo({ center: CITY_COORDS[name], zoom: 12 }); });
-      new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(CITY_COORDS[name]).addTo(map);
-      cityMarkers.push({ el, name, count });
-    }
-  }
-  function addMarkers() {
-    for (const p of allPlaces()) {
-      if (!p.coords) continue;
-      const layer = layerForCats(p.categories, p.isLocal);
-      const color = layer === 'fuel' ? FUEL_PIN : layer === 'market' ? MARKET_PIN : layer === 'localeat' ? LOCAL_PIN : ratingColor(effectiveRating(p.id, p.rating));
-      const m = new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
-      const el = m.getElement();
-      el.style.cursor = 'pointer';
-      el.dataset.mkLayer = layer;
-      el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); });
-      markersByLayer[layer].push(el);
-    }
-    for (const pin of store.pins) {
-      if (!pin.coords) continue;
-      const m = new maplibregl.Marker({ color: PIN_USER }).setLngLat([pin.coords.lng, pin.coords.lat]).addTo(map);
-      m.getElement().style.cursor = 'pointer';
-      m.getElement().addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(pin.id); });
-    }
-    // border crossings as a distinct blue layer; click opens the crossings list
-    for (const x of CROSSINGS) {
-      if (!x.coords) continue;
-      const m = new maplibregl.Marker({ color: CROSSING_PIN }).setLngLat([x.coords.lng, x.coords.lat]).addTo(map);
-      const el = m.getElement();
-      el.style.cursor = 'pointer';
-      el.dataset.mkLayer = 'crossing';
-      el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenCrossing) opts.onOpenCrossing(x.id); });
-      markersByLayer.crossing.push(el);
-    }
-    // public / day-pass / water-park pools as a distinct cyan layer
-    for (const p of POOLS) {
-      if (!p.coords) continue;
-      const m = new maplibregl.Marker({ color: POOL_PIN }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
-      const el = m.getElement();
-      el.style.cursor = 'pointer';
-      el.dataset.mkLayer = 'pools';
-      el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenPool) opts.onOpenPool(p); });
-      markersByLayer.pools.push(el);
-    }
-    // the user's accommodation, if set — a distinct home marker, always visible
-    const stay = getMyStay();
-    if (stay && stay.coords) placeStayMarker(stay.coords);
-  }
-
-  // Build a custom home-pin element (a 🏠 on a white disc) and (re)position it.
-  function placeStayMarker(coords) {
-    if (!coords) { if (stayMarker) { stayMarker.remove(); stayMarker = null; } return; }
-    if (stayMarker) { stayMarker.setLngLat([coords.lng, coords.lat]); return; }
-    const el = document.createElement('div');
-    el.textContent = '🏠';
-    el.title = 'Your accommodation';
-    el.style.cssText = 'font-size:18px;width:30px;height:30px;line-height:30px;text-align:center;background:#FFF6E2;border:2px solid #C0431A;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
-    stayMarker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([coords.lng, coords.lat]).addTo(map);
-  }
-  // Inter-city route corridors as colour-coded lines (drawn under the markers).
-  function addRoutes() {
-    const data = routesGeoJSON();
-    if (!data.features.length || map.getSource('mk-routes')) return;
-    map.addSource('mk-routes', { type: 'geojson', data });
-    map.addLayer({ id: 'mk-routes-casing', type: 'line', source: 'mk-routes',
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#FFFBF0', 'line-width': 6, 'line-opacity': 0.6 } });
-    // One line layer per mode: line-dasharray is not data-driven, so each transport
-    // mode gets its own static dash — a colour-blind-safe cue layered on top of colour.
-    for (const m of ROUTE_LEGEND) {
-      map.addLayer({ id: 'mk-routes-' + m.key, type: 'line', source: 'mk-routes',
-        filter: ['==', ['get', 'mode'], m.key],
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': ['get', 'color'], 'line-width': 3.4, 'line-dasharray': m.dash } });
-    }
-  }
-  // "Way back" guide line: a direct dashed line from the live GPS dot to the saved
-  // accommodation, redrawn as you move. Not turn-by-turn (no offline routing engine),
-  // but a reliable heading + a casing so it reads over satellite — fully offline.
-  function addWayback() {
-    if (map.getSource('mk-wayback')) return;
-    map.addSource('mk-wayback', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    map.addLayer({ id: 'mk-wayback-casing', type: 'line', source: 'mk-wayback',
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#FFFFFF', 'line-width': 7, 'line-opacity': 0.75 } });
-    map.addLayer({ id: 'mk-wayback-line', type: 'line', source: 'mk-wayback',
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#D6336C', 'line-width': 4, 'line-dasharray': [1.4, 1] } });
-  }
-  function setWayback(from, to) {
-    const src = map.getSource('mk-wayback');
-    if (!src) return;
-    const empty = { type: 'FeatureCollection', features: [] };
-    if (!from || !to) { src.setData(empty); return; }
-    src.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {},
-      geometry: { type: 'LineString', coordinates: [[from.lng, from.lat], [to.lng, to.lat]] } }] });
-  }
-
-  // Measure tool: tap points to lay a multi-segment line; the running total distance
-  // is reported back to the toolbar. Fully offline (great-circle maths, no service).
-  function haversineKmLL(a, b) {
-    const R = 6371, toR = Math.PI / 180;
-    const dLat = (b.lat - a.lat) * toR, dLng = (b.lng - a.lng) * toR;
-    const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLng / 2) ** 2;
-    return 2 * R * Math.asin(Math.sqrt(s));
-  }
-  let measuring = false, measurePts = [], measureCb = null;
-  function addMeasureLayers() {
-    if (map.getSource('mk-measure')) return;
-    map.addSource('mk-measure', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    map.addLayer({ id: 'mk-measure-line', type: 'line', source: 'mk-measure',
-      layout: { 'line-cap': 'round', 'line-join': 'round' }, filter: ['==', '$type', 'LineString'],
-      paint: { 'line-color': '#1E1E1E', 'line-width': 3, 'line-dasharray': [1.5, 1] } });
-    map.addLayer({ id: 'mk-measure-pts', type: 'circle', source: 'mk-measure', filter: ['==', '$type', 'Point'],
-      paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-stroke-color': '#1E1E1E', 'circle-stroke-width': 2 } });
-  }
-  function renderMeasure() {
-    const src = map.getSource('mk-measure'); if (!src) return;
-    const feats = measurePts.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] } }));
-    if (measurePts.length >= 2) feats.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: measurePts.map((p) => [p.lng, p.lat]) } });
-    src.setData({ type: 'FeatureCollection', features: feats });
-    let km = 0;
-    for (let i = 1; i < measurePts.length; i++) km += haversineKmLL(measurePts[i - 1], measurePts[i]);
-    if (measureCb) measureCb(km, measurePts.length);
-  }
-
-  // Offline search index over the curated data + the user's own pins. No geocoder /
-  // network: a simple case-insensitive name match across cities, places, pools and pins.
-  function searchIndex(q) {
-    q = (q || '').trim().toLowerCase();
-    if (q.length < 2) return [];
-    const out = [];
-    for (const name in CITY_COORDS) {
-      if (name.toLowerCase().includes(q)) out.push({ name, type: 'City', lng: CITY_COORDS[name][0], lat: CITY_COORDS[name][1], z: 12 });
-    }
-    for (const p of allPlaces()) {
-      if (p.coords && (p.name || '').toLowerCase().includes(q)) out.push({ name: p.name, type: 'Place', id: p.id, lng: p.coords.lng, lat: p.coords.lat, z: 15 });
-    }
-    for (const p of POOLS) {
-      if (p.coords && (p.name || '').toLowerCase().includes(q)) out.push({ name: p.name, type: 'Pool', lng: p.coords.lng, lat: p.coords.lat, z: 15 });
-    }
-    for (const pin of store.pins) {
-      if (pin.coords && (pin.name || '').toLowerCase().includes(q)) out.push({ name: pin.name, type: 'Pin', id: pin.id, lng: pin.coords.lng, lat: pin.coords.lat, z: 15 });
-    }
-    // exact / prefix matches first, then by name length (shorter = closer match)
-    out.sort((a, b) => {
-      const ap = a.name.toLowerCase().startsWith(q) ? 0 : 1, bp = b.name.toLowerCase().startsWith(q) ? 0 : 1;
-      return ap - bp || a.name.length - b.name.length;
-    });
-    return out.slice(0, 12);
-  }
-
-  // Add on style.load (fires when the inline style parses) so they appear even before
-  // — or without — basemap tiles (which need the network on first load).
-  map.on('style.load', () => { addRoutes(); addWayback(); addMeasureLayers(); addMarkers(); addCityMarkers(); refreshMarkers(); });
-  map.on('zoomend', refreshMarkers);
-  try { window.__mkMap = map; } catch { /* dev aid */ }
-
-  // tap empty map to drop a pin — or, in measure mode, to add a measurement point
-  map.on('click', (e) => {
-    if (measuring) { measurePts.push({ lat: e.lngLat.lat, lng: e.lngLat.lng }); renderMeasure(); return; }
-    if (opts.onMapClick) opts.onMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
-  });
-
-  return {
-    map,
-    flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
-    setLayer: setLayerVisible,
-    layers: ['stay', 'eat', 'localeat', 'go', 'market', 'pools', 'crossing', 'fuel'],
-    setSatellite: (on) => { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none'); if (map.getLayer('street')) map.setLayoutProperty('street', 'visibility', on ? 'none' : 'visible'); },
-    setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
-    // GPS: reuse the single built-in GeolocateControl (one watcher, one blue dot).
-    triggerLocate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
-    onLocate: (cb) => geo.on('geolocate', (e) => cb({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy })),
-    // My-stay home marker: set/move/clear live, and centre on it.
-    setMyStay: (coords) => placeStayMarker(coords),
-    goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
-    // Draw / clear the "way back" guide line from `from` to `to` (pass nulls to clear).
-    setWayback: (from, to) => setWayback(from, to),
-    // Offline name search across cities, curated places, pools and the user's pins.
-    search: (q) => searchIndex(q),
-    // Fit the view to both points so the whole way-back line is visible.
-    frameBoth: (a, b, pad = 64) => {
-      if (!a || !b) return;
-      try {
-        const bounds = new maplibregl.LngLatBounds([a.lng, a.lat], [a.lng, a.lat]);
-        bounds.extend([b.lng, b.lat]);
-        map.fitBounds(bounds, { padding: pad, maxZoom: 16, duration: 600 });
-      } catch { /* noop */ }
-    },
-    // Offline area download: the satellite tiles covering the current view.
-    getDownloadTiles: (cap = 600) => tileUrlsForBounds(map.getBounds(), map.getZoom(), 2, cap),
-    // Snapshot of the current view, recorded with a saved area so it can be sized,
-    // re-shown and (tile-by-tile) deleted later.
-    getViewInfo: () => {
-      const b = map.getBounds(), c = map.getCenter();
-      return { center: { lng: c.lng, lat: c.lat }, bounds: { w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() }, zoom: map.getZoom() };
-    },
-    // Recompute a saved area's tile URLs (same params as the original save) so the
-    // service worker can delete exactly that pack.
-    tileUrlsForArea: (bounds, z, cap = 1000) =>
-      tileUrlsForBounds({ getWest: () => bounds.w, getEast: () => bounds.e, getNorth: () => bounds.n, getSouth: () => bounds.s }, z, 2, cap),
-    // Nearest known city to the current centre (for a default saved-area name), or null.
-    nearestCityName: () => { const c = map.getCenter(); return nearestCity({ lng: c.lng, lat: c.lat }); },
-    // Measure tool: toggle on with a callback (km, pointCount); off clears the line.
-    toggleMeasure: (on, cb) => { measuring = on; measureCb = cb || null; if (!on) { measurePts = []; renderMeasure(); } },
-    measureReset: () => { measurePts = []; renderMeasure(); },
-    // Tear down the map, its WebGL context and the GPS watcher — call when leaving the
-    // map screen. Without this, each visit leaks a context and the map dies after ~8-16.
-    dispose: () => { try { map.remove(); } catch { /* already gone */ } if (window.__mkMap === map) { try { window.__mkMap = null; } catch { /* noop */ } } },
+  // ---- Satellite / street toggle (shared by both modes) ------------------------
+  // Full mode with no opts.satellite passed: leave the style's own default (satellite
+  // visible) untouched at load — the standalone map's caller re-applies the traveller's
+  // real persisted layer prefs itself once the controller resolves, exactly as before this
+  // merge. Embed mode, or any caller that DOES pass opts.satellite, gets the active default
+  // this map has always forced on its own: on only when opts.satellite === true.
+  let satOn = (embed || Object.prototype.hasOwnProperty.call(opts, 'satellite')) ? (opts.satellite === true) : null;
+  const applySatellite = () => {
+    if (satOn === null) return; // full mode, unspecified: do not touch the style's own default
+    try {
+      if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', satOn ? 'visible' : 'none');
+      if (map.getLayer('street')) map.setLayoutProperty('street', 'visibility', satOn ? 'none' : 'visible');
+    } catch { /* noop */ }
   };
-}
-
-// A lightweight, embeddable map for browsing a *specific set* of places (e.g. the
-// filtered Places results) spatially instead of as a scrolling list. Shares the same
-// offline geometry basemap, but hides the streaming satellite layer for a fast, always-
-// offline embed. Markers are coloured like the main map (markets gold, local eats red,
-// everything else by effective rating) and tapping one calls opts.onOpen(id). The
-// returned controller exposes setPlaces() so filter changes re-point the markers without
-// tearing down the WebGL context, plus dispose()/locate().
-export async function initPlacesMap(containerEl, places, opts = {}) {
-  await loadLibs();
-  const maplibregl = window.maplibregl;
-  if (!maplibregl) throw new Error('map library unavailable');
-
-  const map = new maplibregl.Map({
-    container: containerEl,
-    style: basemapStyle(),
-    center: [104.5, 13.5],
-    zoom: 5,
-    attributionControl: true,
-  });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
-  const geo = new maplibregl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true }, trackUserLocation: true,
-    showUserLocation: true, showUserHeading: true,
-  });
-  map.addControl(geo, 'top-right');
-  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left'); } catch { /* older build */ }
-  geo.on('geolocate', (e) => { if (opts.onLocate) opts.onLocate({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }); });
-  // Satellite imagery (Esri World Imagery). Every tile fetched while online is stored by the
-  // service worker (mk-tiles cache), so a viewed area stays available with no signal; missing
-  // tiles simply reveal the offline geometry basemap beneath. Default OFF for lightweight embeds
-  // (single-place mini-maps); the Places living map opts in with opts.satellite:true and gets a
-  // Map/Satellite toggle. The layer sits below the borders + Mekong so those stay legible on imagery.
-  let satOn = opts.satellite === true;
-  const applySatellite = () => { try { if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', satOn ? 'visible' : 'none'); if (map.getLayer('street')) map.setLayoutProperty('street', 'visibility', satOn ? 'none' : 'visible'); } catch { /* noop */ } };
-  const setSatellite = (on) => { satOn = !!on; applySatellite(); if (opts.onStyleChange) { try { opts.onStyleChange(satOn); } catch { /* noop */ } } };
+  const setSatellite = (on) => {
+    satOn = !!on; applySatellite();
+    if (opts.onStyleChange) { try { opts.onStyleChange(satOn); } catch { /* noop */ } }
+  };
   map.on('style.load', applySatellite);
-  // In-map Map/Satellite toggle: a two-button segment so the current basemap is obvious and one
-  // tap flips it (persisted by the caller via opts.onStyleChange). HTML control — glyph-free GL
-  // style is unaffected. Fully usable offline (geometry always; satellite from cached tiles).
+  // In-map Map/Satellite toggle: a two-button segment (opt-in via opts.styleToggle — Places
+  // uses it; the full map instead drives setSatellite from its own external checkbox UI, so
+  // it simply never passes this option). HTML control — glyph-free GL style is unaffected.
   if (opts.styleToggle) {
     const toggleCtrl = {
       onAdd() {
@@ -558,167 +284,450 @@ export async function initPlacesMap(containerEl, places, opts = {}) {
     };
     map.addControl(toggleCtrl, 'top-left');
   }
+  // GPS: reuse the single built-in GeolocateControl (one watcher, one blue dot). Both prior
+  // calling conventions are supported so neither mode's call sites need to change: embed
+  // callers pass opts.onLocate (wired here, at construction); the full map instead calls the
+  // returned onLocate(cb)/triggerLocate() controller methods after it resolves.
+  if (opts.onLocate) geo.on('geolocate', (e) => { try { opts.onLocate({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }); } catch { /* noop */ } });
+  const onLocate = (cb) => geo.on('geolocate', (e) => cb({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }));
+  const triggerLocate = () => { try { geo.trigger(); } catch { /* not ready / denied */ } };
 
-  const MARKET = '#E0A100', LOCAL = '#D62828';
-  // Two ways to colour a pin: by RATING (default — quality at a glance, markets gold / local
-  // eats red kept as special cases) or by CATEGORY family (opts.categoryColor(p), supplied by
-  // the app's canonical colour system). setColorMode() flips between them without re-fitting.
-  let colorMode = opts.colorMode === 'category' ? 'category' : 'rating';
-  const colorFor = (p) => {
-    // An explicit per-place colour (e.g. the app's category-bucket colour, so map pins match
-    // the numbered list rows exactly) wins over both colour modes.
-    if (typeof opts.markerColor === 'function') {
-      try { const c = opts.markerColor(p); if (c) return c; } catch { /* fall through */ }
+  let ro = null; // ResizeObserver — only created in embed mode; referenced by the shared dispose()
+  let fullApi = {}, embedApi = {};
+
+  if (!embed) {
+    // ==== FULL MODE — everything the standalone #map screen uses =================
+    // markers: curated places coloured by EFFECTIVE rating (your own rating wins),
+    // except markets, which use a distinct gold pin. Each marker is tagged with its
+    // map layer (stay / eat / go / market) so the layer toggles can show or hide it.
+    // User pins stay in grape and always show.
+    const markersByLayer = { stay: [], eat: [], localeat: [], go: [], market: [], pools: [], crossing: [], fuel: [] };
+    const CROSSING_PIN = '#3B5BDB';
+    const MARKET_PIN = '#E0A100';
+    const POOL_PIN = '#0EA5C4';     // watery cyan for swimming pools
+    const LOCAL_PIN = '#D62828';    // local (non-tourist) eateries — a distinct "eat local" red
+    const FUEL_PIN = '#0F9D8C';     // fuel / petrol stations — the "getting around" teal
+    let stayMarker = null;          // the user's accommodation home marker (set live)
+    function layerForCats(cats, isLocal) {
+      cats = cats || [];
+      if (cats.includes('fuel')) return 'fuel';
+      if (cats.includes('market')) return 'market';
+      if (cats.some((c) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(c))) return 'stay';
+      if (cats.some((c) => ['food', 'restaurant'].includes(c))) return isLocal ? 'localeat' : 'eat';
+      return 'go';
     }
-    if (colorMode === 'category' && typeof opts.categoryColor === 'function') {
-      try { const c = opts.categoryColor(p); if (c) return c; } catch { /* fall through to rating */ }
+    const layerOn = { stay: true, eat: true, localeat: true, go: true, market: true, pools: true, crossing: true, fuel: true };
+    const CITY_ZOOM = 8.5;        // below this, show city count-bubbles instead of pins
+    const cityMarkers = [];       // { el, name, count }
+    // Assign a place/pool to its nearest known city centre (within ~0.8°), else none.
+    function nearestCity(coords) {
+      let best = null, bestD = Infinity;
+      for (const name in CITY_COORDS) {
+        const d = (coords.lng - CITY_COORDS[name][0]) ** 2 + (coords.lat - CITY_COORDS[name][1]) ** 2;
+        if (d < bestD) { bestD = d; best = name; }
+      }
+      return bestD <= 0.64 ? best : null;
     }
-    const cats = p.categories || [];
-    if (cats.includes('market')) return MARKET;
-    if (p.isLocal) return LOCAL;
-    return ratingColor(effectiveRating(p.id, p.rating));
-  };
-  let markers = [];
-  let lastList = places || [];
-  function fit(list) {
-    const pts = (list || []).filter((p) => p.coords).map((p) => [p.coords.lng, p.coords.lat]);
-    if (!pts.length) return;
-    if (pts.length === 1) { map.flyTo({ center: pts[0], zoom: 13, duration: 400 }); return; }
-    try {
-      const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
-      pts.forEach((c) => b.extend(c));
-      map.fitBounds(b, { padding: 46, maxZoom: 14, duration: 400 });
-    } catch { /* noop */ }
-  }
-  // A numbered round badge marker (matches the numbered list rows) when opts.numbered is set;
-  // otherwise the default MapLibre teardrop. The badge shows p._num, coloured by colorFor.
-  function numPinEl(color, num) {
-    const el = document.createElement('div');
-    el.className = 'mk-numpin';
-    el.style.background = color;
-    el.textContent = num != null ? String(num) : '•';
-    return el;
-  }
-  function addSingle(p) {
-    if (!p.coords) return;
-    const color = colorFor(p);
-    const m = opts.numbered
-      ? new maplibregl.Marker({ element: numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
-      : new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
-    const el = m.getElement();
-    el.style.cursor = 'pointer';
-    el.setAttribute('role', 'button');
-    el.setAttribute('tabindex', '0');
-    el.setAttribute('aria-label', (p._num != null ? p._num + '. ' : '') + (p.name || 'place'));
-    const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
-    el.addEventListener('click', open);
-    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
-    markers.push(m);
-  }
-  // Greedy pixel-space clustering so dense areas (e.g. Bangkok) stay readable when zoomed out:
-  // a point within CLUSTER_PX of an existing cluster centre joins it, else it starts a new one.
-  const CLUSTER_PX = 46;
-  function clusterByPixels(list) {
-    const clusters = [];
-    (list || []).forEach((p) => {
-      if (!p.coords) return;
-      let xy; try { xy = map.project([p.coords.lng, p.coords.lat]); } catch { return; }
-      let hit = null;
-      for (const c of clusters) { const dx = c.x - xy.x, dy = c.y - xy.y; if (dx * dx + dy * dy <= CLUSTER_PX * CLUSTER_PX) { hit = c; break; } }
-      if (hit) hit.members.push(p); else clusters.push({ x: xy.x, y: xy.y, members: [p] });
+    // Clustering, glyph-free: at region zoom show ONE count bubble per city
+    // ("Bangkok 9") instead of ~200 overlapping pins; the bubbles become small place-name
+    // labels and the individual pins appear as you zoom in. (User pins + home always show.)
+    function refreshMarkers() {
+      const cityMode = map.getZoom() < CITY_ZOOM;
+      for (const layer of Object.keys(markersByLayer)) {
+        const on = !cityMode && layerOn[layer] !== false;
+        markersByLayer[layer].forEach((el) => { el.style.display = on ? '' : 'none'; });
+      }
+      for (const c of cityMarkers) {
+        c.el.className = 'mk-city ' + (cityMode ? 'bubble' : 'label');
+        c.el.textContent = cityMode ? `${c.name}  ${c.count}` : c.name;
+      }
+    }
+    function setLayerVisible(layer, on) { layerOn[layer] = on; refreshMarkers(); }
+    // One HTML marker per city: a count bubble (low zoom) / name label (high zoom).
+    function addCityMarkers() {
+      const counts = {};
+      const tally = (coords) => { if (!coords) return; const c = nearestCity(coords); if (c) counts[c] = (counts[c] || 0) + 1; };
+      for (const p of allPlaces()) tally(p.coords);
+      for (const p of POOLS) tally(p.coords);
+      for (const name in CITY_COORDS) {
+        const count = counts[name] || 0;
+        if (!count) continue;                 // skip cities with no curated places
+        const el = document.createElement('div');
+        el.className = 'mk-city bubble';
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); map.flyTo({ center: CITY_COORDS[name], zoom: 12 }); });
+        new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(CITY_COORDS[name]).addTo(map);
+        cityMarkers.push({ el, name, count });
+      }
+    }
+    function addMarkers() {
+      for (const p of allPlaces()) {
+        if (!p.coords) continue;
+        const layer = layerForCats(p.categories, p.isLocal);
+        const color = layer === 'fuel' ? FUEL_PIN : layer === 'market' ? MARKET_PIN : layer === 'localeat' ? LOCAL_PIN : ratingColor(effectiveRating(p.id, p.rating));
+        const m = new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+        const el = m.getElement();
+        el.style.cursor = 'pointer';
+        el.dataset.mkLayer = layer;
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); });
+        markersByLayer[layer].push(el);
+      }
+      for (const pin of store.pins) {
+        if (!pin.coords) continue;
+        const m = new maplibregl.Marker({ color: PIN_USER }).setLngLat([pin.coords.lng, pin.coords.lat]).addTo(map);
+        m.getElement().style.cursor = 'pointer';
+        m.getElement().addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(pin.id); });
+      }
+      // border crossings as a distinct blue layer; click opens the crossings list
+      for (const x of CROSSINGS) {
+        if (!x.coords) continue;
+        const m = new maplibregl.Marker({ color: CROSSING_PIN }).setLngLat([x.coords.lng, x.coords.lat]).addTo(map);
+        const el = m.getElement();
+        el.style.cursor = 'pointer';
+        el.dataset.mkLayer = 'crossing';
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenCrossing) opts.onOpenCrossing(x.id); });
+        markersByLayer.crossing.push(el);
+      }
+      // public / day-pass / water-park pools as a distinct cyan layer
+      for (const p of POOLS) {
+        if (!p.coords) continue;
+        const m = new maplibregl.Marker({ color: POOL_PIN }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+        const el = m.getElement();
+        el.style.cursor = 'pointer';
+        el.dataset.mkLayer = 'pools';
+        el.addEventListener('click', (ev) => { ev.stopPropagation(); if (opts.onOpenPool) opts.onOpenPool(p); });
+        markersByLayer.pools.push(el);
+      }
+      // the user's accommodation, if set — a distinct home marker, always visible
+      const stay = getMyStay();
+      if (stay && stay.coords) placeStayMarker(stay.coords);
+    }
+
+    // Build a custom home-pin element (a 🏠 on a white disc) and (re)position it.
+    function placeStayMarker(coords) {
+      if (!coords) { if (stayMarker) { stayMarker.remove(); stayMarker = null; } return; }
+      if (stayMarker) { stayMarker.setLngLat([coords.lng, coords.lat]); return; }
+      const el = document.createElement('div');
+      el.textContent = '🏠';
+      el.title = 'Your accommodation';
+      el.style.cssText = 'font-size:18px;width:30px;height:30px;line-height:30px;text-align:center;background:#FFF6E2;border:2px solid #C0431A;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer';
+      stayMarker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([coords.lng, coords.lat]).addTo(map);
+    }
+    // Inter-city route corridors as colour-coded lines (drawn under the markers).
+    function addRoutes() {
+      const data = routesGeoJSON();
+      if (!data.features.length || map.getSource('mk-routes')) return;
+      map.addSource('mk-routes', { type: 'geojson', data });
+      map.addLayer({ id: 'mk-routes-casing', type: 'line', source: 'mk-routes',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#FFFBF0', 'line-width': 6, 'line-opacity': 0.6 } });
+      // One line layer per mode: line-dasharray is not data-driven, so each transport
+      // mode gets its own static dash — a colour-blind-safe cue layered on top of colour.
+      for (const m of ROUTE_LEGEND) {
+        map.addLayer({ id: 'mk-routes-' + m.key, type: 'line', source: 'mk-routes',
+          filter: ['==', ['get', 'mode'], m.key],
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': ['get', 'color'], 'line-width': 3.4, 'line-dasharray': m.dash } });
+      }
+    }
+    // "Way back" guide line: a direct dashed line from the live GPS dot to the saved
+    // accommodation, redrawn as you move. Not turn-by-turn (no offline routing engine),
+    // but a reliable heading + a casing so it reads over satellite — fully offline.
+    function addWayback() {
+      if (map.getSource('mk-wayback')) return;
+      map.addSource('mk-wayback', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'mk-wayback-casing', type: 'line', source: 'mk-wayback',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#FFFFFF', 'line-width': 7, 'line-opacity': 0.75 } });
+      map.addLayer({ id: 'mk-wayback-line', type: 'line', source: 'mk-wayback',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#D6336C', 'line-width': 4, 'line-dasharray': [1.4, 1] } });
+    }
+    function setWayback(from, to) {
+      const src = map.getSource('mk-wayback');
+      if (!src) return;
+      const empty = { type: 'FeatureCollection', features: [] };
+      if (!from || !to) { src.setData(empty); return; }
+      src.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {},
+        geometry: { type: 'LineString', coordinates: [[from.lng, from.lat], [to.lng, to.lat]] } }] });
+    }
+
+    // Measure tool: tap points to lay a multi-segment line; the running total distance
+    // is reported back to the toolbar. Fully offline (great-circle maths, no service).
+    function haversineKmLL(a, b) {
+      const R = 6371, toR = Math.PI / 180;
+      const dLat = (b.lat - a.lat) * toR, dLng = (b.lng - a.lng) * toR;
+      const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(s));
+    }
+    let measuring = false, measurePts = [], measureCb = null;
+    function addMeasureLayers() {
+      if (map.getSource('mk-measure')) return;
+      map.addSource('mk-measure', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'mk-measure-line', type: 'line', source: 'mk-measure',
+        layout: { 'line-cap': 'round', 'line-join': 'round' }, filter: ['==', '$type', 'LineString'],
+        paint: { 'line-color': '#1E1E1E', 'line-width': 3, 'line-dasharray': [1.5, 1] } });
+      map.addLayer({ id: 'mk-measure-pts', type: 'circle', source: 'mk-measure', filter: ['==', '$type', 'Point'],
+        paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-stroke-color': '#1E1E1E', 'circle-stroke-width': 2 } });
+    }
+    function renderMeasure() {
+      const src = map.getSource('mk-measure'); if (!src) return;
+      const feats = measurePts.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] } }));
+      if (measurePts.length >= 2) feats.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: measurePts.map((p) => [p.lng, p.lat]) } });
+      src.setData({ type: 'FeatureCollection', features: feats });
+      let km = 0;
+      for (let i = 1; i < measurePts.length; i++) km += haversineKmLL(measurePts[i - 1], measurePts[i]);
+      if (measureCb) measureCb(km, measurePts.length);
+    }
+
+    // Offline search index over the curated data + the user's own pins. No geocoder /
+    // network: a simple case-insensitive name match across cities, places, pools and pins.
+    function searchIndex(q) {
+      q = (q || '').trim().toLowerCase();
+      if (q.length < 2) return [];
+      const out = [];
+      for (const name in CITY_COORDS) {
+        if (name.toLowerCase().includes(q)) out.push({ name, type: 'City', lng: CITY_COORDS[name][0], lat: CITY_COORDS[name][1], z: 12 });
+      }
+      for (const p of allPlaces()) {
+        if (p.coords && (p.name || '').toLowerCase().includes(q)) out.push({ name: p.name, type: 'Place', id: p.id, lng: p.coords.lng, lat: p.coords.lat, z: 15 });
+      }
+      for (const p of POOLS) {
+        if (p.coords && (p.name || '').toLowerCase().includes(q)) out.push({ name: p.name, type: 'Pool', lng: p.coords.lng, lat: p.coords.lat, z: 15 });
+      }
+      for (const pin of store.pins) {
+        if (pin.coords && (pin.name || '').toLowerCase().includes(q)) out.push({ name: pin.name, type: 'Pin', id: pin.id, lng: pin.coords.lng, lat: pin.coords.lat, z: 15 });
+      }
+      // exact / prefix matches first, then by name length (shorter = closer match)
+      out.sort((a, b) => {
+        const ap = a.name.toLowerCase().startsWith(q) ? 0 : 1, bp = b.name.toLowerCase().startsWith(q) ? 0 : 1;
+        return ap - bp || a.name.length - b.name.length;
+      });
+      return out.slice(0, 12);
+    }
+
+    // Add on style.load (fires when the inline style parses) so they appear even before
+    // — or without — basemap tiles (which need the network on first load).
+    map.on('style.load', () => { addRoutes(); addWayback(); addMeasureLayers(); addMarkers(); addCityMarkers(); refreshMarkers(); });
+    map.on('zoomend', refreshMarkers);
+    try { window.__mkMap = map; } catch { /* dev aid */ }
+
+    // tap empty map to drop a pin — or, in measure mode, to add a measurement point
+    map.on('click', (e) => {
+      if (measuring) { measurePts.push({ lat: e.lngLat.lat, lng: e.lngLat.lng }); renderMeasure(); return; }
+      if (opts.onMapClick) opts.onMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
     });
-    return clusters;
-  }
-  function addCluster(members) {
-    const first = members[0];
-    const el = document.createElement('div');
-    el.className = 'mk-cluster';
-    el.textContent = String(members.length);
-    el.setAttribute('role', 'button');
-    el.setAttribute('tabindex', '0');
-    el.setAttribute('aria-label', members.length + ' places here — zoom in');
-    const m = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([first.coords.lng, first.coords.lat]).addTo(map);
-    const zoomIn = (ev) => {
-      if (ev) ev.stopPropagation();
-      const pts = members.map((p) => [p.coords.lng, p.coords.lat]);
+
+    fullApi = {
+      flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
+      setLayer: setLayerVisible,
+      layers: ['stay', 'eat', 'localeat', 'go', 'market', 'pools', 'crossing', 'fuel'],
+      setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
+      // My-stay home marker: set/move/clear live, and centre on it.
+      setMyStay: (coords) => placeStayMarker(coords),
+      goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
+      // Draw / clear the "way back" guide line from `from` to `to` (pass nulls to clear).
+      setWayback: (from, to) => setWayback(from, to),
+      // Offline name search across cities, curated places, pools and the user's pins.
+      search: (q) => searchIndex(q),
+      // Fit the view to both points so the whole way-back line is visible.
+      frameBoth: (a, b, pad = 64) => {
+        if (!a || !b) return;
+        try {
+          const bounds = new maplibregl.LngLatBounds([a.lng, a.lat], [a.lng, a.lat]);
+          bounds.extend([b.lng, b.lat]);
+          map.fitBounds(bounds, { padding: pad, maxZoom: 16, duration: 600 });
+        } catch { /* noop */ }
+      },
+      // Offline area download: the satellite tiles covering the current view.
+      getDownloadTiles: (cap = 600) => tileUrlsForBounds(map.getBounds(), map.getZoom(), 2, cap),
+      // Snapshot of the current view, recorded with a saved area so it can be sized,
+      // re-shown and (tile-by-tile) deleted later.
+      getViewInfo: () => {
+        const b = map.getBounds(), c = map.getCenter();
+        return { center: { lng: c.lng, lat: c.lat }, bounds: { w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() }, zoom: map.getZoom() };
+      },
+      // Recompute a saved area's tile URLs (same params as the original save) so the
+      // service worker can delete exactly that pack.
+      tileUrlsForArea: (bounds, z, cap = 1000) =>
+        tileUrlsForBounds({ getWest: () => bounds.w, getEast: () => bounds.e, getNorth: () => bounds.n, getSouth: () => bounds.s }, z, 2, cap),
+      // Nearest known city to the current centre (for a default saved-area name), or null.
+      nearestCityName: () => { const c = map.getCenter(); return nearestCity({ lng: c.lng, lat: c.lat }); },
+      // Measure tool: toggle on with a callback (km, pointCount); off clears the line.
+      toggleMeasure: (on, cb) => { measuring = on; measureCb = cb || null; if (!on) { measurePts = []; renderMeasure(); } },
+      measureReset: () => { measurePts = []; renderMeasure(); },
+    };
+  } else {
+    // ==== EMBED MODE — everything Places / mini-maps use ==========================
+    const MARKET = '#E0A100', LOCAL = '#D62828';
+    // Two ways to colour a pin: by RATING (default — quality at a glance, markets gold / local
+    // eats red kept as special cases) or by CATEGORY family (opts.categoryColor(p), supplied by
+    // the app's canonical colour system). setColorMode() flips between them without re-fitting.
+    let colorMode = opts.colorMode === 'category' ? 'category' : 'rating';
+    const colorFor = (p) => {
+      // An explicit per-place colour (e.g. the app's category-bucket colour, so map pins match
+      // the numbered list rows exactly) wins over both colour modes.
+      if (typeof opts.markerColor === 'function') {
+        try { const c = opts.markerColor(p); if (c) return c; } catch { /* fall through */ }
+      }
+      if (colorMode === 'category' && typeof opts.categoryColor === 'function') {
+        try { const c = opts.categoryColor(p); if (c) return c; } catch { /* fall through to rating */ }
+      }
+      const cats = p.categories || [];
+      if (cats.includes('market')) return MARKET;
+      if (p.isLocal) return LOCAL;
+      return ratingColor(effectiveRating(p.id, p.rating));
+    };
+    let markers = [];
+    let lastList = opts.places || [];
+    function fit(list) {
+      const pts = (list || []).filter((p) => p.coords).map((p) => [p.coords.lng, p.coords.lat]);
+      if (!pts.length) return;
+      if (pts.length === 1) { map.flyTo({ center: pts[0], zoom: 13, duration: 400 }); return; }
       try {
         const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
-        pts.forEach((q) => b.extend(q));
-        map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 500 });
-      } catch { map.flyTo({ center: [first.coords.lng, first.coords.lat], zoom: Math.min(16, map.getZoom() + 2), duration: 500 }); }
-    };
-    el.addEventListener('click', zoomIn);
-    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') zoomIn(ev); });
-    markers.push(m);
-  }
-  function drawMarkers(list) {
-    markers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
-    markers = [];
-    // Cluster only when asked (the Places living map) and only while zoomed out enough that pins
-    // would overlap; past clusterMaxZoom every place shows as its own numbered pin.
-    if (opts.cluster && map.getZoom() < (opts.clusterMaxZoom || 11)) {
-      clusterByPixels(list).forEach((c) => { if (c.members.length > 1) addCluster(c.members); else addSingle(c.members[0]); });
-    } else {
-      (list || []).forEach((p) => addSingle(p));
-    }
-  }
-  function setPlaces(list) { lastList = list || []; drawMarkers(lastList); fit(lastList); }
-  function setColorMode(mode) { colorMode = mode === 'category' ? 'category' : 'rating'; drawMarkers(lastList); }
-
-  // Draw the initial markers once the map settles. 'idle' is more reliable than 'load' for the
-  // glyph-free offline style embedded here (which can finish rendering without ever firing
-  // 'load'); it fires after the first render settle. Guarded to run once, and setPlaces is
-  // idempotent, so a later 'load' just redraws the same pins.
-  let drewInitial = false;
-  const drawInitial = () => { if (drewInitial) return; drewInitial = true; setPlaces(places); };
-  map.on('load', drawInitial);
-  map.on('idle', drawInitial);
-  // 'render' fires on the first painted frame even when a raster source (e.g. the hidden
-  // satellite layer) never finishes loading, so neither 'load' nor 'idle' ever fires. This is
-  // the reliable trigger for the embedded offline map; guarded to run once.
-  map.on('render', drawInitial);
-
-  // When clustering is on, re-run the split after the view settles so cluster counts and the
-  // pin/cluster boundary always match the current zoom. drawMarkers does not call fit(), so a
-  // fitBounds/flyTo → moveend → drawMarkers pass simply re-draws; it never loops.
-  if (opts.cluster) {
-    map.on('zoomend', () => drawMarkers(lastList));
-    map.on('moveend', () => drawMarkers(lastList));
-  }
-
-  // Keep the canvas matched to its container. The map is often created while its <details>/card
-  // is still settling its real size (or is briefly off-screen), leaving a zero-size viewport
-  // where map.project() cannot position markers and no tiles are requested — the "map does not
-  // render" bug. A one-shot timer race is unreliable; a ResizeObserver fires exactly when the box
-  // gains or changes size, so we resize + redraw precisely then. The first real size also frames
-  // the pins (setPlaces); later resizes only redraw so they never fight a user's pan/zoom.
-  let roFitted = false;
-  let ro = null;
-  if (typeof ResizeObserver !== 'undefined') {
-    // Resize synchronously in the callback (no requestAnimationFrame, which is paused while the
-    // tab is hidden). map.resize() only re-sizes the inner canvas to the container, which never
-    // changes the observed container's own box, so this cannot trigger an observer loop.
-    ro = new ResizeObserver(() => {
-      const r = containerEl.getBoundingClientRect();
-      if (r.width < 2 || r.height < 2) return;   // still collapsed — wait for a real size
-      try {
-        map.resize();
-        if (!roFitted) { roFitted = true; setPlaces(lastList); }   // first real size: draw + frame
-        else drawMarkers(lastList);                                // later resizes: redraw only
+        pts.forEach((c) => b.extend(c));
+        map.fitBounds(b, { padding: 46, maxZoom: 14, duration: 400 });
       } catch { /* noop */ }
-    });
-    try { ro.observe(containerEl); } catch { /* noop */ }
+    }
+    // A numbered round badge marker (matches the numbered list rows) when opts.numbered is set;
+    // otherwise the default MapLibre teardrop. The badge shows p._num, coloured by colorFor.
+    function numPinEl(color, num) {
+      const el = document.createElement('div');
+      el.className = 'mk-numpin';
+      el.style.background = color;
+      el.textContent = num != null ? String(num) : '•';
+      return el;
+    }
+    function addSingle(p) {
+      if (!p.coords) return;
+      const color = colorFor(p);
+      const m = opts.numbered
+        ? new maplibregl.Marker({ element: numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
+        : new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
+      const el = m.getElement();
+      el.style.cursor = 'pointer';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', (p._num != null ? p._num + '. ' : '') + (p.name || 'place'));
+      const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
+      markers.push(m);
+    }
+    // Greedy pixel-space clustering so dense areas (e.g. Bangkok) stay readable when zoomed out:
+    // a point within CLUSTER_PX of an existing cluster centre joins it, else it starts a new one.
+    const CLUSTER_PX = 46;
+    function clusterByPixels(list) {
+      const clusters = [];
+      (list || []).forEach((p) => {
+        if (!p.coords) return;
+        let xy; try { xy = map.project([p.coords.lng, p.coords.lat]); } catch { return; }
+        let hit = null;
+        for (const c of clusters) { const dx = c.x - xy.x, dy = c.y - xy.y; if (dx * dx + dy * dy <= CLUSTER_PX * CLUSTER_PX) { hit = c; break; } }
+        if (hit) hit.members.push(p); else clusters.push({ x: xy.x, y: xy.y, members: [p] });
+      });
+      return clusters;
+    }
+    function addCluster(members) {
+      const first = members[0];
+      const el = document.createElement('div');
+      el.className = 'mk-cluster';
+      el.textContent = String(members.length);
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', members.length + ' places here — zoom in');
+      const m = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([first.coords.lng, first.coords.lat]).addTo(map);
+      const zoomIn = (ev) => {
+        if (ev) ev.stopPropagation();
+        const pts = members.map((p) => [p.coords.lng, p.coords.lat]);
+        try {
+          const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
+          pts.forEach((q) => b.extend(q));
+          map.fitBounds(b, { padding: 60, maxZoom: 16, duration: 500 });
+        } catch { map.flyTo({ center: [first.coords.lng, first.coords.lat], zoom: Math.min(16, map.getZoom() + 2), duration: 500 }); }
+      };
+      el.addEventListener('click', zoomIn);
+      el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') zoomIn(ev); });
+      markers.push(m);
+    }
+    function drawMarkers(list) {
+      markers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
+      markers = [];
+      // Cluster only when asked (the Places living map) and only while zoomed out enough that pins
+      // would overlap; past clusterMaxZoom every place shows as its own numbered pin.
+      if (opts.cluster && map.getZoom() < (opts.clusterMaxZoom || 11)) {
+        clusterByPixels(list).forEach((c) => { if (c.members.length > 1) addCluster(c.members); else addSingle(c.members[0]); });
+      } else {
+        (list || []).forEach((p) => addSingle(p));
+      }
+    }
+    function setPlaces(list) { lastList = list || []; drawMarkers(lastList); fit(lastList); }
+    function setColorMode(mode) { colorMode = mode === 'category' ? 'category' : 'rating'; drawMarkers(lastList); }
+
+    // Draw the initial markers once the map settles. 'idle' is more reliable than 'load' for the
+    // glyph-free offline style embedded here (which can finish rendering without ever firing
+    // 'load'); it fires after the first render settle. Guarded to run once, and setPlaces is
+    // idempotent, so a later 'load' just redraws the same pins.
+    let drewInitial = false;
+    const drawInitial = () => { if (drewInitial) return; drewInitial = true; setPlaces(opts.places); };
+    map.on('load', drawInitial);
+    map.on('idle', drawInitial);
+    // 'render' fires on the first painted frame even when a raster source (e.g. the hidden
+    // satellite layer) never finishes loading, so neither 'load' nor 'idle' ever fires. This is
+    // the reliable trigger for the embedded offline map; guarded to run once.
+    map.on('render', drawInitial);
+
+    // When clustering is on, re-run the split after the view settles so cluster counts and the
+    // pin/cluster boundary always match the current zoom. drawMarkers does not call fit(), so a
+    // fitBounds/flyTo → moveend → drawMarkers pass simply re-draws; it never loops.
+    if (opts.cluster) {
+      map.on('zoomend', () => drawMarkers(lastList));
+      map.on('moveend', () => drawMarkers(lastList));
+    }
+
+    // Keep the canvas matched to its container. The map is often created while its <details>/card
+    // is still settling its real size (or is briefly off-screen), leaving a zero-size viewport
+    // where map.project() cannot position markers and no tiles are requested — the "map does not
+    // render" bug. A one-shot timer race is unreliable; a ResizeObserver fires exactly when the box
+    // gains or changes size, so we resize + redraw precisely then. The first real size also frames
+    // the pins (setPlaces); later resizes only redraw so they never fight a user's pan/zoom.
+    let roFitted = false;
+    if (typeof ResizeObserver !== 'undefined') {
+      // Resize synchronously in the callback (no requestAnimationFrame, which is paused while the
+      // tab is hidden). map.resize() only re-sizes the inner canvas to the container, which never
+      // changes the observed container's own box, so this cannot trigger an observer loop.
+      ro = new ResizeObserver(() => {
+        const r = containerEl.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return;   // still collapsed — wait for a real size
+        try {
+          map.resize();
+          if (!roFitted) { roFitted = true; setPlaces(lastList); }   // first real size: draw + frame
+          else drawMarkers(lastList);                                // later resizes: redraw only
+        } catch { /* noop */ }
+      });
+      try { ro.observe(containerEl); } catch { /* noop */ }
+    }
+
+    embedApi = { setPlaces, setColorMode };
   }
 
   return {
     map,
-    setPlaces,
-    setColorMode,
     setSatellite,
-    locate: () => { try { geo.trigger(); } catch { /* not ready / denied */ } },
+    onLocate,
+    triggerLocate,
+    locate: triggerLocate,   // alias — embed mode's original name for the same action
+    ...fullApi,
+    ...embedApi,
+    // Tear down the map, its WebGL context, the GPS watcher and (embed mode) the
+    // ResizeObserver — call when leaving the screen. Without this, each visit leaks a
+    // context and the map dies after ~8-16 (full mode), or the observer keeps firing
+    // against a removed container (embed mode).
     dispose: () => {
       try { if (ro) ro.disconnect(); } catch { /* noop */ }
       try { map.remove(); } catch { /* already gone */ }
+      if (window.__mkMap === map) { try { window.__mkMap = null; } catch { /* noop */ } }
     },
   };
 }
