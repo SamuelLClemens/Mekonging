@@ -168,7 +168,15 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
   padding: var(--sp-4) var(--sp-4) var(--sp-3); background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
-.topbar h1 { font-size: clamp(1rem, 4.8vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); }
+/* Hard 2-line ceiling: the topbar shares its row with up to 5 fixed-width controls (back +
+   net/saved/settings/SOS), leaving very little width for the title on mobile — as little as
+   ~59px per line at 375px wide. Left unbounded, a title that overflows that budget just keeps
+   wrapping (confirmed: 4 lines for "Health & wildlife hazards", 3 for "Weather & forecast",
+   "Export & share", "Festivals & events" — pushing the whole page down and reading as broken).
+   Clamping to 2 lines with an ellipsis means no title can ever blow up the header like that
+   again, however long a future one turns out to be — a title that still needs it shortened
+   for clarity gets that PLUS this backstop, not one or the other. */
+.topbar h1 { font-size: clamp(1rem, 4.8vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .topbar .back {
   border: none; background: var(--teal); color: #fff; cursor: pointer;
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
