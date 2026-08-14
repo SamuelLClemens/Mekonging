@@ -35,12 +35,13 @@ import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction } from '../ui-widgets.js';
+import { budgetTarget, tripSpanDays } from '../screens/budget.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
   ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
   citySlug, cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
-  budgetTarget, tripSpanDays, gamifyLevelBadge,
+  gamifyLevelBadge,
 } from '../main.js';
 
 export function homeScreen() {
