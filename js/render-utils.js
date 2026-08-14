@@ -117,6 +117,7 @@ export const CATEGORY_FAMILIES = [
   { key: 'nightlife', label: 'Nightlife & social',  emoji: '🌃', color: '#D6336C' },
   { key: 'transport', label: 'Getting around',      emoji: '🛵', color: '#0F9D8C' },
   { key: 'wellness',  label: 'Wellness & spa',      emoji: '💆', color: '#7048E8' },
+  { key: 'practical', label: 'Money & practical',   emoji: '🧰', color: '#A0693D' },
   { key: 'other',     label: 'More to see',         emoji: '📌', color: '#8A8F98' },
 ];
 export const FAMILY_COLOR = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.key, f.color]));
@@ -131,14 +132,20 @@ const CAT_FAMILY = {
   nightlife: 'nightlife', bars: 'nightlife', clubs: 'nightlife', cocktail: 'nightlife', rooftop: 'nightlife',
   transport: 'transport', rental: 'transport', fuel: 'transport',
   wellness: 'wellness', spa: 'wellness',
+  // Cash/ATMs, health & pharmacies, SIM/laundry errands, and the orientation "info" cards
+  // (e.g. "Pai practical: cash, health & road safety") — practical guidance rather than a
+  // sight to visit. 'practical' itself self-maps so a future entry can just use that one tag.
+  practical: 'practical', money: 'practical', health: 'practical', info: 'practical', sim: 'practical', atm: 'practical', laundry: 'practical',
 };
 export function catFamily(cat) { return CAT_FAMILY[cat] || 'other'; }
 export function catColor(cat) { return FAMILY_COLOR[catFamily(cat)] || FAMILY_COLOR.other; }
 // The single most identifying category colour for a whole place (beach beats nature,
-// culture beats park, etc.) — used to colour map pins by category.
+// culture beats park, etc.) — used to colour map pins by category. 'practical' sits last:
+// an info/money/health card that ALSO carries a real physical category (e.g. a transport
+// how-to) should still read as that stronger category, not as generic "practical" brown.
 export function placeCatColor(p) {
   const cats = p.categories || [];
-  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport'];
+  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport', 'practical'];
   for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return FAMILY_COLOR[fam];
   return FAMILY_COLOR.other;
 }

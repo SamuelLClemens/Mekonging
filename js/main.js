@@ -266,7 +266,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.404.0';
+const APP_VERSION = 'mk-v0.405.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1132,8 +1132,8 @@ function homeRightNowCard(ctx) {
   // Category chips + a price select — both only offered when there is a real choice; options
   // are whichever this exact ranked pool actually contains (the same CATEGORY_FAMILIES/
   // catFamily vocabulary catTag() and daySuggestScreen already use), minus stay/transport/
-  // other which are not "things to do right now" categories.
-  const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key))
+  // practical/other which are not "things to do right now" categories.
+  const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'practical', 'other'].includes(f.key))
     .filter((f) => ranked.some((x) => (x.p.categories || []).some((c) => catFamily(c) === f.key)));
   const tiersPresent = ['low', 'mid', 'high'].filter((t) => ranked.some((x) => x.p.budgetTier === t));
   // Smart default: which of these families the traveller already told us they like, in
@@ -9389,9 +9389,11 @@ function todoScore(p, ctx, prefs, anchor) {
 }
 // The place's single most-identifying category family (beach beats nature, culture beats
 // park, …) — used for the accent colour and the placeholder emoji when no photo exists.
+// Kept in lockstep with placeCatColor()'s own priority order in render-utils.js — the two
+// must never disagree about a place's dominant family.
 function placeFamily(p) {
   const cats = p.categories || [];
-  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport'];
+  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport', 'practical'];
   for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return fam;
   return 'other';
 }
@@ -9530,7 +9532,7 @@ function daySuggestScreen(country) {
     const inScope = scored.filter((x) => tierOf(x));
 
     // --- Category filter chips (only the families that exist nearby). ---
-    const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'other'].includes(f.key))
+    const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'practical', 'other'].includes(f.key))
       .filter((f) => inScope.some((x) => x.cats.some((c) => catFamily(c) === f.key)));
     const chipRow = h('div', { class: 'chips todo-filter' });
     const mkChip = (key, label) => h('button', { class: 'chip', dataset: { f: key }, 'aria-pressed': todoFamily === key ? 'true' : 'false', onclick: () => { todoFamily = key; drawList(); } }, label);
