@@ -182,6 +182,18 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .topbar .back:hover { filter: brightness(1.08); }
+/* W8 mobile pass: these buttons measure ~30x30 (topbar-ic) and ~34x37 (topbar-sos) on
+   screen — both under the 44x44 minimum touch target, and there is no room to grow that
+   visually without re-squeezing the h1 title column the 2-line clamp above just fixed
+   (the topbar already spends its whole width on up to 5 fixed controls, see that comment).
+   Fix: `position: relative` + an invisible ::before sized to 44x44 and centred on each
+   button extends the TAPPABLE area only, so the visible icon/pill stays exactly as small
+   as it already needs to be. */
+.topbar-ic, .topbar-sos { position: relative; }
+.topbar-ic::before, .topbar-sos::before {
+  content: ''; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
 .topbar-ic {
   border: none; background: transparent; cursor: pointer; color: var(--ink-soft);
   line-height: 1; padding: var(--sp-1) var(--sp-1); border-radius: var(--r-pill); flex: none;

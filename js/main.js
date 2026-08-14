@@ -265,7 +265,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.399.0';
+const APP_VERSION = 'mk-v0.400.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3994,7 +3994,7 @@ function bulletinScreen(arg) {
   let cat = BB_CATS.some((c) => c.id === arg) ? arg : 'all';
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Traveller board', '#home'));
-  wrap.append(h('p', { class: 'lead' }, 'A traveller-to-traveller board you share by link — swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. Post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
+  wrap.append(h('p', { class: 'lead' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit — post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
   const rates = getRates();
   if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));
 
@@ -4918,7 +4918,7 @@ function placesScreen(arg) {
     : '';
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
-  { const t = oneTimeHint('places-living-map', 'This is your decide-now shortlist: what is near you, tiered by how far it is, best matches first. The map and list stay in sync — tap the coloured category chips to show only what you want. Looking to browse a whole country or region instead? That is what Explore is for.'); if (t) wrap.append(t); }
+  { const t = oneTimeHint('places-living-map', 'Your decide-now shortlist — nearest and best-matched first. Tap a category chip to filter; map and list stay in sync. Want to browse a whole region? That is what Explore is for.'); if (t) wrap.append(t); }
   // Who these results are being ranked and tagged for (one line, also the edit control).
   wrap.append(travellingAsLine());
   // Places anchors on where the traveller actually is, and never offers a "browse all of the
@@ -7181,7 +7181,7 @@ function crossingsScreen() {
 function mapScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Map', '#places'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — the region map, your GPS location, search, places, pools, pins and your saved accommodation all work with no connection. Tap ⊕ to find yourself, search to jump to any place, tap the map to drop a pin, and set your accommodation to see a guide line and the distance and direction back. Use “Save this area” to keep the satellite imagery offline.'));
+  wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — GPS, search, places, pins and your saved accommodation all work with no connection.'));
 
   const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
   const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
