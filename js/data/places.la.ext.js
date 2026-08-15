@@ -706,6 +706,7 @@ export const PLACES_LA_EXT = [
   {
     id: "la-ext-wat-xieng-thong",
     access: { stepFree: "partial", note: "Entered at grade from the southern street gate and the compound grounds are broadly rollable, but the temple buildings sit on low stepped plinths with raised sills and the northern river approach is a long steep staircase, so no building interiors are step-free." },
+    afterDark: { openAfterDark: false, note: "Own listed hours are 08:00-17:00, closing well before dusk in Luang Prabang — the compound is not lit or open for after-dark visits." },
     name: "Wat Xieng Thong",
     city: "Luang Prabang",
     country: "la",
@@ -724,7 +725,7 @@ export const PLACES_LA_EXT = [
     mapQuery: "Wat Xieng Thong Luang Prabang",
     coords: { lat: 19.8955, lng: 102.1409 },
     bookHint: "No booking; pay at the gate and enter on foot.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
@@ -754,6 +755,7 @@ export const PLACES_LA_EXT = [
   {
     id: "la-ext-royal-palace-museum-lpb",
     access: { stepFree: "no", note: "The palace (Haw Kham) is entered up a grand staircase with no documented ramp or lift; shoes must be removed and the galleries sit above ground level, so the building interior is not step-free." },
+    afterDark: { openAfterDark: false, note: "Own listed hours are 08:00-11:30 and 13:30-16:00 (often closed Tuesday), closing mid-afternoon — well before dusk, with no after-dark access." },
     name: "Royal Palace Museum (Haw Kham)",
     city: "Luang Prabang",
     country: "la",
@@ -772,7 +774,7 @@ export const PLACES_LA_EXT = [
     mapQuery: "Royal Palace Museum Luang Prabang",
     coords: { lat: 19.8886, lng: 102.1356 },
     bookHint: "No booking; buy a ticket at the gate and observe the dress and locker rules.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
