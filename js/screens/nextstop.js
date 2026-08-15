@@ -19,10 +19,10 @@ import { h } from '../util.js';
 import { getCountry, isCountryLoaded, loadAllCountries, allPlaces } from '../data/regions.js';
 import { isFavorite } from '../state.js';
 import { planRoutes, isRouteNode } from '../journey.js';
-import { citySlug } from '../render-utils.js';
+import { citySlug, personalScore } from '../render-utils.js';
 import {
   go, mount, topbar, render, focusSpot, todayISO, daysUntilISO,
-  whereNextSection, nextChainTail, personalScore, placeCard, planCard, twelveGoUrl,
+  whereNextSection, nextChainTail, placeCard, planCard, twelveGoUrl,
 } from '../main.js';
 
 // Re-render this screen in place, preserving scroll — the same idiom whereNextSection's own

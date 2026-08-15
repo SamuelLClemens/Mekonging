@@ -397,3 +397,31 @@ export function sourcesNote(sources, verified, place) {
   kids.push(`${verified ? ` · verified ${verified}` : ''}. Guidance only — verify locally.`);
   return h('p', { class: 'disclaimer' }, kids);
 }
+
+// "For you" personalisation (task #205 step 3): once the traveller sets a profile
+// (#foryou), lists rank what fits them first — budget tier, kids, long-stay fit and
+// interests all add to a place's base rating. Stateless (reads store.profile.prefs and
+// the passed-in place's own plain fields only, no DOM/map coupling), so it moves cleanly
+// here rather than staying a places.js-bound export — nextstop.js and the eventual
+// places.js both rank lists with it, and this way neither has to reach into the other.
+export function personalScore(p) {
+  const prefs = store.profile.prefs;
+  const r = Number(p.rating) || 0;
+  let s = r || 3;
+  if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) s += 0.7;
+  // Party shape — modest nudges using fields that always exist (rating/stayType/kidFriendly),
+  // so choosing Solo / Couple / Group / Family actually reorders picks instead of being inert.
+  if (prefs.party === 'family') { if (p.kidFriendly === true) s += 0.8; if (p.kidFriendly === false) s -= 0.5; }
+  // Travelling with a baby leans even harder on kid-friendly places, and away from
+  // ones explicitly flagged not-for-kids — regardless of the party shape chosen.
+  if (prefs.withBaby) { if (p.kidFriendly === true) s += 0.6; if (p.kidFriendly === false) s -= 0.6; }
+  if (prefs.party === 'solo' && p.stayType === 'hostel') s += 0.4;                 // sociable, budget-friendly bases
+  if (prefs.party === 'couple') { if (r >= 4.4) s += 0.3; if (p.stayType === 'hostel') s -= 0.3; }  // quality over dorms
+  if (prefs.party === 'group' && (p.stayType === 'hostel' || p.stayType === 'apartment')) s += 0.3; // space for several
+  // Trip length — long stays prefer long-stay lodging; short trips want the highlights first.
+  if (prefs.tripLength === 'long' && (p.stayDuration === 'long' || p.stayDuration === 'both')) s += 0.5;
+  if (prefs.tripLength === 'short' && r >= 4.5) s += 0.5;
+  if (prefs.tripLength === 'medium' && r >= 4.3) s += 0.25;
+  if ((prefs.interests || []).some((i) => (p.categories || []).includes(i))) s += 0.4;
+  return s;
+}

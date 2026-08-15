@@ -67,7 +67,7 @@ import {
   citySlug, PRICE_TIER_LABEL, tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, catTag,
   marketOpenDays, marketOnToday, marketCovered, isBeach, seaAgo,
   aqiBand, airBlock, uvBand, uvLineNode, uvTodayBlock,
-  photoBlock, extUrl, sourceHref, sourcesNote,
+  photoBlock, extUrl, sourceHref, sourcesNote, personalScore,
 } from './render-utils.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
@@ -270,7 +270,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.414.0';
+const APP_VERSION = 'mk-v0.415.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5686,28 +5686,6 @@ function profileIsSet() {
   const p = store.profile.prefs;
   return !!(p.party || p.tripLength || (p.budget && p.budget !== 'flexible') || (p.interests || []).length);
 }
-export function personalScore(p) {
-  const prefs = store.profile.prefs;
-  const r = Number(p.rating) || 0;
-  let s = r || 3;
-  if (prefs.budget && prefs.budget !== 'flexible' && (p.budgetTier === prefs.budget || p.budgetTier === 'any')) s += 0.7;
-  // Party shape — modest nudges using fields that always exist (rating/stayType/kidFriendly),
-  // so choosing Solo / Couple / Group / Family actually reorders picks instead of being inert.
-  if (prefs.party === 'family') { if (p.kidFriendly === true) s += 0.8; if (p.kidFriendly === false) s -= 0.5; }
-  // Travelling with a baby leans even harder on kid-friendly places, and away from
-  // ones explicitly flagged not-for-kids — regardless of the party shape chosen.
-  if (prefs.withBaby) { if (p.kidFriendly === true) s += 0.6; if (p.kidFriendly === false) s -= 0.6; }
-  if (prefs.party === 'solo' && p.stayType === 'hostel') s += 0.4;                 // sociable, budget-friendly bases
-  if (prefs.party === 'couple') { if (r >= 4.4) s += 0.3; if (p.stayType === 'hostel') s -= 0.3; }  // quality over dorms
-  if (prefs.party === 'group' && (p.stayType === 'hostel' || p.stayType === 'apartment')) s += 0.3; // space for several
-  // Trip length — long stays prefer long-stay lodging; short trips want the highlights first.
-  if (prefs.tripLength === 'long' && (p.stayDuration === 'long' || p.stayDuration === 'both')) s += 0.5;
-  if (prefs.tripLength === 'short' && r >= 4.5) s += 0.5;
-  if (prefs.tripLength === 'medium' && r >= 4.3) s += 0.25;
-  if ((prefs.interests || []).some((i) => (p.categories || []).includes(i))) s += 0.4;
-  return s;
-}
-
 // A unified, LAWFUL rating: a synthesised score from multiple cited public sources
 // (no scraping), plus a deep link to live Google reviews. The user's own rating
 // lives separately in yourLayer().
