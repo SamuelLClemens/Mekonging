@@ -1087,6 +1087,8 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hanoi-sofitel-legend-metropole",
+    access: { stepFree: "partial", note: "The 1901 Heritage Wing has a genuine, functioning century-old lift alongside its preserved original wooden staircase, plus a wheelchair-accessible concierge desk, but the newer Opera Wing (this entry's own tips already distinguish the two) is the more likely bet for fully step-free, modern-standard rooms — ask for it specifically if mobility is a concern." },
+    afterDark: { openAfterDark: true, lit: true, note: "24-hour front desk confirmed directly, ready to assist at any hour — a staffed, lit entrance and porte-cochere follow from reception genuinely operating through the night." },
     recognition: 'A white colonial building with green shutters and a wrought-iron canopy on Ngo Quyen Street in the French Quarter, a short walk from the Opera House.',
     localName: 'Khách sạn Metropole Hà Nội · Khach san Metropole Ha Noi',
     name: "Sofitel Legend Metropole Hanoi",
@@ -1142,10 +1144,11 @@ export const PLACES_VI_EXT = [
     mapQuery: "Sofitel Legend Metropole Hanoi",
     coords: { lat: 21.0255, lng: 105.8565 },
     bookHint: "Book directly via Sofitel/Accor two to three months ahead for autumn and Tet-adjacent dates, and specify Historical Wing at booking if the older rooms matter to you.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
+      { org: "Sofitel Legend Metropole Hanoi (official)", url: "https://www.sofitel-legend-metropole-hanoi.com/" },
     ],
   },
   {

@@ -683,6 +683,8 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-phnom-penh-raffles-le-royal",
+    access: { stepFree: "partial", toilet: true, note: "Wheelchair access and accessible toilet facilities are confirmed for rooms and public areas, plus a walk-in shower cubicle option — notably better than its Siem Reap sister property, per a wheelchair user's direct comparison of the two hotels. Still a 1929 heritage building overall, so request an accessible room specifically rather than assume every room qualifies." },
+    afterDark: { openAfterDark: true, lit: true, note: "24-hour front desk confirmed directly, including wake-up calls and after-hours meeting-room access — a staffed, lit porte-cochere and lobby follow from reception genuinely operating through the night." },
     recognition: 'A colonnaded cream 1929 colonial hotel with a central porte-cochere and landscaped gardens, set just south of Wat Phnom on Street 92 in the capital.',
     name: "Raffles Hotel Le Royal",
     city: "Phnom Penh",
@@ -737,14 +739,17 @@ export const PLACES_KH_EXT = [
     mapQuery: "Raffles Hotel Le Royal Phnom Penh",
     coords: { lat: 11.577, lng: 104.9165 },
     bookHint: "Book directly with Raffles a few weeks ahead for most of the year, but two to three months ahead for the November-February dry season.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [
       { org: "Ministry of Tourism Cambodia", url: "https://www.mot.gov.kh" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
+      { org: "Raffles Hotels (official)", url: "https://www.raffles.com/phnom-penh/" },
     ],
   },
   {
     id: "kh-ext-siem-reap-raffles-grand-hotel-dangkor",
+    access: { stepFree: "partial", note: "The original 1930s lift is a genuine, staffed elevator reaching the upper floors, but a wheelchair-using guest with a spinal condition reported real difficulty getting in and out of the bathtub in their assigned room; the hotel acknowledged the gap in a public response and now flags special-needs guests to travel agents at booking so a more suitable room (e.g. one with a walk-in shower, as its Phnom Penh sister property has) can be assigned in advance — request one explicitly rather than assume it by default." },
+    afterDark: { openAfterDark: true, lit: true, note: "24-hour front desk confirmed directly, plus a personal butler on call around the clock for every stay — a staffed, lit lobby and porte-cochere follow from reception genuinely operating through the night." },
     recognition: 'A grand 1932 colonnaded hotel facing the Royal Gardens on the road toward the temples, known for its original 1930s open birdcage lift and long garden pool.',
     name: "Raffles Grand Hotel d'Angkor",
     city: "Siem Reap",
@@ -799,10 +804,11 @@ export const PLACES_KH_EXT = [
     mapQuery: "Raffles Grand Hotel d'Angkor Siem Reap",
     coords: { lat: 13.3627, lng: 103.8565 },
     bookHint: "Book directly with Raffles two to three months ahead for the December-February Angkor high season; shoulder-season rates in May-June drop noticeably.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [
       { org: "Ministry of Tourism Cambodia", url: "https://www.mot.gov.kh" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
+      { org: "Raffles Hotels (official)", url: "https://www.raffles.com/siem-reap/" },
     ],
   },
   {

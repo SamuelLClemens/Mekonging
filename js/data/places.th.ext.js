@@ -1322,6 +1322,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-bangkok-mandarin-oriental",
+    access: { stepFree: "partial", note: "The modern river-view tower has step-free public areas and its own accessible-room category, but the low-rise, colonial-era Authors' Wing (per this entry's own recognition text) is more likely to carry the raised thresholds and narrower routes typical of an 1876-founded heritage building — ask specifically for the tower if step-free access matters." },
+    afterDark: { openAfterDark: true, lit: true, note: "24-hour butler service is confirmed directly for this property, and round-the-clock front-desk/concierge coverage is a stated brand standard across Mandarin Oriental hotels — a staffed, lit entrance and river pier follow from reception genuinely operating through the night." },
     recognition: 'On the Chao Phraya east bank in the Charoen Krung trading quarter; a riverside grand hotel reached by its own shuttle boat, with the low colonial-era Authors Wing set beside the modern river-view tower.',
     localName: 'โรงแรมแมนดาริน โอเรียนเต็ล กรุงเทพ · Rongraem Mandarin Oriental Krung Thep',
     name: "Mandarin Oriental Bangkok",
@@ -1377,10 +1379,11 @@ export const PLACES_TH_EXT = [
     mapQuery: "Mandarin Oriental Bangkok",
     coords: { lat: 13.7236, lng: 100.514 },
     bookHint: "Reserve directly on mandarinoriental.com several months ahead for December-February; flexible rates often include breakfast and are worth comparing against prepaid ones.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
+      { org: "Mandarin Oriental (official)", url: "https://www.mandarinoriental.com/en/bangkok/chao-phraya-river/stay" },
     ],
   },
   {

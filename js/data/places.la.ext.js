@@ -554,6 +554,8 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-luang-prabang-belmond-phou-vao",
+    access: { stepFree: "partial", note: "Unlike the older heritage-building hotels on this shortlist, this is a purpose-built modern resort, and general listings describe accessible rooms and wheelchair access across the grounds — but it is explicitly a hilltop property (Phou Vao means 'kite hill'), so expect gentle-to-moderate slopes between pavilions, the pool and reception even where individual paths are paved." },
+    afterDark: { openAfterDark: true, lit: true, note: "24-hour front desk confirmed directly, with multilingual staff on hand for evening arrivals — a staffed, lit entrance and driveway follow from reception genuinely operating through the night." },
     recognition: 'A hilltop resort on Phou Vao just outside the old town, its lotus-pond spa and infinity pool looking across the temple roofs toward Mount Phousi.',
     name: "Belmond La Residence Phou Vao",
     city: "Luang Prabang",
@@ -609,14 +611,17 @@ export const PLACES_LA_EXT = [
     mapQuery: "Belmond La Residence Phou Vao Luang Prabang",
     coords: { lat: 19.8765, lng: 102.1345 },
     bookHint: "Book directly with Belmond three or more months ahead for November-February, since the resort has few rooms and holiday weeks sell out early.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [
       { org: "Tourism Laos", url: "https://www.tourismlaos.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
+      { org: "Belmond (official)", url: "https://www.belmond.com/hotels/asia/laos/luang-prabang/belmond-la-residence-phou-vao/" },
     ],
   },
   {
     id: "la-ext-vientiane-settha-palace",
+    access: { stepFree: "partial", note: "This small (29-room), two-storey 1932 building has NO lift — multiple guest reviews consistently describe an original spiral staircase as the only way to upper-floor rooms, with several travellers flagging it as a real downside. Ground-floor rooms and the garden/pool/restaurant areas should still be reachable at grade; request a ground-floor room explicitly if stairs are a problem." },
+    afterDark: { openAfterDark: true, lit: true, note: "24-hour front desk confirmed directly, staffed day and night — a lit entrance and garden approach follow from reception genuinely operating through the night." },
     recognition: 'A restored 1932 French-colonial hotel on Pang Kham Street near the Nam Phou fountain, with a cream facade, shuttered windows and a palm-lined garden pool.',
     name: "Settha Palace Hotel",
     city: "Vientiane",
@@ -654,13 +659,14 @@ export const PLACES_LA_EXT = [
     mapQuery: "Settha Palace Hotel Pang Kham Street Vientiane",
     coords: { lat: 17.968, lng: 102.604 },
     bookHint: "Book via the hotel's official website or a major booking platform a few weeks ahead for the November-February peak; the small room count means it fills early.",
-    verified: "2026-07",
+    verified: "2026-08",
     sources: [
       {
         org: "Lao National Tourism, Ministry of Information, Culture and Tourism",
         url: "https://www.tourismlaos.org",
       },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
+      { org: "Settha Palace Hotel (official)", url: "https://www.setthapalace.com/" },
     ],
   },
   {
