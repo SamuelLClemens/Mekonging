@@ -269,7 +269,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.411.0';
+const APP_VERSION = 'mk-v0.412.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5129,6 +5129,64 @@ function placesScreen(arg) {
   renderAreasCard();
   wrap.append(foldedCard('🗂️ Saved offline areas', areasCard, 'placesAreasOpen', false));
 
+  // ---- More map tools: offline search, measure, borders --------------------------
+  // Task #196 Phase 2 slice 2: the same three tools #map's standalone screen has always
+  // offered are now available on every controller (map.js's shared-scope hoist, Phase 2
+  // slice 1) — this builds the Places-side UI for them, reusing #map's own copy and
+  // behaviour verbatim so the two screens read as one feature, not two implementations.
+  const mapSearchResultsP = h('div', { class: 'map-search-results' });
+  const MAP_SEARCH_ICON = { City: '🏙️', Place: '📍', Pool: '🏊', Pin: '📌' };
+  function runMapSearchP() {
+    mapSearchResultsP.textContent = '';
+    const q = mapSearchInputP.value.trim();
+    if (!placesCtrl || q.length < 2) return;
+    const matches = placesCtrl.search(q);
+    if (!matches.length) { mapSearchResultsP.append(h('p', { class: 'muted', style: 'padding:6px 4px;font-size:13px' }, 'No matches in the offline data.')); return; }
+    matches.forEach((m) => mapSearchResultsP.append(
+      h('button', { class: 'btn ghost block', style: 'justify-content:flex-start;margin-top:4px', onclick: () => {
+        placesCtrl.flyTo(m.lng, m.lat, m.z);
+        mapSearchResultsP.textContent = ''; mapSearchInputP.value = '';
+      } }, `${MAP_SEARCH_ICON[m.type] || '•'}  ${m.name}  ·  ${m.type}`)));
+  }
+  const mapSearchInputP = h('input', { type: 'search', class: 'map-search', placeholder: 'Search places, cities, pools, your pins…', 'aria-label': 'Search the map', autocomplete: 'off', oninput: runMapSearchP });
+
+  let measuringP = false;
+  const measureOutP = h('p', { class: 'map-hint', style: 'margin:8px 0 0;display:none' }, '');
+  function fmtKmP(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 2 : 1)} km`; }
+  function toggleMeasureP() {
+    if (!placesCtrl) return;
+    measuringP = !measuringP;
+    if (measuringP) {
+      measureBtnP.textContent = '📏 Measuring — tap the map'; measureBtnP.classList.add('toggle-on');
+      measureOutP.style.display = ''; measureOutP.textContent = 'Tap two or more points on the map to measure the distance.';
+      placesCtrl.toggleMeasure(true, (km, n) => {
+        measureOutP.textContent = n < 2 ? 'Tap another point to measure…'
+          : `Distance: ${fmtKmP(km)} over ${n} points. Tap to extend, or tap “Measure” again to finish.`;
+      });
+    } else {
+      measureBtnP.textContent = '📏 Measure'; measureBtnP.classList.remove('toggle-on');
+      measureOutP.style.display = 'none';
+      placesCtrl.toggleMeasure(false);
+    }
+  }
+  const measureBtnP = h('button', { class: 'btn ghost', onclick: toggleMeasureP }, '📏 Measure');
+
+  // Same store.profile.prefs.mapLayers object #map itself reads/writes, so the borders
+  // choice is one shared setting rather than a second, independent Places-only toggle.
+  const mapLayersPrefsP = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { borders: true });
+  const bordersCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.borders !== false ? '' : null,
+    onchange: (e) => { mapLayersPrefsP.borders = e.target.checked; save(); if (placesCtrl) placesCtrl.setBorders(e.target.checked); } });
+
+  const toolsCard = h('div', {}, [
+    h('div', { class: 'map-search-wrap' }, [mapSearchInputP, mapSearchResultsP]),
+    h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px' }, [
+      measureBtnP,
+      h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
+    ]),
+    measureOutP,
+  ]);
+  wrap.append(foldedCard('🛠 More map tools', toolsCard, 'placesToolsOpen', false));
+
   // interest filters (seeded from saved prefs the first time)
   const prefs = store.profile.prefs;
   const selInterests = new Set(prefs.interests || []);
@@ -5579,6 +5637,9 @@ function placesScreen(arg) {
     })).then((c) => {
       placesCtrl = c;
       setLiveCleanup(() => { try { c.dispose(); } catch { /* noop */ } });
+      // Reconcile the borders layer with whatever was last saved (it defaults to visible
+      // at construction regardless of a stored "off" pref from an earlier #map session).
+      c.setBorders(mapLayersPrefsP.borders !== false);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out
