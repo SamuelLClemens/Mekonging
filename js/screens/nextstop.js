@@ -19,8 +19,9 @@ import { h } from '../util.js';
 import { getCountry, isCountryLoaded, loadAllCountries, allPlaces } from '../data/regions.js';
 import { isFavorite } from '../state.js';
 import { planRoutes, isRouteNode } from '../journey.js';
+import { citySlug } from '../render-utils.js';
 import {
-  go, mount, topbar, render, focusSpot, citySlug, todayISO, daysUntilISO,
+  go, mount, topbar, render, focusSpot, todayISO, daysUntilISO,
   whereNextSection, nextChainTail, personalScore, placeCard, planCard, twelveGoUrl,
 } from '../main.js';
 

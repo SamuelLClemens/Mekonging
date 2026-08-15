@@ -6,7 +6,7 @@
 // writing the module-private binding directly.
 import { store, save, getLastFix, setLastFix } from '../state.js';
 import { h, esc } from '../util.js';
-import { wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip } from '../render-utils.js';
+import { wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip, airBlock, uvLineNode } from '../render-utils.js';
 import { field, online } from '../ui-widgets.js';
 import {
   WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot,
@@ -17,7 +17,7 @@ import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
 // Circular import back into main.js — same accepted pattern js/screens/home.js already uses
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
-import { topbar, mount, focusSpot, fmtClock, spotForCity, airBlock, uvLineNode } from '../main.js';
+import { topbar, mount, focusSpot, fmtClock, spotForCity } from '../main.js';
 
 // ---- WEATHER + FORECAST -----------------------------------------------------
 let weatherKey = '';   // remembered city selection across renders

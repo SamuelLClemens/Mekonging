@@ -5,6 +5,8 @@
 
 import { h, fmtDistance, compass, bearing } from './util.js';
 import { store, getLastFix } from './state.js';
+import { spotKey, getCachedAir, refreshAir, getCachedWeather, refreshWeather, nearestSpot } from './weather.js';
+import { online } from './ui-widgets.js';
 
 // "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
 // understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
@@ -163,3 +165,169 @@ export function wxWindU() { return (store.profile && store.profile.wxWindUnit) |
 export function fmtTemp(c) { if (c == null) return 'N/A'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
 export function fmtWind(kmh) { if (kmh == null) return 'N/A'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
 export function fmtPrecip(mm) { if (mm == null) return 'N/A'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
+
+// ---- Extracted from main.js (task #205 step 1) ------------------------------
+// Genuinely cross-screen helpers that happened to be physically declared inside
+// main.js's "Places" section but are called from Home, day-suggestions and other
+// screens too — moved here so those callers stop reverse-importing from a screen
+// module. Pure relocate, no behaviour change; see task #205 for the full audit.
+
+// "Chiang Mai" -> "chiang-mai" for city-scoped Places routes (#places-<cc>-<slug>).
+export function citySlug(name) {
+  return String(name || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Display labels for a place's price tier — deliberately never the word "budget" anywhere in
+// the UI. That word is reserved for the expense tracker (EXP_CATS, trip.budgetLog); two chip
+// rows both reading "Budget" in different sections was the site's most-repeated report. The
+// stored tier keys (low/mid/high/any/flexible) are unchanged — this is a label map only, so
+// no data migration is needed. Shared by every screen that shows a tier: the Places filter,
+// the compare sheet, the colour key, onboarding, and Settings.
+export const PRICE_TIER_LABEL = { flexible: 'Any price', any: 'Any price', low: '$', mid: '$$', high: '$$$' };
+
+export function tierBadge(tier) {
+  const lbl = PRICE_TIER_LABEL[tier] || tier;
+  return h('span', { class: `tier ${tier}` }, lbl);
+}
+
+// Category buckets for grouping the Places list and filtering Search. A place falls in
+// the FIRST matching bucket (stays are distinct; then the four interest categories).
+export const PLACE_BUCKETS = [
+  ['food', '🍜 Food'],
+  ['market', '🛒 Markets'],
+  ['stay', '🛏 Places to stay'],
+  ['culture', '🏛 Culture & history'],
+  ['nature', '🌿 Nature & outdoors'],
+  ['nightlife', '🌃 Nightlife & social'],
+  ['rental', '🛵 Getting around & rentals'],
+  ['other', '📌 More to see'],
+];
+// One semantic colour per category bucket so the eye can tell a place to STAY (blue)
+// from a place to EAT (orange), see (violet), a nature spot (green) or nightlife (pink)
+// at a glance — on cards, list section headers and chips. Fixed hues (like the map
+// legend) read as an accent on both light and dark themes.
+export const BUCKET_COLOR = {
+  food: '#E8632A', market: '#E0A100', stay: '#2C7DA0', culture: '#8A5CC0',
+  nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
+};
+
+export function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
+
+// A category chip coloured by its family, with the family name as a tooltip.
+export function catTag(cat, label) {
+  const fam = catFamily(cat);
+  return h('span', { class: 'cat-tag', style: `background:${FAMILY_COLOR[fam]}`, title: FAMILY_META[fam].label }, label || cat);
+}
+
+// ---- MARKETS: day-of-week awareness -----------------------------------------
+// Many markets run only on certain days (weekend walking streets, Fri–Sun floating
+// markets). marketDays is an array of weekday indices (0=Sun … 6=Sat); absent/empty
+// means daily. Returns the sorted unique open-days array, or null when the market runs daily.
+export function marketOpenDays(p) {
+  const d = Array.isArray(p.marketDays) ? p.marketDays.filter((n) => Number.isInteger(n) && n >= 0 && n <= 6) : [];
+  if (!d.length || d.length >= 7) return null;
+  return [...new Set(d)].sort((a, b) => a - b);
+}
+export function marketOnToday(p, dow) { const d = marketOpenDays(p); return !d || d.includes(dow); }
+// Best-effort "is this actually shelter from rain?" — most night/walking-street/floating
+// markets in the region are open-air stalls, not weatherproof, so a market is only treated
+// as rain-friendly when its own text says so (a covered hall, a tin/corrugated roof, "market
+// building"). No structured covered/indoor field exists in the data, so this reads the same
+// free text a traveller would: marketType, blurb, recognition and tips. Under-detects rather
+// than over-detects on purpose — an unmarked market defaults to "gets wet", the honest guess.
+export function marketCovered(p) {
+  const text = [p.marketType, p.blurb, p.recognition, ...(p.tips || [])].filter(Boolean).join(' ');
+  return /covered market|market hall|tin[- ]roofed|corrugated roof|under.{0,25}roofs?/i.test(text);
+}
+
+// A beach is any place carrying beach-safety fields or the 'beach' category — used to
+// gate the whole beach-safety card cluster (lifeguards, jellyfish season, sea state).
+export function isBeach(p) {
+  return !!(p && (p.lifeguard || p.swim || (Array.isArray(p.jellyfishMonths) && p.jellyfishMonths.length)
+    || (Array.isArray(p.categories) && p.categories.includes('beach'))));
+}
+
+// Human "n min/h/d ago" from a timestamp — used by the live air-quality and sea-state blocks.
+export function seaAgo(ts) {
+  const min = Math.max(1, Math.round((Date.now() - ts) / 60000));
+  if (min < 60) return `${min} min ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.round(hr / 24)}d ago`;
+}
+
+// --- Air quality -------------------------------------------------------------
+// US AQI band -> [label, css class, health advice]. Standard US EPA breakpoints.
+export function aqiBand(aqi) {
+  if (aqi == null) return null;
+  if (aqi <= 50) return ['Good', 'good', 'Air is clean — enjoy the outdoors.'];
+  if (aqi <= 100) return ['Moderate', 'mod', 'Fine for most; unusually sensitive people may take it easier.'];
+  if (aqi <= 150) return ['Unhealthy for sensitive groups', 'usg', 'Asthma, heart or lung conditions, children and the elderly should limit long or intense time outdoors.'];
+  if (aqi <= 200) return ['Unhealthy', 'unhealthy', 'Everyone may feel effects — limit prolonged exertion outdoors and consider a mask.'];
+  if (aqi <= 300) return ['Very unhealthy', 'vunhealthy', 'Health warning — avoid outdoor exertion and wear an N95/KN95 mask outside.'];
+  return ['Hazardous', 'hazard', 'Emergency conditions — stay indoors with air filtered where possible; wear an N95/KN95 outdoors.'];
+}
+// Air-quality sub-block for a city spot: US AQI + PM2.5, painted from cache immediately
+// and refreshed when online (repaints only if still attached). Honest offline fallback.
+export function airBlock(spot, opts) {
+  const compact = opts && opts.compact;
+  const box = h('div', { class: 'air-block' });
+  const key = spotKey(spot);
+  function paint(rec, loading) {
+    box.innerHTML = '';
+    if (rec && rec.aqi != null) {
+      const b = aqiBand(rec.aqi);
+      const pm = rec.pm25 != null ? ` · PM2.5 ${Math.round(rec.pm25)} µg/m³` : '';
+      box.append(h('p', { class: `aqi-line ${b[1]}` }, `🌫️ Air quality: ${Math.round(rec.aqi)} US AQI — ${b[0]}${pm}`));
+      if (!compact) box.append(h('p', { class: 'muted small' }, b[2]));
+      box.append(h('p', { class: 'muted small' }, `Updated ${seaAgo(rec.fetchedAt)}${online() ? '' : ' · offline'}`));
+    } else {
+      box.append(h('p', { class: 'muted small' }, loading ? '🌫️ Checking air quality…' : '🌫️ Air quality loads when you are online.'));
+    }
+  }
+  const cached = getCachedAir(key);
+  paint(cached, !cached && online());
+  if (online()) refreshAir(spot).then((r) => { if (r && box.isConnected) paint(r, false); });
+  return box;
+}
+
+// --- Sun / UV index ----------------------------------------------------------
+// WHO UV Index band -> [label, css band class, sun-safety advice]. Reuses the AQI
+// colour bands so no new palette is needed. UV comes free with the 7-day forecast
+// (Open-Meteo daily uv_index_max), so it is cache-first and works offline.
+export function uvBand(uv) {
+  if (uv == null) return null;
+  if (uv < 3) return ['Low', 'good', 'Minimal sun protection needed for most people.'];
+  if (uv < 6) return ['Moderate', 'mod', 'Wear sunscreen, a hat and sunglasses; seek shade near midday.'];
+  if (uv < 8) return ['High', 'usg', 'Protection needed — SPF 30+, a hat, and shade between 11am and 3pm.'];
+  if (uv < 11) return ['Very high', 'unhealthy', 'Extra care — avoid the sun 11am–4pm, use SPF 50+, cover up and re-apply often.'];
+  return ['Extreme', 'hazard', 'Avoid being outside in the middle of the day; full protection is essential.'];
+}
+// A coloured UV line node (optionally with the advice line). Returns null when unknown.
+export function uvLineNode(uv, opts) {
+  const b = uvBand(uv);
+  if (!b) return null;
+  const box = h('div', {});
+  box.append(h('p', { class: `aqi-line ${b[1]}` }, `☀️ Sun index (UV): ${Math.round(uv)} — ${b[0]}`));
+  if (opts && opts.advice) box.append(h('p', { class: 'muted small' }, b[2]));
+  return box;
+}
+// Today's UV for a place's location, taken from the nearest forecast city (cache-first,
+// refreshed once when online). Mirrors airBlock so the card never blocks on the network.
+export function uvTodayBlock(coords, country) {
+  const spot = nearestSpot(coords, country);
+  const box = h('div', { class: 'air-block' });
+  function paint(rec) {
+    box.innerHTML = '';
+    const uv = rec && rec.daily && rec.daily[0] ? rec.daily[0].uv : null;
+    const node = uvLineNode(uv, { advice: true });
+    if (node) box.append(node);
+    else box.append(h('p', { class: 'muted small' }, online() ? '☀️ Checking the sun index…' : '☀️ Sun (UV) index loads with the forecast when you are online.'));
+  }
+  const cached = getCachedWeather(spotKey(spot));
+  paint(cached);
+  if (online() && !(cached && cached.daily && cached.daily.length)) {
+    refreshWeather(spot).then((r) => { if (r && box.isConnected) paint(r); });
+  }
+  return box;
+}
