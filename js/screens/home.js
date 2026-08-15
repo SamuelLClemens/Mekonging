@@ -226,10 +226,10 @@ export function homeScreen() {
       // are not for post travel should be removed and only things for post travel should be in
       // post"): `hidePost` marks anything whose whole purpose is preparing for, or being
       // physically present on, a trip that — in this phase — has already ended: planning a
-      // route, the pre-trip checklist, tuning recommendations for picking where to go, and the
-      // on-the-ground-only marketplace. Everything else still genuinely serves a returned
-      // traveller (reviewing the trip/spend, scrapbook, saved places, currency, documents,
-      // help) and stays in every phase.
+      // route, tuning recommendations for picking where to go, and the on-the-ground-only
+      // marketplace. Everything else still genuinely serves a returned traveller (reviewing the
+      // trip/spend, scrapbook, saved places, currency, documents, help) and stays in every
+      // phase. (Pre-trip checklist uses its own, stricter `planningOnly` rule now — see below.)
       //
       // Journal / Calendar / Money dropped entirely, per the sitewide duplicate-chip audit:
       // quickAccessRow (above) already carries all three, with a LIVE status sub-label
@@ -246,7 +246,13 @@ export function homeScreen() {
         { ic: '🧭', label: 'Trip plans', hash: '#plans', hidePost: true },
         { ic: '🎯', label: 'For you', hash: '#foryou', hidePost: true },
         { ic: '🧳', label: name ? `${name}’s trip` : 'My trip', hash: '#trip' },
-        { ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', hidePost: true },
+        // planningOnly, not hidePost — per direct request ("in home traveling remove pretrip
+        // checklist it should only show in the planning section of home"): the same pre-trip
+        // prep already hidden once a trip ends is now ALSO hidden once it has actually started,
+        // since a traveller on the ground has moved past preparing. Still fully reachable —
+        // You's own "Plan & prepare" section (meHubScreen, main.js) and #everything both link
+        // straight to it — this only narrows where on Home it surfaces.
+        { ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', planningOnly: true },
         { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook', hidePost: true },
         { ic: '⭐', label: 'Saved places', hash: '#saved' },
         { ic: '💱', label: 'Currency converter', hash: '#currency' },
@@ -255,7 +261,7 @@ export function homeScreen() {
         { ic: '🤝', label: 'Traveller board', hash: '#exchange', hidePost: true },
         { ic: '🔒', label: 'Documents', hash: '#vault' },
         { ic: '❓', label: 'Help & FAQ', hash: '#help' },
-      ].filter((t) => !(t.hidePost && phase === 'post'))
+      ].filter((t) => (t.planningOnly ? phase === 'planning' : !(t.hidePost && phase === 'post')))
         .map((t) => chip(t.ic, t.label, t.sub || null, t.hash, t.cls || '')),
     ] },
     // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
