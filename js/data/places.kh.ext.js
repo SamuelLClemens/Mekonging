@@ -217,6 +217,7 @@ export const PLACES_KH_EXT = [
 {
     id: "kh-ext-ta-prohm", name: "Ta Prohm", city: "Siem Reap", country: "kh",
     access: { stepFree: "partial", note: "The approach is a relatively flat compacted-earth path and some sections have a boardwalk, so exteriors are wheelable, but doorways and inner areas still have steps, so it is not fully accessible." },
+    afterDark: { openAfterDark: false, note: "Angkor Archaeological Park's general temples (Ta Prohm included) close by 18:00-18:30 at the latest — at or before dusk — with only Phnom Bakheng and Pre Rup kept open later for sunset viewing; there is no after-dark access to Ta Prohm itself." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.8, scale: 5, count: 19490, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d325222-Reviews-Ta_Prohm-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
     ],
@@ -231,12 +232,13 @@ export const PLACES_KH_EXT = [
     scamWarnings: ["Buy the Angkor pass only at the official ticket centre; touts selling passes elsewhere are not legitimate."],
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ta Prohm Angkor Siem Reap", coords: { lat: 13.4348, lng: 103.8890 },
-    bookHint: "Buy the Angkor pass at the official ticket centre; hire a tuk-tuk or guide for the circuit.", verified: "2026-06",
-    sources: [{ org: "Angkor Enterprise (official)", url: "https://www.angkorenterprise.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    bookHint: "Buy the Angkor pass at the official ticket centre; hire a tuk-tuk or guide for the circuit.", verified: "2026-08",
+    sources: [{ org: "Angkor Enterprise (official)", url: "https://www.angkorenterprise.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Adventures Cambodia", url: "https://adventurescambodia.com/blog/angkor-temple-opening-hours/" }],
   },
   {
     id: "kh-ext-banteay-srei", name: "Banteay Srei", city: "Siem Reap", country: "kh",
     access: { stepFree: "partial", note: "Flat fine-gravel paths let a sturdy manual wheelchair loop the compact temple's exterior and view the facade, but low steps and uneven plastered stone bar entry into the temple itself; sources conflict on whether an accessible toilet exists, so treat toilets as uncertain." },
+    afterDark: { openAfterDark: false, note: "Closes at 17:00-17:30, earlier than the main Angkor temples nearer town, and — being roughly 25 km out — has no evening lighting programme or after-dark access." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.7, scale: 5, count: 7326, url: "https://www.tripadvisor.com/Attraction_Review-g297390-d469308-Reviews-Banteay_Srei-Siem_Reap_Siem_Reap_Province.html", asOf: "2026-07" },
     ],
@@ -251,8 +253,8 @@ export const PLACES_KH_EXT = [
     scamWarnings: [],
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Banteay Srei temple Siem Reap", coords: { lat: 13.5990, lng: 103.9630 },
-    bookHint: "Use your Angkor pass; arrange a tuk-tuk or car for the round trip out of town.", verified: "2026-06",
-    sources: [{ org: "Angkor Enterprise (official)", url: "https://www.angkorenterprise.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    bookHint: "Use your Angkor pass; arrange a tuk-tuk or car for the round trip out of town.", verified: "2026-08",
+    sources: [{ org: "Angkor Enterprise (official)", url: "https://www.angkorenterprise.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Adventures Cambodia", url: "https://adventurescambodia.com/blog/angkor-temple-opening-hours/" }],
   },
   {
     id: "kh-ext-koh-ker", name: "Koh Ker", city: "Preah Vihear", country: "kh",

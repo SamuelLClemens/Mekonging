@@ -211,6 +211,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-doi-suthep", name: "Wat Phra That Doi Suthep", city: "Chiang Mai", country: "th",
     access: { stepFree: "partial", note: "A lift and cable car from the car park bypass the 306-step staircase, and ramps reach the lookout and main terrace, but several ramps are very steep (around 1:4), so a wheelchair user needs a strong helper." },
+    afterDark: { openAfterDark: true, lit: true, note: "Multiple 2026 travel sources describe the grounds and chedi terrace staying open and lit later than the main 06:00-18:00 hours, into the 20:00-21:00 evening — a genuine after-dark option, distinct from the inner viharn, which closes with the earlier daytime hours." },
     externalRatings: [
       { site: "Google", score: 4.7, scale: 5, count: 11828, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.4, scale: 5, count: 7796, url: "https://www.tripadvisor.com/Attraction_Review-g8286767-d456320-Reviews-Wat_Phra_That_Doi_Suthep-Doi_Suthep.html", asOf: "2026-07" },
@@ -226,12 +227,13 @@ export const PLACES_TH_EXT = [
     scamWarnings: ["Agree the songthaew fare up and down before departing; return pricing is sometimes inflated."],
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Wat Phra That Doi Suthep Chiang Mai", coords: { lat: 18.8047, lng: 98.9217 },
-    bookHint: "No booking; take a red songthaew from the old city or Chiang Mai University area.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    bookHint: "No booking; take a red songthaew from the old city or Chiang Mai University area.", verified: "2026-08",
+    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Chiang Mai Traveller", url: "https://www.chiangmaitraveller.com/night-at-doi-suthep/" }],
   },
   {
     id: "th-ext-white-temple", name: "Wat Rong Khun (White Temple)", city: "Chiang Rai", country: "th",
     access: { stepFree: "no", note: "The Bridge of Rebirth and the main ubosot are reached by steps with no ramps and uneven ornate surfaces, so wheelchair users can view and photograph the exterior from ground level but cannot cross the bridge or enter the main building." },
+    afterDark: { openAfterDark: false, note: "Closes at or before dusk (roughly 08:00-17:00/18:00 depending on source) with no visitor access after hours; unlike some other Chiang Rai landmarks it is not illuminated as a night attraction — the separate clock-tower light show in central Chiang Rai, not this temple, is the city's evening spectacle." },
     externalRatings: [
       { site: "Google", score: 4.6, scale: 5, count: 24934, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 7954, url: "https://www.tripadvisor.com/Attraction_Review-g297920-d1368436-Reviews-Wat_Rong_Khun-Chiang_Rai_Chiang_Rai_Province.html", asOf: "2026-07" },
@@ -247,12 +249,13 @@ export const PLACES_TH_EXT = [
     scamWarnings: [],
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Wat Rong Khun White Temple Chiang Rai", coords: { lat: 19.8243, lng: 99.7633 },
-    bookHint: "No booking; buy tickets at the gate. Many Chiang Rai day tours include it.", verified: "2026-06",
+    bookHint: "No booking; buy tickets at the gate. Many Chiang Rai day tours include it.", verified: "2026-08",
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-sukhothai-historical-park", name: "Sukhothai Historical Park", city: "Sukhothai", country: "th",
     access: { stepFree: "partial", note: "The Central Zone has flat paved paths (built for cycling) plus electric buggy hire so the grounds are easy to cross, but individual ruins sit on stepped brick platforms and some connecting paths are dirt, grass or uneven stone." },
+    afterDark: { openAfterDark: false, note: "General daytime hours (roughly 06:30-18:00) close at or before dusk; a separate ticketed Light and Sound show (500-1,200 THB) runs about 19:00-20:00 on Friday-Sunday evenings outside festival season, expanding into a larger multi-night programme during the November Loy Krathong festival — a distinct paid evening event, not general after-dark park access." },
     externalRatings: [
       { site: "Google", score: 4.7, scale: 5, count: 18178, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.7, scale: 5, count: 3491, url: "https://www.tripadvisor.com/Attraction_Review-g303921-d455348-Reviews-Sukhothai_Historical_Park-Sukhothai_Sukhothai_Province.html", asOf: "2026-07" },
@@ -268,12 +271,13 @@ export const PLACES_TH_EXT = [
     scamWarnings: [],
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Sukhothai Historical Park", coords: { lat: 17.0206, lng: 99.7036 },
-    bookHint: "No booking; buy zone tickets at each entrance. Stay in New or Old Sukhothai.", verified: "2026-06",
-    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org/en/list/574" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    bookHint: "No booking; buy zone tickets at each entrance. Stay in New or Old Sukhothai.", verified: "2026-08",
+    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org/en/list/574" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Thailand.go.th", url: "https://thailand.go.th/event-detail/sukhothai-light-and-sound-show" }],
   },
   {
     id: "th-ext-ayutthaya-historical-park", name: "Ayutthaya Historical Park", city: "Ayutthaya", country: "th",
     access: { stepFree: "partial", note: "A wheelchair user (Cory Lee) reports Wat Mahathat has smooth paths and well-placed ramps reaching the famous Buddha head, but many other Ayutthaya ruins have uneven ground and steps up into the temple interiors." },
+    afterDark: { openAfterDark: false, note: "Standard ticketed park hours (roughly 08:00-18:30) close at or before dusk; during the cool season (December-February) the Fine Arts Department runs a separate lighting programme covering Wat Mahathat and several other named temples on Friday-Sunday and public holidays, 16:30-21:30 — a distinct seasonal evening event, not year-round after-dark access." },
     // Removed a Google snapshot that was the wrong entity (4.8 from only 86 reviews — far too
     // few for a UNESCO site with tens of thousands). Falls back to the cited editorial estimate
     // until a correct Historical Park listing is captured.
@@ -288,8 +292,8 @@ export const PLACES_TH_EXT = [
     scamWarnings: ["Settle the hourly tuk-tuk rate and the list of temples before starting."],
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ayutthaya Historical Park Wat Mahathat", coords: { lat: 14.3570, lng: 100.5680 },
-    bookHint: "No booking; buy tickets on site. Trains and minivans run frequently from Bangkok.", verified: "2026-06",
-    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org/en/list/576" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    bookHint: "No booking; buy tickets on site. Trains and minivans run frequently from Bangkok.", verified: "2026-08",
+    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org/en/list/576" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Ayutthaya Temple Guide", url: "https://ayutthayatemple-guide.com/plan-your-visit/ayutthaya-temple-opening-hours/" }],
   },
   {
     id: "th-ext-similan-islands", name: "Similan Islands National Park", city: "Khao Lak", country: "th",
@@ -428,6 +432,7 @@ export const PLACES_TH_EXT = [
 {
     id: "th-ext-damnoen-saduak", name: "Damnoen Saduak Floating Market", city: "Ratchaburi", country: "th",
     access: { stepFree: "partial", note: "Entrance, parking and the flat paved canal-side quays are rollable with assistance, but the narrow uneven wooden alleys are difficult and the iconic longtail/paddle boats are near-impossible to board in a wheelchair." },
+    afterDark: { openAfterDark: false, note: "A morning market that winds down well before evening — sources vary on the exact close (as early as 11:00-12:00, at most by 16:00-17:00), but vendors and boats have consistently packed up long before dusk, with no evening trade." },
     recognition: 'Southwest of Bangkok in Ratchaburi; wooden boats piled with fruit and noodles crowd the narrow khlong canals, boarded from the piers and bank-side walkways lined with vendor shophouses.',
     localName: 'ตลาดน้ำดำเนินสะดวก · Talat Nam Damnoen Saduak',
     categories: ["market", "food"], budgetTier: "low",
@@ -440,7 +445,7 @@ export const PLACES_TH_EXT = [
     scamWarnings: [],
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Damnoen Saduak Floating Market Ratchaburi", coords: { lat: 13.521, lng: 99.957 },
-    bookHint: "No booking to walk; arrange a boat at the pier or via a Bangkok day tour.", verified: "2026-06",
+    bookHint: "No booking to walk; arrange a boat at the pier or via a Bangkok day tour.", verified: "2026-08",
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
@@ -3236,6 +3241,10 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-chatuchak-weekend-market", name: "Chatuchak Weekend Market (JJ Market)", city: "Bangkok", country: "th",
+    // access/afterDark copied verbatim from th-bkk-chatuchak (task #147 audit) — same market,
+    // duplicate listing, so this reuses the already-sourced facts rather than re-sourcing them.
+    access: { stepFree: "partial", toilet: true, note: "Outdoor main lanes are flat and paved and rollable, but the market was not designed for accessibility: many sub-sois (alleys) are narrow, weekend crowds are dense, vendor goods cause occasional obstructions, and some stalls have a step at the door." },
+    afterDark: { openAfterDark: false, note: "Main Saturday-Sunday hours are 09:00-18:00, closing at or before typical Bangkok dusk; the market's own 'some areas Friday evening' exception is a partial, non-standard extension, not a general after-dark opening." },
     recognition: 'By Chatuchak Park in northern Bangkok, right at BTS Mo Chit and MRT Chatuchak Park / Kamphaeng Phet — a vast grid of 15,000+ covered stalls in numbered sections.',
     localName: 'ตลาดนัดจตุจักร · Talat Nat Chatuchak',
     categories: ["market", "food"], budgetTier: "low",
@@ -3249,7 +3258,7 @@ export const PLACES_TH_EXT = [
     scamWarnings: ["A first price quoted to obvious tourists can be high; bargain politely and be ready to walk away.", "Keep bags zipped and to the front in the densest lanes."],
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chatuchak Weekend Market Bangkok", coords: { lat: 13.7997, lng: 100.5505 },
-    bookHint: "No booking; go on a Saturday or Sunday and arrive early.", verified: "2026-07",
+    bookHint: "No booking; go on a Saturday or Sunday and arrive early.", verified: "2026-08",
     sources: [{ org: "Chatuchak Market (official)", url: "https://www.chatuchakmarket.org/opening-times/" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org/Attraction/chatuchak-weekend-market" }],
   },
   {
