@@ -261,11 +261,15 @@ export function placesScreen(arg) {
   renderAreasCard();
   wrap.append(foldedCard('🗂️ Saved offline areas', areasCard, 'placesAreasOpen', false));
 
-  // ---- More map tools: offline search, measure, borders --------------------------
-  // Task #196 Phase 2 slice 2: the same three tools #map's standalone screen has always
-  // offered are now available on every controller (map.js's shared-scope hoist, Phase 2
-  // slice 1) — this builds the Places-side UI for them, reusing #map's own copy and
-  // behaviour verbatim so the two screens read as one feature, not two implementations.
+  // ---- Map search: always visible, never buried ----------------------------------
+  // Reported bug: the map used to only ever show wherever GPS/last-focused-city resolved
+  // to (see the focusSpot() fix, main.js), with no way to look anywhere else short of
+  // leaving Places for Explore. This search is the fix for that half of the report — it is
+  // global (placesCtrl.search() indexes CITY_COORDS + allPlaces() + POOLS + pins across all
+  // four countries, not just the active one, see map.js searchIndex) — so it used to sit
+  // hidden inside the collapsed "More map tools" card below, where nobody browsing near
+  // themselves would ever find it. Promoted here, directly under the map, so "see any place
+  // in any country" is one always-visible search box away rather than a buried toggle.
   const mapSearchResultsP = h('div', { class: 'map-search-results' });
   const MAP_SEARCH_ICON = { City: '🏙️', Place: '📍', Pool: '🏊', Pin: '📌' };
   function runMapSearchP() {
@@ -280,8 +284,19 @@ export function placesScreen(arg) {
         mapSearchResultsP.textContent = ''; mapSearchInputP.value = '';
       } }, `${MAP_SEARCH_ICON[m.type] || '•'}  ${m.name}  ·  ${m.type}`)));
   }
-  const mapSearchInputP = h('input', { type: 'search', class: 'map-search', placeholder: 'Search places, cities, pools, your pins…', 'aria-label': 'Search the map', autocomplete: 'off', oninput: runMapSearchP });
+  const mapSearchInputP = h('input', { type: 'search', class: 'map-search', placeholder: 'Search any city or place, in any country…', 'aria-label': 'Search the map', autocomplete: 'off', oninput: runMapSearchP });
+  // Appended into mapSection (not toolsCard) — lands right after the map/caption, still
+  // above every collapsed card, so it never depends on placesCtrl having resolved yet to be
+  // visible (runMapSearchP itself already no-ops safely until it has).
+  mapSection.append(h('div', { class: 'map-search-wrap', style: 'margin:8px 0 2px' }, [mapSearchInputP, mapSearchResultsP]));
 
+  // ---- More map tools: measure, borders -------------------------------------------
+  // Task #196 Phase 2 slice 2: the same tools #map's standalone screen has always offered
+  // are now available on every controller (map.js's shared-scope hoist, Phase 2 slice 1) —
+  // this builds the Places-side UI for them, reusing #map's own copy and behaviour verbatim
+  // so the two screens read as one feature, not two implementations. Search used to live
+  // here too; it is now always-visible above (see comment there) — only the two tools a
+  // traveller reaches for far less often stay tucked behind this collapsed card.
   let measuringP = false;
   const measureOutP = h('p', { class: 'map-hint', style: 'margin:8px 0 0;display:none' }, '');
   function fmtKmP(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 2 : 1)} km`; }
@@ -310,7 +325,6 @@ export function placesScreen(arg) {
     onchange: (e) => { mapLayersPrefsP.borders = e.target.checked; save(); if (placesCtrl) placesCtrl.setBorders(e.target.checked); } });
 
   const toolsCard = h('div', {}, [
-    h('div', { class: 'map-search-wrap' }, [mapSearchInputP, mapSearchResultsP]),
     h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px' }, [
       measureBtnP,
       h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
