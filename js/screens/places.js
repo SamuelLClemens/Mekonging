@@ -553,11 +553,13 @@ export function placesScreen(arg) {
 
   let currentResults = [];
   // Places is map-first now — the map is the only section that never collapses. The distance
-  // tiers below it default to open for "Right here"/"Nearby" (the immediately actionable ones)
-  // and folded for "Worth a day trip"/"Further afield" — this set holds only the tiers the
-  // traveller has explicitly flipped AWAY from that default, for this visit only (renderList()
-  // rebuilds these <details> on every filter/search change, so without this a keystroke would
-  // undo whatever the traveller just toggled).
+  // tiers below it default to open for "Nearby" (the immediately actionable one — an easy walk
+  // through about an hour's drive, all one bucket; see PLACE_TIERS/tierOf below for why "Right
+  // here" was folded into it rather than kept a separate tier) and folded for "Worth a day
+  // trip"/"Further afield" — this set holds only the tiers the traveller has explicitly flipped
+  // AWAY from that default, for this visit only (renderList() rebuilds these <details> on every
+  // filter/search change, so without this a keystroke would undo whatever the traveller just
+  // toggled).
   const tierToggled = new Set();
 
   // Compare tray — per-visit only (never persisted, never carried between countries/cities):
@@ -675,8 +677,16 @@ export function placesScreen(arg) {
   // "near" means. Nothing is ever hidden for being far — rank/collapse/never-remove, same
   // principle as everywhere else in this app — the Google Maps link at the foot covers
   // whatever this guide does not (yet) curate at all.
+  //
+  // "Right here" (an easy walk, <=2.5 km) used to be its own tier ahead of "Nearby" — per direct
+  // request ("in places there is right here and nearby and they should get merged"), it is now
+  // folded into "Nearby": every walkable place already satisfies withinNear() too (2.5 km is a
+  // ~4-minute estimated drive, nowhere near the 75-minute ceiling), so this is a pure grouping
+  // merge — it changes nothing about which places show or how they are ranked within the tier.
+  // The walk-vs-drive distinction is not lost: every row's own distanceChip (render-utils.js)
+  // already states "X min walk" or "X min by road (est.)" per place, the finer-grained signal
+  // a whole separate section heading was only duplicating.
   const PLACE_TIERS = [
-    ['walk', '🚶 Right here', true],
     ['near', '📍 Nearby', true],
     ['trip', '🚌 Worth a day trip', false],
     ['far', '🗺 Further afield', false],
@@ -684,7 +694,7 @@ export function placesScreen(arg) {
   function tierOf(p) {
     if (!p.coords) return 'near';
     const km = haversineKm(anchor, p.coords);
-    return km <= 2.5 ? 'walk' : withinNear(km) ? 'near' : withinDayTrip(km) ? 'trip' : 'far';
+    return withinNear(km) ? 'near' : withinDayTrip(km) ? 'trip' : 'far';
   }
 
   function renderList() {
