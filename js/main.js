@@ -274,7 +274,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.418.0';
+const APP_VERSION = 'mk-v0.419.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2456,6 +2456,16 @@ function meHubScreen() {
     flatChip('🏅', `Your contributions · ${cLvl.emoji} ${cLvl.title}`, '#contributions'),
   ], true));
 
+  // Everything — its own section, not one more chip lost inside "You & settings" (direct
+  // request: "it should be in a section of its own where the user can reach anything on the
+  // site from this section"). Placed right after "Your stuff" — the second thing on the
+  // screen — so the one-tap doorway to every feature is never more than a glance away.
+  // #everything (built for task #199) already IS the full site index; this section's only
+  // job is to make sure the traveller can actually find the door to it.
+  wrap.append(chipGrp('🗂️', 'Everything', [
+    flatChip('🗂️', 'All features', '#everything'),
+  ], true));
+
   // Plan & prepare — Home's own "Planning" tools, now also one tap from You: previously these
   // three lived on Home only, with no path to them from here at all.
   wrap.append(chipGrp('🧭', 'Plan & prepare', [
@@ -2464,13 +2474,13 @@ function meHubScreen() {
     flatChip('🏷️', 'Bargain helper', '#bargain'),
   ], true));
 
-  // You & settings — identity, preferences, privacy, support, and two more global features
-  // that used to have no direct path from You: Search (already on Home, now here too) and
-  // Export & backup (previously two taps deep inside Settings, now one).
+  // You & settings — identity, preferences, privacy, support, and one more global feature
+  // that used to have no direct path from You: Search (already on Home, now here too).
+  // Export & backup moved up from deep inside Settings to one tap; "All features" moved out
+  // to its own section above rather than being duplicated in both places.
   wrap.append(chipGrp('⚙️', 'You & settings', [
     flatChip('⚙️', 'Settings', '#settings'),
     flatChip('🔎', 'Search everything', '#search'),
-    flatChip('🗂️', 'All features', '#everything'),
     flatChip('📤', 'Export', '#export'),
     flatChip('❤️', 'Give back', '#donate'),
     flatChip('❓', 'Help & FAQ', '#help'),
