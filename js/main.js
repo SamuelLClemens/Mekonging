@@ -274,7 +274,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.417.0';
+const APP_VERSION = 'mk-v0.418.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -764,10 +764,14 @@ export function focusSpot(explicitCountry) {
   const near = gps ? nearestSpotGlobal(gps) : null;
   const focus = focusCitySpot();
   if (explicitCountry && getCountry(explicitCountry)) {
-    // A country was explicitly requested (e.g. "Today in Vietnam"): stay in that country,
-    // but still prefer the focused/located city within it over the capital.
-    if (focus && focus.country === explicitCountry) return { spot: focus, source: 'focus' };
+    // A country was explicitly requested (e.g. "Today in Vietnam"): a live GPS fix inside
+    // that country wins first — the traveller is actually there right now, which always
+    // outranks whatever city they last browsed/set (bug fix: this used to check `focus`
+    // first, so once a traveller had ever browsed, say, Chiang Mai, a later live GPS fix in
+    // Pai was silently ignored — the map kept showing Chiang Mai). Else the focused/located
+    // city within it, else the capital.
     if (near && near.spot && near.spot.country === explicitCountry) return { spot: near.spot, source: 'gps', km: near.km };
+    if (focus && focus.country === explicitCountry) return { spot: focus, source: 'focus' };
     return { spot: defaultSpot(explicitCountry), source: 'default' };
   }
   if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km };
