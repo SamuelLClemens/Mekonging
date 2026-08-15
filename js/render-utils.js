@@ -3,10 +3,11 @@
 // main.js to shrink the file every future edit has to load — pure functions only, no
 // screen logic. See MASTER_BUILD_PROMPT.md / plan history for the extraction rationale.
 
-import { h, fmtDistance, compass, bearing } from './util.js';
+import { h, fmtDistance, compass, bearing, mapsUrl } from './util.js';
 import { store, getLastFix } from './state.js';
 import { spotKey, getCachedAir, refreshAir, getCachedWeather, refreshWeather, nearestSpot } from './weather.js';
 import { online } from './ui-widgets.js';
+import { PHOTOS } from './data/photos.js';
 
 // "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
 // understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
@@ -330,4 +331,69 @@ export function uvTodayBlock(coords, country) {
     refreshWeather(spot).then((r) => { if (r && box.isConnected) paint(r); });
   }
   return box;
+}
+
+// ---- Extracted from main.js (task #205 step 2) -------------------------------
+
+// Self-hosted, openly-licensed identify photo. `item.photo` is a repo-relative
+// path (e.g. 'img/nature/king-cobra.jpg') so it works fully offline once bundled;
+// `item.photoAttribution` credits the source and licence. Until an image is added
+// a placeholder slot makes the gap explicit (photos are filled in a dedicated
+// pass). Images lazy-load so slow/offline connections degrade gracefully.
+export function photoBlock(item, alt) {
+  const reg = (item && item.id && PHOTOS[item.id]) || null;
+  const src = (item && item.photo) || (reg && reg.src);
+  const credit = (item && item.photoAttribution) || (reg && reg.credit);
+  if (src) {
+    return h('figure', { class: 'id-photo' }, [
+      h('img', { src, alt: alt || '', loading: 'lazy', decoding: 'async' }),
+      credit ? h('figcaption', { class: 'muted' }, credit) : null,
+    ]);
+  }
+  return h('div', { class: 'id-photo placeholder' }, [
+    h('span', { class: 'id-photo-emoji' }, (item && item.emoji) || '📷'),
+    h('span', { class: 'muted' }, 'Photo coming soon'),
+  ]);
+}
+
+// Deep-links out to an external ratings/booking site (or a search for the place on that
+// site when no direct URL is known). Split out of the "Ratings across the web" cluster
+// (extStars/extRow/externalRatingsCard, main.js) because this — like sourceHref below —
+// is needed wherever a citation appears, not only on the ratings card itself.
+export function extUrl(ext, p) {
+  if (ext && ext.url) return ext.url;
+  const q = encodeURIComponent(`${p.name} ${p.city || ''}`.trim());
+  const site = ((ext && ext.site) || '').toLowerCase();
+  if (site.includes('booking')) return `https://www.booking.com/searchresults.html?ss=${q}`;
+  if (site.includes('agoda')) return `https://www.agoda.com/search?q=${q}`;
+  if (site.includes('tripadvisor')) return `https://www.tripadvisor.com/Search?q=${q}`;
+  if (site.includes('trip.com') || site === 'trip') return `https://www.trip.com/hotels/list?searchword=${q}`;
+  if (site.includes('google')) return mapsUrl(p);
+  return `https://www.google.com/search?q=${q}%20${encodeURIComponent((ext && ext.site) || '')}`;
+}
+
+// A citation is only worth linking when it points somewhere specific. A bare review-site
+// homepage (tripadvisor.com with no path) dumps the traveller on the front page, so when we
+// know the place we turn it into a search for that place; otherwise we show the name as plain
+// text rather than a useless link. Deep links (UNESCO listings, official sites) stay clickable.
+export function sourceHref(s, place) {
+  const url = s && s.url;
+  if (!url) return null;
+  const m = /^https?:\/\/[^/]+(\/[^?#]*)?/i.exec(url);
+  const path = (m && m[1] ? m[1] : '').replace(/\/+$/, '');
+  const isReviewSite = /tripadvisor|booking|agoda|trip\.com|google/i.test(url);
+  if (isReviewSite && !path) return place ? extUrl({ site: s.org }, place) : null;
+  return url;
+}
+export function sourcesNote(sources, verified, place) {
+  const kids = ['Sources: '];
+  sources.forEach((s, i) => {
+    if (i) kids.push(', ');
+    const href = sourceHref(s, place);
+    kids.push(href
+      ? h('a', { class: 'src-link', href, target: '_blank', rel: 'noopener' }, s.org)
+      : s.org);
+  });
+  kids.push(`${verified ? ` · verified ${verified}` : ''}. Guidance only — verify locally.`);
+  return h('p', { class: 'disclaimer' }, kids);
 }
