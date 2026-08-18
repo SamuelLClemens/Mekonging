@@ -146,6 +146,14 @@ export const FOOD_VI = {
       "veg": "A vegetarian 'hu tieu chay' with mushroom broth and tofu is reasonably available, especially in the south. Ask 'chay'.",
       "spice": "mild", "price": { "low": 30000, "high": 80000, "currency": "VND" },
       "whereToFind": "Southern Vietnam, especially Saigon and the Mekong Delta (My Tho is famous for hu tieu dai).",
-      "sources": ["Wikipedia", "Local Vietnam", "Viet World Kitchen"] }
+      "sources": ["Wikipedia", "Local Vietnam", "Viet World Kitchen"] },
+    { "id": "vi-bun-dau-mam-tom", "name": "Bun Dau Mam Tom", "localName": "bún đậu mắm tôm", "roman": "boon dow mum tom", "category": "noodle",
+      "description": "One of Hanoi's most distinctive and polarising-smelling specialities: rice vermicelli, fried tofu and boiled pork or pork belly with herbs, dipped in fermented shrimp paste whipped with lime and chilli.",
+      "ingredients": ["rice vermicelli", "fried tofu", "boiled pork belly", "fermented shrimp paste", "lime", "chilli", "herbs", "cucumber"],
+      "allergens": ["shellfish", "fish", "soy"],
+      "veg": "Not vegetarian-friendly as standardly served — the dip itself is a shellfish product; ask for a soy- or fish-sauce dip as a substitute, and note the pork content too.",
+      "spice": "mild", "price": { "low": 25000, "high": 100000, "currency": "VND" },
+      "whereToFind": "A Hanoi speciality found at dedicated bun dau stalls and restaurants across the city, most classically in the Old Quarter.",
+      "sources": ["BestPrice Travel", "iTourVN"] }
   ]
 };
