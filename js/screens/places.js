@@ -9,31 +9,49 @@
 // see the task's own note on trusting the verified call graph over stale classification),
 // placeCard/placeQuickRow, and the saveSheet/collRow/tripVisitSheet action sheets.
 // placeScreen() (the place-detail page) and its detail-only helper cluster (market/beach info
-// cards, external ratings, orientation+access, transit, local secrets, photos) are a
-// deliberately separate, higher-risk step (step 5) — see task #205's description for the full
-// ordered sequence. resolveItem, formatMarketDays and jellyInSeason stay in main.js for now
-// (their bigger detail-cluster callers haven't moved yet) and are reverse-imported below;
-// they relocate here too once step 5 lands, and these three imports drop out then.
+// cards, external ratings, orientation+access, transit, local secrets, photos) landed in step 5
+// (task #205) — re-verified against a fresh call graph rather than trusting this file's own
+// step-4 labels, per the task's own warning that earlier passes had already been wrong at least
+// once. resolveItem, formatMarketDays, jellyInSeason and placePhotoKeys are now natively
+// defined below rather than reverse-imported from main.js; formatMonths, SEV_LABEL,
+// fmtReportDate, addPlaceSecret and placeScreen itself are now exported FROM here because
+// main.js still has genuine external callers for each (mosquito-peak months, the Travel Circle
+// inbox/share-detail screens, and the #place router case respectively) — see main.js's own
+// reverse-import of this module for the full list.
 import {
   store, save, getPlaceData, getLastFix, setLastFix, getMyStay, setMyStay, clearMyStay,
   getSavedAreas, addSavedArea, removeSavedArea, addPlaceVisit, removePlaceVisit,
   toggleFavorite, isFavorite, createCollection, togglePlaceInCollection, collectionsForItem,
+  setPlaceField, deletePin, ensureMe, getJellyReports, addJellyReport, getPin, todayKey,
 } from '../state.js';
-import { getActiveCountry, setActiveCountry, setLiveCleanup } from '../app-state.js';
-import { h, geolocate, bearing, compass, fmtDistance, titleCase, mapsUrl } from '../util.js';
+import { getActiveCountry, setActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
+import {
+  h, geolocate, bearing, compass, fmtDistance, titleCase, mapsUrl, mapsDirUrl, money,
+} from '../util.js';
 import {
   haversineKm, distanceChip, withinNear, withinDayTrip, attrTag, starsStr, isMarket, isBeach,
   placeBucket, FAMILY_META, catColor, catTag, tierColor, swatch, citySlug, PRICE_TIER_LABEL,
   tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, marketOpenDays, personalScore,
-  CATEGORY_FAMILIES,
+  CATEGORY_FAMILIES, photoBlock, seaAgo, airBlock, uvTodayBlock, extUrl, sourcesNote,
+  fmtTemp, fmtWind,
 } from '../render-utils.js';
-import { collapsibleCard, openModal } from '../ui-widgets.js';
-import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces } from '../data/regions.js';
+import { collapsibleCard, openModal, readAloudBar, confirmAction, online } from '../ui-widgets.js';
+import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
+import { getAccessibility } from '../data/accessibility.js';
+import { CROSSINGS } from '../data/borders.js';
+import { TRANSPORT_HUBS, TRANSIT_SOURCES } from '../data/transit.js';
+import { putBlob, delBlob } from '../idb.js';
+import { shareOrDownload } from '../exporter.js';
+import {
+  nearestSpot, spotKey, wmo, getCachedWeather, refreshWeather, getCachedMarine, refreshMarine,
+} from '../weather.js';
+import { seedWeatherKey } from './weather.js';
+import { shareUrl, encodeShare } from '../social.js';
 import {
   go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity, oneTimeHint,
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
-  placePhotoKeys, priceLine, stopDateLabel, resolveItem, formatMarketDays, jellyInSeason,
-  chipIcon,
+  priceLine, stopDateLabel, shareButton, profileFitCard, phraseSlug, exportOnePlaceReviewHtml,
+  setBlobThumb, scriptLang, mapsSearch, kmLabel, daysUntilISO, chipIcon,
 } from '../main.js';
 
 // Closes the tail this guide does not (yet) curate: a live Google Maps search centred on
@@ -852,9 +870,9 @@ function colorKeyCard() {
   return wrap;
 }
 
-// Small chip for cards/lists: green "On today" when open now, else the day pattern. Its
-// formatMarketDays/marketOpenDays dependency stays in main.js for now, alongside the bigger
-// marketInfoCard detail card that hasn't moved yet (see the reverse-import above).
+// Small chip for cards/lists: green "On today" when open now, else the day pattern. Reads the
+// same formatMarketDays/marketOpenDays as the bigger marketInfoCard detail card further below
+// (step 5) — both now module-native, so the two can never drift out of sync.
 function marketChip(p) {
   if (!isMarket(p)) return null;
   const d = marketOpenDays(p);
@@ -866,7 +884,7 @@ function marketChip(p) {
 
 // Small card/list chip: warns first about jellyfish season, else shows lifeguard status.
 // Returns null for a bare beach with no structured info and no active warning (no clutter).
-// jellyInSeason stays in main.js for now, alongside the bigger beach detail cluster.
+// jellyInSeason is module-native (step 5), same as the bigger beach detail cluster below.
 function beachChip(p) {
   if (!isBeach(p)) return null;
   const nowM = new Date().getMonth() + 1;
@@ -1070,4 +1088,778 @@ export function tripVisitSheet(placeId) {
   sheet.append(body);
   backdrop.append(sheet);
   close = openModal(backdrop);
+}
+
+// ============================================================================
+// Step 5 (task #205): placeScreen() — the place-detail page — and its detail-only
+// helper cluster (market/beach info, external ratings, orientation+access, transit,
+// local secrets, photos). Moved verbatim from main.js, re-verified against a fresh
+// call graph rather than the earlier scoping pass's labels (several of which had
+// already drifted — see this file's own header note). placeScreen, resolveItem,
+// formatMarketDays, jellyInSeason and placePhotoKeys were already exported (main.js
+// reverse-imported some of them); formatMonths, SEV_LABEL, fmtReportDate and
+// addPlaceSecret gained a first-time export here because main.js has real external
+// callers for each (mosquito-peak months on the danger screen; the Travel Circle
+// share-detail + inbox screens for jelly/secret previews) confirmed via a fresh grep,
+// not by trusting this cluster's original "detail-only" classification.
+// ============================================================================
+
+function ratingBlock(p) {
+  return h('div', { class: 'rating-block' }, [
+    h('span', { class: 'stars-static' }, starsStr(p.rating)),
+    h('span', { class: 'muted' }, ` ${Number(p.rating).toFixed(1)} · editorial estimate from ${(p.reviewSources || []).join(', ') || 'multiple public sources'}, not a live score`),
+    h('a', { class: 'rev-link', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'See live reviews'),
+  ]);
+}
+
+// Resolve a saved item id to a renderable place-like object: a curated place, or a
+// user pin normalised into the same shape.
+export function resolveItem(id) {
+  if (typeof id === 'string' && id.startsWith('pin-')) {
+    const pin = getPin(id);
+    if (!pin) return null;
+    return {
+      id: pin.id, name: pin.name, city: 'Your pin', country: '', isPin: true,
+      categories: pin.tags || [], budgetTier: 'any', blurb: pin.note || 'A place you marked.',
+      priceRange: { low: null, high: null, currency: '' }, coords: pin.coords || null, mapQuery: pin.name,
+    };
+  }
+  return getPlace(id);
+}
+
+// ---- MARKETS: day-of-week awareness -----------------------------------------
+// Many markets run only on certain days (weekend walking streets, Fri–Sun floating
+// markets). marketDays is an array of weekday indices (0=Sun … 6=Sat); absent/empty
+// means daily. These helpers drive the "on today?" line, card chip and ranking so a
+// Sunday-only market is not surfaced as "near you now" on a Tuesday.
+const DOW_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export function formatMarketDays(p) {
+  const d = marketOpenDays(p);
+  if (!d) return 'Daily';
+  if (d.length === 2 && d.includes(0) && d.includes(6)) return 'Weekends (Sat & Sun)';
+  if (d.join(',') === '0,5,6') return 'Fri–Sun';                 // Fri, Sat, Sun (Sun wraps to index 0)
+  let contig = true;
+  for (let i = 1; i < d.length; i++) if (d[i] !== d[i - 1] + 1) contig = false;
+  if (contig && d.length > 2) return `${DOW_SHORT[d[0]]}–${DOW_SHORT[d[d.length - 1]]}`;
+  return d.map((n) => DOW_SHORT[n]).join(d.length > 2 ? ', ' : ' & ');
+}
+// Human "next open" hint from today: 'tomorrow' or the weekday name; null when daily.
+function nextMarketDay(p, dow) {
+  const d = marketOpenDays(p);
+  if (!d) return null;
+  for (let i = 1; i <= 7; i++) { const nd = (dow + i) % 7; if (d.includes(nd)) return i === 1 ? 'tomorrow' : DOW_SHORT[nd]; }
+  return null;
+}
+// Detail-screen block: market type, what they sell, the days/hours and a live on-today line.
+function marketInfoCard(p) {
+  if (!isMarket(p)) return null;
+  const card = h('div', { class: 'card market-info' }, [h('h2', {}, '🛍️ Market')]);
+  if (p.marketType) card.append(h('p', { class: 'market-type' }, h('strong', {}, p.marketType)));
+  if (p.sells) card.append(h('p', {}, [h('strong', {}, 'What they sell: '), h('span', {}, p.sells)]));
+  card.append(h('p', {}, [h('strong', {}, 'Runs: '), h('span', {}, formatMarketDays(p) + (p.hours ? ` · ${p.hours}` : ''))]));
+  const d = marketOpenDays(p);
+  if (!d) { card.append(h('p', { class: 'mkt-status on' }, '✅ Open daily')); return card; }
+  const on = d.includes(new Date().getDay());
+  const nxt = nextMarketDay(p, new Date().getDay());
+  card.append(h('p', { class: `mkt-status ${on ? 'on' : 'off'}` },
+    on ? '✅ On today' : `⏳ Not on today${nxt ? ` — next on ${titleCase(nxt)}` : ''}`));
+  return card;
+}
+
+// --- Beaches, lifeguards & jellyfish safety ----------------------------------
+// Beaches are ordinary map places (editable review, save, share) that additionally
+// carry optional safety fields: lifeguard status, a swimming-conditions note, and a
+// seasonal jellyfish window. No real-time jellyfish feed exists for the region, so the
+// month window is HONEST SEASONAL GUIDANCE — the card says so and points to the flags.
+const MONTH_SHORT = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Sorted unique 1-12 month list of elevated jellyfish risk, or null when none is set.
+function jellyMonths(p) {
+  const m = Array.isArray(p.jellyfishMonths) ? p.jellyfishMonths.filter((n) => Number.isInteger(n) && n >= 1 && n <= 12) : [];
+  return m.length ? [...new Set(m)].sort((a, b) => a - b) : null;
+}
+export function jellyInSeason(p, month) { const m = jellyMonths(p); return !!(m && m.includes(month)); }
+// Compact "Jul–Oct" / "Apr, Jun & Aug" from a sorted month array. Also reused by the danger
+// screen's mosquito-peak card in main.js (reverse-imported from there), not just beaches.
+export function formatMonths(m) {
+  if (!m || !m.length) return '';
+  let contig = true;
+  for (let i = 1; i < m.length; i++) if (m[i] !== m[i - 1] + 1) contig = false;
+  if (contig && m.length > 2) return `${MONTH_SHORT[m[0]]}–${MONTH_SHORT[m[m.length - 1]]}`;
+  return m.map((n) => MONTH_SHORT[n]).join(m.length > 2 ? ', ' : ' & ');
+}
+const LIFEGUARD_LABEL = {
+  yes: ['✅', 'Lifeguards patrol this beach', 'on'],
+  seasonal: ['⚠️', 'Lifeguards / flags in season — check for a red flag before you swim', 'off'],
+  no: ['❌', 'No lifeguards — swim with extra care and never alone', 'off'],
+  unknown: ['ℹ️', 'No patrol information — treat as unpatrolled', 'muted'],
+};
+// Wave-height descriptor for swimming: [label, severity class].
+function waveDesc(m) {
+  if (m == null) return null;
+  if (m < 0.3) return ['glassy calm', 'on'];
+  if (m < 0.6) return ['calm', 'on'];
+  if (m < 1.25) return ['moderate — take care', 'off'];
+  if (m < 2.5) return ['rough — strong swimmers only', 'off'];
+  return ['very rough — stay out of the water', 'off'];
+}
+// Live sea-state sub-block for a beach: significant wave height + water temperature from
+// the Open-Meteo Marine API, painted from cache immediately and refreshed when online.
+// Honest offline fallback so the beach card never blocks on the network.
+function beachSeaBlock(coords) {
+  const box = h('div', { class: 'beach-sea' });
+  function paint(rec, loading) {
+    box.innerHTML = '';
+    if (rec && rec.waveHeight != null) {
+      const wd = waveDesc(rec.waveHeight);
+      const bits = [`🌊 Sea now: waves ${rec.waveHeight.toFixed(1)} m`];
+      if (wd) bits.push(`(${wd[0]})`);
+      if (rec.seaTemp != null) bits.push(`· water ${Math.round(rec.seaTemp)}°C`);
+      box.append(h('p', { class: `beach-sea-line ${wd ? wd[1] : ''}` }, bits.join(' ')));
+      box.append(h('p', { class: 'muted small' }, `Live sea state · updated ${seaAgo(rec.fetchedAt)}${online() ? '' : ' · offline'}`));
+    } else {
+      box.append(h('p', { class: 'muted small' }, loading ? '🌊 Checking sea conditions…' : '🌊 Live sea conditions load when you are online.'));
+    }
+  }
+  const cached = getCachedMarine(coords);
+  paint(cached, !cached && online());
+  if (online()) {
+    refreshMarine(coords).then((r) => { if ((location.hash || '').startsWith('#place') && r) paint(r, false); });
+  }
+  return box;
+}
+// Community jellyfish sightings — the honest "updated on wifi" layer: no real-time feed
+// exists, but travellers can record and SHARE sightings through the backendless Travel
+// Circle, and received ones pin to the beach. Reports live on placeData[id].jellyReports.
+// Exported: the Travel Circle share-detail and inbox screens (main.js) render a jelly-sighting
+// preview with this same dictionary, reverse-imported from here.
+export const SEV_LABEL = { seen: 'Jellyfish seen', lots: 'Lots of jellyfish', stung: 'Someone was stung' };
+function daysSinceISO(iso) { const n = -daysUntilISO(iso); return Number.isFinite(n) ? n : 9999; }
+// Exported for the same Travel Circle share-detail/inbox reason as SEV_LABEL above.
+export function fmtReportDate(iso) {
+  const ds = daysSinceISO(iso);
+  if (ds <= 0) return 'today';
+  if (ds === 1) return 'yesterday';
+  if (ds < 30) return `${ds} days ago`;
+  return iso;
+}
+function jellyReportsBlock(p) {
+  const wrap = h('div', { class: 'jelly-reports' });
+  const list = h('div', {});
+  wrap.append(list);
+  function render() {
+    list.innerHTML = '';
+    const reps = getJellyReports(p.id);
+    const recent = reps.filter((r) => daysSinceISO(r.d) <= 60).sort((a, b) => daysSinceISO(a.d) - daysSinceISO(b.d));
+    if (recent.length) {
+      list.append(h('p', { class: 'jelly-head' }, `🪼 Traveller sightings — ${recent.length} in the last 60 days`));
+      recent.slice(0, 4).forEach((r) => {
+        const who = r.by === 'You' ? 'you' : (r.by || 'a traveller');
+        const when = fmtReportDate(r.d);
+        list.append(h('div', { class: 'list-note' },
+          `${when.charAt(0).toUpperCase()}${when.slice(1)} · ${SEV_LABEL[r.sev] || SEV_LABEL.seen}${r.note ? ` — ${r.note}` : ''} · ${who}`));
+      });
+    } else {
+      list.append(h('p', { class: 'muted small' }, reps.length
+        ? 'No sightings in the last 60 days (older reports are kept in your records).'
+        : 'No traveller sightings reported here yet. If you see jellyfish, add a report to warn others.'));
+    }
+    let sev = 'seen';
+    const note = h('input', { type: 'text', maxlength: '160', class: 'jelly-note-input', placeholder: 'Optional: where / how many (e.g. north end, small stingers)' });
+    const sevRow = h('div', { class: 'sev-row' });
+    [['seen', 'Seen'], ['lots', 'Lots'], ['stung', 'Stung']].forEach(([k, lbl]) => {
+      sevRow.append(h('button', {
+        class: 'chip', dataset: { k }, 'aria-pressed': k === sev ? 'true' : 'false',
+        onclick: () => { sev = k; sevRow.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.k === sev ? 'true' : 'false')); },
+      }, lbl));
+    });
+    list.append(h('details', { class: 'jelly-form' }, [
+      h('summary', {}, '＋ Report a jellyfish sighting'),
+      h('p', { class: 'muted small' }, 'Saved on your device and dated today. Share it below so other travellers see it — nothing is sent to any server.'),
+      sevRow, note,
+      h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => {
+        addJellyReport(p.id, { d: todayKey(), sev, note: (note.value || '').trim().slice(0, 160), by: 'You' });
+        render();
+      } }, 'Save sighting'),
+    ]));
+    if (reps.length) {
+      list.append(shareButton('📤 Share the latest sighting', `Jellyfish sighting — ${p.name}`,
+        () => { const r = getJellyReports(p.id).slice().sort((a, b) => daysSinceISO(a.d) - daysSinceISO(b.d))[0]; return shareUrl('in', encodeShare('jelly', { id: p.id, n: p.name, d: r.d, sev: r.sev, note: r.note }, ensureMe())); }));
+    }
+  }
+  render();
+  return wrap;
+}
+
+// One-line "can I swim here today?" synthesis from everything the app knows: seasonal
+// jellyfish risk, recent traveller sightings, lifeguard status and the cached sea state.
+// A summary only — the detailed blocks below (and the live sea state) always carry the
+// full picture. Red = take real care; amber = caution; green = no specific warning now.
+function swimVerdict(p) {
+  if (!isBeach(p)) return null;
+  const nowM = new Date().getMonth() + 1;
+  const reasons = [];
+  let sev = 0;
+  if (jellyInSeason(p, nowM)) { reasons.push('jellyfish season'); sev = Math.max(sev, 1); }
+  const reps = getJellyReports(p.id) || [];
+  if (reps.some((r) => r.sev === 'stung' && daysSinceISO(r.d) <= 14)) { reasons.push('a sting reported in the last two weeks'); sev = 2; }
+  else if (reps.some((r) => daysSinceISO(r.d) <= 14)) { reasons.push('recent traveller sightings'); sev = Math.max(sev, 1); }
+  if (p.lifeguard === 'no') { reasons.push('no lifeguards'); sev = Math.max(sev, 1); }
+  const sea = p.coords ? getCachedMarine(p.coords) : null;
+  if (sea && sea.waveHeight != null) {
+    if (sea.waveHeight >= 2.5) { reasons.push('very rough water now'); sev = 2; }
+    else if (sea.waveHeight >= 1.25) { reasons.push('choppy water now'); sev = Math.max(sev, 1); }
+  }
+  const label = sev === 2 ? ['🔴', 'Take real care in the water today', 'off']
+    : sev === 1 ? ['🟠', 'Swim with caution today', 'off']
+    : ['🟢', 'No specific warnings right now — always obey the beach flags', 'on'];
+  const box = h('div', {});
+  box.append(h('p', { class: `swim-verdict ${label[2]}` }, `${label[0]} ${label[1]}`));
+  if (reasons.length) box.append(h('p', { class: 'muted small' }, `Because: ${reasons.join('; ')}.`));
+  return box;
+}
+
+// Detail-screen block: lifeguard status, swimming conditions, live sea state (waves /
+// water temperature), seasonal jellyfish risk ("in season this month?"), and first aid.
+function beachInfoCard(p) {
+  if (!isBeach(p)) return null;
+  const card = h('div', { class: 'card beach-info' }, [h('h2', {}, '🏖️ Beach & swimming')]);
+  const sv = swimVerdict(p); if (sv) card.append(sv);
+  if (p.lifeguard) {
+    const lg = LIFEGUARD_LABEL[p.lifeguard] || LIFEGUARD_LABEL.unknown;
+    card.append(h('p', { class: `beach-lg ${lg[2]}` }, `${lg[0]} ${lg[1]}`));
+  } else {
+    card.append(h('p', { class: 'muted' }, 'Check on arrival for a lifeguard flag system.'));
+  }
+  if (p.swim) card.append(h('p', {}, [h('strong', {}, 'Conditions: '), h('span', {}, p.swim)]));
+  if (p.coords && p.coords.lat != null && p.coords.lng != null) card.append(beachSeaBlock(p.coords));
+  const m = jellyMonths(p);
+  if (m) {
+    const on = m.includes(new Date().getMonth() + 1);
+    card.append(h('p', { class: `beach-jelly ${on ? 'on' : 'off'}` },
+      on ? `🪼 Jellyfish: elevated risk this month (peak season ${formatMonths(m)})`
+         : `🪼 Jellyfish: lower risk now — peak season is ${formatMonths(m)}`));
+  }
+  if (p.jellyfish) card.append(h('p', { class: 'muted' }, p.jellyfish));
+  card.append(jellyReportsBlock(p));
+  card.append(h('p', { class: 'muted small' }, 'No real-time jellyfish warning exists anywhere in the region. Always obey the beach flags — a red flag means do not swim — and ask lifeguards or locals about recent sightings.'));
+  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#danger') }, '🩹 Sting & marine first aid'));
+  return card;
+}
+
+// Ratings + prices from across the web. Snapshots are curated (each stamped with the
+// month it was checked) so they work offline; every row and the compare buttons
+// deep-link out to the live site. No reviews are scraped.
+function extStars(score, scale) { const s = (Number(score) / (Number(scale) || 5)) * 5; return isNaN(s) ? NaN : Math.round(s * 10) / 10; }
+function extRow(label, right, href) {
+  return h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
+    h('span', { style: 'font-weight:600' }, label),
+    href ? h('a', { class: 'rev-link', href, target: '_blank', rel: 'noopener' }, right) : h('span', { class: 'muted' }, right),
+  ]);
+}
+function externalRatingsCard(p) {
+  const ext = Array.isArray(p.externalRatings) ? p.externalRatings : [];
+  const prices = Array.isArray(p.externalPrices) ? p.externalPrices : [];
+  const own = (getPlaceData(p.id).rating) || 0;
+  const isStay = !!p.stayType;
+  if (!ext.length && !prices.length && !isStay) return null;
+
+  const card = h('div', { class: 'card' }, [h('h2', {}, 'Across the web')]);
+
+  if (ext.length || own > 0) {
+    // Blend the sites' scores weighted by review volume, so a site with 50,000 reviews
+    // outweighs one with 86; fall back to a simple mean when no counts are present.
+    const scored = ext.map((e) => ({ star: extStars(e.score, e.scale), w: Number(e.count) || 0 })).filter((x) => !isNaN(x.star));
+    const totalW = scored.reduce((a, x) => a + x.w, 0);
+    const blended = !scored.length ? 0
+      : totalW > 0
+        ? scored.reduce((a, x) => a + x.star * (x.w || 1), 0) / scored.reduce((a, x) => a + (x.w || 1), 0)
+        : scored.reduce((a, x) => a + x.star, 0) / scored.length;
+    const overall = own > 0 ? own : blended;
+    if (overall > 0) {
+      const how = own > 0 ? ' · your rating counts first'
+        : scored.length > 1 ? (totalW > 0 ? ' · weighted by review volume' : ' · averaged across sites') : '';
+      card.append(h('div', { class: 'rating-block' }, [
+        h('span', { class: 'stars-static' }, starsStr(overall)),
+        h('span', { class: 'muted' }, ` ${overall.toFixed(1)} overall${how}`),
+      ]));
+    }
+    if (own > 0) card.append(extRow('You', `${starsStr(own)} ${own.toFixed(1)}`));
+    ext.forEach((e) => {
+      const st = extStars(e.score, e.scale);
+      const cnt = e.count ? ` · ${Number(e.count).toLocaleString()} reviews` : '';
+      const as = e.asOf ? ` · ${e.asOf}` : '';
+      card.append(extRow(e.site, `${e.score}/${e.scale || 5}${isNaN(st) ? '' : ` (${st.toFixed(1)}★)`}${cnt}${as} ›`, extUrl(e, p)));
+    });
+  }
+
+  if (prices.length) {
+    card.append(h('h3', {}, 'Prices'));
+    prices.forEach((pr) => {
+      const from = pr.from != null ? `from ${money(pr.from, pr.currency) || (pr.from + ' ' + (pr.currency || ''))}` : 'Check price';
+      card.append(extRow(pr.site, `${from}${pr.asOf ? ` · ${pr.asOf}` : ''} ›`, extUrl(pr, p)));
+    });
+  }
+
+  const sites = isStay ? ['Booking', 'Agoda', 'Trip.com', 'Google'] : ['TripAdvisor', 'Google'];
+  card.append(h('h3', {}, isStay ? 'Compare & book' : 'Compare live'));
+  card.append(h('div', { class: 'chips' }, sites.map((site) =>
+    h('a', { class: 'chip', href: extUrl({ site }, p), target: '_blank', rel: 'noopener' }, site))));
+  card.append(h('p', { class: 'disclaimer' }, 'Scores and prices are snapshots from the dates shown — tap a site for live numbers and to book. Aggregated from public sources; no reviews are scraped.'));
+  return card;
+}
+
+// Compact current-conditions card for a place, read from the NEAREST listed weather
+// city (weather here is regional, not pinpoint — the distance is shown). Cached-first
+// so it works offline; refreshes once in the background when online.
+function weatherNearbyCard(p) {
+  if (!p.coords || p.coords.lat == null || p.coords.lng == null) return null;
+  const spot = nearestSpot(p.coords, p.country);
+  if (!spot) return null;
+  const km = haversineKm(p.coords, { lat: spot.lat, lng: spot.lng });
+  const key = spotKey(spot);
+
+  const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Weather nearby')]);
+  const body = h('div', {});
+  card.append(body);
+
+  function paintWx(rec, loading) {
+    body.innerHTML = '';
+    if (rec && rec.current) {
+      const [clabel, cemoji] = wmo(rec.current.code);
+      body.append(h('div', { class: 'row-between' }, [
+        h('span', { style: 'font-size:34px;line-height:1' }, cemoji),
+        h('div', { style: 'text-align:right' }, [
+          h('div', { style: 'font-size:26px;font-weight:800' }, fmtTemp(rec.current.temp)),
+          h('div', { class: 'muted' }, clabel),
+        ]),
+      ]));
+      body.append(h('div', { class: 'muted', style: 'margin-top:6px' },
+        `Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`));
+    } else {
+      body.append(h('p', { class: 'muted', style: 'margin:0' },
+        loading ? 'Fetching the latest forecast…' : 'No saved forecast yet — tap below, then Refresh while online.'));
+    }
+  }
+
+  const cached = getCachedWeather(key);
+  paintWx(cached, !cached && online());
+  if (!cached && online()) {
+    refreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
+  }
+
+  card.append(airBlock(spot, { compact: true }));
+  card.append(uvTodayBlock(p.coords, p.country));
+  card.append(
+    h('p', { class: 'muted', style: 'margin:6px 0 0' },
+      `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { seedWeatherKey(key); go('#weather'); } }, 'See full forecast'),
+  );
+  return card;
+}
+
+// "Find it" orientation block for place detail — the fix for "a name alone does not tell
+// me I am in the right place." Shows the local name/script, a one-line "how you will know
+// you are there" recognition cue, distance + direction from the traveller, and an inline
+// offline mini-map with the pin (tap the ⊕ to see yourself relative to it), plus a direct
+// "directions" hand-off. Every part is optional and appears only when data exists.
+function orientationCard(p) {
+  if (!p || (!p.coords && !p.recognition && !p.localName)) return null;
+  const card = h('div', { class: 'card' }, [h('h2', {}, '📍 Find it')]);
+  if (p.localName) card.append(h('p', { class: 'local-name', lang: scriptLang(p.country) }, p.localName));
+  if (p.recognition) card.append(h('div', { class: 'recognition' }, [
+    h('strong', {}, 'How you will know you are there — '), h('span', {}, p.recognition),
+  ]));
+  const areaBits = [p.city ? `In ${p.city}` : null].filter(Boolean);
+  if (areaBits.length) card.append(h('p', { class: 'muted', style: 'margin:6px 0 2px' }, areaBits.join(' · ')));
+  const dchip = distanceChip(p);
+  if (dchip) card.append(h('div', { style: 'margin:2px 0 8px' }, dchip));
+  if (p.coords) {
+    const mini = h('div', { class: 'mini-map', style: 'height:210px;border-radius:14px;overflow:hidden;position:relative' });
+    card.append(mini);
+    import('../map.js').then((m) => m.initMap(mini, {
+      places: [p],
+      onOpen: () => { /* already on this place */ },
+      onLocate: (f) => setLastFix(f),
+    })).then((c) => {
+      // dispose the mini-map when leaving the screen (chain with any existing cleanup).
+      const prev = getLiveCleanup();
+      setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } });
+    }).catch(() => { mini.remove(); });
+    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsDirUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
+  }
+  return card;
+}
+
+// Per-place accessibility: shows the recorded step-free/toilet tag if present; otherwise,
+// for a traveller with a mobility need, points honestly to the country guide.
+function placeAccessBlock(p) {
+  const a = p.access;
+  if (a && (a.stepFree || a.note)) {
+    const LBL = { yes: '♿ Step-free access', partial: '♿ Partly step-free', no: '⚠️ Not step-free' };
+    const box = h('div', { class: 'card access-focus' });
+    box.append(h('h3', { style: 'margin-top:0' }, LBL[a.stepFree] || '♿ Accessibility'));
+    if (a.note) box.append(h('p', { class: 'muted', style: 'margin:4px 0' }, a.note));
+    if (a.toilet) box.append(h('div', { class: 'list-note' }, 'Accessible toilet reported on site.'));
+    box.append(h('p', { class: 'tiny muted', style: 'margin-bottom:0' }, 'Reported accessibility — always verify on the day.'));
+    return box;
+  }
+  const needMobility = (store.profile.prefs.access || []).includes('mobility');
+  if (needMobility && !p.isPin) {
+    const cc = p.country || (p.id || '').split('-')[0];
+    if (getAccessibility(cc)) {
+      const box = h('div', { class: 'card' });
+      box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, 'Step-free access here is not recorded yet.'));
+      box.append(h('button', { class: 'btn ghost block', onclick: () => go(`#access-${cc}`) }, '♿ See the country accessibility guide'));
+      return box;
+    }
+  }
+  return null;
+}
+
+// ---- TRANSPORT: getting to & from a place ----------------------------------
+// Per-place connections computed from coordinates: the nearest airport, train, bus and
+// ferry hub (from TRANSPORT_HUBS) plus the nearest cross-border crossing (from CROSSINGS).
+// Distances are great-circle from the place; the map links resolve each hub by NAME, so
+// door-to-door directions stay accurate even where a hub coordinate is only approximate.
+const HUB_TYPES = [
+  { type: 'airport', emoji: '🛫', label: 'airport', max: Infinity },
+  { type: 'train', emoji: '🚆', label: 'train station', max: 130 },
+  { type: 'bus', emoji: '🚌', label: 'bus terminal', max: 90 },
+  { type: 'ferry', emoji: '⛴️', label: 'pier / ferry', max: 110 },
+];
+
+function nearestHub(coords, type, cc) {
+  let best = null, bestSec = null;
+  for (const hub of TRANSPORT_HUBS) {
+    if (hub.type !== type || !hub.coords) continue;
+    if (cc && hub.cc !== cc) continue;
+    const km = haversineKm(coords, hub.coords);
+    if (hub.secondary) { if (!bestSec || km < bestSec.km) bestSec = { hub, km }; }
+    else if (!best || km < best.km) best = { hub, km };
+  }
+  // Prefer a primary (long-distance) hub. Only fall back to a secondary/commuter one when
+  // it is substantially closer (>20 km) — so a central place shows the main terminal, not
+  // a nearer commuter stop, but a remote place still gets whatever is actually near.
+  if (best && bestSec) return (best.km <= bestSec.km + 20) ? best : bestSec;
+  return best || bestSec;
+}
+
+function nearestCrossing(coords, maxKm) {
+  let best = null;
+  for (const x of CROSSINGS) {
+    if (!x.coords) continue;
+    const km = haversineKm(coords, x.coords);
+    if (!best || km < best.km) best = { x, km };
+  }
+  return best && best.km <= maxKm ? best : null;
+}
+
+// Google Maps directions from a place to a named hub. Origin is the place's coordinates;
+// destination is the hub NAME + city (resolved by Maps), so it stays accurate regardless
+// of the stored hub coordinate. Opening needs internet; the distances above work offline.
+function hubDirUrl(from, hub) {
+  const dest = encodeURIComponent(`${hub.name}, ${hub.city}`);
+  return `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${dest}`;
+}
+
+function transitCard(p) {
+  if (!p || !p.coords || p.isPin) return null;
+  const cc = p.country || (p.id || '').split('-')[0];
+  const card = h('div', { class: 'card' }, [
+    h('h2', {}, '🚉 Getting here & away'),
+    h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' },
+      'Nearest airport, train, bus and boat connections. Distances are straight-line from this spot; tap for door-to-door directions (needs internet).'),
+  ]);
+  HUB_TYPES.forEach((t) => {
+    const found = nearestHub(p.coords, t.type, cc);
+    if (!found || found.km > t.max) return;
+    const { hub, km } = found;
+    const dir = compass(bearing(p.coords, hub.coords));
+    card.append(h('div', { class: 'transit-row' }, [
+      h('div', { class: 'row-between' }, [
+        h('strong', {}, `${t.emoji} ${hub.name}${hub.code ? ` (${hub.code})` : ''}`),
+        h('span', { class: 'fair' }, `${kmLabel(km)} · ${dir}`),
+      ]),
+      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, (hub.city && hub.city !== p.city) ? `${titleCase(t.label)} · ${hub.city}` : titleCase(t.label)),
+      hub.into ? h('div', { class: 'list-note' }, hub.into) : null,
+      hub.note ? h('div', { class: 'muted tiny' }, hub.note) : null,
+      h('a', { class: 'btn ghost block', style: 'margin-top:4px', href: hubDirUrl(p.coords, hub), target: '_blank', rel: 'noopener' }, 'Directions ↗'),
+    ]));
+  });
+  // Nearest open cross-border crossing (from the borders dataset) — useful when a place
+  // sits near a frontier and the traveller is continuing into the next country.
+  const bx = nearestCrossing(p.coords, 100);
+  if (bx) {
+    card.append(h('div', { class: 'transit-row' }, [
+      h('div', { class: 'row-between' }, [
+        h('strong', {}, `🛂 ${bx.x.name}`),
+        h('span', { class: 'fair' }, kmLabel(bx.km)),
+      ]),
+      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `Border crossing · ${bx.x.pair}`),
+      h('button', { class: 'btn ghost block', onclick: () => go('#crossings') }, 'Crossing details, hours & visa ↗'),
+    ]));
+  }
+  // Always-on helpers: a live "transport near here" search, the country's intercity routes
+  // and its arrival guide (airport → town, cash, SIM). These keep every place useful even
+  // where no listed hub sits within range.
+  card.append(h('div', { class: 'chips', style: 'margin-top:8px' }, [
+    h('a', { class: 'chip', href: mapsSearch(`bus station OR train station near ${p.coords.lat},${p.coords.lng}`), target: '_blank', rel: 'noopener' }, '🔎 Transport near here ↗'),
+    h('button', { class: 'chip', onclick: () => go(`#transport-${cc}`) }, '🧭 Routes, rentals & tickets'),
+    h('button', { class: 'chip', onclick: () => go(`#arrival-${cc}`) }, '🛬 Arrival guide'),
+  ]));
+  card.append(sourcesNote(TRANSIT_SOURCES, 'July 2026'));
+  return card;
+}
+
+// ---- LOCAL SECRETS (per-place crowdsourced tips; on-device, shared by link) --
+// Insider tips for a place: curated guide tips + the user's own secrets + secrets
+// other travellers shared with a link. Stored in placeData[id].secrets (rides along
+// in the backup). A progressive-disclosure drawer keeps the place page calm.
+function getPlaceSecrets(id) { const s = getPlaceData(id).secrets; return Array.isArray(s) ? s : []; }
+// Exported: the Travel Circle share-detail screen (main.js) saves an incoming shared secret
+// straight onto the matching place via this, reverse-imported from here.
+export function addPlaceSecret(id, { text, by }) {
+  const list = getPlaceSecrets(id).slice();
+  list.unshift({ text: String(text || '').slice(0, 400), by: String(by || '').slice(0, 40), at: todayKey() });
+  setPlaceField(id, 'secrets', list);
+}
+function removePlaceSecret(id, idx) { const list = getPlaceSecrets(id).slice(); list.splice(idx, 1); setPlaceField(id, 'secrets', list); }
+
+function localSecretsCard(p) {
+  if (p.isPin) return null;
+  const guideTips = Array.isArray(p.tips) ? p.tips : [];
+  const card = h('details', { class: 'card local-secrets' });
+  const summary = h('summary', {}, '');
+  card.append(summary);
+  card.append(h('p', { class: 'muted small', style: 'margin:2px 0 8px' }, 'Insider tips for this place — from the guide, from you, and from travellers who shared a link. Kept on your device.'));
+  if (guideTips.length) {
+    card.append(h('h3', { style: 'margin:6px 0 2px' }, '📖 From the guide'));
+    guideTips.forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
+  }
+  const listEl = h('div', {});
+  card.append(listEl);
+  function drawSecrets() {
+    listEl.innerHTML = '';
+    const s = getPlaceSecrets(p.id);
+    summary.textContent = `🔑 Local secrets & tips${s.length ? ` (${s.length})` : ''}`;
+    if (s.length) listEl.append(h('h3', { style: 'margin:10px 0 2px' }, '🔑 Traveller secrets'));
+    s.forEach((sec, i) => {
+      listEl.append(h('div', { class: 'secret-item' }, [
+        h('p', { style: 'margin:0' }, sec.text),
+        h('div', { class: 'tiny muted' }, [sec.by, sec.at].filter(Boolean).join(' · ')),
+        h('div', { class: 'listing-actions' }, [
+          shareButton('🔗 Share', `A tip for ${p.name}`, () => shareUrl('in', encodeShare('secret', { id: p.id, n: p.name, text: sec.text, by: sec.by || (ensureMe().name || '') }, ensureMe())), 'btn ghost'),
+          h('button', { class: 'btn ghost', 'aria-label': 'Remove this secret', onclick: () => { removePlaceSecret(p.id, i); drawSecrets(); } }, '🗑'),
+        ]),
+      ]));
+    });
+  }
+  drawSecrets();
+  const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '400', placeholder: 'A hidden gem, a shortcut, a heads-up…' });
+  card.append(h('div', { class: 'secret-add' }, [
+    h('label', { class: 'secret-cta' }, '✨ Spotted something new? Add to the collective wisdom'),
+    ta,
+    h('button', { class: 'btn block', style: 'margin-top:6px', onclick: () => {
+      const t = ta.value.trim(); if (!t) { ta.focus(); return; }
+      addPlaceSecret(p.id, { text: t, by: ensureMe().name || '' });
+      ta.value = ''; drawSecrets();
+    } }, '＋ Add this secret'),
+    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest a bigger correction to the guide'),
+  ]));
+  return card;
+}
+
+// The place-detail page itself. Exported: main.js's #place router case reverse-imports this.
+export function placeScreen(id) {
+  const p = resolveItem(id);
+  const backHash = p && p.isPin ? '#saved' : '#places';
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar(p ? p.name : 'Place', backHash));
+  if (!p) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, backHash); return; }
+
+  const cats = Array.isArray(p.categories) ? p.categories : [];
+  const hasPrice = p.priceRange && p.priceRange.currency;
+  const card = h('div', { class: 'card' }, [
+    (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
+      h('div', { class: 'cats' }, cats.map((c) => catTag(c))),
+      (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
+    ]) : null,
+    travelerChips(p),
+    photoBlock(p, p.name),
+    p.blurb ? h('p', {}, p.blurb) : null,
+  ]);
+  // Show the synthesised rating only when there is no real external-ratings snapshot; when
+  // externalRatings exists it is the single source of truth (rendered lower down), so the two
+  // can no longer sit side by side showing slightly different numbers.
+  if (p.rating && !(Array.isArray(p.externalRatings) && p.externalRatings.length)) card.append(ratingBlock(p));
+  if (p.history) { card.append(h('h3', {}, 'A little history'), h('p', {}, p.history)); { const rd = readAloudBar(() => [p.blurb, p.history].filter(Boolean).join('. ')); if (rd) card.append(rd); } }
+  if (p.whyItFits) { card.append(h('h3', {}, 'Why it fits you'), h('p', {}, p.whyItFits)); }
+  if (hasPrice) {
+    card.append(h('h3', {}, 'Price'));
+    card.append(h('p', {}, `${priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`));
+  }
+  if (p.hours && !isMarket(p)) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
+  if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));
+  if (p.scamWarnings && p.scamWarnings.length) { card.append(h('h3', {}, 'Watch out')); p.scamWarnings.forEach((t) => card.append(h('div', { class: 'warn-note' }, t))); }
+  if (p.activities && p.activities.length) { card.append(h('h3', {}, 'Things to do here')); card.append(h('div', { class: 'cats' }, p.activities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
+  if (p.amenities && p.amenities.length) { card.append(h('h3', {}, 'Amenities')); card.append(h('div', { class: 'cats' }, p.amenities.map((a) => h('span', { class: 'cat-tag' }, titleCase(a))))); }
+
+  const colls = collectionsForItem(p.id);
+  const collStrip = colls.length
+    ? h('div', { class: 'cats', style: 'margin-top:8px' }, colls.map((c) => h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`)))
+    : null;
+
+  const actions = h('div', { class: 'card' }, [
+    (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => tripVisitSheet(p.id) }, '🧭 Add to my trip'),
+    !p.isPin ? shareButton('📤 Recommend to a friend', `Check out ${p.name}`, () => shareUrl('in', encodeShare('place', { id: p.id, n: p.name }, ensureMe()))) : null,
+    !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
+    collStrip,
+    p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#addpin-${p.id}`) }, '✎ Edit this place') : null,
+    p.isPin ? h('button', {
+      class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
+      onclick: () => { confirmAction({ title: 'Delete this pin?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deletePin(p.id); go('#saved'); } }); },
+    }, 'Delete pin') : null,
+  ]);
+
+  wrap.append(card);
+  const accBlock = placeAccessBlock(p);
+  if (accBlock) wrap.append(accBlock);
+  // What this place means for who the traveller IS — including, stated plainly, what nobody
+  // has recorded yet. Sits right after accessibility so the two read as one honest block.
+  const fitCard = profileFitCard(p);
+  if (fitCard) wrap.append(fitCard);
+  const mkt = marketInfoCard(p);
+  if (mkt) wrap.append(mkt);
+  const beach = beachInfoCard(p);
+  if (beach) wrap.append(beach);
+  const orient = orientationCard(p);
+  if (orient) {
+    { const t = oneTimeHint('place-orient', 'Below, "Find it" gives the local name and how to recognise this spot on the ground — useful for a taxi or asking directions.'); if (t) wrap.append(t); }
+    wrap.append(orient);
+  }
+  const transit = transitCard(p);
+  if (transit) wrap.append(transit);
+  const extCard = externalRatingsCard(p);
+  if (extCard) wrap.append(extCard);
+  const wxCard = weatherNearbyCard(p);
+  if (wxCard) wrap.append(wxCard);
+  const secretsCard = localSecretsCard(p);
+  if (secretsCard) wrap.append(secretsCard);
+  wrap.append(actions, yourLayer(p));
+  if (p.sources && p.sources.length) wrap.append(sourcesNote(p.sources, p.verified, p));
+  mount(wrap, backHash);
+}
+
+// Photos the traveller attached to a place, stored on-device: blobs in IndexedDB keyed by
+// the place, with the ordered key list kept in placeData[id].photos (so they ride along in
+// the full backup). Autosaves immediately, like the rating/note/review on the same card.
+export function placePhotoKeys(id) { const d = getPlaceData(id); return Array.isArray(d.photos) ? d.photos : []; }
+async function addPlacePhotos(id, files) {
+  const keys = placePhotoKeys(id).slice();
+  let n = 0;
+  for (const f of files) {
+    const nk = `placephoto-${id}-${Date.now()}-${n++}-${Math.floor(Math.random() * 1e6)}`;
+    try { await putBlob(nk, f); keys.push(nk); } catch { /* skip a photo that will not store */ }
+  }
+  setPlaceField(id, 'photos', keys);
+  return keys;
+}
+function removePlacePhoto(id, key) {
+  setPlaceField(id, 'photos', placePhotoKeys(id).filter((k) => k !== key));
+  delBlob(key);
+}
+// A reusable "add photos" block (camera + library) that writes straight to a place and
+// repaints the given thumbs container. Shared by the place card and the pin editor.
+function placePhotoControls(id, thumbs, renderThumbs) {
+  const camIn = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
+  const libIn = h('input', { type: 'file', accept: 'image/*', multiple: '', style: 'display:none' });
+  const onPick = async (inp) => {
+    const files = inp.files ? [...inp.files] : []; inp.value = '';
+    if (files.length) { await addPlacePhotos(id, files); renderThumbs(); }
+  };
+  camIn.onchange = () => onPick(camIn);
+  libIn.onchange = () => onPick(libIn);
+  return h('div', {}, [
+    thumbs,
+    h('div', { class: 'chips' }, [
+      h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
+      h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Add pictures'),
+    ]),
+    camIn, libIn,
+  ]);
+}
+function placePhotoThumbs(id) {
+  const thumbs = h('div', { class: 'photo-thumbs' });
+  const renderThumbs = () => {
+    thumbs.innerHTML = '';
+    const keys = placePhotoKeys(id);
+    if (!keys.length) { thumbs.append(h('p', { class: 'muted', style: 'margin:0' }, 'No photos yet — add your own.')); return; }
+    keys.forEach((k) => {
+      const img = h('img', { alt: 'Your photo of this place', loading: 'lazy' });
+      setBlobThumb(img, k);
+      thumbs.append(h('div', { class: 'photo-thumb' }, [
+        img,
+        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { removePlacePhoto(id, k); renderThumbs(); } }, '✕'),
+      ]));
+    });
+  };
+  renderThumbs();
+  return { thumbs, renderThumbs };
+}
+
+// The user's own layer on a place: rating, private note, and their own review kept
+// alongside the guidebook original (colour-coded). All on-device.
+function yourLayer(p) {
+  const d = getPlaceData(p.id);
+  const card = h('div', { class: 'card' }, [h('h2', {}, 'Your notes & review')]);
+
+  const stars = h('div', { class: 'stars' });
+  const paint = (n) => [...stars.children].forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
+  for (let i = 1; i <= 5; i++) {
+    stars.append(h('button', { class: 'star', 'aria-label': `${i} star${i > 1 ? 's' : ''}`, onclick: () => {
+      const nv = getPlaceData(p.id).rating === i ? 0 : i; setPlaceField(p.id, 'rating', nv); paint(nv);
+    } }, '☆'));
+  }
+  paint(d.rating || 0);
+  card.append(h('div', { class: 'field' }, [h('label', {}, 'Your rating'), stars]));
+
+  // Your photos — take or add pictures of this place (kept on-device, in the backup).
+  const { thumbs, renderThumbs } = placePhotoThumbs(p.id);
+  card.append(h('div', { class: 'field' }, [h('label', {}, 'Your photos'), placePhotoControls(p.id, thumbs, renderThumbs)]));
+
+  const note = h('textarea', { class: 'ta', placeholder: 'Private notes — directions, what to order, who you met…' });
+  note.value = d.note || '';
+  note.addEventListener('change', () => setPlaceField(p.id, 'note', note.value));
+  card.append(h('div', { class: 'field' }, [h('label', {}, 'Private note'), note]));
+
+  if (!p.isPin && (p.blurb || p.whyItFits)) {
+    card.append(h('div', { class: 'review-orig' }, [
+      h('span', { class: 'rlabel' }, 'Guidebook'),
+      h('p', {}, [p.blurb, p.whyItFits].filter(Boolean).join(' ')),
+    ]));
+  }
+  const yourRev = h('textarea', { class: 'ta', placeholder: 'Your own take — kept separately from the guidebook…' });
+  yourRev.value = d.review || '';
+  yourRev.addEventListener('change', () => setPlaceField(p.id, 'review', yourRev.value));
+  card.append(h('div', { class: 'review-yours' }, [h('span', { class: 'rlabel' }, 'Your take'), yourRev]));
+
+  // Share just this place's review — your stars, words and photos — as a small web page.
+  const shareBtn = h('button', { class: 'btn ghost block', style: 'margin-top:10px' }, '📤 Share my review');
+  shareBtn.onclick = async () => {
+    const dd = getPlaceData(p.id);
+    if (!(dd.rating || (dd.review || '').trim() || (dd.note || '').trim() || (dd.photos || []).length)) {
+      alert('Add a star rating, a review or a photo first, then share.'); return;
+    }
+    const lbl = shareBtn.textContent; shareBtn.disabled = true; shareBtn.textContent = 'Preparing…';
+    try {
+      const html = await exportOnePlaceReviewHtml(p.id, p.name);
+      await shareOrDownload([{ blob: new Blob([html], { type: 'text/html' }), name: `my-review-${phraseSlug(p.name || 'place')}.html` }], `My review of ${p.name || 'this place'}`);
+    } catch { alert('Could not build the review to share.'); }
+    shareBtn.disabled = false; shareBtn.textContent = lbl;
+  };
+  card.append(shareBtn);
+
+  return card;
 }
