@@ -283,7 +283,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.423.0';
+const APP_VERSION = 'mk-v0.424.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2552,7 +2552,7 @@ function everythingScreen() {
     chip('🎒', 'Gear market', '#market'),
   ]));
   wrap.append(grp('📍', 'Places & map', [
-    chip('🗺️', 'Map', '#map'),
+    chip('🗺️', 'Map', '#places'),
     chip('⭐', 'Saved places', '#saved'),
     chip('📍', 'Near me', '#nearby'),
     chip('🛂', 'Border crossings', '#crossings'),
@@ -3389,7 +3389,7 @@ function exploreScreen(argCc) {
       { ic: '🛂', t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
       { ic: '📋', t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${cc}` },
       { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
-      { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#map' },
+      { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#places' },
     ] },
     { label: 'Eat & drink', tiles: [
       { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${cc}` },
@@ -3510,7 +3510,7 @@ function arrivalEssentials(country, featured) {
         : 'Bottled or filtered water only. Busy stalls with high turnover are usually the safest — the food is cooked to order and does not sit around.')),
     item('🏠 Get to your stay',
       h('p', { class: 'muted' }, 'Save where you are staying and the map will always show the distance and direction back — even with no signal.'),
-      h('button', { class: 'btn ghost block', onclick: () => go('#map') }, 'Set my accommodation on the map')),
+      h('button', { class: 'btn ghost block', onclick: () => go('#places') }, 'Set my accommodation on the map')),
     item('💬 First words',
       h('p', { class: 'muted' }, 'Hello, thank you and the numbers go a long way with drivers and vendors.'),
       h('button', { class: 'btn ghost block', onclick: () => go(`#phrasebook-${lang}`) }, 'Open the phrasebook')),
@@ -3584,7 +3584,7 @@ function arrivalScreen(arg) {
   wrap.append(foodCard);
 
   const doCard = h('div', { class: 'card' }, [h('h2', {}, '🧭 Settle in')]);
-  doCard.append(h('button', { class: 'btn ghost block', onclick: () => go('#map') }, '🏠 Save where I am staying on the map'));
+  doCard.append(h('button', { class: 'btn ghost block', onclick: () => go('#places') }, '🏠 Save where I am staying on the map'));
   if (c && c.lang) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 First words — hello, thanks, numbers'));
   doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#sos-${cc}`) }, '🆘 Emergency numbers here'));
   doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#scams-${cc}`) }, '⚠️ Common scams — and how to avoid them'));
@@ -3689,7 +3689,7 @@ function nearbyScreen() {
     body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
       h('button', { class: 'chip', onclick: () => go(`#places-${country}`) }, [chipIcon('map'), 'See on the map']),
-      h('button', { class: 'chip', onclick: () => go('#map') }, [chipIcon('pin'), 'Set my stay']),
+      h('button', { class: 'chip', onclick: () => go('#places') }, [chipIcon('pin'), 'Set my stay']),
       h('button', { class: 'chip', onclick: () => go('#exchange') }, '🤝 Traveller board'),
       h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
     ]));
@@ -5461,7 +5461,7 @@ function poolsScreen(arg) {
 
 function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Border crossings', '#map'));
+  wrap.append(topbar('Border crossings', '#places'));
   wrap.append(h('p', { class: 'map-hint' }, 'Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
   // Freshness badge: the oldest "verified" date across all crossings, so the whole set is
   // judged by its weakest link. Quiet ✓ while under ~6 months old, a prominent ⚠ nudge once
@@ -5497,377 +5497,15 @@ function crossingsScreen() {
       wrap.append(card);
     });
   });
-  mount(wrap, '#map');
-}
-
-function mapScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Map', '#places'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Offline-first — GPS, search, places, pins and your saved accommodation all work with no connection.'));
-
-  const storeBtn = h('button', { class: 'btn ghost', onclick: showStorage }, 'Storage');
-  const addBtn = h('button', { class: 'btn ghost', onclick: () => go('#addpin') }, '＋ Add a place');
-  const crossBtn = h('button', { class: 'btn ghost', onclick: () => go('#crossings') }, '🛂 Crossings');
-  const toolbar = h('div', { class: 'map-toolbar' }, [addBtn, crossBtn, storeBtn]);
-
-  // Keep-screen-awake while navigating on foot (Screen Wake Lock API). The OS releases
-  // the lock when the app is backgrounded, so re-acquire it when we return to foreground.
-  let wakeLock = null, wantWake = false;
-  const wakeBtn = h('button', { class: 'btn ghost', onclick: toggleWake }, '🔆 Keep screen on');
-  if (!('wakeLock' in navigator)) wakeBtn.style.display = 'none';
-  async function acquireWake() {
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => { wakeLock = null; });
-  }
-  async function toggleWake() {
-    if (wantWake) {
-      wantWake = false;
-      try { if (wakeLock) await wakeLock.release(); } catch { /* already gone */ }
-      wakeLock = null; wakeBtn.textContent = '🔆 Keep screen on'; wakeBtn.classList.remove('toggle-on');
-    } else {
-      try { await acquireWake(); wantWake = true; wakeBtn.textContent = '🔆 Screen stays on'; wakeBtn.classList.add('toggle-on'); }
-      catch (e) { storageOut.textContent = 'Could not keep the screen on: ' + ((e && e.message) || e); }
-    }
-  }
-  const onVis = () => { if (wantWake && wakeLock === null && document.visibilityState === 'visible') acquireWake().catch(() => { /* denied */ }); };
-  document.addEventListener('visibilitychange', onVis);
-  // release the lock + detach the listener when the user leaves the map screen
-  setLiveCleanup(() => { wantWake = false; document.removeEventListener('visibilitychange', onVis); if (wakeLock) { try { wakeLock.release(); } catch { /* noop */ } wakeLock = null; } });
-  const storageOut = h('p', { class: 'map-hint' }, '');
-  async function showStorage() {
-    const m = await import('./map.js'); const e = await m.storageEstimate();
-    storageOut.innerHTML = '';
-    storageOut.append(e ? `Stored on device: about ${e.usageMB.toFixed(1)} MB. ` : '');
-    const clearBtn = h('button', { class: 'linklike', onclick: async () => {
-      storageOut.textContent = 'Clearing all saved areas…';
-      try { await m.clearTileCache(); } catch { /* noop */ }
-      getSavedAreas().length = 0; save();
-      renderAreas();
-      showStorage();
-    } }, 'Clear all saved areas');
-    storageOut.append(clearBtn);
-  }
-
-  const canvas = h('div', { id: 'map-canvas' });
-  // Layer toggles: show/hide marker groups (all on by default). Wired to the map
-  // controller once it initialises (mapCtrl). Markets are their own gold layer.
-  let mapCtrl = null;
-  // Layer visibility is remembered (store.profile.prefs.mapLayers).
-  const ML = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, fuel: true, satellite: true, borders: true });
-  const TOGGLES = [
-    ['satellite', '🛰️ Satellite imagery'], ['borders', '🗺️ Country borders'],
-    ['go', '📍 Things to do'], ['eat', '🍜 Places to eat'], ['localeat', '🍲 Local restaurants'], ['market', '🛍️ Markets'],
-    ['stay', '🛏️ Places to stay'], ['pools', '🏊 Pools'], ['crossing', '🛂 Border crossings'], ['fuel', '⛽ Fuel stations'],
-  ];
-  function applyLayer(key, on) {
-    if (!mapCtrl) return;
-    if (key === 'satellite') mapCtrl.setSatellite(on);
-    else if (key === 'borders') mapCtrl.setBorders(on);
-    else mapCtrl.setLayer(key, on);
-  }
-  const layerLabel = (key, label) => h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [
-    h('input', { type: 'checkbox', checked: ML[key] !== false ? '' : null, 'aria-label': label,
-      onchange: (e) => { ML[key] = e.target.checked; save(); applyLayer(key, e.target.checked); } }),
-    h('span', {}, label),
-  ]);
-  const layersCard = h('div', { class: 'card', style: 'padding:10px 12px' }, [
-    h('div', { class: 'muted', style: 'font-weight:700;margin-bottom:6px' }, 'Map layers (tap to show or hide — remembered)'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px 16px' }, TOGGLES.map(([k, l]) => layerLabel(k, l))),
-    h('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' }, 'Place, pool and crossing pins appear as you zoom into an area, so the wide view stays clear. The plain map (coastlines, rivers, borders, your places) is always offline; satellite imagery streams when online — use “Save this area” to keep it offline.'),
-  ]);
-
-  // --- My accommodation: save it, then always see the way back -----------------
-  const stayBanner = h('p', { class: 'stay-banner', style: 'margin:4px 0;font-weight:700' }, '');
-  const stayCard = h('div', { class: 'card' });
-  let lastFix = null;
-  function updateStayBanner() {
-    const stay = getMyStay();
-    if (!stay || !stay.coords) return;
-    if (!lastFix) { stayBanner.textContent = 'Tap the ⊕ locate button to see distance and direction back.'; return; }
-    stayBanner.textContent = `${fmtDistance(haversineKm(lastFix, stay.coords))} · ${compass(bearing(lastFix, stay.coords))} to your stay`;
-  }
-  async function setStayHere() {
-    stayBanner.textContent = 'Getting your location…';
-    try {
-      const pos = await geolocate();
-      const s = setMyStay({ name: (getMyStay() || {}).name || 'My stay', coords: { lat: pos.lat, lng: pos.lng } });
-      if (mapCtrl) { mapCtrl.setMyStay(s.coords); if (lastFix) mapCtrl.setWayback(lastFix, s.coords); }
-      renderStay();
-    } catch (err) { stayBanner.textContent = 'Could not get your location: ' + err.message; }
-  }
-  function renderStay() {
-    stayCard.textContent = '';
-    stayCard.append(h('h2', {}, '🏠 My accommodation'));
-    const stay = getMyStay();
-    if (stay && stay.coords) {
-      stayCard.append(
-        h('p', {}, [h('strong', {}, stay.name || 'My stay'), h('span', { class: 'muted' }, ` · ${stay.coords.lat.toFixed(4)}, ${stay.coords.lng.toFixed(4)}`)]),
-        stayBanner,
-        h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:6px' }, [
-          h('button', { class: 'btn', onclick: () => {
-            if (mapCtrl && lastFix) { mapCtrl.setWayback(lastFix, stay.coords); mapCtrl.frameBoth(lastFix, stay.coords); }
-            else if (mapCtrl) { mapCtrl.goToStay(stay.coords); }
-          } }, '🧭 Show the way back'),
-          h('a', { class: 'btn ghost', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'),
-          h('button', { class: 'btn ghost', onclick: () => { if (mapCtrl) mapCtrl.goToStay(stay.coords); } }, 'Show on map'),
-          h('button', { class: 'btn ghost', onclick: setStayHere }, 'Move to here'),
-          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (mapCtrl) { mapCtrl.setMyStay(null); mapCtrl.setWayback(null, null); } renderStay(); } }, 'Clear'),
-        ]),
-      );
-      updateStayBanner();
-    } else {
-      stayCard.append(
-        h('p', { class: 'muted' }, 'Save where you are staying and the map will always show the distance and direction back to it — even offline.'),
-        h('button', { class: 'btn block', onclick: setStayHere }, '📍 Set my stay to my current location'),
-        h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, 'Tip: stand at your hotel and tap this, or tap the map and choose “Set as my accommodation”.'),
-      );
-    }
-  }
-  renderStay();
-
-  // --- Save this area offline (satellite tiles -> service-worker cache) ---------
-  // Two-step so a save can never silently fill the device: first show how many tiles
-  // and roughly how much space THIS view needs, then download only on confirm.
-  const swAvailable = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
-  const dlBtn = h('button', { class: 'btn ghost', onclick: estimateArea }, '⬇ Save this area');
-  if (!swAvailable) dlBtn.style.display = 'none';
-  function estimateArea() {
-    if (!mapCtrl || !swAvailable) { storageOut.textContent = 'Offline area saving runs in the web app.'; return; }
-    const urls = mapCtrl.getDownloadTiles(1000);
-    if (!urls.length) { storageOut.textContent = 'Nothing to save at this view — zoom in to an area first.'; return; }
-    const viewInfo = mapCtrl.getViewInfo();             // recorded with the saved area
-    const mbNum = urls.length * 0.018;                  // Esri imagery tiles average ~18 KB
-    const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
-    storageOut.textContent = '';
-    storageOut.append(
-      `This area is about ${urls.length} satellite tiles (~${mb} MB). Zoom in for more street detail, or out to cover more ground. `,
-      h('button', { class: 'linklike', onclick: () => downloadArea(urls, viewInfo) }, 'Download now'),
-      ' · ',
-      h('button', { class: 'linklike', onclick: showStorage }, 'Cancel'),
-    );
-  }
-  async function downloadArea(urls, viewInfo) {
-    storageOut.textContent = `Saving ${urls.length} map tiles for offline…`;
-    const onMsg = (e) => {
-      const d = e.data || {};
-      if (d.type === 'PREFETCH_PROGRESS') { storageOut.textContent = `Saving map tiles… ${d.done}/${d.total}`; return; }
-      if (d.type !== 'PREFETCH_DONE') return;
-      navigator.serviceWorker.removeEventListener('message', onMsg);
-      if (d.quotaHit) {
-        storageOut.textContent = `Storage is full — saved ${d.ok} tiles before stopping. Remove a saved area below, then try a smaller area.`;
-        return;
-      }
-      if (d.ok > 0 && viewInfo) {
-        const def = (mapCtrl && mapCtrl.nearestCityName && mapCtrl.nearestCityName()) || 'Saved area';
-        const name = (prompt('Name this offline area:', def) || def).trim() || def;
-        // floor (not round): tileUrlsForBounds downloads at Math.floor(zoom), so the
-        // recorded z must match or per-area delete would target the wrong zoom level.
-        addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.floor(viewInfo.zoom), count: d.ok });
-        renderAreas();
-      }
-      showStorage();
-    };
-    navigator.serviceWorker.addEventListener('message', onMsg);
-    // Protect existing saved packs from FIFO eviction: recompute their exact tile
-    // URLs (bounds+z are recorded per area) and pass them so the cap skips them.
-    let protect = [];
-    try {
-      protect = getSavedAreas().flatMap((a) => (mapCtrl && mapCtrl.tileUrlsForArea) ? mapCtrl.tileUrlsForArea(a.bounds, a.z) : []);
-    } catch { /* best-effort */ }
-    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls, protect });
-  }
-
-  // --- Saved offline areas: named tile packs, each sized and individually removable -
-  const areasCard = h('div', { class: 'card' });
-  function renderAreas() {
-    areasCard.textContent = '';
-    areasCard.append(h('h2', {}, '🗂️ Saved offline areas'));
-    const areas = getSavedAreas();
-    if (!areas.length) {
-      areasCard.append(h('p', { class: 'muted' }, 'Save an area above to use the satellite map with no signal. Each area you save is listed here and can be removed on its own.'));
-      return;
-    }
-    areas.forEach((a) => {
-      const mbNum = (a.count || 0) * 0.018;
-      const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
-      areasCard.append(h('div', { class: 'row-between price-item' }, [
-        h('div', {}, [h('strong', {}, a.name), h('div', { class: 'muted', style: 'font-size:12px' }, `${a.count || 0} tiles · ~${mb} MB · saved ${a.savedAt}`)]),
-        h('div', { class: 'cats' }, [
-          h('button', { class: 'chip', title: 'Show on map', 'aria-label': `Show ${a.name} on map`, onclick: () => { if (mapCtrl && a.center) mapCtrl.flyTo(a.center.lng, a.center.lat, a.z || 12); } }, '◎'),
-          h('button', { class: 'chip', 'aria-label': `Delete ${a.name}`, onclick: () => deleteArea(a) }, '✕'),
-        ]),
-      ]));
-    });
-  }
-  function deleteArea(a) {
-    removeSavedArea(a.id); renderAreas();
-    if (mapCtrl && swAvailable && a.bounds && navigator.serviceWorker.controller) {
-      const urls = mapCtrl.tileUrlsForArea(a.bounds, a.z || 12, 1000);
-      const onMsg = (e) => { if ((e.data || {}).type === 'DELETE_DONE') { navigator.serviceWorker.removeEventListener('message', onMsg); showStorage(); } };
-      navigator.serviceWorker.addEventListener('message', onMsg);
-      navigator.serviceWorker.controller.postMessage({ type: 'DELETE_TILES', urls });
-    }
-  }
-  // --- Measure tool: tap points to read distances, fully offline ----------------
-  let measuring = false;
-  const measureOut = h('p', { class: 'map-hint', style: 'margin:2px 0;display:none' }, '');
-  const measureBtn = h('button', { class: 'btn ghost', onclick: toggleMeasure }, '📏 Measure');
-  function fmtKm(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 2 : 1)} km`; }
-  function toggleMeasure() {
-    if (!mapCtrl) return;
-    measuring = !measuring;
-    if (measuring) {
-      measureBtn.textContent = '📏 Measuring — tap points'; measureBtn.classList.add('toggle-on');
-      measureOut.style.display = ''; measureOut.textContent = 'Tap two or more points on the map to measure the distance.';
-      mapCtrl.toggleMeasure(true, (km, n) => {
-        measureOut.textContent = n < 2 ? 'Tap another point to measure…'
-          : `Distance: ${fmtKm(km)} over ${n} points. Tap to extend, or tap “Measure” again to finish.`;
-      });
-    } else {
-      measureBtn.textContent = '📏 Measure'; measureBtn.classList.remove('toggle-on');
-      measureOut.style.display = 'none';
-      mapCtrl.toggleMeasure(false);
-    }
-  }
-  toolbar.append(dlBtn, wakeBtn, measureBtn);
-
-  // --- Offline search: find a place / city / pool / your pin and fly to it -------
-  const searchInput = h('input', { type: 'search', class: 'map-search', placeholder: 'Search places, cities, pools, your pins…', 'aria-label': 'Search the map', autocomplete: 'off' });
-  const searchResults = h('div', { class: 'map-search-results' });
-  const SEARCH_ICON = { City: '🏙️', Place: '📍', Pool: '🏊', Pin: '📌' };
-  function runSearch() {
-    searchResults.textContent = '';
-    const q = searchInput.value.trim();
-    if (!mapCtrl || q.length < 2) return;
-    const matches = mapCtrl.search(q);
-    if (!matches.length) { searchResults.append(h('p', { class: 'muted', style: 'padding:6px 4px;font-size:13px' }, 'No matches in the offline data.')); return; }
-    matches.forEach((m) => searchResults.append(
-      h('button', { class: 'btn ghost block', style: 'justify-content:flex-start;margin-top:4px', onclick: () => {
-        mapCtrl.flyTo(m.lng, m.lat, m.z);
-        searchResults.textContent = ''; searchInput.value = '';
-      } }, `${SEARCH_ICON[m.type] || '•'}  ${m.name}  ·  ${m.type}`)));
-  }
-  searchInput.addEventListener('input', runSearch);
-  const searchWrap = h('div', { class: 'map-search-wrap' }, [searchInput, searchResults]);
-
-  wrap.append(toolbar, searchWrap, storageOut, measureOut, canvas, layersCard, stayCard, areasCard);
-  renderAreas();
-
-  // ---- Map key: every pin and EVERY line on the map, grouped + swatched --------
-  // Each pin dot carries a faint ring so its edge stays visible on the cream/dark card.
-  const dot = (c) => h('span', { style: `display:inline-block;width:13px;height:13px;border-radius:50%;background:${c};box-shadow:0 0 0 1px var(--key-dot-ring);flex:0 0 auto` });
-  // A small line sample mirroring the real on-map style. `dash`: false = solid, true =
-  // "5 3", or a custom dash string. `point`: overlay a white dot (the measure vertices).
-  const lineSwatch = ({ color, dash = false, casing = null, width = 3, point = false }) => {
-    const da = dash === true ? '5 3' : (typeof dash === 'string' ? dash : null);
-    return h('span', { class: 'line-swatch', html:
-      '<svg width="34" height="12" viewBox="0 0 34 12" role="img" aria-hidden="true">'
-      + (casing ? `<line x1="2" y1="6" x2="32" y2="6" stroke="${casing}" stroke-width="${width + 3}" stroke-linecap="round"/>` : '')
-      + `<line x1="2" y1="6" x2="32" y2="6" stroke="${color}" stroke-width="${width}" stroke-linecap="round"${da ? ` stroke-dasharray="${da}"` : ''}/>`
-      + (point ? '<circle cx="17" cy="6" r="3" fill="#FFFFFF" stroke="#1E1E1E" stroke-width="1.5"/>' : '')
-      + '</svg>' });
-  };
-  const keyRow = (swatch, label, sub) => h('div', { class: 'key-row' }, [
-    swatch, h('span', {}, [h('span', { class: 'key-label' }, label), sub ? h('span', { class: 'key-sub' }, ` — ${sub}`) : null]),
-  ]);
-  const subhead = (t) => h('div', { class: 'key-subhead' }, t);
-
-  const keyCard = h('details', { class: 'card map-key' }, [
-    h('summary', {}, 'Map key — what every pin and line means'),
-
-    subhead('Pins'),
-    h('div', { class: 'key-grid' }, RATING_BANDS.map((b) => keyRow(dot(b.color), b.label))),
-    h('div', { class: 'key-grid', style: 'margin-top:6px' }, [
-      keyRow(dot('#D62828'), 'Local restaurant', 'a local, non-tourist eatery'),
-      keyRow(dot('#E0A100'), 'Market'),
-      keyRow(dot('#0EA5C4'), 'Pool'),
-      keyRow(dot('#3B5BDB'), 'Border crossing', 'a place you can cross between countries'),
-      keyRow(dot('#6A4C93'), 'Your dropped pin'),
-      keyRow(h('span', { style: 'flex:0 0 auto' }, '🏠'), 'Your accommodation'),
-    ]),
-    h('p', { class: 'key-note' }, 'Place pins are coloured by rating (your own rating wins over the guidebook score) — except markets (gold) and local restaurants (red), which have their own colour.'),
-
-    subhead('Base map'),
-    h('div', { class: 'key-grid' }, [
-      keyRow(lineSwatch({ color: '#2C7DA0', width: 4 }), 'Mekong River'),
-      keyRow(lineSwatch({ color: '#A9824A', width: 3 }), 'Land / country outline'),
-      keyRow(lineSwatch({ color: '#FF3B30', dash: '3 2.5', width: 3 }), 'Country border', 'the line between two countries'),
-    ]),
-    h('p', { class: 'key-note' }, 'The tan line outlines all land. Along national land borders it runs together with the red dashed Country border line (when that layer is on); only the tan line follows the sea coast.'),
-
-    subhead('Transport routes (between cities)'),
-    h('div', { class: 'key-grid' },
-      ROUTE_LEGEND.map((b) => keyRow(lineSwatch({ color: b.color, dash: b.swatchDash, casing: '#FFFBF0', width: 3 }), b.label))),
-    h('p', { class: 'key-note' }, 'A dashed line is the recommended way to travel between two cities. Each mode has its own colour AND dash pattern, so they stay distinct even when colours are hard to tell apart.'),
-
-    subhead('Your navigation (shown only while you use a tool)'),
-    h('div', { class: 'key-grid' }, [
-      keyRow(lineSwatch({ color: '#D6336C', dash: true, casing: '#FFFFFF', width: 3 }), 'Way back to your stay', 'a direct line from your GPS location'),
-      keyRow(lineSwatch({ color: '#1E1E1E', dash: true, casing: '#FFFFFF', width: 3, point: true }), 'Measuring line', 'from the 📏 Measure tool, with a dot at each tap'),
-    ]),
-  ]);
-  // Place the key directly under the map so it is reachable without scrolling past
-  // the layers/stay/areas cards (expert map-UX finding).
-  layersCard.before(keyCard);
-
-  // pins list (handy when offline / no GPS)
-  const pinsCard = h('div', { class: 'card' }, [
-    h('h2', {}, 'Your pins'),
-    ...(store.pins.length
-      ? store.pins.map((pin) => h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`))
-      : [h('p', { class: 'muted' }, 'No pins yet. Tap the map or use “＋ Add a place”.')]),
-  ]);
-  wrap.append(pinsCard);
-  mount(wrap, '#map');
-
-  // lazy-init the map engine (vendored); fall back to a simple GPS panel if it fails.
-  import('./map.js').then((m) => m.initMap(canvas, {
-    onMapClick: (coords) => { pendingPinCoords = coords; go('#addpin'); },
-    onOpen: (id) => go(`#place-${id}`),
-    onOpenCrossing: () => go('#crossings'),
-    onOpenPool: () => go('#pools'),
-    onShowKey: () => { keyCard.open = true; keyCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
-  })).then((ctrl) => {
-    mapCtrl = ctrl; setLiveMapCtrl(ctrl); showStorage();
-    const applyAll = () => Object.keys(ML).forEach((k) => applyLayer(k, ML[k] !== false));
-    applyAll();
-    ctrl.map.once('idle', applyAll);            // re-apply once markers (added on style.load) exist
-    ctrl.onLocate((fix) => {
-      lastFix = fix; updateStayBanner();
-      const st = getMyStay();
-      if (st && st.coords) ctrl.setWayback(fix, st.coords);   // live guide line, redrawn as you move
-    });
-    ctrl.triggerLocate();                        // auto-start GPS: blue dot + live distance to your stay
-  }).catch(() => {
-    canvas.replaceWith(mapFallback());
-    storeBtn.remove();
-  });
-}
-
-// Shown only if the map engine itself fails to load (rare; it is precached).
-function mapFallback() {
-  const card = h('div', { class: 'card' }, [
-    h('h2', {}, 'Map engine could not start'),
-    h('p', { class: 'muted' }, 'The map could not start on this device. You can still capture your GPS location below and manage your pins; the home-screen country map also works.'),
-  ]);
-  const out = h('p', {});
-  card.append(h('button', { class: 'btn', onclick: () => {
-    out.textContent = 'Locating…';
-    if (!navigator.geolocation) { out.textContent = 'Geolocation unavailable.'; return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { out.textContent = `Latitude ${pos.coords.latitude.toFixed(5)}, longitude ${pos.coords.longitude.toFixed(5)}.`; },
-      (err) => { out.textContent = `No location: ${err.message}`; },
-      { enableHighAccuracy: true, timeout: 10000 });
-  } }, 'Find me'), out);
-  return card;
+  mount(wrap, true);
 }
 
 function addPinScreen(editId) {
   const existing = editId ? getPin(editId) : null;
   const editing = !!existing;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(editing ? 'Edit place' : 'Add a place', editing ? `#place-${editId}` : '#map'));
-  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, '#map'); return; }
+  wrap.append(topbar(editing ? 'Edit place' : 'Add a place', editing ? `#place-${editId}` : '#places'));
+  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, '#places'); return; }
   const state = { coords: existing ? existing.coords : (pendingPinCoords || null), colls: new Set() };
   pendingPinCoords = null; // consume the tapped coordinate
 
@@ -5928,7 +5566,7 @@ function addPinScreen(editId) {
     go(`#place-${pin.id}`);   // open the new place so photos, a rating and a review are one tap away
   } }, editing ? 'Save changes' : 'Save place'));
   wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 2px' }, 'After saving, open the place to add your photos, a star rating and a review — everything stays on your device.'));
-  mount(wrap, '#map');
+  mount(wrap, true);
 }
 
 function toggleSet(set, v) { if (set.has(v)) set.delete(v); else set.add(v); }
@@ -11566,7 +11204,7 @@ export function render() {
   // graph memoises forever on first build, so it must never run while only partly
   // loaded); and a traveller's own saved places/collections, which may span any
   // country they have visited.
-  const NEEDS_ALL_COUNTRIES = new Set(['search', 'map', 'route', 'journey', 'saved', 'collection', 'nextstop']);
+  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop']);
   if (NEEDS_COUNTRY_DATA.has(head) || NEEDS_ALL_COUNTRIES.has(head)) {
     const wantAll = NEEDS_ALL_COUNTRIES.has(head);
     const prefix = arg ? arg.split('-')[0] : null;
@@ -11608,7 +11246,6 @@ export function render() {
       case 'info': return infoScreen(arg);
       case 'saved': return savedScreen();
       case 'collection': return collectionScreen(arg);
-      case 'map': return mapScreen();
       case 'crossings': return crossingsScreen();
       case 'pools': return poolsScreen(arg);
       case 'addpin': return addPinScreen(arg);
