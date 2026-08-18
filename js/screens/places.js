@@ -342,10 +342,38 @@ export function placesScreen(arg) {
   const bordersCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.borders !== false ? '' : null,
     onchange: (e) => { mapLayersPrefsP.borders = e.target.checked; save(); if (placesCtrl) placesCtrl.setBorders(e.target.checked); } });
 
+  // Keep-screen-awake while navigating on foot (Screen Wake Lock API) — the one #map
+  // feature task #196's own functional-parity check found genuinely missing here, ported
+  // verbatim from mapScreen()'s own implementation. The OS releases the lock when the app
+  // is backgrounded, so re-acquire it when we return to foreground. Chained (not
+  // overwritten) with this screen's own map-dispose cleanup below, since both share the
+  // one liveCleanup slot.
+  let wakeLockP = null, wantWakeP = false;
+  const wakeBtnP = h('button', { class: 'btn ghost', onclick: toggleWakeP }, '🔆 Keep screen on');
+  if (!('wakeLock' in navigator)) wakeBtnP.style.display = 'none';
+  async function acquireWakeP() {
+    wakeLockP = await navigator.wakeLock.request('screen');
+    wakeLockP.addEventListener('release', () => { wakeLockP = null; });
+  }
+  async function toggleWakeP() {
+    if (wantWakeP) {
+      wantWakeP = false;
+      try { if (wakeLockP) await wakeLockP.release(); } catch { /* already gone */ }
+      wakeLockP = null; wakeBtnP.textContent = '🔆 Keep screen on'; wakeBtnP.classList.remove('toggle-on');
+    } else {
+      try { await acquireWakeP(); wantWakeP = true; wakeBtnP.textContent = '🔆 Screen stays on'; wakeBtnP.classList.add('toggle-on'); }
+      catch { /* denied — leave the button in its off state */ }
+    }
+  }
+  const onVisP = () => { if (wantWakeP && wakeLockP === null && document.visibilityState === 'visible') acquireWakeP().catch(() => { /* denied */ }); };
+  document.addEventListener('visibilitychange', onVisP);
+  { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } wantWakeP = false; document.removeEventListener('visibilitychange', onVisP); if (wakeLockP) { try { wakeLockP.release(); } catch { /* noop */ } wakeLockP = null; } }); }
+
   const toolsCard = h('div', {}, [
     h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px' }, [
       measureBtnP,
       h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
+      wakeBtnP,
     ]),
     measureOutP,
   ]);
@@ -564,10 +592,6 @@ export function placesScreen(arg) {
     h('summary', {}, '🎨 Colour key'),
     colorKeyCard(),
   ]));
-  // A link to the full offline map (GPS, extra layers, measure — My accommodation and
-  // saved offline areas now live right here too, see above).
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:8px 0 2px', onclick: () => go('#map') },
-    [chipIcon('map'), ' Full map — extra layers & measure tool']));
 
   let currentResults = [];
   // Places is map-first now — the map is the only section that never collapses. The distance
@@ -811,7 +835,8 @@ export function placesScreen(arg) {
       onStyleChange: (on) => { store.profile.prefs.placesMapSat = on; save(); },
     })).then((c) => {
       placesCtrl = c;
-      setLiveCleanup(() => { try { c.dispose(); } catch { /* noop */ } });
+      const prevCleanup = getLiveCleanup();
+      setLiveCleanup(() => { try { if (prevCleanup) prevCleanup(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } });
       // Reconcile the borders layer with whatever was last saved (it defaults to visible
       // at construction regardless of a stored "off" pref from an earlier #map session).
       c.setBorders(mapLayersPrefsP.borders !== false);
