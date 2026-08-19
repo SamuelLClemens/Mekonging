@@ -290,7 +290,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.428.0';
+const APP_VERSION = 'mk-v0.429.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -794,6 +794,21 @@ export function focusSpot(explicitCountry) {
   if (focus) return { spot: focus, source: 'focus' };
   return { spot: defaultSpot(getActiveCountry() || 'th'), source: 'default' };
 }
+// The one place every explicit "use my location" control should call — NOT raw
+// geolocate()+setLastFix() — so a fresh fix always updates activeCountry/the remembered
+// focus city immediately, not only once some later render happens to already agree with
+// GPS. Before this existed, several buttons (Home's right-now invites, Places' own locate
+// chip, the "#today" trigger) only cached the raw coordinate; a traveller who crossed a
+// border and re-located still saw the OLD country everywhere, because nothing had told
+// activeCountry the fix disagreed with it. Mirrors what nearbyScreen/the Settings location
+// toggle already did by hand; this just gives every other call site the same fix.
+export async function refreshLocation() {
+  const pos = await geolocate();
+  setLastFix(pos);
+  const nb = nearestSpotGlobal(pos);
+  if (nb) setFocusSpot(nb.spot);
+  return { pos, nearest: nb };
+}
 // Map a scoped city (by display name) to its nearest listed weather city, so browsing a
 // city page quietly makes that city the traveller's focus for weather + picks.
 export function spotForCity(cc, cityName) {
@@ -1144,7 +1159,7 @@ function homeRightNowCard(ctx) {
       card.append(h('button', { class: 'btn block', onclick: async (e) => {
         store.profile.prefs.geoAsked = true; save();
         e.currentTarget.textContent = 'Locating…';
-        try { setLastFix(await geolocate()); } catch { /* denied/unavailable */ }
+        try { await refreshLocation(); } catch { /* denied/unavailable */ }
         render();
       } }, '📍 Use my location'));
     }
@@ -1205,7 +1220,7 @@ function homeRightNowCard(ctx) {
     card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
       store.profile.prefs.geoAsked = true; save();
       e.currentTarget.textContent = 'Locating…';
-      try { setLastFix(await geolocate()); } catch { /* denied/unavailable */ }
+      try { await refreshLocation(); } catch { /* denied/unavailable */ }
       render();
     } }, '📍 Use my location for picks where you are'));
   }
@@ -1277,7 +1292,7 @@ function homeRightNowCard(ctx) {
   if (ctx.approx && typeof navigator !== 'undefined' && navigator.geolocation) {
     card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
       e.currentTarget.textContent = 'Locating…';
-      try { setLastFix(await geolocate()); } catch { /* denied/unavailable */ }
+      try { await refreshLocation(); } catch { /* denied/unavailable */ }
       render();
     } }, '📍 Use my exact location'));
   }
@@ -4561,7 +4576,14 @@ function dictionaryScreen() {
   // More than one language in play: a dropdown picks which one to view, instead of every
   // language's list stacked one after another — per direct request. One language: skip the
   // dropdown entirely and just show it.
-  if (!dictLangSel || !allCodes.includes(dictLangSel)) dictLangSel = allCodes[0];
+  // Default to wherever the traveller actually is (same "auto, overridable" logic the
+  // phrasebook's own defaultLang uses), not just whichever language happened to be first in
+  // Object.keys() iteration order — falls back to that only when the local language has no
+  // saved phrases yet.
+  if (!dictLangSel || !allCodes.includes(dictLangSel)) {
+    const hereCode = langForCountry(getActiveCountry());
+    dictLangSel = allCodes.includes(hereCode) ? hereCode : allCodes[0];
+  }
   if (allCodes.length > 1) {
     wrap.append(field('Language', selectEl(
       allCodes.map((c) => [c, (getLanguage(c) || {}).label || c]),
@@ -6884,7 +6906,7 @@ function daySuggestScreen(country) {
       h('span', { class: 'todo-scope-city' }, `📍 ${gps ? 'Near ' : ''}${spot.city}`),
       h('button', { class: 'chip', onclick: async (e) => {
         const b = e.currentTarget; b.textContent = 'Locating…'; b.disabled = true;
-        try { setLastFix(await geolocate()); go('#today'); return; } catch { /* denied/offline */ }
+        try { await refreshLocation(); go('#today'); return; } catch { /* denied/offline */ }
         b.textContent = 'Location off'; b.disabled = false;
       } }, gps ? 'Update' : '📍 Use my location'),
     ]));
@@ -8255,8 +8277,9 @@ const SAFETY = {
 };
 
 // Globally nearest listed city to a GPS fix, so the SOS screen can infer which country
-// the traveller is actually in (rather than the last one they browsed).
-function nearestSpotGlobal(fix) {
+// the traveller is actually in (rather than the last one they browsed). Exported so
+// places.js's own embedded-map locate control can resolve+apply a fix the same way.
+export function nearestSpotGlobal(fix) {
   let best = null, bestD = Infinity;
   for (const s of WEATHER_SPOTS) {
     const d = haversineKm(fix, { lat: s.lat, lng: s.lng });
@@ -8315,6 +8338,13 @@ function startLocationWatch() {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
         setLastFix(next);
         const moved = !prev || (haversineKm(prev, next) || 0) > 0.4;
+        // Bug fix: this used to only cache the coordinate — activeCountry/the remembered
+        // focus city never followed a real move, so a traveller who crossed into a new
+        // country kept seeing the old one everywhere (dictionary language, places, map)
+        // until they happened to hit an explicit "use my location" button that itself
+        // re-derived the country. Resolving+applying the nearest spot here means the whole
+        // app's notion of "where I am" now actually tracks GPS continuously, in the background.
+        if (moved) { const nb = nearestSpotGlobal(next); if (nb) setFocusSpot(nb.spot); }
         const hash = location.hash || '';
         if (moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) render();
       },
@@ -9583,7 +9613,7 @@ function welcomeScreen() {
       locCard.append(h('p', { class: 'muted' }, 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
       if (typeof navigator !== 'undefined' && navigator.geolocation) {
         const lb = h('button', { class: 'btn ghost block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
-        lb.onclick = async () => { lb.textContent = 'Locating…'; lb.disabled = true; try { const p = await geolocate(); setLastFix(p); const nb = nearestSpotGlobal(p); if (nb) setFocusSpot(nb.spot); lb.textContent = '📍 Location is on'; } catch { lb.textContent = '📍 Location unavailable'; } lb.disabled = false; };
+        lb.onclick = async () => { lb.textContent = 'Locating…'; lb.disabled = true; try { await refreshLocation(); lb.textContent = '📍 Location is on'; } catch { lb.textContent = '📍 Location unavailable'; } lb.disabled = false; };
         locCard.append(lb);
       } else {
         locCard.append(h('p', { class: 'muted' }, 'Location is not available on this device — you can still browse by country and city.'));
