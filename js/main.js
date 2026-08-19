@@ -290,7 +290,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.429.0';
+const APP_VERSION = 'mk-v0.430.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4163,6 +4163,23 @@ function removeCustomPhrase(code, key) {
   const i = a.findIndex((c) => c.key === key);
   if (i >= 0) { a.splice(i, 1); save(); }
 }
+// Cross-language propagation for custom phrases — the free-translate equivalent of
+// propagatePinAcrossLanguages above. That function can just LOOK UP an already-translated
+// static entry in each other language's phrasebook; a custom phrase has no such entry to
+// find, so it has to actually be translated into each other language via the same
+// translate() call liveTranslateBox already makes for the primary language. Runs in the
+// background (the caller does not await this) and is fully best-effort per language via
+// Promise.allSettled: one language being offline, rate-limited, or an unsupported pair never
+// blocks the others or the phrase already saved in fromCode. Idempotent the same way
+// addCustomPhrase itself is (by the English/source text typed), so re-translating the same
+// phrase later, in any language, never duplicates it.
+async function propagateCustomPhraseAcrossLanguages(fromCode, text, sourceLang) {
+  const targets = Object.keys(LANGUAGES).filter((code) => code !== fromCode);
+  await Promise.allSettled(targets.map(async (code) => {
+    const script = await translate(text, code, sourceLang);
+    addCustomPhrase(code, text, script);
+  }));
+}
 // Map every phrase (incl. the allergens category) to its derived key, so pinned/hidden
 // keys can be resolved back to the phrase object regardless of which category it lives in.
 function phraseIndexFor(categories, code) {
@@ -4775,6 +4792,12 @@ function liveTranslateBox(code, label, locale) {
           '✓ Saved to your dictionary · ',
           h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'View →'),
         ]));
+        // Fire-and-forget: also translate this phrase into every other phrasebook language
+        // and save it there too, so searching/translating one phrase populates the whole
+        // dictionary rather than only the language it was typed in. Not awaited — the primary
+        // translation above is already shown; the traveller should never wait on N more
+        // network calls just to see the one they asked for.
+        propagateCustomPhraseAcrossLanguages(code, text, srcSel.value);
       }
     } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
   };
