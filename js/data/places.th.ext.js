@@ -4724,4 +4724,66 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking - pay the small lift fee on site if you want it.", verified: "2026-08",
     sources: [{ org: "Bon Voyage Thailand — Wat Huay Pla Kang Chiang Rai (Guan Yin / Big Buddha)", url: "https://www.bonvoyagethailand.com/chiang-rai/wat-huay-pla-kang-chiang-rai/" }, { org: "Renown Travel — Wat Huay Pla Kang, Chiang Rai", url: "https://www.renown-travel.com/temples/wat-huay-pla-kang.html" }],
   },
+  // Run 9 (task #142): Thailand x sights, Udon Thani hub. Before this run the ONLY entry
+  // anywhere tagged city:"Udon Thani" was th-ext-ban-chiang-archaeological-site — a real
+  // UNESCO site, but an hour outside town, leaving the city itself with zero orientation
+  // content. These three cover the actual in-town/near-town sights instead of duplicating
+  // Ban Chiang. Red Lotus Sea has no fixed headline TripAdvisor rating surfaced by search
+  // (only review counts/sentiment, no bubble breakdown) and neither does Nong Prajak Park -
+  // both direct TripAdvisor fetches returned HTTP 403, same as mapcarta.com in Run 7 - so
+  // both ship without rating/reviewSources rather than inventing a number. afterDark is set
+  // for the museum (closes 15:30, well before dark) and the lotus lake (dawn/morning boat
+  // activity only, no evening operation at the rural pier) since both are safe, sourced,
+  // clear-cut "closes before dark" facts; omitted for the park, whose 20:00 closing genuinely
+  // straddles dusk with no sourced info on evening lighting/safety - omit rather than guess.
+  {
+    id: "th-ext-udonthani-nong-prajak-park", name: "Nong Prajak Park", city: "Udon Thani", country: "th",
+    recognition: "A large lake ringed by a walking/jogging track at the heart of Udon Thani city, with a footbridge out to a garden island and food carts along the path at dusk.",
+    localName: "หนองประจักษ์ศิลปาคม · Nong Prajak Silapakhom",
+    categories: ["nature", "park"], budgetTier: "low",
+    kidFriendly: true, activities: ["park", "walking", "sunset"],
+    blurb: "Udon Thani's central public lake park, named for Prince Prajak Silapakhom - the royal administrator credited as the city's founder, who moved the provincial capital here in 1893. A lakeside track, a garden island reached by footbridge, and evening food stalls make it the default first stop for getting oriented in town.",
+    whyItFits: "The 'go for a walk and get your bearings' stop in a hub town whose named sights otherwise mean a day trip out to Ban Chiang.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free, open public park with no gate." },
+    hours: "Roughly 04:00-20:00 daily; liveliest in the cool early morning and at dusk.",
+    tips: ["Go at dusk for cooler air, joggers, and grilled-chicken-skewer carts along the path.", "The garden island in the middle of the lake is reached by a footbridge - a worthwhile short detour.", "A short walk or songthaew ride from the train station and Central Udon mall, so it works well as a first stop right after arriving."],
+    scamWarnings: [],
+    mapQuery: "Nong Prajak Park Udon Thani", coords: { lat: 17.4189, lng: 102.7816 },
+    bookHint: "No booking - open access, no gate.", verified: "2026-08",
+    sources: [{ org: "Travelfish — Nong Prajak Park, Udon Thani", url: "https://www.travelfish.org/sight_profile/thailand/northeast_thailand/udon_thani/udon_thani/3403" }, { org: "Thaizer — Nong Prajak Park, Udon Thani", url: "https://www.thaizer.com/nong-prajak-park-udon-thani/" }],
+  },
+  {
+    id: "th-ext-udonthani-red-lotus-sea", name: "Red Lotus Sea (Thale Bua Daeng)", city: "Udon Thani", country: "th",
+    recognition: "A shallow lake that turns pink-red each cool season as thousands of wild lotus flowers open across the water, toured by hired long-tail boat from Ban Diam pier.",
+    localName: "ทะเลบัวแดง · Thale Bua Daeng (the lake itself is Nong Han Kumphawapi)",
+    categories: ["nature"], budgetTier: "mid",
+    kidFriendly: true, activities: ["boat trip", "photography"],
+    afterDark: { openAfterDark: false, note: "A dawn/morning boat activity only - the lotus flowers close by mid-morning as the sun strengthens, and there is no evening operation at the rural pier." },
+    blurb: "A wild lotus-covered lake around 35km southeast of Udon Thani city near Ban Diam village, Kumphawapi district. Its red-pink bloom, at its best from December to early January, is one of the most photographed seasonal sights in northeast Thailand.",
+    whyItFits: "The single most distinctive nature sight near Udon Thani, and a genuine reason to add a half-day beyond the Ban Chiang museum trip - in season.",
+    priceRange: { low: 150, typical: 300, high: 500, currency: "THB", note: "Small boats run roughly 150-300 THB per person; larger shared boats around 500 THB total. Fares are set informally at the pier and vary by operator - agree the total before boarding." },
+    hours: "Best 06:00-11:00 while the flowers are open. Blooms only mid-October to mid-February (peak December-early January); little to see the rest of the year.",
+    tips: ["This is a genuinely seasonal sight - check bloom season (roughly Nov-Feb, peak Dec-early Jan) before planning a special trip out.", "Go early: flowers open around 6am and close as the sun strengthens, so a 6-9am boat gives the best bloom.", "Weekday mornings are far quieter than weekend mid-mornings.", "Boat fares are negotiated at the pier kiosk, not fixed - agree the total (per-person vs per-boat) before you board."],
+    scamWarnings: ["Agree the boat fare and duration up front; per-person vs per-boat pricing is often unclear until you ask directly."],
+    mapQuery: "Red Lotus Sea Ban Diam Pier Kumphawapi Udon Thani", coords: { lat: 17.2211, lng: 103.0381 },
+    bookHint: "No advance booking - buy a boat ticket at the Ban Diam pier kiosk on arrival.", verified: "2026-08",
+    sources: [{ org: "Thaizer — Visiting the Red Lotus Lake, Udon Thani", url: "https://www.thaizer.com/visiting-the-red-lotus-lake-udon-thani/" }, { org: "TripAdvisor — Red Lotus Lake (Kumphawapi) reviews", url: "https://www.tripadvisor.com/Attraction_Review-g15684784-d3181452-Reviews-Red_Lotus_Lake-Chiang_Haeo_Udon_Thani_Province.html" }],
+  },
+  {
+    id: "th-ext-udonthani-city-museum", name: "Udon Thani City Museum", city: "Udon Thani", country: "th",
+    recognition: "A preserved two-storey 1920s former municipal building turned free 26-room museum, overlooking the southern side of Nong Prajak lake.",
+    localName: "พิพิธภัณฑ์เมืองอุดรธานี · Udon Thani City Museum",
+    categories: ["museum", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["museum", "history"],
+    afterDark: { openAfterDark: false, note: "Closes at 15:30, well before dark - a daytime, air-conditioned stop." },
+    blurb: "A well-labelled municipal museum in a preserved colonial-era building from 1920, covering the province's geology, prehistory (including a Ban Chiang tie-in), local history and traditions across 26 rooms - a compact, free way to get oriented before or after the Ban Chiang day trip.",
+    whyItFits: "A free, indoor, English-labelled orientation stop that pairs naturally with a walk around neighbouring Nong Prajak Park.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free entry." },
+    hours: "Tue-Sun 09:00-15:30 (closed 12:00-13:00 for lunch); closed Mondays and public holidays.",
+    tips: ["Pairs naturally with a visit to neighbouring Nong Prajak Park - the museum overlooks its southern side.", "Worth doing before or after Ban Chiang itself for context on the same prehistoric finds without the trip out of town.", "Air-conditioned - a good heat-of-the-day stop."],
+    scamWarnings: [],
+    mapQuery: "Udon Thani City Museum", coords: { lat: 17.4123, lng: 102.7822 },
+    bookHint: "No booking - free walk-in entry during opening hours.", verified: "2026-08",
+    sources: [{ org: "Trip.com — Udon Thani City Museum", url: "https://sg.trip.com/travel-guide/attraction/udon-thani/udon-thani-city-museum-38623618/" }, { org: "Evendo — Udon Thani City Museum", url: "https://evendo.com/locations/thailand/udon-thani/landmark/udon-thani-city-museum" }],
+  },
 ];
