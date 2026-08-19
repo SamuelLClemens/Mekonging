@@ -50,10 +50,13 @@ import { shareUrl, encodeShare } from '../social.js';
 import {
   go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity, oneTimeHint,
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
-  priceLine, stopDateLabel, shareButton, profileFitCard, phraseSlug, exportOnePlaceReviewHtml,
-  setBlobThumb, scriptLang, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
+  priceLine, stopDateLabel, shareButton, profileFitCard, exportOnePlaceReviewHtml,
+  setBlobThumb, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
   nearestSpotGlobal,
 } from '../main.js';
+// phraseSlug/scriptLang moved from main.js to phrasebook.js (task #211's final module-split
+// slice) — this is the one screen module that needed an import-line edit on that extraction.
+import { phraseSlug, scriptLang } from './phrasebook.js';
 
 // Closes the tail this guide does not (yet) curate: a live Google Maps search centred on
 // wherever Places is anchored right now, via the same mapsUrl() deep link every place-detail
