@@ -4607,4 +4607,65 @@ export const PLACES_TH_EXT = [
     bookHint: "Buy at the gate, or book the all-in ticket online in advance for a small discount on some resale sites.", verified: "2026-08",
     sources: [{ org: "Traveloka — Nong Nooch Tropical Garden Ticket Prices 2026", url: "https://www.traveloka.com/en-en/activities/thailand/product/nong-nooch-tropical-garden-2002113179492" }, { org: "Trip.com — Nong Nooch Tropical Garden Tickets 2026", url: "https://us.trip.com/travel-guide/attraction/sattahip/nong-nooch-tropical-garden-77152/" }, { org: "Wikipedia — Nong Nooch Tropical Garden", url: "https://en.wikipedia.org/wiki/Nong_Nooch_Tropical_Garden" }],
   },
+  // Run 7 (task #142): Thailand x sights, Hua Hin hub. Hua Hin had exactly ONE entry
+  // (a stay listing) before this run — a genuine gap for a major, long-established beach
+  // resort town. These three are the core land-attraction "why visit" sights, mirroring
+  // the Pattaya Run 6 shape; a future run can add practical/transport/eat passes.
+  {
+    id: "th-ext-huahin-wat-huay-mongkol", name: "Wat Huay Mongkol", city: "Hua Hin", country: "th",
+    // No coords: after 5 separate WebSearch/WebFetch attempts, no source returned a precise
+    // decimal lat/lng for this temple (only "~14-15km west of central Hua Hin, off Route
+    // 3219, Thap Tai Subdistrict"). mapsUrl() in util.js PREFERS coords over mapQuery when
+    // present, so a guessed pin would silently override the reliable text search and could
+    // point somewhere wrong — omitting coords here is the safer choice, not an oversight.
+    recognition: "A giant 11.5m bronze statue of the revered monk Luang Pu Thuad seated on a raised mound, flanked by two large wooden three-headed elephants, in open temple grounds off Route 3219 well outside town.",
+    localName: "วัดห้วยมงคล · Wat Huay Mongkol",
+    rating: 4.5, reviewSources: ["Traveller consensus", "TripAdvisor reviews"],
+    categories: ["culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["temple", "sculpture"],
+    blurb: "A working temple built around the world's largest statue of Luang Pu Thuad, a monk revered across Thailand for miracle stories - renamed by royal decree in 1952 after a visit from King Bhumibol.",
+    whyItFits: "Hua Hin's one major cultural landmark outside the beach strip itself, and a real pilgrimage site for Thai visitors, not just a tour-bus stop.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free entry; a small donation is customary and welcomed." },
+    hours: "08:00-18:00 daily (a couple of sources list slightly wider hours - arrive in this window to be safe)",
+    tips: ["It's about 14-15km west of central Hua Hin off Route 3219 - a taxi, Grab or rented scooter is the practical way out, there's no direct public bus.", "Cover shoulders and knees - it is an active temple.", "Combine with other west-of-town stops (vineyards, the Hub Kapong hot spring area) to justify the drive out."],
+    scamWarnings: [],
+    mapQuery: "Wat Huay Mongkol, Thap Tai, Hua Hin", coords: null,
+    bookHint: "No booking - open access, free entry.", verified: "2026-08",
+    sources: [{ org: "Hua Hin Today — Wat Huay Mongkol Hua Hin temple", url: "https://huahintoday.com/places-to-visit/wat-huay-mongkol-hua-hin-temple/" }, { org: "Renown Travel — Wat Huay Mongkol temple Hua Hin", url: "https://www.renown-travel.com/daytripshuahin/wathuaymongkol.html" }, { org: "Thailand Tourism Directory — Huay Mongkol Temple", url: "https://thailandtourismdirectory.go.th/en/attraction/1442" }],
+  },
+  {
+    id: "th-ext-huahin-khao-takiab", name: "Khao Takiab (Monkey Mountain)", city: "Hua Hin", country: "th",
+    recognition: "A 270m hill marking the south end of Hua Hin beach, topped with a 20m golden standing Buddha statue visible from the shoreline - reached by a stepped path or a short drive up, and home to a resident troop of macaques.",
+    localName: "เขาตะเกียบ · Khao Takiab",
+    rating: 4.3, reviewSources: ["Traveller consensus", "Google Maps consensus"],
+    categories: ["culture", "viewpoint"], budgetTier: "low",
+    kidFriendly: true, activities: ["temple", "viewpoint", "wildlife"],
+    blurb: "A hilltop shrine and golden standing Buddha at the southern tip of Hua Hin beach, with a genuine sea view and a resident monkey troop that gives the hill its popular nickname.",
+    whyItFits: "The easiest short trip out of central Hua Hin for a real coastal view and a working temple, walkable from the south end of the beach at low tide or a quick taxi ride otherwise.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free entry; parking and a couple of small stalls charge modest fees." },
+    hours: "Open daily from early morning to roughly 18:00; sunset is the recommended time for the view and cooler air",
+    tips: ["Secure food, drinks and anything shiny or dangly (sunglasses, jewellery) before you go up - the monkeys are known to snatch items.", "Cover shoulders and knees for the temple itself.", "About 6km south of central Hua Hin - taxi, Grab, songthaew or rented scooter all work."],
+    scamWarnings: [],
+    mapQuery: "Khao Takiab Hua Hin", coords: { lat: 12.5163, lng: 99.9819 },
+    bookHint: "No booking - open access.", verified: "2026-08",
+    sources: [{ org: "Renown Travel — Monkey Mountain Hua Hin", url: "https://www.renown-travel.com/daytripshuahin/huahinmonkeymountain.html" }, { org: "Two Passports Packed — Wat Khao Takiab: Hua Hin's Monkey Mountain by the Sea", url: "https://twopassportspacked.com/wat-khao-takiab-hua-hin/" }],
+  },
+  {
+    id: "th-ext-huahin-railway-station", name: "Hua Hin Railway Station (historic)", city: "Hua Hin", country: "th",
+    afterDark: { openAfterDark: false, note: "A daytime photo stop and preserved public building, not lit or set up for evening visits." },
+    recognition: "A red-and-cream wooden station building with a distinctive multi-tiered roof, and beside it the ornate golden royal waiting pavilion (Phra Mongkut Klao Pavilion) - sits right next to the new, larger modern station that replaced it.",
+    localName: "สถานีรถไฟหัวหิน (เก่า) · Sathani Rotfai Hua Hin (Kao)",
+    rating: 4.4, reviewSources: ["Traveller consensus", "TripAdvisor reviews"],
+    categories: ["culture", "history"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "Thailand's oldest surviving railway station building (current structure from 1926), with an ornate royal waiting pavilion built for King Rama VI - no longer used for train departures since a new station opened next door in December 2023, but preserved and open daily as a free heritage site and photo stop.",
+    whyItFits: "A five-minute, free, genuinely historic stop in the middle of town - one of the most-photographed buildings in Hua Hin and an easy add-on to a walk through the old town or night market.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free to view from the platform/grounds." },
+    hours: "Grounds accessible daily during daylight hours; check locally if you want the interior, which may have more limited access now that it no longer handles live train services",
+    tips: ["Trains themselves now leave from the new Hua Hin station built right next door - don't wait here for a departure.", "The four-gabled royal pavilion beside the platform is the single best photo - come mid-morning for good light without a harsh midday sun.", "Combine with the nearby old town shophouses and Chatchai day market, both an easy walk away."],
+    scamWarnings: [],
+    mapQuery: "Hua Hin Railway Station (old)", coords: { lat: 12.5653, lng: 99.9547 },
+    bookHint: "No booking - open access, free entry.", verified: "2026-08",
+    sources: [{ org: "Hua Hin Today — Hua Hin Railway Station: a classic photo spot full of history", url: "https://huahintoday.com/places-to-visit/hua-hin/hua-hin-railway-station-a-classic-photo-spot-full-of-history/" }, { org: "Wikipedia — Hua Hin railway station", url: "https://en.wikipedia.org/wiki/Hua_Hin_railway_station" }, { org: "ASEAN NOW — Iconic Hua Hin Railway Station set to be preserved as new modern facility opens", url: "https://aseannow.com/topic/1313420-iconic-hua-hin-railway-station-set-to-be-preserved-as-new-modern-facility-opens/" }],
+  },
 ];
