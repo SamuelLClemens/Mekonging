@@ -25,6 +25,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-pha-dok-seaw", name: "Pha Dok Siao Waterfall & Nature Trail", city: "Chiang Mai", country: "th",
     access: { stepFree: "no", note: "Guided-only forest trek on dirt paths with wooden and bamboo steps, narrow slopes with bamboo handrails, and bamboo river-crossing bridges; the waterfall section is stairs, impassable for a wheelchair." },
+    afterDark: { openAfterDark: false, note: "Park hours are roughly 05:30-18:00 (own listing); not accessible after dark." },
     categories: ["waterfall", "hike", "nature", "park"], budgetTier: "mid",
     blurb: "A lesser-trodden waterfall inside Doi Inthanon National Park reached on a guided trail that threads through Karen rice terraces, coffee plots and hill-tribe villages.",
     whyItFits: "For walkers who want Doi Inthanon's scenery without the summit crowds, plus a genuine community-tourism angle. Pairs well with the twin royal pagodas higher up the mountain.",
@@ -190,6 +191,7 @@ export const PLACES_TH_EXT = [
 {
     id: "th-ext-doi-inthanon", name: "Doi Inthanon National Park", city: "Chiang Mai", country: "th",
     access: { stepFree: "partial", note: "The summit Ang Ka nature trail is a near-flat 360m raised-boardwalk loop, but sources conflict on a few small step/uneven sections along it, so it is not fully step-free; the Royal Twin Pagodas and Wachirathan viewpoint need little walking but have paved steps around them." },
+    afterDark: { openAfterDark: false, note: "Park hours are roughly 05:30-18:00 (own listing); not accessible after dark." },
     externalRatings: [
       { site: "Google", score: 4.6, scale: 5, count: 3661, asOf: "2026-07" },
       { site: "Tripadvisor", score: 4.4, scale: 5, count: 2265, url: "https://www.tripadvisor.com/Attraction_Review-g1027112-d455307-Reviews-Doi_Inthanon-Doi_Inthanon_National_Park.html", asOf: "2026-07" },
@@ -487,6 +489,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-doiinthanon-camping", name: "Doi Inthanon National Park camping", city: "Chiang Mai", country: "th",
+    access: { stepFree: "no", note: "Standard pitches are on grass/ground near the park HQ with a shared toilet/shower block a short walk away; no accessible-camping infrastructure (paved pitches, adapted toilets) is documented. Rentable 'VIP' tents add a private bathroom but not step-free access." },
+    afterDark: { openAfterDark: true, note: "Camping is overnight by design, unlike the park's day-use gates - but this means the HQ campsite area itself, not the unlit trails and waterfalls elsewhere in the park." },
     categories: ["stay", "park", "nature"], budgetTier: "low",
     kidFriendly: true, stayType: "tent", stayDuration: "short",
     activities: ["camping", "hiking", "waterfalls", "birdwatching"],
@@ -3751,6 +3755,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-mae-klang-luang-homestays", name: "Ban Mae Klang Luang — Karen homestays & coffee (Doi Inthanon)", city: "Chiang Mai", country: "th",
+    access: { stepFree: "no", note: "Traditional wooden homestay houses on stepped rice-terrace ground, typically reached by wooden stairs; no ground-level or ramped rooms documented." },
+    afterDark: { openAfterDark: true, note: "An overnight homestay by design, but the village has no lit streets or services after dark - suits travellers comfortable with a quiet, unlit rural village at night." },
     recognition: "A White Karen village on the lower slopes of Doi Inthanon, its wooden homestays and coffee huts set along stepped rice terraces beside the Mae Klang stream, about two hours south-west of Chiang Mai.",
     localName: "บ้านแม่กลางหลวง · Ban Mae Klang Luang",
     categories: ["stay", "guesthouse", "nature"], budgetTier: "low",
@@ -3794,6 +3800,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-kew-mae-pan-trail", name: "Kew Mae Pan nature trail (Doi Inthanon)", city: "Chiang Mai", country: "th",
+    access: { stepFree: "no", note: "A guided ridge trail with steps, uneven ground and steep sections in places; a compulsory local guide, capped group size, and closed entirely June-October for reforestation." },
+    afterDark: { openAfterDark: false, note: "Trail hours run roughly 06:00-16:00 last entry within its open season only; not usable after dark." },
     recognition: "A roughly 2.5km ridge-top trail high on Doi Inthanon, running from cloud forest out to open grassland cliffs with vast valley views; walked with a local guide and closed each rainy season.",
     localName: "เส้นทางศึกษาธรรมชาติกิ่วแม่ปาน · Kew Mae Pan",
     categories: ["hike", "viewpoint", "nature"], budgetTier: "low",
@@ -3811,6 +3819,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-wachirathan-waterfall", name: "Wachirathan Waterfall (Doi Inthanon)", city: "Chiang Mai", country: "th",
+    access: { stepFree: "partial", note: "A boardwalk with handrails reaches the lower viewpoint from the car park - nearly flat, and the reason this entry's own tips already call it buggy-friendly to that point - but the upper viewpoint is reached by steps, so it is not fully step-free." },
+    afterDark: { openAfterDark: false, note: "Park hours are roughly 05:30-18:00 (own listing); not accessible after dark." },
     recognition: "A wide, powerful waterfall beside the Doi Inthanon road that crashes off a high granite cliff into a misted pool, throwing spray and rainbows across the viewing area.",
     localName: "น้ำตกวชิรธาร · Nam Tok Wachirathan",
     categories: ["waterfall", "nature"], budgetTier: "low",
@@ -3828,6 +3838,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-mae-ya-waterfall", name: "Mae Ya Waterfall (Doi Inthanon)", city: "Chiang Mai", country: "th",
+    access: { stepFree: "partial", note: "The path from the car park to the viewpoint is flat and pram-manageable (as this entry's own tips already note), but the final approach road to the trailhead is narrow with minimal signage, and wet rock near the pool is slippery - 'partial' rather than a full step-free rating." },
+    afterDark: { openAfterDark: false, note: "Park hours are roughly 05:30-18:00 (own listing); not accessible after dark." },
     recognition: "A vast, many-tiered waterfall near the park's southern (Chom Thong) entrance, sliding some 280m down a broad staircase of rock into forest — one of the tallest in Thailand.",
     localName: "น้ำตกแม่ยะ · Nam Tok Mae Ya",
     categories: ["waterfall", "nature"], budgetTier: "low",
@@ -3958,6 +3970,8 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-mae-klang-waterfall", name: "Mae Klang Waterfall (Doi Inthanon)", city: "Chiang Mai", country: "th",
+    access: { stepFree: "partial", note: "The most accessible waterfall on the mountain: sealed, paved paths this entry's own tips already describe as 'easy with prams' - but no source confirms full wheelchair accessibility, so 'partial' rather than 'yes'." },
+    afterDark: { openAfterDark: false, note: "Park hours are roughly 05:30-18:00 (own listing); not accessible after dark." },
     recognition: "The first and most accessible waterfall on Doi Inthanon, a broad ~100m cascade just inside the Chom Thong entrance, with sealed paths, footbridges and food stalls.",
     localName: "น้ำตกแม่กลาง · Nam Tok Mae Klang",
     categories: ["waterfall", "nature"], budgetTier: "low",
