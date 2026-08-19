@@ -51,7 +51,8 @@ import {
   go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity, oneTimeHint,
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
   priceLine, stopDateLabel, shareButton, profileFitCard, phraseSlug, exportOnePlaceReviewHtml,
-  setBlobThumb, scriptLang, mapsSearch, kmLabel, daysUntilISO, chipIcon,
+  setBlobThumb, scriptLang, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
+  nearestSpotGlobal,
 } from '../main.js';
 
 // Closes the tail this guide does not (yet) curate: a live Google Maps search centred on
@@ -485,12 +486,17 @@ export function placesScreen(arg) {
   modeBar.append(h('span', { style: 'flex:1' }));
   if (scopeSlug) {
     modeBar.append(h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, '↩ Use my location instead'));
-  } else if (!usingGps && typeof navigator !== 'undefined' && navigator.geolocation) {
-    const locBtn = h('button', { class: 'chip' }, '📍 Use my location');
+  } else if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    // Bug fix: this used to disappear once `usingGps` first became true, so a traveller
+    // who had ever gotten one fix had no way to ask for a fresh one after actually moving —
+    // exactly when a re-locate matters most. Now it stays, relabelled, so "find my location"
+    // is always available rather than a one-time-only invite.
+    const label = usingGps ? '🔄 Refresh location' : '📍 Use my location';
+    const locBtn = h('button', { class: 'chip' }, label);
     locBtn.onclick = async () => {
       locBtn.textContent = 'Locating…';
-      try { setLastFix(await geolocate()); render(); }
-      catch { locBtn.textContent = '📍 Location unavailable'; setTimeout(() => { locBtn.textContent = '📍 Use my location'; }, 1800); }
+      try { await refreshLocation(); render(); }
+      catch { locBtn.textContent = '📍 Location unavailable'; setTimeout(() => { locBtn.textContent = label; }, 1800); }
     };
     modeBar.append(locBtn);
   }
@@ -824,7 +830,20 @@ export function placesScreen(arg) {
     import('../map.js').then((m) => m.initMap(canvas, {
       places: mapList0,
       onOpen: (id) => go(`#place-${id}`),
-      onLocate: (fix) => setLastFix(fix),
+      // Bug fix: this used to only cache the raw coordinate — the map's own native locate
+      // control (trackUserLocation: true, so this can fire repeatedly while tracking is on)
+      // could report a fix in an entirely different country and the screen would just keep
+      // showing the old one, because nothing re-derived activeCountry from it. A same-country
+      // move needs nothing extra here — focusSpot() already prefers a live GPS fix over a
+      // stale focus city on its own next render (that was task #206's fix). Only a genuine
+      // country change needs to force things: applying the new country/focus and re-rendering
+      // on every routine position tick would rebuild this whole map dozens of times while
+      // tracking is active, for no visible benefit.
+      onLocate: (fix) => {
+        setLastFix(fix);
+        const nb = nearestSpotGlobal(fix);
+        if (nb && nb.spot.country !== getActiveCountry()) { setFocusSpot(nb.spot); render(); }
+      },
       numbered: true,
       cluster: true,
       markerColor: (p) => bucketColor(p),
