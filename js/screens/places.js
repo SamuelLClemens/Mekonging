@@ -35,7 +35,7 @@ import {
   CATEGORY_FAMILIES, photoBlock, seaAgo, airBlock, uvTodayBlock, extUrl, sourcesNote,
   fmtTemp, fmtWind,
 } from '../render-utils.js';
-import { collapsibleCard, openModal, readAloudBar, confirmAction, online } from '../ui-widgets.js';
+import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
 import { getAccessibility } from '../data/accessibility.js';
 import { CROSSINGS } from '../data/borders.js';
@@ -66,6 +66,30 @@ function placesMapsFallback(anchor, label) {
     class: 'btn ghost block', style: 'margin:10px 0 4px',
     href: mapsUrl({ coords: anchor }), target: '_blank', rel: 'noopener',
   }, `🗺 Not seeing it? Search near ${label} on Google Maps →`);
+}
+
+// A compact "choose your location" bottom sheet — always available regardless of GPS
+// support or scope state (direct request: the map/list anchor must always be manually
+// choosable, not only whatever GPS/last-focused-city happened to resolve to). Reuses the
+// exact locationSelect()+setFocusSpot() pairing whereAmICard already uses INLINE elsewhere
+// (main.js) rather than the full-screen #setcity flow, which navigates to Explore's country
+// hub on selection — the wrong destination for something opened from Places. Selecting a
+// city applies immediately and closes; no separate "confirm" tap, matching that inline feel.
+function openLocationPicker() {
+  const backdrop = h('div', { class: 'sheet-backdrop' });
+  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Choose your location' });
+  let close;
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+  sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
+  sheet.append(h('h3', {}, '📍 Choose your location'));
+  sheet.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Sets where the map, distances and “near me” match — works offline, no GPS needed.'));
+  const cur = focusSpot(getActiveCountry()).spot;
+  sheet.append(field('Your location', locationSelect(spotKey(cur), (key) => {
+    const s = spotForKey(key);
+    if (s) { close(); setFocusSpot(s); render(); }
+  })));
+  backdrop.append(sheet);
+  close = openModal(backdrop);
 }
 
 export function placesScreen(arg) {
@@ -540,11 +564,15 @@ export function placesScreen(arg) {
   }
   buildLayerChips();
 
-  // Mode bar: a plain STATUS label (where "near" is centred) on the left, and — since a scoped
-  // city already has its own "↩" escape hatch below, this only ever needs ONE further action —
-  // either "drop the city scope, use my location" or "get a precise GPS fix" on the right.
+  // Mode bar: a plain STATUS label (where "near" is centred) on the left, and up to two
+  // actions on the right. "Choose location" is unconditional — direct request: the map/list
+  // anchor must always have a manual override, not only whatever GPS/last-focused-city
+  // happened to resolve to (previously the only way to do this was to leave Places for
+  // Explore's per-city "Where are you?" card). The scoped-city escape hatch or GPS-refresh
+  // chip is the one further, situational action alongside it.
   modeBar.append(h('span', { class: 'mode-state' }, `📍 Near ${anchorLabel}`));
   modeBar.append(h('span', { style: 'flex:1' }));
+  modeBar.append(h('button', { class: 'chip', onclick: openLocationPicker }, '✎ Choose location'));
   if (scopeSlug) {
     modeBar.append(h('button', { class: 'chip', onclick: () => go(`#places-${getActiveCountry()}`) }, '↩ Use my location instead'));
   } else if (typeof navigator !== 'undefined' && navigator.geolocation) {
