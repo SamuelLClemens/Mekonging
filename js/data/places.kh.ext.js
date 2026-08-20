@@ -3031,4 +3031,93 @@ export const PLACES_KH_EXT = [
     verified: "2026-08",
     sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com/Hotel_Review-g1893367-d3598769-Reviews-Green_House_Guest_House-Sen_Monorom_Mondulkiri_Province.html" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }],
   },
+  // Task #142 "do it all" pass: a fresh category-filtered count across all 22 remaining
+  // WEATHER_SPOTS hub towns (Vietnam beyond Hanoi/Sapa, all of Cambodia, all of Laos)
+  // found sights/stay/eat reasonably populated almost everywhere already, but PRACTICAL
+  // at a flat zero in every single one of the 22 - the single starkest, most systematic
+  // gap found all session. Rather than the 3-separate-card Hanoi/Bangkok shape (money/
+  // health/sim as distinct entries), each town below gets ONE combined "money, health &
+  // connectivity" card - prioritising breadth (some real practical coverage in all 22
+  // towns) over per-town depth, given the scale. Country-level facts (ATM fees, SIM
+  // providers/pricing, emergency numbers) are researched once per country and hold
+  // across all its towns; only the named hospital/clinic is genuinely town-specific
+  // research per entry, not generic copy-paste. Cambodia first (6 towns, smallest):
+  {
+    id: "kh-ext-phnompenh-practical", name: "Phnom Penh practical: money, health & connectivity", city: "Phnom Penh", country: "kh",
+    categories: ["practical", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Cambodia runs a dollarized economy - USD is the everyday currency, with Riel used only for small change under about a dollar. ATMs dispense both currencies; foreign cards pay a flat access fee of roughly USD 4-6 per withdrawal at most banks (no fee-free ATMs exist), with per-transaction limits typically USD 500-2,000. Cellcard, Smart and Metfone all sell tourist SIMs from about USD 5 (30GB/15 days) at the airport and citywide. For anything beyond a minor complaint, Royal Phnom Penh Hospital and Sunrise Japan Hospital both run genuine international-standard emergency care.",
+    whyItFits: "The orientation card for money, getting online and knowing which hospital to head for in the capital.",
+    priceRange: { low: 4, typical: 5, high: 10, currency: "USD", note: "ATM withdrawal fee roughly USD 4-6 (some banks add a further ~2% charge); a tourist SIM with 30GB runs about USD 5, up to 100GB for USD 10 from Cellcard/Metfone." },
+    hours: "ATMs 24h; SIM counters and pharmacies keep long daily hours, roughly 07:00-21:00 in central areas.",
+    tips: ["Carry small-denomination USD - Riel is only for change under a dollar, and change is often given in a USD/Riel mix.", "Buy a Smart, Cellcard or Metfone tourist SIM at the airport or any phone shop - eSIM options exist from all three if your phone supports it.", "For a genuine emergency, do not wait for a 119 ambulance (response can exceed 30 minutes even in the capital) - take a tuk-tuk or taxi straight to a private hospital.", "Royal Phnom Penh Hospital and Sunrise Japan Hospital are the standard international-standard picks; confirm your travel insurer direct-bills or budget to pay upfront and claim back."],
+    scamWarnings: ["No ATM in Cambodia is fee-free for foreign cards - be wary of a machine claiming otherwise.", "Some private clinics have been reported to charge foreigners well above the local rate for the same simple treatment - ask for an upfront estimate before agreeing to non-emergency care."],
+    mapQuery: "Royal Phnom Penh Hospital", coords: { lat: 11.5564, lng: 104.9282 },
+    bookHint: "No booking for ATMs/SIM counters; hospitals take emergency walk-ins and phone-ahead scheduled visits.", verified: "2026-08",
+    sources: [{ org: "AsiaTourAdvisor — ATMs in Vietnam and Cambodia 2026", url: "https://www.asiatouradvisor.com/get-inspired/viet-nam/atms-in-vietnam-and-cambodia/" }, { org: "ZetSIM — Cambodian SIM Card Guide 2026", url: "https://www.zetsim.com/blogs/news/cambodian-sim-card-guide-2026-prices-plans-esim" }, { org: "4stogo — Emergency Contacts Every Traveler Needs in Cambodia", url: "https://4stogo.com/blog/posts/emergency-contacts-cambodia" }],
+  },
+  {
+    id: "kh-ext-siemreap-practical", name: "Siem Reap practical: money, health & connectivity", city: "Siem Reap", country: "kh",
+    categories: ["practical", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "As across Cambodia, USD is the working currency here with Riel for small change; ATMs charge foreign cards roughly USD 4-6 per withdrawal with no fee-free option. Cellcard, Smart and Metfone tourist SIMs (from about USD 5 for 30GB) are sold at the airport and around Pub Street/the Old Market. Royal Angkor International Hospital is the standard tourist and expat hospital, used to treating temple-related heat exhaustion, cuts and travellers' stomach complaints alongside genuine emergencies.",
+    whyItFits: "The orientation card for money, connectivity and health specifically for a temple-touring base, where heat and long walking days are the most common real risks.",
+    priceRange: { low: 4, typical: 5, high: 10, currency: "USD", note: "ATM withdrawal fee roughly USD 4-6; a 30GB tourist SIM runs about USD 5, up to 100GB for USD 10." },
+    hours: "ATMs 24h; SIM shops and pharmacies around Pub Street/Old Market keep long hours into the evening.",
+    tips: ["Carry a paper photocopy of your Angkor Pass and passport when temple-touring - losing the physical pass mid-day is a common, avoidable hassle.", "Drink more water than feels necessary - heat exhaustion during a full-day temple circuit is the single most common reason travellers end up needing care here.", "Royal Angkor International Hospital is the standard call for anything beyond a pharmacy-level complaint - confirm your insurer direct-bills or budget to pay upfront.", "Buy a tourist SIM at the airport on arrival if landing after dark, since data helps immediately for booking a tuk-tuk into town."],
+    scamWarnings: ["Unofficial 'ticket sellers' near the Angkor Archaeological Park approach independently of the official ticket counters - buy passes only from the official Angkor Enterprise counter or online."],
+    mapQuery: "Royal Angkor International Hospital Siem Reap", coords: { lat: 13.3671, lng: 103.8448 },
+    bookHint: "No booking for ATMs/SIM; the hospital takes walk-in emergencies and phone-ahead appointments.", verified: "2026-08",
+    sources: [{ org: "Backpack Moments — Money in Cambodia", url: "https://backpackmoments.com/money-in-cambodia/" }, { org: "Kampatour — Cambodia SIM Card Guide 2026", url: "https://kampatour.com/cambodia-sim-card" }, { org: "Cambodia Kingdom — Emergency Numbers 2026", url: "https://cambodiakingdom.com/ko/safety-laws/emergency-numbers" }],
+  },
+  {
+    id: "kh-ext-sihanoukville-practical", name: "Sihanoukville practical: money, health & connectivity", city: "Sihanoukville", country: "kh",
+    categories: ["practical", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Same nationwide USD/Riel and ATM-fee picture as elsewhere in Cambodia (roughly USD 4-6 per foreign-card withdrawal), with Cellcard/Smart/Metfone SIM counters along the main strip. Sihanoukville has no major hospital of its own - CT Clinic is the expat/tourist standby (English-speaking doctors, 24-hour on-call), while Sihanoukville International Clinic also runs 24-hour care but has been reported to charge Western foreigners well above the standard local rate for simple complaints. For anything serious, Sonja Kill Memorial Hospital in nearby Kampot is the closest genuine international-standard facility.",
+    whyItFits: "The honest orientation card for a beach-resort town whose own medical options are limited - what to use for a minor issue here versus when to head to Kampot instead.",
+    priceRange: { low: 4, typical: 5, high: 10, currency: "USD", note: "ATM withdrawal fee roughly USD 4-6; a 30GB tourist SIM runs about USD 5." },
+    hours: "ATMs 24h; CT Clinic keeps English-speaking doctors on call 24 hours.",
+    tips: ["CT Clinic is the more consistently recommended of the two main private clinics in town for day-to-day care.", "Get an upfront price estimate before treatment at any private clinic here - overcharging foreigners for simple complaints is a documented pattern locally.", "For anything beyond a minor issue, Sonja Kill Memorial Hospital in Kampot (about 1-1.5h away) is the nearest properly-equipped international-standard hospital.", "Sihanoukville Referral Hospital is the public option but is not the standard pick for foreign visitors - private clinics are strongly preferred."],
+    scamWarnings: ["Get any private-clinic treatment cost agreed upfront - a documented pattern here is charging foreign visitors markedly more than locals for the same simple procedure."],
+    mapQuery: "CT Clinic Sihanoukville", coords: { lat: 10.6270, lng: 103.5223 },
+    bookHint: "No booking for ATMs/SIM; CT Clinic takes walk-ins and has an on-call line.", verified: "2026-08",
+    sources: [{ org: "Move to Cambodia — Medical Care in Sihanoukville", url: "https://movetocambodia.com/city-guides/sihanoukville/medical-care/" }, { org: "Canby Publications — Sihanoukville Emergency Services", url: "http://www.canbypublications.com/sihanoukville-cambodia/sihanoukville-hospital.htm" }, { org: "MEXC News — Cambodia ATM Withdrawal Guide 2026", url: "https://www.mexc.com/news/1083034" }],
+  },
+  {
+    id: "kh-ext-battambang-practical", name: "Battambang practical: money, health & connectivity", city: "Battambang", country: "kh",
+    categories: ["practical", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Same nationwide USD/Riel and ATM-fee picture as the rest of Cambodia, with Cellcard/Smart/Metfone SIM counters around the town centre. Battambang's own medical facilities (the Handa Medical Center/Clinic for minor care, Battambang Provincial Referral Hospital for public care) suit day-to-day complaints, but locals and expats consistently recommend leaving town for anything more serious - Phnom Penh or Siem Reap for a real hospital, since Battambang also sits on a common Thailand-Cambodia land-crossing route where a medical evacuation can run into the tens of thousands of dollars without insurance.",
+    whyItFits: "The honest orientation card for a town whose real medical answer, beyond minor care, is 'go to Phnom Penh or Siem Reap' - worth knowing before it's urgent, not during.",
+    priceRange: { low: 4, typical: 5, high: 10, currency: "USD", note: "ATM withdrawal fee roughly USD 4-6; a 30GB tourist SIM runs about USD 5." },
+    hours: "ATMs 24h; Handa Medical Center keeps standard daytime clinic hours for outpatient care.",
+    tips: ["Handa Medical Center (Handa Clinic) is the recommended stop for straightforward check-ups and minor complaints.", "For anything beyond minor care, head to Phnom Penh or Siem Reap rather than relying on local facilities - this is the consistent local/expat advice, not just caution.", "Comprehensive travel insurance with medical evacuation cover matters here specifically - an emergency evacuation has been quoted as high as USD 20,000 without it.", "Battambang is a common overland Thailand-Cambodia crossing point - if arriving that way, note the nearest real hospital is a genuine journey away, not a short ride."],
+    scamWarnings: [],
+    mapQuery: "Handa Medical Center Battambang", coords: { lat: 13.0957, lng: 103.1968 },
+    bookHint: "No booking for ATMs/SIM; Handa Medical Center takes walk-in outpatients.", verified: "2026-08",
+    sources: [{ org: "Move to Cambodia — Battambang Doctors, Hospitals & Medical Care", url: "https://movetocambodia.com/city-guides/battambang/medical-care/" }, { org: "Expat Exchange — Health Care in Battambang", url: "https://www.expatexchange.com/ctryguide/9538/211/Cambodia/Health-Care-in-Battambang-Health-Care-in-Battambang" }, { org: "Adventures Cambodia — Currency Guide 2026", url: "https://adventurescambodia.com/blog/understanding-currency-in-cambodia/" }],
+  },
+  {
+    id: "kh-ext-kampot-practical", name: "Kampot practical: money, health & connectivity", city: "Kampot", country: "kh",
+    categories: ["practical", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Same nationwide USD/Riel and ATM-fee picture as the rest of Cambodia, with Cellcard/Smart/Metfone SIM counters around the riverside town centre. Kampot's real advantage is medical, not just practical: Sonja Kill Memorial Hospital (SKMH), run by the NGO HOPE Worldwide, is a genuinely well-equipped international-standard facility right in town - the same hospital travellers from Kep and Sihanoukville are directed to when they need more than a clinic visit.",
+    whyItFits: "The orientation card for a riverside base that, unusually for a smaller Cambodian town, has a genuinely good hospital of its own rather than needing a trip elsewhere.",
+    priceRange: { low: 4, typical: 5, high: 10, currency: "USD", note: "ATM withdrawal fee roughly USD 4-6; a 30GB tourist SIM runs about USD 5." },
+    hours: "ATMs 24h; Sonja Kill Memorial Hospital runs an emergency line (078 265 782) alongside standard clinic hours (non-emergency: 077 666 752).",
+    tips: ["Sonja Kill Memorial Hospital is the go-to for anything beyond a pharmacy-level complaint - save both its emergency and non-emergency numbers before you need them.", "U-Care, Cambodia's largest pharmacy chain, has a branch in Kampot for everyday medication.", "Kampot's relative medical strength is a genuine reason some travellers base themselves here over Kep for a longer stay in the region."],
+    scamWarnings: [],
+    mapQuery: "Sonja Kill Memorial Hospital Kampot", coords: { lat: 10.6104, lng: 104.1819 },
+    bookHint: "No booking for ATMs/SIM; Sonja Kill Memorial Hospital takes emergency walk-ins and has phone lines for both emergency and non-emergency contact.", verified: "2026-08",
+    sources: [{ org: "Expat Life Cambodia — Best Doctors, Hospitals & Medical Care in Kampot & Kep", url: "https://www.expatlifecambodia.com/best-doctors-hospitals-and-medical-care-in-kampot-kep/" }, { org: "Watchdoq — Navigating Healthcare in Cambodia", url: "https://watchdoq.com/blog/post/navigating-healthcare-in-the-kingdom-of-wonder:-a-guide-to-top-hospitals-and-clinics-in-cambodia-(2024)" }],
+  },
+  {
+    id: "kh-ext-kep-practical", name: "Kep practical: money, health & connectivity", city: "Kep", country: "kh",
+    categories: ["practical", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Same nationwide USD/Riel and ATM-fee picture as the rest of Cambodia, though Kep is small enough that ATMs and SIM counters are limited to a handful of spots near the town centre and crab market - if visiting from Kampot or Sihanoukville, sorting cash and a SIM before arriving is worth it. Kep Provincial Hospital covers basic public care; for anything more, Sonja Kill Memorial Hospital in Kampot (about 30-40 minutes away) is the nearest proper international-standard facility, the same one Sihanoukville is directed to.",
+    whyItFits: "The honest orientation card for Cambodia's smallest coastal hub - what little exists locally, and exactly where to go (Kampot) for anything real.",
+    priceRange: { low: 4, typical: 5, high: 10, currency: "USD", note: "ATM withdrawal fee roughly USD 4-6; a 30GB tourist SIM runs about USD 5, best bought before arriving given Kep's limited selection of shops." },
+    hours: "ATMs 24h where available; Kep Provincial Hospital keeps standard public-hospital daytime hours.",
+    tips: ["Bring more cash than you think you need, or withdraw it in Kampot/Sihanoukville first - Kep has fewer ATMs than either neighbour.", "Sonja Kill Memorial Hospital in Kampot, not the local provincial hospital, is the real answer for anything beyond a minor complaint.", "U-Care pharmacy has a branch in Kep for everyday medication needs.", "Bokor Clinic in nearby Kampot is a further option locals mention alongside Sonja Kill."],
+    scamWarnings: [],
+    mapQuery: "Kep Provincial Hospital", coords: { lat: 10.4831, lng: 104.3169 },
+    bookHint: "No booking for ATMs/SIM; Kep Provincial Hospital and Sonja Kill Memorial Hospital (Kampot) both take walk-in care.", verified: "2026-08",
+    sources: [{ org: "Expat Life Cambodia — Best Doctors, Hospitals & Medical Care in Kampot & Kep", url: "https://www.expatlifecambodia.com/best-doctors-hospitals-and-medical-care-in-kampot-kep/" }, { org: "MyHospitalNow — Kep Provincial Hospital", url: "https://www.myhospitalnow.com/hospitals/kep-provincial-hospital" }],
+  },
 ];
