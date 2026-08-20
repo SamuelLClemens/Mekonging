@@ -3946,4 +3946,54 @@ export const PLACES_VI_EXT = [
     bookHint: "No booking for airport/in-town counters; eSIMs can be bought or registered online in advance and activated on arrival.", verified: "2026-08",
     sources: [{ org: "Gigago — Buying Best SIM Card at Noi Bai Airport 2026", url: "https://gigago.com/hanoi-airport-sim-card/" }, { org: "ZetSIM — Vietnam SIM Card & eSIM Guide 2026", url: "https://www.zetsim.com/blogs/news/vietnam-sim-card-esim-guide-2026-plans-tips-faqs" }, { org: "Vietnam Travelers — Complete Guide to Viettel Stores in Hanoi Old Quarter", url: "https://vietnamtravelers.com/viettel-store-hanoi-old-quarter/" }, { org: "MobiFone — International Travel eSIM", url: "https://www.mobifone.vn/travel" }],
   },
+  // Run 13 (task #142): Vietnam x transport, Hanoi. A fresh live category-filtered count
+  // (not the raw entry count) found Hanoi's true gap: 6 eat, 5 sights, 3 stay and 3
+  // practical entries already exist for the city, but ZERO were tagged "transport" -
+  // by far the starkest gap of the four remaining categories the task notes listed,
+  // and a repeat of the exact lesson from the Ayutthaya/Sukhothai gap-analysis (a raw
+  // "needs eat/stay/sights/transport" note does not mean all four are equally thin).
+  // Follows the sibling Hanoi-practical dense-info-card shape (categories:
+  // ["transport","info"], no rating/access/afterDark - consistent with the 3 existing
+  // Hanoi practical cards, which are curated info references rather than rated venues).
+  // Three cards cover arrival, local movement and departure - the natural three-part
+  // shape of a traveller's own experience of transport in one city:
+  {
+    id: "vi-ext-hanoi-airport-transfers", name: "Hanoi practical: Noi Bai Airport transfers", city: "Hanoi", country: "vi",
+    categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Noi Bai International Airport sits roughly 30-45km northwest of the Old Quarter, a 30-60 minute journey depending on traffic and mode. Express Bus 86 (45,000 VND, every 45 minutes, 06:30-22:00) calls at Hanoi Railway Station and major hotel areas - the cheapest reliable option. Grab offers a fixed upfront price (roughly 250,000-350,000 VND) with no haggling; metered taxis from trusted counters (Noi Bai Taxi, Mai Linh, Thanh Cong, Taxi Group) run roughly 300,000-400,000 VND.",
+    whyItFits: "The orientation card for arriving: what each transfer option actually costs and takes, and which taxi counters are trustworthy versus which to avoid.",
+    priceRange: { low: 40000, typical: 300000, high: 400000, currency: "VND", note: "Bus 86 or an airline/hotel shuttle bus run 40,000-45,000 VND; Grab is a fixed roughly 250,000-350,000 VND; a metered taxi from a trusted counter runs roughly 300,000-400,000 VND." },
+    hours: "Bus 86 runs every 45 minutes, roughly 06:30-22:00; Grab and taxis operate 24h to match all arriving flights.",
+    tips: ["Bus 86 is the cheapest reliable option and stops at Hanoi Railway Station plus major hotel clusters - useful if arriving late and connecting onward.", "Book Grab in the app before leaving the arrivals hall and walk to the marked pickup point - fixed price, no haggling, trackable.", "If taking a taxi, use only a marked, trusted counter (Noi Bai Taxi, Mai Linh, Thanh Cong, Taxi Group) - unmarked drivers approaching in the arrivals hall are a common overcharging risk.", "Traffic on the airport expressway can add real time at rush hour - budget extra if catching an onward connection."],
+    scamWarnings: ["Unofficial taxi/car touts approach arriving passengers inside the terminal before the marked counters - politely decline and walk to a named, signed counter or the Grab pickup point instead.", "Some unmetered taxis quote a flat 'foreigner price' well above the metered rate - insist on the meter or use Grab's fixed upfront price instead."],
+    mapQuery: "Noi Bai International Airport Hanoi", coords: { lat: 21.2212, lng: 105.8072 },
+    bookHint: "No booking for the bus; book Grab in-app; taxis are walk-up at marked counters.", verified: "2026-08",
+    sources: [{ org: "North Vietnam — Noi Bai Airport to Hanoi Center 2026", url: "https://north-vietnam.com/noi-bai-airport-to-hanoi-center/" }, { org: "Vietnam Local Tour — Noi Bai Airport to Hanoi City Center 2026", url: "https://www.vietnam-tour.biz/noi-bai-airport-to-hanoi-city-center/" }, { org: "Travelers and Dreamers — Hanoi Airport to Old Quarter 2026", url: "https://travelersanddreamers.com/hanoi-airport-to-old-quarter/" }],
+  },
+  {
+    id: "vi-ext-hanoi-getting-around", name: "Hanoi practical: getting around the city", city: "Hanoi", country: "vi",
+    categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "The Old Quarter, Hoan Kiem Lake and the French Quarter all sit within comfortable walking distance of each other, but Grab (GrabCar and GrabBike) is the default tool for anything further - transparent in-app pricing, no haggling. Public buses run a flat 7,000 VND fare citywide. Metro Line 2A (Cat Linh-Ha Dong, opened 2021) and the elevated section of Line 3 (Nhon-Cau Giay, opened August 2024) are both running, but neither yet reaches the Old Quarter or Hanoi Railway Station directly - Line 3's underground extension to the main station is under construction, expected late 2027.",
+    whyItFits: "The orientation card for daily movement in the capital: when to just walk, when Grab beats a taxi, and the honest current state of the metro (useful, but not yet a Old-Quarter-to-station connector).",
+    priceRange: { low: 7000, typical: 30000, high: 120000, currency: "VND", note: "Public bus is a flat 7,000 VND. GrabBike runs roughly 15,000-40,000 VND and GrabCar roughly 40,000-120,000 VND for a typical 3-8km in-city trip. Metro fares start around 8,600 VND per trip." },
+    hours: "Metro Lines 2A and 3 (elevated section) run roughly 05:30-22:00 daily; Grab and buses operate through the day, Grab into the night.",
+    tips: ["Walk the Old Quarter/Hoan Kiem/French Quarter core - it's compact and most major sights are within it.", "Grab is the default for anything beyond walking distance - fixed price in the app beats negotiating with a street taxi or xe om.", "Informal xe om (motorbike taxi) drivers are cheaper than GrabBike but unregulated - agree the fare before getting on if using one instead of the app.", "Don't expect the metro to solve Old Quarter transport yet - Line 2A and Line 3's open section serve the western/southwestern suburbs, not the historic core, and the extension into Hanoi Railway Station is not expected before late 2027.", "Crossing the street takes a specific technique: walk at a steady, predictable pace and let the motorbike traffic flow around you rather than stopping or running - the classic Hanoi skill every visitor eventually learns."],
+    scamWarnings: ["Unmetered street taxis and unofficial xe om drivers near tourist areas sometimes quote inflated 'tourist' fares - agree a price first or use Grab's fixed pricing instead."],
+    mapQuery: "Hoan Kiem Lake Hanoi", coords: { lat: 21.0285, lng: 105.8524 },
+    bookHint: "No booking for walking/buses; book Grab in-app; buy metro tokens/cards at station machines.", verified: "2026-08",
+    sources: [{ org: "GetYourGuide — Getting Around Hanoi", url: "https://www.getyourguide.com/explorer/hanoi-ttd205/getting-around-hanoi/" }, { org: "Hanoi Tourism — Hanoi Metro Guide 2026", url: "https://www.hanoitourism.org/hanoi-metro-guide/" }, { org: "Railway Gazette International — Vietnam metro expansion", url: "https://www.railwaygazette.com/vietnam/2026/08/08/vietnam-ambitious-metro-expansion-targets-just-out-of-reach/" }, { org: "Day Trips Vietnam — Grab and Taxis in Vietnam 2026", url: "https://daytripsvietnam.com/transport/grab-and-taxis-in-vietnam/" }],
+  },
+  {
+    id: "vi-ext-hanoi-onward-travel", name: "Hanoi practical: onward travel by train and bus", city: "Hanoi", country: "vi",
+    categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Hanoi Railway Station (Ga Hanoi, two sides: Station A on Le Duan Street for national trains, Station B on Tran Quy Cap Street) sits on the main Reunification Line south to Ninh Binh, Hue, Da Nang, Nha Trang and Ho Chi Minh City, with sleeper cabins on the longer overnight legs. Long-distance buses leave from different terminals by direction: My Dinh (north/northwest), Giap Bat (south) and Gia Lam (northeast, including the Ha Long Bay direction, now mostly a road trip on the modern expressway rather than by rail - Ha Long has no station of its own). The separate Hanoi-Sapa route (night train plus mountain transfer, or a direct sleeper bus) has its own dedicated entry.",
+    whyItFits: "The orientation card for leaving Hanoi: which station or terminal to head for depending on direction, and a pointer to the dedicated Sapa-route entry rather than repeating it here.",
+    priceRange: { low: 150000, typical: 500000, high: 1500000, currency: "VND", note: "A seated ticket on a shorter leg (e.g. to Ninh Binh) can run as low as roughly 150,000 VND; overnight sleeper berths to Hue, Da Nang or Ho Chi Minh City typically run from several hundred thousand VND up to 1.5 million VND depending on class and route length." },
+    hours: "Station ticket counters typically run roughly 07:00-22:00; overnight trains and sleeper buses depart mostly in the evening.",
+    tips: ["Book sleeper-train berths for longer legs (Hue, Da Nang, Ho Chi Minh City) a few days ahead in peak season - they sell out before seated carriages do.", "Check which bus terminal serves your direction before heading out - My Dinh, Giap Bat and Gia Lam serve different regions and are not interchangeable.", "Ha Long Bay has no railway station - budget for a road transfer (shared shuttle, private car or tour bus) on the expressway instead.", "See the dedicated Hanoi-to-Sapa entry for the night-train-plus-transfer detail on that specific route rather than duplicating it here."],
+    scamWarnings: ["Buy train tickets at the station counter or the official Vietnam Railways site/app rather than from unofficial street agents, who have been reported to mark up prices or sell invalid tickets."],
+    mapQuery: "Hanoi Railway Station", coords: { lat: 21.024417, lng: 105.841083 },
+    bookHint: "Book online via the Vietnam Railways site/app or at the station counter for trains; bus tickets can usually be bought same-day at the terminal.", verified: "2026-08",
+    sources: [{ org: "Wikipedia — Hanoi railway station", url: "https://en.wikipedia.org/wiki/Hanoi_railway_station" }, { org: "Jungle Boss Tours — Hanoi Railway Station Guide 2025", url: "https://junglebosstours.com/explorer/tourism-blog/hanoi-railway-station-guide-2025" }, { org: "Vietnam Railways — Hanoi to Ninh Binh", url: "https://vietnam-railway.com/train/route/train-from-hanoi-to-ninh-binh" }],
+  },
 ];
