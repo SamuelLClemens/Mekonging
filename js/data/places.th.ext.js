@@ -4800,4 +4800,74 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking - free walk-in entry during opening hours.", verified: "2026-08",
     sources: [{ org: "Trip.com — Udon Thani City Museum", url: "https://sg.trip.com/travel-guide/attraction/udon-thani/udon-thani-city-museum-38623618/" }, { org: "Evendo — Udon Thani City Museum", url: "https://evendo.com/locations/thailand/udon-thani/landmark/udon-thani-city-museum" }],
   },
+  // Run 10 (task #142): Thailand x sights, Ayutthaya hub. Before this run Ayutthaya's ONLY
+  // sights entry was th-ext-ayutthaya-historical-park, one umbrella entry covering the whole
+  // UNESCO park - real and useful for orientation, but leaving the city's three most-visited
+  // individual temples (each a physically separate stop, on opposite sides of the old city
+  // island, with their own hours/fees) with no dedicated practical info of their own. These
+  // three fill that gap: Wat Mahathat (the iconic tree-root Buddha head, central old city),
+  // Wat Chaiwatthanaram (riverside Khmer-style prangs, west bank), and Wat Yai Chai Mongkhon
+  // (the climbable chedi + still-active temple, southeast of the island) - the same "cluster
+  // gets its own sub-entries alongside one umbrella entry" pattern used for Doi Inthanon
+  // National Park in task #147. None ships a rating: Wat Mahathat's and Wat Yai Chai
+  // Mongkhon's TripAdvisor pages surface only a ranking ("#5/#6 of ~82") with no headline
+  // star number; Wat Chaiwatthanaram's search result DID return a "4.7/5" figure but its own
+  // five-star-through-one-star breakdown summed to over 9,600 while the same result stated
+  // only 1,242 total reviews - an internally-inconsistent, clearly garbled number - so it
+  // ships without rating/reviewSources too rather than trust a figure that fails its own
+  // arithmetic. afterDark is omitted on all three: closing-time sources disagree by as much
+  // as 90 minutes per temple (5-6:30pm range), which genuinely straddles dusk for at least
+  // part of the year - same "omit rather than guess" call as Run 9's Nong Prajak Park.
+  // access is set only on Wat Mahathat, narrowing a wheelchair trip-report already cited
+  // (less precisely) on the umbrella park entry to just this temple, now with its own
+  // traceable URL.
+  {
+    id: "th-ext-ayutthaya-wat-mahathat", name: "Wat Mahathat", city: "Ayutthaya", country: "th",
+    access: { stepFree: "partial", note: "A wheelchair user (Cory Lee, Curb Free with Cory Lee) reports generally smooth paths and thoughtfully placed ramps letting him explore most of the ruins, including reaching the famous Buddha head - but this is a single trip report rather than an official accessibility audit, and 'most' still leaves some ground uncovered, so 'partial' rather than a full step-free rating." },
+    recognition: "The single most-photographed image in Ayutthaya: a serene sandstone Buddha head, cradled since the temple's ruin in the roots of a Bodhi/banyan tree that grew up and around it over the centuries.",
+    localName: "วัดมหาธาตุ · Wat Mahathat",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "The 'Monastery of the Great Relic' at the historic centre of the old city: rows of headless Buddha images and leaning brick prangs around the famous tree-root Buddha head, ranked among the very top things to do in Ayutthaya.",
+    whyItFits: "The one unmissable single stop if a visit only has time for one Ayutthaya temple - come at opening to beat the Bangkok day-tour buses.",
+    priceRange: { low: 50, typical: 50, high: 50, currency: "THB", note: "50 THB for foreign visitors; may also be covered by a combined Historical Park pass." },
+    hours: "Roughly 08:30-17:00 (some sources list up to 18:00; ticket sales can stop earlier) - arrive at opening for the best light and to beat 9:30am+ tour groups from Bangkok.",
+    tips: ["Arrive at or near the 08:30 opening - this is Ayutthaya's single most-visited site and tour buses from Bangkok arrive from around 09:30 onward.", "Never pose with your head above or level with the tree-root Buddha head - keep lower as a sign of respect.", "The wider complex has genuinely uneven ground and steps in places beyond the main path - manage expectations if mobility is a concern."],
+    scamWarnings: [],
+    mapQuery: "Wat Mahathat Ayutthaya", coords: { lat: 14.3569, lng: 100.5675 },
+    bookHint: "No booking - pay on site, or covered by a combined Historical Park pass. Regular trains and minivans run from Bangkok.", verified: "2026-08",
+    sources: [{ org: "Curb Free with Cory Lee — 3 Days in Bangkok and Ayutthaya as a Wheelchair User", url: "https://curbfreewithcorylee.com/2025/03/14/wheelchair-accessible-bangkok-thailand/" }, { org: "Your Thai Guide — Wat Maha That", url: "https://yourthaiguide.com/wat-maha-that-famous-for-buddha-head-embedded-in-banyan-tree-roots/" }, { org: "Ayutthaya Temple Guide — Wat Mahathat", url: "https://ayutthayatemple-guide.com/what-to-see/wat-mahathat-ayutthaya-temple/" }],
+  },
+  {
+    id: "th-ext-ayutthaya-wat-chaiwatthanaram", name: "Wat Chaiwatthanaram", city: "Ayutthaya", country: "th",
+    recognition: "A dramatic row of Khmer-style prangs on the west bank of the Chao Phraya, built in 1630 to mimic Angkor Wat and now Ayutthaya's most photographed riverside silhouette, especially at golden hour.",
+    localName: "วัดไชยวัฒนาราม · Wat Chaiwatthanaram",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "A grand riverside temple built by King Prasat Thong in 1630 in Khmer style to commemorate his mother, escaping the worst of the 1767 sacking of the city relatively intact - now Ayutthaya's most atmospheric outlying ruin, a short river-crossing west of the old city island.",
+    whyItFits: "The single best pick for travellers who want one riverside, away-from-the-crowds temple with a real sunset view over water.",
+    priceRange: { low: 50, typical: 50, high: 50, currency: "THB", note: "50 THB for foreign visitors (Thai nationals pay less)." },
+    hours: "Roughly 08:30-17:00 (sources vary; some list hours as late as 18:30) - aim for late afternoon for the golden-hour view across the river.",
+    tips: ["Cross the river from the old city by longtail boat, or loop round by road/bike - it sits apart from the walkable central cluster.", "Late afternoon light is what makes this temple's reputation - avoid a rushed midday visit if photography matters to you.", "Combine with a Chao Phraya boat trip rather than treating it as a stand-alone stop."],
+    scamWarnings: [],
+    mapQuery: "Wat Chaiwatthanaram Ayutthaya", coords: { lat: 14.3431, lng: 100.5419 },
+    bookHint: "No booking - pay on site. Reachable by longtail boat, bicycle, or a short taxi/tuk-tuk ride from the old city.", verified: "2026-08",
+    sources: [{ org: "Ayutthaya Temple Guide — Wat Chaiwatthanaram", url: "https://ayutthayatemple-guide.com/what-to-see/wat-chaiwatthanaram-ayutthaya-temple/" }, { org: "Renown Travel — Wat Chaiwatthanaram", url: "https://www.renown-travel.com/historicalsites/ayutthaya/wat-chaiwatthanaram.html" }, { org: "Wikidata — Wat Chaiwatthanaram", url: "https://www.wikidata.org/wiki/Q2063779" }],
+  },
+  {
+    id: "th-ext-ayutthaya-wat-yai-chai-mongkhon", name: "Wat Yai Chai Mongkhon", city: "Ayutthaya", country: "th",
+    recognition: "A towering bell-shaped chedi over 60m tall, raised by King Naresuan to celebrate his 1592 elephant-back duel victory over the Burmese crown prince, with a steep external stairway visitors can climb partway up for a view over the temple grounds and a giant reclining Buddha alongside.",
+    localName: "วัดใหญ่ชัยมงคล · Wat Yai Chai Mongkhon",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "Unlike most of Ayutthaya's ruined temples, this one is still an active monastery with resident monks - built up around the original chedi King Naresuan raised after his 1592 victory over the Burmese. The climbable chedi steps and reclining Buddha make it one of the city's top-ranked sights.",
+    whyItFits: "The pick for travellers who want to see a temple that is still alive as a place of worship, not just a preserved ruin, plus a genuine viewpoint to climb.",
+    priceRange: { low: 20, typical: 20, high: 50, currency: "THB", note: "Around 20 THB for foreign visitors per the most recent listings; a small number of older sources cite 50 THB." },
+    hours: "Roughly 08:00-17:00 daily.",
+    tips: ["The chedi's external steps are steep - sturdy footwear helps, and the climb only reaches a lower platform, not the very top.", "Dress modestly - this is a working temple with resident monks, not just a historical site.", "Southeast of the old city island, a short ride from the central Wat Mahathat cluster."],
+    scamWarnings: [],
+    mapQuery: "Wat Yai Chai Mongkhon Ayutthaya", coords: { lat: 14.3453, lng: 100.5925 },
+    bookHint: "No booking - pay on site. A short tuk-tuk or bicycle ride from the old city island.", verified: "2026-08",
+    sources: [{ org: "Thaizer — Wat Yai Chai Mongkhon, Ayutthaya", url: "https://www.thaizer.com/wat-yai-chai-mongkhon-ayutthaya/" }, { org: "Ayutthaya Temple Guide — Wat Yai Chai Mongkhon", url: "https://ayutthayatemple-guide.com/what-to-see/wat-yai-chai-mongkhon-ayutthaya-temple/" }, { org: "Wikidata — Wat Yai Chai Mongkhon", url: "https://www.wikidata.org/wiki/Q2552414" }],
+  },
 ];
