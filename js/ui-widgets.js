@@ -8,6 +8,7 @@ import { store, save } from './state.js';
 import { speak, stop as stopSpeak } from './tts.js';
 import { WEATHER_SPOTS, spotKey, spotsForCountry } from './weather.js';
 import { COUNTRIES } from './data/regions.js';
+import { CURRENCY_CODES } from './currency.js';
 
 // ---- Read-aloud reader ------------------------------------------------------
 // Play/pause long-form text (history, guides, first aid) at a chosen speed. Speech is
@@ -176,8 +177,12 @@ export function confirmAction(opts = {}) {
   });
 }
 
-export function currencySelect(current) {
-  return selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'], current, () => {}, 'Currency');
+// `onchange` is optional (defaults to a no-op) — most call sites just read `.value` on
+// submit, but a display-currency switcher needs to react immediately (see
+// budgetSummaryCard's totalsCurrencyRow), so the widget supports both without a second,
+// parallel picker to keep in sync.
+export function currencySelect(current, onchange) {
+  return selectEl(CURRENCY_CODES, current, onchange || (() => {}), 'Currency');
 }
 
 let _fieldSeq = 0;

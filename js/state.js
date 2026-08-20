@@ -214,17 +214,43 @@ function parseStore(k) {
 }
 
 // Does this store hold anything the user created? Used to decide whether a recovery from
-// the backup is warranted (we never overwrite real data with an empty default).
+// the backup is warranted (we never overwrite real data with an empty default) — gates BOTH
+// load()'s .bak fallback and ensureDurability()'s IndexedDB-mirror restore, so an under-
+// counting bug here is a real data-loss risk, not just a display nit: if the live store's
+// only real content lived in a field this function did not check, ensureDurability() would
+// read `false` and could silently replace the live store with a stale mirror snapshot on
+// the very next boot. Audited to cover every user-generated field in defaults() above —
+// previously missed trip.stops/placeVisits/withdrawals, myStay, savedAreas, all of social,
+// album photos, board posts, and the personal calendar, none of which are reproducible if
+// wrongly discarded.
 function hasUserData(s) {
   if (!s || typeof s !== 'object') return false;
+  const trip = s.trip || {};
+  const social = s.social || {};
+  const personal = s.personal || {};
   const j = s.journal && Array.isArray(s.journal.entries) && s.journal.entries.length;
-  const b = s.trip && Array.isArray(s.trip.budgetLog) && s.trip.budgetLog.length;
+  const b = Array.isArray(trip.budgetLog) && trip.budgetLog.length;
+  const stops = Array.isArray(trip.stops) && trip.stops.length;
+  const visits = Array.isArray(trip.placeVisits) && trip.placeVisits.length;
+  const wd = Array.isArray(trip.withdrawals) && trip.withdrawals.length;
   const c = s.calendar && Array.isArray(s.calendar.items) && s.calendar.items.length;
   const p = Array.isArray(s.pins) && s.pins.length;
   const col = Array.isArray(s.collections) && s.collections.length;
   const pd = s.placeData && typeof s.placeData === 'object' && Object.keys(s.placeData).length;
   const f = Array.isArray(s.favorites) && s.favorites.length;
-  return !!(j || b || c || p || col || pd || f);
+  const stay = s.myStay && s.myStay.coords;
+  const areas = Array.isArray(s.savedAreas) && s.savedAreas.length;
+  const contacts = Array.isArray(social.contacts) && social.contacts.length;
+  const threads = social.threads && typeof social.threads === 'object' && Object.keys(social.threads).length;
+  const listings = Array.isArray(social.listings) && social.listings.length;
+  const album = s.album && Array.isArray(s.album.photos) && s.album.photos.length;
+  const board = s.boardPosts && typeof s.boardPosts === 'object'
+    && Object.values(s.boardPosts).some((arr) => Array.isArray(arr) && arr.length);
+  const per = (Array.isArray(personal.partners) && personal.partners.length)
+    || (personal.days && typeof personal.days === 'object' && Object.keys(personal.days).length)
+    || personal.pregnancy;
+  return !!(j || b || stops || visits || wd || c || p || col || pd || f
+    || stay || areas || contacts || threads || listings || album || board || per);
 }
 
 function load() {

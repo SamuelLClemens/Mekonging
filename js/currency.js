@@ -7,6 +7,15 @@
 const KEY = 'mk.rates';
 const ENDPOINT = 'https://open.er-api.com/v6/latest/USD';
 
+// The one canonical currency list for every picker in the app (per-expense currency,
+// withdrawal currency, and the "show totals & percentages in" display currency in both
+// Settings and the Budget screen). A single shared list means those pickers can never
+// drift out of sync with each other — previously Settings' home-currency picker hardcoded
+// its own, shorter list that omitted THB/VND/KHR/LAK/CNY/MYR entirely, so a traveller could
+// log an expense in Thai Baht but could never choose Baht as the currency totals are shown
+// in. Order matches the rates object above (major currencies first, Mekong-region last).
+export const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'];
+
 // Approximate baseline (per 1 USD). Labelled "approximate" until a live refresh.
 const FALLBACK = {
   base: 'USD', date: 'approximate', live: false,

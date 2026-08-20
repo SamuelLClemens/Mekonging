@@ -98,7 +98,7 @@ import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine, refreshAir, getCachedAir } from './weather.js';
-import { RATING_BANDS, ROUTE_LEGEND, ratingColor, effectiveRating } from './map.js';
+import { ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -116,7 +116,6 @@ import { ACCESSIBILITY, getAccessibility } from './data/accessibility.js';
 import { ARRIVAL, getArrival } from './data/arrival.js';
 import { VISA, getVisa } from './data/visa.js';
 import { scamsFor } from './data/scams.js';
-import { FAMILY, getFamily } from './data/family.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 import { REGIONS_TH } from './data/regions.th.js';
@@ -292,7 +291,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.445.0';
+const APP_VERSION = 'mk-v0.446.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -821,19 +820,6 @@ export function spotForCity(cc, cityName) {
   if (exact) return exact;
   const rep = allPlaces({ country: cc }).find((p) => p.coords && citySlug(p.city) === slug);
   return rep ? nearestSpot(rep.coords, cc) : null;
-}
-
-// A compact, always-available control so the traveller can switch data on/off any time
-// and always see which mode they are in.
-function netStatusRow() {
-  const m = netMode();
-  const label = m === 'online' ? '📶 Online — using data when available'
-    : (m === 'offline' ? '✈️ Offline — no data used' : '✈️ Offline until you choose');
-  const other = m === 'online' ? 'offline' : 'online';
-  return h('div', { class: 'net-status' }, [
-    h('span', { class: 'tiny muted' }, label),
-    h('button', { class: 'chip', onclick: () => { setNetMode(other); render(); } }, other === 'online' ? 'Use data' : 'Go offline'),
-  ]);
 }
 
 // Festivals happening now, or starting within the next few weeks, in the user's country —
@@ -2096,8 +2082,21 @@ function quickSpendRow(id) {
   const box = h('div', { class: 'now-spend' });
   const draw = () => {
     box.innerHTML = '';
-    let spent = 0;
-    (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
+    // Sum every expense logged today, converting anything not already in `cur` into `cur`
+    // first — a same-day expense logged in a different currency (e.g. a booking paid in USD
+    // while everything else today is in THB) used to be silently dropped by a strict
+    // `(b.currency || cur) === cur` match, so "Spent today" could under-report with no
+    // indication anything was left out. unknownToday flags the rare case where a logged
+    // currency has no cached rate, so the figure stays honest rather than quietly wrong.
+    let spent = 0, unknownToday = false;
+    (store.trip.budgetLog || []).forEach((b) => {
+      if (b.date !== t) return;
+      const amt = parseFloat(b.amount) || 0; if (!amt) return;
+      const bc = b.currency || cur;
+      if (bc === cur) { spent += amt; return; }
+      const conv = convert(amt, bc, cur);
+      if (conv == null || isNaN(conv)) unknownToday = true; else spent += conv;
+    });
     // A working mini-converter in place of the old one-way "1 USD ≈ 36 THB" caption: the same
     // shared fxConverterControl the Currency and Budget screens use, compact (no rates
     // footnote) so it costs barely more height than the static line it replaces. Always
@@ -2107,7 +2106,7 @@ function quickSpendRow(id) {
     box.append(fxConverterControl(home, home !== cur ? cur : (home === 'USD' ? 'EUR' : 'USD'), { compact: true }));
     box.append(expenseAddCard({ currency: cur, afterAdd: draw, compact: true }));
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log an expense above. ',
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur}${unknownToday ? ' (some unknown)' : ''} · ` : 'Log an expense above. ',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
   };
@@ -4485,7 +4484,12 @@ function collectionScreen(id) {
     wrap.append(h('div', { class: 'card' }, [
       h('h3', {}, 'Share this list'),
       h('p', { class: 'muted' }, 'Send this list of places to a friend — they can save it as a collection in their own app.'),
-      shareButton('📤 Share this list', `${title} — places to check out`, () => shareUrl('in', encodeShare('collection', { name: title, items: items.map((p) => ({ id: p.id, n: p.name })) }, ensureMe()))),
+      // Cap the shared item count — the payload travels base64-encoded inside the URL hash
+      // (MAX_PAYLOAD_URL, social.js) with no truncation-safe fallback if it runs over, so an
+      // uncapped map() over a very large collection could silently produce a link too long
+      // for some share targets (SMS, certain in-app browsers) to carry intact. 80 is well
+      // above any realistic saved-places list while staying comfortably inside the budget.
+      shareButton('📤 Share this list', `${title} — places to check out`, () => shareUrl('in', encodeShare('collection', { name: title, items: items.slice(0, 80).map((p) => ({ id: p.id, n: p.name })) }, ensureMe()))),
     ]));
   }
   if (coll) {
@@ -5309,90 +5313,15 @@ function moodLine(m) {
     : 'great for outdoor sights and nature.';
 }
 
-// ---- Daily-habit morning strip (the traveller's day, at a glance) ------------
+// ---- Next plan item -----------------------------------------------------------
 // The next thing on the traveller's own calendar — today or later — i.e. their plan.
+// (Its old sibling, dailyStripCard — the full "Your day" card this fed — had zero
+// callers left anywhere in the app after Home's own rebuild; removed as dead code
+// during the full-site audit rather than left to bit-rot. This getter is still very
+// much alive: js/screens/home.js's own next-stop card calls it directly.)
 export function nextPlanItem() {
   const t = todayISO();
   return calItems().find((it) => it.date && it.date >= t) || null;
-}
-// The compact "Your day" card: next plan item · one-tap spend.
-// Weather-independent, so it is rendered once (outside the weather repaint) and a
-// half-typed budget amount never gets wiped by a live-weather refresh.
-function dailyStripCard(id) {
-  const code = store.profile.defaultLang || langForCountry(id);
-  const c = getCountry(id);
-  const card = h('div', { class: 'card daily-strip' });
-  card.append(h('h2', { style: 'margin-top:0' }, '🎒 Your day'));
-
-  // 0) Story-so-far anchor: once the trip has started, a gentle "which day am I on" line
-  //    plus a positive tally of what has happened. No streaks, no guilt — just orientation.
-  {
-    const startISO = tripStartISO();
-    if (startISO) {
-      const until = daysUntilISO(startISO);
-      if (until <= 0) {
-        const dayNum = 1 - until; // the start date itself is day 1
-        const dated = (store.trip.stops || []).flatMap((s) => [s.date, s.endDate]).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '')).sort();
-        const lastISO = dated[dated.length - 1];
-        const span = lastISO && lastISO !== startISO
-          ? Math.round((new Date(lastISO + 'T00:00:00') - new Date(startISO + 'T00:00:00')) / 86400000) + 1
-          : null;
-        const dayLabel = (span && dayNum <= span) ? `Day ${dayNum} of ${span}` : `Day ${dayNum} of your trip`;
-        const explored = ((store.profile.prefs || {}).doneSpots || []).length;
-        const notes = ((store.journal || {}).entries || []).length;
-        const tally = [
-          explored ? `${explored} place${explored === 1 ? '' : 's'} explored` : null,
-          notes ? `${notes} journal note${notes === 1 ? '' : 's'}` : null,
-        ].filter(Boolean).join(' · ');
-        card.append(h('button', { class: 'btn ghost block strip-row', onclick: () => go('#journey'), 'aria-label': 'Your journey so far' }, [
-          h('span', { class: 'strip-ic' }, '📖'),
-          h('span', { class: 'grow strip-txt' }, [
-            h('div', { class: 'en' }, dayLabel),
-            h('div', { class: 'sci' }, tally || 'Your story so far — mark places done and add journal notes as you go.'),
-          ]),
-        ]));
-      }
-    }
-  }
-
-  // 1) Next plan item — or a gentle nudge to add one.
-  const item = nextPlanItem();
-  const t = todayISO();
-  const when = item ? (item.date === t ? 'Today' : item.date === addDaysISO(t, 1) ? 'Tomorrow' : evShort(item.date)) : '';
-  card.append(h('button', { class: 'btn ghost block strip-row', onclick: () => go('#calendar') }, [
-    h('span', { class: 'strip-ic' }, '📅'),
-    h('span', { class: 'grow strip-txt' }, item ? [
-      h('div', { class: 'en' }, item.title || 'Planned'),
-      h('div', { class: 'sci' }, `${when}${item.time ? ' · ' + item.time : ''}${item.place ? ' · ' + item.place : ''}`),
-    ] : [
-      h('div', { class: 'en' }, 'Plan your day'),
-      h('div', { class: 'sci' }, 'Add what you want to do to your calendar'),
-    ]),
-  ]));
-
-  // 2) Budget quick-add — logs in one tap and shows today's running spend.
-  const budBox = h('div', { style: 'margin-top:10px' });
-  const cur = (c && c.currency) || 'THB';
-  const renderBud = () => {
-    budBox.innerHTML = '';
-    let spent = 0;
-    (store.trip.budgetLog || []).forEach((b) => { if (b.date === t && (b.currency || cur) === cur) spent += parseFloat(b.amount) || 0; });
-    const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', class: 'strip-amt', 'aria-label': 'Amount spent' });
-    const note = h('input', { type: 'text', placeholder: 'On what? (optional)', class: 'strip-note', 'aria-label': 'What the expense was on' });
-    const add = () => { if (!amt.value) return; addBudgetItem({ amount: amt.value, currency: cur, note: note.value.trim() }); renderBud(); };
-    amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
-    budBox.append(h('div', { class: 'strip-budget' }, [
-      h('span', { class: 'strip-ic' }, '💸'), amt, h('span', { class: 'strip-cur' }, cur), note,
-      h('button', { class: 'btn strip-add', 'aria-label': 'Add expense', onclick: add }, '＋'),
-    ]));
-    budBox.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur} · ` : 'Log an expense in one tap. ',
-      h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
-    ]));
-  };
-  renderBud();
-  card.append(budBox);
-  return card;
 }
 
 // ---- "Things to do" ranking: weather + time of day + day of week + profile ------
@@ -5721,9 +5650,20 @@ function daySuggestScreen(country) {
 }
 
 // ---- FESTIVALS & EVENTS -----------------------------------------------------
-export function todayISO() { try { return new Date().toISOString().slice(0, 10); } catch { return '2026-01-01'; } }
+// Local calendar date as YYYY-MM-DD via the local Y/M/D getters — NEVER via toISOString(),
+// which always serialises in UTC. This app's own supported countries (Thailand, Vietnam,
+// Cambodia, Laos) all sit at UTC+7, so a UTC-based "today" silently returns YESTERDAY's
+// date for roughly the first 7 hours of every local day — and the same mistake inside
+// addDaysISO cancelled out its own +1-day advance for exactly that reason, so a plan due
+// tomorrow could never show "Tomorrow" (see nextPlanItem's caller in js/screens/home.js).
+// Confirmed via the full-site audit; every call site of todayISO()/addDaysISO() reads
+// through these two functions, so fixing them here fixes every caller with no other
+// changes needed. Mirrors the already-correct local-date pattern this codebase already
+// uses in js/screens/calendar.js's own calYmd().
+function localYMD(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+export function todayISO() { try { return localYMD(new Date()); } catch { return '2026-01-01'; } }
 export function addDaysISO(iso, n) {
-  try { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+  try { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return localYMD(d); }
   catch { return iso; }
 }
 export function evShort(d) {
@@ -9022,6 +8962,15 @@ export function render() {
   // js/app-state.js for the liveMapCtrl/liveCleanup protocol itself.
   teardownLiveScreen();
   stopAllReaders();   // cancel any in-progress read-aloud before the screen changes
+  // Close any open modal/confirm/bottom-sheet before rebuilding the screen underneath it.
+  // This used to live only in the hashchange listener below, which two real paths skip
+  // entirely: go() short-circuits straight to render() when the hash is unchanged, and the
+  // background GPS watcher calls render() directly on movement while on Home/Nearby/Explore/
+  // Places. Either one, with a modal open, used to rebuild the screen while the modal stayed
+  // up as a stale, disconnected overlay — closing it here instead covers every render(), not
+  // just hash-navigation ones. Harmless to also still run in the hashchange listener (closing
+  // an already-empty modal set is a no-op).
+  closeAllModals();
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
