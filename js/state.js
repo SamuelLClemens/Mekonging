@@ -725,6 +725,11 @@ export function removeSavedArea(id) {
   const i = list.findIndex((x) => x.id === id);
   if (i >= 0) { list.splice(i, 1); save(); }
 }
+// Drops every saved-area RECORD (name/bounds/tile count) in one go. Callers are responsible
+// for also clearing the actual cached tiles behind them (js/map.js's clearTileCache()) — this
+// only clears the list places.js renders, so the two stay in sync rather than leaving stale
+// "saved area" entries pointing at tiles that no longer exist in Cache Storage.
+export function clearSavedAreas() { store.savedAreas = []; save(); }
 
 // --- favorites helpers --------------------------------------------------------
 export function isFavorite(id) { return store.favorites.includes(id); }
