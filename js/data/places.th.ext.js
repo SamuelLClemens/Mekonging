@@ -4870,4 +4870,86 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking - pay on site. A short tuk-tuk or bicycle ride from the old city island.", verified: "2026-08",
     sources: [{ org: "Thaizer — Wat Yai Chai Mongkhon, Ayutthaya", url: "https://www.thaizer.com/wat-yai-chai-mongkhon-ayutthaya/" }, { org: "Ayutthaya Temple Guide — Wat Yai Chai Mongkhon", url: "https://ayutthayatemple-guide.com/what-to-see/wat-yai-chai-mongkhon-ayutthaya-temple/" }, { org: "Wikidata — Wat Yai Chai Mongkhon", url: "https://www.wikidata.org/wiki/Q2552414" }],
   },
+  // Run 11 (task #142): Thailand x sights, Sukhothai hub. Same "temple-circuit cluster"
+  // pattern as Run 10's Ayutthaya work - Sukhothai's ONLY sights entry was the umbrella
+  // th-ext-sukhothai-historical-park, which already namechecks Wat Si Chum in its own
+  // recognition/tips text but gives none of the park's three most-visited individual
+  // temples their own dedicated practical info. NOTE FOR FUTURE RUNS: "Wat Mahathat" is a
+  // extremely common Thai temple name - th-ext-sukhothai-wat-mahathat below is a
+  // DIFFERENT physical temple from th-ext-ayutthaya-wat-mahathat (Run 10) despite the
+  // identical name; do not merge or confuse them. Ratings: Wat Mahathat's TripAdvisor
+  // breakdown (Excellent 351 / Very good 118 / Average 16 / Poor 0 / Terrible 2) sums to
+  // exactly its stated 487-review total - passes the sanity check Wat Chaiwatthanaram
+  // failed in Run 10 - so a weighted rating (351*5+118*4+16*3+0*2+2*1)/487 = 4.676 -> 4.7
+  // is used. Wat Si Chum and Wat Si Sawai's searches surfaced only a review count/ranking,
+  // no headline number or usable breakdown, so both ship without rating. access: reused
+  // and narrowed the umbrella entry's own already-sourced Central Zone note (paved cycle
+  // paths, but individual ruins on stepped brick platforms) for the two Central Zone
+  // temples (Wat Mahathat, Wat Si Sawai); Wat Si Chum sits in the separately-ticketed
+  // North Zone, for which no specific accessibility source surfaced beyond a generic "easy
+  // by bike" (which describes reaching it, not the ground at the site) - access omitted
+  // rather than stretched. afterDark: the umbrella entry already fact-checked "general
+  // hours close at or before dusk" for this exact park, so that conclusion is reused
+  // directly (unlike Run 10's Ayutthaya temples, where conflicting closing times forced an
+  // omission) - the Central Zone temples' note also carries over the umbrella's Light and
+  // Sound show caveat since that ticketed evening event covers the Central Zone; omitted
+  // from Wat Si Chum's note since that show is Central Zone-specific and North Zone
+  // evening access isn't addressed by any source found.
+  {
+    id: "th-ext-sukhothai-wat-mahathat", name: "Wat Mahathat", city: "Sukhothai", country: "th",
+    access: { stepFree: "partial", note: "Sits inside the Central Zone, which has flat paved paths built for cycling and buggy hire to cross the grounds easily - but the temple's own ~200 chedis and main mondop sit on stepped brick platforms, so 'partial' rather than a full step-free rating." },
+    afterDark: { openAfterDark: false, note: "General park hours (roughly 06:30-18:00) close at or before dusk; a separate ticketed Light and Sound show covers the Central Zone on Friday-Sunday evenings outside festival season (expanding during Loy Krathong) - a distinct paid evening event, not standing after-dark access." },
+    recognition: "The spiritual and physical centre of the old walled city: around 200 chedis of every size clustered around a lotus-bud-shaped central chedi in the distinctive Sukhothai style, with a large seated bronze Buddha that catches dramatic light at sunrise and sunset.",
+    localName: "วัดมหาธาตุ · Wat Mahathat (Sukhothai)",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "The largest and most important temple of the old Sukhothai kingdom, at the dead centre of the Historical Park's Central Zone - a forest of brick chedis around the kingdom's signature lotus-bud spire, ranked the #2 thing to do in Sukhothai.",
+    whyItFits: "The one unmissable single stop if a visit only has time for one Sukhothai temple - allow at least an hour to walk the full chedi field.",
+    priceRange: { low: 100, typical: 100, high: 220, currency: "THB", note: "Covered by the Sukhothai Historical Park Central Zone ticket (around 100 THB); some sources cite a higher combined price bundling the Ramkhamhaeng National Museum." },
+    hours: "Roughly 06:30-18:00 daily, matching general Central Zone park hours - many visitors time it for sunrise or sunset light on the main Buddha image.",
+    tips: ["Hire a bicycle at the park gate - the Central Zone alone is large enough that cycling beats walking between temples.", "Sunrise or late-afternoon light is what most photographs of this temple are chasing.", "Combine with neighbouring Wat Si Sawai, a short walk away in the same zone."],
+    scamWarnings: [],
+    // Rating computed from a verified TripAdvisor breakdown (Excellent 351, Very good 118,
+    // Average 16, Poor 0, Terrible 2 = 487, matching the stated review count exactly):
+    // weighted (351*5+118*4+16*3+0*2+2*1)/487 = 4.676, rounded to 4.7.
+    rating: 4.7, reviewSources: ["Tripadvisor"],
+    mapQuery: "Wat Mahathat Sukhothai Historical Park", coords: { lat: 17.01688, lng: 99.70370 },
+    bookHint: "No booking - pay the Central Zone entrance fee at the gate.", verified: "2026-08",
+    sources: [{ org: "The Longest Way Home — Sukhothai Historical Park Entrance Fees & Guide", url: "https://www.thelongestwayhome.com/travel-guides/thailand/sukhothai/sukhothai-historical-park.html" }, { org: "Tripadvisor — Wat Mahathat, Sukhothai", url: "https://www.tripadvisor.com/Attraction_Review-g303921-d447465-Reviews-Wat_Mahathat-Sukhothai_Sukhothai_Province.html" }, { org: "Wikidata — Wat Mahathat (Sukhothai)", url: "https://www.wikidata.org/wiki/Q2552296" }],
+  },
+  {
+    id: "th-ext-sukhothai-wat-si-chum", name: "Wat Si Chum", city: "Sukhothai", country: "th",
+    afterDark: { openAfterDark: false, note: "General North Zone hours (roughly 06:30-18:00) close at or before dusk, same as the rest of the park." },
+    recognition: "A roofless brick mondop in the park's North Zone enclosing a huge 15m seated Buddha, Phra Achana, met through a narrow slot in the front wall before entering - one of the most striking single images in the whole park.",
+    localName: "วัดศรีชุม · Wat Si Chum",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "A short ride north of the main cluster, this brick mondop was built to frame one giant seated Buddha image behind a narrow viewing slot - widely rated the single most impressive individual sight in Sukhothai, ahead of even Wat Mahathat.",
+    whyItFits: "The pick for travellers who want one unforgettable single image rather than a broad walk through ruins - pairs naturally with a half-day central-zone visit.",
+    priceRange: { low: 100, typical: 100, high: 100, currency: "THB", note: "A separate North Zone ticket from the Central Zone (around 100 THB) - not covered by a Central Zone-only ticket." },
+    hours: "Roughly 06:30-18:00 daily, matching general North Zone park hours.",
+    tips: ["An easy 10-minute bicycle ride from the Central Zone - hire at the main gate rather than walking.", "Look for the giant hand reaching down near waist height, where visitors leave flowers and gold leaf.", "Access along the passage toward the Buddha's head is sometimes restricted - it is not guaranteed on every visit."],
+    scamWarnings: [],
+    mapQuery: "Wat Si Chum Sukhothai", coords: { lat: 17.02694, lng: 99.69333 },
+    bookHint: "No booking - pay the separate North Zone entrance fee at that zone's gate.", verified: "2026-08",
+    sources: [{ org: "Thaizer — Wat Si Chum, Sukhothai", url: "https://www.thaizer.com/wat-si-chum-sukhothai/" }, { org: "Tripadvisor — Wat Si Chum, Sukhothai", url: "https://www.tripadvisor.com/Attraction_Review-g303921-d1743396-Reviews-Wat_Si_Chum-Sukhothai_Sukhothai_Province.html" }, { org: "Wikidata — Wat Si Chum", url: "https://www.wikidata.org/wiki/Q13020832" }],
+  },
+  {
+    id: "th-ext-sukhothai-wat-si-sawai", name: "Wat Si Sawai", city: "Sukhothai", country: "th",
+    access: { stepFree: "partial", note: "Sits inside the Central Zone, which has flat paved paths built for cycling and buggy hire to cross the grounds easily - but the temple's own raised platform and three prangs are reached by brick steps, so 'partial' rather than a full step-free rating." },
+    afterDark: { openAfterDark: false, note: "General park hours (roughly 06:30-18:00) close at or before dusk; a separate ticketed Light and Sound show covers the Central Zone on Friday-Sunday evenings outside festival season (expanding during Loy Krathong) - a distinct paid evening event, not standing after-dark access." },
+    recognition: "Three well-preserved Khmer-style corn-cob prangs in the Central Zone's southwest corner, the tallest reaching 15m - Sukhothai's only Hindu-founded temple, its stucco decoration showing guardians, garudas and naga serpents.",
+    localName: "วัดศรีสวาย · Wat Si Sawai",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "Built as a Hindu shrine in the late 12th or early 13th century - before the Sukhothai kingdom itself existed - and later adapted for Buddhist use. Its three Khmer-style prangs stand out architecturally from every other ruin in the park, ranked a top-five Sukhothai sight.",
+    whyItFits: "The pick for travellers curious about what predates the Sukhothai kingdom itself, and for anyone who has already seen Ayutthaya's or Angkor's prangs and wants the contrast of a much smaller, quieter example.",
+    priceRange: { low: 100, typical: 100, high: 220, currency: "THB", note: "Covered by the Sukhothai Historical Park Central Zone ticket (around 100 THB), the same ticket that covers Wat Mahathat." },
+    hours: "Roughly 06:30-18:00 daily, matching general Central Zone park hours.",
+    tips: ["A short walk south from Wat Mahathat within the same Central Zone - easy to combine on one ticket.", "The stucco relief on the towers rewards a slow look, not just a passing photo.", "Quieter than Wat Mahathat despite being a short walk away - a good pick to de-crowd a visit."],
+    scamWarnings: [],
+    mapQuery: "Wat Si Sawai Sukhothai", coords: { lat: 17.01319, lng: 99.70231 },
+    bookHint: "No booking - covered by the Central Zone entrance fee at the gate.", verified: "2026-08",
+    sources: [{ org: "Renown Travel — Wat Si Sawai", url: "https://www.renown-travel.com/historicalsites/sukhothai/wat-si-sawai.html" }, { org: "Travelfish — Wat Si Sawai, Sukhothai", url: "https://www.travelfish.org/sight_profile/thailand/northern_thailand/sukhothai/sukhothai/212" }, { org: "Tripadvisor — Wat Sri Sawai, Sukhothai", url: "https://www.tripadvisor.com/Attraction_Review-g303921-d1746813-Reviews-Wat_Sri_Sawai-Sukhothai_Sukhothai_Province.html" }],
+  },
 ];
