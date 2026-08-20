@@ -28,7 +28,6 @@
 // shipping commit) since "no cleanup needed" is itself a claim worth confirming, not assuming.
 
 import { store, save, getAudioPacks, hasAudioPack, addAudioPack } from '../state.js';
-import { getActiveCountry } from '../app-state.js';
 import { h, debounce } from '../util.js';
 import { field, selectEl, openModal, confirmAction, online } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
@@ -44,8 +43,11 @@ import * as Diet from '../data/diet.js';
 const { DIET_LABEL, joinList } = Diet;
 // Reverse-imports: helpers that stay resident in main.js because they have callers outside
 // this file (langForCountry, in main.js's own dish-identifier code; oneTimeHint/contextNow/
-// inferPhase, already reverse-imported the same way by home.js and places.js).
-import { go, mount, topbar, langForCountry, oneTimeHint, contextNow, inferPhase } from '../main.js';
+// inferPhase, already reverse-imported the same way by home.js and places.js; focusSpot, the
+// same GPS-first/focus-second/activeCountry-last resolver places.js's map uses to pick a
+// city — reused here so "what language/country am I in" agrees with "what city is my map on"
+// instead of reading the (possibly stale, pre-GPS) activeCountry state directly).
+import { go, mount, topbar, langForCountry, oneTimeHint, contextNow, inferPhase, focusSpot } from '../main.js';
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
@@ -360,7 +362,14 @@ function rankedPhraseCats(categories, phase, part) {
 }
 
 export function phrasebookScreen(lang) {
-  const code = lang || store.profile.defaultLang || langForCountry(getActiveCountry());
+  // Auto mode (no explicit lang, no pinned defaultLang) must reflect where the traveller
+  // actually is RIGHT NOW, not whatever activeCountry last happened to be set to (which can
+  // be stale — e.g. still the boot-time timezone guess if GPS hasn't resolved yet, or the
+  // last country the traveller browsed rather than the one they're standing in). focusSpot()
+  // already encodes the right priority for this (live GPS fix > last explicit focus city >
+  // activeCountry default) — reuse it instead of reading getActiveCountry() directly, so the
+  // phrasebook's language agrees with whatever city the map/home screen is showing.
+  const code = lang || store.profile.defaultLang || langForCountry(focusSpot().spot.country);
   const book = getLanguage(code);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Phrasebook'));
@@ -655,7 +664,9 @@ export function dictionaryScreen() {
   // Object.keys() iteration order — falls back to that only when the local language has no
   // saved phrases yet.
   if (!dictLangSel || !allCodes.includes(dictLangSel)) {
-    const hereCode = langForCountry(getActiveCountry());
+    // Same GPS-first resolution as phrasebookScreen's own auto-language, so "My Dictionary"
+    // opens on the same language the phrasebook itself would default to right now.
+    const hereCode = langForCountry(focusSpot().spot.country);
     dictLangSel = allCodes.includes(hereCode) ? hereCode : allCodes[0];
   }
   if (allCodes.length > 1) {

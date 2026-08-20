@@ -20,7 +20,7 @@
 // reverse-import of this module for the full list.
 import {
   store, save, getPlaceData, getLastFix, setLastFix, getMyStay, setMyStay, clearMyStay,
-  getSavedAreas, addSavedArea, removeSavedArea, addPlaceVisit, removePlaceVisit,
+  getSavedAreas, addSavedArea, removeSavedArea, clearSavedAreas, addPlaceVisit, removePlaceVisit,
   toggleFavorite, isFavorite, createCollection, togglePlaceInCollection, collectionsForItem,
   setPlaceField, deletePin, ensureMe, getJellyReports, addJellyReport, getPin, todayKey,
 } from '../state.js';
@@ -211,8 +211,21 @@ export function placesScreen(arg) {
   wrap.append(foldedCard('🏠 My accommodation', stayCard, 'placesStayOpen', false));
 
   const areasStatusP = h('p', { class: 'muted', style: 'margin:4px 0;font-size:13px' }, '');
+  const storageLineP = h('p', { class: 'muted', style: 'margin:2px 0 8px;font-size:12px' }, '');
   const areasCard = h('div', { class: 'card' });
   const swAvailableP = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
+  // Reported gap: nothing here ever showed how much offline map data actually exists, or
+  // gave a way to clear it in one action (only one area at a time). navigator.storage.estimate()
+  // covers the whole origin (precached app shell + IndexedDB photos/audio too, not just map
+  // tiles), so the line is worded as total offline storage rather than implying tiles-only.
+  async function renderStorageLine() {
+    storageLineP.textContent = '';
+    const mapMod = await import('../map.js');
+    const est = await mapMod.storageEstimate();
+    if (!est) return; // navigator.storage.estimate unsupported — say nothing rather than guess
+    const used = est.usageMB < 1 ? est.usageMB.toFixed(1) : String(Math.round(est.usageMB));
+    storageLineP.textContent = `~${used} MB stored offline on this device (maps, photos, audio).`;
+  }
   function estimateAreaP() {
     if (!placesCtrl) { areasStatusP.textContent = 'The map is still loading — try again in a moment.'; return; }
     const urls = placesCtrl.getDownloadTiles(1000);
@@ -221,8 +234,12 @@ export function placesScreen(arg) {
     const mbNum = urls.length * 0.018;
     const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
     areasStatusP.textContent = '';
+    // Reported gap: no signal anywhere that connectivity affects this feature — a traveller
+    // offline right now would only find out by trying. Non-blocking (a view already fully
+    // cached from a previous save still completes fine with no connection), just upfront.
+    const offlineNote = online() ? '' : ' You appear to be offline right now — this will only work for tiles you already have saved.';
     areasStatusP.append(
-      `This view is about ${urls.length} satellite tiles (~${mb} MB). `,
+      `This view is about ${urls.length} satellite tiles (~${mb} MB).${offlineNote} `,
       h('button', { class: 'linklike', onclick: () => downloadAreaP(urls, viewInfo) }, 'Download now'),
       ' · ',
       h('button', { class: 'linklike', onclick: () => { areasStatusP.textContent = ''; } }, 'Cancel'),
@@ -238,11 +255,29 @@ export function placesScreen(arg) {
       if (d.quotaHit) { areasStatusP.textContent = `Storage is full — saved ${d.ok} tiles before stopping. Remove a saved area below, then try a smaller view.`; return; }
       if (d.ok > 0 && viewInfo) {
         const def = (placesCtrl && placesCtrl.nearestCityName && placesCtrl.nearestCityName()) || 'Saved area';
-        const name = (prompt('Name this offline area:', def) || def).trim() || def;
+        // Found live: some embedded/restricted browser contexts (confirmed here) don't support
+        // window.prompt() at all — it THROWS rather than just being uncallable or cancellable.
+        // Uncaught, that exception would skip addSavedArea() entirely: the tiles are genuinely
+        // cached (d.ok > 0) but the traveller never sees a saved area, and the status text stays
+        // stuck on "Saving…" forever with no error. Falls back to the same default name a
+        // cancelled prompt already uses, so the save still completes either way.
+        let name = def;
+        try { name = (prompt('Name this offline area:', def) || def).trim() || def; } catch { /* prompt unsupported here — keep def */ }
         addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.floor(viewInfo.zoom), count: d.ok });
+        areasStatusP.textContent = '';
+      } else if (d.ok === 0) {
+        // Reported gap: this used to go silently blank on total failure — from the traveller's
+        // point of view, identical to the "saved fine" case above. Now it says plainly why
+        // nothing is available offline, and distinguishes "you're offline" from "you're online
+        // but the tile service itself didn't respond" instead of guessing which applies.
+        areasStatusP.textContent = online()
+          ? 'Nothing could be saved — the map service did not respond. Try again in a moment.'
+          : 'Nothing could be saved — you need a connection to download new tiles. Reconnect and try again.';
+      } else {
+        areasStatusP.textContent = '';
       }
-      areasStatusP.textContent = '';
       renderAreasCard();
+      renderStorageLine();
     };
     navigator.serviceWorker.addEventListener('message', onMsg);
     let protect = [];
@@ -250,13 +285,33 @@ export function placesScreen(arg) {
     navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls, protect });
   }
   function deleteAreaP(a) {
-    removeSavedArea(a.id); renderAreasCard();
+    removeSavedArea(a.id); renderAreasCard(); renderStorageLine();
     if (placesCtrl && swAvailableP && a.bounds && navigator.serviceWorker.controller) {
       const urls = placesCtrl.tileUrlsForArea(a.bounds, a.z || 12, 1000);
-      const onMsg = (e) => { if ((e.data || {}).type === 'DELETE_DONE') { navigator.serviceWorker.removeEventListener('message', onMsg); renderAreasCard(); } };
+      const onMsg = (e) => { if ((e.data || {}).type === 'DELETE_DONE') { navigator.serviceWorker.removeEventListener('message', onMsg); renderAreasCard(); renderStorageLine(); } };
       navigator.serviceWorker.addEventListener('message', onMsg);
       navigator.serviceWorker.controller.postMessage({ type: 'DELETE_TILES', urls });
     }
+  }
+  // Reported gap: clearing offline map data meant removing areas one at a time — no single
+  // "start over" action. Clears both sides that need to stay in sync: the actual cached tiles
+  // (js/map.js's clearTileCache(), the mk-tiles* Cache Storage entries) and the saved-area
+  // RECORDS (state.js's clearSavedAreas()) — clearing only one would leave either orphaned
+  // tiles with no listing, or listed areas pointing at tiles that no longer exist.
+  function clearAllAreasP() {
+    confirmAction({
+      title: 'Clear all offline map data?',
+      body: 'This removes every saved area and its downloaded tiles from this device. You can save areas again any time you have a connection.',
+      confirmLabel: 'Clear all', danger: true,
+    }).then(async (ok) => {
+      if (!ok) return;
+      const mapMod = await import('../map.js');
+      await mapMod.clearTileCache();
+      clearSavedAreas();
+      areasStatusP.textContent = '';
+      renderAreasCard();
+      renderStorageLine();
+    });
   }
   function renderAreasCard() {
     areasCard.textContent = '';
@@ -266,6 +321,7 @@ export function placesScreen(arg) {
     const areas = getSavedAreas();
     if (!areas.length) {
       areasCard.append(h('p', { class: 'muted' }, 'Save the view above to use the satellite map with no signal. Each area you save is listed here and can be removed on its own.'));
+      areasCard.append(storageLineP);
       return;
     }
     areas.forEach((a) => {
@@ -279,8 +335,10 @@ export function placesScreen(arg) {
         ]),
       ]));
     });
+    areasCard.append(storageLineP, h('button', { class: 'btn ghost', style: 'margin-top:6px', onclick: clearAllAreasP }, '🗑 Clear all offline map data'));
   }
   renderAreasCard();
+  renderStorageLine();
   wrap.append(foldedCard('🗂️ Saved offline areas', areasCard, 'placesAreasOpen', false));
 
   // ---- Map search: always visible, never buried ----------------------------------
