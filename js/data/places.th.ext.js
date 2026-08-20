@@ -4952,4 +4952,83 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking - covered by the Central Zone entrance fee at the gate.", verified: "2026-08",
     sources: [{ org: "Renown Travel — Wat Si Sawai", url: "https://www.renown-travel.com/historicalsites/sukhothai/wat-si-sawai.html" }, { org: "Travelfish — Wat Si Sawai, Sukhothai", url: "https://www.travelfish.org/sight_profile/thailand/northern_thailand/sukhothai/sukhothai/212" }, { org: "Tripadvisor — Wat Sri Sawai, Sukhothai", url: "https://www.tripadvisor.com/Attraction_Review-g303921-d1746813-Reviews-Wat_Sri_Sawai-Sukhothai_Sukhothai_Province.html" }],
   },
+  // Run 12 (task #142): Thailand x sights, Koh Samui hub. Different shape from Runs 10-11:
+  // a beach-resort island, not a temple-circuit park, so the "cluster" pattern doesn't
+  // apply - these three are unrelated named landmarks rather than sub-sites of one site.
+  // NOTE: "Big Buddha" is ANOTHER Wat-Mahathat-style common-name collision risk - this file
+  // already has th-ext-phuket-big-buddha (Ming Mongkol Buddha) and
+  // th-ext-pattaya-big-buddha-hill (also literally "Wat Phra Yai"), both entirely different
+  // statues in different cities from this Koh Samui one. Ratings: Big Buddha's own search
+  // result stated two flatly contradictory review-count figures in the same answer (6,831
+  // vs 14,452) with no breakdown to check either against - discarded per the same
+  // sum-vs-stated-total discipline as Run 10/11, just applied to a simpler "two numbers
+  // that can't both be right" case rather than a breakdown arithmetic failure. Fisherman's
+  // Village and Na Muang Waterfalls both surfaced only a ranking/review count, no headline
+  // number - ship without rating too. Coordinates: Fisherman's Village had two sources
+  // disagreeing by roughly 2.5km (unlike the ~500m spreads accepted for the Ayutthaya/
+  // Sukhothai temples) - used the figure consistent with Bophut's well-established general
+  // location rather than the outlier. access: Big Buddha's viewing platform is reached by a
+  // guarded staircase (a physical-construction fact, same reasoning class as task #147's
+  // stilt-housing/tent-camping inference - not a guess) so stepFree:"no"; Na Muang
+  // Waterfalls has an explicit, specific reviewer-sourced hazard description (a ~30-inch
+  // handrail-less bridge, uneven root-and-gravel track) supporting the same "no"; Fisherman's
+  // Village is a paved village street but no source explicitly confirms its surface
+  // condition, so access is omitted rather than assumed from the fact that it's a street.
+  // afterDark: Fisherman's Village gets a confident openAfterDark:true - its Friday walking
+  // street runs 17:00-23:00, which is after dark under any Thai season, the cleanest
+  // "open after dark" fact found in this run. Big Buddha and Na Muang Waterfalls both
+  // omit afterDark: Big Buddha's 6pm closing (some sources say 7am-6pm, others 8am-6pm)
+  // has the same dusk-straddling ambiguity as Run 10's Ayutthaya temples, and Na Muang's
+  // jungle terrain has no source confirming evening lighting/safety either way.
+  {
+    id: "th-ext-kohsamui-big-buddha", name: "Big Buddha (Wat Phra Yai)", city: "Koh Samui", country: "th",
+    access: { stepFree: "no", note: "The 12m gold statue sits on a platform reached by a naga-flanked staircase from the causeway - there is no ramped or step-free route to the viewing platform itself." },
+    recognition: "A 12-metre golden seated Buddha on its own small islet (Koh Fan), linked to Samui's north coast by a short causeway - visible from kilometres out to sea and probably the most photographed single object on the island.",
+    localName: "วัดพระใหญ่ · Wat Phra Yai",
+    categories: ["history", "culture"], budgetTier: "low",
+    kidFriendly: true, activities: ["history", "photography"],
+    blurb: "Built in 1972 on Koh Fan islet off Bang Rak, this 12m gold Buddha is Samui's best-known landmark and a working temple as well as a photo stop, with views across the bay toward Koh Pha Ngan from the platform at its base.",
+    whyItFits: "The single default sightseeing stop on Koh Samui - free, quick to visit, and easy to combine with the Bang Rak/Bophut side of the island.",
+    priceRange: { low: 0, typical: 50, high: 100, currency: "THB", note: "No fixed entrance fee - a 50-100 THB donation is customary and supports the temple." },
+    hours: "Roughly 07:00/08:00-18:00 daily (sources vary slightly on opening time).",
+    tips: ["Dress modestly - shoulders and knees covered; sarongs are available at the entrance for anyone underdressed.", "Early morning or late afternoon gives the best light and the smallest crowds.", "Combine with a walk through neighbouring Fisherman's Village, a short drive away."],
+    scamWarnings: [],
+    mapQuery: "Big Buddha Wat Phra Yai Koh Samui", coords: { lat: 9.570804, lng: 100.059845 },
+    bookHint: "No booking - open access, donation-based entry.", verified: "2026-08",
+    sources: [{ org: "Wikipedia — Wat Phra Yai", url: "https://en.wikipedia.org/wiki/Wat_Phra_Yai" }, { org: "Travelfish — Big Buddha (Wat Phra Yai), Ko Samui", url: "https://www.travelfish.org/sight_profile/thailand/southern_thailand/surat_thani/ko_samui/3028" }, { org: "Tripadvisor — Big Buddha Temple (Wat Phra Yai)", url: "https://www.tripadvisor.com/Attraction_Review-g1179396-d456459-Reviews-Big_Buddha_Temple_Wat_Phra_Yai-Bophut_Ko_Samui_Surat_Thani_Province.html" }],
+  },
+  {
+    id: "th-ext-kohsamui-fishermans-village", name: "Fisherman's Village", city: "Koh Samui", country: "th",
+    afterDark: { openAfterDark: true, note: "The Friday walking street runs 17:00-23:00, well after dark year-round - by far the busiest and most distinctive time to visit, not an incidental evening option." },
+    recognition: "A row of preserved wooden Chinese-Thai shophouses along Bophut's beach road, on the island's north coast - narrow streets of boutiques, bars and waterfront restaurants that close to traffic for a Friday-night walking market.",
+    localName: "หมู่บ้านหัวถนน บ่อผุด · Bophut old town",
+    categories: ["culture", "market"], budgetTier: "mid",
+    kidFriendly: true, activities: ["market", "food", "photography"],
+    blurb: "Bophut's old fishing-village shophouses, now a strip of boutiques, bars and restaurants that most visitors time around the Friday-night walking street - stalls, street food and live music filling the pedestrianised road until 11pm.",
+    whyItFits: "The pick for an evening out that isn't a beach bar strip - come hungry on a Friday for the walking market, or any evening for a quieter waterfront dinner.",
+    priceRange: { low: 0, typical: 300, high: 1000, currency: "THB", note: "Free to walk; typical cost is a meal or market shopping, roughly 300 THB up." },
+    hours: "Shops and cafes generally open from around 11:00; the Friday walking street runs 17:00-23:00 specifically.",
+    tips: ["Time a visit for Friday evening for the walking street - the rest of the week it's a quieter boutique/dining strip.", "Explore the side alleys, not just the main beach road, for smaller cafes and shops.", "Pairs naturally with Big Buddha, a short drive away on the same side of the island."],
+    scamWarnings: [],
+    mapQuery: "Fisherman's Village Bophut Koh Samui", coords: { lat: 9.5598, lng: 100.0300 },
+    bookHint: "No booking - open access; restaurants take walk-ins most nights outside peak season.", verified: "2026-08",
+    sources: [{ org: "Holidify — Fisherman's Village, Koh Samui", url: "https://www.holidify.com/places/koh-samui/fishermans-village-sightseeing-10734.html" }, { org: "Tripadvisor — Fisherman's Village", url: "https://www.tripadvisor.com/Attraction_Review-g1179396-d2287711-Reviews-Fisherman_s_Village-Bophut_Ko_Samui_Surat_Thani_Province.html" }],
+  },
+  {
+    id: "th-ext-kohsamui-na-muang-waterfalls", name: "Na Muang Waterfalls", city: "Koh Samui", country: "th",
+    access: { stepFree: "no", note: "Reviewers describe a narrow (roughly 30-inch), handrail-less bridge and an uneven track with tree roots and loose gravel on the approach - a genuinely rough path, not step-free." },
+    recognition: "Two waterfalls inland from Lamai in the island's hilly interior - Na Muang 1, a broad, easily reached cascade with a swimmable pool, and Na Muang 2, a taller falls a further short jungle trek beyond it.",
+    localName: "น้ำตกหน้าเมือง · Na Muang",
+    categories: ["nature"], budgetTier: "low",
+    kidFriendly: true, activities: ["nature", "swimming", "hiking"],
+    blurb: "Koh Samui's best-known waterfalls, inland from Lamai: Na Muang 1 is a short, easy walk from the car park to a swimmable pool, while Na Muang 2 asks for a steeper, rougher jungle trek to a taller, quieter cascade beyond it.",
+    whyItFits: "The pick for travellers who want a genuine jungle-and-swimming stop inland from the beaches, rather than another stretch of sand.",
+    priceRange: { low: 0, typical: 0, high: 100, currency: "THB", note: "Na Muang 1 is generally free; some sources report a roughly 50-100 THB fee for the Na Muang 2 side, plus optional paid parking or a jeep ride up (about 100 THB)." },
+    hours: "Roughly 08:00/09:00-17:00/18:00 daily (sources vary).",
+    tips: ["Wear proper closed-toe footwear - reviewers describe the track as uneven with tree roots and loose gravel, and the pools have slippery rock.", "Na Muang 1 is the easy, family-friendly option; only continue to Na Muang 2 if the group is comfortable with a steeper, rougher trek.", "An elephant camp near the entrance has drawn animal-welfare concerns in visitor reviews - a separate business from the waterfall itself, worth knowing if that matters for your visit."],
+    scamWarnings: [],
+    mapQuery: "Na Muang Waterfall 1 Koh Samui", coords: { lat: 9.4665, lng: 99.9840 },
+    bookHint: "No booking - pay any entrance/parking fee on site.", verified: "2026-08",
+    sources: [{ org: "Tripadvisor — Na Muang Waterfall, Ko Samui", url: "https://www.tripadvisor.com/Attraction_Review-g293918-d456466-Reviews-Na_Muang_Waterfall-Ko_Samui_Surat_Thani_Province.html" }, { org: "BestPrice Travel — Na Muang 2 Waterfall", url: "https://www.bestpricetravel.com/travel-guide/na-muang-2-waterfall.html" }],
+  },
 ];
