@@ -4119,4 +4119,47 @@ export const PLACES_VI_EXT = [
     bookHint: "No booking for ATMs/SIM; Vinmec Can Tho takes emergency walk-ins.", verified: "2026-08",
     sources: [{ org: "Move to Vietnam — Best Medical Clinics and International Hospitals", url: "https://movetovietnam.com/best-medical-clinics-and-international-hospitals-in-vietnam/" }],
   },
+  // Task #142 transport-gap pass: the 3 Vietnam towns that showed 0 transport-family
+  // entries in a fresh live audit (Ha Long, Ho Chi Minh City, Da Nang). Same combined
+  // single-card shape as the practical sweep - one orientation card per town covering
+  // how travellers actually arrive/move, rather than the fuller 3-card Hanoi treatment.
+  {
+    id: "vi-ext-halong-transport", name: "Ha Long practical: getting there and around", city: "Ha Long", country: "vi",
+    categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Ha Long Bay has no railway station and no airport of its own - the standard approach from Hanoi is a roughly 160-180km road transfer via the Hanoi-Hai Phong Expressway, taking about 2.5 hours in normal traffic (up to 4.5 hours on a bad day). Seat buses run as cheap as 150,000-250,000 VND; comfortable minivans and limousine buses (Phuc Xuyen, Kumho Viet Thanh, Cat Ba Express and others) run roughly 240,000-300,000 VND and pick up from Old Quarter hotels. Once in Ha Long City/Bai Chay, most everything relevant to a cruise stay - the harbour, hotels, the night market - is walkable or a short Grab ride; the real logistics happen at the cruise embarkation point itself.",
+    whyItFits: "The orientation card for how travellers actually arrive here - a road transfer, not a train or flight - and what to expect once in town before boarding a boat.",
+    priceRange: { low: 150000, typical: 270000, high: 300000, currency: "VND", note: "Public/seat buses run 150,000-250,000 VND; comfortable minivans and limousine buses run roughly 240,000-300,000 VND. Grab within Ha Long City/Bai Chay for a typical short hop runs a small fraction of this." },
+    hours: "Bus and minivan departures run through the day from the Old Quarter, roughly matching typical cruise check-in windows.",
+    tips: ["Book a minivan/limousine bus with hotel pickup rather than the cheapest public bus if arriving with luggage for a cruise - most cruise operators can arrange this transfer directly as part of the booking.", "Confirm your cruise operator's exact embarkation pier before travelling - Ha Long Bay has more than one, and arriving at the wrong one is a real and avoidable problem.", "There is no rail option to Ha Long - don't search for a train ticket, the expressway bus/minivan is the standard route.", "Budget extra time on weekends and holidays, when the expressway can back up well beyond the normal 2.5 hours."],
+    scamWarnings: ["Book bus/minivan tickets through the operator's own site, a hotel or a recognised booking platform rather than an unmarked street agent, who have been reported to sell seats on services that don't actually exist."],
+    mapQuery: "Ha Long Bay cruise port", coords: { lat: 20.9101, lng: 107.1839 },
+    bookHint: "Book minivan/limousine bus transfers online or via your cruise operator; public buses are usually walk-up.", verified: "2026-08",
+    sources: [{ org: "North Vietnam — Hanoi to Ha Long Bay Bus Schedule 2026", url: "https://north-vietnam.com/hanoi-to-ha-long-bay-bus-schedule-timetable/" }, { org: "BestPrice Travel — Hanoi to Halong Bay Shuttle Bus 2026", url: "https://www.bestpricetravel.com/travel-guide/hanoi-to-halong-bay-shuttle-bus-522.html" }, { org: "Oxalis Adventure — 5 Easy Ways from Hanoi to Halong Bay", url: "https://oxalisadventure.com/easy-ways-from-hanoi-to-halong-bay/" }],
+  },
+  {
+    id: "vi-ext-hcmc-transport", name: "Ho Chi Minh City practical: getting around", city: "Ho Chi Minh City", country: "vi",
+    categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Tan Son Nhat International Airport sits only about 8km from District 1, a 20-40 minute Grab or taxi ride in normal traffic (allow 40-60 minutes during the 7-9am/5-7pm rush). Grab to District 1 typically runs 90,000-200,000 VND; metered taxis run 150,000-260,000 VND plus a small toll/surcharge. International arrivals should look for the Grab pickup point in the parking area opposite Terminal 2 rather than at the immediate kerb. Once in the city, Metro Line 1 (Ben Thanh-Suoi Tien, opened December 2024) now runs 14 stations over nearly 20km - the first three (Ben Thanh, Opera House, Ba Son) underground, the rest elevated - with fares of 7,000-20,000 VND by distance. It's genuinely useful for the District 1-to-Thu Duc corridor, though Grab remains the default for anywhere the line doesn't reach.",
+    whyItFits: "The orientation card for arriving and moving around the country's biggest city: what the airport transfer actually costs, and the honest current reach of the still-new metro.",
+    priceRange: { low: 7000, typical: 120000, high: 260000, currency: "VND", note: "Metro Line 1 fares run 7,000-20,000 VND by distance. Airport Grab to District 1 runs roughly 90,000-200,000 VND; a metered taxi runs 150,000-260,000 VND plus small tolls." },
+    hours: "Metro Line 1 runs roughly 05:00-22:00 daily; Grab and taxis operate 24h to match arriving flights.",
+    tips: ["Head to the marked Grab pickup area in the parking zone opposite Terminal 2 for international arrivals, not the terminal kerb.", "Metro Line 1 is worth using for a District 1-Thu Duc trip, but it doesn't yet reach most of the rest of the city - Grab is still the default elsewhere.", "Budget real extra time for rush hour (7-9am, 5-7pm) on any road transfer, airport included.", "Insist on the meter with a street taxi, or just use Grab's fixed upfront price instead."],
+    scamWarnings: ["Some unmetered taxis outside the marked ranks quote an inflated flat 'airport price' - use a marked counter or Grab's fixed price instead."],
+    mapQuery: "Ben Thanh metro station Ho Chi Minh City", coords: { lat: 10.8231, lng: 106.6297 },
+    bookHint: "No booking needed - book Grab in-app, buy metro tokens/cards at station machines, taxis are walk-up.", verified: "2026-08",
+    sources: [{ org: "Wikipedia — Ho Chi Minh City Metro Line 1", url: "https://en.wikipedia.org/wiki/Ho_Chi_Minh_City_Metro_Line_1" }, { org: "The Traveler — Grab Pickup at Ho Chi Minh Airport 2026 Guide", url: "https://www.thetraveler.org/grab-pickup-at-ho-chi-minh-airport-complete-2026-guide/" }, { org: "Vietnam-Visa — Tan Son Nhat Airport to City Center 2026", url: "https://www.vietnam-visa.com/ho-chi-minh-airport-to-city-center/" }],
+  },
+  {
+    id: "vi-ext-danang-transport", name: "Da Nang practical: getting around and onward", city: "Da Nang", country: "vi",
+    categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
+    blurb: "Da Nang International Airport is unusually close-in - about 3km from the Han River - so a Grab into the centre typically runs just 70,000-100,000 VND, with a metered taxi around 150,000-200,000 VND (taxis are cash-only). Grab surges 1.5-2x in rain or during the 5-7pm rush, so waiting 15 minutes when it isn't urgent often settles the price back down. Onward to Hoi An, there's no direct train - a bus/minivan takes about 1-1.5 hours. Onward to Hue, both a train (via the scenic Hai Van Pass, from Da Nang Railway Station) and a bus take roughly 2-4 hours; the train is the more popular choice for the views alone.",
+    whyItFits: "The orientation card for Central Vietnam's main airport hub: an unusually short airport transfer, and the two realistic onward routes south to Hoi An and north to Hue.",
+    priceRange: { low: 70000, typical: 120000, high: 200000, currency: "VND", note: "Airport Grab into the centre runs roughly 70,000-100,000 VND; metered taxi roughly 150,000-200,000 VND. Bus/minivan to Hoi An runs a wide range depending on operator (roughly 50,000-400,000 VND); the Hue train or bus runs a few hundred thousand VND depending on class." },
+    hours: "Grab and taxis run 24h to match flights; Da Nang Railway Station ticket counters typically run roughly 07:00-19:00.",
+    tips: ["Queue at the marked taxi pick-up point rather than accept a higher rate from a driver waiting near the Grab pickup area.", "If it's not urgent, wait out a rain/rush-hour Grab surge for about 15 minutes rather than booking immediately at the inflated price.", "There's no direct train to Hoi An - a bus, minivan or Grab is the only way there.", "Book a window seat if taking the Da Nang-Hue train - the Hai Van Pass crossing is the reason many travellers choose the train over the bus for this leg."],
+    scamWarnings: ["Taxis here are cash-only and don't accept cards - carry small bills rather than relying on being able to pay by card."],
+    mapQuery: "Da Nang International Airport", coords: { lat: 16.0544, lng: 108.2022 },
+    bookHint: "No booking for Grab/taxi; book train tickets via the Vietnam Railways site/app or the station counter; bus/minivan tickets via the operator or a booking platform.", verified: "2026-08",
+    sources: [{ org: "Klook — Da Nang Airport Transfers 2026", url: "https://www.klook.com/blog/da-nang-airport/" }, { org: "North Vietnam — Da Nang to Hue Transport Options 2026", url: "https://north-vietnam.com/how-to-get-from-danang-to-hue/" }, { org: "North Vietnam — Da Nang to Hoi An 2026", url: "https://north-vietnam.com/da-nang-to-hoi-an/" }],
+  },
 ];
