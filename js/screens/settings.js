@@ -31,6 +31,7 @@ import { getFamily } from '../data/family.js';
 import { getAccessibility } from '../data/accessibility.js';
 import { getAllBlobs, putBlob } from '../idb.js';
 import * as reminders from '../reminders.js';
+import { CURRENCY_CODES } from '../currency.js';
 import {
   go, mount, topbar, render, focusSpot, daysUntilISO, todayISO, applyTheme, dietPicker,
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
@@ -149,8 +150,18 @@ export function settingsScreen() {
     type: 'text', value: p.name, oninput: (e) => { p.name = e.target.value; save(); },
   })));
 
-  card.append(field('Home currency', selectEl(['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'ILS'], p.homeCurrency,
+  // The full shared currency list (same one the per-expense picker uses — see
+  // ui-widgets.js's currencySelect) — this used to be a separate, shorter, hardcoded list
+  // that omitted THB/VND/KHR/LAK/CNY/MYR entirely, so a traveller logging expenses in Thai
+  // Baht (or any other Mekong-region currency) had no way to pick that same currency as the
+  // one totals are shown in. Every mixed-currency expense/withdrawal is converted into
+  // whatever is chosen here before being summed — nothing is dropped, just re-expressed in
+  // one currency (see budgetSummaryCard's totalsCurrencyRow for the same control, live,
+  // right next to the totals it drives).
+  card.append(field('Home currency', selectEl(CURRENCY_CODES, p.homeCurrency,
     (v) => { p.homeCurrency = v; save(); })));
+  card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' },
+    'Used for every total and percentage across the app, however each expense was logged.'));
 
   card.append(field('Default phrasebook language',
     selectEl([['', 'Auto — match where I am']].concat(Object.values(LANGUAGES).map((b) => [b.lang, b.label])), p.defaultLang,

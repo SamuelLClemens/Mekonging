@@ -222,7 +222,7 @@ function calendarScreen() {
         it.note ? h('p', {}, it.note) : null,
         h('div', { class: 'row-between', style: 'margin-top:8px' }, [
           h('button', { class: 'btn ghost', onclick: () => go(`#calendar-edit-${it.id}`) }, '✎ Edit'),
-          h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteCalendarItem(it.id); render(); } }); } }, 'Delete'),
+          h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteCalendarItem(it.id); reminders.tick(); render(); } }); } }, 'Delete'),
         ]),
       ]));
     }

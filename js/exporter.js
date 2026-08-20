@@ -104,7 +104,14 @@ export function toCsv(headers, rows) {
 }
 
 // --- XLSX (a ZIP of XML; inline strings, so no shared-strings table) -----------
-function xmlEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+// Strips XML 1.0-illegal control characters (\x00-\x08, \x0B, \x0C, \x0E-\x1F) before
+// escaping the usual entities — a journal/note/budget field is free user text and can
+// contain one (e.g. pasted from another app), which would otherwise produce malformed
+// worksheet XML and an Excel "needs repair" prompt or an outright failure to open.
+function xmlEsc(s) {
+  return String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 function colLetter(n) { let s = ''; n += 1; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
 // headers: string[]; rows: array of arrays; a cell may be a number or a string.
 export function buildXlsx(headers, rows, sheetName = 'Sheet1') {

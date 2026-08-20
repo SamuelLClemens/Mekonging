@@ -241,6 +241,22 @@ function donutSVG(segs, centerTop, centerSub) {
   return `<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Spending by category">${ring}<text x="21" y="20.3" class="donut-top" text-anchor="middle">${esc(String(centerTop || ''))}</text><text x="21" y="25.6" class="donut-sub" text-anchor="middle">${esc(String(centerSub || ''))}</text></svg>`;
 }
 
+// The one control that decides what currency every total and percentage on this screen —
+// donut, legend, target/projection, trend, withdrawals — converts into before summing, no
+// matter what currency each individual expense was logged in. Reuses store.profile.
+// homeCurrency directly, the exact same field Settings' own "Home currency" field edits, so
+// the two pickers can never drift out of sync — change either one and both read the new
+// value. Lives right here, next to the totals it explains, rather than only in Settings
+// three screens away, since picking a different currency matters most exactly while looking
+// at a mixed-currency breakdown. render() (not just save()) so every number on the card
+// updates immediately, in place, without navigating away and back.
+function totalsCurrencyRow() {
+  return h('div', { class: 'row-between', style: 'margin:0 0 10px' }, [
+    h('span', { class: 'muted tiny' }, 'Show totals & percentages in'),
+    currencySelect(homeCurrency(), (v) => { store.profile.homeCurrency = v; save(); render(); }),
+  ]);
+}
+
 // The budget picture: donut + legend, remaining vs a target, and a spend-trend projection.
 export function budgetSummaryCard() {
   const log = store.trip.budgetLog || [];
@@ -251,6 +267,7 @@ export function budgetSummaryCard() {
     // rather than making the traveller log an expense first just to find it.
     const card = h('div', { class: 'card budget-card' });
     card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
+    card.append(totalsCurrencyRow());
     card.append(h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Log an expense below, or set a budget and your trip dates here to see stats before you do.'));
     card.append(budgetSetupEditor());
     return card;
@@ -269,6 +286,7 @@ export function budgetSummaryCard() {
   const segs = cats.map((c) => ({ value: sums[c.id], color: c.color }));
   const card = h('div', { class: 'card budget-card' });
   card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
+  card.append(totalsCurrencyRow());
 
   const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, spent > 0 ? Math.round(spent).toLocaleString() : '—', home) });
   // Legend rows sort biggest-first and carry each category's share of total spend alongside

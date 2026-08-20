@@ -105,7 +105,10 @@ export function contributionSuggestions(store) {
     { key: 'photo', when: c.photos < 8, emoji: '📷', text: 'Add photos to your journal or album', pts: POINTS.photo, hash: '#journal-add' },
     { key: 'review', when: c.reviews < 5, emoji: '✍️', text: 'Review a place you have visited', pts: POINTS.review, hash: '#places' },
     { key: 'tip', when: c.tips < 3, emoji: '💬', text: 'Share a tip on a local noticeboard', pts: POINTS.tip, hash: '#board' },
-    { key: 'pin', when: c.pins < 3, emoji: '📍', text: 'Drop a pin on a place you found', pts: POINTS.pin, hash: '#map' },
+    // '#map' hasn't been a real route since #map was merged into Places' embedded map —
+    // this pointed at a dead link (silently falling through to Home) until the full-site
+    // audit caught it. #addpin is the actual, currently-working "add a place" screen.
+    { key: 'pin', when: c.pins < 3, emoji: '📍', text: 'Drop a pin on a place you found', pts: POINTS.pin, hash: '#addpin' },
   ];
   return ideas.filter((i) => i.when);
 }
