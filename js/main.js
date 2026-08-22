@@ -108,7 +108,10 @@ import {
   loadCountry, isCountryLoaded, loadAllCountries,
 } from './data/regions.js';
 import { ALLERGENS } from './data/allergens.js';
-import { NATURE_GROUPS, allSpecies, getSpecies } from './data/nature.js';
+// nature.js (~108 KB of species data) is NOT statically imported here — see the lazy
+// loadNature() below (added right after the import block), which mirrors regions.js's
+// loadCountry() idiom for the same reason: a traveller who never opens Identify/Sounds/
+// Dangerous should never pay to parse it.
 import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
 import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
@@ -125,6 +128,33 @@ import { REGIONS_LA } from './data/regions.la.js';
 import { provinceInfo } from './data/regions.info.js';
 import { zonesFor, getZone, zoneForProvince } from './data/zones.js';
 import * as Diet from './data/diet.js';
+
+// ---- Lazy nature/wildlife data loading --------------------------------------
+// NATURE_GROUPS/allSpecies/getSpecies used to be a static top-of-file import of
+// js/data/nature.js (~108 KB of species data), parsed on every launch even for a
+// traveller who never opens Identify/Sounds/Dangerous. Loaded on first real need
+// instead, mirroring js/data/regions.js's loadCountry()/isCountryLoaded() idiom:
+// same in-flight/settled promise cache, same "delete on failure so a retry gets a
+// fresh attempt" shape, same isNatureLoaded() synchronous flag. allSpecies()/
+// getSpecies() below stay fully synchronous either way — they return a safe empty
+// default before the module resolves — so no call site changes its own shape, only
+// whether it triggers/awaits the load. NATURE_GROUPS itself is a plain mutable
+// binding (not a function) reassigned once loaded, for the same reason: every
+// existing reference to it (a plain array read, never a call) keeps working as-is.
+let NATURE_GROUPS = [];
+let _natureMod = null;
+let _natureLoad = null;
+function isNatureLoaded() { return !!_natureMod; }
+function loadNature() {
+  if (_natureMod) return Promise.resolve(_natureMod);
+  if (_natureLoad) return _natureLoad;
+  _natureLoad = import('./data/nature.js')
+    .then((mod) => { _natureMod = mod; NATURE_GROUPS = mod.NATURE_GROUPS; return mod; })
+    .catch((err) => { _natureLoad = null; throw err; });
+  return _natureLoad;
+}
+function allSpecies(filter = {}) { return _natureMod ? _natureMod.allSpecies(filter) : []; }
+function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; }
 
 // ---- service worker + theme -------------------------------------------------
 // Register the service worker only in a secure web context (https / http localhost).
@@ -5908,16 +5938,6 @@ function soundsScreen() {
   wrap.append(topbar('Sounds around you', '#nature'));
   wrap.append(h('p', { class: 'map-hint' }, 'Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
-  // Every callable species, computed once so the group chips can show live counts.
-  const callable = allSpecies().filter(hasCall);
-  const GROUPS = [
-    { id: '', label: 'All', emoji: '✶' },
-    { id: 'bird', label: 'Birds', emoji: '🐦' },
-    { id: 'mammal', label: 'Mammals', emoji: '🐘' },
-    { id: 'insect', label: 'Insects', emoji: '🦗' },
-    { id: 'reptile', label: 'Frogs & geckos', emoji: '🐸' },
-  ].map((g) => ({ ...g, n: g.id ? callable.filter((s) => s.group === g.id).length : callable.length }))
-    .filter((g) => g.n > 0);
   let group = '';
   let query = '';
 
@@ -5925,15 +5945,35 @@ function soundsScreen() {
     oninput: debounce((e) => { query = e.target.value; renderList(); }, 120) });
   wrap.append(search);
 
-  const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
-    h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
-      onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
-      `${g.emoji} ${g.label} (${g.n})`)));
-  wrap.append(chips);
+  // Chips live in their own wrapper, rebuilt by renderChips() rather than computed once,
+  // so the group counts pick up nature.js once it lands (see loadNature() near the top of
+  // this file) instead of freezing at the empty pre-load default.
+  const chipsWrap = h('div', {});
+  wrap.append(chipsWrap);
   const listEl = h('div', {});
   wrap.append(listEl);
+
+  function renderChips() {
+    // Every callable species, recomputed each call so the group chips show live counts.
+    const callable = allSpecies().filter(hasCall);
+    const GROUPS = [
+      { id: '', label: 'All', emoji: '✶' },
+      { id: 'bird', label: 'Birds', emoji: '🐦' },
+      { id: 'mammal', label: 'Mammals', emoji: '🐘' },
+      { id: 'insect', label: 'Insects', emoji: '🦗' },
+      { id: 'reptile', label: 'Frogs & geckos', emoji: '🐸' },
+    ].map((g) => ({ ...g, n: g.id ? callable.filter((s) => s.group === g.id).length : callable.length }))
+      .filter((g) => g.n > 0);
+    chipsWrap.innerHTML = '';
+    const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
+      h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
+        onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
+        `${g.emoji} ${g.label} (${g.n})`)));
+    chipsWrap.append(chips);
+  }
   function renderList() {
     listEl.innerHTML = '';
+    if (!isNatureLoaded()) { listEl.append(h('p', { class: 'empty' }, 'Loading the sounds library…')); return; }
     const results = allSpecies({ group: group || undefined, q: query.trim() || undefined }).filter(hasCall);
     if (!results.length) { listEl.append(h('p', { class: 'empty' }, query.trim() ? 'No calls match your search.' : 'No calls in this group yet.')); return; }
     results.forEach((s) => {
@@ -5948,7 +5988,9 @@ function soundsScreen() {
       ]));
     });
   }
+  renderChips();
   renderList();
+  if (!isNatureLoaded()) { loadNature().then(() => { renderChips(); renderList(); }, () => { renderChips(); renderList(); }); }
   mount(wrap, '#home');
 }
 
@@ -5961,12 +6003,11 @@ function natureScreen() {
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
 
-  const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS);
-  const groupChips = h('div', { class: 'chips' }, groups.map((g) =>
-    h('button', { class: 'chip', 'aria-pressed': natureGroup === g.id ? 'true' : 'false', dataset: { g: g.id },
-      onclick: () => { natureGroup = g.id; groupChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
-      `${g.emoji} ${g.label}`)));
-  wrap.append(groupChips);
+  // Group chips live in their own wrapper, rebuilt by renderChips() rather than computed
+  // once, so they pick up NATURE_GROUPS once nature.js lands (see loadNature() near the
+  // top of this file) instead of freezing at the empty pre-load default (just "All").
+  const chipsWrap = h('div', {});
+  wrap.append(chipsWrap);
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
 
   wrap.append(h('div', { class: 'card' }, [
@@ -5979,6 +6020,15 @@ function natureScreen() {
 
   const listEl = h('div', {});
   wrap.append(listEl);
+  function renderChips() {
+    const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS);
+    chipsWrap.innerHTML = '';
+    const groupChips = h('div', { class: 'chips' }, groups.map((g) =>
+      h('button', { class: 'chip', 'aria-pressed': natureGroup === g.id ? 'true' : 'false', dataset: { g: g.id },
+        onclick: () => { natureGroup = g.id; groupChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
+        `${g.emoji} ${g.label}`)));
+    chipsWrap.append(groupChips);
+  }
   function renderList() {
     listEl.innerHTML = '';
     const results = allSpecies({ q: natureQuery.trim(), group: natureGroup });
@@ -5990,7 +6040,9 @@ function natureScreen() {
     }
     results.forEach((s) => listEl.append(speciesCard(s)));
   }
+  renderChips();
   renderList();
+  if (!isNatureLoaded()) { loadNature().then(() => { renderChips(); renderList(); }, () => { renderChips(); renderList(); }); }
   mount(wrap, '#home');
 }
 
@@ -6005,6 +6057,20 @@ function speciesCard(s) {
 }
 
 function speciesScreen(id) {
+  // A direct deep link (a pinned item, a shared hash) can reach this screen before the
+  // traveller has ever opened Identify/Sounds/Dangerous this session — getSpecies(id)
+  // would otherwise return null exactly as it would for a genuinely unknown id, wrongly
+  // reporting "Not found." while nature.js is still loading. Distinguish the two and
+  // redraw (via the router, safe even if the traveller has since navigated elsewhere)
+  // once the module resolves — see loadNature() near the top of this file.
+  if (!isNatureLoaded()) {
+    loadNature().then(render, render);
+    const wrap = h('div', { class: 'screen' });
+    wrap.append(topbar('Species', '#nature'));
+    wrap.append(h('p', { class: 'empty' }, 'Loading the wildlife guide…'));
+    mount(wrap, '#home');
+    return;
+  }
   const s = getSpecies(id);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(s ? s.commonName : 'Species', '#nature'));
@@ -6587,6 +6653,13 @@ function searchScreen() {
     }
   }
   renderResults();
+  // Wildlife results depend on nature.js — kick off its load as soon as Search opens
+  // (see loadNature() near the top of this file) rather than waiting for a keystroke, and
+  // refresh just the results (never the input above, so an in-progress query is never
+  // interrupted) once it resolves. Until then, section() already omits an empty "Wildlife
+  // & plants" heading entirely — a matching-text query simply surfaces those results a
+  // little later rather than showing anything misleading in the meantime.
+  if (!isNatureLoaded()) { loadNature().then(renderResults, renderResults); }
   mount(wrap, '#home');
 }
 
@@ -7208,7 +7281,14 @@ function dangerScreen() {
   // Mosquitoes & dengue — moved to the end of this screen per direct request (was the
   // lead card). It carries its own sources note and disclaimer already, so it reads as a
   // self-contained closing section rather than needing to borrow the wildlife groups'.
+  // Not gated on nature.js at all (it needs none of that data), so this safety content
+  // renders immediately regardless of whether the wildlife list below it is still loading.
   wrap.append(mosquitoCard());
+  // The wildlife-danger list above depends on nature.js — trigger the load (see
+  // loadNature() near the top of this file) and redraw via the router once it resolves
+  // (safe even if the traveller has since navigated elsewhere) so the "still downloading"
+  // message above never lingers once the data actually lands.
+  if (!isNatureLoaded()) { loadNature().then(render, render); }
   mount(wrap, '#sos');
 }
 
@@ -9175,3 +9255,11 @@ try { reminders.tick(); } catch { /* reminders are best-effort */ }
 
 // Refresh exchange rates in the background when online; update the converter if open.
 if (online()) refreshRates().then(() => { if ((location.hash || '').startsWith('#currency')) render(); }).catch(() => {});
+
+// Warm the wildlife/plant data (js/data/nature.js) once the browser is idle, so Identify/
+// Sounds/Species/Dangerous/Search often already have it by the time a traveller taps in —
+// see loadNature() near the top of this file. Purely best-effort: every call site above
+// that actually needs this data triggers (and gracefully awaits) its own load regardless,
+// so a slow, starved, or unsupported idle callback never leaves anything stuck.
+if ('requestIdleCallback' in window) requestIdleCallback(() => { loadNature().catch(() => {}); }, { timeout: 4000 });
+else setTimeout(() => { loadNature().catch(() => {}); }, 2000);
