@@ -3593,7 +3593,6 @@ export const PLACES_VI_EXT = [
     mapQuery: "bicycle rental Ninh Binh Tam Coc",
     verified: "2026-07",
     sources: [{ org: "Ninh Binh Tourist Center - Rent a bicycle or motorbike", url: "https://ninhbinhtouristcenter.com/rent-a-bicycle-or-motorbike-ninh-binh-city/" }, { org: "Golden Trail Travel - Bike rental prices in Ninh Binh", url: "https://goldentrailtravel.com/blog/bike-rental-price-ninh-binh-the-complete-guide-to-costs-options-and-the-best-places-to-rent-bicycles" }, { org: "Ninh Binh Bicycle Rental (Facebook)", url: "https://www.facebook.com/ninhbinhbicyclerental/" }],
-    sources: []
   },
   {
     id: "vi-ext-rental-nha-trang",
@@ -3611,7 +3610,6 @@ export const PLACES_VI_EXT = [
     mapQuery: "scooter rental Nha Trang",
     verified: "2026-07",
     sources: [{ org: "Vinpearl - Motorbike rental in Nha Trang", url: "https://vinpearl.com/en/motorbike-rental-in-nha-trang" }, { org: "The Sketchy Traveller - Nha Trang scooter rental", url: "https://thesketchytraveller.com/nha-trang-scooter-rental/" }, { org: "UNIQ Bike & Scooter Rental", url: "https://uniqmoto.com/en" }],
-    sources: []
   },
   {
     id: "vi-ext-rental-phu-quoc",
@@ -3629,7 +3627,6 @@ export const PLACES_VI_EXT = [
     mapQuery: "scooter rental Phu Quoc Duong Dong",
     verified: "2026-07",
     sources: [{ org: "VinWonders - Motorbike rental in Phu Quoc", url: "https://vinwonders.com/en/wonderpedia/news/motorbike-rental-in-phu-quoc/" }, { org: "Phu Quoc Go - Motorbike rental Phu Quoc 2026", url: "https://phuquocgo.vn/en/motorbike-rental-phu-quoc/" }, { org: "Traveloka", url: "https://www.traveloka.com/en-en/activities/vietnam/product/scooter-rental-in-phu-quoc-2000967219526" }, { org: "Phu Quoc Motorbike Rental", url: "https://motorbikes-phuquoc.com/en/" }],
-    sources: []
   },
   {
     id: "vi-ext-fansipan-cable-car", name: "Fansipan Summit & Cable Car (Roof of Indochina)", city: "Sapa", country: "vi",
