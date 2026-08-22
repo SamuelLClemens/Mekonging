@@ -80,7 +80,7 @@ import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing
 import {
   haversineKm, distanceChip, driveLabel, estDriveMin, withinNear, withinDayTrip, DAYTRIP_MAX_MIN,
   attrClass, attrTag, starsStr, isMarket, placeBucket,
-  CATEGORY_FAMILIES, FAMILY_COLOR, FAMILY_META, catFamily, catColor, placeCatColor, tierColor, swatch,
+  CATEGORY_FAMILIES, FAMILY_COLOR, FAMILY_META, catFamily, catColor, placeCatColor, placeFamilyKey, tierColor, swatch,
   wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip,
   citySlug, PRICE_TIER_LABEL, tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, catTag,
   marketOpenDays, marketOnToday, marketCovered, isBeach, seaAgo,
@@ -5406,14 +5406,9 @@ function todoScore(p, ctx, prefs, anchor) {
 }
 // The place's single most-identifying category family (beach beats nature, culture beats
 // park, …) — used for the accent colour and the placeholder emoji when no photo exists.
-// Kept in lockstep with placeCatColor()'s own priority order in render-utils.js — the two
-// must never disagree about a place's dominant family.
-export function placeFamily(p) {
-  const cats = p.categories || [];
-  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport', 'practical'];
-  for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return fam;
-  return 'other';
-}
+// Now a thin alias over render-utils' placeFamilyKey(), which placeCatColor() also uses, so
+// the colour and the emoji share one precedence list instead of two hand-synced copies.
+export function placeFamily(p) { return placeFamilyKey(p); }
 // The self-hosted, openly-licensed photo path for a place, or null. Same lookup as
 // photoBlock, exposed so list cards can show a small recognition thumbnail offline.
 export function placePhotoSrc(p) {

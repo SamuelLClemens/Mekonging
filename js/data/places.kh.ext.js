@@ -2274,6 +2274,7 @@ export const PLACES_KH_EXT = [
     whyItFits: "For a relaxed paddle and a seafood-and-sunset stroll along the promenade; most swimmers take a boat to Rabbit Island for clearer water.",
     priceRange: { currency: "KHR", low: 0, high: 0 },
     verified: "2026-07",
+    sources: [{ org: "Bookaway - A traveller's guide to Kep Beach", url: "https://www.bookaway.com/blog/beaches-cambodia-kep/" }, { org: "Seripheap - The Crab Market of Kep", url: "https://www.tour-cambodia.com/guide-cambodia/attraction/crab-market" }],
     recognition: "A short crescent of pale imported sand backed by casuarina trees and food vendors, with the White Lady (Sela Cham Pou) statue on the rocks nearby.",
     lifeguard: "no",
     swim: "A small, calm, shallow town beach that is pleasant for a paddle but often murky; most visitors swim at Rabbit Island (Koh Tonsay) instead. No patrol.",
@@ -2557,7 +2558,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.489, lng: 106.0188 },
     bookHint: "Email or call ahead to book one of the few guesthouse rooms; walk in for the restaurant.",
     verified: "2026-08",
-    sources: [{ org: "Le Tonlé Tourism Training Center (official)", url: "http://letonle.org/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g729351-d7136401-Reviews-Le_Tonle_Restaurant_and_Guesthouse-Kratie_Kratie_Province.html" }],
+    sources: [{ org: "Le Tonlé Tourism Training Center (official)", url: "https://letonle.org/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g729351-d7136401-Reviews-Le_Tonle_Restaurant_and_Guesthouse-Kratie_Kratie_Province.html" }],
   },
   {
     id: "kh-ext-kratie-tokae",
@@ -3079,7 +3080,7 @@ export const PLACES_KH_EXT = [
     scamWarnings: ["Get any private-clinic treatment cost agreed upfront - a documented pattern here is charging foreign visitors markedly more than locals for the same simple procedure."],
     mapQuery: "CT Clinic Sihanoukville", coords: { lat: 10.6270, lng: 103.5223 },
     bookHint: "No booking for ATMs/SIM; CT Clinic takes walk-ins and has an on-call line.", verified: "2026-08",
-    sources: [{ org: "Move to Cambodia — Medical Care in Sihanoukville", url: "https://movetocambodia.com/city-guides/sihanoukville/medical-care/" }, { org: "Canby Publications — Sihanoukville Emergency Services", url: "http://www.canbypublications.com/sihanoukville-cambodia/sihanoukville-hospital.htm" }, { org: "MEXC News — Cambodia ATM Withdrawal Guide 2026", url: "https://www.mexc.com/news/1083034" }],
+    sources: [{ org: "Move to Cambodia — Medical Care in Sihanoukville", url: "https://movetocambodia.com/city-guides/sihanoukville/medical-care/" }, { org: "Canby Publications — Sihanoukville Emergency Services", url: "https://www.canbypublications.com/sihanoukville-cambodia/sihanoukville-hospital.htm" }, { org: "MEXC News — Cambodia ATM Withdrawal Guide 2026", url: "https://www.mexc.com/news/1083034" }],
   },
   {
     id: "kh-ext-battambang-practical", name: "Battambang practical: money, health & connectivity", city: "Battambang", country: "kh",

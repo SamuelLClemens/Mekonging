@@ -592,7 +592,7 @@ export const LOCAL_VI = [
     ],
     sources: [
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
-      { org: "Con Dao National Park", url: "http://condaopark.com.vn" },
+      { org: "Con Dao National Park", url: "https://condaopark.com.vn" },
     ],
   },
   {

@@ -4566,11 +4566,12 @@ export const PLACES_LA_EXT = [
     budgetTier: "low",
     blurb: "The old town is compact and flat, perfect for a bicycle among the temples and the night market, while a scooter reaches Kuang Si Falls and the outlying villages.",
     whyItFits: "For getting around the peninsula and out to the waterfalls at your own pace.",
-    priceRange: { low: 20000, typical: 50000, high: 150000, currency: "LAK", note: "Per day: bicycles roughly 20,000-40,000 LAK; an automatic scooter around 100,000-150,000 LAK." },
+    priceRange: { low: 20000, typical: 50000, high: 150000, currency: "LAK", note: "Per day: a plain bicycle around 20,000 LAK and a mountain bike nearer 50,000 LAK; an automatic scooter roughly 100,000-120,000 LAK, more for a manual 150cc." },
     tips: ["Cycle the peninsula between the Mekong and the Nam Khan early for the quiet temples; ride to Kuang Si Falls only if you are a confident rider.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 19.8845, lng: 102.1348 },
     mapQuery: "bicycle rental Luang Prabang",
     verified: "2026-07",
+    sources: [{ org: "ScootScoot - Scooter rental in Luang Prabang", url: "https://scootscoot.app/blog/guides/scooter-rental-luang-prabang" }, { org: "Nomadasaurus - Kuang Si Falls, Luang Prabang", url: "https://www.nomadasaurus.com/kuang-si-falls-luang-prabang-laos/" }],
     sources: []
   },
   {

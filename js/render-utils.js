@@ -3,7 +3,7 @@
 // main.js to shrink the file every future edit has to load — pure functions only, no
 // screen logic. See MASTER_BUILD_PROMPT.md / plan history for the extraction rationale.
 
-import { h, fmtDistance, compass, bearing, mapsUrl } from './util.js';
+import { h, fmtDistance, compass, bearing, mapsUrl, haversineKm } from './util.js';
 import { store, getLastFix } from './state.js';
 import { spotKey, getCachedAir, refreshAir, getCachedWeather, refreshWeather, nearestSpot } from './weather.js';
 import { online } from './ui-widgets.js';
@@ -41,12 +41,12 @@ export function driveLabel(km) {
   return `~${rem ? `${hrs}h ${rem}m` : `${hrs}h`}+ by road (est.)`;
 }
 
-// Universal straight-line distance (km) between two {lat,lng} points.
-export function haversineKm(a, b) {
-  const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
-  const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(s));
-}
+// Universal straight-line distance (km) between two {lat,lng} points. Re-exported from
+// util.js rather than reimplemented: this module used to carry its own copy that differed
+// in two ways — no null guard, and no Math.min(1, ...) clamp before asin. Callers such as
+// nearbySafetyStrip already filter on `km != null`, which only means anything with util's
+// guarded version, so the two copies were quietly disagreeing about missing coordinates.
+export { haversineKm };
 
 // "1.2 km · ~15 min walk away" from the user's last GPS fix, when known. Offline,
 // pure maths (haversine + ~4.8 km/h walking pace); walk time only for close spots.
@@ -155,11 +155,16 @@ export function catColor(cat) { return FAMILY_COLOR[catFamily(cat)] || FAMILY_CO
 // culture beats park, etc.) — used to colour map pins by category. 'practical' sits last:
 // an info/money/health card that ALSO carries a real physical category (e.g. a transport
 // how-to) should still read as that stronger category, not as generic "practical" brown.
+export const FAMILY_PRIORITY = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport', 'practical'];
+// The place's single most-identifying family. One implementation, imported by main.js's
+// placeFamily() too, so the colour and the placeholder emoji can never disagree.
+export function placeFamilyKey(p) {
+  const cats = (p && p.categories) || [];
+  for (const fam of FAMILY_PRIORITY) if (cats.some((c) => catFamily(c) === fam)) return fam;
+  return 'other';
+}
 export function placeCatColor(p) {
-  const cats = p.categories || [];
-  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport', 'practical'];
-  for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return FAMILY_COLOR[fam];
-  return FAMILY_COLOR.other;
+  return FAMILY_COLOR[placeFamilyKey(p)] || FAMILY_COLOR.other;
 }
 
 // Budget-tier colours — one source of truth shared by badges, chips and the key.

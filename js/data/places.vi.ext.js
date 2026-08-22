@@ -427,7 +427,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Bac Ha Market Lao Cai Vietnam", coords: { lat: 22.535, lng: 104.296 },
     bookHint: "No booking; join a Sapa day tour or drive on Sunday.", verified: "2026-07",
-    sources: [{ org: "Origin Vietnam — Bac Ha Sunday Market", url: "https://www.originvietnam.com/destinations/bac-ha-sunday-market/" }, { org: "Sapa O'Chau — Bac Ha market", url: "http://sapaochau.org/sapa-trekking-and-homestay/sapa-trek-and-tour/market-tours/bac-ha-market-bac-ha-town-lao-cai-province" }, { org: "Your Vietnam Travel — Bac Ha", url: "https://www.yourvietnamtravel.com/bac-ha-market-vietnam" }],
+    sources: [{ org: "Origin Vietnam — Bac Ha Sunday Market", url: "https://www.originvietnam.com/destinations/bac-ha-sunday-market/" }, { org: "Sapa O'Chau — Bac Ha market", url: "https://sapaochau.org/sapa-trekking-and-homestay/sapa-trek-and-tour/market-tours/bac-ha-market-bac-ha-town-lao-cai-province" }, { org: "Your Vietnam Travel — Bac Ha", url: "https://www.yourvietnamtravel.com/bac-ha-market-vietnam" }],
   },
 
   // --- Phase 5 content batch 2: where to stay + signature experiences (Vietnam) ---
@@ -446,7 +446,7 @@ export const PLACES_VI_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Ta Van village homestay Sapa Vietnam", coords: { lat: 22.3086, lng: 103.8986 },
     bookHint: "Book a village homestay + trekking guide from Sapa town or online a day or two ahead.", verified: "2026-07",
-    sources: [{ org: "ETHOS — ethical Sapa trekking & homestays", url: "https://www.ethosspirit.com/sapa-trekking-ethical-tours" }, { org: "Sapa Sisters — responsible trekking", url: "https://sapasisters.com/responsible-trekking-in-sapa/" }, { org: "Sapa O'Chau", url: "http://sapaochau.org/" }],
+    sources: [{ org: "ETHOS — ethical Sapa trekking & homestays", url: "https://www.ethosspirit.com/sapa-trekking-ethical-tours" }, { org: "Sapa Sisters — responsible trekking", url: "https://sapasisters.com/responsible-trekking-in-sapa/" }, { org: "Sapa O'Chau", url: "https://sapaochau.org/" }],
   },
   {
     id: "vi-ext-maichau-homestay", name: "Mai Chau stilt-house homestay", city: "Mai Chau", country: "vi",
@@ -3550,6 +3550,7 @@ export const PLACES_VI_EXT = [
     whyItFits: "For watersports lovers — steady afternoon winds from November to April make this a legendary kite- and windsurfing beach.",
     priceRange: { currency: "VND", low: 0, high: 0 },
     verified: "2026-07",
+    sources: [{ org: "Vietnam Tourism - Wind, sand and sea: Mui Ne's must-do list", url: "https://vietnam.travel/things-to-do/wind-sand-and-sea-mui-nes-must-do-list" }, { org: "Wikivoyage - Mui Ne", url: "https://en.wikivoyage.org/wiki/Mui_Ne" }],
     recognition: "A wide bay lined with resorts and kite schools, kites filling the sky most afternoons; the fishing harbour and its round coracle boats sit at the eastern end.",
     lifeguard: "no",
     swim: "Better for kitesurfing and windsurfing than gentle swimming — a strong shorebreak and powerful shoreline current build most afternoons in the windy November–April high season, and the beach is eroded in places. No patrol, so take real care in the surf.",
@@ -3565,6 +3566,7 @@ export const PLACES_VI_EXT = [
     whyItFits: "For an easy beach day or overnight from Ho Chi Minh City, with a long sandy stretch, seafood and lifeguard-flagged swim zones.",
     priceRange: { currency: "VND", low: 0, high: 0 },
     verified: "2026-07",
+    sources: [{ org: "Joy Journeys - Beaches near Ho Chi Minh City", url: "https://joyjourneys.com.vn/article/beach-near-ho-chi-minh/" }, { org: "Holidify - Beaches in Vietnam", url: "https://www.holidify.com/collections/beaches-in-vietnam" }],
     recognition: "A long open-ocean beach lined with hotels and seafood restaurants, with the giant Christ of Vung Tau statue on the headland to the south.",
     lifeguard: "seasonal",
     swim: "Lifeguards watch the busier sections and mark swim zones with flags, but dangerous rip currents — strongest in the December–March northeast monsoon — cause drownings every year. Swim only between the flags, stay within waist depth, and never swim after drinking.",
@@ -3584,6 +3586,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 20.2506, lng: 105.9745 },
     mapQuery: "bicycle rental Ninh Binh Tam Coc",
     verified: "2026-07",
+    sources: [{ org: "Ninh Binh Tourist Center - Rent a bicycle or motorbike", url: "https://ninhbinhtouristcenter.com/rent-a-bicycle-or-motorbike-ninh-binh-city/" }, { org: "Golden Trail Travel - Bike rental prices in Ninh Binh", url: "https://goldentrailtravel.com/blog/bike-rental-price-ninh-binh-the-complete-guide-to-costs-options-and-the-best-places-to-rent-bicycles" }],
     sources: []
   },
   {
@@ -3600,6 +3603,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2388, lng: 109.1967 },
     mapQuery: "scooter rental Nha Trang",
     verified: "2026-07",
+    sources: [{ org: "Vinpearl - Motorbike rental in Nha Trang", url: "https://vinpearl.com/en/motorbike-rental-in-nha-trang" }, { org: "The Sketchy Traveller - Nha Trang scooter rental", url: "https://thesketchytraveller.com/nha-trang-scooter-rental/" }],
     sources: []
   },
   {
@@ -3616,6 +3620,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 10.227, lng: 103.967 },
     mapQuery: "scooter rental Phu Quoc Duong Dong",
     verified: "2026-07",
+    sources: [{ org: "VinWonders - Motorbike rental in Phu Quoc", url: "https://vinwonders.com/en/wonderpedia/news/motorbike-rental-in-phu-quoc/" }, { org: "Phu Quoc Go - Motorbike rental Phu Quoc 2026", url: "https://phuquocgo.vn/en/motorbike-rental-phu-quoc/" }],
     sources: []
   },
   {
@@ -3726,7 +3731,7 @@ export const PLACES_VI_EXT = [
     rating: 4.7, reviewSources: ["ETHOS", "Sapa Sisters", "Sapa O'Chau"],
     mapQuery: "Sapa town centre", coords: { lat: 22.3357, lng: 103.8438 },
     bookHint: "Book a licensed guide a day ahead through Sapa O'Chau, Sapa Sisters or ETHOS; homestay treks include the village stay.", verified: "2026-07",
-    sources: [{ org: "ETHOS — ethical trekking checklist", url: "https://www.ethosspirit.com/ethical-trekking-in-sapa-a-travellers-checklist" }, { org: "Sapa Sisters — responsible trekking", url: "https://sapasisters.com/responsible-trekking-in-sapa/" }, { org: "Sapa O'Chau", url: "http://sapaochau.org/" }],
+    sources: [{ org: "ETHOS — ethical trekking checklist", url: "https://www.ethosspirit.com/ethical-trekking-in-sapa-a-travellers-checklist" }, { org: "Sapa Sisters — responsible trekking", url: "https://sapasisters.com/responsible-trekking-in-sapa/" }, { org: "Sapa O'Chau", url: "https://sapaochau.org/" }],
   },
   {
     id: "vi-ext-getting-to-sapa-hanoi", name: "Getting to Sapa from Hanoi: night train, sleeper bus and the transfer", city: "Sapa", country: "vi",
