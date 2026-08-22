@@ -152,7 +152,7 @@ export const PLACES_KH_EXT = [
     sources: [{ org: "Visit Koh Rong", url: "https://www.visitkohrong.com/samloem/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
-    id: "kh-ext-bou-sra", name: "Bou Sra Waterfall", city: "Mondulkiri", country: "kh",
+    id: "kh-ext-bou-sra", name: "Bou Sra Waterfall", city: "Sen Monorom", country: "kh",
     recognition: 'About 40 km east of Sen Monorom in Mondulkiri, a powerful multi-tier waterfall in dense highland forest; viewing platforms overlook the wide upper tier and the plunging lower drop.',
     localName: 'ទឹកជ្រោះប៊ូស្រា · Tuek Chruoh Bou Sra',
     categories: ["waterfall", "nature", "viewpoint"], budgetTier: "low",
@@ -168,7 +168,7 @@ export const PLACES_KH_EXT = [
     sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
-    id: "kh-ext-sea-forest-viewpoint", name: "Sea Forest Viewpoint (Sen Monorom)", city: "Mondulkiri", country: "kh",
+    id: "kh-ext-sea-forest-viewpoint", name: "Sea Forest Viewpoint (Sen Monorom)", city: "Sen Monorom", country: "kh",
     categories: ["viewpoint", "nature"], budgetTier: "low",
     blurb: "A hillside lookout just outside Sen Monorom over an ocean of rolling, tree-topped hills that genuinely resemble a green sea stretching to the horizon. At around 800 m elevation the air is cool, and sunrise and sunset light turn the ridges gold and lilac.",
     whyItFits: "For travellers who want an effortless, free panorama of Mondulkiri's signature highland scenery — ideal as a sunset stop before or after the waterfalls and elephant forests.",
@@ -1787,7 +1787,7 @@ export const PLACES_KH_EXT = [
   {
     id: "kh-ext-kachang-waterfall",
     name: "Kachang Waterfall",
-    city: "Banlung (Ratanakiri)",
+    city: "Banlung",
     country: "kh",
     recognition: "A wide sheet of water dropping over a rock ledge into a pool ringed by tall jungle, reached down a short earthen path from a small parking-and-ticket hut.",
     localName: "ទឹកធ្លាក់កាចាញ់ (Tuk Tleak Kachang)",
@@ -1831,7 +1831,7 @@ export const PLACES_KH_EXT = [
   {
     id: "kh-ext-phnom-doh-kromom",
     name: "Wat Phnom Doh Kromom Sunset Viewpoint",
-    city: "Sen Monorom (Mondulkiri)",
+    city: "Sen Monorom",
     country: "kh",
     recognition: "A gilded hilltop wat with a large Buddha image and a wooden sunset deck looking west over open, rolling hills — lively with locals as dusk approaches.",
     localName: "វត្តភ្នំដូងក្រមុំ (Wat Phnom Doh Kromom)",
@@ -1853,7 +1853,7 @@ export const PLACES_KH_EXT = [
   {
     id: "kh-ext-preah-khan-kompong-svay",
     name: "Preah Khan of Kompong Svay (Prasat Bakan)",
-    city: "Preah Vihear province",
+    city: "Preah Vihear",
     country: "kh",
     recognition: "After kilometres of dirt track you reach a laterite causeway and a huge square baray; four concentric enclosures, a ruined face-tower gate and the stepped Preah Damrei pyramid stand almost alone in dry forest.",
     localName: "ប្រាសាទព្រះខ័នកំពង់ស្វាយ (Prasat Preah Khan Kampong Svay) — ប្រាសាទបាកាន (Prasat Bakan)",

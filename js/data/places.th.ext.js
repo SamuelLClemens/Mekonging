@@ -471,7 +471,7 @@ export const PLACES_TH_EXT = [
 
   // --- Phase 5 content batch 1: where to stay for every budget + get outdoors ---
   {
-    id: "th-ext-khaoyai-camping", name: "Khao Yai National Park camping", city: "Khao Yai (Nakhon Ratchasima)", country: "th",
+    id: "th-ext-khaoyai-camping", name: "Khao Yai National Park camping", city: "Khao Yai", country: "th",
     categories: ["stay", "park", "nature"], budgetTier: "low",
     kidFriendly: true, stayType: "tent", stayDuration: "short",
     activities: ["camping", "wildlife", "hiking", "waterfalls", "stargazing"],
@@ -738,7 +738,7 @@ export const PLACES_TH_EXT = [
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
-    id: "th-ext-phuket-old-town-hokkien-noodles", name: "Phuket Old Town Hokkien Noodle Heritage Cluster", city: "Phuket Town", country: "th",
+    id: "th-ext-phuket-old-town-hokkien-noodles", name: "Phuket Old Town Hokkien Noodle Heritage Cluster", city: "Phuket", country: "th",
     categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
@@ -755,7 +755,7 @@ export const PLACES_TH_EXT = [
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
-    id: "th-ext-phuket-lard-yai-walking-street", name: "Lard Yai Sunday Walking Street (Thalang Road)", city: "Phuket Town", country: "th",
+    id: "th-ext-phuket-lard-yai-walking-street", name: "Lard Yai Sunday Walking Street (Thalang Road)", city: "Phuket", country: "th",
     categories: ["market", "food"], budgetTier: "low",
     marketType: "Sunday walking-street night market", sells: "Phuket-Baba snacks (a-pong crepes, satay, moo hong), local desserts, crafts and souvenirs.", marketDays: [0],
     isLocal: true,
@@ -773,7 +773,7 @@ export const PLACES_TH_EXT = [
     sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
-    id: "th-ext-krabi-chao-fah-night-market", name: "Chao Fah Pier Night Market", city: "Krabi Town", country: "th",
+    id: "th-ext-krabi-chao-fah-night-market", name: "Chao Fah Pier Night Market", city: "Krabi", country: "th",
     categories: ["food"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
@@ -1597,7 +1597,7 @@ export const PLACES_TH_EXT = [
     id: "th-ext-phimai-historical-park",
     access: { stepFree: "partial", note: "Grounds are mostly flat, shaded and gravel/paved with ramps and minimal stairs, so most of the Khmer complex is rollable; the elevated central prang has steps up to the inner sanctuary." },
     name: "Phimai Historical Park",
-    city: "Nakhon Ratchasima (Korat)",
+    city: "Nakhon Ratchasima",
     country: "th",
     recognition: "A white-sandstone central sanctuary tower rises inside concentric galleries and gateways, set within a walled town square in the middle of modern Phimai.",
     localName: "ปราสาทหินพิมาย · Prasat Hin Phimai",
@@ -1869,7 +1869,7 @@ export const PLACES_TH_EXT = [
     id: "th-ext-ang-thong-marine-national-park",
     access: { stepFree: "no", note: "Reached only by boat with a wobbly floating pier and beach landing; the main Koh Wua Talap viewpoint is a steep rope-assisted rocky climb and the Emerald Lagoon viewpoint is roughly 240 steep steps, so no step-free route reaches any highlight." },
     name: "Ang Thong Marine National Park",
-    city: "Ko Samui / Surat Thani",
+    city: "Koh Samui",
     country: "th",
     recognition: "Dozens of steep green-topped limestone islets cluster in blue sea, with a jade-coloured saltwater lake hidden inside one of them.",
     localName: "อุทยานแห่งชาติหมู่เกาะอ่างทอง · Mu Ko Ang Thong",
@@ -2154,7 +2154,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-khao-yai-national-park-campsites", sources: [{ org: "Wikivoyage — Khao Yai National Park", url: "https://en.wikivoyage.org/wiki/Khao_Yai_National_Park" }],
     name: "National-park campsites at Khao Yai (Pha Kluai Mai / Lam Takhong)",
-    city: "Nakhon Ratchasima (Isaan)",
+    city: "Khao Yai",
     country: "th",
     categories: ["stay"],
     stayType: "tent",

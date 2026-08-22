@@ -127,19 +127,28 @@ export const FAMILY_COLOR = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.k
 export const FAMILY_META = Object.fromEntries(CATEGORY_FAMILIES.map((f) => [f.key, f]));
 const CAT_FAMILY = {
   culture: 'culture', temple: 'culture', museum: 'culture', spectacle: 'culture', history: 'culture', wat: 'culture', heritage: 'culture',
+  archaeology: 'culture', ruins: 'culture', memorial: 'culture', church: 'culture', architecture: 'culture', spiritual: 'culture', pilgrimage: 'culture',
+  landmark: 'culture', craft: 'culture', handicraft: 'culture', silk: 'culture', workshop: 'culture', 'lantern-boats': 'culture',
   nature: 'nature', hike: 'nature', waterfall: 'nature', viewpoint: 'nature', park: 'nature', wildlife: 'nature', hotspring: 'nature', sunset: 'nature', riverside: 'nature', garden: 'nature', cave: 'nature', outdoors: 'nature',
-  beach: 'beach', island: 'beach', water: 'beach', dive: 'beach', snorkel: 'beach',
-  food: 'food', streetfood: 'food', seafood: 'food', restaurant: 'food', cafe: 'food',
-  market: 'market', shopping: 'market',
+  hiking: 'nature', lake: 'nature', river: 'nature', riverfront: 'nature', wetland: 'nature', reserve: 'nature', 'protected-area': 'nature', birdwatching: 'nature',
+  landscape: 'nature', ecotourism: 'nature', swimming: 'nature', kayaking: 'nature', zipline: 'nature', adventure: 'nature', remote: 'nature', 'road-trip': 'nature', cycling: 'nature', boat: 'nature',
+  beach: 'beach', island: 'beach', water: 'beach', dive: 'beach', snorkel: 'beach', 'beach-adjacent': 'beach',
+  food: 'food', streetfood: 'food', 'street-food': 'food', seafood: 'food', restaurant: 'food', cafe: 'food', breakfast: 'food',
+  market: 'market', shopping: 'market', 'night-market': 'market',
   stay: 'stay', hotel: 'stay', guesthouse: 'stay', homestay: 'stay', hostel: 'stay', resort: 'stay', apartment: 'stay', camping: 'stay', backpacker: 'stay', accommodation: 'stay',
   nightlife: 'nightlife', bars: 'nightlife', clubs: 'nightlife', cocktail: 'nightlife', rooftop: 'nightlife',
-  transport: 'transport', rental: 'transport', fuel: 'transport',
+  'live-music': 'nightlife', 'live-sport': 'nightlife', 'beer-street': 'nightlife', 'after-hours': 'nightlife', 'beach-bar': 'nightlife', 'beach-club': 'nightlife', 'expat-strip': 'nightlife', 'cafe-bar': 'nightlife',
+  transport: 'transport', rental: 'transport', fuel: 'transport', motorbike: 'transport',
   wellness: 'wellness', spa: 'wellness',
   // Cash/ATMs, health & pharmacies, SIM/laundry errands, and the orientation "info" cards
   // (e.g. "Pai practical: cash, health & road safety") — practical guidance rather than a
   // sight to visit. 'practical' itself self-maps so a future entry can just use that one tag.
   practical: 'practical', money: 'practical', health: 'practical', info: 'practical', sim: 'practical', atm: 'practical', laundry: 'practical',
 };
+// Deliberately NOT mapped, so they keep falling through to 'other': village, town, area,
+// local, remote-ish descriptors, seasonal, family, free, budget, activity, sight, attraction.
+// Those are modifiers on a place (who it suits, what it costs, when to go) rather than a
+// category of thing to do, so folding them into a family would mislabel the pin and the filter.
 export function catFamily(cat) { return CAT_FAMILY[cat] || 'other'; }
 export function catColor(cat) { return FAMILY_COLOR[catFamily(cat)] || FAMILY_COLOR.other; }
 // The single most identifying category colour for a whole place (beach beats nature,
