@@ -48,6 +48,11 @@ html[data-theme="dark"] {
   --ink: #F7E4C4; --ink-soft: #C9A9D9;
   --sun: #F6BD55; --orange: #FF7A40; --magenta: #FF5C95; --teal: #2FD0C4;
   --warn: #FF6B4A;   /* brighter warning text so it stays AA-readable on the dark surface (6.25:1) */
+  --good: #34C77B;   /* same reason as --warn above, which was brightened but this was not: the
+                        light-mode #1F7A47 is tuned for cream and lands at 2.91:1 on the dark
+                        card, failing AA everywhere it is used as text — the "✓ Better:" line on
+                        Fair prices, the market open/closed status, the beach swim verdict and
+                        the good-air AQI line. #34C77B reads 7.09:1 on --card, 8.05:1 on --cream. */
   --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
       rgba(255,122,64,0.16) 0deg 9deg, rgba(47,208,196,0.10) 9deg 18deg);
   --shadow: 0 8px 24px rgba(0,0,0,0.5);
@@ -177,11 +182,20 @@ h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
    again, however long a future one turns out to be — a title that still needs it shortened
    for clarity gets that PLUS this backstop, not one or the other. */
 .topbar h1 { font-size: clamp(1rem, 4.8vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* Filled with --teal-deep, not --teal: white on the light-mode --teal (#16A39A) is only
+   3.12:1, under AA for this 14px bold label. The deep teal takes the same white label to
+   7.6:1 and matches the ghost button and card headings that already use it. */
 .topbar .back {
-  border: none; background: var(--teal); color: #fff; cursor: pointer;
+  border: none; background: var(--teal-deep); color: #fff; cursor: pointer;
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .topbar .back:hover { filter: brightness(1.08); }
+/* --teal is deliberately bright on dark themes (see the dark block), which makes the white
+   label on this filled pill 1.92:1 — the Back button is on nearly every screen, so this is
+   the most-seen contrast failure in the app. Painting the label in the page background
+   colour instead keeps the same bright pill and reaches 9.17:1, and stays correct for every
+   skin because --cream is whatever that skin's page colour is. */
+html[data-theme="dark"] .topbar .back { background: var(--teal); color: var(--cream); }
 /* W8 mobile pass: these buttons measure ~30x30 (topbar-ic) and ~34x37 (topbar-sos) on
    screen — both under the 44x44 minimum touch target, and there is no room to grow that
    visually without re-squeezing the h1 title column the 2-line clamp above just fixed
@@ -1658,6 +1672,11 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 
 /* Place-detail "Find it" orientation block. */
 .local-name { font-size: 1.15rem; font-weight: 700; color: var(--grape); margin: 2px 0 6px; }
+/* --grape on the dark grape card is 2.27:1. Same problem and same fix as `.phrase .native`
+   above, which was already handled; this one was missed. --ink-soft keeps the lilac
+   character and reads 7.51:1. Matters because the local-script name is the line you show a
+   driver when the English one means nothing to them. */
+html[data-theme="dark"] .local-name { color: var(--ink-soft); }
 .recognition {
   background: rgba(30,158,90,0.10); border-left: 3px solid var(--sage, #6E9A52);
   border-radius: 8px; padding: 8px 12px; margin: 4px 0 8px; line-height: 1.45;

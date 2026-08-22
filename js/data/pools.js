@@ -233,7 +233,7 @@ export const POOLS = [
     facilities: ["two large outdoor pools", "children's pool", "poolside swim-up bars", "private beach access", "loungers", "towels", "restaurants"],
     tips: ["Confirm the current day-pass rate and what it includes by contacting the front office, as quoted prices vary and are several years old.", "One of the few proper resort pools with private beach in Sihanoukville - good for a relaxed day away from the city."],
     coords: { lat: 10.6122, lng: 103.5061 }, mapQuery: "Sokha Beach Resort, Sihanoukville, Cambodia",
-    sources: [{ org: "Tripadvisor - Sokha Beach Resort day pass Q&A", url: "https://www.tripadvisor.com/FAQ_Answers-g325573-d578646-t341193-Cost_of_day_pass_for_no_guests_please.html" }, { org: "Sokha Hotels (official site)", url: "http://www.sokhahotels.com/sihanoukville/" }], verified: "2026-06", confidence: "low",
+    sources: [{ org: "Tripadvisor - Sokha Beach Resort day pass Q&A", url: "https://www.tripadvisor.com/FAQ_Answers-g325573-d578646-t341193-Cost_of_day_pass_for_no_guests_please.html" }, { org: "Sokha Hotels (official site)", url: "https://www.sokhahotels.com/sihanoukville/" }], verified: "2026-06", confidence: "low",
   },
   {
     id: "pool-kh-kampot-arcadia-waterpark", name: "Arcadia Waterpark", city: "Kampot", country: "kh", type: "natural",

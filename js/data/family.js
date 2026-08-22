@@ -170,7 +170,7 @@ export const FAMILY = {
         "kind": "children's museum",
         "ages": "1-12",
         "note": "Free, hands-on discovery museum in Queen Sirikit Park by Chatuchak with age-zoned play; open Tue-Sun 10:00-16:00, bring photo ID. A short walk from BTS Mo Chit and MRT Chatuchak.",
-        "url": "http://www.cdm-bangkok.com/"
+        "url": "https://www.cdm-bangkok.com/"
       },
       {
         "name": "Dream World",

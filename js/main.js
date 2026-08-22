@@ -80,7 +80,7 @@ import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing
 import {
   haversineKm, distanceChip, driveLabel, estDriveMin, withinNear, withinDayTrip, DAYTRIP_MAX_MIN,
   attrClass, attrTag, starsStr, isMarket, placeBucket,
-  CATEGORY_FAMILIES, FAMILY_COLOR, FAMILY_META, catFamily, catColor, placeCatColor, tierColor, swatch,
+  CATEGORY_FAMILIES, FAMILY_COLOR, FAMILY_META, catFamily, catColor, placeCatColor, placeFamilyKey, tierColor, swatch,
   wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip,
   citySlug, PRICE_TIER_LABEL, tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, catTag,
   marketOpenDays, marketOnToday, marketCovered, isBeach, seaAgo,
@@ -170,7 +170,35 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     if (navigator.serviceWorker.controller) {
       navigator.serviceWorker.addEventListener('controllerchange', () => showUpdateToast());
     }
+
+    // The worker precaches best-effort: one unreachable file must never abort the whole
+    // offline install. The cost of that choice is that a bad connection at install time can
+    // leave the offline copy quietly incomplete — and this app's whole promise is that it
+    // works with no signal, so the traveller would discover the hole in a Laos village
+    // rather than on hotel wifi. The worker now reports what it could not store; surface it
+    // while the user still has a connection to fix it.
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (!e.data || e.data.type !== 'precache-incomplete') return;
+      showOfflineIncompleteToast((e.data.missing || []).length);
+    });
   });
+}
+
+// Shown only when the service worker could not store part of the offline copy. Retrying is
+// a re-register, which re-runs install and re-attempts exactly the files that failed.
+let offlineToastShown = false;
+function showOfflineIncompleteToast(count) {
+  if (offlineToastShown) return;
+  offlineToastShown = true;
+  const toast = h('div', { class: 'update-toast', role: 'status' }, [
+    h('span', {}, `Offline copy incomplete — ${count} file${count === 1 ? '' : 's'} did not download.`),
+    h('button', {
+      class: 'update-toast-btn',
+      onclick: () => { toast.remove(); offlineToastShown = false; navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => { /* still offline */ }); },
+    }, 'Retry'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: () => toast.remove() }, '✕'),
+  ]);
+  document.body.append(toast);
 }
 
 // A small, non-blocking "update ready" toast pinned above the tab bar. Tapping it reloads
@@ -291,7 +319,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.449.0';
+const APP_VERSION = 'mk-v0.451.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5406,14 +5434,9 @@ function todoScore(p, ctx, prefs, anchor) {
 }
 // The place's single most-identifying category family (beach beats nature, culture beats
 // park, …) — used for the accent colour and the placeholder emoji when no photo exists.
-// Kept in lockstep with placeCatColor()'s own priority order in render-utils.js — the two
-// must never disagree about a place's dominant family.
-export function placeFamily(p) {
-  const cats = p.categories || [];
-  const order = ['beach', 'culture', 'nature', 'market', 'nightlife', 'wellness', 'food', 'stay', 'transport', 'practical'];
-  for (const fam of order) if (cats.some((c) => catFamily(c) === fam)) return fam;
-  return 'other';
-}
+// Now a thin alias over render-utils' placeFamilyKey(), which placeCatColor() also uses, so
+// the colour and the emoji share one precedence list instead of two hand-synced copies.
+export function placeFamily(p) { return placeFamilyKey(p); }
 // The self-hosted, openly-licensed photo path for a place, or null. Same lookup as
 // photoBlock, exposed so list cards can show a small recognition thumbnail offline.
 export function placePhotoSrc(p) {
