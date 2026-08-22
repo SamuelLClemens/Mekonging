@@ -18,24 +18,24 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
 - [x] **2.2** (shipped mk-v0.271.0) Collapse both Home tool decks by default for fresh profiles (`profileIsSet()` js/main.js:3578); promote one phase-aware next-best-action via `phaseLead()` (1332). [S]
 - [x] **2.3** Auto-infer + pre-select journey phase from GPS fix + `tripStartISO()` (js/main.js:1370); reframe heading as correctable statement. [M] — shipped mk-v0.272.0 (inferPhase() reads dates+fix, never persists; heading now "You are…"/"Looks like you are…"; phaseSelector(active)).
 - [x] **2.7** New `scamsScreen(cc)` / `#scams-<cc>`: aggregate existing scattered scam fields + curated web-verified top-list; link from SOS + arrival. [M] — shipped mk-v0.273.0 (new web-verified js/data/scams.js top-list per th/vi/kh/la + folds in VISA scams + arrival pointer; TH tourist-police 1155; linked from SOS + arrival hub; sources cited).
-- [ ] **2.12** Drop pre-confirm on reversible done/skip (js/main.js:593-594); optimistic action + reusable "Undo" toast. [S]
-- [ ] **2.9** Search zero-state launchpad: example-query chips + capped-5 `prefs.recentSearches` (js/main.js:8554-8557). [S]
-- [ ] **2.4** Dismiss-once contextual hints: `prefs.hintsSeen` + `oneTimeHint(key,text)` on Home/Places/first-place-detail/right-now/phrasebook (NOT a spotlight engine). [M]
-- [ ] **2.8** Trip-day / story-so-far anchor line on the daily strip when a trip start exists (js/main.js:7381; tripStartISO 1370) — no streak guilt. [M]
-- [ ] **2.10** Add eSIM line to each country's SIM row in `essentials.js` (consistency with arrival hub js/main.js:2161). [S]
-- [ ] **2.11** Surface `verified` date badge + >6-month staleness nudge on visa + crossings screens (js/main.js:5236). [S]
+- [x] **2.12** Drop pre-confirm on reversible done/skip (js/main.js:593-594); optimistic action + reusable "Undo" toast. [S] — shipped mk-v0.274.0 (removed confirmSpotDone/Hide; new showUndoToast() + unmarkSpotDone/unhideSpot; wired rightNow drawPicks + nearby drawList; shared .snack-toast CSS).
+- [x] **2.9** Search zero-state launchpad: example-query chips + capped-5 `prefs.recentSearches` (js/main.js:8554-8557). [S] — shipped mk-v0.275.0 (rememberSearch on result-commit; Recent row + Clear; 8 example chips; new prefs.recentSearches self-defaulting).
+- [x] **2.4** Dismiss-once contextual hints: `prefs.hintsSeen` + `oneTimeHint(key,text)` on Home/Places/first-place-detail/right-now/phrasebook (NOT a spotlight engine). [M] — shipped mk-v0.279.0 (oneTimeHint returns null once seen; 5 surfaces wired; dashed .one-hint card; dismissal persists, verified across reload).
+- [x] **2.8** Trip-day / story-so-far anchor line on the daily strip when a trip start exists (js/main.js:7381; tripStartISO 1370) — no streak guilt. [M] — shipped mk-v0.278.0 (dailyStripCard leads with "📖 Day N of M · P places explored · J journal notes" once the trip has started; positive tally, no streak; links to #journey).
+- [x] **2.10** Add eSIM line to each country's SIM row in `essentials.js` (consistency with arrival hub js/main.js:2161). [S] — shipped mk-v0.276.0 (esim field on th/vi/kh/la SIM items + muted sub-line in Cheapest-essentials loop; honest phone-capability + longer-stay caveat).
+- [x] **2.11** Surface `verified` date badge + >6-month staleness nudge on visa + crossings screens (js/main.js:5236). [S] — shipped mk-v0.277.0 (visa already had freshnessNotice; added a screen-level freshnessLine badge to crossingsScreen from the oldest verified date, 183-day nudge; freshnessLine gained optional label arg for "June 2026" display).
 
 ## Priority 3 — Media & Accessibility
-- [ ] **3.1** Multi-speed read-aloud reader: thread `{rate}` through `speak()/say()` (js/tts.js:49); reusable `readAloud(getText)` play/pause + 1.0/1.25/1.5/2.0x, sentence-chunked, cancel on nav; drop on history/guide/province/first-aid; persist rate. [M]
+- [x] **3.1** Multi-speed read-aloud reader: thread `{rate}` through `speak()/say()` (js/tts.js:49); reusable `readAloud(getText)` play/pause + 1.0/1.25/1.5/2.0x, sentence-chunked, cancel on nav; drop on history/guide/province/first-aid; persist rate. [M] — shipped mk-v0.280.0 (readAloudBar sentence-chunked w/ generation-token; stopAllReaders() in render() cancels on nav; prefs.readRate persists; on history/place-history/province/first-aid; tts.js opts{rate,onend,onerror} + lazy voice refresh).
 
 ## Priority 4 — Code Quality & Technical Debt
-- [ ] **4.1** Fix photo object-URL leak: revoke read-only thumbs on `img load` (js/main.js:4647,5784,5854,5865,5871,5952,6334); revoke editor thumbs (6059) via `liveCleanup` (11029). [S]
-- [ ] **4.2** Debounce localStorage `save()` (js/state.js:212-233) + drop per-save `JSON.parse` of prev blob; immediate flush on `pagehide`. [S]
-- [ ] **4.7** Build `confirmAction()` on `openModal()` (js/main.js:3048); route the ~20 destructive `window.confirm` sites through it. [M]
-- [ ] **4.4** Replace `uid()` with `crypto.randomUUID()` (js/state.js:504-509); injectable id source for tests. [S]
-- [ ] **4.5** Memoize `idb.open()` (js/idb.js:5-12) — one cached connection. [S]
+- [x] **4.1** Fix photo object-URL leak: revoke read-only thumbs on `img load` (js/main.js:4647,5784,5854,5865,5871,5952,6334); revoke editor thumbs (6059) via `liveCleanup` (11029). [S] — shipped mk-v0.282.0 (setBlobThumb() revokes on load/error across 7 read-only sites; journal-editor liveCleanup revokes st.photos urls).
+- [x] **4.2** Debounce localStorage `save()` (js/state.js:212-233) + drop per-save `JSON.parse` of prev blob; immediate flush on `pagehide`. [S] — shipped mk-v0.281.0 (200ms coalesced write via flushSave; backup fed from _lastWritten so no re-parse; pagehide/beforeunload/hidden flush; flushSaveNow() exported).
+- [x] **4.7** Build `confirmAction()` on `openModal()` (js/main.js:3048); route the ~20 destructive `window.confirm` sites through it. [M] — shipped mk-v0.283.0 (Promise-based confirmAction on openModal; all 18 window.confirm sites routed; danger styling; .confirm-card CSS; verified cancel-keeps/confirm-deletes).
+- [x] **4.4** Replace `uid()` with `crypto.randomUUID()` (js/state.js:504-509); injectable id source for tests. [S] — shipped mk-v0.281.0 (uid prefers crypto.randomUUID + monotonic -seq suffix; setIdSource(fn) for tests; deterministic fallback kept).
+- [x] **4.5** Memoize `idb.open()` (js/idb.js:5-12) — one cached connection. [S] — shipped mk-v0.281.0 (cached _dbPromise; cleared on error/close/versionchange).
 - [ ] **4.3** Country-scoped dynamic `import()` of `places.<cc>.ext.js`/prices/routes/food on country select, preload step (js/main.js:4-79; mirror map.js). [M]
-- [ ] **4.8** Extract reusable `foldable(summary, body, {open})` helper; replace inlined `<details>` blocks incrementally. [S]
+- [x] **4.8** Extract reusable `foldable(summary, body, {open})` helper; replace inlined `<details>` blocks incrementally. [S] — shipped mk-v0.284.0 (foldable() appends body as direct children so .filters-collapse CSS unchanged; converted country-hub history + More-for-country groups + history-screen city blocks; rest migrate incrementally).
 - [ ] **4.6** Incrementally split `main.js` monolith into `screens/*` + `ui/*` modules; add each to sw.js PRECACHE; sequence after 4.3. [L, multi-wave]
 
 ---
