@@ -834,20 +834,28 @@ export function placesScreen(arg) {
     return withinNear(km) ? 'near' : withinDayTrip(km) ? 'trip' : 'far';
   }
 
+  // Shared numbering: number every MAPPED place by its position in the displayed order, so a
+  // list row and the map pin carry the SAME number and colour. Numbers live in a local
+  // id->num lookup, never written onto the shared, cached place objects (allPlaces() hands
+  // back the same singleton records every screen reads — writing a view-local number
+  // straight onto one would leak this screen's numbering into whatever reads that object
+  // next). map.js still reads its pin badge off p._num, so map places get their own shallow
+  // copy carrying that one field; the underlying cached place is untouched. Hoisted out of
+  // renderList() so every caller that seeds or redraws the map (the initial mapList0 below,
+  // and the post-load paint() repaints) numbers pins the same way renderList() does — those
+  // used to call the raw, un-numbered mapPlaces() directly, so every pin fell back to map.js's
+  // '•' placeholder until the first filter tap forced a renumbered renderList() pass.
+  function numberedMapPlaces() {
+    const rawMl = mapPlaces();
+    const numById = new Map(rawMl.map((p, i) => [p.id, i + 1]));
+    return { numById, ml: rawMl.map((p) => ({ ...p, _num: numById.get(p.id) })) };
+  }
+
   function renderList() {
     const country = getCountry(getActiveCountry());
     const computed = computeResults();
     currentResults = computed || [];
-    // Shared numbering: number every MAPPED place by its position in the displayed order, so a
-    // list row and the map pin carry the SAME number and colour. Numbers live in a local
-    // id->num lookup, never written onto the shared, cached place objects (allPlaces() hands
-    // back the same singleton records every screen reads — writing a view-local number
-    // straight onto one would leak this screen's numbering into whatever reads that object
-    // next). map.js still reads its pin badge off p._num, so map places get their own shallow
-    // copy carrying that one field; the underlying cached place is untouched.
-    const rawMl = mapPlaces();
-    const numById = new Map(rawMl.map((p, i) => [p.id, i + 1]));
-    const ml = rawMl.map((p) => ({ ...p, _num: numById.get(p.id) }));
+    const { numById, ml } = numberedMapPlaces();
     const numFor = (id) => numById.get(id) || null;
     const mine = userMapPins().length;
     // Honest about what the list actually contains: each tier caps at 6 rows behind a
@@ -912,7 +920,7 @@ export function placesScreen(arg) {
   // markers with no WebGL rebuild; leaving the screen disposes it via liveCleanup.
   const canvas = h('div', { class: 'places-map' });
   mapWrap.append(canvas);
-  const mapList0 = mapPlaces();
+  const mapList0 = numberedMapPlaces().ml;
   if (!mapList0.length) {
     mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'No mapped places for these filters/layers yet — widen them, or add a place of your own.'));
   } else {
@@ -953,7 +961,7 @@ export function placesScreen(arg) {
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out
       // dimensions and redraw on the next frame(s) so the numbered pins appear on first paint
       // rather than only after the traveller touches a filter. setPlaces is idempotent.
-      const paint = () => { try { c.map.resize(); c.setPlaces(mapPlaces()); } catch { /* noop */ } };
+      const paint = () => { try { c.map.resize(); c.setPlaces(numberedMapPlaces().ml); } catch { /* noop */ } };
       paint();
       requestAnimationFrame(paint);
       setTimeout(paint, 250);
