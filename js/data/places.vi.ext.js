@@ -682,7 +682,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hagiang-dongvan-thang-co-market", name: "Dong Van Sunday market and old-town eats (thang co and corn wine)", city: "Ha Giang", country: "vi",
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: false,
     blurb: "Dong Van's Sunday market, at the heart of the Ha Giang loop, is the classic place to try thang co, the Hmong horse-meat and offal stew simmered in huge pans and eaten with corn wine among market-day crowds from the surrounding villages. On other days the stone houses of the old quarter serve mountain staples: banh cuon with bone broth, men men steamed corn, smoked buffalo, and ruou ngo corn wine.",
@@ -698,7 +698,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-sapa-market-bbq-stalls", name: "Sapa market food court and night barbecue stalls", city: "Sapa", country: "vi",
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Sapa's cold mountain evenings are built for its barbecue culture: charcoal stalls around the market and the streets near the stone church grill skewers of lon cap nach (local black pig), chicken, mushrooms, eggs, and bamboo-tube rice, while the market food court and nearby kitchens serve the highland specialities of ca hoi (Sapa-farmed salmon) and ca tam (sturgeon) hotpot.",
@@ -778,7 +778,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-dalat-nightmarket-banhtrangnuong", name: "Da Lat Night Market Banh Trang Nuong Stalls", city: "Da Lat", country: "vi",
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Da Lat's chilly evenings were made for banh trang nuong - 'Vietnamese pizza' - rice paper grilled over coals with egg, dried shrimp, spring onion, cheese and chili sauce. Stalls line the night market around Nguyen Thi Minh Khai street, alongside hot soy milk, grilled corn, skewers and strawberry vendors from the surrounding farms.",
@@ -794,7 +794,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cantho-cairang-floating-breakfast", name: "Cai Rang Floating Market Breakfast Boats", city: "Can Tho", country: "vi",
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "At dawn on the Can Tho River, sampans pull alongside your boat at Cai Rang floating market selling steaming bowls of hu tieu and bun rieu, strong iced coffee and fresh pineapple cut to order. Breakfast is passed hand to hand across the water while wholesale fruit boats trade around you - the Mekong Delta's most famous morning ritual.",
@@ -1202,7 +1202,7 @@ export const PLACES_VI_EXT = [
     name: "Con Son market evening stalls",
     city: "Con Dao",
     country: "vi",
-    categories: ["food"],
+    categories: ["food", "market"],
     isLocal: true,
     kidFriendly: true,
     budgetTier: "low",

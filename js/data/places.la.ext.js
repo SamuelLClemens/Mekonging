@@ -437,7 +437,7 @@ export const PLACES_LA_EXT = [
   {
     id: "la-ext-mekong-slowboat", name: "Mekong slow boat to Luang Prabang", city: "Huay Xai", country: "la",
     access: { stepFree: "no", note: "Boarding means descending a steep dirt riverbank and crossing narrow planks onto a low wooden long-boat fitted with fixed bench/car seats; there is no level boarding and no accessible facilities aboard." },
-    categories: ["nature", "culture"], budgetTier: "mid",
+    categories: ["nature", "culture", "transport"], budgetTier: "mid",
     kidFriendly: true, stayDuration: "short",
     activities: ["boat", "mekong", "scenic", "villages"],
     blurb: "From Huay Xai on the Thai border, the two-day public slow boat drifts down the Mekong to Luang Prabang, overnighting in the river town of Pakbeng. It is a Southeast Asia rite of passage: riverbank villages, forested gorges and no hurry at all.",
@@ -538,7 +538,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-vientiane-ban-anou-night-market", name: "Ban Anou night food market", city: "Vientiane", country: "la",
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Every evening a short street in the Ban Anou quarter turns into Vientiane's favourite takeaway kitchen: charcoal grills of ping kai (grilled chicken) and Lao sausage, tubs of jeow dips, papaya salad pounded to order, crispy rice salad (nam khao), steamed sticky rice and coconut sweets, all sold by long-standing family stalls.",

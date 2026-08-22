@@ -633,7 +633,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-siem-reap-road60-night-market", name: "Road 60 Night Market food stalls", city: "Siem Reap", country: "kh",
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "A sprawling evening strip on the road toward the Angkor ticket checkpoints where Siem Reap families spread mats, ride fairground attractions and graze on grilled chicken, beef skewers, num banh chok, fried insects, fertilised duck eggs and sugarcane juice. Almost entirely local, loud and cheerful.",
@@ -651,7 +651,7 @@ export const PLACES_KH_EXT = [
     id: "kh-ext-kep-crab-market", name: "Kep Crab Market shacks (Psar Kdam)", city: "Kep", country: "kh",
     recognition: 'A row of open-fronted wooden seafood shacks along the Kep waterfront, in front of bamboo crab traps set in the shallows and a bronze statue of a woman holding a crab.',
     localName: 'ផ្សារក្តាមកែប · Phsar Kdam Kep',
-    categories: ["food"], budgetTier: "low",
+    categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
     blurb: "Kep's famous waterfront crab market: women haul blue swimmer crabs from bamboo traps in the shallows and a row of simple shacks wok-fries them with fresh Kampot green peppercorns. Grilled squid, prawns and fish round out the menu, eaten at plastic tables over the water.",

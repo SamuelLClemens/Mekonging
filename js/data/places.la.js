@@ -161,7 +161,7 @@ export const PLACES_LA = [
     name: "Mekong Slow Boat from Huay Xai",
     city: "Luang Prabang",
     country: "la",
-    categories: ["nature", "culture"],
+    categories: ["nature", "culture", "transport"],
     budgetTier: "mid",
     blurb: "The classic two-day downriver journey on a wooden passenger boat from Huay Xai to Luang Prabang, with an overnight stop in Pakbeng.",
     whyItFits: "Suits slow travellers who would rather watch the Mekong drift by than take the fast railway or a road.",
