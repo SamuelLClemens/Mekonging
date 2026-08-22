@@ -2237,10 +2237,11 @@ export const PLACES_KH_EXT = [
     blurb: "Tourists may not ride motorbikes in Siem Reap town, so the local way to explore is a bicycle or e-bike - including charity schemes that fund community projects - or a hired tuk-tuk for the temples.",
     whyItFits: "For getting around town and the closer temples cheaply and legally.",
     priceRange: { low: 2, typical: 8, high: 15, currency: "USD", note: "Per day; bicycles from ~$2, e-bikes ~$8-15. Tuk-tuk day hire ~$15-25." },
+    hours: "Roughly 07:00-20:00 daily, varies by shop; several Siem Reap outfits open as early as 06:00 or run past 21:00, with hotel delivery on request.",
     tips: ["For the wider Angkor circuit, hire a tuk-tuk or remork with a driver; the distances and heat are too much for most on a bicycle.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 13.354, lng: 103.8555 }, mapQuery: "scooter rental Siem Reap",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
+    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }, { org: "Siem Reap Hub - Mr. Tom Scooter & Bicycle Rental listing", url: "https://siemreaphub.com/commerce/gp-ChIJ4UnUKQAXEDER6qj-gHyt" }],
   },
   {
     id: "kh-ext-rental-battambang", name: "Scooter & bicycle rental, Battambang", city: "Battambang", country: "kh",
@@ -2248,10 +2249,11 @@ export const PLACES_KH_EXT = [
     blurb: "A relaxed town for hiring a scooter or bicycle to reach the bamboo railway, hillside temples and countryside workshops just outside the centre.",
     whyItFits: "For the out-of-town sights that make Battambang worth the stop.",
     priceRange: { low: 5, typical: 6, high: 8, currency: "USD", note: "Per day for a scooter; bicycles cheaper." },
+    hours: "Roughly 08:00-18:00 daily, varies by shop; Battambang's rental outfits are small and informal, so confirm hours directly with the shop.",
     tips: ["Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 13.0957, lng: 103.1968 }, mapQuery: "scooter rental Battambang",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
+    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }, { org: "Tripadvisor - The Battambang Bike", url: "https://www.tripadvisor.com/Attraction_Review-g303666-d3555624-Reviews-The_Battambang_Bike-Battambang_Battambang_Province.html" }],
   },
   {
     id: "kh-ext-rental-kampot", name: "Scooter rental, Kampot", city: "Kampot", country: "kh",
@@ -2259,10 +2261,11 @@ export const PLACES_KH_EXT = [
     blurb: "Kampot's riverside guesthouses and town shops hire scooters cheaply for the pepper farms, salt fields and the ride up into Bokor National Park.",
     whyItFits: "For the countryside and the Bokor loop that define a Kampot visit.",
     priceRange: { low: 5, typical: 6, high: 8, currency: "USD", note: "Per day for a scooter." },
+    hours: "Roughly 08:00-18:00 daily, varies by shop; Kampot's rental outfits are small guesthouse- or shopfront-run operations with no standard citywide hours.",
     tips: ["The Bokor mountain road is long and can be foggy - fuel up, and turn back if visibility drops.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 10.6104, lng: 104.1819 }, mapQuery: "scooter rental Kampot",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
+    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }, { org: "Tripadvisor - Kampot gear rentals", url: "https://www.tripadvisor.com/Attractions-g608455-Activities-c61-t186-Kampot_Kampot_Province.html" }],
   },
   {
     id: "kh-ext-kep-beach",
@@ -2273,8 +2276,9 @@ export const PLACES_KH_EXT = [
     blurb: "Kep's small, palm-lined town beach of imported white sand, beside the seafront promenade and a short ride from the famous crab market.",
     whyItFits: "For a relaxed paddle and a seafood-and-sunset stroll along the promenade; most swimmers take a boat to Rabbit Island for clearer water.",
     priceRange: { currency: "KHR", low: 0, high: 0 },
+    hours: "Open beach; no gate or fixed hours, busiest with local visitors at weekends and on public holidays.",
     verified: "2026-07",
-    sources: [{ org: "Bookaway - A traveller's guide to Kep Beach", url: "https://www.bookaway.com/blog/beaches-cambodia-kep/" }, { org: "Seripheap - The Crab Market of Kep", url: "https://www.tour-cambodia.com/guide-cambodia/attraction/crab-market" }],
+    sources: [{ org: "Bookaway - A traveller's guide to Kep Beach", url: "https://www.bookaway.com/blog/beaches-cambodia-kep/" }, { org: "Seripheap - The Crab Market of Kep", url: "https://www.tour-cambodia.com/guide-cambodia/attraction/crab-market" }, { org: "Tourism Cambodia - Kep Beach", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/what-to-see/40_kep-beach.htm" }],
     recognition: "A short crescent of pale imported sand backed by casuarina trees and food vendors, with the White Lady (Sela Cham Pou) statue on the rocks nearby.",
     lifeguard: "no",
     swim: "A small, calm, shallow town beach that is pleasant for a paddle but often murky; most visitors swim at Rabbit Island (Koh Tonsay) instead. No patrol.",
@@ -2291,11 +2295,12 @@ export const PLACES_KH_EXT = [
     blurb: "A scooter reaches the ferry piers for Koh Rong and the quieter southern beaches; the town itself is a busy, fast-changing construction zone, so ride carefully.",
     whyItFits: "For reaching the island ferries and the beaches beyond the busy town centre.",
     priceRange: { low: 5, typical: 7, high: 12, currency: "USD", note: "Per day for an automatic scooter; petrol extra." },
+    hours: "Roughly 08:00-18:00 daily, varies by shop; Sihanoukville's rental outfits are informal shopfront or guesthouse operations with no standard citywide hours.",
     tips: ["The islands (Koh Rong, Koh Rong Sanloem) have no roads for rental bikes - park on the mainland and take the ferry.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 10.627, lng: 103.5223 },
     mapQuery: "scooter rental Sihanoukville",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com" }]
+    sources: [{ org: "Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor - Moto Rental, Sihanoukville", url: "https://www.tripadvisor.com/Attraction_Review-g325573-d12505638-Reviews-Moto_Rental-Sihanoukville_Sihanoukville_Province.html" }]
   },
   {
     id: "kh-ext-rental-phnom-penh",
@@ -2307,11 +2312,12 @@ export const PLACES_KH_EXT = [
     blurb: "Bicycles and sub-125cc scooters are rented across the city, but Phnom Penh's traffic is chaotic and foreign riders face real risks, so many travellers use Grab or PassApp instead.",
     whyItFits: "For confident riders who want to explore independently; others may prefer app-based tuk-tuks and rides.",
     priceRange: { low: 1, typical: 6, high: 10, currency: "USD", note: "Per day: bicycles about 1-3 USD, an automatic scooter around 5-8 USD." },
+    hours: "Roughly 08:00-18:00 daily is typical (e.g. Penh House's rental desk quotes exactly this window); varies by shop.",
     tips: ["Phnom Penh traffic is dense and unpredictable; rental bikes carry no third-party insurance, and a foreigner on a Cambodian-plate bike can be held responsible after an accident - Grab or PassApp are a lower-risk way around town.", "Scooters of 125cc and under need no licence under Cambodian law, but police checkpoints are common - always wear a helmet and carry ID rather than your passport.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 11.5564, lng: 104.9282 },
     mapQuery: "bicycle rental Phnom Penh",
     verified: "2026-07",
-    sources: [{ org: "AG Cambodia (legal guidance)", url: "https://www.agcambodia.com/" }]
+    sources: [{ org: "AG Cambodia (legal guidance)", url: "https://www.agcambodia.com/" }, { org: "Penh House - Rent a Bike", url: "https://penhhouse.asia/activities/rent-a-bike/" }]
   },
   {
     id: "kh-ext-phnom-bakheng",
@@ -2325,11 +2331,12 @@ export const PLACES_KH_EXT = [
     history: "Built by Yasovarman I around 889-910 AD as the state temple of his new capital, two centuries before Angkor Wat.",
     recognition: "A five-tier sandstone pyramid on a natural hill reached by a path up the slope; the summit looks out over forest toward Angkor Wat.",
     priceRange: { low: 37, typical: 62, high: 72, currency: "USD", note: "Covered by the Angkor Pass; not sold separately." },
+    hours: "Kept open later than most Angkor temples for sunset, until roughly 19:00 (opening is reported anywhere from 05:00-07:00 depending on the source); the summit also enforces a strict ~300-visitor capacity cap that can fill by mid-afternoon in peak season (Dec-Jan) — arrive by around 16:00 to secure a spot.",
     tips: ["A valid Angkor Pass is required, and the summit has a visitor cap, so arrive well before sunset.", "The climb is short but steep - bring water and a torch for the walk down after dark."],
     mapQuery: "Phnom Bakheng Angkor Siem Reap",
     coords: { lat: 13.42418, lng: 103.85601 },
     verified: "2026-07",
-    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Phnom_Bakheng" }]
+    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Phnom_Bakheng" }, { org: "Khmer Times - ANA adjusts opening hours for Angkor visits", url: "https://www.khmertimeskh.com/501546894/ana-adjusts-opening-hours-for-ancient-temple-visits/" }, { org: "Journey Cambodia - Phnom Bakheng Sunset Guide", url: "https://journeycambodia.com/phnom-bakheng-temple-sunset/" }]
   },
   {
     id: "kh-ext-pre-rup",
@@ -2343,11 +2350,12 @@ export const PLACES_KH_EXT = [
     history: "Built in 961-962 AD as the state temple of Rajendravarman; the name means turn the body, after a cremation ritual once associated with the site.",
     recognition: "A steep three-tier laterite pyramid crowned by five brick towers in a quincunx, glowing reddish at sunrise and sunset.",
     priceRange: { low: 37, typical: 62, high: 72, currency: "USD", note: "Covered by the Angkor Pass; not sold separately." },
+    hours: "Also kept open later than most Angkor temples for sunset, until roughly 19:00, matching Phnom Bakheng; unlike Phnom Bakheng it has no reported visitor cap, making it a quieter sunset alternative.",
     tips: ["On the Grand Circuit, often paired with East Mebon just to the north.", "The upper tiers are reached by steep stairs; take care in low light after sunset."],
     mapQuery: "Pre Rup Angkor Siem Reap",
     coords: { lat: 13.435473, lng: 103.920452 },
     verified: "2026-07",
-    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Pre_Rup" }]
+    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Pre_Rup" }, { org: "Angkor Wat Guide - Opening Hours (Every Temple, Every Day)", url: "https://angkorwat-guide.com/plan-your-visit/opening-hours/" }, { org: "Adventures Cambodia - Angkor Temple Opening Hours", url: "https://adventurescambodia.com/blog/angkor-temple-opening-hours/" }]
   },
   {
     id: "kh-ext-preah-khan-angkor",
@@ -2361,11 +2369,12 @@ export const PLACES_KH_EXT = [
     history: "Completed in 1191 AD by Jayavarman VII, dedicated to his father and once a Buddhist university and city in its own right.",
     recognition: "A long east-west line of nested rectangular galleries and narrowing doorways, with silk-cotton tree roots over largely unrestored stone.",
     priceRange: { low: 37, typical: 62, high: 72, currency: "USD", note: "Covered by the Angkor Pass; not sold separately." },
+    hours: "Roughly 06:00-18:30 under APSARA's 2024 park-wide schedule adjustment (some guides still cite an older 07:30-17:30); standard Angkor Pass hours, with no special sunset/sunrise extension or capacity cap reported here.",
     tips: ["Enter from one gate and walk out the far side so you cover the full axis rather than doubling back.", "This is Preah Khan at Angkor, not the remote Preah Khan of Kompong Svay far to the east."],
     mapQuery: "Preah Khan temple Angkor Siem Reap",
     coords: { lat: 13.46196, lng: 103.87159 },
     verified: "2026-07",
-    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Preah_Khan" }]
+    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Preah_Khan" }, { org: "Adventures Cambodia - Angkor Temple Opening Hours", url: "https://adventurescambodia.com/blog/angkor-temple-opening-hours/" }]
   },
   {
     id: "kh-ext-neak-pean",
@@ -2379,11 +2388,12 @@ export const PLACES_KH_EXT = [
     history: "Built in the late 12th century by Jayavarman VII as a symbolic healing site, its central pool once fed four smaller pools representing water, earth, fire and wind.",
     recognition: "A single round tower on a stone island ringed by two entwined naga serpents, in the middle of a large reservoir.",
     priceRange: { low: 37, typical: 62, high: 72, currency: "USD", note: "Covered by the Angkor Pass; not sold separately." },
+    hours: "Roughly 06:00-18:30 under APSARA's 2024 park-wide schedule adjustment (some guides still cite an older 07:30-17:30); standard Angkor Pass hours, with no special sunset/sunrise extension or capacity cap reported here.",
     tips: ["On the Grand Circuit; a raised walkway leads to the viewing point and you cannot enter the island itself.", "Water levels vary by season, and the setting is most striking in and just after the rains."],
     mapQuery: "Neak Pean Angkor Siem Reap",
     coords: { lat: 13.46306, lng: 103.89444 },
     verified: "2026-07",
-    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Neak_Pean" }]
+    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Neak_Pean" }, { org: "Adventures Cambodia - Angkor Temple Opening Hours", url: "https://adventurescambodia.com/blog/angkor-temple-opening-hours/" }]
   },
   {
     id: "kh-ext-banteay-kdei",
@@ -2397,11 +2407,12 @@ export const PLACES_KH_EXT = [
     history: "Built from the mid-12th to early 13th century under Jayavarman VII as a Buddhist monastic complex, and never fully restored.",
     recognition: "Weathered laterite enclosure walls and toppled galleries under trees, entered through a Bayon-style face-tower gate.",
     priceRange: { low: 37, typical: 62, high: 72, currency: "USD", note: "Covered by the Angkor Pass; not sold separately." },
+    hours: "Roughly 06:00-18:30 under APSARA's 2024 park-wide schedule adjustment (some guides still cite an older 07:30-17:30); standard Angkor Pass hours, with no special sunset/sunrise extension or capacity cap reported here.",
     tips: ["Pair it with Srah Srang directly opposite for a calmer sunrise than the Angkor Wat crowds.", "Footing is uneven among the fallen blocks, so wear proper shoes."],
     mapQuery: "Banteay Kdei Angkor Siem Reap",
     coords: { lat: 13.42972, lng: 103.89833 },
     verified: "2026-07",
-    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Banteay_Kdei" }]
+    sources: [{ org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Banteay_Kdei" }, { org: "Adventures Cambodia - Angkor Temple Opening Hours", url: "https://adventurescambodia.com/blog/angkor-temple-opening-hours/" }]
   },
   {
     id: "kh-ext-battambang-jaan-bai",
