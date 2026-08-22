@@ -121,10 +121,9 @@ import { VISA, getVisa } from './data/visa.js';
 import { scamsFor } from './data/scams.js';
 import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
-import { REGIONS_TH } from './data/regions.th.js';
-import { REGIONS_VI } from './data/regions.vi.js';
-import { REGIONS_KH } from './data/regions.kh.js';
-import { REGIONS_LA } from './data/regions.la.js';
+// regions.<cc>.js (the ADM1 province-polygon files) are NOT statically imported here — they
+// are large pure geometry (27-87 KB each) needed only by the region/zone drill-down, so they
+// are loaded lazily, one country at a time, by loadRegionSet() near REGIONS_BY_CC below.
 import { provinceInfo } from './data/regions.info.js';
 import { zonesFor, getZone, zoneForProvince } from './data/zones.js';
 import * as Diet from './data/diet.js';
@@ -2819,8 +2818,43 @@ function mightNotKnowSection(cc) {
 // map plus per-region content — lands in Wave 2. Until then the route falls back to the
 // country hub so it never dead-ends.
 // ---- Region / province drill-down (ADM1) -------------------------------------------
-const REGIONS_BY_CC = { th: REGIONS_TH, vi: REGIONS_VI, kh: REGIONS_KH, la: REGIONS_LA };
+// Lazy per-country region-set loading — mirrors js/data/regions.js's loadCountry()/
+// isCountryLoaded() idiom exactly, but as a second, independent axis: THAT loader fetches a
+// country's places/food/prices/etc.; THIS one fetches only its ADM1 province polygons, used
+// solely by the region/zone maps and lookups below. A traveller who only ever visits Thailand
+// never downloads or parses Vietnam/Cambodia/Laos borders. Every regions.<cc>.js file is
+// already precached by the service worker like any other app-code file (sw.js PRECACHE), so
+// offline availability is unchanged — this only defers the parse/download to first real need.
+const REGIONS_BY_CC = { th: null, vi: null, kh: null, la: null };
+const REGION_SET_LOADERS = {
+  th: () => import('./data/regions.th.js').then((m) => m.REGIONS_TH),
+  vi: () => import('./data/regions.vi.js').then((m) => m.REGIONS_VI),
+  kh: () => import('./data/regions.kh.js').then((m) => m.REGIONS_KH),
+  la: () => import('./data/regions.la.js').then((m) => m.REGIONS_LA),
+};
+// In-flight/settled load promises, keyed by country id. Deleted on failure so a later retry
+// (e.g. the connection comes back) gets a fresh attempt rather than a stuck rejection.
+const _regionSetLoads = {};
 function regionSetFor(cc) { return REGIONS_BY_CC[cc] || null; }
+function isRegionSetLoaded(cc) { return !!REGIONS_BY_CC[cc]; }
+// Fetches and caches one country's province polygons. Safe to call repeatedly and from
+// several call sites at once — concurrent calls for the same country share one in-flight
+// load, same idiom as loadCountry(). Every reader below (regionsMap/zonesMap/zoneAssignment/
+// findProvince, and whereAmI's cross-country scan) already treats regionSetFor() returning
+// null as "not loaded yet" and degrades gracefully rather than assuming synchronous data; the
+// router's region-data gate (see render() below) is what actually triggers this loader for
+// the two routes that render a province/zone map.
+function loadRegionSet(cc) {
+  if (REGIONS_BY_CC[cc]) return Promise.resolve(REGIONS_BY_CC[cc]);
+  if (_regionSetLoads[cc]) return _regionSetLoads[cc];
+  const loader = REGION_SET_LOADERS[cc];
+  if (!loader) return Promise.resolve(null);
+  const p = loader()
+    .then((set) => { REGIONS_BY_CC[cc] = set; return set; })
+    .catch((err) => { delete _regionSetLoads[cc]; throw err; });
+  _regionSetLoads[cc] = p;
+  return p;
+}
 function findProvince(cc, code) {
   const set = regionSetFor(cc);
   return set ? set.provinces.find((p) => p.code === code) || null : null;
@@ -2945,8 +2979,13 @@ function zoneAssignment(cc) {
       });
       if (best && provZone[best]) byPlace.set(pl.id, provZone[best]);
     });
+    // Cache ONLY once a real region set backed this pass. The region set now loads lazily
+    // (see loadRegionSet above), so `set` can be null on early calls; caching an empty
+    // byPlace keyed just on place count would poison it forever once the set does land
+    // (place count alone would look unchanged, so the stale empty map would never be
+    // recomputed). Skipping the cache while unset is cheap — the loop above never runs.
+    _zoneAssign[cc] = { byPlace, n: places.length };
   }
-  _zoneAssign[cc] = { byPlace, n: places.length };
   return byPlace;
 }
 
@@ -3257,15 +3296,24 @@ function exploreScreen(argCc) {
   // yet (e.g. a dated stop set for a country never opened this session) would otherwise render
   // sparse forever. Background-load + quietly repaint, same idiom as the chooser above and as
   // Home's own country-load block — never block first paint, never silently stay empty.
+  // Same non-blocking "load then quietly repaint if still here" idiom, run once per loader
+  // so either landing independently of the other — the region set gates only the "by
+  // region" map further down, not the whole screen.
+  const repaintExploreIfStillHere = () => {
+    const headRoute = (location.hash || '').slice(1).split('-')[0];
+    if (headRoute === 'explore' || headRoute === 'country') {
+      const y = window.scrollY;
+      exploreScreen(argCc);
+      requestAnimationFrame(() => window.scrollTo(0, y));
+    }
+  };
   if (!isCountryLoaded(cc)) {
-    loadCountry(cc).then(() => {
-      const headRoute = (location.hash || '').slice(1).split('-')[0];
-      if (headRoute === 'explore' || headRoute === 'country') {
-        const y = window.scrollY;
-        exploreScreen(argCc);
-        requestAnimationFrame(() => window.scrollTo(0, y));
-      }
-    }).catch(() => { /* offline with nothing cached yet — sparse view stays up */ });
+    loadCountry(cc).then(repaintExploreIfStillHere)
+      .catch(() => { /* offline with nothing cached yet — sparse view stays up */ });
+  }
+  if (!isRegionSetLoaded(cc)) {
+    loadRegionSet(cc).then(repaintExploreIfStillHere)
+      .catch(() => { /* offline with nothing cached yet — region map stays hidden */ });
   }
 
   // Lead with the map: this country's regions, right after country select — plain and
@@ -9101,14 +9149,23 @@ export function render() {
   // loaded); and a traveller's own saved places/collections, which may span any
   // country they have visited.
   const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop']);
+  // The two routes that render a province/zone map or read placesInZone/townsInZone
+  // (zoneAssignment) — all backed by the ADM1 region-set loader (loadRegionSet/
+  // isRegionSetLoaded, defined above with REGIONS_BY_CC). This is a second, independent
+  // lazy axis from the country CONTENT gated below: nothing else in NEEDS_COUNTRY_DATA
+  // touches regionSetFor(), so gating them on region data too would re-introduce eager
+  // loading for the three routes that never render a region/zone map.
+  const NEEDS_REGION_DATA = new Set(['country', 'region']);
   if (NEEDS_COUNTRY_DATA.has(head) || NEEDS_ALL_COUNTRIES.has(head)) {
     const wantAll = NEEDS_ALL_COUNTRIES.has(head);
     const prefix = arg ? arg.split('-')[0] : null;
     const argCc = ALL_CC.includes(arg) ? arg : (ALL_CC.includes(prefix) ? prefix : null);
     const neededCcs = wantAll ? ALL_CC : [argCc || getActiveCountry()];
-    const pending = neededCcs.filter((cc) => !isCountryLoaded(cc));
-    if (pending.length) {
-      pending.forEach((cc) => { loadCountry(cc).then(render, render); });
+    const pendingCountry = neededCcs.filter((cc) => !isCountryLoaded(cc));
+    const pendingRegion = NEEDS_REGION_DATA.has(head) ? neededCcs.filter((cc) => !isRegionSetLoaded(cc)) : [];
+    if (pendingCountry.length || pendingRegion.length) {
+      pendingCountry.forEach((cc) => { loadCountry(cc).then(render, render); });
+      pendingRegion.forEach((cc) => { loadRegionSet(cc).then(render, render); });
       mount(countryLoadingScreen(neededCcs), true);
       return;
     }
