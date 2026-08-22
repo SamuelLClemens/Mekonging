@@ -33,8 +33,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return super().guess_type(path)
 
 
-class Server(socketserver.TCPServer):
+class Server(socketserver.ThreadingTCPServer):
+    # Threading, not the plain single-request-at-a-time TCPServer: the service worker's
+    # install step requests the whole precache list at once, and against a serial server
+    # most of those requests time out. The failures are swallowed by design (one missing
+    # asset must not abort the install), so a serial dev server silently produces a
+    # half-populated offline cache and makes offline behaviour untestable locally.
     allow_reuse_address = True
+    daemon_threads = True
 
 
 if __name__ == "__main__":

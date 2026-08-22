@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.450.0';
+const CACHE_VERSION = 'mk-v0.451.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -151,7 +151,36 @@ self.addEventListener('install', (e) => {
       for (const u of CRITICAL) { await c.add(fresh(u)); }
       // The rest is best-effort: cache each file independently so one missing/renamed
       // asset cannot abort the entire offline install (the old atomic addAll did).
-      await Promise.all(PRECACHE.map((u) => c.add(fresh(u)).catch(() => { /* skip this asset */ })));
+      //
+      // Two things matter about HOW that is done. Firing all ~114 requests at once is a
+      // burst that a phone radio, a hotel wifi captive portal or a modest static host can
+      // partly drop — and because every failure is silently caught, the app then believes
+      // it is installed and offline-ready while missing whole country data bundles. That
+      // is the worst possible failure for this app: it shows up as an empty screen in a
+      // Laos village, not as an error at install time. So: request in bounded batches, and
+      // give anything that failed one retry before giving up on it.
+      const BATCH = 8;
+      const failed = [];
+      for (let i = 0; i < PRECACHE.length; i += BATCH) {
+        await Promise.all(PRECACHE.slice(i, i + BATCH).map(
+          (u) => c.add(fresh(u)).catch(() => { failed.push(u); }),
+        ));
+      }
+      const stillMissing = [];
+      for (const u of failed) {
+        // Second pass runs one at a time and without cache:'reload' — if the first attempt
+        // lost a race for a connection, an ordinary request usually succeeds.
+        await c.add(u).catch(() => { stillMissing.push(u); });
+      }
+      if (stillMissing.length) {
+        // Not fatal, but no longer silent: the page can read this to tell the user their
+        // offline copy is incomplete rather than letting them discover it with no signal.
+        self.__mkPrecacheMissing = stillMissing;
+        const clients = await self.clients.matchAll({ includeUncontrolled: true });
+        for (const client of clients) {
+          client.postMessage({ type: 'precache-incomplete', missing: stillMissing });
+        }
+      }
       await self.skipWaiting();
     }),
   );
