@@ -4530,10 +4530,11 @@ export const PLACES_LA_EXT = [
     blurb: "The laid-back capital is flat and easy for a hired bicycle or small scooter along the Mekong riverfront and out to the Buddha Park.",
     whyItFits: "For covering Vientiane's spread-out riverside sights without relying on tuk-tuks.",
     priceRange: { low: 60000, typical: 110000, high: 200000, currency: "LAK", note: "Per day for a scooter; bicycles cheaper." },
+    hours: "Roughly 08:00-18:00 daily",
     tips: ["Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 17.966, lng: 102.611 }, mapQuery: "scooter rental Vientiane",
     verified: "2026-07",
-    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
+    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }, { org: "Wanderlog - Style Motorbikes Vientiane (Google Maps hours)", url: "https://wanderlog.com/place/details/13397598/style-motorbikes-vientiane-helmet-and-bike-shop" }],
   },
   {
     id: "la-ext-rental-vang-vieng", name: "Scooter & buggy rental, Vang Vieng", city: "Vang Vieng", country: "la",
@@ -4552,10 +4553,11 @@ export const PLACES_LA_EXT = [
     blurb: "The gateway to the Bolaven Plateau loop, where shops hire semi-automatic and manual motorbikes robust enough for the waterfalls, coffee farms and cool highland roads.",
     whyItFits: "For riding the multi-day Bolaven loop, one of Laos's best road trips.",
     priceRange: { low: 90000, typical: 150000, high: 250000, currency: "LAK", note: "Per day for a semi-automatic; loop-ready bikes a little more." },
+    hours: "Roughly 08:00-18:00 daily",
     tips: ["Hire a bike with good tyres and brakes, budget two to three days, and carry cash - ATMs are scarce on the plateau.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 15.1202, lng: 105.782 }, mapQuery: "scooter rental Pakse",
     verified: "2026-07",
-    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
+    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }, { org: "Style Motorbikes Laos - Pakse shop", url: "https://stylemotorbikes-laos.com/style-motorbikes-pakse-motorbike-rental/" }],
   },
   {
     id: "la-ext-rental-luang-prabang",
@@ -4567,12 +4569,12 @@ export const PLACES_LA_EXT = [
     blurb: "The old town is compact and flat, perfect for a bicycle among the temples and the night market, while a scooter reaches Kuang Si Falls and the outlying villages.",
     whyItFits: "For getting around the peninsula and out to the waterfalls at your own pace.",
     priceRange: { low: 20000, typical: 50000, high: 150000, currency: "LAK", note: "Per day: a plain bicycle around 20,000 LAK and a mountain bike nearer 50,000 LAK; an automatic scooter roughly 100,000-120,000 LAK, more for a manual 150cc." },
+    hours: "Roughly 08:00-20:00 daily",
     tips: ["Cycle the peninsula between the Mekong and the Nam Khan early for the quiet temples; ride to Kuang Si Falls only if you are a confident rider.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 19.8845, lng: 102.1348 },
     mapQuery: "bicycle rental Luang Prabang",
     verified: "2026-07",
-    sources: [{ org: "ScootScoot - Scooter rental in Luang Prabang", url: "https://scootscoot.app/blog/guides/scooter-rental-luang-prabang" }, { org: "Nomadasaurus - Kuang Si Falls, Luang Prabang", url: "https://www.nomadasaurus.com/kuang-si-falls-luang-prabang-laos/" }],
-    sources: []
+    sources: [{ org: "ScootScoot - Scooter rental in Luang Prabang", url: "https://scootscoot.app/blog/guides/scooter-rental-luang-prabang" }, { org: "Nomadasaurus - Kuang Si Falls, Luang Prabang", url: "https://www.nomadasaurus.com/kuang-si-falls-luang-prabang-laos/" }, { org: "Wanderlog - Anousay Motorbike Rental (Google Maps hours)", url: "https://wanderlog.com/place/details/5100121/anousay-motorbike-rental" }],
   },
   {
     id: "la-ext-rental-thakhek",
@@ -4584,11 +4586,12 @@ export const PLACES_LA_EXT = [
     blurb: "Thakhek is the start of the famous 3-4 day Thakhek Loop, around 500 km through karst country to the 7km Kong Lor river cave, with a couple of trusted rental shops in the town centre.",
     whyItFits: "For one of Southeast Asia's great motorbike journeys, past caves, lagoons and dramatic limestone scenery.",
     priceRange: { low: 100000, typical: 120000, high: 200000, currency: "LAK", note: "Per day for a semi-automatic; the full loop takes 3-4 days." },
+    hours: "Roughly 07:00-20:00 daily; exact hours vary by shop",
     tips: ["Ride the loop counter-clockwise on Highways 12, 1E and 8, with the 42km detour to Kong Lor Cave, and allow at least four days.", "Fuel up whenever you can on the eastern stretch, carry warm and waterproof layers for the highlands, and expect sparse breakdown help.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 17.411, lng: 104.851 },
     mapQuery: "motorbike rental Thakhek Loop",
     verified: "2026-07",
-    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org" }, { org: "Evendo - Wang Wang Motor Rental, Thakhek", url: "https://evendo.com/locations/laos/thakhek/landmark/wang-wang-motor-rental" }, { org: "Evendo - Mad Monkey Motorcycle, Thakhek", url: "https://evendo.com/locations/laos/thakhek/shop/mad-monkey-motorcycle" }]
   },
 
   // --- Phase 6 content batch: named food & stay for thin overnight hubs (Nong Khiaw, Luang Namtha, Savannakhet, Phonsavan, Pakse) ---
