@@ -352,7 +352,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.454.0';
+const APP_VERSION = 'mk-v0.455.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1082,13 +1082,18 @@ function profileFitAdj(p, prefs) {
 // profileFitAdj()/personalScore(); this is the DISPLAY truth, so every surface says the same
 // thing about the same place.
 //
-// The hard rule: never invent a suitability or safety verdict. Measured across the 586 place
-// records, the data supports some dimensions and not others — kidFriendly is set on 316,
-// access/stepFree on 137, scamWarnings on 567, but per-venue safety, women's-safety and
-// baby-facility fields are effectively absent. So an unrecorded field returns an `unknown`
-// entry that the UI prints as "not recorded", which is more useful than silence and far
-// safer than a false negative: a traveller must be able to tell "no step-free access" from
-// "nobody has checked". Those gaps are being filled with sourced data, not inference.
+// The hard rule: never invent a suitability or safety verdict. Measured across the 808 place
+// records (August 2026), the data supports some dimensions and not others — kidFriendly is set
+// on 426, afterDark on 187, access/stepFree on 176, scamWarnings on 691, but per-venue safety,
+// women's-safety and baby-facility fields are effectively absent (access.babyChange is set on
+// none). So an unrecorded field returns an `unknown` entry that the UI prints as "not
+// recorded", which is more useful than silence and far safer than a false negative: a
+// traveller must be able to tell "no step-free access" from "nobody has checked". Those gaps
+// are being filled with sourced data, not inference — afterDark, for instance, is only ever
+// derived where a record's OWN listed hours settle the question (see the field's contract in
+// js/data/places.th.js); the ambiguous cases stay unrecorded on purpose.
+//
+// Recount these with scripts/check-place-fields.py rather than trusting the figures above.
 //
 // Returns { good: [], warn: [], unknown: [] } of short strings, already filtered to the
 // dimensions this traveller actually asked about.
@@ -1122,9 +1127,10 @@ function profileFit(p, prefs = store.profile.prefs) {
   }
 
   // Solo and solo-female. There is NO per-venue safety data in this app and none is invented
-  // here. What is real: scamWarnings (recorded on 567 of 586 places) and opening hours. Those
-  // are surfaced as concrete, checkable facts; the judgement stays with the traveller, and the
-  // country-level solo guidance is one tap away from the same card.
+  // here. What is real: scamWarnings (a field on 691 of 808 places, non-empty on 350) and
+  // opening hours (on 807 of 808). Those are surfaced as concrete, checkable facts; the
+  // judgement stays with the traveller, and the country-level solo guidance is one tap away
+  // from the same card.
   if (prefs.soloFemale || prefs.party === 'solo') {
     if ((p.scamWarnings || []).length) warn.push(`${p.scamWarnings.length} reported scam${p.scamWarnings.length > 1 ? 's' : ''} here`);
     if (cats.includes('nightlife')) warn.push('Night venue — plan how you get back');
