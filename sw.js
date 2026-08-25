@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.453.0';
+const CACHE_VERSION = 'mk-v0.454.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -46,6 +46,11 @@ const PRECACHE = [
   'js/social.js',
   'js/tts.js',
   'js/translate.js',
+  // Interface language. Both are shell, not optional extras: main.js imports i18n.js eagerly,
+  // and a traveller who set the app to Thai must still get a Thai interface with no signal —
+  // which is the whole point of bundling the dictionary rather than fetching it.
+  'js/i18n.js',
+  'js/data/ui-strings.js',
   'js/journey.js',
   'js/util.js',
   'js/map.js',

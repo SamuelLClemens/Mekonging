@@ -32,6 +32,7 @@ import { h, debounce } from '../util.js';
 import { field, selectEl, openModal, confirmAction, online } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
+import { LANGS, LANG_BY_CODE, uiLang, transCode } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../data/regions.js';
 import { ALLERGENS } from '../data/allergens.js';
 // Namespace import kept (rather than named imports for every piece) so the moved code below —
@@ -829,20 +830,45 @@ function liveTranslateBox(code, label, locale) {
     h('h2', { style: 'margin-top:0' }, `Say it in ${label}`),
     h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
   ]);
-  const srcSel = selectEl([['en', 'From English'], ['he', 'From Hebrew (עברית)']], 'en', () => {});
+  // The language the traveller is speaking FROM. This used to offer English and Hebrew only,
+  // which quietly excluded every other visitor to the region — and they are the majority.
+  //
+  // Each option leads with the country flag and then the language's OWN name, so the closed
+  // control shows a recognisable flag and a speaker who reads no English can still find their
+  // row. The default is whatever the app's interface is set to (a phone running in Korean
+  // should not make its owner re-pick Korean here), and the choice is remembered separately
+  // from the interface language so changing one never silently moves the other.
+  const remembered = store.profile.prefs.talkSrcLang;
+  const srcDefault = (remembered && LANG_BY_CODE[remembered]) ? remembered : uiLang();
+  const srcSel = selectEl(
+    LANGS.map((l) => [l.code, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`]),
+    srcDefault,
+    // syncSrc is declared below; the handler only ever runs on a user interaction, long after
+    // this whole function body has finished evaluating.
+    (v) => { store.profile.prefs.talkSrcLang = v; save(); syncSrc(); },
+  );
   srcSel.setAttribute('aria-label', 'Language you are translating from');
+  srcSel.setAttribute('data-no-i18n', '');   // option labels are already in their own language
   // Talk T3: its own class distinct from the phrase-filter '.search' input below it on this
   // same screen — the two were previously visually identical, which caused real confusion
   // during the UX interview (typing a test query into the wrong box).
-  const input = h('input', { class: 'search translate-input', type: 'text', 'aria-label': 'Translate from English', placeholder: 'e.g. Where is the bus station?' });
+  const input = h('input', { class: 'search translate-input', type: 'text', placeholder: 'e.g. Where is the bus station?' });
   const out = h('div', { class: 'tr-out', style: 'margin-top:10px' });
+  // The input's accessible name has to name the ACTUAL source language, not a hard-coded
+  // "English" — a screen-reader user who picked Japanese was previously told they were typing
+  // English. Re-run whenever the picker changes.
+  const syncSrc = () => {
+    const l = LANG_BY_CODE[srcSel.value];
+    input.setAttribute('aria-label', l ? `Translate from ${l.name}` : 'Translate from English');
+  };
+  syncSrc();
 
   const doTranslate = async () => {
     const text = input.value.trim();
     if (!text) return;
     out.innerHTML = ''; out.append(h('p', { class: 'muted' }, 'Translating…'));
     try {
-      const res = await translate(text, code, srcSel.value);
+      const res = await translate(text, code, transCode(srcSel.value));
       out.innerHTML = '';
       out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
       const able = canSay(locale);
@@ -865,7 +891,7 @@ function liveTranslateBox(code, label, locale) {
         // dictionary rather than only the language it was typed in. Not awaited — the primary
         // translation above is already shown; the traveller should never wait on N more
         // network calls just to see the one they asked for.
-        propagateCustomPhraseAcrossLanguages(code, text, srcSel.value);
+        propagateCustomPhraseAcrossLanguages(code, text, transCode(srcSel.value));
       }
     } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
   };
@@ -880,7 +906,10 @@ function liveTranslateBox(code, label, locale) {
     micBtn.addEventListener('click', () => {
       try {
         const rec = new SR();
-        rec.lang = srcSel.value === 'he' ? 'he-IL' : 'en-US';
+        // Speech recognition needs the full BCP-47 locale of whatever the traveller is
+        // actually speaking — taken from the language registry rather than the old
+        // Hebrew-or-English guess, which mis-transcribed every other language on the list.
+        rec.lang = (LANG_BY_CODE[srcSel.value] || {}).speech || 'en-US';
         rec.interimResults = false; rec.maxAlternatives = 1;
         micBtn.textContent = '🎙 Listening…'; micBtn.disabled = true;
         rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(); };

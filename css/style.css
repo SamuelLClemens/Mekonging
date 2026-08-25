@@ -154,9 +154,22 @@ html[data-reduced-motion="on"] *, html[data-reduced-motion="on"] *::before {
 .screen { padding: var(--sp-4) var(--sp-4) calc(var(--tabbar-h) + var(--sp-6)); position: relative; z-index: 1; }
 /* Visually-hidden but available to assistive tech (the live-region announcer). */
 .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-/* Skip link: off-screen until focused, then pinned top-left so keyboard users can jump in. */
-.skip-link { position: absolute; left: -9999px; top: 0; z-index: 1000; background: var(--card); color: var(--ink); padding: 10px 14px; border-radius: 0 0 var(--r-md) 0; font-weight: 700; text-decoration: none; }
-.skip-link:focus { left: 0; }
+/* Skip link: hidden until focused, then pinned to the top inline-start edge so keyboard users
+   can jump straight into the content.
+   Hidden by CLIPPING, not by `left: -9999px`. An element parked far off the left edge creates
+   no scrollable overflow in a left-to-right page, so that idiom looked harmless for years —
+   but the moment the document became `dir="rtl"` for Hebrew and Arabic, the very same offset
+   landed in the scrollable direction and gave every RTL page an 11,000px horizontal scroll
+   (confirmed: scrollWidth 11279 against a 1280 viewport). Clipping takes up no space in
+   either direction, and the logical `inset-inline-start` / `border-end-end-radius` below pin
+   the revealed chip to the correct corner in both. */
+.skip-link {
+  position: absolute; top: 0; inset-inline-start: 0; z-index: 1000;
+  width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  background: var(--card); color: var(--ink); border-end-end-radius: var(--r-md);
+  font-weight: 700; text-decoration: none;
+}
+.skip-link:focus { width: auto; height: auto; padding: 10px 14px; overflow: visible; clip: auto; }
 
 h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
 
@@ -2066,3 +2079,100 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
 .compare-row.compare-head { border-bottom: 2px solid var(--line); }
 .compare-label { font-size: 12px; }
 .compare-cell { font-size: 13px; word-break: break-word; }
+
+/* --- interface language: the topbar flag, its picker, and right-to-left support ---------- */
+/* The flag control sits in the topbar alongside net/saved/settings/SOS. It inherits
+   .topbar-ic's invisible 44x44 tap target, so the emoji can stay visually small without
+   becoming a tiny touch target — the same trade the other header icons make. */
+.topbar-lang { font-size: 1.2rem; }
+/* Reclaiming the width the flag cost the title.
+   The flag makes this a SIX-control header (back · flag · net · saved · settings · SOS). At
+   375px that left the title column 29px against the 48px it needed, truncating the Hebrew for
+   "Currency" from מטבע to מטו — precisely the squeeze the 2-line-clamp comment further up this
+   file warns about. Tightening the header's own gap (12→8px) and the icon buttons' horizontal
+   padding (4→2px) returns ~40px to the title, putting it slightly AHEAD of where it was before
+   the flag existed rather than merely level. No tap target shrinks: the 44x44 minimum comes
+   from the invisible ::before boxes on .topbar-ic/.topbar-sos, which padding does not touch. */
+.topbar { gap: var(--sp-2); padding-inline: var(--sp-3); }
+.topbar-ic { padding-inline: 2px; }
+/* A long SINGLE word cannot wrap, so the 2-line clamp further up this file cannot rescue it —
+   it just clips. "CURRENCY" needs 104px and gets 73 at 375px wide, and renders as "CURREN"
+   (this predates the flag; the flag left it 9px better off, not worse). Translation makes it
+   routine rather than occasional: German and Dutch build one long compound where English used
+   two short words — Grenzübergänge, Grensovergangen for "Border crossings". Permitting a break
+   inside a word gives the clamp its second line back, so these degrade to two tidy lines
+   instead of a cut-off word.
+   `break-word` rather than `anywhere` so a word only breaks when it genuinely cannot fit on a
+   line of its own, and `hyphens: auto` so the break is marked with a hyphen instead of looking
+   like a typo — that hyphenation is language-aware, and works precisely because applyDocLang()
+   now keeps <html lang> accurate for whichever language is active. */
+.topbar h1 { overflow-wrap: break-word; hyphens: auto; }
+/* A column layout in which ONLY the language list scrolls. The generic .sheet scrolls its own
+   whole body, which on a short viewport pushed the heading and the filter box off the top and
+   the Close button off the bottom — leaving a list of thirty languages and no visible way to
+   search or dismiss it. Pinning the chrome and giving the list the leftover height fixes that
+   at every viewport height instead of at a chosen one. */
+.lang-sheet {
+  max-width: 520px; border-radius: var(--r-lg);
+  display: flex; flex-direction: column; max-height: 86vh; overflow: hidden;
+}
+/* min-height, not just flex-grow: the list is the point of this sheet, and without a floor the
+   explanatory note below it was winning the height contest and leaving only three of thirty
+   languages on screen. */
+.lang-list {
+  flex: 1 1 auto; min-height: min(38vh, 260px); overflow-y: auto; margin: var(--sp-3) 0;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.lang-sheet > h3, .lang-sheet > p, .lang-sheet > input, .lang-sheet > .lang-mt,
+.lang-sheet > .confirm-actions { flex: none; }
+.lang-row {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%;
+  padding: 10px var(--sp-3); border: none; border-bottom: 1px solid var(--line);
+  background: none; color: var(--ink); cursor: pointer; text-align: start; font: inherit;
+}
+.lang-row:last-child { border-bottom: none; }
+.lang-row:hover { background: rgba(128, 128, 128, 0.1); }
+.lang-row.on { background: rgba(22, 163, 154, 0.14); }
+.lang-flag { font-size: 1.4rem; line-height: 1; flex: none; }
+.lang-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+/* The language's own name is the primary label — it is the only one a speaker who reads no
+   English can use to find their row, so it gets the weight and the size. */
+.lang-native { font-weight: 700; font-size: var(--fs-md); }
+.lang-en { font-size: 11px; color: var(--ink-soft); }
+.lang-tick { color: var(--teal-deep); font-weight: 800; flex: none; }
+.lang-section {
+  margin: 0; padding: var(--sp-2) var(--sp-3); background: rgba(128, 128, 128, 0.08);
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--ink-soft); position: sticky; top: 0;
+}
+.lang-mt { display: flex; gap: var(--sp-3); align-items: flex-start; margin: 0 0 var(--sp-4); cursor: pointer; }
+.lang-mt input { margin-top: 3px; flex: none; }
+/* Talk's source-language picker. It shipped as a bare, unstyled <select>, which was easy to
+   overlook while it held two options — but on the dark themes it renders as a white box in the
+   middle of a dark card, and it now holds thirty flagged languages, so it is the first thing
+   the eye lands on. Matched to the tokens the app's other selects already use (.field select,
+   .talk-top-row select) and given the 44px minimum height the rest of the controls observe. */
+.translate-card select {
+  width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-2); min-height: 44px;
+}
+.translate-card select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+
+/* --- right-to-left ---------------------------------------------------------------------- */
+/* Hebrew, Arabic, Persian and Urdu set <html dir="rtl"> (js/i18n.js). Flexbox, grid and text
+   alignment mirror themselves from that attribute alone, so this block only has to correct
+   the places where the stylesheet hard-codes a physical side. Anything using logical
+   properties (text-align: start, padding-inline, inset-inline) needs nothing here. */
+html[dir="rtl"] { text-align: right; }
+html[dir="rtl"] .city-pick,
+html[dir="rtl"] .sight-cap,
+html[dir="rtl"] .srch-place-text { text-align: right; }
+/* Numeric and Latin-script runs (prices, times, phone numbers, romanisation) must stay
+   left-to-right inside an RTL paragraph, or "1669" and "07:00–17:00" render reversed. */
+html[dir="rtl"] .bp-roman,
+html[dir="rtl"] .price,
+html[dir="rtl"] .tel,
+html[dir="rtl"] code { direction: ltr; unicode-bidi: embed; text-align: left; }
+/* The tab bar is a flex row and mirrors on its own; the icons above the labels must not. */
+html[dir="rtl"] .tabbar button { direction: rtl; }

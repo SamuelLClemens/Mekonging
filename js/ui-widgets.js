@@ -137,6 +137,11 @@ export function openModal(rootEl, onClose) {
   _openModals.add(close);
   document.addEventListener('keydown', onKey, true);
   document.body.append(rootEl);
+  // A modal's backdrop is a sibling of #app, so mount()'s interface-language pass never sees
+  // it. Without this, picking a non-English language would translate every screen but leave
+  // every sheet, confirm dialog and bottom-sheet in English. Dynamic import keeps this module
+  // free of a hard dependency on i18n (and of any import cycle through it).
+  import('./i18n.js').then((m) => { try { m.translateTree(rootEl); m.autoTranslateTree(rootEl).catch(() => {}); } catch { /* noop */ } }).catch(() => {});
   setTimeout(() => { const f = focusables(); (f[0] || dialog).focus(); }, 0);
   return close;
 }

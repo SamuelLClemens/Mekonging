@@ -30,6 +30,10 @@ import {
 // physically moved out of main.js. It reaches back in for shared helpers (a circular
 // import, safe because every one of them is only read inside a function body, never at
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
+import {
+  LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree,
+  detectPreferredLang, mtEnabled, setMtEnabled,
+} from './i18n.js';
 import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
 import { familyScreen, familyCard } from './screens/family.js';
@@ -348,7 +352,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.453.0';
+const APP_VERSION = 'mk-v0.454.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -540,9 +544,18 @@ export function topbar(title, backHash) {
   // it sits alongside the other always-available controls (Saved, Settings, Emergency) no
   // matter where in the app a traveller happens to be.
   const netOnline = netMode() === 'online';
+  const lang = uiLangMeta();
   return h('header', { class: 'topbar' }, [
     backHash ? h('button', { class: 'back', onclick: () => goBack(backHash) }, '‹ Back') : null,
     h('h1', {}, title),
+    // Interface language. The control is the flag of the ACTIVE language, so a traveller who
+    // reads no English can still see at a glance which language they are in and that tapping
+    // here changes it. `data-no-i18n` keeps the translation pass off the flag itself.
+    h('button', {
+      class: 'topbar-ic topbar-lang', 'data-no-i18n': '',
+      'aria-label': `Language: ${lang.name} — tap to change`, title: `${lang.native} — change language`,
+      onclick: () => languageSheet(),
+    }, lang.flag),
     h('button', {
       class: 'topbar-ic topbar-net', 'aria-label': netOnline ? 'Online — tap to go offline' : 'Offline — tap to go online',
       title: netOnline ? 'Online' : 'Offline', onclick: () => { setNetMode(netOnline ? 'offline' : 'online'); render(); },
@@ -553,6 +566,99 @@ export function topbar(title, backHash) {
     // bold red marker so it stands out from the neutral menu icons).
     onSos ? null : h('button', { class: 'topbar-sos', 'aria-label': 'Emergency help', title: 'Emergency help', onclick: () => go('#sos') }, '🆘'),
   ]);
+}
+
+// The interface-language picker, opened from the topbar flag.
+//
+// Every row is labelled with the language's OWN name first (`native`), because the person who
+// most needs this screen cannot read the English one. The English name follows in small text
+// for anyone who is picking on someone else's behalf — a guesthouse owner setting the phone up
+// for a guest, say.
+//
+// Two tiers, and the distinction is stated on the page rather than hidden: languages with a
+// bundled dictionary translate the app's navigation and safety terms with no network at all,
+// which is the promise the rest of this offline-first app makes. The remainder can only be
+// produced by an online translation service, so choosing one of those turns that service on —
+// said plainly in the section note, at the moment of choosing, not buried in Settings.
+export function languageSheet() {
+  const cur = uiLang();
+  let close = null;
+  const backdrop = h('div', { class: 'sheet-backdrop center' });
+
+  const pick = (code, needsMt) => {
+    if (needsMt && !mtEnabled()) setMtEnabled(true);
+    setUiLang(code);
+    if (close) close();
+    render();
+  };
+
+  const row = (l, needsMt) => h('button', {
+    class: 'lang-row' + (l.code === cur ? ' on' : ''),
+    'data-no-i18n': '',
+    lang: l.code,
+    'aria-current': l.code === cur ? 'true' : null,
+    onclick: () => pick(l.code, needsMt),
+  }, [
+    h('span', { class: 'lang-flag', 'aria-hidden': 'true' }, l.flag),
+    h('span', { class: 'lang-names' }, [
+      h('span', { class: 'lang-native' }, l.native),
+      h('span', { class: 'lang-en' }, l.name),
+    ]),
+    l.code === cur ? h('span', { class: 'lang-tick', 'aria-hidden': 'true' }, '✓') : null,
+  ]);
+
+  // NB: not named `online` — that is an imported helper (js/ui-widgets.js) and shadowing it
+  // inside this function would be a trap for the next person to add a network check here.
+  const bundled = LANGS.filter((l) => l.ui);
+  const mtOnly = LANGS.filter((l) => !l.ui);
+
+  const list = h('div', { class: 'lang-list' }, [
+    ...bundled.map((l) => row(l, false)),
+    h('p', { class: 'lang-section' }, 'Online translation only'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 8px;padding:0 12px' },
+      'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
+    ...mtOnly.map((l) => row(l, true)),
+  ]);
+
+  // A 30-row list is faster to filter than to scroll on a phone. Matches the native name, the
+  // English name, and the code, so "Deutsch", "German" and "de" all find German.
+  const filter = h('input', {
+    class: 'search', type: 'search', 'aria-label': 'Find a language',
+    placeholder: 'Find a language…',
+  });
+  filter.addEventListener('input', () => {
+    const q = filter.value.trim().toLowerCase();
+    for (const el of list.querySelectorAll('.lang-row')) {
+      const hay = (el.textContent + ' ' + (el.getAttribute('lang') || '')).toLowerCase();
+      el.style.display = !q || hay.includes(q) ? '' : 'none';
+    }
+  });
+
+  const mtRow = h('label', { class: 'lang-mt' }, [
+    h('input', {
+      type: 'checkbox', checked: mtEnabled() ? '' : null,
+      onchange: (e) => { setMtEnabled(e.target.checked); render(); },
+    }),
+    h('span', {}, [
+      h('strong', {}, 'Also machine-translate the rest'),
+      h('span', { class: 'tiny muted', style: 'display:block' },
+        'Navigation and safety wording is checked by hand. This adds online machine translation for the longer text, saved on your device. Emergency numbers are never sent, and machine wording is a guide, not checked text.'),
+    ]),
+  ]);
+
+  const dialog = h('div', { class: 'sheet lang-sheet', role: 'dialog', 'aria-label': 'Choose your language' }, [
+    h('h3', { style: 'margin:0 0 2px' }, 'Choose your language'),
+    h('p', { class: 'tiny muted', style: 'margin:0 0 10px' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
+    filter,
+    list,
+    mtRow,
+    h('div', { class: 'confirm-actions' }, [
+      h('button', { class: 'btn ghost', onclick: () => close && close() }, 'Close'),
+    ]),
+  ]);
+  backdrop.append(dialog);
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close && close(); });
+  close = openModal(backdrop);
 }
 
 // A one-time contextual hint: a small dismissible tip shown once at a surface, then never
@@ -662,6 +768,16 @@ export function mount(node, showTabbar) {
   app.innerHTML = '';
   app.append(node);
   if (showTabbar) app.append(tabbar());
+  // Interface language: this is THE choke point every screen passes through, so translating
+  // here covers all of them — including the forty-odd screens that know nothing about i18n.
+  // It runs before the announce below deliberately, so a screen reader reads the translated
+  // heading rather than the English one it was built with. See js/i18n.js for why the app
+  // translates its finished DOM instead of threading a t() call through every label.
+  try { translateTree(app); } catch { /* a translation miss must never block a render */ }
+  // The optional machine-translation pass is async (network) and strictly additive: it fills
+  // in what the bundled dictionary missed, so it is fired off without awaiting and the screen
+  // paints immediately in English-plus-whatever-was-cached.
+  try { autoTranslateTree(app).catch(() => {}); } catch { /* best-effort */ }
   window.scrollTo(0, 0);
   // Single-page accessibility: a full page load moves focus to the top and lets a screen
   // reader announce the new page. An SPA must do that itself, or keyboard and screen-reader
@@ -1704,7 +1820,9 @@ function scamsScreen(cc) {
 
   const s = scamsFor(getActiveCountry());
   if (s && s.hotline) {
-    wrap.append(h('a', { class: 'btn block', style: 'margin:8px 0', href: `tel:${String(s.hotline.number).replace(/\s/g, '')}` }, `🚔 ${s.hotline.label}: ${s.hotline.number}`));
+    // data-no-mt: same reasoning as the SOS numbers — label and dialable digits share a text
+    // node, so this one stays exactly as written. See js/i18n.js.
+    wrap.append(h('a', { class: 'btn block', 'data-no-mt': '', style: 'margin:8px 0', href: `tel:${String(s.hotline.number).replace(/\s/g, '')}` }, `🚔 ${s.hotline.label}: ${s.hotline.number}`));
   }
 
   if (s && s.top && s.top.length) {
@@ -7141,7 +7259,12 @@ function sosScreen(cc) {
   // (1) Call for help — emergency numbers.
   const nums = h('div', { class: 'card sos-card' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
   const em = (c.info && c.info.emergency) || [];
-  if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
+  // `data-no-mt` exempts these from the optional machine-translation pass (js/i18n.js). The
+  // label and the DIGITS share one text node ("Tourist Police: 1155"), so handing that string
+  // to a translation service risks it rewriting, regrouping or dropping the number itself —
+  // and this is the one screen in the app where a mangled string could get somebody hurt. The
+  // bundled dictionary still translates the labels, because those are checked by hand.
+  if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
 
   // (2) Where to go — the nearest hospital first. The maps deep link needs internet, so
@@ -9108,6 +9231,7 @@ function countryLoadingScreen(ccs) {
 // ---- router -----------------------------------------------------------------
 export function render() {
   applyTheme();
+  applyDocLang();   // keep <html lang>/<html dir> in step with the chosen interface language
   // Tear down any live map before rendering the next screen (frees the WebGL context
   // and stops the GPS watcher — prevents the map dying after repeated visits). See
   // js/app-state.js for the liveMapCtrl/liveCleanup protocol itself.
@@ -9294,6 +9418,18 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
     if ((location.hash || '').startsWith('#phrasebook')) render();
   }); } catch { /* older API */ }
 }
+// First run only: open in the language the traveller's own device is already set to, so a
+// phone configured in Spanish or Korean does not present an English wall before they have
+// found the flag. Recorded as an explicit preference from then on, which means a later manual
+// choice is never second-guessed by the browser's setting — and `!== undefined` (rather than a
+// truthiness test) is what makes a deliberate switch BACK to English stick.
+if (store.profile.prefs.uiLang === undefined) {
+  const guess = detectPreferredLang();
+  store.profile.prefs.uiLang = guess;
+  save();
+}
+applyDocLang();
+
 render();
 
 // Location on from the start: request a live fix immediately (browser permission still
