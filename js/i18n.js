@@ -66,20 +66,20 @@ export const LANGS = [
   // --- right-to-left ------------------------------------------------------------
   { code: 'he',    name: 'Hebrew',                native: 'עברית',              flag: '🇮🇱', dir: 'rtl', speech: 'he-IL', ui: true },
   { code: 'ar',    name: 'Arabic',                native: 'العربية',             flag: '🇸🇦', dir: 'rtl', speech: 'ar-SA', ui: true },
-  { code: 'fa',    name: 'Persian',               native: 'فارسی',              flag: '🇮🇷', dir: 'rtl', speech: 'fa-IR', ui: false },
-  { code: 'ur',    name: 'Urdu',                  native: 'اردو',               flag: '🇵🇰', dir: 'rtl', speech: 'ur-PK', ui: false },
+  { code: 'fa',    name: 'Persian',               native: 'فارسی',              flag: '🇮🇷', dir: 'rtl', speech: 'fa-IR', ui: true },
+  { code: 'ur',    name: 'Urdu',                  native: 'اردو',               flag: '🇵🇰', dir: 'rtl', speech: 'ur-PK', ui: true },
 
   // --- remaining world languages by speakers ------------------------------------
   { code: 'pt',    name: 'Portuguese',            native: 'Português',          flag: '🇵🇹', dir: 'ltr', speech: 'pt-PT', ui: true },
   { code: 'it',    name: 'Italian',               native: 'Italiano',           flag: '🇮🇹', dir: 'ltr', speech: 'it-IT', ui: true },
   { code: 'nl',    name: 'Dutch',                 native: 'Nederlands',         flag: '🇳🇱', dir: 'ltr', speech: 'nl-NL', ui: true },
-  { code: 'pl',    name: 'Polish',                native: 'Polski',             flag: '🇵🇱', dir: 'ltr', speech: 'pl-PL', ui: false },
-  { code: 'tr',    name: 'Turkish',               native: 'Türkçe',             flag: '🇹🇷', dir: 'ltr', speech: 'tr-TR', ui: false },
-  { code: 'uk',    name: 'Ukrainian',             native: 'Українська',         flag: '🇺🇦', dir: 'ltr', speech: 'uk-UA', ui: false },
-  { code: 'cs',    name: 'Czech',                 native: 'Čeština',            flag: '🇨🇿', dir: 'ltr', speech: 'cs-CZ', ui: false },
-  { code: 'sv',    name: 'Swedish',               native: 'Svenska',            flag: '🇸🇪', dir: 'ltr', speech: 'sv-SE', ui: false },
-  { code: 'bn',    name: 'Bengali',               native: 'বাংলা',              flag: '🇧🇩', dir: 'ltr', speech: 'bn-BD', ui: false },
-  { code: 'tl',    name: 'Filipino',              native: 'Filipino',           flag: '🇵🇭', dir: 'ltr', speech: 'fil-PH', ui: false },
+  { code: 'pl',    name: 'Polish',                native: 'Polski',             flag: '🇵🇱', dir: 'ltr', speech: 'pl-PL', ui: true },
+  { code: 'tr',    name: 'Turkish',               native: 'Türkçe',             flag: '🇹🇷', dir: 'ltr', speech: 'tr-TR', ui: true },
+  { code: 'uk',    name: 'Ukrainian',             native: 'Українська',         flag: '🇺🇦', dir: 'ltr', speech: 'uk-UA', ui: true },
+  { code: 'cs',    name: 'Czech',                 native: 'Čeština',            flag: '🇨🇿', dir: 'ltr', speech: 'cs-CZ', ui: true },
+  { code: 'sv',    name: 'Swedish',               native: 'Svenska',            flag: '🇸🇪', dir: 'ltr', speech: 'sv-SE', ui: true },
+  { code: 'bn',    name: 'Bengali',               native: 'বাংলা',              flag: '🇧🇩', dir: 'ltr', speech: 'bn-BD', ui: true },
+  { code: 'tl',    name: 'Filipino',              native: 'Filipino',           flag: '🇵🇭', dir: 'ltr', speech: 'fil-PH', ui: true },
 ];
 
 export const LANG_BY_CODE = Object.fromEntries(LANGS.map((l) => [l.code, l]));

@@ -612,12 +612,18 @@ export function languageSheet() {
   const bundled = LANGS.filter((l) => l.ui);
   const mtOnly = LANGS.filter((l) => !l.ui);
 
+  // Every language currently ships a bundled dictionary, so the second section renders
+  // nothing. It stays here rather than being deleted because the registry's `ui` flag is the
+  // thing that decides: add a language without a dictionary and it lands in a labelled section
+  // that explains itself, instead of silently appearing to work offline when it cannot.
   const list = h('div', { class: 'lang-list' }, [
     ...bundled.map((l) => row(l, false)),
-    h('p', { class: 'lang-section' }, 'Online translation only'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px;padding:0 12px' },
-      'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
-    ...mtOnly.map((l) => row(l, true)),
+    ...(mtOnly.length ? [
+      h('p', { class: 'lang-section' }, 'Online translation only'),
+      h('p', { class: 'tiny muted', style: 'margin:0 0 8px;padding:0 12px' },
+        'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
+      ...mtOnly.map((l) => row(l, true)),
+    ] : []),
   ]);
 
   // A 30-row list is faster to filter than to scroll on a phone. Matches the native name, the
