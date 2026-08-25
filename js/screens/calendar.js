@@ -28,6 +28,7 @@ import { field, selectEl, infoTip, confirmAction } from '../ui-widgets.js';
 import { getCountry, getEvents, COUNTRIES } from '../data/regions.js';
 import * as personal from '../personal.js';
 import * as reminders from '../reminders.js';
+import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, render, focusSpot, setBlobThumb, CAL_ICON, addEventToCalendar,
 } from '../main.js';
@@ -47,7 +48,7 @@ export function calendarDispatch(arg) {
 }
 
 function calDateLabel(d) {
-  try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }); }
+  try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }); }
   catch { return d; }
 }
 
@@ -80,7 +81,17 @@ function calMonthGrid(y, m, byDate, sel, onSelect) {
   const startDow = (first.getDay() + 6) % 7;   // Monday = 0
   const days = new Date(y, m + 1, 0).getDate();
   const today = calYmd(new Date());
-  const cells = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((w) => h('div', { class: 'cal-wk' }, w));
+  // Weekday headers from the platform's own locale data rather than a hard-coded English
+  // array, so all 29 interface languages get correct short names with no dictionary entries to
+  // author or keep in parity. 2024-01-01 was a Monday, which is the column order this grid
+  // uses (startDow above puts Monday at 0).
+  const wkFmt = new Intl.DateTimeFormat(dateLocale(), { weekday: 'short' });
+  const cells = Array.from({ length: 7 }, (_, i) => {
+    let label;
+    try { label = wkFmt.format(new Date(2024, 0, 1 + i)); }
+    catch { label = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]; }
+    return h('div', { class: 'cal-wk' }, label);
+  });
   for (let i = 0; i < startDow; i++) cells.push(h('div', { class: 'cal-cell cal-empty' }));
   for (let d = 1; d <= days; d++) {
     const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -157,7 +168,7 @@ function calendarScreen() {
   }
 
   // Month header + navigation.
-  const monthName = new Date(calView.y, calView.m, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const monthName = new Date(calView.y, calView.m, 1).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
   const shift = (delta) => { let m = calView.m + delta, y = calView.y; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } calView = { y, m }; render(); };
   wrap.append(h('div', { class: 'cal-head' }, [
     h('button', { class: 'chip', 'aria-label': 'Previous month', onclick: () => shift(-1) }, '‹'),

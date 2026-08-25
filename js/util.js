@@ -30,12 +30,35 @@ export function h(tag, attrs = {}, children = []) {
 // generally). Keeps "฿300" / "₫25,000" clean rather than "฿300.00".
 const NO_MINOR_UNITS = ['VND', 'KHR', 'LAK', 'JPY', 'THB'];
 
+// The locale for number and currency formatting, read from <html lang> rather than imported
+// from js/i18n.js.
+//
+// WHY NOT IMPORT IT. This module's contract, stated at the top of the file, is "no
+// dependencies, no side effects" — and it is the leaf that nearly every other module pulls in.
+// Importing i18n.js here would drag state.js in behind it, and state.js reads localStorage at
+// module-evaluation time, so the app's most-depended-on file would acquire a load-order
+// side effect in exchange for thousands separators. Reading the attribute costs nothing and
+// cannot go stale: applyDocLang() sets it on every render, and h() below already touches the
+// DOM, so no invariant is given up.
+//
+// `-u-nu-latn` for the Arabic-script and Indic locales keeps the DIGITS Latin while grouping
+// and currency placement still localise — a price is read in order to be compared against one
+// printed on a tag or a menu, and Arabic-Indic or Devanagari numerals make that harder.
+const LATIN_DIGIT_LOCALES = ['ar', 'fa', 'ur', 'bn', 'hi'];
+function numLocale() {
+  try {
+    const lang = (document.documentElement.getAttribute('lang') || '').trim();
+    if (!lang) return undefined;                      // fall back to the browser's own locale
+    return LATIN_DIGIT_LOCALES.includes(lang) ? `${lang}-u-nu-latn` : lang;
+  } catch { return undefined; }
+}
+
 // Currency formatting. Falls back gracefully for codes Intl does not know.
 export function money(amount, currency) {
   if (amount == null) return '';
   const whole = NO_MINOR_UNITS.includes(currency) || amount >= 1000;
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(numLocale(), {
       style: 'currency', currency,
       minimumFractionDigits: whole ? 0 : undefined,
       maximumFractionDigits: whole ? 0 : 2,

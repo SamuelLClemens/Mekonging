@@ -32,7 +32,7 @@ import {
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree,
-  detectPreferredLang, mtEnabled, setMtEnabled,
+  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
@@ -871,7 +871,7 @@ export function contextNow() {
   let wx = null, raining = false;
   if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
   const wet = (WET_MONTHS[country] || []).includes(now.getMonth());
-  const dayName = now.toLocaleDateString(undefined, { weekday: 'long' });
+  const dayName = now.toLocaleDateString(dateLocale(), { weekday: 'long' });
   return { fix, near, approx, seeded, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
 }
 
@@ -2091,7 +2091,7 @@ function destinationOutlookCard(spot) {
     if (k === 0) return 'Today';
     if (k === 1) return 'Tomorrow';
     const dt = new Date(iso + 'T00:00:00');
-    return isNaN(dt) ? iso : dt.toLocaleDateString(undefined, { weekday: 'short' });
+    return isNaN(dt) ? iso : dt.toLocaleDateString(dateLocale(), { weekday: 'short' });
   };
   const days = spot ? ((getCachedWeather(spotKey(spot)) || {}).daily || []).slice(0, 6) : [];
   if (!days.length) {
@@ -2504,7 +2504,7 @@ function meHubScreen() {
     const rc = h('div', { class: 'card', style: 'margin-top:12px' }, [h('h3', { style: 'margin-top:0' }, '🔔 Coming up')]);
     up.slice(0, 4).forEach((u) => {
       const it = u.item;
-      const when = u.eventAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
+      const when = u.eventAt.toLocaleDateString(dateLocale(), { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
       rc.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:6px', onclick: () => go('#calendar') },
         `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when}`));
     });
@@ -3925,7 +3925,7 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
   function recompute() {
     const v = parseFloat(amount.value) || 0;
     const r = convert(v, fromSel.value, toSel.value);
-    out.value = r == null ? '—' : r.toLocaleString(undefined, { maximumFractionDigits: r >= 100 ? 0 : 2 });
+    out.value = r == null ? '—' : r.toLocaleString(dateLocale(), { maximumFractionDigits: r >= 100 ? 0 : 2 });
   }
   amount.addEventListener('input', recompute);
   fromSel.addEventListener('change', recompute);
@@ -3959,7 +3959,7 @@ function currencyScreen() {
     const r = convert(n, home, local);
     quick.append(h('div', { class: 'price-item row-between' }, [
       h('span', {}, `${n} ${home}`),
-      h('strong', { class: 'fair' }, r == null ? '—' : `${r.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${local}`),
+      h('strong', { class: 'fair' }, r == null ? '—' : `${r.toLocaleString(dateLocale(), { maximumFractionDigits: 0 })} ${local}`),
     ]));
   });
   wrap.append(quick);
@@ -3997,7 +3997,7 @@ function bbSubKinds(cat) {
   return [['free', '🎁 Free / giveaway'], ['sale', '🏷 For sale'], ['wanted', '🙋 Wanted'], ['other', '📦 Other']];
 }
 const HOUSE_KIND = { room: 'Room / bed', place: 'Whole place', looking: 'Looking for a place' };
-function fmtMoney(n, cur) { return `${Number(n).toLocaleString(undefined, { maximumFractionDigits: n >= 100 ? 0 : 2 })} ${cur || ''}`.trim(); }
+function fmtMoney(n, cur) { return `${Number(n).toLocaleString(dateLocale(), { maximumFractionDigits: n >= 100 ? 0 : 2 })} ${cur || ''}`.trim(); }
 
 // A listing's one-line headline and a short subline, shared by the card + import views.
 function bbHeadline(cat, d) {
@@ -4817,7 +4817,7 @@ function crossingsScreen() {
     const oldest = dates[0];
     if (oldest) {
       const d = new Date(oldest + '-01T00:00:00');
-      const label = isNaN(d.getTime()) ? oldest : d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      const label = isNaN(d.getTime()) ? oldest : d.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
       const fresh = freshnessLine(oldest, 'Border crossing details', 183, label);
       if (fresh) wrap.append(fresh);
     }
@@ -5892,7 +5892,7 @@ export function addDaysISO(iso, n) {
   catch { return iso; }
 }
 export function evShort(d) {
-  try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
+  try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); }
   catch { return d; }
 }
 // Compact festival date label: "13 Apr – 15 Apr 2026" or "24 Nov 2026".

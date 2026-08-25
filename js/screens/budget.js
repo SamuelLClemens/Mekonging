@@ -9,6 +9,7 @@ import { field, selectEl, currencySelect, confirmAction, collapsibleCard, infoTi
 import { convert } from '../currency.js';
 import { getCountry } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
+import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, render, homeCurrency, focusSpot, todayISO, fxConverterControl, approxHome,
 } from '../main.js';
@@ -392,7 +393,7 @@ function budgetTrendCard() {
     const sums = byDay[d];
     const total = dayTotal(sums);
     const dObj = new Date(`${d}T00:00`);
-    const dLbl = isNaN(dObj) ? d : dObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const dLbl = isNaN(dObj) ? d : dObj.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' });
     // Stacked bottom-up in a fixed category order (column-reverse in CSS) so the same
     // category always occupies the same band across every bar, day to day.
     const segs = cats.filter((c) => sums[c.id] > 0).map((c) => h('span', {
@@ -612,7 +613,7 @@ function fmtLogDate(iso) {
   const y = new Date(); y.setDate(y.getDate() - 1);
   if (iso === `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`) return 'Yesterday';
   const d = new Date(`${iso}T00:00`);
-  return isNaN(d) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return isNaN(d) ? iso : d.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' });
 }
 // Same, but a monthly-flagged item (rent, a SIM plan — logged against the whole month rather
 // than one day, see expenseAddCard's "monthly expense" toggle) reads as "August 2026", not the
@@ -620,7 +621,7 @@ function fmtLogDate(iso) {
 function fmtLogDateFor(b) {
   if (b && b.monthly && b.date) {
     const d = new Date(`${b.date}T00:00`);
-    if (!isNaN(d)) return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    if (!isNaN(d)) return d.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
   }
   return fmtLogDate(b ? b.date : '');
 }

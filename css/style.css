@@ -1789,8 +1789,19 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
 /* Month-grid travel calendar */
 .cal-head { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 8px; }
 .cal-head strong { min-width: 150px; text-align: center; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal-wk { text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); padding: 2px 0; }
+/* minmax(0, 1fr), not 1fr: a grid track's default min-width is `auto`, meaning it refuses to
+   shrink below its content. That was invisible while the weekday headers were the hard-coded
+   English "Mon"…"Sun", but they now come from the platform's locale data for whichever of the
+   29 interface languages is active, and Thai renders "อังคาร"/"พฤหัส" where English had three
+   letters. Left at 1fr those would push all seven columns wider than the viewport and give the
+   page a horizontal scroll at 375px. minmax(0, …) lets the tracks shrink; the wrapping rules
+   on .cal-wk below then let the label use two short lines instead of overflowing. */
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-wk {
+  text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--ink-soft); padding: 2px 0;
+  min-width: 0; overflow-wrap: anywhere; line-height: 1.15;
+}
 .cal-cell { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; padding: 4px 0 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit; font: inherit; cursor: pointer; }
 .cal-cell.cal-empty { border: none; background: none; cursor: default; }
 .cal-day { font-size: 13px; font-weight: 600; line-height: 1; }

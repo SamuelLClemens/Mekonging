@@ -145,6 +145,26 @@ export function applyDocLang() {
   root.setAttribute('dir', l.dir);
 }
 
+// ---- dates, times and numbers -----------------------------------------------
+// Locales whose DEFAULT numbering system is not Latin digits. Month and weekday names should
+// absolutely localise, but the digits should not: a traveller reads a date or a fare in order
+// to match it against what is printed on a ticket, a timetable or a price board, and Arabic-
+// Indic or Devanagari digits make that comparison harder rather than easier. The `-u-nu-latn`
+// extension keeps the names localised and the numerals Latin.
+const NON_LATIN_DIGITS = new Set(['ar', 'fa', 'ur', 'bn', 'hi']);
+
+// The locale to hand toLocaleDateString / toLocaleTimeString / Intl.NumberFormat.
+//
+// These were all called with `undefined`, which means the BROWSER's locale — so a traveller
+// who set the app to Japanese still read English weekday names, because their phone was bought
+// in London. Passing the chosen interface language instead is what makes "Tue, 25 Aug" follow
+// the flag along with everything else, and it costs no dictionary entries: the platform
+// already carries every month and weekday name for all 29 languages.
+export function dateLocale() {
+  const c = uiLang();
+  return NON_LATIN_DIGITS.has(c) ? `${c}-u-nu-latn` : c;
+}
+
 // ---- string lookup ----------------------------------------------------------
 function dict() {
   const c = uiLang();

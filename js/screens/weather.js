@@ -18,6 +18,7 @@ import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
 import { topbar, mount, focusSpot, fmtClock, spotForCity } from '../main.js';
+import { dateLocale } from '../i18n.js';
 
 // ---- WEATHER + FORECAST -----------------------------------------------------
 let weatherKey = '';   // remembered city selection across renders
@@ -31,9 +32,9 @@ function wxAgo(ts) {
   if (hr < 24) return `${hr} h ago`;
   return `${Math.round(hr / 24)} d ago`;
 }
-function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return d; } }
-function wxDayDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }); } catch { return d; } }
-function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : 'N/A'; } }
+function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'short' }); } catch { return d; } }
+function wxDayDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' }); } catch { return d; } }
+function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : 'N/A'; } }
 // Project lng/lat onto the same map as the landing-page country outlines.
 function projLL(lng, lat) { const P = REGION_PROJ; return [P.pad + (lng - P.minlng) * P.kx * P.scale, P.pad + (P.maxlat - lat) * P.scale]; }
 function wxTempVal(c) { return wxTempU() === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c); }
@@ -84,8 +85,8 @@ function wxIsISO(d) { return /^\d{4}-\d{2}-\d{2}$/.test(d || ''); }
 // positive-offset timezones. (Weekday/short labels below stay local for display.)
 function wxAddDays(iso, n) { const dt = new Date(iso + 'T00:00:00Z'); dt.setUTCDate(dt.getUTCDate() + n); return dt.toISOString().slice(0, 10); }
 export function wxDiffDays(a, b) { return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000); }
-function wxDayShort(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch { return d; } }
-function wxWeekdayNum(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }); } catch { return d; } }
+function wxDayShort(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return d; } }
+function wxWeekdayNum(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric' }); } catch { return d; } }
 
 // Distinct plan cities in itinerary order (deduped by weather spot), each carrying the
 // stop dates that map to it, plus any stops whose title matched no weather station.

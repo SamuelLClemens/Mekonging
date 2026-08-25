@@ -36,6 +36,7 @@ import { fmtTemp, citySlug } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction } from '../ui-widgets.js';
 import { budgetTarget, tripSpanDays } from '../screens/budget.js';
+import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
@@ -79,7 +80,7 @@ export function homeScreen() {
   // H1 — slim identity + safety bar, replaces the old collapsing hero. Reusing topbar() (no
   // backHash — Home is a root tab) brings the 🆘 emergency button, Saved and Settings icons for
   // free: Home was previously the only screen without 🆘, since the hero displaced the top bar.
-  const dateLabel = new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  const dateLabel = new Date().toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
   wrap.append(topbar(`📍 ${focus.spot.city || 'Your trip'} · ${dateLabel}`, null));
 
   // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the

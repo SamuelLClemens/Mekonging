@@ -35,6 +35,7 @@ import { field, confirmAction } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
+import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal,
   entryPhotoKeys,
@@ -111,7 +112,7 @@ function journalEntryScreen(id) {
   wrap.append(topbar('Journal', '#journal-open'));
   if (!e) { wrap.append(h('p', { class: 'empty' }, 'Entry not found.')); mount(wrap, '#home'); return; }
   const when = new Date(e.ts);
-  const stamp = `${when.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} · ${when.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+  const stamp = `${when.toLocaleDateString(dateLocale(), { year: 'numeric', month: 'long', day: 'numeric' })} · ${when.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}`;
   const loc = e.place || (e.coords ? `${e.coords.lat.toFixed(3)}, ${e.coords.lng.toFixed(3)}` : '');
   const page = h('div', { class: 'page page-single page-enter' }, [
     h('div', { class: 'stamp' }, [h('span', {}, stamp), loc ? h('span', { class: 'stamp-loc' }, `📍 ${loc}`) : null, e.weather ? h('span', { class: 'stamp-loc' }, e.weather) : null]),
@@ -148,7 +149,7 @@ function sbFmtDate(d) {
   if (!d) return '';
   const dt = new Date(d);
   if (isNaN(dt)) return d;
-  return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  return dt.toLocaleDateString(dateLocale(), { year: 'numeric', month: 'short', day: 'numeric' });
 }
 function sbDateRange(a, b) {
   if (!a && !b) return '';
