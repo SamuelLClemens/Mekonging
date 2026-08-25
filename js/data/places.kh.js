@@ -142,6 +142,7 @@ export const PLACES_KH = [
     whyItFits: "Best for travellers wanting authentic Cambodian cuisine in a comfortable sit-down environment.",
     priceRange: { low: 8, typical: 18, high: 35, currency: "USD", note: "Mains roughly $8-$15; more with starters, dessert and drinks" },
     hours: "~06:30-22:00 daily",
+    afterDark: { openAfterDark: true, note: "From this entry's own listed hours (~06:30-22:00 daily), which run past typical dusk in the region (about 17:45-18:45 by season). Lighting is not recorded." },
     tips: ["Try the fish amok and Khmer-style soups", "Book ahead for dinner on weekends"],
     scamWarnings: [],
     mapQuery: "Malis Restaurant Phnom Penh", coords: { lat: 11.5560, lng: 104.9270 },
