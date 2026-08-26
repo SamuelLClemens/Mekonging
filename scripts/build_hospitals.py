@@ -152,6 +152,27 @@ def main(tile_dir):
         print('ok: already built (pass --force, or delete js/data/hospitals.*.js, to rebuild)')
         return 0
 
+    # Corrections verified against OpenStreetMap's own boundaries by
+    # scripts/verify-hospital-countries.py. Applied here so a rebuild can never reintroduce a
+    # facility this project has already established is in Myanmar or China, and never re-loses
+    # a Thai hospital that the simplified Lao outline had swallowed.
+    corrections = {'reassign': [], 'excluded': []}
+    if os.path.exists('scripts/hospitals-corrections.json'):
+        corrections = json.load(open('scripts/hospitals-corrections.json', encoding='utf-8'))
+        print(f"  corrections: {len(corrections['reassign'])} reassign, {len(corrections['excluded'])} exclude")
+
+    def correction_for(rec):
+        """Matched on rounded coordinate rather than name: OSM names get edited, positions do
+        not move. 4 dp is ~11 m, the same precision the emitted rows carry."""
+        key = (round(rec['lat'], 4), round(rec['lng'], 4))
+        for c in corrections['excluded']:
+            if (round(c['lat'], 4), round(c['lng'], 4)) == key:
+                return 'drop', None
+        for c in corrections['reassign']:
+            if (round(c['lat'], 4), round(c['lng'], 4)) == key:
+                return 'move', c['actual'].lower().replace('vn', 'vi')
+        return None, None
+
     provs = {}
     for cc in CCS:
         provs[cc] = [(p['name'], bbox_of(p), p) for p in load_provinces(cc)]
@@ -196,7 +217,7 @@ def main(tile_dir):
 
     # Assign a country by point-in-province, bbox-gated so this stays fast over ~6k points.
     buckets = {cc: [] for cc in CCS}
-    outside = recovered = 0
+    outside = recovered = moved = dropped_by_correction = 0
     for rec in seen.values():
         hit = None
         for cc in CCS:
@@ -221,11 +242,19 @@ def main(tile_dir):
                         break
                 if hit:
                     break
+        action, target = correction_for(rec)
+        if action == 'drop':
+            dropped_by_correction += 1
+            continue
+        if action == 'move' and target in CCS:
+            hit = target
+            moved += 1
         if hit:
             buckets[hit].append(rec)
         else:
             outside += 1
     print(f'  {recovered} recovered within {EDGE_TOLERANCE_KM} km of a simplified boundary')
+    print(f'  {moved} reassigned and {dropped_by_correction} dropped by verified corrections')
     print(f'  {outside} outside the four countries (dropped)')
 
     for cc in CCS:
