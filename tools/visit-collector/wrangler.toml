@@ -1,0 +1,12 @@
+# Cloudflare Worker config for the optional visitor-pin collector. See worker.js for what it
+# stores (a ~55 km grid cell and a count, no identifiers of any kind) and why the project does
+# not run one itself.
+name = "mekonging-visits"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# Create with:  wrangler kv namespace create VISITS
+# then paste the returned id here.
+[[kv_namespaces]]
+binding = "VISITS"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"

@@ -3660,6 +3660,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-fansipan-cable-car", name: "Fansipan Summit & Cable Car (Roof of Indochina)", city: "Sapa", country: "vi",
+    access: { stepFree: 'partial', note: "The cable car stations and the lower complex are wheelchair accessible, and the Peak Rail funicular from Do Quyen station removes the 600-step climb. The final stretch to the summit still has unavoidable steps and uneven paths, and there is no lift to the very top. Sources: bestpricetravel.com, sapa-tickets.com, gohsomewhere.com (checked August 2026)." },
     localName: "Đỉnh Fansipan · Phan Xi Păng",
     recognition: "A three-rope cable car swings out of a station on the edge of Sapa town and climbs over the Muong Hoa valley to a summit complex of stone stairways, bronze statues and a 20m-plus bronze Buddha, often above a sea of cloud.",
     categories: ["nature", "viewpoint", "culture"], budgetTier: "mid", kidFriendly: true,
@@ -3900,6 +3901,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-ho-chi-minh-mausoleum-complex", name: "Ho Chi Minh Mausoleum Complex", city: "Hanoi", country: "vi",
+    access: { stepFree: 'yes', note: "Ramps at the entrance and exit, paved paths throughout the complex, accessible toilets, and wheelchairs available to borrow near the entrance. Staff will assist on request. Sources: getyourguide.com accessibility listing, oxalisadventure.com (checked August 2026)." },
     categories: ["culture", "landmark"], budgetTier: "low", kidFriendly: false,
     blurb: "Vietnam's most solemn national monument, where Ho Chi Minh's embalmed body lies in state, bundled with the stilt-house residence he lived in, the Presidential Palace grounds and the One Pillar Pagoda.",
     whyItFits: "A major landmark for anyone interested in modern Vietnamese history — but the strict rules and morning-only hours need planning ahead.",

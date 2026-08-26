@@ -4632,6 +4632,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-bangkok-bts-mrt", name: "Bangkok practical: BTS Skytrain & MRT subway", city: "Bangkok", country: "th",
+    access: { stepFree: 'partial', note: "The MRT subway is step-free: every station has lifts. The BTS Skytrain is not — only about 16 of its stations have a lift, including Mo Chit, Siam, Asok, Chong Nonsi, On Nut, Krung Thonburi, Wong Wian Yai and the Sukhumvit line extension from On Nut onward. Check your station before you set out. Tourist information desks at Phaya Thai, Saphan Taksin and Siam can confirm. Sources: wheelchairtravel.org, tour-bangkok-legacies.com (checked August 2026)." },
     categories: ["transport", "info"], budgetTier: "low", kidFriendly: true,
     blurb: "Bangkok's two rail systems - the elevated BTS Skytrain and the underground MRT - cover most of the tourist and business districts and beat traffic-clogged roads for speed. A Rabbit Card (100 THB card fee plus your first top-up) taps onto BTS, the MRT Yellow and Pink Lines, the BRT and some Chao Phraya boat piers - but NOT the original MRT Blue or Purple Lines, which still run their own separate token/card system at the gates.",
     whyItFits: "The orientation card for getting around the capital day to day: which card works on which line, what a typical fare costs, and the one gap (Blue/Purple Line) that catches new arrivals out.",
