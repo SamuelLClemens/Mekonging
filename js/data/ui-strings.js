@@ -85,6 +85,7 @@ export const UI_STRINGS = {
     'Night markets': 'ตลาดกลางคืน', 'Playgrounds': 'สนามเด็กเล่น', 'Daily': 'ทุกวัน',
     'Weekends': 'สุดสัปดาห์', 'Favourites': 'รายการโปรด', 'Your pins': 'หมุดของคุณ',
     'New collection': 'คอลเลกชันใหม่', 'Use my location': 'ใช้ตำแหน่งของฉัน',
+    'What this is': 'นี่คืออะไร', 'Get to a hospital': 'ไปโรงพยาบาล', 'Where people are': 'ผู้คนใช้จากที่ไหน',
   },
 
   // ---------------------------------------------------------- Vietnamese -----
@@ -141,6 +142,7 @@ export const UI_STRINGS = {
     'Night markets': 'Chợ đêm', 'Playgrounds': 'Sân chơi', 'Daily': 'Hằng ngày', 'Weekends': 'Cuối tuần',
     'Favourites': 'Yêu thích', 'Your pins': 'Ghim của bạn', 'New collection': 'Bộ sưu tập mới',
     'Use my location': 'Dùng vị trí của tôi',
+    'What this is': 'Đây là gì', 'Get to a hospital': 'Đến bệnh viện', 'Where people are': 'Mọi người đang ở đâu',
   },
 
   // --------------------------------------------------------------- Khmer -----
@@ -198,6 +200,7 @@ export const UI_STRINGS = {
     'Restaurants': 'ភោជនីយដ្ឋាន', 'Street food': 'អាហារតាមផ្លូវ', 'Night markets': 'ផ្សារយប់',
     'Playgrounds': 'កន្លែងលេង', 'Daily': 'ប្រចាំថ្ងៃ', 'Weekends': 'ចុងសប្តាហ៍', 'Favourites': 'សំណព្វ',
     'Your pins': 'ម្ជុលរបស់អ្នក', 'New collection': 'បណ្តុំថ្មី', 'Use my location': 'ប្រើទីតាំងរបស់ខ្ញុំ',
+    'What this is': 'នេះជាអ្វី', 'Get to a hospital': 'ទៅមន្ទីរពេទ្យ', 'Where people are': 'អ្នកប្រើនៅកន្លែងណា',
   },
 
   // ----------------------------------------------------------------- Lao -----
@@ -255,6 +258,7 @@ export const UI_STRINGS = {
     'Restaurants': 'ຮ້ານອາຫານ', 'Street food': 'ອາຫານຂ້າງທາງ', 'Night markets': 'ຕະຫຼາດກາງຄືນ',
     'Playgrounds': 'ສະໜາມເດັກຫຼິ້ນ', 'Daily': 'ທຸກມື້', 'Weekends': 'ທ້າຍອາທິດ', 'Favourites': 'ລາຍການໂປດ',
     'Your pins': 'ໝຸດຂອງທ່ານ', 'New collection': 'ຊຸດໃໝ່', 'Use my location': 'ໃຊ້ຕຳແໜ່ງຂອງຂ້ອຍ',
+    'What this is': 'ນີ້ແມ່ນຫຍັງ', 'Get to a hospital': 'ໄປໂຮງໝໍ', 'Where people are': 'ຜູ້ຄົນຢູ່ໃສ',
   },
 
   // ------------------------------------------------ Chinese (Simplified) -----
@@ -298,6 +302,7 @@ export const UI_STRINGS = {
     'Nightlife': '夜生活', 'Viewpoints': '观景台', 'Restaurants': '餐厅', 'Street food': '街头小吃',
     'Night markets': '夜市', 'Playgrounds': '游乐场', 'Daily': '每天', 'Weekends': '周末', 'Favourites': '收藏',
     'Your pins': '你的标记', 'New collection': '新建收藏集', 'Use my location': '使用我的位置',
+    'What this is': '这是什么', 'Get to a hospital': '前往医院', 'Where people are': '用户来自哪里',
   },
 
   // ----------------------------------------------- Chinese (Traditional) -----
@@ -341,6 +346,7 @@ export const UI_STRINGS = {
     'Nightlife': '夜生活', 'Viewpoints': '觀景台', 'Restaurants': '餐廳', 'Street food': '街頭小吃',
     'Night markets': '夜市', 'Playgrounds': '遊樂場', 'Daily': '每天', 'Weekends': '週末', 'Favourites': '收藏',
     'Your pins': '你的標記', 'New collection': '新收藏集', 'Use my location': '使用我的位置',
+    'What this is': '這是什麼', 'Get to a hospital': '前往醫院', 'Where people are': '使用者來自哪裡',
   },
 
   // --------------------------------------------------------------- Malay -----
@@ -398,6 +404,7 @@ export const UI_STRINGS = {
     'Night markets': 'Pasar malam', 'Playgrounds': 'Taman permainan', 'Daily': 'Setiap hari',
     'Weekends': 'Hujung minggu', 'Favourites': 'Kegemaran', 'Your pins': 'Pin anda',
     'New collection': 'Koleksi baharu', 'Use my location': 'Guna lokasi saya',
+    'What this is': 'Apa ini', 'Get to a hospital': 'Ke hospital', 'Where people are': 'Di mana orang berada',
   },
 
   // ---------------------------------------------------------- Indonesian -----
@@ -456,6 +463,7 @@ export const UI_STRINGS = {
     'Playgrounds': 'Taman bermain', 'Daily': 'Setiap hari', 'Weekends': 'Akhir pekan',
     'Favourites': 'Favorit', 'Your pins': 'Pin Anda', 'New collection': 'Koleksi baru',
     'Use my location': 'Gunakan lokasi saya',
+    'What this is': 'Apa ini', 'Get to a hospital': 'Ke rumah sakit', 'Where people are': 'Di mana orang berada',
   },
 
   // -------------------------------------------------------------- Korean -----
@@ -500,6 +508,7 @@ export const UI_STRINGS = {
     'Restaurants': '음식점', 'Street food': '길거리 음식', 'Night markets': '야시장', 'Playgrounds': '놀이터',
     'Daily': '매일', 'Weekends': '주말', 'Favourites': '즐겨찾기', 'Your pins': '내 핀', 'New collection': '새 컬렉션',
     'Use my location': '내 위치 사용',
+    'What this is': '이것은 무엇인가', 'Get to a hospital': '병원 가기', 'Where people are': '사람들이 있는 곳',
   },
 
   // ------------------------------------------------------------ Japanese -----
@@ -545,6 +554,7 @@ export const UI_STRINGS = {
     'Restaurants': 'レストラン', 'Street food': '屋台料理', 'Night markets': 'ナイトマーケット', 'Playgrounds': '遊び場',
     'Daily': '毎日', 'Weekends': '週末', 'Favourites': 'お気に入り', 'Your pins': 'あなたのピン',
     'New collection': '新しいコレクション', 'Use my location': '現在地を使う',
+    'What this is': 'これは何か', 'Get to a hospital': '病院へ行く', 'Where people are': '利用者のいる場所',
   },
 
   // --------------------------------------------------------------- Hindi -----
@@ -600,6 +610,7 @@ export const UI_STRINGS = {
     'Restaurants': 'रेस्तराँ', 'Street food': 'स्ट्रीट फ़ूड', 'Night markets': 'रात्रि बाज़ार',
     'Playgrounds': 'खेल का मैदान', 'Daily': 'प्रतिदिन', 'Weekends': 'सप्ताहांत', 'Favourites': 'पसंदीदा',
     'Your pins': 'आपके पिन', 'New collection': 'नया संग्रह', 'Use my location': 'मेरा स्थान उपयोग करें',
+    'What this is': 'यह क्या है', 'Get to a hospital': 'अस्पताल पहुँचें', 'Where people are': 'लोग कहाँ हैं',
   },
 
   // ------------------------------------------------------------- Russian -----
@@ -660,6 +671,7 @@ export const UI_STRINGS = {
     'Playgrounds': 'Детские площадки', 'Daily': 'Ежедневно', 'Weekends': 'Выходные',
     'Favourites': 'Избранное', 'Your pins': 'Ваши метки', 'New collection': 'Новая подборка',
     'Use my location': 'Использовать моё местоположение',
+    'What this is': 'Что это', 'Get to a hospital': 'Добраться до больницы', 'Where people are': 'Откуда заходят люди',
   },
 
   // -------------------------------------------------------------- French -----
@@ -719,6 +731,7 @@ export const UI_STRINGS = {
     'Night markets': 'Marchés de nuit', 'Playgrounds': 'Aires de jeux', 'Daily': 'Tous les jours',
     'Weekends': 'Week-ends', 'Favourites': 'Favoris', 'Your pins': 'Vos repères', 'New collection': 'Nouvelle collection',
     'Use my location': 'Utiliser ma position',
+    'What this is': 'De quoi s’agit-il', 'Get to a hospital': 'Rejoindre un hôpital', 'Where people are': 'D’où viennent les visiteurs',
   },
 
   // ------------------------------------------------------------- Spanish -----
@@ -779,6 +792,7 @@ export const UI_STRINGS = {
     'Night markets': 'Mercados nocturnos', 'Playgrounds': 'Parques infantiles', 'Daily': 'A diario',
     'Weekends': 'Fines de semana', 'Favourites': 'Favoritos', 'Your pins': 'Tus marcadores',
     'New collection': 'Nueva colección', 'Use my location': 'Usar mi ubicación',
+    'What this is': 'Qué es esto', 'Get to a hospital': 'Llegar a un hospital', 'Where people are': 'Desde dónde entran',
   },
 
   // -------------------------------------------------------------- German -----
@@ -839,6 +853,7 @@ export const UI_STRINGS = {
     'Street food': 'Streetfood', 'Night markets': 'Nachtmärkte', 'Playgrounds': 'Spielplätze',
     'Daily': 'Täglich', 'Weekends': 'Wochenenden', 'Favourites': 'Favoriten', 'Your pins': 'Deine Pins',
     'New collection': 'Neue Sammlung', 'Use my location': 'Meinen Standort verwenden',
+    'What this is': 'Was das ist', 'Get to a hospital': 'Zum Krankenhaus', 'Where people are': 'Woher die Nutzer kommen',
   },
 
   // -------------------------------------------------------------- Hebrew -----
@@ -891,6 +906,7 @@ export const UI_STRINGS = {
     'Street food': 'אוכל רחוב', 'Night markets': 'שווקי לילה', 'Playgrounds': 'גני שעשועים',
     'Daily': 'כל יום', 'Weekends': 'סופי שבוע', 'Favourites': 'מועדפים', 'Your pins': 'הסימונים שלך',
     'New collection': 'אוסף חדש', 'Use my location': 'השתמש במיקום שלי',
+    'What this is': 'מה זה', 'Get to a hospital': 'להגיע לבית חולים', 'Where people are': 'מהיכן נכנסים',
   },
 
   // -------------------------------------------------------------- Arabic -----
@@ -945,6 +961,7 @@ export const UI_STRINGS = {
     'Restaurants': 'مطاعم', 'Street food': 'طعام الشارع', 'Night markets': 'أسواق ليلية',
     'Playgrounds': 'ملاعب', 'Daily': 'يوميًا', 'Weekends': 'عطلات نهاية الأسبوع', 'Favourites': 'المفضلة',
     'Your pins': 'علاماتك', 'New collection': 'مجموعة جديدة', 'Use my location': 'استخدام موقعي',
+    'What this is': 'ما هذا', 'Get to a hospital': 'الوصول إلى مستشفى', 'Where people are': 'من أين يدخل الناس',
   },
 
   // ---------------------------------------------------------- Portuguese -----
@@ -1005,6 +1022,7 @@ export const UI_STRINGS = {
     'Playgrounds': 'Parques infantis', 'Daily': 'Diariamente', 'Weekends': 'Fins de semana',
     'Favourites': 'Favoritos', 'Your pins': 'Os seus marcadores', 'New collection': 'Nova coleção',
     'Use my location': 'Usar a minha localização',
+    'What this is': 'O que é isto', 'Get to a hospital': 'Chegar a um hospital', 'Where people are': 'De onde acedem',
   },
 
   // ------------------------------------------------------------- Italian -----
@@ -1063,6 +1081,7 @@ export const UI_STRINGS = {
     'Night markets': 'Mercati notturni', 'Playgrounds': 'Parchi giochi', 'Daily': 'Ogni giorno',
     'Weekends': 'Fine settimana', 'Favourites': 'Preferiti', 'Your pins': 'I tuoi segnaposto',
     'New collection': 'Nuova raccolta', 'Use my location': 'Usa la mia posizione',
+    'What this is': 'Che cos’è', 'Get to a hospital': 'Raggiungere un ospedale', 'Where people are': 'Da dove si collegano',
   },
 
   // --------------------------------------------------------------- Dutch -----
@@ -1121,6 +1140,7 @@ export const UI_STRINGS = {
     'Street food': 'Streetfood', 'Night markets': 'Nachtmarkten', 'Playgrounds': 'Speeltuinen',
     'Daily': 'Dagelijks', 'Weekends': 'Weekenden', 'Favourites': 'Favorieten', 'Your pins': 'Jouw pins',
     'New collection': 'Nieuwe collectie', 'Use my location': 'Mijn locatie gebruiken',
+    'What this is': 'Wat dit is', 'Get to a hospital': 'Naar een ziekenhuis', 'Where people are': 'Waar mensen zijn',
   },
 
   // ------------------------------------------------------------- Persian -----
@@ -1176,6 +1196,7 @@ export const UI_STRINGS = {
     'Restaurants': 'رستوران‌ها', 'Street food': 'غذای خیابانی', 'Night markets': 'بازارهای شبانه',
     'Playgrounds': 'زمین بازی', 'Daily': 'روزانه', 'Weekends': 'آخر هفته‌ها', 'Favourites': 'علاقه‌مندی‌ها',
     'Your pins': 'نشانه‌های شما', 'New collection': 'مجموعه جدید', 'Use my location': 'استفاده از موقعیت من',
+    'What this is': 'این چیست', 'Get to a hospital': 'رسیدن به بیمارستان', 'Where people are': 'کاربران کجا هستند',
   },
 
   // ---------------------------------------------------------------- Urdu -----
@@ -1230,6 +1251,7 @@ export const UI_STRINGS = {
     'Restaurants': 'ریستوران', 'Street food': 'اسٹریٹ فوڈ', 'Night markets': 'رات کے بازار',
     'Playgrounds': 'کھیل کے میدان', 'Daily': 'روزانہ', 'Weekends': 'ہفتے کے آخر', 'Favourites': 'پسندیدہ',
     'Your pins': 'آپ کے پن', 'New collection': 'نیا مجموعہ', 'Use my location': 'میرا مقام استعمال کریں',
+    'What this is': 'یہ کیا ہے', 'Get to a hospital': 'ہسپتال پہنچیں', 'Where people are': 'لوگ کہاں ہیں',
   },
 
   // -------------------------------------------------------------- Polish -----
@@ -1289,6 +1311,7 @@ export const UI_STRINGS = {
     'Street food': 'Uliczne jedzenie', 'Night markets': 'Nocne targi', 'Playgrounds': 'Place zabaw',
     'Daily': 'Codziennie', 'Weekends': 'Weekendy', 'Favourites': 'Ulubione', 'Your pins': 'Twoje pinezki',
     'New collection': 'Nowa kolekcja', 'Use my location': 'Użyj mojej lokalizacji',
+    'What this is': 'Co to jest', 'Get to a hospital': 'Dotrzeć do szpitala', 'Where people are': 'Skąd korzystają',
   },
 
   // ------------------------------------------------------------- Turkish -----
@@ -1347,6 +1370,7 @@ export const UI_STRINGS = {
     'Night markets': 'Gece pazarları', 'Playgrounds': 'Oyun alanları', 'Daily': 'Her gün',
     'Weekends': 'Hafta sonları', 'Favourites': 'Favoriler', 'Your pins': 'İşaretlerin',
     'New collection': 'Yeni koleksiyon', 'Use my location': 'Konumumu kullan',
+    'What this is': 'Bu nedir', 'Get to a hospital': 'Hastaneye ulaşın', 'Where people are': 'İnsanlar nerede',
   },
 
   // ----------------------------------------------------------- Ukrainian -----
@@ -1404,6 +1428,7 @@ export const UI_STRINGS = {
     'Restaurants': 'Ресторани', 'Street food': 'Вулична їжа', 'Night markets': 'Нічні ринки',
     'Playgrounds': 'Дитячі майданчики', 'Daily': 'Щодня', 'Weekends': 'Вихідні', 'Favourites': 'Обране',
     'Your pins': 'Ваші позначки', 'New collection': 'Нова добірка', 'Use my location': 'Використати моє місце',
+    'What this is': 'Що це', 'Get to a hospital': 'Дістатися лікарні', 'Where people are': 'Звідки заходять',
   },
 
   // --------------------------------------------------------------- Czech -----
@@ -1459,6 +1484,7 @@ export const UI_STRINGS = {
     'Restaurants': 'Restaurace', 'Street food': 'Pouliční jídlo', 'Night markets': 'Noční trhy',
     'Playgrounds': 'Hřiště', 'Daily': 'Denně', 'Weekends': 'Víkendy', 'Favourites': 'Oblíbené',
     'Your pins': 'Vaše špendlíky', 'New collection': 'Nová sbírka', 'Use my location': 'Použít mou polohu',
+    'What this is': 'Co to je', 'Get to a hospital': 'Dostat se do nemocnice', 'Where people are': 'Odkud lidé přicházejí',
   },
 
   // ------------------------------------------------------------- Swedish -----
@@ -1514,6 +1540,7 @@ export const UI_STRINGS = {
     'Restaurants': 'Restauranger', 'Street food': 'Gatumat', 'Night markets': 'Nattmarknader',
     'Playgrounds': 'Lekplatser', 'Daily': 'Dagligen', 'Weekends': 'Helger', 'Favourites': 'Favoriter',
     'Your pins': 'Dina nålar', 'New collection': 'Ny samling', 'Use my location': 'Använd min plats',
+    'What this is': 'Vad detta är', 'Get to a hospital': 'Ta dig till sjukhus', 'Where people are': 'Var människor finns',
   },
 
   // ------------------------------------------------------------- Bengali -----
@@ -1570,6 +1597,7 @@ export const UI_STRINGS = {
     'Night markets': 'রাতের বাজার', 'Playgrounds': 'খেলার মাঠ', 'Daily': 'প্রতিদিন',
     'Weekends': 'সপ্তাহান্ত', 'Favourites': 'প্রিয়', 'Your pins': 'আপনার পিন', 'New collection': 'নতুন সংগ্রহ',
     'Use my location': 'আমার অবস্থান ব্যবহার করুন',
+    'What this is': 'এটি কী', 'Get to a hospital': 'হাসপাতালে পৌঁছান', 'Where people are': 'মানুষ কোথায় আছে',
   },
 
   // ------------------------------------------------------------ Filipino -----
@@ -1633,5 +1661,6 @@ export const UI_STRINGS = {
     'Night markets': 'Mga palengke sa gabi', 'Playgrounds': 'Mga palaruan', 'Daily': 'Araw-araw',
     'Weekends': 'Katapusan ng linggo', 'Favourites': 'Mga paborito', 'Your pins': 'Iyong mga pin',
     'New collection': 'Bagong koleksyon', 'Use my location': 'Gamitin ang aking lokasyon',
+    'What this is': 'Ano ito', 'Get to a hospital': 'Pumunta sa ospital', 'Where people are': 'Nasaan ang mga tao',
   },
 };

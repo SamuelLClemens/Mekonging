@@ -37,7 +37,9 @@ import {
 import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
 import { familyScreen, familyCard } from './screens/family.js';
+import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { hospitalScreen } from './screens/medical.js';
+import { visitorsScreen } from './screens/visitors.js';
 import { HOSPITALS, HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
 import { settingsScreen } from './screens/settings.js';
 import { calendarDispatch } from './screens/calendar.js';
@@ -354,7 +356,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.455.0';
+const APP_VERSION = 'mk-v0.456.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7222,6 +7224,8 @@ function startLocationWatch() {
         // re-derived the country. Resolving+applying the nearest spot here means the whole
         // app's notion of "where I am" now actually tracks GPS continuously, in the background.
         if (moved) { const nb = nearestSpotGlobal(next); if (nb) setFocusSpot(nb.spot); }
+        // First fix of the session is the one that means "opened here" — see logOpenLocation.
+        logOpenLocation();
         const hash = location.hash || '';
         if (moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) render();
       },
@@ -7230,6 +7234,22 @@ function startLocationWatch() {
     );
   } catch { /* noop */ }
 }
+// One coarsened pin per place per day, and only when the traveller has switched it on.
+// Hangs off the app-open path rather than the location watch: a pin is meant to record
+// "I opened the app here", not to trace a route through the day.
+let _visitLogged = false;
+function logOpenLocation() {
+  if (_visitLogged || !visitsEnabled()) return;
+  try {
+    const fix = getLastFix();
+    if (!fix) return;
+    _visitLogged = true;
+    const wai = whereAmI(fix);
+    const cell = recordVisit(fix, (wai && wai.country) || getActiveCountry(), todayISO());
+    if (cell) contributeVisit(cell, (wai && wai.country) || getActiveCountry());
+  } catch { /* a pin is never worth breaking a launch over */ }
+}
+
 function initLocation() {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return;
   const begin = () => { if (!store.profile.prefs.geoAsked) { store.profile.prefs.geoAsked = true; save(); } startLocationWatch(); };
@@ -9436,6 +9456,7 @@ export function render() {
       case 'board': return boardScreen(arg);
       case 'streetfood': return streetfoodScreen();
       case 'donate': return donateScreen();
+      case 'visitors': return visitorsScreen();
       case 'settings': return settingsScreen();
       case 'export': return exportScreen();
       default: return homeScreen();
