@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.459.0';
+const CACHE_VERSION = 'mk-v0.460.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -52,6 +52,7 @@ const PRECACHE = [
   // ~146 KB gzipped for all four, and precached rather than lazily fetched because "nearest
   // hospital" is the one query that has to answer with no signal — including the morning
   // after crossing a border, when the next country's file has never been touched.
+  'js/data/drivetimes.js',
   'js/data/hospitals.js',
   'js/data/hospitals.th.js',
   'js/data/hospitals.vi.js',

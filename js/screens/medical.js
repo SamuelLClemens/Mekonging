@@ -57,7 +57,7 @@ function tierChip(tier) {
 // honest road estimate, which on a mountain or an island is a very different number.
 function hospitalCard(x, fix) {
   const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
-  const drive = km != null ? driveLabel(km) : null;
+  const drive = km != null ? driveLabel(km, x.cc) : null;
   return h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
     h('div', { class: 'row-between' }, [
       h('strong', {}, x.name),
@@ -254,7 +254,7 @@ export function hospitalScreen(cc) {
 
     heroSlot.replaceChildren();
     if (hero && fix && fix.lat != null) {
-      const drive = hero.km != null ? driveLabel(hero.km) : null;
+      const drive = hero.km != null ? driveLabel(hero.km, hero.cc) : null;
       heroSlot.append(h('div', { class: 'card sos-card', style: 'margin:0 0 10px' }, [
         h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, heroForeign
           ? `Closest hospital to you right now — across the border in ${heroForeign.flag} ${heroForeign.name}`
@@ -287,7 +287,7 @@ export function hospitalScreen(cc) {
               h('span', { class: 'fair' }, kmLabel(known.km)),
             ]),
             h('div', { class: 'tiny muted', style: 'margin:2px 0 4px' },
-              [known.city, kc ? `${kc.flag} ${kc.name}` : null, driveLabel(known.km)].filter(Boolean).join(' · ')),
+              [known.city, kc ? `${kc.flag} ${kc.name}` : null, driveLabel(known.km, known.cc)].filter(Boolean).join(' · ')),
             h('div', { class: 'chips' }, [tierChip(known.tier), ...(known.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
             routeLinks(known.lat, known.lng, known.name),
           ]));
@@ -304,7 +304,7 @@ export function hospitalScreen(cc) {
           h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`),
           h('div', { class: 'row-between' }, [h('strong', {}, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
           clinic.en ? h('div', { class: 'tiny muted' }, clinic.en) : null,
-          h('div', { class: 'tiny muted', style: 'margin:2px 0 0' }, driveLabel(clinic.km) || ''),
+          h('div', { class: 'tiny muted', style: 'margin:2px 0 0' }, driveLabel(clinic.km, clinic.cc) || ''),
           routeLinks(clinic.lat, clinic.lng, clinic.name),
         ]));
       }
