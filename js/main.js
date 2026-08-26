@@ -40,7 +40,8 @@ import { familyScreen, familyCard } from './screens/family.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { hospitalScreen } from './screens/medical.js';
 import { visitorsScreen } from './screens/visitors.js';
-import { HOSPITALS, HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
+import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
+import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
 import { settingsScreen } from './screens/settings.js';
 import { calendarDispatch } from './screens/calendar.js';
 import { journalDispatch, scrapbookScreen, journeyScreen } from './screens/journal.js';
@@ -356,7 +357,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.456.0';
+const APP_VERSION = 'mk-v0.457.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -580,17 +581,32 @@ export function topbar(title, backHash) {
 // for a guest, say.
 //
 // Two tiers, and the distinction is stated on the page rather than hidden: languages with a
-// bundled dictionary translate the app's navigation and safety terms with no network at all,
-// which is the promise the rest of this offline-first app makes. The remainder can only be
-// produced by an online translation service, so choosing one of those turns that service on —
-// said plainly in the section note, at the moment of choosing, not buried in Settings.
+// bundled dictionary translate the app's navigation, safety terms and emergency phrases with
+// no network at all, which is the promise the rest of this offline-first app makes.
+//
+// WHAT THE BUNDLED DICTIONARY IS AND IS NOT. Measured across ten representative screens
+// (August 2026) it covers about 9% of visible text nodes and 3% of the words. That is not a
+// shortfall to be apologised for — it is the design. The dictionary holds the chrome and the
+// wording where a wrong word is dangerous: navigation, section headings, safety labels, the
+// emergency phrase set. The other 97% is editorial prose — place write-ups, first-aid steps,
+// scam explainers — roughly ninety thousand words that no hand-authored dictionary across 29
+// languages is going to hold. Machine translation is the only honest way to reach it, so the
+// picker says exactly that rather than implying the app is fully translated.
+//
+// Picking a non-English language therefore switches machine translation ON as part of that
+// choice — the moment of intent, with the consequence stated on the button — because the
+// alternative was a traveller choosing Hebrew and getting an app that was 91% English with a
+// second checkbox to find. It stays switchable, and English never sends anything.
 export function languageSheet() {
   const cur = uiLang();
   let close = null;
   const backdrop = h('div', { class: 'sheet-backdrop center' });
 
-  const pick = (code, needsMt) => {
-    if (needsMt && !mtEnabled()) setMtEnabled(true);
+  // Choosing any non-English language turns machine translation on. Choosing English turns
+  // nothing on and sends nothing. `needsMt` (no bundled dictionary at all) is now a subset of
+  // this rather than the only trigger.
+  const pick = (code) => {
+    if (code !== 'en' && !mtEnabled()) setMtEnabled(true);
     setUiLang(code);
     if (close) close();
     render();
@@ -601,7 +617,7 @@ export function languageSheet() {
     'data-no-i18n': '',
     lang: l.code,
     'aria-current': l.code === cur ? 'true' : null,
-    onclick: () => pick(l.code, needsMt),
+    onclick: () => pick(l.code),
   }, [
     h('span', { class: 'lang-flag', 'aria-hidden': 'true' }, l.flag),
     h('span', { class: 'lang-names' }, [
@@ -644,15 +660,20 @@ export function languageSheet() {
     }
   });
 
+  // The old copy read "Also machine-translate the rest", which implied the app was already
+  // translated and this was a bonus. It is the other way round: the dictionary covers the
+  // chrome and the safety wording, and this is what reaches the prose. Say which is which,
+  // and say what happens if it is switched off, because switching it off is what leaves a
+  // traveller reading English.
   const mtRow = h('label', { class: 'lang-mt' }, [
     h('input', {
       type: 'checkbox', checked: mtEnabled() ? '' : null,
       onchange: (e) => { setMtEnabled(e.target.checked); render(); },
     }),
     h('span', {}, [
-      h('strong', {}, 'Also machine-translate the rest'),
+      h('strong', {}, 'Translate the longer text too'),
       h('span', { class: 'tiny muted', style: 'display:block' },
-        'Navigation and safety wording is checked by hand. This adds online machine translation for the longer text, saved on your device. Emergency numbers are never sent, and machine wording is a guide, not checked text.'),
+        'Navigation, headings, safety labels and the emergency phrases are translated by hand and work with no signal. The longer writing — places, first aid, scams — is machine-translated online and then saved on your device, so it stays readable offline afterwards. Turn this off and that longer writing stays in English. Emergency numbers are never sent to any service, and machine wording is a guide, not checked text.'),
     ]),
   ]);
 
@@ -1088,7 +1109,7 @@ function profileFitAdj(p, prefs) {
 //
 // The hard rule: never invent a suitability or safety verdict. Measured across the 808 place
 // records (August 2026), the data supports some dimensions and not others — kidFriendly is set
-// on 426, afterDark on 187, access/stepFree on 176, scamWarnings on 691, but per-venue safety,
+// on 436, afterDark on 187, access/stepFree on 187, scamWarnings on 691, but per-venue safety,
 // women's-safety and baby-facility fields are effectively absent (access.babyChange is set on
 // none). So an unrecorded field returns an `unknown` entry that the UI prints as "not
 // recorded", which is more useful than silence and far safer than a false negative: a
@@ -7308,19 +7329,29 @@ function sosScreen(cc) {
   hosp.append(h('button', { class: 'btn block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, '🏥 Get to a hospital — full guide'));
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
   if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
-  const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === getActiveCountry()), fix);
-  if (localHosp.length) {
-    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
-    localHosp.slice(0, 3).forEach((x) => {
-      const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
-      hosp.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
-        h('div', { class: 'row-between' }, [h('strong', {}, x.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city),
-        h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))),
-        h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: mapsSearch(`${x.name} ${x.city}`), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
-      ]));
-    });
-    if (localHosp.length > 3) hosp.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, `All ${localHosp.length} listed in ${c.name} →`));
+  // Three nearest, from the merged curated + OpenStreetMap layer, so this is the real nearest
+  // and not merely the nearest place somebody wrote about. Paints from curated data at once
+  // and re-paints when the full country layer lands — see js/data/hospitals.js.
+  const hospSlot = h('div', {});
+  hosp.append(hospSlot);
+  const paintSosHosp = () => {
+    const cc = getActiveCountry();
+    const list = nearestCare(fix, cc, { hospitalsOnly: true, limit: 3 });
+    hospSlot.replaceChildren();
+    if (!list.length) return;
+    hospSlot.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
+      h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
+      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city || x.en || ''),
+      x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
+      h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
+    ])));
+    hospSlot.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${cc}`) }, `Every hospital in ${c.name} →`));
+  };
+  paintSosHosp();
+  if (!isHospitalsLoaded(getActiveCountry())) {
+    const at = location.hash;
+    loadHospitals(getActiveCountry()).then(() => { if (location.hash === at) paintSosHosp(); }).catch(() => { /* curated view stands */ });
   }
 
   // (3) What to do while getting there — bites/stings first aid, then life-saving basics.

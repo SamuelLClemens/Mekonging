@@ -75,6 +75,7 @@ export const PLACES_KH = [
   },
   {
     id: "kh-phnompenh-tuol-sleng", name: "Tuol Sleng Genocide Museum (S-21)", city: "Phnom Penh", country: "kh",
+    kidFriendly: false,
     access: { stepFree: "partial", note: "The ground floors of all buildings are wheelchair accessible with ramps provided, but at least one ramp is uneven and steep enough to need assistance, and upper floors are reached only by stairs." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.6, scale: 5, count: 12983, url: "https://www.tripadvisor.com/Attraction_Review-g293940-d324063-Reviews-Tuol_Sleng_Genocide_Museum-Phnom_Penh.html", asOf: "2026-07" },

@@ -349,6 +349,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-bai-sao", name: "Bai Sao (Star Beach)", city: "Phu Quoc", country: "vi",
+    kidFriendly: true,
     categories: ["beach", "nature"], budgetTier: "mid",
     lifeguard: "no", swim: "Calm white-sand bay, among Vietnam's safest swimming in the November-April dry season; no patrol.", jellyfishMonths: [11,12], jellyfish: "Jellyfish appear around Phu Quoc mainly from late November to mid-December; usually a painful sting rather than a danger.",
     blurb: "A curving bay of exceptionally soft white sand and calm, shallow turquoise water on the south-east of Phu Quoc island, with beach clubs and seafood at one end and quieter sand beyond.",
@@ -1321,6 +1322,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-thap-ba-hot-springs",
+    kidFriendly: true,
     name: "Thap Ba Hot Spring Center",
     city: "Nha Trang",
     country: "vi",
@@ -2902,6 +2904,7 @@ export const PLACES_VI_EXT = [
   },
   {
     "id": "vi-ext-monkey-island-cat-dua",
+    "access": { "stepFree": "no" },
     "name": "Monkey Island (Cat Dua)",
     "city": "Cat Ba",
     "country": "vi",
@@ -3055,6 +3058,7 @@ export const PLACES_VI_EXT = [
   },
   {
     "id": "vi-ext-cat-co-beaches",
+    "kidFriendly": true,
     "name": "Cat Co 1, 2 & 3 Beaches",
     "city": "Cat Ba",
     "country": "vi",
@@ -3157,6 +3161,7 @@ export const PLACES_VI_EXT = [
   },
   {
     "id": "vi-ext-titop-island",
+    "access": { "stepFree": "no" },
     "name": "Ti Top Island",
     "city": "Ha Long",
     "country": "vi",
@@ -3260,6 +3265,7 @@ export const PLACES_VI_EXT = [
   },
   {
     "id": "vi-ext-sun-world-ha-long-cable-car",
+    "kidFriendly": true,
     "name": "Sun World Ha Long & Queen Cable Car (Bai Chay)",
     "city": "Ha Long",
     "country": "vi",
@@ -3686,6 +3692,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-ham-rong-mountain", name: "Ham Rong Mountain (Dragon's Jaw) Gardens & Viewpoint", city: "Sapa", country: "vi",
+    access: { stepFree: 'no' },
     localName: "Núi Hàm Rồng",
     recognition: "A landscaped hill rising straight behind the Stone Church, terraced with orchid houses and European-style flower beds that spell out 'Sapa', topped by rocky 'cloud yard' platforms looking down on the town.",
     categories: ["nature", "viewpoint", "garden"], budgetTier: "low", kidFriendly: true,

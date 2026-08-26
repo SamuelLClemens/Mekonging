@@ -22,9 +22,12 @@ import { driveLabel, sourcesNote } from '../render-utils.js';
 import { infoTip, field } from '../ui-widgets.js';
 import { showBigPhrase } from './phrasebook.js';
 import {
-  HOSPITALS, HOSP_TAG, TIER_META, TIER_ORDER,
+  HOSP_TAG, TIER_META,
   CARE_SYSTEM, EVAC, REACH_STEPS, REMOTE_PLAN, MED_SOURCES,
 } from '../data/medical.js';
+import {
+  loadHospitals, isHospitalsLoaded, nearestCare, nearestAnywhere, careCount, KIND_LABEL,
+} from '../data/hospitals.js';
 import {
   go, mount, topbar, countryChips, mapsSearch, kmLabel, whereAmI, nearestSpotGlobal, ensureRegionSet,
 } from '../main.js';
@@ -208,59 +211,158 @@ export function hospitalScreen(cc) {
   wrap.append(show);
 
   // ---- 3. Where to go -----------------------------------------------------
-  // Ordered by distance when there is a fix, otherwise by capability so the strongest
-  // options in the country are on top. The split at 150 km is the point where "go there"
-  // stops being useful advice on its own and the province fallback below starts to matter.
-  const inCountry = HOSPITALS.filter((x) => x.cc === active);
-  const withKm = inCountry.map((x) => ({ x, km: (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null }));
-  if (fix && fix.lat != null) withKm.sort((a, b) => a.km - b.km);
-  else withKm.sort((a, b) => TIER_ORDER.indexOf(a.x.tier) - TIER_ORDER.indexOf(b.x.tier));
-  const near = withKm.filter((r) => r.km != null && r.km <= 150);
-  const rest = withKm.filter((r) => !near.includes(r));
-
+  // Two datasets, one list. The curated entries (js/data/medical.js) carry capability and
+  // context; the OpenStreetMap layer (js/data/hospitals.js) carries completeness — every
+  // named hospital, clinic and surgery in the country. Merged and sorted by real distance,
+  // so from anywhere in the four countries the top of this list is the actual nearest care
+  // rather than the nearest place somebody happened to write about.
+  //
+  // The OSM layer loads in the BACKGROUND. This card paints from curated data immediately
+  // and upgrades in place when the full layer lands — an emergency screen must never wait
+  // on a download to show the traveller something.
   const go2 = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
     h('h2', { style: 'margin:0' }, '3. Where to go'),
-    infoTip('Distances are straight-line; the road figure is an estimate that already allows for how these roads actually drive. Green and blue are private hospitals used to foreign patients. Yellow is the government hospital that must accept an emergency. Orange and white can stabilise you and refer you onward, but not much more.'),
+    infoTip('Sorted by real distance from you. The road figure is an estimate that already allows for how these roads actually drive. Green and blue are private hospitals used to foreign patients; yellow is the government hospital that must accept an emergency; orange and white can stabilise you and refer you onward. Entries without a colour come from OpenStreetMap and carry a name and a location only — this app makes no claim about what they can treat.'),
   ])]);
   const liveSearch = (fix && fix.lat != null)
     ? `https://www.google.com/maps/search/hospital/@${fix.lat},${fix.lng},13z`
     : 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me';
-  go2.append(h('a', { class: 'btn block', href: liveSearch, target: '_blank', rel: 'noopener' }, '🔎 Search every hospital around me (needs internet) ↗'));
 
-  if (near.length) {
-    go2.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Within reach of you, nearest first:'));
-    near.slice(0, 8).forEach((r) => go2.append(hospitalCard(r.x, fix)));
-  }
-  // The honest case. No listed hospital nearby does NOT mean no hospital nearby — it means
-  // this app does not name the one that is there. So say what the country's health system
-  // guarantees at this administrative level, and give the traveller the local word to ask
-  // with. This is the paragraph that makes the screen work in a village.
-  const NEAR_ENOUGH_KM = 40;
-  const nothingClose = !near.length || (near[0].km != null && near[0].km > NEAR_ENOUGH_KM);
-  if (nothingClose && sys) {
-    const provLine = provName ? `You are in ${provName}. ` : '';
-    go2.append(h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [
-      h('h3', { style: 'margin:0 0 6px' }, near.length ? 'There is almost certainly something closer than that' : 'No hospital listed close to you — here is what is there anyway'),
-      h('p', { class: 'tiny', style: 'margin:0 0 6px' }, `${provLine}This app names the hospitals travellers use, not every hospital in the country. What the health system guarantees where you are:`),
-      h('ul', { class: 'sos-aid' }, sys.levels.map((li) => h('li', {}, li))),
-      h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [
-        'Ask for, or search for, ', h('strong', { lang: book ? book.locale : null }, sys.hospitalWord.script),
-        ` (${sys.hospitalWord.roman}) — plus the name of the town you are in.`,
-      ]),
-      provName ? h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsSearch(`${sys.hospitalWord.script} ${provName}`), target: '_blank', rel: 'noopener' }, `🔎 Hospitals in ${provName} ↗`) : null,
-    ]));
-  }
-  if (rest.length) {
-    const more = h('details', { class: 'filters-collapse', open: near.length ? null : '' }, [
-      h('summary', {}, near.length ? `Every other hospital listed in ${c.name} (${rest.length})` : `Hospitals listed in ${c.name} (${rest.length})`),
-    ]);
-    const inner = h('div', {});
-    rest.forEach((r) => inner.append(hospitalCard(r.x, fix)));
-    more.append(inner);
-    go2.append(more);
-  }
-  go2.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'A starting list, not a directory, and not a ranking of quality. For a child, a pregnancy or a complex condition, telephone ahead so the right department is open when you arrive.'));
+  // The hero: the single closest hospital. This is the answer to the question the screen
+  // exists for, so it is not buried in a list — it is the first thing under the heading.
+  const heroSlot = h('div', {});
+  const listSlot = h('div', {});
+  const countLine = h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, '');
+  go2.append(heroSlot, listSlot);
+  go2.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: liveSearch, target: '_blank', rel: 'noopener' }, '🔎 Search every hospital around me (needs internet) ↗'));
+  go2.append(countLine);
+  go2.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Not a ranking of quality. For a child, a pregnancy or a complex condition, telephone ahead so the right department is open when you arrive.'));
   wrap.append(go2);
+
+  // Painted once from curated data and again when the OSM layer arrives, so the same code
+  // produces both the instant view and the complete one.
+  function paintCare() {
+    const hospitals = nearestCare(fix, active, { hospitalsOnly: true });
+    const anyCare = nearestCare(fix, active);
+    // The headline searches every country whose data is loaded, not just the one being
+    // browsed. At Nong Khai, Mukdahan, Ha Tien or Bavet the nearest hospital is across the
+    // river, and a border is not a reason to send somebody further away.
+    const hero = (fix && fix.lat != null)
+      ? (nearestAnywhere(fix, { hospitalsOnly: true, limit: 1 })[0] || hospitals[0] || null)
+      : (hospitals[0] || null);
+    const heroForeign = hero && hero.cc && hero.cc !== active ? getCountry(hero.cc) : null;
+
+    heroSlot.replaceChildren();
+    if (hero && fix && fix.lat != null) {
+      const drive = hero.km != null ? driveLabel(hero.km) : null;
+      heroSlot.append(h('div', { class: 'card sos-card', style: 'margin:0 0 10px' }, [
+        h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, heroForeign
+          ? `Closest hospital to you right now — across the border in ${heroForeign.flag} ${heroForeign.name}`
+          : 'Closest hospital to you right now'),
+        h('div', { class: 'row-between' }, [
+          h('strong', { style: 'font-size:1.1rem' }, hero.name),
+          h('span', { class: 'fair' }, kmLabel(hero.km)),
+        ]),
+        hero.en ? h('div', { class: 'tiny muted' }, hero.en) : null,
+        h('div', { class: 'tiny muted', style: 'margin:2px 0 6px' },
+          [hero.city || null, drive].filter(Boolean).join(' · ')),
+        hero.curated
+          ? h('div', { class: 'chips' }, [tierChip(hero.tier), ...(hero.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean))
+          : h('div', { class: 'tiny muted' }, hero.er ? 'Mapped with a 24-hour emergency department.' : 'From OpenStreetMap — name and location only. Telephone ahead if you can.'),
+        routeLinks(hero.lat, hero.lng, hero.name),
+      ]));
+      // When the closest thing is an OpenStreetMap entry of unknown capability — and in rural
+      // Thailand and Laos it usually is, because sub-district health centres are tagged as
+      // hospitals — also name the nearest facility whose capability IS known. This is the
+      // "go to the biggest hospital you can reach, not the closest" rule from section 4, made
+      // actionable at the point where the decision is taken rather than left as advice.
+      if (!hero.curated) {
+        const known = nearestAnywhere(fix, { hospitalsOnly: true }).find((x) => x.curated);
+        if (known && known.km != null && known.km > hero.km) {
+          const kc = known.cc !== active ? getCountry(known.cc) : null;
+          heroSlot.append(h('div', { class: 'card', style: 'margin:0 0 10px' }, [
+            h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, 'Further, but a known quantity — for anything serious, go here instead'),
+            h('div', { class: 'row-between' }, [
+              h('strong', {}, known.name),
+              h('span', { class: 'fair' }, kmLabel(known.km)),
+            ]),
+            h('div', { class: 'tiny muted', style: 'margin:2px 0 4px' },
+              [known.city, kc ? `${kc.flag} ${kc.name}` : null, driveLabel(known.km)].filter(Boolean).join(' · ')),
+            h('div', { class: 'chips' }, [tierChip(known.tier), ...(known.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
+            routeLinks(known.lat, known.lng, known.name),
+          ]));
+        }
+      }
+      // A clinic that is dramatically closer is worth naming for a minor problem — and worth
+      // NOT naming for a major one, which is why the wording says which is which.
+      const clinic = anyCare.find((x) => x.kind !== 1);
+      if (clinic && hero.km != null && clinic.km != null && clinic.km < hero.km * 0.5 && clinic.km < hero.km - 2) {
+        heroSlot.append(h('div', { class: 'card', style: 'margin:0 0 10px' }, [
+          h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`),
+          h('div', { class: 'row-between' }, [h('strong', {}, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
+          routeLinks(clinic.lat, clinic.lng, clinic.name),
+        ]));
+      }
+    } else if (hero) {
+      heroSlot.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Turn on location and this shows the hospital closest to you. Until then, the strongest options in the country:'));
+    }
+
+    listSlot.replaceChildren();
+    const rest = hospitals.slice(hero ? 1 : 0);
+    const nearRest = rest.filter((r) => r.km != null && r.km <= 60).slice(0, 7);
+    const shown = nearRest.length ? nearRest : rest.slice(0, 6);
+    if (shown.length) {
+      listSlot.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, fix && fix.lat != null ? 'Then:' : `Hospitals in ${c.name}:`));
+      shown.forEach((x) => listSlot.append(hospitalCard(x, fix)));
+    }
+    // Curated entries the distance sort pushed out of view still matter: they are the ones
+    // with an English-speaking ER and an evacuation desk. Keep them one tap away.
+    const curatedRest = hospitals.filter((x) => x.curated && !shown.includes(x) && x !== hero);
+    if (curatedRest.length) {
+      const d = h('details', { class: 'filters-collapse' }, [
+        h('summary', {}, `Hospitals used to foreign patients in ${c.name} (${curatedRest.length})`),
+      ]);
+      const inner = h('div', {});
+      curatedRest.forEach((x) => inner.append(hospitalCard(x, fix)));
+      d.append(inner);
+      listSlot.append(d);
+    }
+    const counts = careCount(active);
+    countLine.textContent = counts
+      ? `Searching all ${counts.hospitals.toLocaleString()} hospitals and ${(counts.total - counts.hospitals).toLocaleString()} clinics mapped in ${c.name}. Works offline.`
+      : `Searching ${hospitals.length} hospitals. Loading the full map of every hospital and clinic in ${c.name}…`;
+
+    // The province fallback now fires only when the merged data genuinely has nothing within
+    // reach — with the OSM layer loaded that is rare, and it means something when it happens.
+    const nothingClose = !hero || hero.km == null || hero.km > 60;
+    if (nothingClose && sys) {
+      const provLine = provName ? `You are in ${provName}. ` : '';
+      listSlot.append(h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [
+        h('h3', { style: 'margin:0 0 6px' }, hero ? 'That is a long way — here is what else is near you' : 'Nothing mapped close to you — here is what is there anyway'),
+        h('p', { class: 'tiny', style: 'margin:0 0 6px' }, `${provLine}Not every facility is on the map, and a village health centre rarely is. What the health system guarantees where you are:`),
+        h('ul', { class: 'sos-aid' }, sys.levels.map((li) => h('li', {}, li))),
+        h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [
+          'Ask for, or search for, ', h('strong', { lang: book ? book.locale : null }, sys.hospitalWord.script),
+          ` (${sys.hospitalWord.roman}) — plus the name of the town you are in.`,
+        ]),
+        provName ? h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsSearch(`${sys.hospitalWord.script} ${provName}`), target: '_blank', rel: 'noopener' }, `🔎 Hospitals in ${provName} ↗`) : null,
+      ]));
+    }
+  }
+  paintCare();
+  // The active country first so the list fills as fast as possible, then the other three so
+  // the cross-border headline above can be right. All four are precached, so after the first
+  // run this costs nothing and works with no signal.
+  {
+    const at = location.hash;
+    const repaint = () => { if (location.hash === at) paintCare(); };
+    const others = ['th', 'vi', 'kh', 'la'].filter((cc) => cc !== active && !isHospitalsLoaded(cc));
+    const first = isHospitalsLoaded(active) ? Promise.resolve() : loadHospitals(active).then(repaint);
+    first.catch(() => { /* curated view stands */ })
+      .then(() => Promise.all(others.map((cc) => loadHospitals(cc).catch(() => null))))
+      .then(repaint)
+      .catch(() => { /* whatever loaded still shows */ });
+  }
 
   // ---- 4. How to actually get there ---------------------------------------
   const how = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [

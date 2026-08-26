@@ -70,6 +70,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-pai-canyon", name: "Pai Canyon (Kong Lan) sunset", city: "Pai", country: "th",
+    access: { stepFree: 'no' },
     recognition: 'From the small hilltop car park off the 1095 road about 8 km south of Pai, a short paved path leads to red-orange eroded sandstone ridges with narrow knife-edge spines dropping into a forested valley.',
     localName: 'กองแลน · Kong Lan',
     categories: ["viewpoint", "nature", "hike"], budgetTier: "low",
@@ -86,6 +87,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-railay-viewpoint-lagoon", name: "Railay Viewpoint & Princess Lagoon", city: "Krabi", country: "th",
+    access: { stepFree: 'no' },
     categories: ["viewpoint", "hike", "nature"], budgetTier: "low",
     blurb: "A steep, rope-assisted scramble up from Railay's beaches leads to a panoramic clifftop viewpoint, then descends to a hidden tidal lagoon ringed by limestone walls.",
     whyItFits: "For adventurous travellers who want Railay beyond the beach bars. The climb is short but genuinely hands-on, rewarding fitness and decent footwear.",
@@ -512,6 +514,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-erawan-camping", name: "Erawan National Park camping", city: "Kanchanaburi", country: "th",
+    access: { stepFree: 'no' },
     categories: ["stay", "park", "nature", "waterfall"], budgetTier: "low",
     kidFriendly: true, stayType: "tent", stayDuration: "short",
     activities: ["camping", "waterfalls", "swimming", "hiking"],
@@ -2555,6 +2558,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-huahin-beach-hotels", sources: [{ org: "Wikivoyage — Hua Hin", url: "https://en.wikivoyage.org/wiki/Hua_Hin" }, { org: "Traveloka — Hua Hin Beachfront Hotels", url: "https://www.traveloka.com/en-th/hotel/thailand/area/hua-hin-beachfront-30009981/cheap-hotels-in-hua-hin-beachfront" }],
+    kidFriendly: true,
     name: "Seafront hotels & condos along Hua Hin beach",
     city: "Hua Hin",
     country: "th",
@@ -2571,6 +2575,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-kohlanta-longbeach-resorts", sources: [{ org: "Wikivoyage — Ko Lanta", url: "https://en.wikivoyage.org/wiki/Ko_Lanta" }, { org: "Tripadvisor — Lanta Beach Resort", url: "https://www.tripadvisor.com/Hotel_Review-g303905-d1230183-Reviews-Lanta_Beach_Resort-Ko_Lanta_Krabi_Province.html" }],
+    kidFriendly: true,
     name: "Beach resorts along Long Beach (Phra Ae)",
     city: "Koh Lanta",
     country: "th",
