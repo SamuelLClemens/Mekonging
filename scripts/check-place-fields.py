@@ -100,7 +100,7 @@ def main():
         # as of August 2026, and as dict keys the second silently replaced the first, which
         # quietly dropped afterDark from the check while still printing PASS.
         expect = [('808', total, 'total'), ('436', counts['kidFriendly'], 'kidFriendly'),
-                  ('187', counts['afterDark'], 'afterDark'), ('187', counts['stepFree'], 'stepFree'),
+                  ('187', counts['afterDark'], 'afterDark'), ('189', counts['stepFree'], 'stepFree'),
                   ('691', counts['scamWarnings'], 'scamWarnings'),
                   ('350', counts['scam_nonempty'], 'scam_nonempty')]
         for quoted, actual, _label in expect:

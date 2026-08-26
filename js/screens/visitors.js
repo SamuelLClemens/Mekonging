@@ -17,6 +17,7 @@ import {
 } from '../visits.js';
 import { initVisitMap } from '../map.js';
 import { go, mount, topbar } from '../main.js';
+import { setLiveCleanup, getLiveCleanup } from '../app-state.js';
 
 function countryName(cc) { const c = getCountry(cc); return c ? `${c.flag} ${c.name}` : null; }
 
@@ -44,6 +45,10 @@ export function visitorsScreen() {
   intro.append(mapBox);
   const legend = h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, '🟠 your own pins · 🔵 shared feed · each pin is an area of about 55 km, never an address');
   intro.append(legend);
+  // The map's own attribution control is collapsed to a ⓘ so it does not cover the world on a
+  // phone, so the credit is stated here in full as well — it is a licence condition, not a
+  // decoration, and it should not depend on anyone opening a control.
+  intro.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' }, 'Map: © OpenStreetMap contributors · Natural Earth · streets © Esri, HERE, Garmin, USGS.'));
   wrap.append(intro);
 
   // ---- Your own pins ------------------------------------------------------
@@ -119,6 +124,11 @@ export function visitorsScreen() {
   let ctrl = null;
   initVisitMap(mapBox, mine).then((c) => {
     ctrl = c;
+    // A MapLibre instance holds a WebGL context, and browsers cap how many a page may have
+    // (around sixteen). Without this, opening this screen a dozen times over a session
+    // leaks contexts until the map silently stops starting at all. Same idiom as the Places
+    // map: chain onto any cleanup already registered rather than replacing it.
+    { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } ctrl = null; }); }
     if (mine.length) c.fit(mine);
     if (!visitsFeedUrl()) return;
     feedStatus.textContent = 'Loading the shared feed…';

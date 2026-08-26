@@ -4802,6 +4802,7 @@ export const PLACES_TH_EXT = [
   // without duplicating it.
   {
     id: "th-ext-chiangrai-blue-temple", name: "Wat Rong Suea Ten (Blue Temple)", city: "Chiang Rai", country: "th",
+    access: { stepFree: 'no', note: "Accessibility from OpenStreetMap (วัดร่องเสือเต้น), 8 m from this entry." },
     recognition: "An entirely deep-blue-and-gold temple complex on the northern edge of town, with a huge white Buddha at its centre - the colour scheme alone makes it unmistakable, and it is a modern build (finished 2016), not an ancient site.",
     localName: "วัดร่องเสือเต้น · Wat Rong Suea Ten",
     rating: 4.5, reviewSources: ["Traveller consensus", "Google Maps consensus"],
@@ -5036,6 +5037,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-sukhothai-wat-si-chum", name: "Wat Si Chum", city: "Sukhothai", country: "th",
+    access: { stepFree: 'yes', note: "Accessibility from OpenStreetMap (วัดศรีชุม), 16 m from this entry." },
     afterDark: { openAfterDark: false, note: "General North Zone hours (roughly 06:30-18:00) close at or before dusk, same as the rest of the park." },
     recognition: "A roofless brick mondop in the park's North Zone enclosing a huge 15m seated Buddha, Phra Achana, met through a narrow slot in the front wall before entering - one of the most striking single images in the whole park.",
     localName: "วัดศรีชุม · Wat Si Chum",
