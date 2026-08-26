@@ -226,6 +226,37 @@ export async function initVisitMap(containerEl, points) {
     renderWorldCopies: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+  // MapLibre measures its container once, at construction. This map is built inside a card
+  // that is still being laid out — `aspect-ratio` plus `max-height: 46vh` resolves after the
+  // element is in the document — so the first measurement is routinely narrower than the
+  // final box, and the map then paints into a strip with dead space beside it. Watch the
+  // container and tell the map when its size actually settles.
+  let ro = null;
+  if (typeof ResizeObserver !== 'undefined') {
+    let last = '';
+    ro = new ResizeObserver(() => {
+      const k = `${containerEl.clientWidth}x${containerEl.clientHeight}`;
+      if (k === last || !containerEl.clientWidth) return;
+      last = k;
+      try { map.resize(); } catch { /* map already removed */ }
+    });
+    ro.observe(containerEl);
+  }
+  // Belt and braces for browsers without ResizeObserver, and for the case where the card is
+  // still transitioning when the observer first fires.
+  map.once('load', () => {
+    try { map.resize(); } catch { /* noop */ }
+    // MapLibre renders the compact attribution EXPANDED on first paint, which on a phone-width
+    // map covers a third of the world. Collapse it to the ⓘ it is meant to be — the credit is
+    // still one tap away, and the visitors screen also prints a permanent credit line beneath
+    // the map, so nothing is hidden.
+    try {
+      containerEl.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact-show')
+        .forEach((el) => el.classList.remove('maplibregl-compact-show'));
+    } catch { /* noop */ }
+  });
+
   return {
     map,
     setPoints(next) {
@@ -239,7 +270,10 @@ export async function initVisitMap(containerEl, points) {
       list.forEach((p) => b.extend([p.lng, p.lat]));
       try { map.fitBounds(b, { padding: 48, maxZoom: 6, duration: 0 }); } catch { /* single point */ }
     },
-    destroy() { try { map.remove(); } catch { /* already gone */ } },
+    dispose() {
+      if (ro) { try { ro.disconnect(); } catch { /* noop */ } }
+      try { map.remove(); } catch { /* already gone */ }
+    },
   };
 }
 

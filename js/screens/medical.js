@@ -293,13 +293,18 @@ export function hospitalScreen(cc) {
           ]));
         }
       }
-      // A clinic that is dramatically closer is worth naming for a minor problem — and worth
-      // NOT naming for a major one, which is why the wording says which is which.
+      // Any clinic or health post that is closer than the nearest hospital gets named. An
+      // earlier draft only showed one less than half the distance away, which in rural Laos
+      // and Isan almost never fires — the health post is typically a few kilometres nearer,
+      // not half as far — and a few kilometres of that road is fifteen minutes. Showing both
+      // with the framing on which to pick beats silently hiding the nearer one.
       const clinic = anyCare.find((x) => x.kind !== 1);
-      if (clinic && hero.km != null && clinic.km != null && clinic.km < hero.km * 0.5 && clinic.km < hero.km - 2) {
+      if (clinic && hero.km != null && clinic.km != null && clinic.km < hero.km - 1) {
         heroSlot.append(h('div', { class: 'card', style: 'margin:0 0 10px' }, [
           h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`),
           h('div', { class: 'row-between' }, [h('strong', {}, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
+          clinic.en ? h('div', { class: 'tiny muted' }, clinic.en) : null,
+          h('div', { class: 'tiny muted', style: 'margin:2px 0 0' }, driveLabel(clinic.km) || ''),
           routeLinks(clinic.lat, clinic.lng, clinic.name),
         ]));
       }

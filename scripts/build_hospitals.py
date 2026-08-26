@@ -15,10 +15,69 @@ an emergency screen must never depend on a live API.
 Input:  the tile JSONs written by the scratchpad fetch_osm.py (Overpass, tiled + resumable).
 Usage:  python3 scripts/build_hospitals.py <tile-dir>
 """
-import json, os, re, sys
+import json, math, os, re, sys
 
 CCS = ['th', 'vi', 'kh', 'la']
 KIND = {'hospital': 1, 'clinic': 2, 'doctors': 3}
+
+# ---- NAME AND KIND CORRECTIONS ---------------------------------------------
+# Two problems with taking OpenStreetMap's amenity=hospital at face value here.
+#
+# 1. TIER. Thailand tags its ~9,800 sub-district health-promoting hospitals (โรงพยาบาลส่งเสริม
+#    สุขภาพตำบล, universally abbreviated รพ.สต.) as amenity=hospital. They are nurse-led posts
+#    with no surgeon and usually no doctor. Vietnam does the same with commune health stations
+#    (Trạm Y tế) and Laos with ສຸກສາລາ. Leaving them as kind=1 means the app's answer to
+#    "closest hospital" is frequently a health post — which is fine for a fever and useless
+#    for a fracture. They are kept, because they are real care and often the only care for
+#    50 km, but reclassified as clinics so the hospital list means what it says.
+#
+# 2. READABILITY. Many are named only by the abbreviation, which tells a foreign traveller
+#    nothing. The primary name is left EXACTLY as mapped — that string is what gets shown to a
+#    driver — and the expansion goes in the English field, which is otherwise empty.
+DOWNGRADE = [
+    # (pattern, English gloss to use when name:en is missing)
+    ('รพ.สต.', 'Sub-district health post'),
+    ('โรงพยาบาลส่งเสริมสุขภาพตำบล', 'Sub-district health-promoting hospital'),
+    ('สถานีอนามัย', 'Health station'),
+    ('ศูนย์สุขภาพชุมชน', 'Community health centre'),
+    ('ศูนย์บริการสาธารณสุข', 'Public health service centre'),
+    ('สอน.', 'Health station'),
+    ('ສຸກສາລາ', 'Health centre'),
+    ('Trạm Y tế', 'Commune health station'),
+    ('Tram Y te', 'Commune health station'),
+    ('មណ្ឌលសុខភាព', 'Health centre'),
+    ('health center', 'Health centre'),
+    ('health centre', 'Health centre'),
+    ('health post', 'Health post'),
+    ('health station', 'Health station'),
+    ('dispensary', 'Dispensary'),
+]
+# Read as a hospital even though the string matched a downgrade pattern above — a provincial
+# or district hospital that happens to contain "health centre" in its name is still a hospital.
+KEEP_HOSPITAL = ('provincial hospital', 'district hospital', 'general hospital', 'referral hospital',
+                 'โรงพยาบาลศูนย์', 'โรงพยาบาลทั่วไป', 'bệnh viện', 'benh vien')
+
+
+def classify(name, en, kind):
+    """Returns (kind, english_gloss_or_empty). Never rewrites the primary name."""
+    hay = f'{name} {en}'.lower()
+    if any(k in hay for k in KEEP_HOSPITAL):
+        return kind, ''
+    for pat, gloss in DOWNGRADE:
+        if pat.lower() in hay:
+            return (max(kind, 2), gloss)
+    return kind, ''
+
+
+LETTERS = re.compile(r'[^\W\d_]', re.UNICODE)
+
+
+def unreadable(name, en):
+    """A name that is mostly digits and punctuation identifies nothing to anybody — a mapper's
+    shorthand such as "อบ19". Dropped only when there is no English name to fall back on."""
+    if en:
+        return False
+    return len(LETTERS.findall(name)) < 3
 
 
 def load_provinces(cc):
@@ -49,6 +108,34 @@ def in_province(prov, lng, lat):
     return False
 
 
+# The province polygons are simplified to ~2 km (scripts/build_basemap.py's EPS), so a facility
+# genuinely inside the country can fall a few hundred metres outside its own province outline —
+# most often on a coast or a riverbank. Recovering those means allowing a small tolerance, and
+# the tolerance has to be small: measured over the 1,449 points that fail a strict test, 49 sit
+# within 1 km (Vietnamese and Cambodian names, all genuinely inside), while by 1-3 km the set is
+# already dominated by Burmese-script clinics on the Myanmar side of the Thai border. 1 km buys
+# back the artefacts without importing a neighbouring country.
+EDGE_TOLERANCE_KM = 1.0
+
+
+def seg_dist_km(px, py, ring):
+    best = 1e9
+    for i in range(len(ring) - 1):
+        x1, y1 = ring[i]
+        x2, y2 = ring[i + 1]
+        dx, dy = x2 - x1, y2 - y1
+        t = 0 if (dx == 0 and dy == 0) else max(0, min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
+        cx, cy = x1 + t * dx, y1 + t * dy
+        d = math.hypot((px - cx) * math.cos(math.radians(py)) * 111.32, (py - cy) * 110.57)
+        if d < best:
+            best = d
+    return best
+
+
+def near_province(prov, lng, lat, km):
+    return any(seg_dist_km(lng, lat, poly[0]) <= km for poly in prov['polys'])
+
+
 def bbox_of(prov):
     xs, ys = [], []
     for poly in prov['polys']:
@@ -59,8 +146,10 @@ def bbox_of(prov):
 
 def main(tile_dir):
     # IDEMPOTENCY: a complete set of outputs means there is nothing to do.
-    if all(os.path.exists(f'js/data/hospitals.{cc}.js') and os.path.getsize(f'js/data/hospitals.{cc}.js') > 2000 for cc in CCS):
-        print('ok: already built (delete js/data/hospitals.*.js to rebuild)')
+    if '--force' not in sys.argv and all(
+            os.path.exists(f'js/data/hospitals.{cc}.js') and os.path.getsize(f'js/data/hospitals.{cc}.js') > 2000
+            for cc in CCS):
+        print('ok: already built (pass --force, or delete js/data/hospitals.*.js, to rebuild)')
         return 0
 
     provs = {}
@@ -92,9 +181,14 @@ def main(tile_dir):
             name_en = (t.get('name:en') or '').strip()
             if not name and not name_en:
                 continue          # an unnamed point cannot be asked for or searched
+            primary = name or name_en
+            english = name_en if (name_en and name_en != name) else ''
+            if unreadable(primary, english):
+                continue          # a mapper's shorthand identifies nothing to anybody
+            kind, gloss = classify(primary, english, kind)
             seen[key] = {
                 'lat': round(float(lat), 4), 'lng': round(float(lng), 4),
-                'name': name or name_en, 'en': name_en if (name_en and name_en != name) else '',
+                'name': primary, 'en': english or gloss,
                 'k': kind, 'er': 1 if t.get('emergency') == 'yes' else 0,
             }
 
@@ -102,7 +196,7 @@ def main(tile_dir):
 
     # Assign a country by point-in-province, bbox-gated so this stays fast over ~6k points.
     buckets = {cc: [] for cc in CCS}
-    outside = 0
+    outside = recovered = 0
     for rec in seen.values():
         hit = None
         for cc in CCS:
@@ -114,10 +208,24 @@ def main(tile_dir):
                     break
             if hit:
                 break
+        # Second pass, only for what the strict test rejected: allow the simplification
+        # tolerance. Restricted to a padded bbox so this never scans the whole world.
+        if not hit:
+            for cc in CCS:
+                for _, (x0, y0, x1, y1), prov in provs[cc]:
+                    if not (x0 - 0.05 <= rec['lng'] <= x1 + 0.05 and y0 - 0.05 <= rec['lat'] <= y1 + 0.05):
+                        continue
+                    if near_province(prov, rec['lng'], rec['lat'], EDGE_TOLERANCE_KM):
+                        hit = cc
+                        recovered += 1
+                        break
+                if hit:
+                    break
         if hit:
             buckets[hit].append(rec)
         else:
             outside += 1
+    print(f'  {recovered} recovered within {EDGE_TOLERANCE_KM} km of a simplified boundary')
     print(f'  {outside} outside the four countries (dropped)')
 
     for cc in CCS:
