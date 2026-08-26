@@ -38,9 +38,10 @@ import {
 import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
 import { dateLocale, t } from '../i18n.js';
-import { getAccessibility } from '../data/accessibility.js';
-import { CROSSINGS } from '../data/borders.js';
-import { TRANSPORT_HUBS, TRANSIT_SOURCES } from '../data/transit.js';
+// accessibility/borders/transit are route-scoped data, fetched by the gate in main.js before
+// the place screens render — read here through the one owner so this file and main.js share a
+// single copy. See js/lazy-data.js.
+import { getAccessibility, CROSSINGS, TRANSPORT_HUBS, TRANSIT_SOURCES } from '../lazy-data.js';
 import { putBlob, delBlob } from '../idb.js';
 import { shareOrDownload } from '../exporter.js';
 import {

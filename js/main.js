@@ -53,14 +53,9 @@ import {
   placesScreen, placeCard, travelerChips, saveSheet, tripVisitSheet, placeScreen, resolveItem,
   jellyInSeason, formatMonths, SEV_LABEL, fmtReportDate, addPlaceSecret,
 } from './screens/places.js';
-import { suggestPlans } from './data/itineraries.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
-import { bestForCountry, getBestList } from './data/bestof.js';
 import { PHOTOS } from './data/photos.js';
-import { SOUNDS } from './data/sounds.js';
-import { CROSSINGS } from './data/borders.js';
-import { TRANSPORT_HUBS, TRANSIT_SOURCES, GET_AROUND } from './data/transit.js';
 import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
 import { zipStore, toCsv, buildXlsx, downloadBlob, shareOrDownload } from './exporter.js';
 import {
@@ -115,20 +110,34 @@ import { ALLERGENS } from './data/allergens.js';
 // loadNature() below (added right after the import block), which mirrors regions.js's
 // loadCountry() idiom for the same reason: a traveller who never opens Identify/Sounds/
 // Dangerous should never pay to parse it.
-import { SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry } from './data/schedules.js';
-import { PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce } from './data/produce.js';
+// Thirteen single-screen data modules are NOT imported here — they are fetched by the route
+// that needs them, through js/lazy-data.js, which owns the loaders and the live bindings so
+// that main.js, places.js and settings.js all read one copy. ROUTE_DATA below states which
+// route needs which, and the router gate awaits them exactly as it awaits country data, so
+// every read in this file stays synchronous and unchanged. See js/lazy-data.js for what is
+// deliberately NOT deferred, and why.
+import {
+  POOLS, poolsForCountry,
+  TRANSPORT_HUBS, TRANSIT_SOURCES, GET_AROUND,
+  suggestPlans,
+  PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce,
+  VISA, getVisa,
+  zonesFor, getZone, zoneForProvince,
+  CROSSINGS,
+  bestForCountry, getBestList,
+  ACCESSIBILITY, getAccessibility,
+  scamsFor,
+  ARRIVAL, getArrival,
+  SOUNDS,
+  SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry,
+  DATA_MODULES, loadData, isDataLoaded,
+} from './lazy-data.js';
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
-import { ACCESSIBILITY, getAccessibility } from './data/accessibility.js';
-import { ARRIVAL, getArrival } from './data/arrival.js';
-import { VISA, getVisa } from './data/visa.js';
-import { scamsFor } from './data/scams.js';
-import { POOLS, poolsForCountry } from './data/pools.js';
 import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 // regions.<cc>.js (the ADM1 province-polygon files) are NOT statically imported here — they
 // are large pure geometry (27-87 KB each) needed only by the region/zone drill-down, so they
 // are loaded lazily, one country at a time, by loadRegionSet() near REGIONS_BY_CC below.
 import { provinceInfo } from './data/regions.info.js';
-import { zonesFor, getZone, zoneForProvince } from './data/zones.js';
 import * as Diet from './data/diet.js';
 
 // ---- Lazy nature/wildlife data loading --------------------------------------
@@ -214,13 +223,56 @@ function loadScreenMod(name) {
   }
   return _screenPending[name];
 }
-// Regaining a connection clears the failures so the screen can be opened again without a
-// restart — the same trigger the service-worker update check already uses.
+
+// ---- lazy data modules -------------------------------------------------------
+// Which js/lazy-data.js modules a route must have before it can render. Same contract as
+// ROUTE_SCREENS above: the gate awaits them, so by the time a case in the switch runs, every
+// read below is of real data and stays synchronous.
+//
+// This map is NOT maintained by hand-reading the code. `scripts/check-lazy-data.py` walks the
+// call graph from every router case and fails if a route can reach one of these reads without
+// being listed here — which matters because the failure it prevents is silent: an ungated read
+// returns the same empty value an unknown key returns, so the screen renders with the section
+// simply absent. Run it after touching any consumer, and `--report` regenerates this map.
+const ROUTE_DATA = {
+  access: ['accessibility'],
+  arrival: ['arrival', 'visa'],
+  bestlist: ['bestof'],
+  bestof: ['bestof'],
+  country: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  crossings: ['borders', 'visa'],
+  explore: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  foryou: ['itineraries'],
+  place: ['accessibility', 'borders', 'transit'],
+  plans: ['itineraries'],
+  pools: ['pools'],
+  produce: ['produce'],
+  region: ['zones'],
+  scams: ['scams', 'visa'],
+  schedules: ['schedules'],
+  settings: ['accessibility'],
+  sounds: ['sounds'],
+  species: ['sounds'],
+  transport: ['transit'],
+  visa: ['visa'],
+};
+// Same failure record, and for the same reason, as _screenFailed above: the gate re-renders on
+// failure, so without this it would re-request forever and strand an offline traveller on a
+// loading card.
+const _dataFailed = Object.create(null);
+function loadDataMod(name) {
+  return loadData(name).catch((err) => { _dataFailed[name] = true; throw err; });
+}
+
+// Regaining a connection clears the failures so a screen or its data can be fetched again
+// without a restart — the same trigger the service-worker update check already uses.
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     let any = false;
     for (const k of Object.keys(_screenFailed)) { delete _screenFailed[k]; any = true; }
-    if (any && (ROUTE_SCREENS[(location.hash || '#home').slice(1).split('-')[0]] || []).length) render();
+    for (const k of Object.keys(_dataFailed)) { delete _dataFailed[k]; any = true; }
+    const head = (location.hash || '#home').slice(1).split('-')[0];
+    if (any && ((ROUTE_SCREENS[head] || []).length || (ROUTE_DATA[head] || []).length)) render();
   });
 }
 
@@ -428,7 +480,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.462.0';
+const APP_VERSION = 'mk-v0.463.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -9445,7 +9497,10 @@ function screenUnavailableScreen(names) {
         : 'It needs a connection the first time you open it. Emergency numbers, phrases and the hospital finder all work offline.'),
       h('button', {
         class: 'btn block',
-        onclick: () => { (names || []).forEach((n) => { delete _screenFailed[n]; }); render(); },
+        onclick: () => {
+          (names || []).forEach((n) => { delete _screenFailed[n]; delete _dataFailed[n]; });
+          render();
+        },
       }, 'Retry'),
     ]),
   ]);
@@ -9518,21 +9573,29 @@ export function render() {
     }
   }
 
-  // ---- Lazy screen-module gate -------------------------------------------------
+  // ---- Lazy screen-module and data gate ----------------------------------------
   // Same shape as the country-data gate above, and for the same reason: hold the render for
   // one module rather than make every screen in the app carry a not-loaded-yet branch. By the
-  // time a case in the switch runs, screenMod(name) is guaranteed non-null.
+  // time a case in the switch runs, screenMod(name) is guaranteed non-null and every
+  // js/lazy-data.js binding a route reads is guaranteed populated. The two kinds share one
+  // loading card, one unavailable card and one retry, because to the traveller they are the
+  // same event: this screen is not on the device yet.
   const needScreens = ROUTE_SCREENS[head] || [];
+  const needData = ROUTE_DATA[head] || [];
   const wantScreens = needScreens.filter((n) => !screenMod(n) && !_screenFailed[n]);
-  if (wantScreens.length) {
+  const wantData = needData.filter((n) => !isDataLoaded(n) && !_dataFailed[n]);
+  if (wantScreens.length || wantData.length) {
     wantScreens.forEach((n) => { loadScreenMod(n).then(render, render); });
+    wantData.forEach((n) => { loadDataMod(n).then(render, render); });
     mount(screenLoadingScreen(), true);
     return;
   }
   // Asked for, attempted, and not available: say so plainly and offer a retry, rather than
-  // calling a screen function on a module that is not there.
-  if (needScreens.some((n) => !screenMod(n))) {
-    mount(screenUnavailableScreen(needScreens.filter((n) => !screenMod(n))), true);
+  // calling a screen function on a module that is not there — or rendering a screen whose data
+  // silently came back empty.
+  const absent = needScreens.filter((n) => !screenMod(n)).concat(needData.filter((n) => !isDataLoaded(n)));
+  if (absent.length) {
+    mount(screenUnavailableScreen(absent), true);
     return;
   }
 
@@ -9706,3 +9769,28 @@ if (online()) refreshRates().then(() => { if ((location.hash || '').startsWith('
 // so a slow, starved, or unsupported idle callback never leaves anything stuck.
 if ('requestIdleCallback' in window) requestIdleCallback(() => { loadNature().catch(() => {}); }, { timeout: 4000 });
 else setTimeout(() => { loadNature().catch(() => {}); }, 2000);
+
+// Warm the route-scoped data modules (js/lazy-data.js) the same way, and for the reason that
+// makes deferring them a clear win rather than a trade: taking them off the critical path
+// speeds up the first paint, but it would otherwise put a round trip in front of the first
+// visit to Visa, Pools, Transport and the rest. Warmed on idle, that round trip is normally
+// already paid before the traveller taps, and the gate simply falls through.
+//
+// Deliberately AFTER nature and one at a time: this is background work and must never compete
+// with the screen the traveller is actually looking at. Failures are ignored — the gate will
+// fetch on demand, and offline the worker serves them from cache anyway.
+function warmLazyData() {
+  const queue = DATA_MODULES.slice();
+  const step = () => {
+    const name = queue.shift();
+    if (!name) return;
+    if (isDataLoaded(name)) { step(); return; }
+    loadData(name).catch(() => {}).then(() => {
+      if ('requestIdleCallback' in window) requestIdleCallback(step, { timeout: 3000 });
+      else setTimeout(step, 250);
+    });
+  };
+  step();
+}
+if ('requestIdleCallback' in window) requestIdleCallback(warmLazyData, { timeout: 12000 });
+else setTimeout(warmLazyData, 6000);

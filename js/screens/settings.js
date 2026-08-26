@@ -29,7 +29,7 @@ import { visitsEnabled, myVisits } from '../visits.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
 import { LANGUAGES, INTERESTS } from '../data/regions.js';
 import { getFamily } from '../data/family.js';
-import { getAccessibility } from '../data/accessibility.js';
+import { getAccessibility } from '../lazy-data.js';   // route-scoped: see js/lazy-data.js
 import { getAllBlobs, putBlob } from '../idb.js';
 import * as reminders from '../reminders.js';
 import { CURRENCY_CODES } from '../currency.js';
