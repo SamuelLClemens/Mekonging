@@ -832,7 +832,7 @@ export function placesScreen(arg) {
   function tierOf(p) {
     if (!p.coords) return 'near';
     const km = haversineKm(anchor, p.coords);
-    return withinNear(km) ? 'near' : withinDayTrip(km) ? 'trip' : 'far';
+    return withinNear(km, p.country) ? 'near' : withinDayTrip(km, p.country) ? 'trip' : 'far';
   }
 
   // Shared numbering: number every MAPPED place by its position in the displayed order, so a

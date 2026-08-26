@@ -357,7 +357,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.459.0';
+const APP_VERSION = 'mk-v0.460.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1109,7 +1109,7 @@ function profileFitAdj(p, prefs) {
 //
 // The hard rule: never invent a suitability or safety verdict. Measured across the 808 place
 // records (August 2026), the data supports some dimensions and not others — kidFriendly is set
-// on 436, afterDark on 187, access/stepFree on 189, scamWarnings on 691, but per-venue safety,
+// on 436, afterDark on 187, access/stepFree on 192, scamWarnings on 691, but per-venue safety,
 // women's-safety and baby-facility fields are effectively absent (access.babyChange is set on
 // none). So an unrecorded field returns an `unknown` entry that the UI prints as "not
 // recorded", which is more useful than silence and far safer than a false negative: a
@@ -1245,7 +1245,7 @@ function scoreForNow(p, ctx) {
   // that offer "what to do right now" never disagree about what counts as a thing to do.
   if (!todoDoable(p)) return -Infinity;
   const km = haversineKm(ctx.fix, p.coords);
-  if (!withinNear(km)) return -Infinity;         // ~1-hour-drive "near you" ceiling — see NEAR_MAX_MIN
+  if (!withinNear(km, p.country)) return -Infinity;   // drive-time "near you" ceiling — see NEAR_MAX_MIN
   const cats = p.categories || [];
   const meta = PART_META[ctx.part];
   let s = 30 - km * 0.9;                          // proximity
@@ -3791,11 +3791,12 @@ function nearbySafetyStrip(country, fix) {
   }
   const beaches = allPlaces({ country }).filter((p) => p.coords && isBeach(p))
     .map((p) => ({ p, km: haversineKm(fix, p.coords) })).filter((x) => x.km != null).sort((a, b) => a.km - b.km);
-  if (beaches.length && estDriveMin(beaches[0].km) != null && estDriveMin(beaches[0].km) <= DAYTRIP_MAX_MIN) {
+  const bcc = beaches.length && beaches[0].p ? beaches[0].p.country : undefined;
+  if (beaches.length && estDriveMin(beaches[0].km, bcc) != null && estDriveMin(beaches[0].km, bcc) <= DAYTRIP_MAX_MIN) {
     const b = beaches[0].p;
     const inSeason = jellyInSeason(b, m);
-    const near = withinNear(beaches[0].km);
-    const dl = driveLabel(beaches[0].km);
+    const near = withinNear(beaches[0].km, bcc);
+    const dl = driveLabel(beaches[0].km, bcc);
     card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${b.id}`) },
       `${inSeason ? '🪼' : '🏖️'} ${near ? 'Nearest beach' : 'Closest beach'}: ${b.name} (${dl})${inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'}`));
   }
@@ -3903,8 +3904,8 @@ function nearbyScreen() {
       // "Near me" = within about an hour's DRIVE (road-time, not straight-line). Comprehensive
       // within that reach (up to 40) rather than padded with far picks, so every row is truly
       // reachable. A separate, collapsed tier holds real "further afield" next-destinations.
-      const near = ranked.filter(({ p, km }) => withinNear(km) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 40);
-      const afield = ranked.filter(({ p, km }) => withinDayTrip(km) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 20);
+      const near = ranked.filter(({ p, km }) => withinNear(km, p.country) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 40);
+      const afield = ranked.filter(({ p, km }) => withinDayTrip(km, p.country) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 20);
 
       function renderRow(container, p, km) {
         const done = isSpotDone(p.id);
@@ -3918,7 +3919,7 @@ function nearbyScreen() {
             rnThumb(p),
             h('div', { class: 'near-text' }, [
               h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
-              h('span', { class: 'dist-chip' }, `${fmtDistance(km)} · ${driveLabel(km)} · ${compass(bearing(f, p.coords))}`),
+              h('span', { class: 'dist-chip' }, `${fmtDistance(km)} · ${driveLabel(km, p.country)} · ${compass(bearing(f, p.coords))}`),
               tags.length ? h('div', { class: 'near-tags' }, tags) : null,
             ]),
           ]),

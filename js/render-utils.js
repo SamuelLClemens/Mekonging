@@ -8,37 +8,111 @@ import { store, getLastFix } from './state.js';
 import { spotKey, getCachedAir, refreshAir, getCachedWeather, refreshWeather, nearestSpot } from './weather.js';
 import { online } from './ui-widgets.js';
 import { PHOTOS } from './data/photos.js';
+import { DRIVE_CURVE } from './data/drivetimes.js';
+import { getActiveCountry } from './app-state.js';
 
 // "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
 // understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
-// crow flies but a 3-hour mountain drive — so a flat km cap would still call Chiang Mai "near
-// Pai". We convert straight-line km to an estimated road drive (a winding-road multiplier and a
-// realistic effective speed) and cap "near you" at about an hour give or take. Places just
-// beyond that, up to a ~3-hour day trip, surface separately as "Further afield".
-const ROAD_FACTOR = 1.35;       // straight-line km -> likely road km (curves, terrain, towns)
-const DRIVE_KMH = 50;           // effective road speed incl. towns, stops, slow sections
-// Kept conservative at 75 min rather than raised to 90: because the estimate is straight-line
-// derived, a 90-min ceiling would pull genuine 3-hour mountain routes (e.g. Pai->Chiang Mai,
-// est. ~89 min) into "near you". Raising it safely needs verified corridor/terrain drive times.
-const NEAR_MAX_MIN = 75;        // "within an hour give or take" — the near-me ceiling (~46 km)
+// crow flies but a 2h20m mountain drive — so a flat km cap would still call Chiang Mai "near
+// Pai".
+//
+// The estimate used to be `km * 1.35 / 50 kmh`, one flat figure of 1.62 minutes per
+// straight-line kilometre. Measured against 16,000+ real routed journeys between this app's
+// own places (see scripts/build_drivetimes.py), that was wrong in a consistent direction:
+// 23-63% TOO FAST on short trips and 18-30% too slow on long ones. Minutes per straight-line
+// km is not constant — it falls with distance, because a longer journey spends more of itself
+// on a better road, and in Thailand it RISES first through the 12-90 km band that is all
+// provincial roads and market towns before the motorways take over.
+//
+// So the curve is now measured per country (js/data/drivetimes.js) and read as cumulative
+// minutes at each band edge, interpolated. Cumulative rather than per-band because a step
+// function makes a 91 km trip finish sooner than an 89 km one, which is the sort of thing a
+// traveller notices and rightly stops trusting.
+const CUM = {};
+// Three cumulative curves per country: a fast plausible journey (p25), a typical one (p50),
+// and a slow one (p75). [straightLineKm, totalMinutes] at each band edge, from (0, 0).
+function cumulative(cc) {
+  if (CUM[cc]) return CUM[cc];
+  const curve = DRIVE_CURVE[cc];
+  if (!curve) return null;
+  const build = (idx) => {
+    const pts = [[0, 0]];
+    for (const row of curve) pts.push([row[0], row[0] * row[idx]]);
+    // A cumulative total cannot fall as the journey lengthens, whatever the per-band figures
+    // do. Enforced rather than assumed: it holds for the current fit, and a future refetch
+    // must not be able to produce a 91 km trip that finishes before an 89 km one.
+    for (let i = 1; i < pts.length; i += 1) pts[i][1] = Math.max(pts[i][1], pts[i - 1][1]);
+    return pts;
+  };
+  CUM[cc] = { fast: build(1), mid: build(2), slow: build(3) };
+  return CUM[cc];
+}
+// Which curve to use when the caller does not say. The country being browsed is the right
+// default: every distance on screen is to a place in it.
+function curveFor(cc) {
+  return cumulative(cc) || cumulative(getActiveCountry()) || cumulative('th');
+}
+function hm(mins) {
+  if (mins < 60) return `${Math.max(5, Math.round(mins / 5) * 5)} min`;
+  const h = Math.floor(mins / 60), m = Math.round((mins % 60) / 15) * 15;
+  return m && m < 60 ? `${h}h ${m}m` : `${h + (m >= 60 ? 1 : 0)}h`;
+}
+// Raised from 75 to 90 now that the estimate is calibrated. The old cap was held down because
+// a straight-line-derived guess put Pai -> Chiang Mai at ~89 minutes, so a 90-minute ceiling
+// would have called a 2h20m mountain drive "near you". Real routing puts that pair at 122
+// minutes on this curve, well outside the cap, so the ceiling can finally be what it should be.
+const NEAR_MAX_MIN = 90;        // "within an hour and a half" — ~42 km in Thailand, ~61 in Laos
 export const DAYTRIP_MAX_MIN = 180;    // "further afield / next destinations" — up to a ~3-hour trip
-export function estDriveMin(km) { return km == null ? null : Math.round((km * ROAD_FACTOR) / DRIVE_KMH * 60); }
-export function withinNear(km) { const m = estDriveMin(km); return m != null && m <= NEAR_MAX_MIN; }
-export function withinDayTrip(km) { const m = estDriveMin(km); return m != null && m > NEAR_MAX_MIN && m <= DAYTRIP_MAX_MIN; }
+function interp(pts, km) {
+  if (!pts) return null;
+  if (km <= 0) return 0;
+  for (let i = 1; i < pts.length; i += 1) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+    if (km <= x1) return Math.round(y0 + ((km - x0) / (x1 - x0)) * (y1 - y0));
+  }
+  // Beyond the last edge, extend at the final pace rather than clamping.
+  const [xl, yl] = pts[pts.length - 1];
+  return Math.round(yl * (km / xl));
+}
+// The typical case. Used for the near / day-trip classification, where "typical" is what a
+// threshold means.
+export function estDriveMin(km, cc) {
+  if (km == null) return null;
+  const c = curveFor(cc);
+  return c ? interp(c.mid, km) : null;
+}
+// The honest spread, for anything shown to a traveller. Within one band the range is real
+// rather than statistical noise: Thailand at 50-90 km holds both a 59-minute motorway run to
+// Ayutthaya and a 2h20m mountain drive to Pai, and from two coordinates alone there is no way
+// to know which road connects them.
+export function driveRange(km, cc) {
+  if (km == null) return null;
+  const c = curveFor(cc);
+  if (!c) return null;
+  return [interp(c.fast, km), interp(c.slow, km)];
+}
+export function withinNear(km, cc) { const m = estDriveMin(km, cc); return m != null && m <= NEAR_MAX_MIN; }
+export function withinDayTrip(km, cc) { const m = estDriveMin(km, cc); return m != null && m > NEAR_MAX_MIN && m <= DAYTRIP_MAX_MIN; }
 // Human label: a walk time under ~2.5 km, otherwise a ROUGH road estimate. The estimate is
 // derived from straight-line distance, so it is deliberately framed as approximate ("by road
 // (est.)") with coarse granularity and a "+" on longer trips — a switchback mountain route can
 // take far longer than the number suggests, and false precision would mislead a traveller.
-export function driveLabel(km) {
+export function driveLabel(km, cc) {
   if (km == null) return null;
   if (km <= 2.5) return `~${Math.max(1, Math.round((km / 4.8) * 60))} min walk`;
-  const m = estDriveMin(km);
-  if (m < 60) return `~${Math.max(5, Math.round(m / 5) * 5)} min by road (est.)`;
-  // Coarse half-hour steps + a trailing "+" so a straight-line estimate is never read as a
-  // precise routed time.
-  const half = Math.round(m / 30) * 30;
-  const hrs = Math.floor(half / 60), rem = half % 60;
-  return `~${rem ? `${hrs}h ${rem}m` : `${hrs}h`}+ by road (est.)`;
+  // A RANGE, not a point. The old label said "~2h+ by road (est.)" off a single flat
+  // multiplier, which was a false precision twice over: the multiplier was uncalibrated, and
+  // even a perfectly calibrated one cannot tell a motorway from a mountain pass between two
+  // coordinates. The calibration gives a measured fast and slow case, so the label says both.
+  const r = driveRange(km, cc);
+  if (!r) return null;
+  const [fast, slow] = r;
+  // Collapse to one figure when the spread is too small to be worth two, or under an hour
+  // where the wording would read as fussy.
+  if (slow < 60 || slow - fast < Math.max(8, fast * 0.18)) {
+    return `~${hm(estDriveMin(km, cc))} by road (est.)`;
+  }
+  return `${hm(fast)}–${hm(slow)} by road (est.)`;
 }
 
 // Universal straight-line distance (km) between two {lat,lng} points. Re-exported from
