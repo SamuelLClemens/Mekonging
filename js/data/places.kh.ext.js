@@ -9,6 +9,7 @@
 export const PLACES_KH_EXT = [
   {
     id: "kh-ext-phnom-sampov", name: "Phnom Sampov (Killing Caves & Bat Exodus)", city: "Battambang", country: "kh",
+    kidFriendly: false,
     access: { stepFree: "no", note: "A sealed road or a moto (~$4) carries you up the hill, but the Killing Caves memorial is reached by a staircase down into the cavern and the summit/bat-cave viewpoint by a long stone staircase (~700 steps), so the actual sights are not step-free." },
     externalRatings: [
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 1754, asOf: "2026-07" },
@@ -1058,6 +1059,7 @@ export const PLACES_KH_EXT = [
   },
   {
     id: "kh-ext-choeung-ek",
+    kidFriendly: false,
     access: { stepFree: "partial", note: "Most of the memorial is flat compacted sand/dirt that a manual wheelchair can cross (a few root-crossed paths are rough) and staff will help lift a chair on request, but the glass memorial stupa and the museum are reached only by stairs;" },
     name: "Choeung Ek Killing Fields",
     city: "Phnom Penh",

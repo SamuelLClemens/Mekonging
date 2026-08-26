@@ -93,10 +93,17 @@ def main():
 
     if '--assert' in sys.argv:
         main_js = open('js/main.js', encoding='utf-8').read()
-        expect = {'808': total, '426': counts['kidFriendly'], '187': counts['afterDark'],
-                  '176': counts['stepFree'], '691': counts['scamWarnings'],
-                  '350': counts['scam_nonempty']}
-        for quoted, actual in expect.items():
+        # The figures this file expects js/main.js to be quoting. Bump BOTH together when a
+        # data pass moves one — that pairing is the whole point of the check.
+        #
+        # A LIST, not a dict, and it has to stay one: afterDark and stepFree both read 187
+        # as of August 2026, and as dict keys the second silently replaced the first, which
+        # quietly dropped afterDark from the check while still printing PASS.
+        expect = [('808', total, 'total'), ('436', counts['kidFriendly'], 'kidFriendly'),
+                  ('187', counts['afterDark'], 'afterDark'), ('187', counts['stepFree'], 'stepFree'),
+                  ('691', counts['scamWarnings'], 'scamWarnings'),
+                  ('350', counts['scam_nonempty'], 'scam_nonempty')]
+        for quoted, actual, _label in expect:
             if int(quoted) != actual:
                 problems.append(f'js/main.js quotes {quoted} where the data now says {actual} '
                                 f'— update the profileFit() comment')

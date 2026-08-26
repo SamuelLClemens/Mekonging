@@ -311,6 +311,7 @@ export const REMOTE_PLAN = [
 ];
 
 export const MED_SOURCES = [
+  { org: 'OpenStreetMap contributors (every mapped hospital and clinic, ODbL)', url: 'https://www.openstreetmap.org/copyright' },
   { org: 'World Health Organization — country health system profiles', url: 'https://www.who.int/countries' },
   { org: 'Joint Commission International (hospital accreditation)', url: 'https://www.jointcommissioninternational.org' },
   { org: 'Thailand National Institute for Emergency Medicine', url: 'https://www.niems.go.th' },

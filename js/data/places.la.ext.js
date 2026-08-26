@@ -933,6 +933,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-blue-lagoon-1",
+    access: { stepFree: 'no' },
     name: "Blue Lagoon 1 (Tham Poukham)",
     city: "Vang Vieng",
     country: "la",
@@ -1403,6 +1404,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-phou-fa-viewpoint-phongsali",
+    access: { stepFree: 'no' },
     name: "Phou Fa Mountain Viewpoint",
     city: "Phongsali",
     country: "la",
@@ -1559,6 +1561,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-phanoi-viewpoint-muang-ngoi",
+    access: { stepFree: 'no' },
     name: "Phanoi Viewpoint",
     city: "Muang Ngoi",
     country: "la",
@@ -2500,6 +2503,7 @@ export const PLACES_LA_EXT = [
   },
   {
     "id": "la-ext-tham-pha-chan",
+    "access": { "stepFree": "no" },
     "name": "Tham Pha Chan",
     "city": "Thakhek",
     "country": "la",
@@ -3079,6 +3083,7 @@ export const PLACES_LA_EXT = [
   },
   {
     "id": "la-ext-tad-soung",
+    "access": { "stepFree": "no" },
     "name": "Tad Soung Waterfall",
     "city": "Tad Lo",
     "country": "la",
@@ -4294,6 +4299,7 @@ export const PLACES_LA_EXT = [
   },
   {
     "id": "la-ext-living-land-farm",
+    "kidFriendly": true,
     "name": "Living Land Farm",
     "city": "Luang Prabang",
     "country": "la",
