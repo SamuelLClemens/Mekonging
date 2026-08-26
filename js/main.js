@@ -37,6 +37,8 @@ import {
 import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
 import { familyScreen, familyCard } from './screens/family.js';
+import { hospitalScreen } from './screens/medical.js';
+import { HOSPITALS, HOSP_TAG } from './data/medical.js';
 import { settingsScreen } from './screens/settings.js';
 import { calendarDispatch } from './screens/calendar.js';
 import { journalDispatch, scrapbookScreen, journeyScreen } from './screens/journal.js';
@@ -2980,10 +2982,27 @@ function loadRegionSet(cc) {
   const loader = REGION_SET_LOADERS[cc];
   if (!loader) return Promise.resolve(null);
   const p = loader()
-    .then((set) => { REGIONS_BY_CC[cc] = set; return set; })
+    .then((set) => {
+      REGIONS_BY_CC[cc] = set;
+      // A newly available province set changes what whereAmI() should return for the
+      // current fix, and whereAmI memoises. Drop the memo or the re-render below repaints
+      // the same pre-province answer it already had.
+      _waiCache = { key: '', val: null };
+      return set;
+    })
     .catch((err) => { delete _regionSetLoads[cc]; throw err; });
   _regionSetLoads[cc] = p;
   return p;
+}
+// Non-blocking province-polygon load for a screen that must paint immediately but reads
+// better once it can name the traveller's province. Deliberately NOT part of the router's
+// NEEDS_REGION_DATA gate: gating the emergency screens on a download would trade a fact
+// that is merely useful for a delay that is actively harmful. Re-renders once, only if the
+// traveller is still on the route that asked.
+export function ensureRegionSet(cc) {
+  if (!cc || isRegionSetLoaded(cc)) return;
+  const at = location.hash;
+  loadRegionSet(cc).then(() => { if (location.hash === at) render(); }).catch(() => { /* degrades to no province name */ });
 }
 function findProvince(cc, code) {
   const set = regionSetFor(cc);
@@ -6855,34 +6874,10 @@ function nearestFirst(list, fix) {
 }
 export function kmLabel(km) { return km == null ? '' : (km < 1 ? '<1 km' : `${Math.round(km)} km`); }
 
-// Reputable hospitals travellers and expats commonly use, tagged by capability so a
-// family can find an ER, a children's ward or maternity care fast. Not exhaustive.
-const HOSP_TAG = { er: '🚑 24h ER', peds: '🧒 Children', maternity: '🤰 Maternity', intl: '🌐 English / international' };
-const HOSPITALS = [
-  // Thailand
-  { cc: 'th', city: 'Bangkok', lat: 13.7437, lng: 100.5548, name: 'Bumrungrad International Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Bangkok', lat: 13.7305, lng: 100.5690, name: 'Samitivej Sukhumvit Hospital', tags: ['er', 'peds', 'maternity', 'intl'], note: 'Has a dedicated children’s hospital.' },
-  { cc: 'th', city: 'Bangkok', lat: 13.7247, lng: 100.5389, name: 'BNH Hospital', tags: ['er', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Chiang Mai', lat: 18.7965, lng: 98.9720, name: 'Chiang Mai Ram Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Phuket', lat: 7.8927, lng: 98.3699, name: 'Bangkok Hospital Phuket', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Koh Samui', lat: 9.5350, lng: 100.0620, name: 'Bangkok Hospital Samui', tags: ['er', 'intl'] },
-  { cc: 'th', city: 'Krabi', lat: 8.0800, lng: 98.9060, name: 'Krabi Nakharin International Hospital', tags: ['er', 'intl'] },
-  // Vietnam
-  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7290, lng: 106.7220, name: 'FV Hospital (Franco-Vietnamese)', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7846, lng: 106.6960, name: 'Family Medical Practice HCMC', tags: ['er', 'intl'], note: '24/7 international clinic with evacuation support.' },
-  { cc: 'vi', city: 'Hanoi', lat: 20.9950, lng: 105.8680, name: 'Vinmec International Hospital (Times City)', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'vi', city: 'Hanoi', lat: 21.0300, lng: 105.8130, name: 'Family Medical Practice Hanoi', tags: ['intl'] },
-  { cc: 'vi', city: 'Da Nang', lat: 16.0600, lng: 108.2200, name: 'Vinmec Da Nang International Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  // Cambodia
-  { cc: 'kh', city: 'Phnom Penh', lat: 11.5800, lng: 104.8990, name: 'Royal Phnom Penh Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'kh', city: 'Phnom Penh', lat: 11.5560, lng: 104.9280, name: 'Raffles Medical Phnom Penh', tags: ['er', 'intl'] },
-  { cc: 'kh', city: 'Siem Reap', lat: 13.3670, lng: 103.8560, name: 'Royal Angkor International Hospital', tags: ['er', 'intl'] },
-  { cc: 'kh', city: 'Siem Reap', lat: 13.3560, lng: 103.8590, name: 'Angkor Hospital for Children', tags: ['peds'], note: 'Renowned charitable children’s hospital.' },
-  // Laos
-  { cc: 'la', city: 'Vientiane', lat: 17.9660, lng: 102.6110, name: 'Alliance International Medical Centre', tags: ['er', 'intl'] },
-  { cc: 'la', city: 'Vientiane', lat: 17.9610, lng: 102.6030, name: 'Mahosot Hospital', tags: ['er'], note: 'Public hospital. Serious cases are often stabilised then evacuated to Thailand (Udon Thani or Bangkok).' },
-  { cc: 'la', city: 'Luang Prabang', lat: 19.8790, lng: 102.1470, name: 'Luang Prabang Provincial Hospital', tags: ['er'], note: 'Basic care. Serious cases are commonly evacuated to Vientiane or Thailand.' },
-];
+// The hospital dataset moved to js/data/medical.js when the nineteen-entry big-city list
+// grew into region-wide coverage plus the province-level fallback that answers "how do I
+// reach a hospital" from a village this app has never heard of. HOSPITALS/HOSP_TAG are
+// imported at the top of this file; the full flow lives in js/screens/medical.js.
 
 // Actually kosher — in this region that means Chabad houses (supervised), never
 // "kosher-style". Each runs meals and/or a food shop for travellers.
@@ -7175,7 +7170,9 @@ export function nearestSpotGlobal(fix) {
 // naming must NOT, or a traveller in Mae Hong Son is wrongly told they are in Pai (the
 // closest listed hub). Memoised per ~100 m cell so per-render calls stay cheap.
 let _waiCache = { key: '', val: null };
-function whereAmI(fix) {
+// Exported so the medical screen can name the traveller's province authoritatively — the
+// province is what decides which hospital is actually reachable, not the nearest hub town.
+export function whereAmI(fix) {
   if (!fix || fix.lat == null || fix.lng == null) return null;
   const key = fix.lat.toFixed(3) + ',' + fix.lng.toFixed(3);
   if (_waiCache.key === key) return _waiCache.val;
@@ -7279,32 +7276,31 @@ function sosScreen(cc) {
   if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
 
-  // (2) Where to go — the nearest hospital first. The maps deep link needs internet, so
-  // pair it with an offline fallback: show a big "I need a hospital" phrase to a local.
-  const hosp = h('div', { class: 'card' }, [h('h2', {}, 'Get to a hospital — nearest you')]);
-  const mapHref = (fix && fix.lat != null)
-    ? `https://www.google.com/maps/search/hospital/@${fix.lat},${fix.lng},14z`
-    : 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me';
-  hosp.append(h('a', { class: 'btn block', href: mapHref, target: '_blank', rel: 'noopener' }, 'Find nearest hospital (needs internet) ↗'));
+  // (2) Where to go. The full answer — province-level fallback, evacuation chains, the
+  // local word for "hospital", the medical card — is its own screen (js/screens/medical.js),
+  // because it outgrew a card the moment it had to work somewhere without a listed hospital.
+  // What stays here is the decision a person in trouble makes in three seconds: the three
+  // nearest options, and one button to everything else.
+  const hosp = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, 'Get to a hospital'),
+    infoTip('Ordered by straight-line distance from your location. Open the full screen for the rest of the country, what to do where no hospital is listed, how people actually reach one here, and your medical card.'),
+  ])]);
+  hosp.append(h('button', { class: 'btn block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, '🏥 Get to a hospital — full guide'));
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
   if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
-
-  // Reputable hospitals in the country, nearest first, tagged so a family can find an ER,
-  // a children's ward or maternity care fast. The map link routes to the exact door; call
-  // ahead — in a life-threatening emergency use the number above.
   const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === getActiveCountry()), fix);
   if (localHosp.length) {
-    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, `Trusted hospitals in ${c.name}, nearest first — for adults, children, babies and pregnancy. Most have English-speaking staff.`));
-    localHosp.forEach((x) => {
+    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    localHosp.slice(0, 3).forEach((x) => {
       const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
       hosp.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
         h('div', { class: 'row-between' }, [h('strong', {}, x.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city + (x.note ? ` · ${x.note}` : '')),
+        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city),
         h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))),
         h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: mapsSearch(`${x.name} ${x.city}`), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
       ]));
     });
-    hosp.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'A starting list, not exhaustive. For a young child, pregnancy or complex needs, telephone ahead to confirm the right department is open.'));
+    if (localHosp.length > 3) hosp.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, `All ${localHosp.length} listed in ${c.name} →`));
   }
 
   // (3) What to do while getting there — bites/stings first aid, then life-saving basics.
@@ -9276,7 +9272,7 @@ export function render() {
   const NEEDS_COUNTRY_DATA = new Set([
     'country', 'region', 'nearby', 'places', 'place', 'prices', 'transport',
     'calendar', 'events', 'event', 'today', 'food', 'dish', 'board', 'streetfood',
-    'sos', 'foryou',
+    'sos', 'hospital', 'foryou',
   ]);
   // Read across every country at once: universal search; the full multi-country map
   // (NOT the small embedded per-country Places map, which is caller-scoped via a
@@ -9364,6 +9360,7 @@ export function render() {
       case 'identified': return myIdentifierScreen();
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
+      case 'hospital': return hospitalScreen(arg);
       case 'scams': return scamsScreen(arg);
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);

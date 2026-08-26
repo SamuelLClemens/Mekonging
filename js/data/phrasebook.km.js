@@ -66,6 +66,12 @@ export const PHRASEBOOK_KM = {
       { en: "Too expensive", script: "ថ្លៃណាស់", roman: "thlai nas", note: "ណាស់ (nas) = 'very/too'; core bargaining phrase." },
     ] },
     { id: "emergency", name: "Emergency", phrases: [
+      { en: "Take me to the hospital", script: "ជូនខ្ញុំទៅមន្ទីរពេទ្យ", roman: "joun khnhom tov muntii pet", note: "Say this to a tuk-tuk or car driver. Outside Phnom Penh this is usually faster than waiting for an ambulance." },
+      { en: "It is an emergency", script: "បន្ទាន់!", roman: "bontoan!", note: "បន្ទាន់ (bontoan) = urgent. The fuller form on hospital signs is សង្គ្រោះបន្ទាន់ (sangkruoh bontoan), 'emergency rescue'." },
+      { en: "I am bleeding", script: "ខ្ញុំហូរឈាម", roman: "khnhom hou chheam", note: "ហូរឈាម (hou chheam) = to bleed. Point at the wound." },
+      { en: "They are not breathing", script: "គាត់មិនដកដង្ហើម", roman: "koat min dok dangheum", note: "ដកដង្ហើម (dok dangheum) = to breathe. Point at the person as you say it." },
+      { en: "A snake bit me", script: "ពស់ចឹកខ្ញុំ", roman: "poah cheuk khnhom", note: "ពស់ (poah) = snake, ចឹក (cheuk) = bit. Some speakers use ខាំ (kham) for 'bit' — either is understood." },
+      { en: "I have travel insurance", script: "ខ្ញុំមានធានារ៉ាប់រង", roman: "khnhom mean thienea-rap-rong", note: "ធានារ៉ាប់រង = insurance. Cambodian hospitals often want cash regardless, so carry some as well." },
       { en: "Help! (urgent shout)", script: "ជួយផង!", roman: "chuoy phong!", note: "Urgent distress shout to call out loudly. ផង (phong) intensifies the plea; ជួយ (chuoy) alone also works but is softer." },
       { en: "Call the police!", script: "ជួយហៅប៉ូលិសមក!", roman: "chuoy hav bolih mok!", note: "ហៅ (hav) = 'call/summon'; ប៉ូលិស (bolih) = 'police'. Cambodia police emergency number is 117." },
       { en: "Call an ambulance!", script: "ជួយហៅឡានសង្គ្រោះមក!", roman: "chuoy hav lan songkruoh mok!", note: "ឡានសង្គ្រោះ (lan songkruoh) = 'rescue/ambulance vehicle'; some sources use រថយន្តសង្គ្រោះ (rotyon songkruoh). Ambulance number is 119; phrasing varies by source." },

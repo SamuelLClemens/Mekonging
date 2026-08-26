@@ -70,6 +70,12 @@ export const PHRASEBOOK_TH = {
       { en: 'One thousand', script: 'พัน', roman: 'phan' },
     ]},
     { id: 'emergency', name: 'Emergency & health', phrases: [
+      { en: "Take me to the hospital", script: 'พาไปโรงพยาบาล', roman: 'phaa bpai rohng-phá-yaa-baan', note: "Say this to any driver. Add หน่อยครับ/ค่ะ (nòi khráp/khâ) to be polite, or leave it off when it is urgent — the bare phrase is understood either way." },
+      { en: "It is an emergency", script: 'ฉุกเฉิน', roman: 'chùk-chěrn', note: "The single word is what is recognised fastest, and it is the word written on every emergency-room sign." },
+      { en: "I am bleeding", script: 'เลือดออก', roman: 'lêuat òk', note: "Literally 'blood is coming out'. Point at the wound while saying it." },
+      { en: "They are not breathing", script: 'ไม่หายใจ', roman: 'mâi hăai-jai', note: "Point at the person. This is the phrase that gets an ambulance dispatched at the highest priority." },
+      { en: "A snake bit me", script: 'งูกัด', roman: 'nguu gàt', note: "งู (nguu) = snake, กัด (gàt) = bit. If you saw the snake, do not chase it — describe it or show a photo instead." },
+      { en: "I have travel insurance", script: 'มีประกันการเดินทาง', roman: 'mee bprà-gan gaan-dern-taang', note: "Useful at a private hospital reception, where payment or an insurer's guarantee is normally asked for before treatment." },
       { en: 'Help!', script: 'ช่วยด้วย', roman: 'chuay duay' },
       { en: 'Call the police', script: 'เรียกตำรวจ', roman: 'riak tam-ruat' },
       { en: 'Hospital', script: 'โรงพยาบาล', roman: 'rong-pha-ya-baan' },
