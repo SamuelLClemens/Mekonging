@@ -1,0 +1,52 @@
+// Interface dictionary — Japanese (ja).
+//
+// One language per file, loaded on demand by js/i18n.js (ensureUiStrings). The rules
+// this file follows — exact-match keys, an omitted entry falling back to English, and
+// why a wrong entry is worse than a missing one — are documented in ui-strings.js,
+// which is also where the parity checker starts. Do not add a key here without adding
+// it to every other language; run `python3 scripts/check-ui-strings.py` after editing.
+
+export const STRINGS = {
+    'Home': 'ホーム', 'Talk': '会話', 'Places': 'スポット', 'Explore': '探索', 'YOU': 'マイ',
+    'Your space': 'マイページ', '‹ Back': '‹ 戻る', 'Settings': '設定', 'Saved & collections': '保存済み',
+    'Emergency help': '緊急ヘルプ', 'Emergency': '緊急', 'Online': 'オンライン', 'Offline': 'オフライン',
+    'Skip to content': '本文へスキップ', 'Language': '言語', 'Choose your language': '言語を選択してください',
+    'Save': '保存', 'Save changes': '変更を保存', 'Cancel': 'キャンセル', 'Delete': '削除', 'Remove': '取り除く',
+    'Clear': 'クリア', 'Close': '閉じる', 'Edit': '編集', 'Add': '追加', 'Done': '完了', 'Search': '検索',
+    'Copy': 'コピー', 'Share': '共有', 'Export': 'エクスポート', 'Dismiss': '閉じる', 'Hide': '非表示',
+    'Details': '詳細', 'Confirm': '確認', 'Are you sure?': 'よろしいですか？', 'Translate': '翻訳',
+    'Loading…': '読み込み中…', 'Translating…': '翻訳中…', 'Locating…': '位置を取得中…', 'Yes': 'はい',
+    'No': 'いいえ', 'Show more': 'もっと見る', 'Show less': '折りたたむ', 'More': 'もっと', 'Less': '少なく',
+    'Today': '今日', 'Tomorrow': '明日', 'Yesterday': '昨日', 'Morning': '午前', 'Afternoon': '午後',
+    'Evening': '夕方', 'Night': '夜', 'Amount': '金額', 'Date': '日付', 'Price': '価格', 'Note': 'メモ',
+    'Notes': 'メモ', 'Title': 'タイトル', 'Type': '種類', 'City': '都市', 'Place': '場所', 'Where': '場所',
+    'All': 'すべて', 'Free': '無料', 'Open': '営業中', 'Closed': '閉店', 'Nearby': '近く',
+    'Your location': '現在地', 'Currency': '通貨', 'Untitled': '無題', 'Phrasebook': 'フレーズ集',
+    'Fair prices': '適正価格', 'Getting around': '交通', 'Weather': '天気', 'Budget': '予算',
+    'Journal': '旅日記', 'Calendar': 'カレンダー', 'Family': '家族', 'Next stop': '次の目的地',
+    'Journey planner': '旅程プランナー', 'Border crossings': '国境検問所', 'Entry & visa': '入国とビザ',
+    'Common scams': 'よくある詐欺', 'Accessibility': 'アクセシビリティ', 'History & culture': '歴史と文化',
+    'Near me': '現在地周辺', 'Just arrived': '到着直後', 'All features': 'すべての機能', 'Dictionary': '辞書',
+    'Saved': '保存済み', 'Police': '警察', 'Ambulance': '救急車', 'Fire': '消防',
+    'Tourist Police': 'ツーリストポリス', 'Hospital': '病院', 'Embassy': '大使館', 'Call': '電話',
+    'Thailand': 'タイ', 'Vietnam': 'ベトナム', 'Cambodia': 'カンボジア', 'Laos': 'ラオス', 'say:': '読み:',
+    'Pin to top': '上部にピン留め', 'Unpin': 'ピン留めを解除', 'Hide from lists': '一覧から隠す',
+    'Quick save': 'クイック保存', 'Compare': '比較', 'Full details': '詳細情報', 'More info': '詳細',
+    'Culture & history': '文化と歴史', 'Nature & outdoors': '自然とアウトドア', 'Food & drink': '食べ物と飲み物',
+    'Markets & shopping': '市場と買い物', 'Places to stay': '宿泊先', 'Beaches & water': 'ビーチと水辺',
+    'Nightlife & social': 'ナイトライフと社交', 'Read this aloud': '読み上げる', 'Reading speed': '読み上げ速度',
+    'My trip': '私の旅', 'For you': 'あなたへ', 'Documents': '書類', 'Saved places': '保存した場所',
+    'Quick access': 'クイックアクセス', 'Category': 'カテゴリ', 'Per day': '1日あたり', 'Any price': '価格を問わない',
+    'Step-free': '段差なし', 'Copy the local text': '現地語のテキストをコピー',
+    'Tap to show large': 'タップで大きく表示',
+    'Food': '料理', 'Nature': '自然', 'Planning': '計画中', 'Traveling': '旅行中', 'Post': '旅行後',
+    'Tools': 'ツール', 'Map': '地図', 'Create': '作成', 'Sounds': '音', 'Produce': '青果', 'Dangerous': '危険',
+    'Plan your trip': '旅行を計画する', 'Search everything': 'すべて検索', 'Trip plans': '旅行プラン',
+    'Pre-trip checklist': '出発前チェックリスト', 'Currency converter': '通貨換算', 'Help & FAQ': 'ヘルプとFAQ',
+    'Cafes': 'カフェ', 'Parks': '公園', 'Temples': '寺院', 'Museums': '博物館', 'Beaches': 'ビーチ',
+    'Shopping': 'ショッピング', 'Wellness': 'ウェルネス', 'Nightlife': 'ナイトライフ', 'Viewpoints': '展望スポット',
+    'Restaurants': 'レストラン', 'Street food': '屋台料理', 'Night markets': 'ナイトマーケット', 'Playgrounds': '遊び場',
+    'Daily': '毎日', 'Weekends': '週末', 'Favourites': 'お気に入り', 'Your pins': 'あなたのピン',
+    'New collection': '新しいコレクション', 'Use my location': '現在地を使う',
+    'What this is': 'これは何か', 'Get to a hospital': '病院へ行く', 'Where people are': '利用者のいる場所',
+};

@@ -32,19 +32,13 @@ import {
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree,
-  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale,
+  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
-import { nextStopScreen } from './screens/nextstop.js';
-import { familyScreen, familyCard } from './screens/family.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { hospitalScreen } from './screens/medical.js';
-import { visitorsScreen } from './screens/visitors.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
 import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
-import { settingsScreen } from './screens/settings.js';
-import { calendarDispatch } from './screens/calendar.js';
-import { journalDispatch, scrapbookScreen, journeyScreen } from './screens/journal.js';
 import { phrasebookScreen, dictionaryScreen, scriptLang, showBigPhrase } from './screens/phrasebook.js';
 // Places step 4 (task #205): placesScreen itself, plus placeCard/travelerChips/saveSheet/
 // tripVisitSheet, which this file's own not-yet-extracted screens (signature sights strip,
@@ -95,6 +89,7 @@ import {
   marketOpenDays, marketOnToday, marketCovered, isBeach, seaAgo,
   aqiBand, airBlock, uvBand, uvLineNode, uvTodayBlock,
   photoBlock, extUrl, sourceHref, sourcesNote, personalScore,
+  ratingColor, effectiveRating,
 } from './render-utils.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
@@ -107,7 +102,6 @@ import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine, refreshAir, getCachedAir } from './weather.js';
-import { ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -164,6 +158,72 @@ function loadNature() {
 function allSpecies(filter = {}) { return _natureMod ? _natureMod.allSpecies(filter) : []; }
 function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; }
 
+// ---- lazy screen modules ----------------------------------------------------
+// Six screen modules are loaded on demand rather than statically imported. Every one of them
+// is reached ONLY through the router (their exports are used nowhere else in this file — the
+// one exception is familyCard, which the country/explore hub renders, so 'explore' and
+// 'country' request the family module below). Together they were 184 KB of the eagerly-parsed
+// cold-start graph — a settings screen and a journal parsed before the first screen could
+// paint, on connections where that is seconds.
+//
+// The screens that are NOT here are deliberate: home.js is the first thing rendered, and
+// medical.js is the #hospital emergency screen, which must never depend on a fetch. places.js,
+// budget.js, weather.js and phrasebook.js each export helpers used throughout this file, so
+// they are not route-scoped and are left alone.
+// The `bust` argument exists because a FAILED dynamic import is permanent. The spec stores the
+// failure in the page's module map against that exact specifier, so importing the same URL
+// again never refetches — a Retry button that re-imported './screens/settings.js' would keep
+// reporting failure forever, on a connection that had already come back. A different query
+// string is a different module-map entry, so the retry genuinely re-requests. The service
+// worker matches its cache with ignoreSearch, so the busted URL still hits the offline copy.
+const SCREEN_LOADERS = {
+  calendar: (b) => import('./screens/calendar.js' + b),
+  journal: (b) => import('./screens/journal.js' + b),
+  nextstop: (b) => import('./screens/nextstop.js' + b),
+  settings: (b) => import('./screens/settings.js' + b),
+  visitors: (b) => import('./screens/visitors.js' + b),
+  family: (b) => import('./screens/family.js' + b),
+};
+// Which modules a route needs before it can render. The router gate below awaits these the
+// same way it awaits country data, so by the time a case runs its module is guaranteed
+// present and every call site stays synchronous.
+const ROUTE_SCREENS = {
+  calendar: ['calendar'],
+  journal: ['journal'], scrapbook: ['journal'], journey: ['journal'],
+  nextstop: ['nextstop'],
+  settings: ['settings'],
+  visitors: ['visitors'],
+  family: ['family'], explore: ['family'], country: ['family'],
+};
+const _screenMods = Object.create(null);
+const _screenPending = Object.create(null);
+// Modules whose load FAILED — offline before the worker had cached them, or a dropped
+// connection mid-fetch. This set is what stops the gate below from spinning: it re-renders on
+// failure, and without a record of the failure it would ask for the same module again, fail
+// again, and leave the traveller on a loading card forever.
+const _screenFailed = Object.create(null);
+function screenMod(name) { return _screenMods[name] || null; }
+const _screenTries = Object.create(null);
+function loadScreenMod(name) {
+  if (_screenMods[name]) return Promise.resolve(_screenMods[name]);
+  if (!_screenPending[name]) {
+    const n = _screenTries[name] = (_screenTries[name] || 0) + 1;
+    _screenPending[name] = SCREEN_LOADERS[name](n > 1 ? `?retry=${n}` : '')
+      .then((m) => { _screenMods[name] = m; delete _screenPending[name]; return m; })
+      .catch((err) => { delete _screenPending[name]; _screenFailed[name] = true; throw err; });
+  }
+  return _screenPending[name];
+}
+// Regaining a connection clears the failures so the screen can be opened again without a
+// restart — the same trigger the service-worker update check already uses.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    let any = false;
+    for (const k of Object.keys(_screenFailed)) { delete _screenFailed[k]; any = true; }
+    if (any && (ROUTE_SCREENS[(location.hash || '#home').slice(1).split('-')[0]] || []).length) render();
+  });
+}
+
 // ---- service worker + theme -------------------------------------------------
 // Register the service worker only in a secure web context (https / http localhost).
 // In the native iOS wrapper the app is served over a custom scheme where SW cannot
@@ -193,6 +253,17 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
       window.addEventListener('online', checkForUpdate);
+
+      // Tell the worker it may now fill the offline copy. The worker no longer precaches at
+      // install time, because those requests raced the page's own module loads on exactly the
+      // weak connections this app is built for. Waiting for idle costs the offline copy a few
+      // seconds and buys the traveller a first screen that is not competing with a 3 MB
+      // background download. requestIdleCallback is not on Safari, hence the timeout fallback.
+      const warm = () => navigator.serviceWorker.ready
+        .then((r) => { if (r.active) r.active.postMessage({ type: 'warm-cache' }); })
+        .catch(() => { /* worker never activated — nothing to warm */ });
+      if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 8000 });
+      else setTimeout(warm, 4000);
     }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
 
     // A NEW worker taking control used to force an immediate window.location.reload() here, to
@@ -357,7 +428,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.460.0';
+const APP_VERSION = 'mk-v0.462.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -609,7 +680,10 @@ export function languageSheet() {
     if (code !== 'en' && !mtEnabled()) setMtEnabled(true);
     setUiLang(code);
     if (close) close();
-    render();
+    // Fetch the chosen language's dictionary before repainting. Dictionaries are per-language
+    // files now, so without this the screen would render once in English and then flip.
+    // ensureUiStrings never rejects — a language that cannot be fetched stays English.
+    ensureUiStrings(code).then(render);
   };
 
   const row = (l, needsMt) => h('button', {
@@ -3645,7 +3719,11 @@ function exploreScreen(argCc) {
   // every visit; still one tap away, never removed.
   const acc = accessCard(cc); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen', false));
   const vc = visaCard(cc); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen', false));
-  const famc = familyCard(cc); if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen', false));
+  // The family module is requested for 'explore'/'country' in ROUTE_SCREENS, so it is loaded
+  // by the time this runs; the guard is for any future caller that is not route-gated.
+  const famMod = screenMod('family');
+  const famc = famMod ? famMod.familyCard(cc) : null;
+  if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen', false));
 
   mount(wrap, '#explore');
 }
@@ -9340,6 +9418,39 @@ function countryLoadingScreen(ccs) {
   ]);
 }
 
+// Shown for the fraction of a second a route's own screen module takes to arrive. Separate
+// from countryLoadingScreen because it is not naming a country — and because it is almost
+// always instant: the service worker has these cached after the first visit.
+function screenLoadingScreen() {
+  return h('div', { class: 'screen' }, [
+    h('div', { class: 'card', style: 'text-align:center;margin-top:15vh' }, [
+      h('div', { style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
+      h('h2', { style: 'margin:0 0 4px' }, 'Opening…'),
+      h('p', { class: 'muted' }, 'One moment.'),
+    ]),
+  ]);
+}
+
+// Shown when a route's own screen module could not be fetched — offline before the service
+// worker had stored it. Honest about the cause, and a retry rather than a dead end. Emergency
+// screens are deliberately not lazy, so this can never stand between a traveller and
+// #sos or #hospital.
+function screenUnavailableScreen(names) {
+  return h('div', { class: 'screen' }, [
+    topbar('Not downloaded yet', '#home'),
+    h('div', { class: 'card' }, [
+      h('h2', { style: 'margin:0 0 6px' }, 'This screen is not on your device yet'),
+      h('p', { class: 'muted' }, online()
+        ? 'It could not be fetched just now. Tap retry.'
+        : 'It needs a connection the first time you open it. Emergency numbers, phrases and the hospital finder all work offline.'),
+      h('button', {
+        class: 'btn block',
+        onclick: () => { (names || []).forEach((n) => { delete _screenFailed[n]; }); render(); },
+      }, 'Retry'),
+    ]),
+  ]);
+}
+
 // ---- router -----------------------------------------------------------------
 export function render() {
   applyTheme();
@@ -9407,6 +9518,24 @@ export function render() {
     }
   }
 
+  // ---- Lazy screen-module gate -------------------------------------------------
+  // Same shape as the country-data gate above, and for the same reason: hold the render for
+  // one module rather than make every screen in the app carry a not-loaded-yet branch. By the
+  // time a case in the switch runs, screenMod(name) is guaranteed non-null.
+  const needScreens = ROUTE_SCREENS[head] || [];
+  const wantScreens = needScreens.filter((n) => !screenMod(n) && !_screenFailed[n]);
+  if (wantScreens.length) {
+    wantScreens.forEach((n) => { loadScreenMod(n).then(render, render); });
+    mount(screenLoadingScreen(), true);
+    return;
+  }
+  // Asked for, attempted, and not available: say so plainly and offer a retry, rather than
+  // calling a screen function on a module that is not there.
+  if (needScreens.some((n) => !screenMod(n))) {
+    mount(screenUnavailableScreen(needScreens.filter((n) => !screenMod(n))), true);
+    return;
+  }
+
   try {
     // First run: learn the traveller before dropping them on the menu. Only intercepts the
     // home route, so any deep link (a shared place/board) still opens directly.
@@ -9431,25 +9560,25 @@ export function render() {
       case 'prices': return pricesScreen(arg);
       case 'transport': return transportScreen(arg);
       case 'route': return planRouteScreen();
-      case 'nextstop': return nextStopScreen(arg);
+      case 'nextstop': return screenMod('nextstop').nextStopScreen(arg);
       case 'info': return infoScreen(arg);
       case 'saved': return savedScreen();
       case 'collection': return collectionScreen(arg);
       case 'crossings': return crossingsScreen();
       case 'pools': return poolsScreen(arg);
       case 'addpin': return addPinScreen(arg);
-      case 'journal': return journalDispatch(arg);
-      case 'scrapbook': return scrapbookScreen();
+      case 'journal': return screenMod('journal').journalDispatch(arg);
+      case 'scrapbook': return screenMod('journal').scrapbookScreen();
       case 'contributions': return contributionsScreen();
-      case 'journey': return journeyScreen();
-      case 'calendar': return calendarDispatch(arg);
+      case 'journey': return screenMod('journal').journeyScreen();
+      case 'calendar': return screenMod('calendar').calendarDispatch(arg);
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
       case 'weather': return weatherScreen(arg);
       case 'today': return daySuggestScreen(arg);
       case 'access': return accessScreen(arg);
       case 'baby': return babyScreen(arg);
-      case 'family': return familyScreen(arg);
+      case 'family': return screenMod('family').familyScreen(arg);
       case 'history': return historyScreen(arg);
       case 'setcity': return setCityScreen(arg);
       case 'arrival': return arrivalScreen(arg);
@@ -9488,8 +9617,8 @@ export function render() {
       case 'board': return boardScreen(arg);
       case 'streetfood': return streetfoodScreen();
       case 'donate': return donateScreen();
-      case 'visitors': return visitorsScreen();
-      case 'settings': return settingsScreen();
+      case 'visitors': return screenMod('visitors').visitorsScreen();
+      case 'settings': return screenMod('settings').settingsScreen();
       case 'export': return exportScreen();
       default: return homeScreen();
     }
@@ -9544,7 +9673,14 @@ if (store.profile.prefs.uiLang === undefined) {
 }
 applyDocLang();
 
-render();
+// First paint waits for the active language's interface dictionary — one ~5 KB file, or
+// nothing at all for English. It used to be free because all 29 languages were bundled into
+// the eagerly-imported module graph; that cost every traveller 162 KB before anything could
+// appear. Awaiting one file here is what keeps a Thai or Arabic launch from painting an
+// English screen and then flipping. ensureUiStrings never rejects, so a failed fetch still
+// renders — in English, which is the documented fallback for a missing dictionary anyway.
+if (uiStringsReady()) render();
+else ensureUiStrings().then(render, render);
 
 // Location on from the start: request a live fix immediately (browser permission still
 // gates it) and keep it current; denial degrades to the manual city picker.

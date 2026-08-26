@@ -1,0 +1,51 @@
+// Interface dictionary — Korean (ko).
+//
+// One language per file, loaded on demand by js/i18n.js (ensureUiStrings). The rules
+// this file follows — exact-match keys, an omitted entry falling back to English, and
+// why a wrong entry is worse than a missing one — are documented in ui-strings.js,
+// which is also where the parity checker starts. Do not add a key here without adding
+// it to every other language; run `python3 scripts/check-ui-strings.py` after editing.
+
+export const STRINGS = {
+    'Home': '홈', 'Talk': '대화', 'Places': '장소', 'Explore': '탐색', 'YOU': '나',
+    'Your space': '내 공간', '‹ Back': '‹ 뒤로', 'Settings': '설정', 'Saved & collections': '저장함',
+    'Emergency help': '긴급 도움', 'Emergency': '긴급', 'Online': '온라인', 'Offline': '오프라인',
+    'Skip to content': '본문으로 이동', 'Language': '언어', 'Choose your language': '언어를 선택하세요',
+    'Save': '저장', 'Save changes': '변경 사항 저장', 'Cancel': '취소', 'Delete': '삭제', 'Remove': '제거',
+    'Clear': '지우기', 'Close': '닫기', 'Edit': '편집', 'Add': '추가', 'Done': '완료', 'Search': '검색',
+    'Copy': '복사', 'Share': '공유', 'Export': '내보내기', 'Dismiss': '닫기', 'Hide': '숨기기',
+    'Details': '상세', 'Confirm': '확인', 'Are you sure?': '확실합니까?', 'Translate': '번역',
+    'Loading…': '불러오는 중…', 'Translating…': '번역 중…', 'Locating…': '위치 확인 중…', 'Yes': '예',
+    'No': '아니요', 'Show more': '더 보기', 'Show less': '간단히 보기', 'More': '더', 'Less': '덜',
+    'Today': '오늘', 'Tomorrow': '내일', 'Yesterday': '어제', 'Morning': '아침', 'Afternoon': '오후',
+    'Evening': '저녁', 'Night': '밤', 'Amount': '금액', 'Date': '날짜', 'Price': '가격', 'Note': '메모',
+    'Notes': '메모', 'Title': '제목', 'Type': '유형', 'City': '도시', 'Place': '장소', 'Where': '위치',
+    'All': '전체', 'Free': '무료', 'Open': '영업 중', 'Closed': '영업 종료', 'Nearby': '근처',
+    'Your location': '내 위치', 'Currency': '통화', 'Untitled': '제목 없음', 'Phrasebook': '회화집',
+    'Fair prices': '적정 가격', 'Getting around': '교통', 'Weather': '날씨', 'Budget': '예산',
+    'Journal': '여행 일지', 'Calendar': '캘린더', 'Family': '가족', 'Next stop': '다음 목적지',
+    'Journey planner': '여행 계획', 'Border crossings': '국경 검문소', 'Entry & visa': '입국 및 비자',
+    'Common scams': '흔한 사기', 'Accessibility': '접근성', 'History & culture': '역사와 문화',
+    'Near me': '내 주변', 'Just arrived': '방금 도착', 'All features': '모든 기능', 'Dictionary': '사전',
+    'Saved': '저장됨', 'Police': '경찰', 'Ambulance': '구급차', 'Fire': '소방', 'Tourist Police': '관광경찰',
+    'Hospital': '병원', 'Embassy': '대사관', 'Call': '전화', 'Thailand': '태국', 'Vietnam': '베트남',
+    'Cambodia': '캄보디아', 'Laos': '라오스', 'say:': '발음:', 'Pin to top': '상단 고정', 'Unpin': '고정 해제',
+    'Hide from lists': '목록에서 숨기기', 'Quick save': '빠른 저장', 'Compare': '비교',
+    'Full details': '전체 정보', 'More info': '자세히', 'Culture & history': '문화와 역사',
+    'Nature & outdoors': '자연과 야외', 'Food & drink': '음식과 음료', 'Markets & shopping': '시장과 쇼핑',
+    'Places to stay': '숙소', 'Beaches & water': '해변과 물놀이', 'Nightlife & social': '나이트라이프와 사교',
+    'Read this aloud': '소리 내어 읽기', 'Reading speed': '읽기 속도', 'My trip': '내 여행', 'For you': '추천',
+    'Documents': '서류', 'Saved places': '저장한 장소', 'Quick access': '빠른 실행', 'Category': '분류',
+    'Per day': '하루당', 'Any price': '가격 무관', 'Step-free': '계단 없음',
+    'Copy the local text': '현지어 텍스트 복사', 'Tap to show large': '탭하여 크게 보기',
+    'Food': '음식', 'Nature': '자연', 'Planning': '계획 중', 'Traveling': '여행 중', 'Post': '여행 후',
+    'Tools': '도구', 'Map': '지도', 'Create': '만들기', 'Sounds': '소리', 'Produce': '농산물',
+    'Dangerous': '위험', 'Plan your trip': '여행 계획하기', 'Search everything': '전체 검색', 'Trip plans': '여행 계획',
+    'Pre-trip checklist': '출발 전 체크리스트', 'Currency converter': '환율 계산기', 'Help & FAQ': '도움말 및 FAQ',
+    'Cafes': '카페', 'Parks': '공원', 'Temples': '사원', 'Museums': '박물관', 'Beaches': '해변',
+    'Shopping': '쇼핑', 'Wellness': '웰니스', 'Nightlife': '나이트라이프', 'Viewpoints': '전망대',
+    'Restaurants': '음식점', 'Street food': '길거리 음식', 'Night markets': '야시장', 'Playgrounds': '놀이터',
+    'Daily': '매일', 'Weekends': '주말', 'Favourites': '즐겨찾기', 'Your pins': '내 핀', 'New collection': '새 컬렉션',
+    'Use my location': '내 위치 사용',
+    'What this is': '이것은 무엇인가', 'Get to a hospital': '병원 가기', 'Where people are': '사람들이 있는 곳',
+};

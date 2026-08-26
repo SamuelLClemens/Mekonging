@@ -22,6 +22,74 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Mekonging">
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- Module preload graph. The app is native ES modules with no bundler, so without these the
+       browser cannot discover a single dependency until it has downloaded AND parsed main.js —
+       making first paint a two-round-trip chain: html, then main.js in full, then everything
+       else. These hints let all eager modules download in parallel with main.js instead of
+       after it. Every entry is a module the app statically imports, so nothing here is
+       speculative; lazily-imported country data and screens are deliberately absent.
+       Regenerate with: python3 scripts/check-preloads.py --fix -->
+  <link rel="modulepreload" href="js/main.js">
+  <link rel="modulepreload" href="js/screens/places.js">
+  <link rel="modulepreload" href="js/data/medical.js">
+  <link rel="modulepreload" href="js/screens/phrasebook.js">
+  <link rel="modulepreload" href="js/data/photos.js">
+  <link rel="modulepreload" href="js/state.js">
+  <link rel="modulepreload" href="js/data/history.js">
+  <link rel="modulepreload" href="js/data/pools.js">
+  <link rel="modulepreload" href="js/data/transit.js">
+  <link rel="modulepreload" href="js/screens/budget.js">
+  <link rel="modulepreload" href="js/screens/weather.js">
+  <link rel="modulepreload" href="js/render-utils.js">
+  <link rel="modulepreload" href="js/screens/home.js">
+  <link rel="modulepreload" href="js/data/itineraries.js">
+  <link rel="modulepreload" href="js/data/produce.js">
+  <link rel="modulepreload" href="js/data/checklist.js">
+  <link rel="modulepreload" href="js/screens/medical.js">
+  <link rel="modulepreload" href="js/i18n.js">
+  <link rel="modulepreload" href="js/data/allergens.js">
+  <link rel="modulepreload" href="js/data/regions.info.js">
+  <link rel="modulepreload" href="js/vault.js">
+  <link rel="modulepreload" href="js/data/visa.js">
+  <link rel="modulepreload" href="js/data/zones.js">
+  <link rel="modulepreload" href="js/data/borders.js">
+  <link rel="modulepreload" href="js/data/phrasebook.km.js">
+  <link rel="modulepreload" href="js/personal.js">
+  <link rel="modulepreload" href="js/data/phrasebook.th.js">
+  <link rel="modulepreload" href="js/data/phrasebook.lo.js">
+  <link rel="modulepreload" href="js/data/phrasebook.my.js">
+  <link rel="modulepreload" href="js/data/geo.js">
+  <link rel="modulepreload" href="js/data/bestof.js">
+  <link rel="modulepreload" href="js/ui-widgets.js">
+  <link rel="modulepreload" href="js/data/accessibility.js">
+  <link rel="modulepreload" href="js/data/phrasebook.vi.js">
+  <link rel="modulepreload" href="js/weather.js">
+  <link rel="modulepreload" href="js/data/regions.js">
+  <link rel="modulepreload" href="js/data/phrasebook.zh.js">
+  <link rel="modulepreload" href="js/data/scams.js">
+  <link rel="modulepreload" href="js/data/phrasebook.ms.js">
+  <link rel="modulepreload" href="js/data/diet.js">
+  <link rel="modulepreload" href="js/data/phrasebook.hmn.js">
+  <link rel="modulepreload" href="js/exporter.js">
+  <link rel="modulepreload" href="js/data/hospitals.js">
+  <link rel="modulepreload" href="js/social.js">
+  <link rel="modulepreload" href="js/data/essentials.js">
+  <link rel="modulepreload" href="js/data/arrival.js">
+  <link rel="modulepreload" href="js/util.js">
+  <link rel="modulepreload" href="js/reminders.js">
+  <link rel="modulepreload" href="js/visits.js">
+  <link rel="modulepreload" href="js/gamify.js">
+  <link rel="modulepreload" href="js/data/sounds.js">
+  <link rel="modulepreload" href="js/tts.js">
+  <link rel="modulepreload" href="js/journey.js">
+  <link rel="modulepreload" href="js/data/schedules.js">
+  <link rel="modulepreload" href="js/translate.js">
+  <link rel="modulepreload" href="js/idb.js">
+  <link rel="modulepreload" href="js/data/ui-strings.js">
+  <link rel="modulepreload" href="js/currency.js">
+  <link rel="modulepreload" href="js/app-state.js">
+  <link rel="modulepreload" href="js/data/drivetimes.js">
 </head>
 <body>
   <a class="skip-link" href="#app">Skip to content</a>

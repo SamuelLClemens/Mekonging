@@ -22,7 +22,7 @@
 // needs in order to be usable must be self-hosted rather than pulled from a CDN.
 
 import { store, save } from './state.js';
-import { UI_STRINGS } from './data/ui-strings.js';
+import { UI_STRING_LANGS } from './data/ui-strings.js';
 
 // ---- the language registry --------------------------------------------------
 // `code`   BCP-47-ish tag used as our own key, in `<html lang>`, and (unless `trans`
@@ -166,9 +166,44 @@ export function dateLocale() {
 }
 
 // ---- string lookup ----------------------------------------------------------
+// Dictionaries load ONE LANGUAGE AT A TIME from js/data/ui-strings.<code>.js. They used to be
+// a single statically-imported object holding all 29, which meant every traveller downloaded
+// and parsed 162 KB of dictionaries — 28 of them for languages they had not chosen — before
+// the first screen could paint. On the weak mobile connections this app is built for that was
+// among the largest single costs of a cold start.
+//
+// A cache entry of `null` means "attempted and unavailable" (offline on a first visit, or a
+// failed fetch). That is deliberately indistinguishable from a missing key to every caller
+// below: both fall back to English, which every screen here was written and reviewed in.
+const DICTS = Object.create(null);
+const PENDING = Object.create(null);
+const HAS_FILE = new Set(UI_STRING_LANGS);
+
 function dict() {
   const c = uiLang();
-  return c === FALLBACK ? null : (UI_STRINGS[c] || null);
+  if (c === FALLBACK) return null;
+  return DICTS[c] || null;
+}
+
+// True when the active language needs no further loading — English, a language with no
+// dictionary file, or one already attempted. Callers use this to avoid painting English that
+// is about to be replaced.
+export function uiStringsReady(code) {
+  const c = code || uiLang();
+  return c === FALLBACK || !HAS_FILE.has(c) || c in DICTS;
+}
+
+// Load one language's dictionary. ALWAYS resolves, never rejects: a dictionary that cannot be
+// fetched must degrade to English, not break the render that awaited it.
+export function ensureUiStrings(code) {
+  const c = code || uiLang();
+  if (uiStringsReady(c)) return Promise.resolve();
+  if (PENDING[c]) return PENDING[c];
+  PENDING[c] = import(`./data/ui-strings.${c}.js`)
+    .then((m) => { DICTS[c] = (m && m.STRINGS) || null; })
+    .catch(() => { DICTS[c] = null; })
+    .then(() => { delete PENDING[c]; });
+  return PENDING[c];
 }
 
 // Translate one English UI string. Returns the English unchanged when the active language has

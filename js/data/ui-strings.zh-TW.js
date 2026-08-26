@@ -1,0 +1,50 @@
+// Interface dictionary — Chinese (Traditional) (zh-TW).
+//
+// One language per file, loaded on demand by js/i18n.js (ensureUiStrings). The rules
+// this file follows — exact-match keys, an omitted entry falling back to English, and
+// why a wrong entry is worse than a missing one — are documented in ui-strings.js,
+// which is also where the parity checker starts. Do not add a key here without adding
+// it to every other language; run `python3 scripts/check-ui-strings.py` after editing.
+
+export const STRINGS = {
+    'Home': '首頁', 'Talk': '交談', 'Places': '地點', 'Explore': '探索', 'YOU': '我的',
+    'Your space': '你的空間', '‹ Back': '‹ 返回', 'Settings': '設定', 'Saved & collections': '收藏',
+    'Emergency help': '緊急求助', 'Emergency': '緊急', 'Online': '線上', 'Offline': '離線',
+    'Skip to content': '跳到主要內容', 'Language': '語言', 'Choose your language': '選擇您的語言',
+    'Save': '儲存', 'Save changes': '儲存變更', 'Cancel': '取消', 'Delete': '刪除', 'Remove': '移除',
+    'Clear': '清除', 'Close': '關閉', 'Edit': '編輯', 'Add': '新增', 'Done': '完成', 'Search': '搜尋',
+    'Copy': '複製', 'Share': '分享', 'Export': '匯出', 'Dismiss': '忽略', 'Hide': '隱藏',
+    'Details': '詳細資料', 'Confirm': '確認', 'Are you sure?': '確定嗎？', 'Translate': '翻譯',
+    'Loading…': '載入中…', 'Translating…': '翻譯中…', 'Locating…': '定位中…', 'Yes': '是', 'No': '否',
+    'Show more': '顯示更多', 'Show less': '收起', 'More': '更多', 'Less': '較少', 'Today': '今天',
+    'Tomorrow': '明天', 'Yesterday': '昨天', 'Morning': '上午', 'Afternoon': '下午', 'Evening': '傍晚',
+    'Night': '夜晚', 'Amount': '金額', 'Date': '日期', 'Price': '價格', 'Note': '備註', 'Notes': '備註',
+    'Title': '標題', 'Type': '類型', 'City': '城市', 'Place': '地點', 'Where': '地點', 'All': '全部',
+    'Free': '免費', 'Open': '營業中', 'Closed': '已關閉', 'Nearby': '附近', 'Your location': '您的位置',
+    'Currency': '貨幣', 'Untitled': '無標題', 'Phrasebook': '常用語手冊', 'Fair prices': '合理價格',
+    'Getting around': '交通出行', 'Weather': '天氣', 'Budget': '預算', 'Journal': '旅行日誌',
+    'Calendar': '日曆', 'Family': '家庭', 'Next stop': '下一站', 'Journey planner': '行程規劃',
+    'Border crossings': '邊境口岸', 'Entry & visa': '入境與簽證', 'Common scams': '常見騙局',
+    'Accessibility': '無障礙', 'History & culture': '歷史與文化', 'Near me': '我附近',
+    'Just arrived': '剛剛抵達', 'All features': '全部功能', 'Dictionary': '詞典', 'Saved': '已儲存',
+    'Police': '警察', 'Ambulance': '救護車', 'Fire': '消防', 'Tourist Police': '旅遊警察',
+    'Hospital': '醫院', 'Embassy': '大使館', 'Call': '撥打', 'Thailand': '泰國', 'Vietnam': '越南',
+    'Cambodia': '柬埔寨', 'Laos': '寮國', 'say:': '讀作：', 'Pin to top': '置頂', 'Unpin': '取消置頂',
+    'Hide from lists': '從列表中隱藏', 'Quick save': '快速儲存', 'Compare': '比較', 'Full details': '完整詳情',
+    'More info': '更多資訊', 'Culture & history': '文化與歷史', 'Nature & outdoors': '自然與戶外',
+    'Food & drink': '餐飲', 'Markets & shopping': '市場與購物', 'Places to stay': '住宿',
+    'Beaches & water': '海灘與水上', 'Nightlife & social': '夜生活與社交', 'Read this aloud': '朗讀這段',
+    'Reading speed': '朗讀速度', 'My trip': '我的行程', 'For you': '為你推薦', 'Documents': '證件',
+    'Saved places': '已儲存地點', 'Quick access': '快速存取', 'Category': '類別', 'Per day': '每天',
+    'Any price': '不限價格', 'Step-free': '無階梯', 'Copy the local text': '複製當地文字',
+    'Tap to show large': '點按放大顯示',
+    'Food': '美食', 'Nature': '自然', 'Planning': '規劃中', 'Traveling': '旅行中', 'Post': '旅行後',
+    'Tools': '工具', 'Map': '地圖', 'Create': '建立', 'Sounds': '聲音', 'Produce': '蔬果', 'Dangerous': '危險',
+    'Plan your trip': '規劃行程', 'Search everything': '搜尋全部', 'Trip plans': '行程規劃', 'Pre-trip checklist': '行前清單',
+    'Currency converter': '貨幣換算', 'Help & FAQ': '說明與常見問題', 'Cafes': '咖啡廳', 'Parks': '公園',
+    'Temples': '寺廟', 'Museums': '博物館', 'Beaches': '海灘', 'Shopping': '購物', 'Wellness': '養生',
+    'Nightlife': '夜生活', 'Viewpoints': '觀景台', 'Restaurants': '餐廳', 'Street food': '街頭小吃',
+    'Night markets': '夜市', 'Playgrounds': '遊樂場', 'Daily': '每天', 'Weekends': '週末', 'Favourites': '收藏',
+    'Your pins': '你的標記', 'New collection': '新收藏集', 'Use my location': '使用我的位置',
+    'What this is': '這是什麼', 'Get to a hospital': '前往醫院', 'Where people are': '使用者來自哪裡',
+};
