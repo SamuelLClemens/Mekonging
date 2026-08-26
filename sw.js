@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.460.0';
+const CACHE_VERSION = 'mk-v0.461.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -64,11 +64,42 @@ const PRECACHE = [
   'js/social.js',
   'js/tts.js',
   'js/translate.js',
-  // Interface language. Both are shell, not optional extras: main.js imports i18n.js eagerly,
-  // and a traveller who set the app to Thai must still get a Thai interface with no signal —
-  // which is the whole point of bundling the dictionary rather than fetching it.
+  // Interface language. i18n.js and the dictionary MANIFEST are shell. The 29 per-language
+  // dictionaries below are not shell — i18n.js now imports only the active one — but they are
+  // all still stored offline on purpose: a traveller with no signal must be able to switch the
+  // app into a language they can read, which is exactly the moment they cannot download it.
+  // ~5 KB each, warmed on idle, so this costs nothing at launch.
   'js/i18n.js',
   'js/data/ui-strings.js',
+  'js/data/ui-strings.th.js',
+  'js/data/ui-strings.vi.js',
+  'js/data/ui-strings.km.js',
+  'js/data/ui-strings.lo.js',
+  'js/data/ui-strings.zh-CN.js',
+  'js/data/ui-strings.zh-TW.js',
+  'js/data/ui-strings.ms.js',
+  'js/data/ui-strings.id.js',
+  'js/data/ui-strings.ko.js',
+  'js/data/ui-strings.ja.js',
+  'js/data/ui-strings.hi.js',
+  'js/data/ui-strings.ru.js',
+  'js/data/ui-strings.fr.js',
+  'js/data/ui-strings.es.js',
+  'js/data/ui-strings.de.js',
+  'js/data/ui-strings.he.js',
+  'js/data/ui-strings.ar.js',
+  'js/data/ui-strings.pt.js',
+  'js/data/ui-strings.it.js',
+  'js/data/ui-strings.nl.js',
+  'js/data/ui-strings.fa.js',
+  'js/data/ui-strings.ur.js',
+  'js/data/ui-strings.pl.js',
+  'js/data/ui-strings.tr.js',
+  'js/data/ui-strings.uk.js',
+  'js/data/ui-strings.cs.js',
+  'js/data/ui-strings.sv.js',
+  'js/data/ui-strings.bn.js',
+  'js/data/ui-strings.tl.js',
   'js/journey.js',
   'js/util.js',
   'js/map.js',
@@ -163,51 +194,59 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_VERSION).then(async (c) => {
-      // Fetch every asset with {cache:'reload'} so the install BYPASSES the HTTP cache and
-      // stores FRESH bytes. Without this, a new worker (new CACHE_VERSION) can precache STALE
-      // copies served from the browser/CDN HTTP cache, leaving the offline app on old code
-      // even though the version bumped — the root cause of "offline shows the old version".
-      const fresh = (u) => new Request(u, { cache: 'reload' });
-      // Critical shell must cache for the install to be useful; fail the install if it cannot.
-      for (const u of CRITICAL) { await c.add(fresh(u)); }
-      // The rest is best-effort: cache each file independently so one missing/renamed
-      // asset cannot abort the entire offline install (the old atomic addAll did).
-      //
-      // Two things matter about HOW that is done. Firing all ~114 requests at once is a
-      // burst that a phone radio, a hotel wifi captive portal or a modest static host can
-      // partly drop — and because every failure is silently caught, the app then believes
-      // it is installed and offline-ready while missing whole country data bundles. That
-      // is the worst possible failure for this app: it shows up as an empty screen in a
-      // Laos village, not as an error at install time. So: request in bounded batches, and
-      // give anything that failed one retry before giving up on it.
-      const BATCH = 8;
-      const failed = [];
-      for (let i = 0; i < PRECACHE.length; i += BATCH) {
-        await Promise.all(PRECACHE.slice(i, i + BATCH).map(
-          (u) => c.add(fresh(u)).catch(() => { failed.push(u); }),
-        ));
-      }
-      const stillMissing = [];
-      for (const u of failed) {
-        // Second pass runs one at a time and without cache:'reload' — if the first attempt
-        // lost a race for a connection, an ordinary request usually succeeds.
-        await c.add(u).catch(() => { stillMissing.push(u); });
-      }
-      if (stillMissing.length) {
-        // Not fatal, but no longer silent: the page can read this to tell the user their
-        // offline copy is incomplete rather than letting them discover it with no signal.
-        self.__mkPrecacheMissing = stillMissing;
-        const clients = await self.clients.matchAll({ includeUncontrolled: true });
-        for (const client of clients) {
-          client.postMessage({ type: 'precache-incomplete', missing: stillMissing });
-        }
-      }
-      await self.skipWaiting();
-    }),
-  );
+  // Install now caches ONLY the navigation fallback, and nothing else.
+  //
+  // It used to precache all 126 PRECACHE entries here (6.7 MB) with {cache:'reload'}, which
+  // forced a full second download of every file the PAGE was fetching at that same moment —
+  // on a 0.65 Mbps mobile link that is minutes of contention against the traveller's own
+  // first navigations. The offline promise is unchanged: warmCache() below stores the same
+  // set, but only once the page reports it is idle, and it SKIPS anything the page already
+  // pulled through the fetch handler, so nothing is ever downloaded twice.
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE_VERSION);
+    for (const u of CRITICAL) { await c.add(new Request(u, { cache: 'reload' })); }
+    await self.skipWaiting();
+  })());
 });
+
+// Fill the offline copy in the background, on the page's signal (see 'warm-cache' below).
+// Deliberately gentle: 4 concurrent requests, skip what is already stored, and give anything
+// that failed one retry before reporting it — a phone radio or a captive portal drops part of
+// a wide burst, and every failure here is caught, so a silent hole would only surface later
+// as an empty screen with no signal.
+let warming = false;
+async function warmCache() {
+  if (warming) return;
+  warming = true;
+  try {
+    const c = await caches.open(CACHE_VERSION);
+    const todo = [];
+    for (const u of PRECACHE) {
+      if (!(await c.match(u, { ignoreSearch: true }))) todo.push(u);
+    }
+    const BATCH = 4;
+    const failed = [];
+    for (let i = 0; i < todo.length; i += BATCH) {
+      await Promise.all(todo.slice(i, i + BATCH).map(
+        // 'no-cache' revalidates rather than re-downloading: for a file this session already
+        // has it is a cheap 304, and it still cannot serve a stale copy from a previous
+        // deploy's HTTP cache into this version's cache.
+        (u) => c.add(new Request(u, { cache: 'no-cache' })).catch(() => { failed.push(u); }),
+      ));
+    }
+    const stillMissing = [];
+    for (const u of failed) { await c.add(u).catch(() => { stillMissing.push(u); }); }
+    if (stillMissing.length) {
+      self.__mkPrecacheMissing = stillMissing;
+      const clients = await self.clients.matchAll({ includeUncontrolled: true });
+      for (const client of clients) {
+        client.postMessage({ type: 'precache-incomplete', missing: stillMissing });
+      }
+    }
+  } finally {
+    warming = false;
+  }
+}
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
@@ -219,6 +258,18 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+// Navigation timeout. Long enough that a merely-slow link still delivers the newest deploy,
+// short enough that it is not a blank screen. Falls back to the cached shell, which the app
+// then refreshes in the background via the service-worker update check.
+const NAV_TIMEOUT_MS = 3000;
+
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then((v) => { clearTimeout(t); resolve(v); }, (err) => { clearTimeout(t); reject(err); });
+  });
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -229,44 +280,54 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname === TTS_HOST) { e.respondWith(handleTTS(req)); return; }
   if (url.origin !== self.location.origin) return;
 
-  // App CODE (html/js/css/json/manifest + navigations) uses NETWORK-FIRST. This is the fix for
-  // "offline / the app still shows the OLD version after a deploy". The previous strategy was
-  // stale-while-revalidate, which serves the CACHED (old) copy on the visible launch and only
-  // refreshes the cache in the background for NEXT time — so an online user saw the old build on
-  // the launch right after a deploy, and if they went offline in between, offline stayed old too.
+  // App CODE. Split by request kind, because navigations and sub-resources want opposite
+  // strategies on a weak connection.
   //
-  // Network-first instead:
-  //   • ONLINE  → fetch the network copy with {cache:'no-cache'} (a conditional request, so the
-  //     host's own HTTP-cache max-age cannot serve a stale build; 304 when unchanged is cheap),
-  //     render the LATEST deploy immediately, and write it into the cache.
-  //   • OFFLINE → the fetch throws; serve the last copy cached from a previous online launch
-  //     (i.e. exactly what the traveller last saw with a connection). index.html is precached as
-  //     the navigation fallback so the app shell always opens with no signal.
-  // Heavy, rarely-changing assets (the map engine in lib/, images, fonts, the GeoJSON basemap)
-  // stay pure cache-first below, so they are never re-downloaded on a launch. Data lives in
-  // js/data/*.js, so it rides the .js path and refreshes together with the code.
+  // This used to be NETWORK-FIRST for everything, to stop a deploy showing stale code. The
+  // cost of that was paid on EVERY launch: the app statically loads dozens of modules, and
+  // network-first revalidated all of them before rendering. Against a ~600 ms RTT mobile link
+  // that is tens of seconds of waiting for bytes the device already had, and fetch() does not
+  // reject on a slow network — only on a failed one — so there was no fallback to the cache
+  // while the user watched a splash screen.
+  //
+  //   • NAVIGATION  → network-first, but RACED AGAINST A TIMEOUT, then the cached shell. Keeps
+  //     a fresh deploy visible on the launch it lands, without letting a crawling connection
+  //     hold a blank screen.
+  //   • SUB-RESOURCE (js/css/json) → CACHE-FIRST. The cache is scoped to CACHE_VERSION and
+  //     activate() drops every other cache, so a hit is by construction the code of THIS
+  //     build: there is nothing to revalidate against. A new release bumps CACHE_VERSION,
+  //     which empties the cache and refetches, and main.js shows the update toast.
+  // Heavy, rarely-changing assets (map engine, images, fonts) stay cache-first below.
   const p = url.pathname;
-  const isCode = req.mode === 'navigate' || /\.(js|css|json|webmanifest|html)$/.test(p);
+  const isNav = req.mode === 'navigate';
   const heavy = p.startsWith('/lib/') || /\.(png|jpe?g|webp|gif|svg|ico|woff2?|ttf|otf|geojson)$/.test(p);
+  const isSub = /\.(js|css|json|webmanifest|html)$/.test(p);
 
-  if (isCode && !heavy) {
-    e.respondWith(
-      caches.open(CACHE_VERSION).then(async (cache) => {
-        try {
-          const res = await fetch(req, { cache: 'no-cache' });   // network-first: newest when online
-          // Cache same-origin sub-resources (js/css/json) for the next offline launch. Navigations
-          // are skipped so the cache does not accumulate one entry per ?query — index.html is the
-          // precached navigation fallback, matched below when offline.
-          if (res && res.ok && req.mode !== 'navigate') cache.put(req, res.clone()).catch(() => { /* storage full */ });
-          return res;
-        } catch (err) {
-          const hit = await cache.match(req, { ignoreSearch: true });
-          if (hit) return hit;                                   // offline: last copy seen online
-          if (req.mode === 'navigate') return (await cache.match('index.html')) || Response.error();
-          return new Response('offline and uncached: ' + req.url, { status: 504 });
-        }
-      }),
-    );
+  if (isNav) {
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      try {
+        return await withTimeout(fetch(req, { cache: 'no-cache' }), NAV_TIMEOUT_MS);
+      } catch {
+        return (await cache.match('index.html')) || Response.error();
+      }
+    })());
+    return;
+  }
+
+  if (isSub && !heavy) {
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      const hit = await cache.match(req, { ignoreSearch: true });
+      if (hit) return hit;
+      try {
+        const res = await fetch(req, { cache: 'no-cache' });
+        if (res && res.ok) cache.put(req, res.clone()).catch(() => { /* storage full */ });
+        return res;
+      } catch {
+        return new Response('offline and uncached: ' + req.url, { status: 504 });
+      }
+    })());
     return;
   }
 
@@ -346,6 +407,10 @@ self.addEventListener('message', (e) => {
     e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
   } else if (d.type === 'PREFETCH_TTS' && Array.isArray(d.urls)) {
     e.waitUntil(prefetchTTS(d.urls.slice(0, 2000), e.source, d.lang || ''));
+  } else if (d.type === 'warm-cache') {
+    // The page has finished loading and gone idle, so filling the offline copy can no longer
+    // steal bandwidth from what the traveller is actually looking at.
+    e.waitUntil(warmCache());
   }
 });
 

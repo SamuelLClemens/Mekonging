@@ -6,7 +6,7 @@
 Exits non-zero on any problem, so it can gate a commit or a deploy.
 
 WHY THIS EXISTS. js/i18n.js translates the finished DOM by exact-matching English strings
-against js/data/ui-strings.js. That design has one failure mode worth guarding: a language can
+against js/data/ui-strings.<code>.js. That design has one failure mode worth guarding: a language can
 drift out of parity — a key added to English and to fifteen dictionaries but not the
 sixteenth — and NOTHING breaks. The missing key just falls back to English, so a Korean
 traveller silently gets one English word in the middle of a Korean screen and no error is
@@ -22,12 +22,19 @@ Checks performed:
   4. No empty values, and no value left identical to its English key in a non-Latin script
      (a strong sign of a copy-paste that was never translated).
 """
+import glob
 import json
+import os
 import re
 import sys
 
 I18N = 'js/i18n.js'
-STRINGS = 'js/data/ui-strings.js'
+MANIFEST = 'js/data/ui-strings.js'
+# One file per language since the dictionaries were split out of the manifest (all 29 in one
+# eagerly-imported module cost every traveller 162 KB before first paint). The manifest is
+# still the source of truth for WHICH languages exist, so a file on disk that the manifest
+# does not list — or a listed language with no file — is itself a failure worth reporting.
+STRINGS_GLOB = 'js/data/ui-strings.*.js'
 
 # A block whose language genuinely shares a word with English is not an error. Filipino uses
 # the English "Home", "Online", "Offline", "Emergency" and "Accessibility" as ordinary loans,
@@ -51,14 +58,29 @@ def pairs(body):
 def main():
     problems = []
     i18n = open(I18N, encoding='utf-8').read()
-    strings = open(STRINGS, encoding='utf-8').read()
+    manifest = open(MANIFEST, encoding='utf-8').read()
 
     registry = dict(re.findall(r"code: '([^']+)'[^}]*?ui: (true|false)", i18n))
     ui_true = {c for c, v in registry.items() if v == 'true'} - {'en'}
 
+    listed = re.findall(r"^  '([A-Za-z-]+)',$", manifest, re.M)
+    on_disk = {}
+    for path in sorted(glob.glob(STRINGS_GLOB)):
+        code = os.path.basename(path)[len('ui-strings.'):-len('.js')]
+        on_disk[code] = path
+
+    # The manifest, the files on disk, and the registry must agree. Any disagreement offers the
+    # traveller a language that resolves to a 404 (dead picker row) or ships a dictionary that
+    # can never load, and both fail silently as "everything is in English".
+    for code in sorted(set(listed) - set(on_disk)):
+        problems.append(f'{code}: listed in UI_STRING_LANGS but js/data/ui-strings.{code}.js is missing')
+    for code in sorted(set(on_disk) - set(listed)):
+        problems.append(f'{code}: js/data/ui-strings.{code}.js exists but is not in UI_STRING_LANGS — it will never load')
+
     dicts = {}
-    for code, body in blocks(strings):
-        kv = pairs(body)
+    for code, path in on_disk.items():
+        body = open(path, encoding='utf-8').read()
+        kv = pairs(body[body.index('export const STRINGS = {'):])
         keys = [k for k, _ in kv]
         dupes = {k for k in keys if keys.count(k) > 1}
         if dupes:

@@ -15,7 +15,6 @@ import {
   visitsEnabled, setVisitsEnabled, visitsShareEnabled, setVisitsShareEnabled,
   visitsFeedUrl, setVisitsFeedUrl, myVisits, clearVisits, loadSharedVisits, GRID,
 } from '../visits.js';
-import { initVisitMap } from '../map.js';
 import { go, mount, topbar } from '../main.js';
 import { setLiveCleanup, getLiveCleanup } from '../app-state.js';
 
@@ -122,7 +121,10 @@ export function visitorsScreen() {
   // The map is an enhancement: if MapLibre cannot start, the counts and the list above are
   // the screen and they still read correctly. Never let a map failure blank this page.
   let ctrl = null;
-  initVisitMap(mapBox, mine).then((c) => {
+  // Load the map module on demand. It was the last static import of map.js in the eager
+  // graph; keeping it here meant every cold start parsed the map engine wrapper and its
+  // basemap/border/pool data to render a screen most travellers never open.
+  import('../map.js').then((mod) => mod.initVisitMap(mapBox, mine)).then((c) => {
     ctrl = c;
     // A MapLibre instance holds a WebGL context, and browsers cap how many a page may have
     // (around sixteen). Without this, opening this screen a dozen times over a session

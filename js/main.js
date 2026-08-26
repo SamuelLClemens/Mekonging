@@ -32,7 +32,7 @@ import {
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree,
-  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale,
+  detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
@@ -95,6 +95,7 @@ import {
   marketOpenDays, marketOnToday, marketCovered, isBeach, seaAgo,
   aqiBand, airBlock, uvBand, uvLineNode, uvTodayBlock,
   photoBlock, extUrl, sourceHref, sourcesNote, personalScore,
+  ratingColor, effectiveRating,
 } from './render-utils.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
@@ -107,7 +108,6 @@ import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine, refreshAir, getCachedAir } from './weather.js';
-import { ratingColor, effectiveRating } from './map.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -193,6 +193,17 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
       window.addEventListener('online', checkForUpdate);
+
+      // Tell the worker it may now fill the offline copy. The worker no longer precaches at
+      // install time, because those requests raced the page's own module loads on exactly the
+      // weak connections this app is built for. Waiting for idle costs the offline copy a few
+      // seconds and buys the traveller a first screen that is not competing with a 3 MB
+      // background download. requestIdleCallback is not on Safari, hence the timeout fallback.
+      const warm = () => navigator.serviceWorker.ready
+        .then((r) => { if (r.active) r.active.postMessage({ type: 'warm-cache' }); })
+        .catch(() => { /* worker never activated — nothing to warm */ });
+      if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 8000 });
+      else setTimeout(warm, 4000);
     }).catch(() => { /* SW unavailable — the app still works, just without offline caching */ });
 
     // A NEW worker taking control used to force an immediate window.location.reload() here, to
@@ -357,7 +368,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.460.0';
+const APP_VERSION = 'mk-v0.461.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -609,7 +620,10 @@ export function languageSheet() {
     if (code !== 'en' && !mtEnabled()) setMtEnabled(true);
     setUiLang(code);
     if (close) close();
-    render();
+    // Fetch the chosen language's dictionary before repainting. Dictionaries are per-language
+    // files now, so without this the screen would render once in English and then flip.
+    // ensureUiStrings never rejects — a language that cannot be fetched stays English.
+    ensureUiStrings(code).then(render);
   };
 
   const row = (l, needsMt) => h('button', {
@@ -9544,7 +9558,14 @@ if (store.profile.prefs.uiLang === undefined) {
 }
 applyDocLang();
 
-render();
+// First paint waits for the active language's interface dictionary — one ~5 KB file, or
+// nothing at all for English. It used to be free because all 29 languages were bundled into
+// the eagerly-imported module graph; that cost every traveller 162 KB before anything could
+// appear. Awaiting one file here is what keeps a Thai or Arabic launch from painting an
+// English screen and then flipping. ensureUiStrings never rejects, so a failed fetch still
+// renders — in English, which is the documented fallback for a missing dictionary anyway.
+if (uiStringsReady()) render();
+else ensureUiStrings().then(render, render);
 
 // Location on from the start: request a live fix immediately (browser permission still
 // gates it) and keep it current; denial degrades to the manual city picker.

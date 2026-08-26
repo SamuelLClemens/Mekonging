@@ -513,3 +513,23 @@ export function personalScore(p) {
   if ((prefs.interests || []).some((i) => (p.categories || []).includes(i))) s += 0.4;
   return s;
 }
+
+// ---- place rating ----------------------------------------------------------
+// Pin and card colour by rating. The traveller's OWN rating (placeData) wins over the
+// curated/synthesised score, so once you rate a place its pin and its stars reflect YOUR view.
+// These live here rather than in map.js so that rendering a place card — which every screen
+// does — does not drag the map module and its 111 KB of basemap/border/pool data into the
+// cold-start graph. map.js re-exports them for its own callers.
+export function effectiveRating(id, curated) {
+  const own = (store.placeData && store.placeData[id] && store.placeData[id].rating) || 0;
+  return own > 0 ? own : (curated || 0);
+}
+export const RATING_BANDS = [
+  { min: 4.5, color: '#1E9E5A', label: 'Excellent (4.5+)' },
+  { min: 4.0, color: '#7DB23A', label: 'Great (4.0+)' },
+  { min: 3.0, color: '#F2A93B', label: 'Good (3.0+)' },
+  { min: 2.0, color: '#E8632A', label: 'Mixed (2.0+)' },
+  { min: 0.1, color: '#D6336C', label: 'Poor (<2.0)' },
+  { min: 0, color: '#8A8F98', label: 'Unrated' },
+];
+export function ratingColor(r) { return (RATING_BANDS.find((b) => r >= b.min) || RATING_BANDS[RATING_BANDS.length - 1]).color; }
