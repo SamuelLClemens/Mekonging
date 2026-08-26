@@ -159,6 +159,23 @@ export function infoTip(text) {
   return det;
 }
 
+// The screen-level sibling of infoTip: the standing explainer paragraph that used to sit
+// under a topbar, telling the traveller what a screen is for, folded down to a single ⓘ row.
+//
+// Those paragraphs were three and four lines each and there is one at the top of sixteen
+// screens, so on a phone the first thing below the title was consistently prose and the
+// actual content — the list, the map, the search box — started below the fold. The text is
+// worth keeping; standing space at the top of a screen is not what it is worth. Same
+// disclosure mechanism as infoTip, but block-level so the text reads at full width when it
+// is opened, and with a visible label so the affordance is not a bare glyph.
+export function screenHint(text, label = 'What this is') {
+  const det = h('details', { class: 'screen-hint' });
+  const sum = h('summary', { 'aria-expanded': 'false' }, [h('span', { class: 'screen-hint-ic', 'aria-hidden': 'true' }, 'ⓘ'), label]);
+  det.append(sum, h('p', { class: 'map-hint', style: 'margin-top:6px' }, text));
+  det.addEventListener('toggle', () => sum.setAttribute('aria-expanded', det.open ? 'true' : 'false'));
+  return det;
+}
+
 // Promise-based confirmation built on openModal — the styled, focus-trapped, in-app
 // replacement for the native blocking window.confirm. Resolves true on confirm and false on
 // cancel / Escape / backdrop tap. opts: { title, body, confirmLabel, cancelLabel, danger }.

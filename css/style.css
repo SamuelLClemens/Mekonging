@@ -2187,3 +2187,19 @@ html[dir="rtl"] .tel,
 html[dir="rtl"] code { direction: ltr; unicode-bidi: embed; text-align: left; }
 /* The tab bar is a flex row and mirrors on its own; the icons above the labels must not. */
 html[dir="rtl"] .tabbar button { direction: rtl; }
+
+/* Screen-level help, folded away. The standing explainer paragraph at the top of a screen
+   cost three or four lines and pushed the real content below the fold on a phone; this is
+   the same text behind a single small row. Sized as a proper 44px touch target via padding
+   rather than height, so the collapsed row still measures ~28px of visible ink. */
+.screen-hint { margin: 0 0 var(--sp-3); }
+.screen-hint > summary {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
+  color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 600;
+  padding: var(--sp-2) 0; user-select: none;
+}
+.screen-hint > summary::-webkit-details-marker { display: none; }
+.screen-hint > summary:hover { color: var(--ink); }
+.screen-hint[open] > summary { color: var(--teal); }
+.screen-hint-ic { font-size: 1.05rem; line-height: 1; }
+.screen-hint > p { margin: 0; }

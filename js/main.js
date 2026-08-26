@@ -38,7 +38,7 @@ import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
 import { familyScreen, familyCard } from './screens/family.js';
 import { hospitalScreen } from './screens/medical.js';
-import { HOSPITALS, HOSP_TAG } from './data/medical.js';
+import { HOSPITALS, HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
 import { settingsScreen } from './screens/settings.js';
 import { calendarDispatch } from './screens/calendar.js';
 import { journalDispatch, scrapbookScreen, journeyScreen } from './screens/journal.js';
@@ -96,7 +96,7 @@ import {
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
-  online, netMode, setNetMode, infoTip,
+  online, netMode, setNetMode, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -4793,7 +4793,7 @@ function poolsScreen(arg) {
   const country = cc ? getCountry(cc) : null;
   const list = cc ? poolsForCountry(cc) : POOLS.slice();
   wrap.append(topbar(country ? `${country.name} pools` : 'Public pools', cc ? `#country-${cc}` : '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Public swimming pools, hotel & resort day passes, water parks and managed natural swimming spots. Prices are ranges in local currency and change often — guidance only, confirm locally.'));
+  wrap.append(screenHint('Public swimming pools, hotel & resort day passes, water parks and managed natural swimming spots. Prices are ranges in local currency and change often — guidance only, confirm locally.'));
   if (!list.length) { wrap.append(h('p', { class: 'muted' }, 'No pools listed for this area yet.')); mount(wrap, '#home'); return; }
 
   // Lead with what is NEAR the traveller (GPS, else their focused city), so a pool
@@ -4833,7 +4833,7 @@ function poolsScreen(arg) {
 function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Border crossings', '#places'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
+  wrap.append(screenHint('Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
   // Freshness badge: the oldest "verified" date across all crossings, so the whole set is
   // judged by its weakest link. Quiet ✓ while under ~6 months old, a prominent ⚠ nudge once
   // it ages. Re-checked on every open (self-updating age, server-free).
@@ -5185,7 +5185,7 @@ function foodScreen(country) {
   if (country) foodCountry = country;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify food', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Set your allergies and diet below and dishes are highlighted for you — green fits, red to avoid. Use “Avoid” to hide dishes with an allergen.'));
+  wrap.append(screenHint('Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Set your allergies and diet below and dishes are highlighted for you — green fits, red to avoid. Use “Avoid” to hide dishes with an allergen.'));
 
   const cFilters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const cChips = h('div', { class: 'chips' }, cFilters.map((f) =>
@@ -5436,7 +5436,7 @@ function produceCard(p) {
 function produceScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Market produce', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
+  wrap.append(screenHint('Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
   const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(PRODUCE_CATEGORIES);
   const chips = h('div', { class: 'chips' }, cats.map((g) =>
     h('button', { class: 'chip', 'aria-pressed': produceCat === g.id ? 'true' : 'false', dataset: { g: g.id },
@@ -5517,7 +5517,7 @@ function schedulesScreen(country) {
   if (country && getCountry(country)) { setActiveCountry(country); schedCountry = country; }
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Transport schedules', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
+  wrap.append(screenHint('Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const chips = h('div', { class: 'chips' }, filters.map((f) =>
@@ -5981,7 +5981,7 @@ function eventsScreen(country) {
   // "Festivals" alone — matches the "🎉 N festivals" link that points here, and fits on one
   // line; the full "Festivals & events" phrase 3-line-wrapped on mobile.
   wrap.append(topbar('Festivals', getCountry(eventsCountry) ? `#country-${eventsCountry}` : '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
+  wrap.append(screenHint('Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const chips = h('div', { class: 'chips' }, filters.map((f) =>
@@ -6133,7 +6133,7 @@ function callControl(s, label) {
 function soundsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Sounds around you', '#nature'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
+  wrap.append(screenHint('Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   let group = '';
   let query = '';
@@ -6194,7 +6194,7 @@ function soundsScreen() {
 function natureScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify nature', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
+  wrap.append(screenHint('Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
 
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search by name…', value: natureQuery,
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
@@ -6384,7 +6384,7 @@ function myIdentifierScreen() {
     mount(wrap, '#me');
     return;
   }
-  wrap.append(h('p', { class: 'map-hint' },
+  wrap.append(screenHint(
     'Everything you saved from the identify tools, kept on your device. Tap to reopen; use ✎ to file items into your own categories and add notes, and ↑ ↓ to reorder.'));
 
   // Datalist of the categories already in use, so adding a tag can reuse them.
@@ -7304,8 +7304,10 @@ function sosScreen(cc) {
   }
 
   // (3) What to do while getting there — bites/stings first aid, then life-saving basics.
-  const danger = h('div', { class: 'card allergy-card' }, [h('h2', {}, '🐍 Bites, stings & dangerous wildlife')]);
-  danger.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'));
+  const danger = h('div', { class: 'card allergy-card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '🐍 Bites, stings & dangerous wildlife'),
+    infoTip('What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'),
+  ])]);
   FIRST_AID.forEach((fa) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, fa.t)]);
     const inner = h('div', {});
@@ -7324,7 +7326,10 @@ function sosScreen(cc) {
 
   // Life-saving essentials: honest guidance on EpiPens and defibrillators (neither is
   // reliably bought on the street here) plus hands-only CPR.
-  const life = h('div', { class: 'card' }, [h('h2', {}, '💉 Life-saving essentials')]);
+  const life = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '💉 Life-saving essentials'),
+    infoTip('Honest guidance on adrenaline auto-injectors and defibrillators — neither is reliably bought on the street in this region — plus hands-only CPR.'),
+  ])]);
   LIFESAVING.forEach((ls) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, ls.t)]);
     const inner = h('div', {});
@@ -7336,10 +7341,10 @@ function sosScreen(cc) {
   // (4) How to communicate once you are there — emergency phrases in the local language.
   let phraseCard = null;
   if (emCat) {
-    phraseCard = h('div', { class: 'card' }, [
-      h('h2', {}, `At the hospital: say it in ${book.label}`),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Show or speak these to hospital staff or anyone helping you.'),
-    ]);
+    phraseCard = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, `At the hospital: say it in ${book.label}`),
+      infoTip('Show or speak these to hospital staff or anyone helping you. Works offline.'),
+    ])]);
     const voiceOk = hasVoiceFor(book.locale);
     emCat.phrases.forEach((p) => phraseCard.append(h('div', { class: 'phrase' }, [
       h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native', lang: book.locale }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
@@ -7374,11 +7379,58 @@ function sosScreen(cc) {
   sd.append(sInner);
   solo.append(sd);
 
+  // Everything that is an emergency but is not a bite. Road traffic injury is the leading
+  // cause of traveller death in this region and had no entry on this screen at all; nor did
+  // a stolen passport, an arrest, a spiked drink or a missing companion. Each situation is a
+  // closed <details> so thirteen of them cost one card of vertical space, and the screen's
+  // first fold stays what it should be: the phone number.
+  const sit = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '🚨 If something happens'),
+    infoTip('Tap the one that fits. Each opens what to do in the next minute, what to do in the next few hours, and the mistake people reliably make. Works offline.'),
+  ])]);
+  EMERGENCIES.forEach((e) => {
+    const d = h('details', { class: 'filters-collapse' }, [h('summary', {}, `${e.ic} ${e.t}`)]);
+    const inner = h('div', {});
+    if (e.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, e.lead));
+    inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Right now')]));
+    inner.append(h('ul', { class: 'sos-aid' }, e.now.map((li) => h('li', {}, li))));
+    if (e.then && e.then.length) {
+      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Then')]));
+      inner.append(h('ul', { class: 'sos-aid' }, e.then.map((li) => h('li', {}, li))));
+    }
+    if (e.avoid && e.avoid.length) {
+      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('ul', { class: 'sos-aid dont' }, e.avoid.map((li) => h('li', {}, li))));
+    }
+    { const rd = readAloudBar(() => [`${e.t}.`, 'Right now:', e.now.join(' '), (e.then || []).length ? 'Then: ' + e.then.join(' ') : '', (e.avoid || []).length ? 'Do not: ' + e.avoid.join(' ') : ''].filter(Boolean).join(' ')); if (rd) inner.append(rd); }
+    d.append(inner);
+    sit.append(d);
+  });
+
+  // Consular help, and the limits of it. Travellers routinely expect the wrong things from
+  // an embassy, which wastes exactly the hours in which it could have helped.
+  const emb = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '🏛 Your embassy'),
+    infoTip('Consular help is free and is the right first call for a lost passport, an arrest, a death or a large-scale emergency. Find yours and save the address now — searching for it during the emergency is the part that goes wrong.'),
+  ])]);
+  const embD = h('details', { class: 'filters-collapse' }, [h('summary', {}, 'What an embassy can and cannot do')]);
+  const embInner = h('div', {});
+  embInner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'It can')]));
+  embInner.append(h('ul', { class: 'sos-aid' }, EMBASSY.can.map((li) => h('li', {}, li))));
+  embInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'It cannot')]));
+  embInner.append(h('ul', { class: 'sos-aid dont' }, EMBASSY.cannot.map((li) => h('li', {}, li))));
+  embInner.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, EMBASSY.note));
+  embD.append(embInner);
+  emb.append(embD);
+  emb.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsSearch(`embassy consulate ${c.name}`), target: '_blank', rel: 'noopener' }, `🔎 Find your embassy in ${c.name} ↗`));
+
   // Ordered append — the true order of operations in an emergency.
   wrap.append(nums);
   wrap.append(hosp);
   wrap.append(danger);
   wrap.append(life);
+  wrap.append(sit);
+  wrap.append(emb);
   if (phraseCard) wrap.append(phraseCard);
   if (safeCard) wrap.append(safeCard);
   wrap.append(solo);
@@ -7436,7 +7488,7 @@ function dangerScreen() {
   // aid" buttons elsewhere) — the old title was the only place still saying something else,
   // and at 25 characters it was also the worst of the topbar 3-line-wrap family (4 lines here).
   wrap.append(topbar('Dangerous', '#sos'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
+  wrap.append(screenHint('Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
   const list = allSpecies().filter((s) => s.dangerous);
   const groups = [
     { label: '🐍 Snakes', match: (s) => /cobra|krait|viper|python|snake/i.test(s.commonName) },
@@ -7482,7 +7534,7 @@ function worshipScreen(cc) {
   else if (near) setActiveCountry(near.spot.country);
   const c = getCountry(getActiveCountry());
   wrap.append(countryChips((id) => go(`#worship-${id}`)));
-  wrap.append(h('p', { class: 'map-hint' }, 'Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
+  wrap.append(screenHint('Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
 
   wrap.append(h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Find a place of worship near me'),
@@ -7851,7 +7903,7 @@ function contributionsScreen() {
 function helpScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Help & FAQ', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
+  wrap.append(screenHint('How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
   const faq = (q, a) => h('details', { class: 'card' }, [h('summary', {}, q), typeof a === 'string' ? h('p', {}, a) : a]);
 
   wrap.append(faq('What works offline, and what needs internet?', h('div', {}, [
@@ -7899,7 +7951,7 @@ function feedbackScreen(arg) {
   const wrap = h('div', { class: 'screen' });
   const place = arg ? resolveItem(arg) : null;
   wrap.append(topbar(place ? 'Suggest an edit' : 'Send feedback', place ? `#place-${place.id}` : '#help'));
-  wrap.append(h('p', { class: 'map-hint' }, place
+  wrap.append(screenHint(place
     ? `Suggest a correction or addition for “${place.name}”. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically.`
     : 'Tell us what to fix, add or improve. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically, and no account is needed.'));
 
@@ -9206,7 +9258,7 @@ function givingCalculator() {
 function donateScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Give back', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
+  wrap.append(screenHint('Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
   wrap.append(h('div', { class: 'banner' }, 'Mekonging takes no money and no cut, and never processes a payment. These links open external sites and need internet. Please do your own checks before giving.'));
   wrap.append(givingCalculator());
   DONATE_ORGS.forEach((grp) => {
