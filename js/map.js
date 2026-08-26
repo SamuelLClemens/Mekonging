@@ -151,6 +151,98 @@ function basemapStyle() {
   };
 }
 
+// ---- WORLD MAP OF VISITS ----------------------------------------------------
+// A separate, much smaller map than initMap: no places, no pins-as-markers, no GPS
+// control, no offline-area tooling. Just the world with dots on it.
+//
+// The basemap is the Esri street raster already used elsewhere, which is worldwide and
+// already named in the CSP, so this adds no new dependency and no new origin. At world
+// zoom that is a handful of tiles. When they cannot load — offline, or a firewall — the
+// map does NOT go blank: the sea background, a 30° graticule and the self-hosted
+// four-country geometry all render from data in the bundle, so the dots still sit on
+// something recognisable. That is the same graceful-degradation rule the rest of the
+// app's map layers follow.
+function graticule(step = 30) {
+  const features = [];
+  for (let lng = -180; lng <= 180; lng += step) {
+    features.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[lng, -85], [lng, 85]] } });
+  }
+  for (let lat = -60; lat <= 60; lat += step) {
+    const line = [];
+    for (let lng = -180; lng <= 180; lng += 10) line.push([lng, lat]);
+    features.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } });
+  }
+  return { type: 'FeatureCollection', features };
+}
+
+function pointsFC(points) {
+  return {
+    type: 'FeatureCollection',
+    features: (points || []).map((p) => ({
+      type: 'Feature',
+      properties: { n: p.n || 1, mine: p.mine ? 1 : 0 },
+      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+    })),
+  };
+}
+
+export async function initVisitMap(containerEl, points) {
+  await loadLibs();
+  const maplibregl = window.maplibregl;
+  if (!maplibregl) throw new Error('map library unavailable');
+  const map = new maplibregl.Map({
+    container: containerEl,
+    style: {
+      version: 8,
+      sources: {
+        street: { type: 'raster', tiles: [STREET_TILES], tileSize: 256, maxzoom: 19, attribution: STREET_ATTR },
+        grid: { type: 'geojson', data: graticule() },
+        land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
+        visits: { type: 'geojson', data: pointsFC(points) },
+      },
+      layers: [
+        { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
+        { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
+        { id: 'grid', source: 'grid', type: 'line', paint: { 'line-color': '#7FBDB7', 'line-width': 0.6 } },
+        { id: 'street', source: 'street', type: 'raster', paint: { 'raster-opacity': 0.95 } },
+        // Radius grows with the visit count but is capped, so one very busy cell cannot
+        // swallow a continent. sqrt keeps a 100-visit dot from being 100x a 1-visit dot.
+        { id: 'visit-halo', source: 'visits', type: 'circle',
+          paint: {
+            'circle-color': ['case', ['==', ['get', 'mine'], 1], '#FF6B3D', '#2C7DA0'],
+            'circle-opacity': 0.22,
+            'circle-radius': ['min', 26, ['*', 4, ['sqrt', ['max', 1, ['get', 'n']]]]],
+          } },
+        { id: 'visit-dot', source: 'visits', type: 'circle',
+          paint: {
+            'circle-color': ['case', ['==', ['get', 'mine'], 1], '#FF6B3D', '#2C7DA0'],
+            'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 1.2,
+            'circle-radius': ['min', 11, ['+', 3.5, ['sqrt', ['max', 1, ['get', 'n']]]]],
+          } },
+      ],
+    },
+    center: [40, 20], zoom: 1.1, minZoom: 0.6, maxZoom: 9,
+    attributionControl: { compact: true },
+    renderWorldCopies: true,
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  return {
+    map,
+    setPoints(next) {
+      const src = map.getSource('visits');
+      if (src) src.setData(pointsFC(next));
+    },
+    fit(pts) {
+      const list = (pts || []).filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+      if (!list.length) return;
+      const b = new maplibregl.LngLatBounds([list[0].lng, list[0].lat], [list[0].lng, list[0].lat]);
+      list.forEach((p) => b.extend([p.lng, p.lat]));
+      try { map.fitBounds(b, { padding: 48, maxZoom: 6, duration: 0 }); } catch { /* single point */ }
+    },
+    destroy() { try { map.remove(); } catch { /* already gone */ } },
+  };
+}
+
 // Initialise the map into containerEl for a caller-supplied list of places — used by
 // Places' living map and the place-detail/street-food mini-maps: numbered/clustered
 // pins, rating-or-category colouring, an optional built-in Map/Satellite toggle.

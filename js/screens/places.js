@@ -37,6 +37,7 @@ import {
 } from '../render-utils.js';
 import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
+import { dateLocale, t } from '../i18n.js';
 import { getAccessibility } from '../data/accessibility.js';
 import { CROSSINGS } from '../data/borders.js';
 import { TRANSPORT_HUBS, TRANSIT_SOURCES } from '../data/transit.js';
@@ -1273,22 +1274,35 @@ export function resolveItem(id) {
 // markets). marketDays is an array of weekday indices (0=Sun … 6=Sat); absent/empty
 // means daily. These helpers drive the "on today?" line, card chip and ranking so a
 // Sunday-only market is not surfaced as "near you now" on a Tuesday.
-const DOW_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// Short weekday names come from the platform's own locale data for the chosen interface
+// language, exactly as the calendar grid does (js/screens/calendar.js) — 2024-01-07 was a
+// Sunday, which is index 0 here. Deriving them beats hand-authoring 7 dictionary rows in 29
+// languages: no parity to maintain, correct plural/casing conventions per locale, and a
+// market that runs "Fri–Sun" reads properly in Thai or Hebrew for free. Falls back to English
+// if Intl rejects the locale tag, so a bad tag can never blank a market's opening days.
+const DOW_FALLBACK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function dowShort(i) {
+  try {
+    return new Intl.DateTimeFormat(dateLocale(), { weekday: 'short' }).format(new Date(2024, 0, 7 + i));
+  } catch { return DOW_FALLBACK[i]; }
+}
 export function formatMarketDays(p) {
   const d = marketOpenDays(p);
-  if (!d) return 'Daily';
-  if (d.length === 2 && d.includes(0) && d.includes(6)) return 'Weekends (Sat & Sun)';
-  if (d.join(',') === '0,5,6') return 'Fri–Sun';                 // Fri, Sat, Sun (Sun wraps to index 0)
+  // t() rather than a bare literal: these two are assembled at runtime around locale-derived
+  // weekday names, so translateTree's exact-string match can never see them as a whole.
+  if (!d) return t('Daily');
+  if (d.length === 2 && d.includes(0) && d.includes(6)) return `${t('Weekends')} (${dowShort(6)} & ${dowShort(0)})`;
+  if (d.join(',') === '0,5,6') return `${dowShort(5)}–${dowShort(0)}`;   // Fri, Sat, Sun (Sun wraps to index 0)
   let contig = true;
   for (let i = 1; i < d.length; i++) if (d[i] !== d[i - 1] + 1) contig = false;
-  if (contig && d.length > 2) return `${DOW_SHORT[d[0]]}–${DOW_SHORT[d[d.length - 1]]}`;
-  return d.map((n) => DOW_SHORT[n]).join(d.length > 2 ? ', ' : ' & ');
+  if (contig && d.length > 2) return `${dowShort(d[0])}–${dowShort(d[d.length - 1])}`;
+  return d.map((n) => dowShort(n)).join(d.length > 2 ? ', ' : ' & ');
 }
 // Human "next open" hint from today: 'tomorrow' or the weekday name; null when daily.
 function nextMarketDay(p, dow) {
   const d = marketOpenDays(p);
   if (!d) return null;
-  for (let i = 1; i <= 7; i++) { const nd = (dow + i) % 7; if (d.includes(nd)) return i === 1 ? 'tomorrow' : DOW_SHORT[nd]; }
+  for (let i = 1; i <= 7; i++) { const nd = (dow + i) % 7; if (d.includes(nd)) return i === 1 ? 'tomorrow' : dowShort(nd); }
   return null;
 }
 // Detail-screen block: market type, what they sell, the days/hours and a live on-today line.

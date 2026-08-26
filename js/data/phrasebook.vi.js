@@ -70,6 +70,12 @@ export const PHRASEBOOK_VI = {
       { en: 'One thousand', script: 'Một nghìn', roman: 'mot ngin' },
     ]},
     { id: 'emergency', name: 'Emergency & health', phrases: [
+      { en: "Take me to the hospital", script: 'Đưa tôi đến bệnh viện', roman: 'duh-uh toy den beng vien', note: "Say this to a taxi or ride-hailing driver. In heavy city traffic this is often faster than waiting for an ambulance." },
+      { en: "It is an emergency", script: 'Khẩn cấp!', roman: 'khan kap', note: "Also the word on emergency-department signs, alongside cấp cứu (kap koo)." },
+      { en: "I am bleeding", script: 'Tôi bị chảy máu', roman: 'toy bee chay mao', note: "chảy máu = to bleed. Point at the wound." },
+      { en: "They are not breathing", script: 'Không thở được', roman: 'khong tuh duhk', note: "Literally 'cannot breathe'. Point at the person." },
+      { en: "A snake bit me", script: 'Bị rắn cắn', roman: 'bee ran kan', note: "rắn = snake, cắn = bit. Keep the limb still and below the heart while you say it." },
+      { en: "I have travel insurance", script: 'Tôi có bảo hiểm du lịch', roman: 'toy ko bao hiem yoo lik', note: "International hospitals will ask for this before admitting you." },
       { en: 'Help me!', script: 'Cứu tôi với!', roman: 'koo toy vuh-y' },
       { en: 'Call the police', script: 'Gọi công an', roman: 'goy kong an' },
       { en: 'Hospital', script: 'Bệnh viện', roman: 'beng vien' },

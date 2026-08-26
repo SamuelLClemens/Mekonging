@@ -25,6 +25,7 @@
 import { store, save, resetAll, exportData, importData, storageStatus, requestPersistence } from '../state.js';
 import { h } from '../util.js';
 import { field, selectEl, infoTip, confirmAction } from '../ui-widgets.js';
+import { visitsEnabled, myVisits } from '../visits.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
 import { LANGUAGES, INTERESTS } from '../data/regions.js';
 import { getFamily } from '../data/family.js';
@@ -279,6 +280,22 @@ export function settingsScreen() {
       oninput: (e) => { p.feedbackTo = e.target.value.trim(); save(); },
     })),
     h('p', { class: 'disclaimer' }, 'Stays on this device — never committed to the app.'),
+  ]));
+
+  // Where people are using this from. Sits here rather than under "Your data" because the
+  // interesting half is the map, not the storage — but the privacy shape of it is stated on
+  // the chip's own screen, and the recording is off until switched on there.
+  wrap.append(h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, 'Where people are'),
+      infoTip('A world map with a pin on every place the app has been opened from. Your own pins stay on this device and are rounded to about 55 km, so no pin can place anyone. There is no shared feed unless you add one.'),
+    ]),
+    h('div', { class: 'chips' }, [
+      h('button', { class: 'chip', onclick: () => go('#visitors') }, '🌍 Open the world map'),
+    ]),
+    visitsEnabled()
+      ? h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, `Recording your pins — ${myVisits().length} ${myVisits().length === 1 ? 'place' : 'places'} so far.`)
+      : h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Not recording anything yet. Switch it on from the map.'),
   ]));
 
   // Reminders — server-free: per-entry lead time on the calendar + an optional daily

@@ -37,6 +37,10 @@ import {
 import { homeScreen } from './screens/home.js';
 import { nextStopScreen } from './screens/nextstop.js';
 import { familyScreen, familyCard } from './screens/family.js';
+import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
+import { hospitalScreen } from './screens/medical.js';
+import { visitorsScreen } from './screens/visitors.js';
+import { HOSPITALS, HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
 import { settingsScreen } from './screens/settings.js';
 import { calendarDispatch } from './screens/calendar.js';
 import { journalDispatch, scrapbookScreen, journeyScreen } from './screens/journal.js';
@@ -94,7 +98,7 @@ import {
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
-  online, netMode, setNetMode, infoTip,
+  online, netMode, setNetMode, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -352,7 +356,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.455.0';
+const APP_VERSION = 'mk-v0.456.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2980,10 +2984,27 @@ function loadRegionSet(cc) {
   const loader = REGION_SET_LOADERS[cc];
   if (!loader) return Promise.resolve(null);
   const p = loader()
-    .then((set) => { REGIONS_BY_CC[cc] = set; return set; })
+    .then((set) => {
+      REGIONS_BY_CC[cc] = set;
+      // A newly available province set changes what whereAmI() should return for the
+      // current fix, and whereAmI memoises. Drop the memo or the re-render below repaints
+      // the same pre-province answer it already had.
+      _waiCache = { key: '', val: null };
+      return set;
+    })
     .catch((err) => { delete _regionSetLoads[cc]; throw err; });
   _regionSetLoads[cc] = p;
   return p;
+}
+// Non-blocking province-polygon load for a screen that must paint immediately but reads
+// better once it can name the traveller's province. Deliberately NOT part of the router's
+// NEEDS_REGION_DATA gate: gating the emergency screens on a download would trade a fact
+// that is merely useful for a delay that is actively harmful. Re-renders once, only if the
+// traveller is still on the route that asked.
+export function ensureRegionSet(cc) {
+  if (!cc || isRegionSetLoaded(cc)) return;
+  const at = location.hash;
+  loadRegionSet(cc).then(() => { if (location.hash === at) render(); }).catch(() => { /* degrades to no province name */ });
 }
 function findProvince(cc, code) {
   const set = regionSetFor(cc);
@@ -4774,7 +4795,7 @@ function poolsScreen(arg) {
   const country = cc ? getCountry(cc) : null;
   const list = cc ? poolsForCountry(cc) : POOLS.slice();
   wrap.append(topbar(country ? `${country.name} pools` : 'Public pools', cc ? `#country-${cc}` : '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Public swimming pools, hotel & resort day passes, water parks and managed natural swimming spots. Prices are ranges in local currency and change often — guidance only, confirm locally.'));
+  wrap.append(screenHint('Public swimming pools, hotel & resort day passes, water parks and managed natural swimming spots. Prices are ranges in local currency and change often — guidance only, confirm locally.'));
   if (!list.length) { wrap.append(h('p', { class: 'muted' }, 'No pools listed for this area yet.')); mount(wrap, '#home'); return; }
 
   // Lead with what is NEAR the traveller (GPS, else their focused city), so a pool
@@ -4814,7 +4835,7 @@ function poolsScreen(arg) {
 function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Border crossings', '#places'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
+  wrap.append(screenHint('Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
   // Freshness badge: the oldest "verified" date across all crossings, so the whole set is
   // judged by its weakest link. Quiet ✓ while under ~6 months old, a prominent ⚠ nudge once
   // it ages. Re-checked on every open (self-updating age, server-free).
@@ -5166,7 +5187,7 @@ function foodScreen(country) {
   if (country) foodCountry = country;
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify food', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Set your allergies and diet below and dishes are highlighted for you — green fits, red to avoid. Use “Avoid” to hide dishes with an allergen.'));
+  wrap.append(screenHint('Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Set your allergies and diet below and dishes are highlighted for you — green fits, red to avoid. Use “Avoid” to hide dishes with an allergen.'));
 
   const cFilters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const cChips = h('div', { class: 'chips' }, cFilters.map((f) =>
@@ -5417,7 +5438,7 @@ function produceCard(p) {
 function produceScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Market produce', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
+  wrap.append(screenHint('Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
   const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(PRODUCE_CATEGORIES);
   const chips = h('div', { class: 'chips' }, cats.map((g) =>
     h('button', { class: 'chip', 'aria-pressed': produceCat === g.id ? 'true' : 'false', dataset: { g: g.id },
@@ -5498,7 +5519,7 @@ function schedulesScreen(country) {
   if (country && getCountry(country)) { setActiveCountry(country); schedCountry = country; }
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Transport schedules', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
+  wrap.append(screenHint('Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const chips = h('div', { class: 'chips' }, filters.map((f) =>
@@ -5962,7 +5983,7 @@ function eventsScreen(country) {
   // "Festivals" alone — matches the "🎉 N festivals" link that points here, and fits on one
   // line; the full "Festivals & events" phrase 3-line-wrapped on mobile.
   wrap.append(topbar('Festivals', getCountry(eventsCountry) ? `#country-${eventsCountry}` : '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
+  wrap.append(screenHint('Major festivals and public holidays with 2026 dates. Movable (lunar) dates shift each year — confirm locally. Tap “Add to plan” to place one on your calendar.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
   const chips = h('div', { class: 'chips' }, filters.map((f) =>
@@ -6114,7 +6135,7 @@ function callControl(s, label) {
 function soundsScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Sounds around you', '#nature'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
+  wrap.append(screenHint('Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   let group = '';
   let query = '';
@@ -6175,7 +6196,7 @@ function soundsScreen() {
 function natureScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify nature', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
+  wrap.append(screenHint('Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
 
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search by name…', value: natureQuery,
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
@@ -6365,7 +6386,7 @@ function myIdentifierScreen() {
     mount(wrap, '#me');
     return;
   }
-  wrap.append(h('p', { class: 'map-hint' },
+  wrap.append(screenHint(
     'Everything you saved from the identify tools, kept on your device. Tap to reopen; use ✎ to file items into your own categories and add notes, and ↑ ↓ to reorder.'));
 
   // Datalist of the categories already in use, so adding a tag can reuse them.
@@ -6855,34 +6876,10 @@ function nearestFirst(list, fix) {
 }
 export function kmLabel(km) { return km == null ? '' : (km < 1 ? '<1 km' : `${Math.round(km)} km`); }
 
-// Reputable hospitals travellers and expats commonly use, tagged by capability so a
-// family can find an ER, a children's ward or maternity care fast. Not exhaustive.
-const HOSP_TAG = { er: '🚑 24h ER', peds: '🧒 Children', maternity: '🤰 Maternity', intl: '🌐 English / international' };
-const HOSPITALS = [
-  // Thailand
-  { cc: 'th', city: 'Bangkok', lat: 13.7437, lng: 100.5548, name: 'Bumrungrad International Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Bangkok', lat: 13.7305, lng: 100.5690, name: 'Samitivej Sukhumvit Hospital', tags: ['er', 'peds', 'maternity', 'intl'], note: 'Has a dedicated children’s hospital.' },
-  { cc: 'th', city: 'Bangkok', lat: 13.7247, lng: 100.5389, name: 'BNH Hospital', tags: ['er', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Chiang Mai', lat: 18.7965, lng: 98.9720, name: 'Chiang Mai Ram Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Phuket', lat: 7.8927, lng: 98.3699, name: 'Bangkok Hospital Phuket', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'th', city: 'Koh Samui', lat: 9.5350, lng: 100.0620, name: 'Bangkok Hospital Samui', tags: ['er', 'intl'] },
-  { cc: 'th', city: 'Krabi', lat: 8.0800, lng: 98.9060, name: 'Krabi Nakharin International Hospital', tags: ['er', 'intl'] },
-  // Vietnam
-  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7290, lng: 106.7220, name: 'FV Hospital (Franco-Vietnamese)', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'vi', city: 'Ho Chi Minh City', lat: 10.7846, lng: 106.6960, name: 'Family Medical Practice HCMC', tags: ['er', 'intl'], note: '24/7 international clinic with evacuation support.' },
-  { cc: 'vi', city: 'Hanoi', lat: 20.9950, lng: 105.8680, name: 'Vinmec International Hospital (Times City)', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'vi', city: 'Hanoi', lat: 21.0300, lng: 105.8130, name: 'Family Medical Practice Hanoi', tags: ['intl'] },
-  { cc: 'vi', city: 'Da Nang', lat: 16.0600, lng: 108.2200, name: 'Vinmec Da Nang International Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  // Cambodia
-  { cc: 'kh', city: 'Phnom Penh', lat: 11.5800, lng: 104.8990, name: 'Royal Phnom Penh Hospital', tags: ['er', 'peds', 'maternity', 'intl'] },
-  { cc: 'kh', city: 'Phnom Penh', lat: 11.5560, lng: 104.9280, name: 'Raffles Medical Phnom Penh', tags: ['er', 'intl'] },
-  { cc: 'kh', city: 'Siem Reap', lat: 13.3670, lng: 103.8560, name: 'Royal Angkor International Hospital', tags: ['er', 'intl'] },
-  { cc: 'kh', city: 'Siem Reap', lat: 13.3560, lng: 103.8590, name: 'Angkor Hospital for Children', tags: ['peds'], note: 'Renowned charitable children’s hospital.' },
-  // Laos
-  { cc: 'la', city: 'Vientiane', lat: 17.9660, lng: 102.6110, name: 'Alliance International Medical Centre', tags: ['er', 'intl'] },
-  { cc: 'la', city: 'Vientiane', lat: 17.9610, lng: 102.6030, name: 'Mahosot Hospital', tags: ['er'], note: 'Public hospital. Serious cases are often stabilised then evacuated to Thailand (Udon Thani or Bangkok).' },
-  { cc: 'la', city: 'Luang Prabang', lat: 19.8790, lng: 102.1470, name: 'Luang Prabang Provincial Hospital', tags: ['er'], note: 'Basic care. Serious cases are commonly evacuated to Vientiane or Thailand.' },
-];
+// The hospital dataset moved to js/data/medical.js when the nineteen-entry big-city list
+// grew into region-wide coverage plus the province-level fallback that answers "how do I
+// reach a hospital" from a village this app has never heard of. HOSPITALS/HOSP_TAG are
+// imported at the top of this file; the full flow lives in js/screens/medical.js.
 
 // Actually kosher — in this region that means Chabad houses (supervised), never
 // "kosher-style". Each runs meals and/or a food shop for travellers.
@@ -7175,7 +7172,9 @@ export function nearestSpotGlobal(fix) {
 // naming must NOT, or a traveller in Mae Hong Son is wrongly told they are in Pai (the
 // closest listed hub). Memoised per ~100 m cell so per-render calls stay cheap.
 let _waiCache = { key: '', val: null };
-function whereAmI(fix) {
+// Exported so the medical screen can name the traveller's province authoritatively — the
+// province is what decides which hospital is actually reachable, not the nearest hub town.
+export function whereAmI(fix) {
   if (!fix || fix.lat == null || fix.lng == null) return null;
   const key = fix.lat.toFixed(3) + ',' + fix.lng.toFixed(3);
   if (_waiCache.key === key) return _waiCache.val;
@@ -7225,6 +7224,8 @@ function startLocationWatch() {
         // re-derived the country. Resolving+applying the nearest spot here means the whole
         // app's notion of "where I am" now actually tracks GPS continuously, in the background.
         if (moved) { const nb = nearestSpotGlobal(next); if (nb) setFocusSpot(nb.spot); }
+        // First fix of the session is the one that means "opened here" — see logOpenLocation.
+        logOpenLocation();
         const hash = location.hash || '';
         if (moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) render();
       },
@@ -7233,6 +7234,22 @@ function startLocationWatch() {
     );
   } catch { /* noop */ }
 }
+// One coarsened pin per place per day, and only when the traveller has switched it on.
+// Hangs off the app-open path rather than the location watch: a pin is meant to record
+// "I opened the app here", not to trace a route through the day.
+let _visitLogged = false;
+function logOpenLocation() {
+  if (_visitLogged || !visitsEnabled()) return;
+  try {
+    const fix = getLastFix();
+    if (!fix) return;
+    _visitLogged = true;
+    const wai = whereAmI(fix);
+    const cell = recordVisit(fix, (wai && wai.country) || getActiveCountry(), todayISO());
+    if (cell) contributeVisit(cell, (wai && wai.country) || getActiveCountry());
+  } catch { /* a pin is never worth breaking a launch over */ }
+}
+
 function initLocation() {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return;
   const begin = () => { if (!store.profile.prefs.geoAsked) { store.profile.prefs.geoAsked = true; save(); } startLocationWatch(); };
@@ -7279,37 +7296,38 @@ function sosScreen(cc) {
   if (em.length) em.forEach((e) => nums.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else nums.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
 
-  // (2) Where to go — the nearest hospital first. The maps deep link needs internet, so
-  // pair it with an offline fallback: show a big "I need a hospital" phrase to a local.
-  const hosp = h('div', { class: 'card' }, [h('h2', {}, 'Get to a hospital — nearest you')]);
-  const mapHref = (fix && fix.lat != null)
-    ? `https://www.google.com/maps/search/hospital/@${fix.lat},${fix.lng},14z`
-    : 'https://www.google.com/maps/search/?api=1&query=hospital%20near%20me';
-  hosp.append(h('a', { class: 'btn block', href: mapHref, target: '_blank', rel: 'noopener' }, 'Find nearest hospital (needs internet) ↗'));
+  // (2) Where to go. The full answer — province-level fallback, evacuation chains, the
+  // local word for "hospital", the medical card — is its own screen (js/screens/medical.js),
+  // because it outgrew a card the moment it had to work somewhere without a listed hospital.
+  // What stays here is the decision a person in trouble makes in three seconds: the three
+  // nearest options, and one button to everything else.
+  const hosp = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, 'Get to a hospital'),
+    infoTip('Ordered by straight-line distance from your location. Open the full screen for the rest of the country, what to do where no hospital is listed, how people actually reach one here, and your medical card.'),
+  ])]);
+  hosp.append(h('button', { class: 'btn block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, '🏥 Get to a hospital — full guide'));
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
   if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
-
-  // Reputable hospitals in the country, nearest first, tagged so a family can find an ER,
-  // a children's ward or maternity care fast. The map link routes to the exact door; call
-  // ahead — in a life-threatening emergency use the number above.
   const localHosp = nearestFirst(HOSPITALS.filter((x) => x.cc === getActiveCountry()), fix);
   if (localHosp.length) {
-    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, `Trusted hospitals in ${c.name}, nearest first — for adults, children, babies and pregnancy. Most have English-speaking staff.`));
-    localHosp.forEach((x) => {
+    hosp.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    localHosp.slice(0, 3).forEach((x) => {
       const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
       hosp.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
         h('div', { class: 'row-between' }, [h('strong', {}, x.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city + (x.note ? ` · ${x.note}` : '')),
+        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city),
         h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))),
         h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: mapsSearch(`${x.name} ${x.city}`), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
       ]));
     });
-    hosp.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'A starting list, not exhaustive. For a young child, pregnancy or complex needs, telephone ahead to confirm the right department is open.'));
+    if (localHosp.length > 3) hosp.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, `All ${localHosp.length} listed in ${c.name} →`));
   }
 
   // (3) What to do while getting there — bites/stings first aid, then life-saving basics.
-  const danger = h('div', { class: 'card allergy-card' }, [h('h2', {}, '🐍 Bites, stings & dangerous wildlife')]);
-  danger.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'));
+  const danger = h('div', { class: 'card allergy-card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '🐍 Bites, stings & dangerous wildlife'),
+    infoTip('What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'),
+  ])]);
   FIRST_AID.forEach((fa) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, fa.t)]);
     const inner = h('div', {});
@@ -7328,7 +7346,10 @@ function sosScreen(cc) {
 
   // Life-saving essentials: honest guidance on EpiPens and defibrillators (neither is
   // reliably bought on the street here) plus hands-only CPR.
-  const life = h('div', { class: 'card' }, [h('h2', {}, '💉 Life-saving essentials')]);
+  const life = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '💉 Life-saving essentials'),
+    infoTip('Honest guidance on adrenaline auto-injectors and defibrillators — neither is reliably bought on the street in this region — plus hands-only CPR.'),
+  ])]);
   LIFESAVING.forEach((ls) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, ls.t)]);
     const inner = h('div', {});
@@ -7340,10 +7361,10 @@ function sosScreen(cc) {
   // (4) How to communicate once you are there — emergency phrases in the local language.
   let phraseCard = null;
   if (emCat) {
-    phraseCard = h('div', { class: 'card' }, [
-      h('h2', {}, `At the hospital: say it in ${book.label}`),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Show or speak these to hospital staff or anyone helping you.'),
-    ]);
+    phraseCard = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, `At the hospital: say it in ${book.label}`),
+      infoTip('Show or speak these to hospital staff or anyone helping you. Works offline.'),
+    ])]);
     const voiceOk = hasVoiceFor(book.locale);
     emCat.phrases.forEach((p) => phraseCard.append(h('div', { class: 'phrase' }, [
       h('div', { class: 'grow' }, [h('div', { class: 'en' }, p.en), h('div', { class: 'native', lang: book.locale }, p.script), h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman])]),
@@ -7378,11 +7399,58 @@ function sosScreen(cc) {
   sd.append(sInner);
   solo.append(sd);
 
+  // Everything that is an emergency but is not a bite. Road traffic injury is the leading
+  // cause of traveller death in this region and had no entry on this screen at all; nor did
+  // a stolen passport, an arrest, a spiked drink or a missing companion. Each situation is a
+  // closed <details> so thirteen of them cost one card of vertical space, and the screen's
+  // first fold stays what it should be: the phone number.
+  const sit = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '🚨 If something happens'),
+    infoTip('Tap the one that fits. Each opens what to do in the next minute, what to do in the next few hours, and the mistake people reliably make. Works offline.'),
+  ])]);
+  EMERGENCIES.forEach((e) => {
+    const d = h('details', { class: 'filters-collapse' }, [h('summary', {}, `${e.ic} ${e.t}`)]);
+    const inner = h('div', {});
+    if (e.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, e.lead));
+    inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Right now')]));
+    inner.append(h('ul', { class: 'sos-aid' }, e.now.map((li) => h('li', {}, li))));
+    if (e.then && e.then.length) {
+      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Then')]));
+      inner.append(h('ul', { class: 'sos-aid' }, e.then.map((li) => h('li', {}, li))));
+    }
+    if (e.avoid && e.avoid.length) {
+      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('ul', { class: 'sos-aid dont' }, e.avoid.map((li) => h('li', {}, li))));
+    }
+    { const rd = readAloudBar(() => [`${e.t}.`, 'Right now:', e.now.join(' '), (e.then || []).length ? 'Then: ' + e.then.join(' ') : '', (e.avoid || []).length ? 'Do not: ' + e.avoid.join(' ') : ''].filter(Boolean).join(' ')); if (rd) inner.append(rd); }
+    d.append(inner);
+    sit.append(d);
+  });
+
+  // Consular help, and the limits of it. Travellers routinely expect the wrong things from
+  // an embassy, which wastes exactly the hours in which it could have helped.
+  const emb = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
+    h('h2', { style: 'margin:0' }, '🏛 Your embassy'),
+    infoTip('Consular help is free and is the right first call for a lost passport, an arrest, a death or a large-scale emergency. Find yours and save the address now — searching for it during the emergency is the part that goes wrong.'),
+  ])]);
+  const embD = h('details', { class: 'filters-collapse' }, [h('summary', {}, 'What an embassy can and cannot do')]);
+  const embInner = h('div', {});
+  embInner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'It can')]));
+  embInner.append(h('ul', { class: 'sos-aid' }, EMBASSY.can.map((li) => h('li', {}, li))));
+  embInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'It cannot')]));
+  embInner.append(h('ul', { class: 'sos-aid dont' }, EMBASSY.cannot.map((li) => h('li', {}, li))));
+  embInner.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, EMBASSY.note));
+  embD.append(embInner);
+  emb.append(embD);
+  emb.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsSearch(`embassy consulate ${c.name}`), target: '_blank', rel: 'noopener' }, `🔎 Find your embassy in ${c.name} ↗`));
+
   // Ordered append — the true order of operations in an emergency.
   wrap.append(nums);
   wrap.append(hosp);
   wrap.append(danger);
   wrap.append(life);
+  wrap.append(sit);
+  wrap.append(emb);
   if (phraseCard) wrap.append(phraseCard);
   if (safeCard) wrap.append(safeCard);
   wrap.append(solo);
@@ -7440,7 +7508,7 @@ function dangerScreen() {
   // aid" buttons elsewhere) — the old title was the only place still saying something else,
   // and at 25 characters it was also the worst of the topbar 3-line-wrap family (4 lines here).
   wrap.append(topbar('Dangerous', '#sos'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
+  wrap.append(screenHint('Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
   const list = allSpecies().filter((s) => s.dangerous);
   const groups = [
     { label: '🐍 Snakes', match: (s) => /cobra|krait|viper|python|snake/i.test(s.commonName) },
@@ -7486,7 +7554,7 @@ function worshipScreen(cc) {
   else if (near) setActiveCountry(near.spot.country);
   const c = getCountry(getActiveCountry());
   wrap.append(countryChips((id) => go(`#worship-${id}`)));
-  wrap.append(h('p', { class: 'map-hint' }, 'Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
+  wrap.append(screenHint('Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
 
   wrap.append(h('div', { class: 'card' }, [
     h('h2', { style: 'margin-top:0' }, 'Find a place of worship near me'),
@@ -7855,7 +7923,7 @@ function contributionsScreen() {
 function helpScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Help & FAQ', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
+  wrap.append(screenHint('How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
   const faq = (q, a) => h('details', { class: 'card' }, [h('summary', {}, q), typeof a === 'string' ? h('p', {}, a) : a]);
 
   wrap.append(faq('What works offline, and what needs internet?', h('div', {}, [
@@ -7903,7 +7971,7 @@ function feedbackScreen(arg) {
   const wrap = h('div', { class: 'screen' });
   const place = arg ? resolveItem(arg) : null;
   wrap.append(topbar(place ? 'Suggest an edit' : 'Send feedback', place ? `#place-${place.id}` : '#help'));
-  wrap.append(h('p', { class: 'map-hint' }, place
+  wrap.append(screenHint(place
     ? `Suggest a correction or addition for “${place.name}”. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically.`
     : 'Tell us what to fix, add or improve. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically, and no account is needed.'));
 
@@ -9210,7 +9278,7 @@ function givingCalculator() {
 function donateScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Give back', '#home'));
-  wrap.append(h('p', { class: 'map-hint' }, 'Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
+  wrap.append(screenHint('Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
   wrap.append(h('div', { class: 'banner' }, 'Mekonging takes no money and no cut, and never processes a payment. These links open external sites and need internet. Please do your own checks before giving.'));
   wrap.append(givingCalculator());
   DONATE_ORGS.forEach((grp) => {
@@ -9276,7 +9344,7 @@ export function render() {
   const NEEDS_COUNTRY_DATA = new Set([
     'country', 'region', 'nearby', 'places', 'place', 'prices', 'transport',
     'calendar', 'events', 'event', 'today', 'food', 'dish', 'board', 'streetfood',
-    'sos', 'foryou',
+    'sos', 'hospital', 'foryou',
   ]);
   // Read across every country at once: universal search; the full multi-country map
   // (NOT the small embedded per-country Places map, which is caller-scoped via a
@@ -9364,6 +9432,7 @@ export function render() {
       case 'identified': return myIdentifierScreen();
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
+      case 'hospital': return hospitalScreen(arg);
       case 'scams': return scamsScreen(arg);
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);
@@ -9387,6 +9456,7 @@ export function render() {
       case 'board': return boardScreen(arg);
       case 'streetfood': return streetfoodScreen();
       case 'donate': return donateScreen();
+      case 'visitors': return visitorsScreen();
       case 'settings': return settingsScreen();
       case 'export': return exportScreen();
       default: return homeScreen();

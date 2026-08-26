@@ -67,6 +67,12 @@ export const PHRASEBOOK_LO = {
       { en: "Too expensive", script: "ແພງຫຼາຍ", roman: "phaeng laai", note: "For greater emphasis Lao speakers may double it: ແພງຫຼາຍໆ (phaeng laai laai)." },
     ] },
     { id: "emergency", name: "Emergency", phrases: [
+      { en: "Take me to the hospital", script: "ພາຂ້ອຍໄປໂຮງໝໍ", roman: "phaa khoy pai hong mor", note: "Say this to a driver or ask your accommodation to arrange a car. Outside Vientiane an ambulance may not be available at all." },
+      { en: "It is an emergency", script: "ສຸກເສີນ!", roman: "souk-seun!", note: "ສຸກເສີນ (souk-seun) = emergency; it is the word on emergency-room signs." },
+      { en: "I am bleeding", script: "ຂ້ອຍເລືອດອອກ", roman: "khoy leuat ok", note: "ເລືອດອອກ (leuat ok) = blood coming out. Point at the wound." },
+      { en: "They are not breathing", script: "ລາວບໍ່ຫາຍໃຈ", roman: "lao bo hai jai", note: "ຫາຍໃຈ (hai jai) = to breathe; ບໍ່ (bo) = not. ລາວ (lao) is the everyday third-person pronoun." },
+      { en: "A snake bit me", script: "ງູກັດຂ້ອຍ", roman: "nguu gat khoy", note: "ງູ (nguu) = snake, ກັດ (gat) = bit. Keep the limb still and get to a provincial hospital — antivenom is not held at village level." },
+      { en: "I have travel insurance", script: "ຂ້ອຍມີປະກັນໄພການເດີນທາງ", roman: "khoy mee pa-kan phai kan deun thang", note: "Bring the policy document or a photo of it; Laos is a cash-first health system and a written guarantee matters." },
       { en: "Help", script: "ຊ່ວຍດ້ວຍ", roman: "suay duay", note: "This is the urgent shout for danger ('Help!'), confirmed as the emphatic call for immediate assistance. The softer 'please help me' is ຊ່ອຍແດ່ (suay dae); use ຊ່ວຍດ້ວຍ when in real danger." },
       { en: "Call the police", script: "ໂທຫາຕຳຫຼວດ", roman: "tho haa tam-luat", note: "ໂທຫາ (tho haa) = phone/call; ຕຳຫຼວດ (tam-luat) = police. Laos police emergency number is 191 (1191 from mobiles)." },
       { en: "Call an ambulance", script: "ໂທຫາລົດໂຮງໝໍ", roman: "tho haa lot hong mor", note: "Romanization corrected: ລົດ is 'lot' (Lao has no 'r' here), not 'rot'. ລົດໂຮງໝໍ (lot hong mor, literally 'hospital vehicle') is a valid compound for ambulance but was not directly attested in a phrasebook; the attested alternative is ລົດສຸກເສີນ (lot suk-soen, 'emergency vehicle'). The verb ໂທຫາ is confirmed. Ambulance number is 195 (1195); in Vientiane the volunteer Rescue line is 1623." },

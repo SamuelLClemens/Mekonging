@@ -2187,3 +2187,33 @@ html[dir="rtl"] .tel,
 html[dir="rtl"] code { direction: ltr; unicode-bidi: embed; text-align: left; }
 /* The tab bar is a flex row and mirrors on its own; the icons above the labels must not. */
 html[dir="rtl"] .tabbar button { direction: rtl; }
+
+/* Screen-level help, folded away. The standing explainer paragraph at the top of a screen
+   cost three or four lines and pushed the real content below the fold on a phone; this is
+   the same text behind a single small row. Sized as a proper 44px touch target via padding
+   rather than height, so the collapsed row still measures ~28px of visible ink. */
+.screen-hint { margin: 0 0 var(--sp-3); }
+.screen-hint > summary {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
+  color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 600;
+  padding: var(--sp-2) 0; user-select: none;
+}
+.screen-hint > summary::-webkit-details-marker { display: none; }
+.screen-hint > summary:hover { color: var(--ink); }
+.screen-hint[open] > summary { color: var(--teal); }
+.screen-hint-ic { font-size: 1.05rem; line-height: 1; }
+.screen-hint > p { margin: 0; }
+
+/* World map of visits (#visitors). Fixed aspect so the container has a size before
+   MapLibre measures it — a zero-height container is the classic reason a GL map paints
+   nothing. Capped in absolute terms so it never eats a tall phone screen whole. */
+.visit-map {
+  width: 100%; aspect-ratio: 16 / 10; max-height: 46vh; min-height: 220px;
+  margin-top: var(--sp-3); border-radius: var(--r-md, 12px); overflow: hidden;
+  border: 1px solid var(--line); background: #9FD3CE;
+}
+.switch-row {
+  display: flex; align-items: center; gap: var(--sp-3); cursor: pointer;
+  padding: var(--sp-2) 0; font-weight: 600;
+}
+.switch-row input { width: 20px; height: 20px; flex: none; accent-color: var(--teal); }

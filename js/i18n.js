@@ -209,6 +209,28 @@ function swapText(node, translated) {
   node.nodeValue = lead + translated + tail;
 }
 
+// A great many labels in this app are written as "<emoji> <label>" — '🍜 Food & drink',
+// '⚡ Quick access', '🇹🇭 Thailand'. Keying those verbatim would mean a second dictionary row
+// for every icon variant of the same words, and — worse — it fails SILENTLY: 'Food & drink'
+// translates, '🍜 Food & drink' does not, so one screen ends up half in the reader's language.
+// So the emoji is split off, the words alone are looked up, and the emoji is put back. Emoji
+// are language-neutral, which is exactly why this is safe to do generically.
+//
+// Deliberately anchored and single-run: only a LEADING pictographic run followed by
+// whitespace. A string that merely contains an emoji is left alone, because the words either
+// side of it are not necessarily a phrase the dictionary knows.
+const LEAD_EMOJI = /^([\p{Extended_Pictographic}‍️⃣\p{Regional_Indicator}＋+]+)(\s+)(.+)$/u;
+
+// Look a string up directly, then — failing that — as "<emoji> <label>".
+function lookup(d, s) {
+  const direct = d[s];
+  if (direct) return direct;
+  const m = LEAD_EMOJI.exec(s);
+  if (!m) return null;
+  const inner = d[m[3]];
+  return inner ? m[1] + m[2] + inner : null;
+}
+
 // Translate every known string inside `root`. Cheap enough to run on every render: a single
 // TreeWalker plus a Map hit per node. Safe to call twice on the same tree — a translated
 // string is no longer a dictionary key, so the second pass is a no-op.
@@ -228,7 +250,7 @@ export function translateTree(root) {
   const texts = [];
   for (let n = walker.nextNode(); n; n = walker.nextNode()) texts.push(n);
   for (const n of texts) {
-    const hit = d[n.nodeValue.trim()];
+    const hit = lookup(d, n.nodeValue.trim());
     if (hit) swapText(n, hit);
   }
 
@@ -241,7 +263,7 @@ export function translateTree(root) {
     for (const a of ATTRS) {
       const v = el.getAttribute(a);
       if (!v) continue;
-      const hit = d[v.trim()];
+      const hit = lookup(d, v.trim());
       if (hit) el.setAttribute(a, hit);
     }
   }

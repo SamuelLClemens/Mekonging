@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.455.0';
+const CACHE_VERSION = 'mk-v0.456.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -40,6 +40,14 @@ const PRECACHE = [
   'js/screens/calendar.js',
   'js/screens/journal.js',
   'js/screens/phrasebook.js',
+  // The emergency screens and their data. main.js imports all four EAGERLY, so a miss here
+  // is not a degraded feature — it is a module-evaluation failure that takes the whole app
+  // down offline. They are also, of everything in this list, the files most likely to be
+  // opened with no signal.
+  'js/screens/medical.js',
+  'js/data/medical.js',
+  'js/screens/visitors.js',
+  'js/visits.js',
   'js/render-utils.js',
   'js/ui-widgets.js',
   'js/state.js',
