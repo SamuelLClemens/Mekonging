@@ -200,12 +200,19 @@ FOUR DECISIONS TAKEN (do not relitigate without the user):
   Yuam 6, Mae Sariang 6. Raises month coverage from 81% toward 100% and fills city cards that
   render thin.
 
-- [ ] **10.4** SLICE 4 — Vietnam depth, and the typography pass. Vietnam is the weak side and it is
-  the side the user asked about: Bangkok has 40 places and Chiang Mai 32, while Hoi An, Da Nang and
-  Hue have 9 each, Phong Nha 6, Ha Giang 5, Cat Ba 2 and Mai Chau 1. Bring the named destinations
-  toward the depth Thailand already has. Fold in **8.4** here — the flat h1-to-h3 outline on visa,
-  scams, dish, event and weather, and the mixed h2/h3 levels on the place screen — because both are
-  editorial-judgement work rather than defect fixes and belong in one pass.
+- [ ] **10.4** SLICE 4 — genuinely thin Vietnam towns, and the typography pass. RE-SCOPED
+  2026-08-27 against the corrected count (see the 696→808 correction above): Hoi An (15), Da Nang
+  (17), Hue (9), Sapa (17) and Cat Ba (11) were reported thin in the flawed 696-count and are not —
+  Hoi An and Da Nang already sit above Chiang Mai's old figure. The real Vietnam gap, by the
+  authoritative per-city count, is single-place stubs: **Mai Chau, Lang Co, Cao Bang, Thanh Hoa,
+  Hoa Binh, Ba Ria-Vung Tau, Lao Cai, Duy Phu, Phan Thiet, An Giang** (1 place each), then Quy
+  Nhon, Con Dao, Buon Ma Thuot, Vung Tau (2 each). Bring these toward a browsable minimum rather
+  than chasing Bangkok/Chiang Mai-level depth (40/33) that no city in the other three countries
+  needs either — Thailand alone has 24 cities at ≤3 places, Laos 26, Cambodia 19; a full census is
+  `scratchpad/recount6.py`'s job re-run, not reproduced here. Fold in **8.4** here — the flat
+  h1-to-h3 outline on visa, scams, dish, event and weather, and the mixed h2/h3 levels on the place
+  screen — because both are editorial-judgement work rather than defect fixes and belong in one
+  pass.
 
 - [ ] **10.5** UNSPECIFIED — the user selected a fifth priority during the interview but the
   description did not come through, and answered "[No preference]" when asked again. Left as an
