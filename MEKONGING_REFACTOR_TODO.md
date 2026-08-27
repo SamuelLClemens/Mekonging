@@ -128,18 +128,33 @@ granularity and 9.4 stated the place-level gap as a limitation. This priority cl
 only honest way: by structuring prose that is ALREADY WRITTEN AND SOURCED rather than authoring
 month fields for records that have no source.
 
-MEASURED FIRST (`scratchpad/month_coverage.py`, `besttime.py`, `reach.py`, 2026-08-27):
+MEASURED FIRST (`scratchpad/month_coverage.py`, `besttime.py`, `reach.py`, 2026-08-27) — AND
+RE-MEASURED the same day: the first pass counted 696 place records and called that "corrected"
+against the file's own long-standing, repeatedly-verified 808 (Priority 5's `stepFree`/`kidFriendly`
+audits and 9.4 both already said 808). That was backwards. The 696 figure came from a record-
+splitting regex that matched the bare `id: "x"` convention only and silently missed every
+pretty-printed `"id": "x"` record — about 14% of the catalogue, concentrated in `places.la.ext.js`
+and `places.vi.ext.js`. Caught by running `scripts/check-place-fields.py`, which reported 808 and
+prompted a recount with that script's own (more general) id-extraction regex. Every figure below
+is from the corrected recount; scratchpad scripts are not committed, so the numbers are the record:
 
-  - 696 place records across 8 files. The figure of 808 used in earlier notes was wrong.
+  - **808 place records** across 8 files (th 276, vi 189, kh 159, la 184).
   - THREE tiers of when-to-go already exist, only the top one structured:
       region  19 zones   100% structured   `bestM`/`avoidM`, shipped mk-v0.465.0
       city    62 cities  100% PROSE ONLY   `bestTime` in history.js, never parsed
-      place   696 recs   ~21% prose        month ranges buried in `tips`/`hours`
-  - 576 of 696 place records (83%) sit in a city that already has a `bestTime` sentence.
-  - 150 records (22%) carry an explicit month RANGE; 145 of those in a when-to-visit-ish field.
-    A large share of those ranges are about harvests or hotel rates, NOT about visiting — so the
-    place tier is partial BY DESIGN and each entry needs a judgement call, never a regex.
-  - 61 of the 123 cities that own place records have no city profile at all.
+      place   808 recs   ~22% prose        month ranges buried in `tips`/`hours`
+  - **653 of 808 place records (81%)** sit in a city that already has a `bestTime` sentence; the
+    other **155 (19%)** would fall back to the region tier. Per country: vi 94%, th 78%, la 77%,
+    kh 76% — Vietnam's smaller, more concentrated catalogue reaches almost completely on city
+    data alone.
+  - **190 records (24%)** carry an explicit month RANGE; **179** of those in a when-to-visit-ish
+    field (`tips`, `hours`, `blurb`, `whyItFits`, `swim`, `note`, `jellyfish`, `recognition`,
+    `bookHint`, `afterDark`). A large share of those ranges are about harvests or hotel rates, NOT
+    about visiting — so the place tier is partial BY DESIGN and each entry needs a judgement call,
+    never a regex.
+  - **142 distinct cities** own at least one place record; **80** of them have no `history.js`
+    profile at all (no `bestTime`, no `knownFor`, no blurb). Largest by places affected: Koh Kong
+    10, Koh Samui 9, Soppong 8, Pattaya 7, Paksong 7, Hua Hin 6, Khun Yuam 6, Mae Sariang 6.
 
 FOUR DECISIONS TAKEN (do not relitigate without the user):
 
@@ -148,9 +163,9 @@ FOUR DECISIONS TAKEN (do not relitigate without the user):
   2. Surface: SORT plus an OPT-IN filter. Default view stays complete — ordering answers the
      question without a tap, and nobody loses a place they came looking for. Not a filter-only
      design (hiding Hoi An in September is worse than flagging it) and not a tag-only design
-     (696 badges is close to no badges).
+     (808 badges is close to no badges).
   3. Meaning: three SEPARATE axes — weather, crowds, price. Never combined into one score; the
-     inputs are too uneven across 696 records to defend a single number, and a score buries the
+     inputs are too uneven across 808 records to defend a single number, and a score buries the
      reason. Crowds and price are genuinely CITY-level properties (high season belongs to Hoi An,
      not to the Japanese Bridge), so all three axes resolve by the same rule: finest tier that has
      real data, city as the floor, region as the backstop.
@@ -160,24 +175,30 @@ FOUR DECISIONS TAKEN (do not relitigate without the user):
 
 - [ ] **10.1** SLICE 1 — city month tier, plus sort and filter. Parse the 62 `bestTime` sentences
   in `js/data/history.js` into `bestM`/`avoidM` per city, exactly as Priority 9 did for the 19
-  zones. Generalise `scripts/check-zone-months.py` to cover cities under the SAME asymmetric rule:
-  every month an array claims must be named by its own prose, never the reverse. Add a single
-  resolver — `whenFor(place, month) -> { verdict, tier: 'place'|'city'|'region', why }` — so every
-  surface asks one function and the tier is always visible to the caller and to the user. Wire
-  ordering into the places list and the explore lists, plus one opt-in "hide poor months" toggle.
-  Finish with the hand-reviewed place-tier overrides for the subset of the ~145 candidate records
-  that genuinely speak to VISITING. Expected reach: 83% city-precise, 17% region, place overrides
-  on top. Asserts no new fact.
+  zones — DONE. `scripts/check-zone-months.py` generalised and renamed to `check-month-arrays.py`,
+  now checking both files under the identical asymmetric rule; negative-tested in four distinct
+  failure modes. `js/data/month-verdict.js` holds the verdict function shared by all three tiers
+  (named `verdictFor`, not `monthVerdict` — that name is reserved by `check-lazy-data.py`'s
+  lexical gate on the zones module, caught by running the guard rather than by inspection).
+  `placeWhen(place, month, zone)` in `render-utils.js` resolves place override → city → region
+  (region only when a caller supplies the zone object, since resolving it needs main.js's
+  province-geometry lookup, a dependency this eagerly-loaded module must not carry). Ordering and
+  the opt-in "hide poor months" toggle are wired into the Places list (city/place precision, 81%
+  reach, no region fallback — documented, not silent) and the verdict now leads the existing
+  bestTime line on the country hub and the place-detail page. STILL OPEN: the hand-reviewed
+  place-tier overrides for the subset of the 179 candidate records that genuinely speak to
+  VISITING (`js/data/place-months.js`, seeded empty), and browser verification.
 
 - [ ] **10.2** SLICE 2 — the crowds and price axes. Add month-structured `crowds` and `prices`
   alongside `bestTime` at city level, each with a real source. Render as three separate lines,
   never merged. Sort stays on weather; crowds and price are informational, with their own opt-in
   filters only if the coverage earns them. Cities without a source show weather alone.
 
-- [ ] **10.3** SLICE 3 — city profiles for the 61 blanks. Cities that own place records but have
+- [ ] **10.3** SLICE 3 — city profiles for the 80 blanks. Cities that own place records but have
   no `history.js` entry: name, blurb, knownFor, bestTime, and crowds/price where sourced. Largest
-  by places affected: Koh Kong 9, Koh Samui 9, Pattaya 7, Hua Hin 6, Paksong 6, Mae Sariang 5,
-  Soppong 5. Raises month coverage from 83% toward 100% and fills city cards that render thin.
+  by places affected: Koh Kong 10, Koh Samui 9, Soppong 8, Pattaya 7, Paksong 7, Hua Hin 6, Khun
+  Yuam 6, Mae Sariang 6. Raises month coverage from 81% toward 100% and fills city cards that
+  render thin.
 
 - [ ] **10.4** SLICE 4 — Vietnam depth, and the typography pass. Vietnam is the weak side and it is
   the side the user asked about: Bangkok has 40 places and Chiang Mai 32, while Hoi An, Da Nang and

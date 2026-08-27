@@ -3,7 +3,7 @@
 // to the region tier (js/data/zones.js) where a caller has one. See MEKONGING_REFACTOR_TODO.md
 // Priority 10.1 for why this tier exists and how it was scoped.
 //
-// Deliberately small and hand-picked, not derived in bulk: of the app's 696 place records,
+// Deliberately small and hand-picked, not derived in bulk: of the app's 808 place records,
 // only a minority say anything month-specific in their own prose at all, and of those, most
 // name a harvest, a hotel's peak rate, or a park's flood closure — real facts, but not a
 // visiting recommendation. An entry belongs here ONLY when the place's own record already

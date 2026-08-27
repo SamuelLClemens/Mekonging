@@ -6,7 +6,7 @@
 // ---- bestM / avoidM: the CITY tier of "when to go" ----------------------------------------
 // `bestTime` has always been prose — the right form for a human reading one city's card, and
 // it already covers all 62 cities here. What it could not do is let the app SORT or FILTER by
-// month, which matters because 576 of the app's 696 place records (83%) sit in one of these
+// month, which matters because 653 of the app's 808 place records (81%) sit in one of these
 // cities: structuring bestTime the same way js/data/zones.js structures `bestMonths` turns 19
 // region-level answers into 62 city-level ones, without writing a single new fact — see
 // js/data/month-verdict.js for the shared verdict function and scripts/check-month-arrays.py

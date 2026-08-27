@@ -556,7 +556,7 @@ export function personalScore(p) {
 
 // "When to go", resolved for one place — the finest tier that actually has data for it, in
 // order: PLACE_MONTHS (this record's own visiting-window sentence, rare), the CITY's bestTime
-// (js/data/history.js, covers 62 cities and 83% of all place records), then the REGION's
+// (js/data/history.js, covers 62 cities and 81% of all place records), then the REGION's
 // bestMonths (js/data/zones.js) if the caller supplies one — see MEKONGING_REFACTOR_TODO.md
 // Priority 10.1 for why the tiers stop there rather than resolving the region internally.
 //

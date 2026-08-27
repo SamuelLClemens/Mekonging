@@ -1919,7 +1919,7 @@ export function placeScreen(id) {
   // "When to go" for THIS specific place — finest tier available (place override, else this
   // place's city; no region fallback here, see placeWhen()'s own comment). Silent on
   // 'shoulder': that means "not specifically flagged either way", and a page this busy does
-  // not need a badge for every one of 696 places saying nothing in particular. Reusing the
+  // not need a badge for every one of 808 places saying nothing in particular. Reusing the
   // .zone-when / .zone-why classes from the region picker rather than inventing new ones — same
   // verdict, same visual language, wherever it appears. `why` is attributed to whichever tier
   // actually supplied it, so this never reads as a claim about the place itself when it is
