@@ -480,7 +480,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.463.0';
+const APP_VERSION = 'mk-v0.464.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4221,9 +4221,14 @@ function guessCityName() {
 
 // A "paste a shared link" importer: opens the payload exactly as tapping the link would.
 function pasteLinkBox(hint) {
-  const inp = h('input', { type: 'text', placeholder: hint || 'Paste a link a traveller sent you', style: 'width:100%' });
+  // aria-label, not just the placeholder: a placeholder is announced as a value and vanishes
+  // as soon as the field has content, leaving the box unnamed.
+  const label = hint || 'Paste a link a traveller sent you';
+  const inp = h('input', { type: 'text', placeholder: label, 'aria-label': label, style: 'width:100%' });
   return h('div', { class: 'card' }, [
-    h('h3', { style: 'margin-top:0' }, '📥 Got a link?'),
+    // h2, not h3: this is a card heading and the card beside it on the same screen uses h2, so
+    // an h3 here skipped a level in the outline for no reason.
+    h('h2', { style: 'margin-top:0' }, '📥 Got a link?'),
     inp,
     h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => {
       const m = String(inp.value || '').match(/#(.+)$/);
@@ -8226,7 +8231,7 @@ function circleScreen() {
   // --- your card: read-only summary once saved, editable form on request ---
   const cardBox = h('div', { class: 'card' });
   if (editingMyCard || !me.name) {
-    const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', value: me.name || '' });
+    const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', 'aria-label': 'Your display name', value: me.name || '' });
     const avIn = h('input', { type: 'text', maxlength: '4', 'aria-label': 'Your emoji', value: me.avatar || '🧭', style: 'width:64px; text-align:center' });
     const bioIn = h('textarea', { class: 'ta', maxlength: '160', rows: '2', placeholder: 'One line about you (optional)' }, me.bio || '');
     cardBox.append(
@@ -9462,8 +9467,8 @@ function donateScreen() {
 function countryLoadingScreen(ccs) {
   const names = ccs.map((id) => { const c = getCountry(id); return c ? `${c.flag} ${c.name}` : id; }).join(', ');
   return h('div', { class: 'screen' }, [
-    h('div', { class: 'card', style: 'text-align:center;margin-top:15vh' }, [
-      h('div', { style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
+    h('div', { class: 'card', role: 'status', style: 'text-align:center;margin-top:15vh' }, [
+      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
       h('h2', { style: 'margin:0 0 4px' }, `Loading ${names}…`),
       h('p', { class: 'muted' }, 'One-time — this stays on your device after.'),
     ]),
@@ -9475,8 +9480,8 @@ function countryLoadingScreen(ccs) {
 // always instant: the service worker has these cached after the first visit.
 function screenLoadingScreen() {
   return h('div', { class: 'screen' }, [
-    h('div', { class: 'card', style: 'text-align:center;margin-top:15vh' }, [
-      h('div', { style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
+    h('div', { class: 'card', role: 'status', style: 'text-align:center;margin-top:15vh' }, [
+      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
       h('h2', { style: 'margin:0 0 4px' }, 'Opening…'),
       h('p', { class: 'muted' }, 'One moment.'),
     ]),
