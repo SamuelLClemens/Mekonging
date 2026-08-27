@@ -121,5 +121,77 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
   One finding was chased and rejected: `.sight-name` / `.sight-city` on the country hub measure 1.47–1.51:1 in the light theme, but the caption sits on a 74%-black gradient scrim that is an absolutely-positioned SIBLING, invisible to a walk up the ancestor chain, plus a text shadow. The checker's blind spot, not a defect — the same shape of error as reading a gradient-filled button as transparent.
 - [ ] **9.4** Not done, and worth stating rather than leaving implied. This is REGION-level, because that is the granularity the sourced data supports. A place-level "good in September" would need a month field on 808 records, and there is no source that fills it in bulk — the honest signals that exist today are prose inside individual records (Muong Hoa Valley's "late August to early September to catch the gold harvest colour", Sapa's own "When to go" entry). Adding a `Ta Van village` place record was considered and rejected for the same reason the hospital layer dedupes: the valley is already carried by `vi-ext-muong-hoa-valley` and `vi-ext-sapa-homestay`, whose coordinates ARE Ta Van, and a third near-duplicate would be worse than the gap.
 
+## Priority 10 — "When should I go, and what will it cost me?" (planned 2026-08-27, four slices)
+
+Agreed with the user by interview on 2026-08-27. Priority 9 answered the month question at REGION
+granularity and 9.4 stated the place-level gap as a limitation. This priority closes that gap the
+only honest way: by structuring prose that is ALREADY WRITTEN AND SOURCED rather than authoring
+month fields for records that have no source.
+
+MEASURED FIRST (`scratchpad/month_coverage.py`, `besttime.py`, `reach.py`, 2026-08-27):
+
+  - 696 place records across 8 files. The figure of 808 used in earlier notes was wrong.
+  - THREE tiers of when-to-go already exist, only the top one structured:
+      region  19 zones   100% structured   `bestM`/`avoidM`, shipped mk-v0.465.0
+      city    62 cities  100% PROSE ONLY   `bestTime` in history.js, never parsed
+      place   696 recs   ~21% prose        month ranges buried in `tips`/`hours`
+  - 576 of 696 place records (83%) sit in a city that already has a `bestTime` sentence.
+  - 150 records (22%) carry an explicit month RANGE; 145 of those in a when-to-visit-ish field.
+    A large share of those ranges are about harvests or hotel rates, NOT about visiting — so the
+    place tier is partial BY DESIGN and each entry needs a judgement call, never a regex.
+  - 61 of the 123 cities that own place records have no city profile at all.
+
+FOUR DECISIONS TAKEN (do not relitigate without the user):
+
+  1. Resolution: city tier universally, place tier only where the record's own prose earns it.
+     No record ever gets a month invented for it. Region remains the backstop.
+  2. Surface: SORT plus an OPT-IN filter. Default view stays complete — ordering answers the
+     question without a tap, and nobody loses a place they came looking for. Not a filter-only
+     design (hiding Hoi An in September is worse than flagging it) and not a tag-only design
+     (696 badges is close to no badges).
+  3. Meaning: three SEPARATE axes — weather, crowds, price. Never combined into one score; the
+     inputs are too uneven across 696 records to defend a single number, and a score buries the
+     reason. Crowds and price are genuinely CITY-level properties (high season belongs to Hoi An,
+     not to the Japanese Bridge), so all three axes resolve by the same rule: finest tier that has
+     real data, city as the floor, region as the backstop.
+  4. Sourcing: cite every new claim, the standard the place records already hold. A city with no
+     source for crowds or price shows the weather line alone, and the UI must render that
+     gracefully rather than leaving a gap.
+
+- [ ] **10.1** SLICE 1 — city month tier, plus sort and filter. Parse the 62 `bestTime` sentences
+  in `js/data/history.js` into `bestM`/`avoidM` per city, exactly as Priority 9 did for the 19
+  zones. Generalise `scripts/check-zone-months.py` to cover cities under the SAME asymmetric rule:
+  every month an array claims must be named by its own prose, never the reverse. Add a single
+  resolver — `whenFor(place, month) -> { verdict, tier: 'place'|'city'|'region', why }` — so every
+  surface asks one function and the tier is always visible to the caller and to the user. Wire
+  ordering into the places list and the explore lists, plus one opt-in "hide poor months" toggle.
+  Finish with the hand-reviewed place-tier overrides for the subset of the ~145 candidate records
+  that genuinely speak to VISITING. Expected reach: 83% city-precise, 17% region, place overrides
+  on top. Asserts no new fact.
+
+- [ ] **10.2** SLICE 2 — the crowds and price axes. Add month-structured `crowds` and `prices`
+  alongside `bestTime` at city level, each with a real source. Render as three separate lines,
+  never merged. Sort stays on weather; crowds and price are informational, with their own opt-in
+  filters only if the coverage earns them. Cities without a source show weather alone.
+
+- [ ] **10.3** SLICE 3 — city profiles for the 61 blanks. Cities that own place records but have
+  no `history.js` entry: name, blurb, knownFor, bestTime, and crowds/price where sourced. Largest
+  by places affected: Koh Kong 9, Koh Samui 9, Pattaya 7, Hua Hin 6, Paksong 6, Mae Sariang 5,
+  Soppong 5. Raises month coverage from 83% toward 100% and fills city cards that render thin.
+
+- [ ] **10.4** SLICE 4 — Vietnam depth, and the typography pass. Vietnam is the weak side and it is
+  the side the user asked about: Bangkok has 40 places and Chiang Mai 32, while Hoi An, Da Nang and
+  Hue have 9 each, Phong Nha 6, Ha Giang 5, Cat Ba 2 and Mai Chau 1. Bring the named destinations
+  toward the depth Thailand already has. Fold in **8.4** here — the flat h1-to-h3 outline on visa,
+  scams, dish, event and weather, and the mixed h2/h3 levels on the place screen — because both are
+  editorial-judgement work rather than defect fixes and belong in one pass.
+
+- [ ] **10.5** UNSPECIFIED — the user selected a fifth priority during the interview but the
+  description did not come through, and answered "[No preference]" when asked again. Left as an
+  explicit slot rather than guessed at. Ask before planning around it.
+
+Each slice ships and deploys on its own so the user can judge it before the next one starts, and so
+no single session grows large enough to burn a week of budget (see the token-cost notes in memory).
+
 ---
 _Skipped (already shipped, verified): Home Signature-Sights removal; Home layout order; collapsible `<details>` headings; drive-TIME near-me ceiling + distant-hub exclusion; trust/consent architecture. Skipped (premise false): AI/scanner centralisation._
