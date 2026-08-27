@@ -45,7 +45,9 @@ export const HISTORY = {
         "General reference: Britannica \"Thailand\", \"Ayutthaya\", \"Mangrai\"",
         "UNESCO World Heritage listings (Sukhothai, Ayutthaya, Ban Chiang)",
         "Lonely Planet Thailand guides"
-      ]
+      ],
+      "crowds": { "text": "High season runs November to February nationwide — Tourism Authority of Thailand figures for 2025 show January as the single busiest month, with arrivals declining through the year to a May-September low. Christmas, New Year and the Chinese New Year weeks that follow are the busiest of all — book well ahead.", "sources": [{ "org": "Khaosod English, citing Tourism Authority of Thailand", "url": "https://www.khaosodenglish.com/tourism/2025/12/14/thailand-tourist-arrivals-fall-to-32m-amid-challenging-2025/" }, { "org": "Wikivoyage — Thailand", "url": "https://en.wikivoyage.org/wiki/Thailand" }] },
+      "prices": { "text": "Hotel and flight prices follow the same curve: highest across December-February and hardest to book around Christmas, New Year and Chinese New Year, easing once the rains arrive from May.", "sources": [{ "org": "Wikivoyage — Thailand", "url": "https://en.wikivoyage.org/wiki/Thailand" }] }
     },
     "vi": {
       "blurb": "Vietnam's civilization grew along the Red River delta and later expanded south down the coast, absorbing about a millennium of Chinese rule (roughly the 2nd century BCE to the 10th century CE) that shaped its writing, cuisine, and Confucian traditions, followed by centuries of independent dynasties such as the Ly, Tran, Le, and Nguyen. French colonization from the mid-19th century added Catholic churches, coffee culture, and boulevard architecture, before the long wars of the 20th century led to reunification under a communist government in the mid-1970s. The 1986 Doi Moi reforms opened the economy, and today Vietnam is a fast-developing, densely populated country that blends deep-rooted tradition with rapid urban change. Regional identities remain strong, and the influence of the former Champa kingdom and Khmer settlement is still visible in the center and south. Visitors encounter a nation defined by resilience, family life, street food, and a striking mix of Asian and European heritage.",
@@ -62,7 +64,9 @@ export const HISTORY = {
       "sources": [
         "General reference knowledge (encyclopedic history of Vietnam)",
         "Standard travel-guide orientation (Lonely Planet-style regional overviews)"
-      ]
+      ],
+      "crowds": { "text": "Tet (Lunar New Year, usually late January or February) is Vietnam's single biggest travel event: tens of millions of Vietnamese travel to be with family, transport is jammed in the days beforehand, and most shops, restaurants and small businesses close for several days over the holiday itself. The south's own dry season, December to February, is otherwise the steadiest high season.", "sources": [{ "org": "Wikivoyage — Vietnam", "url": "https://en.wikivoyage.org/wiki/Vietnam" }] },
+      "prices": { "text": "Flights and hotels around Tet can run two to three times normal rates, and accommodation at the beach or in Da Lat is hard to find around the country's other big holidays (30 April, 1 May, 2 September) too — book those windows well ahead.", "sources": [{ "org": "Wikivoyage — Vietnam", "url": "https://en.wikivoyage.org/wiki/Vietnam" }, { "org": "Vietcetera", "url": "https://vietcetera.com/en/flight-prices-surge-for-vietnams-lunar-new-year-2026-how-to-plan-ahead" }] }
     },
     "kh": {
       "blurb": "Cambodia's identity is rooted in the Khmer Empire, which from roughly the 9th to the 15th century ruled much of mainland Southeast Asia from its capital at Angkor and left behind the temple complexes that define the country's heritage. The culture absorbed Indian influences early, shifting from Hinduism to the Theravada Buddhism that predominates today. After centuries of decline and regional rivalry, Cambodia became a French protectorate in 1863 and gained full independence in 1953. The country endured devastating upheaval under the Khmer Rouge regime (1975-1979), whose genocide is estimated to have killed on the order of 1.7 to 2 million people, followed by years of conflict before stabilising in the 1990s. Today Cambodia is a constitutional monarchy that blends deep pride in its Angkorian past, a resilient Buddhist culture, and a young, fast-changing society.",
@@ -79,7 +83,9 @@ export const HISTORY = {
       "sources": [
         "General reference knowledge (encyclopedic history of Cambodia and the Khmer Empire)",
         "Widely established travel and cultural guidance for Cambodia"
-      ]
+      ],
+      "crowds": { "text": "November to March is high season nationwide — cooler, drier, and when Angkor draws by far its largest crowds; Chinese New Year (Jan/Feb) brings a further, sharp local surge in visitors. The wet season, roughly June to October, is quiet almost everywhere.", "sources": [{ "org": "Wikivoyage — Cambodia", "url": "https://en.wikivoyage.org/wiki/Cambodia" }] },
+      "prices": { "text": "Lodging books up and even bus fares rise during the Chinese New Year window in particular, as visitors from across the region travel at the same time as Cambodians themselves.", "sources": [{ "org": "Wikivoyage — Cambodia", "url": "https://en.wikivoyage.org/wiki/Cambodia" }] }
     },
     "la": {
       "blurb": "Laos, a landlocked country on the Mekong River, traces its national identity to the Kingdom of Lan Xang (\"Land of a Million Elephants\"), founded in the mid-14th century (1353) and long a centre of Theravada Buddhism and Tai-Lao culture. In 1707 the realm fragmented into the rival kingdoms of Luang Prabang, Vientiane, and Champasak, which later fell under Siamese influence and then became a French protectorate within Indochina from the 1890s. Laos gained full independence in 1953, endured heavy bombing during the Second Indochina War, and in 1975 the monarchy was abolished when the Pathet Lao established the Lao People's Democratic Republic, a one-party socialist state that endures today. Modern Laos is defined by a gentle, unhurried pace, deep Buddhist tradition, considerable ethnic diversity, and mountainous, river-laced landscapes. Its cities blend gilded temples, French colonial streetscapes, and Mekong life.",
@@ -97,7 +103,8 @@ export const HISTORY = {
         "UNESCO World Heritage Centre",
         "Encyclopaedia Britannica",
         "Lonely Planet Laos"
-      ]
+      ],
+      "crowds": { "text": "November to February is high season nationwide, when the weather is coolest and driest; December and January are the peak weeks almost everywhere.", "sources": [{ "org": "Wikivoyage — Laos", "url": "https://en.wikivoyage.org/wiki/Laos" }] }
     }
   },
   "cities": {
@@ -113,7 +120,8 @@ export const HISTORY = {
         "Nightlife"
       ],
       "bestTime": "November to February, during the cool, dry season.",
-      "bestM": [11, 12, 1, 2], "avoidM": []
+      "bestM": [11, 12, 1, 2], "avoidM": [],
+      "prices": { "text": "Songkran (13–15 April) is a second demand spike on top of the winter high season. It has historically been the priciest week of the year for a room here, though demand — and how much hotels charge — varies year to year.", "sources": [{ "org": "Bangkok Post", "url": "https://www.bangkokpost.com/business/general/3222939/hotels-slash-rates-to-lure-songkran-market" }] }
     },
     "th-chiang-mai": {
       "name": "Chiang Mai",
@@ -127,7 +135,8 @@ export const HISTORY = {
         "Yi Peng lantern festival"
       ],
       "bestTime": "November to February; avoid the March-April burning season for haze.",
-      "bestM": [11, 12, 1, 2], "avoidM": [3, 4]
+      "bestM": [11, 12, 1, 2], "avoidM": [3, 4],
+      "prices": { "text": "Songkran (13–15 April) is a second demand spike on top of the winter high season. It has historically been the priciest week of the year for a room here, though demand — and how much hotels charge — varies year to year.", "sources": [{ "org": "Bangkok Post", "url": "https://www.bangkokpost.com/business/general/3222939/hotels-slash-rates-to-lure-songkran-market" }] }
     },
     "th-chiang-rai": {
       "name": "Chiang Rai",
@@ -667,7 +676,8 @@ export const HISTORY = {
         "floating villages"
       ],
       "bestTime": "November to February, the cool dry season, for the most comfortable temple visits.",
-      "bestM": [11, 12, 1, 2], "avoidM": []
+      "bestM": [11, 12, 1, 2], "avoidM": [],
+      "crowds": { "text": "Angkor Enterprise's own ticket-sales figures for 2025 show the shape of the year clearly: around 133,000 foreign visitors a month in January-March, falling through the wet season to a directly-reported September low of 35,650, then climbing again into the December-January peak, when Cambodia's dry season overlaps school holidays across Europe, North America and Australia.", "sources": [{ "org": "Phnom Penh Post", "url": "https://phnompenhpost.com/business/angkor-ticket-sales-climb-by-almost-a-third/" }, { "org": "Cambodianess, citing Angkor Enterprise", "url": "https://cambodianess.com/article/foreign-tourists-visiting-angkor-surpass-700000-in-first-nine-months-of-2025" }, { "org": "Khmer Times, citing Angkor Enterprise", "url": "https://www.khmertimeskh.com/501730845/cambodias-angkor-makes-28-6-mln-from-ticket-sales-during-jan-july-period/" }] }
     },
     "kh-phnom-penh": {
       "name": "Phnom Penh",
@@ -800,7 +810,8 @@ export const HISTORY = {
         "night market"
       ],
       "bestTime": "November to February, when the weather is cool and dry",
-      "bestM": [11, 12, 1, 2], "avoidM": []
+      "bestM": [11, 12, 1, 2], "avoidM": [],
+      "crowds": { "text": "The country's most-visited town by far: over 1.7 million visitors in the first ten months of 2024 alone, already past its own full-year target, with the trend continuing into the traditional December-January peak.", "sources": [{ "org": "tourismlaos.org", "url": "https://www.tourismlaos.org/2024/12/18/luang-prabang-smashes-2024-tourism-goal-over-1-7-million-visitors-expecting-surge-in-peak-season/" }] }
     },
     "la-vientiane": {
       "name": "Vientiane",

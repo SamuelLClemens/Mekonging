@@ -486,7 +486,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.466.0';
+const APP_VERSION = 'mk-v0.467.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2919,6 +2919,31 @@ function fitsYourTripSection(cc) {
 // shared monthVerdict() the region tier uses). 'shoulder' keeps the original neutral phrasing
 // on purpose: it means "not specifically flagged either way", not "no data", so it earns no
 // badge. Omits itself if there is nothing dated or sourced to say.
+//
+// Priority 10.2 (crowds/prices): a THIRD and FOURTH line, each independently sourced and never
+// merged with the weather verdict above — the interview decision was three separate axes, not
+// one score, because the inputs are too uneven to defend a single number and a score buries
+// the reason. Deliberately narrower than the 62-city weather tier: real, attributable crowd and
+// price sourcing (Wikivoyage, Bangkok Post, official Angkor Enterprise ticket-sales figures
+// reported by Cambodian outlets, Laos's own tourism-promotion site) exists for 4 countries and
+// 4 cities, not 62 — see MEKONGING_REFACTOR_TODO.md Priority 10.2 for the sourcing account. A
+// city override wins over its country's general figure; a country with no distinct PRICE fact
+// (Laos) shows crowds alone rather than a forced or invented one — the same "no source, no
+// claim" rule the weather tiers already hold to. Each line carries its own sourcesNote() rather
+// than folding into the plain `lines` array, because these are recent, verifiable stats a
+// traveller may want to click through to, not evergreen prose.
+function crowdsAndPriceBlocks(cc, hi) {
+  const country = countryHistory(cc);
+  const crowds = (hi && hi.crowds) || (country && country.crowds);
+  const price = (hi && hi.prices) || (country && country.prices);
+  const blocks = [];
+  if (crowds) blocks.push(['👥', crowds]);
+  if (price) blocks.push(['💰', price]);
+  return blocks.flatMap(([emoji, f]) => [
+    h('p', { style: 'margin:4px 0' }, `${emoji} ${f.text}`),
+    sourcesNote(f.sources, null, null),
+  ]);
+}
 function seasonalFitSection(cc, cityName, slug) {
   const now = new Date();
   const wet = (WET_MONTHS[cc] || []).includes(now.getMonth());
@@ -2943,7 +2968,7 @@ function seasonalFitSection(cc, cityName, slug) {
   if (!lines.length) return null;
   return h('section', {}, [
     h('h2', { class: 'home-section' }, '📅 Right now, seasonally'),
-    h('div', { class: 'card' }, lines.map((t) => h('p', { style: 'margin:4px 0' }, t))),
+    h('div', { class: 'card' }, [...lines.map((t) => h('p', { style: 'margin:4px 0' }, t)), ...crowdsAndPriceBlocks(cc, hi)]),
     soon.length ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#events-${cc}`) }, 'All festivals & holidays →') : null,
   ]);
 }
