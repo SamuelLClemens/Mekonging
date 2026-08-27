@@ -386,6 +386,26 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .zone-tag { font-size: var(--fs-sm); opacity: .85; }
 .zone-count { font-size: var(--fs-xs, 0.78rem); }
 .zone-go { flex: none; opacity: .5; font-size: 1.2rem; }
+/* --- "where to go in <month>" on the region chooser ------------------------------------- */
+/* The verdict is a text label rather than a filled pill on purpose: --good and --warn are
+   tuned as TEXT colours in both palettes (see their comments in the token block), while the
+   same values as a fill would put white on #34C77B at 1.9:1 in the dark theme. */
+.zone-when-wrap { margin: var(--sp-3) 0; }
+.zone-when-head { margin: 0 0 var(--sp-2); }
+/* Twelve short chips WRAP rather than scroll horizontally, which is the better answer on a
+   phone: three tidy rows show every month at once, with no hidden content behind a swipe and
+   no scroll gesture competing with the page's own. It inherits .chips' flex-wrap and only
+   tightens the spacing. */
+.month-strip { margin-bottom: var(--sp-2); }
+/* Tighter horizontal padding than a normal chip so six months fit a 375px row and the strip
+   is two rows rather than three. min-height stays at the base rule's 44px — the tap target
+   is not what is being trimmed. */
+.month-strip .chip { flex: none; padding-inline: var(--sp-1); }
+.zone-when { font-size: var(--fs-label); font-weight: 800; margin-top: 1px; }
+.zone-when.is-best { color: var(--good); }
+.zone-when.is-avoid { color: var(--warn); }
+.zone-when.is-mixed, .zone-when.is-shoulder { color: var(--ink-soft); }
+.zone-why { font-size: var(--fs-xs, 0.78rem); line-height: 1.35; margin-top: 2px; }
 /* The region facts block: a definition grid, deliberately terse — label left, fact right. */
 .zone-lead { margin: 0 0 var(--sp-3); font-weight: 600; }
 .zone-dl { display: grid; grid-template-columns: minmax(84px, auto) 1fr; gap: var(--sp-1) var(--sp-3); margin: 0; }

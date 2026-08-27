@@ -19,6 +19,32 @@
 //
 // Province code lists are exhaustive: every province of every country belongs to exactly one
 // zone (77+64+25+18 = 184 accounted for). See the assertion helper at the foot of this file.
+//
+// ---- WHEN TO GO, AS SOMETHING THE APP CAN ACTUALLY ANSWER --------------------
+// `bestMonths` and `avoidMonths` are prose, and prose is the right form for a human reading
+// one region's page — "Andaman (Phuket, Krabi, Lanta): Nov–Apr. Gulf (Samui, Phangan, Tao):
+// Jan–Aug" says something no single date range can. But it left the app unable to answer the
+// question a traveller actually asks first, which is not "when is the North Highlands good?"
+// but "it is September — where should I go?". Answering that meant opening all nineteen
+// region pages and reading nineteen sentences.
+//
+// `bestM` / `avoidM` are those same sentences as month numbers (1 = January), added so the
+// app can sort and filter by month. They introduce NO new claim: every month in them is a
+// month the prose beside them already names, and `scripts/check-zone-months.py` fails the
+// build if that stops being true.
+//
+// The editorial rule, applied consistently across all nineteen:
+//   - `bestM` holds only the months the prose RECOMMENDS outright. Hedged alternatives stay
+//     out — Thailand's North says "Jul–Oct is green and wet but quiet" and Vietnam's Northern
+//     Highlands says "Dec–Feb is genuinely cold", and neither is a recommendation.
+//   - `avoidM` holds the months it warns against.
+//   - A month may appear in BOTH, and that is information rather than a mistake: Thailand's
+//     South is two coasts with opposite monsoons, and Vietnam's Central Coast pairs a
+//     typhoon-season shoreline with highlands that are fine all year. Those months resolve to
+//     "mixed", and the UI must show the prose so the traveller reads WHICH half applies.
+//   - A month in neither is a shoulder: not recommended, not warned against.
+// Because "mixed" and "shoulder" both mean "read the sentence", every surface that uses these
+// arrays is required to render `bestMonths` / `avoidMonths` alongside the verdict.
 
 export const ZONES = {
   th: [
@@ -29,6 +55,7 @@ export const ZONES = {
       notFor: 'Beaches, and anyone visiting Mar–Apr, when crop burning drops air quality hard.',
       bestMonths: 'Nov–Feb (cool, clear). Jul–Oct is green and wet but quiet.',
       avoidMonths: 'Mar–Apr — smoke season.',
+      bestM: [11, 12, 1, 2], avoidM: [3, 4],
       howLong: '5–10 days; the Mae Hong Son loop alone wants 4–5.',
       gettingAround: 'Buses and minivans between towns; scooter or rented car for the loops. Chiang Mai has the region\'s only busy airport.',
       gateway: 'Chiang Mai',
@@ -41,6 +68,7 @@ export const ZONES = {
       notFor: 'Anyone on a short trip chasing highlights — distances are long and sights are spread thin.',
       bestMonths: 'Nov–Feb (dry, cooler). Green season Jun–Oct suits the rice terraces.',
       avoidMonths: 'Apr — the hottest place in the country.',
+      bestM: [11, 12, 1, 2], avoidM: [4],
       howLong: '4–7 days, usually as a Mekong-side run rather than a full sweep.',
       gettingAround: 'Overnight trains and buses from Bangkok; sparse local transport once there, so a car helps.',
       gateway: 'Nakhon Ratchasima (Korat) or Udon Thani',
@@ -53,6 +81,7 @@ export const ZONES = {
       notFor: 'Quiet. Bangkok is relentless and the plains are flat farmland.',
       bestMonths: 'Nov–Feb (dry, least humid).',
       avoidMonths: 'Apr–May heat; Sep–Oct is the wettest.',
+      bestM: [11, 12, 1, 2], avoidM: [4, 5, 9, 10],
       howLong: '3–5 days for Bangkok, plus a day each for Ayutthaya and Sukhothai.',
       gettingAround: 'The best transport in the country: BTS/MRT in the city, frequent trains and buses out of it.',
       gateway: 'Bangkok',
@@ -65,6 +94,7 @@ export const ZONES = {
       notFor: 'Anyone picturing postcard Thailand — Pattaya is a city, not a beach idyll.',
       bestMonths: 'Nov–Apr. Koh Chang largely shuts down in the heaviest rains.',
       avoidMonths: 'Jun–Sep on the islands.',
+      bestM: [11, 12, 1, 2, 3, 4], avoidM: [6, 7, 8, 9],
       howLong: '2–5 days.',
       gettingAround: 'Buses and minivans from Bangkok in 2–5 hours; ferries to the islands.',
       gateway: 'Pattaya or Trat (for Koh Chang)',
@@ -77,6 +107,7 @@ export const ZONES = {
       notFor: 'Nightlife or island-hopping.',
       bestMonths: 'Nov–Feb. Hua Hin stays usable most of the year.',
       avoidMonths: 'Apr heat inland.',
+      bestM: [11, 12, 1, 2], avoidM: [4],
       howLong: '2–4 days.',
       gettingAround: 'Easy day-trip distance from Bangkok by train, bus or minivan.',
       gateway: 'Kanchanaburi or Hua Hin',
@@ -89,6 +120,7 @@ export const ZONES = {
       notFor: 'Budget travel in high season, or anyone wanting both coasts at their best at once.',
       bestMonths: 'Andaman (Phuket, Krabi, Lanta): Nov–Apr. Gulf (Samui, Phangan, Tao): Jan–Aug.',
       avoidMonths: 'Andaman May–Oct; the Gulf peaks in rain Oct–Dec.',
+      bestM: [1, 2, 3, 4, 5, 6, 7, 8, 11, 12], avoidM: [5, 6, 7, 8, 9, 10, 11, 12],
       howLong: '7–14 days; pick one coast per trip.',
       gettingAround: 'Fly into Phuket, Krabi or Surat Thani, then ferries. Overland from Bangkok is a long night.',
       gateway: 'Phuket, Krabi or Surat Thani',
@@ -104,6 +136,7 @@ export const ZONES = {
       notFor: 'Anyone short on time or uneasy on a bike — the roads are the attraction.',
       bestMonths: 'Sep–Oct (terraces golden) and Mar–May. Dec–Feb is genuinely cold.',
       avoidMonths: 'Jun–Aug — landslide season on mountain roads.',
+      bestM: [3, 4, 5, 9, 10], avoidM: [6, 7, 8],
       howLong: '4–8 days; the Ha Giang loop is 3–4 on its own.',
       gettingAround: 'Sleeper buses and the night train from Hanoi; rented bikes or easy-riders once there.',
       gateway: 'Hanoi, then Sapa or Ha Giang',
@@ -116,6 +149,7 @@ export const ZONES = {
       notFor: 'Escaping crowds — this is the most-visited corner of Vietnam.',
       bestMonths: 'Oct–Dec and Mar–Apr.',
       avoidMonths: 'Jul–Aug (hot, wet, and peak domestic travel); Feb–Mar drizzle greys out the bay.',
+      bestM: [3, 4, 10, 11, 12], avoidM: [2, 3, 7, 8],
       howLong: '4–7 days.',
       gettingAround: 'Vietnam\'s densest transport hub — trains, buses and flights everywhere. Ninh Binh is 2 hours by train.',
       gateway: 'Hanoi',
@@ -128,6 +162,7 @@ export const ZONES = {
       notFor: 'Beach time — the coast here is working, not resort.',
       bestMonths: 'Feb–Aug. Caves and the Phong Nha park close in flood season.',
       avoidMonths: 'Sep–Nov — this stretch takes the worst typhoons and flooding in Vietnam.',
+      bestM: [2, 3, 4, 5, 6, 7, 8], avoidM: [9, 10, 11],
       howLong: '3–5 days.',
       gettingAround: 'The Reunification Express north–south; buses to Phong Nha from Hue or Dong Hoi.',
       gateway: 'Hue or Dong Hoi',
@@ -140,6 +175,7 @@ export const ZONES = {
       notFor: 'Solitude in Hoi An, which is small and very busy.',
       bestMonths: 'Coast Feb–Aug; the highlands (Da Lat) are pleasant year-round.',
       avoidMonths: 'Sep–Dec on the coast — typhoons and flooding reach Hoi An\'s old town.',
+      bestM: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], avoidM: [9, 10, 11, 12],
       howLong: '5–8 days.',
       gettingAround: 'Da Nang airport serves the whole area; Hoi An is 45 min by taxi. Buses climb to Da Lat overnight.',
       gateway: 'Da Nang',
@@ -152,6 +188,7 @@ export const ZONES = {
       notFor: 'Cool weather — it is hot and humid here every month of the year.',
       bestMonths: 'Dec–Apr (dry).',
       avoidMonths: 'Jun–Sep, when afternoon downpours are near-daily.',
+      bestM: [12, 1, 2, 3, 4], avoidM: [6, 7, 8, 9],
       howLong: '4–7 days including the delta.',
       gettingAround: 'Vietnam\'s busiest airport; buses to the delta take 2–4 hours; boats within it.',
       gateway: 'Ho Chi Minh City',
@@ -167,6 +204,7 @@ export const ZONES = {
       notFor: 'Travellers hoping to see Angkor alone; sunrise at Angkor Wat draws crowds daily.',
       bestMonths: 'Nov–Feb (dry, cooler). Jun–Oct greens the moats and thins the crowds.',
       avoidMonths: 'Mar–May — punishing heat on unshaded stone.',
+      bestM: [11, 12, 1, 2], avoidM: [3, 4, 5],
       howLong: '3–5 days: two on the temples minimum, plus Battambang.',
       gettingAround: 'Siem Reap has an international airport; tuk-tuk by the day around the park.',
       gateway: 'Siem Reap',
@@ -179,6 +217,7 @@ export const ZONES = {
       notFor: 'Light sightseeing. Tuol Sleng and Choeung Ek are distressing by design.',
       bestMonths: 'Nov–Feb.',
       avoidMonths: 'Mar–May heat.',
+      bestM: [11, 12, 1, 2], avoidM: [3, 4, 5],
       howLong: '2–3 days.',
       gettingAround: 'The country\'s road hub — buses radiate to every other region; a fast expressway now runs to the coast.',
       gateway: 'Phnom Penh',
@@ -191,6 +230,7 @@ export const ZONES = {
       notFor: 'Anyone expecting Thailand\'s infrastructure — Sihanoukville\'s casino build-out changed it sharply.',
       bestMonths: 'Nov–Apr.',
       avoidMonths: 'Jun–Oct, when boats to the islands get cancelled in rough seas.',
+      bestM: [11, 12, 1, 2, 3, 4], avoidM: [6, 7, 8, 9, 10],
       howLong: '4–7 days.',
       gettingAround: 'Buses from Phnom Penh in 3–5 hours; ferries out to the islands from Sihanoukville.',
       gateway: 'Kampot or Sihanoukville',
@@ -203,6 +243,7 @@ export const ZONES = {
       notFor: 'Tight schedules — roads are slow and services are thin.',
       bestMonths: 'Nov–Feb.',
       avoidMonths: 'Jun–Oct, when unsealed roads to Ratanakiri and Mondulkiri turn to mud.',
+      bestM: [11, 12, 1, 2], avoidM: [6, 7, 8, 9, 10],
       howLong: '4–6 days.',
       gettingAround: 'Long bus days from Phnom Penh (6–10 hours); a bike or hired driver once you arrive.',
       gateway: 'Kratie or Banlung',
@@ -218,6 +259,7 @@ export const ZONES = {
       notFor: 'Comfort. Roads are winding, buses are old, and villages are genuinely basic.',
       bestMonths: 'Nov–Feb (dry, cool).',
       avoidMonths: 'Mar–Apr, when agricultural burning fills the valleys with smoke.',
+      bestM: [11, 12, 1, 2], avoidM: [3, 4],
       howLong: '4–7 days.',
       gettingAround: 'The Huay Xai slow boat to Luang Prabang takes 2 days; buses elsewhere are slow mountain runs.',
       gateway: 'Huay Xai or Luang Namtha',
@@ -230,6 +272,7 @@ export const ZONES = {
       notFor: 'Late nights; a nationwide curfew closes things early, and the town is strictly quiet.',
       bestMonths: 'Nov–Mar.',
       avoidMonths: 'Mar–Apr burning season hazes the famous river views.',
+      bestM: [11, 12, 1, 2, 3], avoidM: [3, 4],
       howLong: '3–6 days, plus 2–3 upriver at Nong Khiaw or Muang Ngoi.',
       gettingAround: 'The China–Laos railway put Vientiane within 2 hours; boats and buses run north up the Nam Ou.',
       gateway: 'Luang Prabang',
@@ -242,6 +285,7 @@ export const ZONES = {
       notFor: 'Grand sightseeing — Vientiane is the quietest capital in the region.',
       bestMonths: 'Nov–Feb.',
       avoidMonths: 'Jun–Sep, when the Konglor cave loop floods.',
+      bestM: [11, 12, 1, 2], avoidM: [6, 7, 8, 9],
       howLong: '4–7 days.',
       gettingAround: 'The railway links Vientiane to Vang Vieng and Luang Prabang fast; buses south are long.',
       gateway: 'Vientiane',
@@ -254,6 +298,7 @@ export const ZONES = {
       notFor: 'Anyone in a hurry — the whole point of Si Phan Don is that nothing happens.',
       bestMonths: 'Nov–Feb. Waterfalls are at their most dramatic Aug–Oct.',
       avoidMonths: 'Mar–May heat on the lowlands.',
+      bestM: [11, 12, 1, 2], avoidM: [3, 4, 5],
       howLong: '5–8 days.',
       gettingAround: 'Pakse is the hub — buses from Vientiane are an overnight haul; boats out to the islands.',
       gateway: 'Pakse',
@@ -267,6 +312,28 @@ export function zonesFor(cc) { return ZONES[cc] || []; }
 
 // One zone by country + id.
 export function getZone(cc, id) { return zonesFor(cc).find((z) => z.id === id) || null; }
+
+// The verdict for one region in one month (1-12): 'best', 'avoid', 'mixed' or 'shoulder'.
+// See the WHEN TO GO note at the head of this file — 'mixed' and 'shoulder' both mean the
+// prose has to be read, so never show this without `bestMonths` / `avoidMonths` beside it.
+export function monthVerdict(zone, month) {
+  if (!zone || !month) return 'shoulder';
+  const best = (zone.bestM || []).includes(month);
+  const avoid = (zone.avoidM || []).includes(month);
+  if (best && avoid) return 'mixed';
+  if (best) return 'best';
+  if (avoid) return 'avoid';
+  return 'shoulder';
+}
+
+// A country's regions ordered for one month: recommended first, then shoulder, then mixed,
+// then the ones to avoid. Ties keep the file's own order, which runs roughly north to south.
+const VERDICT_RANK = { best: 0, shoulder: 1, mixed: 2, avoid: 3 };
+export function zonesByMonth(cc, month) {
+  return zonesFor(cc)
+    .map((z, i) => ({ zone: z, verdict: monthVerdict(z, month), i }))
+    .sort((a, b) => (VERDICT_RANK[a.verdict] - VERDICT_RANK[b.verdict]) || (a.i - b.i));
+}
 
 // Which zone owns a province code, e.g. 'TH-58' -> the North zone. Null if unmapped.
 export function zoneForProvince(cc, code) {
