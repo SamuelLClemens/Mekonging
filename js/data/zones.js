@@ -1,3 +1,5 @@
+import { verdictFor, VERDICT_RANK } from './month-verdict.js';
+
 // Travel REGIONS — the browse layer Explore is built on.
 //
 // NAMING: the UI calls these "regions". Internally they are ZONES, because this codebase
@@ -316,19 +318,14 @@ export function getZone(cc, id) { return zonesFor(cc).find((z) => z.id === id) |
 // The verdict for one region in one month (1-12): 'best', 'avoid', 'mixed' or 'shoulder'.
 // See the WHEN TO GO note at the head of this file — 'mixed' and 'shoulder' both mean the
 // prose has to be read, so never show this without `bestMonths` / `avoidMonths` beside it.
-export function monthVerdict(zone, month) {
-  if (!zone || !month) return 'shoulder';
-  const best = (zone.bestM || []).includes(month);
-  const avoid = (zone.avoidM || []).includes(month);
-  if (best && avoid) return 'mixed';
-  if (best) return 'best';
-  if (avoid) return 'avoid';
-  return 'shoulder';
-}
+// The actual logic is shared with the city tier via verdictFor() in month-verdict.js — this
+// keeps the PUBLIC name `monthVerdict` living in exactly one place (the reserved identifier
+// scripts/check-lazy-data.py gates the 'zones' module on), so every existing caller of it — via
+// lazy-data.js's live-binding wrapper — needs no change.
+export function monthVerdict(zone, month) { return verdictFor(zone, month); }
 
 // A country's regions ordered for one month: recommended first, then shoulder, then mixed,
 // then the ones to avoid. Ties keep the file's own order, which runs roughly north to south.
-const VERDICT_RANK = { best: 0, shoulder: 1, mixed: 2, avoid: 3 };
 export function zonesByMonth(cc, month) {
   return zonesFor(cc)
     .map((z, i) => ({ zone: z, verdict: monthVerdict(z, month), i }))

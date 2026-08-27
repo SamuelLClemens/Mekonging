@@ -31,10 +31,11 @@ import {
 import {
   haversineKm, distanceChip, withinNear, withinDayTrip, attrTag, starsStr, isMarket, isBeach,
   placeBucket, FAMILY_META, catColor, catTag, tierColor, swatch, citySlug, PRICE_TIER_LABEL, inkOn,
-  tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, marketOpenDays, personalScore,
+  tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, marketOpenDays, personalScore, placeWhen,
   CATEGORY_FAMILIES, photoBlock, seaAgo, airBlock, uvTodayBlock, extUrl, sourcesNote,
   fmtTemp, fmtWind,
 } from '../render-utils.js';
+import { VERDICT_RANK } from '../data/month-verdict.js';
 import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
 import { dateLocale, t } from '../i18n.js';
@@ -93,6 +94,13 @@ function openLocationPicker() {
   backdrop.append(sheet);
   close = openModal(backdrop);
 }
+
+// "When to go" pin for this screen — mirrors zoneMonth in main.js (0 = follow today,
+// otherwise 1-12 pinned for the session) but kept local to this file rather than shared: the
+// region picker and this list are different questions ("where should I go" vs. "should I go
+// THERE this month"), and sharing one variable across files would coalesce them silently.
+let placesMonth = 0;
+let hidePoorMonths = false;
 
 export function placesScreen(arg) {
   // arg is "<cc>" or "<cc>-<citySlug>" (e.g. "th" or "th-chiang-mai").
@@ -666,6 +674,51 @@ export function placesScreen(arg) {
   wrap.append(pillsRow);
   wrap.append(filterBtn);
 
+  // "When to go" — closed by default, because the sort already does its job with no tap: this
+  // is for a traveller who wants a DIFFERENT month, or wants poor months hidden outright. Same
+  // interaction vocabulary as the region picker's month strip (zonePickList in main.js):
+  // aria-pressed carries both state and styling, a bullet marks today, tapping the pinned month
+  // again resets it. Deliberately never calls the app-level render() — this screen's map is
+  // expensive to rebuild (see renderList's own note below), so every control here, like every
+  // filter chip above, only ever calls renderList() and patches its own small bit of DOM.
+  {
+    const nowM = new Date().getMonth() + 1;
+    const monthShort = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'short' });
+    const monthName = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'long' });
+    const summaryLabel = () => `🗓 ${monthName(placesMonth || nowM)} · best places first${hidePoorMonths ? ' · poor months hidden' : ''}`;
+    const whenSummary = h('summary', {}, summaryLabel());
+    const strip = h('div', { class: 'chips month-strip', role: 'group', 'aria-label': 'Choose a month' });
+    const repaint = () => {
+      const pm = placesMonth || nowM;
+      [...strip.children].forEach((c, idx) => c.setAttribute('aria-pressed', String(idx + 1 === pm)));
+      whenSummary.textContent = summaryLabel();
+    };
+    for (let i = 1; i <= 12; i++) {
+      strip.append(h('button', {
+        class: 'chip', 'aria-pressed': String(i === (placesMonth || nowM)),
+        onclick: () => { placesMonth = (placesMonth === i) ? 0 : i; repaint(); renderList(); },
+      }, monthShort(i) + (i === nowM ? ' •' : '')));
+    }
+    const hideChip = h('button', {
+      class: 'chip', 'aria-pressed': String(hidePoorMonths),
+      onclick: (e) => {
+        hidePoorMonths = !hidePoorMonths;
+        e.currentTarget.setAttribute('aria-pressed', String(hidePoorMonths));
+        whenSummary.textContent = summaryLabel();
+        renderList();
+      },
+    }, '🙈 Hide poor months');
+    const resetBtn = h('button', {
+      class: 'chip ghost',
+      onclick: () => { placesMonth = 0; repaint(); renderList(); },
+    }, '↺ This month');
+    wrap.append(h('details', { class: 'filters-collapse' }, [
+      whenSummary,
+      strip,
+      h('div', { class: 'chips', style: 'margin-top:6px' }, [hideChip, resetBtn]),
+    ]));
+  }
+
   const listEl = h('div', {});
   wrap.append(listEl);
 
@@ -806,10 +859,24 @@ export function placesScreen(arg) {
       const q = searchTerm.trim().toLowerCase();
       results = results.filter((p) => (p.name || '').toLowerCase().includes(q) || (p.city || '').toLowerCase().includes(q));
     }
-    // Best-for-you leads; personalScore degrades to a plain rating-first order with no profile
-    // set, so this is always a sensible default, not just a post-profile upgrade. Distance
-    // tiering (walk/near/day-trip/further) is applied at render time from the same `anchor`.
-    results = results.slice().sort((a, b) => personalScore(b) - personalScore(a));
+    // "When to go": city-tier precision (83% of records) plus any place-tier override — see
+    // placeWhen()'s own comment for why this screen resolves no region fallback (the third,
+    // geometry-backed tier main.js can afford). `hidePoorMonths` narrows on a CONFIRMED avoid
+    // verdict only, never on "no data for this place": an unknown is not a warning, and this
+    // screen must never lose a place a traveller came looking for over one it could not rate.
+    const pm = placesMonth || (new Date().getMonth() + 1);
+    const whenById = new Map(results.map((p) => [p.id, placeWhen(p, pm, null)]));
+    if (hidePoorMonths) results = results.filter((p) => whenById.get(p.id)?.verdict !== 'avoid');
+    // Best-for-you leads WITHIN each month tier; personalScore degrades to a plain rating-first
+    // order with no profile set, so a place with no month signal at all still sorts sensibly (it
+    // falls into the same neutral 'shoulder' bucket as an explicit shoulder verdict, and ranks
+    // on rating alone within it — no different from this screen's ordering before this feature
+    // existed). Distance tiering (walk/near/day-trip/further) is applied at render time.
+    results = results.slice().sort((a, b) => {
+      const va = VERDICT_RANK[whenById.get(a.id)?.verdict] ?? VERDICT_RANK.shoulder;
+      const vb = VERDICT_RANK[whenById.get(b.id)?.verdict] ?? VERDICT_RANK.shoulder;
+      return (va - vb) || (personalScore(b) - personalScore(a));
+    });
     return results;
   }
 
@@ -1849,6 +1916,26 @@ export function placeScreen(id) {
     photoBlock(p, p.name),
     p.blurb ? h('p', {}, p.blurb) : null,
   ]);
+  // "When to go" for THIS specific place — finest tier available (place override, else this
+  // place's city; no region fallback here, see placeWhen()'s own comment). Silent on
+  // 'shoulder': that means "not specifically flagged either way", and a page this busy does
+  // not need a badge for every one of 696 places saying nothing in particular. Reusing the
+  // .zone-when / .zone-why classes from the region picker rather than inventing new ones — same
+  // verdict, same visual language, wherever it appears. `why` is attributed to whichever tier
+  // actually supplied it, so this never reads as a claim about the place itself when it is
+  // really the city's season.
+  const when = placeWhen(p, new Date().getMonth() + 1, null);
+  if (when && when.verdict !== 'shoulder') {
+    const monthNow = new Date().toLocaleDateString(dateLocale(), { month: 'long' });
+    const label = {
+      best: `✓ Good time to visit — ${monthNow}`,
+      avoid: `✗ Poor time to visit — ${monthNow}`,
+      mixed: `± Depends where — ${monthNow}`,
+    }[when.verdict];
+    const attribution = when.tier === 'city' ? `${when.name}: ` : (when.tier === 'region' ? `${when.name} region: ` : '');
+    card.append(h('p', { class: `zone-when is-${when.verdict}`, style: 'margin:4px 0' }, label));
+    card.append(h('p', { class: 'zone-why muted', style: 'margin:0 0 8px' }, `${attribution}${when.why}`));
+  }
   // Show the synthesised rating only when there is no real external-ratings snapshot; when
   // externalRatings exists it is the single source of truth (rendered lower down), so the two
   // can no longer sit side by side showing slightly different numbers.
