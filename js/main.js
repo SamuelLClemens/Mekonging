@@ -83,9 +83,15 @@ import {
   citySlug, PRICE_TIER_LABEL, tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, catTag,
   marketOpenDays, marketOnToday, marketCovered, isBeach, seaAgo,
   aqiBand, airBlock, uvBand, uvLineNode, uvTodayBlock,
-  photoBlock, extUrl, sourceHref, sourcesNote, personalScore,
+  photoBlock, extUrl, sourceHref, sourcesNote, personalScore, placeWhen,
   ratingColor, effectiveRating,
 } from './render-utils.js';
+// The pure verdict function shared by all three "when to go" tiers (region/city/place — see
+// js/data/month-verdict.js), named `verdictFor` rather than `monthVerdict` on purpose: that
+// name is reserved for zones.js's own export, the one scripts/check-lazy-data.py gates the
+// 'zones' lazy module on — see the comment in month-verdict.js. Used here for the CITY tier,
+// which has nothing to do with that module and must not gain an incidental dependency on it.
+import { verdictFor } from './data/month-verdict.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
@@ -480,7 +486,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.465.0';
+const APP_VERSION = 'mk-v0.466.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2908,9 +2914,11 @@ function fitsYourTripSection(cc) {
 
 // Explore E5 (seasonal fit): the wet/dry read from WET_MONTHS (already used by contextNow())
 // plus any real, dated festival within the next ~45 days from events.*.js, and the current
-// city's own bestTime line from history.js when one exists — bestTime is city-scoped only
-// (no place-level equivalent exists in the data), so this never claims a country-wide season
-// fit it cannot support. Omits itself if there is nothing dated or sourced to say.
+// city's own bestTime line from history.js when one exists, now led by that city's verdict for
+// THIS month (Priority 10.1 gave every city bestM/avoidM alongside its bestTime prose — same
+// shared monthVerdict() the region tier uses). 'shoulder' keeps the original neutral phrasing
+// on purpose: it means "not specifically flagged either way", not "no data", so it earns no
+// badge. Omits itself if there is nothing dated or sourced to say.
 function seasonalFitSection(cc, cityName, slug) {
   const now = new Date();
   const wet = (WET_MONTHS[cc] || []).includes(now.getMonth());
@@ -2923,7 +2931,11 @@ function seasonalFitSection(cc, cityName, slug) {
   }).sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, 2);
   soon.forEach((e) => lines.push(`🎉 ${e.name} — ${evShort(e.start)}${e.lunar ? ' (movable date)' : ''}.`));
   const hi = slug ? cityHistory(cc, slug) : null;
-  if (hi && hi.bestTime && cityName) lines.push(`🗓 Best time for ${cityName}: ${hi.bestTime}`);
+  if (hi && hi.bestTime && cityName) {
+    const verdict = verdictFor(hi, now.getMonth() + 1);
+    const mark = { best: '✓ Good time for', avoid: '✗ Poor time for', mixed: '± Depends where in' }[verdict];
+    lines.push(mark ? `${mark} ${cityName}: ${hi.bestTime}` : `🗓 Best time for ${cityName}: ${hi.bestTime}`);
+  }
   // The wet/dry line alone is still real, sourced content (not a guess) and directly answers
   // "best for this season" — one of the traveller's own explicit asks — so it is enough to
   // show on its own; this only ever omits if WET_MONTHS somehow held nothing for cc, which

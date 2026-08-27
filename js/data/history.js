@@ -1,7 +1,32 @@
 // Traveller-facing history & orientation for every notable country and city.
 // countries[cc] = { blurb, knownFor[], cultureTip?, sources[] }
-// cities["<cc>-<citySlug>"] = { name, blurb, knownFor[], bestTime? }
+// cities["<cc>-<citySlug>"] = { name, blurb, knownFor[], bestTime?, bestM?, avoidM? }
 // Curated and fact-checked (concise, hedged where dates are uncertain).
+//
+// ---- bestM / avoidM: the CITY tier of "when to go" ----------------------------------------
+// `bestTime` has always been prose — the right form for a human reading one city's card, and
+// it already covers all 62 cities here. What it could not do is let the app SORT or FILTER by
+// month, which matters because 653 of the app's 808 place records (81%) sit in one of these
+// cities: structuring bestTime the same way js/data/zones.js structures `bestMonths` turns 19
+// region-level answers into 62 city-level ones, without writing a single new fact — see
+// js/data/month-verdict.js for the shared verdict function and scripts/check-month-arrays.py
+// for the build-time guard, which checks THIS file under the identical rule zones.js uses:
+//
+//   - `bestM` holds only months `bestTime` RECOMMENDS outright. A caveat that sits INSIDE the
+//     recommended window ("November to February; nights can be cold in the valley") does not
+//     disqualify those months — the whole clause IS the recommendation. A genuine alternative
+//     window joined by "or"/"and" counts too (Ninh Binh's golden-rice May–July alongside its
+//     cool Oct–Dec) — these are not hedges, both halves are actively recommended.
+//   - `avoidM` holds only months named as a WARNING, e.g. Hoi An's "avoid the October-November
+//     flood season". A vaguer aside — "rainy season", "summer storms" — is real information in
+//     the prose but is deliberately left OUT of avoidM when it names no specific month, the
+//     same restraint the region tier already applies to hedged months.
+//   - Every month in either array must be named by this city's OWN `bestTime` sentence; the
+//     reverse is not required (a festival date or a side fact can name a month that supports
+//     neither array). A month in both arrays reads as "mixed", exactly as at region level — it
+//     does not happen to occur anywhere in this file today (checked, not assumed), because
+//     every `bestTime` sentence here was written as one coherent window rather than the kind
+//     of two-coast split some region-level prose describes.
 export const HISTORY = {
   "countries": {
     "th": {
@@ -87,7 +112,8 @@ export const HISTORY = {
         "Chao Phraya River",
         "Nightlife"
       ],
-      "bestTime": "November to February, during the cool, dry season."
+      "bestTime": "November to February, during the cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-chiang-mai": {
       "name": "Chiang Mai",
@@ -100,7 +126,8 @@ export const HISTORY = {
         "Cooking classes",
         "Yi Peng lantern festival"
       ],
-      "bestTime": "November to February; avoid the March-April burning season for haze."
+      "bestTime": "November to February; avoid the March-April burning season for haze.",
+      "bestM": [11, 12, 1, 2], "avoidM": [3, 4]
     },
     "th-chiang-rai": {
       "name": "Chiang Rai",
@@ -112,7 +139,8 @@ export const HISTORY = {
         "Hill-tribe villages",
         "Mountain scenery"
       ],
-      "bestTime": "November to February, cool and dry."
+      "bestTime": "November to February, cool and dry.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-pai": {
       "name": "Pai",
@@ -124,7 +152,8 @@ export const HISTORY = {
         "Waterfalls",
         "Relaxed vibe"
       ],
-      "bestTime": "November to February; nights can be cold in the valley."
+      "bestTime": "November to February; nights can be cold in the valley.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-mae-hong-son": {
       "name": "Mae Hong Son",
@@ -136,7 +165,8 @@ export const HISTORY = {
         "Hill-tribe culture",
         "Wat Jong Kham"
       ],
-      "bestTime": "November to February for cool weather and morning mists."
+      "bestTime": "November to February for cool weather and morning mists.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-nan": {
       "name": "Nan",
@@ -148,7 +178,8 @@ export const HISTORY = {
         "Quiet atmosphere",
         "National park trekking"
       ],
-      "bestTime": "November to February, cool and dry."
+      "bestTime": "November to February, cool and dry.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-sukhothai": {
       "name": "Sukhothai",
@@ -160,7 +191,8 @@ export const HISTORY = {
         "Cycling the ruins",
         "Loy Krathong festival"
       ],
-      "bestTime": "November to February; the historical park is atmospheric at Loy Krathong (usually November)."
+      "bestTime": "November to February; the historical park is atmospheric at Loy Krathong (usually November).",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-ayutthaya": {
       "name": "Ayutthaya",
@@ -172,7 +204,8 @@ export const HISTORY = {
         "Buddha head in tree roots",
         "Day trip from Bangkok"
       ],
-      "bestTime": "November to February for cooler sightseeing weather."
+      "bestTime": "November to February for cooler sightseeing weather.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-kanchanaburi": {
       "name": "Kanchanaburi",
@@ -184,7 +217,8 @@ export const HISTORY = {
         "Erawan waterfalls",
         "National parks"
       ],
-      "bestTime": "November to February, dry and comfortable."
+      "bestTime": "November to February, dry and comfortable.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-krabi": {
       "name": "Krabi",
@@ -197,7 +231,8 @@ export const HISTORY = {
         "Andaman beaches",
         "Ao Nang"
       ],
-      "bestTime": "November to April, the Andaman dry season."
+      "bestTime": "November to April, the Andaman dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "th-phuket": {
       "name": "Phuket",
@@ -209,7 +244,8 @@ export const HISTORY = {
         "Diving and island trips",
         "Big Buddha"
       ],
-      "bestTime": "November to April, dry season on the Andaman coast."
+      "bestTime": "November to April, dry season on the Andaman coast.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "th-koh-lanta": {
       "name": "Koh Lanta",
@@ -221,7 +257,8 @@ export const HISTORY = {
         "Lanta Old Town",
         "Sunsets"
       ],
-      "bestTime": "November to April; many businesses close in the low season."
+      "bestTime": "November to April; many businesses close in the low season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "th-koh-tao": {
       "name": "Koh Tao",
@@ -233,7 +270,8 @@ export const HISTORY = {
         "Clear waters",
         "Affordable diving"
       ],
-      "bestTime": "Roughly March to September; the Gulf's rainiest spell is often October-December."
+      "bestTime": "Roughly March to September; the Gulf's rainiest spell is often October-December.",
+      "bestM": [3, 4, 5, 6, 7, 8, 9], "avoidM": [10, 11, 12]
     },
     "th-koh-phangan": {
       "name": "Koh Phangan",
@@ -245,7 +283,8 @@ export const HISTORY = {
         "Nightlife",
         "Jungle interior"
       ],
-      "bestTime": "Roughly January to September; heaviest rains typically October-December."
+      "bestTime": "Roughly January to September; heaviest rains typically October-December.",
+      "bestM": [1, 2, 3, 4, 5, 6, 7, 8, 9], "avoidM": [10, 11, 12]
     },
     "th-koh-chang": {
       "name": "Koh Chang",
@@ -257,7 +296,8 @@ export const HISTORY = {
         "National park",
         "Snorkeling"
       ],
-      "bestTime": "November to April; much quiets down in the rainy season."
+      "bestTime": "November to April; much quiets down in the rainy season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "th-trang": {
       "name": "Trang",
@@ -269,7 +309,8 @@ export const HISTORY = {
         "Beaches",
         "Authentic southern culture"
       ],
-      "bestTime": "November to April, Andaman dry season."
+      "bestTime": "November to April, Andaman dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "th-nong-khai": {
       "name": "Nong Khai",
@@ -281,7 +322,8 @@ export const HISTORY = {
         "Isaan culture",
         "Naga fireballs festival"
       ],
-      "bestTime": "November to February; the Naga fireballs event usually falls in October."
+      "bestTime": "November to February; the Naga fireballs event usually falls in October.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-khon-kaen": {
       "name": "Khon Kaen",
@@ -293,7 +335,8 @@ export const HISTORY = {
         "Bueng Kaen Nakhon lake",
         "Dinosaur fossils nearby"
       ],
-      "bestTime": "November to February, cooler and drier."
+      "bestTime": "November to February, cooler and drier.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-buriram": {
       "name": "Buriram",
@@ -305,7 +348,8 @@ export const HISTORY = {
         "Khmer heritage",
         "Isaan culture"
       ],
-      "bestTime": "November to February; Phanom Rung's solar alignments draw crowds around April."
+      "bestTime": "November to February; Phanom Rung's solar alignments draw crowds around April.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-ubon-ratchathani": {
       "name": "Ubon Ratchathani",
@@ -317,7 +361,8 @@ export const HISTORY = {
         "Pha Taem rock art",
         "National parks"
       ],
-      "bestTime": "November to February; the Candle Festival usually falls in July."
+      "bestTime": "November to February; the Candle Festival usually falls in July.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-udon-thani": {
       "name": "Udon Thani",
@@ -329,7 +374,8 @@ export const HISTORY = {
         "Regional transport hub",
         "Markets"
       ],
-      "bestTime": "November to February; the Red Lotus Sea blooms roughly December to February."
+      "bestTime": "November to February; the Red Lotus Sea blooms roughly December to February.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-lopburi": {
       "name": "Lopburi",
@@ -341,7 +387,8 @@ export const HISTORY = {
         "Ancient history",
         "Prang Sam Yot"
       ],
-      "bestTime": "November to February; the annual Monkey Buffet festival is usually in November."
+      "bestTime": "November to February; the annual Monkey Buffet festival is usually in November.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "th-khao-lak": {
       "name": "Khao Lak",
@@ -353,7 +400,8 @@ export const HISTORY = {
         "National parks",
         "2004 tsunami memorials"
       ],
-      "bestTime": "November to April; the Similan Islands are typically open mid-October to mid-May."
+      "bestTime": "November to April; the Similan Islands are typically open mid-October to mid-May.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "vi-hanoi": {
       "name": "Hanoi",
@@ -366,7 +414,8 @@ export const HISTORY = {
         "Ho Chi Minh Mausoleum",
         "egg coffee"
       ],
-      "bestTime": "October to April, when the weather is cooler and drier; autumn (October-November) is especially pleasant."
+      "bestTime": "October to April, when the weather is cooler and drier; autumn (October-November) is especially pleasant.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "vi-ho-chi-minh-city": {
       "name": "Ho Chi Minh City",
@@ -379,7 +428,8 @@ export const HISTORY = {
         "motorbike traffic",
         "street food"
       ],
-      "bestTime": "December to April, the dry season; expect heat and humidity year-round."
+      "bestTime": "December to April, the dry season; expect heat and humidity year-round.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
     },
     "vi-hoi-an": {
       "name": "Hoi An",
@@ -392,7 +442,8 @@ export const HISTORY = {
         "riverside dining",
         "UNESCO heritage"
       ],
-      "bestTime": "February to May, dry and mild; avoid the October-November flood season."
+      "bestTime": "February to May, dry and mild; avoid the October-November flood season.",
+      "bestM": [2, 3, 4, 5], "avoidM": [10, 11]
     },
     "vi-da-nang": {
       "name": "Da Nang",
@@ -405,7 +456,8 @@ export const HISTORY = {
         "modern coastal city",
         "seafood"
       ],
-      "bestTime": "February to May, before the summer heat and the autumn rains."
+      "bestTime": "February to May, before the summer heat and the autumn rains.",
+      "bestM": [2, 3, 4, 5], "avoidM": []
     },
     "vi-hue": {
       "name": "Hue",
@@ -418,7 +470,8 @@ export const HISTORY = {
         "imperial cuisine",
         "Thien Mu Pagoda"
       ],
-      "bestTime": "February to April; Hue is prone to heavy rain later in the year."
+      "bestTime": "February to April; Hue is prone to heavy rain later in the year.",
+      "bestM": [2, 3, 4], "avoidM": []
     },
     "vi-da-lat": {
       "name": "Da Lat",
@@ -431,7 +484,8 @@ export const HISTORY = {
         "lakes and waterfalls",
         "pine forests"
       ],
-      "bestTime": "December to March, the drier months; pleasantly cool all year."
+      "bestTime": "December to March, the drier months; pleasantly cool all year.",
+      "bestM": [12, 1, 2, 3], "avoidM": []
     },
     "vi-ninh-binh": {
       "name": "Ninh Binh",
@@ -444,7 +498,8 @@ export const HISTORY = {
         "rice paddies",
         "UNESCO heritage"
       ],
-      "bestTime": "Late May to early July for golden rice, or the dry cool months of October to December."
+      "bestTime": "Late May to early July for golden rice, or the dry cool months of October to December.",
+      "bestM": [5, 6, 7, 10, 11, 12], "avoidM": []
     },
     "vi-phong-nha": {
       "name": "Phong Nha",
@@ -457,7 +512,8 @@ export const HISTORY = {
         "caving and adventure",
         "UNESCO heritage"
       ],
-      "bestTime": "February to August, the dry season; caves may close during autumn floods."
+      "bestTime": "February to August, the dry season; caves may close during autumn floods.",
+      "bestM": [2, 3, 4, 5, 6, 7, 8], "avoidM": []
     },
     "vi-nha-trang": {
       "name": "Nha Trang",
@@ -470,7 +526,8 @@ export const HISTORY = {
         "seafood",
         "beach nightlife"
       ],
-      "bestTime": "January to August, especially the dry months before the autumn rains."
+      "bestTime": "January to August, especially the dry months before the autumn rains.",
+      "bestM": [1, 2, 3, 4, 5, 6, 7, 8], "avoidM": []
     },
     "vi-ha-giang": {
       "name": "Ha Giang",
@@ -483,7 +540,8 @@ export const HISTORY = {
         "motorbike touring",
         "terraced fields"
       ],
-      "bestTime": "September to November for clear skies and harvest, or spring (March-April) for flowers."
+      "bestTime": "September to November for clear skies and harvest, or spring (March-April) for flowers.",
+      "bestM": [9, 10, 11, 3, 4], "avoidM": []
     },
     "vi-sapa": {
       "name": "Sapa",
@@ -496,7 +554,8 @@ export const HISTORY = {
         "hill-station origins",
         "mountain homestays"
       ],
-      "bestTime": "September to November and March to May; winters are cold and can be foggy."
+      "bestTime": "September to November and March to May; winters are cold and can be foggy.",
+      "bestM": [9, 10, 11, 3, 4, 5], "avoidM": []
     },
     "vi-can-tho": {
       "name": "Can Tho",
@@ -509,7 +568,8 @@ export const HISTORY = {
         "rice country",
         "fresh fruit"
       ],
-      "bestTime": "December to April, the dry season; floating markets are best at dawn."
+      "bestTime": "December to April, the dry season; floating markets are best at dawn.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
     },
     "vi-phu-quoc": {
       "name": "Phu Quoc",
@@ -522,7 +582,8 @@ export const HISTORY = {
         "night market",
         "pepper farms"
       ],
-      "bestTime": "November to April, the dry season with calm seas."
+      "bestTime": "November to April, the dry season with calm seas.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "vi-ha-long": {
       "name": "Ha Long",
@@ -535,7 +596,8 @@ export const HISTORY = {
         "UNESCO heritage",
         "floating villages"
       ],
-      "bestTime": "October to April for cooler, clearer conditions; avoid summer storm season."
+      "bestTime": "October to April for cooler, clearer conditions; avoid summer storm season.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "vi-cat-ba": {
       "name": "Cat Ba",
@@ -548,7 +610,8 @@ export const HISTORY = {
         "hiking",
         "UNESCO heritage"
       ],
-      "bestTime": "April to October for beach weather; late spring and early autumn are most comfortable."
+      "bestTime": "April to October for beach weather; late spring and early autumn are most comfortable.",
+      "bestM": [4, 5, 6, 7, 8, 9, 10], "avoidM": []
     },
     "vi-quy-nhon": {
       "name": "Quy Nhon",
@@ -561,7 +624,8 @@ export const HISTORY = {
         "coastal scenery",
         "off-the-beaten-path feel"
       ],
-      "bestTime": "February to August, the drier and calmer months."
+      "bestTime": "February to August, the drier and calmer months.",
+      "bestM": [2, 3, 4, 5, 6, 7, 8], "avoidM": []
     },
     "vi-con-dao": {
       "name": "Con Dao",
@@ -574,7 +638,8 @@ export const HISTORY = {
         "quiet beaches",
         "nature reserve"
       ],
-      "bestTime": "March to September for calm seas and diving; turtle nesting peaks in summer."
+      "bestTime": "March to September for calm seas and diving; turtle nesting peaks in summer.",
+      "bestM": [3, 4, 5, 6, 7, 8, 9], "avoidM": []
     },
     "vi-buon-ma-thuot": {
       "name": "Buon Ma Thuot",
@@ -587,7 +652,8 @@ export const HISTORY = {
         "coffee plantations",
         "national parks"
       ],
-      "bestTime": "November to April, the dry season; the coffee harvest runs late in the year."
+      "bestTime": "November to April, the dry season; the coffee harvest runs late in the year.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "kh-siem-reap": {
       "name": "Siem Reap",
@@ -600,7 +666,8 @@ export const HISTORY = {
         "night markets",
         "floating villages"
       ],
-      "bestTime": "November to February, the cool dry season, for the most comfortable temple visits."
+      "bestTime": "November to February, the cool dry season, for the most comfortable temple visits.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "kh-phnom-penh": {
       "name": "Phnom Penh",
@@ -613,7 +680,8 @@ export const HISTORY = {
         "Central Market",
         "French colonial architecture"
       ],
-      "bestTime": "November to February for cooler, drier weather."
+      "bestTime": "November to February for cooler, drier weather.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "kh-kampot": {
       "name": "Kampot",
@@ -625,7 +693,8 @@ export const HISTORY = {
         "Bokor National Park",
         "laid-back atmosphere"
       ],
-      "bestTime": "November to April, the dry season."
+      "bestTime": "November to April, the dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "kh-kep": {
       "name": "Kep",
@@ -637,7 +706,8 @@ export const HISTORY = {
         "Kep National Park",
         "Rabbit Island"
       ],
-      "bestTime": "November to April, the dry season."
+      "bestTime": "November to April, the dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "kh-battambang": {
       "name": "Battambang",
@@ -649,7 +719,8 @@ export const HISTORY = {
         "bamboo railway",
         "Phnom Sampeau caves"
       ],
-      "bestTime": "November to February for cooler, drier conditions."
+      "bestTime": "November to February for cooler, drier conditions.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "kh-kratie": {
       "name": "Kratie",
@@ -661,7 +732,8 @@ export const HISTORY = {
         "colonial shophouses",
         "Koh Trong island"
       ],
-      "bestTime": "November to April, the dry season, when river levels aid dolphin viewing."
+      "bestTime": "November to April, the dry season, when river levels aid dolphin viewing.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "kh-sihanoukville": {
       "name": "Sihanoukville",
@@ -673,7 +745,8 @@ export const HISTORY = {
         "casinos and resorts",
         "rapid development"
       ],
-      "bestTime": "November to April, the dry season."
+      "bestTime": "November to April, the dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "kh-koh-rong": {
       "name": "Koh Rong",
@@ -685,7 +758,8 @@ export const HISTORY = {
         "island nightlife",
         "clear waters"
       ],
-      "bestTime": "November to April, the dry season, for calm seas and clear water."
+      "bestTime": "November to April, the dry season, for calm seas and clear water.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "kh-banlung": {
       "name": "Banlung",
@@ -697,7 +771,8 @@ export const HISTORY = {
         "ethnic minority villages",
         "remote highlands"
       ],
-      "bestTime": "November to February, before roads become difficult in the wet season."
+      "bestTime": "November to February, before roads become difficult in the wet season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "kh-sen-monorom": {
       "name": "Sen Monorom",
@@ -710,7 +785,8 @@ export const HISTORY = {
         "Bunong culture",
         "forest treks"
       ],
-      "bestTime": "November to February, the cool dry season."
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-luang-prabang": {
       "name": "Luang Prabang",
@@ -723,7 +799,8 @@ export const HISTORY = {
         "Kuang Si Falls",
         "night market"
       ],
-      "bestTime": "November to February, when the weather is cool and dry"
+      "bestTime": "November to February, when the weather is cool and dry",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-vientiane": {
       "name": "Vientiane",
@@ -736,7 +813,8 @@ export const HISTORY = {
         "relaxed capital",
         "colonial buildings"
       ],
-      "bestTime": "November to February for cooler, drier days"
+      "bestTime": "November to February for cooler, drier days",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-vang-vieng": {
       "name": "Vang Vieng",
@@ -749,7 +827,8 @@ export const HISTORY = {
         "blue lagoons",
         "outdoor adventure"
       ],
-      "bestTime": "November to March, avoiding the heaviest rains"
+      "bestTime": "November to March, avoiding the heaviest rains",
+      "bestM": [11, 12, 1, 2, 3], "avoidM": []
     },
     "la-nong-khiaw": {
       "name": "Nong Khiaw",
@@ -762,7 +841,8 @@ export const HISTORY = {
         "caves",
         "slow rural pace"
       ],
-      "bestTime": "October to April, during the dry season"
+      "bestTime": "October to April, during the dry season",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "la-thakhek": {
       "name": "Thakhek",
@@ -775,7 +855,8 @@ export const HISTORY = {
         "colonial roots",
         "motorbike touring"
       ],
-      "bestTime": "November to February, when caves and roads are at their most accessible"
+      "bestTime": "November to February, when caves and roads are at their most accessible",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-pakse": {
       "name": "Pakse",
@@ -788,7 +869,8 @@ export const HISTORY = {
         "transport hub",
         "waterfalls"
       ],
-      "bestTime": "November to February for cooler, drier conditions"
+      "bestTime": "November to February for cooler, drier conditions",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-champasak": {
       "name": "Champasak",
@@ -800,7 +882,8 @@ export const HISTORY = {
         "former royal seat",
         "Mekong tranquillity"
       ],
-      "bestTime": "November to February, and around the Wat Phou festival in the cool season"
+      "bestTime": "November to February, and around the Wat Phou festival in the cool season",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-savannakhet": {
       "name": "Savannakhet",
@@ -812,7 +895,8 @@ export const HISTORY = {
         "dinosaur museum",
         "trade route heritage"
       ],
-      "bestTime": "November to February for the driest, coolest weather"
+      "bestTime": "November to February for the driest, coolest weather",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-phonsavan": {
       "name": "Phonsavan",
@@ -824,7 +908,8 @@ export const HISTORY = {
         "UXO awareness",
         "highland scenery"
       ],
-      "bestTime": "November to February, though highland nights can be cold"
+      "bestTime": "November to February, though highland nights can be cold",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     },
     "la-luang-namtha": {
       "name": "Luang Namtha",
@@ -837,7 +922,8 @@ export const HISTORY = {
         "kayaking",
         "ecotourism"
       ],
-      "bestTime": "October to April, during the drier trekking season"
+      "bestTime": "October to April, during the drier trekking season",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "la-si-phan-don": {
       "name": "Si Phan Don",
@@ -849,7 +935,8 @@ export const HISTORY = {
         "French railway remnants",
         "cycling and hammocks"
       ],
-      "bestTime": "November to February for comfortable travel; waterfalls are fullest late in the wet season"
+      "bestTime": "November to February for comfortable travel; waterfalls are fullest late in the wet season",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     }
   }
 };

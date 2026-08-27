@@ -121,5 +121,130 @@ Baseline: `mk-v0.265.0` · branch `feat/deep-content` → merge `--no-ff` into `
   One finding was chased and rejected: `.sight-name` / `.sight-city` on the country hub measure 1.47–1.51:1 in the light theme, but the caption sits on a 74%-black gradient scrim that is an absolutely-positioned SIBLING, invisible to a walk up the ancestor chain, plus a text shadow. The checker's blind spot, not a defect — the same shape of error as reading a gradient-filled button as transparent.
 - [ ] **9.4** Not done, and worth stating rather than leaving implied. This is REGION-level, because that is the granularity the sourced data supports. A place-level "good in September" would need a month field on 808 records, and there is no source that fills it in bulk — the honest signals that exist today are prose inside individual records (Muong Hoa Valley's "late August to early September to catch the gold harvest colour", Sapa's own "When to go" entry). Adding a `Ta Van village` place record was considered and rejected for the same reason the hospital layer dedupes: the valley is already carried by `vi-ext-muong-hoa-valley` and `vi-ext-sapa-homestay`, whose coordinates ARE Ta Van, and a third near-duplicate would be worse than the gap.
 
+## Priority 10 — "When should I go, and what will it cost me?" (planned 2026-08-27, four slices)
+
+Agreed with the user by interview on 2026-08-27. Priority 9 answered the month question at REGION
+granularity and 9.4 stated the place-level gap as a limitation. This priority closes that gap the
+only honest way: by structuring prose that is ALREADY WRITTEN AND SOURCED rather than authoring
+month fields for records that have no source.
+
+MEASURED FIRST (`scratchpad/month_coverage.py`, `besttime.py`, `reach.py`, 2026-08-27) — AND
+RE-MEASURED the same day: the first pass counted 696 place records and called that "corrected"
+against the file's own long-standing, repeatedly-verified 808 (Priority 5's `stepFree`/`kidFriendly`
+audits and 9.4 both already said 808). That was backwards. The 696 figure came from a record-
+splitting regex that matched the bare `id: "x"` convention only and silently missed every
+pretty-printed `"id": "x"` record — about 14% of the catalogue, concentrated in `places.la.ext.js`
+and `places.vi.ext.js`. Caught by running `scripts/check-place-fields.py`, which reported 808 and
+prompted a recount with that script's own (more general) id-extraction regex. Every figure below
+is from the corrected recount; scratchpad scripts are not committed, so the numbers are the record:
+
+  - **808 place records** across 8 files (th 276, vi 189, kh 159, la 184).
+  - THREE tiers of when-to-go already exist, only the top one structured:
+      region  19 zones   100% structured   `bestM`/`avoidM`, shipped mk-v0.465.0
+      city    62 cities  100% PROSE ONLY   `bestTime` in history.js, never parsed
+      place   808 recs   ~22% prose        month ranges buried in `tips`/`hours`
+  - **653 of 808 place records (81%)** sit in a city that already has a `bestTime` sentence; the
+    other **155 (19%)** would fall back to the region tier. Per country: vi 94%, th 78%, la 77%,
+    kh 76% — Vietnam's smaller, more concentrated catalogue reaches almost completely on city
+    data alone.
+  - **190 records (24%)** carry an explicit month RANGE; **179** of those in a when-to-visit-ish
+    field (`tips`, `hours`, `blurb`, `whyItFits`, `swim`, `note`, `jellyfish`, `recognition`,
+    `bookHint`, `afterDark`). A large share of those ranges are about harvests or hotel rates, NOT
+    about visiting — so the place tier is partial BY DESIGN and each entry needs a judgement call,
+    never a regex.
+  - **142 distinct cities** own at least one place record; **80** of them have no `history.js`
+    profile at all (no `bestTime`, no `knownFor`, no blurb). Largest by places affected: Koh Kong
+    10, Koh Samui 9, Soppong 8, Pattaya 7, Paksong 7, Hua Hin 6, Khun Yuam 6, Mae Sariang 6.
+
+FOUR DECISIONS TAKEN (do not relitigate without the user):
+
+  1. Resolution: city tier universally, place tier only where the record's own prose earns it.
+     No record ever gets a month invented for it. Region remains the backstop.
+  2. Surface: SORT plus an OPT-IN filter. Default view stays complete — ordering answers the
+     question without a tap, and nobody loses a place they came looking for. Not a filter-only
+     design (hiding Hoi An in September is worse than flagging it) and not a tag-only design
+     (808 badges is close to no badges).
+  3. Meaning: three SEPARATE axes — weather, crowds, price. Never combined into one score; the
+     inputs are too uneven across 808 records to defend a single number, and a score buries the
+     reason. Crowds and price are genuinely CITY-level properties (high season belongs to Hoi An,
+     not to the Japanese Bridge), so all three axes resolve by the same rule: finest tier that has
+     real data, city as the floor, region as the backstop.
+  4. Sourcing: cite every new claim, the standard the place records already hold. A city with no
+     source for crowds or price shows the weather line alone, and the UI must render that
+     gracefully rather than leaving a gap.
+
+- [x] **10.1** DONE, verified 2026-08-27. SLICE 1 — city month tier, plus sort and filter. Parsed
+  the 62 `bestTime` sentences in `js/data/history.js` into `bestM`/`avoidM` per city, exactly as
+  Priority 9 did for the 19 zones. `scripts/check-zone-months.py` generalised and renamed to
+  `check-month-arrays.py`, now checking all THREE tiers under the identical asymmetric rule;
+  negative-tested in five distinct failure modes across the session (unsupported month injection
+  at each of the region/city/place tiers, missing arrays, a wraparound-boundary injection), every
+  source file confirmed byte-identical to its pre-test state afterward. `js/data/month-verdict.js`
+  holds the verdict function shared by all three tiers (named `verdictFor`, not `monthVerdict` —
+  that name is reserved by `check-lazy-data.py`'s lexical gate on the zones module; a first attempt
+  using the reserved name falsely dragged the Places screen into that gate, caught by running the
+  guard rather than by inspection). `placeWhen(place, month, zone)` in `render-utils.js` resolves
+  place override → city → region (region only when a caller supplies the zone object, since
+  resolving it needs main.js's province-geometry lookup, a dependency this eagerly-loaded module
+  must not carry). Ordering and the opt-in "hide poor months" toggle are wired into the Places list
+  (city/place precision, 81% reach, no region fallback — documented, not silent) and the verdict
+  now leads the existing bestTime line on the country hub and the place-detail page.
+
+  Place-tier overrides (`js/data/place-months.js`): reviewed all 179 candidates, curated **52**
+  that survive the bar (the record's own prose must state, in its own words, that some months are
+  genuinely better or worse TO VISIT — not a harvest, not a hotel rate, not a restatement of the
+  city's own bestTime). `avoidM` reserved for explicit warning language throughout, applied
+  consistently after catching three entries that initially leaned looser. Every entry machine-
+  verified before being written (real id, every month named by its own quote) — caught and fixed
+  four real gaps this way, two quote-trimming errors and two genuine over-claims.
+
+  Verified live in the browser, not just by the checker: place-detail verdict line (Phong Nha →
+  "✓ Good time to visit — August", Similan Islands' own place-tier override correctly outranking
+  Khao Lak's city tier → "✗ Poor time to visit"), Places-list sort (September correctly floats the
+  Northern Highlands to the top of "Further afield" — Ma Pi Leng Pass, Sapa, Nho Que — matching the
+  region-tier answer from Priority 9 at place granularity), the hide-poor-months toggle (189→174
+  places for Vietnam in October, cross-checked analytically: exactly Hoi An's 15 places, its city
+  tier's only October-avoid case), the country-hub verdict badge, and no horizontal overflow or
+  console errors at 375px. One real bug found and fixed along the way, not in this feature's own
+  code: unregistering a Service Worker does not stop it controlling an already-open tab (Chrome
+  behaviour) — closing and reopening the tab is required, not just `unregister()` + reload; folded
+  into `[[mekong-preview-reload-gotcha]]`.
+
+  CORRECTION mid-slice: the place-record count first measured for this priority (696) was wrong —
+  see the dedicated entry above. Recomputing with the authoritative count also corrected the
+  reach figures (81%, not 83%) and the per-city counts cited in 10.4 below.
+
+- [ ] **10.2** SLICE 2 — the crowds and price axes. Add month-structured `crowds` and `prices`
+  alongside `bestTime` at city level, each with a real source. Render as three separate lines,
+  never merged. Sort stays on weather; crowds and price are informational, with their own opt-in
+  filters only if the coverage earns them. Cities without a source show weather alone.
+
+- [ ] **10.3** SLICE 3 — city profiles for the 80 blanks. Cities that own place records but have
+  no `history.js` entry: name, blurb, knownFor, bestTime, and crowds/price where sourced. Largest
+  by places affected: Koh Kong 10, Koh Samui 9, Soppong 8, Pattaya 7, Paksong 7, Hua Hin 6, Khun
+  Yuam 6, Mae Sariang 6. Raises month coverage from 81% toward 100% and fills city cards that
+  render thin.
+
+- [ ] **10.4** SLICE 4 — genuinely thin Vietnam towns, and the typography pass. RE-SCOPED
+  2026-08-27 against the corrected count (see the 696→808 correction above): Hoi An (15), Da Nang
+  (17), Hue (9), Sapa (17) and Cat Ba (11) were reported thin in the flawed 696-count and are not —
+  Hoi An and Da Nang already sit above Chiang Mai's old figure. The real Vietnam gap, by the
+  authoritative per-city count, is single-place stubs: **Mai Chau, Lang Co, Cao Bang, Thanh Hoa,
+  Hoa Binh, Ba Ria-Vung Tau, Lao Cai, Duy Phu, Phan Thiet, An Giang** (1 place each), then Quy
+  Nhon, Con Dao, Buon Ma Thuot, Vung Tau (2 each). Bring these toward a browsable minimum rather
+  than chasing Bangkok/Chiang Mai-level depth (40/33) that no city in the other three countries
+  needs either — Thailand alone has 24 cities at ≤3 places, Laos 26, Cambodia 19; a full census is
+  `scratchpad/recount6.py`'s job re-run, not reproduced here. Fold in **8.4** here — the flat
+  h1-to-h3 outline on visa, scams, dish, event and weather, and the mixed h2/h3 levels on the place
+  screen — because both are editorial-judgement work rather than defect fixes and belong in one
+  pass.
+
+- [ ] **10.5** UNSPECIFIED — the user selected a fifth priority during the interview but the
+  description did not come through, and answered "[No preference]" when asked again. Left as an
+  explicit slot rather than guessed at. Ask before planning around it.
+
+Each slice ships and deploys on its own so the user can judge it before the next one starts, and so
+no single session grows large enough to burn a week of budget (see the token-cost notes in memory).
+
 ---
 _Skipped (already shipped, verified): Home Signature-Sights removal; Home layout order; collapsible `<details>` headings; drive-TIME near-me ceiling + distant-hub exclusion; trust/consent architecture. Skipped (premise false): AI/scanner centralisation._

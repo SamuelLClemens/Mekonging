@@ -10,6 +10,9 @@ import { online } from './ui-widgets.js';
 import { PHOTOS } from './data/photos.js';
 import { DRIVE_CURVE } from './data/drivetimes.js';
 import { getActiveCountry } from './app-state.js';
+import { HISTORY } from './data/history.js';
+import { PLACE_MONTHS } from './data/place-months.js';
+import { verdictFor } from './data/month-verdict.js';
 
 // "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
 // understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
@@ -549,6 +552,37 @@ export function personalScore(p) {
   if (prefs.tripLength === 'medium' && r >= 4.3) s += 0.25;
   if ((prefs.interests || []).some((i) => (p.categories || []).includes(i))) s += 0.4;
   return s;
+}
+
+// "When to go", resolved for one place — the finest tier that actually has data for it, in
+// order: PLACE_MONTHS (this record's own visiting-window sentence, rare), the CITY's bestTime
+// (js/data/history.js, covers 62 cities and 81% of all place records), then the REGION's
+// bestMonths (js/data/zones.js) if the caller supplies one — see MEKONGING_REFACTOR_TODO.md
+// Priority 10.1 for why the tiers stop there rather than resolving the region internally.
+//
+// `zone` is OPTIONAL and deliberately not resolved in here: doing so needs point-in-polygon
+// province lookup (main.js's zoneAssignment(), which depends on the lazily-loaded province
+// geometry), and this module is loaded eagerly by every screen. A caller that already has the
+// place's zone object cheaply on hand (main.js, once a country's region set is loaded) passes
+// it; a caller that does not (the always-on Places list) gets city/place precision only and
+// says so honestly via `tier` — never a silent, unlabelled guess at the region.
+//
+// Returns null when NO tier has anything to say (a place with no city profile and no zone
+// passed in) — every caller must handle that by omitting the signal, not defaulting to
+// "shoulder", which would print a specific-looking claim this function never made.
+export function placeWhen(place, month, zone) {
+  if (!place || !month) return null;
+  const ov = PLACE_MONTHS[place.id];
+  if (ov) return { tier: 'place', verdict: verdictFor(ov, month), why: ov.why };
+  const slug = place.city ? citySlug(place.city) : '';
+  const city = slug ? HISTORY.cities[`${place.country}-${slug}`] : null;
+  if (city && city.bestTime) {
+    return { tier: 'city', verdict: verdictFor(city, month), why: city.bestTime, name: city.name };
+  }
+  if (zone) {
+    return { tier: 'region', verdict: verdictFor(zone, month), why: zone.bestMonths, name: zone.name };
+  }
+  return null;
 }
 
 // ---- place rating ----------------------------------------------------------
