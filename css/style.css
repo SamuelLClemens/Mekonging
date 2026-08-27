@@ -6,7 +6,11 @@
 :root {
   /* Sunset psychedelia */
   --sun: #F2A93B;        --sun-deep: #E07A1F;
-  --orange: #CC5500;     --magenta: #D6336C;   --pink: #EE6CA0;
+  /* --orange was #CC5500. It is the screen title (h1) and the active tab-bar label, so it is
+     the most-read text in the app in daylight mode, and it measured 3.62:1 on the page and
+     4.01:1 on a card. #B04A00 is the same hue two steps deeper: 4.61 and 5.11, and it still
+     carries white as a fill at 5.49:1. The dark theme keeps its own brighter --orange. */
+  --orange: #B04A00;     --magenta: #D6336C;   --pink: #EE6CA0;
   --teal: #16A39A;       --teal-deep: #0A615B;
   --grape: #6A4C93;      --grape-deep: #4A3068;
   --olive: #9C9A3A;
@@ -18,6 +22,23 @@
   /* Roles */
   --good: #1F7A47;       --warn: #A8380F;   /* darkened for AA contrast on cream (5.45:1) */
   --tier-low: #1F7A47;   --tier-mid: #E07A1F;  --tier-high: #D6336C;
+
+  /* --muted and --gold were used by eleven rules but never defined anywhere, so every one of
+     them silently fell through to its hard-coded fallback and ignored the theme. Measured on
+     the light card (#FFF6E2) and the dark one (#2C1A4A): the muted greys #7a7a7a / #8a8a8a /
+     #8A8F98 land at 3.99 / 3.21 / 3.02 on light and 3.61 / 4.49 / 4.77 on dark — each fails on
+     one side or the other. --ink-soft is the theme's own muted-text colour and reaches 5.04 to
+     8.71 on every skin, so --muted simply aliases it. --gold needs a real value per theme: the
+     rating star and "* 4.8" line sat at 2.07-2.27 on light surfaces.
+     --badge-ink is the dark text for solid badges whose fill is too light for white; the
+     category hues stay exactly as they are and the LABEL changes instead, because those hues
+     are the map legend's colour language and appear on every pin.
+     --head-accent lets a skin whose --magenta is too light for body-size headings override
+     just that use without changing the colour everywhere else. */
+  --muted: var(--ink-soft);
+  --gold: #8F6800;        /* 4.85:1 on the cream card; the dark themes brighten it below */
+  --badge-ink: #241A10;
+  --head-accent: #C5275E;   /* --magenta itself reads 3.88:1 as a section heading on the page */
 
   /* Signature gradients */
   --grad-sun: linear-gradient(135deg, #E07A1F 0%, #E8632A 45%, #D6336C 100%);
@@ -47,6 +68,11 @@ html[data-theme="dark"] {
   --cream: #201038; --card: #2C1A4A; --line: #4A2F6E;
   --ink: #F7E4C4; --ink-soft: #C9A9D9;
   --sun: #F6BD55; --orange: #FF7A40; --magenta: #FF5C95; --teal: #2FD0C4;
+  --gold: #E0A100;   /* 6.85:1 on --card; the light-theme value would be muddy here */
+  /* The :root value of --head-accent is a deep magenta tuned for cream paper; on this surface
+     the skin's own bright --magenta is the readable one. The three dark SKINS inherit this
+     line, because none of them sets --head-accent and they all carry data-theme="dark". */
+  --head-accent: var(--magenta);
   --warn: #FF6B4A;   /* brighter warning text so it stays AA-readable on the dark surface (6.25:1) */
   --good: #34C77B;   /* same reason as --warn above, which was brightened but this was not: the
                         light-mode #1F7A47 is tuned for cream and lands at 2.91:1 on the dark
@@ -67,7 +93,12 @@ html[data-theme="dark"] {
   --cream: #141017; --bg: #141017; --card: #1E1822; --line: #332A3C;
   --ink: #F3EEE6; --ink-soft: #A79C8C;
   --sun: #F5A524; --sun-deep: #E08A10; --orange: #F5A524; --magenta: #FF5C8A; --pink: #FF5C8A;
-  --teal: #2ED3B7; --teal-deep: #2ED3B7; --grape: #8A6BC0;
+  /* --teal-deep is a FILL that carries white text (.chip[aria-pressed], .cat-tag,
+     .attr-tag.at-info). Setting it to the bright accent put white on #2ED3B7 — 1.89:1, so the
+     pressed-chip and category labels were unreadable. Deepened to 4.63:1; --teal, the accent,
+     is untouched and --grad-teal still starts from the bright value. */
+  --teal: #2ED3B7; --teal-deep: #1C8372; --grape: #8564BD;   /* --grape carries white on .tier.any: 4.25 -> 4.61 */
+  --gold: #E0A100;
   --grad-sun: linear-gradient(135deg, #F5A524 0%, #FF5C8A 100%);
   --grad-teal: linear-gradient(135deg, #2ED3B7 0%, #8A6BC0 100%);
   --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
@@ -78,6 +109,7 @@ html[data-theme="dark"] {
   --cream: #F3F1EC; --bg: #F3F1EC; --card: #FFFFFF; --line: #E3DED2;
   --ink: #222019; --ink-soft: #6B635A;
   --sun: #0E7C66; --sun-deep: #0A5E4D; --orange: #0E7C66; --magenta: #E24E1B; --pink: #E24E1B;
+  --head-accent: #C04217;   /* --magenta as a section heading measured 3.48:1 on this paper */
   --teal: #0E7C66; --teal-deep: #1B4038; --grape: #6A4C93;
   --grad-sun: linear-gradient(135deg, #0E7C66 0%, #1B4038 100%);
   --grad-teal: linear-gradient(135deg, #0E7C66 0%, #1B4038 100%);
@@ -89,6 +121,8 @@ html[data-theme="dark"] {
   --cream: #FBFBF9; --bg: #FBFBF9; --card: #FFFFFF; --line: #E7EDEA;
   --ink: #212529; --ink-soft: #66707A;
   --sun: #12B886; --sun-deep: #0CA678; --orange: #0E7C66; --magenta: #FF6B6B; --pink: #FF922B;
+  --head-accent: #D73232;   /* --magenta as a section heading measured 2.68:1 on this page; 4.62:1 now */
+  --gold: #8F6800;
   --teal: #1098AD; --teal-deep: #0B7285; --grape: #7048E8;
   --grad-sun: linear-gradient(135deg, #12B886 0%, #1098AD 100%);
   --grad-teal: linear-gradient(135deg, #1098AD 0%, #7048E8 100%);
@@ -100,7 +134,10 @@ html[data-theme="dark"] {
   /* 1960s–70s Cambodian rock: vintage sleeve paper + swirling saturated warmth. */
   --cream: #F6E7C4; --bg: #F6E7C4; --card: #FFF4D6; --line: #E3C98C;
   --ink: #3A2410; --ink-soft: #7A5A2C;
-  --sun: #E8A33D; --sun-deep: #D9541E; --orange: #C43E12; --magenta: #D6336C; --pink: #E84C88;
+  --sun: #E8A33D; --sun-deep: #D9541E; --orange: #BA3B11; --magenta: #D6336C; --pink: #E84C88;
+  /* --orange is this skin's h1 colour and measured 4.24:1 on its own paper; --magenta as a
+     section heading measured 3.77:1. Both nudged a shade deeper to clear 4.5. */
+  --head-accent: #C1275D;
   --teal: #1FA6A0; --teal-deep: #0E6E68; --grape: #7B3FA0;
   --grad-sun: linear-gradient(135deg, #D9541E 0%, #D6336C 50%, #7B3FA0 100%);
   --grad-teal: linear-gradient(135deg, #1FA6A0 0%, #7B3FA0 100%);
@@ -113,7 +150,10 @@ html[data-theme="dark"] {
   --cream: #120A1C; --bg: #120A1C; --card: #1C1030; --line: #3A2258;
   --ink: #F6E9C9; --ink-soft: #C9A9D9;
   --sun: #FF6A2B; --sun-deep: #E24E1B; --orange: #FF3D9A; --magenta: #FF3D9A; --pink: #FF6A2B;
-  --teal: #26E0C8; --teal-deep: #26E0C8; --grape: #B15CFF;
+  /* Same fill-token fix as Night Market: white on #26E0C8 measured 1.67:1. --grape carries
+     white on the "Any price" tier badge and measured 3.59:1, so it is deepened a shade too. */
+  --teal: #26E0C8; --teal-deep: #138375; --grape: #A13AFF;
+  --gold: #E0A100;
   --grad-sun: linear-gradient(135deg, #F0561A 0%, #FF3D9A 50%, #B15CFF 100%);
   --grad-teal: linear-gradient(135deg, #26E0C8 0%, #B15CFF 100%);
   --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
@@ -126,7 +166,8 @@ html[data-theme="dark"] {
   --cream: #0F1512; --bg: #0F1512; --card: #18211C; --line: #2B3A32;
   --ink: #F3ECDD; --ink-soft: #A6B2A6;
   --sun: #F2A44E; --sun-deep: #E07A33; --orange: #EC8340; --magenta: #E4795A; --pink: #E4795A;
-  --teal: #23A579; --teal-deep: #148A63; --grape: #7E6BA8;
+  --teal: #23A579; --teal-deep: #138560; --grape: #7E6BA8;   /* --teal-deep nudged: 4.33 -> 4.61 white */
+  --gold: #E0A100;
   --grad-sun: linear-gradient(135deg, #F2A44E 0%, #E4663B 100%);
   --grad-teal: linear-gradient(135deg, #23A579 0%, #148A63 100%);
   --sunburst: repeating-conic-gradient(from 0deg at 50% 0%,
@@ -703,7 +744,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   background: var(--card); color: var(--ink);
 }
 .talk-top-row .btn { flex: none; }
-.cat-title { font-size: var(--fs-h3); color: var(--magenta); margin: var(--sp-4) 0 var(--sp-2);
+.cat-title { font-size: var(--fs-h3); color: var(--head-accent, var(--magenta)); margin: var(--sp-4) 0 var(--sp-2);
   text-transform: uppercase; letter-spacing: 0.04em; }
 /* Talk T2: folded, ranked phrase categories — same visual pattern as Places' rank/collapse
    fold (.place-cat-group etc.), reused here under its own name for clarity in this section. */
@@ -793,7 +834,12 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .budget-proj.over { color: var(--magenta); }
 .budget-set { margin-top: var(--sp-3); }
 .budget-set summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
-.exp-cat-pick .chip.on { background: var(--sun); color: var(--ink); border-color: transparent; font-weight: 700; }
+/* --sun is a light fill on six of the seven skins, but --ink flips to a light cream on the dark
+   ones, so the active chip painted cream-on-amber at 1.37-2.37:1. A fixed dark ink is right for
+   every skin whose --sun is warm (5.97-10.02:1); Silk alone makes --sun a deep green, where
+   white is the readable choice (5.13:1). */
+.exp-cat-pick .chip.on { background: var(--sun); color: var(--badge-ink); border-color: transparent; font-weight: 700; }
+:root[data-skin="silk"] .exp-cat-pick .chip.on { color: #fff; }
 /* A custom category's chip in the picker itself: a select area + its own small ✕, so removing
    one never needs a second, separate "manage categories" list elsewhere on the screen. */
 .exp-cat-chip-custom { padding: 0; overflow: hidden; }
@@ -804,7 +850,10 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 /* Custom expense categories: the in-place "+ Add" text field inside expCatPicker (mirrors
    .id-tag's shape). */
 .exp-cat-new { font-family: inherit; font-size: var(--fs-sm); padding: 5px 10px; border: 1px solid var(--line); border-radius: var(--r-pill, 999px); background: var(--card); color: var(--ink); min-width: 0; width: 120px; }
-.exp-monthly-toggle { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--sp-2) 0; cursor: pointer; }
+/* min-height: the label is the tap target for the checkbox it wraps, and it measured 88x22 on
+   a 375px screen — under the 24px WCAG 2.5.8 minimum. The row is flex-centred, so the extra
+   two pixels go to the target and nothing moves visually. */
+.exp-monthly-toggle { display: flex; align-items: center; gap: 6px; min-height: 24px; font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--sp-2) 0; cursor: pointer; }
 .exp-monthly-toggle input { margin: 0; }
 /* Cash withdrawals: its own accent so the wheel reads as a distinct tool from the day-to-day
    category donut just above it, plus the 14-day spend sparkline. A fold nested inside this
@@ -910,7 +959,9 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .tier { font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
         padding: 3px var(--sp-2); border-radius: var(--r-pill); color: #fff; }
 .tier.low { background: var(--tier-low); }
-.tier.mid { background: var(--tier-mid); }
+/* White on --tier-mid (#E07A1F) measures 3.01:1 at this size; the same fill with --badge-ink
+   reaches 5.67:1, so the price band keeps its orange and the "$$" becomes readable. */
+.tier.mid { background: var(--tier-mid); color: var(--badge-ink); }
 .tier.high { background: var(--tier-high); }
 .tier.any { background: var(--grape); }
 .cats { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
@@ -977,7 +1028,10 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
   font-family: var(--font-ui, system-ui, sans-serif); }
 /* Cluster badge: shown when many pins would overlap at low zoom; tap to zoom into its members. */
 .mk-cluster { min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; border: 2px solid #fff;
-  background: var(--ink, #2b2b2b); box-shadow: 0 1px 5px rgba(0,0,0,0.5); color: #fff; font-weight: 800;
+  /* --ink is the dominant TEXT colour, so it is light on every dark skin: white-on-cream at
+     1.25:1 made this badge's count invisible on four of the seven skins. --cream is whatever
+     that skin's page colour is, so it is always the opposite of --ink (11.91-16.29:1). */
+  background: var(--ink, #2b2b2b); box-shadow: 0 1px 5px rgba(0,0,0,0.5); color: var(--cream, #fff); font-weight: 800;
   font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer;
   font-family: var(--font-ui, system-ui, sans-serif); }
 
@@ -1121,14 +1175,17 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
    status at a glance. Solid fills with white (or dark) text stay legible in light and dark. */
 .attr-tag { display: inline-block; font-size: var(--fs-label); font-weight: 800; color: #fff;
   border-radius: var(--r-pill); padding: 2px 8px; line-height: 1.35; white-space: nowrap; }
-.attr-tag.at-kids   { background: #d97706; }   /* amber — family */
+/* Four of these fills are too light to carry white text at 11px (measured against #fff:
+   at-kids 3.19, at-heat 3.68, at-cool 2.96, at-veg 3.30). They keep their hue — the hue is the
+   meaning — and take --badge-ink instead, which lifts them to 5.36 / 4.64 / 5.76 / 5.18. */
+.attr-tag.at-kids   { background: #d97706; color: var(--badge-ink); }   /* amber — family */
 .attr-tag.at-rain   { background: #2563eb; }   /* blue — good in the rain / indoor */
-.attr-tag.at-heat   { background: #0891b2; }   /* cyan — cool off from the heat */
-.attr-tag.at-cool   { background: #0ea5b7; }   /* teal — cool morning hours */
+.attr-tag.at-heat   { background: #0891b2; color: var(--badge-ink); }   /* cyan — cool off from the heat */
+.attr-tag.at-cool   { background: #0ea5b7; color: var(--badge-ink); }   /* teal — cool morning hours */
 .attr-tag.at-evening{ background: #6d28d9; }   /* violet — evening / sunset / nightlife */
 .attr-tag.at-market { background: #0f766e; }   /* deep teal — market on today */
 .attr-tag.at-open   { background: #15803d; }   /* green — open now */
-.attr-tag.at-veg    { background: #16a34a; }   /* green — veg/diet-friendly */
+.attr-tag.at-veg    { background: #16a34a; color: var(--badge-ink); }   /* green — veg/diet-friendly */
 .attr-tag.at-access { background: #7c3aed; }   /* purple — accessibility note */
 .attr-tag.at-stay   { background: #4f46e5; }   /* indigo — stay type / length */
 .attr-tag.at-info   { background: var(--teal-deep); }  /* neutral — budget/interest */
@@ -1236,7 +1293,9 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 
 .journey-wrap { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
 .journey-svg { width: 100%; max-width: 360px; background: var(--sunburst), var(--card); border-radius: var(--r-lg); }
-.stars-static { color: var(--sun-deep); font-size: 1.1rem; letter-spacing: 1px; }
+/* Was --sun-deep, which the Tropical skin redefines to a mid green (3.12:1 on its white card).
+   --gold is the rating colour used by .pqr-rating and .pqr-star and is theme-aware. */
+.stars-static { color: var(--gold, var(--sun-deep)); font-size: 1.1rem; letter-spacing: 1px; }
 .rating-block { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0; }
 .rev-link { font-size: var(--fs-sm); font-weight: 700; }
 .src-link { color: var(--teal-deep); text-decoration: underline; font-style: normal; }
@@ -1369,6 +1428,13 @@ html[data-theme="dark"] .fx-side .fx-out { color: var(--teal); }
 .map-toolbar { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .map-hint { font-size: var(--fs-sm); color: var(--ink-soft); margin: 0 0 var(--sp-2); }
 .maplibregl-ctrl-group { border-radius: var(--r-md) !important; }
+/* The attribution plate paints its own near-white background, so the link cannot inherit the
+   app's accent: --teal is a bright #2ED3B7 on some skins and measured 1.67-3.12:1 there. This
+   is required attribution — it has to be readable on every skin. */
+/* :root, not a bare class: `html[data-theme="dark"] a { color: var(--teal) }` further up is
+   more specific than a plain descendant selector and was still winning. */
+:root .maplibregl-ctrl-attrib a { color: #0B4F8A; }
+:root .maplibregl-ctrl-attrib, :root .maplibregl-ctrl-attrib-inner { color: #1F2328; }
 
 /* offline map search */
 .map-search-wrap { margin-bottom: var(--sp-2); }

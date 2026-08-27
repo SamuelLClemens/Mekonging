@@ -6,7 +6,7 @@
 // detail is intentionally omitted so the whole region ships in ~26 KB and never breaks.
 
 import { store, getMyStay } from './state.js';
-import { effectiveRating, RATING_BANDS, ratingColor } from './render-utils.js';
+import { effectiveRating, RATING_BANDS, ratingColor, inkOn } from './render-utils.js';
 import { allPlaces } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
 import { BORDER_LINES } from './data/borders_lines.js';
@@ -529,6 +529,9 @@ export async function initMap(containerEl, opts = {}) {
     const el = document.createElement('div');
     el.className = 'mk-numpin';
     el.style.background = color;
+    // The pin number sits directly on the category hue, and several of those are too light for
+    // white at 12px (market amber measures 2.27:1). See inkOn() in render-utils.js.
+    el.style.color = inkOn(color);
     el.textContent = num != null ? String(num) : '•';
     return el;
   }

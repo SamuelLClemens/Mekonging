@@ -186,7 +186,10 @@ export function placeBucket(p) {
 // Fixed hues (not CSS vars) so they read as an accent on both light and dark themes.
 export const CATEGORY_FAMILIES = [
   { key: 'culture',   label: 'Culture & history',   emoji: '🏛', color: '#8A5CC0' },
-  { key: 'nature',    label: 'Nature & outdoors',   emoji: '🌿', color: '#2E8B57' },
+  // #2E8B57 was the one hue in this palette that could carry neither white (4.25:1) nor dark
+  // (4.10:1) text at label size. Three channels deeper clears 4.5 with white and is not a
+  // visible change to the pin or the tag.
+  { key: 'nature',    label: 'Nature & outdoors',   emoji: '🌿', color: '#2C8453' },
   { key: 'beach',     label: 'Beaches & water',     emoji: '🏖', color: '#0EA5C4' },
   { key: 'food',      label: 'Food & drink',        emoji: '🍜', color: '#E8632A' },
   { key: 'market',    label: 'Markets & shopping',  emoji: '🛍', color: '#E0A100' },
@@ -297,15 +300,49 @@ export const PLACE_BUCKETS = [
 // legend) read as an accent on both light and dark themes.
 export const BUCKET_COLOR = {
   food: '#E8632A', market: '#E0A100', stay: '#2C7DA0', culture: '#8A5CC0',
-  nature: '#2E8B57', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',
+  nature: '#2C8453', nightlife: '#D6336C', rental: '#0F9D8C', other: '#8A8F98',   // nature: see CATEGORY_FAMILIES
 };
 
 export function bucketColor(p) { return BUCKET_COLOR[placeBucket(p)] || BUCKET_COLOR.other; }
 
 // A category chip coloured by its family, with the family name as a tooltip.
+// ---- LABEL COLOUR FOR A SOLID BADGE -----------------------------------------
+// These category hues are fixed on purpose (see CATEGORY_FAMILIES) and several of them are too
+// light to carry white text at label size — white on the market amber #E0A100 measures 2.27:1
+// against the 4.5:1 that 11px text needs. Changing the hues was the wrong answer: they are the
+// map legend's colour language and every pin uses them. So the FILL stays and the LABEL is
+// chosen from it, exactly as .tier.mid and the four light .attr-tag fills do in CSS.
+//
+// --badge-ink in style.css is the same value; keep the two in step.
+const BADGE_INK = '#241A10';
+const BADGE_INK_LUM = 0.0141;   // relative luminance of BADGE_INK, precomputed
+const _lumCache = new Map();
+function relLuminance(hex) {
+  let v = _lumCache.get(hex);
+  if (v !== undefined) return v;
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) { _lumCache.set(hex, 1); return 1; }
+  const n = parseInt(m[1], 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  v = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  _lumCache.set(hex, v);
+  return v;
+}
+// White or the dark badge ink — whichever contrasts more with this fill.
+export function inkOn(hex) {
+  const l = relLuminance(hex);
+  const white = 1.05 / (l + 0.05);
+  const dark = (Math.max(l, BADGE_INK_LUM) + 0.05) / (Math.min(l, BADGE_INK_LUM) + 0.05);
+  return dark > white ? BADGE_INK : '#fff';
+}
+
 export function catTag(cat, label) {
   const fam = catFamily(cat);
-  return h('span', { class: 'cat-tag', style: `background:${FAMILY_COLOR[fam]}`, title: FAMILY_META[fam].label }, label || cat);
+  const bg = FAMILY_COLOR[fam];
+  return h('span', { class: 'cat-tag', style: `background:${bg};color:${inkOn(bg)}`, title: FAMILY_META[fam].label }, label || cat);
 }
 
 // ---- MARKETS: day-of-week awareness -----------------------------------------

@@ -30,7 +30,7 @@ import {
 } from '../util.js';
 import {
   haversineKm, distanceChip, withinNear, withinDayTrip, attrTag, starsStr, isMarket, isBeach,
-  placeBucket, FAMILY_META, catColor, catTag, tierColor, swatch, citySlug, PRICE_TIER_LABEL,
+  placeBucket, FAMILY_META, catColor, catTag, tierColor, swatch, citySlug, PRICE_TIER_LABEL, inkOn,
   tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, marketOpenDays, personalScore,
   CATEGORY_FAMILIES, photoBlock, seaAgo, airBlock, uvTodayBlock, extUrl, sourcesNote,
   fmtTemp, fmtWind,
@@ -460,7 +460,9 @@ export function placesScreen(arg) {
   const toolsCard = h('div', {}, [
     h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px' }, [
       measureBtnP,
-      h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
+      // min-height 24px: the label is the checkbox's tap target and measured 149x21 on a 375px
+      // screen, under the WCAG 2.5.8 minimum. See .exp-monthly-toggle in style.css for the twin.
+      h('label', { style: 'display:flex;align-items:center;gap:6px;min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
       wakeBtnP,
     ]),
     measureOutP,
@@ -1006,7 +1008,9 @@ function colorKeyCard() {
   const wrap = h('div', { class: 'color-key' });
   wrap.append(h('div', { class: 'muted', style: 'margin:2px 0 4px' }, 'Category colours'));
   wrap.append(h('div', { class: 'cats' }, CATEGORY_FAMILIES.filter((f) => f.key !== 'other').map((f) =>
-    h('span', { class: 'cat-tag', style: `background:${f.color}`, title: f.label }, `${f.emoji} ${f.label}`))));
+    // The colour key repeats the family fills, so it needs the same readable label colour
+    // catTag() applies — white on the market amber measured 2.27:1 here.
+    h('span', { class: 'cat-tag', style: `background:${f.color};color:${inkOn(f.color)}`, title: f.label }, `${f.emoji} ${f.label}`))));
   wrap.append(h('div', { class: 'muted', style: 'margin:10px 0 4px' }, 'Price'));
   wrap.append(h('div', { class: 'cats' }, [['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['any', PRICE_TIER_LABEL.any]].map(([t, l]) =>
     h('span', { class: `tier ${t}` }, l))));
@@ -1117,7 +1121,8 @@ function placeQuickRow(p, num, compareCtl) {
   }, compareCtl.has(p.id) ? '☑' : '☐') : null;
   const summary = h('summary', { class: 'pqr-summary' }, [
     compareTick,
-    num != null ? h('span', { class: 'pqr-num', style: `background:${accent}` }, String(num)) : null,
+    // Same category hues as the map pins, so the number takes the readable label colour too.
+    num != null ? h('span', { class: 'pqr-num', style: `background:${accent};color:${inkOn(accent)}` }, String(num)) : null,
     h('div', { class: 'pqr-main' }, [
       h('div', { class: 'pqr-name' }, `${p.isPin ? '📌 ' : ''}${p.name}`),
       meta,
@@ -1811,7 +1816,7 @@ function localSecretsCard(p) {
     });
   }
   drawSecrets();
-  const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '400', placeholder: 'A hidden gem, a shortcut, a heads-up…' });
+  const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '400', placeholder: 'A hidden gem, a shortcut, a heads-up…', 'aria-label': 'Add a local secret about this place' });
   card.append(h('div', { class: 'secret-add' }, [
     h('label', { class: 'secret-cta' }, '✨ Spotted something new? Add to the collective wisdom'),
     ta,
@@ -1985,7 +1990,7 @@ function yourLayer(p) {
   const { thumbs, renderThumbs } = placePhotoThumbs(p.id);
   card.append(h('div', { class: 'field' }, [h('label', {}, 'Your photos'), placePhotoControls(p.id, thumbs, renderThumbs)]));
 
-  const note = h('textarea', { class: 'ta', placeholder: 'Private notes — directions, what to order, who you met…' });
+  const note = h('textarea', { class: 'ta', placeholder: 'Private notes — directions, what to order, who you met…', 'aria-label': 'Your private notes on this place' });
   note.value = d.note || '';
   note.addEventListener('change', () => setPlaceField(p.id, 'note', note.value));
   card.append(h('div', { class: 'field' }, [h('label', {}, 'Private note'), note]));
@@ -1996,7 +2001,7 @@ function yourLayer(p) {
       h('p', {}, [p.blurb, p.whyItFits].filter(Boolean).join(' ')),
     ]));
   }
-  const yourRev = h('textarea', { class: 'ta', placeholder: 'Your own take — kept separately from the guidebook…' });
+  const yourRev = h('textarea', { class: 'ta', placeholder: 'Your own take — kept separately from the guidebook…', 'aria-label': 'Your own review of this place' });
   yourRev.value = d.review || '';
   yourRev.addEventListener('change', () => setPlaceField(p.id, 'review', yourRev.value));
   card.append(h('div', { class: 'review-yours' }, [h('span', { class: 'rlabel' }, 'Your take'), yourRev]));
