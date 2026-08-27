@@ -173,21 +173,46 @@ FOUR DECISIONS TAKEN (do not relitigate without the user):
      source for crowds or price shows the weather line alone, and the UI must render that
      gracefully rather than leaving a gap.
 
-- [ ] **10.1** SLICE 1 — city month tier, plus sort and filter. Parse the 62 `bestTime` sentences
-  in `js/data/history.js` into `bestM`/`avoidM` per city, exactly as Priority 9 did for the 19
-  zones — DONE. `scripts/check-zone-months.py` generalised and renamed to `check-month-arrays.py`,
-  now checking both files under the identical asymmetric rule; negative-tested in four distinct
-  failure modes. `js/data/month-verdict.js` holds the verdict function shared by all three tiers
-  (named `verdictFor`, not `monthVerdict` — that name is reserved by `check-lazy-data.py`'s
-  lexical gate on the zones module, caught by running the guard rather than by inspection).
-  `placeWhen(place, month, zone)` in `render-utils.js` resolves place override → city → region
-  (region only when a caller supplies the zone object, since resolving it needs main.js's
-  province-geometry lookup, a dependency this eagerly-loaded module must not carry). Ordering and
-  the opt-in "hide poor months" toggle are wired into the Places list (city/place precision, 81%
-  reach, no region fallback — documented, not silent) and the verdict now leads the existing
-  bestTime line on the country hub and the place-detail page. STILL OPEN: the hand-reviewed
-  place-tier overrides for the subset of the 179 candidate records that genuinely speak to
-  VISITING (`js/data/place-months.js`, seeded empty), and browser verification.
+- [x] **10.1** DONE, verified 2026-08-27. SLICE 1 — city month tier, plus sort and filter. Parsed
+  the 62 `bestTime` sentences in `js/data/history.js` into `bestM`/`avoidM` per city, exactly as
+  Priority 9 did for the 19 zones. `scripts/check-zone-months.py` generalised and renamed to
+  `check-month-arrays.py`, now checking all THREE tiers under the identical asymmetric rule;
+  negative-tested in five distinct failure modes across the session (unsupported month injection
+  at each of the region/city/place tiers, missing arrays, a wraparound-boundary injection), every
+  source file confirmed byte-identical to its pre-test state afterward. `js/data/month-verdict.js`
+  holds the verdict function shared by all three tiers (named `verdictFor`, not `monthVerdict` —
+  that name is reserved by `check-lazy-data.py`'s lexical gate on the zones module; a first attempt
+  using the reserved name falsely dragged the Places screen into that gate, caught by running the
+  guard rather than by inspection). `placeWhen(place, month, zone)` in `render-utils.js` resolves
+  place override → city → region (region only when a caller supplies the zone object, since
+  resolving it needs main.js's province-geometry lookup, a dependency this eagerly-loaded module
+  must not carry). Ordering and the opt-in "hide poor months" toggle are wired into the Places list
+  (city/place precision, 81% reach, no region fallback — documented, not silent) and the verdict
+  now leads the existing bestTime line on the country hub and the place-detail page.
+
+  Place-tier overrides (`js/data/place-months.js`): reviewed all 179 candidates, curated **52**
+  that survive the bar (the record's own prose must state, in its own words, that some months are
+  genuinely better or worse TO VISIT — not a harvest, not a hotel rate, not a restatement of the
+  city's own bestTime). `avoidM` reserved for explicit warning language throughout, applied
+  consistently after catching three entries that initially leaned looser. Every entry machine-
+  verified before being written (real id, every month named by its own quote) — caught and fixed
+  four real gaps this way, two quote-trimming errors and two genuine over-claims.
+
+  Verified live in the browser, not just by the checker: place-detail verdict line (Phong Nha →
+  "✓ Good time to visit — August", Similan Islands' own place-tier override correctly outranking
+  Khao Lak's city tier → "✗ Poor time to visit"), Places-list sort (September correctly floats the
+  Northern Highlands to the top of "Further afield" — Ma Pi Leng Pass, Sapa, Nho Que — matching the
+  region-tier answer from Priority 9 at place granularity), the hide-poor-months toggle (189→174
+  places for Vietnam in October, cross-checked analytically: exactly Hoi An's 15 places, its city
+  tier's only October-avoid case), the country-hub verdict badge, and no horizontal overflow or
+  console errors at 375px. One real bug found and fixed along the way, not in this feature's own
+  code: unregistering a Service Worker does not stop it controlling an already-open tab (Chrome
+  behaviour) — closing and reopening the tab is required, not just `unregister()` + reload; folded
+  into `[[mekong-preview-reload-gotcha]]`.
+
+  CORRECTION mid-slice: the place-record count first measured for this priority (696) was wrong —
+  see the dedicated entry above. Recomputing with the authoritative count also corrected the
+  reach figures (81%, not 83%) and the per-city counts cited in 10.4 below.
 
 - [ ] **10.2** SLICE 2 — the crowds and price axes. Add month-structured `crowds` and `prices`
   alongside `bestTime` at city level, each with a real source. Render as three separate lines,
