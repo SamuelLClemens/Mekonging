@@ -214,10 +214,46 @@ FOUR DECISIONS TAKEN (do not relitigate without the user):
   see the dedicated entry above. Recomputing with the authoritative count also corrected the
   reach figures (81%, not 83%) and the per-city counts cited in 10.4 below.
 
-- [ ] **10.2** SLICE 2 — the crowds and price axes. Add month-structured `crowds` and `prices`
-  alongside `bestTime` at city level, each with a real source. Render as three separate lines,
-  never merged. Sort stays on weather; crowds and price are informational, with their own opt-in
-  filters only if the coverage earns them. Cities without a source show weather alone.
+- [x] **10.2** DONE, verified 2026-08-27, RE-SCOPED from the plan against what the sourcing
+  actually supports. The plan called for `crowds`/`prices` at all 62 cities; research (Wikivoyage
+  for all four countries, then pushed further per the user's explicit instruction) found the
+  general Nov–Feb/Mar high-season pattern well-sourced at COUNTRY level everywhere, but city-level
+  crowds/price detail genuinely thin — Wikivoyage's own Siem Reap and Luang Prabang pages say
+  nothing about monthly crowds or price at all. Rather than force 62 entries onto sourcing that
+  does not exist, or drop to a lower citation bar than the rest of this file, shipped what the
+  evidence actually supports:
+
+  - **4 country-level entries** (`HISTORY.countries[cc].crowds` / `.prices`), each cited: Thailand
+    (Tourism Authority of Thailand figures via Khaosod English — January 2025 was the single
+    busiest month, declining to a May–September low — plus Wikivoyage), Vietnam (Tet closures and
+    the transport crush beforehand, Wikivoyage; the 2–3x Tet price surge, Vietcetera), Cambodia
+    (Nov–Mar high season and the Chinese New Year price/booking surge, Wikivoyage), Laos (Nov–Feb
+    high season, Wikivoyage — no distinct PRICE source found, so `prices` is absent rather than
+    invented, the same "no source, no claim" rule `bestM`/`avoidM` already hold to).
+  - **4 city-level overrides**, each distinctly and more precisely sourced than its country:
+    Bangkok and Chiang Mai (`prices` — Songkran, 13–15 April, historically the priciest week of
+    the year, Bangkok Post), Siem Reap (`crowds` — Angkor Enterprise's own 2025 ticket-sales
+    figures, computed from cumulative reports in the Phnom Penh Post/Cambodianess/Khmer Times:
+    ~133,000 visitors/month Jan–Mar, a directly-reported September low of 35,650, climbing again
+    into the Dec–Jan peak), Luang Prabang (`crowds` — over 1.7 million visitors in the first ten
+    months of 2024 alone, tourismlaos.org).
+  - City override wins over country; a country/city with no distinct PRICE fact shows crowds
+    alone. Rendered in `seasonalFitSection` (main.js) as two further lines below the existing
+    weather verdict, each with its own `sourcesNote()` — real, clickable citations, not folded
+    into the plain prose lines the weather axis uses, because these are recent stats worth
+    letting a traveller click through to verify.
+  - No month-array structuring and no sort/filter for crowds/price in this pass — the plan's own
+    condition ("their own opt-in filters only if the coverage earns them") is not met by 8 sourced
+    facts out of 66 possible country+city slots; forcing filter machinery onto that coverage would
+    overstate what is actually known.
+
+  Verified live: Siem Reap correctly shows its own Angkor figures rather than Cambodia's general
+  line; Vientiane (no city override, Laos has no price fact) shows crowds only, zero price line;
+  Bangkok shows the country crowds line plus its own Songkran price override. No console errors,
+  no horizontal overflow at 375px. Two copy-consistency fixes caught before shipping: this file's
+  new prose used a plain ASCII `--` where the app's existing copy uses a real em dash throughout,
+  and a numeric day range ("13-15 April") that should have matched the file's own en-dash
+  convention for day ranges (confirmed against `events.*.js`) — both fixed and re-verified.
 
 - [ ] **10.3** SLICE 3 — city profiles for the 80 blanks. Cities that own place records but have
   no `history.js` entry: name, blurb, knownFor, bestTime, and crowds/price where sourced. Largest
