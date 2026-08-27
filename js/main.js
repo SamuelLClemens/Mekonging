@@ -122,7 +122,7 @@ import {
   suggestPlans,
   PRODUCE, PRODUCE_CATEGORIES, produceByCategory, getProduce,
   VISA, getVisa,
-  zonesFor, getZone, zoneForProvince,
+  zonesFor, getZone, zoneForProvince, monthVerdict, zonesByMonth,
   CROSSINGS,
   bestForCountry, getBestList,
   ACCESSIBILITY, getAccessibility,
@@ -480,7 +480,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.464.0';
+const APP_VERSION = 'mk-v0.465.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3331,26 +3331,77 @@ function zonesMap(cc, opts = {}) {
   return box;
 }
 
+// The month a traveller is asking about on the region chooser. 0 means "follow today", which
+// is the state a fresh load starts in; picking a month pins it for the session only, because
+// this is a browsing filter and not a preference worth persisting.
+let zoneMonth = 0;
+
+// The verdict as a traveller reads it, plus the sentence that justifies it. The sentence is
+// not optional: js/data/zones.js only puts a month in bestM/avoidM when its prose recommends
+// or warns, so "mixed" and "shoulder" BOTH mean "read the sentence" — a bare badge would be
+// the one thing worse than no badge, because Vietnam's Central Coast in September is a
+// typhoon shoreline and a perfectly pleasant highland in the same breath.
+function zoneWhenLine(z, verdict, monthName) {
+  if (verdict === 'best') return { label: `✓ Good in ${monthName}`, cls: 'is-best', why: z.bestMonths };
+  if (verdict === 'avoid') return { label: `✗ Poor in ${monthName}`, cls: 'is-avoid', why: z.avoidMonths };
+  if (verdict === 'mixed') {
+    return { label: `± Depends where in ${monthName}`, cls: 'is-mixed', why: `${z.bestMonths} · Avoid: ${z.avoidMonths}` };
+  }
+  return { label: '· Shoulder month', cls: 'is-shoulder', why: `Best months: ${z.bestMonths}` };
+}
+
 // The region chooser used on Explore: one row per region with its own facts, live town and
 // place counts, so a traveller can see where the depth actually is before tapping in.
+//
+// It also answers the question travellers actually ask first — not "when is the Northern
+// Highlands good?" but "it is September, where should I go?". The month strip re-sorts the
+// regions by that month's verdict (see monthVerdict() in js/data/zones.js) and prints the
+// region's own season sentence under each one, so the ordering is always shown its working.
 function zonePickList(cc) {
   const zones = zonesFor(cc);
   if (!zones.length) return null;
+  const nowM = new Date().getMonth() + 1;
+  const m = zoneMonth || nowM;
+  const monthName = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'long' });
+  const monthShort = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'short' });
+
+  const wrap = h('div', { class: 'zone-when-wrap' });
+  wrap.append(h('h3', { class: 'zone-when-head' },
+    zoneMonth ? `Where to go in ${monthName(m)}` : `Where to go this month · ${monthName(m)}`));
+  const strip = h('div', { class: 'chips month-strip', role: 'group', 'aria-label': 'Choose a month' });
+  for (let i = 1; i <= 12; i++) {
+    strip.append(h('button', {
+      // aria-pressed carries BOTH the state and the styling here: .chip[aria-pressed="true"]
+      // is the app's existing selected-chip rule, so there is no second visual convention.
+      class: 'chip',
+      'aria-pressed': String(i === m),
+      onclick: () => { zoneMonth = (zoneMonth === i) ? 0 : i; render(); },
+    }, monthShort(i) + (i === nowM ? ' •' : '')));
+  }
+  wrap.append(strip);
+  if (zoneMonth) {
+    wrap.append(h('button', { class: 'chip ghost', style: 'margin-top:6px', onclick: () => { zoneMonth = 0; render(); } }, '↺ Back to this month'));
+  }
+
   const list = h('div', { class: 'zone-list' });
-  zones.forEach((z) => {
+  zonesByMonth(cc, m).forEach(({ zone: z, verdict }) => {
     const n = placesInZone(cc, z.id).length;
     const towns = townsInZone(cc, z.id).length;
+    const when = zoneWhenLine(z, verdict, monthName(m));
     list.append(h('button', { class: 'zone-row', onclick: () => go(`#region-${cc}-${z.id}`) }, [
       h('span', { class: 'zone-emoji' }, z.emoji || '📍'),
       h('span', { class: 'zone-text' }, [
         h('span', { class: 'zone-name' }, z.name),
+        h('span', { class: `zone-when ${when.cls}` }, when.label),
         h('span', { class: 'zone-tag' }, z.tagline),
+        when.why ? h('span', { class: 'zone-why muted' }, when.why) : null,
         h('span', { class: 'zone-count muted' }, `${towns} town${towns === 1 ? '' : 's'} · ${n} place${n === 1 ? '' : 's'}`),
       ]),
       h('span', { class: 'zone-go' }, '›'),
     ]));
   });
-  return list;
+  wrap.append(list);
+  return wrap;
 }
 
 // The region's facts as a compact definition grid — deliberately terse rows, not prose, so
@@ -3368,6 +3419,15 @@ function zoneFactsCard(z) {
   ].filter(([, v]) => v);
   const card = h('div', { class: 'card zone-facts' }, [h('h2', { style: 'margin-top:0' }, `${z.emoji || '📍'} ${z.name}`)]);
   card.append(h('p', { class: 'zone-lead' }, z.tagline));
+  // Lead with the verdict for the month in hand. The two prose rows are still in the grid
+  // below, which is what makes this honest: "Depends where" is a pointer to the sentence, not
+  // a substitute for it. Follows the same pinned month as the region chooser, so a traveller
+  // planning September does not have to re-pick it on every region they open.
+  const vm = zoneMonth || (new Date().getMonth() + 1);
+  const verdict = monthVerdict(z, vm);
+  const vName = new Date(2020, vm - 1, 1).toLocaleDateString(dateLocale(), { month: 'long' });
+  const vLine = zoneWhenLine(z, verdict, vName);
+  card.append(h('p', { class: `zone-when ${vLine.cls}`, style: 'margin:0 0 6px' }, vLine.label));
   const dl = h('dl', { class: 'zone-dl' });
   rows.forEach(([k, v]) => { dl.append(h('dt', {}, k), h('dd', {}, v)); });
   card.append(dl);
