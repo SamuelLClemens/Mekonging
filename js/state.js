@@ -227,15 +227,32 @@ function parseStore(k) {
 // counting bug here is a real data-loss risk, not just a display nit: if the live store's
 // only real content lived in a field this function did not check, ensureDurability() would
 // read `false` and could silently replace the live store with a stale mirror snapshot on
-// the very next boot. Audited to cover every user-generated field in defaults() above —
-// previously missed trip.stops/placeVisits/withdrawals, myStay, savedAreas, all of social,
-// album photos, board posts, and the personal calendar, none of which are reproducible if
-// wrongly discarded.
+// the very next boot. Top-level fields were the first gap: trip.stops/placeVisits/
+// withdrawals, myStay, savedAreas, all of social, album photos, board posts and the
+// personal calendar all went unchecked once, and none of them are reproducible if wrongly
+// discarded.
+//
+// PROFILE-NESTED CONTENT COUNTS TOO, and was the second gap. Most of `profile` is settings
+// (theme, currency, netMode) which ARE reproducible, so the whole branch reads as one worth
+// skipping — but real content hides in there: profile.visits.cells (the #visitors map,
+// accumulated one app-open at a time and unrecoverable once dropped), prefs.doneSpots,
+// prefs.idPins, prefs.phrasePins, prefs.customPhrases. Treat that as the CURRENT audit, not
+// a closed one: anything new under profile that the traveller AUTHORS rather than configures
+// belongs here, and prefs.phraseNotes is a known un-counted candidate.
+//
+// Watch the shapes when adding more. Empty containers are created by mere navigation —
+// visits.js bucket() writes `cells: {}` the first time any visits helper runs, and
+// phrasebook.js phrasePinsFor()/customPhrasesFor() write `map[lang] = []` just for opening a
+// language — so presence proves nothing. Count the contents instead: Object.keys() on the
+// cell map, and .some(len) across the per-language maps (the boardPosts pattern), never
+// Object.keys() on those maps themselves.
 function hasUserData(s) {
   if (!s || typeof s !== 'object') return false;
   const trip = s.trip || {};
   const social = s.social || {};
   const personal = s.personal || {};
+  const profile = s.profile || {};
+  const prefs = profile.prefs || {};
   const j = s.journal && Array.isArray(s.journal.entries) && s.journal.entries.length;
   const b = Array.isArray(trip.budgetLog) && trip.budgetLog.length;
   const stops = Array.isArray(trip.stops) && trip.stops.length;
@@ -258,8 +275,22 @@ function hasUserData(s) {
   const per = (Array.isArray(personal.partners) && personal.partners.length)
     || (personal.days && typeof personal.days === 'object' && Object.keys(personal.days).length)
     || personal.pregnancy;
+  // The visit-cell map behind #visitors. Not in defaults(), so it arrives verbatim through
+  // migrate()'s profile spread and can be any shape; bucket() also creates it empty, hence
+  // the key count rather than a presence test.
+  const cells = profile.visits && typeof profile.visits === 'object'
+    && profile.visits.cells && typeof profile.visits.cells === 'object'
+    && Object.keys(profile.visits.cells).length;
+  const done = Array.isArray(prefs.doneSpots) && prefs.doneSpots.length;
+  const idp = Array.isArray(prefs.idPins) && prefs.idPins.length;
+  // Per-language maps: an empty array under a language is just "opened the phrasebook".
+  const phr = prefs.phrasePins && typeof prefs.phrasePins === 'object'
+    && Object.values(prefs.phrasePins).some((arr) => Array.isArray(arr) && arr.length);
+  const cust = prefs.customPhrases && typeof prefs.customPhrases === 'object'
+    && Object.values(prefs.customPhrases).some((arr) => Array.isArray(arr) && arr.length);
   return !!(j || b || stops || visits || wd || c || p || col || pd || f
-    || stay || areas || contacts || threads || listings || album || board || per || journeys);
+    || stay || areas || contacts || threads || listings || album || board || per || journeys
+    || cells || done || idp || phr || cust);
 }
 
 function load() {
