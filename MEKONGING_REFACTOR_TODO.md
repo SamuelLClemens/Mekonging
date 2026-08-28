@@ -255,11 +255,56 @@ FOUR DECISIONS TAKEN (do not relitigate without the user):
   and a numeric day range ("13-15 April") that should have matched the file's own en-dash
   convention for day ranges (confirmed against `events.*.js`) — both fixed and re-verified.
 
-- [ ] **10.3** SLICE 3 — city profiles for the 80 blanks. Cities that own place records but have
-  no `history.js` entry: name, blurb, knownFor, bestTime, and crowds/price where sourced. Largest
-  by places affected: Koh Kong 10, Koh Samui 9, Soppong 8, Pattaya 7, Paksong 7, Hua Hin 6, Khun
-  Yuam 6, Mae Sariang 6. Raises month coverage from 81% toward 100% and fills city cards that
-  render thin.
+- [x] **10.3** DONE, verified 2026-08-28. SLICE 3 — city profiles for all 80 blanks. Every city
+  that owned a place record but had no `history.js` entry now has one: **142 of 142 cities
+  structured** (up from 62), all name/blurb/knownFor, 137 of the 142 also carrying `bestTime` +
+  `bestM`/`avoidM`.
+
+  Researched via Wikivoyage/Wikipedia/official tourism sources (Tourism Authority of Thailand,
+  tourismlaos.org) and reputable travel guides, one country at a time, each entry checked against
+  the same asymmetric month-array rule the original 62 are held to (`scripts/check-month-arrays.py`
+  — every array month must be named by that city's own `bestTime` sentence; `avoidM` reserved for
+  explicit warning language). Mid-slice, re-examined the original 62 cities' own convention and
+  found it more generous than the brief first assumed: EVERY existing city carries a `bestTime`
+  even when it is just the country's own plain dry season restated (Chiang Rai's "November to
+  February, cool and dry" claims nothing unique to Chiang Rai) — coverage, not novelty, is the
+  standard. Corrected course to match: a real, true seasonal fact is included even when unoriginal,
+  and omitted only for a genuine transit/administrative entry with no on-site weather-gated
+  activity of its own — **5 of 142** qualify (`th-surat-thani`, `vi-lao-cai`, `vi-ba-ria-vung-tau`,
+  `kh-skun`, `la-nakasang`), each a pure gateway/waypoint role, not a coverage gap.
+
+  Two things surfaced in passing and handled rather than filed away:
+  - The Anlong Cheuteal Mekong-dolphin pool (Don Khon/Preah Rumkel, the Laos-Cambodia border):
+    cross-checked current conservation status instead of trusting older travel copy. That
+    population is correctly described as functionally extinct (last individual died February
+    2022) in both new entries — checked against the EXISTING place record
+    (`la-ext-anlong-cheuteal-dolphin-pool`), which already said the same, so no inconsistency and
+    no follow-up needed, just confirmation the new prose does not regress an already-correct fact.
+  - Cambodia's separate Kratie-Stung Treng dolphin population is NOT in the same state — it is
+    recovering (a National Geographic-reported 20-year high in 2024/25) — reflected accordingly in
+    `kh-sambor` rather than conflating the two populations into one dolphin story.
+
+  Verified live on production (mk-v0.468.0): fetched the deployed `history.js` directly and
+  confirmed the new entries are actually served (not a stale-cache false positive). Checked two
+  places with no place-tier override of their own, so each had to fall through to its new CITY
+  entry to show anything at all: "Scooter rental, Koh Samui" rendered `zone-when is-best` / "✓
+  Good time to visit — August" with the attribution "Koh Samui: Roughly January to September..."
+  — the exact new `bestTime` prose, live, end-to-end. "Peam Krasop Mangrove Sanctuary" (Koh Kong)
+  correctly rendered NO badge in August, because Koh Kong's new `bestM` (November-April) does not
+  include August — confirmed as designed behavior (`placeScreen` is deliberately silent on
+  'shoulder', not just when a tier is missing), not a defect, by reading the render condition in
+  `js/screens/places.js` rather than assuming. Tatai Waterfall's own place-tier override (from
+  Slice 1, unrelated to this slice) still correctly outranks Koh Kong's new city entry. No console
+  errors, no horizontal overflow at 375px.
+
+  Deployed via `feat/blank-city-profiles`, merged into `feat/scaffold-bangkok-slice` (matching
+  10.1/10.2's branch pattern), full guard suite green: `check-month-arrays.py`,
+  `check-lazy-data.py`, `check-imports.py`, `check-preloads.py`, `check-ui-strings.py`,
+  `check-place-fields.py`, `check-cache-version.py --base feat/scaffold-bangkok-slice`.
+
+  Not done in this slice: `crowds`/`prices` fields for the 80 (Slice 2's own condition — cite or
+  omit — applies here too, and city-specific crowd/price sourcing for these 80 was not chased;
+  none were added rather than guessed).
 
 - [ ] **10.4** SLICE 4 — genuinely thin Vietnam towns, and the typography pass. RE-SCOPED
   2026-08-27 against the corrected count (see the 696→808 correction above): Hoi An (15), Da Nang
