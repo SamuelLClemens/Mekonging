@@ -412,6 +412,255 @@ export const HISTORY = {
       "bestTime": "November to April; the Similan Islands are typically open mid-October to mid-May.",
       "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
+    "th-ratchaburi": {
+      "name": "Ratchaburi",
+      "blurb": "A largely agricultural province southwest of Bangkok, Ratchaburi is best known to travellers as the home of Damnoen Saduak, Thailand's most famous floating market, where vendors sell fruit, noodles and souvenirs from paddleboats along a network of canals dug in the 1860s.",
+      "knownFor": [
+        "Damnoen Saduak Floating Market",
+        "canal-boat vendors",
+        "day trip from Bangkok"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-samut-songkhram": {
+      "name": "Samut Songkhram",
+      "blurb": "Thailand's smallest province by area, on the Gulf coast southwest of Bangkok, Samut Songkhram is best known for the Maeklong Railway Market, nicknamed \"Talad Rom Hup\" (the umbrella-pulldown market): stallholders fold back their awnings and produce several times a day as a train rolls directly through the middle of the market along the platform.",
+      "knownFor": [
+        "Maeklong Railway Market",
+        "market stalls that fold back for the train",
+        "Mae Klong River"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-amphawa": {
+      "name": "Amphawa",
+      "blurb": "A canal-side town in Samut Songkhram province, Amphawa is best known for its weekend floating market, busiest on Friday, Saturday and Sunday evenings, and for long-tail boat tours after dark to watch fireflies light up the mangroves along the Mae Klong River.",
+      "knownFor": [
+        "Amphawa Floating Market",
+        "weekend evening market",
+        "firefly boat tours"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-nakhon-ratchasima": {
+      "name": "Nakhon Ratchasima",
+      "blurb": "Known locally as Khorat, Thailand's second-largest province is a gateway to Isan (the northeast) and home to Phimai Historical Park, the largest ancient Khmer temple complex in Thailand, parts of which predate Angkor Wat. Every November the Phimai Festival fills the site with long-boat races on the Mun River and an evening sound-and-light show.",
+      "knownFor": [
+        "Phimai Historical Park",
+        "Khmer temple ruins",
+        "Phimai Festival (November)",
+        "gateway to Isan",
+        "Khao Yai National Park (partly in this province)"
+      ],
+      "bestTime": "Cool season aside, the Phimai Festival in early-to-mid November is the single best time to come, with long-boat races and an evening sound-and-light show at the temple.",
+      "bestM": [11], "avoidM": []
+    },
+    "th-loei": {
+      "name": "Loei",
+      "blurb": "A mountainous, relatively cool province in Thailand's far north-east near the Laos border, Loei is best known for Phu Kradueng National Park, a table-top mountain reached by a steep half-day trek to a plateau of pine forest, cliffs and campsites.",
+      "knownFor": [
+        "Phu Kradueng National Park",
+        "mountain trekking and camping",
+        "cool-season temperatures"
+      ],
+      "bestTime": "Phu Kradueng is open only October to May; the park closes completely June to September each year, both for the rainy season and to let the plateau recover.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4, 5], "avoidM": [6, 7, 8, 9]
+    },
+    "th-phetchaburi": {
+      "name": "Phetchaburi",
+      "blurb": "An old royal town on the Gulf coast south of Bangkok, Phetchaburi is known for hilltop and cave temples and as the gateway to Kaeng Krachan National Park, Thailand's largest national park, where a \"sea of mist\" spreads below the Phanoen Thung viewpoint on cool-season mornings.",
+      "knownFor": [
+        "Kaeng Krachan National Park",
+        "Phanoen Thung sea-of-mist viewpoint",
+        "hilltop and cave temples",
+        "birdwatching"
+      ],
+      "bestTime": "November to February for the sea-of-mist views at Phanoen Thung; the upper park (Ban Krang and Phanoen Thung) closes to overnight visitors from August to October each year for the wet season.",
+      "bestM": [11, 12, 1, 2], "avoidM": [8, 9, 10]
+    },
+    "th-surat-thani": {
+      "name": "Surat Thani",
+      "blurb": "A transport hub on Thailand's Gulf coast, Surat Thani town itself draws few visitors but is the main gateway by rail, road and ferry to Koh Samui, Koh Phangan and Koh Tao, and to the rainforest and lake of Khao Sok National Park inland.",
+      "knownFor": [
+        "ferry gateway to the Gulf islands",
+        "train and bus hub",
+        "Khao Sok National Park (inland)"
+      ]
+    },
+    "th-satun": {
+      "name": "Satun",
+      "blurb": "Thailand's southwesternmost province, on the Andaman coast near the Malaysian border, Satun is the gateway to Koh Lipe, a small coral-fringed island inside Tarutao National Marine Park known for clear water and reef snorkelling.",
+      "knownFor": [
+        "Koh Lipe",
+        "Tarutao National Marine Park",
+        "coral reefs and snorkelling",
+        "Malaysia border crossing"
+      ],
+      "bestTime": "November to April, when the sea is calm; most resorts and the ferry to Koh Lipe close for the monsoon, roughly mid-May to mid-October, and Tarutao National Park's own closure runs to mid-November.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": [5, 6, 7, 8, 9, 10]
+    },
+    "th-phang-nga-bay": {
+      "name": "Phang Nga Bay",
+      "blurb": "A bay of limestone karst islands and mangrove channels between Phuket and Krabi, Phang Nga Bay is known for Ko Tapu (\"James Bond Island\") and long-tail boat and sea-canoe trips through its hongs (hidden lagoons). Koh Yao Noi, a quiet, largely undeveloped island inside the bay, is a base for slower island-hopping and cycling away from Phuket's crowds.",
+      "knownFor": [
+        "James Bond Island (Ko Tapu)",
+        "limestone karsts",
+        "hong sea-canoe tours",
+        "Koh Yao Noi"
+      ],
+      "bestTime": "November to April, driest and calmest for boat trips; some trips are cancelled in the roughest weather, September and October.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": [9, 10]
+    },
+    "th-rayong": {
+      "name": "Rayong",
+      "blurb": "An industrial and agricultural province on the eastern Gulf coast, Rayong is best known to travellers as the mainland departure point for Koh Samet, a small national-park island with some of the closest white-sand beaches to Bangkok.",
+      "knownFor": [
+        "Koh Samet",
+        "Ban Phe ferry pier",
+        "durian and seafood"
+      ],
+      "bestTime": "November to February, when it's driest and coolest; rain is heaviest from July to October.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-koh-samui": {
+      "name": "Koh Samui",
+      "blurb": "Long known as \"Coconut Island\" for its plantations, Koh Samui is Thailand's third-largest island, settled for centuries by Malay and Chinese fishing communities in the Gulf of Thailand. Backpackers began arriving by boat in the 1970s, and the island's own airport, opened in 1989, brought mass and luxury tourism that has since overtaken coconuts and fishing as the main economy. Today it offers resort beaches along Chaweng and Bophut, temples and waterfalls inland, and boat access to the limestone islands of Ang Thong Marine National Park.",
+      "knownFor": [
+        "Chaweng Beach",
+        "Fisherman's Village, Bophut",
+        "Big Buddha (Wat Phra Yai)",
+        "Ang Thong Marine National Park",
+        "Na Muang Waterfalls",
+        "Beach resorts and nightlife"
+      ],
+      "bestTime": "Roughly January to September; like nearby Koh Tao and Koh Phangan, Samui's monsoon runs opposite the mainland's, and the Northeast Monsoon's heaviest rain and roughest seas from October to December are best avoided for beach time.",
+      "bestM": [1, 2, 3, 4, 5, 6, 7, 8, 9], "avoidM": [10, 11, 12]
+    },
+    "th-soppong": {
+      "name": "Soppong",
+      "blurb": "Soppong is a small Shan village in Pang Mapha district, Mae Hong Son province, roughly midway between Pai and Mae Hong Son on the mountain loop road. The district holds one of Thailand's densest concentrations of caves, most famously Tham Lod, where the Nam Lang River runs through a limestone passage that visitors cross by bamboo raft past wooden coffins left by an Iron Age culture. Soppong and the long-running Cave Lodge serve as the base for caving, trekking to Lahu and other hill-tribe villages, and exploring the district's many undeveloped caves.",
+      "knownFor": [
+        "Tham Lod Cave (Nam Lang River)",
+        "Cave Lodge",
+        "Iron Age log coffins",
+        "Lahu and hill-tribe treks",
+        "Wild caves of Pang Mapha",
+        "Mae Hong Son Loop stopover"
+      ],
+      "bestTime": "November to February, the cool dry season; like the rest of Mae Hong Son province, avoid March-April for burning-season haze.",
+      "bestM": [11, 12, 1, 2], "avoidM": [3, 4]
+    },
+    "th-pattaya": {
+      "name": "Pattaya",
+      "blurb": "Pattaya's name comes from Thap Phraya (\"army of the Phraya\"), after an 18th-century military encounter involving the general who became King Taksin. The fishing village stayed largely undeveloped until American servicemen began arriving for rest and recreation in 1959, a role that expanded through the Vietnam War and turned Pattaya, chartered as a city in 1978, into one of Thailand's largest beach resorts. It is known equally for nightlife along Walking Street and for family-oriented attractions such as the wooden Sanctuary of Truth, the hilltop Big Buddha, and Nong Nooch Tropical Garden, with quieter Jomtien Beach just to the south.",
+      "knownFor": [
+        "Walking Street nightlife",
+        "Sanctuary of Truth",
+        "Big Buddha Hill (Wat Phra Yai)",
+        "Nong Nooch Tropical Garden",
+        "Jomtien Beach",
+        "Thepprasit Night Market"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-hua-hin": {
+      "name": "Hua Hin",
+      "blurb": "Hua Hin grew from a small fishing settlement into Thailand's original royal seaside resort after the railway reached town in 1911 and Prince Purachatra built the Railway Hotel in 1922. King Rama VII cemented its royal status by completing the Klai Kangwon (\"Far from Worries\") summer palace in 1929, drawing Bangkok's elite to build holiday homes along the coast. It retains that heritage today in its restored railway station and seafront hotels, alongside the temple and viewpoint at Khao Takiab (\"Monkey Mountain\") and the large Luang Pu Thuat statue at Wat Huay Mongkol.",
+      "knownFor": [
+        "Royal seaside resort heritage",
+        "Hua Hin Railway Station",
+        "Khao Takiab (Monkey Mountain)",
+        "Wat Huay Mongkol",
+        "Seafront hotels",
+        "Chatchai Market and night market"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-khun-yuam": {
+      "name": "Khun Yuam",
+      "blurb": "Khun Yuam is a small district town on the Mae Hong Son Loop, in a valley between Mae Hong Son and Mae Sariang. During the Second World War it served as a Japanese army staging post and hospital on the supply route into Burma, a history documented in its Thai-Japan Friendship Memorial Hall, which holds artifacts left by the soldiers who passed through. Above the town, the hills of Doi Mae U-Kho turn gold each November and December when wild Mexican sunflowers (Thung Bua Tong) bloom across the ridgelines, and nearby Mae Surin Waterfall and Wat To Phae are further draws.",
+      "knownFor": [
+        "Thung Bua Tong sunflower fields (Doi Mae U-Kho)",
+        "Khun Yuam WWII Museum",
+        "Mae Surin Waterfall",
+        "Wat To Phae",
+        "Mae Hong Son Loop stopover"
+      ],
+      "bestTime": "The Thung Bua Tong sunflower fields usually peak in mid-November and last into December; as elsewhere in Mae Hong Son province, avoid March-April for burning-season haze.",
+      "bestM": [11, 12], "avoidM": [3, 4]
+    },
+    "th-mae-sariang": {
+      "name": "Mae Sariang",
+      "blurb": "Mae Sariang is a quiet district town on the Yuam River in Mae Hong Son province, with a Shan (Tai Yai) heritage reflected in its older teak buildings and Burmese-style temples. It is a stop on the Mae Hong Son Loop and a base for river trips on the Salween, which forms the Myanmar border nearby at Mae Sam Laep, as well as for hill-tribe villages in the surrounding hills.",
+      "knownFor": [
+        "Salween River and Mae Sam Laep",
+        "Shan (Tai Yai) old town and temples",
+        "Yuam River",
+        "Night market",
+        "Mae Hong Son Loop stopover"
+      ],
+      "bestTime": "November to February, the cool dry season; like the rest of Mae Hong Son province, avoid March-April for burning-season haze.",
+      "bestM": [11, 12, 1, 2], "avoidM": [3, 4]
+    },
+    "th-mae-chaem": {
+      "name": "Mae Chaem",
+      "blurb": "Mae Chaem is a remote district town of Chiang Mai province, in a valley of the Mae Chaem River on the back route between the Mae Hong Son Loop and Doi Inthanon. Home to Tai Yuan, Karen, Lua, Hmong, and Lisu communities, it is known for traditional weaving, older temples such as Wat Pa Daet, and nearby Ob Luang National Park, where the river cuts a narrow granite gorge.",
+      "knownFor": [
+        "Ob Luang Gorge",
+        "Wat Pa Daet",
+        "Traditional weaving",
+        "Village homestays",
+        "Route to Doi Inthanon"
+      ],
+      "bestTime": "November to February, the cool dry season; like Chiang Mai province generally, avoid March-April for burning-season haze.",
+      "bestM": [11, 12, 1, 2], "avoidM": [3, 4]
+    },
+    "th-khao-sok": {
+      "name": "Khao Sok",
+      "blurb": "Khao Sok National Park, established in 1980 in Surat Thani province, protects one of Thailand's oldest surviving stretches of rainforest alongside limestone karst peaks. Its centerpiece is Cheow Lan Lake, a reservoir where limestone islands rise from the water and floating raft-house bungalows let visitors stay overnight on the lake. The park is also home to wild elephants, gibbons, hornbills, and other wildlife, with a village near the park entrance offering jungle guesthouses and lodges for those exploring on land.",
+      "knownFor": [
+        "Cheow Lan Lake",
+        "Floating raft-house bungalows",
+        "Limestone karst",
+        "Rainforest wildlife (elephants, gibbons, hornbills)",
+        "Jungle trekking",
+        "Jungle guesthouses and lodges"
+      ],
+      "bestTime": "December to April, the region's dry season, when trails and lake access are easiest; rainfall picks up from May.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+    "th-khao-yai": {
+      "name": "Khao Yai",
+      "blurb": "Khao Yai National Park, established in 1962, was Thailand's first national park and remains one of its most visited, covering forested hills and grassland northeast of Bangkok. It forms part of the Dong Phayayen-Khao Yai Forest Complex, a UNESCO World Heritage Site since 2005, and supports wild elephants, gibbons, hornbills, and other wildlife alongside waterfalls and hiking trails; dry, hot conditions in the pre-monsoon months can concentrate animals around waterholes. Within a few hours of Bangkok, it is a popular weekend trip, including camping at the park's own campsites at Pha Kluai Mai and Lam Takhong.",
+      "knownFor": [
+        "Wild elephants and gibbons",
+        "Haew Suwat and Haew Narok waterfalls",
+        "Hornbills",
+        "Pha Kluai Mai and Lam Takhong campsites",
+        "Hiking trails",
+        "Dong Phayayen-Khao Yai UNESCO forest complex"
+      ],
+      "bestTime": "November to February, for cool weather and the most comfortable hiking conditions.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "th-trat": {
+      "name": "Trat",
+      "blurb": "Trat is a small provincial capital in far eastern Thailand, briefly occupied by France from 1904 to 1907 as leverage in a border dispute before being returned to Siam under the Franco-Siamese treaty of 1907, an event still marked by the town's Independence Day celebrations each March. Its old shophouse streets and markets see relatively few visitors, since most travellers pass straight through en route to the ferry piers at Laem Ngop and Laem Sok for the offshore islands of Koh Chang, Koh Mak, and Koh Kood, or onward to the Cambodian border crossing at Hat Lek.",
+      "knownFor": [
+        "Gateway to Koh Chang, Koh Mak and Koh Kood",
+        "Old shophouse streets",
+        "Hat Lek border crossing to Cambodia",
+        "Wat Buppharam",
+        "Local markets"
+      ],
+      "bestTime": "November to April, when seas are calmest and ferries to the outer islands run full schedules; sailings to Koh Mak and Koh Kood thin out considerably from May to October.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
     "vi-hanoi": {
       "name": "Hanoi",
       "blurb": "Vietnam's capital traces its founding as Thang Long to around 1010, when the Ly dynasty moved the capital there, making it one of Southeast Asia's oldest continuously inhabited capitals. It became the political and cultural heart of the north and later a major French colonial administrative center, layers that remain visible today. Visitors experience a dense Old Quarter of narrow trading streets, lakes and pagodas, tree-lined colonial boulevards, and a famously vibrant street-food scene.",
@@ -664,6 +913,133 @@ export const HISTORY = {
       "bestTime": "November to April, the dry season; the coffee harvest runs late in the year.",
       "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
+    "vi-an-giang": {
+      "name": "An Giang",
+      "blurb": "A Mekong Delta province on the Cambodian border, An Giang is best known to travellers for Tra Su Cajuput Forest, a flooded melaleuca wetland where small boats glide beneath a green canopy past nesting-bird colonies, alongside Cham and Khmer communities and the sacred Sam Mountain pilgrimage site near Chau Doc.",
+      "knownFor": [
+        "Tra Su Cajuput Forest",
+        "Mekong Delta flooded wetlands",
+        "Chau Doc and Sam Mountain",
+        "Cham and Khmer communities"
+      ],
+      "bestTime": "September to November, during the Mekong Delta flood season, when water levels rise, duckweed carpets the canals and bird numbers peak.",
+      "bestM": [9, 10, 11], "avoidM": []
+    },
+    "vi-lang-co": {
+      "name": "Lang Co",
+      "blurb": "A fishing village and lagoon on Vietnam's central coast, between Hue and Da Nang at the foot of the Hai Van Pass, Lang Co is known for a long white-sand beach backed by a calm lagoon and green hills, and as a scenic rest stop on one of Vietnam's most dramatic stretches of coastal road and railway.",
+      "knownFor": [
+        "Lang Co Beach",
+        "Lang Co Lagoon",
+        "Hai Van Pass",
+        "coastal railway views"
+      ],
+      "bestTime": "February to May, the same dry window as nearby Da Nang.",
+      "bestM": [2, 3, 4, 5], "avoidM": []
+    },
+    "vi-cao-bang": {
+      "name": "Cao Bang",
+      "blurb": "A mountainous province on the Chinese border in Vietnam's far north, Cao Bang is best known for Ban Gioc, Vietnam's largest and most famous waterfall, which straddles the border with China (known there as Detian Falls) amid limestone karst scenery.",
+      "knownFor": [
+        "Ban Gioc Waterfall",
+        "karst mountain scenery",
+        "China border region",
+        "Nguom Ngao Cave"
+      ],
+      "bestTime": "September and October, when the water is highest but starting to clear after the wet season; March is a quieter alternative with clearer, if lower, water.",
+      "bestM": [9, 10, 3], "avoidM": []
+    },
+    "vi-thanh-hoa": {
+      "name": "Thanh Hoa",
+      "blurb": "A large coastal and mountainous province south of Hanoi, Thanh Hoa is best known to travellers for Pu Luong Nature Reserve, a valley of terraced rice fields, limestone hills and Thai ethnic-minority stilt-house villages, popular for trekking and homestays.",
+      "knownFor": [
+        "Pu Luong Nature Reserve",
+        "rice terraces",
+        "Thai stilt-house villages",
+        "trekking and homestays"
+      ],
+      "bestTime": "May to June for vivid green young rice, or September to October for the golden harvest — Pu Luong's two rice-terrace seasons.",
+      "bestM": [5, 6, 9, 10], "avoidM": []
+    },
+    "vi-hoa-binh": {
+      "name": "Hoa Binh",
+      "blurb": "A provincial capital on the Da (Black) River southwest of Hanoi, Hoa Binh is best known for its dam — from 1994 to 2012 the largest hydroelectric power plant in Vietnam, built with Soviet assistance between 1979 and 1994 and still one of the largest in Southeast Asia. It is also the usual gateway by road into the province's Mai Chau Valley.",
+      "knownFor": [
+        "Hoa Binh Dam",
+        "Da (Black) River",
+        "Muong ethnic-minority culture",
+        "gateway to Mai Chau"
+      ],
+      "bestTime": "October to April, cooler and drier, the same window as Hanoi.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "vi-ba-ria-vung-tau": {
+      "name": "Ba Ria-Vung Tau",
+      "blurb": "The southeastern coastal province that administers both the mainland beach city of Vung Tau and, far offshore, the Con Dao archipelago. Con Dao is reached by direct flight from Ho Chi Minh City or by a slower ferry that also runs from Vung Tau itself.",
+      "knownFor": [
+        "Con Dao Islands (administered from here)",
+        "Vung Tau city",
+        "Mekong Delta shipping lanes"
+      ]
+    },
+    "vi-lao-cai": {
+      "name": "Lao Cai",
+      "blurb": "A provincial capital on the Chinese border at the terminus of the Hanoi-Lao Cai railway, Lao Cai city itself is mainly a transit gateway to Sapa. The wider province's best-known traveller draw is Bac Ha, whose Sunday market is one of the largest and most colourful ethnic-minority markets in the northwest, filled with Flower Hmong traders.",
+      "knownFor": [
+        "gateway to Sapa",
+        "Bac Ha Sunday Market",
+        "China border crossing",
+        "Flower Hmong communities"
+      ]
+    },
+    "vi-mai-chau": {
+      "name": "Mai Chau",
+      "blurb": "A valley in Hoa Binh province southwest of Hanoi, Mai Chau is known for White Thai and Black Thai stilt-house villages set among rice paddies, a popular one- or two-night homestay trip from Hanoi for cycling and gentle valley walks.",
+      "knownFor": [
+        "stilt-house homestays",
+        "rice-paddy valley",
+        "White Thai and Black Thai culture",
+        "cycling"
+      ],
+      "bestTime": "October to April, cooler and drier, the same window as Hanoi.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "vi-duy-phu": {
+      "name": "Duy Phu (My Son)",
+      "blurb": "A rural district in Quang Nam province inland from Hoi An, Duy Phu is home to My Son Sanctuary, a cluster of Hindu temple towers built by the Champa kingdom from roughly the 4th to the 14th centuries and now a UNESCO World Heritage Site.",
+      "knownFor": [
+        "My Son Sanctuary",
+        "Champa kingdom ruins",
+        "Hindu temple towers",
+        "UNESCO heritage"
+      ],
+      "bestTime": "February to May, dry season; like nearby Hoi An and Da Nang, the area is prone to flooding October-November.",
+      "bestM": [2, 3, 4, 5], "avoidM": [10, 11]
+    },
+    "vi-phan-thiet": {
+      "name": "Phan Thiet",
+      "blurb": "A fishing city on Vietnam's south-central coast, Phan Thiet is the gateway to Mui Ne, a beach town famous for red and white sand dunes and among Southeast Asia's best kitesurfing and windsurfing conditions.",
+      "knownFor": [
+        "Mui Ne Beach",
+        "sand dunes",
+        "kitesurfing and windsurfing",
+        "fishing harbour"
+      ],
+      "bestTime": "November to April, dry and sunny, and the best wind for kitesurfing, strongest from December to February.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "vi-vung-tau": {
+      "name": "Vung Tau",
+      "blurb": "A beach city on a peninsula southeast of Ho Chi Minh City, Vung Tau has been a seaside getaway since the French colonial era and remains a popular weekend escape from Saigon. It is known for the Christ of Vung Tau, a 32-metre statue on Tao Phung Mountain completed in 1994 and reached by around 800 steps, and for Back Beach (Bai Sau), its main stretch of sand.",
+      "knownFor": [
+        "Christ of Vung Tau statue",
+        "Back Beach (Bai Sau)",
+        "seafood",
+        "weekend trip from Ho Chi Minh City"
+      ],
+      "bestTime": "December to April, the dry season; expect heat and humidity year-round, as in nearby Ho Chi Minh City.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
     "kh-siem-reap": {
       "name": "Siem Reap",
       "blurb": "Siem Reap is the gateway town to the Angkor Archaeological Park, the sprawling complex of temples built by the Khmer Empire between roughly the 9th and 13th centuries, including the iconic Angkor Wat. Once a modest settlement, it grew into Cambodia's main tourism hub as visitors flocked to the ruins. Today travellers use it as a base for temple exploration by day and enjoy a lively scene of restaurants, markets, and Khmer cultural shows by night.",
@@ -797,6 +1173,257 @@ export const HISTORY = {
       ],
       "bestTime": "November to February, the cool dry season.",
       "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-koh-kong": {
+      "name": "Koh Kong",
+      "blurb": "A riverside border town in Cambodia's remote southwest, Koh Kong sits near the Thai crossing at Cham Yeam and serves as the main gateway to the Cardamom Mountains: community-based ecotourism at Chi Phat, kayaking and waterfalls on the Tatai River, and the mangrove boardwalks of Peam Krasop Wildlife Sanctuary.",
+      "knownFor": [
+        "gateway to the Cardamom Mountains",
+        "Tatai River",
+        "Peam Krasop mangroves",
+        "Thailand border crossing"
+      ],
+      "bestTime": "November to April, the dry season, for easier travel on the Cardamoms' unpaved roads.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-cardamom-mountains": {
+      "name": "Cardamom Mountains",
+      "blurb": "A vast, sparsely populated range of rainforest in southwestern Cambodia, the Cardamom Mountains are one of Southeast Asia's largest remaining wilderness areas. Community-based ecotourism, centred on villages such as Chi Phat, lets visitors trek and boat through the forest while directly supporting local conservation.",
+      "knownFor": [
+        "community-based ecotourism",
+        "rainforest wildlife",
+        "Chi Phat village",
+        "trekking and river trips"
+      ],
+      "bestTime": "November to April, the dry season, when forest trails are easier going.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-koh-rong-sanloem": {
+      "name": "Koh Rong Sanloem",
+      "blurb": "The quieter of the two main islands off Sihanoukville, Koh Rong Sanloem is smaller and less developed than Koh Rong, known for calmer beaches such as Lazy Beach and Saracen Bay, snorkelling, and a slower pace geared toward relaxation over nightlife.",
+      "knownFor": [
+        "Lazy Beach",
+        "Saracen Bay",
+        "snorkelling",
+        "quieter than Koh Rong"
+      ],
+      "bestTime": "November to April, the dry season, for calm seas and clear water.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-preah-vihear": {
+      "name": "Preah Vihear",
+      "blurb": "A remote northern province on the Thai border, Preah Vihear is named for the clifftop Khmer temple of the same name, dramatically sited atop the Dangrek escarpment and a UNESCO World Heritage Site. The province is also home to Koh Ker, a 10th-century former capital of the Khmer Empire, and Preah Khan of Kompong Svay, one of Angkor's largest temple enclosures.",
+      "knownFor": [
+        "Preah Vihear Temple",
+        "Koh Ker temple complex",
+        "Preah Khan of Kompong Svay",
+        "Dangrek Mountains"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-kampong-cham": {
+      "name": "Kampong Cham",
+      "blurb": "A Mekong riverside city northeast of Phnom Penh, Kampong Cham is known for the Khmer-era temple of Wat Nokor, which encloses a working Buddhist pagoda within its sandstone ruins, and for the Koh Paen bamboo bridge, rebuilt by hand each December once the river drops low enough, and taken down again before the rains raise the water in the middle of the year.",
+      "knownFor": [
+        "Koh Paen Bamboo Bridge",
+        "Wat Nokor Bachey",
+        "Mekong riverside",
+        "rebuilt annually each dry season"
+      ],
+      "bestTime": "December to April, when the Koh Paen bamboo bridge is standing.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-koh-sdach": {
+      "name": "Koh Sdach",
+      "blurb": "Koh Sdach (\"King Island\") is a small fishing island off Cambodia's southwest coast, between the mainland and Koh Kong, with a working fishing-village harbour rather than a resort scene. It is a stepping-stone for boat trips to quieter nearby islands such as Koh Totang.",
+      "knownFor": [
+        "fishing village",
+        "boat hub to nearby islands",
+        "Koh Totang",
+        "off-the-beaten-path"
+      ],
+      "bestTime": "November to April, the dry season, for calmer boat crossings.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-takeo": {
+      "name": "Takeo",
+      "blurb": "A province south of Phnom Penh toward the Vietnamese border, Takeo is best known to travellers for the Phnom Tamao Wildlife Rescue Centre, Cambodia's largest wildlife rescue and rehabilitation facility, home to rescued elephants, tigers, bears and other animals confiscated from illegal trade.",
+      "knownFor": [
+        "Phnom Tamao Wildlife Rescue Centre",
+        "rescued elephants and bears",
+        "Mekong Delta scenery"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-kampong-thom": {
+      "name": "Kampong Thom",
+      "blurb": "A provincial capital midway between Phnom Penh and Siem Reap, Kampong Thom is the gateway to Sambor Prei Kuk, a group of brick temple towers dating mostly from the early 7th century under the pre-Angkorian Chenla kingdom, among the oldest surviving temple architecture in Cambodia and a UNESCO World Heritage Site.",
+      "knownFor": [
+        "Sambor Prei Kuk Temple Group",
+        "pre-Angkorian Chenla ruins",
+        "UNESCO heritage",
+        "roadside stop between Phnom Penh and Siem Reap"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-skun": {
+      "name": "Skun",
+      "blurb": "A small roadside town on National Road 6 between Phnom Penh and Kampong Cham, Skun is known nationwide as \"Spider Town\" for its market stalls selling deep-fried tarantulas, a local delicacy and a popular photo stop for travellers passing through.",
+      "knownFor": [
+        "fried tarantula market",
+        "roadside stop",
+        "National Road 6"
+      ]
+    },
+    "kh-oudong": {
+      "name": "Oudong",
+      "blurb": "Oudong served as the royal capital of Cambodia for roughly two centuries, from 1618 until Phnom Penh took over in 1866. Its hilltop is crowned by a row of royal stupas, including those of several former kings, making Phnom Oudong a popular day trip and pilgrimage site from Phnom Penh.",
+      "knownFor": [
+        "Phnom Oudong royal stupas",
+        "former royal capital",
+        "day trip from Phnom Penh",
+        "pilgrimage site"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-angkor-borei": {
+      "name": "Angkor Borei",
+      "blurb": "A small town in Takeo province near the Vietnamese border, Angkor Borei is one of Cambodia's oldest urban sites, linked to the pre-Angkorian kingdom of Funan from around the 1st to 6th centuries CE. Nearby Phnom Da holds an early Khmer hilltop temple with river-plain views over the surrounding countryside.",
+      "knownFor": [
+        "Funan-era archaeology",
+        "Phnom Da temple",
+        "one of Cambodia's oldest settlements",
+        "Mekong Delta borderlands"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-tonle-bati": {
+      "name": "Tonle Bati",
+      "blurb": "Tonle Bati is a small lake in Takeo province about 30 kilometres south of Phnom Penh, a popular weekend and day-trip spot for locals, with bamboo pavilions built out over the water for picnicking. On its bank stand two temples built under Jayavarman VII in the late 12th century, the same era as Angkor Thom and the Bayon: Ta Prohm, with well-preserved carvings in its inner sanctuary, and the smaller Yeay Peau.",
+      "knownFor": [
+        "Ta Prohm temple (Tonle Bati)",
+        "Yeay Peau temple",
+        "lakeside picnic pavilions",
+        "day trip from Phnom Penh",
+        "12th-century Khmer carvings"
+      ],
+      "bestTime": "November to February for cooler, drier weather, best for a day trip from Phnom Penh.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-kampong-speu": {
+      "name": "Kampong Speu",
+      "blurb": "Kampong Speu is a provincial capital west of Phnom Penh, known chiefly as the gateway to Kirirom National Park, a pine-forested plateau in the eastern Cardamom Mountains that became Cambodia's first designated national park in 1993. King Norodom Sihanouk developed Kirirom as a royal hill-station retreat in the 1950s and 60s; its villas fell into ruin during the civil war and Khmer Rouge period, and the area was cleared of landmines and reopened to visitors in the 1990s. The province is also home to Phnom Aural, Cambodia's highest peak, and is well known nationally for its palm sugar.",
+      "knownFor": [
+        "Kirirom National Park",
+        "former royal hill station",
+        "Phnom Aural, Cambodia's highest peak",
+        "palm sugar"
+      ],
+      "bestTime": "November to February, the cool dry season, for the most comfortable hiking conditions at Kirirom.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-kampong-chhnang": {
+      "name": "Kampong Chhnang",
+      "blurb": "Kampong Chhnang is a provincial capital on the Tonle Sap River north of Phnom Penh, best known for the nearby pottery village of Andong Russey, where around 300 artisan families continue a hand-thrown pottery tradition whose kilns have been dated back some 1,500 years. The town is also a base for visiting Tonle Sap floating villages, home mainly to ethnic Vietnamese communities, and for the abandoned Kampong Chhnang Airport, a vast unfinished military airfield built by the Khmer Rouge between 1976 and 1979 using forced labour, at great cost of life, with Chinese technical support.",
+      "knownFor": [
+        "Andong Russey pottery village",
+        "Tonle Sap floating villages",
+        "abandoned Khmer Rouge airfield",
+        "provincial riverside town"
+      ],
+      "bestTime": "November to February for cooler, drier weather.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-preah-rumkel": {
+      "name": "Preah Rumkel (Stung Treng)",
+      "blurb": "Preah Rumkel is a small Mekong-side village in Stung Treng province, close to the Laos border, built around a community-based ecotourism project that arranges homestays with local Khmer and Lao families. It is the access point for Sopheakmit Waterfall, where the Mekong drops around 26 metres over a wide, multi-channel stretch of rapids, and for birdwatching and kayaking in the surrounding Ramsar-listed wetlands and flooded forest. The Irrawaddy dolphins once advertised here, at the nearby Anlong Cheuteal pool shared with Laos, are no longer a reliable sighting: the last dolphin in that transboundary pool was found dead in February 2022, and the subpopulation is now considered extinct.",
+      "knownFor": [
+        "Sopheakmit Waterfall (Mekong rapids)",
+        "community-based ecotourism",
+        "Ramsar wetlands and flooded forest",
+        "village near the Laos border"
+      ],
+      "bestTime": "November to April, the dry season, when falling river levels expose Sopheakmit's rocks and flooded forest; conditions are often described as best in December, before the water drops further.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-stung-treng": {
+      "name": "Stung Treng",
+      "blurb": "Stung Treng is the capital of its namesake province in Cambodia's northeast, sitting close to where the Sekong and Sesan rivers join the Mekong, about 50 kilometres south of the Laos border. It functions mainly as a quiet regional hub and a common stop for travellers crossing overland between Laos and Cambodia, as well as the starting point for boat trips upriver toward Preah Rumkel and the border wetlands. The town is also home to Mekong Blue, a fair-trade silk-weaving social enterprise run by the Stung Treng Women's Development Center that trains and employs local women in traditional Khmer weaving.",
+      "knownFor": [
+        "Mekong Blue silk weaving",
+        "confluence of the Sekong, Sesan and Mekong rivers",
+        "gateway to the Laos border",
+        "quiet river-trade hub"
+      ],
+      "bestTime": "November to April, the dry season, best for river travel toward the Laos border.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-voen-sai": {
+      "name": "Voen Sai (Ratanakiri)",
+      "blurb": "Voen Sai is a river town on the Tonle San (Sesan) River in Ratanakiri province, in Cambodia's northeastern highlands. Its north bank holds a Chinese settlement roughly two centuries old, alongside Lao and indigenous Kreung and Tampuan villages, reflecting the ethnic mix typical of the region. Boat trips upriver reach Kachon, a Tampuan village with a traditional forest cemetery where the dead are honoured with carved wooden effigies, and a ranger post in Voen Sai can arrange guided treks toward Virachey National Park.",
+      "knownFor": [
+        "Sesan River villages",
+        "historic Chinese settlement",
+        "Lao and Kreung/Tampuan communities",
+        "Kachon's Tampuan cemetery",
+        "access to Virachey National Park"
+      ],
+      "bestTime": "November to February, before rural roads and river access become difficult in the wet season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-sambor": {
+      "name": "Sambor (Kratie)",
+      "blurb": "Sambor is a small Mekong-side town in Kratie province, roughly 38 kilometres north of Kratie town, on the site of Sambhupura, a polity linked to early Chenla-period rulers such as Bhavavarman I in the 6th and 7th centuries before it faded from prominence by around the 9th century. Its main landmark today is Wat Sasar Muoy Roy, the \"100-Column Pagoda,\" an unusually north-south-facing temple that was destroyed during the Khmer Rouge period and rebuilt in 1997. The town lies within the same Mekong stretch, between Kratie and the Laos border, that holds Cambodia's recovering population of Irrawaddy dolphins, though the main viewing site, Kampi, is closer to Kratie town itself.",
+      "knownFor": [
+        "Wat Sasar Muoy Roy (100-Column Pagoda)",
+        "Sambhupura, a pre-Angkorian capital",
+        "Mekong riverside",
+        "within Cambodia's dolphin habitat zone"
+      ],
+      "bestTime": "November to April, the dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-anlong-veng": {
+      "name": "Anlong Veng",
+      "blurb": "Anlong Veng, in Oddar Meanchey province near the Thai border, was the Khmer Rouge's last stronghold, held by forces under commander Ta Mok until the remaining units surrendered in December 1998. Pol Pot died in custody nearby in April 1998; his cremation site close to his former home can still be visited today, along with Ta Mok's own lakeside house at the foot of the Dangrek escarpment. The town has since been developed for memorial and heritage tourism, and serves as a stop on the road between Siem Reap and the temple of Preah Vihear.",
+      "knownFor": [
+        "Ta Mok's House",
+        "Pol Pot's cremation site",
+        "Khmer Rouge's last stronghold",
+        "Dangrek Mountains",
+        "route to Preah Vihear temple"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "kh-botum-sakor": {
+      "name": "Botum Sakor",
+      "blurb": "Botum Sakor National Park, on a peninsula in Koh Kong province facing the Gulf of Thailand, is Cambodia's largest national park at over 1,800 square kilometres, combining rainforest, mangroves, and wetlands that shelter Asian elephants, clouded leopards, and hundreds of bird species. Established in 1993, much of the park has since been affected by a large tourism concession granted in 2008, which has cleared substantial areas of forest and mangrove for development. Remaining wilderness is reached by road or boat, with boat trips offering access to flooded forest, mangroves, and more remote stretches of coastline.",
+      "knownFor": [
+        "Cambodia's largest national park",
+        "rainforest, mangroves and wetlands",
+        "Asian elephants and clouded leopards",
+        "boat access to remote coastline"
+      ],
+      "bestTime": "November to April, the dry season, for easier travel on the park's unpaved roads.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "kh-kampong-trach": {
+      "name": "Kampong Trach",
+      "blurb": "Kampong Trach is a small town in Kampot province near the Vietnamese border, built around Phnom Kampong Trach, a limestone karst outcrop honeycombed with more than 100 caves. Wat Kiri Sela, the temple at its base, leads through an underground passage into an open-air, cliff-walled hollow housing a large reclining Buddha and smaller shrines regarded as sacred by local Buddhists.",
+      "knownFor": [
+        "Wat Kiri Sela",
+        "Phnom Kampong Trach caves",
+        "limestone karst caverns",
+        "reclining Buddha shrine"
+      ],
+      "bestTime": "November to April, the dry season.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     },
     "la-luang-prabang": {
       "name": "Luang Prabang",
@@ -936,6 +1563,246 @@ export const HISTORY = {
       "bestTime": "October to April, during the drier trekking season",
       "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
     },
+    "la-paksong": {
+      "name": "Paksong",
+      "blurb": "Paksong is a small market town on the Bolaven Plateau in Champasak province, sitting at around 1,300 metres elevation and serving as the unofficial capital of Laos's coffee-growing highlands. Volcanic soil and a cooler, damper climate than the lowlands support extensive Arabica and Robusta plantations sold along the roadside and in local cafes. The plateau's rivers also drop over a dense cluster of waterfalls nearby, led by the twin, roughly 120-metre cascade of Tad Fane, and the town is the usual base for riding the multi-day Bolaven Loop past them.",
+      "knownFor": [
+        "Bolaven Plateau coffee",
+        "Tad Fane Waterfall",
+        "Tad Yuang Waterfall",
+        "cool highland climate",
+        "Bolaven Loop motorbike route",
+        "highland guesthouses"
+      ],
+      "bestTime": "November to February for the coolest, driest weather on the plateau, though at around 1,300 metres nights can turn cold and misty; the waterfalls carry the most water during and just after the rainy season, roughly May to October.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-kiet-ngong": {
+      "name": "Kiet Ngong",
+      "blurb": "Kiet Ngong is a small village on the edge of the Xe Pian National Protected Area in Champasak province, built around the Beung Kiat Ngong wetland, a Ramsar-designated marsh (since 2010) that is an important habitat for waterbirds and freshwater turtles. The village keeps a herd of domesticated elephants used for treks out to Phou Asa, a hilltop ruin of roughly 100 stone pillars whose age and original purpose are disputed among historians. Trails around the wetland also make for gentle dry-season birdwatching walks.",
+      "knownFor": [
+        "Beung Kiat Ngong Wetland",
+        "Phou Asa ruins",
+        "elephant trekking",
+        "Xe Pian National Protected Area",
+        "birdwatching"
+      ],
+      "bestTime": "October to April, the wetland's dry season, when trails are firm underfoot for wetland walks and elephant treks out to Phou Asa.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "la-sekong": {
+      "name": "Sekong",
+      "blurb": "Sekong is a provincial capital on the Xe Kong river in the far south of Laos, established in 1984 after unexploded ordnance left from the Second Indochina War made the previous provincial seat uninhabitable. Sekong province is among the least-explored in the country, and the town today serves mainly as a base for reaching Tad Faek and Tad Hua Khon, two waterfalls in the surrounding forest.",
+      "knownFor": [
+        "Tad Faek Waterfall",
+        "Tad Hua Khon Waterfall",
+        "Xe Kong riverfront",
+        "remote, little-visited province",
+        "multi-ethnic communities"
+      ],
+      "bestTime": "November to February, the cool dry season, when roads out to the surrounding waterfalls are easiest to travel.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-salavan": {
+      "name": "Salavan",
+      "blurb": "Salavan is a quiet provincial capital in southern Laos with a frontier feel, surrounded by forest and indigenous villages rather than other towns. Its main draw is the morning market, where women from outlying communities sell foraged goods such as mushrooms, bamboo shoots, and wild produce; the waterfall village of Tad Lo lies about 30 km away.",
+      "knownFor": [
+        "provincial market",
+        "frontier-town atmosphere",
+        "indigenous villages",
+        "gateway to Tad Lo"
+      ],
+      "bestTime": "November to February, for the coolest and driest travelling weather.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-huay-xai": {
+      "name": "Huay Xai",
+      "blurb": "Huay Xai is the capital of Bokeo province, sitting on the Mekong across from Chiang Khong, Thailand, and linked to it by the Fourth Thai-Lao Friendship Bridge. For most travellers it functions as a gateway rather than a destination in itself: the starting point for the two-day slow boat down the Mekong to Luang Prabang, and the base for the Gibbon Experience, a treehouse-and-zipline operation in the Bokeo Nature Reserve built around protecting the endangered black-crested gibbon.",
+      "knownFor": [
+        "Gibbon Experience zipline trek",
+        "Bokeo Nature Reserve",
+        "Mekong slow boat to Luang Prabang",
+        "Thai border crossing",
+        "Mekong riverfront"
+      ],
+      "bestTime": "November to April is the dry season recommended for the Gibbon Experience's jungle trails, before they turn muddy with the rains; the Mekong slow boat runs year-round.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "la-don-det": {
+      "name": "Don Det",
+      "blurb": "Don Det is the busiest of the inhabited islands in Si Phan Don, long established as the backpacker hub of the Four Thousand Islands. It has the densest cluster of cheap guesthouses, riverside bars, and hammock-strung porches facing the sunset, with an economy built on tourism rather than the rice and fishing of neighbouring islands. Visitors cycle its roughly 7-km loop road, kayak the surrounding channels, and cross an old French colonial railway bridge to the quieter island of Don Khon.",
+      "knownFor": [
+        "riverside bungalows",
+        "backpacker bars",
+        "hammock lounging",
+        "cycling the island loop",
+        "kayaking",
+        "French railway bridge to Don Khon"
+      ],
+      "bestTime": "November to February, the cool dry season, for comfortable days cycling and relaxing along the river.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-attapeu": {
+      "name": "Attapeu",
+      "blurb": "Attapeu, officially Muang Samakhi Xay, is the southernmost of Laos's provincial capitals, built on a bend of the Xe Kong river, with a history said to reach back to the 16th-century Lan Xang kingdom. It is a quiet riverfront administrative town, used mainly as the gateway to Nong Fa, a volcanic crater lake roughly 70 km away that requires a 4WD drive and a two-to-three-hour trek to reach.",
+      "knownFor": [
+        "Nong Fa Crater Lake",
+        "Xe Kong riverfront",
+        "remote southern gateway",
+        "Ho Chi Minh Trail history"
+      ],
+      "bestTime": "November to April, the dry season when the rough road and trek out to Nong Fa Lake are passable; heavy rain across the province from May to October makes the route much harder.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "la-vieng-xai": {
+      "name": "Vieng Xai",
+      "blurb": "Vieng Xai is a small town in Houaphanh province built into a valley of limestone karst that sheltered the Pathet Lao leadership throughout the Second Indochina War. Some 480 caves here were fitted out as a self-contained underground city, complete with a hospital, school, workshops, and a theatre, housing an estimated 23,000 people at the war's height and serving as the movement's headquarters until it took power in 1975. A number of the caves, including one used by longtime leader Kaysone Phomvihane, are now open on guided tours.",
+      "knownFor": [
+        "Pathet Lao wartime caves",
+        "Kaysone Phomvihane's cave",
+        "cave city museum tours",
+        "limestone karst scenery",
+        "Second Indochina War history"
+      ],
+      "bestTime": "November to February, when the cool dry season keeps the walks between caves comfortable.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-phongsali": {
+      "name": "Phongsali",
+      "blurb": "Phongsali is the capital of Laos's northernmost province and, at around 1,400 metres, the highest town in the country, built just below the Phou Fa viewpoint that overlooks it. The wider province is home to numerous ethnic groups, including the Akha and Phunoy, and to tea plantations at some of the highest elevations in Southeast Asia, with trees said to be around 400 years old.",
+      "knownFor": [
+        "Phou Fa viewpoint",
+        "highest town in Laos",
+        "ancient tea trees",
+        "ethnic diversity",
+        "remote northern frontier"
+      ],
+      "bestTime": "November to February, though as Laos's highest town, nights here can turn especially cold.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-oudomxai": {
+      "name": "Oudomxai (Muang Xai)",
+      "blurb": "Oudomxai, or Muang Xai, is the largest town in northern Laos and a crossroads on routes linking China, Vietnam, and the rest of the country, with a visibly Chinese-influenced market street. Around town, Phou Sebey hill offers a morning viewpoint over the rooftops near the rebuilt 14th-century Phu That stupa, while the main draw further out is Chom Ong, a cave system of more than 16 km that ranks as the longest in northern Laos.",
+      "knownFor": [
+        "Chom Ong Cave",
+        "northern transport hub",
+        "Phou Sebey viewpoint",
+        "Phu That Stupa",
+        "multi-ethnic markets"
+      ],
+      "bestTime": "November to April, the dry season when the dirt road out to Chom Ong Cave is passable by motorbike or car; it turns muddy once the rains begin in May.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "la-muang-sing": {
+      "name": "Muang Sing",
+      "blurb": "Muang Sing is a small district town in Luang Namtha province, close to the border with China, where the French once ran a weigh station for the regional opium trade. Today it is a centre for Akha, Tai Lue, and other hill-tribe communities, most visible at its early-morning market, and it serves as a trekking base for the Nam Ha National Protected Area.",
+      "knownFor": [
+        "Muang Sing Morning Market",
+        "Akha and Tai Lue hill-tribe communities",
+        "former opium-trade post",
+        "Nam Ha NPA trekking"
+      ],
+      "bestTime": "October to April, during the region's drier season.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "la-sainyabuli": {
+      "name": "Sainyabuli (Xayaboury)",
+      "blurb": "Sainyabuli is the capital of the only Lao province lying entirely west of the Mekong, a mountainous, forested area bordering Thailand. Its main draw is the Elephant Conservation Center on the Nam Tien reservoir, home to the country's only elephant hospital, and the province hosts an annual Elephant Festival each February.",
+      "knownFor": [
+        "Elephant Conservation Center",
+        "Elephant Festival (February)",
+        "only Lao province west of the Mekong",
+        "Nam Phouy protected area"
+      ],
+      "bestTime": "November to February, the cool dry season; the province's Elephant Festival is usually held in February.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-pak-beng": {
+      "name": "Pak Beng",
+      "blurb": "Pak Beng is a small Mekong-side town in Oudomxay province that exists mainly as the overnight stop on the two-day slow-boat route between Huay Xai and Luang Prabang. Guesthouses line the single street above the boat landing, and the hillside Wat Sin Jong Jaeng, a temple dating to the French colonial era, is a short walk up from the river for sunset.",
+      "knownFor": [
+        "Mekong slow-boat overnight stop",
+        "Wat Sin Jong Jaeng",
+        "Mekong sunset views",
+        "Huay Xai-Luang Prabang route"
+      ],
+      "bestTime": "November to February for the most comfortable weather, though the slow-boat schedule runs the same year-round.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-muang-ngoi": {
+      "name": "Muang Ngoi",
+      "blurb": "Muang Ngoi (Muang Ngoi Neua) is a small, car-free village on the Nam Ou River in Luang Prabang province, hemmed in by karst peaks, that had no road access at all until a rough track arrived around 2013 — most visitors still arrive by boat from Nong Khiaw. Travellers come to climb to the Phanoi viewpoint above the village and visit nearby caves that sheltered residents during wartime bombing.",
+      "knownFor": [
+        "car-free village",
+        "Phanoi Viewpoint",
+        "Nam Ou River",
+        "karst scenery",
+        "boat access only"
+      ],
+      "bestTime": "October to April, during the dry season.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+    "la-muang-khoun": {
+      "name": "Muang Khoun",
+      "blurb": "Muang Khoun, or Old Xieng Khuang, was the capital of the Phuan kingdom and later the French provincial capital, until American bombing during the Second Indochina War destroyed most of the town and the provincial seat moved to Phonsavan. What survives — the roofless Wat Phia Wat, its brick Buddha image open to the sky, and the ruined That Foun stupa — sits about 35 km southeast of Phonsavan and is usually visited on the same loop as the Plain of Jars.",
+      "knownFor": [
+        "Old Xieng Khuang",
+        "Wat Phia Wat ruins",
+        "That Foun stupa",
+        "former Phuan kingdom capital",
+        "war-damaged history"
+      ],
+      "bestTime": "November to February, though like nearby Phonsavan its highland nights can be cold.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-muang-kham": {
+      "name": "Muang Kham",
+      "blurb": "Muang Kham is a small district town in Xieng Khouang province on Route 7, east of Phonsavan toward the Vietnamese border. Nearby is Tham Piu, a cave where Lao villagers sheltering from wartime bombing were killed in a US airstrike on 24 November 1968 and which is now a national memorial, along with a set of hot springs a short drive further out.",
+      "knownFor": [
+        "Tham Piu Cave War Memorial",
+        "Muang Kham hot springs",
+        "Route 7 waypoint",
+        "Xieng Khouang province"
+      ],
+      "bestTime": "November to February for cooler, drier travel.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-viengthong": {
+      "name": "Viengthong (Muang Hiam)",
+      "blurb": "Viengthong, formerly known as Muang Hiam, is a remote district town in Houaphanh province reached by a long mountain road, and serves as headquarters for the Nam Et-Phou Louey National Protected Area. Its main draw is the Nam Nern Night Safari, a community-run ecotour in which former hunters guide visitors upriver by boat before floating back after dark to spotlight wildlife.",
+      "knownFor": [
+        "Nam Nern Night Safari",
+        "Nam Et-Phou Louey NPA headquarters",
+        "community-run ecotourism",
+        "remote mountain access"
+      ],
+      "bestTime": "November to March, the driest months for the park's river-based Night Safari.",
+      "bestM": [11, 12, 1, 2, 3], "avoidM": []
+    },
+    "la-houameuang": {
+      "name": "Houameuang (near Sam Neua)",
+      "blurb": "Houameuang is a small, remote district of Houaphanh province, known mainly as the access point for the Hintang Archaeological Park, a scattering of roughly 1,500 upright stone menhirs and stone discs across dozens of sites on a forested ridge, first surveyed by French archaeologist Madeleine Colani in 1931. English-language information on the district itself, beyond this site, is limited.",
+      "knownFor": [
+        "Hintang Archaeological Park (Standing Stones)",
+        "ancient megaliths",
+        "remote access from Sam Neua"
+      ],
+      "bestTime": "November to March, the dry season, when the rough access road from Sam Neua is most passable.",
+      "bestM": [11, 12, 1, 2, 3], "avoidM": []
+    },
+    "la-sam-neua": {
+      "name": "Sam Neua",
+      "blurb": "Sam Neua (Xam Neua) is the capital of Houaphanh province, a cool highland town that was a centre of Pathet Lao activity during the Laotian civil war. It is the usual base for visiting the nearby Vieng Xai caves, the movement's former underground wartime headquarters, and its own morning market is a major outlet for Tai Daeng and other locally handwoven textiles.",
+      "knownFor": [
+        "Sam Neua Morning Market",
+        "gateway to Vieng Xai caves",
+        "Houaphanh provincial capital",
+        "handwoven textiles",
+        "cool highland climate"
+      ],
+      "bestTime": "November to February, when Houaphanh's highland nights turn cold.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
     "la-si-phan-don": {
       "name": "Si Phan Don",
       "blurb": "Si Phan Don, or the \"Four Thousand Islands,\" is a braided stretch of the Mekong in far southern Laos near the Cambodian border, where the river fans out into countless islets. The main inhabited islands of Don Khong, Don Det, and Don Khon offer a famously slow, hammock-paced way of life alongside remnants of a French-era railway. The area is also home to Khone Phapheng, the largest waterfall by volume in Southeast Asia.",
@@ -948,6 +1815,119 @@ export const HISTORY = {
       ],
       "bestTime": "November to February for comfortable travel; waterfalls are fullest late in the wet season",
       "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-muang-sui": {
+      "name": "Muang Sui",
+      "blurb": "Muang Sui, also known as Nong Tang, is a small town on Route 7 in Xieng Khouang province, about 48 kilometres from Phonsavan. During the Laotian Civil War — the CIA's so-called \"Secret War\" — it was the site of Lima Site 108, a Royal Lao/CIA-backed airstrip fiercely contested by government and Pathet Lao forces; little physical evidence of the fighting remains today. Its main present-day draw is Nong Tang Lake, a scenic lake ringed by limestone cliffs used for picnicking and simple lakeside meals.",
+      "knownFor": [
+        "Nong Tang Lake",
+        "limestone cliffs",
+        "former Lima Site 108 airstrip",
+        "Secret War history",
+        "picnicking"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-boualapha": {
+      "name": "Boualapha",
+      "blurb": "Boualapha is a district town in Khammouane province, reached from Thakhek by a multi-hour drive on partly unpaved roads. It is the gateway to Xe Bang Fai Cave (Tham Khoun Xe), a several-kilometre river cave that boats can travel through, and to the surrounding Hin Nam No National Park, inscribed as Laos's fourth UNESCO World Heritage Site in 2025.",
+      "knownFor": [
+        "Xe Bang Fai Cave (Tham Khoun Xe)",
+        "Hin Nam No National Park",
+        "river-cave boat trips",
+        "karst caving",
+        "community-guided ecotourism"
+      ],
+      "bestTime": "Cave boat trips run from November to May; they are suspended from June to October, when the river floods and currents turn dangerous.",
+      "bestM": [11, 12, 1, 2, 3, 4, 5], "avoidM": [6, 7, 8, 9, 10]
+    },
+    "la-pakkading": {
+      "name": "Pakkading",
+      "blurb": "Pakkading is a small town in Bolikhamxay province where the Nam Kading river meets the Mekong, and a district capital on Route 13. It is a well-known lunch stop for travellers and truckers, with a cluster of riverside fish restaurants, and the main gateway to the Nam Kading National Protected Area, a 1,690-square-kilometre forest reserve upriver that shelters saola, elephants, and several species of gibbon.",
+      "knownFor": [
+        "Nam Kading National Protected Area",
+        "Route 13 waypoint",
+        "riverside fish restaurants",
+        "Nam Kading-Mekong confluence"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-nakai": {
+      "name": "Nakai",
+      "blurb": "Nakai is a district town on the Nakai Plateau in Khammouane province, beside the Nam Theun 2 Reservoir, a roughly 490-square-kilometre lake built for Laos's largest hydropower project, completed in 2010. Its creation required resettling about 6,300 people into new villages on the plateau, many of whom now depend on reservoir fishing for their livelihood.",
+      "knownFor": [
+        "Nam Theun 2 Reservoir",
+        "Nakai Plateau",
+        "Nakai-Nam Theun National Park",
+        "hydropower",
+        "resettled villages",
+        "reservoir fishing"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-paksan": {
+      "name": "Paksan",
+      "blurb": "Paksan is the capital of Bolikhamxay province, on the Mekong at the mouth of the Nam Xan river, from which it takes its name (\"mouth of the Xan\"). The town predates the 1890s, when the Siamese withdrew from the Mekong's left bank and French missionaries occupied it and built a church there; it has since developed into a trade and transport hub on Route 13.",
+      "knownFor": [
+        "Mekong riverfront",
+        "provincial capital",
+        "Nam Xan river confluence",
+        "Route 13 hub",
+        "market town"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-thaphabat": {
+      "name": "Thaphabat",
+      "blurb": "Thaphabat is a district of Bolikhamxay province on Highway 13 South, about 83 kilometres from Vientiane. Its main landmark is Wat Phabat Phonsan, a temple local tradition traces back many centuries and that was rebuilt around a large Buddha footprint discovered in 1993; it was declared a national heritage site in 2024. The temple hosts the annual Boun Phabath Phonsan festival each January.",
+      "knownFor": [
+        "Wat Phabat Phonsan",
+        "Buddha footprint relic",
+        "Boun Phabath Phonsan festival",
+        "national heritage temple"
+      ],
+      "bestTime": "Late January, around the Boun Phabath Phonsan festival (22–25 January).",
+      "bestM": [1], "avoidM": []
+    },
+    "la-tad-lo": {
+      "name": "Tad Lo",
+      "blurb": "Tad Lo is a small village on the Bolaven Plateau in Salavan province, built around a cluster of waterfalls: Tad Hang, Tad Lo, and Tad Soung. It is a popular overnight stop on the Bolaven Plateau loop, with riverside guesthouses, homestays, and easy access to a nearby Katu ethnic-minority village; elephants kept by local operators are sometimes seen bathing in the river above the falls.",
+      "knownFor": [
+        "Tad Lo, Tad Hang and Tad Soung waterfalls",
+        "Katu village",
+        "riverside guesthouses",
+        "elephant bathing",
+        "Bolaven loop stop"
+      ],
+      "bestTime": "November to February for comfortable travel; the falls are fullest at the end of the wet season, around October.",
+      "bestM": [11, 12, 1, 2, 10], "avoidM": []
+    },
+    "la-don-khon": {
+      "name": "Don Khon",
+      "blurb": "Don Khon is the quieter of the two main linked islands in Si Phan Don, joined to livelier Don Det by an old French railway bridge. Its village, Ban Khon, is the largest settlement in the area and keeps more colonial-era buildings than its neighbour, including a rusting locomotive left from the 7-kilometre Don Det-Don Khon portage railway and an old French cemetery. The island's western side has the Somphamit (Li Phi) rapids, and near Ban Hang Khon at its southern tip is Anlong Cheuteal, a deep Mekong pool long promoted for its Irrawaddy dolphins; conservation groups now consider the population on the Lao side functionally extinct, with the last known individual dying in 2022.",
+      "knownFor": [
+        "French railway relic",
+        "Ban Khon colonial architecture",
+        "Somphamit (Li Phi) Falls",
+        "Anlong Cheuteal pool",
+        "quieter than Don Det"
+      ],
+      "bestTime": "November to February, the same comfortable dry season as the rest of Si Phan Don.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+    "la-nakasang": {
+      "name": "Nakasang",
+      "blurb": "Nakasang is a small mainland town in Champasak province on Route 13, serving as the main boat pier for reaching Don Det and Don Khon in Si Phan Don. Most travellers pass through only briefly, using its ATM, market, and bus connections to Pakse or the Cambodian border before or after crossing to the islands by longtail boat.",
+      "knownFor": [
+        "boat pier to Si Phan Don",
+        "gateway to Don Det/Don Khon",
+        "riverside market",
+        "bus and border connections"
+      ]
     }
   }
 };
