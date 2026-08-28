@@ -42,7 +42,7 @@ import {
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
   ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
-  gamifyLevelBadge,
+  gamifyLevelBadge, locationSheet,
 } from '../main.js';
 
 export function homeScreen() {
@@ -82,6 +82,21 @@ export function homeScreen() {
   // free: Home was previously the only screen without 🆘, since the hero displaced the top bar.
   const dateLabel = new Date().toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
   wrap.append(topbar(`📍 ${focus.spot.city || 'Your trip'} · ${dateLabel}`, null));
+
+  // The headline above names focus.spot.city with full confidence regardless of WHY it was
+  // picked — a live GPS fix, a city merely browsed or set days ago, or (with neither) the
+  // country's bare default. Only the first of those is actually where the traveller is right
+  // now. While on the ground, flag the other two and offer a one-tap fix (locationSheet(), same
+  // GPS-or-manual card onboarding's own location step uses) — this is the concrete bug where a
+  // traveller who moved on without a fresh fix keeps reading their old city (e.g. still "Hanoi"
+  // days after reaching Sapa) with no visible reason or way to correct it. Pre-trip, no fix is
+  // normal (they have not left yet), so the hint stays silent until phase is actually 'traveling'.
+  if (onGround && focus.source !== 'gps') {
+    wrap.append(h('button', { class: 'btn ghost block location-stale-hint', onclick: () => locationSheet() },
+      focus.source === 'focus'
+        ? `📍 Showing ${focus.spot.city} from earlier — moved on? Tap to update`
+        : `📍 Showing ${focus.spot.city} as a starting point — tap to set your real location`));
+  }
 
   // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
   // value-first first run — proof that the few taps already personalised the app.
