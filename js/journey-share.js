@@ -297,6 +297,40 @@ function esand(list) {
   return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
 }
 
+// The line under the title: which countries, and the span of dates. Shared by the file and
+// the link so a journey reads the same however it was sent.
+function journeySubtitle(entries) {
+  const ccs = new Set();
+  (store.trip.stops || []).forEach((s) => { if (s.country) ccs.add(s.country); });
+  try { (myVisits() || []).forEach((c) => { if (c.cc) ccs.add(c.cc); }); } catch { /* visit cells are optional */ }
+  const names = [...ccs].map((c) => (getCountry(c) || {}).name).filter(Boolean);
+  const dates = [];
+  (store.trip.stops || []).forEach((s) => { if (s.date) dates.push(s.date); if (s.endDate) dates.push(s.endDate); });
+  (entries || []).forEach((e) => { if (e.date) dates.push(e.date); });
+  dates.sort();
+  const span = dates.length
+    ? (dates[0] === dates[dates.length - 1] ? dates[0] : `${dates[0]} – ${dates[dates.length - 1]}`) : '';
+  return [names.length ? esand(names) : '', span].filter(Boolean).join(' · ') || 'A journey';
+}
+
+// The same journey, small enough to travel INSIDE a link. No photographs — those are what
+// make the file a file — but the map, the stops and the written entries all fit, and the
+// recipient needs no app and no account: mekonging.com renders it from the payload.
+export function journeyLinkData(journey) {
+  const include = Object.assign({}, DEFAULT_INCLUDE, (journey && journey.include) || {});
+  const journalIds = (journey && journey.journalIds) || null;
+  const who = (store.profile.name || '').trim();
+  const entries = include.journal
+    ? journalEntries().filter((e) => !journalIds || journalIds.includes(e.id)) : [];
+  return {
+    name: (journey && journey.name && journey.name.trim()) || (who ? `${who}’s journey` : 'My journey'),
+    subtitle: journeySubtitle(entries),
+    points: include.map ? journeyPoints(include, journalIds) : [],
+    stops: include.stops ? (store.trip.stops || []) : [],
+    entries: entries.map((e) => ({ title: e.title, date: e.date, place: e.place, text: e.text })),
+  };
+}
+
 // Build the whole page. `journey` is { name, include, journalIds }. onProgress fires once per
 // photo embedded, so a caller can show real progress.
 export async function buildJourneyHtml(journey, onProgress) {
@@ -310,18 +344,7 @@ export async function buildJourneyHtml(journey, onProgress) {
   const entries = journalEntries().filter((e) => !journalIds || journalIds.includes(e.id));
   const pts = journeyPoints(include, journalIds);
 
-  // Subtitle: the countries and the span of dates, worked out from whatever is included.
-  const ccs = new Set();
-  (store.trip.stops || []).forEach((s) => { if (s.country) ccs.add(s.country); });
-  try { (myVisits() || []).forEach((c) => { if (c.cc) ccs.add(c.cc); }); } catch { /* visit cells are optional */ }
-  const names = [...ccs].map((c) => (getCountry(c) || {}).name).filter(Boolean);
-  const dates = [];
-  (store.trip.stops || []).forEach((s) => { if (s.date) dates.push(s.date); if (s.endDate) dates.push(s.endDate); });
-  entries.forEach((e) => { if (e.date) dates.push(e.date); });
-  dates.sort();
-  const span = dates.length
-    ? (dates[0] === dates[dates.length - 1] ? dates[0] : `${dates[0]} – ${dates[dates.length - 1]}`) : '';
-  const subtitle = [names.length ? esand(names) : '', span].filter(Boolean).join(' · ') || 'A journey';
+  const subtitle = journeySubtitle(entries);
 
   // Map
   if (include.map && pts.length) {

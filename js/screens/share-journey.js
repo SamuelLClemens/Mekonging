@@ -9,13 +9,15 @@
 // Several named journeys can coexist, which is how "who sees what" works without accounts:
 // the scope is baked into whichever file you hand over.
 import { h } from '../util.js';
+import { getCountry } from '../data/regions.js';
 import { infoTip, field, confirmAction } from '../ui-widgets.js';
 import {
   store, journalEntries, getJourneys, addJourney, updateJourney, deleteJourney,
 } from '../state.js';
 import {
-  buildJourneyHtml, journeyPoints, journeyMapSVG, photoCount, DEFAULT_INCLUDE,
+  buildJourneyHtml, journeyPoints, journeyMapSVG, photoCount, DEFAULT_INCLUDE, journeyLinkData,
 } from '../journey-share.js';
+import { encodeJourney, parseJourney, shareUrl, MAX_PAYLOAD_URL } from '../social.js';
 import { shareOrDownload } from '../exporter.js';
 import { go, mount, topbar } from '../main.js';
 
@@ -149,8 +151,84 @@ function journeyCard(j, onChange) {
   const build = h('button', { class: 'btn block' }, '📤 Build and share');
   build.onclick = () => buildAndShare(j, build, status);
   card.append(build);
+
+  // The link half. Everything except the photographs fits inside the URL itself, so a
+  // recipient opens it in a browser with nothing to install. When it does not fit we say so
+  // and point at the file rather than quietly dropping stops out of someone's journey.
+  const payload = encodeJourney(journeyLinkData(j));
+  const url = shareUrl('jr', payload);
+  const fits = payload.length <= MAX_PAYLOAD_URL;
+  const link = h('button', { class: 'btn ghost block', style: 'margin-top:8px' },
+    fits ? '🔗 Copy a link (map and words, no photos)' : '🔗 Too long for a link — send the file above');
+  if (!fits) link.disabled = true;
+  link.onclick = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(url);
+      else if (navigator.share) { await navigator.share({ title: j.name, url }); status.textContent = 'Link sent.'; return; }
+      else throw new Error('no clipboard');
+      status.textContent = 'Link copied. It opens in any browser — photos travel in the file above.';
+    } catch { status.textContent = 'Could not copy the link on this device — use Build and share instead.'; }
+  };
+  card.append(link);
+  card.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, fits
+    ? `Link is ${Math.round(url.length / 100) / 10} KB of characters — well within what messaging apps carry.`
+    : 'A link carries the map and your written entries, but this journey is too long for one. The file has everything.'));
   card.append(status);
   return card;
+}
+
+// ---- what a RECIPIENT sees -------------------------------------------------
+// Reached by opening a shared link. Everything here arrived from someone else and is
+// UNTRUSTED: it is rendered as text children only (never innerHTML), and the map SVG is built
+// from numbers alone, so nothing from the payload reaches the markup.
+export function sharedJourneyScreen(arg) {
+  const wrap = h('div', { class: 'screen' });
+  wrap.append(topbar('A shared journey', '#home'));
+  const d = parseJourney(arg);
+  if (!d) {
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', { style: 'margin-top:0' }, 'This journey link could not be read'),
+      h('p', { class: 'muted' }, 'It may have been cut off in transit — long links are sometimes shortened by messaging apps. Ask whoever sent it to share it again, or to send the file instead.'),
+      h('button', { class: 'btn', onclick: () => go('#home') }, 'Go to Mekonging'),
+    ]));
+    mount(wrap, '#home'); return;
+  }
+
+  const head = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, d.name)]);
+  if (d.subtitle) head.append(h('p', { class: 'muted', style: 'margin:0' }, d.subtitle));
+  wrap.append(head);
+
+  if (d.points.length) {
+    const box = h('div', { class: 'card' });
+    box.append(h('div', { class: 'journey-preview', html: journeyMapSVG(d.points, []) }));
+    box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+      `${d.points.length} place${d.points.length === 1 ? '' : 's'} along the way, in order.`));
+    wrap.append(box);
+  }
+
+  if (d.stops.length) {
+    const box = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, 'Where they went')]);
+    d.stops.forEach((st) => {
+      const cn = st.country ? (getCountry(st.country) || {}).name : '';
+      const when = (st.date && st.endDate && st.endDate !== st.date) ? `${st.date} → ${st.endDate}` : (st.date || st.endDate || '');
+      box.append(h('div', { class: 'list-note' }, [st.title, cn, when].filter(Boolean).join(' · ')));
+    });
+    wrap.append(box);
+  }
+
+  d.entries.forEach((e) => {
+    const box = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, e.title || 'Untitled')]);
+    const meta = [e.date, e.place].filter(Boolean).join(' · ');
+    if (meta) box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, meta));
+    if (e.text) String(e.text).split('\n').forEach((line) => box.append(h('p', { style: 'margin:0 0 6px' }, line)));
+    wrap.append(box);
+  });
+
+  wrap.append(h('div', { class: 'card' }, [
+    h('p', { class: 'tiny muted', style: 'margin:0' },
+      'Shared from Mekonging. A link carries the map and the writing; photographs travel in the file version, so ask the sender for that if you would like to see them. Nothing here was uploaded anywhere — the whole journey arrived inside the link you opened.'),
+  ]));
+  mount(wrap, '#home');
 }
 
 export function shareJourneyScreen() {
