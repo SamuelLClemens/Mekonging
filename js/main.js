@@ -486,7 +486,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.468.0';
+const APP_VERSION = 'mk-v0.469.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -815,6 +815,58 @@ export function languageSheet() {
     filter,
     list,
     mtRow,
+    h('div', { class: 'confirm-actions' }, [
+      h('button', { class: 'btn ghost', onclick: () => close && close() }, 'Close'),
+    ]),
+  ]);
+  backdrop.append(dialog);
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close && close(); });
+  close = openModal(backdrop);
+}
+
+// The location card: live GPS plus a manual fallback, side by side, so a traveller is never
+// stuck with a wrong or missing location. Used in three places — onboarding's own step, the
+// Home hint when the resolved city is not a live fix, and #nearby's "location is off" state —
+// one component, one behaviour, everywhere "where am I" can go stale or wrong.
+//
+// `onChange` is optional and fires only once a location actually changes (a fresh GPS fix, or
+// a manual pick); the GPS button otherwise updates its own label in place rather than forcing
+// a full re-render, so callers that do not need one (onboarding) do not pay for one.
+export function locationFixCard(opts = {}) {
+  const { onChange } = opts;
+  const card = h('div', { class: 'card' });
+  card.append(h('h3', { style: 'margin-top:0' }, '📍 Use your location?'));
+  card.append(h('p', { class: 'muted' },
+    'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
+    lb.onclick = async () => {
+      lb.textContent = 'Locating…'; lb.disabled = true;
+      try { await refreshLocation(); lb.textContent = '📍 Location is on'; if (onChange) onChange(); }
+      catch { lb.textContent = '📍 Location unavailable — set it manually below'; }
+      lb.disabled = false;
+    };
+    card.append(lb);
+  } else {
+    card.append(h('p', { class: 'muted' }, 'Location is not available on this device — set it manually below.'));
+  }
+  card.append(h('p', { class: 'muted', style: 'margin-top:10px' },
+    'Not right, or GPS unavailable? Set your city instead — used for weather and distances until GPS updates it:'));
+  card.append(locationSelect(spotKey(focusSpot().spot), (key) => {
+    const s = spotForKey(key);
+    if (s) { setFocusSpot(s); if (onChange) onChange(); }
+  }));
+  return card;
+}
+
+// A quick modal wrapper around locationFixCard, for correcting location from anywhere outside
+// onboarding — mirrors languageSheet()'s own modal wiring exactly, so the two "fix something
+// about how the app sees me" entry points behave identically.
+export function locationSheet() {
+  let close = null;
+  const backdrop = h('div', { class: 'sheet-backdrop center' });
+  const dialog = h('div', { class: 'sheet loc-sheet', role: 'dialog', 'aria-label': 'Set your location' }, [
+    locationFixCard({ onChange: () => { if (close) close(); render(); } }),
     h('div', { class: 'confirm-actions' }, [
       h('button', { class: 'btn ghost', onclick: () => close && close() }, 'Close'),
     ]),
@@ -4058,6 +4110,7 @@ function nearbyScreen() {
     body.append(h('div', { class: 'card' }, [
       h('p', {}, 'Turn on location to see what is around you — distances, walking times and the closest places, all offline once you have a fix.'),
       h('button', { class: 'btn block', onclick: () => go('#nearby') }, 'Try again'),
+      h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => locationSheet() }, '📍 Set my city manually'),
       h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#home') }, 'Or browse by country'),
     ]));
   }
@@ -8717,15 +8770,20 @@ function prefChips(pairs, current, onPick) {
 // where they are — then the whole app leads with what fits their situation, place and
 // moment. Short, skippable, editable later in "For you" and Settings. Fully offline.
 // NAV-1: a value-first stepped first run. Rather than a single wall of six cards, the
-// traveller answers three focused, high-leverage questions — one per step — then lands on
-// Home with a "here is what I set up for you" recap that proves the payoff. The richer,
-// lower-urgency fields (accessibility, budget, interests, location) live behind an optional
-// "Fine-tune" foldable on the last step, so nothing is lost but nothing is front-loaded.
+// traveller answers four focused, high-leverage questions — one per step: network, location,
+// who, diet — then lands on Home with a "here is what I set up for you" recap that proves the
+// payoff. The interface language is not one of these steps; it is a persistent chip in the
+// header above them (js/i18n.js languageSheet()) so a wrong first-run guess can be fixed
+// before a single question has to be read in it. The richer, lower-urgency fields
+// (accessibility, budget, interests) live behind an optional "Fine-tune" foldable on the last
+// step, so nothing is lost but nothing is front-loaded. Location got promoted OUT of that
+// foldable into its own step — it used to be folded away and easy to never see, which is how
+// a traveller ends up permanently "in Hanoi" while standing in Sapa: no fix, no correction.
 // welcomeStep is module state so Next/Back re-render the same focused flow without a route.
 let welcomeStep = 0;
 function welcomeScreen() {
   const prefs = store.profile.prefs;
-  const step = Math.min(Math.max(welcomeStep | 0, 0), 2);
+  const step = Math.min(Math.max(welcomeStep | 0, 0), 3);
   const wrap = h('div', { class: 'screen welcome' });
 
   // Finishing = leave onboarding for a personalised Home. Show the recap only when the
@@ -8742,16 +8800,26 @@ function welcomeScreen() {
     save();
     go('#home');
   };
-  const goStep = (n) => { welcomeStep = Math.min(Math.max(n, 0), 2); welcomeScreen(); };
+  const goStep = (n) => { welcomeStep = Math.min(Math.max(n, 0), 3); welcomeScreen(); };
 
   // Compact header: small logo + a progress indicator so the traveller always knows where
-  // they are and that the flow is short (three steps).
+  // they are and that the flow is short (four steps). The language chip sits here — not
+  // gated behind any step — so a wrong first-run guess (detectPreferredLang(), js/i18n.js) can
+  // be corrected before the traveller has to read a single question in it. Reuses the exact
+  // picker every other screen's topbar flag opens (languageSheet()), so it is one consistent
+  // control rather than a second, onboarding-only implementation.
+  const lang = uiLangMeta();
   wrap.append(h('section', { class: 'hero welcome-hero' }, [
     h('div', { class: 'logo-wrap', html: logoSVG() }),
     h('p', { style: 'margin:0' }, 'A few quick taps and Home fits you — or skip and explore. Everything stays on your device.'),
+    h('button', {
+      class: 'chip', 'data-no-i18n': '', style: 'margin-top:10px',
+      'aria-label': `Language: ${lang.name} — tap to change`, title: `${lang.native} — change language`,
+      onclick: () => languageSheet(),
+    }, `${lang.flag} ${lang.native}`),
   ]));
-  wrap.append(h('div', { class: 'welcome-progress', role: 'group', 'aria-label': `Step ${step + 1} of 3` },
-    [0, 1, 2].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
+  wrap.append(h('div', { class: 'welcome-progress', role: 'group', 'aria-label': `Step ${step + 1} of 4` },
+    [0, 1, 2, 3].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
 
   // ---- Step 1 — Network choice (the gate: no data touched without it) ----
   if (step === 0) {
@@ -8771,8 +8839,22 @@ function welcomeScreen() {
     wrap.append(h('button', { class: 'btn ghost block welcome-skip', onclick: finish }, 'Skip — just explore'));
   }
 
-  // ---- Step 2 — Who is travelling (+ baby, solo female) ----
+  // ---- Step 2 — Location (the second gate) ----
+  // Promoted out of the old collapsed "Fine-tune" foldable at the very end of setup, where it
+  // was easy to never see at all: with no live fix and nothing focused yet, every screen that
+  // reads "where am I" falls back to the country default (js/main.js focusSpot()) — which is
+  // exactly how a traveller ends up reading "Hanoi" while standing in Sapa. Asked plainly here,
+  // with a working manual fallback right beside it, and still fully skippable via Next.
   if (step === 1) {
+    wrap.append(locationFixCard());
+    wrap.append(h('div', { class: 'welcome-nav' }, [
+      h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
+      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
+    ]));
+  }
+
+  // ---- Step 3 — Who is travelling (+ baby, solo female) ----
+  if (step === 2) {
     const whoCard = h('div', { class: 'card' });
     whoCard.append(h('h2', { style: 'margin-top:0' }, 'Who is travelling?'));
     whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
@@ -8786,13 +8868,13 @@ function welcomeScreen() {
     whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
     wrap.append(whoCard);
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
+      h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
+      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(3) }, 'Next →'),
     ]));
   }
 
-  // ---- Step 3 — Food allergies / diet (the most visibly personalised surface) ----
-  if (step === 2) {
+  // ---- Step 4 — Food allergies / diet (the most visibly personalised surface) ----
+  if (step === 3) {
     const dietCard = h('div', { class: 'card' });
     dietCard.append(h('h2', { style: 'margin-top:0' }, 'Any food allergies or diet?'));
     dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
@@ -8800,8 +8882,10 @@ function welcomeScreen() {
     wrap.append(dietCard);
 
     // Everything else is optional and tucked away — reachable now for keen setters, invisible
-    // to travellers who just want to get moving. All fields also live in Settings.
-    wrap.append(foldable('⚙️ Fine-tune (optional): accessibility, price, interests, location', () => {
+    // to travellers who just want to get moving. All fields also live in Settings. Location
+    // used to be folded away in here too; it now has its own step (Step 2, above) since a
+    // missing or stale fix silently breaks weather/near-me everywhere else in the app.
+    wrap.append(foldable('⚙️ Fine-tune (optional): accessibility, price, interests', () => {
       const box = [];
       // Accessibility + text size
       const accCard = h('div', { class: 'card' });
@@ -8831,23 +8915,11 @@ function welcomeScreen() {
           onclick: (e) => { prefs.interests = prefs.interests || []; const i = prefs.interests.indexOf(it.id); if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, `${it.emoji} ${it.label}`)); });
       fitCard.append(intRow);
       box.push(fitCard);
-      // Location (sensors, not data)
-      const locCard = h('div', { class: 'card' });
-      locCard.append(h('h3', { style: 'margin-top:0' }, 'Use your location? (optional)'));
-      locCard.append(h('p', { class: 'muted' }, 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
-      if (typeof navigator !== 'undefined' && navigator.geolocation) {
-        const lb = h('button', { class: 'btn ghost block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
-        lb.onclick = async () => { lb.textContent = 'Locating…'; lb.disabled = true; try { await refreshLocation(); lb.textContent = '📍 Location is on'; } catch { lb.textContent = '📍 Location unavailable'; } lb.disabled = false; };
-        locCard.append(lb);
-      } else {
-        locCard.append(h('p', { class: 'muted' }, 'Location is not available on this device — you can still browse by country and city.'));
-      }
-      box.push(locCard);
       return box;
     }, { cls: 'welcome-more' }));
 
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
+      h('button', { class: 'btn ghost', onclick: () => goStep(2) }, '← Back'),
       h('button', { class: 'btn', style: 'margin-left:auto', onclick: finish }, 'See what I set up →'),
     ]));
   }
