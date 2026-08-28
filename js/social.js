@@ -159,3 +159,41 @@ export function parseMessage(str) {
   if (!from || !from.userId || !text) return null;
   return { from, text };
 }
+
+// --- a journey, as a link ----------------------------------------------------
+// The companion to the self-contained journey FILE (js/journey-share.js). The file carries
+// photographs and so must be sent as a file; this carries the map, the stops and the written
+// entries inside the link itself, which means a recipient opens it in a browser with nothing
+// to install and no account — the app renders it for them from the payload alone.
+//
+// Keys are single letters and coordinates are rounded to 4 decimals (about 11 m, far finer
+// than a journey line needs) because every character counts against MAX_PAYLOAD_URL. Callers
+// must check the encoded length against that cap and fall back to the file when it does not
+// fit; there is no silent truncation, because a journey that quietly lost half its stops in
+// transit is worse than one that honestly refused to become a link.
+function r4(n) { const v = Number(n); return Number.isFinite(v) ? Math.round(v * 1e4) / 1e4 : 0; }
+export function encodeJourney(d) {
+  return encodePayload('j', {
+    n: clean(d.name, 60),
+    b: clean(d.subtitle, 90),
+    m: (d.points || []).slice(0, 120).map((p) => [r4(p.lat), r4(p.lng), clean(p.label, 40), clean(p.date, 10)]),
+    s: (d.stops || []).slice(0, 60).map((s) => ({ t: clean(s.title, 60), c: clean(s.country, 4), d: clean(s.date, 10), e: clean(s.endDate, 10) })),
+    j: (d.entries || []).slice(0, 60).map((e) => ({ t: clean(e.title, 70), d: clean(e.date, 10), p: clean(e.place, 40), x: clean(e.text, 600) })),
+  });
+}
+export function parseJourney(str) {
+  const p = decodePayload(str);
+  if (!p || p.t !== 'j' || !p.d) return null;
+  const d = p.d;
+  const pts = Array.isArray(d.m) ? d.m.slice(0, 120).map((a) => ({
+    lat: Number(a && a[0]), lng: Number(a && a[1]), label: clean(a && a[2], 40), date: clean(a && a[3], 10),
+  })).filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lng) && Math.abs(x.lat) <= 90 && Math.abs(x.lng) <= 180) : [];
+  const stops = Array.isArray(d.s) ? d.s.slice(0, 60).map((s) => ({
+    title: clean(s && s.t, 60), country: clean(s && s.c, 4), date: clean(s && s.d, 10), endDate: clean(s && s.e, 10),
+  })).filter((s) => s.title) : [];
+  const entries = Array.isArray(d.j) ? d.j.slice(0, 60).map((e) => ({
+    title: clean(e && e.t, 70), date: clean(e && e.d, 10), place: clean(e && e.p, 40), text: clean(e && e.x, 600),
+  })).filter((e) => e.title || e.text) : [];
+  if (!pts.length && !stops.length && !entries.length) return null;
+  return { name: clean(d.n, 60) || 'A journey', subtitle: clean(d.b, 90), points: pts, stops, entries };
+}

@@ -210,7 +210,7 @@ const ROUTE_SCREENS = {
   settings: ['settings'],
   visitors: ['visitors'],
   family: ['family'], explore: ['family'], country: ['family'],
-  sharejourney: ['sharejourney'],
+  sharejourney: ['sharejourney'], jr: ['sharejourney'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -488,7 +488,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.470.0';
+const APP_VERSION = 'mk-v0.471.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -9813,6 +9813,9 @@ export function render() {
       case 'contributions': return contributionsScreen();
       case 'journey': return screenMod('journal').journeyScreen();
       case 'sharejourney': return screenMod('sharejourney').shareJourneyScreen();
+      // A journey someone shared as a link. The whole journey travels in the payload, so this
+      // renders for a first-time visitor with no profile and nothing stored.
+      case 'jr': return screenMod('sharejourney').sharedJourneyScreen(arg);
       case 'calendar': return screenMod('calendar').calendarDispatch(arg);
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
