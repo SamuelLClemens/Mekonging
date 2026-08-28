@@ -153,6 +153,13 @@ function defaults() {
     // IndexedDB; this holds the ordered metadata. The scrapbook shows these + journal
     // photos together. On-device, backup-safe. { photos: [{ id, key, caption, date }] }
     album: { photos: [] },
+    // --- v12: saved "journey" share scopes. Each is a named recipe for one self-contained
+    // HTML page the traveller builds and hands to someone — NOT a copy of the content, just
+    // which parts to include, so several can coexist ("For family" with everything, a wider
+    // one with map and photos only). Built by js/journey-share.js. Nothing here is uploaded;
+    // the passport vault and the private calendar are unreachable from that builder by design.
+    // { id, name, include: { map, stops, journal, photos, reviews, spending }, journalIds|null, builtAt }
+    journeys: [],
   };
 }
 
@@ -198,6 +205,7 @@ function migrate(data) {
     // inner shape lazily); only reset to the empty default if it is missing or malformed.
     personal: (data.personal && typeof data.personal === 'object' && !Array.isArray(data.personal)) ? data.personal : base.personal,
     album: { photos: Array.isArray((data.album || {}).photos) ? data.album.photos : [] },
+    journeys: Array.isArray(data.journeys) ? data.journeys : base.journeys,
   };
   // v1 -> v2: collections[] and pins[]. v2 -> v3: placeData{}. v3 -> v4: journal{} +
   // calendar{} (nested objects, backfilled explicitly above). All guarded; favorites carries.
@@ -244,13 +252,14 @@ function hasUserData(s) {
   const threads = social.threads && typeof social.threads === 'object' && Object.keys(social.threads).length;
   const listings = Array.isArray(social.listings) && social.listings.length;
   const album = s.album && Array.isArray(s.album.photos) && s.album.photos.length;
+  const journeys = Array.isArray(s.journeys) && s.journeys.length;
   const board = s.boardPosts && typeof s.boardPosts === 'object'
     && Object.values(s.boardPosts).some((arr) => Array.isArray(arr) && arr.length);
   const per = (Array.isArray(personal.partners) && personal.partners.length)
     || (personal.days && typeof personal.days === 'object' && Object.keys(personal.days).length)
     || personal.pregnancy;
   return !!(j || b || stops || visits || wd || c || p || col || pd || f
-    || stay || areas || contacts || threads || listings || album || board || per);
+    || stay || areas || contacts || threads || listings || album || board || per || journeys);
 }
 
 function load() {
@@ -580,6 +589,35 @@ export function updateAlbumPhoto(id, patch = {}) {
 }
 export function deleteAlbumPhoto(id) {
   const a = getAlbum(); const i = a.findIndex((x) => x.id === id);
+  if (i >= 0) { a.splice(i, 1); save(); }
+}
+
+// --- saved journeys (share scopes) -------------------------------------------
+// A journey is a NAMED RECIPE, not a copy: which parts of the traveller's own record go into
+// the self-contained page js/journey-share.js builds. Keeping several means "who sees what"
+// can differ per recipient without any account system — the scope is baked into whichever
+// file you hand over.
+export function getJourneys() {
+  if (!Array.isArray(store.journeys)) store.journeys = [];
+  return store.journeys;
+}
+export function addJourney({ name, include, journalIds = null }) {
+  const j = { id: uid('jr'), name: String(name || '').slice(0, 60) || 'My journey', include: { ...include }, journalIds, builtAt: null };
+  getJourneys().push(j); save();
+  return j;
+}
+export function updateJourney(id, patch = {}) {
+  const j = getJourneys().find((x) => x.id === id);
+  if (!j) return null;
+  if (patch.name !== undefined) j.name = String(patch.name || '').slice(0, 60) || j.name;
+  if (patch.include) j.include = { ...j.include, ...patch.include };
+  if (patch.journalIds !== undefined) j.journalIds = patch.journalIds;
+  if (patch.builtAt !== undefined) j.builtAt = patch.builtAt;
+  save();
+  return j;
+}
+export function deleteJourney(id) {
+  const a = getJourneys(); const i = a.findIndex((x) => x.id === id);
   if (i >= 0) { a.splice(i, 1); save(); }
 }
 

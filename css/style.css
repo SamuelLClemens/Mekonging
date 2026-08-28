@@ -1313,6 +1313,10 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 
 .journey-wrap { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
 .journey-svg { width: 100%; max-width: 360px; background: var(--sunburst), var(--card); border-radius: var(--r-lg); }
+/* The share-a-journey preview. The SVG carries its own sea-coloured backdrop (it has to, so
+   the same markup survives being written into a standalone file), so this only frames it. */
+.journey-preview { display: flex; justify-content: center; }
+.journey-preview .jr-map { width: 100%; max-width: 420px; height: auto; border-radius: var(--r-lg); border: 1px solid var(--line); }
 /* Was --sun-deep, which the Tropical skin redefines to a mid green (3.12:1 on its white card).
    --gold is the rating colour used by .pqr-rating and .pqr-star and is theme-aware. */
 .stars-static { color: var(--gold, var(--sun-deep)); font-size: 1.1rem; letter-spacing: 1px; }

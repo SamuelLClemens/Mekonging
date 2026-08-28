@@ -198,6 +198,7 @@ const SCREEN_LOADERS = {
   settings: (b) => import('./screens/settings.js' + b),
   visitors: (b) => import('./screens/visitors.js' + b),
   family: (b) => import('./screens/family.js' + b),
+  sharejourney: (b) => import('./screens/share-journey.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -209,6 +210,7 @@ const ROUTE_SCREENS = {
   settings: ['settings'],
   visitors: ['visitors'],
   family: ['family'], explore: ['family'], country: ['family'],
+  sharejourney: ['sharejourney'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -486,7 +488,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.469.0';
+const APP_VERSION = 'mk-v0.470.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2753,6 +2755,7 @@ function meHubScreen() {
     flatChip('⭐', svN ? `Saved places · ${svN}` : 'Saved places', '#saved'),
     flatChip('🔍', idN ? `My identifier · ${idN}` : 'My identifier', '#identified'),
     flatChip('🗺', 'Journey map', '#journey'),
+    flatChip('📤', 'Share my journey', '#sharejourney'),
     flatChip('📸', 'Trip scrapbook', '#scrapbook'),
     flatChip('🏅', `Your contributions · ${cLvl.emoji} ${cLvl.title}`, '#contributions'),
   ], true));
@@ -2856,6 +2859,7 @@ function everythingScreen() {
     chip('📔', 'Journal', '#journal'),
     chip('📸', 'Trip scrapbook', '#scrapbook'),
     chip('🗺', 'Journey map', '#journey'),
+    chip('📤', 'Share my journey', '#sharejourney'),
     chip('🔍', 'My identifier', '#identified'),
     chip('💬', name ? `${name}’s dictionary` : 'My Dictionary', '#dictionary'),
     chip('🏅', 'Your contributions', '#contributions'),
@@ -9808,6 +9812,7 @@ export function render() {
       case 'scrapbook': return screenMod('journal').scrapbookScreen();
       case 'contributions': return contributionsScreen();
       case 'journey': return screenMod('journal').journeyScreen();
+      case 'sharejourney': return screenMod('sharejourney').shareJourneyScreen();
       case 'calendar': return screenMod('calendar').calendarDispatch(arg);
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
