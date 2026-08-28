@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.469.0';
+const CACHE_VERSION = 'mk-v0.470.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -47,6 +47,8 @@ const PRECACHE = [
   'js/screens/medical.js',
   'js/data/medical.js',
   'js/screens/visitors.js',
+  'js/screens/share-journey.js',
+  'js/journey-share.js',
   'js/visits.js',
   // The full hospital layer: every named hospital, clinic and surgery in the four countries.
   // ~146 KB gzipped for all four, and precached rather than lazily fetched because "nearest
