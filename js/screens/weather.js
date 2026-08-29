@@ -343,7 +343,12 @@ export function weatherScreen(country) {
   const mapBox = h('div', {});
   wrap.append(mapBox);
   function renderMap(many) {
-    const cities = spotsForCountry(curCountry);
+    // Hubs, plus the selected city when it is an anchor rather than a hub — otherwise
+    // choosing e.g. Koh Lanta from the search box left the map with no dot highlighted at
+    // all. Only the one selected anchor is added; drawing all 101 would bury the map.
+    const hubs = spotsForCountry(curCountry);
+    const sel = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey);
+    const cities = (sel && sel.country === curCountry && !sel.hub) ? hubs.concat([sel]) : hubs;
     const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
       ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1.5" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
     const dots = cities.map((s) => {

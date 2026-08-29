@@ -488,7 +488,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.475.0';
+const APP_VERSION = 'mk-v0.476.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1208,6 +1208,11 @@ export function spotForCity(cc, cityName) {
   const inCountry = WEATHER_SPOTS.filter((s) => s.country === cc);
   const exact = inCountry.find((s) => citySlug(s.city) === slug);
   if (exact) return exact;
+  // Last resort only. Every city with place records now has its own entry in WEATHER_SPOTS
+  // (see the header there), so the exact match above is the normal path. This snap-to-nearest
+  // -hub branch used to run for 101 cities and is what made "Places in Ninh Binh" rank Hanoi
+  // venues as Nearby; it now fires only for a city named by something other than the place
+  // data, where the nearest hub genuinely is the best available guess.
   const rep = allPlaces({ country: cc }).find((p) => p.coords && citySlug(p.city) === slug);
   return rep ? nearestSpot(rep.coords, cc) : null;
 }
