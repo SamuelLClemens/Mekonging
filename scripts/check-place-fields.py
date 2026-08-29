@@ -99,10 +99,10 @@ def main():
         # A LIST, not a dict, and it has to stay one: afterDark and stepFree both read 187
         # as of August 2026, and as dict keys the second silently replaced the first, which
         # quietly dropped afterDark from the check while still printing PASS.
-        expect = [('808', total, 'total'), ('436', counts['kidFriendly'], 'kidFriendly'),
-                  ('187', counts['afterDark'], 'afterDark'), ('192', counts['stepFree'], 'stepFree'),
-                  ('691', counts['scamWarnings'], 'scamWarnings'),
-                  ('350', counts['scam_nonempty'], 'scam_nonempty')]
+        expect = [('815', total, 'total'), ('441', counts['kidFriendly'], 'kidFriendly'),
+                  ('192', counts['afterDark'], 'afterDark'), ('199', counts['stepFree'], 'stepFree'),
+                  ('698', counts['scamWarnings'], 'scamWarnings'),
+                  ('354', counts['scam_nonempty'], 'scam_nonempty')]
         for quoted, actual, _label in expect:
             if int(quoted) != actual:
                 problems.append(f'js/main.js quotes {quoted} where the data now says {actual} '
