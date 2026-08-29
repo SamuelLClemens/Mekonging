@@ -900,7 +900,11 @@ export function placesScreen(arg) {
     ['far', '🗺 Further afield', false],
   ];
   function tierOf(p) {
-    if (!p.coords) return 'near';
+    // No coords means the distance is UNKNOWN, not zero. This returned 'near' and so put any
+    // coordless place in the Nearby bucket of every city in its country - Wat Huay Mongkol,
+    // outside Hua Hin, was listed as nearby on Koh Samet 300 km away. 'far' is the honest
+    // bucket: it still surfaces the place without implying it is a short hop.
+    if (!p.coords) return 'far';
     const km = haversineKm(anchor, p.coords);
     return withinNear(km, p.country) ? 'near' : withinDayTrip(km, p.country) ? 'trip' : 'far';
   }
