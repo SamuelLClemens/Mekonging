@@ -31,6 +31,16 @@ export const WEATHER_SPOTS = [
   { country: 'th', city: 'Kanchanaburi', lat: 14.0227, lng: 99.5328 },
   { country: 'th', city: 'Hua Hin', lat: 12.5684, lng: 99.9577 },
   { country: 'th', city: 'Udon Thani', lat: 17.4138, lng: 102.7870 },
+  // The islands within a day of Bangkok. Each one is a `city` in the place data, and a city
+  // with records but no spot here silently anchors on the nearest listed one - Ninh Binh
+  // ranked Hanoi venues as "Nearby" for exactly this reason. Koh Kret and Bang Krachao are
+  // river islands inside greater Bangkok, so their weather is Bangkok's in practice; they
+  // are listed anyway so the Places anchor and "You're around X" resolve to the right place.
+  { country: 'th', city: 'Koh Kret', lat: 13.9089, lng: 100.4796 },
+  { country: 'th', city: 'Bang Krachao', lat: 13.6954, lng: 100.5610 },
+  { country: 'th', city: 'Koh Si Chang', lat: 13.1525, lng: 100.8094 },
+  { country: 'th', city: 'Koh Larn', lat: 12.9175, lng: 100.7782 },
+  { country: 'th', city: 'Koh Samet', lat: 12.5667, lng: 101.4500 },
   // Vietnam
   { country: 'vi', city: 'Hanoi', lat: 21.0278, lng: 105.8342 },
   { country: 'vi', city: 'Ho Chi Minh City', lat: 10.8231, lng: 106.6297 },
