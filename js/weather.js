@@ -41,6 +41,11 @@ export const WEATHER_SPOTS = [
   { country: 'vi', city: 'Da Lat', lat: 11.9404, lng: 108.4583 },
   { country: 'vi', city: 'Sapa', lat: 22.3364, lng: 103.8438 },
   { country: 'vi', city: 'Ha Long', lat: 20.9101, lng: 107.1839 },
+  // Without an entry here spotForCity() falls through to nearestSpot(), which for Ninh Binh
+  // resolves to Hanoi 90 km away: scoping Places to Ninh Binh ranked Hanoi venues as
+  // "Nearby" and its weather read the capital's. Coordinates are the city People's Committee
+  // building - the town centre, not the karst valleys 8 km west, which stay a short hop.
+  { country: 'vi', city: 'Ninh Binh', lat: 20.2580, lng: 105.9798 },
   { country: 'vi', city: 'Phu Quoc', lat: 10.2270, lng: 103.9670 },
   { country: 'vi', city: 'Can Tho', lat: 10.0452, lng: 105.7469 },
   // Cambodia
