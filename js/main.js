@@ -488,7 +488,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.472.0';
+const APP_VERSION = 'mk-v0.473.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3471,10 +3471,15 @@ function zonePickList(cc) {
       onclick: () => { zoneMonth = (zoneMonth === i) ? 0 : i; render(); },
     }, monthShort(i) + (i === nowM ? ' •' : '')));
   }
-  wrap.append(strip);
-  if (zoneMonth) {
-    wrap.append(h('button', { class: 'chip ghost', style: 'margin-top:6px', onclick: () => { zoneMonth = 0; render(); } }, '↺ Back to this month'));
-  }
+  // The twelve-month strip sits behind a "By month" button rather than standing open. The
+  // common question is "what about now?", which the heading and the list below already
+  // answer, so twelve chips were costing three rows of a phone screen to serve the planning
+  // case alone. It opens automatically whenever a month IS pinned — leaving it shut would
+  // strand a traveller on a June ordering with no visible reason for it and no way back.
+  const monthFold = foldable('📅 By month', zoneMonth
+    ? [strip, h('button', { class: 'chip ghost', style: 'margin-top:6px', onclick: () => { zoneMonth = 0; render(); } }, '↺ Back to this month')]
+    : strip, { open: !!zoneMonth });
+  wrap.append(monthFold);
 
   const list = h('div', { class: 'zone-list' });
   zonesByMonth(cc, m).forEach(({ zone: z, verdict }) => {
