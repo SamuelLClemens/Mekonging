@@ -374,3 +374,83 @@ export async function refreshAir(spot) {
   } catch { /* offline or blocked — fall through to cache */ }
   return getCachedAir(key);
 }
+
+// --- STALENESS AND AUTOMATIC REFRESH ----------------------------------------
+// Every refresh* above fetches unconditionally whenever it is called, and each was called
+// only from the screen that displays it. That is wrong in both directions at once:
+//
+//   too rarely — nothing refreshed in the background, so an app left open on Home all day
+//     showed the forecast it happened to fetch at breakfast, and a launch with no signal
+//     meant no weather for the rest of the session however long the traveller was online
+//     afterwards. This is an installed PWA people leave open, not a page they reload.
+//
+//   too often — opening the forecast five times fetched it five times, on a phone roaming
+//     on a foreign SIM, for data that Open-Meteo only recomputes hourly.
+//
+// So staleness lives here, in the module that owns the cache, and the callers get maybe*
+// entry points that are cheap to call as often as anything likes. Same shape as
+// maybeRefreshRates() in js/currency.js: no-op unless genuinely due, a minimum gap between
+// attempts, and in-flight de-duplication so concurrent callers share one request.
+//
+// TTLs follow what the upstream data actually does. Open-Meteo recomputes its forecast
+// hourly and its current conditions about every fifteen minutes, so a 20-minute window on
+// conditions is as fresh as the source can be; marine and air quality are hourly.
+const WX_TTL_MS = 20 * 60 * 1000;
+const SEA_TTL_MS = 60 * 60 * 1000;
+const AIR_TTL_MS = 60 * 60 * 1000;
+const MANY_TTL_MS = 30 * 60 * 1000;
+const MIN_GAP_MS = 2 * 60 * 1000;    // never re-attempt the same key faster than this
+const _lastAttempt = {};
+const _inFlight = {};
+
+function ageOf(rec) { return (rec && rec.fetchedAt) ? Date.now() - rec.fetchedAt : Infinity; }
+
+// Shared guard. `key` scopes the gap and the in-flight slot, so two cities refresh
+// independently while two callers asking for the same city share one fetch.
+function guarded(key, stale, run) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.resolve(null);
+  if (!stale) return Promise.resolve(null);
+  if (_inFlight[key]) return _inFlight[key];
+  const now = Date.now();
+  if ((now - (_lastAttempt[key] || 0)) < MIN_GAP_MS) return Promise.resolve(null);
+  _lastAttempt[key] = now;
+  _inFlight[key] = Promise.resolve()
+    .then(run)
+    .catch(() => null)
+    .finally(() => { delete _inFlight[key]; });
+  return _inFlight[key];
+}
+
+export function weatherIsStale(spot, ttl = WX_TTL_MS) {
+  return ageOf(getCachedWeather(spotKey(spot))) >= ttl;
+}
+
+// Resolves to the fresh record when it fetched, or null when it decided not to. A null is
+// not a failure: it means "what you already have is current enough".
+export function maybeRefreshWeather(spot, force = false) {
+  if (!spot) return Promise.resolve(null);
+  const key = spotKey(spot);
+  if (force) { delete _lastAttempt[key]; }
+  return guarded(`wx:${key}`, force || weatherIsStale(spot), () => refreshWeather(spot));
+}
+
+export function maybeRefreshMany(spots, force = false) {
+  if (!spots || !spots.length) return Promise.resolve(null);
+  const key = `many:${spots[0].country || ''}:${spots.length}`;
+  if (force) { delete _lastAttempt[key]; }
+  return guarded(key, force || ageOf(getCachedMany()) >= MANY_TTL_MS, () => refreshMany(spots));
+}
+
+export function maybeRefreshMarine(coords, force = false) {
+  if (!coords || coords.lat == null || coords.lng == null) return Promise.resolve(null);
+  const key = marineKey(coords);
+  if (force) { delete _lastAttempt[key]; }
+  return guarded(key, force || ageOf(getCachedMarine(coords)) >= SEA_TTL_MS, () => refreshMarine(coords));
+}
+
+export function maybeRefreshAir(spot, force = false) {
+  if (!spot) return Promise.resolve(null);
+  const key = `air:${spotKey(spot)}`;
+  if (force) { delete _lastAttempt[key]; }
+  return guarded(key, force || ageOf(getCachedAir(spotKey(spot))) >= AIR_TTL_MS, () => refreshAir(spot));
+}

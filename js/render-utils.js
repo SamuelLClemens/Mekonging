@@ -5,7 +5,7 @@
 
 import { h, fmtDistance, compass, bearing, mapsUrl, haversineKm } from './util.js';
 import { store, getLastFix } from './state.js';
-import { spotKey, getCachedAir, refreshAir, getCachedWeather, refreshWeather, nearestSpot } from './weather.js';
+import { spotKey, getCachedAir, getCachedWeather, nearestSpot, maybeRefreshWeather, maybeRefreshAir } from './weather.js';
 import { online } from './ui-widgets.js';
 import { PHOTOS } from './data/photos.js';
 import { DRIVE_CURVE } from './data/drivetimes.js';
@@ -416,7 +416,7 @@ export function airBlock(spot, opts) {
   }
   const cached = getCachedAir(key);
   paint(cached, !cached && online());
-  if (online()) refreshAir(spot).then((r) => { if (r && box.isConnected) paint(r, false); });
+  if (online()) maybeRefreshAir(spot).then((r) => { if (r && box.isConnected) paint(r, false); });
   return box;
 }
 
@@ -456,7 +456,7 @@ export function uvTodayBlock(coords, country) {
   const cached = getCachedWeather(spotKey(spot));
   paint(cached);
   if (online() && !(cached && cached.daily && cached.daily.length)) {
-    refreshWeather(spot).then((r) => { if (r && box.isConnected) paint(r); });
+    maybeRefreshWeather(spot).then((r) => { if (r && box.isConnected) paint(r); });
   }
   return box;
 }

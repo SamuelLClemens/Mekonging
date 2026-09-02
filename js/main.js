@@ -104,7 +104,7 @@ import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine, refreshAir, getCachedAir } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany } from './weather.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
   getCountry, getLanguage, allPlaces, getPlace,
@@ -490,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.479.0';
+const APP_VERSION = 'mk-v0.480.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1140,15 +1140,13 @@ function forecastOutlook(rec) {
 // online use, pull the focus city's forecast once (skipped when a fresh copy is already cached,
 // and de-duplicated so repeated renders never stack fetches), then re-render Home so the outlook
 // and the "right now" forecast line fill in. Never fetches when offline or without consent.
-let _homeWxKey = '', _homeWxAt = 0;
 export function ensureHomeWeather(spot) {
   if (!spot || !online()) return;
-  const key = spotKey(spot);
-  const rec = getCachedWeather(key);
-  if (rec && rec.fetchedAt && (Date.now() - rec.fetchedAt) < 30 * 60 * 1000) return;   // fresh enough
-  if (_homeWxKey === key && (Date.now() - _homeWxAt) < 60 * 1000) return;               // recent / in-flight
-  _homeWxKey = key; _homeWxAt = Date.now();
-  refreshWeather(spot).then((r) => {
+  // The staleness window, the minimum retry gap and the in-flight de-duplication that used
+  // to be hand-rolled here now live in js/weather.js, so every caller gets them and they
+  // cannot drift apart — Home's 30-minute rule and the forecast screen's no rule at all
+  // were the same fetch under two different policies.
+  maybeRefreshWeather(spot).then((r) => {
     const hash = location.hash || '';
     if (r && (hash === '' || hash === '#' || hash === '#home')) render();
   }).catch(() => {});
@@ -6232,7 +6230,7 @@ function daySuggestScreen(country) {
   let lastRec = getCachedWeather(spotKey(spot));
   paint(lastRec);
   if (online()) {
-    refreshWeather(spot).then((r) => { if (r && (location.hash || '').startsWith('#today')) { lastRec = r; paint(r); } });
+    maybeRefreshWeather(spot).then((r) => { if (r && (location.hash || '').startsWith('#today')) { lastRec = r; paint(r); } });
   }
   mount(wrap, '#home');
 }
@@ -10034,18 +10032,45 @@ function syncRates(force = false) {
     if (RATE_SCREENS.some((r) => hash.startsWith(r))) render();
   }).catch(() => {});
 }
+// The weather where the traveller actually is, on the same triggers as the rates. It used to
+// refresh only when a screen showing it was opened, which meant an app left open on Home all
+// day kept the forecast it fetched at breakfast, and a launch with no signal meant no weather
+// for the rest of the session however long the traveller was online afterwards. Staleness and
+// de-duplication live in js/weather.js, so this can be called freely; it no-ops when what is
+// cached is current.
+//
+// Only the FOCUS city is refreshed in the background. Chasing every cached city would turn a
+// heartbeat into dozens of requests on a foreign SIM for cities nobody is looking at; the
+// rest refresh when their screen is opened, which is the moment they matter.
+const WX_SCREENS = ['#weather', '#today', '#home'];
+function syncWeather(force = false) {
+  if (!online()) return;
+  let spot = null;
+  try { spot = focusSpot().spot; } catch { return; }
+  if (!spot) return;
+  maybeRefreshWeather(spot, force).then((rec) => {
+    if (!rec) return;                        // already current — nothing repainted, nothing fetched
+    const hash = location.hash || '';
+    if (WX_SCREENS.some((r) => hash === r || hash.startsWith(r)) || hash === '' || hash === '#') render();
+  }).catch(() => {});
+}
+
+// One call for every live source, so a trigger can never be wired to one and forgotten for
+// the other — which is how the rates ended up with four triggers and the forecast with none.
+function syncLive(force = false) { syncRates(force); syncWeather(force); }
+
 // Exported so the two places that turn data ON can fetch immediately rather than waiting for
 // the next poll — enabling data and then seeing "approximate" rates for half an hour reads
 // as broken.
-export function ratesOnConsent() { syncRates(true); }
-syncRates();
+export function ratesOnConsent() { syncLive(true); }
+syncLive();
 // Regaining a connection is the single most valuable moment to try: it is exactly the case
 // the old once-per-boot fetch missed.
-window.addEventListener('online', () => syncRates());
+window.addEventListener('online', () => syncLive());
 // Coming back to the app after it has been backgrounded for hours.
-document.addEventListener('visibilitychange', () => { if (!document.hidden) syncRates(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncLive(); });
 // And a slow heartbeat for a session that simply stays open.
-setInterval(() => syncRates(), RATE_POLL_MS);
+setInterval(() => syncLive(), RATE_POLL_MS);
 
 // Warm the wildlife/plant data (js/data/nature.js) once the browser is idle, so Identify/
 // Sounds/Species/Dangerous/Search often already have it by the time a traveller taps in —

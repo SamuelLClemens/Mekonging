@@ -45,9 +45,7 @@ import { dateLocale, t } from '../i18n.js';
 import { getAccessibility, CROSSINGS, TRANSPORT_HUBS, TRANSIT_SOURCES } from '../lazy-data.js';
 import { putBlob, delBlob } from '../idb.js';
 import { shareOrDownload } from '../exporter.js';
-import {
-  nearestSpot, spotKey, wmo, getCachedWeather, refreshWeather, getCachedMarine, refreshMarine,
-} from '../weather.js';
+import { nearestSpot, spotKey, wmo, getCachedWeather, getCachedMarine, maybeRefreshWeather, maybeRefreshMarine } from '../weather.js';
 import { seedWeatherKey } from './weather.js';
 import { shareUrl, encodeShare } from '../social.js';
 import {
@@ -1455,7 +1453,7 @@ function beachSeaBlock(coords) {
   const cached = getCachedMarine(coords);
   paint(cached, !cached && online());
   if (online()) {
-    refreshMarine(coords).then((r) => { if ((location.hash || '').startsWith('#place') && r) paint(r, false); });
+    maybeRefreshMarine(coords).then((r) => { if ((location.hash || '').startsWith('#place') && r) paint(r, false); });
   }
   return box;
 }
@@ -1676,7 +1674,7 @@ function weatherNearbyCard(p) {
   const cached = getCachedWeather(key);
   paintWx(cached, !cached && online());
   if (!cached && online()) {
-    refreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
+    maybeRefreshWeather(spot).then((r) => { if ((location.hash || '').startsWith('#place') && r) paintWx(r, false); });
   }
 
   card.append(airBlock(spot, { compact: true }));
