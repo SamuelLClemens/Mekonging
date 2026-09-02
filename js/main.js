@@ -37,6 +37,7 @@ import {
 import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems } from './nav-groups.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
+import { noteTrail, trailEnabled } from './trail.js';
 import { hospitalScreen } from './screens/medical.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
 import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
@@ -489,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.478.0';
+const APP_VERSION = 'mk-v0.479.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7576,6 +7577,12 @@ function startLocationWatch() {
         if (moved) { const nb = nearestSpotGlobal(next); if (nb) setFocusSpot(nb.spot); }
         // First fix of the session is the one that means "opened here" — see logOpenLocation.
         logOpenLocation();
+        // The journey trail records EVERY fix, unlike the visit pin above which is once per
+        // session: that is what lets the map fill itself in as somebody actually travels
+        // through a day rather than only where they happened to launch the app. noteTrail()
+        // is cheap and self-deduplicating — a fix within 2 km of a point it already holds
+        // just touches that point's date — so calling it on every callback is correct.
+        logTrail(next);
         const hash = location.hash || '';
         if (moved && (hash === '' || hash === '#' || hash === '#home' || hash === '#nearby' || hash === '#explore' || hash.startsWith('#places'))) render();
       },
@@ -7584,11 +7591,27 @@ function startLocationWatch() {
     );
   } catch { /* noop */ }
 }
+// The journey trail (js/trail.js) — the traveller's own map of where they have been, built
+// without them having to add a single pin. Deliberately unlike logOpenLocation below: on by
+// default, at real precision, every fix rather than one a session, and never offered to any
+// feed. City name comes from whereAmI() so a pin reads "Ninh Binh" rather than a coordinate.
+function logTrail(fix) {
+  if (!trailEnabled()) return;
+  try {
+    const wai = whereAmI(fix);
+    noteTrail(fix, (wai && wai.country) || getActiveCountry(), (wai && wai.name) || '', todayISO());
+  } catch { /* a pin is never worth breaking a location update over */ }
+}
+
 // One coarsened pin per place per day, and only when the traveller has switched it on.
 // Hangs off the app-open path rather than the location watch: a pin is meant to record
 // "I opened the app here", not to trace a route through the day.
 let _visitLogged = false;
 function logOpenLocation() {
+  // The trail is recorded first and independently of the visits opt-in below, so a traveller
+  // who never switched visits on still gets their journey map. A launch that reads one screen
+  // and closes may never reach a watch callback, so the fix already in hand counts.
+  { const f = getLastFix(); if (f) logTrail(f); }
   if (_visitLogged || !visitsEnabled()) return;
   try {
     const fix = getLastFix();

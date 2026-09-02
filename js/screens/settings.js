@@ -26,6 +26,7 @@ import { store, save, resetAll, exportData, importData, storageStatus, requestPe
 import { h } from '../util.js';
 import { field, selectEl, infoTip, confirmAction } from '../ui-widgets.js';
 import { visitsEnabled, myVisits } from '../visits.js';
+import { trailEnabled, setTrailEnabled, clearTrail, trailStats } from '../trail.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
 import { LANGUAGES, INTERESTS } from '../data/regions.js';
 import { getFamily } from '../data/family.js';
@@ -296,6 +297,34 @@ export function settingsScreen() {
     visitsEnabled()
       ? h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, `Recording your pins — ${myVisits().length} ${myVisits().length === 1 ? 'place' : 'places'} so far.`)
       : h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Not recording anything yet. Switch it on from the map.'),
+  ]));
+
+  // Your journey map. A SEPARATE control from "Where people are" above, and the difference
+  // is the whole point: that one feeds a shared map, is rounded to ~55 km and is off until
+  // switched on; this one is the traveller's own record, kept at real precision, never
+  // transmitted, and on by default so a map of their trip exists without them opting into
+  // anything. Which means the off switch has to be easy to find — hence its own card, said
+  // plainly, next to the erase button.
+  const ts = trailStats();
+  wrap.append(h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('h2', { style: 'margin:0' }, 'Your journey map'),
+      infoTip('Pins are recorded automatically whenever the app has your location, so a map of your trip builds itself. They stay on this device at all times — there is no code path that sends them anywhere — and you can stop or erase them here.'),
+    ]),
+    h('p', { class: 'tiny muted', style: 'margin:6px 0 8px' }, trailEnabled()
+      ? (ts.places
+        ? `Recording — ${ts.places} ${ts.places === 1 ? 'place' : 'places'} so far, ${ts.countries || 1} ${ts.countries === 1 ? 'country' : 'countries'}.`
+        : 'Recording. Your map fills in once your device gives the app a location.')
+      : 'Stopped. Nothing new is being recorded.'),
+    h('div', { class: 'chips' }, [
+      h('button', { class: 'chip', onclick: () => go('#journey') }, '🗺 Open my journey map'),
+      h('button', { class: 'chip', onclick: () => { setTrailEnabled(!trailEnabled()); render(); } },
+        trailEnabled() ? '⏸ Stop recording' : '▶️ Start recording'),
+      ts.places ? h('button', { class: 'chip', onclick: () => {
+        confirmAction({ title: 'Erase your journey pins?', body: `This removes all ${ts.places} recorded ${ts.places === 1 ? 'pin' : 'pins'} from this device. Your journal, photos and saved places are not touched.`, confirmLabel: 'Erase pins', danger: true })
+          .then((ok) => { if (ok) { clearTrail(); render(); } });
+      } }, '🗑 Erase pins') : null,
+    ]),
   ]));
 
   // Reminders — server-free: per-entry lead time on the calendar + an optional daily
