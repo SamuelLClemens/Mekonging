@@ -27,7 +27,7 @@
 // access row, the next-stop card) is written directly in this file instead, since it belongs
 // to Home alone.
 
-import { store, save, unreadInboxCount, unreadMessagesCount } from '../state.js';
+import { store, save } from '../state.js';
 import { h } from '../util.js';
 import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
@@ -40,7 +40,7 @@ import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
-  ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
+  ensureHomeWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
 } from '../main.js';
@@ -206,108 +206,27 @@ export function homeScreen() {
   // direct request ("gamification level should move to before tools in home post section").
   if (phase === 'post') wrap.append(gamifyLevelBadge());
 
-  // No separate "Plan & tools" heading — it duplicated the merged group's own "🧰 Tools"
-  // summary text directly below with nothing distinguishing them. The group heading alone
-  // is the title now.
+  // The seven feature sections, as doors — replacing the two chip bags that used to sit
+  // here. "🧰 Tools" had become thirteen unrelated chips in one row (Trip plans, Currency
+  // converter, Travel circle, Documents, Help & FAQ…) and "🔎 Identify what's around you"
+  // six more, and the same destinations were listed again on You, again on the country hub,
+  // and again on #everything — four hand-kept lists, four sets of drifting names.
   //
-  // Home now carries only TRIP-WIDE tools (planning, memories, money, admin). Everything
-  // tied to a place — food, transport, weather, pools, kids, visa, nature… — lives on the
-  // focused country's hub (the "Explore" button above), so there is one menu per context
-  // instead of Home and the hub duplicating each other.
+  // Home now shows one door per section (js/nav-groups.js), each saying what is behind it,
+  // and the section's own hub holds its features. That is one extra tap to reach the long
+  // tail, bought with a Home a traveller can take in at a glance — and nothing that is used
+  // daily pays it: Calendar, Budget, Weather and Journal all still show live, one tap away,
+  // in Quick access above, and Search everything is its own button.
   //
-  // Every group below renders as chip rows, not a tile grid, per direct request ("turn all
-  // the things in home plan your trip and money and tools into chips" and, this round,
-  // "make identify what's around me section elements chips as well the site should be
-  // consistent in that way") — the same .status-chip look already used by quickAccessRow
-  // above and by You's own tile→chip conversion (meHubScreen's chipGrp/flatChip, main.js).
-  // Same signature as those two: icon + label, an optional live "· sub" second line, an
-  // optional accent class — so Travel circle's unread badge and My identifier's live count
-  // both work exactly as they already do in meHubScreen, instead of a one-off shape here.
-  const chip = (ic, label, sub, hash, extraClass) => h('button', {
-    class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick: () => go(hash),
-  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
-  // Shared-with-you items AND circle messages both count as "things waiting for you in
-  // Travel circle" — one badge, so a new chat reply is just as visible as a new shared place.
-  const unread = unreadInboxCount() + unreadMessagesCount();
-  const idN = idPinCount();
-  const name = (store.profile.name || '').trim();
-  const groups = [
-    // "Plan your trip" and "Money & tools" combined into one Tools section per direct
-    // request ("make all the plan and tools chips and the money and tools chips combined
-    // into one tools section and default it expanded") — was two separate collapsibles,
-    // now one, with every chip from both concatenated in their original order.
-    { label: '🧰 Tools', items: [
-      // Talk-section-style unify (You Y1): six destinations used to answer to two different
-      // names depending on which tab you arrived from. The short name now matches meHubScreen
-      // (js/main.js) on every one of these — see OVERHAUL.md's You section for the audit.
-      //
-      // Post-phase filter, per direct request ("in home post travel ... all the things that
-      // are not for post travel should be removed and only things for post travel should be in
-      // post"): `hidePost` marks anything whose whole purpose is preparing for, or being
-      // physically present on, a trip that — in this phase — has already ended: planning a
-      // route, tuning recommendations for picking where to go, and the on-the-ground-only
-      // marketplace. Everything else still genuinely serves a returned traveller (reviewing the
-      // trip/spend, scrapbook, saved places, currency, documents, help) and stays in every
-      // phase. (Pre-trip checklist uses its own, stricter `planningOnly` rule now — see below.)
-      //
-      // Journal / Calendar / Money dropped entirely, per the sitewide duplicate-chip audit:
-      // quickAccessRow (above) already carries all three, with a LIVE status sub-label
-      // (entry count, day count, spend %) this flat list never had — so those were pure
-      // redundant repeats of the exact same destination on the exact same screen, not a
-      // deliberate CTA/reference-list split. "Buy or sell" renamed to "Traveller board" to
-      // match the destination screen's own title and every other chip that links to it
-      // (meHubScreen, nearbyScreen, circleScreen all already used the correct name — this was
-      // the one place still on the old label). `hidePost` on Trip scrapbook is the same
-      // quick-access-already-covers-it reasoning, not the prepare-for-a-trip reasoning above:
-      // quickAccessRow's own 4th chip is "Scrapbook" ONLY in post phase (Weather otherwise),
-      // so post is the one phase where Tools' copy is a pure repeat too.
-      ...[
-        { ic: '🧭', label: 'Trip plans', hash: '#plans', hidePost: true },
-        { ic: '🎯', label: 'For you', hash: '#foryou', hidePost: true },
-        { ic: '🧳', label: name ? `${name}’s trip` : 'My trip', hash: '#trip' },
-        // planningOnly, not hidePost — per direct request ("in home traveling remove pretrip
-        // checklist it should only show in the planning section of home"): the same pre-trip
-        // prep already hidden once a trip ends is now ALSO hidden once it has actually started,
-        // since a traveller on the ground has moved past preparing. Still fully reachable —
-        // You's own "Plan & prepare" section (meHubScreen, main.js) and #everything both link
-        // straight to it — this only narrows where on Home it surfaces.
-        { ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', planningOnly: true },
-        { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook', hidePost: true },
-        { ic: '⭐', label: 'Saved places', hash: '#saved' },
-        { ic: '💱', label: 'Currency converter', hash: '#currency' },
-        { ic: '🏷️', label: 'Bargain helper', hash: '#bargain', hidePost: true },
-        { ic: '👥', label: 'Travel circle', sub: unread ? `${unread} unread` : null, hash: '#circle', cls: unread ? 'budget-red' : '' },
-        { ic: '🤝', label: 'Traveller board', hash: '#exchange', hidePost: true },
-        { ic: '🔒', label: 'Documents', hash: '#vault' },
-        { ic: '❓', label: 'Help & FAQ', hash: '#help' },
-      ].filter((t) => (t.planningOnly ? phase === 'planning' : !(t.hidePost && phase === 'post')))
-        .map((t) => chip(t.ic, t.label, t.sub || null, t.hash, t.cls || '')),
-    ] },
-    // Identify what's around you — the recognition tools (food, produce, wildlife, sounds,
-    // dangerous animals) plus the traveller's own saved finds. Icons picked to match each
-    // destination's own established emoji elsewhere (🍜 dish/food, 🍈 produce, 🔍 My
-    // identifier — all three from ID_TYPES/meHubScreen, main.js) rather than inventing new
-    // ones, so the same feature always reads the same way wherever it shows as a chip.
-    { label: '🔎 Identify what’s around you', items: [
-      chip('🍜', 'Food', null, '#food'),
-      chip('🍈', 'Produce', null, '#produce'),
-      chip('🌿', 'Nature', null, '#nature'),
-      chip('🔊', 'Sounds', null, '#sounds'),
-      chip('⚠️', 'Dangerous', null, '#danger'),
-      chip('🔍', 'My identifier', idN ? `${idN} saved` : null, '#identified'),
-    ] },
-  ];
-  // Tools (index 0) now always defaults expanded, in every phase, per direct request
-  // ("default it expanded") — it no longer gates on phase at all, unlike before the merge
-  // when "Plan your trip" only opened by default in planning/post. Identify (index 1,
-  // unaffected by the merge) keeps its own phase-relevance rule: it leads on the ground.
-  groups.forEach((g, gi) => {
-    const open = (gi === 0) || (gi === 1 && onGround);
-    wrap.append(h('details', { class: 'home-group-d', open: open ? '' : null }, [
-      h('summary', { class: 'home-group' }, g.label),
-      h('div', { class: 'chips' }, g.items),
-    ]));
-  });
+  // Settings & help is the one section deliberately absent: Settings and Emergency are
+  // pinned in the topbar on every screen, and You carries the whole group. Phase filtering
+  // is unchanged, only moved — it now lives on the items in the manifest (hidePost /
+  // planningOnly), so a returned traveller still never sees Cash swap or a pre-trip
+  // checklist, and a section whose every item is hidden drops out entirely.
+  wrap.append(h('h2', { class: 'home-section', style: 'margin:16px 0 6px' }, '🧰 What do you need?'));
+  wrap.append(groupDoors(['admin']));
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#everything') },
+    '🗂️ All features, A–Z →'));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
   wrap.append(h('div', { class: 'card give-back', style: 'margin-top:10px' }, [

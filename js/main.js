@@ -35,6 +35,7 @@ import {
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
+import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems } from './nav-groups.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { hospitalScreen } from './screens/medical.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
@@ -488,7 +489,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.477.0';
+const APP_VERSION = 'mk-v0.478.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -595,7 +596,9 @@ function accentFor(hash) {
 // count. Every tile grid (Home tools, personal hub, country hub) uses this so a section's
 // colour and icon are identical wherever it shows.
 export function sectionTile(x) {
-  const accent = accentFor(x.hash);
+  // An explicit accent wins: the eight feature-hub doors all live under one route head
+  // ('hub'), so accentFor() cannot tell Money from My stuff — the group carries its own.
+  const accent = x.accent || accentFor(x.hash);
   const base = x.badge ? `${x.t} — ${x.badge} new` : x.t;
   // Fold the visible one-line hint into the accessible name so screen-reader users get the
   // same description sighted users see; the icon is decorative.
@@ -959,6 +962,8 @@ const TAB_FOR_HEAD = {
   // Home or Explore: like trip/journey/calendar, it commits directly to store.trip.stops,
   // the traveller's own data, not a suggestion to browse (that's #plans, which stays Home).
   nextstop: '#me',
+  hub: '#home',
+  everything: '#me',
   home: '#home', '': '#home', welcome: '#home', search: '#home', checklist: '#home',
   plans: '#home', help: '#home', feedback: '#home',
   circle: '#home', add: '#home', in: '#home', inbox: '#home', thread: '#home', msg: '#home', sos: '#home',
@@ -2658,10 +2663,9 @@ function meHubScreen() {
   // name is saved, so the chips below become the true lead.
   if (!name) wrap.append(nameEntryCard());
 
-  const jN = store.journal.entries.length;
-  const svN = (store.favorites || []).length;     // saved places
-  const svP = countSavedPhrases();
-  const idN = idPinCount();
+  // The journal, saved-place, phrase and identifier counts used to be read here for their own
+  // chips. All four now show as live status on their rows inside My stuff below, through the
+  // one liveStatus() table, rather than being counted a second time here.
 
   // Quick access chips — Calendar, My Dictionary, Budget and Journal lead (the four asked
   // for), then Documents, My trip, Traveller board, For you and Travel circle promoted to
@@ -2706,15 +2710,20 @@ function meHubScreen() {
   // Shared-with-you items AND circle messages both count as "things waiting for you in
   // Travel circle" — one badge, so a new chat reply is just as visible as a new shared place.
   const unread = unreadInboxCount() + unreadMessagesCount();
+  // Quick access is now exactly the shortcuts You does NOT itself contain: a day count, the
+  // trip's stops, spend against target, and anything waiting in the circle — each living in
+  // another section (Plan & travel, Money, People) and each with a live figure to justify
+  // the shortcut. Nine chips became four, on two counts. Documents, Traveller board and For
+  // you were bare labels with nothing live to report, which made them duplicate doors rather
+  // than status. Journal and Your dictionary were worse: both are the FIRST rows of My stuff
+  // directly below, open by default and carrying the same live counts — the same destination
+  // twice on one screen. Everything dropped is one tap away, from the row or door that owns
+  // it, which is the rule the rest of this refactor follows.
+  const stopN = (store.trip.stops || []).length;
   wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
     chip('📅', calLabel, null, () => go('#calendar')),
-    chip('💬', name ? `${name}’s dictionary` : 'My Dictionary', svP ? `${svP} saved` : null, () => go('#dictionary')),
+    chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
     chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
-    chip('📔', 'Journal', jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null, () => go('#journal')),
-    chip('🔒', 'Documents', null, () => go('#vault')),
-    chip('🧳', name ? `${name}’s trip` : 'My trip', null, () => go('#trip')),
-    chip('🤝', 'Traveller board', null, () => go('#exchange')),
-    chip('🎯', 'For you', null, () => go('#foryou')),
     chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
   ]));
 
@@ -2741,63 +2750,28 @@ function meHubScreen() {
   // spend still shows in the numbers strip above and stays one tap away via the Money tile
   // below; the donut itself still renders on Home.)
 
-  // --- Everything else in You, as chips too: every group below is a `chips` row (the exact
-  // same status-chip look as the quick-access row above), not a tile grid, per direct
-  // request ("turn all the your stuff in you into chips ... so users can reach everything
-  // from you"). A plain destination chip (no live sub-status) reuses the same chip() helper
-  // from the quick-access row above, just without a sub-line.
-  const flatChip = (ic, label, hash) => chip(ic, label, null, () => go(hash));
-  const chipGrp = (emoji, label, chips, open) => h('details', { class: 'home-group-d', open: open ? '' : null }, [
-    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
-    h('div', { class: 'chips' }, chips),
-  ]);
+  // --- The rest of You: its own section in full, then a door to each of the others.
+  //
+  // This used to be four hand-written chip groups — Your stuff, Everything, Plan & prepare,
+  // You & settings — twenty-odd chips listing destinations that Home, the country hub and
+  // #everything each listed again under their own names. You now shows the ONE group it
+  // actually owns (My stuff, js/nav-groups.js) as full rows that say what each thing is,
+  // and the other seven as doors. Nothing has moved further away: every destination those
+  // four groups held is either a row below, or one tap inside the door of the section that
+  // owns it, and Settings & help is a door of its own rather than a chip inside a bag.
+  const mine = navGroup('mine');
+  const mineBody = h('div', {});
+  visibleItems(mine, store.profile.prefs.phase || inferPhase())
+    .forEach((it) => mineBody.append(hubRow(it, getActiveCountry(), mine.accent)));
+  wrap.append(h('details', { class: 'home-group-d', open: '' }, [
+    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${mine.ic} ${mine.title}`)),
+    mineBody,
+  ]));
 
-  // Your stuff — content the traveller made or curated themselves. Open by default: this is
-  // what makes You worth a separate tab from Home, so it leads. Journal is not repeated here
-  // (same reasoning that already dropped "My phrases" from this group) — the chip row above
-  // already covers it. Journey map (previously only reachable from deep inside Journal
-  // itself) is added here: it is exactly this kind of "content you made" feature.
-  const cPts = gamify.contributionPoints(store);
-  const cLvl = gamify.levelInfo(cPts);
-  wrap.append(chipGrp('📔', 'Your stuff', [
-    flatChip('⭐', svN ? `Saved places · ${svN}` : 'Saved places', '#saved'),
-    flatChip('🔍', idN ? `My identifier · ${idN}` : 'My identifier', '#identified'),
-    flatChip('🗺', 'Journey map', '#journey'),
-    flatChip('📤', 'Share my journey', '#sharejourney'),
-    flatChip('📸', 'Trip scrapbook', '#scrapbook'),
-    flatChip('🏅', `Your contributions · ${cLvl.emoji} ${cLvl.title}`, '#contributions'),
-  ], true));
-
-  // Everything — its own section, not one more chip lost inside "You & settings" (direct
-  // request: "it should be in a section of its own where the user can reach anything on the
-  // site from this section"). Placed right after "Your stuff" — the second thing on the
-  // screen — so the one-tap doorway to every feature is never more than a glance away.
-  // #everything (built for task #199) already IS the full site index; this section's only
-  // job is to make sure the traveller can actually find the door to it.
-  wrap.append(chipGrp('🗂️', 'Everything', [
-    flatChip('🗂️', 'All features', '#everything'),
-  ], true));
-
-  // Plan & prepare — Home's own "Planning" tools, now also one tap from You: previously these
-  // three lived on Home only, with no path to them from here at all.
-  wrap.append(chipGrp('🧭', 'Plan & prepare', [
-    flatChip('🧭', 'Trip plans', '#plans'),
-    flatChip('✅', 'Pre-trip checklist', '#checklist'),
-    flatChip('🏷️', 'Bargain helper', '#bargain'),
-  ], true));
-
-  // You & settings — identity, preferences, privacy, support, and one more global feature
-  // that used to have no direct path from You: Search (already on Home, now here too).
-  // Export & backup moved up from deep inside Settings to one tap; "All features" moved out
-  // to its own section above rather than being duplicated in both places.
-  wrap.append(chipGrp('⚙️', 'You & settings', [
-    flatChip('⚙️', 'Settings', '#settings'),
-    flatChip('🔎', 'Search everything', '#search'),
-    flatChip('📤', 'Export', '#export'),
-    flatChip('❤️', 'Give back', '#donate'),
-    flatChip('❓', 'Help & FAQ', '#help'),
-  ], true));
-
+  wrap.append(h('h2', { class: 'home-section', style: 'margin:16px 0 6px' }, '🗂️ Everything else'));
+  wrap.append(groupDoors(['mine']));
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#everything') },
+    '🗂️ All features, A–Z →'));
   // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
   // quiet dismissible line near the foot. Same trigger (a single expense is still "something
   // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
@@ -2813,106 +2787,190 @@ function meHubScreen() {
   mount(wrap, '#me');
 }
 
-// A full, browsable index of every feature on the site, organized into clean categories —
-// per direct request ("the you section should have a chip to get to every feature in the
-// site organized nicely and cleanly"). Two deliberate omissions, both because they are
-// already never more than one tap away regardless: the five bottom tabs themselves (Home,
-// Talk, You, Places, Explore), and Emergency/SOS (pinned in the topbar on every screen).
-// Also omitted: pure detail/parameterised screens reached FROM a feature rather than
-// browsed TO directly (a specific place, event, species, message thread, saved collection).
-// Country-scoped destinations use the currently active country — the same convention
-// Explore's own tile grid already uses for identical links.
+// ---- FEATURE HUBS (one door per group in js/nav-groups.js) -------------------
+// Eight screens rendered from one manifest, instead of the same destinations hand-listed on
+// Home, You, Explore and #everything under four sets of names. See js/nav-groups.js for why.
+//
+// A door earns more than a label when it can show a live figure, so the features that HAVE
+// one show it on the row itself. These are the same numbers Home's Quick access row and
+// You's chips already compute — read through this one table rather than re-derived per
+// screen, which is what let "Budget" show a percentage in one place and a raw total in
+// another. Anything absent from the table simply shows its blurb. Wrapped in try/catch as a
+// whole: a status line is decoration, and must never be the reason a hub fails to render.
+function liveStatus(id) {
+  try {
+    switch (id) {
+      case 'budget': {
+        const sp = tripSpendHome();
+        const target = budgetTarget();
+        if (target && sp.sum > 0) {
+          const span = tripSpanDays();
+          const rate = span && span.elapsed > 0 ? sp.sum / span.elapsed : sp.sum;
+          if (target.per === 'trip') {
+            const pct = Math.round(sp.sum / target.amount * 100);
+            const cls = sp.sum > target.amount ? 'budget-red'
+              : (span && span.total && rate * span.total > target.amount) ? 'budget-yellow' : 'budget-green';
+            return { sub: `${pct}% spent`, cls };
+          }
+          const pct = Math.round(rate / target.amount * 100);
+          const cls = rate > target.amount ? 'budget-red' : rate >= target.amount * 0.9 ? 'budget-yellow' : 'budget-green';
+          return { sub: `${pct}% of daily budget`, cls };
+        }
+        if (sp.any && sp.sum > 0) return { sub: `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` };
+        return null;
+      }
+      // The live rate for where you are, against your own home currency — the single figure
+      // the converter exists to give. Silent when the two are the same currency, and when
+      // the cached table is still the approximate fallback, so this never presents a
+      // hardcoded guess as a rate (see js/currency.js on why that mattered).
+      case 'rate': {
+        const rates = getRates();
+        if (!rates.live) return null;
+        const home = homeCurrency();
+        const c = getCountry(getActiveCountry());
+        const local = c && c.currency;
+        if (!local || !home || local === home) return null;
+        const n = convert(1, home, local);
+        if (!(n > 0)) return null;
+        return { sub: `1 ${home} ≈ ${n >= 500 ? Math.round(n).toLocaleString() : n.toFixed(2)} ${local}` };
+      }
+      case 'calendar': {
+        const startISO = tripStartISO();
+        if (!startISO) return null;
+        const d = daysUntilISO(startISO);
+        return { sub: d <= 0 ? `Day ${1 - d}` : `${d} ${d === 1 ? 'day' : 'days'} to go` };
+      }
+      case 'weather': {
+        const spot = focusSpot().spot;
+        const wx = spot ? getCachedWeather(spotKey(spot)) : null;
+        if (!wx || typeof wx.tempNow !== 'number') return null;
+        return { sub: `${spot.city} ${fmtTemp(wx.tempNow)}` };
+      }
+      case 'journal': { const n = store.journal.entries.length; return n ? { sub: `${n} ${n === 1 ? 'entry' : 'entries'}` } : null; }
+      case 'saved': { const n = (store.favorites || []).length; return n ? { sub: `${n} saved` } : null; }
+      case 'phrases': { const n = countSavedPhrases(); return n ? { sub: `${n} saved` } : null; }
+      case 'identified': { const n = idPinCount(); return n ? { sub: `${n} saved` } : null; }
+      case 'contributions': { const l = gamify.levelInfo(gamify.contributionPoints(store)); return { sub: `${l.emoji} ${l.title}` }; }
+      case 'circle': { const n = unreadMessagesCount(); return n ? { sub: `${n} unread`, cls: 'budget-red' } : null; }
+      case 'inbox': { const n = unreadInboxCount(); return n ? { sub: `${n} new`, cls: 'budget-red' } : null; }
+      default: return null;
+    }
+  } catch { return null; }
+}
+
+// A group's total badge count for its door: only the two things a traveller would want
+// chased — someone waiting on a reply, and something shared with them.
+function groupBadge(group) {
+  if (group.id !== 'people') return 0;
+  try { return unreadInboxCount() + unreadMessagesCount(); } catch { return 0; }
+}
+
+// One directory row: icon, the feature's ONE name, its live figure when it has one, and a
+// line saying what you actually get. The blurb is folded into the accessible name, so a
+// screen reader hears the same description a sighted traveller reads.
+function hubRow(item, cc, accent) {
+  const live = item.live ? liveStatus(item.live) : null;
+  const label = live && live.sub ? `${item.label} · ${live.sub}` : item.label;
+  const attrs = {
+    class: 'hub-row' + (live && live.cls ? ' ' + live.cls : ''),
+    onclick: () => go(resolveHash(item, cc)),
+    'aria-label': item.blurb ? `${label}. ${item.blurb}` : label,
+  };
+  if (accent) attrs.style = `--tile-accent:${accent}`;
+  return h('button', attrs, [
+    h('span', { class: 'hub-ic', 'aria-hidden': 'true' }, item.ic),
+    h('span', { class: 'hub-txt' }, [
+      h('span', { class: 'hub-lbl' }, label),
+      item.blurb ? h('span', { class: 'hub-sub' }, item.blurb) : null,
+    ]),
+    h('span', { class: 'hub-go', 'aria-hidden': 'true' }, '›'),
+  ]);
+}
+
+// The eight doors, as one tile grid. Home, You and the all-features index all render this
+// same block, so the groups read identically wherever a traveller meets them. `skip` drops
+// a group the surrounding screen already covers in full (You is itself My stuff's home).
+export function groupDoors(skip = []) {
+  const phase = store.profile.prefs.phase || inferPhase();
+  const groups = visibleGroups(phase).filter((g) => !skip.includes(g.id));
+  return h('div', { class: 'grid door-grid' }, groups.map((g) => sectionTile({
+    ic: g.ic, t: g.title, d: g.blurb, hash: groupHash(g.id), accent: g.accent, badge: groupBadge(g) || null,
+  })));
+}
+
+// The hub itself. Unknown id falls through to the full index rather than an error screen:
+// a stale bookmark to a group that has been renamed should still land somewhere useful.
+function hubScreen(id) {
+  const group = navGroup(id);
+  if (!group) return everythingScreen();
+  const cc = getActiveCountry();
+  const phase = store.profile.prefs.phase || inferPhase();
+  const items = visibleItems(group, phase);
+  const wrap = h('div', { class: 'screen' });
+  // Title without the group emoji, unlike the doors and chips that lead here: the topbar
+  // holds "‹ Back", the title, and five pinned controls, and at 375px an emoji plus an
+  // uppercased "KNOW THIS COUNTRY" pushes it to three lines. The accent stripe down every
+  // row below already carries the section's identity.
+  wrap.append(topbar(group.title, '#home'));
+  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, group.intro || group.blurb));
+
+  // Sub-headings only where a group is too long to scan flat — Plan & travel is twelve
+  // features covering three different questions (your trip, when to go, how you get there),
+  // and reads as a wall without them. Groups of six or eight need no such help, so they get
+  // none: a heading per item would be noise.
+  const sections = [];
+  items.forEach((it) => {
+    const key = it.section || '';
+    const last = sections[sections.length - 1];
+    if (last && last.key === key) last.items.push(it);
+    else sections.push({ key, items: [it] });
+  });
+  sections.forEach((sec) => {
+    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin:14px 0 2px' }, sec.key));
+    sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
+  });
+
+  // Sideways, not back: the other seven groups as chips at the foot, so moving from Money to
+  // Plan is one tap instead of Back-then-tap. This is the whole reason a hub can afford to
+  // hold the long tail — nothing is ever more than two taps from anywhere.
+  const others = visibleGroups(phase).filter((g) => g.id !== group.id);
+  if (others.length) {
+    wrap.append(h('h2', { class: 'home-section', style: 'margin:18px 0 2px' }, 'Other sections'));
+    wrap.append(h('div', { class: 'chips' }, others.map((g) => h('button', {
+      class: 'status-chip', onclick: () => go(groupHash(g.id)), 'aria-label': `${g.title}. ${g.intro || g.blurb}`,
+    }, [h('span', { class: 'status-ic' }, g.ic), h('span', { class: 'status-lbl' }, g.title)]))));
+  }
+  mount(wrap, '#home');
+}
+
+// The doorway to every feature on the site — now the eight groups plus one flat A–Z list,
+// rendered from js/nav-groups.js instead of the hand-written nine folds this used to be.
+// The folds and the group hubs would have shown the same rows twice; what a full index adds
+// over a hub is the OTHER way of looking, so that is what it does. A traveller who knows the
+// shape of the site takes a door; one who remembers only a name takes the alphabet.
+//
+// Two deliberate omissions, both because they are already never more than one tap away: the
+// five bottom tabs (Home, Talk, You, Places, Explore) and Emergency/SOS, pinned in the
+// topbar on every screen. Also omitted: detail screens reached FROM a feature rather than
+// browsed TO (a specific place, event, species, message thread, saved collection).
 function everythingScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('All features', '#me'));
   wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' },
-    'Every feature on the site in one place. The five tabs at the bottom — Home, Talk, You, Places, Explore — are always one tap away, so they are not repeated here.'));
+    'Everything on the site, in eight sections. The five tabs at the bottom — Home, Talk, You, Places, Explore — and Emergency are always one tap away, so they are not repeated here.'));
+  wrap.append(groupDoors());
 
   const cc = getActiveCountry();
-  const name = (store.profile.name || '').trim();
-  const chip = (ic, label, hash) => h('button', { class: 'status-chip', onclick: () => go(hash) },
-    [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, label)]);
-  const grp = (emoji, label, chips) => h('details', { class: 'home-group-d' }, [
-    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${emoji} ${label}`)),
-    h('div', { class: 'chips' }, chips),
-  ]);
+  const phase = store.profile.prefs.phase || inferPhase();
+  const shown = new Set(visibleGroups(phase).flatMap((g) => g.items.map((it) => it.hash)));
+  const az = navItems().filter((it) => shown.has(it.hash))
+    .sort((a, b) => a.label.localeCompare(b.label, 'en'));
+  const list = h('div', {});
+  az.forEach((it) => list.append(hubRow({ ...it, blurb: `${it.groupTitle} · ${it.blurb}` }, cc, '')));
+  wrap.append(foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🔤 Every feature, A–Z · ${az.length}`), list));
 
-  wrap.append(grp('🧭', 'Trip & planning', [
-    chip('🧭', 'Trip plans', '#plans'),
-    chip('🧳', name ? `${name}’s trip` : 'My trip', '#trip'),
-    chip('✅', 'Pre-trip checklist', '#checklist'),
-    chip('🎯', 'Tune "For you"', '#foryou'),
-    chip('👣', 'Plan your next stop', '#nextstop'),
-    chip('🧭', 'Full journey planner', '#route'),
-    chip('🏆', 'Best of', `#bestof-${cc}`),
-  ]));
-  wrap.append(grp('💰', 'Money', [
-    chip('💱', 'Money & prices', `#prices-${cc}`),
-    chip('💰', 'Budget & Expenses', '#expenses'),
-    chip('💱', 'Currency converter', '#currency'),
-    chip('🏷️', 'Bargain helper', '#bargain'),
-    chip('🤝', 'Cash swap', '#swap'),
-    chip('🎒', 'Gear market', '#market'),
-  ]));
-  wrap.append(grp('📍', 'Places & map', [
-    chip('🗺️', 'Map', '#places'),
-    chip('⭐', 'Saved places', '#saved'),
-    chip('📍', 'Near me', '#nearby'),
-    chip('🛂', 'Border crossings', '#crossings'),
-    chip('🏊', 'Swimming spots', `#pools-${cc}`),
-    chip('🍢', 'Street food', '#streetfood'),
-    chip('🙏', 'Places of worship', `#worship-${cc}`),
-  ]));
-  wrap.append(grp('📔', 'Content you made', [
-    chip('📔', 'Journal', '#journal'),
-    chip('📸', 'Trip scrapbook', '#scrapbook'),
-    chip('🗺', 'Journey map', '#journey'),
-    chip('📤', 'Share my journey', '#sharejourney'),
-    chip('🔍', 'My identifier', '#identified'),
-    chip('💬', name ? `${name}’s dictionary` : 'My Dictionary', '#dictionary'),
-    chip('🏅', 'Your contributions', '#contributions'),
-  ]));
-  wrap.append(grp('🔎', 'Identify what’s around you', [
-    chip('🍜', 'Food', '#food'),
-    chip('🍈', 'Produce', '#produce'),
-    chip('🌿', 'Nature', '#nature'),
-    chip('🔊', 'Sounds', '#sounds'),
-    chip('⚠️', 'Dangerous', '#danger'),
-  ]));
-  wrap.append(grp('☀️', 'Weather & dates', [
-    chip('🌤', 'Weather', `#weather-${cc}`),
-    chip('🕒', 'Things to do today', `#today-${cc}`),
-    chip('📅', 'Travel calendar', '#calendar'),
-    chip('🎉', 'Festivals & holidays', `#events-${cc}`),
-  ]));
-  wrap.append(grp('🛂', 'Country & safety info', [
-    chip('🧭', 'Country guide', `#info-${cc}`),
-    chip('🛂', 'Entry & visa', `#visa-${cc}`),
-    chip('🛬', 'Just arrived', `#arrival-${cc}`),
-    chip('⚠️', 'Scams to know', `#scams-${cc}`),
-    chip('♿', 'Accessibility', `#access-${cc}`),
-    chip('🍼', 'Traveling with a baby', `#baby-${cc}`),
-    chip('👪', 'Traveling with kids', `#family-${cc}`),
-    chip('📜', 'History & culture', `#history-${cc}`),
-    chip('🚌', 'Getting around', `#transport-${cc}`),
-    chip('📋', 'Transport schedules', `#schedules-${cc}`),
-  ]));
-  wrap.append(grp('👥', 'People & sharing', [
-    chip('👥', 'Travel circle', '#circle'),
-    chip('🤝', 'Traveller board', '#exchange'),
-    chip('📌', 'Local noticeboard', `#board-${cc}`),
-    chip('📥', 'Inbox', '#inbox'),
-    chip('❤️', 'Give back', '#donate'),
-  ]));
-  wrap.append(grp('⚙️', 'You & settings', [
-    chip('⚙️', 'Settings', '#settings'),
-    chip('🔒', 'Documents', '#vault'),
-    chip('📤', 'Export', '#export'),
-    chip('🔎', 'Search everything', '#search'),
-    chip('✉️', 'Send feedback', '#feedback'),
-    chip('❓', 'Help & FAQ', '#help'),
-  ]));
-
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#search') },
+    '🔎 Search everything'));
   mount(wrap, '#me');
 }
 
@@ -3830,73 +3888,26 @@ function exploreScreen(argCc) {
     wrap.append(whereAmICard(cc));
   }
 
-  // "More for {country}" (the full toolkit, as chip decks) moved to directly after the
-  // location card and above Signature sights, per direct request. Regrouped from one
-  // 26-tile wall into four labelled, collapsible sub-clusters so a traveller scans four
-  // intents, not a flat grid; the "identify what's around me" tools sit together under See
-  // & do. Rendered as chip rows (icon + label), not tiles, per an earlier direct request
-  // ("explore all the tools should be made chips like the home section") — same
-  // .status-chip/.chips classes and home-group-d collapsible as Home's own Tools/Identify
-  // groups, not a look-alike, the SAME components. Each tile's one-line hint (d) still
-  // reaches screen readers via aria-label even though a chip has no room to show it, same
-  // "fold the hint into the accessible name" idiom sectionTile itself already used.
+  // "More for {country}" — the same six feature sections a traveller meets on Home, minus
+  // the two that are not about a country (My stuff, Settings & help). This was four
+  // hand-written decks holding twenty-five chips, and it was the third copy of the same
+  // destination list: Home had its own names for these, You had a third set, #everything a
+  // fourth. It now renders from js/nav-groups.js like every other surface, so "Money &
+  // prices" and "Fair prices" are one thing with one name, and a country-scoped feature
+  // still lands on THIS country — resolveHash() takes the country being viewed.
+  //
+  // Two destinations lead separately above the doors because they are bottom TABS rather
+  // than features, and so are deliberately absent from the taxonomy: this country's own
+  // place list, and its language.
   const lang = getLanguage(c.lang);
-  const tileGroups = [
-    { label: 'Get oriented', tiles: [
-      { ic: '🛬', t: 'Just arrived', d: 'First hour: cash, SIM, airport → town', hash: `#arrival-${cc}` },
-      { ic: '🧭', t: 'Country guide', d: 'Money, SIM, visa, safety', hash: `#info-${cc}` },
-      { ic: '💬', t: 'Phrasebook', d: lang ? lang.label : 'Language', hash: `#phrasebook-${c.lang}` },
-      { ic: '💱', t: 'Money & prices', d: `Convert to ${c.currency}, avoid overcharging`, hash: `#prices-${cc}` },
-      { ic: '🌤', t: 'Weather', d: '7-day forecast', hash: `#weather-${cc}` },
-      { ic: '🆘', t: 'Emergency', d: 'Numbers, hospitals, first aid', hash: '#sos' },
-    ] },
-    { label: 'Getting around', tiles: [
-      { ic: '🚌', t: 'Getting around', d: 'Best way to next place', hash: `#transport-${cc}` },
-      { ic: '🛂', t: 'Between countries', d: 'Border crossings, hours & visas', hash: '#crossings' },
-      { ic: '📋', t: 'Schedules', d: 'Train/bus times', hash: `#schedules-${cc}` },
-      { ic: '🧭', t: 'Journey planner', d: 'Chain buses/trains/boats', hash: '#route' },
-      { ic: '🗺️', t: 'Map', d: 'Offline + GPS', hash: '#places' },
-    ] },
-    { label: 'Eat & drink', tiles: [
-      { ic: '🍜', t: 'Food', d: 'Dishes & ingredients', hash: `#food-${cc}` },
-      { ic: '🍢', t: 'Street food', d: 'Find, rate & review stalls', hash: '#streetfood' },
-      { ic: '📌', t: 'Local noticeboard', d: 'Markets, family supplies', hash: `#board-${cc}` },
-      { ic: '🍈', t: 'Market produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-    ] },
-    { label: 'See & do', tiles: [
-      { ic: '📍', t: 'Places', d: 'For your taste & price', hash: `#places-${cc}` },
-      { ic: '🏆', t: 'Best of', d: 'Top picks, families & more', hash: `#bestof-${cc}` },
-      { ic: '🕒', t: 'Things to do', d: 'Picks for right now', hash: `#today-${cc}` },
-      { ic: '👪', t: 'With kids', d: 'Schools, childcare, things to do', hash: `#family-${cc}` },
-      { ic: '🎉', t: 'Festivals', d: 'Dates & holidays', hash: `#events-${cc}` },
-      { ic: '🏊', t: 'Pools', d: 'Swims & day passes', hash: `#pools-${cc}` },
-      { ic: '🙏', t: 'Places of worship', d: 'Temples, churches, mosques', hash: `#worship-${cc}` },
-      { ic: '🌿', t: 'Identify nature', d: 'Birds, fish, plants', hash: '#nature' },
-      { ic: '🔊', t: 'Sounds around you', d: 'Animal & bird calls', hash: '#sounds' },
-      { ic: '⭐', t: 'Saved', d: 'Your collections', hash: '#saved' },
-    ] },
-  ];
-  // E3: "Get oriented" / "Getting around" / "Eat & drink" default EXPANDED always, per direct
-  // request — these are the day-to-day decks a traveller reaches for regardless of trip phase.
-  // "See & do" alone stays phase-ranked (opens while 'traveling', the phase it fits best);
-  // planning/post no longer force a single deck open since three of the four are already open.
-  // Nothing persisted per-deck: like Home, this always recomputes on render, not a sticky
-  // manual override — a traveller can still collapse one for the moment by tapping it.
-  const explorePhase = store.profile.prefs.phase || inferPhase();
-  const ALWAYS_OPEN_DECKS = new Set(['Get oriented', 'Getting around', 'Eat & drink']);
-  const openDeck = explorePhase === 'traveling' ? 'See & do' : null;
-  const toolChip = (x) => h('button', {
-    class: 'status-chip', onclick: () => go(x.hash), 'aria-label': x.d ? `${x.t}. ${x.d}` : x.t,
-  }, [h('span', { class: 'status-ic' }, x.ic), h('span', { class: 'status-lbl' }, x.t)]);
   wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
-  tileGroups.forEach((g) => {
-    const shouldOpen = ALWAYS_OPEN_DECKS.has(g.label) || g.label === openDeck;
-    const details = h('details', { class: 'home-group-d', open: shouldOpen ? '' : null }, [
-      h('summary', { class: 'home-group' }, g.label),
-      h('div', { class: 'chips' }, g.tiles.map(toolChip)),
-    ]);
-    wrap.append(details);
-  });
+  wrap.append(h('div', { class: 'chips', style: 'margin-bottom:10px' }, [
+    h('button', { class: 'status-chip', onclick: () => go(`#places-${cc}`), 'aria-label': `Places in ${c.name}. For your taste and price` },
+      [h('span', { class: 'status-ic' }, '📍'), h('span', { class: 'status-lbl' }, `Places in ${c.name}`)]),
+    h('button', { class: 'status-chip', onclick: () => go(`#phrasebook-${c.lang}`), 'aria-label': `Phrasebook. ${lang ? lang.label : 'Language'}` },
+      [h('span', { class: 'status-ic' }, '💬'), h('span', { class: 'status-lbl' }, lang ? lang.label : 'Phrasebook')]),
+  ]));
+  wrap.append(groupDoors(['mine', 'admin']));
 
   // Explore E4–E7: discovery leads, then the reference/admin cards — Signature sights leads
   // ("What's here"), then Where next ("What's after this"), then the more occasional reads
@@ -7114,6 +7125,21 @@ function searchScreen() {
     out.innerHTML = '';
     const q = searchQuery.trim().toLowerCase();
     const fix = getLastFix();
+    // Features first. Search covered places, wildlife, phrases, fair prices and countries —
+    // everything EXCEPT the app's own screens, so typing "visa" or "budget" returned nothing
+    // and the only way to a feature was to know where it lived. Now that the long tail sits
+    // behind eight hubs (js/nav-groups.js), search is the fast path for anyone who remembers
+    // a name instead of a section, so this leads: it is the cheapest and most certain match.
+    // Matched on the feature's own name, its description and its section's name, and each hit
+    // says which section owns it, so a search also teaches where the thing lives.
+    if (q.length >= 2) {
+      const cc0 = getActiveCountry();
+      const phase0 = store.profile.prefs.phase || inferPhase();
+      const live = new Set(visibleGroups(phase0).flatMap((g) => g.items.map((it) => it.hash)));
+      const feats = navItems().filter((it) => live.has(it.hash)
+        && `${it.label} ${it.blurb || ''} ${it.groupTitle}`.toLowerCase().includes(q));
+      section('Features', feats.map((it) => link(`${it.ic} ${it.label} · ${it.groupTitle}`, resolveHash(it, cc0))));
+    }
     // Places: filter by category and/or text; when a location is known, order by distance.
     let places = allPlaces();
     if (cat !== 'all') places = places.filter((p) => placeBucket(p) === cat);
@@ -9798,6 +9824,7 @@ export function render() {
       case '': case 'home': return homeScreen();
       case 'me': return meHubScreen();
       case 'everything': return everythingScreen();
+      case 'hub': return hubScreen(arg);   // arg is a group id from js/nav-groups.js
       case 'welcome': return welcomeScreen();
       case 'explore': return exploreScreen(arg);   // arg is usually undefined; 'all' forces the four-country view
       case 'country': return exploreScreen(arg);   // arg is always a valid country id — 21 existing links
