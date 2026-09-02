@@ -34,7 +34,7 @@ import { getActiveCountry } from '../app-state.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp, citySlug } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
-import { confirmAction } from '../ui-widgets.js';
+import { confirmAction, netMode, setNetMode, online } from '../ui-widgets.js';
 import { budgetTarget, tripSpanDays } from '../screens/budget.js';
 import { dateLocale } from '../i18n.js';
 import {
@@ -42,7 +42,7 @@ import {
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
   ensureHomeWeather, idPinCount, nextPlanItem, evShort, tripSpendHome,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
-  gamifyLevelBadge, locationSheet,
+  gamifyLevelBadge, locationSheet, ratesOnConsent,
 } from '../main.js';
 
 export function homeScreen() {
@@ -154,12 +154,10 @@ export function homeScreen() {
 
   // On the first online visit, pull the relevant city's forecast once (respects offline &
   // consent, de-duplicated) so the outlook and the "right now" forecast line populate.
-  {
-    const phaseSpot = onGround
-      ? (ctx.near ? ctx.near.spot : focus.spot)
-      : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
-    ensureHomeWeather(phaseSpot);
-  }
+  const phaseSpot = onGround
+    ? (ctx.near ? ctx.near.spot : focus.spot)
+    : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
+  ensureHomeWeather(phaseSpot);
 
   // The by-category budget donut used to render here too — dropped as a duplicated CARD (Home
   // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
@@ -172,11 +170,16 @@ export function homeScreen() {
   // other Home section) per direct request ("all the sections need to be collapsible including
   // widgets like weather") — homeWeatherCard's own `.card` styling becomes the foldable's body,
   // same technique whereYouAreCard already uses for cityAboutCard's `.card` below. Other
-  // phases never had this widget, so they keep Search everything here as before.
-  if (onGround) {
-    const wxCard = homeWeatherCard();
-    if (wxCard) wrap.append(weatherFold(wxCard));
-  } else if (phase === 'planning') {
+  // phases never had this widget, so they kept Search everything here instead.
+  // The fold now renders in EVERY phase, and renders even with no forecast cached yet.
+  // Both of those were bugs, and together they meant the default new traveller never saw
+  // weather on Home at all: inferPhase() returns 'planning' until a trip has dates or GPS
+  // puts you in the region, so `onGround` was false; and onboarding defaults an unanswered
+  // network question to 'offline' (welcomeScreen's finish()), so nothing was ever fetched
+  // to display. Each condition alone hid the section, silently, with nothing on screen
+  // saying why. A forecast is just as useful while planning a trip as during one.
+  wrap.append(weatherFold(homeWeatherCard(phaseSpot) || homeWeatherPending(phaseSpot)));
+  if (!onGround && phase === 'planning') {
     // Reorder per direct request: "I have arrived" (inside the countdown card, top of
     // stageBlock above) → Search everything → "Plan your trip"/"Tune 'For you'" — so Search
     // is inserted directly into stageBlock's own DOM, right before its trailing actions row,
@@ -545,6 +548,35 @@ function whereYouAreCard(cc, cityName) {
   details.append(h('summary', { class: 'home-group' }, '📍 Where you are'));
   details.append(inner);
   return details;
+}
+
+// Stand-in body for the weather fold when no forecast is cached yet. The section must never
+// silently vanish — that is exactly how a traveller ends up thinking the app has no weather.
+// This NEVER fetches: the app's whole network contract is that nothing touches mobile data or
+// Wi-Fi until the traveller says so (see ui-widgets.js online()), so when consent is missing
+// this offers the switch rather than flipping it.
+function homeWeatherPending(spot) {
+  const card = h('div', { class: 'card' });
+  const where = (spot && spot.city) ? ` for ${spot.city}` : '';
+  if (netMode() !== 'online') {
+    card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
+      'The forecast needs data. Everything else here works offline.'));
+    card.append(h('button', {
+      class: 'btn block',
+      onclick: () => { setNetMode('online'); ratesOnConsent(); render(); },
+    }, '📶 Use data when I have it'));
+    return card;
+  }
+  if (!online()) {
+    card.append(h('p', { class: 'muted', style: 'margin:0' },
+      'No connection right now — the forecast updates as soon as you are back online.'));
+    return card;
+  }
+  // Consent given and a connection present: ensureHomeWeather() above is already fetching and
+  // re-renders Home when it lands, so this is a genuinely transient state.
+  card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, `Getting the latest forecast${where}…`));
+  card.append(h('button', { class: 'btn ghost block', onclick: () => go('#weather') }, 'Full forecast →'));
+  return card;
 }
 
 // The big weather widget (homeWeatherCard, main.js) as its own collapsible — same home-group-d
