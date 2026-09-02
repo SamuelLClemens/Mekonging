@@ -12,7 +12,7 @@ crashes when a month is added to the sentence and not the array, the region/city
 stops appearing in the month it is best in.
 
 Formerly `check-zone-months.py`, checking only js/data/zones.js. Extended to also check
-js/data/history.js's 62 city `bestM`/`avoidM` pairs (added alongside the existing `bestTime`
+js/data/history.cities.<cc>.js's city `bestM`/`avoidM` pairs (added alongside the existing `bestTime`
 prose), then extended again for js/data/place-months.js's hand-curated place-tier overrides —
 rather than maintaining three near-duplicate scripts for what is structurally the same check.
 
@@ -37,7 +37,10 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZONES_SRC = os.path.join(ROOT, 'js', 'data', 'zones.js')
-HISTORY_SRC = os.path.join(ROOT, 'js', 'data', 'history.js')
+# The 142 city records moved out of history.js into one file per country (loaded with that
+# country's other data — see js/data/regions.js). They are VERBATIM, formatting included,
+# precisely so this parser keeps working; it now reads the four files as one stream.
+HISTORY_SRCS = [os.path.join(ROOT, 'js', 'data', f'history.cities.{cc}.js') for cc in ('th', 'vi', 'kh', 'la')]
 PLACE_MONTHS_SRC = os.path.join(ROOT, 'js', 'data', 'place-months.js')
 
 MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -207,7 +210,7 @@ def print_table(label, records):
 
 def main():
     zones = parse_zones(open(ZONES_SRC, encoding='utf-8').read())
-    cities = parse_cities(open(HISTORY_SRC, encoding='utf-8').read())
+    cities = parse_cities('\n'.join(open(p, encoding='utf-8').read() for p in HISTORY_SRCS))
     places = parse_places(open(PLACE_MONTHS_SRC, encoding='utf-8').read())
     if not zones:
         print('FAIL — parsed no zones out of js/data/zones.js')

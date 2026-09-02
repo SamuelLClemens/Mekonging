@@ -12,6 +12,7 @@
 // evaluation-time code anywhere reads place data, only function bodies, so the data
 // may arrive after this module finishes loading without any call site changing.
 
+import { HISTORY } from './history.js';
 import { PHRASEBOOK_TH } from './phrasebook.th.js';
 import { PHRASEBOOK_VI } from './phrasebook.vi.js';
 import { PHRASEBOOK_KM } from './phrasebook.km.js';
@@ -59,6 +60,12 @@ export function getCountry(id) { return COUNTRIES.find((c) => c.id === id) || nu
 export function getLanguage(code) { return LANGUAGES[code] || null; }
 
 // ---- Lazy per-country data loading ------------------------------------------
+// City history rides along here too. It used to be 99 KB of js/data/history.js parsed on
+// every launch; it is now this country's share of it, arriving with that country's places,
+// food and prices. HISTORY.cities is MUTATED rather than reassigned, so every existing
+// `HISTORY.cities[key]` read sees the new entries without a single call-site change — the
+// live-binding technique js/lazy-data.js documents. A read before the country lands gets
+// undefined, which is what an unknown city already returned.
 // One loader per country, each a straight dynamic-import mirror of what used to be
 // static top-of-file imports + the COUNTRIES literal spread. Every module imported
 // here is precached by the service worker (sw.js PRECACHE), so this fetches from the
@@ -69,57 +76,69 @@ async function loadTH(c) {
   const [
     { PLACES_TH }, { PLACES_TH_EXT }, { PRICES_TH }, { ROUTES_TH }, { INFO_TH },
     { GUIDE_TH }, { EVENTS_TH }, { FOOD_TH }, { FOOD_TH_EXT }, { LOCAL_TH },
+    { HISTORY_CITIES_TH },
   ] = await Promise.all([
     import('./places.th.js'), import('./places.th.ext.js'), import('./prices.th.js'),
     import('./routes.th.js'), import('./info.th.js'), import('./guide.th.js'),
     import('./events.th.js'), import('./food.th.js'), import('./food.th.ext.js'), import('./local.th.js'),
+    import('./history.cities.th.js'),
   ]);
   c.places = [...PLACES_TH, ...PLACES_TH_EXT];
   c.prices = PRICES_TH; c.routes = ROUTES_TH; c.info = INFO_TH; c.guide = GUIDE_TH;
   c.events = EVENTS_TH.events; c.food = [...FOOD_TH.dishes, ...FOOD_TH_EXT];
   c._localBoards = LOCAL_TH;
+  Object.assign(HISTORY.cities, HISTORY_CITIES_TH);
 }
 async function loadVI(c) {
   const [
     { PLACES_VI }, { PLACES_VI_EXT }, { PRICES_VI }, { ROUTES_VI }, { INFO_VI },
     { GUIDE_VI }, { EVENTS_VI }, { FOOD_VI }, { FOOD_VI_EXT }, { LOCAL_VI },
+    { HISTORY_CITIES_VI },
   ] = await Promise.all([
     import('./places.vi.js'), import('./places.vi.ext.js'), import('./prices.vi.js'),
     import('./routes.vi.js'), import('./info.vi.js'), import('./guide.vi.js'),
     import('./events.vi.js'), import('./food.vi.js'), import('./food.vi.ext.js'), import('./local.vi.js'),
+    import('./history.cities.vi.js'),
   ]);
   c.places = [...PLACES_VI, ...PLACES_VI_EXT];
   c.prices = PRICES_VI; c.routes = ROUTES_VI; c.info = INFO_VI; c.guide = GUIDE_VI;
   c.events = EVENTS_VI.events; c.food = [...FOOD_VI.dishes, ...FOOD_VI_EXT];
   c._localBoards = LOCAL_VI;
+  Object.assign(HISTORY.cities, HISTORY_CITIES_VI);
 }
 async function loadKH(c) {
   const [
     { PLACES_KH }, { PLACES_KH_EXT }, { PRICES_KH }, { ROUTES_KH }, { INFO_KH },
     { GUIDE_KH }, { EVENTS_KH }, { FOOD_KH }, { FOOD_KH_EXT }, { LOCAL_KH },
+    { HISTORY_CITIES_KH },
   ] = await Promise.all([
     import('./places.kh.js'), import('./places.kh.ext.js'), import('./prices.kh.js'),
     import('./routes.kh.js'), import('./info.kh.js'), import('./guide.kh.js'),
     import('./events.kh.js'), import('./food.kh.js'), import('./food.kh.ext.js'), import('./local.kh.js'),
+    import('./history.cities.kh.js'),
   ]);
   c.places = [...PLACES_KH, ...PLACES_KH_EXT];
   c.prices = PRICES_KH; c.routes = ROUTES_KH; c.info = INFO_KH; c.guide = GUIDE_KH;
   c.events = EVENTS_KH.events; c.food = [...FOOD_KH.dishes, ...FOOD_KH_EXT];
   c._localBoards = LOCAL_KH;
+  Object.assign(HISTORY.cities, HISTORY_CITIES_KH);
 }
 async function loadLA(c) {
   const [
     { PLACES_LA }, { PLACES_LA_EXT }, { PRICES_LA }, { ROUTES_LA }, { INFO_LA },
     { GUIDE_LA }, { EVENTS_LA }, { FOOD_LA }, { FOOD_LA_EXT }, { LOCAL_LA },
+    { HISTORY_CITIES_LA },
   ] = await Promise.all([
     import('./places.la.js'), import('./places.la.ext.js'), import('./prices.la.js'),
     import('./routes.la.js'), import('./info.la.js'), import('./guide.la.js'),
     import('./events.la.js'), import('./food.la.js'), import('./food.la.ext.js'), import('./local.la.js'),
+    import('./history.cities.la.js'),
   ]);
   c.places = [...PLACES_LA, ...PLACES_LA_EXT];
   c.prices = PRICES_LA; c.routes = ROUTES_LA; c.info = INFO_LA; c.guide = GUIDE_LA;
   c.events = EVENTS_LA.events; c.food = [...FOOD_LA.dishes, ...FOOD_LA_EXT];
   c._localBoards = LOCAL_LA;
+  Object.assign(HISTORY.cities, HISTORY_CITIES_LA);
 }
 const COUNTRY_LOADERS = { th: loadTH, vi: loadVI, kh: loadKH, la: loadLA };
 
