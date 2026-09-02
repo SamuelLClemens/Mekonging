@@ -11,6 +11,11 @@
      4.01:1 on a card. #B04A00 is the same hue two steps deeper: 4.61 and 5.11, and it still
      carries white as a fill at 5.49:1. The dark theme keeps its own brighter --orange. */
   --orange: #B04A00;     --magenta: #D6336C;   --pink: #EE6CA0;
+  /* --magenta is a light coral-pink: correct as a fill or a border, and 4.29:1 as TEXT on
+     the cream card, which is under AA. --magenta-deep is its text variant, exactly as
+     --teal-deep is --teal's. Each light skin sets its own; the dark surfaces keep the
+     bright --magenta and the rules switch back to it (see the dark block below). */
+  --magenta-deep: #C42A5F;   /* 4.29 -> 5.08:1 on #FFF6E2 */
   --teal: #16A39A;       --teal-deep: #0A615B;
   --grape: #6A4C93;      --grape-deep: #4A3068;
   --olive: #9C9A3A;
@@ -109,6 +114,7 @@ html[data-theme="dark"] {
   --cream: #F3F1EC; --bg: #F3F1EC; --card: #FFFFFF; --line: #E3DED2;
   --ink: #222019; --ink-soft: #6B635A;
   --sun: #0E7C66; --sun-deep: #0A5E4D; --orange: #0E7C66; --magenta: #E24E1B; --pink: #E24E1B;
+  --magenta-deep: #C2430F;   /* 3.93 -> 5.12:1 on #FFFFFF */
   --head-accent: #C04217;   /* --magenta as a section heading measured 3.48:1 on this paper */
   --teal: #0E7C66; --teal-deep: #1B4038; --grape: #6A4C93;
   --grad-sun: linear-gradient(135deg, #0E7C66 0%, #1B4038 100%);
@@ -121,6 +127,7 @@ html[data-theme="dark"] {
   --cream: #FBFBF9; --bg: #FBFBF9; --card: #FFFFFF; --line: #E7EDEA;
   --ink: #212529; --ink-soft: #66707A;
   --sun: #12B886; --sun-deep: #0CA678; --orange: #0E7C66; --magenta: #FF6B6B; --pink: #FF922B;
+  --magenta-deep: #C92A2A;   /* Open Color red-9, this palette's own darker step: 2.78 -> 5.46:1 on #FFFFFF */
   --head-accent: #D73232;   /* --magenta as a section heading measured 2.68:1 on this page; 4.62:1 now */
   --gold: #8F6800;
   --teal: #1098AD; --teal-deep: #0B7285; --grape: #7048E8;
@@ -135,6 +142,7 @@ html[data-theme="dark"] {
   --cream: #F6E7C4; --bg: #F6E7C4; --card: #FFF4D6; --line: #E3C98C;
   --ink: #3A2410; --ink-soft: #7A5A2C;
   --sun: #E8A33D; --sun-deep: #D9541E; --orange: #BA3B11; --magenta: #D6336C; --pink: #E84C88;
+  --magenta-deep: #C42A5F;   /* 4.21 -> 4.99:1 on #FFF4D6 */
   /* --orange is this skin's h1 colour and measured 4.24:1 on its own paper; --magenta as a
      section heading measured 3.77:1. Both nudged a shade deeper to clear 4.5. */
   --head-accent: #C1275D;
@@ -305,7 +313,7 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 }
 .info-tip > summary::-webkit-details-marker { display: none; }
 .info-tip > summary:hover { color: var(--ink); }
-.info-tip[open] > summary { color: var(--teal); }
+.info-tip[open] > summary { color: var(--teal-deep); }
 .info-tip > p { margin: 4px 0 0; }
 
 /* Places for you — collapsible category sections + city drill-down */
@@ -891,7 +899,10 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .budget-bar-fill.over { background: var(--magenta); }
 .budget-proj { margin: 4px 0 0; font-size: var(--fs-sm); font-weight: 600; }
 .budget-proj.under { color: var(--teal-deep, var(--teal)); }
-.budget-proj.over { color: var(--magenta); }
+/* Over budget is a warning, and --warn is the token for that — it also happens to be the
+   only one of the two that clears AA on every surface (5.51-6.49 vs --magenta's 2.78 on
+   tropical). The semantic fix and the contrast fix are the same edit. */
+.budget-proj.over { color: var(--warn); }
 .budget-set { margin-top: var(--sp-3); }
 .budget-set summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
 /* --sun is a light fill on six of the seven skins, but --ink flips to a light cream on the dark
@@ -1148,7 +1159,7 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .route-opt .mode { font-weight: 800; }
 .pill-best { font-size: var(--fs-label); font-weight: 800; background: var(--grad-sun); color: #fff;
              border-radius: var(--r-pill); padding: 3px var(--sp-2); text-transform: uppercase; }
-.border-flag { font-size: var(--fs-sm); color: var(--magenta); font-weight: 700; }
+.border-flag { font-size: var(--fs-sm); color: var(--magenta-deep); font-weight: 700; }
 /* --- journey planner --- */
 .plan-picker { display: flex; flex-direction: column; gap: var(--sp-2); }
 .plan-field { display: flex; flex-direction: column; gap: 4px; }
@@ -1273,7 +1284,7 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-meta { font-size: var(--fs-sm); margin-top: 2px; }
 .rn-events { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-2) 0; }
 .rn-event { width: 100%; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: linear-gradient(135deg, rgba(242,169,59,0.16), rgba(214,51,108,0.10)); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); }
-.rn-event-when { font-weight: 800; color: var(--magenta); }
+.rn-event-when { font-weight: 800; color: var(--magenta-deep); }
 /* --- history & orientation --- */
 .history-card { border-left: 4px solid var(--gold, var(--orange)); }
 .knownfor { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--sp-2) 0; }
@@ -1629,6 +1640,21 @@ html[data-theme="dark"] .recap-level { background: rgba(255,255,255,0.06); }
 .disclaimer { font-size: var(--fs-sm); color: var(--ink-soft); font-style: italic; margin-top: var(--sp-3); }
 a { color: var(--teal-deep); }
 html[data-theme="dark"] a { color: var(--teal); }
+
+/* Dark surfaces: the deep variants disappear on them, so every rule that uses one switches
+   back to the bright token. The five rules that already did this (.card h3, .btn.ghost,
+   .bp-roman, .linklike, .rn-wx-link) had the right idea; these were simply missed, and
+   scripts/check-contrast.py measured what that cost — --teal-deep reads 2.12:1 on the
+   classic dark card. The two info/hint summaries are the mirror image: they used the bright
+   --teal on light surfaces, where it reads 2.73:1, and now take --teal-deep there. */
+html[data-theme="dark"] .plan-chain,
+html[data-theme="dark"] .rlabel,
+html[data-theme="dark"] .src-link,
+html[data-theme="dark"] .lang-tick,
+html[data-theme="dark"] .info-tip[open] > summary,
+html[data-theme="dark"] .screen-hint[open] > summary { color: var(--teal); }
+html[data-theme="dark"] .border-flag,
+html[data-theme="dark"] .rn-event-when { color: var(--magenta); }
 
 /* Identify photos — self-hosted, openly licensed; a placeholder slot shows until
    the real image is bundled (photos are filled in a dedicated pass). */
@@ -2367,7 +2393,7 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
 }
 .screen-hint > summary::-webkit-details-marker { display: none; }
 .screen-hint > summary:hover { color: var(--ink); }
-.screen-hint[open] > summary { color: var(--teal); }
+.screen-hint[open] > summary { color: var(--teal-deep); }
 .screen-hint-ic { font-size: 1.05rem; line-height: 1; }
 .screen-hint > p { margin: 0; }
 
