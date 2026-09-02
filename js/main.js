@@ -101,7 +101,7 @@ import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPac
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
-import { getRates, refreshRates, convert } from './currency.js';
+import { getRates, refreshRates, maybeRefreshRates, convert } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, refreshWeather, refreshMany, getCachedMany, refreshMarine, getCachedMarine, refreshAir, getCachedAir } from './weather.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -488,7 +488,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.476.0';
+const APP_VERSION = 'mk-v0.477.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -694,7 +694,7 @@ export function topbar(title, backHash) {
     }, lang.flag),
     h('button', {
       class: 'topbar-ic topbar-net', 'aria-label': netOnline ? 'Online — tap to go offline' : 'Offline — tap to go online',
-      title: netOnline ? 'Online' : 'Offline', onclick: () => { setNetMode(netOnline ? 'offline' : 'online'); render(); },
+      title: netOnline ? 'Online' : 'Offline', onclick: () => { const on = !netOnline; setNetMode(on ? 'online' : 'offline'); if (on) ratesOnConsent(); render(); },
     }, netOnline ? '📶' : '✈️'),
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     onSettings ? null : iconBtn('Settings', '#settings', ICON.gear),
@@ -2533,9 +2533,12 @@ function quickSpendRow(id) {
 // call it directly. wxVizCard already returns a full `.card`, so this needs no extra wrapper;
 // a trailing "Full forecast →" button is appended (wxVizCard itself has no built-in link out)
 // so tapping through to the full Weather screen still works exactly as the old ring did.
-export function homeWeatherCard() {
+// `want` lets Home pass the SAME spot it handed ensureHomeWeather(), so the fetch and the
+// display can never disagree about which city Home is showing. Omitted, it behaves as before
+// (the resolved "where you are" city).
+export function homeWeatherCard(want) {
   const ctx = contextNow();
-  const spot = ctx.near ? ctx.near.spot : null;
+  const spot = want || (ctx.near ? ctx.near.spot : null);
   if (!spot) return null;
   const rec = getCachedWeather(spotKey(spot));
   if (!rec || !Array.isArray(rec.hourly) || !rec.hourly.length) return null;
@@ -9951,8 +9954,48 @@ try {
 // and the optional daily journaling nudge. Best-effort + in-app; see js/reminders.js.
 try { reminders.tick(); } catch { /* reminders are best-effort */ }
 
-// Refresh exchange rates in the background when online; update the converter if open.
-if (online()) refreshRates().then(() => { if ((location.hash || '').startsWith('#currency')) render(); }).catch(() => {});
+// ---- EXCHANGE RATES: KEEP THEM CURRENT --------------------------------------
+// Rates used to be fetched exactly once, at cold boot, and only if the app happened to be
+// online at that instant. For a travel app that is the wrong shape twice over: it is an
+// installed PWA a traveller leaves open all day, and it very often boots with no connection
+// (no SIM yet, plane mode, a hotel network that is not working) — and when that boot fetch
+// was skipped, nothing tried again for the rest of the session. The converter then quietly
+// ran on the hardcoded approximate table while showing prices across the whole app.
+//
+// Four triggers now feed one guarded entry point. maybeRefreshRates() is cheap to call
+// repeatedly — it no-ops unless the cached rates are genuinely due (honouring the endpoint's
+// own published next-update time), refuses to retry within 10 minutes, and de-duplicates
+// concurrent calls — so the triggers can be generous without hammering anything.
+//
+// online() is checked every time, not once: it is the traveller's data-consent gate, and it
+// must keep gating every automatic fetch (see ui-widgets.js). A traveller on "stay fully
+// offline" is never contacted by any of this.
+const RATE_POLL_MS = 30 * 60 * 1000;
+// Screens where a stale rate is actually visible, and where a repaint costs nothing. Home and
+// the place screens also show converted prices, but re-rendering those under someone's thumb
+// to move a third decimal place is not worth the scroll jump — they pick the new rate up on
+// their next natural render.
+const RATE_SCREENS = ['#currency', '#expenses', '#budget', '#prices', '#bargain'];
+function syncRates(force = false) {
+  if (!online()) return;
+  maybeRefreshRates(force).then((changed) => {
+    if (!changed) return;
+    const hash = location.hash || '';
+    if (RATE_SCREENS.some((r) => hash.startsWith(r))) render();
+  }).catch(() => {});
+}
+// Exported so the two places that turn data ON can fetch immediately rather than waiting for
+// the next poll — enabling data and then seeing "approximate" rates for half an hour reads
+// as broken.
+export function ratesOnConsent() { syncRates(true); }
+syncRates();
+// Regaining a connection is the single most valuable moment to try: it is exactly the case
+// the old once-per-boot fetch missed.
+window.addEventListener('online', () => syncRates());
+// Coming back to the app after it has been backgrounded for hours.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncRates(); });
+// And a slow heartbeat for a session that simply stays open.
+setInterval(() => syncRates(), RATE_POLL_MS);
 
 // Warm the wildlife/plant data (js/data/nature.js) once the browser is idle, so Identify/
 // Sounds/Species/Dangerous/Search often already have it by the time a traveller taps in —
