@@ -553,6 +553,46 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .home-group-d[open] > summary::after { transform: rotate(180deg); }
 .home-group-d > .grid { padding-bottom: var(--sp-3); }
 
+/* --- feature-hub directory rows (#hub-<id>, see js/nav-groups.js) ---
+   A chip carries one line of text, which is enough for a destination the traveller already
+   knows and not enough for one they are meeting for the first time. A hub row is the same
+   tap target with room for the name AND a line saying what you get, which is what lets the
+   eight hubs replace fifty-odd bare chips without the site becoming harder to learn. */
+/* The eight section doors reuse .tile, but a door carries a two-word name and one short
+   line, not a place's worth of content — at the full tile's 182px on a 375px screen the
+   grid alone was two screens of scrolling, which is the crowding this was meant to fix.
+   Tighter padding, a smaller icon disc and a two-line clamp bring a door to ~125px, so all
+   eight fit in roughly one screen. */
+.door-grid { gap: var(--sp-2); }
+.door-grid .tile { padding: var(--sp-3); gap: 2px; }
+.door-grid .tile .ic { width: 38px; height: 38px; margin-bottom: 0; }
+.door-grid .tile .ic svg { width: 20px; height: 20px; }
+.door-grid .tile .t { font-size: var(--fs-body); line-height: 1.2; }
+.door-grid .tile .d {
+  font-size: var(--fs-sm); line-height: 1.25;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+
+.hub-row {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  background: var(--card); color: var(--ink); font-family: inherit; cursor: pointer;
+  border: 1px solid var(--line); border-inline-start: 4px solid var(--tile-accent, var(--line));
+  border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); margin-top: var(--sp-2);
+  min-height: 56px; transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.hub-row:hover { border-color: var(--tile-accent, var(--orange)); transform: translateX(2px); }
+.hub-row:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.hub-ic { flex: none; width: 28px; text-align: center; font-size: 1.3rem; line-height: 1; }
+.hub-txt { flex: 1 1 auto; min-width: 0; }
+.hub-lbl { display: block; font-weight: 700; }
+.hub-sub { display: block; color: var(--ink-soft); font-size: var(--fs-sm); margin-top: 1px; }
+.hub-go { flex: none; color: var(--ink-soft); font-size: 1.2rem; }
+/* The three budget colours already used by Home's and You's status chips, so a hub row
+   showing spend reads the same green/yellow/red as the chip that shows it elsewhere. */
+.hub-row.budget-green { border-inline-start-color: var(--good); }
+.hub-row.budget-yellow { border-inline-start-color: var(--sun-deep); }
+.hub-row.budget-red { border-inline-start-color: var(--magenta); }
+
 /* --- post-travel scrapbook --- */
 .scrap-cover { text-align: center; }
 .scrap-stats { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; }
