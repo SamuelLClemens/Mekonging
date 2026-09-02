@@ -60,11 +60,6 @@ export function ratesAreStale(now = Date.now()) {
   return (now - r.fetchedAt) >= TTL_MS;
 }
 
-export function ratesAge(now = Date.now()) {
-  const r = getRates();
-  return r.fetchedAt ? now - r.fetchedAt : null;
-}
-
 // The automatic path. Safe and cheap to call from any trigger: it returns immediately unless
 // the rates are actually due, refuses to retry inside MIN_GAP_MS, and shares one in-flight
 // request between concurrent callers. Resolves to true only when the stored rates CHANGED,

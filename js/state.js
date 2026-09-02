@@ -238,7 +238,8 @@ function parseStore(k) {
 // accumulated one app-open at a time and unrecoverable once dropped), prefs.doneSpots,
 // prefs.idPins, prefs.phrasePins, prefs.customPhrases. Treat that as the CURRENT audit, not
 // a closed one: anything new under profile that the traveller AUTHORS rather than configures
-// belongs here, and prefs.phraseNotes is a known un-counted candidate.
+// belongs here. prefs.phraseNotes and profile.trail.pts were the two outstanding
+// candidates and are both counted now.
 //
 // Watch the shapes when adding more. Empty containers are created by mere navigation —
 // visits.js bucket() writes `cells: {}` the first time any visits helper runs, and
@@ -283,6 +284,15 @@ function hasUserData(s) {
     && Object.keys(profile.visits.cells).length;
   const done = Array.isArray(prefs.doneSpots) && prefs.doneSpots.length;
   const idp = Array.isArray(prefs.idPins) && prefs.idPins.length;
+  // The journey trail (js/trail.js). Authored by LIVING rather than by typing — it
+  // accumulates one app-open at a time and cannot be reconstructed once dropped, which is
+  // exactly the profile.visits.cells case above. A traveller whose only content is their
+  // trail must not have it replaced by a stale mirror.
+  const trail = profile.trail && typeof profile.trail === 'object'
+    && Array.isArray(profile.trail.pts) && profile.trail.pts.length;
+  // Closes the candidate the comment above flagged: per-phrase notes the traveller typed.
+  const pnotes = prefs.phraseNotes && typeof prefs.phraseNotes === 'object'
+    && Object.keys(prefs.phraseNotes).length;
   // Per-language maps: an empty array under a language is just "opened the phrasebook".
   const phr = prefs.phrasePins && typeof prefs.phrasePins === 'object'
     && Object.values(prefs.phrasePins).some((arr) => Array.isArray(arr) && arr.length);
@@ -290,7 +300,7 @@ function hasUserData(s) {
     && Object.values(prefs.customPhrases).some((arr) => Array.isArray(arr) && arr.length);
   return !!(j || b || stops || visits || wd || c || p || col || pd || f
     || stay || areas || contacts || threads || listings || album || board || per || journeys
-    || cells || done || idp || phr || cust);
+    || cells || done || idp || phr || cust || trail || pnotes);
 }
 
 function load() {

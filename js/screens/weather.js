@@ -8,10 +8,7 @@ import { store, save, getLastFix, setLastFix } from '../state.js';
 import { h, esc } from '../util.js';
 import { wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip, airBlock, uvLineNode } from '../render-utils.js';
 import { field, online } from '../ui-widgets.js';
-import {
-  WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot,
-  getCachedWeather, refreshWeather, refreshMany, getCachedMany,
-} from '../weather.js';
+import { WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot, getCachedWeather, getCachedMany, maybeRefreshWeather, maybeRefreshMany } from '../weather.js';
 import { COUNTRIES, getCountry } from '../data/regions.js';
 import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
 // Circular import back into main.js — same accepted pattern js/screens/home.js already uses
@@ -169,7 +166,7 @@ function planCityPanels() {
     };
     paintCity(getCachedWeather(c.key));
     // Background refresh only if the traveller has opted online; repaint if still here.
-    if (online()) refreshWeather(c.spot).then((r) => { if (r && (location.hash || '').startsWith('#weather')) paintCity(r); });
+    if (online()) maybeRefreshWeather(c.spot).then((r) => { if (r && (location.hash || '').startsWith('#weather')) paintCity(r); });
     wrap.append(det);
   });
   if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin:6px 2px 0;font-size:12px' },
@@ -286,7 +283,10 @@ export function weatherScreen(country) {
     const refreshBtn = h('button', { class: 'btn block' }, 'Refresh (needs internet)');
     refreshBtn.addEventListener('click', async () => {
       refreshBtn.textContent = 'Refreshing…'; refreshBtn.disabled = true;
-      const r = await refreshWeather(spot); paint(r, false);
+      // Forced: the traveller asked. Falls back to the cache so an offline tap still repaints
+      // with what is held rather than blanking the card.
+      const r = (await maybeRefreshWeather(spot, true)) || getCachedWeather(spotKey(spot));
+      paint(r, false);
     });
     body.append(refreshBtn);
   }
@@ -303,7 +303,7 @@ export function weatherScreen(country) {
     const cached = getCachedWeather(weatherKey);
     paint(cached, !cached && online());
     if (online()) {
-      refreshWeather(spot).then((r) => {
+      maybeRefreshWeather(spot).then((r) => {
         if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
       });
     }
@@ -319,7 +319,9 @@ export function weatherScreen(country) {
     const countryChanged = spot.country !== curCountry;
     if (countryChanged) curCountry = spot.country;
     renderMap(getCachedMany() && getCachedMany().data);
-    if (countryChanged && online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && spot.country === curCountry) renderMap(r.data); });
+    // Forced, not guarded: the cached batch was fetched for the country being left, so it is
+    // fresh by age and wrong by content. Staleness cannot see that; the caller can.
+    if (countryChanged && online()) maybeRefreshMany(spotsForCountry(curCountry), true).then((r) => { if (r && spot.country === curCountry) renderMap(r.data); });
     loadAndPaint();
     requestAnimationFrame(() => window.scrollTo(0, y));
   }
@@ -371,7 +373,7 @@ export function weatherScreen(country) {
     mapBox.append(box);
   }
   renderMap(getCachedMany() && getCachedMany().data);
-  if (online()) refreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
+  if (online()) maybeRefreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
 
   // Free-text search across every city in all four countries — a native datalist (offline,
   // no extra library) types ahead as the traveller types and jumps straight to that city's

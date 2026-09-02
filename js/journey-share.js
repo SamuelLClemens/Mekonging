@@ -115,9 +115,17 @@ function visitMarks() {
 // Real geography rather than the abstract bounding-box line drawn on #journey: the same
 // country outlines and Mekong the app shows everywhere else, with the route on top. The
 // viewBox is cropped to the route so a trip inside one country is not lost in a map of four.
-export function journeyMapSVG(points, marks = []) {
+// The geography, separated from the drawing: viewBox cropped to the trip, the unit the crop
+// implies, the projected route, and the land/river/visited layers as SVG strings.
+//
+// Factored out because there are now TWO maps to draw from one set of coordinates — the
+// self-contained page this module exports, and the live journey screen (#journey), which
+// needs interactive pins it can attach handlers to and therefore cannot use a finished SVG
+// string. Both must place a point in the same spot on the same outlines, so the projection
+// and the crop live here once rather than being reimplemented per caller.
+export function journeyMapParts(points, marks = []) {
   const all = points.concat(marks);
-  if (!all.length) return '';
+  if (!all.length) return null;
   const proj = all.map((p) => projLL(p.lng, p.lat));
   const routePts = points.map((p) => projLL(p.lng, p.lat));
 
@@ -147,6 +155,13 @@ export function journeyMapSVG(points, marks = []) {
     const [x, y] = projLL(m.lng, m.lat);
     return `<circle cx="${f(x)}" cy="${f(y)}" r="${f(u * 1.3)}" fill="#C0431A" opacity="0.22"/>`;
   }).join('');
+  return { vb, minX, minY, w, hgt, u, f, land, river, visited, routePts, project: projLL };
+}
+
+export function journeyMapSVG(points, marks = []) {
+  const parts = journeyMapParts(points, marks);
+  if (!parts) return '';
+  const { vb, minX, minY, w, hgt, u, f, land, river, visited, routePts } = parts;
 
   let route = '';
   if (routePts.length > 1) {

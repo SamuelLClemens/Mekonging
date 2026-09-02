@@ -1351,6 +1351,43 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .entry-title { font-family: var(--font-display); color: #5A3A18; margin: 0 0 var(--sp-2); }
 .entry-body p { margin: 0 0 var(--sp-3); }
 
+/* --- the live journey map (#journey) ---
+   Deliberately not styled like the other two maps: Places is a MapLibre canvas and Explore
+   a region chooser, while this is a keepsake — country outlines and the Mekong on paper,
+   cropped to the trip. The parchment palette is baked into the SVG (js/journey-share.js)
+   so the same drawing can be handed to someone as a self-contained file; only the frame
+   and the interaction live here. */
+.jr-live-wrap { margin: 0 0 var(--sp-3); }
+.jr-map-live {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-soft);
+}
+/* A pin is a button. Hit area is a transparent circle roughly twice the visible dot, so a
+   thumb can land on a 5px dot at the far end of a four-country crop. */
+.jr-pin { cursor: pointer; }
+.jr-pin .jr-pin-dot { transition: r var(--dur) var(--ease), fill var(--dur) var(--ease); }
+.jr-pin:hover .jr-pin-dot, .jr-pin.on .jr-pin-dot { fill: #C0431A; }
+.jr-pin:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.jr-panel:empty { display: none; }
+.jr-stop h3 { font-size: var(--fs-body); }
+/* Photos from one stop: a scrolling strip, so twelve pictures never push the stops list
+   off the screen. The strip scrolls, the page does not. */
+.jr-photos { display: flex; gap: var(--sp-2); overflow-x: auto; padding: var(--sp-2) 0; }
+.jr-photo-btn { flex: none; padding: 0; border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: none; cursor: pointer; line-height: 0; }
+.jr-photo { width: 88px; height: 88px; object-fit: cover; border-radius: var(--r-sm); display: block; }
+/* One stop in the ordered list. Same shape as a hub row so the app has one list idiom. */
+.jr-row { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  background: none; border: none; border-top: 1px solid var(--line); padding: var(--sp-2) 0;
+  cursor: pointer; font-family: inherit; color: var(--ink); min-height: 52px; }
+.jr-row:first-of-type { border-top: none; }
+.jr-row-n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--orange);
+  color: #fff; font-weight: 800; font-size: var(--fs-sm); display: flex; align-items: center; justify-content: center; }
+.jr-row-txt { flex: 1 1 auto; min-width: 0; }
+.jr-row-lbl { display: block; font-weight: 700; }
+.jr-row-sub { display: block; color: var(--ink-soft); font-size: var(--fs-sm); }
+.jr-row-go { flex: none; color: var(--ink-soft); font-size: 1.2rem; }
+
 .journey-wrap { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
 .journey-svg { width: 100%; max-width: 360px; background: var(--sunburst), var(--card); border-radius: var(--r-lg); }
 /* The share-a-journey preview. The SVG carries its own sea-coloured backdrop (it has to, so
