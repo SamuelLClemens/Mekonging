@@ -210,18 +210,6 @@ export function visibleGroups(phase) {
   return NAV_GROUPS.map((g) => ({ ...g, items: visibleItems(g, phase) })).filter((g) => g.items.length);
 }
 
-// Which group owns a route — used to label a hub's own Back target and to keep the
-// all-features index honest about where a feature lives. Matches on the head of the hash
-// (before any -arg), so '#prices-th' finds the item declared as '#prices-{cc}'.
-const HEAD = (hash) => String(hash || '').replace(/^#/, '').split('-')[0];
-export function groupForHash(hash) {
-  const head = HEAD(hash);
-  if (!head) return null;
-  for (const g of NAV_GROUPS) {
-    for (const it of g.items) if (HEAD(it.hash) === head) return g;
-  }
-  return null;
-}
 
 // Every item in the taxonomy, each carrying the id of the group that owns it. Used by the
 // all-features index and by the sitewide search, so both stay in step with the groups above

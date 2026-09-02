@@ -258,7 +258,7 @@ export function getCachedWeather(key) {
 // spotKey -> { temp, code }.
 const MANY_KEY = 'mk.wx.many';
 export function getCachedMany() { try { return JSON.parse(localStorage.getItem(MANY_KEY)) || null; } catch { return null; } }
-export async function refreshMany(spots) {
+async function refreshMany(spots) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedMany();
   const lats = spots.map((s) => s.lat).join(',');
   const lngs = spots.map((s) => s.lng).join(',');
@@ -279,7 +279,7 @@ export async function refreshMany(spots) {
 // Always fetched in metric (°C, km/h, mm); the UI converts for display so the unit
 // toggle never needs a re-fetch. Hourly data lets the UI break each day into
 // morning / afternoon / evening / night.
-export async function refreshWeather(spot) {
+async function refreshWeather(spot) {
   const key = spotKey(spot);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedWeather(key);
   const url = `${ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}`
@@ -332,7 +332,7 @@ export function getCachedMarine(coords) {
   if (!coords || coords.lat == null || coords.lng == null) return null;
   try { return JSON.parse(localStorage.getItem(marineKey(coords))) || null; } catch { return null; }
 }
-export async function refreshMarine(coords) {
+async function refreshMarine(coords) {
   if (!coords || coords.lat == null || coords.lng == null) return null;
   const key = marineKey(coords);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedMarine(coords);
@@ -358,7 +358,7 @@ export async function refreshMarine(coords) {
 export function getCachedAir(key) {
   try { return JSON.parse(localStorage.getItem(AIR_PREFIX + key)) || null; } catch { return null; }
 }
-export async function refreshAir(spot) {
+async function refreshAir(spot) {
   const key = spotKey(spot);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedAir(key);
   const url = `${AIR_ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}&current=us_aqi,pm2_5&timezone=auto`;
@@ -376,6 +376,9 @@ export async function refreshAir(spot) {
 }
 
 // --- STALENESS AND AUTOMATIC REFRESH ----------------------------------------
+// The four refresh* functions above are deliberately NOT exported. Every caller goes
+// through a maybe* guard below, and an unexported implementation makes that structural
+// rather than a convention somebody has to remember.
 // Every refresh* above fetches unconditionally whenever it is called, and each was called
 // only from the screen that displays it. That is wrong in both directions at once:
 //
@@ -421,7 +424,7 @@ function guarded(key, stale, run) {
   return _inFlight[key];
 }
 
-export function weatherIsStale(spot, ttl = WX_TTL_MS) {
+function weatherIsStale(spot, ttl = WX_TTL_MS) {
   return ageOf(getCachedWeather(spotKey(spot))) >= ttl;
 }
 
