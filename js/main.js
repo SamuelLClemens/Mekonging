@@ -490,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.483.0';
+const APP_VERSION = 'mk-v0.484.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -8886,21 +8886,57 @@ function welcomeScreen() {
     [0, 1, 2, 3].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
 
   // ---- Step 1 — Network choice (the gate: no data touched without it) ----
+  //
+  // THIS STEP REQUIRES AN ANSWER, and that is the entire point of it. Both answers are
+  // legitimate and offline-first is the product, so finish()'s fallback above — an unanswered
+  // flow lands on 'offline' — is correct and stays, for the skip path it was written for.
+  //
+  // What was wrong was reaching Home *through* this step without answering. "Next →" used to
+  // advance whether or not a choice had been made, so a traveller who tapped straight past was
+  // opted out of all network use having declined nothing. That silently cost them live weather
+  // and live exchange rates — two defects shipped and then repaired downstream in mk-v0.477.0,
+  // while this, their actual cause, was left in place.
   if (step === 0) {
     const netCard = h('div', { class: 'card' });
     netCard.append(h('h2', { style: 'margin-top:0' }, 'Data, or fully offline?'));
     netCard.append(h('p', { class: 'muted' }, 'This app works fully offline. It will not use mobile data or Wi-Fi unless you allow it — handy when you have no SIM. You can change this any time.'));
-    const netRow = h('div', { class: 'chips' });
-    [['online', '📶 Use data when I have it'], ['offline', '✈️ Stay fully offline']].forEach(([id, lbl]) =>
-      netRow.append(h('button', { class: 'chip', dataset: { n: id }, 'aria-pressed': netMode() === id ? 'true' : 'false',
-        onclick: () => { setNetMode(id); netRow.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.n === netMode() ? 'true' : 'false')); } }, lbl)));
+
+    // Full-width rows rather than two small chips: this is the most consequential setting in
+    // the app, so each option states what it will actually do, not just what it is called.
+    const netRow = h('div', { class: 'net-choices', role: 'group', 'aria-label': 'Network use' });
+    // Sits inside the card, so enabling "Next →" never moves "Next →" out from under a thumb.
+    const netHint = h('p', { class: 'muted net-hint' }, 'Pick one to continue — or skip setup below.');
+    const nextBtn = h('button', { class: 'btn block', onclick: () => { if (netMode() !== 'ask') goStep(1); } }, 'Next →');
+    // Updated in place rather than by re-rendering the step: a re-render would drop keyboard
+    // focus back to the top of the document the moment a choice was made.
+    const syncNet = () => {
+      const answered = netMode() !== 'ask';
+      netRow.querySelectorAll('.net-choice').forEach((c) =>
+        c.setAttribute('aria-pressed', c.dataset.n === netMode() ? 'true' : 'false'));
+      nextBtn.disabled = !answered;
+      nextBtn.setAttribute('aria-disabled', answered ? 'false' : 'true');
+      netHint.hidden = answered;
+    };
+    [['online', '📶', 'Use data when I have it',
+      'Live weather, exchange rates and sea conditions refresh while you are connected.'],
+     ['offline', '✈️', 'Stay fully offline',
+      'Nothing leaves your device. Everything you see is already downloaded.'],
+    ].forEach(([id, ic, lbl, sub]) => netRow.append(h('button', {
+      class: 'net-choice', dataset: { n: id }, 'aria-pressed': 'false',
+      onclick: () => { setNetMode(id); syncNet(); },
+    }, [
+      h('span', { class: 'nc-ic', 'aria-hidden': 'true' }, ic),
+      h('span', { class: 'nc-txt' }, [h('span', { class: 'nc-lbl' }, lbl), h('span', { class: 'nc-sub' }, sub)]),
+      h('span', { class: 'nc-tick', 'aria-hidden': 'true' }, '✓'),
+    ])));
     netCard.append(netRow);
+    netCard.append(netHint);
     wrap.append(netCard);
-    wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn block', onclick: () => goStep(1) }, 'Next →'),
-    ]));
+    wrap.append(h('div', { class: 'welcome-nav' }, [nextBtn]));
     // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
+    // That path still lands on offline via finish(), which is the honest reading of "skip".
     wrap.append(h('button', { class: 'btn ghost block welcome-skip', onclick: finish }, 'Skip — just explore'));
+    syncNet();
   }
 
   // ---- Step 2 — Location (the second gate) ----
