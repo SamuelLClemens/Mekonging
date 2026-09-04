@@ -490,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.484.0';
+const APP_VERSION = 'mk-v0.485.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2755,7 +2755,7 @@ function meHubScreen() {
   // You & settings — twenty-odd chips listing destinations that Home, the country hub and
   // #everything each listed again under their own names. You now shows the ONE group it
   // actually owns (My stuff, js/nav-groups.js) as full rows that say what each thing is,
-  // and the other seven as doors. Nothing has moved further away: every destination those
+  // and the other eight as doors. Nothing has moved further away: every destination those
   // four groups held is either a row below, or one tap inside the door of the section that
   // owns it, and Settings & help is a door of its own rather than a chip inside a bag.
   const mine = navGroup('mine');
@@ -2886,7 +2886,7 @@ function hubRow(item, cc, accent) {
   ]);
 }
 
-// The eight doors, as one tile grid. Home, You and the all-features index all render this
+// The nine doors, as one tile grid. Home, You and the all-features index all render this
 // same block, so the groups read identically wherever a traveller meets them. `skip` drops
 // a group the surrounding screen already covers in full (You is itself My stuff's home).
 export function groupDoors(skip = []) {
@@ -2895,6 +2895,100 @@ export function groupDoors(skip = []) {
   return h('div', { class: 'grid door-grid' }, groups.map((g) => sectionTile({
     ic: g.ic, t: g.title, d: g.blurb, hash: groupHash(g.id), accent: g.accent, badge: groupBadge(g) || null,
   })));
+}
+
+// A row of features as chips: the icon and the feature's one name, nothing else. This is for
+// LAUNCHING something rather than browsing it, and it is deliberately not hubRow(): six hub
+// rows come to roughly 340px at 375px, which is more height than the whole consolidation
+// saved on Home. The blurb still reaches a screen reader through aria-label.
+export function featureChips(items, cc) {
+  return h('div', { class: 'chips' }, items.map((it) => h('button', {
+    class: 'status-chip', onclick: () => go(resolveHash(it, cc)),
+    'aria-label': it.blurb ? `${it.label}. ${it.blurb}` : it.label,
+  }, [
+    h('span', { class: 'status-ic', 'aria-hidden': 'true' }, it.ic),
+    h('span', { class: 'status-lbl' }, it.label),
+  ])));
+}
+
+// Match a live hash against the manifest's hash TEMPLATES, so '#weather-vi' is recognised as
+// the Weather feature whatever country the traveller happens to be in.
+function routeItemFor(hash) {
+  const items = navItems();
+  const exact = items.find((it) => it.hash === hash);
+  if (exact) return exact;
+  return items.find((it) => {
+    const pat = String(it.hash);
+    if (!pat.includes('{cc}')) return false;
+    const rx = pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace('\\{cc\\}', '[a-z]{2}');
+    try { return new RegExp(`^${rx}$`).test(hash); } catch { return false; }
+  }) || null;
+}
+
+// Record a feature the traveller actually opened, for the row below. Recorded in render()
+// rather than in go() because render() is the one point EVERY arrival passes through: a tap,
+// a deep link, a Back, and the GPS watcher's own direct repaint all land here, where go()
+// catches only the first. A feature reached by Back is still a feature being used. Recording
+// the route that is already at the front is a no-op, so the repaints cost nothing.
+function rememberRoute(hash) {
+  try {
+    const item = routeItemFor(hash);
+    if (!item) return;
+    const prefs = store.profile.prefs;
+    const list = Array.isArray(prefs.recentRoutes) ? prefs.recentRoutes : [];
+    if (list[0] === item.hash) return;
+    prefs.recentRoutes = [item.hash, ...list.filter((x) => x !== item.hash)].slice(0, 6);
+    save();
+  } catch { /* a convenience row is never worth breaking navigation over */ }
+}
+
+// Home's learned one-tap row. The consolidation into nine doors bought a Home a traveller can
+// read at a glance, and it cost seventeen features an extra tap; the four features that kept
+// one-tap access are Quick access's live chips, which are MY choice and fixed. A traveller who
+// checks the phrasebook and the converter ten times a day should not pay two taps for both
+// forever, so this row is theirs: the features they actually open, most recent first.
+//
+// Stored as the manifest's own hash TEMPLATE (with the {cc} placeholder intact), so a route
+// recorded in Thailand opens the Vietnamese screen once the traveller crosses, and a feature
+// that is renamed or retired simply stops resolving instead of leaving a dead chip.
+export function recentRoutesRow() {
+  const prefs = store.profile.prefs;
+  const saved = Array.isArray(prefs.recentRoutes) ? prefs.recentRoutes : [];
+  if (!saved.length) return null;
+  const phase = prefs.phase || inferPhase();
+  const live = new Set(visibleGroups(phase).flatMap((g) => g.items.map((it) => it.hash)));
+  const all = navItems();
+  const items = saved.map((hsh) => all.find((it) => it.hash === hsh))
+    .filter((it) => it && live.has(it.hash)).slice(0, 4);
+  if (!items.length) return null;
+  const cc = getActiveCountry();
+  const box = h('div', { class: 'home-recents' });
+  box.append(h('div', { class: 'row-between', style: 'margin:16px 0 2px' }, [
+    h('h2', { class: 'home-section', style: 'margin:0' }, '🕘 Back to'),
+    h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
+      onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear'),
+  ]));
+  box.append(featureChips(items, cc));
+  return box;
+}
+
+// Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
+// one-handed action performed standing in front of the thing, which is precisely when an extra
+// tap costs most — and all six of these features gained one in the consolidation. Planning
+// keeps the door instead: nobody identifies a bird from the sofa three months out.
+export function identifyRow() {
+  const group = navGroup('identify');
+  if (!group) return null;
+  const phase = store.profile.prefs.phase || inferPhase();
+  const items = visibleItems(group, phase);
+  if (!items.length) return null;
+  const box = h('div', { class: 'home-identify' });
+  // The group's TITLE, not its blurb: .home-section uppercases, and "WHAT IS THIS DISH, FRUIT
+  // OR BIRD?" wrapped to two shouted lines at 375px. Naming it exactly as its door is named
+  // also tells a traveller that these chips are that section, brought forward.
+  box.append(h('h2', { class: 'home-section', style: 'margin:16px 0 2px' }, `${group.ic} ${group.title}`));
+  box.append(featureChips(items, getActiveCountry()));
+  return box;
 }
 
 // The hub itself. Unknown id falls through to the full index rather than an error screen:
@@ -2913,10 +3007,11 @@ function hubScreen(id) {
   wrap.append(topbar(group.title, '#home'));
   wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, group.intro || group.blurb));
 
-  // Sub-headings only where a group is too long to scan flat — Plan & travel is twelve
-  // features covering three different questions (your trip, when to go, how you get there),
-  // and reads as a wall without them. Groups of six or eight need no such help, so they get
-  // none: a heading per item would be noise.
+  // Sub-headings only where a group carries more than one question — Plan & travel splits
+  // into "your trip" and "when to go", which are different enough that a flat list of eight
+  // reads as a wall. Its third question, how you actually travel between two places, is now
+  // its own section (id 'around'). Every other group asks one question, so none of them
+  // carries a heading: one per item would be noise.
   const sections = [];
   items.forEach((it) => {
     const key = it.section || '';
@@ -2929,7 +3024,7 @@ function hubScreen(id) {
     sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
   });
 
-  // Sideways, not back: the other seven groups as chips at the foot, so moving from Money to
+  // Sideways, not back: the other eight groups as chips at the foot, so moving from Money to
   // Plan is one tap instead of Back-then-tap. This is the whole reason a hub can afford to
   // hold the long tail — nothing is ever more than two taps from anywhere.
   const others = visibleGroups(phase).filter((g) => g.id !== group.id);
@@ -2942,7 +3037,7 @@ function hubScreen(id) {
   mount(wrap, '#home');
 }
 
-// The doorway to every feature on the site — now the eight groups plus one flat A–Z list,
+// The doorway to every feature on the site — now the nine groups plus one flat A–Z list,
 // rendered from js/nav-groups.js instead of the hand-written nine folds this used to be.
 // The folds and the group hubs would have shown the same rows twice; what a full index adds
 // over a hub is the OTHER way of looking, so that is what it does. A traveller who knows the
@@ -2956,7 +3051,7 @@ function everythingScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('All features', '#me'));
   wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' },
-    'Everything on the site, in eight sections. The five tabs at the bottom — Home, Talk, You, Places, Explore — and Emergency are always one tap away, so they are not repeated here.'));
+    'Everything on the site, in nine sections. The five tabs at the bottom — Home, Talk, You, Places, Explore — and Emergency are always one tap away, so they are not repeated here.'));
   wrap.append(groupDoors());
 
   const cc = getActiveCountry();
@@ -9801,6 +9896,7 @@ export function render() {
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
+  rememberRoute(hash);   // feeds Home's "Back to" row; ignores anything not a manifest feature
 
   // ---- Lazy country data gate --------------------------------------------------
   // See js/data/regions.js: COUNTRIES ships as metadata only; loadCountry(cc) fetches

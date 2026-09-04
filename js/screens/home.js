@@ -43,6 +43,7 @@ import {
   ensureHomeWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
+  recentRoutesRow, identifyRow,
 } from '../main.js';
 
 export function homeScreen() {
@@ -118,6 +119,28 @@ export function homeScreen() {
     if (ja) wrap.append(ja);
     const nsn = nextStopNudgeChip();
     if (nsn) wrap.append(nsn);
+  }
+
+  // Two one-tap surfaces, both repaying taps the consolidation charged, and both placed HERE
+  // rather than above the doors on purpose. Measured at 375px, above the doors put them 1,293px
+  // down the page — past a screen and a half of scrolling. A one-tap affordance reached only
+  // after a scroll is not one tap, so they belong in Home's launcher zone with Quick access
+  // and Search everything, not in the directory zone with the doors.
+  //
+  // "Back to" is learned rather than chosen: the four features that kept one-tap access are
+  // Quick access's live chips, and those are a fixed guess of mine. This row is the traveller's
+  // own most-recent four, and it renders nothing at all until they have opened something, so a
+  // first run looks exactly as it did.
+  //
+  // Identify goes inline while on the ground and keeps its door while planning. All six of its
+  // features are performed standing in front of the thing being identified, one-handed — which
+  // is precisely when an extra tap costs most — and all six gained one in the consolidation.
+  // Chips, not hub rows: six rows would add ~340px, more height than the consolidation saved.
+  const recents = recentRoutesRow();
+  if (recents) wrap.append(recents);
+  if (onGround) {
+    const ident = identifyRow();
+    if (ident) wrap.append(ident);
   }
 
   // Search everything — while travelling, this leads (moved up from its old spot just before
@@ -206,7 +229,7 @@ export function homeScreen() {
   // direct request ("gamification level should move to before tools in home post section").
   if (phase === 'post') wrap.append(gamifyLevelBadge());
 
-  // The seven feature sections, as doors — replacing the two chip bags that used to sit
+  // The feature sections, as doors — replacing the two chip bags that used to sit
   // here. "🧰 Tools" had become thirteen unrelated chips in one row (Trip plans, Currency
   // converter, Travel circle, Documents, Help & FAQ…) and "🔎 Identify what's around you"
   // six more, and the same destinations were listed again on You, again on the country hub,
@@ -224,7 +247,7 @@ export function homeScreen() {
   // planningOnly), so a returned traveller still never sees Cash swap or a pre-trip
   // checklist, and a section whose every item is hidden drops out entirely.
   wrap.append(h('h2', { class: 'home-section', style: 'margin:16px 0 6px' }, '🧰 What do you need?'));
-  wrap.append(groupDoors(['admin']));
+  wrap.append(groupDoors(onGround ? ['admin', 'identify'] : ['admin']));
   wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#everything') },
     '🗂️ All features, A–Z →'));
 

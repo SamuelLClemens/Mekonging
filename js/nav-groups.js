@@ -93,10 +93,29 @@ export const NAV_GROUPS = [
       { section: 'When to go', ic: '🌤', label: 'Weather', hash: '#weather-{cc}', blurb: 'Forecast, rain and heat by city', live: 'weather' },
       { section: 'When to go', ic: '📅', label: 'Travel calendar', hash: '#calendar', blurb: 'Your dates, bookings and reminders', live: 'calendar' },
       { section: 'When to go', ic: '🎉', label: 'Festivals', hash: '#events-{cc}', blurb: 'Holidays worth planning around — or avoiding' },
-      { section: 'Getting around', ic: '🚌', label: 'Getting around', hash: '#transport-{cc}', blurb: 'Best way between two places' },
-      { section: 'Getting around', ic: '📋', label: 'Transport schedules', hash: '#schedules-{cc}', blurb: 'Train, bus and boat times' },
-      { section: 'Getting around', ic: '🛂', label: 'Border crossings', hash: '#crossings', blurb: 'Where to cross, opening hours, visas' },
-      { section: 'Getting around', ic: '🧭', label: 'Journey planner', hash: '#route', blurb: 'Chain buses, trains and boats into one route' },
+    ],
+  },
+  // Promoted out of Plan & travel, which held twelve features to every other section's six
+  // to eight and needed three sub-headings to be readable at all. "How do I get from here to
+  // there" is a different question from "where should I go and when", and it is asked on the
+  // day rather than in advance — so it is a section, not a sub-heading inside a planning one.
+  //
+  // Titled "Transport" and not "Getting around" on purpose: the #transport screen's own
+  // topbar reads "Getting around", so the ITEM has to keep that name or the manifest starts
+  // drifting from the screens again, which is the whole thing it exists to prevent. A door
+  // and a row inside it cannot both be "Getting around".
+  {
+    id: 'around',
+    accent: '#7B5EA7',
+    ic: '🚌',
+    title: 'Transport',
+    blurb: 'Buses, trains, boats, borders',
+    intro: 'How you get from where you are to where you are going next',
+    items: [
+      { ic: '🚌', label: 'Getting around', hash: '#transport-{cc}', blurb: 'Best way between two places' },
+      { ic: '📋', label: 'Transport schedules', hash: '#schedules-{cc}', blurb: 'Train, bus and boat times' },
+      { ic: '🛂', label: 'Border crossings', hash: '#crossings', blurb: 'Where to cross, opening hours, visas' },
+      { ic: '🧭', label: 'Journey planner', hash: '#route', blurb: 'Chain buses, trains and boats into one route' },
     ],
   },
   {
