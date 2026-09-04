@@ -241,7 +241,7 @@ export function scrapbookScreen() {
 
   if (!entries.length && !stops.length && !budget.length && !loved.length && !getAlbum().length) {
     wrap.append(h('div', { class: 'card empty-state' }, [
-      h('h2', { style: 'margin-top:0' }, 'Your scrapbook builds itself'),
+      h('h2', {}, 'Your scrapbook builds itself'),
       h('p', { class: 'muted' }, 'It is a photo album of your trip — the pictures you add here plus every photo in your journal — alongside the places you rate, your itinerary and budget. Add pictures below, or start a journal entry.'),
       h('div', { class: 'chips' }, [
         h('button', { class: 'chip', onclick: () => go('#journal-add') }, [chipIcon('book'), 'Write a journal entry']),
@@ -774,7 +774,7 @@ export function journeyScreen() {
 
   // Every stop in order, so the whole trip is readable without hunting for pins on a map,
   // and tapping a row lights its pin. Same select() as the map, so they cannot diverge.
-  const list = h('div', { class: 'card', style: 'margin-top:10px' }, [h('h2', { style: 'margin-top:0' }, '🧭 Your stops, in order')]);
+  const list = h('div', { class: 'card', style: 'margin-top:10px' }, [h('h2', {}, '🧭 Your stops, in order')]);
   stops.forEach((s, i) => {
     const bits = [];
     if (s.entries.length) bits.push(`${s.entries.length} 📔`);

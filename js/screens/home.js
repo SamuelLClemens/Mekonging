@@ -460,7 +460,7 @@ function nextStopCard(ctx) {
     const changes = pl.changes === 0 ? 'Direct' : `${pl.changes} change${pl.changes > 1 ? 's' : ''}`;
     const timeStr = pl.totalHrs[1] ? `~${pl.totalHrs[0]}–${pl.totalHrs[1]}h moving` : '';
     return h('div', { class: 'card next-stop-card' }, [
-      h('h2', { style: 'margin-top:0' }, `🚌 Getting to ${stop.title}`),
+      h('h2', {}, `🚌 Getting to ${stop.title}`),
       h('p', { style: 'margin:2px 0 8px' }, [changes, timeStr].filter(Boolean).join(' · ')),
       h('button', { class: 'btn ghost block', onclick: () => go('#route') }, 'Full journey planner →'),
     ]);

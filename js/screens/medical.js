@@ -96,7 +96,7 @@ function showMedCard() {
   const rows = MED_FIELDS.filter((f) => (m[f.k] || '').trim());
   const overlay = h('div', { class: 'bigphrase', role: 'dialog', 'aria-label': 'Medical card' });
   const inner = h('div', { class: 'card', style: 'max-width:520px;text-align:left' }, [
-    h('h2', { style: 'margin-top:0' }, '🏥 Medical information'),
+    h('h2', {}, '🏥 Medical information'),
     rows.length
       ? h('div', {}, rows.map((f) => h('p', { style: 'margin:10px 0;font-size:1.15rem' }, [
         h('strong', {}, `${f.label}: `), (m[f.k] || '').trim(),
