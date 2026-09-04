@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Ratchet the app's inline spacing down onto the --sp-* scale; never let it climb back.
+
+    python3 scripts/check-spacing.py            # fail if any file got worse
+    python3 scripts/check-spacing.py --report   # show every file's current numbers
+    python3 scripts/check-spacing.py --update   # rewrite the ceilings after a real reduction
+
+WHY THIS EXISTS. css/style.css declares a spacing scale — --sp-1..6, being 4/8/12/16/24/32 —
+and for a long time no inline style used it. The measurement that started this: 818 inline
+margin/padding declarations across 879 inline `style:` attributes, ZERO referencing a token,
+and twelve distinct raw pixel values in play (2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 22), eight
+of them off the declared scale.
+
+The ROOT CAUSE was upstream of every one of those call sites: nothing set a margin for `p`, so
+every paragraph inherited the UA default of `1em 0`. That default scales with font size, so one
+intended "paragraph gap" computed to 13.12px, 16px and 18.72px on different screens — all three
+were measured in a 68-route sweep. Every call site that wanted a predictable gap had to override
+it by hand, and 317 of them did. Setting `p { margin: 0 0 var(--sp-4) }` once removed the reason
+they existed.
+
+WHY A RATCHET AND NOT A FLAT RULE. 762 declarations remain. Converting them all in one pass is
+exactly the change most likely to go wrong in a repo with no build step and no CI, and it cannot
+be verified by eye at that volume. So this guard does not demand zero: it records what each file
+carries today and fails only when a file gets WORSE. Every slice ratchets a file down and the
+number can never climb back, which is the property that actually matters when the work has to be
+done incrementally.
+
+Two numbers per file: total inline spacing declarations, and how many use an off-scale value.
+Reduce either and re-run with --update to lower the ceiling.
+"""
+import glob
+import io
+import json
+import os
+import re
+import sys
+
+SCALE = {4, 8, 12, 16, 24, 32}
+SKIP = ('Xcode',)          # the stale tracked mirror of the whole app — never edit, never count
+PROPS = r'(margin[a-z-]*|padding[a-z-]*|gap|row-gap|column-gap)'
+
+# Ceilings, recorded when this guard was written (mk-v0.486.0). [total, off_scale] per file.
+CEILING = {
+    "js/main.js": [427, 210],
+    "js/screens/budget.js": [29, 19],
+    "js/screens/calendar.js": [25, 12],
+    "js/screens/family.js": [7, 2],
+    "js/screens/home.js": [11, 5],
+    "js/screens/journal.js": [28, 13],
+    "js/screens/medical.js": [47, 25],
+    "js/screens/nextstop.js": [5, 4],
+    "js/screens/phrasebook.js": [19, 9],
+    "js/screens/places.js": [76, 41],
+    "js/screens/settings.js": [36, 17],
+    "js/screens/share-journey.js": [17, 7],
+    "js/screens/visitors.js": [13, 2],
+    "js/screens/weather.js": [20, 12],
+    "js/ui-widgets.js": [2, 2],
+}
+
+
+def measure():
+    out = {}
+    for path in sorted(glob.glob('js/**/*.js', recursive=True)):
+        if any(s in path for s in SKIP):
+            continue
+        src = io.open(path, encoding='utf-8').read()
+        attrs = re.findall(r"style:\s*'([^']*)'", src) + re.findall(r'style:\s*"([^"]*)"', src)
+        total = offscale = 0
+        for attr in attrs:
+            for decl in attr.split(';'):
+                m = re.match(PROPS + r'\s*:\s*(.+)$', decl.strip())
+                if not m:
+                    continue
+                total += 1
+                px = [int(v) for v in re.findall(r'(\d+)px', m.group(2))]
+                if any(v not in SCALE and v != 0 for v in px):
+                    offscale += 1
+        if total:
+            out[path] = [total, offscale]
+    return out
+
+
+def main():
+    now = measure()
+    if '--update' in sys.argv:
+        src = io.open(__file__, encoding='utf-8').read()
+        block = json.dumps(now, indent=4)[1:-1].rstrip()
+        src = re.sub(r'CEILING = \{.*?\n\}', 'CEILING = {' + block + '\n}', src, flags=re.S)
+        io.open(__file__, 'w', encoding='utf-8').write(src)
+        print(f'Ceilings updated: {sum(v[0] for v in now.values())} declarations, '
+              f'{sum(v[1] for v in now.values())} off-scale.')
+        return 0
+
+    tot = sum(v[0] for v in now.values())
+    off = sum(v[1] for v in now.values())
+    cap_tot = sum(v[0] for v in CEILING.values())
+    cap_off = sum(v[1] for v in CEILING.values())
+
+    if '--report' in sys.argv:
+        print(f'{"file":34s} {"now":>12s} {"ceiling":>12s}')
+        for path in sorted(set(now) | set(CEILING)):
+            n = now.get(path, [0, 0])
+            c = CEILING.get(path, [0, 0])
+            flag = '' if (n[0] <= c[0] and n[1] <= c[1]) else '  <-- WORSE'
+            print(f'{path:34s} {n[0]:5d}/{n[1]:<6d} {c[0]:5d}/{c[1]:<6d}{flag}')
+        print()
+
+    problems = []
+    for path, n in now.items():
+        c = CEILING.get(path)
+        if c is None:
+            problems.append(f'{path}: {n[0]} inline spacing declarations ({n[1]} off-scale) in a '
+                            f'file that had none. Lay the block out with gap on the parent — '
+                            f'.stack-1..6 in css/style.css bind gap to the token scale.')
+        else:
+            if n[0] > c[0]:
+                problems.append(f'{path}: {n[0]} inline spacing declarations, ceiling is {c[0]} '
+                                f'(+{n[0] - c[0]}).')
+            if n[1] > c[1]:
+                problems.append(f'{path}: {n[1]} of them use an off-scale value, ceiling is '
+                                f'{c[1]} (+{n[1] - c[1]}). The scale is '
+                                f'{sorted(SCALE)} — 2, 6, 10 and 14 are not on it.')
+
+    print(f'{tot} inline spacing declarations across {len(now)} files; {off} use an off-scale '
+          f'value. Ceilings: {cap_tot} / {cap_off}.')
+    if problems:
+        print('\nFAIL — inline spacing grew:\n')
+        for p in problems:
+            print('  ' + p)
+        print('\nUse gap on the parent (.stack-1..6) rather than a margin on each child. If a '
+              '\nreduction elsewhere genuinely offsets this, re-run with --update to re-record '
+              '\nthe ceilings — but --update after an INCREASE just hides it.')
+        return 1
+    won = (cap_tot - tot, cap_off - off)
+    if won[0] or won[1]:
+        print(f'\nPASS — and {won[0]} fewer declarations / {won[1]} fewer off-scale than the '
+              f'recorded ceiling.\nRun --update to lock the improvement in.')
+    else:
+        print('\nPASS — no file carries more inline spacing than its ceiling.')
+    return 0
+
+
+if __name__ == '__main__':
+    os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+    sys.exit(main())

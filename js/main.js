@@ -490,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.485.0';
+const APP_VERSION = 'mk-v0.486.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1719,7 +1719,7 @@ function knownForRow(tags) {
 function countryHistoryCard(cc) {
   const hi = countryHistory(cc);
   if (!hi || !hi.blurb) return null;
-  const card = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, 'History & culture')]);
+  const card = h('div', { class: 'card history-card' }, [h('h2', {}, 'History & culture')]);
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
   if (hi.cultureTip) card.append(h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`));
@@ -1733,7 +1733,7 @@ function whereAmICard(cc) {
   const c = getCountry(cc);
   const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
   return h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, '📍 Where are you?'),
+    h('h2', {}, '📍 Where are you?'),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
     field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); render(); } })),
   ]);
@@ -1760,7 +1760,7 @@ function historyScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar(c ? `${c.name} — history` : 'History & culture', c ? `#country-${cc}` : '#home'));
   if (!hi) { wrap.append(h('p', { class: 'empty' }, 'History for this country is on the way.')); mount(wrap, 'home'); return; }
-  const histCard = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, 'The short history'), h('p', {}, hi.blurb)]);
+  const histCard = h('div', { class: 'card history-card' }, [h('h2', {}, 'The short history'), h('p', {}, hi.blurb)]);
   { const rd = readAloudBar(() => hi.blurb); if (rd) histCard.append(rd); }
   wrap.append(histCard);
   const kf = knownForRow(hi.knownFor); if (kf) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Known for'), kf]));
@@ -1781,7 +1781,7 @@ function historyScreen(cc) {
 export function cityAboutCard(cc, slug) {
   const hi = cityHistory(cc, slug);
   if (!hi || !hi.blurb) return null;
-  const card = h('div', { class: 'card history-card' }, [h('h2', { style: 'margin-top:0' }, `About ${hi.name}`)]);
+  const card = h('div', { class: 'card history-card' }, [h('h2', {}, `About ${hi.name}`)]);
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
   if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom:0' }, `🗓 Best time: ${hi.bestTime}`));
@@ -1837,7 +1837,7 @@ function accessCard(cc) {
   if (!getAccessibility(cc)) return null;
   const hasNeed = (store.profile.prefs.access || []).length > 0;
   const card = h('div', { class: 'card' + (hasNeed ? ' access-focus' : '') });
-  card.append(h('h2', { style: 'margin-top:0' }, '♿ Accessibility'));
+  card.append(h('h2', {}, '♿ Accessibility'));
   card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, hasNeed
     ? 'Honest, practical guidance tailored to the needs you set — your groups come first.'
     : 'How this country works for travellers with limited mobility, low vision or hearing.'));
@@ -1857,7 +1857,7 @@ function babyScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Travelling with a baby', c ? `#country-${cc}` : '#home'));
   wrap.append(h('p', { class: 'muted' }, `Where to find nappies, formula and baby basics in ${c ? c.name : 'this country'} — cheapest first — plus family tips. Guidance; verify locally.`));
-  const dc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '🧷 Where to buy nappies (diapers)')]);
+  const dc = h('div', { class: 'card' }, [h('h2', {}, '🧷 Where to buy nappies (diapers)')]);
   dc.append(h('p', {}, DIAPER_WHERE[cc] || 'Look for the largest supermarket or pharmacy in town and buy larger packs for the best price per nappy.'));
   wrap.append(dc);
   const boards = boardsForCountry(cc).filter((b) => b.family && b.family.length);
@@ -2024,7 +2024,7 @@ function visaScreen(cc) {
 function visaCard(cc) {
   if (!getVisa(cc)) return null;
   const card = h('div', { class: 'card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '🛂 Entry & visa'));
+  card.append(h('h2', {}, '🛂 Entry & visa'));
   card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#visa-${cc}`) }, 'Open the entry guide'));
   return card;
@@ -2310,7 +2310,7 @@ function returnRecapCard() {
 function destinationOutlookCard(spot) {
   const card = h('div', { class: 'card home-outlook' });
   const cityName = spot ? spot.city : 'your destination';
-  card.append(h('h2', { style: 'margin-top:0' }, `🌤 ${cityName} outlook`));
+  card.append(h('h2', {}, `🌤 ${cityName} outlook`));
   const body = h('div', {});
   card.append(body);
   const dayName = (iso, k) => {
@@ -2640,7 +2640,7 @@ function nameEntryCard() {
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
   input.addEventListener('blur', commit);
   return h('div', { class: 'card name-entry-card' }, [
-    h('h2', { style: 'margin-top:0' }, '👋 What should we call you?'),
+    h('h2', {}, '👋 What should we call you?'),
     h('p', { class: 'muted', style: 'margin-top:0' }, 'Personalises this section and your journal exports. Optional — skip any time; add it later from here or Settings.'),
     input,
   ]);
@@ -3675,7 +3675,7 @@ function zoneFactsCard(z) {
     ['Getting around', z.gettingAround],
     ['Arrive at', z.gateway],
   ].filter(([, v]) => v);
-  const card = h('div', { class: 'card zone-facts' }, [h('h2', { style: 'margin-top:0' }, `${z.emoji || '📍'} ${z.name}`)]);
+  const card = h('div', { class: 'card zone-facts' }, [h('h2', {}, `${z.emoji || '📍'} ${z.name}`)]);
   card.append(h('p', { class: 'zone-lead' }, z.tagline));
   // Lead with the verdict for the month in hand. The two prose rows are still in the grid
   // below, which is what makes this honest: "Depends where" is a pointer to the sentence, not
@@ -3735,13 +3735,13 @@ function regionScreen(arg) {
   const towns = townsInZone(cc, z.id);
   if (towns.length) {
     const counts = {}; towns.forEach((t) => { counts[t.city] = t.n; });
-    const cityCard = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `🏙 ${towns.length} town${towns.length === 1 ? '' : 's'} in ${z.name}`)]);
+    const cityCard = h('div', { class: 'card' }, [h('h2', {}, `🏙 ${towns.length} town${towns.length === 1 ? '' : 's'} in ${z.name}`)]);
     cityCard.append(cityPickGrid(cc, towns.map((t) => t.city), counts));
     wrap.append(collapsibleCard(cityCard, 'regionCitiesOpen'));
   }
 
   if (inZone.length) {
-    const pc = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `📍 ${inZone.length} place${inZone.length > 1 ? 's' : ''} in ${z.name}`)]);
+    const pc = h('div', { class: 'card' }, [h('h2', {}, `📍 ${inZone.length} place${inZone.length > 1 ? 's' : ''} in ${z.name}`)]);
     inZone.slice(0, 40).forEach((pl) => pc.append(placeCard(pl)));
     if (inZone.length > 40) {
       pc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) }, `See all ${inZone.length} on the map →`));
@@ -3962,7 +3962,7 @@ function exploreScreen(argCc) {
   if (fcity) {
     const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === fslug).length;
     wrap.append(h('div', { class: 'card access-focus' }, [
-      h('h2', { style: 'margin-top:0' }, `📍 You’re around ${fcity}`),
+      h('h2', {}, `📍 You’re around ${fcity}`),
       h('p', { class: 'muted', style: 'margin:4px 0 8px' },
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
       here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${fslug}`) }, `Places in ${fcity}`) : null,
@@ -4124,7 +4124,7 @@ function arrivalScreen(arg) {
   }
 
   if (arr) {
-    const t = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, `🚕 ${arr.airport}`)]);
+    const t = h('div', { class: 'card' }, [h('h2', {}, `🚕 ${arr.airport}`)]);
     arr.options.forEach((o) => t.append(h('div', { class: 'board-row' }, [
       h('strong', {}, o.mode),
       h('div', { class: 'tiny muted' }, `${o.detail}${o.fare ? ` · 💰 ${o.fare}` : ''}`),
@@ -4500,7 +4500,7 @@ function pasteLinkBox(hint) {
   return h('div', { class: 'card' }, [
     // h2, not h3: this is a card heading and the card beside it on the same screen uses h2, so
     // an h3 here skipped a level in the outline for no reason.
-    h('h2', { style: 'margin-top:0' }, '📥 Got a link?'),
+    h('h2', {}, '📥 Got a link?'),
     inp,
     h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => {
       const m = String(inp.value || '').match(/#(.+)$/);
@@ -4551,7 +4551,7 @@ function buildBBForm(cat) {
   const c = getCountry(getActiveCountry());
   const meta = bbCat(cat);
   const card = h('div', { class: 'card' });
-  card.append(h('h2', { style: 'margin-top:0' }, `${meta.emoji} Post: ${meta.label}`));
+  card.append(h('h2', {}, `${meta.emoji} Post: ${meta.label}`));
 
   const cityIn = h('input', { type: 'text', value: guessCityName(), placeholder: 'Where (town / area)', maxLength: 40 });
   const noteIn = h('input', { type: 'text', placeholder: 'Notes (optional)', maxLength: 400 });
@@ -4813,7 +4813,7 @@ function getAroundSection(cc) {
   const wrap = h('div', {});
 
   if (g.hail && g.hail.length) {
-    const card = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '🚕 Ride-hailing apps')]);
+    const card = h('div', { class: 'card' }, [h('h2', {}, '🚕 Ride-hailing apps')]);
     g.hail.forEach((a) => card.append(h('div', { class: 'transit-row' }, [h('strong', {}, a.name), h('div', { class: 'muted tiny' }, a.what)])));
     wrap.append(card);
   }
@@ -5679,7 +5679,7 @@ function foodScreen(country) {
   if ((store.profile.prefs.diet || []).includes('kosher')) {
     const fix = getLastFix();
     const kv = nearestFirst(KOSHER, fix);
-    const kc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', { style: 'margin-top:0' }, '✡️ Kosher food & Chabad houses')]);
+    const kc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '✡️ Kosher food & Chabad houses')]);
     kc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'In Thailand, Vietnam, Cambodia and Laos, reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified kosher — always confirm supervision with the venue.'));
     kv.slice(0, 8).forEach((k) => {
       const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: k.lat, lng: k.lng }) : null;
@@ -5719,7 +5719,7 @@ function foodScreen(country) {
   // Halal-certified food is widespread here, especially near mosques and Muslim quarters.
   const dietSet = store.profile.prefs.diet || [];
   if (dietSet.includes('halal') || dietSet.includes('no-pork') || dietSet.includes('no-beef')) {
-    const hc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', { style: 'margin-top:0' }, '🕌 Halal & pork-free')]);
+    const hc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '🕌 Halal & pork-free')]);
     hc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Halal-certified food is widely available in the region, especially near mosques and Muslim quarters. Look for a halal-certification logo and confirm with the cook.'));
     hc.append(h('a', { class: 'btn ghost block', href: mapsSearch('halal restaurant near me'), target: '_blank', rel: 'noopener' }, 'Find halal food near me ↗'));
     const hpk = DIET_PHRASES['no-pork'];
@@ -7086,7 +7086,7 @@ function bargainScreen() {
   const ess = getEssentials(fc);
   if (ess && ess.items && ess.items.length) {
     const card = h('div', { class: 'card' }, [
-      h('h2', { style: 'margin-top:0' }, `🛒 Cheapest essentials${fcName ? ' in ' + fcName : ''}`),
+      h('h2', {}, `🛒 Cheapest essentials${fcName ? ' in ' + fcName : ''}`),
       ess.note ? h('p', { class: 'muted', style: 'margin:4px 0 8px' }, ess.note) : null,
     ]);
     ess.items.forEach((it) => card.append(h('div', { class: 'list-note' }, [
@@ -7365,7 +7365,7 @@ function dietEatCard(cc, fix, opts) {
   const wantVeg = (diet.includes('vegan') || diet.includes('vegetarian')) && opts.only !== 'kosher';
   const wantHalal = diet.includes('halal') && !opts.only;
   if (!wantKosher && !wantVeg && !wantHalal) return null;
-  const card = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', { style: 'margin-top:0' }, '🍽 Where you can eat')]);
+  const card = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '🍽 Where you can eat')]);
   const kmOf = (v) => (fix && fix.lat != null && v.lat != null) ? haversineKm(fix, { lat: v.lat, lng: v.lng }) : null;
   const venueRow = (name, city, offer, km, tag) => h('div', { style: 'margin:6px 0' }, [
     h('div', { class: 'row-between' }, [h('strong', {}, name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
@@ -7958,7 +7958,7 @@ const MOSQUITO_SOURCES = [
 function mosquitoCard() {
   const m = new Date().getMonth() + 1;
   const hot = Object.keys(MOSQUITO_PEAK).filter((cc) => MOSQUITO_PEAK[cc].includes(m)).map((cc) => MOSQUITO_NAME[cc]);
-  const card = h('div', { class: 'card mosquito-card' }, [h('h2', { style: 'margin-top:0' }, '🦟 Mosquitoes & dengue')]);
+  const card = h('div', { class: 'card mosquito-card' }, [h('h2', {}, '🦟 Mosquitoes & dengue')]);
   card.append(h('p', {}, 'Dengue fever is the most common serious mosquito-borne illness across all four countries. It is spread by day-biting Aedes mosquitoes and rises sharply in the rainy season.'));
   card.append(h('p', { class: hot.length ? 'mkt-status off' : 'mkt-status on' },
     hot.length ? `⚠️ Dengue risk is elevated this month in: ${hot.join(', ')}` : 'Lower-risk month across the region — but dengue occurs year-round, so keep up prevention.'));
@@ -8033,7 +8033,7 @@ function worshipScreen(cc) {
   wrap.append(screenHint('Notable temples, churches, mosques, synagogues and Hindu temples — tap to open in maps and confirm prayer or service times. Not a full directory; use the search below for anywhere not listed.'));
 
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Find a place of worship near me'),
+    h('h2', {}, 'Find a place of worship near me'),
     h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Opens a live map search (needs internet).'),
     h('div', { class: 'chips' }, Object.keys(WORSHIP_FAITH).map((f) =>
       h('a', { class: 'chip', href: mapsSearch(`${WORSHIP_SEARCH[f]} near me`), target: '_blank', rel: 'noopener' }, `${WORSHIP_FAITH[f]} ↗`))),
@@ -8044,7 +8044,7 @@ function worshipScreen(cc) {
   const byCity = {};
   local.forEach((w) => { (byCity[w.city] = byCity[w.city] || []).push(w); });
   Object.keys(byCity).forEach((city) => {
-    const card = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, city)]);
+    const card = h('div', { class: 'card' }, [h('h2', {}, city)]);
     byCity[city].forEach((w) => card.append(h('div', { class: 'row-between', style: 'margin:4px 0' }, [
       h('div', { class: 'grow' }, [h('strong', {}, w.name), h('div', { class: 'muted tiny' }, WORSHIP_FAITH[w.faith] || '')]),
       h('a', { class: 'chip', href: mapsSearch(`${w.name} ${w.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
@@ -8532,7 +8532,7 @@ function circleScreen() {
   // --- traveller board (peer bulletin board; on-device, shared by link) ---
   const nListings = getListings().length;
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Traveller board'),
+    h('h2', {}, 'Traveller board'),
     h('p', { class: 'muted' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. On-device; a listing travels only inside a link you share.'),
     h('button', { class: 'btn ghost block', onclick: () => go('#exchange') }, `🧭 Open the board${nListings ? ` (${nListings})` : ''}`),
   ]));
@@ -8554,7 +8554,7 @@ function circleScreen() {
     );
   } else {
     cardBox.append(
-      h('h2', { style: 'margin-top:0' }, 'Your traveller card'),
+      h('h2', {}, 'Your traveller card'),
       contactRow(me, h('button', { class: 'chip', 'aria-label': 'Edit your traveller card', onclick: () => { editingMyCard = true; go('#circle'); } }, '✎ Edit')),
     );
   }
@@ -8568,7 +8568,7 @@ function circleScreen() {
   const buildUrl = () => shareUrl('add', encodeCard(ensureMe()));
   const inviteMsg = () => `Join me on Mekonging — a free, offline travel app for Thailand, Vietnam, Cambodia & Laos. Add me: ${buildUrl()}`;
   const shareCard = h('div', { class: 'card' });
-  shareCard.append(h('h2', { style: 'margin-top:0' }, '➕ Invite a friend'));
+  shareCard.append(h('h2', {}, '➕ Invite a friend'));
   shareCard.append(h('p', { class: 'muted' }, 'Send this to another traveller. When they open it, you are added to each other’s circle. On a phone, “Share” can send it over AirDrop or Nearby Share with no internet at all.'));
 
   // WhatsApp — wa.me with no number opens WhatsApp's OWN "choose a chat" picker (exactly
@@ -8993,7 +8993,7 @@ function welcomeScreen() {
   // while this, their actual cause, was left in place.
   if (step === 0) {
     const netCard = h('div', { class: 'card' });
-    netCard.append(h('h2', { style: 'margin-top:0' }, 'Data, or fully offline?'));
+    netCard.append(h('h2', {}, 'Data, or fully offline?'));
     netCard.append(h('p', { class: 'muted' }, 'This app works fully offline. It will not use mobile data or Wi-Fi unless you allow it — handy when you have no SIM. You can change this any time.'));
 
     // Full-width rows rather than two small chips: this is the most consequential setting in
@@ -9051,7 +9051,7 @@ function welcomeScreen() {
   // ---- Step 3 — Who is travelling (+ baby, solo female) ----
   if (step === 2) {
     const whoCard = h('div', { class: 'card' });
-    whoCard.append(h('h2', { style: 'margin-top:0' }, 'Who is travelling?'));
+    whoCard.append(h('h2', {}, 'Who is travelling?'));
     whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
     whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Bringing little ones?'));
     const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
@@ -9071,7 +9071,7 @@ function welcomeScreen() {
   // ---- Step 4 — Food allergies / diet (the most visibly personalised surface) ----
   if (step === 3) {
     const dietCard = h('div', { class: 'card' });
-    dietCard.append(h('h2', { style: 'margin-top:0' }, 'Any food allergies or diet?'));
+    dietCard.append(h('h2', {}, 'Any food allergies or diet?'));
     dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
     dietCard.append(dietPicker());
     wrap.append(dietCard);
@@ -9659,7 +9659,7 @@ function exportScreen() {
 
   // Headline: the whole trip as one beautiful, readable web page (everything, photos inline).
   wrap.append(h('div', { class: 'card', style: 'border:2px solid var(--orange)' }, [
-    h('h2', { style: 'margin-top:0' }, '📖 My travel book'),
+    h('h2', {}, '📖 My travel book'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Everything together — trip, journal, reviews, photos and spending — as one page you can read, print or share. Opens in any browser. This is the nice, readable one.'),
     saver(h('button', { class: 'btn block' }, '⬇️ Save my travel book (.html)'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
     sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share my travel book'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
@@ -9668,21 +9668,21 @@ function exportScreen() {
 
   // Journal
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, '📖 Journal'),
+    h('h2', {}, '📖 Journal'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${jCount} ${jCount === 1 ? 'entry' : 'entries'} — a web page with your writing and photos.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Save journal (.html)'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
     sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share journal'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
   ]));
   // Reviews & ratings
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, '⭐ Ratings & reviews'),
+    h('h2', {}, '⭐ Ratings & reviews'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${rCount} ${rCount === 1 ? 'place' : 'places'} — your stars, reviews, notes and photos.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Save reviews (.html)'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
     sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share reviews'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
   ]));
   // Photos
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, '📷 Photos'),
+    h('h2', {}, '📷 Photos'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'A viewable album, or every picture as individual JPEGs in a zip.'),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Photo album (.html)'), exportPhotosAlbumHtml, `mekonging-photos-${exportStamp()}.html`, 'text/html'),
     saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ All photos (.zip of JPEGs)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
@@ -9690,7 +9690,7 @@ function exportScreen() {
   ]));
   // Expenses — both a true Excel workbook and a CSV, as requested.
   wrap.append(h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, '💸 Expenses'),
+    h('h2', {}, '💸 Expenses'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'expense' : 'expenses'} — as a spreadsheet.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Excel (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
     saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
@@ -9755,7 +9755,7 @@ function loggedTripSpendHome() {
 function givingCalculator() {
   const home = homeCurrency();
   const g = store.profile.prefs.giving = store.profile.prefs.giving || { method: 'trip', pct: 1, perDay: 2, incPct: 1, days: '' };
-  const card = h('div', { class: 'card give-back' }, [h('h2', { style: 'margin-top:0' }, '🧮 How much to give?')]);
+  const card = h('div', { class: 'card give-back' }, [h('h2', {}, '🧮 How much to give?')]);
   card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Giving is personal and entirely optional. Pick an amount whichever way suits you. Anything you type stays on this device and is never saved or sent — only the amount you choose to give, on the charity’s own site.'));
 
   const methods = [['trip', '💸 % of trip spend'], ['day', '📅 Per day here'], ['income', '💰 % of income']];

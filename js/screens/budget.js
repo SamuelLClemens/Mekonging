@@ -187,7 +187,7 @@ export function expenseAddCard(opts = {}) {
     if (opts.afterAdd) opts.afterAdd(item);
   };
   return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
-    h('h2', { style: 'margin-top:0' }, 'Log an expense'),
+    h('h2', {}, 'Log an expense'),
     h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
     field('On what?', bNote), bChips, field('Category', bCat), monthlyToggle, dateField,
     h('button', { class: 'btn block', style: 'margin-top:8px', onclick: add }, '＋ Add expense'),
@@ -267,7 +267,7 @@ export function budgetSummaryCard() {
     // Nothing to summarise yet — still surface the one place to set a budget and trip dates,
     // rather than making the traveller log an expense first just to find it.
     const card = h('div', { class: 'card budget-card' });
-    card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
+    card.append(h('h2', {}, '💰 Budget'));
     card.append(totalsCurrencyRow());
     card.append(h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Log an expense below, or set a budget and your trip dates here to see stats before you do.'));
     card.append(budgetSetupEditor());
@@ -286,7 +286,7 @@ export function budgetSummaryCard() {
   });
   const segs = cats.map((c) => ({ value: sums[c.id], color: c.color }));
   const card = h('div', { class: 'card budget-card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '💰 Budget'));
+  card.append(h('h2', {}, '💰 Budget'));
   card.append(totalsCurrencyRow());
 
   const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, spent > 0 ? Math.round(spent).toLocaleString() : '—', home) });
@@ -350,7 +350,7 @@ function budgetFxCard() {
   const c = getCountry(fc);
   const local = c ? c.currency : 'THB';
   return h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, '💱 Currency converter'),
+    h('h2', {}, '💱 Currency converter'),
     fxConverterControl(home, local),
     h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#currency') }, 'Full converter, quick guide & cash-swap →'),
   ]);
@@ -460,7 +460,7 @@ function budgetWithdrawalsCard() {
     total += conv;
   });
   const card = h('div', { class: 'card budget-card withdrawals-card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '🏧 Cash withdrawals'));
+  card.append(h('h2', {}, '🏧 Cash withdrawals'));
   card.append(h('p', { class: 'muted', style: 'margin:4px 0 10px' }, 'Cash pulled out, tracked separately from itemised spending.'));
 
   if (wTarget) {

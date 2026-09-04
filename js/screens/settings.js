@@ -100,7 +100,7 @@ export function settingsScreen() {
   const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   if (!standalone) {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
-    const ic = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, '📲 Install the app')]);
+    const ic = h('div', { class: 'card' }, [h('h2', {}, '📲 Install the app')]);
     if (getDeferredInstallPrompt()) {
       ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Keeps Mekonging offline and one tap away.'));
       ic.append(h('button', { class: 'btn', onclick: async () => {
@@ -119,7 +119,7 @@ export function settingsScreen() {
   // Journey phase — always switchable here, so Home never has to drag the traveller
   // back to the picker once they have chosen a stage.
   const phaseCard = h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, 'Journey phase'),
+    h('h2', {}, 'Journey phase'),
     h('p', { class: 'muted', style: 'margin-top:0' }, 'Reshapes Home for your stage.'),
     phaseSelector(),
   ]);

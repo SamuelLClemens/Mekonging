@@ -222,6 +222,43 @@ html[data-reduced-motion="on"] *, html[data-reduced-motion="on"] *::before {
 
 h2, h3, .cat-title, .topbar h1 { font-family: var(--font-display); }
 
+/* --- base vertical rhythm, on the token scale -------------------------------------------
+   Nothing here set a margin for `p` until now, so every paragraph in the app inherited the
+   UA default of `1em 0`. Two consequences, both measured:
+
+     1. The gap SCALED WITH FONT SIZE, so the same "one paragraph gap" computed to 13.12px
+        inside a 0.82rem context and 18.72px inside a 1.17rem one. Both showed up in a sweep
+        of 68 routes, alongside 16px — three different values for one intended gap.
+     2. Because the default was never typeset deliberately, 317 separate call sites each
+        invented their own paragraph margin inline to escape it. That is the actual origin of
+        the 818 inline spacing declarations, not carelessness at the call sites.
+
+   var(--sp-4) is 16px, which is exactly what the UA default collapses to BETWEEN two
+   paragraphs at the body size — so inter-paragraph rhythm is unchanged on every screen. What
+   changes is that a paragraph no longer carries a LEADING top margin (which is what the
+   inline `margin-top:0` resets were there to cancel) and the value no longer drifts with
+   font size. Every scoped `p` rule in this file is more specific and still wins. */
+p { margin: 0 0 var(--sp-4); }
+
+/* A card's own padding already provides the space above its first child and below its last.
+   87 inline `margin-top:0` declarations existed only to say this, one element at a time. */
+.card > :first-child, .screen > :first-child { margin-top: 0; }
+.card > :last-child { margin-bottom: 0; }
+
+/* Stack utilities: the parent owns the gap between its children, so a child never carries a
+   margin to space itself from a sibling it cannot see. This is the shape every converted
+   block below takes — `gap` cannot collapse, cannot double, and cannot leave a stray margin
+   behind when the last child is conditionally absent, which margin-based spacing all can. */
+.stack-1, .stack-2, .stack-3, .stack-4, .stack-5, .stack-6 { display: flex; flex-direction: column; }
+.stack-1 { gap: var(--sp-1); }
+.stack-2 { gap: var(--sp-2); }
+.stack-3 { gap: var(--sp-3); }
+.stack-4 { gap: var(--sp-4); }
+.stack-5 { gap: var(--sp-5); }
+.stack-6 { gap: var(--sp-6); }
+/* A stacked parent owns every gap, so its children must not add their own. */
+.stack-1 > *, .stack-2 > *, .stack-3 > *, .stack-4 > *, .stack-5 > *, .stack-6 > * { margin-block: 0; }
+
 /* --- splash --- */
 .splash { display: grid; place-content: center; min-height: 80vh; text-align: center; background: var(--sunburst); }
 .splash-logo-svg { width: min(80vw, 330px); height: auto; }

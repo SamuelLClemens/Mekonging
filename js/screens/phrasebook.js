@@ -827,7 +827,7 @@ function copyText(text, btn) {
 // (free online service); the offline phrasebook below covers the essentials.
 function liveTranslateBox(code, label, locale) {
   const box = h('div', { class: 'card translate-card' }, [
-    h('h2', { style: 'margin-top:0' }, `Say it in ${label}`),
+    h('h2', {}, `Say it in ${label}`),
     h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
   ]);
   // The language the traveller is speaking FROM. This used to offer English and Hebrew only,

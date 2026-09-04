@@ -69,7 +69,7 @@ function gettingThereCard(fromCity, toCity) {
     const plans = _gtCache[key];
     if (!plans.length) {
       return h('div', { class: 'card' }, [
-        h('h2', { class: 'home-section', style: 'margin-top:0' }, `🚌 Getting to ${toCity}`),
+        h('h2', { class: 'home-section' }, `🚌 Getting to ${toCity}`),
         h('p', {}, `No bundled overland route between ${fromCity} and ${toCity} yet.`),
         h('a', { class: 'btn ghost block', href: twelveGoUrl(fromCity, toCity), target: '_blank', rel: 'noopener' }, 'Search 12Go for this trip ↗'),
       ]);
@@ -123,7 +123,7 @@ function commitCard(candidate) {
     hint.remove();
   };
   return h('div', { class: 'card' }, [
-    h('h2', { style: 'margin-top:0' }, `✅ Commit to ${candidate.name}`),
+    h('h2', {}, `✅ Commit to ${candidate.name}`),
     h('div', { class: 'trip-dates' }, [
       h('label', { class: 'trip-date-lbl' }, ['Arrive', dateIn]),
       h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', endIn]),

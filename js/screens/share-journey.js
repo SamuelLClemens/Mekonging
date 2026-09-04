@@ -187,14 +187,14 @@ export function sharedJourneyScreen(arg) {
   const d = parseJourney(arg);
   if (!d) {
     wrap.append(h('div', { class: 'card' }, [
-      h('h2', { style: 'margin-top:0' }, 'This journey link could not be read'),
+      h('h2', {}, 'This journey link could not be read'),
       h('p', { class: 'muted' }, 'It may have been cut off in transit — long links are sometimes shortened by messaging apps. Ask whoever sent it to share it again, or to send the file instead.'),
       h('button', { class: 'btn', onclick: () => go('#home') }, 'Go to Mekonging'),
     ]));
     mount(wrap, '#home'); return;
   }
 
-  const head = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, d.name)]);
+  const head = h('div', { class: 'card' }, [h('h2', {}, d.name)]);
   if (d.subtitle) head.append(h('p', { class: 'muted', style: 'margin:0' }, d.subtitle));
   wrap.append(head);
 
@@ -207,7 +207,7 @@ export function sharedJourneyScreen(arg) {
   }
 
   if (d.stops.length) {
-    const box = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, 'Where they went')]);
+    const box = h('div', { class: 'card' }, [h('h2', {}, 'Where they went')]);
     d.stops.forEach((st) => {
       const cn = st.country ? (getCountry(st.country) || {}).name : '';
       const when = (st.date && st.endDate && st.endDate !== st.date) ? `${st.date} → ${st.endDate}` : (st.date || st.endDate || '');
@@ -217,7 +217,7 @@ export function sharedJourneyScreen(arg) {
   }
 
   d.entries.forEach((e) => {
-    const box = h('div', { class: 'card' }, [h('h2', { style: 'margin-top:0' }, e.title || 'Untitled')]);
+    const box = h('div', { class: 'card' }, [h('h2', {}, e.title || 'Untitled')]);
     const meta = [e.date, e.place].filter(Boolean).join(' · ');
     if (meta) box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, meta));
     if (e.text) String(e.text).split('\n').forEach((line) => box.append(h('p', { style: 'margin:0 0 6px' }, line)));
@@ -249,7 +249,7 @@ export function shareJourneyScreen() {
   const preview = journeyPoints();
   if (preview.length) {
     const box = h('div', { class: 'card' });
-    box.append(h('h2', { style: 'margin-top:0' }, 'Where you have been'));
+    box.append(h('h2', {}, 'Where you have been'));
     box.append(h('div', { class: 'journey-preview', html: journeyMapSVG(preview, []) }));
     box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
       `${preview.length} place${preview.length === 1 ? '' : 's'}, from your journal entries and dated stops.`));

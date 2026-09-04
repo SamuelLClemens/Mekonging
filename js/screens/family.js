@@ -116,7 +116,7 @@ export function familyScreen(cc) {
 export function familyCard(cc) {
   if (!getFamily(cc)) return null;
   const card = h('div', { class: 'card' });
-  card.append(h('h2', { style: 'margin-top:0' }, '👨‍👩‍👧 Travelling with kids'));
+  card.append(h('h2', {}, '👨‍👩‍👧 Travelling with kids'));
   card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'What to do with the kids, childcare & daycare, and international schools for longer stays.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#family-${cc}`) }, 'Open the family guide'));
   return card;
