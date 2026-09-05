@@ -289,7 +289,7 @@ p { margin: 0 0 var(--sp-4); }
    Clamping to 2 lines with an ellipsis means no title can ever blow up the header like that
    again, however long a future one turns out to be — a title that still needs it shortened
    for clarity gets that PLUS this backstop, not one or the other. */
-.topbar h1 { font-size: clamp(1rem, 4.8vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.topbar h1 { font-size: clamp(1rem, 4.4vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.03em; color: var(--orange); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 /* Filled with --teal-deep, not --teal: white on the light-mode --teal (#16A39A) is only
    3.12:1, under AA for this 14px bold label. The deep teal takes the same white label to
    7.6:1 and matches the ghost button and card headings that already use it. */
@@ -311,8 +311,11 @@ html[data-theme="dark"] .topbar .back { background: var(--teal); color: var(--cr
    Fix: `position: relative` + an invisible ::before sized to 44x44 and centred on each
    button extends the TAPPABLE area only, so the visible icon/pill stays exactly as small
    as it already needs to be. */
-.topbar-ic, .topbar-sos { position: relative; }
-.topbar-ic::before, .topbar-sos::before {
+/* .back joins them. It was already only 32px tall — under the minimum before this release
+   touched it — and hiding the word "Back" below 420px takes it to 29px wide as well, so it
+   needs the same invisible box the icons have had. Nothing visible changes. */
+.topbar-ic, .topbar-sos, .topbar .back { position: relative; }
+.topbar-ic::before, .topbar-sos::before, .topbar .back::before {
   content: ''; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
   transform: translate(-50%, -50%);
 }
@@ -2398,6 +2401,26 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
    from the invisible ::before boxes on .topbar-ic/.topbar-sos, which padding does not touch. */
 .topbar { gap: var(--sp-2); padding-inline: var(--sp-3); }
 .topbar-ic { padding-inline: 2px; }
+.topbar .back { display: inline-flex; align-items: baseline; gap: 3px; }
+/* The last of the width the title was missing. At 375px the header spends 254 of its 319
+   usable pixels on the back button and five fixed controls, leaving the screen NAME 65px —
+   enough for about six uppercase characters per line, so "Getting around", "Border
+   crossings", "Market produce" and "Identify food" all overflowed the 2-line clamp and were
+   cut off. The clamp is a backstop against a broken-looking header, not a fix for a title
+   nobody can read.
+   Dropping the word "Back" below 420px returns ~34px to the title — the largest saving
+   available without removing a control, which is not a call to make in CSS. The chevron
+   stays, the tap target is untouched, and the button keeps aria-label="Back". */
+@media (max-width: 420px) {
+  .topbar .back-label { display: none; }
+}
+/* The second half of the same fix. With 102px the title still overflowed its two lines on
+   "Border crossings", "Pre-trip checklist" and "⚠️ Common scams" — measured, not guessed.
+   The clamp's middle term drops 4.8vw -> 4.4vw, which is 16.5px at 375px instead of 18px and
+   clears all three. It stays above the 1rem floor at every width down to 364px, and above
+   528px the --fs-h1 ceiling governs exactly as before, so nothing changes on a tablet or
+   desktop. A slightly smaller title that can be read in full beats a larger one cut off
+   mid-word. */
 /* A long SINGLE word cannot wrap, so the 2-line clamp further up this file cannot rescue it —
    it just clips. "CURRENCY" needs 104px and gets 73 at 375px wide, and renders as "CURREN"
    (this predates the flag; the flag left it 9px better off, not worse). Translation makes it
