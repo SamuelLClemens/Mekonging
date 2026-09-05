@@ -1956,19 +1956,22 @@ export function placeScreen(id) {
 
   const colls = collectionsForItem(p.id);
   const collStrip = colls.length
-    ? h('div', { class: 'cats', style: 'margin-top:8px' }, colls.map((c) => h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`)))
+    ? h('div', { class: 'cats' }, colls.map((c) => h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`)))
     : null;
 
-  const actions = h('div', { class: 'card' }, [
+  // stack-2 rather than a margin-top on each child: half these rows are conditional, so the
+  // margins had to be repeated on every one of them and a stray one would show up whenever
+  // the row above it was absent. The gap is the same 8px, so this is a no-op on screen.
+  const actions = h('div', { class: 'card stack-2' }, [
     (p.coords || p.mapQuery) ? h('a', { class: 'btn block', href: mapsUrl(p), target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
-    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
-    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => tripVisitSheet(p.id) }, '🧭 Add to my trip'),
+    h('button', { class: 'btn ghost block', onclick: () => saveSheet(p.id) }, '＋ Save to collections'),
+    h('button', { class: 'btn ghost block', onclick: () => tripVisitSheet(p.id) }, '🧭 Add to my trip'),
     !p.isPin ? shareButton('📤 Recommend to a friend', `Check out ${p.name}`, () => shareUrl('in', encodeShare('place', { id: p.id, n: p.name }, ensureMe()))) : null,
-    !p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
+    !p.isPin ? h('button', { class: 'btn ghost block', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest an edit') : null,
     collStrip,
-    p.isPin ? h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#addpin-${p.id}`) }, '✎ Edit this place') : null,
+    p.isPin ? h('button', { class: 'btn ghost block', onclick: () => go(`#addpin-${p.id}`) }, '✎ Edit this place') : null,
     p.isPin ? h('button', {
-      class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
+      class: 'btn ghost block danger-outline',
       onclick: () => { confirmAction({ title: 'Delete this pin?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deletePin(p.id); go('#saved'); } }); },
     }, 'Delete pin') : null,
   ]);
