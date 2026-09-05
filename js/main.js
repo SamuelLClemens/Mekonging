@@ -492,7 +492,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.497.0';
+const APP_VERSION = 'mk-v0.498.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -688,7 +688,12 @@ export function topbar(title, backHash) {
   const netOnline = netMode() === 'online';
   const lang = uiLangMeta();
   return h('header', { class: 'topbar' }, [
-    backHash ? h('button', { class: 'back', onclick: () => goBack(backHash) }, '‹ Back') : null,
+    // The word "Back" is dropped below 420px (css/style.css) so the screen title gets its
+    // width back. The chevron alone is a universally understood affordance and it keeps the
+    // button's tap target; aria-label carries the full name either way, so nothing is lost
+    // to a screen reader when the visible word is hidden.
+    backHash ? h('button', { class: 'back', 'aria-label': 'Back', onclick: () => goBack(backHash) },
+      [h('span', { 'aria-hidden': 'true' }, '‹'), h('span', { class: 'back-label' }, 'Back')]) : null,
     h('h1', {}, title),
     // Interface language. The control is the flag of the ACTIVE language, so a traveller who
     // reads no English can still see at a glance which language they are in and that tapping
