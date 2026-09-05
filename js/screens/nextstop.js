@@ -112,7 +112,7 @@ function commitCard(candidate) {
   const dateIn = h('input', { 'aria-label': 'Arrive date', type: 'date' });
   const endIn = h('input', { 'aria-label': 'Leave date', type: 'date' });
   const hint = h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set an arrival date to commit this stop.');
-  const btn = h('button', { class: 'btn block', style: 'margin-top:8px', disabled: '' }, `＋ Add ${candidate.name} to My Trip`);
+  const btn = h('button', { class: 'btn block btn-spaced', disabled: '' }, `＋ Add ${candidate.name} to My Trip`);
   dateIn.addEventListener('input', () => { btn.disabled = !dateIn.value; });
   btn.onclick = () => {
     if (!dateIn.value) return;
@@ -129,7 +129,7 @@ function commitCard(candidate) {
       h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', endIn]),
     ]),
     hint, btn,
-    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#trip') }, 'View My Trip →'),
+    h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#trip') }, 'View My Trip →'),
   ]);
 }
 

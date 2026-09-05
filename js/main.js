@@ -492,7 +492,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.498.0';
+const APP_VERSION = 'mk-v0.499.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1548,7 +1548,7 @@ function homeRightNowCard(ctx) {
       h('span', { class: 'rn-fc-emoji' }, wxRec && wxRec.current ? wmo(wxRec.current.code)[1] : '🌤'),
       h('span', {}, outlook.line),
     ]));
-    if (outlook.hot) card.append(h('button', { class: 'btn ghost block rn-cooloff', style: 'margin:6px 0 0', onclick: () => go(`#pools-${ctx.country}`) }, '🏊 Cool off — pools, springs & waterfalls →'));
+    if (outlook.hot) card.append(h('button', { class: 'btn ghost block rn-cooloff', onclick: () => go(`#pools-${ctx.country}`) }, '🏊 Cool off — pools, springs & waterfalls →'));
   }
 
   if (!ctx.fix) {
@@ -1618,7 +1618,7 @@ function homeRightNowCard(ctx) {
   // When the picks are seeded from the country default (no GPS, nothing focused yet), keep a
   // gentle one-tap upgrade to real local picks — the invite is not lost just because we seeded.
   if (ctx.seeded && typeof navigator !== 'undefined' && navigator.geolocation) {
-    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
+    card.append(h('button', { class: 'btn ghost block rn-geo-upgrade', onclick: async (e) => {
       store.profile.prefs.geoAsked = true; save();
       e.currentTarget.textContent = 'Locating…';
       try { await refreshLocation(); } catch { /* denied/unavailable */ }
@@ -1691,7 +1691,7 @@ function homeRightNowCard(ctx) {
   }
   drawPicks();
   if (ctx.approx && typeof navigator !== 'undefined' && navigator.geolocation) {
-    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:2px', onclick: async (e) => {
+    card.append(h('button', { class: 'btn ghost block rn-geo-upgrade', onclick: async (e) => {
       e.currentTarget.textContent = 'Locating…';
       try { await refreshLocation(); } catch { /* denied/unavailable */ }
       render();
@@ -1709,7 +1709,7 @@ function homeRightNowCard(ctx) {
     });
     card.append(strip);
   }
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#nearby') }, 'See more near me →'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#nearby') }, 'See more near me →'));
   return card;
 }
 
@@ -2012,7 +2012,7 @@ function visaScreen(cc) {
       o.note ? h('div', { class: 'list-note' }, o.note) : null,
     ])));
     if (ls.nomad) lc.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, '💻 Nomad tip: '), ls.nomad]));
-    if (ls.official && ls.official.url) lc.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: ls.official.url, target: '_blank', rel: 'noopener' }, `${ls.official.name} ↗`));
+    if (ls.official && ls.official.url) lc.append(h('a', { class: 'btn ghost block btn-spaced', href: ls.official.url, target: '_blank', rel: 'noopener' }, `${ls.official.name} ↗`));
     lc.append(sourcesNote(ls.sources, ls.asOf));
     wrap.append(lc);
   }
@@ -2082,7 +2082,7 @@ function scamsScreen(cc) {
   if (v && v.scams && v.scams.length) {
     const vc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🛂 Visa & border scams')]);
     v.scams.forEach((x) => vc.append(h('div', { class: 'warn-note' }, x)));
-    vc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#visa-${getActiveCountry()}`) }, 'Open the entry & visa guide'));
+    vc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#visa-${getActiveCountry()}`) }, 'Open the entry & visa guide'));
     wrap.append(vc);
   }
 
@@ -2161,7 +2161,10 @@ function phaseNextBest(phase, cc) {
     post: { e: '📖', t: 'Build your scrapbook', h: '#scrapbook' },
   }[phase];
   if (!primary) return null;
-  return h('button', { class: 'btn block home-next-best', style: 'margin:8px 0 2px', onclick: () => go(primary.h) },
+  // Spacing lives on .home-next-best in the stylesheet. It used to be set twice inline — 8px 0 2px
+  // here and then 10px 0 2px by the only caller a line after inserting it, so the value written
+  // here never once reached the screen and neither value was on the scale.
+  return h('button', { class: 'btn block home-next-best', onclick: () => go(primary.h) },
     `${primary.e} ${primary.t} →`);
 }
 
@@ -2248,7 +2251,7 @@ function tripCountdownCard(cc) {
   if (todo.length) {
     card.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
     todo.slice(0, 3).forEach((it) => card.append(h('div', { class: 'companion-todo' }, `☐ ${it.title}`)));
-    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
+    card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
   } else {
     card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
   }
@@ -2302,11 +2305,11 @@ function returnRecapCard() {
   const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
   if (unrated.length) {
     const first = getPlace(unrated[0]);
-    if (first) card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${first.id}`) },
+    if (first) card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${first.id}`) },
       unrated.length === 1 ? `⭐ Rate ${first.name}` : `⭐ Rate ${unrated.length} places you saved`));
   }
-  card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#scrapbook') }, 'Build your scrapbook →'));
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#export') }, '📤 Save & share your trip (journal, reviews, photos, expenses)'));
+  card.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#scrapbook') }, 'Build your scrapbook →'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#export') }, '📤 Save & share your trip (journal, reviews, photos, expenses)'));
   return card;
 }
 
@@ -2351,7 +2354,7 @@ function destinationOutlookCard(spot) {
   if (anyWet) pack.push('a light rain layer');
   if (anyHeat) pack.push('sun protection and water');
   if (pack.length) body.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, `Pack ${pack.join(' and ')}.`));
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#weather') }, 'Full forecast →'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#weather') }, 'Full forecast →'));
   return card;
 }
 
@@ -2555,7 +2558,7 @@ export function homeWeatherCard(want) {
   const rec = getCachedWeather(spotKey(spot));
   if (!rec || !Array.isArray(rec.hourly) || !rec.hourly.length) return null;
   const card = wxVizCard(rec, spot);
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#weather') }, 'Full forecast →'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#weather') }, 'Full forecast →'));
   return card;
 }
 
@@ -2581,7 +2584,7 @@ function homeNowCard(phase, cc) {
   // The weather ring used to insert itself here (top of this card) — now rendered by home.js
   // as its own standalone foldable, swapped in placement with "Search everything" instead.
   const nb = phaseNextBest(phase, cc);
-  if (nb) { nb.style.margin = '10px 0 2px'; card.insertBefore(nb, head ? head.nextSibling : null); }
+  if (nb) card.insertBefore(nb, head ? head.nextSibling : null);
   // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty
   // state is intentionally omitted here — the status band already shows "No dates yet".
   if (phase === 'planning') {
@@ -2746,7 +2749,7 @@ function meHubScreen() {
     up.slice(0, 4).forEach((u) => {
       const it = u.item;
       const when = u.eventAt.toLocaleDateString(dateLocale(), { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
-      rc.append(h('button', { class: 'btn ghost block reminder-row', style: 'margin-top:6px', onclick: () => go('#calendar') },
+      rc.append(h('button', { class: 'btn ghost block reminder-row btn-spaced', onclick: () => go('#calendar') },
         `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when}`));
     });
     wrap.append(rc);
@@ -3193,7 +3196,7 @@ function seasonalFitSection(cc, cityName, slug) {
   return h('section', {}, [
     h('h2', { class: 'home-section' }, '📅 Right now, seasonally'),
     h('div', { class: 'card' }, [...lines.map((t) => h('p', { style: 'margin:4px 0' }, t)), ...crowdsAndPriceBlocks(cc, hi)]),
-    soon.length ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#events-${cc}`) }, 'All festivals & holidays →') : null,
+    soon.length ? h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#events-${cc}`) }, 'All festivals & holidays →') : null,
   ]);
 }
 
@@ -3324,7 +3327,7 @@ export function whereNextSection(argCc, fromCity, onChange) {
     }, `＋ Add ${_nextChain.length === 1 ? 'this stop' : `these ${_nextChain.length} stops`} to ${tripLabel}`));
   }
 
-  body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#route') }, 'Full journey planner →'));
+  body.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#route') }, 'Full journey planner →'));
 
   return h('section', {}, [h('h2', { class: 'home-section' }, `🚌 Where next, from ${fromCity}`), body]);
 }
@@ -3752,13 +3755,13 @@ function regionScreen(arg) {
     const pc = h('div', { class: 'card' }, [h('h2', {}, `📍 ${inZone.length} place${inZone.length > 1 ? 's' : ''} in ${z.name}`)]);
     inZone.slice(0, 40).forEach((pl) => pc.append(placeCard(pl)));
     if (inZone.length > 40) {
-      pc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) }, `See all ${inZone.length} on the map →`));
+      pc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#places-${cc}`) }, `See all ${inZone.length} on the map →`));
     }
     wrap.append(collapsibleCard(pc, 'regionPlacesOpen', false));
   } else {
     wrap.append(h('div', { class: 'card' }, [
       h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${z.name} yet. Tap another region on the map above, or browse all of ${c.name}.`),
-      h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go(`#places-${cc}`) }, `All places in ${c.name}`),
+      h('button', { class: 'btn block btn-spaced', onclick: () => go(`#places-${cc}`) }, `All places in ${c.name}`),
     ]));
   }
 
@@ -4042,7 +4045,7 @@ function exploreScreen(argCc) {
       h('p', {}, hi.blurb),
       knownForRow(hi.knownFor),
       hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
-      h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#history-${cc}`) }, '📖 In-depth history & culture'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#history-${cc}`) }, '📖 In-depth history & culture'),
     ])));
   }
   // Accessibility / Entry & visa / Travelling with kids default MINIMISED (defaultOpen=false)
@@ -4150,7 +4153,7 @@ function arrivalScreen(arg) {
   cashCard.append(h('p', {}, cash ? cash.cheapest : 'Use a bank ATM rather than an airport counter, and withdraw a larger amount to spread the per-use fee.'));
   if (cash && cash.price && cash.price !== '—') cashCard.append(h('p', { class: 'tiny muted' }, `💰 ${cash.price}`));
   if (cash && cash.tip) cashCard.append(h('div', { class: 'list-note' }, cash.tip));
-  cashCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#currency') }, 'Open the currency converter'));
+  cashCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#currency') }, 'Open the currency converter'));
   wrap.append(cashCard);
 
   const simCard = h('div', { class: 'card' }, [h('h2', {}, '📶 Get online (SIM / eSIM)')]);
@@ -4181,7 +4184,7 @@ function arrivalScreen(arg) {
   if (prefs.withBaby || (prefs.access || []).length) {
     const you = h('div', { class: 'card' }, [h('h2', {}, 'For your trip')]);
     if (prefs.withBaby) you.append(h('button', { class: 'btn ghost block', onclick: () => go(`#baby-${cc}`) }, '🍼 Baby: nappies, formula & family help'));
-    if ((prefs.access || []).length) you.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#access-${cc}`) }, '♿ Accessibility guidance here'));
+    if ((prefs.access || []).length) you.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#access-${cc}`) }, '♿ Accessibility guidance here'));
     wrap.append(you);
   }
 
@@ -4209,10 +4212,10 @@ function nearbySafetyStrip(country, fix) {
     const inSeason = jellyInSeason(b, m);
     const near = withinNear(beaches[0].km, bcc);
     const dl = driveLabel(beaches[0].km, bcc);
-    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${b.id}`) },
+    card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${b.id}`) },
       `${inSeason ? '🪼' : '🏖️'} ${near ? 'Nearest beach' : 'Closest beach'}: ${b.name} (${dl})${inSeason ? ' — jellyfish season, check first' : ' — swim & sea info'}`));
   }
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#danger') }, '🩹 Health & hazards'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#danger') }, '🩹 Health & hazards'));
   return card;
 }
 
@@ -4243,8 +4246,8 @@ function nearbyScreen() {
     body.append(h('div', { class: 'card' }, [
       h('p', {}, 'Turn on location to see what is around you — distances, walking times and the closest places, all offline once you have a fix.'),
       h('button', { class: 'btn block', onclick: () => go('#nearby') }, 'Try again'),
-      h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => locationSheet() }, '📍 Set my city manually'),
-      h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#home') }, 'Or browse by country'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => locationSheet() }, '📍 Set my city manually'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#home') }, 'Or browse by country'),
     ]));
   }
 
@@ -4274,7 +4277,7 @@ function nearbyScreen() {
     // the new, narrower signal for "just landed" now that the phase itself only has one
     // merged on-the-ground stage.
     body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'traveling' && !store.profile.prefs.justArrivedHidden));
-    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
+    body.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
     body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
       h('button', { class: 'chip', onclick: () => go(`#places-${country}`) }, [chipIcon('map'), 'See on the map']),
       h('button', { class: 'chip', onclick: () => go('#places') }, [chipIcon('pin'), 'Set my stay']),
@@ -4513,7 +4516,7 @@ function pasteLinkBox(hint) {
     // an h3 here skipped a level in the outline for no reason.
     h('h2', {}, '📥 Got a link?'),
     inp,
-    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => {
+    h('button', { class: 'btn ghost block btn-spaced', onclick: () => {
       const m = String(inp.value || '').match(/#(.+)$/);
       if (m && m[1]) location.hash = '#' + m[1].trim();
     } }, 'Open the link'),
@@ -4773,7 +4776,7 @@ function pricesScreen(countryId) {
     wrap.append(h('div', { class: 'card' }, [
       h('h2', { style: 'margin:0 0 8px' }, `💱 ${homeCurrency()} → ${country.currency}`),
       fxConverterControl(homeCurrency(), country.currency, { compact: true }),
-      h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#currency') }, 'More currency tools →'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#currency') }, 'More currency tools →'),
     ]));
   }
   wrap.append(h('h2', { class: 'cat-title', style: 'margin-top:14px' }, '🏷 Fair prices'));
@@ -5133,7 +5136,7 @@ function savedScreen() {
   ]);
   if (!store.pins.length) pinsCard.append(h('p', { class: 'muted' }, 'Mark places you find — from the map or by hand — and organise them into collections.'));
   else store.pins.forEach((pin) => pinsCard.append(
-    h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`)));
+    h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) }, `📌 ${pin.name}`)));
   wrap.append(pinsCard);
 
   // Places you have ticked off. This gives the near-me "done" control a home: the reset there
@@ -5225,7 +5228,7 @@ function poolCard(p, ref) {
     p.hours ? h('p', {}, [h('strong', {}, 'Hours: '), p.hours]) : null,
     p.facilities && p.facilities.length ? h('p', { class: 'muted' }, p.facilities.join(' · ')) : null,
     ...((p.tips || []).map((t) => h('div', { class: 'list-note' }, t))),
-    (p.coords || p.mapQuery) ? h('a', { class: 'btn ghost block', style: 'margin-top:6px',
+    (p.coords || p.mapQuery) ? h('a', { class: 'btn ghost block btn-spaced',
       href: p.coords ? `https://www.google.com/maps/search/?api=1&query=${p.coords.lat},${p.coords.lng}`
                       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapQuery)}`,
       target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
@@ -5311,7 +5314,7 @@ function crossingsScreen() {
         x.visa ? h('p', {}, [h('strong', {}, 'Visa: '), x.visa]) : null,
         x.notes ? h('p', { class: 'muted' }, x.notes) : null,
         x.scam ? h('div', { class: 'warn-note' }, `⚠ ${x.scam}`) : null,
-        x.coords ? h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: `https://www.google.com/maps/search/?api=1&query=${x.coords.lat},${x.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
+        x.coords ? h('a', { class: 'btn ghost block btn-spaced', href: `https://www.google.com/maps/search/?api=1&query=${x.coords.lat},${x.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
       ]);
       if (x.sources && x.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${x.sources.map((s) => s.org).join(', ')} · verified ${x.verified}`));
       wrap.append(card);
@@ -5684,7 +5687,7 @@ function foodScreen(country) {
   }
   const foodLangCC = getCountry(foodCountry) ? foodCountry : (getActiveCountry() || 'th');
   const foodLang = (getCountry(foodLangCC) && getCountry(foodLangCC).lang) || 'th';
-  profBox.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
+  profBox.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
   wrap.append(profBox);
 
   // Vegetarian / vegan travellers get the verified veg kitchens up front (kosher has its own
@@ -5756,7 +5759,7 @@ function foodScreen(country) {
     } else {
       hc.append(h('p', { class: 'tiny' }, `“${hpk.en}” — show this to the cook (a verified ${hLang ? hLang.label : 'local'} phrase is coming soon).`));
     }
-    hc.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#worship') }, 'Mosques & Muslim quarters — Places of worship'));
+    hc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#worship') }, 'Mosques & Muslim quarters — Places of worship'));
     wrap.append(hc);
   }
 
@@ -7158,8 +7161,8 @@ function bargainScreen() {
       it.esim ? h('div', { class: 'tiny muted', style: 'margin-top:3px' }, it.esim) : null,
     ])));
     const slug = citySlug(focusSpot().spot.city || '');
-    if (getBoard(fc, slug)) card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#board-${fc}-${slug}`) }, '📍 Local finds & markets near you'));
-    card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#prices-${fc}`) }, 'See fair prices'));
+    if (getBoard(fc, slug)) card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#board-${fc}-${slug}`) }, '📍 Local finds & markets near you'));
+    card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#prices-${fc}`) }, 'See fair prices'));
     wrap.append(card);
   }
   mount(wrap, '#home');
@@ -7836,7 +7839,7 @@ function sosScreen(cc) {
   ])]);
   hosp.append(h('button', { class: 'btn block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, '🏥 Get to a hospital — full guide'));
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
-  if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
+  if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
   // Three nearest, from the merged curated + OpenStreetMap layer, so this is the real nearest
   // and not merely the nearest place somebody wrote about. Paints from curated data at once
   // and re-paints when the full country layer lands — see js/data/hospitals.js.
@@ -7852,7 +7855,7 @@ function sosScreen(cc) {
       h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
       h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city || x.en || ''),
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
-      h('a', { class: 'btn ghost block', style: 'margin-top:6px', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
+      h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
     ])));
     hospSlot.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${cc}`) }, `Every hospital in ${c.name} →`));
   };
@@ -7881,7 +7884,7 @@ function sosScreen(cc) {
     dd.append(inner);
     danger.append(dd);
   });
-  danger.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#danger') }, '⚠️ Dangerous animals — photos & how to spot them'));
+  danger.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#danger') }, '⚠️ Dangerous animals — photos & how to spot them'));
 
   // Life-saving essentials: honest guidance on EpiPens and defibrillators (neither is
   // reliably bought on the street here) plus hands-only CPR.
@@ -7981,7 +7984,7 @@ function sosScreen(cc) {
   embInner.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, EMBASSY.note));
   embD.append(embInner);
   emb.append(embD);
-  emb.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsSearch(`embassy consulate ${c.name}`), target: '_blank', rel: 'noopener' }, `🔎 Find your embassy in ${c.name} ↗`));
+  emb.append(h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`embassy consulate ${c.name}`), target: '_blank', rel: 'noopener' }, `🔎 Find your embassy in ${c.name} ↗`));
 
   // Ordered append — the true order of operations in an emergency.
   wrap.append(nums);
@@ -7993,7 +7996,7 @@ function sosScreen(cc) {
   if (phraseCard) wrap.append(phraseCard);
   if (safeCard) wrap.append(safeCard);
   wrap.append(solo);
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#scams-${getActiveCountry()}`) }, '⚠️ Common scams here — and how to avoid them'));
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#scams-${getActiveCountry()}`) }, '⚠️ Common scams here — and how to avoid them'));
 
   wrap.append(sourcesNote([...HOSP_SOURCES, ...FIRSTAID_SOURCES], 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'In a serious emergency, call the number above. Show this screen to a local to ask for help. Tourist police often speak English. First-aid guidance here is general and does not replace professional medical care.'));
@@ -8297,7 +8300,7 @@ async function renderVault(body) {
 
   body.append(h('div', { class: 'card' }, [
     h('button', { class: 'btn ghost block', onclick: () => { vaultLock(); renderVault(body); } }, '🔒 Lock vault'),
-    h('button', { class: 'btn ghost block', style: 'margin-top:8px; color:var(--warn); border-color:var(--warn)',
+    h('button', { class: 'btn ghost block btn-spaced', style: 'color:var(--warn); border-color:var(--warn)',
       onclick: async () => { if (await confirmAction({ title: 'Erase the entire vault?', body: 'This permanently deletes every document in it and cannot be undone. Download a backup first if you want to keep them.', confirmLabel: 'Erase vault', danger: true })) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
   ]));
 }
@@ -8324,7 +8327,7 @@ function recoveryCodeCard(body, code, opts) {
       h('button', { class: 'btn', onclick: download }, 'Download as file'),
     ]),
     h('p', { class: 'disclaimer', style: 'margin-top:10px' }, 'Keep it private and separate from your device — a password manager, a note at home, or written down. Anyone with this code can open your vault.'),
-    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => renderVault(body) }, 'I have saved it — continue'),
+    h('button', { class: 'btn block btn-spaced', onclick: () => renderVault(body) }, 'I have saved it — continue'),
   ]);
 }
 async function vaultDownload() {
@@ -8343,7 +8346,7 @@ function vaultDownloadBtn(body) {
 // The safe "email for recovery": share the ENCRYPTED backup file to your own inbox / cloud.
 // It is ciphertext, so it stays private; you restore it later and unlock with your passcode.
 function vaultShareBtn() {
-  return h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: async () => {
+  return h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
     try {
       const json = await exportVault();
       const file = new File([json], `mekonging-vault-${vaultStamp()}.json`, { type: 'application/json' });
@@ -8367,7 +8370,7 @@ function vaultRestoreControl(body) {
     };
     reader.readAsText(f);
   } });
-  return h('div', {}, [inp, h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => inp.click() }, '⬆️ Restore from a backup file')]);
+  return h('div', {}, [inp, h('button', { class: 'btn ghost block btn-spaced', onclick: () => inp.click() }, '⬆️ Restore from a backup file')]);
 }
 function vaultSetupCard(body) {
   const p1 = h('input', { type: 'password', placeholder: 'Choose a passcode (min 4 characters)' });
@@ -8401,7 +8404,7 @@ function vaultUnlockCard(body, hintText) {
     h('p', { class: 'muted' }, 'Enter your passcode to decrypt your documents on this device.'),
     field('Passcode', pin), err,
     hintText ? h('p', { class: 'muted', style: 'margin:4px 0 0' }, `💡 Reminder: ${hintText}`) : null,
-    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: submit }, 'Unlock'),
+    h('button', { class: 'btn block btn-spaced', onclick: submit }, 'Unlock'),
     forgottenPasscodeDetails(body),
   ]);
 }
@@ -8456,7 +8459,7 @@ function contributionsScreen() {
   // Ways to earn more (encouragement).
   if (suggestions.length) {
     const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Ways to earn more')]);
-    suggestions.forEach((s) => card.append(h('button', { class: 'btn ghost block contrib-suggest', style: 'margin-top:6px', onclick: () => go(s.hash) },
+    suggestions.forEach((s) => card.append(h('button', { class: 'btn ghost block contrib-suggest btn-spaced', onclick: () => go(s.hash) },
       `${s.emoji} ${s.text}  ·  +${s.pts}`)));
     wrap.append(card);
   }
@@ -8562,13 +8565,13 @@ function feedbackScreen(arg) {
       catch { /* user cancelled */ }
     } }, '📤 Share…'));
   }
-  actions.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => {
+  actions.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => {
     const m = compose();
     const to = (store.profile.feedbackTo || '').trim();
     window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.text)}`;
     status.textContent = to ? 'Opening your email app…' : 'Opened your email app — add a recipient, or set a feedback address in Settings.';
   } }, '✉️ Email'));
-  actions.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+  actions.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
     const m = compose();
     try { await navigator.clipboard.writeText(`${m.subject}\n\n${m.text}`); status.textContent = 'Copied to clipboard — paste it wherever you like.'; }
     catch { status.textContent = 'Could not copy automatically — select your message and copy it.'; }
@@ -8663,7 +8666,7 @@ function circleScreen() {
     && typeof window !== 'undefined' && 'ContactsManager' in window;
   if (contactPickerOk) {
     const pickedBox = h('div', {});
-    shareCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+    shareCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
       let picked;
       try { picked = await navigator.contacts.select(['name', 'tel'], { multiple: true }); }
       catch { return; } // cancelled, or the browser/user denied the picker
@@ -8689,12 +8692,12 @@ function circleScreen() {
   }
 
   if (typeof navigator !== 'undefined' && navigator.share) {
-    shareCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+    shareCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
       try { await navigator.share({ title: 'Add me on Mekonging', text: `${ensureMe().name || 'A traveller'} on Mekonging`, url: buildUrl() }); status.textContent = 'Shared — they can open it to connect.'; }
       catch { /* cancelled */ }
     } }, '📤 Share my card…'));
   }
-  shareCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: async () => {
+  shareCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
     try { await navigator.clipboard.writeText(buildUrl()); status.textContent = 'Link copied — paste it to a friend.'; }
     catch { status.textContent = 'Could not copy automatically — select the link below to copy it.'; }
   } }, '🔗 Copy my link'));
@@ -8747,7 +8750,7 @@ function addContactScreen(arg) {
   } else {
     box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, existing ? `${card.name} is already in your circle — you can refresh their card.` : `Add ${card.name} to your travel circle?`));
     box.append(h('button', { class: 'btn block', onclick: () => { const r = addContact(card); if (r.ok) go('#circle'); else status.textContent = 'Could not add this contact.'; } }, existing ? 'Refresh their card' : `Add ${card.name}`));
-    box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#circle') }, 'Not now'));
+    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#circle') }, 'Not now'));
   }
   box.append(status);
   wrap.append(box);
@@ -8764,7 +8767,7 @@ function addContactScreen(arg) {
 // wrong shape regardless: a spacing value baked into a shared widget cannot be overridden by
 // the layout that hosts it.
 export function shareButton(label, title, buildUrl, cls = 'btn ghost block') {
-  const btn = h('button', { class: cls + ' share-btn', onclick: async () => {
+  const btn = h('button', { class: cls + ' btn-spaced', onclick: async () => {
     const url = buildUrl();
     let msg;
     try {
@@ -8808,7 +8811,7 @@ function importShareScreen(arg) {
     box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
     box.append(h('p', { class: 'muted' }, exists ? 'A place they recommend.' : 'A place they recommend — not in your guide, so search for it by name.'));
     if (exists) box.append(h('button', { class: 'btn block', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
-    box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: (e) => { toggleFavorite(s.data.id); e.currentTarget.textContent = '✓ Saved to favourites'; } }, '⭐ Save to favourites'));
+    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: (e) => { toggleFavorite(s.data.id); e.currentTarget.textContent = '✓ Saved to favourites'; } }, '⭐ Save to favourites'));
   } else if (s.kind === 'collection') {
     box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
     box.append(h('p', { class: 'muted' }, `${s.data.items.length} place${s.data.items.length === 1 ? '' : 's'} in this list.`));
@@ -8831,7 +8834,7 @@ function importShareScreen(arg) {
       addBoardPost(key, { topic: s.data.topic, text: `${s.from ? s.from.name + ': ' : ''}${s.data.text}` });
       e.currentTarget.textContent = '✓ Pinned to your board';
     } }, '📌 Pin to my noticeboard'));
-    if (board) box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#board-${board.country}-${board.slug}`) }, `📋 Open the ${board.city} board`));
+    if (board) box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#board-${board.country}-${board.slug}`) }, `📋 Open the ${board.city} board`));
   } else if (s.kind === 'jelly') {
     const exists = getPlace(s.data.id);
     box.append(h('h2', { style: 'margin-top:8px' }, `🪼 Jellyfish sighting — ${s.data.name}`));
@@ -8840,7 +8843,7 @@ function importShareScreen(arg) {
       addJellyReport(s.data.id, { d: s.data.d || todayKey(), sev: s.data.sev || 'seen', note: s.data.note || '', by: s.from ? s.from.name : 'a traveller' });
       e.currentTarget.textContent = '✓ Added to this beach';
     } }, '＋ Add this sighting to the beach'));
-    if (exists) box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${s.data.id}`) }, 'Open this beach'));
+    if (exists) box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${s.data.id}`) }, 'Open this beach'));
     else box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This beach is not in your guide, so the sighting cannot be pinned to it.'));
   } else if (s.kind === 'secret') {
     const exists = getPlace(s.data.id);
@@ -8849,7 +8852,7 @@ function importShareScreen(arg) {
     if (s.data.by) box.append(h('p', { class: 'tiny muted' }, `Shared by ${s.data.by}`));
     if (exists) {
       box.append(h('button', { class: 'btn block', onclick: (e) => { addPlaceSecret(s.data.id, { text: s.data.text, by: s.data.by || (s.from ? s.from.name : 'a traveller') }); e.currentTarget.textContent = '✓ Saved to this place'; } }, '＋ Save this secret to the place'));
-      box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
+      box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
     } else {
       box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This place is not in your guide, so the secret cannot be pinned to it.'));
     }
@@ -8862,8 +8865,8 @@ function importShareScreen(arg) {
     if (line) box.append(h('p', { class: 'tiny muted' }, line));
     if (d.note) box.append(h('p', { style: 'margin-top:6px' }, d.note));
     if (d.contact) box.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
-    box.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: (e) => { addListing({ cat, mine: false, from: s.from, data: d }); e.currentTarget.textContent = '✓ Saved to your board'; } }, '＋ Save to my board'));
-    box.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#exchange-' + cat) }, 'Open the traveller board'));
+    box.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => { addListing({ cat, mine: false, from: s.from, data: d }); e.currentTarget.textContent = '✓ Saved to your board'; } }, '＋ Save to my board'));
+    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#exchange-' + cat) }, 'Open the traveller board'));
   }
   wrap.append(box);
 
@@ -8874,7 +8877,7 @@ function importShareScreen(arg) {
       already ? null : h('button', { class: 'btn ghost block', onclick: (e) => { addContact(s.from); e.currentTarget.textContent = '✓ Added to your circle'; } }, `Add ${s.from.name}`),
     ]));
   }
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#inbox') }, '📥 See everything shared with you'));
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#inbox') }, '📥 See everything shared with you'));
   mount(wrap, '#circle');
 }
 
@@ -9274,7 +9277,7 @@ function foryouScreen() {
   // place — Settings — so preferences are not scattered across the app.
   if (!profileIsSet()) {
     wrap.append(h('p', { class: 'muted' }, 'Set who you are and how you travel, and every list ranks what fits you first — and the trip plans match your situation. It all stays on your device.'));
-    wrap.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => go('#settings') }, '⚙️ Set up your travel profile in Settings'));
+    wrap.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#settings') }, '⚙️ Set up your travel profile in Settings'));
     mount(wrap, '#home');
     return;
   }
@@ -9312,9 +9315,9 @@ function foryouScreen() {
     if (picks.length) {
       const pk = h('div', { class: 'card' });
       pk.append(h('h2', {}, `Top picks for you${c ? ' — ' + c.name : ''}`));
-      picks.forEach((p) => pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${p.id}`) },
+      picks.forEach((p) => pk.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) },
         `${starsStr(Math.round(effectiveRating(p.id, p.rating)))} ${p.name}`)));
-      pk.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#places-${getActiveCountry()}`) }, 'See all places, ranked for you'));
+      pk.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#places-${getActiveCountry()}`) }, 'See all places, ranked for you'));
       wrap.append(pk);
     }
     // the best-matching plan
@@ -9356,7 +9359,7 @@ function plansScreen() {
     card.append(h('p', {}, pl.summary));
     card.append(h('ol', {}, pl.stops.map((s) => h('li', {}, [h('strong', {}, s.title), ` — ${s.nights} night${s.nights === 1 ? '' : 's'}. `, h('span', { class: 'muted' }, s.why)]))));
     (pl.tips || []).forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
-    card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: (e) => {
+    card.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => {
       pl.stops.forEach((s) => addStop({ title: s.title, country: pl.country }));
       e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
     } }, `＋ Add this plan to ${tripLabel}`));
@@ -9390,7 +9393,7 @@ function boardScreen(arg) {
     wrap.append(countryChips((id) => { setActiveCountry(id); go(`#board-${id}`); }, selected));
     const boards = boardsForCountry(selected);
     if (!boards.length) wrap.append(h('p', { class: 'empty' }, 'No boards for this country yet — more cities are being added.'));
-    boards.forEach((b) => wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px; justify-content:flex-start', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city}`)));
+    boards.forEach((b) => wrap.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city}`)));
     mount(wrap, '#home');
     return;
   }
@@ -9407,7 +9410,7 @@ function boardScreen(arg) {
     .slice(0, 6);
   if (cityPlaces.length) {
     const tc = h('div', { class: 'card' }, [h('h2', {}, `🏆 Top-rated in ${board.city}`)]);
-    cityPlaces.forEach(({ p, er }) => tc.append(h('button', { class: 'btn ghost block', style: 'justify-content:space-between;margin-top:6px', onclick: () => go(`#place-${p.id}`) }, [
+    cityPlaces.forEach(({ p, er }) => tc.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:space-between', onclick: () => go(`#place-${p.id}`) }, [
       h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}`),
       h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)),
     ])));
@@ -9771,7 +9774,7 @@ function exportScreen() {
     h('h2', {}, '📖 My travel book'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Everything together — trip, journal, reviews, photos and spending — as one page you can read, print or share. Opens in any browser. This is the nice, readable one.'),
     saver(h('button', { class: 'btn block' }, '⬇️ Save my travel book (.html)'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
-    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share my travel book'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
+    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share my travel book'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
   ]));
   wrap.append(h('p', { class: 'lbl', style: 'margin:12px 2px 2px' }, 'Or export one type at a time'));
 
@@ -9780,30 +9783,30 @@ function exportScreen() {
     h('h2', {}, '📖 Journal'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${jCount} ${jCount === 1 ? 'entry' : 'entries'} — a web page with your writing and photos.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Save journal (.html)'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
-    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share journal'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
+    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share journal'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
   ]));
   // Reviews & ratings
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '⭐ Ratings & reviews'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${rCount} ${rCount === 1 ? 'place' : 'places'} — your stars, reviews, notes and photos.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Save reviews (.html)'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
-    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share reviews'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
+    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share reviews'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
   ]));
   // Photos
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '📷 Photos'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'A viewable album, or every picture as individual JPEGs in a zip.'),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Photo album (.html)'), exportPhotosAlbumHtml, `mekonging-photos-${exportStamp()}.html`, 'text/html'),
-    saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ All photos (.zip of JPEGs)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
-    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share photos (.zip)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
+    saver(h('button', { class: 'btn ghost block btn-spaced' }, '⬇️ All photos (.zip of JPEGs)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
+    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share photos (.zip)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
   ]));
   // Expenses — both a true Excel workbook and a CSV, as requested.
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '💸 Expenses'),
     h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'expense' : 'expenses'} — as a spreadsheet.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Excel (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-    saver(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
-    sharer(h('button', { class: 'btn ghost block', style: 'margin-top:6px' }, '📤 Share expenses (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    saver(h('button', { class: 'btn ghost block btn-spaced' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
+    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share expenses (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
   ]));
 
   wrap.append(h('p', { class: 'disclaimer' }, 'These files are for you — to keep, print or share. For moving everything to a new phone, use the full backup in Settings instead (it restores directly into the app).'));

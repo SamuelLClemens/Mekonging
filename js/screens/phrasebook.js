@@ -82,7 +82,7 @@ function audioPackControl(code, book) {
     card.append(h('p', { class: 'tiny muted' }, 'Add this app to your home screen to save audio for offline use.'));
     return card;
   }
-  const btn = h('button', { class: 'btn block', style: 'margin-top:8px' }, saved ? '↻ Re-download audio' : `⤓ Save ${book.label} audio`);
+  const btn = h('button', { class: 'btn block btn-spaced' }, saved ? '↻ Re-download audio' : `⤓ Save ${book.label} audio`);
   btn.onclick = () => {
     if (!navigator.serviceWorker.controller) return;
     btn.disabled = true;
@@ -744,7 +744,7 @@ export function dictionaryScreen() {
     wrap.append(h('div', { class: 'card dict-card' }, [dd]));
   });
 
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#phrasebook') }, '💬 Add more from the phrasebook'));
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#phrasebook') }, '💬 Add more from the phrasebook'));
   mount(wrap, '#me');
 }
 

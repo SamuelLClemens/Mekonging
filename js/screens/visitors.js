@@ -87,7 +87,7 @@ export function visitorsScreen() {
         h('span', { class: 'fair' }, `${p.n || 1}×`),
       ]));
     });
-    own.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => {
+    own.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => {
       confirmAction({ title: 'Forget every pin?', body: 'This deletes the record of everywhere you have opened the app. It cannot be undone.', confirmLabel: 'Forget them', danger: true })
         .then((ok) => { if (ok) { clearVisits(); go('#visitors'); } });
     } }, '🗑 Forget my pins'));

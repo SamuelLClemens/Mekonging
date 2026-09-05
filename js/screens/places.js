@@ -733,7 +733,7 @@ export function placesScreen(arg) {
       const pd = getPlaceData(pin.id);
       const kind = (pin.tags && pin.tags[0]) ? titleCase(pin.tags[0]) : 'Place';
       const meta = [kind, pd.rating ? starsStr(pd.rating) : null, (placePhotoKeys(pin.id).length ? `📷 ${placePhotoKeys(pin.id).length}` : null)].filter(Boolean).join(' · ');
-      yp.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px; justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) },
+      yp.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#place-${pin.id}`) },
         `📌 ${pin.name} — ${meta}`));
     });
     wrap.append(yp);
@@ -1506,7 +1506,7 @@ function jellyReportsBlock(p) {
       h('summary', {}, '＋ Report a jellyfish sighting'),
       h('p', { class: 'muted small' }, 'Saved on your device and dated today. Share it below so other travellers see it — nothing is sent to any server.'),
       sevRow, note,
-      h('button', { class: 'btn block', style: 'margin-top:8px', onclick: () => {
+      h('button', { class: 'btn block btn-spaced', onclick: () => {
         addJellyReport(p.id, { d: todayKey(), sev, note: (note.value || '').trim().slice(0, 160), by: 'You' });
         render();
       } }, 'Save sighting'),
@@ -1572,7 +1572,7 @@ function beachInfoCard(p) {
   if (p.jellyfish) card.append(h('p', { class: 'muted' }, p.jellyfish));
   card.append(jellyReportsBlock(p));
   card.append(h('p', { class: 'muted small' }, 'No real-time jellyfish warning exists anywhere in the region. Always obey the beach flags — a red flag means do not swim — and ask lifeguards or locals about recent sightings.'));
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#danger') }, '🩹 Sting & marine first aid'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#danger') }, '🩹 Sting & marine first aid'));
   return card;
 }
 
@@ -1682,7 +1682,7 @@ function weatherNearbyCard(p) {
   card.append(
     h('p', { class: 'muted', style: 'margin:6px 0 0' },
       `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
-    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { seedWeatherKey(key); go('#weather'); } }, 'See full forecast'),
+    h('button', { class: 'btn ghost block btn-spaced', onclick: () => { seedWeatherKey(key); go('#weather'); } }, 'See full forecast'),
   );
   return card;
 }
@@ -1715,7 +1715,7 @@ function orientationCard(p) {
       const prev = getLiveCleanup();
       setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } });
     }).catch(() => { mini.remove(); });
-    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsDirUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
+    card.append(h('a', { class: 'btn ghost block btn-spaced', href: mapsDirUrl(p), target: '_blank', rel: 'noopener' }, 'Get directions in Maps ↗'));
   }
   return card;
 }
@@ -1889,12 +1889,12 @@ function localSecretsCard(p) {
   card.append(h('div', { class: 'secret-add' }, [
     h('label', { class: 'secret-cta' }, '✨ Spotted something new? Add to the collective wisdom'),
     ta,
-    h('button', { class: 'btn block', style: 'margin-top:6px', onclick: () => {
+    h('button', { class: 'btn block btn-spaced', onclick: () => {
       const t = ta.value.trim(); if (!t) { ta.focus(); return; }
       addPlaceSecret(p.id, { text: t, by: ensureMe().name || '' });
       ta.value = ''; drawSecrets();
     } }, '＋ Add this secret'),
-    h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest a bigger correction to the guide'),
+    h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#feedback-${p.id}`) }, '✍️ Suggest a bigger correction to the guide'),
   ]));
   return card;
 }

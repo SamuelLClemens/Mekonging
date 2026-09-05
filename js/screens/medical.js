@@ -202,7 +202,7 @@ export function hospitalScreen(cc) {
       onclick: () => showBigPhrase(x.p, book.locale),
     }, `${x.ic} “${x.p.en}”`));
   });
-  show.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: showMedCard }, '🏥 Show my medical card'));
+  show.append(h('button', { class: 'btn ghost block btn-spaced', onclick: showMedCard }, '🏥 Show my medical card'));
   if (sys) {
     show.append(h('p', { class: 'tiny muted', style: 'margin:10px 0 2px' }, 'The word for “hospital” here — say it, or type it into any map app:'));
     show.append(h('p', { style: 'margin:0;font-size:1.3rem', lang: book ? book.locale : null }, [
@@ -239,7 +239,7 @@ export function hospitalScreen(cc) {
   const listSlot = h('div', {});
   const countLine = h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, '');
   go2.append(heroSlot, listSlot);
-  go2.append(h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: liveSearch, target: '_blank', rel: 'noopener' }, '🔎 Search every hospital around me (needs internet) ↗'));
+  go2.append(h('a', { class: 'btn ghost block btn-spaced', href: liveSearch, target: '_blank', rel: 'noopener' }, '🔎 Search every hospital around me (needs internet) ↗'));
   go2.append(countLine);
   go2.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Not a ranking of quality. For a child, a pregnancy or a complex condition, telephone ahead so the right department is open when you arrive.'));
   wrap.append(go2);
@@ -355,7 +355,7 @@ export function hospitalScreen(cc) {
           'Ask for, or search for, ', h('strong', { lang: book ? book.locale : null }, sys.hospitalWord.script),
           ` (${sys.hospitalWord.roman}) — plus the name of the town you are in.`,
         ]),
-        provName ? h('a', { class: 'btn ghost block', style: 'margin-top:8px', href: mapsSearch(`${sys.hospitalWord.script} ${provName}`), target: '_blank', rel: 'noopener' }, `🔎 Hospitals in ${provName} ↗`) : null,
+        provName ? h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${sys.hospitalWord.script} ${provName}`), target: '_blank', rel: 'noopener' }, `🔎 Hospitals in ${provName} ↗`) : null,
       ]));
     }
   }
@@ -426,10 +426,10 @@ export function hospitalScreen(cc) {
     type: 'text', value: m[f.k] || '', placeholder: f.ph,
     oninput: (e) => { m[f.k] = e.target.value; save(); },
   }))));
-  card.append(h('button', { class: 'btn block', style: 'margin-top:8px', onclick: showMedCard }, '🏥 Show it full screen'));
+  card.append(h('button', { class: 'btn block btn-spaced', onclick: showMedCard }, '🏥 Show it full screen'));
   wrap.append(card);
 
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#sos-${active}`) }, '🆘 Back to emergency — numbers, first aid and phrases'));
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#sos-${active}`) }, '🆘 Back to emergency — numbers, first aid and phrases'));
   wrap.append(sourcesNote(MED_SOURCES, 'August 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Hospital names, capabilities and opening arrangements change. Nothing here is medical advice or a diagnosis, and none of it replaces calling the emergency number. In a life-threatening emergency, call first and read second.'));
   mount(wrap, '#home');

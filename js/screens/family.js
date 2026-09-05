@@ -107,7 +107,7 @@ export function familyScreen(cc) {
   }
 
   // Baby-supplies help is one tap away for anyone travelling with a little one.
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go(`#baby-${cc}`) }, '🍼 Nappies, formula & baby basics'));
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#baby-${cc}`) }, '🍼 Nappies, formula & baby basics'));
 
   if (f.sources && f.sources.length) wrap.append(sourcesNote(f.sources, f.asOf));
   mount(wrap, 'home');

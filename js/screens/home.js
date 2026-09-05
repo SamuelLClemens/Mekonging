@@ -248,7 +248,7 @@ export function homeScreen() {
   // checklist, and a section whose every item is hidden drops out entirely.
   wrap.append(h('h2', { class: 'home-section', style: 'margin:16px 0 6px' }, '🧰 What do you need?'));
   wrap.append(groupDoors(onGround ? ['admin', 'identify'] : ['admin']));
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#everything') },
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
     '🗂️ All features, A–Z →'));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
@@ -325,7 +325,7 @@ function nextStopNudgeChip() {
 // Shared by both of the placements it can appear in (see the swap with the weather ring in
 // homeScreen above) so the button itself is defined once regardless of where it lands.
 function searchEverythingBtn() {
-  return h('button', { class: 'btn ghost block home-search', style: 'margin:10px 0 2px', onclick: () => go('#search') }, '🔎 Search everything');
+  return h('button', { class: 'btn ghost block home-search', onclick: () => go('#search') }, '🔎 Search everything');
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every
