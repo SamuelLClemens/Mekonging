@@ -40,7 +40,7 @@ import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
-import { phrasebookScreen, dictionaryScreen, scriptLang, showBigPhrase } from './screens/phrasebook.js';
+import { scriptLang, showBigPhrase } from './phrase-ui.js';
 // Places step 4 (task #205): placesScreen itself, plus placeCard/travelerChips/saveSheet/
 // tripVisitSheet, which this file's own not-yet-extracted screens (signature sights strip,
 // saved, collections, trip) still reach back in for — same circular-import reasoning as above.
@@ -200,6 +200,7 @@ const SCREEN_LOADERS = {
   family: (b) => import('./screens/family.js' + b),
   sharejourney: (b) => import('./screens/share-journey.js' + b),
   medical: (b) => import('./screens/medical.js' + b),
+  phrasebook: (b) => import('./screens/phrasebook.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -213,6 +214,7 @@ const ROUTE_SCREENS = {
   family: ['family'], explore: ['family'], country: ['family'],
   sharejourney: ['sharejourney'], jr: ['sharejourney'],
   hospital: ['medical'],
+  phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -490,7 +492,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.493.0';
+const APP_VERSION = 'mk-v0.494.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -10079,8 +10081,8 @@ export function render() {
       case 'exchange': return bulletinScreen(arg);
       case 'swap': return bulletinScreen('swap');
       case 'market': return bulletinScreen('gear');
-      case 'phrasebook': return phrasebookScreen(arg);
-      case 'dictionary': return dictionaryScreen();
+      case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
+      case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
       case 'places': return placesScreen(arg);
       case 'place': return placeScreen(arg);
       case 'prices': return pricesScreen(arg);

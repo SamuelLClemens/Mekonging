@@ -20,7 +20,7 @@ import { getCountry, getLanguage } from '../data/regions.js';
 import { haversineKm } from '../util.js';
 import { driveLabel, sourcesNote } from '../render-utils.js';
 import { infoTip, field } from '../ui-widgets.js';
-import { showBigPhrase } from './phrasebook.js';
+import { showBigPhrase } from '../phrase-ui.js';
 import {
   TIER_META,
   CARE_SYSTEM,

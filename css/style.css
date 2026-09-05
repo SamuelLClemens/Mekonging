@@ -1024,6 +1024,7 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 html[data-theme="dark"] .bp-roman { color: var(--teal); }
 .bp-note { font-size: 1rem; color: var(--ink-soft); margin-top: 12px; }
 .bp-actions { display: flex; gap: 10px; justify-content: center; margin-top: 22px; }
+.bp-hint { margin: var(--sp-2) 0 0; }
 
 /* Map city markers: a count bubble at region zoom, a small place-name label zoomed in */
 .linklike { background: none; border: none; padding: 0; color: var(--teal-deep); font: inherit; text-decoration: underline; cursor: pointer; }
