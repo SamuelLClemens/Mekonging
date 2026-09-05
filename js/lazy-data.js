@@ -30,11 +30,24 @@
 //     instant, and a non-blocking load would shift the layout under the traveller.
 //   • history.js (50 KB) — homeScreen -> whereYouAreCard -> cityAboutCard -> cityHistory.
 //   • checklist.js (29 KB) — homeScreen -> homeStageBlock -> homeNowCard -> checklistFor.
-//   • allergens.js (24 KB) — sosScreen/hospitalScreen -> showBigPhrase -> togglePhrasePin ->
-//     propagatePinAcrossLanguages. An emergency screen must never wait on a fetch, and a
-//     silently un-propagated allergy pin is worse than 24 KB.
 //   • diet.js (9 KB) — dish verdicts fan in across every food list.
 //   • medical.js (62 KB) — the emergency screen itself.
+//
+// NO LONGER EAGER, so no longer listed above: allergens.js (24 KB). Its entry here read
+// "sosScreen/hospitalScreen -> showBigPhrase -> togglePhrasePin -> propagatePinAcrossLanguages
+// ... a silently un-propagated allergy pin is worse than 24 KB". That call path existed in the
+// SOURCE but could never fire: showBigPhrase only builds a Pin button when it can derive a
+// phrase key from opts.code + opts.catId, and both emergency callers passed no opts at all,
+// so the key was always null and togglePhrasePin was unreachable from those screens.
+//
+// Worth keeping as a lesson: a static call-graph edge is not a runtime path, and this file's
+// own "measured rather than assumed" standard has to mean measuring what RUNS, not what the
+// parser can reach. mk-v0.494.0 acted on that — showBigPhrase moved to js/phrase-ui.js with
+// the pin behaviour injected through opts.pins rather than imported, and allergens.js left
+// the launch graph along with js/screens/phrasebook.js.
+//
+// It is not in js/lazy-data.js either. A data module read by exactly one screen does not need
+// this machinery — making the SCREEN lazy is simpler and needs no ROUTE_DATA entry.
 
 // LAZY-MODULE: pools = POOLS poolsForCountry
 export let POOLS = [];
