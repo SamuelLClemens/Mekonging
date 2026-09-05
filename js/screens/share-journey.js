@@ -158,7 +158,7 @@ function journeyCard(j, onChange) {
   const payload = encodeJourney(journeyLinkData(j));
   const url = shareUrl('jr', payload);
   const fits = payload.length <= MAX_PAYLOAD_URL;
-  const link = h('button', { class: 'btn ghost block', style: 'margin-top:8px' },
+  const link = h('button', { class: 'btn ghost block btn-spaced' },
     fits ? '🔗 Copy a link (map and words, no photos)' : '🔗 Too long for a link — send the file above');
   if (!fits) link.disabled = true;
   link.onclick = async () => {
@@ -265,7 +265,7 @@ export function shareJourneyScreen() {
   const rerender = () => go('#sharejourney');
   list.forEach((j) => wrap.append(journeyCard(j, rerender)));
 
-  const add = h('button', { class: 'btn ghost block', style: 'margin-top:8px' },
+  const add = h('button', { class: 'btn ghost block btn-spaced' },
     list.length ? '+ Another journey (a different set for a different circle)' : '+ Make a journey to share');
   add.onclick = () => {
     const name = list.length ? `Journey ${list.length + 1}` : ((store.profile.name || '').trim() ? `${store.profile.name.trim()}’s journey` : 'My journey');

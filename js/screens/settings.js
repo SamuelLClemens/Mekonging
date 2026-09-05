@@ -244,11 +244,11 @@ export function settingsScreen() {
   const whoCC = focusSpot().spot.country;
   const guideLinks = [];
   if ((p.prefs.party === 'family' || p.prefs.withBaby) && getFamily(whoCC))
-    guideLinks.push(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#family-${whoCC}`) }, '👨‍👩‍👧 Travelling with kids — schools, childcare & things to do'));
+    guideLinks.push(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#family-${whoCC}`) }, '👨‍👩‍👧 Travelling with kids — schools, childcare & things to do'));
   if (p.prefs.withBaby)
-    guideLinks.push(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#baby-${whoCC}`) }, '🍼 Baby: nappies, formula & family help'));
+    guideLinks.push(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#baby-${whoCC}`) }, '🍼 Baby: nappies, formula & family help'));
   if ((p.prefs.access || []).length && getAccessibility(whoCC))
-    guideLinks.push(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#access-${whoCC}`) }, '♿ Accessibility where you are'));
+    guideLinks.push(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#access-${whoCC}`) }, '♿ Accessibility where you are'));
   if (guideLinks.length) { who.append(h('p', { class: 'muted', style: 'margin:12px 0 2px' }, 'Guides for your situation')); guideLinks.forEach((b) => who.append(b)); }
   wrap.append(who);
 
@@ -341,7 +341,7 @@ export function settingsScreen() {
     onclick: async () => { const ok = await reminders.requestNotify(); reminders.tick(); alert(ok ? 'Device notifications are on.' : 'Notifications are off — you can enable them for this site in your browser settings.'); render(); } },
     (reminders.notifyGranted() && rset.notify) ? '🔔 Device notifications: on' : '🔔 Allow device notifications'));
   remCard.append(field('Default reminder for new entries', selectEl(reminders.LEADS.map((l) => [String(l[0]), l[1]]), String(rset.defaultLead), (v) => { reminders.setDefaultLead(v); })));
-  remCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', 'aria-pressed': rset.journalDaily ? 'true' : 'false',
+  remCard.append(h('button', { class: 'btn ghost block btn-spaced', 'aria-pressed': rset.journalDaily ? 'true' : 'false',
     onclick: () => { reminders.setJournalDaily(!reminders.settings().journalDaily); reminders.tick(); render(); } },
     rset.journalDaily ? '📔 Daily journal reminder: on' : '📔 Remind me to journal each day'));
   if (rset.journalDaily) remCard.append(field('Journal reminder time', h('input', { type: 'time', value: rset.journalTime, onchange: (e) => { reminders.setJournalTime(e.target.value); reminders.tick(); } })));
@@ -400,7 +400,7 @@ export function settingsScreen() {
   // additionally asks the browser to mark storage evict-resistant; whether or not the browser
   // grants that flag, the result is framed positively and truthfully — and always points the
   // traveller to the one guaranteed safeguard: a downloaded copy.
-  const persistBtn = h('button', { class: 'btn ghost block', style: 'margin-top:6px; display:none' }, '🔒 Turn on maximum protection');
+  const persistBtn = h('button', { class: 'btn ghost block btn-spaced', style: 'display:none' }, '🔒 Turn on maximum protection');
   const protectMsg = h('p', { class: 'tiny', style: 'margin:6px 0 0; display:none' });
   persistBtn.onclick = async () => {
     persistBtn.disabled = true; const lbl = persistBtn.textContent; persistBtn.textContent = 'Turning on…';
@@ -444,7 +444,7 @@ export function settingsScreen() {
       reader.readAsText(file);
     } });
   dataCard.append(restoreInput);
-  dataCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => restoreInput.click() }, '⬆️ Restore from a backup file'));
+  dataCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => restoreInput.click() }, '⬆️ Restore from a backup file'));
   wrap.append(dataCard);
 
   // reset

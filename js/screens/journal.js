@@ -756,7 +756,7 @@ export function journeyScreen() {
 
     if (s.entries.length) {
       card.append(h('h3', { style: 'margin:10px 0 2px' }, `📔 Your journal here · ${s.entries.length}`));
-      s.entries.forEach((e) => card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px;text-align:left',
+      s.entries.forEach((e) => card.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:left',
         onclick: () => go(`#journal-entry-${e.id}`) }, `${e.date || ''} — ${e.title || 'Untitled entry'}`)));
     }
     if (s.places.length) {

@@ -279,7 +279,7 @@ function personalDayCard(date) {
       h('span', { class: 'muted', style: 'font-size:.8rem' }, 'On this device only'),
     ]),
   ]);
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', 'aria-pressed': g.period ? 'true' : 'false',
+  card.append(h('button', { class: 'btn ghost block btn-spaced', 'aria-pressed': g.period ? 'true' : 'false',
     onclick: () => { personal.setPeriod(date, !personal.isPeriodDay(date)); render(); } },
     g.period ? '🩸 Period day ✓ (tap to clear)' : '🩸 Mark period day'));
   card.append(h('div', { class: 'field-lbl', style: 'margin-top:8px' }, 'Mood'));
@@ -405,11 +405,11 @@ function personalControlCard() {
   pinDet.append(h('div', {}, [
     field('PIN', np),
     h('button', { class: 'btn block', onclick: async () => { if (await personal.setPin(np.value)) { alert('PIN set.'); render(); } else alert('Use 4–8 digits.'); } }, 'Set PIN'),
-    personal.hasPin() ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => { personal.clearPin(); render(); } }, 'Remove PIN') : null,
+    personal.hasPin() ? h('button', { class: 'btn ghost block btn-spaced', onclick: () => { personal.clearPin(); render(); } }, 'Remove PIN') : null,
     h('p', { class: 'disclaimer' }, 'A PIN hides this section from a casual glance. It is not encryption — the data is stored on this device like your journal. For documents you need encrypted, use the vault.'),
   ]));
   card.append(pinDet);
-  card.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { confirmAction({ title: 'Turn off the private calendar?', body: 'Your entries are kept and return when you turn it back on.', confirmLabel: 'Turn off' }).then((ok) => { if (ok) { personal.setEnabled(false); personal.lock(); render(); } }); } }, 'Turn off private calendar'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => { confirmAction({ title: 'Turn off the private calendar?', body: 'Your entries are kept and return when you turn it back on.', confirmLabel: 'Turn off' }).then((ok) => { if (ok) { personal.setEnabled(false); personal.lock(); render(); } }); } }, 'Turn off private calendar'));
   card.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'This calendar is descriptive and informational, not medical advice or contraception guidance. In this region, pregnant and trying-to-conceive travellers should note dengue and Zika risk and discuss travel, vaccines and insurance with a health professional. Sources: ACOG, NHS, WHO, US CDC Travelers’ Health.'));
   return card;
 }

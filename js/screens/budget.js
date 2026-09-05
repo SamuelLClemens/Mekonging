@@ -190,7 +190,7 @@ export function expenseAddCard(opts = {}) {
     h('h2', {}, 'Log an expense'),
     h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
     field('On what?', bNote), bChips, field('Category', bCat), monthlyToggle, dateField,
-    h('button', { class: 'btn block', style: 'margin-top:8px', onclick: add }, '＋ Add expense'),
+    h('button', { class: 'btn block btn-spaced', onclick: add }, '＋ Add expense'),
   ]);
 }
 
@@ -352,7 +352,7 @@ function budgetFxCard() {
   return h('div', { class: 'card' }, [
     h('h2', {}, '💱 Currency converter'),
     fxConverterControl(home, local),
-    h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#currency') }, 'Full converter, quick guide & cash-swap →'),
+    h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#currency') }, 'Full converter, quick guide & cash-swap →'),
   ]);
 }
 
@@ -518,7 +518,7 @@ function budgetWithdrawalsCard() {
   det.append(
     h('div', { style: 'display:flex;gap:10px' }, [field('Amount', wAmt), field('Currency', wCur)]),
     field('Note (optional)', wNote), field('Date', wDate),
-    h('button', { class: 'btn block', style: 'margin-top:6px', onclick: () => { if (!wAmt.value) return; addWithdrawal({ amount: wAmt.value, currency: wCur.value, date: wDate.value, note: wNote.value.trim() }); render(); } }, '＋ Add withdrawal'),
+    h('button', { class: 'btn block btn-spaced', onclick: () => { if (!wAmt.value) return; addWithdrawal({ amount: wAmt.value, currency: wCur.value, date: wDate.value, note: wNote.value.trim() }); render(); } }, '＋ Add withdrawal'),
   );
   card.append(det);
 
