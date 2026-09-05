@@ -134,6 +134,7 @@ export const WEATHER_SPOTS = [
   { country: 'vi', city: 'Duy Phu', lat: 15.7642, lng: 108.1244 },
   { country: 'vi', city: 'Ha Giang', lat: 23.2386, lng: 105.3553 },
   { country: 'vi', city: 'Hoa Binh', lat: 20.66, lng: 105.1 },
+  { country: 'vi', city: 'Ly Son', lat: 15.3809, lng: 109.1175 },
   { country: 'vi', city: 'Lang Co', lat: 16.23, lng: 108.08 },
   { country: 'vi', city: 'Lao Cai', lat: 22.535, lng: 104.296 },
   { country: 'vi', city: 'Mai Chau', lat: 20.6597, lng: 105.09 },
