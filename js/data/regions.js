@@ -12,6 +12,7 @@
 // evaluation-time code anywhere reads place data, only function bodies, so the data
 // may arrive after this module finishes loading without any call site changing.
 
+import { canonicalPlaceId } from './place-merges.js';
 import { HISTORY } from './history.js';
 import { PHRASEBOOK_TH } from './phrasebook.th.js';
 import { PHRASEBOOK_VI } from './phrasebook.vi.js';
@@ -190,7 +191,13 @@ export function allPlaces(filter = {}) {
 }
 
 export function getPlace(id) {
-  return allPlaces().find((p) => p.id === id) || null;
+  const all = allPlaces();
+  const hit = all.find((p) => p.id === id);
+  if (hit) return hit;
+  // An id that no longer exists may be one half of a merged pair — a bookmarked route, a
+  // shared link, or an inbox item from before the merge. See js/data/place-merges.js.
+  const canon = canonicalPlaceId(id);
+  return canon === id ? null : (all.find((p) => p.id === canon) || null);
 }
 
 // Local noticeboards (per-city local knowledge: markets & schedules, where locals

@@ -106,10 +106,13 @@ def main():
         # count off 360 the coincidence broke and the check finally reported. The comment now
         # quotes the figure properly. Whenever you bump a number here, confirm the new value
         # appears in the profileFit() PARAGRAPH, not merely somewhere in the file.
-        expect = [('846', total, 'total'), ('470', counts['kidFriendly'], 'kidFriendly'),
-                  ('209', counts['afterDark'], 'afterDark'), ('230', counts['stepFree'], 'stepFree'),
-                  ('729', counts['scamWarnings'], 'scamWarnings'),
-                  ('373', counts['scam_nonempty'], 'scam_nonempty')]
+        # September 2026: all six dropped by exactly one when th-ext-chatuchak-weekend-market
+        # was merged into th-bkk-chatuchak — the deleted record carried every one of these
+        # fields, which is why they moved together.
+        expect = [('845', total, 'total'), ('469', counts['kidFriendly'], 'kidFriendly'),
+                  ('208', counts['afterDark'], 'afterDark'), ('229', counts['stepFree'], 'stepFree'),
+                  ('728', counts['scamWarnings'], 'scamWarnings'),
+                  ('372', counts['scam_nonempty'], 'scam_nonempty')]
         for quoted, actual, _label in expect:
             if int(quoted) != actual:
                 problems.append(f'js/main.js quotes {quoted} where the data now says {actual} '

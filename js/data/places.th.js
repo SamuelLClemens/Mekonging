@@ -92,6 +92,11 @@ export const PLACES_TH = [
     sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
   },
   {
+    // Merged 2026-09-05 with th-ext-chatuchak-weekend-market, which was the same market
+    // (25 m apart, same name) listed twice. This id survives because photos.js maps a photo
+    // to it and it carries the Google externalRatings; the market-type/sells/marketDays
+    // fields, the fuller hours and price note, the extra tips and the official
+    // chatuchakmarket.org source all came across from the entry that was deleted.
     id: 'th-bkk-chatuchak', name: 'Chatuchak Weekend Market', city: 'Bangkok', country: 'th',
     access: { stepFree: "partial", toilet: true, note: "Outdoor main lanes are flat and paved and rollable, but the market was not designed for accessibility: many sub-sois (alleys) are narrow, weekend crowds are dense, vendor goods cause occasional obstructions, and some stalls have a step at the door." },
     afterDark: { openAfterDark: false, note: "Main Saturday-Sunday hours are 09:00-18:00, closing at or before typical Bangkok dusk; the market's own 'some areas Friday evening' exception is a partial, non-standard extension, not a general after-dark opening." },
@@ -103,15 +108,17 @@ export const PLACES_TH = [
     rating: 4.4, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
     categories: ['market', 'food', 'culture'], budgetTier: 'low',
     kidFriendly: true, activities: ['market', 'shopping', 'street-food'],
-    blurb: 'One of the world’s largest markets — 15,000+ stalls of food, crafts, clothes and curiosities.',
-    whyItFits: 'A food-and-market paradise. Endless street eats; budget-friendly haggling.',
-    priceRange: { low: 0, typical: 200, high: 600, currency: 'THB', note: 'Free entry; spend what you like.' },
-    hours: 'Sat–Sun 09:00–18:00 (some areas Fri evening)',
-    tips: ['Go early for cooler air.', 'Carry cash; many stalls do not take cards.'],
-    scamWarnings: ['Agree a price before any tailoring or custom work.'],
+    marketType: 'Weekend market — one of the world’s largest', marketDays: [6, 0],
+    sells: '27 numbered sections of clothing, handicrafts, art, home decor, plants, vintage finds, ceramics, pets and street food.',
+    blurb: 'One of the world’s largest weekend markets: more than 15,000 stalls in themed sections selling almost anything, from clothing and art to plants, antiques and street food. It is a full day out, so go early before the heat and crowds peak.',
+    whyItFits: 'The single best Bangkok market for browsing and grazing in one place, easy to reach by BTS or MRT, and endlessly interesting for families and shoppers alike.',
+    priceRange: { low: 0, typical: 200, high: 800, currency: 'THB', note: 'Free to enter; street-food plates about 40-100 THB, goods vary widely. Haggle politely and carry small notes.' },
+    hours: 'Sat–Sun 09:00–18:00 (main market); also Fri 18:00–24:00, and the plant section Wed–Thu.',
+    tips: ['Go early (before 11:00) to beat the midday heat in the covered lanes.', 'Note a landmark clock-tower or section number so you can find your way back in the maze.', 'Carry cash; many stalls do not take cards.', 'The BTS Mo Chit / MRT Chatuchak Park exits drop you at the edge of the market.'],
+    scamWarnings: ['A first price quoted to obvious tourists can be high; bargain politely and be ready to walk away.', 'Keep bags zipped and to the front in the densest lanes.', 'Agree a price before any tailoring or custom work.'],
     mapQuery: 'Chatuchak Weekend Market Bangkok', coords: { lat: 13.7999, lng: 100.5503 },
-    bookHint: 'No booking; take the MRT or BTS to Chatuchak/Mo Chit.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    bookHint: 'No booking; take the MRT or BTS to Chatuchak/Mo Chit.', verified: '2026-08',
+    sources: [{ org: 'Chatuchak Market (official)', url: 'https://www.chatuchakmarket.org/opening-times/' }, { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org/Attraction/chatuchak-weekend-market' }],
   },
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',

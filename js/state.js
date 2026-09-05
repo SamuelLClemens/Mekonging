@@ -3,9 +3,10 @@
 // Mirrors the Gardenoosh state module (defaults / migrate / save / resetAll).
 
 import { putMeta, getMeta } from './idb.js';
+import { MERGED_PLACE_IDS, canonicalPlaceId } from './data/place-merges.js';
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 11;
+const CURRENT_VERSION = 12;
 
 function defaults() {
   return {
@@ -212,7 +213,57 @@ function migrate(data) {
   // v9 -> v10: day/night auto becomes the default. Move anyone still on the old silent
   // 'light' default onto 'auto' (an explicit 'dark' choice is preserved).
   if (dv < 10 && out.profile.theme === 'light') out.profile.theme = 'auto';
+  // v11 -> v12: rewrite the ids of places that have since been merged into another record.
+  // getPlace() also resolves an old id through the same table, so this migration is about
+  // the traveller's OWN data — a favourite, a collection entry, a trip tag, a note or
+  // rating written against the losing id would otherwise resolve to nothing and disappear
+  // from every list. Runs once; new merges bump the version again.
+  if (dv < 12) remapMergedPlaceIds(out);
   return out;
+}
+
+// Rewrites every place id the store can hold. Deliberately explicit about WHERE ids live
+// rather than walking the object blindly: a blind walk would also rewrite unrelated `id`
+// fields (pins, collections, journal entries and inbox items all carry their own ids) and
+// corrupt them. If a future feature stores a place id somewhere new, add it here.
+function remapMergedPlaceIds(out) {
+  if (!Object.keys(MERGED_PLACE_IDS).length) return;
+  const map = (id) => (typeof id === 'string' ? canonicalPlaceId(id) : id);
+  try {
+    if (Array.isArray(out.favorites)) {
+      // A merge can make two entries identical, so de-duplicate rather than leaving the
+      // same place favourited twice.
+      out.favorites = [...new Set(out.favorites.map(map))];
+    }
+    (out.collections || []).forEach((c) => {
+      if (Array.isArray(c.itemIds)) c.itemIds = [...new Set(c.itemIds.map(map))];
+    });
+    if (out.placeData && typeof out.placeData === 'object') {
+      const next = {};
+      Object.entries(out.placeData).forEach(([id, v]) => {
+        const k = map(id);
+        // If the traveller wrote notes against BOTH halves, keep the more recently touched
+        // one rather than letting iteration order decide.
+        const prev = next[k];
+        if (!prev || String(v && v.updatedAt || '') >= String(prev.updatedAt || '')) next[k] = v;
+      });
+      out.placeData = next;
+    }
+    const visits = (out.trip && out.trip.placeVisits) || null;
+    if (Array.isArray(visits)) {
+      const seen = new Set();
+      out.trip.placeVisits = visits.filter((v) => {
+        if (!v || typeof v !== 'object') return false;
+        v.placeId = map(v.placeId);
+        const key = `${v.placeId}|${v.stopId || ''}`;
+        if (seen.has(key)) return false;   // both halves tagged to one stop is now one row
+        seen.add(key); return true;
+      });
+    }
+    ((out.social && out.social.inbox) || []).forEach((it) => {
+      if (it && it.data && typeof it.data.id === 'string') it.data.id = map(it.data.id);
+    });
+  } catch { /* a stale id is a broken row; a thrown migration is a lost store */ }
 }
 
 const BAK = KEY + '.bak';
