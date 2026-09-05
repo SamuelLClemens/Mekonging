@@ -14,7 +14,7 @@
 // traveller in Laos should not parse Vietnam's. All four are precached, though: an emergency
 // screen has to work with no signal, including the morning after crossing a border.
 import { haversineKm } from '../util.js';
-import { HOSPITALS } from './medical.js';
+import { HOSPITALS } from './hospitals.curated.js';
 
 const LOADERS = {
   th: () => import('./hospitals.th.js').then((m) => m.HOSPITAL_ROWS_TH),

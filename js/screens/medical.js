@@ -22,9 +22,14 @@ import { driveLabel, sourcesNote } from '../render-utils.js';
 import { infoTip, field } from '../ui-widgets.js';
 import { showBigPhrase } from './phrasebook.js';
 import {
-  HOSP_TAG, TIER_META,
-  CARE_SYSTEM, EVAC, REACH_STEPS, REMOTE_PLAN, MED_SOURCES,
+  TIER_META,
+  CARE_SYSTEM,
+  EVAC,
+  REACH_STEPS,
+  REMOTE_PLAN,
+  MED_SOURCES,
 } from '../data/medical.js';
+import { HOSP_TAG } from '../data/emergency.js';
 import {
   loadHospitals, isHospitalsLoaded, nearestCare, nearestAnywhere, careCount, KIND_LABEL,
 } from '../data/hospitals.js';
