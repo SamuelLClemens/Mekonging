@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.493.0';
+const CACHE_VERSION = 'mk-v0.494.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -70,6 +70,7 @@ const PRECACHE = [
   'js/state.js',
   'js/social.js',
   'js/tts.js',
+  'js/phrase-ui.js',
   'js/translate.js',
   // Interface language. i18n.js and the dictionary MANIFEST are shell. The 29 per-language
   // dictionaries below are not shell — i18n.js now imports only the active one — but they are

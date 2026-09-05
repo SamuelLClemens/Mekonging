@@ -29,6 +29,10 @@
 
 import { store, save, getAudioPacks, hasAudioPack, addAudioPack } from '../state.js';
 import { h, debounce } from '../util.js';
+// scriptLang, phraseSlug, phraseKey, copyText and the big-phrase overlay live in
+// js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
+// this file's 57 KB of language data into the launch graph. See that file's header.
+import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
 import { field, selectEl, openModal, confirmAction, online } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
@@ -49,6 +53,10 @@ const { DIET_LABEL, joinList } = Diet;
 // city — reused here so "what language/country am I in" agrees with "what city is my map on"
 // instead of reading the (possibly stale, pre-GPS) activeCountry state directly).
 import { go, mount, topbar, langForCountry, oneTimeHint, contextNow, inferPhase, focusSpot } from '../main.js';
+
+// Re-exported for the modules that historically imported them from here; new callers
+// should import from ../phrase-ui.js directly.
+export { scriptLang, phraseSlug };
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
@@ -103,8 +111,6 @@ function audioPackControl(code, book) {
 
 // ---- personal phrasebook: derived keys + pin / hide -------------------------
 // Phrases carry no id, so derive a stable key from lang + category + english text.
-export function phraseSlug(en) { return String(en).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
-function phraseKey(code, catId, p) { return `${code}|${catId}|${phraseSlug(p.en)}`; }
 function phrasePinsFor(code) { const m = store.profile.prefs.phrasePins || (store.profile.prefs.phrasePins = {}); return m[code] || (m[code] = []); }
 function phraseHiddenFor(code) { const m = store.profile.prefs.phraseHidden || (store.profile.prefs.phraseHidden = {}); return m[code] || (m[code] = []); }
 function isPhrasePinned(code, key) { return phrasePinsFor(code).includes(key); }
@@ -165,6 +171,11 @@ function ensurePhrasePinned(code, key) {
   save();
   return true;
 }
+
+// The pin/hide behaviour showBigPhrase cannot own: pinning propagates across every language,
+// which needs LANGUAGES and ALLERGENS. Injected here, so the overlay itself stays data-free.
+const PHRASE_PINS = { isPinned: isPhrasePinned, togglePin: togglePhrasePin, toggleHide: togglePhraseHide };
+
 // Hiding a phrase also drops it from the pins so the two lists never disagree.
 function togglePhraseHide(code, key) {
   const a = phraseHiddenFor(code); const i = a.indexOf(key);
@@ -246,7 +257,7 @@ function phraseChip(p, locale, opts) {
   return h('button', {
     class: 'chip phrase-chip' + (pinned ? ' pinned' : ''),
     title: 'Tap to show large' + (pinned ? ' · pinned' : ''),
-    onclick: () => showBigPhrase(p, locale, opts),
+    onclick: () => showBigPhrase(p, locale, { ...opts, pins: PHRASE_PINS }),
   }, [pinned ? h('span', { class: 'chip-pin-dot', 'aria-hidden': 'true' }, '📌') : null,
       h('b', {}, p.en), ' ', h('span', { lang: locale }, p.script)]);
 }
@@ -750,8 +761,8 @@ function phraseRow(p, locale, opts) {
     h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), p.roman]),
     p.note ? h('div', { class: 'note' }, p.note) : null,
   ]);
-  grow.addEventListener('click', () => showBigPhrase(p, locale, opts));
-  grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale, opts); } });
+  grow.addEventListener('click', () => showBigPhrase(p, locale, { ...opts, pins: PHRASE_PINS }));
+  grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale, { ...opts, pins: PHRASE_PINS }); } });
   const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${p.en}`, title: 'Copy the local text', onclick: () => copyText(p.script, copyBtn) }, '⧉');
   const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: able ? null : '' }, '🔊');
   speakBtn.addEventListener('click', async () => {
@@ -771,57 +782,8 @@ function phraseRow(p, locale, opts) {
   return h('div', { class: 'phrase' + (essential ? ' essential' : '') }, [grow, h('div', { class: 'phrase-ctrls' }, ctrls)]);
 }
 
-// Map a place/dish/event country to the BCP-47 lang subtag of its script, so screen
-// readers announce native text in the right voice instead of the page's English default.
-const SCRIPT_LANG = { th: 'th', vi: 'vi', kh: 'km', la: 'lo' };
-export function scriptLang(country) { return SCRIPT_LANG[country] || null; }
 
-// Full-screen, very large native script to point at a taxi driver / pharmacist / local.
-// opts (optional, same shape as phraseRow's): { code, catId, onChange, noHide } add
-// Pin / Hide alongside Speak / Copy — the compact phraseChip has nowhere on the chip itself
-// for those controls, so they live here instead; a phraseRow passes them through too, for a
-// consistent set of actions wherever a phrase is shown large.
-export function showBigPhrase(p, locale, opts) {
-  opts = opts || {};
-  const { code, catId, onChange, noHide } = opts;
-  const key = (code && catId) ? phraseKey(code, catId, p) : null;
-  const able = canSay(locale);
-  const overlay = h('div', { class: 'bigphrase', role: 'dialog', 'aria-label': 'Show to a local' });
-  let close = () => overlay.remove();
-  overlay.addEventListener('click', () => close());
-  const actions = [
-    able ? h('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); say(p.script, locale); } }, '🔊 Speak') : null,
-    h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); copyText(p.script); } }, '⧉ Copy'),
-  ];
-  if (key) {
-    const pinned = isPhrasePinned(code, key);
-    actions.push(h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); togglePhrasePin(code, key); if (onChange) onChange(); close(); } }, pinned ? '📌 Unpin' : '📌 Pin'));
-    if (!noHide) {
-      actions.push(h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); togglePhraseHide(code, key); if (onChange) onChange(); close(); } }, '✕ Hide'));
-    }
-  }
-  actions.push(h('button', { class: 'btn ghost', onclick: () => close() }, 'Close'));
-  const inner = h('div', { class: 'bigphrase-inner' }, [
-    h('div', { class: 'bp-en' }, p.en),
-    h('div', { class: 'bp-script', lang: locale }, p.script),
-    // Custom live-translated phrases carry no romanisation (the translate service returns
-    // script text only) — omit the line rather than show "say:" with nothing after it.
-    p.roman ? h('div', { class: 'bp-roman' }, p.roman) : null,
-    p.note ? h('div', { class: 'bp-note' }, p.note) : null,
-    h('div', { class: 'bp-actions' }, actions),
-    h('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Show this screen to a local · tap anywhere to close'),
-  ]);
-  inner.addEventListener('click', (e) => e.stopPropagation());
-  overlay.append(inner);
-  close = openModal(overlay);
-}
 
-// Copy text to the clipboard with graceful fallback; flashes a tick on the button.
-function copyText(text, btn) {
-  const flash = () => { if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '⧉'; }, 1200); } };
-  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(flash, () => {}); return; }
-  try { const ta = h('textarea', {}); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); flash(); } catch { /* noop */ }
-}
 
 // Speak/type-in-English → local-language text + spoken audio. Works with no setup
 // (free online service); the offline phrasebook below covers the essentials.
