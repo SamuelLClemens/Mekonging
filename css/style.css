@@ -1671,6 +1671,23 @@ html[data-theme="dark"] .recap-level { background: rgba(255,255,255,0.06); }
    reads as nested under its stop rather than as another top-level itinerary row. */
 .trip-visits { margin: 2px 0; }
 .trip-visit { padding: 4px 0 4px 22px; align-items: flex-start; }
+/* A visit row is now name + chips on one line with an optional note beneath, so the
+   flex-start alignment moves to the inner row and the note inherits the 22px indent. */
+.trip-visit > .row-between { align-items: flex-start; }
+.trip-visit-note { margin-top: var(--sp-1); white-space: pre-wrap; }
+
+/* The destructive-but-not-primary outline that four call sites were each spelling out
+   inline as `color:var(--warn); border-color:var(--warn)`. */
+.danger-outline { color: var(--warn); border-color: var(--warn); }
+.prompt-body { margin: 0 0 var(--sp-3); }
+/* The recovery card stacks two buttons; the second needs the gap the card does not give. */
+.vault-rec-remove { margin-top: var(--sp-2); }
+
+/* Inbox: an item stays unread until the traveller acts on it (see inboxScreen). The dot
+   carries its own aria-label, so the colour is not the only thing saying "unread". */
+.inbox-dot { color: var(--orange); margin-right: var(--sp-1); font-size: .7em; vertical-align: middle; }
+.inbox-markall { margin-bottom: var(--sp-3); }
+.card.inbox-unread { border-left: 3px solid var(--orange); }
 .entry-photo { width: 100%; border-radius: var(--r-md); margin: var(--sp-2) 0; display: block; border: 1px solid var(--line); }
 
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }

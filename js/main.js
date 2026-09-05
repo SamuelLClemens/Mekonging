@@ -4,19 +4,19 @@
 import {
   store, save, resetAll, exportData, importData, isFavorite, toggleFavorite, prefersReducedMotion,
   ensureDurability, storageStatus, requestPersistence,
-  createCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
+  createCollection, renameCollection, deleteCollection, togglePlaceInCollection, collectionsForItem,
   addPin, updatePin, deletePin, getPin, getPlaceData, setPlaceField, getJellyReports, addJellyReport, todayKey,
   addJournalEntry, updateJournalEntry, deleteJournalEntry, journalEntries,
   getAlbum, addAlbumPhoto, updateAlbumPhoto, deleteAlbumPhoto,
   addCalendarItem, updateCalendarItem, deleteCalendarItem,
   isChecked, toggleChecklistItem,
   addStop, removeStop, moveStop, updateStop, addBudgetItem, deleteBudgetItem, updateBudgetItem, addWithdrawal, deleteWithdrawal, updateWithdrawal,
-  addPlaceVisit, removePlaceVisit, visitsForStop, unscheduledVisits,
+  addPlaceVisit, removePlaceVisit, updatePlaceVisit, visitsForStop, unscheduledVisits,
   setMyStay, getMyStay, clearMyStay,
   getLastFix, setLastFix,
   getSavedAreas, addSavedArea, removeSavedArea,
   ensureMe, setMe, getContacts, getContact, addContact, removeContact,
-  getInbox, addInboxItem, deleteInboxItem, unreadInboxCount,
+  getInbox, addInboxItem, markInboxRead, deleteInboxItem, unreadInboxCount,
   getListings, addListing, removeListing,
   getThread, addMessage, markThreadRead, unreadThreadCount, unreadMessagesCount,
   getBoardPosts, addBoardPost, deleteBoardPost,
@@ -66,6 +66,7 @@ import {
   addSecureNote as vaultAddNote, getNoteText as vaultGetNote, exportVault, importVault,
   changePasscode as vaultChangePasscode, getHint as vaultGetHint, setHint as vaultSetHint,
   hasRecoveryCode as vaultHasRecovery, createRecoveryCode as vaultCreateRecovery,
+  removeRecoveryCode as vaultRemoveRecovery,
   unlockWithRecovery as vaultUnlockRecovery, resetPasscodeWithRecovery as vaultResetWithRecovery,
 } from './vault.js';
 // Private personal calendar (cycle/period, mood, symptoms, intimacy, pregnancy). On-device,
@@ -94,7 +95,7 @@ import {
 // which has nothing to do with that module and must not gain an incidental dependency on it.
 import { verdictFor } from './data/month-verdict.js';
 import {
-  field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction,
+  field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction, promptAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
   online, netMode, setNetMode, infoTip, screenHint,
 } from './ui-widgets.js';
@@ -489,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.490.0';
+const APP_VERSION = 'mk-v0.491.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5179,8 +5180,15 @@ function collectionScreen(id) {
     ]));
   }
   if (coll) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('button', { class: 'btn ghost block', style: 'color:var(--warn); border-color:var(--warn)',
+    wrap.append(h('div', { class: 'card stack-2' }, [
+      h('button', { class: 'btn ghost block',
+        onclick: () => { promptAction({ title: 'Rename collection', label: 'Name', value: coll.name, placeholder: 'e.g. Beaches worth the ferry', confirmLabel: 'Rename', maxLength: 40 }).then((name) => {
+          // null = cancelled; '' = cleared, which renameCollection treats as "keep the old
+          // name" rather than leaving the traveller with an unnamed, unfindable collection.
+          if (name == null || !name) return;
+          renameCollection(coll.id, name); go(`#collection-${coll.id}`);
+        }); } }, 'Rename collection'),
+      h('button', { class: 'btn ghost block danger-outline',
         onclick: () => { confirmAction({ title: 'Delete collection?', body: `Delete the “${coll.name}” collection? Your places stay; only the grouping is removed.`, confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteCollection(coll.id); go('#saved'); } }); } }, 'Delete collection'),
     ]));
   }
@@ -6918,6 +6926,59 @@ export function stopDateLabel(s) {
   if (from && to && to !== from) return `${from} → ${to} · ${wxDiffDays(from, to) + 1} days`;
   return from || to || '';
 }
+// One "thing to see" on the itinerary — used for both the rows tagged to a stop and the
+// not-yet-scheduled ones, so a note written in either place behaves identically.
+//
+// placeVisits have carried a `note` field since they were introduced, but nothing ever
+// wrote one: addPlaceVisit is only ever called with { placeId, stopId }, so the field was
+// unreachable and every row was a bare place name. The note is the part that makes the
+// itinerary useful — "book three days ahead", "closed Mondays", "go at dawn" — so it is
+// edited here, in place, rather than on a separate screen.
+function tripVisitRow(visit, place, prefix = '', extraChip = null) {
+  const row = h('div', { class: 'trip-visit' });
+  const noteEl = h('div', { class: 'tiny muted trip-visit-note' });
+  const noteBtn = h('button', { class: 'chip' });
+  // The note is written and repainted without a re-render (a re-render would tear down the
+  // button mid-tap), so the chip's own label has to be repainted here too — otherwise it
+  // keeps reading "＋ Note" on a row that now has one.
+  const paintNote = () => {
+    noteEl.textContent = visit.note || '';
+    noteEl.hidden = !visit.note;
+    noteBtn.textContent = visit.note ? '✎' : '＋ Note';
+    noteBtn.setAttribute('aria-label', `${visit.note ? 'Edit' : 'Add'} a note for ${place.name}`);
+  };
+  const editNote = () => {
+    promptAction({
+      title: place.name,
+      body: 'A reminder for when you get there.',
+      label: 'Note',
+      value: visit.note || '',
+      placeholder: 'e.g. book 3 days ahead · closed Mondays',
+      confirmLabel: 'Save',
+      maxLength: 160,
+      multiline: true,
+    }).then((note) => {
+      // null = cancelled. '' is a real answer here (unlike a collection name): clearing the
+      // field is how a traveller deletes a note they no longer need.
+      if (note == null) return;
+      updatePlaceVisit(visit.id, { note });
+      paintNote();
+    });
+  };
+  noteBtn.addEventListener('click', editNote);
+  paintNote();
+  row.append(h('div', { class: 'row-between' }, [
+    h('button', { class: 'linklike', onclick: () => go(`#place-${place.id}`) }, `${prefix}${place.name}`),
+    h('div', { class: 'chips' }, [
+      extraChip,
+      noteBtn,
+      h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
+    ]),
+  ]));
+  row.append(noteEl);
+  return row;
+}
+
 function tripScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
@@ -6963,10 +7024,7 @@ function tripScreen() {
     const visits = visitsForStop(s.id).map((v) => ({ visit: v, place: resolveItem(v.placeId) })).filter((x) => x.place);
     if (visits.length) {
       itin.append(h('p', { class: 'muted', style: 'margin:6px 0 2px 22px;font-size:12px' }, 'Things to see here:'));
-      itin.append(h('div', { class: 'trip-visits' }, visits.map(({ visit, place }) => h('div', { class: 'row-between trip-visit' }, [
-        h('button', { class: 'linklike', onclick: () => go(`#place-${place.id}`) }, `📍 ${place.name}`),
-        h('button', { class: 'chip', 'aria-label': `Remove ${place.name} from this stop`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
-      ]))));
+      itin.append(h('div', { class: 'trip-visits' }, visits.map(({ visit, place }) => tripVisitRow(visit, place, '📍 '))));
     }
     if (placePickerOpenFor === s.id) {
       const pickable = saved.filter((sp) => !visits.some((x) => x.place.id === sp.id));
@@ -6985,13 +7043,8 @@ function tripScreen() {
   if (unscheduled.length) {
     itin.append(h('div', { class: 'trip-stop' }, [
       h('strong', {}, '📍 Not scheduled yet'),
-      h('div', { class: 'trip-visits' }, unscheduled.map(({ visit, place }) => h('div', { class: 'row-between trip-visit' }, [
-        h('button', { class: 'linklike', onclick: () => go(`#place-${place.id}`) }, place.name),
-        h('div', { class: 'chips' }, [
-          stops.length ? h('button', { class: 'chip', onclick: () => tripVisitSheet(place.id) }, '→ Assign') : null,
-          h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
-        ]),
-      ]))),
+      h('div', { class: 'trip-visits' }, unscheduled.map(({ visit, place }) =>
+        tripVisitRow(visit, place, '', stops.length ? h('button', { class: 'chip', onclick: () => tripVisitSheet(place.id) }, '→ Assign') : null))),
     ]));
   }
   const stopName = h('input', { 'aria-label': 'Stop name', type: 'text', placeholder: 'Place or city' });
@@ -8194,6 +8247,21 @@ async function renderVault(body) {
       try { const code = await vaultCreateRecovery(); body.innerHTML = ''; body.append(recoveryCodeCard(body, code)); }
       catch (e) { alert(e.message); }
     } }, hasRec ? 'Replace recovery code' : 'Create a recovery code'),
+    // A recovery code is a second key to the vault: anyone holding it can open it without
+    // the passcode. That is worth revoking if the written copy is lost, or if the traveller
+    // deliberately wants exactly one way in while crossing a border. The confirmation says
+    // plainly what it costs, because after this the ONLY routes back are the passcode and
+    // an encrypted backup file.
+    hasRec ? h('button', { class: 'btn ghost block danger-outline vault-rec-remove', onclick: async () => {
+      const ok = await confirmAction({
+        title: 'Remove the recovery code?',
+        body: 'Your current code stops working immediately. After this, the only ways into the vault are your passcode and an encrypted backup file — forget both and the documents are gone for good.',
+        confirmLabel: 'Remove code', danger: true,
+      });
+      if (!ok) return;
+      try { await vaultRemoveRecovery(); renderVault(body); }
+      catch (e) { alert(e.message); }
+    } }, 'Remove recovery code') : null,
   ]));
 
   // Change passcode + reminder. An instant re-wrap of the master key — documents are untouched.
@@ -8804,6 +8872,14 @@ function inboxScreen() {
     mount(wrap, '#circle'); return;
   }
   const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip', jelly: '🪼 Sighting', secret: '🔑 Secret', bb: '🧭 Board' };
+  // Until now nothing ever cleared `read`, so the Travel circle badge counted every item
+  // the traveller had ever received and the only way to make it go down was to delete the
+  // item. An item is marked read when it is opened or acted on (below); this clears the
+  // backlog in one tap for someone who has already seen them.
+  if (items.some((it) => !it.read)) {
+    wrap.append(h('button', { class: 'btn ghost block inbox-markall',
+      onclick: () => { items.forEach((it) => markInboxRead(it.id)); go('#inbox'); } }, '✓ Mark all as read'));
+  }
   items.forEach((it) => {
     const title = it.kind === 'place' ? (it.data.name || 'A place')
       : it.kind === 'collection' ? (it.data.name || 'A list')
@@ -8812,9 +8888,10 @@ function inboxScreen() {
       : it.kind === 'secret' ? `🔑 ${it.data.name || 'a place'}`
       : it.kind === 'bb' ? `${bbCat(it.data.cat).emoji} ${bbHeadline(it.data.cat || 'other', it.data)}`
       : 'A trip';
-    wrap.append(h('div', { class: 'card' }, [
+    const unreadDot = it.read ? null : h('span', { class: 'inbox-dot', 'aria-label': 'Unread' }, '●');
+    const card = h('div', { class: 'card' + (it.read ? '' : ' inbox-unread') }, [
       h('div', { class: 'row-between' }, [
-        h('div', {}, [h('strong', {}, title), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
+        h('div', {}, [h('strong', {}, [unreadDot, title]), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
         h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { deleteInboxItem(it.id); go('#inbox'); } }, '✕'),
       ]),
       it.msg ? h('p', { style: 'margin-top:6px' }, it.msg) : null,
@@ -8832,7 +8909,22 @@ function inboxScreen() {
         addJellyReport(it.data.id, { d: it.data.d || todayKey(), sev: it.data.sev || 'seen', note: it.data.note || '', by: it.from ? it.from.name : 'a traveller' });
         e.currentTarget.textContent = '✓ Added to the beach';
       } }, '＋ Add to the beach') : null,
-    ]));
+    ]);
+    // Marking read on view is what threadScreen does, but every inbox item shares one
+    // screen, so "viewed" here would clear the whole badge the first time the traveller
+    // glanced at the list. Acting on an item — opening the place, saving the list, adding
+    // the stops — is the signal that this one has actually been dealt with. Handled on the
+    // card so it catches every action inside it, and updated in place rather than by
+    // re-rendering, which would tear down the button mid-tap.
+    if (!it.read) {
+      card.addEventListener('click', () => {
+        if (it.read) return;
+        markInboxRead(it.id);
+        card.classList.remove('inbox-unread');
+        if (unreadDot) unreadDot.remove();
+      });
+    }
+    wrap.append(card);
   });
   mount(wrap, '#circle');
 }
