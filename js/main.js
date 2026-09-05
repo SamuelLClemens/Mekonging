@@ -490,7 +490,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.487.0';
+const APP_VERSION = 'mk-v0.488.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1302,9 +1302,9 @@ function profileFitAdj(p, prefs) {
 // profileFitAdj()/personalScore(); this is the DISPLAY truth, so every surface says the same
 // thing about the same place.
 //
-// The hard rule: never invent a suitability or safety verdict. Measured across the 836 place
+// The hard rule: never invent a suitability or safety verdict. Measured across the 841 place
 // records (September 2026), the data supports some dimensions and not others — kidFriendly is set
-// on 460, afterDark on 199, access/stepFree on 220, scamWarnings on 719 (366 of them
+// on 465, afterDark on 204, access/stepFree on 225, scamWarnings on 724 (369 of them
 // non-empty), but per-venue safety,
 // women's-safety and baby-facility fields are effectively absent (access.babyChange is set on
 // none). So an unrecorded field returns an `unknown` entry that the UI prints as "not
