@@ -61,7 +61,6 @@ ACCEPTED = {
     ('la-ext-plain-of-jars-2', 'la-ext-plain-of-jars-site-3'),
     ('la-ext-tad-faek', 'la-ext-tad-hua-khon'),
     ('la-ext-tad-fane', 'la-ext-tad-yuang'),
-    ('th-bkk-chatuchak', 'th-ext-chatuchak-weekend-market'),
     ('th-ext-chiangmai-saturday-walking-street', 'th-ext-chiangmai-sunday-walking-street'),
     ('th-ext-doi-inthanon', 'th-ext-doiinthanon-camping'),
     ('th-ext-mae-klang-waterfall', 'th-ext-mae-ya-waterfall'),
@@ -72,6 +71,7 @@ ACCEPTED = {
     ('th-ext-sukhothai-historical-park', 'th-sukhothai-old-city-guesthouses'),
     ('th-koh-lanta-longbeach-hostels', 'th-kohlanta-longbeach-resorts'),
     ('vi-ext-cai-rang', 'vi-ext-cantho-cairang-floating-breakfast'),
+    ('vi-ext-tavan-best-view', 'vi-ext-tavan-madame-view'),
 }
 
 

@@ -4655,24 +4655,58 @@ export const PLACES_VI_EXT = [
   // a separate city would hide these from anyone browsing Sapa. Coordinates below come from
   // OpenStreetMap nodes in the Muong Hoa bounding box, not from a name-only geocode.
   {
+    // Re-verified 2026-09-05 against the property's own Booking.com listing. Three things
+    // changed: the coordinates were 1.1 km out (they came from a name geocode, not the
+    // listing's own map point); "eight rooms, each with its own balcony" was never sourced
+    // and the listing shows six room types including bungalows; and the rating was carried
+    // as a bare 4.5 where the listing reports 9.3/10 from 399 reviews.
     id: "vi-ext-tavan-madame-view", name: "Madame View Homestay (Ta Van)", city: "Sapa", country: "vi",
-    recognition: 'A small hillside homestay above the Ta Van paddies with a pool terrace looking out over the valley, run by a local H’Mong family.',
-    localName: 'Tả Van, Xã Tả Van, Lào Cai',
+    recognition: 'A hillside homestay above the Muong Hoa paddies with an infinity pool on a sun terrace looking down the valley, run by Chan and her family.',
+    localName: 'Tả Van, Mường Hoa, Sa Pa, Lào Cai',
     categories: ["stay", "viewpoint"], budgetTier: "low",
     kidFriendly: true, stayType: "homestay", stayDuration: "short",
     activities: ["homestay", "rice-terraces", "trekking", "village-life"],
-    amenities: ["swimming-pool", "home-cooked-meals", "wifi", "hot-water", "balcony", "shared-kitchen", "breakfast"],
-    blurb: "Eight rooms, each with its own balcony, on the slope above Ta Van village. The draw is the outlook — rice terraces dropping away to the Muong Hoa stream — and a small pool to sit by after a day walking the valley. Breakfast is included and dinner is a shared family table.",
-    whyItFits: "A specific, bookable answer for travellers who want the Ta Van homestay experience with a private room, a view and a pool rather than a mattress in a communal loft.",
-    priceRange: { low: 400000, typical: 650000, high: 1200000, currency: "VND", note: "Roughly from USD 16 a night at the low end on the booking sites; more in the September-October harvest weeks. Breakfast included. Bring cash — card acceptance in the village is patchy." },
-    hours: "24-hour reception; check-in from the afternoon",
-    tips: ["It is a walk uphill from the valley road with luggage — ask the homestay to arrange a motorbike transfer from Sapa town or the Ta Van drop-off.", "Order dinner in the morning; the kitchen shops for it, it is not a menu on demand.", "The pool is unheated and the valley is cool from November to March — this is a spring-to-autumn attraction."],
-    scamWarnings: ["Book direct or through a major platform; touts at the Sapa trailhead will offer 'the same' homestay for a commission."],
+    amenities: ["pool", "home-cooked-meals", "wifi", "hot-water", "balcony", "shared-kitchen", "breakfast", "family-rooms", "garden", "parking", "terrace", "playground", "airport-transfer", "pets-allowed"],
+    externalRatings: [
+      { site: "Booking.com", score: 9.3, scale: 10, count: 399, url: "https://www.booking.com/hotel/vn/madame-view-homestay-sa-pa.html", asOf: "2026-09" },
+    ],
+    blurb: "Rooms and garden bungalows on the slope above the Muong Hoa valley, most with a balcony and a mountain or garden view. The draw is the outlook — rice terraces dropping away to the stream — and an infinity pool to sit by after a day walking the valley. Breakfast is included and cooked to order, and dinner is a shared family table.",
+    whyItFits: "A specific, bookable answer for travellers who want the Ta Van homestay experience with a private room, a view and a pool rather than a mattress in a communal loft — and one of the very few in the valley that takes dogs.",
+    priceRange: { low: 400000, typical: 650000, high: 1200000, currency: "VND", note: "Roughly from USD 16 a night at the low end on the booking sites; more in the September-October harvest weeks. Breakfast included. CASH ONLY, and a refundable VND 200,000 damage deposit is collected in cash on arrival — bring enough; there is no ATM in the village." },
+    hours: "24-hour front desk. Check-in 13:00-22:00, check-out 07:00-11:00.",
+    tips: ["It is a walk uphill from the valley road with luggage — Chan arranges a taxi from Sapa town, which guests consistently rate as the easy way in.", "Order dinner in the morning; the kitchen shops for it, it is not a menu on demand.", "Breakfast covers vegan and Asian as well as American and buffet, which is unusual this far up the valley — say so when you book.", "The pool is unheated and the valley is cool from November to March — this is a spring-to-autumn attraction.", "Children five and over are charged as adults, and there are no cribs or extra beds; ask before booking a family room."],
+    scamWarnings: ["Book direct or through a major platform; touts at the Sapa trailhead will offer 'the same' homestay for a commission.", "Count the damage deposit back at check-out — it is refunded in cash, not to a card."],
     access: { stepFree: false, note: "Hillside site reached by a sloping path and steps; not suitable for wheelchairs or heavy luggage." },
-    rating: 4.5, reviewSources: ["Tripadvisor", "Booking.com", "Agoda"],
-    mapQuery: "Madame View Homestay Ta Van Sapa", coords: { lat: 22.3040, lng: 103.8925 },
+    rating: 4.7, reviewSources: ["Booking.com", "Tripadvisor", "Agoda"],
+    mapQuery: "Madame View Homestay Ta Van Sapa", coords: { lat: 22.30078, lng: 103.88302 },
     bookHint: "Bookable on Booking.com, Agoda, Airbnb and Tripadvisor; book ahead for the September-October harvest.", verified: "2026-09",
-    sources: [{ org: "Tripadvisor — Madame View Homestay, Ta Van", url: "https://www.tripadvisor.com/Hotel_Review-g12536571-d33411286-Reviews-Madame_View_Homestay-Ta_Van_Lao_Cai_Province.html" }, { org: "Booking.com — Madame View Homestay", url: "https://www.booking.com/hotel/vn/madame-view-homestay-sa-pa.html" }, { org: "Agoda — Madame View Homestay", url: "https://www.agoda.com/en-ie/madame-view-homestay/hotel/sapa-vn.html" }],
+    sources: [{ org: "Booking.com — Madame View Homestay", url: "https://www.booking.com/hotel/vn/madame-view-homestay-sa-pa.html" }, { org: "Tripadvisor — Madame View Homestay, Ta Van", url: "https://www.tripadvisor.com/Hotel_Review-g12536571-d33411286-Reviews-Madame_View_Homestay-Ta_Van_Lao_Cai_Province.html" }, { org: "Agoda — Madame View Homestay", url: "https://www.agoda.com/en-ie/madame-view-homestay/hotel/sapa-vn.html" }],
+  },
+  {
+    // Listed on Booking.com under the slug "buffalo-eco-house" — the property was renamed
+    // and the slug was not, which is why a search for "Best View Homestay" finds nothing
+    // and the entry could not be sourced until the owner's own link was supplied.
+    id: "vi-ext-tavan-best-view", name: "Best View Homestay (Ta Van)", city: "Sapa", country: "vi",
+    recognition: 'A H’Mong family house on the open slope between Sapa and Ta Van village, rice terraces on every side, with an infinity pool facing the horizon and buffalo in the fields below.',
+    localName: 'Tả Van, Mường Hoa, Sa Pa, Lào Cai',
+    categories: ["stay", "viewpoint"], budgetTier: "low",
+    kidFriendly: true, isLocal: true, stayType: "homestay", stayDuration: "short",
+    activities: ["homestay", "rice-terraces", "trekking", "village-life", "cooking"],
+    amenities: ["pool", "home-cooked-meals", "wifi", "hot-water", "balcony", "breakfast", "family-rooms", "garden", "tour-desk", "room-service", "coffee-shop"],
+    externalRatings: [
+      { site: "Booking.com", score: 9.8, scale: 10, count: 122, url: "https://www.booking.com/hotel/vn/buffalo-eco-house.html", asOf: "2026-09" },
+    ],
+    blurb: "A family-run house set out among the terraces on the Sapa side of Ta Van, run by Lee (Li) and her family. Rooms are private with their own bathroom and balcony, most looking straight out at the paddies, and there is an infinity pool on the terrace. Guests cook with the family, eat at the family table, and book treks with local guides — the homestay exists in part to put paid work in the hands of H’Mong women in the valley.",
+    whyItFits: "The quietest of the Ta Van options and the one guests rate highest — far enough out of both Sapa town and the village itself that the view is terraces rather than tour buses, while still being a real family home rather than a guesthouse.",
+    priceRange: { low: 350000, typical: 600000, high: 1100000, currency: "VND", note: "Roughly from USD 14 a night for a budget twin; cottages and family rooms cost more, and the September-October harvest weeks are dearest. CASH ONLY — there is no card machine and no ATM in the village, so draw money in Sapa town before you come out." },
+    hours: "Check-in 13:00-22:00, check-out 11:00-12:00. Tell the family your arrival time in advance.",
+    tips: ["It is about 10 km from Sapa town and then roughly a 20-minute walk in — message ahead and the family will bring luggage up by motorbike rather than you carrying it.", "Book the trek through the homestay rather than in Sapa town: the guides are women from the valley and the money stays there.", "Ask about cooking with the family — it is offered, not advertised, and guests rate it as the best part of the stay.", "Children of all ages are welcome but are charged as adults from fifteen, and there are no cribs or extra beds.", "No pets, no smoking indoors, and the family does not take party groups — it is a quiet house."],
+    scamWarnings: ["Book direct or through a major platform; touts at the Sapa trailhead will offer 'the same' homestay for a commission.", "The Booking.com listing still uses the old 'buffalo-eco-house' web address — that is the correct property, not a different one."],
+    access: { stepFree: false, note: "Reached by a walking path through the terraces with a final uphill stretch; not suitable for wheelchairs, and hard going with heavy luggage unless the family collects it by motorbike." },
+    rating: 4.9, reviewSources: ["Booking.com"],
+    mapQuery: "Best View Homestay Ta Van Sapa", coords: { lat: 22.30196, lng: 103.87934 },
+    bookHint: "Bookable on Booking.com under the slug buffalo-eco-house; message the host directly about the luggage transfer and the trek.", verified: "2026-09",
+    sources: [{ org: "Booking.com — Best View Homestay, Sapa", url: "https://www.booking.com/hotel/vn/buffalo-eco-house.html" }],
   },
   {
     id: "vi-ext-tavan-family-homestay", name: "Ta Van Family Homestay", city: "Sapa", country: "vi",
