@@ -38,8 +38,7 @@ import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems } from './nav-groups.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled } from './trail.js';
-import { hospitalScreen } from './screens/medical.js';
-import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/medical.js';
+import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
 import { phrasebookScreen, dictionaryScreen, scriptLang, showBigPhrase } from './screens/phrasebook.js';
 // Places step 4 (task #205): placesScreen itself, plus placeCard/travelerChips/saveSheet/
@@ -113,7 +112,6 @@ import {
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
   loadCountry, isCountryLoaded, loadAllCountries,
 } from './data/regions.js';
-import { ALLERGENS } from './data/allergens.js';
 // nature.js (~108 KB of species data) is NOT statically imported here — see the lazy
 // loadNature() below (added right after the import block), which mirrors regions.js's
 // loadCountry() idiom for the same reason: a traveller who never opens Identify/Sounds/
@@ -145,7 +143,6 @@ import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ 
 // regions.<cc>.js (the ADM1 province-polygon files) are NOT statically imported here — they
 // are large pure geometry (27-87 KB each) needed only by the region/zone drill-down, so they
 // are loaded lazily, one country at a time, by loadRegionSet() near REGIONS_BY_CC below.
-import { provinceInfo } from './data/regions.info.js';
 import * as Diet from './data/diet.js';
 
 // ---- Lazy nature/wildlife data loading --------------------------------------
@@ -201,6 +198,7 @@ const SCREEN_LOADERS = {
   visitors: (b) => import('./screens/visitors.js' + b),
   family: (b) => import('./screens/family.js' + b),
   sharejourney: (b) => import('./screens/share-journey.js' + b),
+  medical: (b) => import('./screens/medical.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -213,6 +211,7 @@ const ROUTE_SCREENS = {
   visitors: ['visitors'],
   family: ['family'], explore: ['family'], country: ['family'],
   sharejourney: ['sharejourney'], jr: ['sharejourney'],
+  hospital: ['medical'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -490,7 +489,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.489.0';
+const APP_VERSION = 'mk-v0.490.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -10032,7 +10031,7 @@ export function render() {
       case 'identified': return myIdentifierScreen();
       case 'search': return searchScreen();
       case 'sos': return sosScreen(arg);
-      case 'hospital': return hospitalScreen(arg);
+      case 'hospital': return screenMod('medical').hospitalScreen(arg);
       case 'scams': return scamsScreen(arg);
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);
