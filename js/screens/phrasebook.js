@@ -477,23 +477,11 @@ export function phrasebookScreen(lang) {
 
   const phase = store.profile.prefs.phase || inferPhase();
   const part = contextNow().part;
-  const jumpToCat = (id) => {
-    // renderPhrases() is fully synchronous (innerHTML reset + direct appends), so the fold
-    // already exists in the DOM the moment this call returns — no frame needs waiting for.
-    phraseQuery = ''; search.value = '';
-    setCatOpen(id, true);
-    renderPhrases();
-    const el = document.getElementById(`phrase-cat-${id}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-  const jumpRow = h('div', { class: 'chips phrase-jump' }, [
-    h('button', { class: 'chip', onclick: () => jumpToCat('essentials') }, '⭐ Essentials'),
-    ...rankedPhraseCats(categories, phase, part).map((cat) => h('button', {
-      class: 'chip' + (cat.id === 'emergency' ? ' chip-sos' : ''),
-      onclick: () => jumpToCat(cat.id),
-    }, (cat.id === 'emergency' ? '🆘 ' : '') + cat.name)),
-  ]);
-  wrap.append(jumpRow);
+  // A row of "jump to category" chips used to sit here, listing exactly the same eleven
+  // categories, in exactly the same order, as the folds immediately below it. It cost 356px
+  // at 375px — most of a phone screen — to save a scroll past folds that are all closed and
+  // total 718px. Tapping a fold's own summary opens it in one tap, which is what the chip
+  // did. Removed as duplication; the folds ARE the category list.
 
   const listEl = h('div', {});
   wrap.append(listEl);
@@ -512,7 +500,7 @@ export function phrasebookScreen(lang) {
     // search opens every matching fold (so results are actually visible); with no search,
     // every fold starts CLOSED unless the traveller opened it themselves (isCatOpen) —
     // rank/collapse/never-remove applies to ORDER here, not to what exists: every phrase is
-    // still one tap away via its fold or a jump chip.
+    // still one tap away via its fold.
     for (const cat of rankedPhraseCats(categories, phase, part)) {
       // A query matches the whole category when its name matches (so "taxi"
       // surfaces the Taxi & directions phrases), else it matches per phrase.
@@ -525,8 +513,20 @@ export function phrasebookScreen(lang) {
       const isOpen = q ? true : isCatOpen(cat.id);
       const body = h('div', { class: 'phrase-cat-body' });
       for (const p of matches) body.append(phraseRow(p, book.locale, { code, catId: cat.id, onChange: repaint }));
-      const det = h('details', { class: 'phrase-cat-group', id: `phrase-cat-${cat.id}`, open: isOpen ? '' : null }, [
-        h('summary', { class: 'phrase-cat-summary' }, `${cat.name} · ${matches.length}`),
+      // Emergency & health is deliberately reachable regardless of trip phase or time of day
+      // (see rankedPhraseCats). The jump row used to mark it with a 🆘 chip carrying class
+      // chip-sos — which was styled with var(--coral), a token that is not defined anywhere
+      // in the stylesheet, so the colour silently fell back to the ordinary ink and the
+      // emphasis never actually shipped. The fold now carries the marker itself, using the
+      // group's existing --cat left-border hook and --warn, which IS defined and is contrast
+      // checked on every skin. The summary text stays --ink, so nothing here changes a
+      // text-contrast ratio.
+      const sos = cat.id === 'emergency';
+      const det = h('details', {
+        class: 'phrase-cat-group' + (sos ? ' phrase-cat-sos' : ''),
+        id: `phrase-cat-${cat.id}`, open: isOpen ? '' : null,
+      }, [
+        h('summary', { class: 'phrase-cat-summary' }, `${sos ? '🆘 ' : ''}${cat.name} · ${matches.length}`),
         body,
       ]);
       // See the Essentials fold above for why this listens on the summary's click rather
