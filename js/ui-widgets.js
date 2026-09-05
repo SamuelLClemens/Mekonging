@@ -199,6 +199,44 @@ export function confirmAction(opts = {}) {
   });
 }
 
+// The text-entry sibling of confirmAction, and the in-app replacement for the native
+// blocking window.prompt (which iOS standalone PWAs suppress entirely, so a prompt-based
+// flow would simply do nothing there). Resolves the trimmed string on confirm, or null on
+// cancel / Escape / backdrop tap — null and '' are deliberately distinguishable so a caller
+// can tell "cancelled" from "cleared the field".
+// opts: { title, body, label, value, placeholder, confirmLabel, cancelLabel, maxLength, multiline }.
+export function promptAction(opts = {}) {
+  const {
+    title = 'Edit', body = '', label = '', value = '', placeholder = '',
+    confirmLabel = 'Save', cancelLabel = 'Cancel', maxLength = 80, multiline = false,
+  } = opts;
+  return new Promise((resolve) => {
+    let close = null, settled = false;
+    const done = (val) => { if (settled) return; settled = true; resolve(val); if (close) close(); };
+    const input = multiline
+      ? h('textarea', { class: 'ta', rows: '3', maxlength: String(maxLength), placeholder })
+      : h('input', { type: 'text', maxlength: String(maxLength), placeholder });
+    input.value = value == null ? '' : String(value);
+    // Enter submits on the single-line variant only; in a textarea it has to insert a newline.
+    if (!multiline) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); done(input.value.trim()); } });
+    const backdrop = h('div', { class: 'sheet-backdrop center' });
+    const dialog = h('div', { class: 'sheet confirm-card', role: 'dialog', 'aria-label': title }, [
+      h('h3', {}, title),
+      body ? h('p', { class: 'muted prompt-body' }, body) : null,
+      label ? field(label, input) : input,
+      h('div', { class: 'confirm-actions' }, [
+        h('button', { class: 'btn ghost', onclick: () => done(null) }, cancelLabel),
+        h('button', { class: 'btn', onclick: () => done(input.value.trim()) }, confirmLabel),
+      ]),
+    ]);
+    backdrop.append(dialog);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) done(null); });
+    close = openModal(backdrop, () => done(null));
+    // openModal moves focus to the dialog; put it on the field the user came here to type in.
+    try { setTimeout(() => { input.focus(); if (!multiline) input.select(); }, 0); } catch { /* focus is a nicety */ }
+  });
+}
+
 // `onchange` is optional (defaults to a no-op) — most call sites just read `.value` on
 // submit, but a display-currency switcher needs to react immediately (see
 // budgetSummaryCard's totalsCurrencyRow), so the widget supports both without a second,

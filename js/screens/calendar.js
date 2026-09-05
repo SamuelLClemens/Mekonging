@@ -374,6 +374,31 @@ function personalControlCard() {
     ]));
     card.append(det);
   }
+  // Partners accumulate silently: the intimacy form mints one from a free-text field the
+  // first time a name is typed, and nothing ever removed one, so a name entered by mistake
+  // — or a person the traveller would simply rather not keep a record of — stayed in the
+  // dropdown for good. On a screen whose whole premise is that it is private and lockable,
+  // being unable to delete a name is the wrong default. Removing a partner clears the name
+  // only; the encounters themselves stay, and show as an unnamed entry.
+  const partners = personal.listPartners();
+  if (partners.length) {
+    const parDet = h('details', { class: 'filters-collapse' });
+    parDet.append(h('summary', {}, `Partners (${partners.length})`));
+    const list = h('div', {});
+    partners.forEach((par) => {
+      list.append(h('div', { class: 'row-between price-item' }, [
+        h('span', { class: 'grow' }, par.name),
+        h('div', { class: 'chips' }, [
+          h('button', { class: 'chip', 'aria-label': `Remove ${par.name}`, onclick: () => {
+            confirmAction({ title: `Remove ${par.name}?`, body: 'The name is removed from this device. Entries recorded with them are kept, and show without a name.', confirmLabel: 'Remove', danger: true })
+              .then((ok) => { if (ok) { personal.removePartner(par.id); render(); } });
+          } }, '✕'),
+        ]),
+      ]));
+    });
+    parDet.append(list);
+    card.append(parDet);
+  }
   const pinDet = h('details', { class: 'filters-collapse' });
   pinDet.append(h('summary', {}, personal.hasPin() ? 'Change or remove PIN' : 'Add a PIN lock'));
   const np = h('input', { type: 'password', inputmode: 'numeric', placeholder: '4–8 digit PIN' });

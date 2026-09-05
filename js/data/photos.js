@@ -34,7 +34,6 @@ export const PHOTOS = {
   "la-ext-muang-ngoy": { src: "img/places/la-ext-muang-ngoy.jpg", credit: "Mattun0211, CC0, via Wikimedia Commons" },
   "la-ext-wat-phou": { src: "img/places/la-ext-wat-phou.jpg", credit: "Mattana, CC BY-SA 3.0, via Wikimedia Commons" },
   "th-ext-ban-chiang-archaeological-site": { src: "img/places/th-ext-ban-chiang-archaeological-site.jpg", credit: "Kiwiodysee, CC BY-SA 3.0, via Wikimedia Commons" },
-  "th-ext-chatuchak-weekend-market": { src: "img/places/th-ext-chatuchak-weekend-market.jpg", credit: "Azreey, CC BY-SA 3.0, via Wikimedia Commons" },
   "th-ext-koh-lipe": { src: "img/places/th-ext-koh-lipe.jpg", credit: "VascoPlanet World Photography, CC BY 3.0, via Wikimedia Commons" },
   "th-ext-koh-samet": { src: "img/places/th-ext-koh-samet.jpg", credit: "No machine-readable author provided. Kereish~commonswiki ass, Public domain, via Wikimedia Commons" },
   "th-ext-phra-prang-sam-yot-lopburi-monkeys": { src: "img/places/th-ext-phra-prang-sam-yot-lopburi-monkeys.jpg", credit: "Mastertongapollo, CC BY-SA 4.0, via Wikimedia Commons" },
