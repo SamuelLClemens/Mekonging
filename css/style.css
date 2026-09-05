@@ -862,8 +862,9 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .place-cat-body, .phrase-cat-body { padding: var(--sp-2) var(--sp-2) var(--sp-4); }
 /* Talk T3: jump-chip row above the phrase list; the Emergency chip gets a coral accent so it
    reads as the "reach it fast" one, matching the app's existing SOS colour language. */
-.phrase-jump { margin-bottom: var(--sp-2); }
-.chip-sos { border-color: var(--coral); color: var(--coral); font-weight: 800; }
+/* Emergency & health, marked on the fold itself. Only the 4px left border is coloured —
+   the summary text stays --ink so no contrast ratio changes on any skin. */
+.phrase-cat-sos { --cat: var(--warn); }
 .phrase {
   display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0;
   border-bottom: 1px dashed var(--line);
