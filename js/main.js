@@ -492,7 +492,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.496.0';
+const APP_VERSION = 'mk-v0.497.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4161,13 +4161,16 @@ function arrivalScreen(arg) {
     : 'Bottled or filtered water only. The busiest stalls with high turnover are usually safest: food is cooked to order, not left sitting.'));
   wrap.append(foodCard);
 
-  const doCard = h('div', { class: 'card' }, [h('h2', {}, '🧭 Settle in')]);
+  // Six rows, four of them conditional, each previously carrying its own margin-top:6px
+  // while the h2 above contributed 8px — two different small gaps in one card. stack-2 puts
+  // every gap on the 8px step and lets an absent row take its gap with it.
+  const doCard = h('div', { class: 'card stack-2' }, [h('h2', {}, '🧭 Settle in')]);
   doCard.append(h('button', { class: 'btn ghost block', onclick: () => go('#places') }, '🏠 Save where I am staying on the map'));
-  if (c && c.lang) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 First words — hello, thanks, numbers'));
-  doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#sos-${cc}`) }, '🆘 Emergency numbers here'));
-  doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#scams-${cc}`) }, '⚠️ Common scams — and how to avoid them'));
-  if (getVisa(cc)) doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#visa-${cc}`) }, '🛂 Entry & visa rules'));
-  doCard.append(h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go('#nearby') }, '📍 What’s near me right now'));
+  if (c && c.lang) doCard.append(h('button', { class: 'btn ghost block', onclick: () => go(`#phrasebook-${c.lang}`) }, '💬 First words — hello, thanks, numbers'));
+  doCard.append(h('button', { class: 'btn ghost block', onclick: () => go(`#sos-${cc}`) }, '🆘 Emergency numbers here'));
+  doCard.append(h('button', { class: 'btn ghost block', onclick: () => go(`#scams-${cc}`) }, '⚠️ Common scams — and how to avoid them'));
+  if (getVisa(cc)) doCard.append(h('button', { class: 'btn ghost block', onclick: () => go(`#visa-${cc}`) }, '🛂 Entry & visa rules'));
+  doCard.append(h('button', { class: 'btn ghost block', onclick: () => go('#nearby') }, '📍 What’s near me right now'));
   wrap.append(doCard);
 
   if (prefs.withBaby || (prefs.access || []).length) {
@@ -8750,8 +8753,13 @@ function addContactScreen(arg) {
 // A share/copy button that flips its own label to confirm, then reverts. Uses the
 // OS share sheet when available (which can send over AirDrop / Nearby Share with
 // no internet), else copies the link to the clipboard.
+// The gap is a CLASS, not an inline style. Inline beat `.stack-N > * { margin-block: 0 }`,
+// so a share button dropped into a stacked card produced a 16px gap where every sibling had
+// 8. That rule now carries !important and would win either way, but the inline style was the
+// wrong shape regardless: a spacing value baked into a shared widget cannot be overridden by
+// the layout that hosts it.
 export function shareButton(label, title, buildUrl, cls = 'btn ghost block') {
-  const btn = h('button', { class: cls, style: 'margin-top:8px', onclick: async () => {
+  const btn = h('button', { class: cls + ' share-btn', onclick: async () => {
     const url = buildUrl();
     let msg;
     try {
@@ -8891,23 +8899,25 @@ function inboxScreen() {
       : it.kind === 'bb' ? `${bbCat(it.data.cat).emoji} ${bbHeadline(it.data.cat || 'other', it.data)}`
       : 'A trip';
     const unreadDot = it.read ? null : h('span', { class: 'inbox-dot', 'aria-label': 'Unread' }, '●');
-    const card = h('div', { class: 'card' + (it.read ? '' : ' inbox-unread') }, [
+    // Everything below the header row is conditional on the item's kind, and each carried its
+    // own margin-top:6px against a header that contributed none. stack-2 gives one 8px step.
+    const card = h('div', { class: 'card stack-2' + (it.read ? '' : ' inbox-unread') }, [
       h('div', { class: 'row-between' }, [
         h('div', {}, [h('strong', {}, [unreadDot, title]), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
         h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { deleteInboxItem(it.id); go('#inbox'); } }, '✕'),
       ]),
-      it.msg ? h('p', { style: 'margin-top:6px' }, it.msg) : null,
-      (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,
-      (it.kind === 'trip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
-      (it.kind === 'collection') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => { const c = createCollection(it.data.name || 'Shared list', '📥'); let n = 0; (it.data.items || []).forEach((x) => { if (getPlace(x.id)) { togglePlaceInCollection(c.id, x.id); n++; } }); e.currentTarget.textContent = `✓ Saved (${n})`; } }, 'Save as a collection') : null,
-      (it.kind === 'tip') ? h('p', { style: 'margin-top:6px' }, it.data.text || '') : null,
-      (it.kind === 'tip') ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => {
+      it.msg ? h('p', {}, it.msg) : null,
+      (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,
+      (it.kind === 'trip') ? h('button', { class: 'btn ghost block', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
+      (it.kind === 'collection') ? h('button', { class: 'btn ghost block', onclick: (e) => { const c = createCollection(it.data.name || 'Shared list', '📥'); let n = 0; (it.data.items || []).forEach((x) => { if (getPlace(x.id)) { togglePlaceInCollection(c.id, x.id); n++; } }); e.currentTarget.textContent = `✓ Saved (${n})`; } }, 'Save as a collection') : null,
+      (it.kind === 'tip') ? h('p', {}, it.data.text || '') : null,
+      (it.kind === 'tip') ? h('button', { class: 'btn ghost block', onclick: (e) => {
         const slug = String(it.data.city || 'a-city').toLowerCase().replace(/[^a-z0-9]+/g, '-');
         addBoardPost(`${it.data.cc || 'xx'}-${slug}`, { topic: it.data.topic, text: `${it.from ? it.from.name + ': ' : ''}${it.data.text}` });
         e.currentTarget.textContent = '✓ Pinned';
       } }, '📌 Pin to my noticeboard') : null,
-      (it.kind === 'jelly') ? h('p', { style: 'margin-top:6px' }, `${SEV_LABEL[it.data.sev] || SEV_LABEL.seen}${it.data.note ? ` — ${it.data.note}` : ''}${it.data.d ? ` · ${fmtReportDate(it.data.d)}` : ''}`) : null,
-      (it.kind === 'jelly' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', style: 'margin-top:6px', onclick: (e) => {
+      (it.kind === 'jelly') ? h('p', {}, `${SEV_LABEL[it.data.sev] || SEV_LABEL.seen}${it.data.note ? ` — ${it.data.note}` : ''}${it.data.d ? ` · ${fmtReportDate(it.data.d)}` : ''}`) : null,
+      (it.kind === 'jelly' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', onclick: (e) => {
         addJellyReport(it.data.id, { d: it.data.d || todayKey(), sev: it.data.sev || 'seen', note: it.data.note || '', by: it.from ? it.from.name : 'a traveller' });
         e.currentTarget.textContent = '✓ Added to the beach';
       } }, '＋ Add to the beach') : null,

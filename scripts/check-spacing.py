@@ -41,21 +41,66 @@ PROPS = r'(margin[a-z-]*|padding[a-z-]*|gap|row-gap|column-gap)'
 
 # Ceilings, recorded when this guard was written (mk-v0.486.0). [total, off_scale] per file.
 CEILING = {
-    "js/main.js": [427, 210],
-    "js/screens/budget.js": [29, 19],
-    "js/screens/calendar.js": [25, 12],
-    "js/screens/family.js": [7, 2],
-    "js/screens/home.js": [11, 5],
-    "js/screens/journal.js": [28, 13],
-    "js/screens/medical.js": [47, 25],
-    "js/screens/nextstop.js": [5, 4],
-    "js/screens/phrasebook.js": [19, 9],
-    "js/screens/places.js": [76, 41],
-    "js/screens/settings.js": [36, 17],
-    "js/screens/share-journey.js": [17, 7],
-    "js/screens/visitors.js": [13, 2],
-    "js/screens/weather.js": [20, 12],
-    "js/ui-widgets.js": [2, 2],
+    "js/main.js": [
+        414,
+        197
+    ],
+    "js/screens/budget.js": [
+        29,
+        19
+    ],
+    "js/screens/calendar.js": [
+        25,
+        12
+    ],
+    "js/screens/family.js": [
+        7,
+        2
+    ],
+    "js/screens/home.js": [
+        11,
+        5
+    ],
+    "js/screens/journal.js": [
+        28,
+        13
+    ],
+    "js/screens/medical.js": [
+        47,
+        25
+    ],
+    "js/screens/nextstop.js": [
+        5,
+        4
+    ],
+    "js/screens/phrasebook.js": [
+        18,
+        9
+    ],
+    "js/screens/places.js": [
+        70,
+        41
+    ],
+    "js/screens/settings.js": [
+        36,
+        17
+    ],
+    "js/screens/share-journey.js": [
+        17,
+        7
+    ],
+    "js/screens/visitors.js": [
+        13,
+        2
+    ],
+    "js/screens/weather.js": [
+        20,
+        12
+    ],
+    "js/ui-widgets.js": [
+        2,
+        2
+    ]
 }
 
 

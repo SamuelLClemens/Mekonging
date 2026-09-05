@@ -249,6 +249,9 @@ p { margin: 0 0 var(--sp-4); }
    margin to space itself from a sibling it cannot see. This is the shape every converted
    block below takes — `gap` cannot collapse, cannot double, and cannot leave a stray margin
    behind when the last child is conditionally absent, which margin-based spacing all can. */
+/* A share button's own gap, for the majority of call sites that are not inside a stack.
+   Inside one, the stack's `margin-block: 0 !important` below takes it back. */
+.share-btn { margin-top: var(--sp-2); }
 .stack-1, .stack-2, .stack-3, .stack-4, .stack-5, .stack-6 { display: flex; flex-direction: column; }
 .stack-1 { gap: var(--sp-1); }
 .stack-2 { gap: var(--sp-2); }
@@ -256,8 +259,14 @@ p { margin: 0 0 var(--sp-4); }
 .stack-4 { gap: var(--sp-4); }
 .stack-5 { gap: var(--sp-5); }
 .stack-6 { gap: var(--sp-6); }
-/* A stacked parent owns every gap, so its children must not add their own. */
-.stack-1 > *, .stack-2 > *, .stack-3 > *, .stack-4 > *, .stack-5 > *, .stack-6 > * { margin-block: 0; }
+/* A stacked parent owns every gap, so its children must not add their own.
+   !important, and it has to be: this selector is (0,1,0), which loses to `.card h2`
+   (0,1,1) and to any inline style. Both were live cases — a stacked card's h2 kept its
+   8px bottom margin on top of the 8px gap, and shareButton's inline margin did the same,
+   each producing a 16px gap in a stack where every other gap was 8. A utility whose entire
+   job is to override is the one place !important is the right tool; without it the contract
+   in the line above is a comment rather than a rule. */
+.stack-1 > *, .stack-2 > *, .stack-3 > *, .stack-4 > *, .stack-5 > *, .stack-6 > * { margin-block: 0 !important; }
 
 /* --- splash --- */
 .splash { display: grid; place-content: center; min-height: 80vh; text-align: center; background: var(--sunburst); }
