@@ -99,10 +99,17 @@ def main():
         # A LIST, not a dict, and it has to stay one: afterDark and stepFree both read 187
         # as of August 2026, and as dict keys the second silently replaced the first, which
         # quietly dropped afterDark from the check while still printing PASS.
-        expect = [('828', total, 'total'), ('452', counts['kidFriendly'], 'kidFriendly'),
-                  ('199', counts['afterDark'], 'afterDark'), ('212', counts['stepFree'], 'stepFree'),
-                  ('711', counts['scamWarnings'], 'scamWarnings'),
-                  ('360', counts['scam_nonempty'], 'scam_nonempty')]
+        #
+        # The scam_nonempty figure was ALSO passing by accident until September 2026: the
+        # profileFit() comment never quoted it, and the `quoted not in main_js` fallback was
+        # satisfied by the logo SVG's own viewBox="0 0 360 122". When a data pass moved the
+        # count off 360 the coincidence broke and the check finally reported. The comment now
+        # quotes the figure properly. Whenever you bump a number here, confirm the new value
+        # appears in the profileFit() PARAGRAPH, not merely somewhere in the file.
+        expect = [('836', total, 'total'), ('460', counts['kidFriendly'], 'kidFriendly'),
+                  ('199', counts['afterDark'], 'afterDark'), ('220', counts['stepFree'], 'stepFree'),
+                  ('719', counts['scamWarnings'], 'scamWarnings'),
+                  ('366', counts['scam_nonempty'], 'scam_nonempty')]
         for quoted, actual, _label in expect:
             if int(quoted) != actual:
                 problems.append(f'js/main.js quotes {quoted} where the data now says {actual} '
