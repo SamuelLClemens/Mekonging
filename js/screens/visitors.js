@@ -37,7 +37,7 @@ export function visitorsScreen() {
 
   // ---- What this map is ---------------------------------------------------
   const intro = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '🌍 The map'),
+    h('h2', {}, '🌍 The map'),
     infoTip(`Mekonging is a static site with no server and no account, so nothing here can see every user — there is nothing collecting them. Orange pins are your own, kept on this device. Blue pins come from a shared feed, and only if you add one yourself below. Every pin is rounded to a ${GRID}° grid cell, roughly 55 km, so no pin can place anyone more precisely than "this corner of the world".`),
   ])]);
   const mapBox = h('div', { class: 'visit-map', role: 'img', 'aria-label': 'World map of places this app has been opened from' });
@@ -52,7 +52,7 @@ export function visitorsScreen() {
 
   // ---- Your own pins ------------------------------------------------------
   const own = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '📍 Your pins'),
+    h('h2', {}, '📍 Your pins'),
     infoTip('Recorded when the app opens and your location is on, at most one per place per day. It never leaves this device unless you switch on contributing below. Turning this off stops new pins; use Forget to delete the ones already here.'),
   ])]);
   const toggle = h('label', { class: 'switch-row' }, [
@@ -96,7 +96,7 @@ export function visitorsScreen() {
 
   // ---- The shared feed ----------------------------------------------------
   const shared = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '🔵 Everyone else'),
+    h('h2', {}, '🔵 Everyone else'),
     infoTip('No shared feed ships with this app, and none is switched on by default — a static site collecting its users’ locations is exactly what this project does not do. Point it at a collector you run and its pins appear alongside yours. The origin must also be listed in index.html’s Content-Security-Policy (connect-src), or the browser will block the request.'),
   ])]);
   shared.append(h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Expects HTTPS returning JSON: an array of { lat, lng, n, cc }, or { points: [ … ] }. Anything malformed is ignored.'));

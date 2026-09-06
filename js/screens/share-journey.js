@@ -76,7 +76,7 @@ async function buildAndShare(j, btn, status) {
 function journeyCard(j, onChange) {
   const card = h('div', { class: 'card' });
   card.append(h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, `📖 ${j.name}`),
+    h('h2', {}, `📖 ${j.name}`),
     h('button', {
       class: 'btn ghost tiny', 'aria-label': `Delete ${j.name}`,
       onclick: async () => {
@@ -236,7 +236,7 @@ export function shareJourneyScreen() {
   wrap.append(topbar('Share my journey', '#me'));
 
   const intro = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '🗺 Your journey, as one page'),
+    h('h2', {}, '🗺 Your journey, as one page'),
     infoTip('Everything is built here on your device and nothing is uploaded. A journey comes out as a single file that holds its own map and pictures, so whoever you send it to can open it in any browser, offline, with no app and no account.'),
   ])]);
   intro.append(h('p', { class: 'muted', style: 'margin:6px 0 0' },

@@ -158,7 +158,7 @@ export function hospitalScreen(cc) {
   // the digits share one text node, and a translation service that regroups or drops a
   // digit here could get somebody killed. The bundled dictionary still covers the labels.
   const call = h('div', { class: 'card sos-card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, `1. Call — ${c.name}`),
+    h('h2', {}, `1. Call — ${c.name}`),
     infoTip('Emergency numbers are free from any phone, need no credit, and on most networks work with no SIM card. If nobody answers in English, keep the line open and hand the phone to anyone nearby.'),
   ])]);
   const em = (c.info && c.info.emergency) || [];
@@ -170,7 +170,7 @@ export function hospitalScreen(cc) {
   // The offline half of the screen. A phrase in the local script, full-screen, is the one
   // thing here that works with a dead data connection and a language you cannot speak.
   const show = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '2. Show — works offline'),
+    h('h2', {}, '2. Show — works offline'),
     infoTip('No signal needed. Hold the screen up to a driver, a hotel receptionist or anyone passing. The phrase is in the local script, so it does not depend on your pronunciation.'),
   ])]);
   // Each button is labelled with the phrase's OWN English, never a label of our choosing:
@@ -226,7 +226,7 @@ export function hospitalScreen(cc) {
   // and upgrades in place when the full layer lands — an emergency screen must never wait
   // on a download to show the traveller something.
   const go2 = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '3. Where to go'),
+    h('h2', {}, '3. Where to go'),
     infoTip('Sorted by real distance from you. The road figure is an estimate that already allows for how these roads actually drive. Green and blue are private hospitals used to foreign patients; yellow is the government hospital that must accept an emergency; orange and white can stabilise you and refer you onward. Entries without a colour come from OpenStreetMap and carry a name and a location only — this app makes no claim about what they can treat.'),
   ])]);
   const liveSearch = (fix && fix.lat != null)
@@ -376,7 +376,7 @@ export function hospitalScreen(cc) {
 
   // ---- 4. How to actually get there ---------------------------------------
   const how = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '4. How to get there'),
+    h('h2', {}, '4. How to get there'),
     infoTip('Read this before you need it. The single most useful thing on this screen is knowing, in advance, whether an ambulance is coming or whether you are making your own way.'),
   ])]);
   REACH_STEPS.forEach((s) => {
@@ -396,7 +396,7 @@ export function hospitalScreen(cc) {
 
   // ---- 5. Far from anywhere -----------------------------------------------
   const remote = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '5. If there is nothing near you'),
+    h('h2', {}, '5. If there is nothing near you'),
     infoTip('For the passes, the islands, the highlands and the long river stretches, where the journey to real care is measured in hours rather than minutes.'),
   ])]);
   remote.append(h('ul', { class: 'sos-aid' }, REMOTE_PLAN.map((li) => h('li', {}, li))));
@@ -406,7 +406,7 @@ export function hospitalScreen(cc) {
   const evac = EVAC[active] || [];
   if (evac.length) {
     const ev = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, '6. If you have to be moved'),
+      h('h2', {}, '6. If you have to be moved'),
       infoTip('Where a serious case actually goes when the local hospital cannot treat it. Your insurer arranges and pays for this — which is why the assistance line is worth calling early, before a decision has already been made for you.'),
     ])]);
     evac.forEach((e) => ev.append(h('div', { class: 'card', style: 'margin:6px 0' }, [
@@ -419,7 +419,7 @@ export function hospitalScreen(cc) {
   // ---- 7. The card someone else will read ---------------------------------
   const m = medCardData();
   const card = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '7. Your medical card'),
+    h('h2', {}, '7. Your medical card'),
     infoTip('Stored on this device only. It is never uploaded, never included in a share link, and never sent to a translation service. Fill it in now — it exists to be read by a paramedic or a stranger holding your phone.'),
   ])]);
   MED_FIELDS.forEach((f) => card.append(field(f.label, h('input', {

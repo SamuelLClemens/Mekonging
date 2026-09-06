@@ -47,7 +47,7 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        253,
+        244,
         125
     ],
     "js/place-ui.js": [
@@ -63,7 +63,7 @@ CEILING = {
         2
     ],
     "js/screens/budget.js": [
-        22,
+        21,
         14
     ],
     "js/screens/calendar.js": [
@@ -83,7 +83,7 @@ CEILING = {
         1
     ],
     "js/screens/family.js": [
-        6,
+        5,
         2
     ],
     "js/screens/giveback.js": [
@@ -95,11 +95,11 @@ CEILING = {
         1
     ],
     "js/screens/journal.js": [
-        32,
+        31,
         12
     ],
     "js/screens/medical.js": [
-        42,
+        35,
         24
     ],
     "js/screens/nextstop.js": [
@@ -123,11 +123,11 @@ CEILING = {
         2
     ],
     "js/screens/settings.js": [
-        30,
+        24,
         11
     ],
     "js/screens/share-journey.js": [
-        15,
+        13,
         7
     ],
     "js/screens/streetfood.js": [
@@ -143,7 +143,7 @@ CEILING = {
         7
     ],
     "js/screens/visitors.js": [
-        12,
+        9,
         2
     ],
     "js/screens/weather.js": [
