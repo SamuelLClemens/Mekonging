@@ -37,7 +37,7 @@ import {
 import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems } from './nav-groups.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
-import { noteTrail, trailEnabled } from './trail.js';
+import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
 import { scriptLang, showBigPhrase } from './phrase-ui.js';
@@ -514,7 +514,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.507.0';
+const APP_VERSION = 'mk-v0.508.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2752,17 +2752,54 @@ function meHubScreen() {
   // twice on one screen. Everything dropped is one tap away, from the row or door that owns
   // it, which is the rule the rest of this refactor follows.
   const stopN = (store.trip.stops || []).length;
+  const jStats = trailStats();
   wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
     chip('📅', calLabel, null, () => go('#calendar')),
     chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
     chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
     chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
+    // Fifth chip, spanning both columns (chip-wide) rather than sitting alone beside a gap —
+    // "Your journey" per direct request, same live-status rule as the four above: a bare
+    // label until there is a first recorded place, then the count that justifies the shortcut.
+    chip('🗺', 'Your journey', jStats.places ? `${jStats.places} ${jStats.places === 1 ? 'place' : 'places'}` : null, () => go('#journey'), 'chip-wide'),
   ]));
 
   // (The old "Trip in numbers" strip — a second, static status-chip row directly below this
   // one, duplicating its Calendar day-count/Journal-entries/Budget-spend figures a second
   // time — is gone. Removed as a duplicate CHIP ROW, not a duplicate destination: every
   // figure it showed still shows live on the one chip above that already owns it.)
+
+  // The journey map, promoted here per direct request — it used to be row three of eight
+  // inside My stuff, easy to miss for a feature a traveller may check daily. A static preview
+  // (journeyMapSVG — the same renderer #sharejourney's own preview already uses; see
+  // journey-share.js) rather than a second live MapLibre instance: this hub is opened far
+  // more often than #journey itself, and a live map here would mean a WebGL context and a
+  // round of satellite-tile requests on every single visit, for a thumbnail nobody asked to
+  // pan or zoom. Hidden entirely until there is a first pin, same rule as "Coming up" just
+  // below — an empty preview is not a feature, it is a promise with nothing behind it yet.
+  if (jStats.places > 0) {
+    const jc = h('div', { class: 'card', style: 'margin-top:12px' });
+    const jrange = (from, to) => {
+      if (!from) return '';
+      const f = (iso) => { try { return new Date(iso + 'T00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return iso; } };
+      return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
+    };
+    jc.append(h('h3', { style: 'margin:0 0 6px' }, '🗺 Your journey'));
+    jc.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
+      [`${jStats.places} ${jStats.places === 1 ? 'place' : 'places'}`,
+        jStats.countries > 1 ? `${jStats.countries} countries` : null,
+        jrange(jStats.from, jStats.to) || null,
+      ].filter(Boolean).join(' · ')));
+    // Same wrapper class the share screen's own preview uses (journey-preview in style.css),
+    // so this thumbnail gets that exact centred/capped-width/rounded treatment for free.
+    const preview = h('div', { class: 'journey-preview' });
+    jc.append(preview);
+    import('./journey-share.js').then((mod) => {
+      preview.innerHTML = mod.journeyMapSVG(trailPoints());
+    }).catch(() => { /* preview is an enhancement; the button below still reaches the real map */ });
+    jc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#journey') }, 'View your journey →'));
+    wrap.append(jc);
+  }
 
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);

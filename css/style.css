@@ -842,6 +842,9 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    a record, not a control, so no pointer cursor or press animation. */
 .status-chip.static { cursor: default; }
 .status-chip.static:active { transform: none; }
+/* A chip spanning both columns of a two-column chip grid (.home-status), for one that would
+   otherwise sit alone beside an empty gap when the row holds an odd count. */
+.chip-wide { grid-column: 1 / -1; }
 
 /* Home Quick access — Budget chip pace ring, once a target + spend both exist: green on
    track to land under budget, yellow if the current pace projects going over, red if over.
