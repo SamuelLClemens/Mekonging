@@ -69,7 +69,7 @@ import {
 // page already uses for "Open in Google Maps".
 function placesMapsFallback(anchor, label) {
   return h('a', {
-    class: 'btn ghost block', style: 'margin:10px 0 4px',
+    class: 'btn ghost block btn-spaced',
     href: mapsUrl({ coords: anchor }), target: '_blank', rel: 'noopener',
   }, `🗺 Not seeing it? Search near ${label} on Google Maps →`);
 }
@@ -378,7 +378,7 @@ export function placesScreen(arg) {
         ]),
       ]));
     });
-    areasCard.append(storageLineP, h('button', { class: 'btn ghost', style: 'margin-top:6px', onclick: clearAllAreasP }, '🗑 Clear all offline map data'));
+    areasCard.append(storageLineP, h('button', { class: 'btn ghost btn-spaced', onclick: clearAllAreasP }, '🗑 Clear all offline map data'));
   }
   renderAreasCard();
   renderStorageLine();
@@ -402,7 +402,7 @@ export function placesScreen(arg) {
     const matches = placesCtrl.search(q);
     if (!matches.length) { mapSearchResultsP.append(h('p', { class: 'muted', style: 'padding:6px 4px;font-size:13px' }, 'No matches in the offline data.')); return; }
     matches.forEach((m) => mapSearchResultsP.append(
-      h('button', { class: 'btn ghost block', style: 'justify-content:flex-start;margin-top:4px', onclick: () => {
+      h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => {
         placesCtrl.flyTo(m.lng, m.lat, m.z);
         mapSearchResultsP.textContent = ''; mapSearchInputP.value = '';
       } }, `${MAP_SEARCH_ICON[m.type] || '•'}  ${m.name}  ·  ${m.type}`)));
@@ -623,7 +623,7 @@ export function placesScreen(arg) {
     + (selKids ? 1 : 0) + (selStepFree ? 1 : 0)
     + (selStayType !== 'any' ? 1 : 0) + (selStayDur !== 'any' ? 1 : 0);
   const filterLabel = () => (countFilters() ? `⚙ Filters · ${countFilters()} on` : '⚙ Filters');
-  const filterBtn = h('button', { class: 'btn ghost block', style: 'margin:4px 0' }, filterLabel());
+  const filterBtn = h('button', { class: 'btn ghost block btn-spaced' }, filterLabel());
   filterBtn.onclick = () => {
     const backdrop = h('div', { class: 'sheet-backdrop' });
     const sheet = h('div', { class: 'sheet filter-sheet', role: 'dialog', 'aria-label': 'Filters' });
@@ -635,7 +635,7 @@ export function placesScreen(arg) {
     sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
     sheet.append(h('h3', {}, 'Filters'));
     sheet.append(filterCard);
-    sheet.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: () => close() }, 'Show results'));
+    sheet.append(h('button', { class: 'btn block btn-spaced', onclick: () => close() }, 'Show results'));
     backdrop.append(sheet);
     close = openModal(backdrop, () => { filterBtn.textContent = filterLabel(); });
   };
@@ -737,7 +737,7 @@ export function placesScreen(arg) {
 
   // Your own places live alongside the curated ones: add a location, then rate, review and
   // photograph it from its page. Kept on-device; a collapsible list keeps the screen tidy.
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0', onclick: () => go('#addpin') }, '➕ Add a place of your own'));
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#addpin') }, '➕ Add a place of your own'));
   if ((store.pins || []).length) {
     const yp = h('details', { class: 'filters-collapse' }, [h('summary', {}, `📌 Your places · ${store.pins.length}`)]);
     store.pins.forEach((pin) => {
@@ -841,7 +841,7 @@ export function placesScreen(arg) {
     const openRow = h('div', { class: 'chips', style: 'margin-top:10px' });
     places.forEach((p) => openRow.append(h('button', { class: 'btn ghost', onclick: () => { close(); go(`#place-${p.id}`); } }, `Open ${compareLabel(p)}`)));
     sheet.append(openRow);
-    sheet.append(h('button', { class: 'btn block', style: 'margin-top:10px', onclick: () => close() }, 'Close'));
+    sheet.append(h('button', { class: 'btn block btn-spaced', onclick: () => close() }, 'Close'));
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
     backdrop.append(sheet);
     close = openModal(backdrop);
@@ -970,7 +970,7 @@ export function placesScreen(arg) {
     // "Show more" expander: reveal the rest inline (no full re-render) to cut scrolling.
     const expander = (rest, label) => {
       if (!rest.length) return null;
-      const btn = h('button', { class: 'btn ghost block', style: 'margin:2px 0 10px' }, label);
+      const btn = h('button', { class: 'btn ghost block btn-spaced' }, label);
       btn.onclick = () => { rest.forEach((p) => btn.before(placeQuickRow(p, numFor(p.id), compareCtl))); btn.remove(); };
       return btn;
     };
@@ -1449,7 +1449,7 @@ function weatherNearbyCard(p) {
   const km = haversineKm(p.coords, { lat: spot.lat, lng: spot.lng });
   const key = spotKey(spot);
 
-  const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Weather nearby')]);
+  const card = h('div', { class: 'card' }, [h('h3', {}, 'Weather nearby')]);
   const body = h('div', {});
   card.append(body);
 
@@ -1528,10 +1528,10 @@ function placeAccessBlock(p) {
   if (a && (a.stepFree || a.note)) {
     const LBL = { yes: '♿ Step-free access', partial: '♿ Partly step-free', no: '⚠️ Not step-free' };
     const box = h('div', { class: 'card access-focus' });
-    box.append(h('h3', { style: 'margin-top:0' }, LBL[a.stepFree] || '♿ Accessibility'));
+    box.append(h('h3', {}, LBL[a.stepFree] || '♿ Accessibility'));
     if (a.note) box.append(h('p', { class: 'muted', style: 'margin:4px 0' }, a.note));
     if (a.toilet) box.append(h('div', { class: 'list-note' }, 'Accessible toilet reported on site.'));
-    box.append(h('p', { class: 'tiny muted', style: 'margin-bottom:0' }, 'Reported accessibility — always verify on the day.'));
+    box.append(h('p', { class: 'tiny muted' }, 'Reported accessibility — always verify on the day.'));
     return box;
   }
   const needMobility = (store.profile.prefs.access || []).includes('mobility');
@@ -1614,7 +1614,7 @@ function transitCard(p) {
       h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, (hub.city && hub.city !== p.city) ? `${titleCase(t.label)} · ${hub.city}` : titleCase(t.label)),
       hub.into ? h('div', { class: 'list-note' }, hub.into) : null,
       hub.note ? h('div', { class: 'muted tiny' }, hub.note) : null,
-      h('a', { class: 'btn ghost block', style: 'margin-top:4px', href: hubDirUrl(p.coords, hub), target: '_blank', rel: 'noopener' }, 'Directions ↗'),
+      h('a', { class: 'btn ghost block btn-spaced', href: hubDirUrl(p.coords, hub), target: '_blank', rel: 'noopener' }, 'Directions ↗'),
     ]));
   });
   // Nearest open cross-border crossing (from the borders dataset) — useful when a place
@@ -1893,7 +1893,7 @@ function yourLayer(p) {
   card.append(h('div', { class: 'review-yours' }, [h('span', { class: 'rlabel' }, 'Your take'), yourRev]));
 
   // Share just this place's review — your stars, words and photos — as a small web page.
-  const shareBtn = h('button', { class: 'btn ghost block', style: 'margin-top:10px' }, '📤 Share my review');
+  const shareBtn = h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share my review');
   shareBtn.onclick = async () => {
     const dd = getPlaceData(p.id);
     if (!(dd.rating || (dd.review || '').trim() || (dd.note || '').trim() || (dd.photos || []).length)) {
