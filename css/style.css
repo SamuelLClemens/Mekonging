@@ -1518,10 +1518,27 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
    a live WebGL map cannot be. */
 .jr-live-wrap { margin: 0 0 var(--sp-3); }
 .jr-map-live {
-  width: 100%; aspect-ratio: 16 / 10; max-height: 46vh; min-height: 220px;
+  /* Taller than it was (16/10, 46vh, 220px floor). The journey map is the point of this
+     screen and it was a letterbox strip: at 375px it stood 220px high, which is not enough
+     to tell one river bend from another, let alone find a street. A 4:3 box up to 62vh
+     still leaves the stops list visibly below it on every phone. */
+  position: relative;
+  width: 100%; aspect-ratio: 4 / 3; max-height: 62vh; min-height: 300px;
   border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-soft);
   overflow: hidden; background: #9FD3CE;
 }
+/* Sits over the map until the imagery lands, so the offline cream-and-borders fallback is
+   never mistaken for the finished map. Pointer-events off: panning and zooming work
+   underneath it from the first frame. */
+.jr-map-loading {
+  position: absolute; inset: auto 0 0 0; z-index: 2; pointer-events: none;
+  display: flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  padding: var(--sp-2); font-size: var(--fs-sm);
+  color: var(--ink); background: color-mix(in srgb, var(--card) 86%, transparent);
+  border-top: 1px solid var(--line);
+}
+.jr-map-hint { margin: var(--sp-2) 0 0; }
+@media (min-width: 700px) { .jr-map-live { aspect-ratio: 16 / 9; } }
 .jr-panel:empty { display: none; }
 .jr-stop h3 { font-size: var(--fs-body); }
 /* Photos from one stop: a scrolling strip, so twelve pictures never push the stops list

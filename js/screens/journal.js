@@ -30,7 +30,7 @@ import {
 import { getActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import { h } from '../util.js';
 import { fmtTemp } from '../render-utils.js';
-import { field, confirmAction, locationSelect, spotForKey, openModal } from '../ui-widgets.js';
+import { field, confirmAction, locationSelect, spotForKey, openModal, collapsibleCard } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
@@ -42,7 +42,7 @@ import { WEATHER_SPOTS } from '../weather.js';
 import { dateLocale } from '../i18n.js';
 import { isRouteNode, directLeg } from '../journey.js';
 import {
-  go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal,
+  go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal, homeFold,
   entryPhotoKeys, ensureRouteGraph,
 } from '../main.js';
 
@@ -63,7 +63,12 @@ function regionTitle() {
 function journalCover() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s journal` : 'Your journal', '#me'));
+  // Plain title, no possessive. The topbar gives the title ~102px at 375px and clamps it to
+  // two lines; a name plus a long noun overflowed it silently (same fix as Dictionary in
+  // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
+  // buttons that lead here, which is where it reads as a nice touch rather than as an
+  // overflowing heading.
+  wrap.append(topbar('Journal', '#me'));
   const n = journalEntries().length;
   const book = h('button', { class: 'book closed', 'aria-label': 'Open journal', onclick: () => go('#journal-open') }, [
     h('div', { class: 'book-spine' }),
@@ -82,7 +87,7 @@ function journalCover() {
 function journalTOC() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s adventures` : 'Your adventures', '#journal'));
+  wrap.append(topbar('Adventures', '#journal'));
   const entries = journalEntries();
   const spread = h('div', { class: 'book-open page-enter' }, [
     h('div', { class: 'page page-left' }, [
@@ -742,7 +747,7 @@ let addingStop = false;
 export function journeyScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s journey` : 'Your journey', '#me'));
+  wrap.append(topbar('Journey', '#me'));
 
   const stops = journeyStops();
   const st = trailStats();
@@ -778,9 +783,21 @@ export function journeyScreen() {
   // about what is shown or which pin is lit.
   const holder = h('div', { class: 'jr-live-wrap' });
   const canvas = h('div', { class: 'jr-map-live' });
-  holder.append(canvas);
+  // Until the raster tiles arrive the map draws the offline geometry — cream landmasses and red
+  // border lines. Correct as a fallback, but left unlabelled it simply reads as "the map is just
+  // country outlines with no detail", which is exactly how it was reported. Say what is
+  // happening; onReady (js/map.js) clears this the moment the map has finished drawing.
+  const loading = h('div', { class: 'jr-map-loading' }, [
+    h('span', { 'aria-hidden': 'true' }, '🛰'),
+    h('span', {}, 'Loading satellite imagery…'),
+  ]);
+  canvas.append(loading);
+  const zoomHint = h('p', { class: 'tiny muted jr-map-hint' },
+    'Pinch, or use + / −, to zoom right in — the imagery goes down to street level. Drag to pan, 🗺/🛰 swaps map and satellite.');
+  holder.append(canvas, zoomHint);
   const panel = h('div', { class: 'jr-panel' });
-  wrap.append(holder, panel);
+  // Foldable like every other section on the app, open by default because it is the screen.
+  wrap.append(homeFold('🗺 Your map', holder, 'journeyMapOpen'), panel);
 
   let selected = -1;
   let mapCtrl = null;
@@ -848,6 +865,7 @@ export function journeyScreen() {
     satellite: store.profile.prefs.journeyMapSat !== false,
     styleToggle: true,
     onStyleChange: (on) => { store.profile.prefs.journeyMapSat = on; save(); },
+    onReady: () => { try { loading.remove(); } catch { /* already gone */ } },
   })).then((c) => {
     mapCtrl = c;
     if (selected >= 0) c.setSelected(String(selected));
@@ -968,7 +986,7 @@ export function journeyScreen() {
       ]));
     }
   });
-  wrap.append(list);
+  wrap.append(collapsibleCard(list, 'journeyStopsOpen'));
 
   // For a place visited without the app open — the gap the automatic pins cannot close on
   // their own. Location comes from the same curated city list a trip stop matches against

@@ -67,7 +67,10 @@ export function familyScreen(cc) {
   const f = getFamily(cc);
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Travelling with kids', c ? `#country-${cc}` : '#home'));
+  // 'With kids', not 'Travelling with kids': the topbar title column is 102px at 375px and
+  // clamps to two lines, and the long form needed three — it rendered truncated. The nav
+  // manifest keeps the full name, which is where a traveller reads it before tapping.
+  wrap.append(topbar('With kids', c ? `#country-${cc}` : '#home'));
   if (!f) { wrap.append(h('p', { class: 'empty' }, 'Family guidance for this country is on the way.')); mount(wrap, 'home'); return; }
   wrap.append(h('div', { class: 'banner' }, 'Orientation for families. Schools, childcare and venues change their fees, hours and enrolment — confirm directly before you rely on any of it.'));
   if (f.intro) wrap.append(h('p', {}, f.intro));

@@ -624,7 +624,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.510.0';
+const APP_VERSION = 'mk-v0.511.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -829,7 +829,7 @@ export function topbar(title, backHash) {
   const hash = location.hash || '';
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
   const onSos = hash.startsWith('#sos');
-  const onSettings = hash.startsWith('#settings');
+  const onSearch = hash.startsWith('#search');
   const iconBtn = (label, target, svg) =>
     h('button', { class: 'topbar-ic', 'aria-label': label, title: label, onclick: () => go(target), html: svg });
   // Online/offline: one tap flips it and re-renders in place, from every screen — moved here
@@ -859,7 +859,17 @@ export function topbar(title, backHash) {
       title: netOnline ? 'Online' : 'Offline', onclick: () => { const on = !netOnline; setNetMode(on ? 'online' : 'offline'); if (on) ratesOnConsent(); render(); },
     }, netOnline ? '📶' : '✈️'),
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
-    onSettings ? null : iconBtn('Settings', '#settings', ICON.gear),
+    // Find anything, from anywhere — a magnifying glass rather than the full-width
+    // "🔎 Search everything" button that used to sit partway down Home. Search is the
+    // fastest route to any of the 56 features, and it was reachable only from one screen,
+    // below the fold, in two of three trip phases.
+    //
+    // It REPLACES Settings here rather than joining it. This row is only 343px at 375px and
+    // already gave the screen's own title just 102px of that; a seventh control would have
+    // truncated titles again (see the dictionary fix in mk-v0.510.0). Settings is the right
+    // one to lose: it is not a control anybody needs mid-moment, and it keeps its place in
+    // the YOU tab's "Settings & help" section, one tap away, exactly like every other feature.
+    onSearch ? null : iconBtn('Search everything', '#search', ICON.search),
     // Persistent safety anchor: emergency help one tap from every screen (kept as the
     // bold red marker so it stands out from the neutral menu icons).
     onSos ? null : h('button', { class: 'topbar-sos', 'aria-label': 'Emergency help', title: 'Emergency help', onclick: () => go('#sos') }, '🆘'),
@@ -2750,7 +2760,7 @@ export function homeFold(label, inner, prefKey, { defaultOpen = true, action = n
 // being listed here simply keeps its own toggle and misses the bulk control, rather than
 // breaking it.
 export const HOME_FOLD_KEYS = [
-  'quickAccessOpen', 'homeRecentsOpen', 'homeIdentifyOpen', 'homeRightNowOpen',
+  'quickAccessOpen', 'homeRecentsOpen', 'homeIdentifyOpen', 'homeStageOpen', 'homeRightNowOpen',
   'homeBudgetOpen', 'homeNextStopOpen', 'homeWeatherOpen', 'whereYouAreOpen',
   'homeDoorsOpen', 'homeGiveBackOpen',
 ];
@@ -7213,7 +7223,12 @@ function tripVisitRow(visit, place, prefix = '', extraChip = null) {
 function tripScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s trip` : 'Your trip', '#me'));
+  // Plain title, no possessive. The topbar gives the title ~102px at 375px and clamps it to
+  // two lines; a name plus a long noun overflowed it silently (same fix as Dictionary in
+  // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
+  // buttons that lead here, which is where it reads as a nice touch rather than as an
+  // overflowing heading.
+  wrap.append(topbar('Your trip', '#me'));
 
   // itinerary
   const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);

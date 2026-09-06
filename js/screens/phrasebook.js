@@ -33,7 +33,7 @@ import { h, debounce } from '../util.js';
 // js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
-import { field, selectEl, openModal, confirmAction, online, collapsibleCard } from '../ui-widgets.js';
+import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
@@ -52,7 +52,7 @@ const { DIET_LABEL, joinList } = Diet;
 // same GPS-first/focus-second/activeCountry-last resolver places.js's map uses to pick a
 // city — reused here so "what language/country am I in" agrees with "what city is my map on"
 // instead of reading the (possibly stale, pre-GPS) activeCountry state directly).
-import { go, mount, topbar, langForCountry, oneTimeHint, contextNow, inferPhase, focusSpot } from '../main.js';
+import { go, mount, topbar, langForCountry, oneTimeHint, contextNow, inferPhase, focusSpot, render } from '../main.js';
 
 // Re-exported for the modules that historically imported them from here; new callers
 // should import from ../phrase-ui.js directly.
@@ -498,7 +498,15 @@ export function phrasebookScreen(lang) {
     if (c) trHost.append(c);
   };
   paintTranslations();
-  if (online()) wrap.append(liveTranslateBox(code, book.label, book.locale, paintTranslations));
+  // ALWAYS render something here. This used to be `if (online())`, which meant the entire
+  // Say-it feature — the reason most travellers open Talk — simply was not on the screen for
+  // anyone whose network question was unanswered. netMode defaults to 'ask', and online()
+  // treats 'ask' as offline, so that is every new install: the traveller saw a phrasebook and
+  // concluded Talk was broken. A feature that needs a connection must SAY it needs one and
+  // offer the switch; it must never quietly not exist.
+  wrap.append(online()
+    ? liveTranslateBox(code, book.label, book.locale, paintTranslations)
+    : offlineTranslateBox(code, book.label));
   wrap.append(trHost);
 
   // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
@@ -920,6 +928,25 @@ function myTranslationsCard(code, label, locale, onChange) {
     h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'Open your dictionary →'),
   ]));
   return collapsibleCard(card, 'talkTranslationsOpen', true);
+}
+
+
+// What "Say it in X" looks like with no connection — or, far more often, with the network
+// question never answered. Same card, same heading, so the feature is visibly THERE and its
+// absence is never mistaken for a broken app. One tap turns the connection on and re-renders
+// straight into the working control; nothing is fetched before that tap, so the privacy
+// promise the rest of the app makes is kept exactly.
+function offlineTranslateBox(code, label) {
+  const asking = netMode() !== 'offline';   // 'ask' — never answered — versus a real choice
+  const box = h('div', { class: 'card translate-card' }, [
+    h('h2', {}, `Say it in ${langFlag(code)} ${label}`.replace('  ', ' ')),
+    h('p', { class: 'muted mytr-note' }, asking
+      ? `Translating anything you type needs an internet connection, and the app has not been given permission to use one yet.`
+      : `You are in offline mode, so live translation is switched off. The ${label} phrasebook below works with no connection at all.`),
+    h('button', { class: 'btn block', onclick: () => { setNetMode('online'); render(); } }, '📶 Turn on internet and translate'),
+    h('p', { class: 'tiny muted mytr-foot' }, `Everything below — the ${label} phrasebook, your dictionary and My translations — works offline either way.`),
+  ]);
+  return box;
 }
 
 // Speak/type-in-English → local-language text + spoken audio. Works with no setup
