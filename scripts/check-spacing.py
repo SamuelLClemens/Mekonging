@@ -47,8 +47,8 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        342,
-        164
+        312,
+        150
     ],
     "js/place-ui.js": [
         8,
@@ -62,9 +62,17 @@ CEILING = {
         22,
         10
     ],
+    "js/screens/export.js": [
+        6,
+        1
+    ],
     "js/screens/family.js": [
         6,
         2
+    ],
+    "js/screens/giveback.js": [
+        11,
+        6
     ],
     "js/screens/home.js": [
         7,
@@ -96,6 +104,10 @@ CEILING = {
     ],
     "js/screens/share-journey.js": [
         15,
+        7
+    ],
+    "js/screens/vault.js": [
+        13,
         7
     ],
     "js/screens/visitors.js": [
