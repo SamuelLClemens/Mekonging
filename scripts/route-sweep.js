@@ -179,7 +179,18 @@ async function routeSweep(opts) {
     // the topbar and the tab bar and nothing whatsoever between them — while the shortest
     // DESIGNED empty state, #journal, renders 88 and #nearby 237. Under 70 there is no screen
     // body at all, which is a defect; short-but-present is a copy question, not a bug.
-    if (text.length < 70) row.flags.push('SCREEN RENDERS NOTHING');
+    // The two failures that a character count alone reports as merely "short". Both have now
+    // happened: a lazy screen module whose import throws lands on the router's honest
+    // "could not open" card (~200 characters), and a syntax error in main.js itself leaves
+    // the app on its splash forever (~55 characters on every route at once). Twelve guards
+    // were green for both, because none of them parses JavaScript.
+    if (/This screen could not open/.test(text)) {
+      const detail = [...root.querySelectorAll('details, pre, code, .muted')]
+        .map((n) => (n.textContent || '').trim()).filter(Boolean).pop() || '';
+      row.flags.push('SCREEN FAILED TO OPEN — ' + detail.slice(-90));
+    } else if (/Loading your companion/.test(text)) {
+      row.flags.push('APP NEVER BOOTED — main.js did not evaluate');
+    } else if (text.length < 70) row.flags.push('SCREEN RENDERS NOTHING');
     else if (text.length < 260) row.flags.push('very short — is the empty state saying enough?');
     if (!heads.length) row.flags.push('NO HEADING');
     // A <details> inside a <summary> concatenates the inner element's whole body onto the

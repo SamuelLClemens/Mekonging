@@ -167,7 +167,7 @@ function allSpecies(filter = {}) { return _natureMod ? _natureMod.allSpecies(fil
 function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; }
 
 // ---- lazy screen modules ----------------------------------------------------
-// Fifteen screen modules are loaded on demand rather than statically imported. Every one of them
+// Twenty-four screen modules are loaded on demand rather than statically imported. Every one of them
 // is reached ONLY through the router (their exports are used nowhere else in this file — the
 // one exception is familyCard, which the country/explore hub renders, so 'explore' and
 // 'country' request the family module below). Together they were 184 KB of the eagerly-parsed
@@ -196,6 +196,15 @@ const SCREEN_LOADERS = {
   vault: (b) => import('./screens/vault.js' + b),
   export: (b) => import('./screens/export.js' + b),
   giveback: (b) => import('./screens/giveback.js' + b),
+  circle: (b) => import('./screens/circle.js' + b),
+  produce: (b) => import('./screens/produce.js' + b),
+  schedules: (b) => import('./screens/schedules.js' + b),
+  trip: (b) => import('./screens/trip.js' + b),
+  bargain: (b) => import('./screens/bargain.js' + b),
+  help: (b) => import('./screens/help.js' + b),
+  contributions: (b) => import('./screens/contributions.js' + b),
+  board: (b) => import('./screens/board.js' + b),
+  streetfood: (b) => import('./screens/streetfood.js' + b),
   phrasebook: (b) => import('./screens/phrasebook.js' + b),
   places: (b) => import('./screens/places.js' + b),
   budget: (b) => import('./screens/budget.js' + b),
@@ -216,6 +225,12 @@ const ROUTE_SCREENS = {
   vault: ['vault'],
   export: ['export'],
   donate: ['giveback'],
+  circle: ['circle'], add: ['circle'], in: ['circle'],
+  inbox: ['circle'], thread: ['circle'], msg: ['circle'],
+  produce: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
+  trip: ['trip'], plans: ['trip'], checklist: ['trip'],
+  help: ['help'], feedback: ['help'], contributions: ['contributions'],
+  board: ['board'], streetfood: ['streetfood'],
   phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
   places: ['places'], place: ['places'],
   expenses: ['budget'],
@@ -282,6 +297,11 @@ const ROUTE_DATA = {
   settings: ['accessibility'],
   sounds: ['sounds'],
   species: ['sounds'],
+  // #trip joins #plans here for the same reason #places did above: tripScreen used to live in
+  // main.js, so it was outside check-lazy-data's route-scoped scan set and this route was
+  // unchecked rather than checked-and-clear. Moving it to js/screens/trip.js brought it into
+  // scope, and the guard immediately found the itineraries read that had never been gated.
+  trip: ['itineraries'],
   transport: ['transit'],
   visa: ['visa'],
 };
@@ -619,7 +639,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.516.0';
+export const APP_VERSION = 'mk-v0.517.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2178,6 +2198,17 @@ function accessCard(cc) {
   return card;
 }
 
+// Stayed in main.js when the noticeboard screen moved to js/screens/board.js: the family/baby
+// section below renders the same row shape for its city-by-city supplies list, and that is an
+// eager render path. js/screens/board.js imports it back.
+export function boardRow(title, sub, tip) {
+  return h('div', { class: 'board-row' }, [
+    h('strong', {}, title),
+    sub ? h('div', { class: 'tiny muted' }, sub) : null,
+    tip ? h('div', { class: 'list-note' }, tip) : null,
+  ]);
+}
+
 // ---- TRAVELLING WITH A BABY (nappies, formula, family help) -----------------
 const DIAPER_WHERE = {
   th: 'Cheapest at the big supercentres — Makro, Big C and Lotus’s (house brands plus MamyPoko / Huggies), far cheaper per nappy than 7-Eleven singles. Boots and Watsons pharmacies stock them too but cost more; Villa Market carries imported brands.',
@@ -2294,7 +2325,7 @@ function freshnessNotice(dateStr, officialUrl, officialName, staleDays = 150) {
 // single authoritative portal to deep-link. Same self-checking age logic as visa: quiet
 // "verified" note while fresh, a plain "may be out of date — confirm locally" card once it
 // ages past staleDays. Keeps the honest self-update promise consistent across the app.
-function freshnessLine(dateStr, noun = 'This data', staleDays = 365, label) {
+export function freshnessLine(dateStr, noun = 'This data', staleDays = 365, label) {
   const age = dataAgeDays(dateStr);
   if (age == null) return null;
   const shown = label || dateStr;
@@ -2516,6 +2547,37 @@ export function inferPhase() {
     if (near && near.km <= INFER_IN_REGION_KM) return 'traveling';
   }
   return 'planning';
+}
+
+// Stayed in main.js for the same reason as checklistFor above, which is its only caller
+// here: the pre-trip countdown is an eager render path. js/screens/trip.js imports it back.
+// Does the saved profile match a checklist item's `iff` descriptor? `true` means "set /
+// non-empty"; a scalar matches by equality or, when the pref is an array, by membership.
+export function matchesProfile(iff, prefs) {
+  if (!iff) return true;
+  prefs = prefs || {};
+  for (const [k, want] of Object.entries(iff)) {
+    const have = prefs[k];
+    if (want === true) {
+      if (Array.isArray(have) ? have.length === 0 : !have) return false;
+    } else if (Array.isArray(have)) {
+      if (!have.includes(want)) return false;
+    } else if (have !== want) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Stayed in main.js when the checklist screen moved to js/screens/trip.js: the countdown card
+// below counts the traveller's outstanding pre-trip items, and that is an eager render path.
+// js/screens/trip.js imports it back.
+// The full checklist for a country: its own items plus any profile-matched universal items.
+export function checklistFor(cc) {
+  const prefs = store.profile.prefs || {};
+  const base = CHECKLIST[cc] || [];
+  const extra = (CHECKLIST_UNIVERSAL || []).filter((it) => matchesProfile(it.iff, prefs));
+  return base.concat(extra).filter((it) => matchesProfile(it.iff, prefs));
 }
 
 // ---- Journey companion: countdown (before you leave) + recap (after return) ----
@@ -4454,13 +4516,13 @@ function exploreScreen(argCc) {
 // The just-stepped-off-the-plane front door. Uses the device GPS (offline; last fix
 // cached) to name where you are, order the closest places by distance, and lay out the
 // first-hour essentials — shaped by your profile. Every distance is pure offline maths.
-function nearCat(p) {
+export function nearCat(p) {
   const c = p.categories || [];
   if (p.stayType || c.some((x) => ['hotel', 'stay', 'accommodation', 'guesthouse', 'homestay', 'resort', 'hostel', 'apartment'].includes(x))) return 'stay';
   if (p.isLocal || c.some((x) => ['food', 'restaurant', 'streetfood', 'market', 'cafe'].includes(x))) return 'eat';
   return 'do';
 }
-function catEmoji(c) { return c === 'eat' ? '🍜' : c === 'stay' ? '🛏' : '🎫'; }
+export function catEmoji(c) { return c === 'eat' ? '🍜' : c === 'stay' ? '🛏' : '🎫'; }
 
 // First-hour essentials, lightly tailored to the traveller's party/budget. The first hour
 // happens once, so this is FEATURED (open) only while the traveller is in the "arrived"
@@ -4842,7 +4904,7 @@ const BB_CATS = [
   { id: 'gear', emoji: '🎒', label: 'Gear & bikes', color: '#0891b2', blurb: 'Motorbikes, bicycles, camping kit, a leftover SIM.' },
   { id: 'other', emoji: '📦', label: 'Other', color: '#6b7280', blurb: 'Free giveaways, wanted, or anything else.' },
 ];
-function bbCat(id) { return BB_CATS.find((c) => c.id === id) || { id: 'other', emoji: '📦', label: 'Listing', color: '#6b7280', blurb: '' }; }
+export function bbCat(id) { return BB_CATS.find((c) => c.id === id) || { id: 'other', emoji: '📦', label: 'Listing', color: '#6b7280', blurb: '' }; }
 // Sub-kind options per category (value + labelled option), for the item picker.
 function bbSubKinds(cat) {
   if (cat === 'kids') return [['carseat', '🚼 Car seat'], ['stroller', '🍼 Stroller / pram'], ['carrier', '👶 Baby carrier'], ['toys', '🧸 Toys'], ['clothing', '🧥 Kids clothing'], ['other', '📦 Other kids item']];
@@ -4853,13 +4915,13 @@ const HOUSE_KIND = { room: 'Room / bed', place: 'Whole place', looking: 'Looking
 function fmtMoney(n, cur) { return `${Number(n).toLocaleString(dateLocale(), { maximumFractionDigits: n >= 100 ? 0 : 2 })} ${cur || ''}`.trim(); }
 
 // A listing's one-line headline and a short subline, shared by the card + import views.
-function bbHeadline(cat, d) {
+export function bbHeadline(cat, d) {
   if (cat === 'swap') return `${fmtMoney((d.have && d.have.a) || 0, (d.have && d.have.c) || '?')} → ${(d.want && d.want.c) || '?'}`;
   if (cat === 'ride') return `${d.from || '?'} → ${d.to || '?'}`;
   if (cat === 'house') return d.title || HOUSE_KIND[d.g] || 'Stay share';
   return d.title || 'Item';
 }
-function bbSubline(cat, d) {
+export function bbSubline(cat, d) {
   if (cat === 'ride') return [d.when, d.seats ? `${d.seats} seat${d.seats === 1 ? '' : 's'}` : '', (d.price && d.price.a) ? `${fmtMoney(d.price.a, d.price.c)} share` : ''].filter(Boolean).join(' · ');
   if (cat === 'house') return [HOUSE_KIND[d.g] || '', d.when, (d.price && d.price.a) ? fmtMoney(d.price.a, d.price.c) : ''].filter(Boolean).join(' · ');
   if (cat !== 'swap' && d.price && d.price.a) return fmtMoney(d.price.a, d.price.c);
@@ -4875,7 +4937,7 @@ function bbSafety(cat) {
 }
 
 // Fair mid-market value + an honest "what a booth would keep" range, as text nodes.
-function swapCalcNodes(a, have, want) {
+export function swapCalcNodes(a, have, want) {
   if (have === want) return [document.createTextNode('Pick two different currencies.')];
   if (!a) return [document.createTextNode('Enter an amount to see the fair mid-market value.')];
   const got = convert(a, have, want);
@@ -5134,7 +5196,7 @@ function cityPickGrid(cc, cities, counts) {
 // ---- "For you" personalisation ------------------------------------------------
 // Once the traveller sets a profile (#foryou), lists rank what fits them first:
 // budget tier, kids, long-stay fit and interests all add to a place's base rating.
-function profileIsSet() {
+export function profileIsSet() {
   const p = store.profile.prefs;
   return !!(p.party || p.tripLength || (p.budget && p.budget !== 'flexible') || (p.interests || []).length);
 }
@@ -5890,7 +5952,7 @@ function spiceLabel(s) {
 // (dishes, produce, wildlife). Shows the self-hosted photo when one exists (offline,
 // lazy-loaded); otherwise the same calm emoji placeholder as before, so a row with no photo
 // is visually unchanged. Helps a traveller match a dish / fruit / creature by sight.
-function recogThumb(item, emoji, extra) {
+export function recogThumb(item, emoji, extra) {
   const src = placePhotoSrc(item);
   const cls = extra ? ` ${extra}` : '';
   if (src) return h('img', { class: `species-photo${cls}`, src, alt: '', loading: 'lazy', decoding: 'async' });
@@ -6001,7 +6063,7 @@ function idMovePin(key, dir, groupKeys) {
 }
 // A compact save/remove star for the identify browse lists — quick-pin without opening
 // the detail page. Stops propagation so it never triggers the row's navigation.
-function idPinStar(type, id) {
+export function idPinStar(type, id) {
   const pinned = isIdPinned(type, id);
   return h('button', {
     class: 'id-star' + (pinned ? ' on' : ''),
@@ -6013,7 +6075,7 @@ function idPinStar(type, id) {
 }
 // A full-width save/remove toggle for an identify detail screen. Re-renders the current
 // screen on tap so the label flips immediately and the count stays honest.
-function idPinButton(type, id) {
+export function idPinButton(type, id) {
   const pinned = isIdPinned(type, id);
   return h('button', {
     class: 'btn block id-pin-btn' + (pinned ? ' on' : ''),
@@ -6261,77 +6323,6 @@ function dishScreen(id) {
 }
 
 // ---- MARKET PRODUCE GUIDE (fruit / vegetable / herb) ------------------------
-let produceQuery = '';
-let produceCat = '';
-function produceCard(p) {
-  const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
-  const main = h('button', { class: 'id-cardmain', onclick: () => go(`#produce-${p.id}`) }, [
-    recogThumb(p, p.emoji || (cat ? cat.emoji : '🍈')),
-    h('span', { class: 'grow' }, [
-      h('div', { class: 'en' }, p.name),
-      h('div', { class: 'sci' }, `${(p.names && p.names.th) || ''}${p.season ? ' · ' + p.season : ''}`),
-    ]),
-  ]);
-  return h('div', { class: 'card species-card id-cardrow' }, [main, idPinStar('produce', p.id)]);
-}
-function produceScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Market produce', '#home'));
-  wrap.append(screenHint('Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
-  const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(PRODUCE_CATEGORIES);
-  const chips = h('div', { class: 'chips' }, cats.map((g) =>
-    h('button', { class: 'chip', 'aria-pressed': produceCat === g.id ? 'true' : 'false', dataset: { g: g.id },
-      onclick: () => { produceCat = g.id; chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
-      `${g.emoji} ${g.label}`)));
-  wrap.append(chips);
-  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search produce…', value: produceQuery,
-    oninput: debounce((e) => { produceQuery = e.target.value; renderList(); }, 120) });
-  wrap.append(search);
-  const listEl = h('div', {});
-  wrap.append(listEl);
-  function renderList() {
-    listEl.innerHTML = '';
-    let items = produceByCategory(produceCat);
-    const q = produceQuery.trim().toLowerCase();
-    if (q) items = items.filter((p) => p.name.toLowerCase().includes(q)
-      || Object.values(p.names || {}).some((n) => (n || '').toLowerCase().includes(q) || (n || '').includes(produceQuery.trim())));
-    if (!items.length) { listEl.append(h('p', { class: 'empty' }, 'No produce matches.')); return; }
-    items.forEach((p) => listEl.append(produceCard(p)));
-  }
-  renderList();
-  mount(wrap, '#home');
-}
-function produceDetail(id) {
-  const p = getProduce(id);
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(p ? p.name : 'Produce', '#produce'));
-  if (!p) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
-  const cat = PRODUCE_CATEGORIES.find((c) => c.id === p.category);
-  const langs = [['th', '🇹🇭', 'th-TH'], ['vi', '🇻🇳', 'vi-VN'], ['km', '🇰🇭', 'km-KH'], ['lo', '🇱🇦', 'lo-LA']];
-  const card = h('div', { class: 'card' }, [
-    h('div', { class: 'row-between' }, [
-      h('strong', {}, `${p.emoji || ''} ${p.name}`),
-      cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
-    ]),
-    h('p', { class: 'muted', style: 'margin:6px 0 2px' }, 'Local names (tap 🔊 to hear):'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px' },
-      langs.filter(([k]) => p.names && p.names[k]).map(([k, flag, loc]) => (canSay(loc)
-        ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(p.names[k], loc) }, `${flag} ${p.names[k]} 🔊`)
-        : h('span', { class: 'cat-tag' }, `${flag} ${p.names[k]}`)))),
-  ]);
-  card.append(photoBlock(p, p.name));
-  if (p.season) card.append(h('h3', {}, 'In season'), h('p', {}, p.season));
-  if (p.taste) card.append(h('h3', {}, 'Taste'), h('p', {}, p.taste));
-  if (p.howToEat) card.append(h('h3', {}, 'How to eat'), h('p', {}, p.howToEat));
-  if (p.selectTip) card.append(h('h3', {}, 'Picking a good one'), h('p', {}, p.selectTip));
-  if (p.caution) card.append(h('div', { class: 'warn-note', style: 'margin-top:8px' }, `⚠ ${p.caution}`));
-  if (p.price) card.append(h('p', { style: 'margin-top:10px' }, [h('strong', {}, 'Typical price: '), `${priceLine(p.price.low, p.price.high, p.price.currency)}${p.price.unit ? ' ' + p.price.unit : ''}`]));
-  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Sources: ${p.sources.join('; ')}`));
-  wrap.append(card);
-  wrap.append(idPinButton('produce', p.id));
-  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${p.name} fruit vegetable`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
-  mount(wrap, '#home');
-}
 
 // weatherScreen is the #weather route handler and loads on demand; these three render a
 // forecast away from that route. js/weather.js (the data service) is a different module.
@@ -6339,67 +6330,6 @@ import { wxVizCard, seedWeatherKey, wxDiffDays } from './weather-ui.js';
 
 
 // ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------
-// The timetable is data built into the app bundle — it updates when the app
-// updates. (An in-page "re-sync" fetch would be answered cache-first by the
-// service worker and silently discarded, so we do not pretend to sync.)
-let schedCountry = '';
-function scheduleCard(s) {
-  const c = getCountry(s.country);
-  return h('div', { class: 'card' }, [
-    h('div', { class: 'row-between' }, [
-      h('strong', {}, `${c ? c.flag + ' ' : ''}${s.from} → ${s.to}`),
-      h('span', { class: 'cat-tag' }, s.mode),
-    ]),
-    h('div', { class: 'muted', style: 'margin:2px 0' }, `${s.operator} · ~${s.durationHrs[0]}–${s.durationHrs[1]} h · verified ${s.verified}`),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:8px 0' }, s.departures.map((t) => h('span', { class: 'cat-tag' }, t))),
-    s.note ? h('p', { class: 'muted', style: 'margin:4px 0' }, s.note) : null,
-    s.book ? h('a', { class: 'btn ghost', href: s.book, target: '_blank', rel: 'noopener' }, 'Check / book ↗') : null,
-  ]);
-}
-function schedulesScreen(country) {
-  if (country && getCountry(country)) { setActiveCountry(country); schedCountry = country; }
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Schedules', '#home'));
-  wrap.append(screenHint('Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
-
-  const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
-  const chips = h('div', { class: 'chips' }, filters.map((f) =>
-    h('button', { class: 'chip', 'aria-pressed': schedCountry === f.id ? 'true' : 'false', dataset: { c: f.id },
-      onclick: () => { schedCountry = f.id; chips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.c === f.id ? 'true' : 'false')); renderList(); } },
-      `${f.flag} ${f.name}`)));
-  wrap.append(chips);
-
-  const schedFresh = freshnessLine(SCHEDULES_VERIFIED, 'Reference timetable', 365);
-  if (schedFresh) wrap.append(schedFresh);
-
-  const listEl = h('div', {});
-  wrap.append(listEl);
-  function renderList() {
-    listEl.innerHTML = '';
-    const rows = schedCountry ? schedulesForCountry(schedCountry) : SCHEDULES;
-    if (!rows.length) { listEl.append(h('p', { class: 'empty' }, 'No reference schedules for this country yet.')); return; }
-    // Lead with departures from where the traveller actually is (GPS or focused city), so a
-    // route on the far side of the country never sits on top. The rest collapses behind a tap.
-    const fs = focusSpot(schedCountry || undefined);
-    const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
-    const here = focusCity ? rows.filter((s) => citySlug(s.from) === citySlug(focusCity)) : [];
-    const rest = rows.filter((s) => !here.includes(s));
-    if (here.length) {
-      listEl.append(h('h3', { class: 'cat-title' }, `🚌 Departing ${focusCity} · ${here.length}`));
-      here.forEach((s) => listEl.append(scheduleCard(s)));
-      if (rest.length) {
-        listEl.append(h('details', { class: 'filters-collapse' }, [
-          h('summary', {}, `More schedules${getCountry(schedCountry) ? ' across ' + getCountry(schedCountry).name : ''} · ${rest.length}`),
-          h('div', {}, rest.map((s) => scheduleCard(s))),
-        ]));
-      }
-    } else {
-      rows.forEach((s) => listEl.append(scheduleCard(s)));
-    }
-  }
-  renderList();
-  mount(wrap, '#home');
-}
 
 // ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
 let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
@@ -6516,7 +6446,7 @@ export function placePhotoSrc(p) {
 // A small (44px) recognition thumbnail for compact "near me" rows: a self-hosted photo when
 // one exists, else a calm family-emoji placeholder. Helps a disoriented traveller confirm a
 // place by sight. Hoisted, so the near-me rows above can call it.
-function rnThumb(p) {
+export function rnThumb(p) {
   const src = placePhotoSrc(p);
   if (src) return h('img', { class: 'rn-thumb', src, alt: '', loading: 'lazy', decoding: 'async' });
   const fam = placeFamily(p);
@@ -6907,7 +6837,7 @@ function eventScreen(id) {
 // ---- NATURE FIELD GUIDE -----------------------------------------------------
 let natureQuery = '';
 let natureGroup = '';
-function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
+export function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
 
 // ---- ANIMAL SOUNDS (bundled offline; falls back to iNaturalist online) -----
 // Every species with `call: true` has a self-hosted recording in the SOUNDS registry
@@ -7319,8 +7249,6 @@ function bestListScreen(id) {
 }
 
 // ---- TRIP PLANNER (itinerary + budget) --------------------------------------
-let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
-let placePickerOpenFor = null;  // stop id currently showing its "+ Add a place" saved-places picker, or null
 // A stop's date line: a single arrival day, or an arrive→leave range with an inclusive day count
 // (so "10 days in Chiang Mai" reads as one entry). Tolerates old stops that carry only `date`.
 export function stopDateLabel(s) {
@@ -7330,239 +7258,9 @@ export function stopDateLabel(s) {
   if (from && to && to !== from) return `${from} → ${to} · ${wxDiffDays(from, to) + 1} days`;
   return from || to || '';
 }
-// One "thing to see" on the itinerary — used for both the rows tagged to a stop and the
-// not-yet-scheduled ones, so a note written in either place behaves identically.
-//
-// placeVisits have carried a `note` field since they were introduced, but nothing ever
-// wrote one: addPlaceVisit is only ever called with { placeId, stopId }, so the field was
-// unreachable and every row was a bare place name. The note is the part that makes the
-// itinerary useful — "book three days ahead", "closed Mondays", "go at dawn" — so it is
-// edited here, in place, rather than on a separate screen.
-function tripVisitRow(visit, place, prefix = '', extraChip = null) {
-  const row = h('div', { class: 'trip-visit' });
-  const noteEl = h('div', { class: 'tiny muted trip-visit-note' });
-  const noteBtn = h('button', { class: 'chip' });
-  // The note is written and repainted without a re-render (a re-render would tear down the
-  // button mid-tap), so the chip's own label has to be repainted here too — otherwise it
-  // keeps reading "＋ Note" on a row that now has one.
-  const paintNote = () => {
-    noteEl.textContent = visit.note || '';
-    noteEl.hidden = !visit.note;
-    noteBtn.textContent = visit.note ? '✎' : '＋ Note';
-    noteBtn.setAttribute('aria-label', `${visit.note ? 'Edit' : 'Add'} a note for ${place.name}`);
-  };
-  const editNote = () => {
-    promptAction({
-      title: place.name,
-      body: 'A reminder for when you get there.',
-      label: 'Note',
-      value: visit.note || '',
-      placeholder: 'e.g. book 3 days ahead · closed Mondays',
-      confirmLabel: 'Save',
-      maxLength: 160,
-      multiline: true,
-    }).then((note) => {
-      // null = cancelled. '' is a real answer here (unlike a collection name): clearing the
-      // field is how a traveller deletes a note they no longer need.
-      if (note == null) return;
-      updatePlaceVisit(visit.id, { note });
-      paintNote();
-    });
-  };
-  noteBtn.addEventListener('click', editNote);
-  paintNote();
-  row.append(h('div', { class: 'row-between' }, [
-    h('button', { class: 'linklike', onclick: () => go(`#place-${place.id}`) }, `${prefix}${place.name}`),
-    h('div', { class: 'chips' }, [
-      extraChip,
-      noteBtn,
-      h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
-    ]),
-  ]));
-  row.append(noteEl);
-  return row;
-}
 
-function tripScreen() {
-  const wrap = h('div', { class: 'screen' });
-  const name = (store.profile.name || '').trim();
-  // Plain title, no possessive. The topbar gives the title ~102px at 375px and clamps it to
-  // two lines; a name plus a long noun overflowed it silently (same fix as Dictionary in
-  // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
-  // buttons that lead here, which is where it reads as a nice touch rather than as an
-  // overflowing heading.
-  wrap.append(topbar('Your trip', '#me'));
-
-  // itinerary
-  const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);
-  const stops = store.trip.stops;
-  // Hoisted above the loop: reused both for the existing "quick-add a stop" chips further down
-  // and for each stop's own "+ Add a place" picker (S4 — place-linked trip stops) below.
-  const saved = store.favorites.map(resolveItem).filter(Boolean);
-  if (!stops.length) itin.append(h('p', { class: 'muted' }, 'Add the places or cities you plan to visit, in order.'));
-  stops.forEach((s, i) => {
-    // Inline editor when this stop is open for correction — fix a typo'd name or a wrong date.
-    if (editStopId === s.id) {
-      const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.title });
-      const dt = h('input', { 'aria-label': 'Arrive date', type: 'date', value: s.date || '' });
-      const dt2 = h('input', { 'aria-label': 'Leave date', type: 'date', value: s.endDate || '' });
-      itin.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
-        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t,
-          h('div', { class: 'trip-dates' }, [
-            h('label', { class: 'trip-date-lbl' }, ['Arrive', dt]),
-            h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', dt2]),
-          ])]),
-        h('div', { class: 'chips' }, [
-          h('button', { class: 'btn', onclick: () => { updateStop(s.id, { title: t.value.trim() || s.title, date: dt.value, endDate: dt2.value }); editStopId = null; go('#trip'); } }, 'Save'),
-          h('button', { class: 'btn ghost', onclick: () => { editStopId = null; render(); } }, 'Cancel'),
-        ]),
-      ]));
-      return;
-    }
-    itin.append(h('div', { class: 'row-between trip-stop' }, [
-      h('div', {}, [h('strong', {}, `${i + 1}. ${s.title}`), stopDateLabel(s) ? h('div', { class: 'muted' }, stopDateLabel(s)) : null]),
-      h('div', { class: 'cats' }, [
-        h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editStopId = s.id; render(); } }, '✎'),
-        h('button', { class: 'chip', 'aria-label': 'Move up', disabled: i === 0 ? '' : null, onclick: () => { moveStop(s.id, -1); go('#trip'); } }, '↑'),
-        h('button', { class: 'chip', 'aria-label': 'Move down', disabled: i === stops.length - 1 ? '' : null, onclick: () => { moveStop(s.id, 1); go('#trip'); } }, '↓'),
-        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { confirmAction({ title: 'Remove this stop?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeStop(s.id); go('#trip'); } }); } }, '✕'),
-      ]),
-    ]));
-    // S4 — places tagged to this leg (a stop and a place are not 1:1, so this is its own list;
-    // see addPlaceVisit in state.js). Tagged from placeScreen / Explore / Places cards.
-    const visits = visitsForStop(s.id).map((v) => ({ visit: v, place: resolveItem(v.placeId) })).filter((x) => x.place);
-    if (visits.length) {
-      itin.append(h('p', { class: 'muted', style: 'margin:6px 0 2px 22px;font-size:12px' }, 'Things to see here:'));
-      itin.append(h('div', { class: 'trip-visits' }, visits.map(({ visit, place }) => tripVisitRow(visit, place, '📍 '))));
-    }
-    if (placePickerOpenFor === s.id) {
-      const pickable = saved.filter((sp) => !visits.some((x) => x.place.id === sp.id));
-      itin.append(h('div', { class: 'trip-visit' }, pickable.length
-        ? h('div', { class: 'chips' }, pickable.map((sp) => h('button', {
-            class: 'chip', onclick: () => { addPlaceVisit({ placeId: sp.id, stopId: s.id }); placePickerOpenFor = null; go('#trip'); },
-          }, sp.name)))
-        : h('p', { class: 'muted', style: 'font-size:12px;margin:2px 0' }, 'Nothing saved yet — save places from Explore or Places, then add them here.')));
-    } else {
-      itin.append(h('button', { class: 'chip', style: 'margin:4px 0 4px 22px', onclick: () => { placePickerOpenFor = s.id; render(); } }, '+ Add a place'));
-    }
-  });
-  // S4 — places added from Explore/a place page before this trip has a matching leg yet
-  // (or left unscheduled on purpose). Nothing is ever blocked on a leg existing first.
-  const unscheduled = unscheduledVisits().map((v) => ({ visit: v, place: resolveItem(v.placeId) })).filter((x) => x.place);
-  if (unscheduled.length) {
-    itin.append(h('div', { class: 'trip-stop' }, [
-      h('strong', {}, '📍 Not scheduled yet'),
-      h('div', { class: 'trip-visits' }, unscheduled.map(({ visit, place }) =>
-        tripVisitRow(visit, place, '', stops.length ? h('button', { class: 'chip', onclick: () => tripVisitSheet(place.id) }, '→ Assign') : null))),
-    ]));
-  }
-  const stopName = h('input', { 'aria-label': 'Stop name', type: 'text', placeholder: 'Place or city' });
-  const stopDate = h('input', { 'aria-label': 'Arrive date', type: 'date' });
-  const stopEnd = h('input', { 'aria-label': 'Leave date', type: 'date' });
-  itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName,
-    h('div', { class: 'trip-dates' }, [
-      h('label', { class: 'trip-date-lbl' }, ['Arrive', stopDate]),
-      h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', stopEnd]),
-    ]),
-    h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
-    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: getActiveCountry(), date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
-  // quick add from saved (`saved` is hoisted above the stops loop — see comment there)
-  if (saved.length) {
-    itin.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Quick-add from saved:'));
-    itin.append(h('div', { class: 'chips' }, saved.slice(0, 12).map((p) => h('button', { class: 'chip', onclick: () => { addStop({ title: p.name, country: p.country }); go('#trip'); } }, p.name))));
-  }
-  wrap.append(itin);
-
-  // share this trip with a travel companion (backendless — link carries the stops)
-  if (store.trip.stops.length) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('h3', {}, 'Share this trip'),
-      h('p', { class: 'muted' }, 'Send your itinerary to a travel companion — they can copy the stops straight into their own trip.'),
-      shareButton('📤 Share my trip', 'My Mekong trip', () => shareUrl('in', encodeShare('trip', { stops: store.trip.stops.map((s) => ({ t: s.title, c: s.country, d: s.date, e: s.endDate })), notes: store.trip.notes || '' }, ensureMe()))),
-    ]));
-  }
-
-  // budget log
-  const bud = h('div', { class: 'card' }, [h('h2', {}, 'Budget log')]);
-  const home = homeCurrency();
-  const totals = {};
-  store.trip.budgetLog.forEach((b) => { const c = b.currency || '?'; totals[c] = (totals[c] || 0) + (parseFloat(b.amount) || 0); });
-  if (Object.keys(totals).length) {
-    bud.append(h('p', { class: 'fair' }, 'Total: ' + Object.entries(totals).map(([c, v]) => `${v.toLocaleString()} ${c}`).join(' · ')));
-    // Single grand total converted to the traveller's home currency (live or cached
-    // offline rates). Flag if any currency has no known rate so the figure is honest.
-    let homeSum = 0, allKnown = true;
-    for (const [c, v] of Object.entries(totals)) {
-      if (c === home) { homeSum += v; continue; }
-      const conv = convert(v, c, home);
-      if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
-    }
-    if (homeSum > 0 && Object.keys(totals).some((c) => c !== home)) {
-      bud.append(h('p', { class: 'muted', style: 'margin:-4px 0 0' },
-        `≈ ${Math.round(homeSum).toLocaleString()} ${home} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
-    }
-  }
-  store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));
-  wrap.append(bud);
-  // Same "Log an expense" card as Budget & Expenses (#expenses) — that screen is the master;
-  // this used to be its own, slightly different inline form (no date, no smart title chips).
-  const c = getCountry(getActiveCountry());
-  wrap.append(expenseAddCard({ currency: c ? c.currency : 'THB', afterAdd: () => go('#trip') }));
-  mount(wrap, '#home');
-}
 
 // ---- BARGAIN HELPER ---------------------------------------------------------
-const BARGAIN = {
-  market: { label: 'Market / souvenirs', open: 0.4, aim: 0.6, tip: 'Start around 40% of the asking price and settle near 60%. Smile, stay friendly, and be ready to walk away politely.' },
-  clothing: { label: 'Clothing / tailor', open: 0.5, aim: 0.7, tip: 'Open near half; bundle several items for a better rate.' },
-  tuktuk: { label: 'Tuk-tuk / taxi', open: 0.5, aim: 0.6, tip: 'Better still: insist on the meter or use Grab/Bolt for an upfront price.' },
-  tour: { label: 'Tour / activity', open: 0.6, aim: 0.8, tip: 'Compare two or three operators; book direct rather than via a tout.' },
-};
-function bargainScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Bargain helper', '#home'));
-  const c = getCountry(getActiveCountry());
-  const price = h('input', { 'aria-label': 'Asking price', type: 'number', inputmode: 'decimal', placeholder: 'Asking price' });
-  const cur = currencySelect(c ? c.currency : 'THB');
-  const ctx = selectEl(Object.entries(BARGAIN).map(([k, v]) => [k, v.label]), 'market', () => {}, 'What you are bargaining for');
-  const out = h('div', { class: 'card' });
-  function recompute() {
-    out.innerHTML = '';
-    const v = parseFloat(price.value) || 0;
-    const b = BARGAIN[ctx.value];
-    if (!v) { out.append(h('p', { class: 'muted' }, 'Enter the asking price to get a suggested counter-offer.')); return; }
-    out.append(h('h3', {}, 'Suggested counter'));
-    out.append(h('p', { class: 'fx-result' }, `Open at ${Math.round(v * b.open).toLocaleString()} ${cur.value}, aim for about ${Math.round(v * b.aim).toLocaleString()} ${cur.value}.`));
-    out.append(h('p', {}, b.tip));
-    out.append(h('button', { class: 'btn ghost', onclick: () => go(`#prices-${getActiveCountry()}`) }, 'Check fair prices'));
-  }
-  price.addEventListener('input', debounce(recompute, 120));
-  cur.addEventListener('change', recompute); ctx.addEventListener('change', recompute);
-  wrap.append(h('div', { class: 'card' }, [field('Asking price', price), field('Currency', cur), field('What are you buying?', ctx)]));
-  wrap.append(out);
-  recompute();
-
-  // Where to buy the everyday essentials cheapest, anchored to where the traveller is.
-  const fc = focusSpot().spot.country || getActiveCountry();
-  const fcName = (getCountry(fc) || {}).name || '';
-  const ess = getEssentials(fc);
-  if (ess && ess.items && ess.items.length) {
-    const card = h('div', { class: 'card' }, [
-      h('h2', {}, `🛒 Cheapest essentials${fcName ? ' in ' + fcName : ''}`),
-      ess.note ? h('p', { class: 'muted', style: 'margin:4px 0 8px' }, ess.note) : null,
-    ]);
-    ess.items.forEach((it) => card.append(h('div', { class: 'list-note' }, [
-      h('strong', {}, `${it.icon || ''} ${it.item}: `), it.cheapest,
-      it.price && it.price !== '—' ? h('span', { class: 'muted' }, ` (${it.price})`) : null,
-      it.esim ? h('div', { class: 'tiny muted', style: 'margin-top:3px' }, it.esim) : null,
-    ])));
-    const slug = citySlug(focusSpot().spot.city || '');
-    if (getBoard(fc, slug)) card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#board-${fc}-${slug}`) }, '📍 Local finds & markets near you'));
-    card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#prices-${fc}`) }, 'See fair prices'));
-    wrap.append(card);
-  }
-  mount(wrap, '#home');
-}
 
 // Budget & Expenses — extracted to js/screens/budget.js (module split; see
 // js/screens/budget.js's own header comment for the extraction rationale).
@@ -7574,63 +7272,7 @@ import {
 } from './budget-ui.js';
 
 // ---- PRE-TRIP CHECKLIST -----------------------------------------------------
-const CK_CAT = { documents: '🛂 Documents', health: '💊 Health', money: '💳 Money', connectivity: '📶 Connectivity', packing: '🎒 Packing', safety: '🛡 Safety & laws' };
 
-// Does the saved profile match a checklist item's `iff` descriptor? `true` means "set /
-// non-empty"; a scalar matches by equality or, when the pref is an array, by membership.
-function matchesProfile(iff, prefs) {
-  if (!iff) return true;
-  prefs = prefs || {};
-  for (const [k, want] of Object.entries(iff)) {
-    const have = prefs[k];
-    if (want === true) {
-      if (Array.isArray(have) ? have.length === 0 : !have) return false;
-    } else if (Array.isArray(have)) {
-      if (!have.includes(want)) return false;
-    } else if (have !== want) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// The full checklist for a country: its own items plus any profile-matched universal items.
-function checklistFor(cc) {
-  const prefs = store.profile.prefs || {};
-  const base = CHECKLIST[cc] || [];
-  const extra = (CHECKLIST_UNIVERSAL || []).filter((it) => matchesProfile(it.iff, prefs));
-  return base.concat(extra).filter((it) => matchesProfile(it.iff, prefs));
-}
-function checklistScreen(countryId) {
-  if (countryId) setActiveCountry(countryId);
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Pre-trip checklist', '#home'));
-  wrap.append(countryChips((id) => go(`#checklist-${id}`)));
-  const items = checklistFor(getActiveCountry());
-  if (!items.length) { wrap.append(h('p', { class: 'empty' }, 'The checklist is being prepared — reconnect once to download it.')); mount(wrap, '#home'); return; }
-  const done = items.filter((it) => isChecked(it.id)).length;
-  wrap.append(h('div', { class: 'banner' }, `${done} of ${items.length} done`));
-  // group by category in CK_CAT order
-  Object.keys(CK_CAT).forEach((cat) => {
-    const group = items.filter((it) => it.cat === cat);
-    if (!group.length) return;
-    wrap.append(h('h2', { class: 'cat-title' }, CK_CAT[cat]));
-    group.forEach((it) => {
-      const row = h('label', { class: 'ck-row' }, [
-        h('input', { type: 'checkbox', checked: isChecked(it.id) ? '' : null, onchange: () => { toggleChecklistItem(it.id); row.classList.toggle('done'); } }),
-        h('div', { class: 'grow' }, [
-          h('strong', {}, [it.title, it.iff ? h('span', { class: 'for-you-tag' }, 'for you') : null]),
-          it.detail ? h('div', { class: 'muted' }, it.detail) : null,
-          it.link ? (it.link.startsWith('#')
-            ? h('button', { class: 'linklike', onclick: (e) => { e.preventDefault(); go(it.link); } }, 'Open in app →')
-            : h('a', { href: it.link, target: '_blank', rel: 'noopener' }, 'Official link ↗')) : null]),
-      ]);
-      if (isChecked(it.id)) row.classList.add('done');
-      wrap.append(row);
-    });
-  });
-  mount(wrap, '#home');
-}
 
 // ---- GLOBAL SEARCH (find anything offline) ----------------------------------
 let searchQuery = '';
@@ -8525,332 +8167,14 @@ function worshipScreen(cc) {
 }
 
 // ---- YOUR CONTRIBUTIONS (on-device points + levels, Local Guides-style) ------
-function contributionsScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Contributions', '#home'));
-  const pts = gamify.contributionPoints(store);
-  const lvl = gamify.levelInfo(pts);
-  const rows = gamify.contributionBreakdown(store);
-  const suggestions = gamify.contributionSuggestions(store);
-
-  // Level card with a progress bar to the next level.
-  wrap.append(h('div', { class: 'card contrib-hero' }, [
-    h('div', { class: 'contrib-badge' }, lvl.emoji),
-    h('h2', { style: 'margin:0' }, `${lvl.title}`),
-    h('p', { class: 'muted', style: 'margin:2px 0 10px' }, `Level ${lvl.level} · ${pts} point${pts === 1 ? '' : 's'}`),
-    h('div', { class: 'contrib-bar' }, [h('span', { style: `width:${Math.round(lvl.pct * 100)}%` })]),
-    h('p', { class: 'muted', style: 'margin:8px 0 0' },
-      lvl.nextTitle ? `${lvl.ptsToNext} point${lvl.ptsToNext === 1 ? '' : 's'} to ${lvl.nextTitle}` : 'You have reached the top level — thank you!'),
-  ]));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, 'Points come from what you add to your own guide. Everything stays on this device — there are no accounts and no leaderboard, just your own progress.'));
-
-  // Ways to earn more (encouragement).
-  if (suggestions.length) {
-    const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Ways to earn more')]);
-    suggestions.forEach((s) => card.append(h('button', { class: 'btn ghost block contrib-suggest btn-spaced', onclick: () => go(s.hash) },
-      `${s.emoji} ${s.text}  ·  +${s.pts}`)));
-    wrap.append(card);
-  }
-
-  // Full breakdown of what counts.
-  const bd = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'What you have added')]);
-  rows.forEach((r) => bd.append(h('div', { class: 'row-between contrib-row' }, [
-    h('span', {}, `${r.emoji} ${r.label}`),
-    h('span', { class: 'muted' }, `${r.count} · ${r.points} pt${r.points === 1 ? '' : 's'}`),
-  ])));
-  wrap.append(bd);
-  wrap.append(h('p', { class: 'disclaimer' }, 'Scoring: review +10, photo +5, journal entry +5, tip +5, pin +3, rating +1, collection +2, calendar entry +1.'));
-  mount(wrap, '#home');
-}
 
 // ---- SETTINGS ---------------------------------------------------------------
 // ---- HELP / FAQ (static, fully offline) -------------------------------------
-function helpScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Help & FAQ', '#home'));
-  wrap.append(screenHint('How Mekonging works, what needs internet, and how your data is kept. This page works offline.'));
-  const faq = (q, a) => h('details', { class: 'card' }, [h('summary', {}, q), typeof a === 'string' ? h('p', {}, a) : a]);
-
-  wrap.append(faq('What works offline, and what needs internet?', h('div', {}, [
-    h('p', {}, 'Almost everything works with no signal, because the guide is stored on your device: the phrasebook, places, food and produce guides, the wildlife field guide, fair prices, transport routes and schedules, border crossings, pools, your journal, trip, calendar, saved places, the document vault, and the base map (coastlines, rivers, borders and your pins).'),
-    h('p', {}, 'A few features need a connection, and each one says so: refreshing the weather, currency rates, live translation, the “Across the web” rating and “Compare & book” links, streamed animal calls, and satellite map imagery. Weather and rates are cached after one online refresh, so you can still read them offline.'),
-  ])));
-  wrap.append(faq('How do I build and log a trip?', h('div', {}, [
-    h('p', {}, '“My trip” holds your itinerary (stops with dates) and a budget log that totals your spending in your home currency. “Travel calendar” schedules stays, meals and activities by day and surfaces festivals falling in your dates. “Travel journal” keeps dated, GPS-stamped entries with photos, and the “Journey map” animates the path between them.'),
-    h('button', { class: 'btn ghost', onclick: () => go('#trip') }, 'Open My trip'),
-  ])));
-  wrap.append(faq('How do ratings work?', 'Each place shows a guidebook score synthesised from public sources, plus an “Across the web” card with snapshots from sites such as TripAdvisor — each stamped with the month it was checked — and live links to compare and book. Your own rating always counts first: rate a place and it becomes the headline score and colours its pin on the map.'));
-  wrap.append(faq('Can I travel my way — with kids, a tent, or for a long stay?', 'On the Places screen you can filter by interests, price, “Good for kids”, stay type (from a tent to a resort) and short- or long-stay. On the map, local (non-tourist) restaurants have their own red pin, and the map key explains every colour.'));
-  wrap.append(faq('Where is my data kept? Is it private?', 'Everything you create — saved places, notes, reviews, pins, journal, trip and calendar — stays on this device only. There are no accounts and nothing is uploaded. The document vault (passports, tickets) is encrypted on-device; if you forget the passcode you can still get back in with the one-time recovery code shown at setup, or by restoring an encrypted backup. The only data that leaves your device is what you actively use online, such as a weather refresh, a translation, or tapping through to a booking site.'));
-  wrap.append(faq('Finding your way around', 'The bottom tabs are Home, Talk (phrasebook), You, Places and Explore. Search on the Home screen looks across places, food, wildlife, phrases and prices at once. Save any place with the ⭐ and organise saves into Collections. On the map (inside Places) you can drop a pin, set “my stay”, measure distances, and save an area for offline satellite imagery.'));
-
-  // Site-wide source register. Individual screens also cite their own sources inline
-  // (via the same "Sources:" line), so every claim is traceable to a primary source.
-  wrap.append(faq('Where does the information come from? (Sources)', h('div', {}, [
-    h('p', {}, 'Guidance is compiled from public, authoritative sources, and each screen also cites its own inline. The main sources across the app:'),
-    h('ul', { class: 'sos-aid' }, [
-      h('li', {}, [h('strong', {}, 'Health & first aid: '), 'World Health Organization and the IFRC / Red Cross; hospitals reflect Joint Commission International accreditation and facilities travellers commonly use.']),
-      h('li', {}, [h('strong', {}, 'Kosher: '), 'Chabad of Thailand, Chabad of Cambodia and the Chabad center directory — only certified-kosher venues, never “kosher-style”.']),
-      h('li', {}, [h('strong', {}, 'Places, worship & maps: '), 'OpenStreetMap contributors and national tourism boards; satellite imagery from Esri / ArcGIS.']),
-      h('li', {}, [h('strong', {}, 'Weather: '), 'Open-Meteo. Exchange rates: open.er-api.com. Live translation: MyMemory.']),
-      h('li', {}, [h('strong', {}, 'Wildlife: '), 'photographs from Wikimedia Commons (Creative Commons, credited on each species); animal calls streamed from Xeno-canto and iNaturalist.']),
-      h('li', {}, [h('strong', {}, 'Ratings: '), 'public snapshots from sites such as TripAdvisor, each stamped with the month it was checked, with live links to the source.']),
-    ]),
-    h('p', { class: 'muted' }, 'Everything here is guidance — always confirm prices, hours, service times and safety with the primary source or locally before you rely on them.'),
-  ])));
-
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Suggest a feature or a correction'),
-    h('p', { class: 'muted' }, 'Spotted something out of date, or want a feature added? Send it over — it helps make the guide better for everyone.'),
-    h('button', { class: 'btn block', onclick: () => go('#feedback') }, '✍️ Send feedback'),
-  ]));
-  wrap.append(h('p', { class: 'disclaimer' }, `Mekonging ${APP_VERSION}. Guidance only — always confirm prices, hours and safety locally.`));
-  mount(wrap, '#home');
-}
 
 // ---- FEEDBACK / SUGGEST (no backend: share sheet, email, or copy) -----------
-// Composes a message the user sends themselves via the OS share sheet, their email
-// app (mailto — recipient is optional and set in Settings), or the clipboard. Nothing
-// is transmitted automatically and no personal address is baked into the app.
-function feedbackScreen(arg) {
-  const wrap = h('div', { class: 'screen' });
-  const place = arg ? resolveItem(arg) : null;
-  wrap.append(topbar(place ? 'Suggest an edit' : 'Send feedback', place ? `#place-${place.id}` : '#help'));
-  wrap.append(screenHint(place
-    ? `Suggest a correction or addition for “${place.name}”. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically.`
-    : 'Tell us what to fix, add or improve. Your message opens in your share sheet, email app, or clipboard — nothing is sent automatically, and no account is needed.'));
-
-  const card = h('div', { class: 'card' });
-  let category = place ? 'correction' : 'feedback';
-  card.append(field('Type', selectEl([['feedback', 'General feedback'], ['feature', 'Feature idea'], ['correction', 'Correct information']], category, (v) => { category = v; })));
-  const subject = h('input', { type: 'text', placeholder: 'Short summary', value: place ? `Correction: ${place.name}` : '' });
-  card.append(field('Subject', subject));
-  const body = h('textarea', { class: 'ta', rows: '6', placeholder: place ? 'What should change, and what is correct?' : 'Your message…' });
-  card.append(field('Message', body));
-  const fromEmail = h('input', { type: 'email', placeholder: 'you@example.com', value: store.profile.contactEmail || '' });
-  fromEmail.addEventListener('change', () => { store.profile.contactEmail = fromEmail.value.trim(); save(); });
-  card.append(field('Your email (optional, so we can reply)', fromEmail));
-  wrap.append(card);
-
-  function compose() {
-    const catLabel = { feedback: 'Feedback', feature: 'Feature idea', correction: 'Correction' }[category] || 'Feedback';
-    const text = [
-      body.value.trim(), '',
-      '— sent from Mekonging —',
-      `Type: ${catLabel}`,
-      place ? `Place: ${place.name} (${place.id})` : null,
-      fromEmail.value.trim() ? `Reply-to: ${fromEmail.value.trim()}` : null,
-      `App: ${APP_VERSION}`,
-      // Anything the app caught since this device last cleared it. Attached automatically
-      // because the traveller cannot be expected to have written down an error they saw
-      // three screens ago — and without it, "it stopped working" is unactionable.
-      ...(recentErrors().length
-        ? ['', 'Recent errors:', ...recentErrors().slice(0, 5).map((e) => `  ${new Date(e.at).toISOString()} ${e.kind} ${e.hash} — ${e.msg}`)]
-        : []),
-    ].filter((x) => x != null).join('\n');
-    return { subject: `[Mekonging] ${catLabel}${subject.value.trim() ? ': ' + subject.value.trim() : ''}`, text };
-  }
-  const status = h('p', { class: 'muted' });
-  const actions = h('div', { class: 'card' });
-  if (typeof navigator !== 'undefined' && navigator.share) {
-    actions.append(h('button', { class: 'btn block', onclick: async () => {
-      const m = compose();
-      try { await navigator.share({ title: m.subject, text: m.text }); status.textContent = 'Shared — choose where to send it.'; }
-      catch { /* user cancelled */ }
-    } }, '📤 Share…'));
-  }
-  actions.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => {
-    const m = compose();
-    const to = (store.profile.feedbackTo || '').trim();
-    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.text)}`;
-    status.textContent = to ? 'Opening your email app…' : 'Opened your email app — add a recipient, or set a feedback address in Settings.';
-  } }, '✉️ Email'));
-  actions.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
-    const m = compose();
-    try { await navigator.clipboard.writeText(`${m.subject}\n\n${m.text}`); status.textContent = 'Copied to clipboard — paste it wherever you like.'; }
-    catch { status.textContent = 'Could not copy automatically — select your message and copy it.'; }
-  } }, '📋 Copy'));
-  actions.append(status);
-  wrap.append(actions);
-  mount(wrap, place ? `#place-${place.id}` : '#help');
-}
 
 // ---- TRAVEL CIRCLE (backendless share / connect / message) ------------------
-// No account, no server: a user's traveller card and (later) messages travel
-// only inside links they choose to share. Imported contact fields are UNTRUSTED
-// and are rendered exclusively as text children (never innerHTML).
-function avatarChip(av) { return h('span', { class: 'avatar', 'aria-hidden': 'true' }, av || '🧭'); }
-function contactRow(c, actionEl) {
-  return h('div', { class: 'row-between contact-row' }, [
-    h('div', { class: 'contact-id' }, [
-      avatarChip(c.avatar),
-      h('div', {}, [h('strong', {}, c.name || 'Traveller'), c.bio ? h('div', { class: 'tiny muted' }, c.bio) : null]),
-    ]),
-    actionEl || null,
-  ]);
-}
-// Own-card render mode: false = the saved card as a read-only summary (matches how
-// every OTHER contact's card renders via contactRow), true = the editable form.
-// Module state, not a route — Save/Edit/Cancel just flip this and re-render #circle
-// in place, same pattern as editWithdrawalId. Fixes a real bug: this used to always
-// render the raw inputs, pre-filled from the just-saved values, so tapping "Save
-// card" appeared to do nothing (the form you were still looking at never changed).
-let editingMyCard = false;
-function circleScreen() {
-  const me = ensureMe();
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Travel circle', '#home'));
-  wrap.append(h('p', { class: 'muted' },
-    'Connect with other travellers — no account, no server. Your card and messages travel only inside links you choose to share; nothing is uploaded and nothing leaves this device on its own.'));
-  wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#inbox') }, `📥 Shared with you (${getInbox().length})`));
 
-  // --- traveller board (peer bulletin board; on-device, shared by link) ---
-  const nListings = getListings().length;
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Traveller board'),
-    h('p', { class: 'muted' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. On-device; a listing travels only inside a link you share.'),
-    h('button', { class: 'btn ghost block', onclick: () => go('#exchange') }, `🧭 Open the board${nListings ? ` (${nListings})` : ''}`),
-  ]));
-
-  // --- your card: read-only summary once saved, editable form on request ---
-  const cardBox = h('div', { class: 'card' });
-  if (editingMyCard || !me.name) {
-    const nameIn = h('input', { type: 'text', maxlength: '40', placeholder: 'Display name (e.g. Sam)', 'aria-label': 'Your display name', value: me.name || '' });
-    const avIn = h('input', { type: 'text', maxlength: '4', 'aria-label': 'Your emoji', value: me.avatar || '🧭', style: 'width:64px; text-align:center' });
-    const bioIn = h('textarea', { class: 'ta', maxlength: '160', rows: '2', placeholder: 'One line about you (optional)' }, me.bio || '');
-    cardBox.append(
-      h('h2', {}, 'Your traveller card'),
-      h('div', { class: 'field' }, [h('label', {}, 'Emoji & name'), h('div', { style: 'display:flex; gap:8px' }, [avIn, nameIn])]),
-      field('Short bio', bioIn),
-      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
-        me.name ? h('button', { class: 'btn ghost', onclick: () => { editingMyCard = false; go('#circle'); } }, 'Cancel') : h('span', {}),
-        h('button', { class: 'btn', onclick: () => { setMe({ name: nameIn.value, avatar: avIn.value, bio: bioIn.value }); editingMyCard = false; go('#circle'); } }, 'Save card'),
-      ]),
-    );
-  } else {
-    cardBox.append(
-      h('h2', {}, 'Your traveller card'),
-      contactRow(me, h('button', { class: 'chip', 'aria-label': 'Edit your traveller card', onclick: () => { editingMyCard = true; go('#circle'); } }, '✎ Edit')),
-    );
-  }
-  wrap.append(cardBox);
-
-  // --- invite a friend (share your card) ---
-  // Every path here hands off to an app the traveller already has (WhatsApp, Messages, or
-  // the OS share sheet) with the invite link pre-filled — never sent automatically, the
-  // traveller still taps send themselves. No account, no server: the link IS the invite.
-  const status = h('p', { class: 'muted' });
-  const buildUrl = () => shareUrl('add', encodeCard(ensureMe()));
-  const inviteMsg = () => `Join me on Mekonging — a free, offline travel app for Thailand, Vietnam, Cambodia & Laos. Add me: ${buildUrl()}`;
-  const shareCard = h('div', { class: 'card' });
-  shareCard.append(h('h2', {}, '➕ Invite a friend'));
-  shareCard.append(h('p', { class: 'muted' }, 'Send this to another traveller. When they open it, you are added to each other’s circle. On a phone, “Share” can send it over AirDrop or Nearby Share with no internet at all.'));
-
-  // WhatsApp — wa.me with no number opens WhatsApp's OWN "choose a chat" picker (exactly
-  // like tapping New chat inside WhatsApp), so picking who to invite is entirely WhatsApp's
-  // native contact list, not anything this app can or does see.
-  shareCard.append(h('button', { class: 'btn block', onclick: () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(inviteMsg())}`, '_blank', 'noopener');
-  } }, '💬 Invite via WhatsApp'));
-
-  // Phone contacts — Contact Picker API (Chrome/Android; feature-detected, most other
-  // browsers simply never show this button). Each tap is a one-off native picker the
-  // traveller explicitly opens and chooses from — no standing access, nothing auto-read.
-  const contactPickerOk = typeof navigator !== 'undefined' && 'contacts' in navigator
-    && typeof window !== 'undefined' && 'ContactsManager' in window;
-  if (contactPickerOk) {
-    const pickedBox = h('div', {});
-    shareCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
-      let picked;
-      try { picked = await navigator.contacts.select(['name', 'tel'], { multiple: true }); }
-      catch { return; } // cancelled, or the browser/user denied the picker
-      pickedBox.replaceChildren();
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
-      (picked || []).forEach((p) => {
-        const nm = (p.name && p.name[0]) || 'Contact';
-        const tel = (p.tel && p.tel[0]) || '';
-        if (!tel) return;
-        const digits = tel.replace(/[^\d]/g, '');
-        const smsUrl = `sms:+${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(inviteMsg())}`;
-        pickedBox.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
-          h('span', {}, nm),
-          h('div', { class: 'cats' }, [
-            h('button', { class: 'chip', onclick: () => window.open(`https://wa.me/${digits}?text=${encodeURIComponent(inviteMsg())}`, '_blank', 'noopener') }, '💬 WhatsApp'),
-            h('button', { class: 'chip', onclick: () => { window.location.href = smsUrl; } }, '✉️ SMS'),
-          ]),
-        ]));
-      });
-      if (!pickedBox.children.length) pickedBox.append(h('p', { class: 'tiny muted' }, 'No phone number on that contact.'));
-    } }, '📇 Invite from phone contacts'));
-    shareCard.append(pickedBox);
-  }
-
-  if (typeof navigator !== 'undefined' && navigator.share) {
-    shareCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
-      try { await navigator.share({ title: 'Add me on Mekonging', text: `${ensureMe().name || 'A traveller'} on Mekonging`, url: buildUrl() }); status.textContent = 'Shared — they can open it to connect.'; }
-      catch { /* cancelled */ }
-    } }, '📤 Share my card…'));
-  }
-  shareCard.append(h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
-    try { await navigator.clipboard.writeText(buildUrl()); status.textContent = 'Link copied — paste it to a friend.'; }
-    catch { status.textContent = 'Could not copy automatically — select the link below to copy it.'; }
-  } }, '🔗 Copy my link'));
-  shareCard.append(h('p', { class: 'tiny muted', style: 'word-break:break-all; margin-top:8px' }, buildUrl()));
-  shareCard.append(status);
-  wrap.append(shareCard);
-
-  // --- your circle ---
-  const contacts = getContacts();
-  const listCard = h('div', { class: 'card' });
-  listCard.append(h('h2', {}, `Your circle (${contacts.length})`));
-  if (!contacts.length) {
-    listCard.append(h('p', { class: 'muted' }, 'No one yet. Share your card, or open a friend’s link to add them.'));
-  } else {
-    contacts.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach((c) => {
-      const cUnread = unreadThreadCount(c.userId);
-      listCard.append(contactRow(c, h('div', { class: 'cats' }, [
-        h('button', { class: 'chip' + (cUnread ? ' budget-red' : ''), onclick: () => go('#thread-' + c.userId) }, cUnread ? `💬 ${cUnread} new` : '💬 Message'),
-        h('button', { class: 'chip', 'aria-label': `Remove ${c.name || 'this contact'} from your circle`, onclick: () => { confirmAction({ title: 'Remove contact?', body: `Remove ${c.name || 'this contact'} from your circle?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeContact(c.userId); go('#circle'); } }); } }, '✕'),
-      ])));
-    });
-  }
-  wrap.append(listCard);
-
-  mount(wrap, '#circle');
-}
-
-function addContactScreen(arg) {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Add to circle', '#circle'));
-  const card = parseCard(arg);
-  if (!card) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('h2', {}, 'This link could not be read'),
-      h('p', { class: 'muted' }, 'The traveller-card link looks invalid or was cut off in transit. Ask them to share it again.'),
-      h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'),
-    ]));
-    mount(wrap, '#circle');
-    return;
-  }
-  const me = ensureMe();
-  const isSelf = card.userId === me.userId;
-  const existing = getContact(card.userId);
-  const box = h('div', { class: 'card' });
-  box.append(contactRow(card));
-  const status = h('p', { class: 'muted' });
-  if (isSelf) {
-    box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, 'This is your own card.'));
-    box.append(h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'));
-  } else {
-    box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, existing ? `${card.name} is already in your circle — you can refresh their card.` : `Add ${card.name} to your travel circle?`));
-    box.append(h('button', { class: 'btn block', onclick: () => { const r = addContact(card); if (r.ok) go('#circle'); else status.textContent = 'Could not add this contact.'; } }, existing ? 'Refresh their card' : `Add ${card.name}`));
-    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#circle') }, 'Not now'));
-  }
-  box.append(status);
-  wrap.append(box);
-  wrap.append(h('p', { class: 'tiny muted' }, 'Adding a contact only stores their card on your device. Nothing is sent anywhere.'));
-  mount(wrap, '#circle');
-}
 
 // A share/copy button that flips its own label to confirm, then reverts. Uses the
 // OS share sheet when available (which can send over AirDrop / Nearby Share with
@@ -8876,250 +8200,6 @@ export function shareButton(label, title, buildUrl, cls = 'btn ghost block') {
   return btn;
 }
 
-// Import screen for a shared place / list / trip (#in-<payload>). All decoded
-// fields are UNTRUSTED and rendered only as text.
-function importShareScreen(arg) {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Shared with you', '#circle'));
-  const s = parseShare(arg);
-  if (!s) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('h2', {}, 'This shared link could not be read'),
-      h('p', { class: 'muted' }, 'It may be invalid or was cut off in transit. Ask the sender to share it again.'),
-      h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'),
-    ]));
-    mount(wrap, '#circle'); return;
-  }
-  // Save to the inbox once (dedupe on identical content so re-opening the link
-  // does not pile up duplicates).
-  const sig = `${s.kind}|${s.from ? s.from.userId : ''}|${JSON.stringify(s.data)}`;
-  if (!getInbox().some((x) => `${x.kind}|${x.from ? x.from.userId : ''}|${JSON.stringify(x.data)}` === sig)) {
-    addInboxItem({ from: s.from, kind: s.kind, data: s.data, msg: s.msg });
-  }
-
-  const box = h('div', { class: 'card' });
-  if (s.from) box.append(contactRow(s.from));
-  if (s.msg) box.append(h('p', { style: 'margin-top:6px' }, s.msg));
-  if (s.kind === 'place') {
-    const exists = getPlace(s.data.id);
-    box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
-    box.append(h('p', { class: 'muted' }, exists ? 'A place they recommend.' : 'A place they recommend — not in your guide, so search for it by name.'));
-    if (exists) box.append(h('button', { class: 'btn block', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
-    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: (e) => { toggleFavorite(s.data.id); e.currentTarget.textContent = '✓ Saved to favourites'; } }, '⭐ Save to favourites'));
-  } else if (s.kind === 'collection') {
-    box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
-    box.append(h('p', { class: 'muted' }, `${s.data.items.length} place${s.data.items.length === 1 ? '' : 's'} in this list.`));
-    box.append(h('ul', {}, s.data.items.slice(0, 40).map((it) => h('li', {}, it.name || it.id))));
-    box.append(h('button', { class: 'btn block', onclick: (e) => {
-      const c = createCollection(s.data.name || 'Shared list', '📥');
-      let n = 0; s.data.items.forEach((it) => { if (getPlace(it.id)) { togglePlaceInCollection(c.id, it.id); n++; } });
-      e.currentTarget.textContent = `✓ Saved (${n} in your guide)`;
-    } }, '＋ Save as a collection'));
-  } else if (s.kind === 'trip') {
-    box.append(h('h2', { style: 'margin-top:8px' }, 'A shared trip'));
-    box.append(h('ol', {}, s.data.stops.slice(0, 40).map((st) => h('li', {}, st.title + (st.date ? ` — ${st.date}` : '')))));
-    box.append(h('button', { class: 'btn block', onclick: (e) => { s.data.stops.forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, '＋ Add these stops to my trip'));
-  } else if (s.kind === 'tip') {
-    box.append(h('h2', { style: 'margin-top:8px' }, `Local tip — ${s.data.city}`));
-    box.append(h('p', {}, s.data.text));
-    const board = getBoard(s.data.cc, s.data.city.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
-    box.append(h('button', { class: 'btn block', onclick: (e) => {
-      const key = board ? `${board.country}-${board.slug}` : `${s.data.cc || 'xx'}-${s.data.city.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-      addBoardPost(key, { topic: s.data.topic, text: `${s.from ? s.from.name + ': ' : ''}${s.data.text}` });
-      e.currentTarget.textContent = '✓ Pinned to your board';
-    } }, '📌 Pin to my noticeboard'));
-    if (board) box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#board-${board.country}-${board.slug}`) }, `📋 Open the ${board.city} board`));
-  } else if (s.kind === 'jelly') {
-    const exists = getPlace(s.data.id);
-    box.append(h('h2', { style: 'margin-top:8px' }, `🪼 Jellyfish sighting — ${s.data.name}`));
-    box.append(h('p', {}, `${SEV_LABEL[s.data.sev] || SEV_LABEL.seen}${s.data.note ? ` — ${s.data.note}` : ''}${s.data.d ? ` · ${fmtReportDate(s.data.d)}` : ''}`));
-    box.append(h('button', { class: 'btn block', onclick: (e) => {
-      addJellyReport(s.data.id, { d: s.data.d || todayKey(), sev: s.data.sev || 'seen', note: s.data.note || '', by: s.from ? s.from.name : 'a traveller' });
-      e.currentTarget.textContent = '✓ Added to this beach';
-    } }, '＋ Add this sighting to the beach'));
-    if (exists) box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${s.data.id}`) }, 'Open this beach'));
-    else box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This beach is not in your guide, so the sighting cannot be pinned to it.'));
-  } else if (s.kind === 'secret') {
-    const exists = getPlace(s.data.id);
-    box.append(h('h2', { style: 'margin-top:8px' }, `🔑 Local secret — ${s.data.name}`));
-    box.append(h('p', {}, s.data.text));
-    if (s.data.by) box.append(h('p', { class: 'tiny muted' }, `Shared by ${s.data.by}`));
-    if (exists) {
-      box.append(h('button', { class: 'btn block', onclick: (e) => { addPlaceSecret(s.data.id, { text: s.data.text, by: s.data.by || (s.from ? s.from.name : 'a traveller') }); e.currentTarget.textContent = '✓ Saved to this place'; } }, '＋ Save this secret to the place'));
-      box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
-    } else {
-      box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This place is not in your guide, so the secret cannot be pinned to it.'));
-    }
-  } else if (s.kind === 'bb') {
-    const d = s.data; const cat = d.cat || 'other'; const meta = bbCat(cat);
-    box.append(h('h2', { style: 'margin-top:8px' }, `${meta.emoji} ${bbHeadline(cat, d)}`));
-    if (cat === 'swap') box.append(h('p', { class: 'muted small' }, swapCalcNodes((d.have && d.have.a) || 0, d.have && d.have.c, d.want && d.want.c)));
-    else { const sub = bbSubline(cat, d); if (sub) box.append(h('p', { class: 'small', style: 'font-weight:700' }, sub)); }
-    const line = [meta.label, d.city].filter(Boolean).join(' · ');
-    if (line) box.append(h('p', { class: 'tiny muted' }, line));
-    if (d.note) box.append(h('p', { style: 'margin-top:6px' }, d.note));
-    if (d.contact) box.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
-    box.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => { addListing({ cat, mine: false, from: s.from, data: d }); e.currentTarget.textContent = '✓ Saved to your board'; } }, '＋ Save to my board'));
-    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#exchange-' + cat) }, 'Open the traveller board'));
-  }
-  wrap.append(box);
-
-  if (s.from) {
-    const already = getContact(s.from.userId);
-    wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted' }, already ? `${s.from.name} is in your circle.` : `Add ${s.from.name} to your circle so you can share back?`),
-      already ? null : h('button', { class: 'btn ghost block', onclick: (e) => { addContact(s.from); e.currentTarget.textContent = '✓ Added to your circle'; } }, `Add ${s.from.name}`),
-    ]));
-  }
-  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#inbox') }, '📥 See everything shared with you'));
-  mount(wrap, '#circle');
-}
-
-function inboxScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Shared with you', '#circle'));
-  const items = getInbox();
-  if (!items.length) {
-    wrap.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, 'Nothing yet. When a friend shares a place, list or trip with you, it lands here.')]));
-    mount(wrap, '#circle'); return;
-  }
-  const KIND = { place: '📍 Place', collection: '⭐ List', trip: '🧳 Trip', tip: '💡 Local tip', jelly: '🪼 Sighting', secret: '🔑 Secret', bb: '🧭 Board' };
-  // Until now nothing ever cleared `read`, so the Travel circle badge counted every item
-  // the traveller had ever received and the only way to make it go down was to delete the
-  // item. An item is marked read when it is opened or acted on (below); this clears the
-  // backlog in one tap for someone who has already seen them.
-  if (items.some((it) => !it.read)) {
-    wrap.append(h('button', { class: 'btn ghost block inbox-markall',
-      onclick: () => { items.forEach((it) => markInboxRead(it.id)); go('#inbox'); } }, '✓ Mark all as read'));
-  }
-  items.forEach((it) => {
-    const title = it.kind === 'place' ? (it.data.name || 'A place')
-      : it.kind === 'collection' ? (it.data.name || 'A list')
-      : it.kind === 'tip' ? `Tip — ${it.data.city || 'a city'}`
-      : it.kind === 'jelly' ? `🪼 Jellyfish — ${it.data.name || 'a beach'}`
-      : it.kind === 'secret' ? `🔑 ${it.data.name || 'a place'}`
-      : it.kind === 'bb' ? `${bbCat(it.data.cat).emoji} ${bbHeadline(it.data.cat || 'other', it.data)}`
-      : 'A trip';
-    const unreadDot = it.read ? null : h('span', { class: 'inbox-dot', 'aria-label': 'Unread' }, '●');
-    // Everything below the header row is conditional on the item's kind, and each carried its
-    // own margin-top:6px against a header that contributed none. stack-2 gives one 8px step.
-    const card = h('div', { class: 'card stack-2' + (it.read ? '' : ' inbox-unread') }, [
-      h('div', { class: 'row-between' }, [
-        h('div', {}, [h('strong', {}, [unreadDot, title]), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
-        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { deleteInboxItem(it.id); go('#inbox'); } }, '✕'),
-      ]),
-      it.msg ? h('p', {}, it.msg) : null,
-      (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,
-      (it.kind === 'trip') ? h('button', { class: 'btn ghost block', onclick: (e) => { (it.data.stops || []).forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, 'Add stops to my trip') : null,
-      (it.kind === 'collection') ? h('button', { class: 'btn ghost block', onclick: (e) => { const c = createCollection(it.data.name || 'Shared list', '📥'); let n = 0; (it.data.items || []).forEach((x) => { if (getPlace(x.id)) { togglePlaceInCollection(c.id, x.id); n++; } }); e.currentTarget.textContent = `✓ Saved (${n})`; } }, 'Save as a collection') : null,
-      (it.kind === 'tip') ? h('p', {}, it.data.text || '') : null,
-      (it.kind === 'tip') ? h('button', { class: 'btn ghost block', onclick: (e) => {
-        const slug = String(it.data.city || 'a-city').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        addBoardPost(`${it.data.cc || 'xx'}-${slug}`, { topic: it.data.topic, text: `${it.from ? it.from.name + ': ' : ''}${it.data.text}` });
-        e.currentTarget.textContent = '✓ Pinned';
-      } }, '📌 Pin to my noticeboard') : null,
-      (it.kind === 'jelly') ? h('p', {}, `${SEV_LABEL[it.data.sev] || SEV_LABEL.seen}${it.data.note ? ` — ${it.data.note}` : ''}${it.data.d ? ` · ${fmtReportDate(it.data.d)}` : ''}`) : null,
-      (it.kind === 'jelly' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', onclick: (e) => {
-        addJellyReport(it.data.id, { d: it.data.d || todayKey(), sev: it.data.sev || 'seen', note: it.data.note || '', by: it.from ? it.from.name : 'a traveller' });
-        e.currentTarget.textContent = '✓ Added to the beach';
-      } }, '＋ Add to the beach') : null,
-    ]);
-    // Marking read on view is what threadScreen does, but every inbox item shares one
-    // screen, so "viewed" here would clear the whole badge the first time the traveller
-    // glanced at the list. Acting on an item — opening the place, saving the list, adding
-    // the stops — is the signal that this one has actually been dealt with. Handled on the
-    // card so it catches every action inside it, and updated in place rather than by
-    // re-rendering, which would tear down the button mid-tap.
-    if (!it.read) {
-      card.addEventListener('click', () => {
-        if (it.read) return;
-        markInboxRead(it.id);
-        card.classList.remove('inbox-unread');
-        if (unreadDot) unreadDot.remove();
-      });
-    }
-    wrap.append(card);
-  });
-  mount(wrap, '#circle');
-}
-
-// Async message thread with one contact. "Sending" records the note locally and
-// produces a link to hand over — the reply comes back as another #msg- link.
-// justImported=true only for the one render importMessageScreen does immediately after
-// adding a brand-new incoming message: without it, that single call would both create the
-// unread message AND instantly clear it in the same synchronous pass (this screen is the
-// only place a message ever gets viewed, so "just added it" and "about to mark it read"
-// would otherwise always happen together and the badge could never show anything). Every
-// other way of reaching this screen — the circle list's "💬 Message" chip, a direct
-// #thread- reload — is a deliberate, separate visit and marks read as normal.
-function threadScreen(userId, fallbackCard, justImported = false) {
-  const wrap = h('div', { class: 'screen' });
-  const contact = getContact(userId) || fallbackCard || null;
-  const name = contact ? contact.name : 'Traveller';
-  wrap.append(topbar(name, '#circle'));
-  wrap.append(h('p', { class: 'muted' }, `Messages travel as links — no server. Write a note, then hand the link to ${name} (share sheet, AirDrop, any app). They open it to receive it and reply the same way.`));
-  if (contact && !getContact(userId)) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted' }, `${name} is not in your circle yet.`),
-      h('button', { class: 'btn ghost block', onclick: (e) => { addContact(contact); e.currentTarget.textContent = '✓ Added to your circle'; } }, `Add ${name} to your circle`),
-    ]));
-  }
-  const th = getThread(userId);
-  if (!justImported) markThreadRead(userId);   // opening the thread IS reading it — clears this contact's badge
-  const list = h('div', { class: 'card thread' });
-  if (!th.length) list.append(h('p', { class: 'muted' }, 'No messages yet — write the first note below.'));
-  else th.forEach((m) => list.append(h('div', { class: 'bubble ' + (m.from === 'me' ? 'me' : 'them') }, [
-    h('span', { class: 'who' }, m.from === 'me' ? 'You' : (m.name || name)),
-    m.text,
-  ])));
-  wrap.append(list);
-  const ta = h('textarea', { class: 'ta', rows: '3', maxlength: '800', placeholder: `Write a note to ${name}…` });
-  const sendBtn = h('button', { class: 'btn block', onclick: async () => {
-    const text = ta.value.trim(); if (!text) return;
-    addMessage(userId, { from: 'me', text });                       // recorded first, so it survives even if sharing is cancelled
-    const url = shareUrl('msg', encodeMessage(ensureMe(), text));
-    let handed = false;
-    try {
-      if (typeof navigator !== 'undefined' && navigator.share) { await navigator.share({ title: `A note for ${name}`, url }); handed = true; }
-      else if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(url); handed = true; }
-    } catch (e) { if (e && e.name === 'AbortError') { go('#thread-' + userId); return; } }
-    if (!handed) {
-      // no Share or Clipboard API (older webviews): execCommand fallback, then
-      // show the link as selectable text rather than failing silently.
-      try { const t = h('textarea', {}); t.value = url; document.body.append(t); t.select(); handed = document.execCommand('copy'); t.remove(); } catch { /* noop */ }
-    }
-    if (!handed) { sendStatus.textContent = 'Could not copy automatically — select and copy this link: '; sendStatus.append(h('span', { style: 'word-break:break-all; user-select:all' }, url)); return; }
-    go('#thread-' + userId);
-  } }, '📤 Send (share the link)');
-  const sendStatus = h('p', { class: 'tiny muted' });
-  wrap.append(h('div', { class: 'card' }, [
-    h('h3', {}, 'Reply'), ta, sendBtn, sendStatus,
-    h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Your note is saved to this thread and a link is created to hand to them.'),
-  ]));
-  mount(wrap, '#circle');
-}
-
-// Import a received message (#msg-<payload>) into its thread, then show it.
-function importMessageScreen(arg) {
-  const m = parseMessage(arg);
-  if (!m) {
-    const wrap = h('div', { class: 'screen' });
-    wrap.append(topbar('Message', '#circle'));
-    wrap.append(h('div', { class: 'card' }, [
-      h('h2', {}, 'This message link could not be read'),
-      h('p', { class: 'muted' }, 'It may be invalid or was cut off in transit. Ask them to send it again.'),
-      h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'),
-    ]));
-    mount(wrap, '#circle'); return;
-  }
-  const uid = m.from.userId;
-  const th = getThread(uid);
-  const last = th[th.length - 1];
-  if (!(last && last.from === 'them' && last.text === m.text)) addMessage(uid, { from: 'them', text: m.text, name: m.from.name });
-  // rewrite the URL so a refresh does not re-import, then show the conversation
-  try { history.replaceState(null, '', '#thread-' + uid); } catch { /* noop */ }
-  return threadScreen(uid, m.from, true);
-}
 
 // ---- FOR YOU (traveller profile + personalised picks) -----------------------
 function prefChips(pairs, current, onPick) {
@@ -9430,233 +8510,10 @@ function foryouScreen() {
 }
 
 // ---- TRIP PLANS (suggested routes matched to the profile) --------------------
-function plansScreen() {
-  const prefs = store.profile.prefs;
-  const tripName = (store.profile.name || '').trim();
-  const tripLabel = tripName ? `${tripName}’s trip` : 'My Trip';
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Trip plans', '#home'));
-  wrap.append(h('p', { class: 'muted' }, `Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to ${tripLabel} and edit it there.`));
-  if (!profileIsSet()) {
-    wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted' }, 'Set your price range, party and trip length first and these plans sort themselves to fit you.'),
-      h('button', { class: 'btn block', onclick: () => go('#foryou') }, '🎯 Set up "For you"'),
-    ]));
-  }
-  wrap.append(countryChips((id) => { setActiveCountry(id); go('#plans'); }));
-  const plans = suggestPlans({ country: getActiveCountry(), tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
-  const PARTY_LBL = { solo: '🎒 solo', couple: '👫 couples', family: '👨‍👩‍👧 families', group: '👥 groups' };
-  plans.forEach((pl, idx) => {
-    const card = h('div', { class: 'card' });
-    card.append(h('div', { class: 'row-between' }, [h('h2', {}, pl.title), idx === 0 && profileIsSet() ? h('span', { class: 'cat-tag' }, 'Best match') : null]));
-    card.append(h('p', { class: 'muted' }, `~${pl.days} days · ${pl.pace} pace · suits ${pl.party.map((x) => PARTY_LBL[x] || x).join(', ')}`));
-    card.append(h('p', {}, pl.summary));
-    card.append(h('ol', {}, pl.stops.map((s) => h('li', {}, [h('strong', {}, s.title), ` — ${s.nights} night${s.nights === 1 ? '' : 's'}. `, h('span', { class: 'muted' }, s.why)]))));
-    (pl.tips || []).forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
-    card.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => {
-      pl.stops.forEach((s) => addStop({ title: s.title, country: pl.country }));
-      e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
-    } }, `＋ Add this plan to ${tripLabel}`));
-    card.append(sourcesNote(pl.sources, null));
-    wrap.append(card);
-  });
-  mount(wrap, '#home');
-}
 
 // ---- LOCAL NOTICEBOARD (per-city local knowledge + your own posts) -----------
-const BOARD_TOPICS = [['market', '🥬 Markets'], ['food', '🍜 Food'], ['family', '👶 Family'], ['tip', '💡 Tip']];
-function boardRow(title, sub, tip) {
-  return h('div', { class: 'board-row' }, [
-    h('strong', {}, title),
-    sub ? h('div', { class: 'tiny muted' }, sub) : null,
-    tip ? h('div', { class: 'list-note' }, tip) : null,
-  ]);
-}
-function boardScreen(arg) {
-  const wrap = h('div', { class: 'screen' });
-  const parts = (arg || '').split('-');
-  const cc = parts.shift() || '';
-  const slug = parts.join('-');
-  const board = (cc && slug) ? getBoard(cc, slug) : null;
-
-  if (!board) {
-    // picker: country chips + city list
-    wrap.append(topbar('Noticeboard', '#home'));
-    wrap.append(h('p', { class: 'muted' }, 'Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
-    const selected = cc || getActiveCountry();
-    wrap.append(countryChips((id) => { setActiveCountry(id); go(`#board-${id}`); }, selected));
-    const boards = boardsForCountry(selected);
-    if (!boards.length) wrap.append(h('p', { class: 'empty' }, 'No boards for this country yet — more cities are being added.'));
-    boards.forEach((b) => wrap.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city}`)));
-    mount(wrap, '#home');
-    return;
-  }
-
-  wrap.append(topbar(board.city, `#board-${board.country}`));
-  if (board.intro) wrap.append(h('p', { class: 'muted' }, board.intro));
-
-  // Highest-recommended places in this city — your own ratings count first.
-  const cityPlaces = allPlaces({ country: board.country })
-    .filter((p) => citySlug(p.city) === board.slug)
-    .map((p) => ({ p, er: effectiveRating(p.id, Number(p.rating) || 0) }))
-    .filter((x) => x.er > 0)
-    .sort((a, b) => b.er - a.er)
-    .slice(0, 6);
-  if (cityPlaces.length) {
-    const tc = h('div', { class: 'card' }, [h('h2', {}, `🏆 Top-rated in ${board.city}`)]);
-    cityPlaces.forEach(({ p, er }) => tc.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:space-between', onclick: () => go(`#place-${p.id}`) }, [
-      h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}`),
-      h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)),
-    ])));
-    tc.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Blends the guide’s rating and yours — rate a place and it climbs your list.'));
-    wrap.append(tc);
-  }
-
-  const section = (title, rows) => {
-    if (!rows || !rows.length) return;
-    const cardEl = h('div', { class: 'card' });
-    cardEl.append(h('h2', {}, title));
-    rows.forEach((r) => cardEl.append(r));
-    wrap.append(cardEl);
-  };
-  section('🕑 Markets & schedules', (board.markets || []).map((m) =>
-    boardRow(m.name, [m.when, m.where].filter(Boolean).join(' · ') + (m.what ? ` — ${m.what}` : ''), m.tip)));
-  section('🥬 Shop like a local', (board.shopLocal || []).map((s) => boardRow(s.what, s.where, s.tip)));
-  const ess = getEssentials(board.country);
-  if (ess) {
-    const ec = h('div', { class: 'card' });
-    ec.append(h('h2', {}, '🛒 Cheapest essentials'));
-    if (ess.note) ec.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, ess.note));
-    ess.items.forEach((it) => ec.append(boardRow(
-      `${it.icon} ${it.item}`,
-      [it.cheapest, (it.price && it.price !== '—') ? `💰 ${it.price}` : null].filter(Boolean).join(' · '),
-      it.tip)));
-    ec.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Countrywide guidance — prices move; the cheapest option rarely does.'));
-    wrap.append(ec);
-  }
-  section('👶 Family supplies', (board.family || []).map((f) =>
-    boardRow(f.item, [f.where, f.price].filter(Boolean).join(' · '), f.tip)));
-  section('🍜 Cheap local food', (board.cheapEats || []).map((e) =>
-    boardRow(`${e.name} — ${e.dish}`, [e.price, e.where].filter(Boolean).join(' · '), e.tip)));
-  section('🌶️ Street food', (board.streetFood || []).map((s) =>
-    boardRow(`${s.name} — ${s.dish}`, [s.price, s.when, s.where].filter(Boolean).join(' · '), s.tip)));
-
-  // Cannabis / dispensaries — only where they legally operate (Thailand), always led by
-  // the current legal status and a cross-border warning. Data-gated: absent = not shown.
-  if (board.dispensaries && board.dispensaries.length) {
-    const dc = h('div', { class: 'card' });
-    dc.append(h('h2', {}, '🌿 Cannabis & dispensaries'));
-    if (board.dispensaryNote) dc.append(h('p', { class: 'disclaimer', style: 'margin:0 0 8px' }, board.dispensaryNote));
-    board.dispensaries.forEach((d) => dc.append(boardRow(d.area, d.where || '', d.note)));
-    if (board.dispensarySources && board.dispensarySources.length) dc.append(sourcesNote(board.dispensarySources, board.dispensaryVerified));
-    wrap.append(dc);
-  }
-
-  // community notes: the user's own posts + share each to the circle
-  const key = `${board.country}-${board.slug}`;
-  const posts = getBoardPosts(key);
-  const notes = h('div', { class: 'card' });
-  notes.append(h('h2', {}, 'Your notes on this board'));
-  notes.append(h('p', { class: 'tiny muted' }, 'Notes stay on your device. Share one and it travels as a link your circle can pin to their own board.'));
-  const topicLbl = Object.fromEntries(BOARD_TOPICS);
-  posts.forEach((p) => notes.append(h('div', { class: 'board-post' }, [
-    h('div', { class: 'row-between' }, [
-      h('span', { class: 'cat-tag' }, topicLbl[p.topic] || p.topic),
-      h('div', { class: 'cats' }, [
-        shareButton('📤', `Local tip — ${board.city}`, () => shareUrl('in', encodeShare('tip', { cc: board.country, city: board.city, topic: p.topic, text: p.text }, ensureMe())), 'chip'),
-        h('button', { class: 'chip', 'aria-label': 'Delete note', onclick: () => { deleteBoardPost(key, p.id); go(`#board-${key}`); } }, '✕'),
-      ]),
-    ]),
-    h('p', { style: 'margin-top:4px' }, p.text),
-    h('div', { class: 'tiny muted' }, p.at),
-  ])));
-  let newTopic = 'tip';
-  const topicChips = h('div', { class: 'chips' }, BOARD_TOPICS.map(([id, lbl]) =>
-    h('button', { class: 'chip', 'aria-pressed': id === newTopic ? 'true' : 'false', dataset: { t: id }, onclick: (e) => {
-      newTopic = id; topicChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.t === id ? 'true' : 'false'));
-    } }, lbl)));
-  const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '500', placeholder: 'e.g. The mango lady at the north gate is the best deal in town…' });
-  notes.append(h('div', { style: 'margin-top:8px' }, [topicChips, ta,
-    h('button', { class: 'btn block', onclick: () => { if (ta.value.trim()) { addBoardPost(key, { topic: newTopic, text: ta.value.trim() }); go(`#board-${key}`); } } }, '＋ Post to my board')]));
-  wrap.append(notes);
-
-  wrap.append(sourcesNote(board.sources, board.verified));
-  mount(wrap, '#home');
-}
 
 // ---- STREET FOOD (find, rate, review) ----------------------------------------
-function starPicker(placeId, current) {
-  const row = h('div', { class: 'chips' });
-  for (let n = 1; n <= 5; n++) {
-    row.append(h('button', { class: 'chip', 'aria-pressed': current === n ? 'true' : 'false', 'aria-label': `Rate ${n} star${n > 1 ? 's' : ''}`, onclick: () => { setPlaceField(placeId, 'rating', n); go('#streetfood'); } }, '★'.repeat(n)));
-  }
-  return row;
-}
-function streetfoodScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Street food', '#home'));
-  wrap.append(h('p', { class: 'muted' }, 'The local stalls and food streets worth queueing for — with your own ratings and takes, kept on-device and shown first. Rate a stall and your score drives its colour on the map too.'));
-  wrap.append(countryChips((id) => { setActiveCountry(id); go('#streetfood'); }));
-
-  // rateable street-food places (curated local eats) — as a rate-list or on a map.
-  const prefs = store.profile.prefs;
-  const sview = prefs.streetView === 'map' ? 'map' : 'list';
-  const places = allPlaces({ country: getActiveCountry() }).filter((p) => p.isLocal === true || (p.categories || []).includes('streetfood'));
-  const mappable = places.filter((p) => p.coords);
-  if (places.length) {
-    if (mappable.length) {
-      wrap.append(h('div', { class: 'view-toggle', style: 'display:flex;gap:8px;align-items:center;margin:6px 0' }, [
-        h('div', { class: 'chips', style: 'margin:0' }, [
-          h('button', { class: 'chip', 'aria-pressed': sview === 'list' ? 'true' : 'false', onclick: () => { prefs.streetView = 'list'; save(); go('#streetfood'); } }, '📋 List'),
-          h('button', { class: 'chip', 'aria-pressed': sview === 'map' ? 'true' : 'false', onclick: () => { prefs.streetView = 'map'; save(); go('#streetfood'); } }, '🗺 Map'),
-        ]),
-      ]));
-    }
-    if (sview === 'map' && mappable.length) {
-      wrap.append(h('p', { class: 'muted', style: 'margin:2px 2px 6px' }, `${mappable.length} stalls & food streets on the map — tap a pin`));
-      const canvas = h('div', { class: 'places-map', style: 'height:340px;border-radius:16px;overflow:hidden;position:relative' });
-      wrap.append(canvas);
-      import('./map.js').then((m) => m.initMap(canvas, {
-        places: mappable,
-        onOpen: (id) => go(`#place-${id}`), onLocate: (f) => setLastFix(f),
-      })).then((c) => { setLiveCleanup(() => { try { c.dispose(); } catch { /* noop */ } }); }).catch(() => { /* list still below */ });
-    } else {
-      const card = h('div', { class: 'card' });
-      card.append(h('h2', {}, 'Rate the classics'));
-      places.forEach((p) => {
-        const mine = getPlaceData(p.id);
-        card.append(h('div', { class: 'board-post' }, [
-          h('button', { class: 'sf-row', onclick: () => go(`#place-${p.id}`) }, [
-            rnThumb(p),
-            h('div', { class: 'sf-text' }, [
-              h('div', { class: 'sf-name' }, p.name),
-              h('div', { class: 'tiny muted' }, p.city),
-            ]),
-          ]),
-          h('div', { class: 'tiny muted' }, mine.rating ? `Your rating: ${starsStr(mine.rating)}` : `Guide rating ${Number(p.rating || 0).toFixed(1)} — tap to add yours`),
-          starPicker(p.id, mine.rating || 0),
-          mine.review ? h('p', { class: 'tiny', style: 'margin-top:4px' }, `“${mine.review}”`) : null,
-        ]));
-      });
-      wrap.append(card);
-    }
-  }
-
-  // street-food areas from the local boards (browse + jump to the board)
-  const boards = boardsForCountry(getActiveCountry()).filter((b) => (b.streetFood || []).length);
-  if (boards.length) {
-    const card = h('div', { class: 'card' });
-    card.append(h('h2', {}, 'Where to graze, city by city'));
-    boards.forEach((b) => {
-      card.append(h('h3', { style: 'margin-top:8px' }, b.city));
-      (b.streetFood || []).forEach((s) => card.append(boardRow(`${s.name} — ${s.dish}`, [s.price, s.when].filter(Boolean).join(' · '), s.tip)));
-      card.append(h('button', { class: 'btn ghost block', style: 'margin-top:4px', onclick: () => go(`#board-${b.country}-${b.slug}`) }, `📋 ${b.city} noticeboard`));
-    });
-    wrap.append(card);
-  }
-  if (!places.length && !boards.length) wrap.append(h('p', { class: 'empty' }, 'No street-food entries for this country yet — more cities are being added.'));
-  mount(wrap, '#home');
-}
 
 // Converts a blob to a base64 data URL. Shared by Settings' full-device backup builder
 // (moved to js/screens/settings.js) and this section's own journal/review/photo-album
@@ -9844,7 +8701,7 @@ export function render() {
       case 'addpin': return addPinScreen(arg);
       case 'journal': return screenMod('journal').journalDispatch(arg);
       case 'scrapbook': return screenMod('journal').scrapbookScreen();
-      case 'contributions': return contributionsScreen();
+      case 'contributions': return screenMod('contributions').contributionsScreen();
       case 'journey': return screenMod('journal').journeyScreen();
       case 'sharejourney': return screenMod('sharejourney').shareJourneyScreen();
       // A journey someone shared as a link. The whole journey travels in the payload, so this
@@ -9862,10 +8719,10 @@ export function render() {
       case 'setcity': return setCityScreen(arg);
       case 'arrival': return arrivalScreen(arg);
       case 'visa': return visaScreen(arg);
-      case 'schedules': return schedulesScreen(arg);
+      case 'schedules': return screenMod('schedules').schedulesScreen(arg);
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);
-      case 'produce': return arg ? produceDetail(arg) : produceScreen();
+      case 'produce': { const m = screenMod('produce'); return arg ? m.produceDetail(arg) : m.produceScreen(); }
       case 'nature': return natureScreen();
       case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);
@@ -9876,25 +8733,25 @@ export function render() {
       case 'scams': return scamsScreen(arg);
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);
-      case 'trip': return tripScreen();
+      case 'trip': return screenMod('trip').tripScreen();
       case 'expenses': return screenMod('budget').expensesScreen();
-      case 'bargain': return bargainScreen();
-      case 'checklist': return checklistScreen(arg);
+      case 'bargain': return screenMod('bargain').bargainScreen();
+      case 'checklist': return screenMod('trip').checklistScreen(arg);
       case 'bestof': return bestofScreen(arg);
       case 'bestlist': return bestListScreen(arg);
       case 'vault': return screenMod('vault').vaultScreen();
-      case 'help': return helpScreen();
-      case 'feedback': return feedbackScreen(arg);
-      case 'circle': return circleScreen();
-      case 'add': return addContactScreen(arg);
-      case 'in': return importShareScreen(arg);
-      case 'inbox': return inboxScreen();
-      case 'thread': return threadScreen(arg);
-      case 'msg': return importMessageScreen(arg);
+      case 'help': return screenMod('help').helpScreen();
+      case 'feedback': return screenMod('help').feedbackScreen(arg);
+      case 'circle': return screenMod('circle').circleScreen();
+      case 'add': return screenMod('circle').addContactScreen(arg);
+      case 'in': return screenMod('circle').importShareScreen(arg);
+      case 'inbox': return screenMod('circle').inboxScreen();
+      case 'thread': return screenMod('circle').threadScreen(arg);
+      case 'msg': return screenMod('circle').importMessageScreen(arg);
       case 'foryou': return foryouScreen();
-      case 'plans': return plansScreen();
-      case 'board': return boardScreen(arg);
-      case 'streetfood': return streetfoodScreen();
+      case 'plans': return screenMod('trip').plansScreen();
+      case 'board': return screenMod('board').boardScreen(arg);
+      case 'streetfood': return screenMod('streetfood').streetfoodScreen();
       case 'donate': return screenMod('giveback').donateScreen();
       case 'visitors': return screenMod('visitors').visitorsScreen();
       case 'settings': return screenMod('settings').settingsScreen();

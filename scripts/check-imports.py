@@ -61,7 +61,34 @@ def names(clause):
     return out
 
 
+# `export` must be followed by something exportable. A script that adds `export ` to a
+# declaration can easily prepend it to the declaration's COMMENT instead — which is exactly
+# what happened during the main.js split, producing `export // Does the saved profile...` and
+# a main.js that would not parse at all. Every one of the twelve guards passed on it, because
+# none of them parses JavaScript; the app simply never left its splash screen. This is not a
+# parser, but it costs nothing and it catches that.
+EXPORT_HEAD = re.compile(
+    r'^export\s+(?!(?:async\s+)?function\b|const\b|let\b|var\b|class\b|default\b|\{|\*)(.*)$',
+    re.M)
+
+
+def check_export_shape(paths):
+    bad = []
+    for path in paths:
+        for m in EXPORT_HEAD.finditer(open(path, encoding='utf-8').read()):
+            line = m.string.count('\n', 0, m.start()) + 1
+            bad.append('  %s:%d  `export` followed by %s'
+                       % (path, line, (m.group(1).strip() or '(nothing)')[:60]))
+    return bad
+
+
 def main():
+    shape = check_export_shape(files())
+    if shape:
+        print('FAIL — `export` is not attached to a declaration (the file will not parse):')
+        print('\n'.join(shape))
+        return 1
+
     src = {p: strip_comments(open(p, encoding='utf-8').read()) for p in files()}
 
     exports, star_from = {}, defaultdict(list)

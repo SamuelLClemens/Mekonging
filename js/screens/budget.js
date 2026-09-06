@@ -19,9 +19,6 @@ import {
 import {
   budgetLogRow, budgetTarget, expCatOf, expCatsAll, expenseAddCard, fmtLogDate, tripSpanDays,
 } from '../budget-ui.js';
-// A budget-log row that flips to an inline editor — used on both Expenses and My Trip so
-// every logged spend can be corrected (amount, currency, note), not only deleted.
-let editExpenseId = null;
 // Same idea for a logged cash withdrawal — see withdrawalRow.
 let editWithdrawalId = null;
 // ---- expenses: categories, budget target, donut chart, projection ----------
