@@ -152,3 +152,52 @@ export function fmtDistance(km) {
   if (km == null) return '';
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`;
 }
+
+// fetch() that can actually give up. Every network call in this app used the bare global,
+// which fails in two very different ways and only ever recovers from one of them:
+//
+//   REFUSED — no SIM, aeroplane mode, DNS blocked, connection reset. fetch() rejects, and
+//   every caller here already catches that and falls back to its cached value. This case
+//   has always worked.
+//
+//   HUNG — the network accepts the connection and then goes quiet. A hotel captive portal
+//   that swallows the request until you log in, a VPN that is half-connected or throttled,
+//   a SIM showing full signal with no working data behind it. fetch() never rejects and
+//   never resolves, so `await fetch(...)` waits forever, and no try/catch can rescue it
+//   because nothing was ever thrown. The cached fallback sitting right there in the catch
+//   block never runs, and any spinner the traveller is looking at spins until they give up.
+//
+// The second case is the ordinary one on the road, and it is the one this app had no answer
+// for: there was not a single AbortController anywhere in js/. Wrapping fetch here turns a
+// hang into a rejection after `ms`, which converts the failure the callers cannot handle
+// into the one they all already do.
+//
+// navigator.onLine is NOT a substitute and is checked in several callers as a fast path
+// only: it reports true on a captive portal, which is precisely the case this exists for.
+//
+// Callers may still pass their own `signal` (visits.js does) — theirs and the timeout are
+// composed, so whichever fires first wins. Rejection is an AbortError either way, which
+// visits.js already distinguishes by name.
+export function fetchTimeout(url, opts = {}, ms = 10000) {
+  if (typeof AbortController === 'undefined') return fetch(url, opts);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  const outer = opts.signal;
+  if (outer) {
+    if (outer.aborted) ctrl.abort();
+    else outer.addEventListener('abort', () => ctrl.abort(), { once: true });
+  }
+  // The deadline deliberately stays armed after the fetch resolves. fetch() settles as soon
+  // as the response HEADERS arrive — the body may still be streaming behind them, and
+  // "headers, then silence" is exactly what a captive portal and a stalling VPN do. Clearing
+  // the timer at the headers would leave every `await res.json()` in this app unprotected,
+  // which is the same hang wearing a different hat.
+  //
+  // Aborting a response whose body has already been read is a no-op, so the armed timer costs
+  // nothing on the normal path. It does mean callers must read the body PROMPTLY rather than
+  // parking a Response and reading it minutes later; every caller here reads it on the next
+  // line. Only a rejection clears the timer, because at that point there is nothing left to
+  // protect.
+  return fetch(url, { ...opts, signal: ctrl.signal })
+    .catch((err) => { clearTimeout(timer); throw err; });
+}

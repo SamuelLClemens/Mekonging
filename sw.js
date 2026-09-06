@@ -286,6 +286,22 @@ self.addEventListener('activate', (e) => {
 // then refreshes in the background via the service-worker update check.
 const NAV_TIMEOUT_MS = 3000;
 
+// Deadlines for everything else the worker fetches. Navigation was the only request kind
+// that could ever give up: every other branch below awaited a bare fetch(), which on a
+// captive portal or a half-connected VPN neither resolves nor rejects. The consequences
+// were not cosmetic — a hung SUB-RESOURCE fetch is a lazily-loaded screen module that
+// never arrives, so the app sits on its loading card indefinitely with no error and no
+// retry, and a hung fetch inside the offline-pack loops stalls the whole download at
+// whatever percentage it had reached.
+//
+// Longer than NAV_TIMEOUT_MS because these are not racing a cached shell that is already
+// on the device — timing one out costs the traveller the thing they asked for, so it is
+// worth waiting out a genuinely slow link first. Timing out returns the same 504 the
+// offline path returns, which every caller already handles.
+const SUB_TIMEOUT_MS = 10000;    // js/css/json — a screen module the app is waiting on
+const ASSET_TIMEOUT_MS = 20000;  // map engine, fonts, geojson — large but rarely needed
+const MEDIA_TIMEOUT_MS = 12000;  // map tiles and phrase audio — degrade quietly
+
 function withTimeout(promise, ms) {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error('timeout')), ms);
@@ -344,7 +360,7 @@ self.addEventListener('fetch', (e) => {
       const hit = await cache.match(req, { ignoreSearch: true });
       if (hit) return hit;
       try {
-        const res = await fetch(req, { cache: 'no-cache' });
+        const res = await withTimeout(fetch(req, { cache: 'no-cache' }), SUB_TIMEOUT_MS);
         if (res && res.ok) cache.put(req, res.clone()).catch(() => { /* storage full */ });
         return res;
       } catch {
@@ -358,7 +374,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       if (hit) return hit;
-      return fetch(req).then((res) => {
+      return withTimeout(fetch(req), ASSET_TIMEOUT_MS).then((res) => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE_VERSION).then((c) => c.put(req, copy)); }
         return res;
       }).catch(() => {
@@ -377,7 +393,7 @@ async function handleTile(req) {
   const hit = await cache.match(keyUrl);
   if (hit) return rebuildRanged(hit);
   try {
-    const res = await fetch(req);
+    const res = await withTimeout(fetch(req), MEDIA_TIMEOUT_MS);
     if (res.status === 200 || res.status === 206) {
       const buf = await res.clone().arrayBuffer();
       const stored = new Response(buf, { status: 200, headers: {
@@ -410,7 +426,7 @@ async function handleTTS(req) {
   const hit = await cache.match(req, { ignoreVary: true });
   if (hit) return hit;
   try {
-    const res = await fetch(req);
+    const res = await withTimeout(fetch(req), MEDIA_TIMEOUT_MS);
     if (res && (res.ok || res.type === 'opaque')) { cache.put(req, res.clone()).catch(() => {}); }
     return res;
   } catch {
@@ -446,7 +462,7 @@ async function prefetchTTS(urls, client, lang) {
     try {
       if (await cache.match(url, { ignoreVary: true })) { ok++; }
       else {
-        const res = await fetch(url, { mode: 'no-cors' });
+        const res = await withTimeout(fetch(url, { mode: 'no-cors' }), MEDIA_TIMEOUT_MS);
         if (res && (res.ok || res.type === 'opaque')) { await cache.put(url, res.clone()); ok++; }
       }
     } catch (err) {
@@ -488,7 +504,7 @@ async function prefetchTiles(urls, client, protect = []) {
     try {
       if (await cache.match(keyUrl)) { ok++; }
       else {
-        const res = await fetch(url);
+        const res = await withTimeout(fetch(url), MEDIA_TIMEOUT_MS);
         if (res.ok) {
           const buf = await res.arrayBuffer();
           await cache.put(keyUrl, new Response(buf, { status: 200, headers: {

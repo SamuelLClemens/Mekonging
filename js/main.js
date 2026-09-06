@@ -80,7 +80,7 @@ import * as personal from './personal.js';
 import * as gamify from './gamify.js';
 // Server-free reminders (per-entry lead time + daily journal nudge; in-app + best-effort notifications).
 import * as reminders from './reminders.js';
-import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
+import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase, fetchTimeout } from './util.js';
 import {
   haversineKm, distanceChip, driveLabel, estDriveMin, withinNear, withinDayTrip, DAYTRIP_MAX_MIN,
   attrClass, attrTag, starsStr, isMarket, placeBucket,
@@ -426,6 +426,106 @@ function showUndoToast(message, undoFn) {
   ]);
   document.body.append(toast);
   undoToastTimer = setTimeout(close, 5000);
+}
+
+// ---- NOTHING FAILS SILENTLY -------------------------------------------------
+// render() has always wrapped the screen switch in a try/catch, so an error thrown while
+// PAINTING a screen was caught and shown. Nothing covered anything else. An error thrown
+// inside a click handler, a timer, or a rejected promise escaped to the console — which on a
+// phone nobody can open — and the traveller was left with a control that simply did nothing.
+// That is the worst failure this app can have, because it is indistinguishable from the app
+// deciding to ignore them, and it produces the one bug report that cannot be acted on: "it
+// stopped working".
+//
+// These listeners are the floor, not a fix. What they guarantee is that no failure is
+// invisible: it is recorded on the device, it rides along with any feedback the traveller
+// sends, and the first one in a session says so out loud instead of leaving a dead button.
+const ERR_KEY = 'mk-errors';
+const ERR_MAX = 20;
+
+// Kept in localStorage rather than memory so the log survives the reload that a traveller
+// will almost certainly perform before they think to report anything. Every access is
+// defensive: storage can be full, disabled, or throw outright in private browsing, and an
+// error recorder that throws while recording an error is worse than no recorder at all.
+function recordError(kind, err) {
+  try {
+    const entry = {
+      at: Date.now(),
+      kind,
+      hash: (typeof location !== 'undefined' && location.hash) || '',
+      msg: String((err && (err.message || err.reason || err)) || 'unknown').slice(0, 300),
+      v: APP_VERSION,
+    };
+    const log = recentErrors();
+    log.unshift(entry);
+    localStorage.setItem(ERR_KEY, JSON.stringify(log.slice(0, ERR_MAX)));
+  } catch { /* the log is best-effort by definition */ }
+}
+
+export function recentErrors() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ERR_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch { return []; }
+}
+
+export function clearRecentErrors() {
+  try { localStorage.removeItem(ERR_KEY); } catch { /* noop */ }
+}
+
+// One quiet toast per session. Repeating it would turn a bad moment into a worse one, and
+// the log is the durable record — this exists only so the traveller knows the app heard the
+// tap and something went wrong, rather than assuming the button is decorative.
+let errToastShown = false;
+function showErrorToast() {
+  if (errToastShown) return;
+  errToastShown = true;
+  const toast = h('div', { class: 'update-toast', role: 'status' }, [
+    h('span', {}, 'That did not work. The rest of the app is still fine.'),
+    h('button', { class: 'update-toast-btn', onclick: () => { toast.remove(); go('#feedback'); } }, 'Report'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: () => toast.remove() }, '✕'),
+  ]);
+  document.body.append(toast);
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    // Resource load failures (a missing image) also raise this, and they are not the
+    // traveller's problem — only script errors carry an `error` object worth surfacing.
+    if (!e || !e.error) return;
+    recordError('script', e.error);
+    showErrorToast();
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    // An aborted fetch is this app working AS DESIGNED — util.js fetchTimeout and the
+    // service worker both abort deliberately, and every caller falls back to cached data.
+    // Recording those would bury the real failures under routine offline behaviour.
+    const r = e && e.reason;
+    if (r && (r.name === 'AbortError' || String(r.message || r) === 'timeout')) return;
+    recordError('promise', r);
+    showErrorToast();
+  });
+}
+
+// Recovery that actually recovers. A traveller told to "reload" cannot fix a bad build,
+// because the service worker is cache-first for code and will serve the same broken files
+// back on every reload until a new CACHE_VERSION lands. This clears the app-code caches and
+// the worker, so the next load fetches the current release.
+//
+// It deliberately does NOT touch mk-tiles-* or mk-tts-*: those are offline map packs and
+// phrase audio the traveller chose to download, possibly over an expensive connection they
+// no longer have. Wiping someone's offline maps to clear a rendering bug would be a far
+// worse failure than the one being recovered from.
+export async function resetAndReload() {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map((r) => r.unregister()));
+  } catch { /* no worker, or unsupported */ }
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => /^mk-v/.test(k)).map((k) => caches.delete(k)));
+  } catch { /* storage unavailable */ }
+  location.reload();
 }
 
 // Capture the Android/Chrome install prompt so the app can offer an "Install" button in
@@ -6622,7 +6722,7 @@ async function playCall(s, btn, statusEl) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
   btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
   try {
-    const res = await fetch(inatSoundUrl(s));
+    const res = await fetchTimeout(inatSoundUrl(s), {}, 15000);
     const d = await res.json();
     let snd = null;
     for (const r of (d.results || [])) { const a = (r.sounds || []).find((x) => x && x.file_url); if (a) { snd = a; break; } }
@@ -8619,6 +8719,12 @@ function feedbackScreen(arg) {
       place ? `Place: ${place.name} (${place.id})` : null,
       fromEmail.value.trim() ? `Reply-to: ${fromEmail.value.trim()}` : null,
       `App: ${APP_VERSION}`,
+      // Anything the app caught since this device last cleared it. Attached automatically
+      // because the traveller cannot be expected to have written down an error they saw
+      // three screens ago — and without it, "it stopped working" is unactionable.
+      ...(recentErrors().length
+        ? ['', 'Recent errors:', ...recentErrors().slice(0, 5).map((e) => `  ${new Date(e.at).toISOString()} ${e.kind} ${e.hash} — ${e.msg}`)]
+        : []),
     ].filter((x) => x != null).join('\n');
     return { subject: `[Mekonging] ${catLabel}${subject.value.trim() ? ': ' + subject.value.trim() : ''}`, text };
   }
@@ -10239,12 +10345,28 @@ export function render() {
       default: return homeScreen();
     }
   } catch (err) {
+    // This used to print the raw exception message as the entire explanation, which is how a
+    // traveller came to be reading "Can't find variable: wxMetric" on a phone in Vietnam.
+    // That string is for whoever fixes it, not for whoever hit it: it names no cause they can
+    // act on and reads like the whole app is broken, when in fact one screen is.
+    //
+    // So: say what is true (this screen, not the app), offer the two things that actually
+    // help — go somewhere that works, or clear a bad cached build — and keep the technical
+    // detail one tap away for the person who reports it.
+    recordError('screen', err);
     const app = document.getElementById('app');
     app.innerHTML = '';
+    const detail = h('details', { class: 'err-detail' }, [
+      h('summary', {}, 'Technical details'),
+      h('p', { class: 'muted mono' }, `${String(err && err.message || err)}\n${location.hash || '#home'} · ${APP_VERSION}`),
+    ]);
     app.append(h('div', { class: 'screen' }, [
-      h('h1', {}, 'Something went wrong'),
-      h('p', { class: 'muted' }, String(err && err.message || err)),
-      h('button', { class: 'btn', onclick: () => go('#home') }, 'Back to home'),
+      h('h1', {}, 'This screen could not open'),
+      h('p', { class: 'muted' }, 'The rest of the app still works. Everything you have saved is safe on this device.'),
+      h('button', { class: 'btn block', onclick: () => go('#home') }, 'Go to Home'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => resetAndReload() }, 'Reload the app'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#feedback') }, 'Report this'),
+      detail,
     ]));
   }
 }

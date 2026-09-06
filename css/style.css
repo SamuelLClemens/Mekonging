@@ -2624,3 +2624,14 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
   padding: var(--sp-2) 0; font-weight: 600;
 }
 .switch-row input { width: 20px; height: 20px; flex: none; accent-color: var(--teal); }
+
+/* Error-boundary technical details. The exception text is real and worth keeping — it is
+   what makes a bug report actionable — but it is written for whoever fixes the bug, not
+   whoever hit it, so it sits behind a disclosure under plain-language copy rather than
+   being the entire explanation a traveller is given. */
+.err-detail { margin-top: var(--sp-4); }
+.err-detail > summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
+.err-detail .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-label); white-space: pre-wrap; word-break: break-word; margin-top: var(--sp-4);
+}

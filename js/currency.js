@@ -19,6 +19,8 @@
 // fallback for a response that omits it, and MIN_GAP_MS stops a flapping connection from
 // hammering the endpoint.
 
+import { fetchTimeout } from './util.js';
+
 const KEY = 'mk.rates';
 const ENDPOINT = 'https://open.er-api.com/v6/latest/USD';
 const TTL_MS = 6 * 60 * 60 * 1000;    // fallback staleness window when the API gives no next-update time
@@ -82,7 +84,7 @@ export async function maybeRefreshRates(force = false) {
 export async function refreshRates() {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getRates();
   try {
-    const res = await fetch(ENDPOINT);
+    const res = await fetchTimeout(ENDPOINT);
     const d = await res.json();
     if (d && d.rates && d.rates.USD) {
       // time_next_update_unix is SECONDS since epoch; everything else here is ms.
