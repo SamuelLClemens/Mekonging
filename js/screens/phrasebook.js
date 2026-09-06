@@ -690,12 +690,25 @@ async function loadGuides() {
 }
 
 function guideLessonRow(item, locale) {
-  const able = canSay();
-  const speak = h('button', {
+  // canSay() takes the LOCALE, and returns false immediately when called without one. Calling
+  // it bare — as this did — disabled every 🔊 in the lesson, on every language, silently.
+  // Every other call site in the app passes it; this was the only one that did not.
+  const able = canSay(locale) && !!item.native;
+  // A language with no locale at all (Hmong: no device voice and no online voice either) gets
+  // no button rather than a permanently dead one. The phrasebook says why in its own banner.
+  const speak = locale ? h('button', {
     class: 'speak', 'aria-label': `Speak: ${item.say}`, title: 'Hear it',
-    disabled: able && item.native ? null : '',
-    onclick: () => say(item.native || item.say, locale),
-  }, '🔊');
+    disabled: able ? null : '',
+  }, '🔊') : null;
+  if (speak) {
+    // Same handling as every phrase row above: say() resolves to false when neither the
+    // device voice nor the online one could pronounce it, and the button says so instead of
+    // appearing to do nothing.
+    speak.addEventListener('click', async () => {
+      const ok = await say(item.native || item.say, locale);
+      if (!ok) { speak.textContent = '🔇'; speak.title = 'Audio unavailable'; setTimeout(() => { speak.textContent = '🔊'; speak.title = 'Hear it'; }, 1500); }
+    });
+  }
   return h('div', { class: 'phrase lg-lesson' }, [
     h('div', { class: 'lg-lesson-txt' }, [
       h('div', { class: 'lg-say' }, item.say),
@@ -703,7 +716,7 @@ function guideLessonRow(item, locale) {
       h('div', { class: 'lg-means muted' }, item.means),
       item.note ? h('div', { class: 'lg-note muted' }, item.note) : null,
     ]),
-    h('div', { class: 'phrase-ctrls' }, [speak]),
+    speak ? h('div', { class: 'phrase-ctrls' }, [speak]) : null,
   ]);
 }
 
