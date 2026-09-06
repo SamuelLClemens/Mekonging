@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.508.1';
+const CACHE_VERSION = 'mk-v0.509.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -281,9 +281,10 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Navigation timeout. Long enough that a merely-slow link still delivers the newest deploy,
-// short enough that it is not a blank screen. Falls back to the cached shell, which the app
-// then refreshes in the background via the service-worker update check.
+// Navigation timeout. The navigation no longer blocks the launch (see the isNav branch: the
+// cached shell is served immediately and this fetch runs behind it), so this is now just the
+// deadline on that BACKGROUND refresh — the point at which a stalled connection stops holding
+// the worker alive for a copy of index.html it is never going to deliver.
 const NAV_TIMEOUT_MS = 3000;
 
 // Deadlines for everything else the worker fetches. Navigation was the only request kind
@@ -343,13 +344,38 @@ self.addEventListener('fetch', (e) => {
   const isSub = /\.(js|css|json|webmanifest|html)$/.test(p);
 
   if (isNav) {
+    // STALE-WHILE-REVALIDATE, not network-first-with-a-timeout.
+    //
+    // Every sub-resource is already served cache-first from this version's own cache, so by
+    // the time a returning traveller launches the app, the entire application is on the
+    // device. The navigation was the one request still going to the network first, and it
+    // held the whole launch: on a slow link that is up to NAV_TIMEOUT_MS of blank screen
+    // before falling back to a shell that was sitting in the cache the entire time. On a
+    // hotel connection that accepts the request and stalls, it was that wait on every single
+    // launch, to end up exactly where it started.
+    //
+    // So the cached shell is served immediately when there is one — the app opens at local
+    // speed on any network, including none — and the network copy is fetched behind it and
+    // written back for next time. A deploy is therefore not lost, only deferred by one
+    // launch, and it does not even wait that long in practice: the service worker's own
+    // update check runs on load and main.js raises the "new version is ready" toast in the
+    // same session. That is a better answer than making everyone wait to find out.
     e.respondWith((async () => {
       const cache = await caches.open(CACHE_VERSION);
-      try {
-        return await withTimeout(fetch(req, { cache: 'no-cache' }), NAV_TIMEOUT_MS);
-      } catch {
-        return (await cache.match('index.html')) || Response.error();
+      const cached = await cache.match('index.html');
+      const fresh = withTimeout(fetch(req, { cache: 'no-cache' }), NAV_TIMEOUT_MS)
+        .then((res) => {
+          if (res && res.ok) cache.put('index.html', res.clone()).catch(() => { /* storage full */ });
+          return res;
+        })
+        .catch(() => null);
+      if (cached) {
+        // Keep the worker alive for the background refresh; the traveller is not waiting on it.
+        e.waitUntil(fresh);
+        return cached;
       }
+      // First ever launch: there is nothing cached to be fast with, so the network it is.
+      return (await fresh) || Response.error();
     })());
     return;
   }
