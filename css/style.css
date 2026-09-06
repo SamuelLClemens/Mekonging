@@ -84,8 +84,29 @@
   /* Radius / spacing / type */
   --r-pill: 999px; --r-lg: 24px; --r-md: 16px; --r-sm: 10px;
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
-  --fs-display: 2.2rem; --fs-h1: 1.45rem; --fs-h2: 1.18rem; --fs-h3: 1.02rem;
-  --fs-lg: 1.18rem; --fs-body: 1rem; --fs-base: 1rem; --fs-sm: 0.875rem; --fs-label: 0.7rem;
+  /* Type scale. One declaration site: the fluid display/h1/h2 values below used to live in a
+     second :root block further down, which silently won, so these three were read as 2.2/1.45/
+     1.18rem by anyone auditing this line and were in fact dead. Same computed values, one home.
+
+     --fs-lg was 1.18rem and fixed. Once h2 became fluid, lg quietly overtook it: 18.88px against
+     h2's 18.20px at 375px, a "large text" token 3.7% bigger than the section heading beside it,
+     and six of its seven uses are weight-800 titles. It tracks h2 now.
+
+     --fs-h3 was 1.02rem — 2% over body, which is not a heading. 1.0625rem gives it 6.25%.
+     The gap between body and h2 is only 2.2px at 375px, so h3 also leans on weight and colour
+     (.card h3 is --teal-deep, .cat-title is --head-accent); size alone cannot carry it here.
+
+     --fs-base equals --fs-body today but must NOT be folded into it: all four uses are form
+     controls, and iOS zooms the page when an input is under 16px. It is pinned for that reason,
+     independently of whatever body text does.
+
+     --fs-xs was used seven times and never defined, so every site silently took its own inline
+     fallback — six said 0.78rem and .explore-tag said 0.72rem. One value now. */
+  --fs-display: clamp(2.05rem, 1.5rem + 3.4vw, 2.95rem);
+  --fs-h1: clamp(1.35rem, 1.18rem + 0.9vw, 1.6rem);
+  --fs-h2: clamp(1.12rem, 1.02rem + 0.5vw, 1.28rem);
+  --fs-lg: var(--fs-h2); --fs-h3: 1.0625rem;
+  --fs-body: 1rem; --fs-base: 1rem; --fs-sm: 0.875rem; --fs-xs: 0.78rem; --fs-label: 0.7rem;
 
   /* softer, layered shadows for a modern feel */
   --shadow: 0 12px 32px -8px rgba(120, 50, 20, 0.16), 0 2px 6px rgba(120, 50, 20, 0.06);
@@ -438,7 +459,7 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .explore-facts { color: var(--ink-soft); font-size: var(--fs-sm); margin-top: 2px; }
 .explore-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .explore-tag {
-  font-size: var(--fs-xs, 0.72rem); line-height: 1.4; padding: 1px 7px; border-radius: 999px;
+  font-size: var(--fs-xs); line-height: 1.4; padding: 1px 7px; border-radius: 999px;
   background: color-mix(in srgb, var(--ec, var(--teal)) 14%, transparent);
   color: var(--ink); border: 1px solid color-mix(in srgb, var(--ec, var(--teal)) 35%, transparent);
 }
@@ -482,7 +503,7 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .zone-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .zone-name { font-weight: 800; }
 .zone-tag { font-size: var(--fs-sm); opacity: .85; }
-.zone-count { font-size: var(--fs-xs, 0.78rem); }
+.zone-count { font-size: var(--fs-xs); }
 .zone-go { flex: none; opacity: .5; font-size: 1.2rem; }
 /* --- "where to go in <month>" on the region chooser ------------------------------------- */
 /* The verdict is a text label rather than a filled pill on purpose: --good and --warn are
@@ -503,7 +524,7 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .zone-when.is-best { color: var(--good); }
 .zone-when.is-avoid { color: var(--warn); }
 .zone-when.is-mixed, .zone-when.is-shoulder { color: var(--ink-soft); }
-.zone-why { font-size: var(--fs-xs, 0.78rem); line-height: 1.35; margin-top: 2px; }
+.zone-why { font-size: var(--fs-xs); line-height: 1.35; margin-top: 2px; }
 /* The region facts block: a definition grid, deliberately terse — label left, fact right. */
 .zone-lead { margin: 0 0 var(--sp-3); font-weight: 600; }
 .zone-dl { display: grid; grid-template-columns: minmax(84px, auto) 1fr; gap: var(--sp-1) var(--sp-3); margin: 0; }
@@ -1025,7 +1046,7 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 /* Trip-elapsed vs. budget-withdrawn pace: two slim reused .budget-bar tracks, each with its
    own fill colour so the two clocks stay visually distinct at a glance. */
 .pace-row { margin-top: var(--sp-3); }
-.pace-lbl { display: block; font-size: var(--fs-xs, 0.78rem); color: var(--ink-soft); }
+.pace-lbl { display: block; font-size: var(--fs-xs); color: var(--ink-soft); }
 .pace-row .budget-bar.pace-bar { margin-top: 3px; }
 .pace-fill-trip { background: var(--ink-soft); }
 .pace-fill-wd { background: #B15C2E; }
@@ -1048,7 +1069,7 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .exp-add-compact .field label { margin-bottom: 2px; }
 .exp-add-compact .exp-title-chips { margin: 2px 0 var(--sp-1); }
 .exp-add-compact .btn.block { margin-top: var(--sp-2); }
-.exp-title-chips .chip { font-size: var(--fs-xs, 0.78rem); padding-top: 4px; padding-bottom: 4px; }
+.exp-title-chips .chip { font-size: var(--fs-xs); padding-top: 4px; padding-bottom: 4px; }
 .exp-row {
   display: flex; align-items: center; gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-2); border-radius: var(--r-lg);
@@ -1061,9 +1082,9 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 }
 .exp-row-mid { flex: 1 1 auto; min-width: 0; }
 .exp-row-note { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.exp-row-date { font-size: var(--fs-xs, 0.78rem); margin-top: 1px; }
+.exp-row-date { font-size: var(--fs-xs); margin-top: 1px; }
 .exp-row-amt { flex: none; text-align: right; font-size: var(--fs-sm); }
-.exp-row-approx { display: block; font-size: var(--fs-xs, 0.78rem); }
+.exp-row-approx { display: block; font-size: var(--fs-xs); }
 .exp-row-actions { flex: none; display: flex; gap: 4px; }
 
 /* "Show to a local": full-screen, very large native script */
@@ -1825,11 +1846,6 @@ html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex
    ========================================================================== */
 
 :root {
-  /* Fluid type — scales smoothly phone → desktop for a premium feel. */
-  --fs-display: clamp(2.05rem, 1.5rem + 3.4vw, 2.95rem);
-  --fs-h1: clamp(1.35rem, 1.18rem + 0.9vw, 1.6rem);
-  --fs-h2: clamp(1.12rem, 1.02rem + 0.5vw, 1.28rem);
-
   /* Elevation tiers with a warm tint (matches the paper palette). */
   --elev-1: 0 1px 2px rgba(120,50,20,0.05), 0 3px 10px -4px rgba(120,50,20,0.12);
   --elev-2: 0 2px 5px rgba(120,50,20,0.07), 0 14px 34px -10px rgba(120,50,20,0.20);
