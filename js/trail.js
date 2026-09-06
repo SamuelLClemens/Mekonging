@@ -142,11 +142,13 @@ export function addTrailStop({ lat, lng, city, cc, first, last }) {
   return rec;
 }
 
-// Rename, re-date (which also reorders it — the list sorts on `first`), or correct the
-// country of one or more points sharing one merged stop on the journey map (journeyStops()
-// merges anything within 10 km, which can span more than one trail.js point even though
-// noteTrail's own 2 km merge already deduplicates most of them). `ids` is every point that
-// stop carries; every field is optional, so a caller can patch just what changed.
+// Rename, re-date (which also reorders it — the list sorts on `first`), correct the
+// country, or set how the traveller arrived (arriveMode — a correction over the journey
+// map's own inferred glyph) for one or more points sharing one merged stop on the journey
+// map (journeyStops() merges anything within 10 km, which can span more than one trail.js
+// point even though noteTrail's own 2 km merge already deduplicates most of them). `ids` is
+// every point that stop carries; every field is optional, so a caller can patch just what
+// changed.
 export function updateTrailStops(ids, patch = {}) {
   const set = new Set(ids || []);
   if (!set.size) return 0;
@@ -157,6 +159,10 @@ export function updateTrailStops(ids, patch = {}) {
     if (patch.cc !== undefined) p.cc = patch.cc || '';
     if (patch.first !== undefined && patch.first) p.first = patch.first;
     if (patch.last !== undefined) p.last = patch.last || p.first;
+    // How the traveller reached this point — a correction over the journey map's own
+    // inferred glyph (js/screens/journal.js). '' clears it back to inferred rather than
+    // pinning it to a guess forever.
+    if (patch.arriveMode !== undefined) p.arriveMode = patch.arriveMode || '';
     n++;
   });
   if (n) save();
