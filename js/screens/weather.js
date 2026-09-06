@@ -398,37 +398,15 @@ export function weatherScreen(country) {
   mount(wrap, '#home');
 }
 
-// ---- Weather visualisation: hourly watch-face ring + month calendar ----------
-// Reads the already-cached hourly/daily records (no extra network). One metric at a
-// time — temperature, rain chance, humidity, feels-like or wind — shown around a
-// 24-hour clock-face ring and across a month calendar. wxMetric persists for the session.
-let wxMetric = 'temp';
-// UV uses the internationally-recognised index bands (green/yellow/orange/red/purple),
-// not a smooth gradient — a UV reading is meaningful in absolute terms, not relative to
-// that single day's own min/max, so it ignores the passed lo/hi range entirely.
-// The next 24 hourly records from "now" (floored to the current hour) — shared by the ring
-// and its click-to-inspect detail panel so both always index the exact same window.
-// `selectedIdx` (0-23, or null) highlights that one wedge with an accent outline and swaps the
-// centre readout from "now" to that hour — tapping a wedge (see wxVizCard) is how it gets set.
-// All-layers detail for one tapped hour — the ring is deliberately one metric's colour at a
-// time; this answers "what about every OTHER layer at that same hour" in one glance, right
-// under the ring rather than a navigation away from it.
-// A genuinely detailed hour-by-hour strip: time, icon, temp, rain chance and wind for each
-// of the next 24 hours, scrollable, ALL metrics at once. The ring above is deliberately one
-// metric at a time (that is what makes it readable as a shape); this is its "as detailed as
-// possible" companion so nothing about the next 24 hours needs a metric switch to see.
-// A rolling "upcoming days" grid — every cell holds a REAL forecast day, no calendar-month
-// padding. It used to lay out a full calendar month, which meant every day before today AND
-// every day past the ~16-day forecast horizon rendered as a bare "N/A" cell — often more N/A
-// cells than real ones. Only the leading blank cells needed to line the first real day up
-// under its actual weekday remain, and those are empty, not labelled "N/A".
-// `onChange`, when given, is called after a metric switch instead of the global render() —
-// letting the caller repaint just this card in place so switching Temp/Rain/Humidity/UV/
-// Feels/Wind never jumps the page back to the top (mount() always scrolls to 0,0).
-// Fully self-contained: switching metric (Temp/Rain/Humidity/UV/Feels/Wind) only ever
-// repaints the small ring+calendar slots below, never the card's own chip row and never
-// the enclosing screen — so it can never trigger the "whole body cleared, then rebuilt"
-// scroll jump that a wider repaint (or the old wxMetric=m;render()) caused.
+// The hourly watch-face ring + month calendar (wxVizCard and everything under it — the
+// selected-hour ring, the all-layers detail panel, the hourly strip, the upcoming-days grid)
+// moved to js/weather-ui.js in mk-v0.504.0's launch-graph split (js/weather.js stays eager;
+// this screen no longer does). This whole section was that code's documentation, left behind
+// pointing at nothing — along with a `let wxMetric = 'temp';` that wxVizCard's own functions
+// went on referencing as if it were still in scope, which a plain module import cannot do
+// across files. It silently threw ReferenceError: Can't find variable: wxMetric the moment
+// anyone actually opened the ring (mk-v0.508.0's live-testing never happened to). Fixed at
+// the source: wxMetric now lives in weather-ui.js, next to the code that actually uses it.
 
 // Exported setter for weatherKey (module-private above) — weatherNearbyCard (main.js) uses
 // this to seed which city "See full forecast" opens to, instead of writing the binding
