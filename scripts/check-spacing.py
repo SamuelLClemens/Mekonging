@@ -111,8 +111,8 @@ CEILING = {
         8
     ],
     "js/screens/places.js": [
-        55,
-        35
+        42,
+        30
     ],
     "js/screens/produce.js": [
         6,
