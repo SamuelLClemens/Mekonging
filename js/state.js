@@ -787,7 +787,9 @@ export function addJellyReport(id, report) {
 let _seq = 0;
 let _idSource = null;
 export function setIdSource(fn) { _idSource = (typeof fn === 'function') ? fn : null; }
-function uid(prefix) {
+// Exported so other modules mint ids in the same format rather than inventing a second
+// convention (js/trail.js's manually-added stops, first caller outside this file).
+export function uid(prefix) {
   _seq += 1;
   if (_idSource) return `${prefix}-${_idSource(_seq)}`;
   try {

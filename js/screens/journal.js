@@ -25,18 +25,19 @@
 // is entirely defined by app-state.js, not by which file calls it.
 import {
   store, journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
-  getAlbum, addAlbumPhoto, deleteAlbumPhoto, updateAlbumPhoto, getPin, getLastFix,
+  getAlbum, addAlbumPhoto, deleteAlbumPhoto, updateAlbumPhoto, getPin, getLastFix, save,
 } from '../state.js';
-import { getActiveCountry, setLiveCleanup } from '../app-state.js';
+import { getActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import { h } from '../util.js';
 import { fmtTemp } from '../render-utils.js';
-import { field, confirmAction } from '../ui-widgets.js';
+import { field, confirmAction, locationSelect, spotForKey } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
-import { trailPoints, trailStats, trailEnabled, setTrailEnabled, clearTrail } from '../trail.js';
-import { journeyMapParts } from '../journey-share.js';
-import { myVisits } from '../visits.js';
+import {
+  trailPoints, trailStats, trailEnabled, setTrailEnabled, clearTrail,
+  addTrailStop, updateTrailStops, deleteTrailStops,
+} from '../trail.js';
 import { WEATHER_SPOTS } from '../weather.js';
 import { dateLocale } from '../i18n.js';
 import {
@@ -539,19 +540,19 @@ function journalFormScreen(editId) {
   mount(wrap, '#home');
 }
 
-// ---- JOURNEY MAP (Indiana-Jones dotted line + moving vehicle) ----------------
 // ---- THE JOURNEY MAP --------------------------------------------------------
-// A map of where the traveller has actually been, built for them rather than by them, and
-// deliberately a DIFFERENT map from the two the app already has: Places is a live MapLibre
-// map of what is around you right now, Explore is a region chooser for deciding where to
-// go. This one is a record of a trip that happened — real country outlines and the Mekong
-// drawn from js/data/geo.js, no tiles, no network, cropped to the trip itself — and every
-// pin is a door into what the traveller put in the app at that place.
+// A map of where the traveller has actually been, built for them rather than by them. Now
+// the same MapLibre engine as Places and Visitors — satellite by default, with the
+// self-hosted country/Mekong geometry as its always-offline fallback (see js/map.js) —
+// rather than the bespoke parchment SVG this screen used to draw itself. That SVG lives on
+// at js/journey-share.js: the share/preview page still needs a static, self-contained
+// drawing it can hand to someone as a file, which a live WebGL map cannot be. Every pin is
+// a door into what the traveller put in the app at that place.
 //
-// It replaces an abstract dotted line drawn inside a bounding box, which had no geography
-// at all, needed two journal entries before it would draw anything, and listed its stops
-// as plain text that led nowhere. Pins are now automatic (js/trail.js), so a traveller who
-// has written nothing still has a map.
+// Before that SVG, this was an abstract dotted line drawn inside a bounding box, which had
+// no geography at all, needed two journal entries before it would draw anything, and listed
+// its stops as plain text that led nowhere. Pins are automatic (js/trail.js), so a traveller
+// who has written nothing still has a map.
 
 // One "place" on this map. 10 km rather than a tighter figure because a stop is a town and
 // the things around it — a journal entry stamped at Tam Coc is 7 km from a trail pin in Ninh
@@ -581,7 +582,7 @@ function journeyStops() {
     for (const s of stops) { const d = jkm(coords, s); if (d < bestKm) { bestKm = d; best = s; } }
     if (best && bestKm < NEAR_KM) return best;
     const st = { lat: coords.lat, lng: coords.lng, label: '', first: '', last: '', cc: '',
-      entries: [], places: [], auto: false, ...seed };
+      entries: [], places: [], auto: false, manual: false, _trailIds: [], ...seed };
     stops.push(st);
     return st;
   };
@@ -596,6 +597,8 @@ function journeyStops() {
     if (p.city && !st.label) st.label = p.city;
     if (p.cc && !st.cc) st.cc = p.cc;
     st.auto = true;
+    if (p.manual) st.manual = true;
+    if (p.id) st._trailIds.push(p.id);
     stamp(st, p.first); stamp(st, p.last);
   });
 
@@ -646,6 +649,12 @@ function jrDateRange(from, to) {
   return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
 }
 
+// Which stop's inline editor is open, and whether the "add a stop you missed" form is —
+// module-level so both survive journeyScreen's own render() (a full rebuild each time), the
+// same idiom as tripScreen's editStopId/placePickerOpenFor in main.js.
+let editingIdx = null;
+let addingStop = false;
+
 export function journeyScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
@@ -678,49 +687,52 @@ export function journeyScreen() {
       jrDateRange(stops[0].first, stops[stops.length - 1].last) || null,
     ].filter(Boolean).join(' · ')));
 
-  // The map. Static layers go in as one SVG string — the same pattern this screen already
-  // used — and each pin carries data-i so the handlers below can find it. A pin is a real
-  // button to a screen reader and to the keyboard, not just a circle.
-  const parts = journeyMapParts(stops, visitMarksForMap());
+  // The map: a live MapLibre satellite map (same engine and offline-geometry fallback as
+  // Places and Visitors — see js/map.js), numbered pins in visit order with their name shown
+  // beside them, and a dashed route line connecting them in order. Selecting a stop is one
+  // function whether it came from a pin or the list below, so the two can never disagree
+  // about what is shown or which pin is lit.
   const holder = h('div', { class: 'jr-live-wrap' });
+  const canvas = h('div', { class: 'jr-map-live' });
+  holder.append(canvas);
   const panel = h('div', { class: 'jr-panel' });
+  wrap.append(holder, panel);
 
-  if (parts) {
-    const { vb, minX, minY, w, hgt, u, f, land, river, visited, project } = parts;
-    const pp = stops.map((s) => project(s.lng, s.lat));
-    const route = pp.length > 1
-      ? `<path d="M${pp.map((c) => `${f(c[0])},${f(c[1])}`).join(' L')}" fill="none" stroke="#C0431A" stroke-width="${f(u * 0.8)}" stroke-dasharray="${f(u * 2.8)} ${f(u * 2)}" stroke-linecap="round"/>`
-      : '';
-    const dotR = u * 2.4, numFs = u * 2.7;
-    const pins = pp.map((c, i) => {
-      const s = stops[i];
-      const lbl = `${i + 1}. ${s.label || 'a place you have been'}${s.entries.length ? `, ${s.entries.length} journal ${s.entries.length === 1 ? 'entry' : 'entries'}` : ''}`;
-      return `<g class="jr-pin" data-i="${i}" role="button" tabindex="0" aria-label="${lbl.replace(/"/g, '&quot;')}">`
-        + `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(dotR * 1.9)}" fill="transparent"/>`
-        + `<circle class="jr-pin-dot" cx="${f(c[0])}" cy="${f(c[1])}" r="${f(dotR)}" fill="#E8632A" stroke="#FFF6E2" stroke-width="${f(u * 0.6)}"/>`
-        + `<text x="${f(c[0])}" y="${f(c[1] + numFs * 0.35)}" font-size="${f(numFs)}" font-weight="700" fill="#FFF6E2" text-anchor="middle" font-family="sans-serif">${i + 1}</text></g>`;
-    }).join('');
-    holder.innerHTML = `<svg viewBox="${vb}" class="jr-map jr-map-live" xmlns="http://www.w3.org/2000/svg" aria-label="Map of your journey">`
-      + `<rect x="${minX.toFixed(1)}" y="${minY.toFixed(1)}" width="${w.toFixed(1)}" height="${hgt.toFixed(1)}" fill="#CFE3EC"/>`
-      + `${land}${river}${visited}${route}${pins}</svg>`;
-    wrap.append(holder);
-  }
-  wrap.append(panel);
-
-  // Selecting a stop is one function whether it came from a pin or the list, so the two can
-  // never disagree about what is shown or which pin is lit.
   let selected = -1;
+  let mapCtrl = null;
   const select = (i) => {
     selected = i;
-    holder.querySelectorAll('.jr-pin').forEach((el) => el.classList.toggle('on', +el.dataset.i === i));
+    if (mapCtrl) mapCtrl.setSelected(String(i));
     panel.innerHTML = '';
     panel.append(stopCard(stops[i], i));
     panel.scrollIntoView({ block: 'nearest' });
   };
-  holder.querySelectorAll('.jr-pin').forEach((el) => {
-    const i = +el.dataset.i;
-    el.addEventListener('click', () => select(i));
-    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(i); } });
+
+  const mapPlaces = stops.map((s, i) => ({
+    id: String(i), _num: i + 1,
+    name: s.label || 'A place you have been',
+    coords: { lat: s.lat, lng: s.lng },
+  }));
+  import('../map.js').then((mod) => mod.initMap(canvas, {
+    places: mapPlaces,
+    numbered: true,
+    showLabels: true,
+    markerColor: () => '#E8632A',
+    route: stops.map((s) => ({ lat: s.lat, lng: s.lng })),
+    onOpen: (id) => select(+id),
+    satellite: store.profile.prefs.journeyMapSat !== false,
+    styleToggle: true,
+    onStyleChange: (on) => { store.profile.prefs.journeyMapSat = on; save(); },
+  })).then((c) => {
+    mapCtrl = c;
+    if (selected >= 0) c.setSelected(String(selected));
+    // One WebGL context per screen visit — without disposing on the way out, opening this
+    // screen repeatedly over a session leaks contexts until maps silently stop starting.
+    // Same idiom as Places and Visitors: chain onto any cleanup already registered.
+    const prev = getLiveCleanup();
+    setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } mapCtrl = null; });
+  }).catch(() => {
+    canvas.replaceChildren(h('p', { class: 'empty' }, 'The map could not start here. Your stops are still listed below.'));
   });
 
   // One stop, in full: when, what was written there, the photos taken there, and the places
@@ -733,7 +745,8 @@ export function journeyScreen() {
       h('span', { class: 'muted tiny' }, jrDateRange(s.first, s.last)),
     ]));
     const tags = [];
-    if (s.auto) tags.push('recorded automatically');
+    if (s.manual) tags.push('added by you');
+    else if (s.auto) tags.push('recorded automatically');
     if (s.planned) tags.push('a planned stop');
     if (tags.length) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, tags.join(' · ')));
 
@@ -774,8 +787,34 @@ export function journeyScreen() {
 
   // Every stop in order, so the whole trip is readable without hunting for pins on a map,
   // and tapping a row lights its pin. Same select() as the map, so they cannot diverge.
+  //
+  // Edit/delete only for a stop with a trail.js component (s._trailIds.length) — one written
+  // purely from a journal entry, a planned trip stop or a saved place is already editable on
+  // its own screen (the journal entry, #trip, the place itself); giving it a second edit path
+  // here would let the two silently disagree about what a "rename" even changed.
   const list = h('div', { class: 'card', style: 'margin-top:10px' }, [h('h2', {}, '🧭 Your stops, in order')]);
   stops.forEach((s, i) => {
+    if (editingIdx === i) {
+      const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.label });
+      const dt = h('input', { 'aria-label': 'Arrive date', type: 'date', value: s.first || '' });
+      const dt2 = h('input', { 'aria-label': 'Leave date', type: 'date', value: s.last || '' });
+      list.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
+        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t,
+          h('div', { class: 'trip-dates' }, [
+            h('label', { class: 'trip-date-lbl' }, ['Arrived', dt]),
+            h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dt2]),
+          ])]),
+        h('div', { class: 'chips' }, [
+          h('button', { class: 'btn', onclick: () => {
+            if (!dt.value) return;
+            updateTrailStops(s._trailIds, { city: t.value.trim() || s.label, first: dt.value, last: dt2.value || dt.value });
+            editingIdx = null; render();
+          } }, 'Save'),
+          h('button', { class: 'btn ghost', onclick: () => { editingIdx = null; render(); } }, 'Cancel'),
+        ]),
+      ]));
+      return;
+    }
     const bits = [];
     if (s.entries.length) bits.push(`${s.entries.length} 📔`);
     if (s.photos.length) bits.push(`${s.photos.length} 📸`);
@@ -788,8 +827,50 @@ export function journeyScreen() {
       ]),
       h('span', { class: 'jr-row-go' }, '›'),
     ]));
+    if (s._trailIds.length) {
+      list.append(h('div', { class: 'jr-row-actions' }, [
+        h('button', { class: 'chip', 'aria-label': `Edit stop ${i + 1}`, onclick: () => { editingIdx = i; render(); } }, '✎ Edit'),
+        h('button', { class: 'chip', 'aria-label': `Remove stop ${i + 1}`, onclick: () => {
+          confirmAction({ title: 'Remove this stop?', body: `This removes ${s.label || 'this pin'} from your recorded journey. Your journal, photos and saved places are not touched.`, confirmLabel: 'Remove', danger: true })
+            .then((ok) => { if (ok) { deleteTrailStops(s._trailIds); render(); } });
+        } }, '✕ Remove'),
+      ]));
+    }
   });
   wrap.append(list);
+
+  // For a place visited without the app open — the gap the automatic pins cannot close on
+  // their own. Location comes from the same curated city list a trip stop matches against
+  // (WEATHER_SPOTS), so an added stop looks and merges exactly like one the app inferred from
+  // a matching trip stop's title, and the date is what places it correctly among the rest —
+  // there is no separate reorder control; re-dating a stop here or above is how you move it.
+  if (addingStop) {
+    let chosen = WEATHER_SPOTS[0];
+    const loc = locationSelect(spotKey(chosen), (key) => { chosen = spotForKey(key) || chosen; });
+    const dateIn = h('input', { 'aria-label': 'Arrive date', type: 'date' });
+    const dateOut = h('input', { 'aria-label': 'Leave date', type: 'date' });
+    const err = h('p', { class: 'muted tiny', style: 'margin:4px 0 0' });
+    wrap.append(h('div', { class: 'card', style: 'margin-top:8px' }, [
+      h('h3', { style: 'margin:0 0 8px' }, '+ Add a stop you missed'),
+      field('Place', loc),
+      h('div', { class: 'trip-dates' }, [
+        h('label', { class: 'trip-date-lbl' }, ['Arrived', dateIn]),
+        h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dateOut]),
+      ]),
+      err,
+      h('div', { class: 'chips', style: 'margin-top:8px' }, [
+        h('button', { class: 'btn', onclick: () => {
+          if (!dateIn.value) { err.textContent = 'Set when you arrived.'; return; }
+          addTrailStop({ lat: chosen.lat, lng: chosen.lng, city: chosen.city, cc: chosen.country, first: dateIn.value, last: dateOut.value || dateIn.value });
+          addingStop = false; render();
+        } }, 'Add stop'),
+        h('button', { class: 'btn ghost', onclick: () => { addingStop = false; render(); } }, 'Cancel'),
+      ]),
+    ]));
+  } else {
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { addingStop = true; render(); } },
+      '+ Add a stop you missed'));
+  }
 
   // Unmatched planned stops: named, so the list is not quietly incomplete.
   const unmatched = (store.trip.stops || []).filter((s) => {
@@ -824,11 +905,4 @@ export function journeyScreen() {
   wrap.append(foot);
 
   mount(wrap, '#home');
-}
-
-// The visit-cell map (js/visits.js) as faint background marks, when the traveller has that
-// switched on. Kept separate from the pins above on purpose: a cell is rounded to ~55 km and
-// says only "the app was opened somewhere in here", so it is context, never a stop.
-function visitMarksForMap() {
-  try { return (myVisits() || []).map((c) => ({ lat: c.lat, lng: c.lng })); } catch { return []; }
 }

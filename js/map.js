@@ -443,6 +443,26 @@ export async function initMap(containerEl, opts = {}) {
     map.addLayer({ id: 'mk-measure-pts', type: 'circle', source: 'mk-measure', filter: ['==', '$type', 'Point'],
       paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-stroke-color': '#1E1E1E', 'circle-stroke-width': 2 } });
   }
+  // Journey route: an ordered dashed line connecting opts.route (an array of {lat,lng}, in
+  // visit order) — the journey map's dotted line between stops. No-op for every other caller,
+  // which never passes opts.route.
+  function addRouteLayers() {
+    if (map.getSource('mk-route')) return;
+    map.addSource('mk-route', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'mk-route-line', type: 'line', source: 'mk-route',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#C0431A', 'line-dasharray': [2.6, 1.8], 'line-opacity': 0.9,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.5, 8, 2.5, 12, 4] } });
+  }
+  function renderRoute() {
+    const src = map.getSource('mk-route');
+    if (!src) return;
+    const pts = (opts.route || []).filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    src.setData(pts.length > 1
+      ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {},
+          geometry: { type: 'LineString', coordinates: pts.map((p) => [p.lng, p.lat]) } }] }
+      : { type: 'FeatureCollection', features: [] });
+  }
   function renderMeasure() {
     const src = map.getSource('mk-measure'); if (!src) return;
     const feats = measurePts.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] } }));
@@ -481,7 +501,7 @@ export async function initMap(containerEl, opts = {}) {
   // and any already-set accommodation marker exist even before — or without — basemap
   // tiles (which need the network on first load).
   map.on('style.load', () => {
-    addWayback(); addMeasureLayers();
+    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -535,17 +555,37 @@ export async function initMap(containerEl, opts = {}) {
     el.textContent = num != null ? String(num) : '•';
     return el;
   }
+  // Numbered pin with its name visible beside it (opts.showLabels — the journey map; every
+  // other numbered-pin caller leaves this off and gets the plain badge above, unchanged). A
+  // separate element from numPinEl rather than an addition to it, so the label's own box can
+  // never grow the marker's anchor box — MapLibre anchors on the wrapper's own size, which the
+  // CSS fixes to exactly the badge (see .mk-numpin-lbl in style.css).
+  function numPinLabelEl(color, num, label) {
+    const wrap = document.createElement('div');
+    wrap.className = 'mk-numpin-lbl';
+    wrap.appendChild(numPinEl(color, num));
+    if (label) {
+      const tag = document.createElement('div');
+      tag.className = 'mk-pin-name';
+      tag.textContent = label;
+      wrap.appendChild(tag);
+    }
+    return wrap;
+  }
   function addSingle(p) {
     if (!p.coords) return;
     const color = colorFor(p);
     const m = opts.numbered
-      ? new maplibregl.Marker({ element: numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
+      ? new maplibregl.Marker({ element: opts.showLabels ? numPinLabelEl(color, p._num, p.name) : numPinEl(color, p._num), anchor: 'center' }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map)
       : new maplibregl.Marker({ color }).setLngLat([p.coords.lng, p.coords.lat]).addTo(map);
     const el = m.getElement();
     el.style.cursor = 'pointer';
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
     el.setAttribute('aria-label', (p._num != null ? p._num + '. ' : '') + (p.name || 'place'));
+    // Lets an external caller (the journey map's stop list) find and highlight this exact
+    // marker's element without keeping its own parallel list of marker objects.
+    if (p.id != null) el.dataset.placeId = String(p.id);
     const open = (ev) => { ev.stopPropagation(); if (opts.onOpen) opts.onOpen(p.id); };
     el.addEventListener('click', open);
     el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') open(ev); });
@@ -645,7 +685,18 @@ export async function initMap(containerEl, opts = {}) {
     try { ro.observe(containerEl); } catch { /* noop */ }
   }
 
-  embedApi = { setPlaces, setColorMode };
+  // Highlight one marker by its place id (an outline ring — see .mk-pin-selected in
+  // style.css), clearing any previous highlight first. Looked up via the data-place-id set
+  // in addSingle rather than kept as its own marker list, so this keeps working regardless
+  // of how the pins were last drawn. Pass null to clear.
+  function setSelected(id) {
+    containerEl.querySelectorAll('.mk-pin-selected').forEach((el) => el.classList.remove('mk-pin-selected'));
+    if (id == null) return;
+    let sel; try { sel = `[data-place-id="${CSS.escape(String(id))}"]`; } catch { return; }
+    const el = containerEl.querySelector(sel);
+    if (el) el.classList.add('mk-pin-selected');
+  }
+  embedApi = { setPlaces, setColorMode, setSelected };
 
   return {
     map,
