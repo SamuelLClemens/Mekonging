@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.500.0';
+const CACHE_VERSION = 'mk-v0.501.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -204,6 +204,13 @@ const PRECACHE = [
   'js/data/basemap.js',
   'lib/maplibre-gl.js',
   'lib/maplibre-gl.css',
+  // The display face. The vietnamese subsets are listed even though a Latin-only screen
+  // never requests them — unicode-range means the browser skips a subset until a character
+  // needs it, and offline is exactly when a Vietnamese place name must still render.
+  'lib/fonts/bevietnampro-700-latin.woff2',
+  'lib/fonts/bevietnampro-700-vietnamese.woff2',
+  'lib/fonts/bevietnampro-800-latin.woff2',
+  'lib/fonts/bevietnampro-800-vietnamese.woff2',
 ];
 
 self.addEventListener('install', (e) => {
