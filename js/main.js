@@ -796,6 +796,25 @@ function goBack(fallback) {
 }
 
 // ---- shell ------------------------------------------------------------------
+// Which country am I reading about? A screen whose entire content is one country's rules —
+// visas, scams, prices, accessibility — carried a title identical to every other country's
+// version of it, so a traveller who crossed a border last week and opened "Entry & visa" had
+// nothing on screen telling them whose rules these were. On a trip through four countries
+// that is not a small ambiguity.
+//
+// The flag goes here rather than into the topbar title, for two measured reasons. At 375px
+// "🇹🇭 Entry & visa" wraps the title to two lines where "Entry & visa" fits on one — and the
+// interface ships in 29 languages, most of which render these titles longer than English, so
+// a title that only just fits here would wrap outright in German or Russian. This line also
+// says the country's NAME, which a flag alone does not: flags are recognisable, not
+// self-explanatory, and a traveller who cannot yet tell the Lao flag from the Thai one is
+// exactly the traveller this is for.
+export function countryContextLine(cc) {
+  const c = getCountry(cc);
+  if (!c) return null;
+  return h('p', { class: 'country-context' }, `${c.flag} ${c.name}`);
+}
+
 export function topbar(title, backHash) {
   const hash = location.hash || '';
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
@@ -1942,6 +1961,7 @@ function accessScreen(cc) {
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Accessibility', c ? `#country-${cc}` : '#home'));
+  wrap.append(countryContextLine(cc));
   if (!a) { wrap.append(h('p', { class: 'empty' }, 'Accessibility guidance for this country is on the way.')); mount(wrap, 'home'); return; }
   wrap.append(h('p', { class: 'muted' }, `How ${c ? c.name : 'this country'} works for travellers with disabilities — honestly. ${a.overview}`));
   const needs = store.profile.prefs.access || [];
@@ -1985,7 +2005,8 @@ const DIAPER_WHERE = {
 function babyScreen(cc) {
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Travelling with a baby', c ? `#country-${cc}` : '#home'));
+  wrap.append(topbar('With a baby', c ? `#country-${cc}` : '#home'));
+  wrap.append(countryContextLine(cc));
   wrap.append(h('p', { class: 'muted' }, `Where to find nappies, formula and baby basics in ${c ? c.name : 'this country'} — cheapest first — plus family tips. Guidance; verify locally.`));
   const dc = h('div', { class: 'card' }, [h('h2', {}, '🧷 Where to buy nappies (diapers)')]);
   dc.append(h('p', {}, DIAPER_WHERE[cc] || 'Look for the largest supermarket or pharmacy in town and buy larger packs for the best price per nappy.'));
@@ -2109,6 +2130,7 @@ function visaScreen(cc) {
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Entry & visa', c ? `#country-${cc}` : '#home'));
+  wrap.append(countryContextLine(cc));
   if (!v) { wrap.append(h('p', { class: 'empty' }, 'Entry guidance for this country is on the way.')); mount(wrap, 'home'); return; }
   wrap.append(h('div', { class: 'banner' }, 'Visa rules depend on your nationality and change often. Treat this as orientation, then confirm on the official site for your passport before you travel.'));
   const fresh = freshnessNotice(v.asOf, v.officialEvisa && v.officialEvisa.url, v.officialEvisa && v.officialEvisa.name);
@@ -2175,6 +2197,7 @@ function scamsScreen(cc) {
   const c = getCountry(getActiveCountry());
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Common scams', c ? `#country-${getActiveCountry()}` : '#home'));
+  wrap.append(countryContextLine(getActiveCountry()));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
 
   wrap.append(h('p', { class: 'muted' }, `The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
@@ -4948,6 +4971,7 @@ function pricesScreen(countryId) {
   // reads "Money & prices" — "Money & prices" measured 3 lines here (task #176's regression
   // threshold), and the converter card immediately below already makes the currency half obvious.
   wrap.append(topbar('Fair prices', getCountry(getActiveCountry()) ? `#country-${getActiveCountry()}` : '#home'));
+  wrap.append(countryContextLine(getActiveCountry()));
   wrap.append(countryChips((id) => go(`#prices-${id}`)));
 
   const country = getCountry(getActiveCountry());
@@ -5466,7 +5490,7 @@ function poolsScreen(arg) {
 
 function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Border crossings', '#places'));
+  wrap.append(topbar('Borders', '#places'));
   wrap.append(screenHint('Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
   // Freshness badge: the oldest "verified" date across all crossings, so the whole set is
   // judged by its weakest link. Quiet ✓ while under ~6 months old, a prominent ⚠ nudge once
@@ -6152,7 +6176,7 @@ function scheduleCard(s) {
 function schedulesScreen(country) {
   if (country && getCountry(country)) { setActiveCountry(country); schedCountry = country; }
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Transport schedules', '#home'));
+  wrap.append(topbar('Schedules', '#home'));
   wrap.append(screenHint('Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
@@ -6768,7 +6792,7 @@ function callControl(s, label) {
 
 function soundsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Sounds around you', '#nature'));
+  wrap.append(topbar('Sounds nearby', '#nature'));
   wrap.append(screenHint('Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   let group = '';
@@ -7440,7 +7464,7 @@ function rememberSearch(q) {
 
 function searchScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Search everything', '#home'));
+  wrap.append(topbar('Search', '#home'));
   const input = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
     placeholder: 'Find places, phrases, wildlife, prices…',
     oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) });
@@ -8325,7 +8349,7 @@ function docKind(type) {
 }
 function vaultScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Secure documents', '#home'));
+  wrap.append(topbar('Documents', '#home'));
   const body = h('div', {});
   wrap.append(body);
   mount(wrap, '#home');
@@ -8626,7 +8650,7 @@ function forgottenPasscodeDetails(body) {
 // ---- YOUR CONTRIBUTIONS (on-device points + levels, Local Guides-style) ------
 function contributionsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Your contributions', '#home'));
+  wrap.append(topbar('Contributions', '#home'));
   const pts = gamify.contributionPoints(store);
   const lvl = gamify.levelInfo(pts);
   const rows = gamify.contributionBreakdown(store);
@@ -9580,7 +9604,7 @@ function boardScreen(arg) {
 
   if (!board) {
     // picker: country chips + city list
-    wrap.append(topbar('Local noticeboard', '#home'));
+    wrap.append(topbar('Noticeboard', '#home'));
     wrap.append(h('p', { class: 'muted' }, 'Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
     const selected = cc || getActiveCountry();
     wrap.append(countryChips((id) => { setActiveCountry(id); go(`#board-${id}`); }, selected));

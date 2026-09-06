@@ -37,6 +37,16 @@ let _inFlight = null;
 // in. Order matches the rates object above (major currencies first, Mekong-region last).
 export const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'];
 
+// A currency is a three-letter code, and three-letter codes are the hardest possible thing to
+// scan under pressure — KHR and LAK and THB look alike at the moment a traveller is holding
+// notes they do not recognise. The flag is the part that is actually read at a glance, so
+// every control naming a currency leads with it.
+const CURRENCY_FLAGS = {
+  USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', AUD: '🇦🇺', CAD: '🇨🇦', SGD: '🇸🇬', CNY: '🇨🇳',
+  MYR: '🇲🇾', ILS: '🇮🇱', THB: '🇹🇭', VND: '🇻🇳', KHR: '🇰🇭', LAK: '🇱🇦',
+};
+export function currencyFlag(code) { return CURRENCY_FLAGS[code] || ''; }
+
 // Approximate baseline (per 1 USD). Labelled "approximate" until a live refresh.
 const FALLBACK = {
   base: 'USD', date: 'approximate', live: false,
