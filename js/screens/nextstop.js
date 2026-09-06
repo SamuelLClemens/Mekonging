@@ -20,7 +20,7 @@ import { getCountry, isCountryLoaded, loadAllCountries, allPlaces } from '../dat
 import { isFavorite } from '../state.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import { citySlug, personalScore } from '../render-utils.js';
-import { placeCard } from './places.js';
+import { placeCard } from '../place-ui.js';
 import {
   go, mount, topbar, render, focusSpot, todayISO, daysUntilISO,
   whereNextSection, nextChainTail, planCard, twelveGoUrl,

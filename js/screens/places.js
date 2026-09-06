@@ -59,6 +59,11 @@ import {
 // slice) — this is the one screen module that needed an import-line edit on that extraction.
 import { phraseSlug, scriptLang } from '../phrase-ui.js';
 
+// Shared with the screens still resident in main.js; see js/place-ui.js. These moved out
+// so this module could leave the launch graph — it is imported on demand by the router now.
+import {
+  SEV_LABEL, placeCard, travelerChips, saveSheet, tripVisitSheet, resolveItem, jellyInSeason, formatMonths, fmtReportDate, addPlaceSecret, beachChip, collRow, daysSinceISO, dowShort, formatMarketDays, getPlaceSecrets, jellyMonths, marketChip,
+} from '../place-ui.js';
 // Closes the tail this guide does not (yet) curate: a live Google Maps search centred on
 // wherever Places is anchored right now, via the same mapsUrl() deep link every place-detail
 // page already uses for "Open in Google Maps".
@@ -1058,16 +1063,6 @@ export function placesScreen(arg) {
 // Traveller-fit chips (kid-friendly, stay type, stay length) shown on cards + detail — read by
 // placeCard/placeQuickRow below AND (once step 5 lands) by placeScreen, which is exactly why
 // this stayed a genuinely shared helper rather than list-only.
-const STAY_LABEL = { tent: '⛺ Camping', hostel: '🛏️ Hostel', guesthouse: '🏠 Guesthouse', homestay: '🏡 Homestay', hotel: '🏨 Hotel', resort: '🌴 Resort', apartment: '🏢 Apartment' };
-export function travelerChips(p) {
-  const chips = [];
-  if (p.kidFriendly === true) chips.push(attrTag('👨‍👩‍👧 Kids OK'));
-  if (p.stayType) chips.push(attrTag(STAY_LABEL[p.stayType] || p.stayType));
-  if (p.stayDuration === 'long') chips.push(attrTag('Long stay'));
-  else if (p.stayDuration === 'short') chips.push(attrTag('Short stay'));
-  else if (p.stayDuration === 'both') chips.push(attrTag('Short or long stay'));
-  return chips.length ? h('div', { class: 'cats', style: 'margin-top:4px' }, chips) : null;
-}
 
 // The site-wide colour key: what each category colour and budget colour means. Shown
 // (collapsed) on Places and the Map so the colour language is always explained. (Verified via
@@ -1089,78 +1084,11 @@ function colorKeyCard() {
 // Small chip for cards/lists: green "On today" when open now, else the day pattern. Reads the
 // same formatMarketDays/marketOpenDays as the bigger marketInfoCard detail card further below
 // (step 5) — both now module-native, so the two can never drift out of sync.
-function marketChip(p) {
-  if (!isMarket(p)) return null;
-  const d = marketOpenDays(p);
-  if (!d) return h('span', { class: 'mkt-chip daily' }, `🛍️ ${p.marketType || 'Market'} · daily`);
-  const on = d.includes(new Date().getDay());
-  return h('span', { class: `mkt-chip ${on ? 'on' : 'off'}`, title: `Runs ${formatMarketDays(p)}` },
-    on ? '🛍️ On today' : `🛍️ ${formatMarketDays(p)}`);
-}
 
 // Small card/list chip: warns first about jellyfish season, else shows lifeguard status.
 // Returns null for a bare beach with no structured info and no active warning (no clutter).
 // jellyInSeason is module-native (step 5), same as the bigger beach detail cluster below.
-function beachChip(p) {
-  if (!isBeach(p)) return null;
-  const nowM = new Date().getMonth() + 1;
-  if (jellyInSeason(p, nowM)) return h('span', { class: 'beach-chip jelly', title: 'Elevated jellyfish season — check the flags' }, '🪼 Jellyfish season');
-  if (p.lifeguard === 'yes') return h('span', { class: 'beach-chip on' }, '🏖️ Lifeguards');
-  if (p.lifeguard === 'no') return h('span', { class: 'beach-chip off' }, '🏖️ No lifeguards');
-  return null;
-}
 
-export function placeCard(p, num) {
-  const cats = Array.isArray(p.categories) ? p.categories : [];
-  const hasPrice = p.priceRange && p.priceRange.currency;
-  const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
-  const colls = collectionsForItem(p.id);
-  const dchip = distanceChip(p);
-  const accent = bucketColor(p);
-  const fam = placeFamily(p);
-  const src = placePhotoSrc(p);
-  // A recognition thumbnail on the left: a self-hosted photo when one exists (offline,
-  // lazy-loaded), else a calm family-emoji placeholder. The category colour still reads
-  // from the left accent bar and the coloured tags, so the placeholder stays quiet.
-  const thumb = src
-    ? h('img', { class: 'pc-thumb', src, alt: '', loading: 'lazy', decoding: 'async' })
-    : h('span', { class: 'pc-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
-  const card = h('div', { class: 'card place-card' + (num != null ? ' has-num' : ''), style: `--cat:${accent}` }, [
-    h('div', { class: 'pc-row' }, [
-      thumb,
-      h('div', { class: 'pc-body' }, [
-        h('div', { class: 'place-head' }, [
-          h('h2', {}, `${p.isPin ? '📌 ' : ''}${p.name}`),
-          h('button', {
-            class: 'save-star', 'aria-label': 'Quick save to favourites', title: 'Quick save',
-            onclick: (e) => { const on = toggleFavorite(p.id); e.currentTarget.textContent = on ? '★' : '☆'; },
-          }, isFavorite(p.id) ? '★' : '☆'),
-        ]),
-        (cats.length || (p.budgetTier && !p.isPin)) ? h('div', { class: 'row-between' }, [
-          h('div', { class: 'cats' }, cats.map((c) => catTag(c))),
-          (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
-        ]) : null,
-        travelerChips(p),
-        isMarket(p) ? h('div', { style: 'margin:2px 0' }, marketChip(p)) : null,
-        (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin:2px 0' }, bc) : null; })(),
-        p.blurb ? h('p', {}, p.blurb) : null,
-        h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
-        dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
-        p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
-        colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
-          h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
-      ]),
-    ]),
-    h('div', { class: 'row-between', style: 'flex-wrap:wrap' }, [
-      h('button', { class: 'btn ghost', onclick: () => go(`#place-${p.id}`) }, 'Details'),
-      h('button', { class: 'btn ghost', onclick: () => saveSheet(p.id) }, '＋ Save'),
-      h('button', { class: 'btn ghost', onclick: () => tripVisitSheet(p.id) }, '🧭 Trip'),
-    ]),
-  ]);
-  // A number badge matching the map pin, when the caller supplies a number.
-  if (num != null) card.prepend(h('span', { class: 'pc-num', 'aria-hidden': 'true', style: `background:${accent}` }, String(num)));
-  return card;
-}
 
 // A collapsed QUICK-VIEW row for the places list: the summary shows just what a traveller
 // scans for — name, distance from them, rating, price, a budget badge and the category —
@@ -1219,93 +1147,12 @@ function placeQuickRow(p, num, compareCtl) {
 }
 
 // Modal sheet: add an item to collections (and toggle favourite / create new).
-export function saveSheet(itemId) {
-  const backdrop = h('div', { class: 'sheet-backdrop' });
-  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Save to collections' });
-  let close = () => backdrop.remove();
-  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
 
-  const body = h('div', {});
-  function rebuild() {
-    body.innerHTML = '';
-    body.append(h('h3', {}, 'Save to'));
-    // favourite quick toggle
-    body.append(collRow('⭐', 'Favourites', store.favorites.includes(itemId),
-      () => { toggleFavorite(itemId); rebuild(); }));
-    // existing collections
-    for (const c of store.collections) {
-      body.append(collRow(c.emoji, `${c.name} (${c.itemIds.length})`, c.itemIds.includes(itemId),
-        () => { togglePlaceInCollection(c.id, itemId); rebuild(); }));
-    }
-    // create new
-    const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'New collection name…', style: 'margin-top:8px' });
-    const add = h('button', { class: 'btn', onclick: () => {
-      if (!input.value.trim()) return;
-      const c = createCollection(input.value.trim(), '⭐');
-      togglePlaceInCollection(c.id, itemId);
-      rebuild();
-    } }, 'Create & add');
-    body.append(input, add);
-    // preset quick-create
-    body.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Quick themes'));
-    body.append(h('div', { class: 'chips presets' }, COLLECTION_PRESETS
-      .filter((pr) => !store.collections.some((c) => c.name.toLowerCase() === pr.name.toLowerCase()))
-      .map((pr) => h('button', { class: 'chip', onclick: () => {
-        const c = createCollection(pr.name, pr.emoji);
-        togglePlaceInCollection(c.id, itemId);
-        rebuild();
-      } }, `${pr.emoji} ${pr.name}`))));
-    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:12px', onclick: close }, 'Done'));
-  }
-  rebuild();
-  sheet.append(body);
-  backdrop.append(sheet);
-  close = openModal(backdrop);
-}
-
-function collRow(emoji, label, checked, onToggle) {
-  return h('label', { class: 'coll-row' }, [
-    h('input', { type: 'checkbox', checked: checked ? '' : null, onchange: onToggle }),
-    h('span', {}, `${emoji} ${label}`),
-  ]);
-}
 
 // Modal sheet: tag a place to a trip leg (S4). A stop and a place are not 1:1, so this just
 // toggles membership in store.trip.placeVisits — same reused pattern as saveSheet above.
 // With no matching leg yet (or no stops at all) "Not scheduled yet" is always available —
 // nothing blocks adding a place before its city has a stop.
-export function tripVisitSheet(placeId) {
-  const backdrop = h('div', { class: 'sheet-backdrop' });
-  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-label': 'Add to my trip' });
-  let close = () => backdrop.remove();
-  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
-
-  const body = h('div', {});
-  function rebuild() {
-    body.innerHTML = '';
-    body.append(h('h3', {}, 'Add to my trip'));
-    const mine = store.trip.placeVisits.filter((v) => v.placeId === placeId);
-    if (store.trip.stops.length) {
-      body.append(h('p', { class: 'muted' }, 'Which stop is this for?'));
-      store.trip.stops.forEach((s) => {
-        const tagged = mine.find((v) => v.stopId === s.id);
-        const label = s.title + (stopDateLabel(s) ? ` — ${stopDateLabel(s)}` : '');
-        body.append(collRow('📍', label, !!tagged,
-          () => { if (tagged) removePlaceVisit(tagged.id); else addPlaceVisit({ placeId, stopId: s.id }); rebuild(); }));
-      });
-    } else {
-      body.append(h('p', { class: 'muted' }, 'No trip stops yet — this will sit unscheduled until you add one.'));
-    }
-    const unsched = mine.find((v) => !v.stopId);
-    body.append(collRow('🗒️', 'Not scheduled yet', !!unsched,
-      () => { if (unsched) removePlaceVisit(unsched.id); else addPlaceVisit({ placeId, stopId: null }); rebuild(); }));
-    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:12px', onclick: close }, 'Done'));
-  }
-  rebuild();
-  sheet.append(body);
-  backdrop.append(sheet);
-  close = openModal(backdrop);
-}
 
 // ============================================================================
 // Step 5 (task #205): placeScreen() — the place-detail page — and its detail-only
@@ -1331,18 +1178,6 @@ function ratingBlock(p) {
 
 // Resolve a saved item id to a renderable place-like object: a curated place, or a
 // user pin normalised into the same shape.
-export function resolveItem(id) {
-  if (typeof id === 'string' && id.startsWith('pin-')) {
-    const pin = getPin(id);
-    if (!pin) return null;
-    return {
-      id: pin.id, name: pin.name, city: 'Your pin', country: '', isPin: true,
-      categories: pin.tags || [], budgetTier: 'any', blurb: pin.note || 'A place you marked.',
-      priceRange: { low: null, high: null, currency: '' }, coords: pin.coords || null, mapQuery: pin.name,
-    };
-  }
-  return getPlace(id);
-}
 
 // ---- MARKETS: day-of-week awareness -----------------------------------------
 // Many markets run only on certain days (weekend walking streets, Fri–Sun floating
@@ -1355,24 +1190,6 @@ export function resolveItem(id) {
 // languages: no parity to maintain, correct plural/casing conventions per locale, and a
 // market that runs "Fri–Sun" reads properly in Thai or Hebrew for free. Falls back to English
 // if Intl rejects the locale tag, so a bad tag can never blank a market's opening days.
-const DOW_FALLBACK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-function dowShort(i) {
-  try {
-    return new Intl.DateTimeFormat(dateLocale(), { weekday: 'short' }).format(new Date(2024, 0, 7 + i));
-  } catch { return DOW_FALLBACK[i]; }
-}
-export function formatMarketDays(p) {
-  const d = marketOpenDays(p);
-  // t() rather than a bare literal: these two are assembled at runtime around locale-derived
-  // weekday names, so translateTree's exact-string match can never see them as a whole.
-  if (!d) return t('Daily');
-  if (d.length === 2 && d.includes(0) && d.includes(6)) return `${t('Weekends')} (${dowShort(6)} & ${dowShort(0)})`;
-  if (d.join(',') === '0,5,6') return `${dowShort(5)}–${dowShort(0)}`;   // Fri, Sat, Sun (Sun wraps to index 0)
-  let contig = true;
-  for (let i = 1; i < d.length; i++) if (d[i] !== d[i - 1] + 1) contig = false;
-  if (contig && d.length > 2) return `${dowShort(d[0])}–${dowShort(d[d.length - 1])}`;
-  return d.map((n) => dowShort(n)).join(d.length > 2 ? ', ' : ' & ');
-}
 // Human "next open" hint from today: 'tomorrow' or the weekday name; null when daily.
 function nextMarketDay(p, dow) {
   const d = marketOpenDays(p);
@@ -1401,22 +1218,8 @@ function marketInfoCard(p) {
 // carry optional safety fields: lifeguard status, a swimming-conditions note, and a
 // seasonal jellyfish window. No real-time jellyfish feed exists for the region, so the
 // month window is HONEST SEASONAL GUIDANCE — the card says so and points to the flags.
-const MONTH_SHORT = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 // Sorted unique 1-12 month list of elevated jellyfish risk, or null when none is set.
-function jellyMonths(p) {
-  const m = Array.isArray(p.jellyfishMonths) ? p.jellyfishMonths.filter((n) => Number.isInteger(n) && n >= 1 && n <= 12) : [];
-  return m.length ? [...new Set(m)].sort((a, b) => a - b) : null;
-}
-export function jellyInSeason(p, month) { const m = jellyMonths(p); return !!(m && m.includes(month)); }
-// Compact "Jul–Oct" / "Apr, Jun & Aug" from a sorted month array. Also reused by the danger
 // screen's mosquito-peak card in main.js (reverse-imported from there), not just beaches.
-export function formatMonths(m) {
-  if (!m || !m.length) return '';
-  let contig = true;
-  for (let i = 1; i < m.length; i++) if (m[i] !== m[i - 1] + 1) contig = false;
-  if (contig && m.length > 2) return `${MONTH_SHORT[m[0]]}–${MONTH_SHORT[m[m.length - 1]]}`;
-  return m.map((n) => MONTH_SHORT[n]).join(m.length > 2 ? ', ' : ' & ');
-}
 const LIFEGUARD_LABEL = {
   yes: ['✅', 'Lifeguards patrol this beach', 'on'],
   seasonal: ['⚠️', 'Lifeguards / flags in season — check for a red flag before you swim', 'off'],
@@ -1462,16 +1265,6 @@ function beachSeaBlock(coords) {
 // Circle, and received ones pin to the beach. Reports live on placeData[id].jellyReports.
 // Exported: the Travel Circle share-detail and inbox screens (main.js) render a jelly-sighting
 // preview with this same dictionary, reverse-imported from here.
-export const SEV_LABEL = { seen: 'Jellyfish seen', lots: 'Lots of jellyfish', stung: 'Someone was stung' };
-function daysSinceISO(iso) { const n = -daysUntilISO(iso); return Number.isFinite(n) ? n : 9999; }
-// Exported for the same Travel Circle share-detail/inbox reason as SEV_LABEL above.
-export function fmtReportDate(iso) {
-  const ds = daysSinceISO(iso);
-  if (ds <= 0) return 'today';
-  if (ds === 1) return 'yesterday';
-  if (ds < 30) return `${ds} days ago`;
-  return iso;
-}
 function jellyReportsBlock(p) {
   const wrap = h('div', { class: 'jelly-reports' });
   const list = h('div', {});
@@ -1845,14 +1638,7 @@ function transitCard(p) {
 // Insider tips for a place: curated guide tips + the user's own secrets + secrets
 // other travellers shared with a link. Stored in placeData[id].secrets (rides along
 // in the backup). A progressive-disclosure drawer keeps the place page calm.
-function getPlaceSecrets(id) { const s = getPlaceData(id).secrets; return Array.isArray(s) ? s : []; }
-// Exported: the Travel Circle share-detail screen (main.js) saves an incoming shared secret
 // straight onto the matching place via this, reverse-imported from here.
-export function addPlaceSecret(id, { text, by }) {
-  const list = getPlaceSecrets(id).slice();
-  list.unshift({ text: String(text || '').slice(0, 400), by: String(by || '').slice(0, 40), at: todayKey() });
-  setPlaceField(id, 'secrets', list);
-}
 function removePlaceSecret(id, idx) { const list = getPlaceSecrets(id).slice(); list.splice(idx, 1); setPlaceField(id, 'secrets', list); }
 
 function localSecretsCard(p) {

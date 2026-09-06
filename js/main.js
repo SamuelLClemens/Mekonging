@@ -50,10 +50,14 @@ import { scriptLang, showBigPhrase } from './phrase-ui.js';
 // mosquito-peak card), and SEV_LABEL/fmtReportDate/addPlaceSecret (the Travel Circle
 // share-detail + inbox screens' jelly/secret previews) — every one confirmed by a fresh grep
 // across main.js, not inherited from the original scoping pass's classification.
+// placesScreen and placeScreen are NOT here any more: they are the #places and #place route
+// handlers and nothing but the router calls them, so they load on demand via SCREEN_LOADERS
+// below. The rest are the helpers that collections, the trip itinerary and feedback render
+// without ever visiting #places, and they now live in the small eager module beside them.
 import {
-  placesScreen, placeCard, travelerChips, saveSheet, tripVisitSheet, placeScreen, resolveItem,
+  placeCard, travelerChips, saveSheet, tripVisitSheet, resolveItem,
   jellyInSeason, formatMonths, SEV_LABEL, fmtReportDate, addPlaceSecret,
-} from './screens/places.js';
+} from './place-ui.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
 import { PHOTOS } from './data/photos.js';
@@ -201,6 +205,7 @@ const SCREEN_LOADERS = {
   sharejourney: (b) => import('./screens/share-journey.js' + b),
   medical: (b) => import('./screens/medical.js' + b),
   phrasebook: (b) => import('./screens/phrasebook.js' + b),
+  places: (b) => import('./screens/places.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -215,6 +220,7 @@ const ROUTE_SCREENS = {
   sharejourney: ['sharejourney'], jr: ['sharejourney'],
   hospital: ['medical'],
   phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
+  places: ['places'], place: ['places'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -256,6 +262,18 @@ const ROUTE_DATA = {
   explore: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
   foryou: ['itineraries'],
   place: ['accessibility', 'borders', 'transit'],
+  // #places had no entry here before, and not because it needed none: js/screens/places.js was
+  // statically imported, so it was outside check-lazy-data's scan set and the guard derived
+  // NOTHING at all for this route — it was unchecked, not checked-and-clear. Making the module
+  // route-scoped brought it into scope and showed placesScreen reaching TRANSPORT_HUBS,
+  // TRANSIT_SOURCES, CROSSINGS and getAccessibility.
+  //
+  // Whether that ever rendered an empty section in practice: I could not reproduce one. A cold
+  // load straight to #places on the previous build has all three modules present and renders
+  // byte-identically to this one, so something (the idle prefetch is the likely candidate) was
+  // winning the race. The gate is still right — it replaces a race that happens to be won with
+  // a guarantee — but it is a correctness tidy-up, not a fix for an observed defect.
+  places: ['accessibility', 'borders', 'transit'],
   plans: ['itineraries'],
   pools: ['pools'],
   produce: ['produce'],
@@ -492,7 +510,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.502.0';
+const APP_VERSION = 'mk-v0.503.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -10101,8 +10119,8 @@ export function render() {
       case 'market': return bulletinScreen('gear');
       case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
       case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
-      case 'places': return placesScreen(arg);
-      case 'place': return placeScreen(arg);
+      case 'places': return screenMod('places').placesScreen(arg);
+      case 'place': return screenMod('places').placeScreen(arg);
       case 'prices': return pricesScreen(arg);
       case 'transport': return transportScreen(arg);
       case 'route': return planRouteScreen();

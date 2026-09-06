@@ -46,6 +46,10 @@ CEILING = {
         341,
         165
     ],
+    "js/place-ui.js": [
+        8,
+        3
+    ],
     "js/screens/budget.js": [
         26,
         18
@@ -79,8 +83,8 @@ CEILING = {
         9
     ],
     "js/screens/places.js": [
-        63,
-        38
+        55,
+        35
     ],
     "js/screens/settings.js": [
         30,
