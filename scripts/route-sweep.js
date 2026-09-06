@@ -8,6 +8,13 @@
  *     await routeSweep();                  // every route
  *     await routeSweep({ only: /journ/ }); // just the ones matching
  *     await routeSweep({ quiet: true });   // summary only, no per-route table
+ *     await routeSweep({ clicks: true });  // ALSO press what is safe to press
+ *
+ * The default pass never clicks anything, so it is safe to run against real data. It still
+ * catches both of the regressions that shipped in mk-v0.518.0 — a control that arrives
+ * disabled, and a <summary> trapped inside its card's own grid — because neither needed a
+ * click to see. `clicks: true` additionally presses screen buttons and reports what throws,
+ * skipping anything whose name suggests it deletes, sends, exports or spends (NEVER_CLICK).
  *
  * It must be an import and not a pasted blob: index.html sets `script-src 'self'`, so eval()
  * of this file's text throws EvalError before a line of it runs. A dynamic import of a
@@ -109,6 +116,164 @@ async function settle(opts) {
   return { mutations, quiet, ms: Math.round(performance.now() - t0) };
 }
 
+// ---- CONTROLS -------------------------------------------------------------------------
+// Two regressions shipped in three releases and BOTH were found by the user rather than by
+// this sweep, because the sweep asked "does the screen render" and never "do its controls
+// work". Both are catchable, and — this is the part worth keeping — neither needs a click:
+//
+//   * Talk's first-lesson audio button rendered `disabled` on every language (canSay() was
+//     called without its locale, and it returns false when it has none). A control that
+//     arrives disabled with nothing on screen saying why is the shape of that defect.
+//   * The You hub's quick-access row put its <summary> inside the card's own two-column
+//     grid, so the heading took a whole column and the chips stacked down the other. A
+//     <summary> is a fold's handle; it must never be a grid or flex ITEM.
+//
+// So the default pass stays read-only and safe to run anywhere. Clicking is opt-in
+// (`routeSweep({ clicks: true })`) and even then refuses anything whose name suggests it
+// destroys, sends or spends — see NEVER_CLICK.
+
+// Never clicked, even with clicks:true. Matched against the accessible name. Deliberately
+// broad: a false skip costs one unchecked button, a false click could wipe a traveller's
+// journal or fire a share sheet.
+const NEVER_CLICK = /delete|remove|erase|wipe|reset|clear|discard|destroy|forget|revoke|unpair|unsave|unpin|sign ?out|log ?out|leave|import|restore|export|download|share|send|email|pay|buy|donate|purchase|subscribe|call|dial/i;
+
+function accName(el) {
+  return (el.getAttribute('aria-label') || el.title || el.textContent || '').trim();
+}
+
+// Does this control have an accessible name by ANY of the routes a browser actually uses?
+// The first version of this checked aria-label, title and text only, and duly reported ~50
+// "unnamed" controls across fourteen screens. Almost every one was a false positive: this
+// codebase labels its inputs with field() in js/ui-widgets.js, which emits a real
+// <label for="…">, and a wrapping <label> works too. A check that cries wolf is worse than
+// no check — so this honours every mechanism, and a placeholder counts as a weak last resort
+// because browsers do fall back to it.
+function hasName(el) {
+  if (accName(el)) return true;
+  if (el.getAttribute('aria-labelledby')) return true;
+  if (el.querySelector('img[alt]:not([alt=""])')) return true;
+  if (el.closest('label')) return true;
+  if (el.id) {
+    const esc = (window.CSS && CSS.escape) ? CSS.escape(el.id) : el.id;
+    try { if (document.querySelector(`label[for="${esc}"]`)) return true; } catch { /* odd id */ }
+  }
+  if (el.placeholder && el.placeholder.trim()) return true;
+  if (el.type === 'hidden') return true;
+  return false;
+}
+
+// Controls belonging to the SCREEN, not the app shell. The topbar and tab bar are on every
+// route; they say nothing about the screen and clicking them navigates away.
+function screenControls(root) {
+  return [...root.querySelectorAll('button, [role="button"], input, select, textarea')]
+    .filter((el) => !el.closest('.topbar') && !el.closest('.tabbar'));
+}
+
+// A closed <details> that renders its body only when opened is invisible to any audit — which
+// is exactly where Talk's broken audio lived. Open everything first, and let the screen
+// settle again so lazily-imported bodies land. Nothing is persisted by this: rememberFold()
+// records closures only, so opening a section writes no preference.
+async function openEveryFold(root) {
+  const shut = [...root.querySelectorAll('details:not([open])')];
+  if (!shut.length) return 0;
+  shut.forEach((d) => { d.open = true; });
+  await settle({ quietTicks: 30, minMs: 250, maxMs: 2500 });
+  return shut.length;
+}
+
+// Zero size is only a finding if it is STILL zero after another turn of the event loop. A
+// control inside a <details> that openEveryFold has just opened can measure 0 for a frame or
+// two while the disclosure settles — Home reported one every run, and a direct measurement of
+// the same screen afterwards found none. Anything that reports a transient as a defect earns
+// the same distrust as reporting nothing at all.
+async function stillZeroSized(candidates) {
+  if (!candidates.length) return [];
+  await yieldToTask();
+  await yieldToTask();
+  return candidates.filter((el) => {
+    if (!el.isConnected) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+    const r = el.getBoundingClientRect();
+    return r.width < 1 || r.height < 1;
+  });
+}
+
+async function controlAudit(root, haveLayout) {
+  const flags = [];
+  const ctrls = screenControls(root);
+
+  // Arrived disabled, with nothing saying why. Some are legitimate (a submit before anything
+  // is typed, a "already saved" marker), so this reports the count and names and leaves the
+  // judgement to a person rather than failing the sweep.
+  const dead = ctrls.filter((el) => el.disabled && !el.closest('form'));
+  if (dead.length) {
+    const names = [...new Set(dead.map(accName).filter(Boolean))].slice(0, 4);
+    flags.push(dead.length + ' CONTROL(S) DISABLED ON ARRIVAL — ' + (names.join(', ') || '(unnamed)'));
+  }
+
+  // A <summary> is the handle of its <details>. If its parent lays children out, the summary
+  // has become a grid/flex item and the fold's contents are laid out around it.
+  if (haveLayout) {
+    const trapped = [...root.querySelectorAll('details > summary')].filter((sum) => {
+      const d = getComputedStyle(sum.parentElement).display;
+      return d === 'grid' || d === 'flex' || d === 'inline-grid' || d === 'inline-flex';
+    });
+    if (trapped.length) {
+      flags.push(trapped.length + ' SUMMARY IN A GRID/FLEX PARENT — '
+        + trapped.map((x) => accName(x).slice(0, 24)).join(', '));
+    }
+    const invisible = ctrls.filter((el) => {
+      if (el.type === 'hidden' || el.hidden) return false;
+      // A visually-hidden <input type=file> driven by a styled button next to it is the
+      // standard way to make a file picker look like the rest of an app, and this codebase
+      // uses it on the vault, the scrapbook and Settings. It is operated through its trigger,
+      // never directly, so neither its size nor its own name is a defect.
+      if (el.type === 'file') return false;
+      // `display: none` and `visibility: hidden` are PROPERLY hidden: not rendered, not
+      // focusable, not announced. The defect this looks for is the opposite — an element
+      // still in the tab order and still clickable that happens to have no size.
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+      const r = el.getBoundingClientRect();
+      return r.width < 1 || r.height < 1;
+    });
+    const reallyZero = await stillZeroSized(invisible);
+    if (reallyZero.length) {
+      flags.push(reallyZero.length + ' ZERO-SIZE CONTROL(S) — '
+        + reallyZero.slice(0, 3).map((el) => accName(el).slice(0, 24) || el.tagName.toLowerCase()).join(', '));
+    }
+  }
+
+  // Nothing a screen reader can announce it by, through any mechanism.
+  const unnamed = ctrls.filter((el) => el.type !== 'file' && !hasName(el));
+  if (unnamed.length) {
+    flags.push(unnamed.length + ' CONTROL(S) WITH NO ACCESSIBLE NAME — '
+      + unnamed.slice(0, 4).map((el) => el.tagName.toLowerCase() + (el.type ? `[${el.type}]` : '')).join(', '));
+  }
+
+  return { flags, total: ctrls.length };
+}
+
+// Opt-in. Presses what is safe to press and reports what threw. The hash is restored after
+// each press, because a control that navigates would carry the sweep off-route.
+async function clickAudit(root, hash, errors) {
+  const out = [];
+  const targets = screenControls(root).filter((el) => el.tagName === 'BUTTON'
+    && !el.disabled && !NEVER_CLICK.test(accName(el)) && !el.closest('form'));
+  for (const el of targets.slice(0, 12)) {
+    if (!el.isConnected) continue;
+    const before = errors.length;
+    try { el.click(); } catch (e) { out.push(accName(el).slice(0, 28) + ': ' + String((e && e.message) || e)); }
+    await yieldToTask();
+    if (errors.length > before) out.push(accName(el).slice(0, 28) + ': ' + errors[errors.length - 1].msg);
+    if ((location.hash || '') !== hash) { location.hash = hash; await settle({ minMs: 150, maxMs: 900 }); }
+    const sheet = document.querySelector('.sheet-backdrop, .modal-backdrop');
+    if (sheet) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await yieldToTask(); }
+  }
+  return out;
+}
+
 function layoutIsComputed() {
   const r = document.body.getBoundingClientRect();
   return r.width > 0 && r.height > 0;
@@ -198,6 +363,16 @@ async function routeSweep(opts) {
     if (root.querySelector('summary details')) row.flags.push('DETAILS NESTED IN SUMMARY');
     const foldAll = root.querySelectorAll('.foldall, [data-foldall]');
     if (foldAll.length > 1) row.flags.push(`${foldAll.length} FOLD-ALL CONTROLS`);
+    // Open every fold before auditing controls, or anything inside a closed section — which
+    // is where Talk's broken audio lived — is invisible to the checks below.
+    row.opened = await openEveryFold(root);
+    const ca = await controlAudit(root, haveLayout);
+    row.controls = ca.total;
+    row.flags.push(...ca.flags);
+    if (o.clicks) {
+      const broke = await clickAudit(root, r.hash, errors);
+      if (broke.length) row.flags.push(`CLICK THREW — ${broke.join(' | ')}`);
+    }
     if (haveLayout && title) {
       // Two lines is the design (-webkit-line-clamp: 2). More than that is clipped, and a
       // single word wider than the column breaks mid-word, which is its own defect.
@@ -224,6 +399,8 @@ async function routeSweep(opts) {
   }
   const summary = {
     routes: rows.length,
+    controls: rows.reduce((n, r) => n + (r.controls || 0), 0),
+    clicked: !!o.clicks,
     clean: rows.length - broken.length,
     broken: broken.map((r) => ({ hash: r.hash, from: r.from, problem: [...r.flags, ...r.errors] })),
     // Visiting a screen must not write a preference. Inserting a <details open> fires a

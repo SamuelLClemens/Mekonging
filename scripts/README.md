@@ -50,7 +50,19 @@ const { routeSweep } = await import('/scripts/route-sweep.js');
 await routeSweep();
 ```
 
-Read its header before trusting a result — it documents the four traps that made earlier
+It audits **controls**, not just content: every fold is opened first (so nothing hides inside a
+collapsed section), then it reports controls that arrive disabled, controls with no accessible
+name by any mechanism, controls that are operable but have no size, and any `<summary>` that
+has become a grid or flex ITEM of its parent. Those last two checks exist because two
+regressions shipped in three releases — Talk's lesson audio disabled on every language, and
+the You hub's quick-access row stacked into one column — and both were catchable without
+clicking anything. Both are negative-tested: reintroduce either and the sweep names it.
+
+`routeSweep({ clicks: true })` additionally presses screen buttons and reports what throws.
+It is opt-in and refuses anything whose accessible name suggests it deletes, sends, exports or
+spends, so the default pass stays safe to run against real data.
+
+Read its header before trusting a result — it documents the traps that made earlier
 hand-written versions of this sweep report confident nonsense, including the one where a
 hidden page computes no layout at all and every width check silently inverts.
 
