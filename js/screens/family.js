@@ -46,7 +46,7 @@ function kidKindLabel(kind) {
 function famCard(e, meta) {
   const card = h('div', { class: 'card fam-card' });
   card.append(h('div', { class: 'row-between' }, [
-    h('h3', { style: 'margin:0' }, e.name),
+    h('h3', {}, e.name),
     e.city ? h('span', { class: 'cat-tag' }, e.city) : null,
   ]));
   if (meta) card.append(h('p', { class: 'tiny muted', style: 'margin:4px 0' }, meta));

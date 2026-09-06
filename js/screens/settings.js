@@ -255,7 +255,7 @@ export function settingsScreen() {
   // live translate
   const tcard = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, 'Live translate'),
+      h('h2', {}, 'Live translate'),
       infoTip('Translation already works with no setup, using a free online service on the Talk screen — the phrasebook itself works fully offline regardless. Your own endpoint and key stay on this device, but the server origin must also be added to index.html’s Content-Security-Policy (connect-src).'),
     ]),
     h('p', { class: 'muted' }, 'Optional — your own server, for volume or privacy.'),
@@ -272,7 +272,7 @@ export function settingsScreen() {
   // help & feedback
   wrap.append(h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, 'Help & feedback'),
+      h('h2', {}, 'Help & feedback'),
       infoTip('Leave this blank and the feedback screen uses your device share sheet or clipboard instead.'),
     ]),
     h('button', { class: 'btn ghost block', onclick: () => go('#help') }, '❓ Help & FAQ'),
@@ -288,7 +288,7 @@ export function settingsScreen() {
   // the chip's own screen, and the recording is off until switched on there.
   wrap.append(h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, 'Where people are'),
+      h('h2', {}, 'Where people are'),
       infoTip('A world map with a pin on every place the app has been opened from. Your own pins stay on this device and are rounded to about 55 km, so no pin can place anyone. There is no shared feed unless you add one.'),
     ]),
     h('div', { class: 'chips' }, [
@@ -308,7 +308,7 @@ export function settingsScreen() {
   const ts = trailStats();
   wrap.append(h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, 'Your journey map'),
+      h('h2', {}, 'Your journey map'),
       infoTip('Pins are recorded automatically whenever the app has your location, so a map of your trip builds itself. They stay on this device at all times — there is no code path that sends them anywhere — and you can stop or erase them here.'),
     ]),
     h('p', { class: 'tiny muted', style: 'margin:6px 0 8px' }, trailEnabled()
@@ -332,7 +332,7 @@ export function settingsScreen() {
   const rset = reminders.settings();
   const remCard = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, 'Reminders'),
+      h('h2', {}, 'Reminders'),
       infoTip('Set a reminder on any calendar entry, with its own lead time — it always appears on the “Coming up” card on Home too. Allow notifications for a device alert while the app is open or when you next open it.'),
     ]),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'No background alerts once fully closed — there is no server.'),
@@ -350,7 +350,7 @@ export function settingsScreen() {
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, 'Your data'),
+      h('h2', {}, 'Your data'),
       infoTip('Everything you create — journal, photos, ratings, trip, budget, calendar, saved places and collections — is written to three places on this device after every change, so a single glitch can never wipe it.'),
     ]),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Kept safe across updates. Nothing is ever uploaded — download a copy below.'),

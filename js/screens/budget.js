@@ -244,7 +244,7 @@ function budgetTrendCard() {
       segs.length ? segs : [h('span', { style: 'height:0;background:var(--line)' })]);
   });
   const card = h('div', { class: 'card' });
-  card.append(h('div', { class: 'row-between' }, [h('h2', { style: 'margin:0' }, '📈 Daily spend, last 14 days'), infoTip('Colour-coded by category — same colours as the breakdown above.')]));
+  card.append(h('div', { class: 'row-between' }, [h('h2', {}, '📈 Daily spend, last 14 days'), infoTip('Colour-coded by category — same colours as the breakdown above.')]));
   card.append(h('div', { class: 'spark-row' }, bars));
   return card;
 }

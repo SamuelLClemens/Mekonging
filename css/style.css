@@ -607,6 +607,14 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .card h2 { font-size: var(--fs-h2); margin: 0 0 var(--sp-2); }
 .card h3 { font-size: var(--fs-h3); margin: var(--sp-3) 0 var(--sp-1); color: var(--teal-deep); }
 html[data-theme="dark"] .card h3 { color: var(--teal); }
+/* A heading sharing a flex row with a button or info tip (align-items: center) must carry
+   no margin of its own, or the two rules above push it off-centre against its neighbour.
+   29 call sites across 9 files repeated `style: 'margin:0'` to say exactly this, one
+   heading at a time — and two more (main.js "Your pins", trip.js's plan titles) were never
+   given the override at all, so those two sat visibly misaligned in their row. One rule,
+   scoped to beat the two above on specificity (0,2,1) against their (0,1,1), replaces all
+   of it and fixes the two strays for free. */
+.card .row-between h2, .card .row-between h3 { margin: 0; }
 .muted { color: var(--ink-soft); font-size: var(--fs-sm); }
 .btn {
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer;

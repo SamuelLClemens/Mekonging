@@ -639,7 +639,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.521.0';
+export const APP_VERSION = 'mk-v0.522.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2254,7 +2254,7 @@ function babyScreen(cc) {
     wrap.append(h('h3', { style: 'margin:14px 2px 4px' }, 'City by city'));
     boards.forEach((b) => {
       const card = h('div', { class: 'card' });
-      card.append(h('div', { class: 'row-between' }, [h('h2', { style: 'margin:0' }, b.city), h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${b.slug}`) }, 'Board')]));
+      card.append(h('div', { class: 'row-between' }, [h('h2', {}, b.city), h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${b.slug}`) }, 'Board')]));
       b.family.forEach((f) => card.append(boardRow(f.item, [f.where, f.price].filter(Boolean).join(' · '), f.tip)));
       wrap.append(card);
     });
@@ -2376,7 +2376,7 @@ function visaScreen(cc) {
   wrap.append(h('p', {}, v.summary));
   (v.options || []).forEach((o) => {
     const card = h('div', { class: 'card' });
-    card.append(h('div', { class: 'row-between' }, [h('h3', { style: 'margin:0' }, VISA_TYPE[o.type] || o.type), o.fee ? h('span', { class: 'cat-tag' }, o.fee) : null]));
+    card.append(h('div', { class: 'row-between' }, [h('h3', {}, VISA_TYPE[o.type] || o.type), o.fee ? h('span', { class: 'cat-tag' }, o.fee) : null]));
     if (o.who) card.append(h('p', { class: 'tiny muted', style: 'margin:4px 0' }, o.who));
     if (o.duration) card.append(h('p', { style: 'margin:2px 0' }, `🕒 ${o.duration}`));
     if (o.howApply) card.append(h('div', { class: 'list-note' }, o.howApply));
@@ -5496,7 +5496,7 @@ export function planCard(pl, primary) {
   const changes = pl.changes === 0 ? 'Direct' : `${pl.changes} change${pl.changes > 1 ? 's' : ''}`;
   const card = h('div', { class: 'card plan-card' }, [
     h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, pl.label),
+      h('h2', {}, pl.label),
       primary ? h('span', { class: 'pill-best' }, 'Suggested') : null,
     ]),
     h('div', { class: 'plan-chain' }, chain.join('  →  ')),
@@ -7926,7 +7926,7 @@ function sosScreen(cc) {
   // What stays here is the decision a person in trouble makes in three seconds: the three
   // nearest options, and one button to everything else.
   const hosp = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, 'Get to a hospital'),
+    h('h2', {}, 'Get to a hospital'),
     infoTip('Ordered by straight-line distance from your location. Open the full screen for the rest of the country, what to do where no hospital is listed, how people actually reach one here, and your medical card.'),
   ])]);
   hosp.append(h('button', { class: 'btn block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, '🏥 Get to a hospital — full guide'));
@@ -7959,7 +7959,7 @@ function sosScreen(cc) {
 
   // (3) What to do while getting there — bites/stings first aid, then life-saving basics.
   const danger = h('div', { class: 'card allergy-card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '🐍 Bites, stings & dangerous wildlife'),
+    h('h2', {}, '🐍 Bites, stings & dangerous wildlife'),
     infoTip('What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'),
   ])]);
   FIRST_AID.forEach((fa) => {
@@ -7981,7 +7981,7 @@ function sosScreen(cc) {
   // Life-saving essentials: honest guidance on EpiPens and defibrillators (neither is
   // reliably bought on the street here) plus hands-only CPR.
   const life = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '💉 Life-saving essentials'),
+    h('h2', {}, '💉 Life-saving essentials'),
     infoTip('Honest guidance on adrenaline auto-injectors and defibrillators — neither is reliably bought on the street in this region — plus hands-only CPR.'),
   ])]);
   LIFESAVING.forEach((ls) => {
@@ -7996,7 +7996,7 @@ function sosScreen(cc) {
   let phraseCard = null;
   if (emCat) {
     phraseCard = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, `At the hospital: say it in ${book.label}`),
+      h('h2', {}, `At the hospital: say it in ${book.label}`),
       infoTip('Show or speak these to hospital staff or anyone helping you. Works offline.'),
     ])]);
     const voiceOk = hasVoiceFor(book.locale);
@@ -8039,7 +8039,7 @@ function sosScreen(cc) {
   // closed <details> so thirteen of them cost one card of vertical space, and the screen's
   // first fold stays what it should be: the phone number.
   const sit = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '🚨 If something happens'),
+    h('h2', {}, '🚨 If something happens'),
     infoTip('Tap the one that fits. Each opens what to do in the next minute, what to do in the next few hours, and the mistake people reliably make. Works offline.'),
   ])]);
   EMERGENCIES.forEach((e) => {
@@ -8064,7 +8064,7 @@ function sosScreen(cc) {
   // Consular help, and the limits of it. Travellers routinely expect the wrong things from
   // an embassy, which wastes exactly the hours in which it could have helped.
   const emb = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
-    h('h2', { style: 'margin:0' }, '🏛 Your embassy'),
+    h('h2', {}, '🏛 Your embassy'),
     infoTip('Consular help is free and is the right first call for a lost passport, an arrest, a death or a large-scale emergency. Find yours and save the address now — searching for it during the emergency is the part that goes wrong.'),
   ])]);
   const embD = h('details', { class: 'filters-collapse' }, [h('summary', {}, 'What an embassy can and cannot do')]);

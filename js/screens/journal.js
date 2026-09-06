@@ -919,7 +919,7 @@ export function journeyScreen() {
   function stopCard(s, i) {
     const card = h('div', { class: 'card jr-stop' });
     card.append(h('div', { class: 'row-between' }, [
-      h('h2', { style: 'margin:0' }, `${i + 1}. ${s.label || 'A place you have been'}`),
+      h('h2', {}, `${i + 1}. ${s.label || 'A place you have been'}`),
       h('span', { class: 'muted tiny' }, jrDateRange(s.first, s.last)),
     ]));
     const tags = [];
