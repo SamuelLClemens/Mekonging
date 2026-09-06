@@ -46,7 +46,7 @@ import { getAccessibility, CROSSINGS, TRANSPORT_HUBS, TRANSIT_SOURCES } from '..
 import { putBlob, delBlob } from '../idb.js';
 import { shareOrDownload } from '../exporter.js';
 import { nearestSpot, spotKey, wmo, getCachedWeather, getCachedMarine, maybeRefreshWeather, maybeRefreshMarine } from '../weather.js';
-import { seedWeatherKey } from './weather.js';
+import { seedWeatherKey } from '../weather-ui.js';
 import { shareUrl, encodeShare } from '../social.js';
 import {
   go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity, oneTimeHint,

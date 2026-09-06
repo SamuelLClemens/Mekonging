@@ -206,6 +206,8 @@ const SCREEN_LOADERS = {
   medical: (b) => import('./screens/medical.js' + b),
   phrasebook: (b) => import('./screens/phrasebook.js' + b),
   places: (b) => import('./screens/places.js' + b),
+  budget: (b) => import('./screens/budget.js' + b),
+  weather: (b) => import('./screens/weather.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -221,6 +223,8 @@ const ROUTE_SCREENS = {
   hospital: ['medical'],
   phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
   places: ['places'], place: ['places'],
+  expenses: ['budget'],
+  weather: ['weather'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -510,7 +514,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.503.0';
+const APP_VERSION = 'mk-v0.504.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5962,7 +5966,9 @@ function produceDetail(id) {
   mount(wrap, '#home');
 }
 
-import { weatherScreen, wxVizCard, seedWeatherKey, wxDiffDays } from './screens/weather.js';
+// weatherScreen is the #weather route handler and loads on demand; these three render a
+// forecast away from that route. js/weather.js (the data service) is a different module.
+import { wxVizCard, seedWeatherKey, wxDiffDays } from './weather-ui.js';
 
 
 // ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------
@@ -7188,9 +7194,12 @@ function bargainScreen() {
 
 // Budget & Expenses — extracted to js/screens/budget.js (module split; see
 // js/screens/budget.js's own header comment for the extraction rationale).
+// expensesScreen is not here: it is the #expenses route handler, 1.6 KB, and only the router
+// calls it — it loads on demand via SCREEN_LOADERS. The helpers below render expense rows and
+// the Home spend card away from #expenses, so they stay eager in their own small module.
 import {
-  expensesScreen, expenseAddCard, budgetLogRow, budgetTarget, tripSpanDays, expCatLookup, expCatOf,
-} from './screens/budget.js';
+  expenseAddCard, budgetLogRow, budgetTarget, tripSpanDays, expCatLookup, expCatOf,
+} from './budget-ui.js';
 
 // ---- PRE-TRIP CHECKLIST -----------------------------------------------------
 const CK_CAT = { documents: '🛂 Documents', health: '💊 Health', money: '💳 Money', connectivity: '📶 Connectivity', packing: '🎒 Packing', safety: '🛡 Safety & laws' };
@@ -10142,7 +10151,7 @@ export function render() {
       case 'calendar': return screenMod('calendar').calendarDispatch(arg);
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
-      case 'weather': return weatherScreen(arg);
+      case 'weather': return screenMod('weather').weatherScreen(arg);
       case 'today': return daySuggestScreen(arg);
       case 'access': return accessScreen(arg);
       case 'baby': return babyScreen(arg);
@@ -10166,7 +10175,7 @@ export function render() {
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);
       case 'trip': return tripScreen();
-      case 'expenses': return expensesScreen();
+      case 'expenses': return screenMod('budget').expensesScreen();
       case 'bargain': return bargainScreen();
       case 'checklist': return checklistScreen(arg);
       case 'bestof': return bestofScreen(arg);

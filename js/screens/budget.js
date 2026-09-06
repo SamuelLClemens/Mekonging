@@ -14,6 +14,11 @@ import {
   go, mount, topbar, render, homeCurrency, focusSpot, todayISO, fxConverterControl, approxHome,
 } from '../main.js';
 
+// Shared with the modules that stay in the launch graph; see js/budget-ui.js. These moved out so
+// this file could leave it — the router imports it on demand now.
+import {
+  budgetLogRow, budgetTarget, expCatOf, expCatsAll, expenseAddCard, fmtLogDate, tripSpanDays,
+} from '../budget-ui.js';
 // A budget-log row that flips to an inline editor — used on both Expenses and My Trip so
 // every logged spend can be corrected (amount, currency, note), not only deleted.
 let editExpenseId = null;
@@ -26,42 +31,11 @@ let editWithdrawalId = null;
 // category is exactly as first-class as Food or Stay everywhere one appears. (This is the fix
 // for the "categories don't join" report: there was no way to add one before, so whatever
 // prompted that report had nowhere to go but silently fold into Other.)
-const EXP_CATS = [
-  { id: 'food', label: 'Food', emoji: '🍜', color: '#E0A100' },
-  { id: 'stay', label: 'Stay', emoji: '🛏', color: '#9C5780' },
-  { id: 'transit', label: 'Transit', emoji: '🚌', color: '#3E7CB1' },
-  { id: 'gear', label: 'Gear', emoji: '🎒', color: '#5E9A52' },
-  { id: 'other', label: 'Other', emoji: '•', color: '#8A8A8A' },
-];
-const EXP_CAT = Object.fromEntries(EXP_CATS.map((c) => [c.id, c]));
-const EXP_CUSTOM_MAX = 6;
-const EXP_CUSTOM_PALETTE = ['#B15C2E', '#4E7A51', '#7A5CB1', '#2E7AB1', '#B15C8E', '#6B7A2E'];
-function customExpCats() { const p = store.profile.prefs; return Array.isArray(p.customExpCats) ? p.customExpCats : []; }
-export function expCatsAll() { return [...EXP_CATS, ...customExpCats()]; }
-export function expCatLookup(id) { return expCatsAll().find((c) => c.id === id) || EXP_CAT.other; }
-export function expCatOf(b) { return (b && b.category && expCatsAll().some((c) => c.id === b.category)) ? b.category : 'other'; }
 // Adds a custom category (name only; colour auto-assigned from a fixed palette so it stays
 // distinct from the 5 built-ins and from other custom ones) and returns it, or null if the
 // name is empty or the cap is already reached.
-function addCustomExpCat(label) {
-  const name = String(label || '').trim().slice(0, 20);
-  if (!name) return null;
-  const cats = customExpCats();
-  if (cats.length >= EXP_CUSTOM_MAX) return null;
-  const existing = new Set(expCatsAll().map((c) => c.id));
-  const base = 'c_' + (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '').slice(0, 24) || 'custom');
-  let id = base, n = 2; while (existing.has(id)) id = `${base}-${n++}`;
-  const cat = { id, label: name, emoji: '🏷', color: EXP_CUSTOM_PALETTE[cats.length % EXP_CUSTOM_PALETTE.length] };
-  cats.push(cat); store.profile.prefs.customExpCats = cats; save();
-  return cat;
-}
 // Removes a custom category; any expense already logged under it folds back to Other rather
 // than pointing at a category that no longer exists (mirrors idPruneMeta's tidy-up-after-self).
-function removeCustomExpCat(id) {
-  store.profile.prefs.customExpCats = customExpCats().filter((c) => c.id !== id);
-  (store.trip.budgetLog || []).forEach((b) => { if (b.category === id) b.category = 'other'; });
-  save();
-}
 
 // Segmented category picker: the fixed 5 plus any the traveller has added, in one row — a
 // custom category is never a second list, and (per direct report — a "Manage your categories"
@@ -72,86 +46,13 @@ function removeCustomExpCat(id) {
 // native prompt(). Rebuilds itself locally (never the global render()) so it stays safe to use
 // mid-form, before the rest of the expense has been saved. Reflects the choice in place and
 // exposes .get()/.set().
-function expCatPicker(current) {
-  let val = expCatsAll().some((c) => c.id === current) ? current : 'other';
-  let adding = false;
-  const row = h('div', { class: 'chips exp-cat-pick' });
-  function build() {
-    row.replaceChildren();
-    const customIds = new Set(customExpCats().map((c) => c.id));
-    expCatsAll().forEach((c) => {
-      if (!customIds.has(c.id)) {
-        row.append(h('button', {
-          type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
-          onclick: () => { val = c.id; build(); },
-        }, `${c.emoji} ${c.label}`));
-        return;
-      }
-      // A custom category: the same pill, but split into a select area and a small ✕ that
-      // removes it on the spot (confirmed first — a stray tap while logging an expense must
-      // never silently delete one). Two sibling buttons, never a button nested in a button.
-      row.append(h('span', { class: 'chip exp-cat-chip-custom' + (c.id === val ? ' on' : '') }, [
-        h('button', {
-          type: 'button', class: 'exp-cat-sel', 'aria-pressed': c.id === val ? 'true' : 'false',
-          onclick: () => { val = c.id; build(); },
-        }, `${c.emoji} ${c.label}`),
-        h('button', {
-          type: 'button', class: 'exp-cat-rm', 'aria-label': `Remove category ${c.label}`,
-          onclick: () => {
-            confirmAction({ title: `Remove “${c.label}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true })
-              .then((ok) => { if (ok) { removeCustomExpCat(c.id); if (val === c.id) val = 'other'; build(); } });
-          },
-        }, '✕'),
-      ]));
-    });
-    if (customExpCats().length < EXP_CUSTOM_MAX) {
-      if (adding) {
-        const input = h('input', { type: 'text', class: 'exp-cat-new', placeholder: 'Category name', maxlength: '20', 'aria-label': 'New category name' });
-        const commit = () => { const cat = addCustomExpCat(input.value); adding = false; if (cat) val = cat.id; build(); };
-        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { adding = false; build(); } });
-        row.append(input, h('button', { type: 'button', class: 'chip', 'aria-label': 'Add this category', onclick: commit }, '✓'));
-        setTimeout(() => input.focus(), 0);
-      } else {
-        row.append(h('button', { type: 'button', class: 'chip ghost', onclick: () => { adding = true; build(); } }, '＋ Add'));
-      }
-    }
-  }
-  build();
-  row.get = () => val;
-  row.set = (id) => { if (expCatsAll().some((c) => c.id === id)) { val = id; build(); } };
-  return row;
-}
 
 // Titles ("On what?") the traveller has typed two or more times before, most-used first —
 // offered as one-tap chips so a repeat expense (the daily coffee, the nightly room) never
 // needs retyping. Each remembers the category most often paired with that exact title, so
 // tapping the chip fills in both the name and the right bucket in one go.
-function frequentExpenseTitles() {
-  const counts = new Map();   // key: lowercased title -> { title, n, cats: Map<category,count> }
-  (store.trip.budgetLog || []).forEach((b) => {
-    const t = (b.note || '').trim();
-    if (!t) return;
-    const key = t.toLowerCase();
-    const rec = counts.get(key) || { title: t, n: 0, cats: new Map() };
-    rec.n++;
-    const cat = expCatOf(b);
-    rec.cats.set(cat, (rec.cats.get(cat) || 0) + 1);
-    counts.set(key, rec);
-  });
-  return [...counts.values()]
-    .filter((r) => r.n >= 2)
-    .sort((a, b) => b.n - a.n)
-    .slice(0, 6)
-    .map((r) => ({ title: r.title, category: [...r.cats.entries()].sort((a, b) => b[1] - a[1])[0][0] }));
-}
 // A row of quick-pick chips for frequent expense titles; filling `noteEl` (and, when given,
 // selecting the matching bucket on `catPicker`) in one tap. Returns null if nothing qualifies.
-function expTitleChips(noteEl, catPicker) {
-  const freq = frequentExpenseTitles();
-  if (!freq.length) return null;
-  return h('div', { class: 'chips exp-title-chips' }, freq.map((f) =>
-    h('button', { type: 'button', class: 'chip ghost', onclick: () => { noteEl.value = f.title; if (catPicker) catPicker.set(f.category); } }, f.title)));
-}
 
 // The one "Log an expense" card, used everywhere a spend can be logged — Budget & Expenses
 // (#expenses) is the master; My Trip's budget log and Home's one-tap spend (quickSpendRow)
@@ -159,44 +60,9 @@ function expTitleChips(noteEl, catPicker) {
 // so logging an expense looks and works identically no matter where you tap in from.
 // `opts.currency` seeds the currency picker (falls back to THB); `opts.afterAdd(item)` runs
 // after a successful add — typically a re-render/navigation back to the calling screen.
-export function expenseAddCard(opts = {}) {
-  const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
-  const bCur = currencySelect(opts.currency || 'THB');
-  const bDate = h('input', { 'aria-label': 'Date', type: 'date', value: todayISO() });
-  const bNote = h('input', { 'aria-label': 'What the expense was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
-  const bCat = expCatPicker('other');
-  const bChips = expTitleChips(bNote, bCat);
-  const dateField = field('Date', bDate);
-  // A rent payment or a month-long SIM plan does not belong to one day — checking this swaps
-  // the day picker for a month picker (native <input type=month>) and the logged date
-  // normalises to that month's 1st, tagged monthly:true so the log/exports can label it
-  // "August 2026" instead of a single day (see fmtLogDateFor).
-  const bMonthly = h('input', { type: 'checkbox' });
-  bMonthly.addEventListener('change', () => {
-    const monthly = bMonthly.checked;
-    bDate.type = monthly ? 'month' : 'date';
-    bDate.value = monthly ? todayISO().slice(0, 7) : todayISO();
-    dateField.firstElementChild.textContent = monthly ? 'Month' : 'Date';
-  });
-  const monthlyToggle = h('label', { class: 'exp-monthly-toggle' }, [bMonthly, ' 🗓 Monthly expense (rent, SIM plan…)']);
-  const add = () => {
-    if (!bAmt.value || !bDate.value) return;
-    const monthly = bMonthly.checked;
-    const date = monthly ? `${bDate.value}-01` : bDate.value;
-    const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date, monthly });
-    if (opts.afterAdd) opts.afterAdd(item);
-  };
-  return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
-    h('h2', {}, 'Log an expense'),
-    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
-    field('On what?', bNote), bChips, field('Category', bCat), monthlyToggle, dateField,
-    h('button', { class: 'btn block btn-spaced', onclick: add }, '＋ Add expense'),
-  ]);
-}
 
 // Budget target in home currency, per whole trip or per day. Stored in prefs so it
 // self-persists; null means "no target set yet".
-export function budgetTarget() { const t = store.profile.prefs.budgetCap; return (t && +t.amount > 0) ? { amount: +t.amount, per: t.per === 'day' ? 'day' : 'trip' } : null; }
 function setBudgetTarget(amount, per) { store.profile.prefs.budgetCap = { amount: +amount || 0, per: per === 'day' ? 'day' : 'trip' }; save(); }
 
 // Trip span in whole days. A start/end set directly in Budget (prefs.tripDates — see
@@ -205,29 +71,6 @@ function setBudgetTarget(amount, per) { store.profile.prefs.budgetCap = { amount
 // logged spends imply, as before. elapsed = start→today; total = start→end, or null if no end
 // is known yet (including an explicitly "undecided" end — see budgetSetupEditor). Returns null
 // only if no start date exists anywhere.
-export function tripSpanDays() {
-  const parse = (d) => { const p = String(d).split('-').map(Number); return Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1); };
-  const manual = store.profile.prefs.tripDates;
-  let start, end;
-  if (manual && manual.start) {
-    start = manual.start;
-    end = manual.end || null;
-  } else {
-    const stops = (store.trip.stops || []);
-    const dates = [];
-    stops.forEach((s) => { if (s.date) dates.push(s.date); if (s.endDate) dates.push(s.endDate); });
-    (store.trip.budgetLog || []).forEach((b) => { if (b.date) dates.push(b.date); });
-    if (!dates.length) return null;
-    start = dates.slice().sort()[0];
-    const ends = stops.map((s) => s.endDate || s.date).filter(Boolean).sort();
-    end = ends.length ? ends[ends.length - 1] : null;
-  }
-  const today = todayKey();
-  const dayMs = 86400000;
-  const elapsed = Math.max(1, Math.round((parse(today) - parse(start)) / dayMs) + 1);
-  const total = end ? Math.max(elapsed, Math.round((parse(end) - parse(start)) / dayMs) + 1) : null;
-  return { elapsed, total, start, end };
-}
 
 // Inline donut chart from [{value,color}]; radius makes the circumference 100 so each
 // segment length equals its percentage. Centre shows a headline + sub-label.
@@ -606,60 +449,9 @@ function budgetSetupEditor() {
 }
 
 // A short, locale-aware date label for the expense list ("Today", "Yesterday", or a short date).
-function fmtLogDate(iso) {
-  if (!iso) return '';
-  const t = todayISO();
-  if (iso === t) return 'Today';
-  const y = new Date(); y.setDate(y.getDate() - 1);
-  if (iso === `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`) return 'Yesterday';
-  const d = new Date(`${iso}T00:00`);
-  return isNaN(d) ? iso : d.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' });
-}
 // Same, but a monthly-flagged item (rent, a SIM plan — logged against the whole month rather
 // than one day, see expenseAddCard's "monthly expense" toggle) reads as "August 2026", not the
 // 1st of the month it is actually stored against.
-function fmtLogDateFor(b) {
-  if (b && b.monthly && b.date) {
-    const d = new Date(`${b.date}T00:00`);
-    if (!isNaN(d)) return d.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
-  }
-  return fmtLogDate(b ? b.date : '');
-}
-export function budgetLogRow(b) {
-  if (editExpenseId === b.id) {
-    const amt = h('input', { type: 'number', inputmode: 'decimal', value: b.amount });
-    const cur = currencySelect(b.currency || 'THB');
-    const dt = h('input', { type: 'date', value: b.date || todayISO() });
-    const note = h('input', { type: 'text', value: b.note || '', placeholder: 'On what?' });
-    const cat = expCatPicker(expCatOf(b));
-    const chips = expTitleChips(note, cat);
-    return h('div', { class: 'card', style: 'margin:6px 0' }, [
-      h('div', { style: 'display:flex;gap:10px' }, [field('Amount', amt), field('Currency', cur)]),
-      field('On what?', note), chips, field('Category', cat), field('Date', dt),
-      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
-        h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
-        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), category: cat.get(), date: dt.value || b.date }); editExpenseId = null; render(); } }, 'Save'),
-      ]),
-    ]);
-  }
-  const approx = approxHome(b.amount, b.currency);
-  const cat = expCatLookup(expCatOf(b));
-  return h('div', { class: 'exp-row' }, [
-    h('span', { class: 'exp-row-cat', style: `background:${cat.color}22;color:${cat.color}`, title: cat.label }, cat.emoji),
-    h('div', { class: 'exp-row-mid' }, [
-      h('div', { class: 'exp-row-note' }, b.note || cat.label),
-      h('div', { class: 'exp-row-date muted' }, fmtLogDateFor(b)),
-    ]),
-    h('div', { class: 'exp-row-amt' }, [
-      h('strong', {}, `${b.amount} ${b.currency}`),
-      approx ? h('span', { class: 'muted exp-row-approx' }, approx) : null,
-    ]),
-    h('div', { class: 'exp-row-actions' }, [
-      h('button', { class: 'chip', 'aria-label': 'Edit', onclick: () => { editExpenseId = b.id; render(); } }, '✎'),
-      h('button', { class: 'chip', 'aria-label': 'Delete', onclick: () => { confirmAction({ title: 'Delete this expense?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteBudgetItem(b.id); render(); } }); } }, '✕'),
-    ]),
-  ]);
-}
 
 // Quick expense logger for money-on-the-road — shares the same budget log as My Trip, so
 // spends logged here show up there and roll into the home-currency total.
