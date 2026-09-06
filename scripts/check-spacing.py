@@ -42,6 +42,10 @@ PROPS = r'(margin[a-z-]*|padding[a-z-]*|gap|row-gap|column-gap)'
 
 # Ceilings, recorded when this guard was written (mk-v0.486.0). [total, off_scale] per file.
 CEILING = {
+    "js/budget-ui.js": [
+        4,
+        4
+    ],
     "js/main.js": [
         341,
         165
@@ -51,8 +55,8 @@ CEILING = {
         3
     ],
     "js/screens/budget.js": [
-        26,
-        18
+        22,
+        14
     ],
     "js/screens/calendar.js": [
         22,
@@ -99,12 +103,16 @@ CEILING = {
         2
     ],
     "js/screens/weather.js": [
-        20,
-        12
+        17,
+        9
     ],
     "js/ui-widgets.js": [
         2,
         2
+    ],
+    "js/weather-ui.js": [
+        3,
+        3
     ]
 }
 

@@ -35,7 +35,7 @@ import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp, citySlug } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction, netMode, setNetMode, online } from '../ui-widgets.js';
-import { budgetTarget, tripSpanDays } from '../screens/budget.js';
+import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
