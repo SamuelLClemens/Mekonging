@@ -4957,4 +4957,22 @@ export const PLACES_VI_EXT = [
     bookHint: "Buy ferry tickets at Sa Ky port on the morning; book a guesthouse by phone or on arrival.", verified: "2026-09",
     sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "OpenStreetMap (Đảo Lý Sơn)", url: "https://www.openstreetmap.org/#map=13/15.3809/109.1175" }],
   },
+  // ---- TAY NINH PROVINCE — first entry for this province; found by re-running the Laos
+  // province-coverage method (point-in-polygon against regions.vi.js, not city-name
+  // guessing) against Vietnam for the first time this session.
+  {
+    id: "vi-ext-nui-ba-den", name: "Núi Bà Đen (Black Virgin Mountain)", city: "Tay Ninh", country: "vi",
+    recognition: "An isolated 996 m peak rising alone over the flat Tay Ninh plain northeast of Tay Ninh town, topped by a cluster of pagodas and reached by two Sun World cable car lines from its base.",
+    localName: 'Núi Bà Đen · Black Virgin Mountain',
+    categories: ["nature", "hike", "culture"], budgetTier: "mid",
+    blurb: "The tallest peak in southern Vietnam, sacred under both a Vietnamese legend (Bà Đen, the 'Black Lady') and an older Khmer one, and topped by a cluster of pagodas and cave shrines. A modern cable car network (Sun World Ba Den Mountain) has turned what was once a serious hike into one of the most-visited sites in the south.",
+    whyItFits: "For travellers who want a single big natural landmark near Ho Chi Minh City paired with the region's other major sight, the Cao Đài Holy See temple, which sits at the mountain's foot in Tay Ninh town.",
+    priceRange: { low: 0, typical: 300000, high: 450000, currency: "VND", note: "Walking or riding a motorbike up the road is free. The Sun World cable car runs roughly 250,000-450,000 VND round-trip per adult depending on route — the cheaper Chua Hang line reaches only the mid-mountain pagoda cluster, the pricier Van Son line goes to the true summit." },
+    hours: "Cable car roughly 07:00-19:00 daily; exact last-ticket cutoffs vary by route and season — check the official site before visiting",
+    tips: ["Confirm which cable car route a ticket covers: Chua Hang reaches only the mid-mountain pagodas, Van Son goes to the summit — they are not interchangeable.", "Pair with the Cao Đài Holy See temple at the mountain's foot in Tay Ninh town for a full day out from Ho Chi Minh City.", "Go on a weekday where possible; this is now one of the most-visited sites in southern Vietnam and gets very crowded on weekends and holidays."],
+    scamWarnings: [],
+    mapQuery: "Nui Ba Den Tay Ninh", coords: { lat: 11.367, lng: 106.167 },
+    bookHint: "Cable car tickets can be bought at the gate or online in advance through Sun World's own site.", verified: "2026-09",
+    sources: [{ org: "Wikipedia — Black Virgin Mountain", url: "https://en.wikipedia.org/wiki/Black_Virgin_Mountain" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel/sun-world-ba-den" }, { org: "Sun World Ba Den Mountain (official)", url: "https://badenmountain.sunworld.vn/en/" }],
+  },
 ];
