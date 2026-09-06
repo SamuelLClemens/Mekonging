@@ -137,6 +137,8 @@ export function homeScreen() {
   // features are performed standing in front of the thing being identified, one-handed — which
   // is precisely when an extra tap costs most — and all six gained one in the consolidation.
   // Chips, not hub rows: six rows would add ~340px, more height than the consolidation saved.
+  // Both of these already come back as their own collapsible (see recentRoutesRow /
+  // identifyRow in main.js) — wrapping them again would nest a fold inside a fold.
   const recents = recentRoutesRow();
   if (recents) wrap.append(recents);
   if (onGround) {
@@ -150,7 +152,6 @@ export function homeScreen() {
   // the "Welcome back" recap below, per direct request ("start with search everything then
   // welcome back section"). Planning is the only phase where Search still trails (spliced
   // into the middle of its own stage block instead — see the planning branch below).
-  if (onGround || phase === 'post') wrap.append(searchEverythingBtn());
 
   // One stage-appropriate situational block. Planning gets a forward-looking outlook +
   // countdown + checklist hub (no near-me); travelling gets the live, forecast-aware
@@ -159,7 +160,16 @@ export function homeScreen() {
   // Kept as a variable (rather than appended inline) because the planning phase needs to
   // insert Search everything into its middle, below — see that block's comment.
   const stageBlock = homeStageBlock(phase, leadCC);
-  wrap.append(stageBlock);
+  // The traveling block (homeNowCard) already folds its own two sections — "🕒 Right now" and
+  // "💰 Budget" — so it is appended as-is; wrapping it would nest a fold inside a fold. The
+  // planning and post blocks were the ones still rendering as bare cards, outside the folding
+  // system entirely, which is why "Minimise all" appeared to skip part of the screen in those
+  // two phases. They get their own key so neither can fight homeNowCard's.
+  if (stageBlock) {
+    if (phase === 'planning') wrap.append(homeFold('🗓 Your trip', stageBlock, 'homeStageOpen'));
+    else if (phase === 'post') wrap.append(homeFold('👋 Welcome back', stageBlock, 'homeStageOpen'));
+    else wrap.append(stageBlock);
+  }
 
   // H4 — next-stop card: real transport options between where you are and your next planned
   // stop. Background-loads all four countries' route data (journey.js's route graph memoises
@@ -205,20 +215,10 @@ export function homeScreen() {
   // to display. Each condition alone hid the section, silently, with nothing on screen
   // saying why. A forecast is just as useful while planning a trip as during one.
   wrap.append(weatherFold(homeWeatherCard(phaseSpot) || homeWeatherPending(phaseSpot)));
-  if (!onGround && phase === 'planning') {
-    // Reorder per direct request: "I have arrived" (inside the countdown card, top of
-    // stageBlock above) → Search everything → "Plan your trip"/"Tune 'For you'" — so Search
-    // is inserted directly into stageBlock's own DOM, right before its trailing actions row,
-    // rather than trailing the whole stage block as it does in every other phase. stageBlock
-    // itself is built in main.js (planningStageBlock); Search everything lives only here, in
-    // home.js, so DOM insertion is how the two meet without a cross-file rewrite.
-    const actions = stageBlock.querySelector('.home-actions');
-    if (actions) actions.before(searchEverythingBtn());
-    else wrap.append(searchEverythingBtn());
-  }
-  // Post already got its Search everything button above, ahead of stageBlock (the "Welcome
-  // back" recap) — the only three phases are planning/traveling/post, and both of those are
-  // handled explicitly above, so there is nothing left to fall through to here.
+  // Search everything used to be a full-width button spliced in here (and, in the other two
+  // phases, further up). It is now the magnifying glass in the topbar — see topbar() in
+  // main.js — so it is one tap from EVERY screen instead of from a scroll position on this
+  // one, and Home is a section shorter.
 
   // H5 — "Where you are": moved to directly before Tools, per direct request — the last
   // situational card before the trip-wide chip groups below.
@@ -329,12 +329,6 @@ function nextStopNudgeChip() {
       },
     }, '✕'),
   ]);
-}
-
-// Shared by both of the placements it can appear in (see the swap with the weather ring in
-// homeScreen above) so the button itself is defined once regardless of where it lands.
-function searchEverythingBtn() {
-  return h('button', { class: 'btn ghost block home-search', onclick: () => go('#search') }, '🔎 Search everything');
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every

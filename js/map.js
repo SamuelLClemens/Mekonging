@@ -5,7 +5,7 @@
 // markers, inter-city routes and the Mekong drawn on top, tap-to-drop-a-pin. Street
 // detail is intentionally omitted so the whole region ships in ~26 KB and never breaks.
 
-import { store, getMyStay } from './state.js';
+import { store, getMyStay, getLastFix } from './state.js';
 import { effectiveRating, RATING_BANDS, ratingColor, inkOn } from './render-utils.js';
 import { allPlaces } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
@@ -373,6 +373,38 @@ export async function initMap(containerEl, opts = {}) {
   if (opts.onLocate) geo.on('geolocate', (e) => { try { opts.onLocate({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }); } catch { /* noop */ } });
   const onLocate = (cb) => geo.on('geolocate', (e) => cb({ lat: e.coords.latitude, lng: e.coords.longitude, accuracy: e.coords.accuracy }));
   const triggerLocate = () => { try { geo.trigger(); } catch { /* not ready / denied */ } };
+
+  // Show the traveller where they are WITHOUT making them find and press the target button
+  // first. Standing in an unfamiliar city, "where am I on this map" is the first question the
+  // map exists to answer, and it was costing a deliberate tap on every single map, every time.
+  //
+  // It only ever fires when the browser has ALREADY been granted location — checked through
+  // the Permissions API, with a stored previous fix as the fallback for browsers that do not
+  // implement it. That distinction is the whole design: auto-triggering on 'prompt' would
+  // throw a system permission dialog in the traveller's face on every map in the app, which
+  // is both hostile and the fastest way to get location denied for good. Someone who has
+  // never granted it still taps the button, exactly as before, and is asked once.
+  // First moment the map has finished drawing everything it can — used by callers that show a
+  // "loading imagery" state, because until the raster tiles arrive the map renders as the
+  // offline geometry: cream landmasses and red border lines. That is a correct fallback and a
+  // terrible thing to leave on screen unexplained; it reads as "the map is just outlines".
+  if (opts.onReady) map.once('idle', () => { try { opts.onReady(); } catch { /* noop */ } });
+
+  if (opts.autoLocate !== false) {
+    const armLocate = () => {
+      let done = false;
+      const fire = () => { if (!done) { done = true; triggerLocate(); } };
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          navigator.permissions.query({ name: 'geolocation' })
+            .then((st) => { if (st.state === 'granted') fire(); })
+            .catch(() => { if (getLastFix()) fire(); });   // Safari < 16 has no geolocation query
+        } else if (getLastFix()) fire();
+      } catch { /* permissions unavailable — leave it to the button */ }
+    };
+    if (map.loaded()) armLocate();
+    else map.once('load', armLocate);
+  }
 
   let ro = null; // ResizeObserver — only created in embed mode; referenced by the shared dispose()
   let embedApi = {};

@@ -111,7 +111,12 @@ function calMonthGrid(y, m, byDate, sel, onSelect) {
 function calendarScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s travel calendar` : 'Your travel calendar', '#me'));
+  // Plain title, no possessive. The topbar gives the title ~102px at 375px and clamps it to
+  // two lines; a name plus a long noun overflowed it silently (same fix as Dictionary in
+  // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
+  // buttons that lead here, which is where it reads as a nice touch rather than as an
+  // overflowing heading.
+  wrap.append(topbar('Calendar', '#me'));
   const L = calLayerState();
   const now = new Date();
   if (!calView) calView = { y: now.getFullYear(), m: now.getMonth() };
