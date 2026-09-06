@@ -639,7 +639,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.522.0';
+export const APP_VERSION = 'mk-v0.523.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1042,7 +1042,7 @@ export function languageSheet() {
 export function locationFixCard(opts = {}) {
   const { onChange } = opts;
   const card = h('div', { class: 'card' });
-  card.append(h('h3', { style: 'margin-top:0' }, '📍 Use your location?'));
+  card.append(h('h3', {}, '📍 Use your location?'));
   card.append(h('p', { class: 'muted' },
     'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
   if (typeof navigator !== 'undefined' && navigator.geolocation) {
@@ -1780,7 +1780,7 @@ export function travellingAsLine() {
 export function profileFitCard(p) {
   const f = profileFit(p);
   if (!f.good.length && !f.warn.length && !f.unknown.length) return null;
-  const card = h('div', { class: 'card fit-card' }, [h('h3', { style: 'margin-top:0' }, '🧭 For how you’re travelling')]);
+  const card = h('div', { class: 'card fit-card' }, [h('h3', {}, '🧭 For how you’re travelling')]);
   const ul = h('ul', { class: 'fit-list' });
   f.good.forEach((t) => ul.append(h('li', { class: 'fit-good' }, t)));
   f.warn.forEach((t) => ul.append(h('li', { class: 'fit-warn' }, t)));
@@ -2139,8 +2139,8 @@ function historyScreen(cc) {
   const histCard = h('div', { class: 'card history-card' }, [h('h2', {}, 'The short history'), h('p', {}, hi.blurb)]);
   { const rd = readAloudBar(() => hi.blurb); if (rd) histCard.append(rd); }
   wrap.append(histCard);
-  const kf = knownForRow(hi.knownFor); if (kf) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Known for'), kf]));
-  if (hi.cultureTip) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🙏 Cultural respect'), h('p', {}, hi.cultureTip)]));
+  const kf = knownForRow(hi.knownFor); if (kf) wrap.append(h('div', { class: 'card' }, [h('h3', {}, 'Known for'), kf]));
+  if (hi.cultureTip) wrap.append(h('div', { class: 'card' }, [h('h3', {}, '🙏 Cultural respect'), h('p', {}, hi.cultureTip)]));
   const cityKeys = Object.keys(HISTORY.cities || {}).filter((k) => k.startsWith(cc + '-'));
   if (cityKeys.length) {
     wrap.append(h('h2', { class: 'home-section' }, 'City by city'));
@@ -2385,7 +2385,7 @@ function visaScreen(cc) {
   // Long stay & remote work (digital nomads, retirees) — separate from tourist entry.
   const ls = LONG_STAY[cc];
   if (ls) {
-    const lc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🧳 Long stay & remote work')]);
+    const lc = h('div', { class: 'card' }, [h('h3', {}, '🧳 Long stay & remote work')]);
     if (ls.note) lc.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, ls.note));
     ls.options.forEach((o) => lc.append(h('div', { style: 'margin:6px 0' }, [
       h('strong', {}, o.name),
@@ -2400,14 +2400,14 @@ function visaScreen(cc) {
   }
   if (v.officialEvisa && v.officialEvisa.url) {
     wrap.append(h('div', { class: 'card' }, [
-      h('h3', { style: 'margin-top:0' }, 'Official e-visa portal'),
+      h('h3', {}, 'Official e-visa portal'),
       h('p', { class: 'tiny muted' }, 'Use only the official government site — look-alike reseller sites overcharge and harvest data.'),
       h('a', { class: 'btn block', href: v.officialEvisa.url, target: '_blank', rel: 'noopener' }, `${v.officialEvisa.name} ↗`),
     ]));
   }
-  if (v.landBorderNotes) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'At land borders'), h('p', {}, v.landBorderNotes)]));
-  if (v.overstay) wrap.append(h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Overstay'), h('p', {}, v.overstay)]));
-  if (v.scams && v.scams.length) { const s = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '⚠️ Common visa scams')]); v.scams.forEach((x) => s.append(h('div', { class: 'warn-note' }, x))); wrap.append(s); }
+  if (v.landBorderNotes) wrap.append(h('div', { class: 'card' }, [h('h3', {}, 'At land borders'), h('p', {}, v.landBorderNotes)]));
+  if (v.overstay) wrap.append(h('div', { class: 'card' }, [h('h3', {}, 'Overstay'), h('p', {}, v.overstay)]));
+  if (v.scams && v.scams.length) { const s = h('div', { class: 'card' }, [h('h3', {}, '⚠️ Common visa scams')]); v.scams.forEach((x) => s.append(h('div', { class: 'warn-note' }, x))); wrap.append(s); }
   wrap.append(sourcesNote(v.sources, v.asOf));
   mount(wrap, 'home');
 }
@@ -2451,7 +2451,7 @@ function scamsScreen(cc) {
   if (s && s.top && s.top.length) {
     s.top.forEach((x) => {
       wrap.append(h('div', { class: 'card scam-card' }, [
-        h('h3', { style: 'margin-top:0' }, x.title),
+        h('h3', {}, x.title),
         h('p', { class: 'scam-how', style: 'margin:4px 0' }, [h('strong', {}, '⚠ What happens: '), x.how]),
         h('p', { class: 'scam-avoid', style: 'margin:4px 0 0' }, [h('strong', {}, '✓ Avoid it: '), x.avoid]),
       ]));
@@ -2463,7 +2463,7 @@ function scamsScreen(cc) {
   // Fold in the visa/border scams already carried in VISA, with a link to the full guide.
   const v = getVisa(getActiveCountry());
   if (v && v.scams && v.scams.length) {
-    const vc = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🛂 Visa & border scams')]);
+    const vc = h('div', { class: 'card' }, [h('h3', {}, '🛂 Visa & border scams')]);
     v.scams.forEach((x) => vc.append(h('div', { class: 'warn-note' }, x)));
     vc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#visa-${getActiveCountry()}`) }, 'Open the entry & visa guide'));
     wrap.append(vc);
@@ -2471,7 +2471,7 @@ function scamsScreen(cc) {
 
   // Point to the airport-transport scam note, which lives on the arrival hub.
   wrap.append(h('div', { class: 'card' }, [
-    h('h3', { style: 'margin-top:0' }, '🚕 Getting from the airport'),
+    h('h3', {}, '🚕 Getting from the airport'),
     h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'The most common first-hour trick is an airport transport overcharge. The arrival guide lists the cheapest safe way into town for each gateway.'),
     h('button', { class: 'btn ghost block', onclick: () => go(`#arrival-${getActiveCountry()}`) }, '🛬 Open the arrival guide'),
   ]));
@@ -3218,7 +3218,7 @@ function meHubScreen() {
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);
   if (up.length) {
-    const rc = h('div', { class: 'card', style: 'margin-top:12px' }, [h('h3', { style: 'margin-top:0' }, '🔔 Coming up')]);
+    const rc = h('div', { class: 'card', style: 'margin-top:12px' }, [h('h3', {}, '🔔 Coming up')]);
     up.slice(0, 4).forEach((u) => {
       const it = u.item;
       const when = u.eventAt.toLocaleDateString(dateLocale(), { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
@@ -4693,7 +4693,7 @@ function arrivalScreen(arg) {
 // nearest beach (flagged when jellyfish are in season) and to the full Health screen.
 function nearbySafetyStrip(country, fix) {
   const spot = nearestSpot(fix, country);
-  const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, '🩺 Conditions & safety now')]);
+  const card = h('div', { class: 'card' }, [h('h3', {}, '🩺 Conditions & safety now')]);
   card.append(airBlock(spot, { compact: true }));
   card.append(uvTodayBlock(fix, country));
   const m = new Date().getMonth() + 1;
@@ -5034,7 +5034,7 @@ function listingCard(it) {
   const cat = it.cat || 'other';
   const meta = bbCat(cat);
   const card = h('div', { class: 'card listing-card', style: `--cat:${meta.color}` });
-  card.append(h('h3', { style: 'margin-top:0' }, `${meta.emoji} ${bbHeadline(cat, d)}`));
+  card.append(h('h3', {}, `${meta.emoji} ${bbHeadline(cat, d)}`));
   if (cat === 'swap') {
     card.append(h('p', { class: 'muted small' }, swapCalcNodes((d.have && d.have.a) || 0, d.have && d.have.c, d.want && d.want.c)));
   } else {
@@ -7224,7 +7224,7 @@ function myIdentifierScreen() {
       if (!items.length) return;
       const groupKeys = items.map((o) => idPinKey(type, o.id));
       const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [
-        h('h3', { style: 'margin-top:0' }, `${spec.emoji} ${spec.label} · ${items.length}`),
+        h('h3', {}, `${spec.emoji} ${spec.label} · ${items.length}`),
       ]);
       items.forEach((o) => card.append(idSavedRow(type, spec, o, groupKeys)));
       wrap.append(card);
@@ -7245,7 +7245,7 @@ function myIdentifierScreen() {
       if (!resolved.length) return;
       const groupKeys = resolved.map((r) => r.key);
       const header = tag ? `🏷 ${tag} · ${resolved.length}` : `• Untagged · ${resolved.length}`;
-      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [h('h3', { style: 'margin-top:0' }, header)]);
+      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [h('h3', {}, header)]);
       resolved.forEach((r) => card.append(idSavedRow(r.type, r.spec, r.o, groupKeys)));
       wrap.append(card);
     });
@@ -8418,7 +8418,7 @@ function welcomeScreen() {
       const box = [];
       // Accessibility + text size
       const accCard = h('div', { class: 'card' });
-      accCard.append(h('h3', { style: 'margin-top:0' }, 'Accessibility needs'));
+      accCard.append(h('h3', {}, 'Accessibility needs'));
       accCard.append(h('p', { class: 'muted' }, 'We will surface honest, practical guidance for how these countries work for you. Pick any that apply, or none.'));
       const accRow = h('div', { class: 'chips' });
       [['mobility', '♿ Wheelchair / limited mobility'], ['vision', '🦯 Blind / low vision'], ['hearing', '🦻 Deaf / hard of hearing']].forEach(([id, lbl]) => {
@@ -8432,7 +8432,7 @@ function welcomeScreen() {
       box.push(accCard);
       // How you like to travel
       const fitCard = h('div', { class: 'card' });
-      fitCard.append(h('h3', { style: 'margin-top:0' }, 'How you like to travel'));
+      fitCard.append(h('h3', {}, 'How you like to travel'));
       fitCard.append(h('p', { class: 'muted' }, 'Price'));
       fitCard.append(prefChips([['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['flexible', PRICE_TIER_LABEL.flexible]], prefs.budget, (v) => { prefs.budget = v; save(); }));
       fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
