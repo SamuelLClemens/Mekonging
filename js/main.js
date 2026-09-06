@@ -624,7 +624,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.512.0';
+const APP_VERSION = 'mk-v0.513.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1236,7 +1236,7 @@ function autoFoldSections(root) {
   }
   const cards = level.filter((el) => el.classList && el.classList.contains('card')
     && el.tagName !== 'DETAILS' && !el.hasAttribute('data-nofold') && el.querySelector('h2'));
-  if (cards.length < 2) return;
+  if (cards.length < 2) { addFoldAllControl(root); return; }
   const prefs = sectionFoldPrefs();
   for (const card of cards) {
     const h2 = card.querySelector('h2');
@@ -1277,6 +1277,35 @@ function autoFoldSections(root) {
     det.addEventListener('toggle', () => rememberFold(key, det.open));
     card.replaceWith(det);
   }
+  addFoldAllControl(root);
+}
+
+// One control that opens or closes every section on the screen, matching Home's own. Added
+// wherever the screen ended up with three or more folds, which is where scrolling past
+// headings actually costs something — Border crossings is eight, and closing them all takes it
+// from 7,495px to 812px. Two folds are quicker to tap individually than to reach for this.
+function addFoldAllControl(root) {
+  if (!root || root.querySelector(':scope > .home-foldall')) return;
+  const folds = [...root.querySelectorAll('details.autofold')];
+  if (folds.length < 3) return;
+  const anyOpen = folds.some((d) => d.open);
+  const btn = h('button', {
+    class: 'chip ghost',
+    'aria-label': anyOpen ? 'Minimise every section on this screen' : 'Expand every section on this screen',
+  }, anyOpen ? '⌃ Minimise all' : '⌄ Expand all');
+  // Set .open directly and let each fold's own toggle listener persist it — one code path for
+  // remembering, whether a section was closed from here or from its own heading.
+  btn.addEventListener('click', () => {
+    const open = !folds.some((d) => d.open);
+    folds.forEach((d) => { if (d.open !== open) d.open = open; });
+    btn.textContent = open ? '⌃ Minimise all' : '⌄ Expand all';
+    btn.setAttribute('aria-label', open ? 'Minimise every section on this screen' : 'Expand every section on this screen');
+  });
+  const row = h('div', { class: 'home-foldall' }, btn);
+  const bar = root.querySelector(':scope > .topbar');
+  if (bar && bar.nextSibling) root.insertBefore(row, bar.nextSibling);
+  else if (bar) root.append(row);
+  else root.insertBefore(row, root.firstChild);
 }
 
 export function mount(node, showTabbar) {
