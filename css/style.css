@@ -2635,3 +2635,11 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: var(--fs-label); white-space: pre-wrap; word-break: break-word; margin-top: var(--sp-4);
 }
+
+/* Minimise-all: one small control, right-aligned above the first section, so it reads as a
+   property of the screen rather than a member of any one section. */
+.home-foldall { display: flex; justify-content: flex-end; margin: var(--sp-1) 0 0; }
+/* A control carried in a section summary (Back to's "Clear") sits beside the fold arrow, not
+   floating in the middle of the row — summary is space-between and would otherwise strand it
+   between the title and the chevron. */
+.home-group-d > summary > .chip { margin-left: auto; }

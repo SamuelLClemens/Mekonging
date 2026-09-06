@@ -2684,18 +2684,43 @@ export function homeWeatherCard(want) {
   return card;
 }
 
-// Shared collapsible wrapper for Home's stage-block pieces — same home-group-d visual
-// language as Tools/Identify/Quick access/Where you are, so collapsibility reads as one
-// consistent site-wide pattern rather than a one-off look for these three. Defaults OPEN
-// (nothing here was hidden before this split existed); once a traveller actually toggles
-// one, that choice persists under its own pref, exactly like Quick access/Where you are do.
-function homeFold(label, inner, prefKey) {
-  const open = store.profile.prefs[prefKey] !== false;
+// Shared collapsible wrapper for Home's sections — same home-group-d visual language
+// everywhere, so collapsibility reads as one consistent site-wide pattern rather than a
+// per-section one-off. Once a traveller actually toggles one, that choice persists under its
+// own pref and survives relaunches; a fold that forgets itself on every launch saves nobody
+// anything, which is the entire point of the feature.
+//
+// Now exported, because it was private here while Home carried eleven stacked sections and
+// only four of them could be folded at all. Everything else was permanently expanded, so a
+// traveller who never uses a given section scrolled past it on every single launch, forever.
+//
+// `defaultOpen: false` is for sections that are worth offering and not worth opening unasked.
+// `action` is an optional control rendered inside the summary (Back to's "Clear"); its click
+// is stopped from reaching the <summary> so pressing it does not also toggle the section.
+export function homeFold(label, inner, prefKey, { defaultOpen = true, action = null } = {}) {
+  if (!inner) return null;
+  const pref = store.profile.prefs[prefKey];
+  const open = pref === undefined ? defaultOpen : pref !== false;
   const det = h('details', { class: 'home-group-d', open: open ? '' : null });
   det.addEventListener('toggle', () => { store.profile.prefs[prefKey] = det.open; save(); });
-  det.append(h('summary', { class: 'home-group' }, label), inner);
+  const sum = h('summary', { class: 'home-group' }, label);
+  if (action) {
+    action.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    sum.append(action);
+  }
+  det.append(sum, inner);
   return det;
 }
+
+// Every Home section's pref key, in the order they appear on the screen. One list, used by
+// both the folds themselves and Home's minimise-all control — so a section added without
+// being listed here simply keeps its own toggle and misses the bulk control, rather than
+// breaking it.
+export const HOME_FOLD_KEYS = [
+  'quickAccessOpen', 'homeRecentsOpen', 'homeIdentifyOpen', 'homeRightNowOpen',
+  'homeBudgetOpen', 'homeNextStopOpen', 'homeWeatherOpen', 'whereYouAreOpen',
+  'homeDoorsOpen', 'homeGiveBackOpen',
+];
 
 function homeNowCard(phase, cc) {
   const ctx = contextNow();
@@ -3132,14 +3157,12 @@ export function recentRoutesRow() {
     .filter((it) => it && live.has(it.hash)).slice(0, 4);
   if (!items.length) return null;
   const cc = getActiveCountry();
-  const box = h('div', { class: 'home-recents' });
-  box.append(h('div', { class: 'row-between', style: 'margin:16px 0 2px' }, [
-    h('h2', { class: 'home-section', style: 'margin:0' }, '🕘 Back to'),
-    h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
-      onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear'),
-  ]));
-  box.append(featureChips(items, cc));
-  return box;
+  const box = h('div', { class: 'home-recents' }, [featureChips(items, cc)]);
+  // Clear rides in the summary rather than above the chips, so the whole row costs one line
+  // when folded away instead of two.
+  const clear = h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
+    onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear');
+  return homeFold('🕘 Back to', box, 'homeRecentsOpen', { action: clear });
 }
 
 // Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
@@ -3152,13 +3175,11 @@ export function identifyRow() {
   const phase = store.profile.prefs.phase || inferPhase();
   const items = visibleItems(group, phase);
   if (!items.length) return null;
-  const box = h('div', { class: 'home-identify' });
-  // The group's TITLE, not its blurb: .home-section uppercases, and "WHAT IS THIS DISH, FRUIT
-  // OR BIRD?" wrapped to two shouted lines at 375px. Naming it exactly as its door is named
-  // also tells a traveller that these chips are that section, brought forward.
-  box.append(h('h2', { class: 'home-section', style: 'margin:16px 0 2px' }, `${group.ic} ${group.title}`));
-  box.append(featureChips(items, getActiveCountry()));
-  return box;
+  const box = h('div', { class: 'home-identify' }, [featureChips(items, getActiveCountry())]);
+  // The group's TITLE, not its blurb: the summary style uppercases, and "WHAT IS THIS DISH,
+  // FRUIT OR BIRD?" wrapped to two shouted lines at 375px. Naming it exactly as its door is
+  // named also tells a traveller that these chips are that section, brought forward.
+  return homeFold(`${group.ic} ${group.title}`, box, 'homeIdentifyOpen');
 }
 
 // The hub itself. Unknown id falls through to the full index rather than an error screen:
