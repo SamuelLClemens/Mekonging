@@ -61,18 +61,7 @@ import {
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
 import { PHOTOS } from './data/photos.js';
-import { putBlob, getBlob, delBlob, getAllBlobs } from './idb.js';
-import { zipStore, toCsv, buildXlsx, downloadBlob, shareOrDownload } from './exporter.js';
-import {
-  available as vaultAvailable, isInitialised as vaultInitialised, isUnlocked as vaultUnlocked,
-  lock as vaultLock, setup as vaultSetup, unlock as vaultUnlock, addDocument as vaultAdd,
-  listDocuments as vaultList, getDocument as vaultGet, deleteDocument as vaultDelete, wipeVault as vaultWipe,
-  addSecureNote as vaultAddNote, getNoteText as vaultGetNote, exportVault, importVault,
-  changePasscode as vaultChangePasscode, getHint as vaultGetHint, setHint as vaultSetHint,
-  hasRecoveryCode as vaultHasRecovery, createRecoveryCode as vaultCreateRecovery,
-  removeRecoveryCode as vaultRemoveRecovery,
-  unlockWithRecovery as vaultUnlockRecovery, resetPasscodeWithRecovery as vaultResetWithRecovery,
-} from './vault.js';
+import { putBlob, getBlob, delBlob } from './idb.js';
 // Private personal calendar (cycle/period, mood, symptoms, intimacy, pregnancy). On-device,
 // opt-in, optional PIN. See js/personal.js. Namespaced to keep the many helpers clear.
 import * as personal from './personal.js';
@@ -178,7 +167,7 @@ function allSpecies(filter = {}) { return _natureMod ? _natureMod.allSpecies(fil
 function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; }
 
 // ---- lazy screen modules ----------------------------------------------------
-// Six screen modules are loaded on demand rather than statically imported. Every one of them
+// Fifteen screen modules are loaded on demand rather than statically imported. Every one of them
 // is reached ONLY through the router (their exports are used nowhere else in this file — the
 // one exception is familyCard, which the country/explore hub renders, so 'explore' and
 // 'country' request the family module below). Together they were 184 KB of the eagerly-parsed
@@ -204,6 +193,9 @@ const SCREEN_LOADERS = {
   family: (b) => import('./screens/family.js' + b),
   sharejourney: (b) => import('./screens/share-journey.js' + b),
   medical: (b) => import('./screens/medical.js' + b),
+  vault: (b) => import('./screens/vault.js' + b),
+  export: (b) => import('./screens/export.js' + b),
+  giveback: (b) => import('./screens/giveback.js' + b),
   phrasebook: (b) => import('./screens/phrasebook.js' + b),
   places: (b) => import('./screens/places.js' + b),
   budget: (b) => import('./screens/budget.js' + b),
@@ -221,6 +213,9 @@ const ROUTE_SCREENS = {
   family: ['family'], explore: ['family'], country: ['family'],
   sharejourney: ['sharejourney'], jr: ['sharejourney'],
   hospital: ['medical'],
+  vault: ['vault'],
+  export: ['export'],
+  donate: ['giveback'],
   phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
   places: ['places'], place: ['places'],
   expenses: ['budget'],
@@ -624,7 +619,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.515.0';
+const APP_VERSION = 'mk-v0.516.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1306,6 +1301,18 @@ function addFoldAllControl(root) {
   if (bar && bar.nextSibling) root.insertBefore(row, bar.nextSibling);
   else if (bar) root.append(row);
   else root.insertBefore(row, root.firstChild);
+}
+
+// One place's review, as a shareable HTML file. The builder lives in the lazy export screen
+// module (js/screens/export.js); this wrapper exists so js/screens/places.js can keep asking
+// main.js for it without pulling that module into its own graph. It goes through
+// loadScreenMod rather than a bare `await import()` because a failed dynamic import is
+// recorded PERMANENTLY in the module map against that specifier — the "Share my review"
+// button would then keep failing on a connection that had already recovered. loadScreenMod
+// retries with a fresh query string, which is a different module-map entry.
+export async function exportOnePlaceReviewHtml(id, name) {
+  const m = await loadScreenMod('export');
+  return m.exportOnePlaceReviewHtml(id, name);
 }
 
 export function mount(node, showTabbar) {
@@ -8517,320 +8524,6 @@ function worshipScreen(cc) {
   mount(wrap, '#home');
 }
 
-// ---- SECURE DOCUMENT VAULT --------------------------------------------------
-// Passports and other documents, encrypted on-device (see js/vault.js). The UI
-// re-renders into `body` after every state change so it always reflects the vault.
-function vaultWarning() {
-  return h('div', { class: 'banner' },
-    'Documents are encrypted with your passcode and stored only on this device — never uploaded. Save your recovery code and an encrypted backup, and a forgotten passcode need never lock you out.');
-}
-function docKind(type) {
-  if (!type) return 'File';
-  if (type === 'note') return 'Secure note';
-  if (type.startsWith('image/')) return 'Image';
-  if (type === 'application/pdf') return 'PDF';
-  return type;
-}
-function vaultScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Documents', '#home'));
-  const body = h('div', {});
-  wrap.append(body);
-  mount(wrap, '#home');
-  if (!vaultAvailable()) {
-    body.append(h('div', { class: 'card' }, [
-      h('h2', {}, 'Secure storage unavailable'),
-      h('p', { class: 'muted' }, 'This browser does not expose the Web Crypto API in the current context. Open the app over HTTPS (or localhost) to use the encrypted vault.'),
-    ]));
-    return;
-  }
-  renderVault(body);
-}
-async function renderVault(body) {
-  body.innerHTML = '';
-  let inited = false;
-  try { inited = await vaultInitialised(); } catch { /* treat as not initialised */ }
-  if (!inited) { body.append(vaultSetupCard(body)); return; }
-  if (!vaultUnlocked()) { let hint = ''; try { hint = await vaultGetHint(); } catch { /* none */ } body.append(vaultUnlockCard(body, hint)); return; }
-
-  body.append(vaultWarning());
-
-  // Fetch the item list once (reused for the nudge and the list below).
-  let docs = [];
-  try { docs = await vaultList(); } catch (e) { body.append(h('div', { class: 'card' }, [h('p', { class: 'muted' }, e.message)])); return; }
-
-  // One-time nudge: once there is something worth protecting, encourage an encrypted backup.
-  if (docs.length && !store.profile.prefs.vaultBackupDone) {
-    body.append(h('div', { class: 'card', style: 'border:1px solid var(--orange)' }, [
-      h('strong', {}, '⬇️ Keep a backup of your vault'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Protects these from an update, reset, or lost phone.'),
-      h('div', { class: 'row-between' }, [
-        h('button', { class: 'btn', onclick: async () => { await vaultDownload(); renderVault(body); } }, 'Download backup'),
-        h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.vaultBackupDone = true; save(); renderVault(body); } }, 'Dismiss'),
-      ]),
-    ]));
-  }
-
-  const fileInput = h('input', { type: 'file', accept: 'image/*,application/pdf' });
-  body.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Add a document'),
-    h('p', { class: 'muted' }, 'Photograph your passport, ID, visa, insurance or vaccination records.'),
-    field('File', fileInput),
-    h('button', { class: 'btn block', onclick: async () => {
-      const f = fileInput.files && fileInput.files[0];
-      if (!f) { alert('Choose a file first.'); return; }
-      try { await vaultAdd(f); renderVault(body); } catch (e) { alert(e.message); }
-    } }, 'Encrypt & save'),
-  ]));
-
-  // Secure typed notes — for card numbers, PINs, booking references, anything you would
-  // never put in plain notes. Encrypted exactly like a document.
-  const noteTitle = h('input', { type: 'text', placeholder: 'Label (e.g. Visa card, Travel insurance)' });
-  const noteText = h('textarea', { rows: '3', placeholder: 'The number, PIN or details — encrypted before it is saved', style: 'width:100%' });
-  body.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Add a secure note'),
-    h('p', { class: 'muted' }, 'For card numbers, PINs or booking references.'),
-    field('Label', noteTitle), field('Details', noteText),
-    h('button', { class: 'btn block', onclick: async () => {
-      if (!noteText.value.trim()) { alert('Enter something to save.'); return; }
-      try { await vaultAddNote(noteTitle.value.trim(), noteText.value); renderVault(body); } catch (e) { alert(e.message); }
-    } }, 'Encrypt & save'),
-  ]));
-
-  const listCard = h('div', { class: 'card' }, [h('h2', {}, 'Your documents & notes')]);
-  body.append(listCard);
-  if (!docs.length) listCard.append(h('p', { class: 'muted' }, 'Nothing saved yet — add a document or a secure note above.'));
-  docs.forEach((d) => {
-    const row = h('div', { class: 'row-between price-item', style: 'flex-wrap:wrap' });
-    const reveal = h('div', { style: 'flex-basis:100%;margin-top:6px;display:none' });
-    const openBtn = d.type === 'note'
-      ? h('button', { class: 'chip', onclick: async () => {
-          if (reveal.style.display !== 'none') { reveal.style.display = 'none'; reveal.innerHTML = ''; return; }
-          try {
-            const text = await vaultGetNote(d.id);
-            reveal.innerHTML = '';
-            const box = h('div', { class: 'card', style: 'margin:0' }, [
-              h('pre', { style: 'white-space:pre-wrap;word-break:break-word;margin:0;font:inherit' }, text),
-              h('button', { class: 'chip', style: 'margin-top:6px', onclick: () => { try { navigator.clipboard.writeText(text); } catch { /* no clipboard */ } } }, 'Copy'),
-            ]);
-            reveal.append(box); reveal.style.display = '';
-          } catch (e) { alert(e.message); }
-        } }, 'Reveal')
-      : h('button', { class: 'chip', onclick: async () => {
-          try { const doc = await vaultGet(d.id); const u = URL.createObjectURL(doc.blob); window.open(u, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(u), 60000); }
-          catch (e) { alert(e.message); }
-        } }, 'View');
-    row.append(
-      h('div', { class: 'grow' }, [h('strong', {}, d.name || 'Document'), h('div', { class: 'muted' }, `${docKind(d.type)} · added ${d.createdAt}`)]),
-      h('div', { class: 'cats' }, [
-        openBtn,
-        h('button', { class: 'chip', 'aria-label': `Delete ${d.name || 'document'} from the vault`, onclick: async () => { if (await confirmAction({ title: 'Delete document?', body: `Delete “${d.name}” from the vault?`, confirmLabel: 'Delete', danger: true })) { await vaultDelete(d.id); renderVault(body); } } }, '✕'),
-      ]),
-      reveal,
-    );
-    listCard.append(row);
-  });
-
-  // Encrypted backup — so passports, cards and notes are never lost to an update, a reset,
-  // or a new phone. The file holds only ciphertext + salt, so it stays private: useless
-  // without the passcode.
-  body.append(h('div', { class: 'card' }, [
-    h('h2', {}, 'Backup'),
-    h('p', { class: 'muted' }, 'Protects these from an update, reset, or new device.'),
-    vaultDownloadBtn(body),
-    vaultShareBtn(),
-    vaultRestoreControl(body),
-  ]));
-
-  // Recovery code — the primary way back in if the passcode is ever forgotten. Every new
-  // vault mints one at setup; this lets the user check it is set or mint a fresh one.
-  let hasRec = false; try { hasRec = await vaultHasRecovery(); } catch { /* treat as none */ }
-  body.append(h('div', { class: 'card', style: hasRec ? '' : 'border:1px solid var(--orange)' }, [
-    h('h2', {}, '🔑 Recovery code'),
-    hasRec
-      ? h('p', { class: 'muted' }, 'Set. Keep it somewhere safe and private, apart from your phone.')
-      : h('p', { class: 'muted' }, 'Not set — create one so a forgotten passcode can’t lock you out for good.'),
-    h('button', { class: 'btn ghost block', onclick: async () => {
-      if (hasRec && !(await confirmAction({ title: 'Generate a new recovery code?', body: 'Your current recovery code will stop working immediately.', confirmLabel: 'Replace code', danger: true }))) return;
-      try { const code = await vaultCreateRecovery(); body.innerHTML = ''; body.append(recoveryCodeCard(body, code)); }
-      catch (e) { alert(e.message); }
-    } }, hasRec ? 'Replace recovery code' : 'Create a recovery code'),
-    // A recovery code is a second key to the vault: anyone holding it can open it without
-    // the passcode. That is worth revoking if the written copy is lost, or if the traveller
-    // deliberately wants exactly one way in while crossing a border. The confirmation says
-    // plainly what it costs, because after this the ONLY routes back are the passcode and
-    // an encrypted backup file.
-    hasRec ? h('button', { class: 'btn ghost block danger-outline vault-rec-remove', onclick: async () => {
-      const ok = await confirmAction({
-        title: 'Remove the recovery code?',
-        body: 'Your current code stops working immediately. After this, the only ways into the vault are your passcode and an encrypted backup file — forget both and the documents are gone for good.',
-        confirmLabel: 'Remove code', danger: true,
-      });
-      if (!ok) return;
-      try { await vaultRemoveRecovery(); renderVault(body); }
-      catch (e) { alert(e.message); }
-    } }, 'Remove recovery code') : null,
-  ]));
-
-  // Change passcode + reminder. An instant re-wrap of the master key — documents are untouched.
-  let curHint = ''; try { curHint = await vaultGetHint(); } catch { /* none */ }
-  const np1 = h('input', { type: 'password', placeholder: 'New passcode (min 4)' });
-  const np2 = h('input', { type: 'password', placeholder: 'Confirm new passcode' });
-  const hintIn = h('input', { type: 'text', value: curHint, placeholder: 'e.g. my usual PIN + birth year' });
-  body.append(h('details', { class: 'filters-collapse' }, [
-    h('summary', {}, 'Change passcode / reminder'),
-    h('div', {}, [
-      field('New passcode', np1), field('Confirm', np2),
-      h('button', { class: 'btn block', onclick: async () => {
-        if (!np1.value) { alert('Enter a new passcode.'); return; }
-        if (np1.value !== np2.value) { alert('The new passcodes do not match.'); return; }
-        try { await vaultChangePasscode(np1.value); await vaultSetHint(hintIn.value.trim()); alert('Passcode changed. Your recovery code still works.'); renderVault(body); }
-        catch (e) { alert(e.message); }
-      } }, 'Change passcode'),
-      field('Passcode reminder (optional)', hintIn),
-      h('button', { class: 'btn ghost block', onclick: async () => { try { await vaultSetHint(hintIn.value.trim()); alert('Reminder saved.'); } catch (e) { alert(e.message); } } }, 'Save reminder only'),
-      h('p', { class: 'disclaimer' }, 'No server or email reset. Use your recovery code or restore a backup to get back in — never gone for good.'),
-    ]),
-  ]));
-
-  body.append(h('div', { class: 'card' }, [
-    h('button', { class: 'btn ghost block', onclick: () => { vaultLock(); renderVault(body); } }, '🔒 Lock vault'),
-    h('button', { class: 'btn ghost block btn-spaced', style: 'color:var(--warn); border-color:var(--warn)',
-      onclick: async () => { if (await confirmAction({ title: 'Erase the entire vault?', body: 'This permanently deletes every document in it and cannot be undone. Download a backup first if you want to keep them.', confirmLabel: 'Erase vault', danger: true })) { try { await vaultWipe(); } catch { /* ignore */ } renderVault(body); } } }, 'Erase vault'),
-  ]));
-}
-function vaultStamp() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-// Shown exactly ONCE, right after a code is minted (setup / replace / reset). The code is
-// never stored where it can be read, so this is the only chance to save it.
-function recoveryCodeCard(body, code, opts) {
-  opts = opts || {};
-  const download = () => {
-    const txt = `Mekonging — vault recovery code\n\nKeep this somewhere safe and private, apart from your phone.\nIt can unlock your vault and reset a forgotten passcode.\n\n    ${code}\n\nAnyone who has this code can open your vault, so store it like a password.\nThis code is shown only once and is not saved anywhere it can be read.\n`;
-    const blob = new Blob([txt], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `mekonging-recovery-code-${vaultStamp()}.txt`;
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
-  };
-  return h('div', { class: 'card', style: 'border:2px solid var(--orange)' }, [
-    h('h2', {}, '🔑 Save your recovery code'),
-    h('p', {}, opts.isReset
-      ? 'Your passcode has been reset. Here is a NEW recovery code — your old one no longer works. Save this one now.'
-      : 'This is the one way back in if you ever forget your passcode. Save it somewhere safe and private now — it is shown only once and is never stored where it can be read.'),
-    h('div', { style: 'margin:10px 0;padding:14px;text-align:center;font-size:1.15rem;letter-spacing:1px;font-family:monospace;user-select:all;word-break:break-all;background:var(--card-2, rgba(0,0,0,.06));border-radius:10px' }, code),
-    h('div', { class: 'row-between' }, [
-      h('button', { class: 'btn', onclick: () => { try { navigator.clipboard.writeText(code); } catch { /* no clipboard */ } } }, 'Copy'),
-      h('button', { class: 'btn', onclick: download }, 'Download as file'),
-    ]),
-    h('p', { class: 'disclaimer', style: 'margin-top:10px' }, 'Keep it private and separate from your device — a password manager, a note at home, or written down. Anyone with this code can open your vault.'),
-    h('button', { class: 'btn block btn-spaced', onclick: () => renderVault(body) }, 'I have saved it — continue'),
-  ]);
-}
-async function vaultDownload() {
-  const json = await exportVault();
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `mekonging-vault-${vaultStamp()}.json`;
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
-  store.profile.prefs.vaultBackupDone = true; save();
-}
-function vaultDownloadBtn(body) {
-  return h('button', { class: 'btn ghost block', onclick: async () => {
-    try { await vaultDownload(); if (body) renderVault(body); } catch (e) { alert(e.message); }
-  } }, '⬇️ Download encrypted backup');
-}
-// The safe "email for recovery": share the ENCRYPTED backup file to your own inbox / cloud.
-// It is ciphertext, so it stays private; you restore it later and unlock with your passcode.
-function vaultShareBtn() {
-  return h('button', { class: 'btn ghost block btn-spaced', onclick: async () => {
-    try {
-      const json = await exportVault();
-      const file = new File([json], `mekonging-vault-${vaultStamp()}.json`, { type: 'application/json' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Mekonging vault backup', text: 'Encrypted vault backup — needs your passcode to open.' });
-        store.profile.prefs.vaultBackupDone = true; save();
-      } else {
-        alert('Sharing files is not supported on this device. Use “Download encrypted backup”, then email that file to yourself — it is encrypted and safe to store.');
-      }
-    } catch (e) { if (e && e.name !== 'AbortError') alert(e.message || 'Could not share the backup.'); }
-  } }, '📧 Email / share encrypted backup');
-}
-function vaultRestoreControl(body) {
-  const inp = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: (e) => {
-    const f = e.target.files && e.target.files[0]; if (!f) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      if (!(await confirmAction({ title: 'Restore this vault backup?', body: 'It replaces any vault currently on this device, and you unlock it with the backup’s passcode.', confirmLabel: 'Restore', danger: true }))) return;
-      try { const res = await importVault(String(reader.result || '')); alert(`Restored ${res.docs} item${res.docs === 1 ? '' : 's'}. Unlock with your passcode.`); renderVault(body); }
-      catch (e) { alert(e.message); }
-    };
-    reader.readAsText(f);
-  } });
-  return h('div', {}, [inp, h('button', { class: 'btn ghost block btn-spaced', onclick: () => inp.click() }, '⬆️ Restore from a backup file')]);
-}
-function vaultSetupCard(body) {
-  const p1 = h('input', { type: 'password', placeholder: 'Choose a passcode (min 4 characters)' });
-  const p2 = h('input', { type: 'password', placeholder: 'Confirm passcode' });
-  const hint = h('input', { type: 'text', placeholder: 'e.g. my usual PIN + birth year' });
-  return h('div', { class: 'card' }, [
-    h('h2', {}, 'Set up your vault'),
-    vaultWarning(),
-    field('Passcode', p1), field('Confirm', p2),
-    field('Passcode reminder (optional)', hint),
-    h('p', { class: 'disclaimer', style: 'margin-top:0' }, 'You’ll get a one-time recovery code next — save it. The reminder below is just a hint, not your passcode.'),
-    h('button', { class: 'btn block', onclick: async () => {
-      if (p1.value !== p2.value) { alert('The passcodes do not match.'); return; }
-      try { const { recoveryCode } = await vaultSetup(p1.value, hint.value.trim()); body.innerHTML = ''; body.append(recoveryCodeCard(body, recoveryCode)); }
-      catch (e) { alert(e.message); }
-    } }, 'Create vault'),
-    h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Moving from another device? Restore your encrypted backup, then unlock it with the same passcode.'),
-    vaultRestoreControl(body),
-  ]);
-}
-function vaultUnlockCard(body, hintText) {
-  const pin = h('input', { type: 'password', placeholder: 'Passcode' });
-  const err = h('p', { class: 'warn-note', style: 'display:none' });
-  const submit = async () => {
-    try { await vaultUnlock(pin.value); renderVault(body); }
-    catch (e) { err.textContent = e.message; err.style.display = ''; }
-  };
-  pin.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
-  return h('div', { class: 'card' }, [
-    h('h2', {}, 'Unlock your vault'),
-    h('p', { class: 'muted' }, 'Enter your passcode to decrypt your documents on this device.'),
-    field('Passcode', pin), err,
-    hintText ? h('p', { class: 'muted', style: 'margin:4px 0 0' }, `💡 Reminder: ${hintText}`) : null,
-    h('button', { class: 'btn block btn-spaced', onclick: submit }, 'Unlock'),
-    forgottenPasscodeDetails(body),
-  ]);
-}
-// The recovery paths, in order: recovery code (resets the passcode), then an encrypted
-// backup. There is deliberately no server/email reset — that is what keeps the vault private.
-function forgottenPasscodeDetails(body) {
-  const rc = h('input', { type: 'text', placeholder: 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX', autocapitalize: 'characters', spellcheck: 'false' });
-  const rnp1 = h('input', { type: 'password', placeholder: 'New passcode (min 4)' });
-  const rnp2 = h('input', { type: 'password', placeholder: 'Confirm new passcode' });
-  const rerr = h('p', { class: 'warn-note', style: 'display:none' });
-  return h('details', { class: 'filters-collapse', style: 'margin-top:10px' }, [
-    h('summary', {}, 'Forgotten your passcode?'),
-    h('div', {}, [
-      h('p', { class: 'muted' }, 'Have your recovery code? Enter it with a new passcode to get back in.'),
-      field('Recovery code', rc), field('New passcode', rnp1), field('Confirm', rnp2), rerr,
-      h('button', { class: 'btn block', onclick: async () => {
-        rerr.style.display = 'none';
-        if (!rc.value.trim()) { rerr.textContent = 'Enter your recovery code.'; rerr.style.display = ''; return; }
-        if (!rnp1.value || rnp1.value !== rnp2.value) { rerr.textContent = 'Enter a new passcode in both fields — they must match.'; rerr.style.display = ''; return; }
-        try {
-          const { recoveryCode } = await vaultResetWithRecovery(rc.value.trim(), rnp1.value);
-          body.innerHTML = ''; body.append(recoveryCodeCard(body, recoveryCode, { isReset: true }));
-        } catch (e) { rerr.textContent = e.message; rerr.style.display = ''; }
-      } }, 'Reset passcode with recovery code'),
-      h('p', { class: 'muted', style: 'margin-top:14px' }, 'No recovery code? If you saved an encrypted backup, restore it and unlock with that backup’s passcode.'),
-      vaultRestoreControl(body),
-      h('p', { class: 'disclaimer' }, 'For your privacy there is no server or email reset. Without your passcode, your recovery code, or an encrypted backup, the contents cannot be recovered.'),
-    ]),
-  ]);
-}
-
 // ---- YOUR CONTRIBUTIONS (on-device points + levels, Local Guides-style) ------
 function contributionsScreen() {
   const wrap = h('div', { class: 'screen' });
@@ -9972,371 +9665,6 @@ export function blobToDataURL(blob) {
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
 }
 
-// ---- EXPORT the traveller's own contributions, per type, human-viewable ------
-// Everything is built on-device from the store + IndexedDB photos. Journal and reviews
-// come out as self-contained HTML (photos inline), photos as an album + a JPEG ZIP, and
-// spending as a true .xlsx and a .csv. Shareable via the device share sheet, else saved.
-function exportStamp() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-function htmlDoc(title, bodyHtml) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)} · Mekonging</title>
-<style>
- body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:820px;margin:0 auto;padding:20px;color:#20143a;background:#faf7f0;line-height:1.5}
- h1{font-size:1.7rem}h2{font-size:1.2rem;margin:0 0 4px}
- article{border:1px solid #e3dccb;border-radius:12px;padding:14px 16px;margin:14px 0;background:#fff}
- .meta{color:#7a7264;font-size:.85rem;margin:0 0 8px}.stars{color:#E0A21A;font-size:1.1rem;margin:2px 0}
- .note{color:#4a7a5a}img{max-width:100%;border-radius:8px;margin:6px 6px 0 0;max-height:360px}
- .album{display:flex;flex-wrap:wrap;gap:8px}.album img{width:180px;height:180px;object-fit:cover;max-height:none}
- .book-section{font-size:1.4rem;margin:30px 0 8px;padding-bottom:5px;border-bottom:2px solid #E8632A}
- .lead{color:#7a7264;margin:0 0 10px}
- table{border-collapse:collapse;width:100%;margin:8px 0;font-size:.92rem}
- th,td{border:1px solid #e3dccb;padding:6px 9px;text-align:left}th{background:#f3ede0}
- tr.total td{font-weight:800;background:#faf3e6}
- footer{color:#9a927f;font-size:.8rem;margin-top:24px;text-align:center}
-</style></head><body>
-<h1>${esc(title)}</h1>
-${bodyHtml}
-<footer>Exported from Mekonging on ${exportStamp()} · your data, kept on your device.</footer>
-</body></html>`;
-}
-async function blobsToDataURLs(keys) {
-  const out = [];
-  for (const k of keys) { try { const b = await getBlob(k); if (b) out.push(await blobToDataURL(b)); } catch { /* skip a missing photo */ } }
-  return out;
-}
-async function exportJournalHtml() {
-  const entries = (store.journal.entries || []).slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
-  const parts = [];
-  for (const e of entries) {
-    const imgs = await blobsToDataURLs(entryPhotoKeys(e));
-    const when = e.ts ? new Date(e.ts).toLocaleString() : '';
-    parts.push(`<article><h2>${esc(e.title || 'Untitled')}</h2>
-<p class="meta">${[when, e.place, e.weather].filter(Boolean).map(esc).join(' · ')}</p>
-<p>${esc(e.text || '').replace(/\n/g, '<br>')}</p>
-${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
-  }
-  return htmlDoc('My travel journal', parts.join('\n') || '<p>No journal entries yet.</p>');
-}
-async function exportReviewsHtml() {
-  const parts = [];
-  for (const id of Object.keys(store.placeData || {})) {
-    const d = store.placeData[id];
-    if (!d || !(d.rating || d.review || d.note || (d.photos || []).length)) continue;
-    const pl = getPlace(id) || getPin(id);
-    const imgs = await blobsToDataURLs(d.photos || []);
-    parts.push(`<article><h2>${esc(pl ? pl.name : id)}</h2>
-${d.rating ? `<p class="stars">${'★'.repeat(d.rating)}${'☆'.repeat(5 - d.rating)}</p>` : ''}
-${d.review ? `<p>${esc(d.review).replace(/\n/g, '<br>')}</p>` : ''}
-${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>')}</p>` : ''}
-${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
-  }
-  return htmlDoc('My ratings & reviews', parts.join('\n') || '<p>No ratings or reviews yet.</p>');
-}
-export async function exportOnePlaceReviewHtml(id, name) {
-  const d = store.placeData[id] || {};
-  const imgs = await blobsToDataURLs(d.photos || []);
-  const body = `<article><h2>${esc(name || id)}</h2>
-${d.rating ? `<p class="stars">${'★'.repeat(d.rating)}${'☆'.repeat(5 - d.rating)}</p>` : ''}
-${d.review ? `<p>${esc(d.review).replace(/\n/g, '<br>')}</p>` : ''}
-${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>')}</p>` : ''}
-${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`;
-  return htmlDoc(`My review — ${name || 'a place'}`, body);
-}
-async function exportPhotosAlbumHtml() {
-  const blobs = await getAllBlobs().catch(() => []);
-  const imgs = [];
-  for (const { blob } of blobs) { if (blob) { try { imgs.push(await blobToDataURL(blob)); } catch { /* skip */ } } }
-  return htmlDoc('My photo album', imgs.length ? `<div class="album">${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</div>` : '<p>No photos yet.</p>');
-}
-async function exportPhotosZip() {
-  const blobs = await getAllBlobs().catch(() => []);
-  const files = [];
-  let n = 1;
-  for (const { blob } of blobs) {
-    if (!blob) continue;
-    const ext = (blob.type && blob.type.includes('png')) ? 'png' : 'jpg';
-    try { files.push({ name: `photo-${String(n++).padStart(3, '0')}.${ext}`, bytes: new Uint8Array(await blob.arrayBuffer()) }); } catch { /* skip */ }
-  }
-  return files.length ? zipStore(files) : null;
-}
-function expenseTable() {
-  const log = (store.trip.budgetLog || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  return { headers: ['Date', 'Amount', 'Currency', 'Category', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', expCatLookup(expCatOf(b)).label, b.note || '']) };
-}
-
-// The headline export: ONE beautiful, self-contained web page a traveller can open on any
-// phone or computer, or print, or share — journal, ratings & reviews, spending and a trip
-// summary, with every photo embedded inline. This is what "download my trip" should feel
-// like: a keepsake to read, not a data file. (The raw JSON in Settings remains, clearly
-// labelled as a device-to-device restore file — not something to read.)
-async function exportTravelBookHtml() {
-  const home = homeCurrency();
-  const parts = [];
-
-  // Trip summary — where and when, and the total spent in the home currency.
-  const stops = (store.trip.stops || []).slice();
-  const log = store.trip.budgetLog || [];
-  let spend = 0, spendKnown = true;
-  log.forEach((b) => {
-    const cur = b.currency || home, amt = parseFloat(b.amount) || 0;
-    if (cur === home) { spend += amt; return; }
-    const c = convert(amt, cur, home);
-    if (c == null || isNaN(c)) spendKnown = false; else spend += c;
-  });
-  const summaryBits = [];
-  if (stops.length) {
-    const countries = [...new Set(stops.map((s) => (getCountry(s.country) || {}).name).filter(Boolean))];
-    if (countries.length) summaryBits.push(`Countries: ${countries.join(', ')}`);
-    const dates = stops.flatMap((s) => [s.date, s.endDate]).filter(Boolean).sort();
-    if (dates.length) summaryBits.push(`Dates: ${dates[0]}${dates.length > 1 && dates[dates.length - 1] !== dates[0] ? ` – ${dates[dates.length - 1]}` : ''}`);
-    summaryBits.push(`${stops.length} stop${stops.length === 1 ? '' : 's'}`);
-  }
-  if (log.length && spend > 0) summaryBits.push(`Total spent: ${money(Math.round(spend), home)}${spendKnown ? '' : ' (partial — some currencies not converted)'}`);
-  if (summaryBits.length) {
-    parts.push(`<h2 class="book-section">My trip</h2><p class="lead">${summaryBits.map(esc).join(' · ')}</p>`);
-    if (stops.length) {
-      parts.push('<article>' + stops.map((s) =>
-        `<div>${esc(s.title || 'Stop')}${s.country ? ` · ${esc((getCountry(s.country) || {}).name || s.country)}` : ''}${stopDateLabel(s) ? ` · ${esc(stopDateLabel(s))}` : ''}</div>`).join('') + '</article>');
-    }
-  }
-
-  // Journal
-  const entries = (store.journal.entries || []).slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
-  if (entries.length) {
-    parts.push('<h2 class="book-section">Journal</h2>');
-    for (const e of entries) {
-      const imgs = await blobsToDataURLs(entryPhotoKeys(e));
-      const when = e.ts ? new Date(e.ts).toLocaleString() : '';
-      parts.push(`<article><h2>${esc(e.title || 'Untitled')}</h2>
-<p class="meta">${[when, e.place, e.weather].filter(Boolean).map(esc).join(' · ')}</p>
-<p>${esc(e.text || '').replace(/\n/g, '<br>')}</p>
-${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
-    }
-  }
-
-  // Ratings & reviews (with their photos inline)
-  const revIds = Object.keys(store.placeData || {}).filter((id) => {
-    const d = store.placeData[id]; return d && (d.rating || d.review || d.note || (d.photos || []).length);
-  });
-  if (revIds.length) {
-    parts.push('<h2 class="book-section">Places I rated</h2>');
-    for (const id of revIds) {
-      const d = store.placeData[id];
-      const pl = getPlace(id) || getPin(id);
-      const imgs = await blobsToDataURLs(d.photos || []);
-      parts.push(`<article><h2>${esc(pl ? pl.name : id)}</h2>
-${d.rating ? `<p class="stars">${'★'.repeat(d.rating)}${'☆'.repeat(5 - d.rating)}</p>` : ''}
-${d.review ? `<p>${esc(d.review).replace(/\n/g, '<br>')}</p>` : ''}
-${d.note ? `<p class="note"><em>My note:</em> ${esc(d.note).replace(/\n/g, '<br>')}</p>` : ''}
-${imgs.map((u) => `<img src="${u}" alt="">`).join('')}</article>`);
-    }
-  }
-
-  // Expenses table
-  if (log.length) {
-    const t = expenseTable();
-    const body = t.rows.map((r) => `<tr>${r.map((c, i) => `<td>${esc(i === 1 ? String(c) : c)}</td>`).join('')}</tr>`).join('');
-    parts.push(`<h2 class="book-section">Spending</h2>
-<table><thead><tr>${t.headers.map((hd) => `<th>${esc(hd)}</th>`).join('')}</tr></thead>
-<tbody>${body}${spend > 0 ? `<tr class="total"><td>Total</td><td>${esc(String(Math.round(spend)))}</td><td>${esc(home)}</td><td>in your home currency${spendKnown ? '' : ' (partial)'}</td></tr>` : ''}</tbody></table>`);
-  }
-
-  if (!parts.length) parts.push('<p>Your travel book is empty for now. Add a journal entry, rate a place, or log an expense and it will appear here.</p>');
-  return htmlDoc('My travel book', parts.join('\n'));
-}
-
-function exportScreen() {
-  const wrap = h('div', { class: 'screen' });
-  // "Export" alone (was "Export & share") — matches the two chips below once they're renamed
-  // to match, and fits on one line; the full phrase 3-line-wrapped on mobile.
-  wrap.append(topbar('Export', '#settings'));
-  wrap.append(h('p', { class: 'muted' }, 'Save your own contributions as files you can read on any phone or computer, and share them however you like. Each type comes out in a fitting format. Everything is made on your device — nothing is uploaded.'));
-
-  const jCount = (store.journal.entries || []).length;
-  const rCount = Object.values(store.placeData || {}).filter((d) => d && (d.rating || d.review || d.note || (d.photos || []).length)).length;
-  const bCount = (store.trip.budgetLog || []).length;
-
-  const saver = (btn, build, filename, mime) => { btn.onclick = async () => {
-    const lbl = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
-    try { const content = await build(); const blob = (content instanceof Blob) ? content : new Blob([content], { type: mime }); if (!blob || (blob.size === 0)) { alert('Nothing to export yet.'); } else downloadBlob(blob, filename); }
-    catch { alert('Could not build that file on this device.'); }
-    btn.disabled = false; btn.textContent = lbl;
-  }; return btn; };
-  const sharer = (btn, build, filename, mime) => { btn.onclick = async () => {
-    const lbl = btn.textContent; btn.disabled = true; btn.textContent = 'Preparing…';
-    try { const content = await build(); const blob = (content instanceof Blob) ? content : new Blob([content], { type: mime }); if (!blob || blob.size === 0) alert('Nothing to share yet.'); else await shareOrDownload([{ blob, name: filename }], filename); }
-    catch { alert('Could not build that file on this device.'); }
-    btn.disabled = false; btn.textContent = lbl;
-  }; return btn; };
-
-  // Headline: the whole trip as one beautiful, readable web page (everything, photos inline).
-  wrap.append(h('div', { class: 'card', style: 'border:2px solid var(--orange)' }, [
-    h('h2', {}, '📖 My travel book'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Everything together — trip, journal, reviews, photos and spending — as one page you can read, print or share. Opens in any browser. This is the nice, readable one.'),
-    saver(h('button', { class: 'btn block' }, '⬇️ Save my travel book (.html)'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
-    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share my travel book'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
-  ]));
-  wrap.append(h('p', { class: 'lbl', style: 'margin:12px 2px 2px' }, 'Or export one type at a time'));
-
-  // Journal
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, '📖 Journal'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${jCount} ${jCount === 1 ? 'entry' : 'entries'} — a web page with your writing and photos.`),
-    saver(h('button', { class: 'btn ghost block' }, '⬇️ Save journal (.html)'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
-    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share journal'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
-  ]));
-  // Reviews & ratings
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, '⭐ Ratings & reviews'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${rCount} ${rCount === 1 ? 'place' : 'places'} — your stars, reviews, notes and photos.`),
-    saver(h('button', { class: 'btn ghost block' }, '⬇️ Save reviews (.html)'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
-    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share reviews'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
-  ]));
-  // Photos
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, '📷 Photos'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'A viewable album, or every picture as individual JPEGs in a zip.'),
-    saver(h('button', { class: 'btn ghost block' }, '⬇️ Photo album (.html)'), exportPhotosAlbumHtml, `mekonging-photos-${exportStamp()}.html`, 'text/html'),
-    saver(h('button', { class: 'btn ghost block btn-spaced' }, '⬇️ All photos (.zip of JPEGs)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
-    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share photos (.zip)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
-  ]));
-  // Expenses — both a true Excel workbook and a CSV, as requested.
-  wrap.append(h('div', { class: 'card' }, [
-    h('h2', {}, '💸 Expenses'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'expense' : 'expenses'} — as a spreadsheet.`),
-    saver(h('button', { class: 'btn ghost block' }, '⬇️ Excel (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-    saver(h('button', { class: 'btn ghost block btn-spaced' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
-    sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share expenses (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-  ]));
-
-  wrap.append(h('p', { class: 'disclaimer' }, 'These files are for you — to keep, print or share. For moving everything to a new phone, use the full backup in Settings instead (it restores directly into the app).'));
-  mount(wrap, '#settings');
-}
-
-// ---- GIVE BACK (donate to causes that help people in the region) ------------
-// Established non-profits, each verified to an official site (2026-07). The app never
-// processes money — every entry is a plain outbound link to the organisation's own site,
-// exactly like the booking deep links. People-focused, spanning all four countries.
-const DONATE_ORGS = [
-  { scope: 'Across the region', flag: '🌏', items: [
-    { name: 'MAG (Mines Advisory Group)', what: 'Finds and clears landmines and unexploded bombs left by war in Cambodia, Laos and Vietnam, so families can farm and children can play safely.', url: 'https://www.maginternational.org/' },
-    { name: 'Friends-International', what: 'Protects urban children and marginalised young people and trains them for work, across Cambodia, Laos and Thailand.', url: 'https://friends-international.org/' },
-  ] },
-  { scope: 'Thailand', flag: '🇹🇭', items: [
-    { name: 'The Mercy Centre (HDF)', what: 'Kindergartens, shelter and daily care for children of Bangkok’s Klong Toey community, serving the city’s poorest families since 1972.', url: 'https://mercycentre.org/' },
-  ] },
-  { scope: 'Vietnam', flag: '🇻🇳', items: [
-    { name: 'Blue Dragon Children’s Foundation', what: 'Rescues children from trafficking and slavery and helps street kids rebuild their lives, based in Hanoi.', url: 'https://www.bluedragon.org/donate/' },
-  ] },
-  { scope: 'Cambodia', flag: '🇰🇭', items: [
-    { name: 'Cambodian Children’s Fund', what: 'Education, healthcare, childcare and family support in one of Phnom Penh’s poorest areas, Steung Meanchey.', url: 'https://www.cambodianchildrensfund.org/donate' },
-  ] },
-  { scope: 'Laos', flag: '🇱🇦', items: [
-    { name: 'COPE', what: 'Free prosthetic limbs and rehabilitation for survivors of unexploded bombs, run from the visitor centre in Vientiane.', url: 'https://copelaos.org/' },
-    { name: 'Big Brother Mouse', what: 'A Lao-owned literacy project publishing books and running reading parties for village children, from Luang Prabang.', url: 'https://www.bigbrothermouse.com/' },
-  ] },
-];
-
-// Recognised giving-effectiveness references, cited in-app for the "how much to give"
-// tool. Not financial advice — a suggestion the traveller is free to ignore.
-const GIVING_SOURCES = [
-  { org: 'Giving What We Can (10% pledge)', url: 'https://www.givingwhatwecan.org/' },
-  { org: 'The Life You Can Save', url: 'https://www.thelifeyoucansave.org/' },
-];
-
-// Total logged trip spend converted to the home currency, or null if nothing is logged
-// or a rate is unknown — lets the giving tool prefill "% of trip spend" from real data.
-function loggedTripSpendHome() {
-  const home = homeCurrency();
-  let sum = 0, known = true;
-  (store.trip.budgetLog || []).forEach((b) => {
-    const cur = b.currency || home;
-    const amt = parseFloat(b.amount) || 0;
-    if (cur === home) { sum += amt; return; }
-    const c = convert(amt, cur, home);
-    if (c == null || isNaN(c)) known = false; else sum += c;
-  });
-  return known && sum > 0 ? Math.round(sum) : null;
-}
-
-// A private, opt-in "how much to give?" calculator. Three framings (a % of trip spend,
-// a per-day amount over the length of stay, or a % of income). Everything typed stays on
-// the device and is NEVER saved or sent — only the non-sensitive preset (method + %) is
-// remembered. The app processes no money; the amount is a suggestion to give on the
-// charity's own site.
-function givingCalculator() {
-  const home = homeCurrency();
-  const g = store.profile.prefs.giving = store.profile.prefs.giving || { method: 'trip', pct: 1, perDay: 2, incPct: 1, days: '' };
-  const card = h('div', { class: 'card give-back' }, [h('h2', {}, '🧮 How much to give?')]);
-  card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Giving is personal and entirely optional. Pick an amount whichever way suits you. Anything you type stays on this device and is never saved or sent — only the amount you choose to give, on the charity’s own site.'));
-
-  const methods = [['trip', '💸 % of trip spend'], ['day', '📅 Per day here'], ['income', '💰 % of income']];
-  const methodRow = h('div', { class: 'chips' });
-  const body = h('div', {});
-  const result = h('p', { style: 'font-weight:800;font-size:1.25rem;margin:12px 0 2px' });
-  const note = h('p', { class: 'tiny muted', style: 'margin:0' });
-  const fmt = (v) => money(Math.max(0, Math.round(v || 0)), home);
-  const setResult = (v, sub) => { result.textContent = `Suggested: ${fmt(v)}`; note.textContent = sub || ''; };
-  const press = (row, el) => { row.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', 'false')); el.setAttribute('aria-pressed', 'true'); };
-
-  function renderBody() {
-    body.innerHTML = '';
-    if (g.method === 'trip') {
-      const logged = loggedTripSpendHome();
-      const amt = h('input', { type: 'number', inputmode: 'decimal', min: '0', placeholder: `Your trip spend in ${home}`, value: logged != null ? logged : '' });
-      body.append(field(`Trip spend (${home})${logged != null ? ' — from your logged budget' : ''}`, amt));
-      const pctRow = h('div', { class: 'chips', style: 'margin-top:6px' }, [0.5, 1, 2, 5].map((p) =>
-        h('button', { class: 'chip', 'aria-pressed': g.pct === p ? 'true' : 'false', onclick: (e) => { g.pct = p; save(); press(pctRow, e.currentTarget); calc(); } }, `${p}%`)));
-      body.append(pctRow);
-      const calc = () => { const n = parseFloat(amt.value) || 0; setResult(n * (g.pct / 100), `${g.pct}% of ${fmt(n)}. Many travellers give around 1% of their trip budget to local causes.`); };
-      amt.addEventListener('input', calc); calc();
-    } else if (g.method === 'day') {
-      const days = h('input', { type: 'number', inputmode: 'numeric', min: '0', placeholder: 'Days in the region', value: g.days || '' });
-      body.append(field('Days in the region', days));
-      const perRow = h('div', { class: 'chips', style: 'margin-top:6px' }, [1, 2, 5, 10].map((p) =>
-        h('button', { class: 'chip', 'aria-pressed': g.perDay === p ? 'true' : 'false', onclick: (e) => { g.perDay = p; save(); press(perRow, e.currentTarget); calc(); } }, `${money(p, home)}/day`)));
-      body.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' }, 'Amount per day'), perRow);
-      const calc = () => { const d = parseFloat(days.value) || 0; g.days = days.value; setResult(d * g.perDay, `${money(g.perDay, home)} × ${d || 0} day${d === 1 ? '' : 's'}. A small daily amount adds up over a trip.`); };
-      days.addEventListener('input', () => { save(); calc(); }); calc();
-    } else {
-      const inc = h('input', { type: 'number', inputmode: 'decimal', min: '0', placeholder: `Your monthly income in ${home}` });
-      body.append(field(`Monthly income (${home}) — not saved`, inc));
-      const pctRow = h('div', { class: 'chips', style: 'margin-top:6px' }, [0.5, 1, 2].map((p) =>
-        h('button', { class: 'chip', 'aria-pressed': g.incPct === p ? 'true' : 'false', onclick: (e) => { g.incPct = p; save(); press(pctRow, e.currentTarget); calc(); } }, `${p}% of a month`)));
-      body.append(pctRow);
-      body.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Giving What We Can suggests pledging 10% of annual income to effective charities — a trip gift can be a first step.'));
-      const calc = () => { const n = parseFloat(inc.value) || 0; const pct = g.incPct || 1; setResult(n * (pct / 100), `${pct}% of one month’s income (${fmt(n)}).`); };
-      inc.addEventListener('input', calc); calc();
-    }
-  }
-  methods.forEach(([id, label]) => methodRow.append(h('button', { class: 'chip', 'aria-pressed': g.method === id ? 'true' : 'false',
-    onclick: (e) => { g.method = id; save(); press(methodRow, e.currentTarget); renderBody(); } }, label)));
-  card.append(methodRow, body, result, note);
-  card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'A suggestion, not a rule — give what feels right, or give your time instead. Choose a cause below to give on its official site.'));
-  card.append(sourcesNote(GIVING_SOURCES, '2026-07'));
-  renderBody();
-  return card;
-}
-
-function donateScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Give back', '#home'));
-  wrap.append(screenHint('Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
-  wrap.append(h('div', { class: 'banner' }, 'Mekonging takes no money and no cut, and never processes a payment. These links open external sites and need internet. Please do your own checks before giving.'));
-  wrap.append(givingCalculator());
-  DONATE_ORGS.forEach((grp) => {
-    wrap.append(h('h2', { class: 'cat-title' }, `${grp.flag} ${grp.scope}`));
-    grp.items.forEach((o) => wrap.append(h('div', { class: 'card donate-card' }, [
-      h('strong', {}, o.name),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, o.what),
-      h('a', { class: 'btn ghost block', href: o.url, target: '_blank', rel: 'noopener noreferrer' }, 'Visit official site ↗'),
-    ])));
-  });
-  wrap.append(h('p', { class: 'muted', style: 'margin-top:12px' }, 'Prefer to help in person? Eating at their training restaurants, buying their books, or volunteering supports the same work — ask at each organisation’s visitor centre.'));
-  wrap.append(h('p', { class: 'disclaimer' }, 'Mekonging is not affiliated with these organisations and receives nothing from them. This is a starting point, not vetting or financial advice — confirm each charity independently before donating.'));
-  mount(wrap, '#home');
-}
 
 // A brief, honest, one-time-per-country loading state — shown only the first time a
 // route needs data that has not been fetched yet this session (see the lazy country
@@ -10554,7 +9882,7 @@ export function render() {
       case 'checklist': return checklistScreen(arg);
       case 'bestof': return bestofScreen(arg);
       case 'bestlist': return bestListScreen(arg);
-      case 'vault': return vaultScreen();
+      case 'vault': return screenMod('vault').vaultScreen();
       case 'help': return helpScreen();
       case 'feedback': return feedbackScreen(arg);
       case 'circle': return circleScreen();
@@ -10567,10 +9895,10 @@ export function render() {
       case 'plans': return plansScreen();
       case 'board': return boardScreen(arg);
       case 'streetfood': return streetfoodScreen();
-      case 'donate': return donateScreen();
+      case 'donate': return screenMod('giveback').donateScreen();
       case 'visitors': return screenMod('visitors').visitorsScreen();
       case 'settings': return screenMod('settings').settingsScreen();
-      case 'export': return exportScreen();
+      case 'export': return screenMod('export').exportScreen();
       default: return homeScreen();
     }
   } catch (err) {
