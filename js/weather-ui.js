@@ -239,4 +239,13 @@ export function wxVizCard(rec, spot) {
   return card;
 }
 
+// Which city the full forecast opens to. This binding lives HERE, not in js/screens/weather.js,
+// because the two modules that seed it — main.js's nearby-weather card and js/screens/places.js's
+// "See full forecast" — must be able to do so without pulling in the whole (lazily loaded)
+// weather screen. It was previously declared in the screen and assigned from here, which in a
+// module (always strict mode) is a ReferenceError, not an implicit global: every tap on "See
+// full forecast" threw, and the forecast opened at the wrong city. Same failure as wxMetric two
+// comments above it in that file, missed in the same refactor.
+let weatherKey = '';
 export function seedWeatherKey(key) { weatherKey = key; }
+export function currentWeatherKey() { return weatherKey; }

@@ -1,9 +1,9 @@
 // Weather screens: full forecast, and the Home/place-card watch-face widget (wxVizCard).
 // Extracted from main.js (module-split, see MASTER_BUILD_PROMPT.md) — the DATA/fetch layer
-// stays in js/weather.js; this is the RENDERING layer only. weatherKey/weatherSeededHash are
-// module-private city-selection state; weatherNearbyCard (main.js, a place-detail widget)
-// seeds which city the full forecast opens to via the exported seedWeatherKey() rather than
-// writing the module-private binding directly.
+// stays in js/weather.js; this is the RENDERING layer only. The selected city (weatherKey)
+// lives in js/weather-ui.js so that main.js's nearby-weather card and js/screens/places.js can
+// seed it via seedWeatherKey() without loading this screen; weatherSeededHash below stays
+// module-private here because only this screen uses it.
 import { store, save, getLastFix, setLastFix } from '../state.js';
 import { h, esc } from '../util.js';
 import { wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip, airBlock, uvLineNode } from '../render-utils.js';
@@ -14,16 +14,17 @@ import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
 // Circular import back into main.js — same accepted pattern js/screens/home.js already uses
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
-import { topbar, mount, focusSpot, fmtClock, spotForCity } from '../main.js';
+import { topbar, mount, focusSpot, fmtClock, spotForCity, render } from '../main.js';
 import { dateLocale } from '../i18n.js';
 
 // Shared with the modules that stay in the launch graph; see js/weather-ui.js. These moved out so
 // this file could leave it — the router imports it on demand now.
 import {
-  seedWeatherKey, wxVizCard,
+  seedWeatherKey, currentWeatherKey, wxVizCard,
 } from '../weather-ui.js';
 // ---- WEATHER + FORECAST -----------------------------------------------------
-let weatherKey = '';   // remembered city selection across renders
+// weatherKey itself now lives in weather-ui.js (see the note there) — a module's `let` cannot
+// be assigned across an import, which is what broke seedWeatherKey.
 let weatherSeededHash = null;   // route we last seeded weatherKey for (so city clicks stick)
 function wxAgo(ts) {
   if (!ts) return 'never';
@@ -187,9 +188,9 @@ export function weatherScreen(country) {
   // every render (e.g. a city-chip click, which calls render()) would overwrite the user's
   // choice back to the focus city. That was the "weather buttons do nothing" bug.
   const curHash = location.hash || '#weather';
-  if (country && weatherSeededHash !== curHash) { weatherKey = spotKey(focusSpot(country).spot); weatherSeededHash = curHash; }
-  if (!weatherKey) weatherKey = spotKey(focusSpot().spot);
-  let spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || defaultSpot('th');
+  if (country && weatherSeededHash !== curHash) { seedWeatherKey(spotKey(focusSpot(country).spot)); weatherSeededHash = curHash; }
+  if (!currentWeatherKey()) seedWeatherKey(spotKey(focusSpot().spot));
+  let spot = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey()) || defaultSpot('th');
 
   // Unit toggles (°C/°F, km/h/mph) — persist in the profile and re-render.
   const setTemp = (u) => { store.profile.wxTempUnit = u; save(); render(); };
@@ -304,19 +305,19 @@ export function weatherScreen(country) {
   // page to the top via mount()'s window.scrollTo(0,0)), but it does deliberately swap in a
   // whole new city's cards, so it restores the traveller's scroll position afterwards.
   function loadAndPaint() {
-    const cached = getCachedWeather(weatherKey);
+    const cached = getCachedWeather(currentWeatherKey());
     paint(cached, !cached && online());
     if (online()) {
       maybeRefreshWeather(spot).then((r) => {
-        if ((location.hash || '').startsWith('#weather') && spotKey(spot) === weatherKey && r) paint(r, false);
+        if ((location.hash || '').startsWith('#weather') && spotKey(spot) === currentWeatherKey() && r) paint(r, false);
       });
     }
   }
   function switchSpot(key) {
-    if (!key || key === weatherKey) return;
+    if (!key || key === currentWeatherKey()) return;
     const y = window.scrollY;
-    weatherKey = key;
-    spot = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey) || spot;
+    seedWeatherKey(key);
+    spot = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey()) || spot;
     // Switching (unlike the map's own country) can jump to a city in a different country —
     // the map must then redraw for THAT country, and its cities' current temps need their
     // own fetch (the cached "many" batch was fetched for the old country's cities).
@@ -353,14 +354,14 @@ export function weatherScreen(country) {
     // choosing e.g. Koh Lanta from the search box left the map with no dot highlighted at
     // all. Only the one selected anchor is added; drawing all 101 would bury the map.
     const hubs = spotsForCountry(curCountry);
-    const sel = WEATHER_SPOTS.find((s) => spotKey(s) === weatherKey);
+    const sel = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey());
     const cities = (sel && sel.country === curCountry && !sel.hub) ? hubs.concat([sel]) : hubs;
     const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
       ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1.5" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
     const dots = cities.map((s) => {
       const [x, y] = projLL(s.lng, s.lat);
       const w = many && many[spotKey(s)];
-      const sel = spotKey(s) === weatherKey;
+      const sel = spotKey(s) === currentWeatherKey();
       const temp = w ? `${wxTempVal(w.temp)}°` : '';
       const emo = w ? wmo(w.code)[1] : '';
       return `<g class="wx-dot" data-key="${spotKey(s)}" style="cursor:pointer">
@@ -408,6 +409,3 @@ export function weatherScreen(country) {
 // anyone actually opened the ring (mk-v0.508.0's live-testing never happened to). Fixed at
 // the source: wxMetric now lives in weather-ui.js, next to the code that actually uses it.
 
-// Exported setter for weatherKey (module-private above) — weatherNearbyCard (main.js) uses
-// this to seed which city "See full forecast" opens to, instead of writing the binding
-// directly (which a plain module import cannot do to another module's `let`).
