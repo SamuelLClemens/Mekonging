@@ -624,7 +624,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.511.0';
+const APP_VERSION = 'mk-v0.512.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -8181,7 +8181,10 @@ function sosScreen(cc) {
   const emCat = book && book.categories.find((cat) => cat.id === 'emergency');
 
   // (1) Call for help — emergency numbers.
-  const nums = h('div', { class: 'card sos-card' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
+  // NEVER foldable. Every other section on this screen collapses like the rest of the app,
+  // but the emergency numbers must be on screen the instant this screen opens, with no
+  // possibility that a traveller collapsed them weeks ago and has to remember that now.
+  const nums = h('div', { class: 'card sos-card', 'data-nofold': '' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
   const em = (c.info && c.info.emergency) || [];
   // `data-no-mt` exempts these from the optional machine-translation pass (js/i18n.js). The
   // label and the DIGITS share one text node ("Tourist Police: 1155"), so handing that string
