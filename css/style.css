@@ -2715,3 +2715,9 @@ select {
    spells itself out rather than competing for space with the one used ten times a day. */
 .translate-keep { margin-top: var(--sp-2); }
 .translate-keep .btn { width: 100%; }
+
+/* Screen-level section folds created by autoFoldSections() (js/main.js). The card variant
+   reuses .card's own box; the heading-run variant has no box of its own, so it just needs the
+   heading to read as a heading and the cards under it to keep their normal spacing. */
+.autofold-run > summary { font-size: var(--fs-h2); margin: var(--sp-4) 0 var(--sp-2); }
+.autofold-run > summary:first-of-type { margin-top: var(--sp-2); }

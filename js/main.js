@@ -1154,9 +1154,136 @@ function tabbar() {
     }, [h('span', { class: 'ic', html: t.svg }), h('span', { title: t.hash === '#me' ? meTabLabel() : null }, t.hash === '#me' ? meTabLabel() : t.label)])));
 }
 
+
+// ---- Automatic section folding -----------------------------------------------------------
+// Every screen's top-level cards become collapsible, here, once, instead of each screen
+// remembering to do it. Home had a full folding system and a "Minimise all" control; the other
+// forty screens did not, so "all the sections should minimise and maximise" was true on exactly
+// one of them. Settings ran to nine stacked cards, Emergency nine, Border crossings eight —
+// all of them a single unbroken scroll.
+//
+// Rules, deliberately conservative:
+//  - only DIRECT children of the screen root that carry the .card class and contain an <h2>,
+//    so nothing nested and nothing without a real heading is touched;
+//  - a screen with fewer than two of them is left alone — folding a lone card buys nothing and
+//    costs a tap;
+//  - `data-nofold` on a card opts it out;
+//  - everything starts OPEN, so no traveller loses sight of anything they had before. The state
+//    is per-screen-per-heading and remembered, so a section closed once stays closed.
+//
+// Where the heading shares a row with a control (Settings does this a lot — "Live translate"
+// beside its switch) the whole row becomes the summary and the control keeps working: its
+// clicks are stopped from reaching the <summary>, which would otherwise toggle the fold.
+function sectionFoldPrefs() {
+  const p = store.profile.prefs;
+  const m = p.sectionFolds || (p.sectionFolds = {});
+  // Only CLOSED sections are worth recording — open is the default. Early builds of this
+  // wrote `true` for every section of every screen the traveller opened, because inserting a
+  // <details open> into the document fires a toggle event: hundreds of entries all saying
+  // "this is how it already was", and a localStorage write on every render to say it.
+  for (const k in m) if (m[k] !== false) delete m[k];
+  return m;
+}
+
+// Writes only a real change, and only a closure. Without the equality check every render
+// would hit localStorage once per section for no reason at all.
+function rememberFold(key, open) {
+  const m = sectionFoldPrefs();
+  if (open) { if (m[key] === undefined) return; delete m[key]; }
+  else { if (m[key] === false) return; m[key] = false; }
+  save();
+}
+
+// The OTHER long-screen shape: a bare <h2> at screen level followed by however many cards
+// belong under it, then the next <h2>. Border crossings is eight of these back to back
+// ("Thailand ↔ Laos", "Thailand ↔ Cambodia", …), which is one continuous scroll with no way
+// to skip a country pair you are nowhere near. Each heading plus everything up to the next
+// heading becomes one fold. Runs first, so the card pass below only ever sees what is left at
+// screen level and nothing gets folded twice.
+function foldHeadingRuns(root, routeKey) {
+  const kids = [...root.children];
+  const heads = kids.filter((el) => el.tagName === 'H2' && !el.hasAttribute('data-nofold'));
+  if (heads.length < 2) return;          // one heading is a screen title, not a section list
+  const prefs = sectionFoldPrefs();
+  for (const head of heads) {
+    const label = (head.textContent || '').trim();
+    if (!label) continue;
+    const body = [];
+    for (let n = head.nextElementSibling; n && n.tagName !== 'H2'; n = n.nextElementSibling) body.push(n);
+    if (!body.length) continue;
+    const key = `${routeKey}:${label.slice(0, 40)}`;
+    const det = h('details', { class: 'foldcard autofold autofold-run' });
+    if (prefs[key] !== false) det.setAttribute('open', '');
+    const sum = h('summary', { class: 'foldcard-sum' }, label);
+    det.append(sum);
+    body.forEach((n) => det.append(n));
+    det.addEventListener('toggle', () => rememberFold(key, det.open));
+    head.replaceWith(det);
+  }
+}
+
+function autoFoldSections(root) {
+  if (!root || !root.children) return;
+  const routeKey = (location.hash || '#home').replace(/^#/, '').split(/[-?]/)[0] || 'home';
+  foldHeadingRuns(root, routeKey);
+  // Screen level, plus one step into any UNSTYLED grouping div a screen used to bundle its
+  // cards (Transport does this). A div with no class of its own is a pure container, so its
+  // children are still screen-level sections as far as the traveller is concerned. Anything
+  // with a class is a real component and is left alone.
+  const level = [...root.children];
+  for (const el of root.children) {
+    if (el.tagName === 'DIV' && !el.className && !el.hasAttribute('data-nofold')) level.push(...el.children);
+  }
+  const cards = level.filter((el) => el.classList && el.classList.contains('card')
+    && el.tagName !== 'DETAILS' && !el.hasAttribute('data-nofold') && el.querySelector('h2'));
+  if (cards.length < 2) return;
+  const prefs = sectionFoldPrefs();
+  for (const card of cards) {
+    const h2 = card.querySelector('h2');
+    if (!h2 || h2.closest('details')) continue;
+    const label = (h2.textContent || '').trim();
+    if (!label) continue;
+    const key = `${routeKey}:${label.slice(0, 40)}`;
+    const det = h('details', { class: `${card.className || ''} foldcard autofold`.trim() });
+    if (prefs[key] !== false) det.setAttribute('open', '');
+    // Carry over anything the screen set on the card itself (inline height, ids, data-*), or
+    // folding would silently drop a screen's own styling.
+    for (const a of card.attributes) if (a.name !== 'class') det.setAttribute(a.name, a.value);
+    const parent = h2.parentElement;
+    // Lift the heading's whole row into the summary ONLY when that row is safe to put there:
+    // it must sit directly in the card, and it must contain no <details> of its own. Settings
+    // pairs most of its headings with an ⓘ tooltip, which IS a <details> — nesting one inside a
+    // <summary> is invalid HTML, and in practice the tooltip's entire body text was being
+    // concatenated onto the heading ("Live translateⓘTranslation already works with no…").
+    const headRow = (parent !== card && parent.parentElement === card && !parent.querySelector('details'))
+      ? parent : null;
+    const sum = h('summary', { class: 'foldcard-sum' });
+    if (headRow) {
+      // Row moves whole, so its controls stay beside the heading. Their clicks must not reach
+      // the <summary>, or operating a switch would also toggle the fold.
+      headRow.remove();
+      headRow.querySelectorAll('button, input, select, a, label').forEach((ctl) => {
+        ctl.addEventListener('click', (e) => e.stopPropagation());
+      });
+      sum.append(headRow);
+    } else {
+      // Heading only. Anything else that shared its row stays in the body, where it is
+      // reachable when the section is open and out of the way when it is not.
+      h2.remove();
+      sum.textContent = label;
+    }
+    while (card.firstChild) det.append(card.firstChild);
+    det.insertBefore(sum, det.firstChild);
+    det.addEventListener('toggle', () => rememberFold(key, det.open));
+    card.replaceWith(det);
+  }
+}
+
 export function mount(node, showTabbar) {
   const app = document.getElementById('app');
   app.innerHTML = '';
+  // Fold before it is on screen, so nothing is ever seen jumping from flat to folded.
+  try { autoFoldSections(node); } catch { /* a folding miss must never block a render */ }
   app.append(node);
   if (showTabbar) app.append(tabbar());
   // Interface language: this is THE choke point every screen passes through, so translating
