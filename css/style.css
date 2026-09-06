@@ -1210,6 +1210,22 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
   box-shadow: 0 1px 4px rgba(0,0,0,0.45); color: #fff; font-weight: 800; font-size: 12px; line-height: 1;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   font-family: var(--font-ui, system-ui, sans-serif); }
+/* Numbered pin + visible name label (Your journey map). A separate wrapper from .mk-numpin
+   alone so the label's box never shifts the marker's own anchor point — the wrapper is fixed
+   to exactly the badge's size, and the label is positioned below it without affecting that. */
+.mk-numpin-lbl { position: relative; width: 22px; height: 22px; }
+.mk-numpin-lbl .mk-numpin { position: absolute; inset: 0; }
+.mk-pin-name {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 3px;
+  font-size: 11px; font-weight: 600; white-space: nowrap; max-width: 130px; overflow: hidden;
+  text-overflow: ellipsis; background: rgba(255,255,255,0.92); color: #1E1E1E;
+  padding: 1px 6px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); pointer-events: none;
+}
+[data-theme="dark"] .mk-pin-name { background: rgba(30,24,46,0.92); color: #FFF6E2; }
+/* Selected pin (tapped from the map or the stops list below it) — an outline ring rather than
+   a colour change, so it never has to fight the marker's own inline background colour. */
+.mk-pin-selected { outline: 3px solid var(--sun); outline-offset: 2px; border-radius: 999px; z-index: 5; }
+
 /* Cluster badge: shown when many pins would overlap at low zoom; tap to zoom into its members. */
 .mk-cluster { min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; border: 2px solid #fff;
   /* --ink is the dominant TEXT colour, so it is light on every dark skin: white-on-cream at
@@ -1486,22 +1502,17 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .entry-body p { margin: 0 0 var(--sp-3); }
 
 /* --- the live journey map (#journey) ---
-   Deliberately not styled like the other two maps: Places is a MapLibre canvas and Explore
-   a region chooser, while this is a keepsake — country outlines and the Mekong on paper,
-   cropped to the trip. The parchment palette is baked into the SVG (js/journey-share.js)
-   so the same drawing can be handed to someone as a self-contained file; only the frame
-   and the interaction live here. */
+   Now the same engine as Places and Visitors: a live MapLibre canvas, satellite by default
+   with the self-hosted country/Mekong geometry as its always-offline fallback (js/map.js).
+   The parchment SVG this replaced lives on at js/journey-share.js — the shareable/preview
+   page still needs a static, self-contained drawing it can hand to someone as a file, which
+   a live WebGL map cannot be. */
 .jr-live-wrap { margin: 0 0 var(--sp-3); }
 .jr-map-live {
-  width: 100%; height: auto; display: block;
+  width: 100%; aspect-ratio: 16 / 10; max-height: 46vh; min-height: 220px;
   border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-soft);
+  overflow: hidden; background: #9FD3CE;
 }
-/* A pin is a button. Hit area is a transparent circle roughly twice the visible dot, so a
-   thumb can land on a 5px dot at the far end of a four-country crop. */
-.jr-pin { cursor: pointer; }
-.jr-pin .jr-pin-dot { transition: r var(--dur) var(--ease), fill var(--dur) var(--ease); }
-.jr-pin:hover .jr-pin-dot, .jr-pin.on .jr-pin-dot { fill: #C0431A; }
-.jr-pin:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 .jr-panel:empty { display: none; }
 .jr-stop h3 { font-size: var(--fs-body); }
 /* Photos from one stop: a scrolling strip, so twelve pictures never push the stops list

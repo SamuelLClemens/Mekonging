@@ -25,9 +25,9 @@
 // is entirely defined by app-state.js, not by which file calls it.
 import {
   store, journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
-  getAlbum, addAlbumPhoto, deleteAlbumPhoto, updateAlbumPhoto, getPin, getLastFix,
+  getAlbum, addAlbumPhoto, deleteAlbumPhoto, updateAlbumPhoto, getPin, getLastFix, save,
 } from '../state.js';
-import { getActiveCountry, setLiveCleanup } from '../app-state.js';
+import { getActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import { h } from '../util.js';
 import { fmtTemp } from '../render-utils.js';
 import { field, confirmAction } from '../ui-widgets.js';
@@ -35,8 +35,6 @@ import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
 import { trailPoints, trailStats, trailEnabled, setTrailEnabled, clearTrail } from '../trail.js';
-import { journeyMapParts } from '../journey-share.js';
-import { myVisits } from '../visits.js';
 import { WEATHER_SPOTS } from '../weather.js';
 import { dateLocale } from '../i18n.js';
 import {
@@ -539,19 +537,19 @@ function journalFormScreen(editId) {
   mount(wrap, '#home');
 }
 
-// ---- JOURNEY MAP (Indiana-Jones dotted line + moving vehicle) ----------------
 // ---- THE JOURNEY MAP --------------------------------------------------------
-// A map of where the traveller has actually been, built for them rather than by them, and
-// deliberately a DIFFERENT map from the two the app already has: Places is a live MapLibre
-// map of what is around you right now, Explore is a region chooser for deciding where to
-// go. This one is a record of a trip that happened — real country outlines and the Mekong
-// drawn from js/data/geo.js, no tiles, no network, cropped to the trip itself — and every
-// pin is a door into what the traveller put in the app at that place.
+// A map of where the traveller has actually been, built for them rather than by them. Now
+// the same MapLibre engine as Places and Visitors — satellite by default, with the
+// self-hosted country/Mekong geometry as its always-offline fallback (see js/map.js) —
+// rather than the bespoke parchment SVG this screen used to draw itself. That SVG lives on
+// at js/journey-share.js: the share/preview page still needs a static, self-contained
+// drawing it can hand to someone as a file, which a live WebGL map cannot be. Every pin is
+// a door into what the traveller put in the app at that place.
 //
-// It replaces an abstract dotted line drawn inside a bounding box, which had no geography
-// at all, needed two journal entries before it would draw anything, and listed its stops
-// as plain text that led nowhere. Pins are now automatic (js/trail.js), so a traveller who
-// has written nothing still has a map.
+// Before that SVG, this was an abstract dotted line drawn inside a bounding box, which had
+// no geography at all, needed two journal entries before it would draw anything, and listed
+// its stops as plain text that led nowhere. Pins are automatic (js/trail.js), so a traveller
+// who has written nothing still has a map.
 
 // One "place" on this map. 10 km rather than a tighter figure because a stop is a town and
 // the things around it — a journal entry stamped at Tam Coc is 7 km from a trail pin in Ninh
@@ -678,49 +676,52 @@ export function journeyScreen() {
       jrDateRange(stops[0].first, stops[stops.length - 1].last) || null,
     ].filter(Boolean).join(' · ')));
 
-  // The map. Static layers go in as one SVG string — the same pattern this screen already
-  // used — and each pin carries data-i so the handlers below can find it. A pin is a real
-  // button to a screen reader and to the keyboard, not just a circle.
-  const parts = journeyMapParts(stops, visitMarksForMap());
+  // The map: a live MapLibre satellite map (same engine and offline-geometry fallback as
+  // Places and Visitors — see js/map.js), numbered pins in visit order with their name shown
+  // beside them, and a dashed route line connecting them in order. Selecting a stop is one
+  // function whether it came from a pin or the list below, so the two can never disagree
+  // about what is shown or which pin is lit.
   const holder = h('div', { class: 'jr-live-wrap' });
+  const canvas = h('div', { class: 'jr-map-live' });
+  holder.append(canvas);
   const panel = h('div', { class: 'jr-panel' });
+  wrap.append(holder, panel);
 
-  if (parts) {
-    const { vb, minX, minY, w, hgt, u, f, land, river, visited, project } = parts;
-    const pp = stops.map((s) => project(s.lng, s.lat));
-    const route = pp.length > 1
-      ? `<path d="M${pp.map((c) => `${f(c[0])},${f(c[1])}`).join(' L')}" fill="none" stroke="#C0431A" stroke-width="${f(u * 0.8)}" stroke-dasharray="${f(u * 2.8)} ${f(u * 2)}" stroke-linecap="round"/>`
-      : '';
-    const dotR = u * 2.4, numFs = u * 2.7;
-    const pins = pp.map((c, i) => {
-      const s = stops[i];
-      const lbl = `${i + 1}. ${s.label || 'a place you have been'}${s.entries.length ? `, ${s.entries.length} journal ${s.entries.length === 1 ? 'entry' : 'entries'}` : ''}`;
-      return `<g class="jr-pin" data-i="${i}" role="button" tabindex="0" aria-label="${lbl.replace(/"/g, '&quot;')}">`
-        + `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(dotR * 1.9)}" fill="transparent"/>`
-        + `<circle class="jr-pin-dot" cx="${f(c[0])}" cy="${f(c[1])}" r="${f(dotR)}" fill="#E8632A" stroke="#FFF6E2" stroke-width="${f(u * 0.6)}"/>`
-        + `<text x="${f(c[0])}" y="${f(c[1] + numFs * 0.35)}" font-size="${f(numFs)}" font-weight="700" fill="#FFF6E2" text-anchor="middle" font-family="sans-serif">${i + 1}</text></g>`;
-    }).join('');
-    holder.innerHTML = `<svg viewBox="${vb}" class="jr-map jr-map-live" xmlns="http://www.w3.org/2000/svg" aria-label="Map of your journey">`
-      + `<rect x="${minX.toFixed(1)}" y="${minY.toFixed(1)}" width="${w.toFixed(1)}" height="${hgt.toFixed(1)}" fill="#CFE3EC"/>`
-      + `${land}${river}${visited}${route}${pins}</svg>`;
-    wrap.append(holder);
-  }
-  wrap.append(panel);
-
-  // Selecting a stop is one function whether it came from a pin or the list, so the two can
-  // never disagree about what is shown or which pin is lit.
   let selected = -1;
+  let mapCtrl = null;
   const select = (i) => {
     selected = i;
-    holder.querySelectorAll('.jr-pin').forEach((el) => el.classList.toggle('on', +el.dataset.i === i));
+    if (mapCtrl) mapCtrl.setSelected(String(i));
     panel.innerHTML = '';
     panel.append(stopCard(stops[i], i));
     panel.scrollIntoView({ block: 'nearest' });
   };
-  holder.querySelectorAll('.jr-pin').forEach((el) => {
-    const i = +el.dataset.i;
-    el.addEventListener('click', () => select(i));
-    el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(i); } });
+
+  const mapPlaces = stops.map((s, i) => ({
+    id: String(i), _num: i + 1,
+    name: s.label || 'A place you have been',
+    coords: { lat: s.lat, lng: s.lng },
+  }));
+  import('../map.js').then((mod) => mod.initMap(canvas, {
+    places: mapPlaces,
+    numbered: true,
+    showLabels: true,
+    markerColor: () => '#E8632A',
+    route: stops.map((s) => ({ lat: s.lat, lng: s.lng })),
+    onOpen: (id) => select(+id),
+    satellite: store.profile.prefs.journeyMapSat !== false,
+    styleToggle: true,
+    onStyleChange: (on) => { store.profile.prefs.journeyMapSat = on; save(); },
+  })).then((c) => {
+    mapCtrl = c;
+    if (selected >= 0) c.setSelected(String(selected));
+    // One WebGL context per screen visit — without disposing on the way out, opening this
+    // screen repeatedly over a session leaks contexts until maps silently stop starting.
+    // Same idiom as Places and Visitors: chain onto any cleanup already registered.
+    const prev = getLiveCleanup();
+    setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } mapCtrl = null; });
+  }).catch(() => {
+    canvas.replaceChildren(h('p', { class: 'empty' }, 'The map could not start here. Your stops are still listed below.'));
   });
 
   // One stop, in full: when, what was written there, the photos taken there, and the places
@@ -824,11 +825,4 @@ export function journeyScreen() {
   wrap.append(foot);
 
   mount(wrap, '#home');
-}
-
-// The visit-cell map (js/visits.js) as faint background marks, when the traveller has that
-// switched on. Kept separate from the pins above on purpose: a cell is rounded to ~55 km and
-// says only "the app was opened somewhere in here", so it is context, never a stop.
-function visitMarksForMap() {
-  try { return (myVisits() || []).map((c) => ({ lat: c.lat, lng: c.lng })); } catch { return []; }
 }
