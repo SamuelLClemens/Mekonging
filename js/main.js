@@ -335,7 +335,17 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       // reg.update() forces the check. The `online` trigger matters most for travellers: the app
       // often sits open while offline (plane, subway, remote area), so the instant signal returns
       // it fetches any new build and — with the controllerchange reload below — adopts it silently.
-      const checkForUpdate = () => { try { reg.update(); } catch { /* offline or not ready */ } };
+      // reg.update() returns a PROMISE, so the synchronous try/catch this used to carry never
+      // caught anything: being offline — the single most likely outcome on this app, and the
+      // exact case the `online` trigger below exists for — rejected into nowhere. It was
+      // invisible until the global unhandledrejection handler added in this release started
+      // reporting it, which is precisely what that handler is for. Being offline is not a
+      // failure worth telling a traveller about, so it is swallowed HERE, deliberately,
+      // rather than by widening the filter that catches real faults.
+      const checkForUpdate = () => {
+        try { const r = reg.update(); if (r && r.catch) r.catch(() => { /* offline, or no new worker */ }); }
+        catch { /* not ready */ }
+      };
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
       window.addEventListener('online', checkForUpdate);
