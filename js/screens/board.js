@@ -11,6 +11,7 @@ import { citySlug, effectiveRating, ratingColor, sourcesNote, starsStr } from '.
 import { encodeShare, shareUrl } from '../social.js';
 import { addBoardPost, deleteBoardPost, ensureMe, getBoardPosts } from '../state.js';
 import { h } from '../util.js';
+import { screenHint } from '../ui-widgets.js';
 import { boardRow, catEmoji, countryChips, go, mount, nearCat, shareButton, topbar } from '../main.js';
 
 const BOARD_TOPICS = [['market', '🥬 Markets'], ['food', '🍜 Food'], ['family', '👶 Family'], ['tip', '💡 Tip']];
@@ -26,7 +27,7 @@ export function boardScreen(arg) {
   if (!board) {
     // picker: country chips + city list
     wrap.append(topbar('Noticeboard', '#home'));
-    wrap.append(h('p', { class: 'muted' }, 'Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
+    wrap.append(screenHint('Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
     const selected = cc || getActiveCountry();
     wrap.append(countryChips((id) => { setActiveCountry(id); go(`#board-${id}`); }, selected));
     const boards = boardsForCountry(selected);

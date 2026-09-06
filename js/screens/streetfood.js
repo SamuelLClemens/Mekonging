@@ -5,6 +5,7 @@ import { allPlaces, boardsForCountry } from '../data/regions.js';
 import { starsStr } from '../render-utils.js';
 import { getPlaceData, save, setLastFix, setPlaceField, store } from '../state.js';
 import { h } from '../util.js';
+import { screenHint } from '../ui-widgets.js';
 import { boardRow, countryChips, go, mount, rnThumb, topbar } from '../main.js';
 
 function starPicker(placeId, current) {
@@ -18,7 +19,7 @@ function starPicker(placeId, current) {
 export function streetfoodScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Street food', '#home'));
-  wrap.append(h('p', { class: 'muted' }, 'The local stalls and food streets worth queueing for — with your own ratings and takes, kept on-device and shown first. Rate a stall and your score drives its colour on the map too.'));
+  wrap.append(screenHint('The local stalls and food streets worth queueing for — with your own ratings and takes, kept on-device and shown first. Rate a stall and your score drives its colour on the map too.'));
   wrap.append(countryChips((id) => { setActiveCountry(id); go('#streetfood'); }));
 
   // rateable street-food places (curated local eats) — as a rate-list or on a map.

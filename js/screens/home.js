@@ -43,7 +43,7 @@ import {
   ensureHomeWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
-  recentRoutesRow, identifyRow, homeFold, HOME_FOLD_KEYS,
+  recentRoutesRow, identifyRow, homeFold,
 } from '../main.js';
 
 export function homeScreen() {
@@ -109,7 +109,6 @@ export function homeScreen() {
   // nothing from navigation — every value here still has its own full screen — an individual
   // chip simply does not render until it has a real value.
   const ctx = contextNow();
-  wrap.append(foldAllRow());
   wrap.append(quickAccessRow(phase, storedPhase, ctx));
 
   // "Just arrived" — a dismissible chip to the first-hour arrival guide. Only while on the
@@ -485,17 +484,6 @@ function nextStopCard(ctx) {
 //
 // The label reflects what the NEXT tap will do, decided by whether anything is currently
 // open, so one control covers both directions without becoming a pair of buttons.
-function foldAllRow() {
-  const prefs = store.profile.prefs;
-  const anyOpen = HOME_FOLD_KEYS.some((k) => prefs[k] !== false);
-  return h('div', { class: 'home-foldall' }, [
-    h('button', {
-      class: 'chip ghost',
-      'aria-label': anyOpen ? 'Minimise every section on this screen' : 'Expand every section on this screen',
-      onclick: () => { HOME_FOLD_KEYS.forEach((k) => { prefs[k] = !anyOpen; }); save(); render(); },
-    }, anyOpen ? '⌃ Minimise all' : '⌄ Expand all'),
-  ]);
-}
 
 // H5 — real, sourced city context, collapsed by default so it does not compete with today's
 // content. cityAboutCard() already returns null when there is no curated history for the

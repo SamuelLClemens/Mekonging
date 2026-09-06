@@ -867,7 +867,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 .status-chip.budget-red, .chip.budget-red { border-color: var(--magenta); border-width: 2px; background: color-mix(in srgb, var(--magenta) 12%, transparent); }
 
 /* Home's dismissible "Just arrived" chip: a .status-chip-styled main button (arrival guide)
-   plus a small ✕ (same look as .one-hint-x) that hides it — confirmed first, and reachable
+   plus a small ✕ that hides it — confirmed first, and reachable
    again from Settings, so it is never a one-tap accidental loss. */
 .just-arrived-chip { display: flex; align-items: stretch; gap: 6px; margin: 0 0 var(--sp-3); }
 .just-arrived-chip .ja-main { flex: 1 1 auto; display: flex; align-items: center; gap: 7px; min-width: 0;
@@ -1130,21 +1130,6 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
   border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); margin-bottom: var(--sp-3);
 }
 
-/* One-time contextual hint: a quiet, dismissible tip. Softer than a banner so it reads as
-   a helper, not an alert. The ✕ records the hint as seen and removes it for good. */
-.one-hint {
-  display: flex; align-items: flex-start; gap: var(--sp-2);
-  background: var(--card); border: 1px dashed var(--line); color: var(--muted-ink, var(--ink));
-  border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm);
-  margin: var(--sp-2) 0 var(--sp-3);
-}
-.one-hint .grow { flex: 1; min-width: 0; }
-.one-hint-ic { flex: 0 0 auto; }
-.one-hint-x {
-  flex: 0 0 auto; min-width: 44px; min-height: 44px; border: none; background: transparent;
-  color: var(--ink); opacity: 0.6; font-size: 15px; cursor: pointer; border-radius: var(--r-sm);
-}
-.one-hint-x:hover { opacity: 1; }
 
 /* Read-aloud reader: a play/pause button + a speed toggle. Compact so it sits under a
    paragraph without dominating it. */
@@ -2639,17 +2624,26 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
    cost three or four lines and pushed the real content below the fold on a phone; this is
    the same text behind a single small row. Sized as a proper 44px touch target via padding
    rather than height, so the collapsed row still measures ~28px of visible ink. */
-.screen-hint { margin: 0 0 var(--sp-3); }
+/* Help behind an icon. Closed, this is a single ⓘ on its own short row and nothing else —
+   the label is carried by aria-label/title and only becomes visible once the hint is open.
+   The whole point is that a screen opens with its content, not with its instructions. */
+.screen-hint { margin: 0 0 var(--sp-1); }
 .screen-hint > summary {
   display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
   color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 600;
-  padding: var(--sp-2) 0; user-select: none;
+  padding: 2px 0; user-select: none; min-height: 24px;
 }
 .screen-hint > summary::-webkit-details-marker { display: none; }
 .screen-hint > summary:hover { color: var(--ink); }
 .screen-hint[open] > summary { color: var(--teal-deep); }
-.screen-hint-ic { font-size: 1.05rem; line-height: 1; }
+.screen-hint-ic { font-size: 1.15rem; line-height: 1; }
+/* Hidden until open, but never display:none — a screen reader should still be able to reach
+   the name, and the ::before tap target of neighbouring controls must not collapse onto it. */
+.screen-hint-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.screen-hint[open] .screen-hint-lbl { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
 .screen-hint > p { margin: 0; }
+/* Sat on its own line by default; pulled up beside a heading where a screen puts it there. */
+.screen-hint.hint-inline { display: inline-block; vertical-align: middle; margin: 0 0 0 4px; }
 
 /* World map of visits (#visitors). Fixed aspect so the container has a size before
    MapLibre measures it — a zero-height container is the classic reason a GL map paints
@@ -2678,7 +2672,6 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
 
 /* Minimise-all: one small control, right-aligned above the first section, so it reads as a
    property of the screen rather than a member of any one section. */
-.home-foldall { display: flex; justify-content: flex-end; margin: var(--sp-1) 0 0; }
 /* A control carried in a section summary (Back to's "Clear") sits beside the fold arrow, not
    floating in the middle of the row — summary is space-between and would otherwise strand it
    between the title and the chevron. */
@@ -2736,8 +2729,28 @@ select {
 /* Talk — "Translate & save to my dictionary" sits under the primary Translate row, full width.
    Keeping a phrase forever is the deliberate action of the two, so it gets its own line and
    spells itself out rather than competing for space with the one used ten times a day. */
-.translate-keep { margin-top: var(--sp-2); }
-.translate-keep .btn { width: 100%; }
+/* Talk's three actions — Translate, Speak, and Translate & save — as one grid rather than a
+   `row-between` pair plus a separately-spaced third. row-between pushed the first two to the
+   card's opposite edges with a hole between them and gave the third its own margin, so three
+   buttons sat at three different widths under two different gaps. Here the top two are equal
+   columns, the save button spans both, and every gap is the same token. `.one-up` is for the
+   browsers with no SpeechRecognition, where there is no Speak button to sit beside. */
+.talk-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-2); }
+.talk-actions.one-up { grid-template-columns: 1fr; }
+.talk-actions .btn { width: 100%; justify-content: center; text-align: center; }
+.talk-actions .talk-save { grid-column: 1 / -1; }
+
+/* Listening reads as a STATE of the same button, not a different button: the fill is
+   untouched (all three actions are deliberately one colour) and the change is a ring that
+   breathes. Anyone who has asked not to see motion gets the static ring. */
+.talk-actions .is-listening { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55), var(--shadow-soft); animation: talk-listening 1.4s ease-in-out infinite; }
+@keyframes talk-listening {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35), var(--shadow-soft); }
+  50%      { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.65), var(--shadow-soft); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .talk-actions .is-listening { animation: none; }
+}
 
 /* Screen-level section folds created by autoFoldSections() (js/main.js). The card variant
    reuses .card's own box; the heading-run variant has no box of its own, so it just needs the
@@ -2764,3 +2777,37 @@ body.jr-map-is-full .tabbar { display: none; }
   right: var(--sp-3); bottom: calc(var(--sp-3) + env(safe-area-inset-bottom, 0px));
   background: var(--card); border-color: var(--line); box-shadow: var(--shadow-soft);
 }
+
+/* --- Learn more about <language>: the closed-by-default primer at the foot of Talk ------- */
+/* One card that is itself the fold, with its categories as folds inside it. Nothing here
+   opens on its own: a traveller who wants a phrase to point at in a market must never have to
+   scroll past an essay to reach one, which is also why it sits last on the screen. */
+.lg-card > summary { cursor: pointer; font-weight: 700; font-size: var(--fs-h3); list-style: none; padding: var(--sp-1) 0; }
+.lg-card > summary::-webkit-details-marker { display: none; }
+.lg-card > summary::after { content: '⌄'; float: right; opacity: 0.6; transition: transform var(--dur) var(--ease); }
+.lg-card[open] > summary::after { transform: rotate(180deg); }
+.lg-wrap { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-2); }
+.lg-intro { margin: 0; }
+.lg-sec > summary { cursor: pointer; font-weight: 700; padding: var(--sp-2) 0; }
+.lg-sec + .lg-sec { border-top: 1px solid var(--hairline, rgba(128,128,128,0.22)); }
+.lg-body { display: flex; flex-direction: column; gap: var(--sp-2); padding-bottom: var(--sp-2); }
+.lg-body p { margin: 0; }
+.lg-tips { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: var(--sp-1); }
+
+/* A lesson line reuses .phrase so it sits at the same rhythm as the phrasebook rows above it,
+   and gets the same 🔊 control in the same place. */
+.lg-lesson-txt { min-width: 0; }
+.lg-say { font-weight: 700; }
+.lg-native { font-size: var(--fs-lg); line-height: 1.5; }
+.lg-means { margin-top: 2px; }
+.lg-note { font-size: var(--fs-small); margin-top: 2px; }
+.lg-sources { margin: var(--sp-1) 0 0; }
+
+/* The colour key, directly under the map's category chips rather than at the foot of the
+   screen. Same collapsed treatment as the filter blocks it used to sit among. */
+.places-map-key { margin-top: var(--sp-2); }
+
+/* The You hub's quick-access group now carries a real heading so it can fold like every other
+   section on that screen. Sized as a section label rather than a card title — it names a strip
+   of chips, not a body of content. */
+.you-chips-head { margin: 0 0 var(--sp-2); font-size: var(--fs-sm); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }

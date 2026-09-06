@@ -47,7 +47,7 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        255,
+        253,
         125
     ],
     "js/place-ui.js": [
@@ -75,8 +75,8 @@ CEILING = {
         7
     ],
     "js/screens/contributions.js": [
-        6,
-        2
+        5,
+        1
     ],
     "js/screens/export.js": [
         6,
@@ -103,11 +103,11 @@ CEILING = {
         24
     ],
     "js/screens/nextstop.js": [
-        3,
-        3
+        2,
+        2
     ],
     "js/screens/phrasebook.js": [
-        15,
+        13,
         8
     ],
     "js/screens/places.js": [

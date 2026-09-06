@@ -15,7 +15,7 @@ import { sourcesNote } from '../render-utils.js';
 import { encodeShare, shareUrl } from '../social.js';
 import { store, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, removePlaceVisit, removeStop,
   toggleChecklistItem, unscheduledVisits, updatePlaceVisit, updateStop, visitsForStop } from '../state.js';
-import { confirmAction, promptAction } from '../ui-widgets.js';
+import { confirmAction, promptAction, screenHint } from '../ui-widgets.js';
 import { h } from '../util.js';
 import { checklistFor, countryChips, go, homeCurrency, mount, profileIsSet, render, shareButton, stopDateLabel,
   topbar } from '../main.js';
@@ -246,7 +246,7 @@ export function plansScreen() {
   const tripLabel = tripName ? `${tripName}’s trip` : 'My Trip';
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Trip plans', '#home'));
-  wrap.append(h('p', { class: 'muted' }, `Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to ${tripLabel} and edit it there.`));
+  wrap.append(screenHint(`Suggested routes, matched to how you travel. Nights are guidance — stretch or compress freely. Add a plan to ${tripLabel} and edit it there.`));
   if (!profileIsSet()) {
     wrap.append(h('div', { class: 'card' }, [
       h('p', { class: 'muted' }, 'Set your price range, party and trip length first and these plans sort themselves to fit you.'),

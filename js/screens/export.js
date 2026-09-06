@@ -19,6 +19,7 @@
 // connection that had already come back. loadScreenMod retries with a fresh query string.
 import { store, getPin } from '../state.js';
 import { h, esc, money } from '../util.js';
+import { screenHint } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { convert } from '../currency.js';
 import { expCatOf, expCatLookup } from '../budget-ui.js';
@@ -201,7 +202,7 @@ export function exportScreen() {
   // "Export" alone (was "Export & share") — matches the two chips below once they're renamed
   // to match, and fits on one line; the full phrase 3-line-wrapped on mobile.
   wrap.append(topbar('Export', '#settings'));
-  wrap.append(h('p', { class: 'muted' }, 'Save your own contributions as files you can read on any phone or computer, and share them however you like. Each type comes out in a fitting format. Everything is made on your device — nothing is uploaded.'));
+  wrap.append(screenHint('Save your own contributions as files you can read on any phone or computer, and share them however you like. Each type comes out in a fitting format. Everything is made on your device — nothing is uploaded.'));
 
   const jCount = (store.journal.entries || []).length;
   const rCount = Object.values(store.placeData || {}).filter((d) => d && (d.rating || d.review || d.note || (d.photos || []).length)).length;

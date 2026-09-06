@@ -168,9 +168,25 @@ export function infoTip(text) {
 // worth keeping; standing space at the top of a screen is not what it is worth. Same
 // disclosure mechanism as infoTip, but block-level so the text reads at full width when it
 // is opened, and with a visible label so the affordance is not a bare glyph.
+// Help text, behind an icon, taking one small row instead of a paragraph.
+//
+// This used to render the label ("What this is") beside the icon, and screens additionally
+// carried loose explanatory paragraphs of their own — a decide-now shortlist tip here, an
+// orientation note there — so a traveller opening a screen met a wall of instructions before
+// any of the content they came for. Places alone spent 123px on one. The text has not been
+// deleted: it is one tap away, always, on every screen that has it, instead of once and then
+// never again.
+//
+// The visible control is the ⓘ alone. `label` is still the accessible name, so a screen
+// reader hears something meaningful rather than a symbol, and it becomes the visible text
+// again once the hint is open — at which point naming what you are reading is useful rather
+// than noise.
 export function screenHint(text, label = 'What this is') {
   const det = h('details', { class: 'screen-hint' });
-  const sum = h('summary', { 'aria-expanded': 'false' }, [h('span', { class: 'screen-hint-ic', 'aria-hidden': 'true' }, 'ⓘ'), label]);
+  const sum = h('summary', { 'aria-expanded': 'false', 'aria-label': label, title: label }, [
+    h('span', { class: 'screen-hint-ic', 'aria-hidden': 'true' }, 'ⓘ'),
+    h('span', { class: 'screen-hint-lbl' }, label),
+  ]);
   det.append(sum, h('p', { class: 'map-hint', style: 'margin-top:6px' }, text));
   det.addEventListener('toggle', () => sum.setAttribute('aria-expanded', det.open ? 'true' : 'false'));
   return det;
