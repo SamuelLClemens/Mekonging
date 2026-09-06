@@ -33,7 +33,7 @@ import { h, debounce } from '../util.js';
 // js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
-import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard } from '../ui-widgets.js';
+import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard, screenHint } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
@@ -47,12 +47,12 @@ import { ALLERGENS } from '../data/allergens.js';
 import * as Diet from '../data/diet.js';
 const { DIET_LABEL, joinList } = Diet;
 // Reverse-imports: helpers that stay resident in main.js because they have callers outside
-// this file (langForCountry, in main.js's own dish-identifier code; oneTimeHint/contextNow/
+// this file (langForCountry, in main.js's own dish-identifier code; contextNow/
 // inferPhase, already reverse-imported the same way by home.js and places.js; focusSpot, the
 // same GPS-first/focus-second/activeCountry-last resolver places.js's map uses to pick a
 // city — reused here so "what language/country am I in" agrees with "what city is my map on"
 // instead of reading the (possibly stale, pre-GPS) activeCountry state directly).
-import { go, mount, topbar, langForCountry, oneTimeHint, contextNow, inferPhase, focusSpot, render } from '../main.js';
+import { go, mount, topbar, langForCountry, contextNow, inferPhase, focusSpot, render, dictionaryName, dictionaryTitle } from '../main.js';
 
 // Re-exported for the modules that historically imported them from here; new callers
 // should import from ../phrase-ui.js directly.
@@ -458,10 +458,9 @@ export function phrasebookScreen(lang) {
   const langSelect = selectEl(
     Object.values(LANGUAGES).map((b) => [b.lang, `${langFlag(b.lang)} ${b.label}`.trim()]), code,
     (val) => { phraseQuery = ''; go(`#phrasebook-${val}`); }, 'Language');
-  const dictName = (store.profile.name || '').trim();
   wrap.append(h('div', { class: 'talk-top-row' }, [
     langSelect,
-    h('button', { class: 'btn ghost', onclick: () => go('#dictionary') }, dictName ? `📖 ${dictName}’s dictionary` : '📖 My Dictionary'),
+    h('button', { class: 'btn ghost', onclick: () => go('#dictionary') }, `📖 ${dictionaryTitle()}`),
   ]));
 
   if (!book) { wrap.append(h('p', { class: 'empty' }, 'Language not available.')); mount(wrap, '#phrasebook'); return; }
@@ -481,7 +480,7 @@ export function phrasebookScreen(lang) {
   const categories = allergyCat ? book.categories.concat([allergyCat]) : book.categories;
   const idx = phraseIndexFor(categories, code);
 
-  { const t = oneTimeHint('phrase-pin', 'Pin a phrase (📌) to save it to your dictionary in the You section, or hide (✕) ones you do not need.'); if (t) wrap.append(t); }
+  wrap.append(screenHint('Pin a phrase (📌) to save it to your dictionary in the You section, or hide (✕) ones you do not need.', 'Pinning phrases'));
 
   // Say-it / live translate needs a live connection end to end — it calls an online
   // translation + speech service, and unlike the phrasebook itself there is no offline
@@ -659,7 +658,113 @@ export function phrasebookScreen(lang) {
       `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
   }
 
+  // Last on the screen and closed by default: the phrasebook above gives a traveller
+  // sentences to point at, and this gives them some idea what they are looking at.
+  wrap.append(languageGuideSection(book));
+
   mount(wrap, '#phrasebook');
+}
+
+// ---- LEARN THE LANGUAGE (closed by default, loaded on demand) ----------------
+// A short primer on the language the phrasebook is currently showing: how it sounds, where it
+// comes from, how its sentences are built, the handful of rules that change whether a
+// traveller is understood, and a first lesson they can use the same afternoon.
+//
+// Closed by default and NEVER opened automatically. Someone who wants a phrase to point at in
+// a market must not have to scroll past an essay to reach it — which is exactly why this sits
+// at the very bottom rather than under the language picker.
+//
+// The content module (js/data/language-guides.js) is 30 KB and is imported only when the
+// section is first opened, so it costs nothing to the travellers who never open it. That
+// import goes through a retry-busting URL for the reason recorded in js/main.js's screen
+// loader: a failed dynamic import is cached PERMANENTLY in the module map against its
+// specifier, so a plain retry after a dropped connection would keep failing forever.
+let _guideMod = null;
+let _guideTries = 0;
+async function loadGuides() {
+  if (_guideMod) return _guideMod;
+  _guideTries += 1;
+  _guideMod = await import(`../data/language-guides.js${_guideTries > 1 ? `?retry=${_guideTries}` : ''}`)
+    .catch((err) => { _guideMod = null; throw err; });
+  return _guideMod;
+}
+
+function guideLessonRow(item, locale) {
+  const able = canSay();
+  const speak = h('button', {
+    class: 'speak', 'aria-label': `Speak: ${item.say}`, title: 'Hear it',
+    disabled: able && item.native ? null : '',
+    onclick: () => say(item.native || item.say, locale),
+  }, '🔊');
+  return h('div', { class: 'phrase lg-lesson' }, [
+    h('div', { class: 'lg-lesson-txt' }, [
+      h('div', { class: 'lg-say' }, item.say),
+      item.native ? h('div', { class: 'lg-native', lang: scriptLang(locale) }, item.native) : null,
+      h('div', { class: 'lg-means muted' }, item.means),
+      item.note ? h('div', { class: 'lg-note muted' }, item.note) : null,
+    ]),
+    h('div', { class: 'phrase-ctrls' }, [speak]),
+  ]);
+}
+
+function renderGuide(body, guide, sources, locale) {
+  body.innerHTML = '';
+  body.append(h('p', { class: 'muted lg-intro' }, guide.oneLine));
+  guide.sections.forEach((sec) => {
+    const inner = h('div', { class: 'lg-body' });
+    (sec.body || []).forEach((para) => inner.append(h('p', {}, para)));
+    if (sec.tips && sec.tips.length) {
+      inner.append(h('ul', { class: 'lg-tips' }, sec.tips.map((t) => h('li', {}, t))));
+    }
+    (sec.lesson || []).forEach((item) => inner.append(guideLessonRow(item, locale)));
+    // data-nofold: these are already the fold. autoFoldSections() must not wrap them again.
+    const det = h('details', { class: 'lg-sec', 'data-nofold': '' }, [
+      h('summary', {}, [h('span', { 'aria-hidden': 'true' }, `${sec.ic} `), sec.title]),
+      inner,
+    ]);
+    body.append(det);
+  });
+  // Not sourcesNote(): that helper is shaped for place records and signs off with "Guidance
+  // only — verify locally", which is the wrong sentence for a language primer.
+  body.append(h('p', { class: 'disclaimer lg-sources' }, [
+    'Orientation notes, not a course. To go further: ',
+    ...sources.flatMap((src, i) => [
+      i ? ', ' : '',
+      h('a', { class: 'src-link', href: src.url, target: '_blank', rel: 'noopener' }, src.label),
+    ]),
+    '.',
+  ]));
+}
+
+function languageGuideSection(book) {
+  const guide = h('details', { class: 'card lg-card', 'data-nofold': '' });
+  const sum = h('summary', {}, [
+    h('span', { 'aria-hidden': 'true' }, '📚 '),
+    `Learn more about ${book.label}`,
+  ]);
+  const body = h('div', { class: 'lg-wrap' }, h('p', { class: 'muted' }, 'Opening…'));
+  guide.append(sum, body);
+  let loaded = false;
+  guide.addEventListener('toggle', async () => {
+    if (!guide.open || loaded) return;
+    loaded = true;
+    try {
+      const mod = await loadGuides();
+      const g = mod.languageGuide(book.lang);
+      if (!g) {
+        body.innerHTML = '';
+        body.append(h('p', { class: 'muted' }, `No background notes for ${book.label} yet. The phrasebook above still works.`));
+        return;
+      }
+      renderGuide(body, g, mod.GUIDE_SOURCES, book.locale);
+    } catch {
+      loaded = false;   // a failed load must be retryable, so let the next open try again
+      body.innerHTML = '';
+      body.append(h('p', { class: 'muted' }, 'Could not open the notes just now.'),
+        h('button', { class: 'btn ghost', onclick: () => { guide.open = false; guide.open = true; } }, 'Try again'));
+    }
+  });
+  return guide;
 }
 
 // ---- Personal Dictionary ("My phrases") ------------------------------------
@@ -722,13 +827,12 @@ function customPhraseRow(code, entry, locale, repaint) {
 let dictLangSel = null;
 export function dictionaryScreen() {
   const wrap = h('div', { class: 'screen' });
-  // Just 'Dictionary'. The topbar gives a title ~102px at 375px and clamps it to two lines,
-  // and "dictionary" is a long enough word on its own that BOTH the personalised
-  // ("Zim’s dictionary") and the neutral ("Your dictionary") forms needed three — so every
-  // traveller, named or not, was reading a silently truncated heading. The personalisation is
-  // not lost: the button on Talk that leads here still says "📖 Zim’s dictionary", which is
-  // where it reads as a nice touch rather than as an overflowing heading.
-  wrap.append(topbar('Dictionary', '#me'));
+  // Named after the traveller once they have given a name, "My dictionary" before that. This
+  // used to be the flat word 'Dictionary': the title column was 102px, and both the
+  // personalised and the "Your dictionary" forms needed three lines in uppercase, so every
+  // traveller read a truncated heading. The column is 120px now and the titles are mixed
+  // case, so "Sam’s dictionary" sets on two lines breaking at the space, which is fine.
+  wrap.append(topbar(dictionaryTitle(), '#me'));
   const repaint = () => dictionaryScreen();
 
   const pinsMap = store.profile.prefs.phrasePins || {};
@@ -759,7 +863,7 @@ export function dictionaryScreen() {
     wrap.append(h('div', { class: 'card', style: 'text-align:center' }, [
       h('div', { style: 'font-size:2.4rem;margin-bottom:6px' }, '📖'),
       h('h2', { style: 'margin:0 0 4px' }, 'No saved phrases yet'),
-      h('p', { class: 'muted', style: 'margin:0 0 12px' }, 'Open the phrasebook and tap 📌 on any phrase, or translate something in Talk and tap “Save to my dictionary”. Build your own pocket dictionary of the words you actually use.'),
+      h('p', { class: 'muted', style: 'margin:0 0 12px' }, `Open the phrasebook and tap 📌 on any phrase, or translate something in Talk and tap “Save to ${dictionaryName()}”. Build your own pocket dictionary of the words you actually use.`),
       h('button', { class: 'btn block', onclick: () => go('#phrasebook') }, '💬 Browse phrases'),
     ]));
     mount(wrap, '#me');
@@ -919,7 +1023,7 @@ function myTranslationsCard(code, label, locale, onChange) {
     const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${t.en}`, disabled: able ? null : '', onclick: () => say(script, locale) }, '🔊');
     const keepBtn = inDictionary(code, t.en)
       ? h('button', { class: 'speak', disabled: '', title: 'Already in your dictionary', 'aria-label': `${t.en} is already in your dictionary` }, '✓')
-      : h('button', { class: 'speak', title: 'Save to my dictionary', 'aria-label': `Save ${t.en} to my dictionary`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
+      : h('button', { class: 'speak', title: `Save to ${dictionaryName()}`, 'aria-label': `Save ${t.en} to ${dictionaryName()}`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
     const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { removeTranslation(t.key); onChange(); } }, '✕');
     card.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
   }
@@ -1027,7 +1131,7 @@ function liveTranslateBox(code, label, locale, onChange) {
       else if (rec) {
         // Translated but not kept. Offer the dictionary anyway — changing your mind after
         // seeing the result should not mean typing it again.
-        status.append(h('button', { class: 'linklike', onclick: keep }, '📖 Save to my dictionary'),
+        status.append(h('button', { class: 'linklike', onclick: keep }, `📖 Save to ${dictionaryName()}`),
           ' · kept in My translations below either way');
       }
       out.append(status);
@@ -1038,31 +1142,56 @@ function liveTranslateBox(code, label, locale, onChange) {
 
   // Two buttons, because they are two different intentions. Translate is the common one and
   // leads; keeping a phrase forever is the deliberate one and says so in full.
+  // All three actions carry the SAME primary style. They used to be a filled Translate, an
+  // outlined Speak and an outlined Save, which read as one real button and two secondary
+  // ones — but a traveller standing in a market wants whichever of the three fits the moment,
+  // and none of them is a lesser action. `.btn` is the sun gradient, which is the inviting one.
   const btn = h('button', { class: 'btn', onclick: () => doTranslate(false) }, 'Translate');
-  const saveBtn = h('button', { class: 'btn ghost', onclick: () => doTranslate(true) }, '📖 Translate & save to my dictionary');
+  const saveBtn = h('button', { class: 'btn talk-save', onclick: () => doTranslate(true) }, `📖 Translate & save to ${dictionaryName()}`);
   // Optional voice input via the Web Speech API (Chrome/Edge; hidden where absent).
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let micBtn = null;
   if (SR) {
-    micBtn = h('button', { class: 'btn ghost', title: 'Speak instead of typing' }, '🎤 Speak');
+    micBtn = h('button', { class: 'btn', title: 'Speak instead of typing', 'aria-pressed': 'false' }, '🎤 Speak');
+    // A toggle, not a one-way trip. This used to disable itself the moment it started
+    // listening, so a traveller who tapped it by accident, or changed their mind, or was
+    // standing somewhere too loud to be heard, had no way back — the button sat there saying
+    // "Listening…" until the engine timed out on its own. Tapping again now stops it.
+    let rec = null;
+    const resetMic = () => {
+      rec = null;
+      micBtn.textContent = '🎤 Speak';
+      micBtn.classList.remove('is-listening');
+      micBtn.setAttribute('aria-pressed', 'false');
+      micBtn.title = 'Speak instead of typing';
+    };
     micBtn.addEventListener('click', () => {
+      if (rec) { try { rec.stop(); } catch { /* already stopped */ } resetMic(); return; }
       try {
-        const rec = new SR();
+        rec = new SR();
         // Speech recognition needs the full BCP-47 locale of whatever the traveller is
         // actually speaking — taken from the language registry rather than the old
         // Hebrew-or-English guess, which mis-transcribed every other language on the list.
         rec.lang = (LANG_BY_CODE[srcSel.value] || {}).speech || 'en-US';
         rec.interimResults = false; rec.maxAlternatives = 1;
-        micBtn.textContent = '🎙 Listening…'; micBtn.disabled = true;
+        micBtn.textContent = '🎙 Listening…';
+        micBtn.classList.add('is-listening');
+        micBtn.setAttribute('aria-pressed', 'true');
+        micBtn.title = 'Listening — tap again to stop';
         rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(false); };
-        rec.onerror = () => { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; };
-        rec.onend = () => { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; };
+        rec.onerror = resetMic;
+        rec.onend = resetMic;
         rec.start();
-      } catch { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; }
+      } catch { resetMic(); }
     });
   }
-  box.append(srcSel, input,
-    h('div', { class: 'row-between', style: 'gap:8px;margin-top:8px' }, [btn, micBtn].filter(Boolean)),
-    h('div', { class: 'translate-keep' }, saveBtn), out);
+  // One grid rather than a row plus a separate block: Translate and Speak share the top line
+  // as equal columns, the save button spans both below them, and every gap is the same token.
+  // The old layout used `row-between`, which pushed the two apart to the card edges with a
+  // hole between them, and then a differently-spaced wrapper for the third — three buttons at
+  // three widths with two different gaps.
+  const actions = h('div', { class: 'talk-actions' + (micBtn ? '' : ' one-up') },
+    [btn, micBtn, saveBtn].filter(Boolean));
+  box.append(srcSel, input, actions, out);
   return box;
 }

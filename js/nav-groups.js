@@ -162,11 +162,11 @@ export const NAV_GROUPS = [
     items: [
       { ic: '📔', label: 'Journal', hash: '#journal', blurb: 'Dated entries, photos and places', live: 'journal' },
       { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook', blurb: 'Your trip as one page to keep' },
-      { ic: '🗺', label: 'Your journey', hash: '#journey', blurb: 'Everywhere you have been, on a map' },
+      { ic: '🗺', label: 'Your journey', hash: '#journey', mine: true, blurb: 'Everywhere you have been, on a map' },
       { ic: '📤', label: 'Share my journey', hash: '#sharejourney', blurb: 'One file or link, you choose what is in it' },
       { ic: '⭐', label: 'Saved places', hash: '#saved', blurb: 'Your stars and collections', live: 'saved' },
-      { ic: '💬', label: 'Your dictionary', hash: '#dictionary', blurb: 'Phrases you saved and words you added', live: 'phrases' },
-      { ic: '🏅', label: 'Your contributions', hash: '#contributions', blurb: 'Reviews, pins and corrections you added', live: 'contributions' },
+      { ic: '💬', label: 'Your dictionary', hash: '#dictionary', mine: true, blurb: 'Phrases you saved and words you added', live: 'phrases' },
+      { ic: '🏅', label: 'Your contributions', hash: '#contributions', mine: true, blurb: 'Reviews, pins and corrections you added', live: 'contributions' },
       { ic: '🔒', label: 'Documents', hash: '#vault', blurb: 'Passport and papers, locked on this device' },
     ],
   },
@@ -233,6 +233,16 @@ export function visibleGroups(phase) {
 // Every item in the taxonomy, each carrying the id of the group that owns it. Used by the
 // all-features index and by the sitewide search, so both stay in step with the groups above
 // without a second list.
+// A traveller who has given their name (store.profile.name, set on the You screen) sees their
+// own name on the things that are theirs — "Sam’s dictionary" rather than "Your dictionary" —
+// and every surface agrees because they all render from this one manifest. Items opt in with
+// `mine: true`; anything else is returned unchanged. Kept pure: the name arrives as an
+// argument, so this file still imports nothing and can be read from anywhere without a cycle.
+export function itemLabel(item, who) {
+  if (!item || !item.mine || !who) return item ? item.label : '';
+  return `${who}’s ${String(item.label).replace(/^Your\s+/i, '')}`;
+}
+
 export function navItems() {
   return NAV_GROUPS.flatMap((g) => g.items.map((it) => ({ ...it, group: g.id, groupTitle: g.title })));
 }

@@ -36,7 +36,7 @@ import {
   fmtTemp, fmtWind,
 } from '../render-utils.js';
 import { VERDICT_RANK } from '../data/month-verdict.js';
-import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey } from '../ui-widgets.js';
+import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey, screenHint } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
 import { dateLocale, t } from '../i18n.js';
 // accessibility/borders/transit are route-scoped data, fetched by the gate in main.js before
@@ -49,7 +49,7 @@ import { nearestSpot, spotKey, wmo, getCachedWeather, getCachedMarine, maybeRefr
 import { seedWeatherKey } from '../weather-ui.js';
 import { shareUrl, encodeShare } from '../social.js';
 import {
-  go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity, oneTimeHint,
+  go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity,
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
   priceLine, stopDateLabel, shareButton, profileFitCard, exportOnePlaceReviewHtml,
   setBlobThumb, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
@@ -118,7 +118,7 @@ export function placesScreen(arg) {
     : '';
   wrap.append(topbar(scopeCity ? `Places in ${scopeCity}` : 'Places for you'));
   wrap.append(countryChips((id) => go(`#places-${id}`)));
-  { const t = oneTimeHint('places-living-map', 'Your decide-now shortlist — nearest and best-matched first. Tap a category chip to filter; map and list stay in sync. Want to browse a whole region? That is what Explore is for.'); if (t) wrap.append(t); }
+  wrap.append(screenHint('Your decide-now shortlist — nearest and best-matched first. Tap a category chip to filter; map and list stay in sync. Want to browse a whole region? That is what Explore is for.', 'About this screen'));
   // Who these results are being ranked and tagged for (one line, also the edit control).
   wrap.append(travellingAsLine());
   // Places anchors on where the traveller actually is, and never offers a "browse all of the
@@ -166,9 +166,15 @@ export function placesScreen(arg) {
   const layerChipsRow = h('div', { class: 'layer-chips' });
   const mapWrap = h('div', {});
   const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
+  // Map FIRST, then the things that describe it. The category chips used to sit above the
+  // map and the colour key at the very bottom of the screen, several thousand pixels away
+  // from the colours it explains — so the traveller met 122px of chips before seeing any map
+  // at all, and had to leave the map entirely to find out what its pin colours meant. Both
+  // now read as what they are: a legend, below the thing they are a legend for.
+  const keyBox = h('div', { class: 'places-map-key' });
   mapSection.append(
     h('div', { class: 'places-map-head' }, '🗺 Map'),
-    modeBar, layerChipsRow, mapWrap, cap,
+    modeBar, mapWrap, cap, layerChipsRow, keyBox,
   );
   wrap.append(mapSection);
 
@@ -743,7 +749,9 @@ export function placesScreen(arg) {
     });
     wrap.append(yp);
   }
-  wrap.append(h('details', { class: 'filters-collapse' }, [
+  // Appended into the map section declared above rather than to the screen, so it sits
+  // directly under the map and its category chips.
+  keyBox.append(h('details', { class: 'filters-collapse' }, [
     h('summary', {}, '🎨 Colour key'),
     colorKeyCard(),
   ]));
@@ -1775,7 +1783,7 @@ export function placeScreen(id) {
   if (beach) wrap.append(beach);
   const orient = orientationCard(p);
   if (orient) {
-    { const t = oneTimeHint('place-orient', 'Below, "Find it" gives the local name and how to recognise this spot on the ground — useful for a taxi or asking directions.'); if (t) wrap.append(t); }
+    wrap.append(screenHint('Below, "Find it" gives the local name and how to recognise this spot on the ground — useful for a taxi or asking directions.', 'About this page'));
     wrap.append(orient);
   }
   const transit = transitCard(p);

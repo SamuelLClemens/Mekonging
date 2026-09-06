@@ -4,6 +4,7 @@
 import * as gamify from '../gamify.js';
 import { store } from '../state.js';
 import { h } from '../util.js';
+import { screenHint } from '../ui-widgets.js';
 import { go, mount, topbar } from '../main.js';
 
 export function contributionsScreen() {
@@ -23,7 +24,7 @@ export function contributionsScreen() {
     h('p', { class: 'muted', style: 'margin:8px 0 0' },
       lvl.nextTitle ? `${lvl.ptsToNext} point${lvl.ptsToNext === 1 ? '' : 's'} to ${lvl.nextTitle}` : 'You have reached the top level — thank you!'),
   ]));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, 'Points come from what you add to your own guide. Everything stays on this device — there are no accounts and no leaderboard, just your own progress.'));
+  wrap.append(screenHint('Points come from what you add to your own guide. Everything stays on this device — there are no accounts and no leaderboard, just your own progress.'));
 
   // Ways to earn more (encouragement).
   if (suggestions.length) {

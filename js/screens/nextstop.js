@@ -16,6 +16,7 @@
 
 import { store, addStop } from '../state.js';
 import { h } from '../util.js';
+import { screenHint } from '../ui-widgets.js';
 import { getCountry, isCountryLoaded, loadAllCountries, allPlaces } from '../data/regions.js';
 import { isFavorite } from '../state.js';
 import { planRoutes, isRouteNode } from '../journey.js';
@@ -164,7 +165,7 @@ export function nextStopScreen(arg) {
     if (wit) wrap.append(wit);
     wrap.append(commitCard(candidate));
   } else if (wn) {
-    wrap.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Tap a destination above to see how to get there, what’s there, and add it to your trip.'));
+    wrap.append(screenHint('Tap a destination above to see how to get there, what’s there, and add it to your trip.'));
   }
 
   mount(wrap, 'home');

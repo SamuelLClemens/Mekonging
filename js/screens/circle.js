@@ -16,7 +16,7 @@ import { store, getPin, ensureMe, setMe, getContacts, getContact, addContact, re
   getInbox, addInboxItem, deleteInboxItem, markInboxRead, getThread, addMessage, markThreadRead,
   unreadThreadCount, addBoardPost, addJellyReport, addListing, addStop, createCollection,
   toggleFavorite, togglePlaceInCollection, todayKey, getListings } from '../state.js';
-import { field, confirmAction } from '../ui-widgets.js';
+import { field, confirmAction, screenHint } from '../ui-widgets.js';
 import { getPlace, getBoard, getCountry } from '../data/regions.js';
 import { encodeCard, parseCard, parseShare, encodeMessage, parseMessage, shareUrl } from '../social.js';
 import { SEV_LABEL, addPlaceSecret, fmtReportDate } from '../place-ui.js';
@@ -385,7 +385,7 @@ export function threadScreen(userId, fallbackCard, justImported = false) {
   const contact = getContact(userId) || fallbackCard || null;
   const name = contact ? contact.name : 'Traveller';
   wrap.append(topbar(name, '#circle'));
-  wrap.append(h('p', { class: 'muted' }, `Messages travel as links — no server. Write a note, then hand the link to ${name} (share sheet, AirDrop, any app). They open it to receive it and reply the same way.`));
+  wrap.append(screenHint(`Messages travel as links — no server. Write a note, then hand the link to ${name} (share sheet, AirDrop, any app). They open it to receive it and reply the same way.`));
   if (contact && !getContact(userId)) {
     wrap.append(h('div', { class: 'card' }, [
       h('p', { class: 'muted' }, `${name} is not in your circle yet.`),

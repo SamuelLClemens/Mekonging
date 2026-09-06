@@ -35,7 +35,7 @@ import {
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
-import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems } from './nav-groups.js';
+import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems, itemLabel } from './nav-groups.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
@@ -639,7 +639,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.517.0';
+export const APP_VERSION = 'mk-v0.518.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -838,6 +838,24 @@ export function countryContextLine(cc) {
   const c = getCountry(cc);
   if (!c) return null;
   return h('p', { class: 'country-context' }, `${c.flag} ${c.name}`);
+}
+
+// The traveller's own name, once they have given one on the You screen. Everything that
+// belongs to them is named after them rather than addressed as "Your" — one helper so the
+// phrasebook, the dictionary, the hubs, the chips and the search index cannot drift apart.
+export function whoName() { return (store.profile.name || '').trim(); }
+
+// "Sam’s dictionary" once a name is set, "my dictionary" before that — written to read
+// correctly MID-SENTENCE, which is where it is mostly used ("Translate & save to …").
+export function dictionaryName() {
+  const who = whoName();
+  return who ? `${who}’s dictionary` : 'my dictionary';
+}
+
+// The same thing as a heading or a button label, where it starts the phrase.
+export function dictionaryTitle() {
+  const who = whoName();
+  return who ? `${who}’s dictionary` : 'My dictionary';
 }
 
 export function topbar(title, backHash) {
@@ -1065,23 +1083,6 @@ export function locationSheet() {
   close = openModal(backdrop);
 }
 
-// A one-time contextual hint: a small dismissible tip shown once at a surface, then never
-// again. NOT a spotlight/tour engine — each caller decides where to place its own hint, and
-// dismissing simply records the key. Returns null once the key has been seen (so callers can
-// `const t = oneTimeHint(...); if (t) node.append(t);`). Additive pref, no store bump.
-export function oneTimeHint(key, text) {
-  const prefs = store.profile.prefs;
-  const seen = prefs.hintsSeen || (prefs.hintsSeen = {});
-  if (seen[key]) return null;
-  const el = h('div', { class: 'one-hint', role: 'note' }, [
-    h('span', { class: 'one-hint-ic' }, '💡'),
-    h('span', { class: 'grow' }, text),
-    h('button', { class: 'one-hint-x', 'aria-label': 'Got it — dismiss this tip', onclick: () => {
-      (prefs.hintsSeen || (prefs.hintsSeen = {}))[key] = true; save(); el.remove();
-    } }, '✕'),
-  ]);
-  return el;
-}
 
 // Point a read-only <img> at an on-device blob, then revoke the object URL as soon as the
 // browser has decoded it (or failed): the decoded bitmap is retained independently, so the
@@ -1178,8 +1179,11 @@ function tabbar() {
 // all of them a single unbroken scroll.
 //
 // Rules, deliberately conservative:
-//  - only DIRECT children of the screen root that carry the .card class and contain an <h2>,
-//    so nothing nested and nothing without a real heading is touched;
+//  - only DIRECT children of the screen root that carry the .card class and contain an <h2>
+//    (or, failing that, an <h3>), so nothing nested and nothing without a real heading is
+//    touched. h3 counts because whole screens name their sections that way — the You hub is
+//    built entirely of h3 cards, and every one of them was uncollapsible for that reason
+//    alone. The heading LEVEL is a typographic choice; whether a card is a section is not;
 //  - a screen with fewer than two of them is left alone — folding a lone card buys nothing and
 //    costs a tap;
 //  - `data-nofold` on a card opts it out;
@@ -1218,13 +1222,26 @@ function rememberFold(key, open) {
 function foldHeadingRuns(root, routeKey) {
   const kids = [...root.children];
   const heads = kids.filter((el) => el.tagName === 'H2' && !el.hasAttribute('data-nofold'));
-  if (heads.length < 2) return;          // one heading is a screen title, not a section list
+  // Two or more headings are obviously a section list. ONE heading is usually a screen title
+  // and folding it would be wrong — unless it carries .home-section, which this codebase puts
+  // on section headings specifically and never on a screen title. That single case is why the
+  // You hub's "🗂️ Everything else" (544px of doors) stayed uncollapsible while everything
+  // around it folded.
+  if (!heads.length) return;
+  if (heads.length < 2 && !heads[0].classList.contains('home-section')) return;
   const prefs = sectionFoldPrefs();
   for (const head of heads) {
     const label = (head.textContent || '').trim();
     if (!label) continue;
+    // The run stops at the next heading — and also at anything that is plainly a page-level
+    // trailer rather than part of this section. Without that, collapsing the You hub's last
+    // heading would also hide the backup prompt and the on-device privacy line that follow it.
     const body = [];
-    for (let n = head.nextElementSibling; n && n.tagName !== 'H2'; n = n.nextElementSibling) body.push(n);
+    for (let n = head.nextElementSibling; n; n = n.nextElementSibling) {
+      if (n.tagName === 'H2' || n.hasAttribute('data-nofold')
+        || (n.classList && (n.classList.contains('disclaimer') || n.classList.contains('backup-line')))) break;
+      body.push(n);
+    }
     if (!body.length) continue;
     const key = `${routeKey}:${label.slice(0, 40)}`;
     const det = h('details', { class: 'foldcard autofold autofold-run' });
@@ -1249,14 +1266,24 @@ function autoFoldSections(root) {
   for (const el of root.children) {
     if (el.tagName === 'DIV' && !el.className && !el.hasAttribute('data-nofold')) level.push(...el.children);
   }
+  // First h2 if the card has one, else its first h3 — but never an h3 that is merely the
+  // first sub-heading underneath an h2, which is why the h2 is looked for first and wins.
+  const headingOf = (el) => el.querySelector('h2') || el.querySelector('h3');
   const cards = level.filter((el) => el.classList && el.classList.contains('card')
-    && el.tagName !== 'DETAILS' && !el.hasAttribute('data-nofold') && el.querySelector('h2'));
-  if (cards.length < 2) { addFoldAllControl(root); return; }
+    && el.tagName !== 'DETAILS' && !el.hasAttribute('data-nofold') && headingOf(el));
+  // "Fewer than two is left alone" is right on a screen with nothing else to compare against —
+  // folding a lone card buys nothing and costs a tap. It is wrong once the screen ALREADY has
+  // folds, which is what the heading pass above and the screens' own <details> produce: the
+  // You hub ended up with two folded sections and one card that stubbornly would not, purely
+  // because it was the only .card left by the time this pass ran. Count what is already
+  // foldable, so a lone card joins a folding screen and still stays put on a flat one.
+  const already = root.querySelectorAll(':scope > details.autofold, :scope > details.home-group-d').length;
+  if (cards.length + already < 2) return;
   const prefs = sectionFoldPrefs();
   for (const card of cards) {
-    const h2 = card.querySelector('h2');
-    if (!h2 || h2.closest('details')) continue;
-    const label = (h2.textContent || '').trim();
+    const head = headingOf(card);
+    if (!head || head.closest('details')) continue;
+    const label = (head.textContent || '').trim();
     if (!label) continue;
     const key = `${routeKey}:${label.slice(0, 40)}`;
     const det = h('details', { class: `${card.className || ''} foldcard autofold`.trim() });
@@ -1264,7 +1291,7 @@ function autoFoldSections(root) {
     // Carry over anything the screen set on the card itself (inline height, ids, data-*), or
     // folding would silently drop a screen's own styling.
     for (const a of card.attributes) if (a.name !== 'class') det.setAttribute(a.name, a.value);
-    const parent = h2.parentElement;
+    const parent = head.parentElement;
     // Lift the heading's whole row into the summary ONLY when that row is safe to put there:
     // it must sit directly in the card, and it must contain no <details> of its own. Settings
     // pairs most of its headings with an ⓘ tooltip, which IS a <details> — nesting one inside a
@@ -1284,7 +1311,7 @@ function autoFoldSections(root) {
     } else {
       // Heading only. Anything else that shared its row stays in the body, where it is
       // reachable when the section is open and out of the way when it is not.
-      h2.remove();
+      head.remove();
       sum.textContent = label;
     }
     while (card.firstChild) det.append(card.firstChild);
@@ -1292,35 +1319,6 @@ function autoFoldSections(root) {
     det.addEventListener('toggle', () => rememberFold(key, det.open));
     card.replaceWith(det);
   }
-  addFoldAllControl(root);
-}
-
-// One control that opens or closes every section on the screen, matching Home's own. Added
-// wherever the screen ended up with three or more folds, which is where scrolling past
-// headings actually costs something — Border crossings is eight, and closing them all takes it
-// from 7,495px to 812px. Two folds are quicker to tap individually than to reach for this.
-function addFoldAllControl(root) {
-  if (!root || root.querySelector(':scope > .home-foldall')) return;
-  const folds = [...root.querySelectorAll('details.autofold')];
-  if (folds.length < 3) return;
-  const anyOpen = folds.some((d) => d.open);
-  const btn = h('button', {
-    class: 'chip ghost',
-    'aria-label': anyOpen ? 'Minimise every section on this screen' : 'Expand every section on this screen',
-  }, anyOpen ? '⌃ Minimise all' : '⌄ Expand all');
-  // Set .open directly and let each fold's own toggle listener persist it — one code path for
-  // remembering, whether a section was closed from here or from its own heading.
-  btn.addEventListener('click', () => {
-    const open = !folds.some((d) => d.open);
-    folds.forEach((d) => { if (d.open !== open) d.open = open; });
-    btn.textContent = open ? '⌃ Minimise all' : '⌄ Expand all';
-    btn.setAttribute('aria-label', open ? 'Minimise every section on this screen' : 'Expand every section on this screen');
-  });
-  const row = h('div', { class: 'home-foldall' }, btn);
-  const bar = root.querySelector(':scope > .topbar');
-  if (bar && bar.nextSibling) root.insertBefore(row, bar.nextSibling);
-  else if (bar) root.append(row);
-  else root.insertBefore(row, root.firstChild);
 }
 
 // One place's review, as a shareable HTML file. The builder lives in the lazy export screen
@@ -1957,7 +1955,7 @@ function homeRightNowCard(ctx) {
     ]));
   }
   card.append(tipEl, listWrap, footEl);
-  { const t = oneTimeHint('rightnow-picks', 'Picks match the time of day, weather and the filters above — tweak them anytime. ✓ done or ✕ skip swaps in a new one.'); if (t) card.append(t); }
+  card.append(screenHint('Picks match the time of day, weather and the filters above — tweak them anytime. ✓ done or ✕ skip swaps in a new one.', 'About these picks'));
 
   // When the picks are seeded from the country default (no GPS, nothing focused yet), keep a
   // gentle one-tap upgrade to real local picks — the invite is not lost just because we seeded.
@@ -2094,7 +2092,7 @@ function whereAmICard(cc) {
 function setCityScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Set your location', cc && getCountry(cc) ? `#country-${cc}` : '#home'));
-  wrap.append(h('p', { class: 'muted' }, 'Choose where you are so distances, weather, “near me” and local prices all match — even with no signal or GPS off.'));
+  wrap.append(screenHint('Choose where you are so distances, weather, “near me” and local prices all match — even with no signal or GPS off.'));
   // One dropdown, defaulting to your current (or last-set) location, grouped by country.
   const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
   wrap.append(h('div', { class: 'card' }, [
@@ -2414,7 +2412,7 @@ function scamsScreen(cc) {
   wrap.append(countryContextLine(getActiveCountry()));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
 
-  wrap.append(h('p', { class: 'muted' }, `The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
+  wrap.append(screenHint(`The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
   wrap.append(countryChips((id) => go(`#scams-${id}`), getActiveCountry()));
 
   const s = scamsFor(getActiveCountry());
@@ -2980,16 +2978,6 @@ export function homeFold(label, inner, prefKey, { defaultOpen = true, action = n
   return det;
 }
 
-// Every Home section's pref key, in the order they appear on the screen. One list, used by
-// both the folds themselves and Home's minimise-all control — so a section added without
-// being listed here simply keeps its own toggle and misses the bulk control, rather than
-// breaking it.
-export const HOME_FOLD_KEYS = [
-  'quickAccessOpen', 'homeRecentsOpen', 'homeIdentifyOpen', 'homeStageOpen', 'homeRightNowOpen',
-  'homeBudgetOpen', 'homeNextStopOpen', 'homeWeatherOpen', 'whereYouAreOpen',
-  'homeDoorsOpen', 'homeGiveBackOpen',
-];
-
 function homeNowCard(phase, cc) {
   const ctx = contextNow();
   const wrap = h('div', {});
@@ -3146,7 +3134,11 @@ function meHubScreen() {
   // it, which is the rule the rest of this refactor follows.
   const stopN = (store.trip.stops || []).length;
   const jStats = trailStats();
+  // Headed, so it can fold like everything else on this screen. It had only an aria-label,
+  // which meant a screen reader knew what the group was and a sighted traveller did not —
+  // and the auto-fold, which keys on a real heading, skipped it entirely.
   wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
+    h('h3', { class: 'you-chips-head' }, '⚡ Quick access'),
     chip('📅', calLabel, null, () => go('#calendar')),
     chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
     chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
@@ -3162,14 +3154,13 @@ function meHubScreen() {
   // time — is gone. Removed as a duplicate CHIP ROW, not a duplicate destination: every
   // figure it showed still shows live on the one chip above that already owns it.)
 
-  // The journey map, promoted here per direct request — it used to be row three of eight
-  // inside My stuff, easy to miss for a feature a traveller may check daily. A static preview
-  // (journeyMapSVG — the same renderer #sharejourney's own preview already uses; see
-  // journey-share.js) rather than a second live MapLibre instance: this hub is opened far
-  // more often than #journey itself, and a live map here would mean a WebGL context and a
-  // round of satellite-tile requests on every single visit, for a thumbnail nobody asked to
-  // pan or zoom. Hidden entirely until there is a first pin, same rule as "Coming up" just
-  // below — an empty preview is not a feature, it is a promise with nothing behind it yet.
+  // Your journey: the numbers and a door, no map. A static SVG preview used to sit here, and
+  // it was the wrong thing in the wrong place — a thumbnail of a map is not a map. It cannot
+  // be panned or zoomed, so it answers no question a traveller actually has, while taking the
+  // vertical space of something that could. #journey renders the real, live, zoomable
+  // satellite map; this is the door to it, and the stats line is what makes the door worth
+  // opening. Still hidden entirely until there is a first pin — an empty door is a promise
+  // with nothing behind it.
   if (jStats.places > 0) {
     const jc = h('div', { class: 'card', style: 'margin-top:12px' });
     const jrange = (from, to) => {
@@ -3183,14 +3174,7 @@ function meHubScreen() {
         jStats.countries > 1 ? `${jStats.countries} countries` : null,
         jrange(jStats.from, jStats.to) || null,
       ].filter(Boolean).join(' · ')));
-    // Same wrapper class the share screen's own preview uses (journey-preview in style.css),
-    // so this thumbnail gets that exact centred/capped-width/rounded treatment for free.
-    const preview = h('div', { class: 'journey-preview' });
-    jc.append(preview);
-    import('./journey-share.js').then((mod) => {
-      preview.innerHTML = mod.journeyMapSVG(trailPoints());
-    }).catch(() => { /* preview is an enhancement; the button below still reaches the real map */ });
-    jc.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => go('#journey') }, 'View your journey →'));
+    jc.append(h('button', { class: 'btn block', onclick: () => go('#journey') }, 'View your journey →'));
     wrap.append(jc);
   }
 
@@ -3332,7 +3316,8 @@ function groupBadge(group) {
 // screen reader hears the same description a sighted traveller reads.
 function hubRow(item, cc, accent) {
   const live = item.live ? liveStatus(item.live) : null;
-  const label = live && live.sub ? `${item.label} · ${live.sub}` : item.label;
+  const name = itemLabel(item, whoName());
+  const label = live && live.sub ? `${name} · ${live.sub}` : name;
   const attrs = {
     class: 'hub-row' + (live && live.cls ? ' ' + live.cls : ''),
     onclick: () => go(resolveHash(item, cc)),
@@ -3365,13 +3350,17 @@ export function groupDoors(skip = []) {
 // rows come to roughly 340px at 375px, which is more height than the whole consolidation
 // saved on Home. The blurb still reaches a screen reader through aria-label.
 export function featureChips(items, cc) {
-  return h('div', { class: 'chips' }, items.map((it) => h('button', {
-    class: 'status-chip', onclick: () => go(resolveHash(it, cc)),
-    'aria-label': it.blurb ? `${it.label}. ${it.blurb}` : it.label,
-  }, [
-    h('span', { class: 'status-ic', 'aria-hidden': 'true' }, it.ic),
-    h('span', { class: 'status-lbl' }, it.label),
-  ])));
+  const who = whoName();
+  return h('div', { class: 'chips' }, items.map((it) => {
+    const label = itemLabel(it, who);
+    return h('button', {
+      class: 'status-chip', onclick: () => go(resolveHash(it, cc)),
+      'aria-label': it.blurb ? `${label}. ${it.blurb}` : label,
+    }, [
+      h('span', { class: 'status-ic', 'aria-hidden': 'true' }, it.ic),
+      h('span', { class: 'status-lbl' }, label),
+    ]);
+  }));
 }
 
 // Match a live hash against the manifest's hash TEMPLATES, so '#weather-vi' is recognised as
@@ -3879,6 +3868,26 @@ function projRegionPt(proj, lng, lat) {
   ];
 }
 // SVG path 'd' for a province: one subpath per ring of every polygon.
+// "You are here" on the Explore maps. These are static SVG, not MapLibre, so they had no
+// notion of the traveller at all — a map of the country you are standing in that does not
+// say where you are standing. Drawn only from a fix the app ALREADY has (getLastFix), so
+// this never prompts for permission and never starts the GPS; the live maps handle asking.
+// Skipped silently when there is no fix, or when the fix falls outside this country's frame
+// — a dot pinned to the edge of the wrong country is worse than no dot.
+function youAreHereMark(proj, viewBox) {
+  const fix = getLastFix();
+  if (!fix || typeof fix.lat !== 'number' || typeof fix.lng !== 'number') return '';
+  const [x, y] = projRegionPt(proj, fix.lng, fix.lat);
+  const [vx, vy, vw, vh] = String(viewBox).trim().split(/\s+/).map(Number);
+  if (![x, y, vx, vy, vw, vh].every((n) => Number.isFinite(n))) return '';
+  if (x < vx || y < vy || x > vx + vw || y > vy + vh) return '';
+  const r = Math.max(vw, vh) / 90;
+  return `<g class="you-are-here" role="img" aria-label="You are here" pointer-events="none">`
+    + `<circle cx="${x}" cy="${y}" r="${r * 2.6}" fill="#2E86FF" fill-opacity="0.18"/>`
+    + `<circle cx="${x}" cy="${y}" r="${r}" fill="#2E86FF" stroke="#fff" stroke-width="${r * 0.5}"/>`
+    + `</g>`;
+}
+
 function provincePathD(prov, proj) {
   const subs = [];
   for (const poly of prov.polys) {
@@ -3930,7 +3939,7 @@ function regionsMap(cc, opts = {}) {
       + `<path class="prov" d="${provincePathD(p, proj)}" fill="${fill}" fill-opacity="${op}"/></g>`;
   }).join('');
   const cName = (getCountry(cc) || {}).name || '';
-  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Provinces of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
+  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Provinces of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, set.viewBox)}</svg>`;
   const box = h('div', { class: 'regions-map', html: svg });
   box.querySelectorAll('.prov-group').forEach((g) => {
     const code = g.getAttribute('data-code');
@@ -4034,7 +4043,7 @@ function zonesMap(cc, opts = {}) {
       + `<path class="zone" d="${d}" fill="${fill}" fill-opacity="${op}"/></g>`;
   }).join('');
   const cName = (getCountry(cc) || {}).name || '';
-  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Regions of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
+  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Regions of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, set.viewBox)}</svg>`;
   const box = h('div', { class: 'regions-map', html: svg });
   box.querySelectorAll('.zone-group').forEach((g) => {
     const id = g.getAttribute('data-zone');
@@ -4576,7 +4585,7 @@ function arrivalScreen(arg) {
 
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Just arrived', '#home'));
-  wrap.append(h('p', { class: 'muted' }, `Your first hour in ${c ? c.name : 'the country'} — cash, a SIM, and the cheapest safe way from the airport into town. It all works offline.`));
+  wrap.append(screenHint(`Your first hour in ${c ? c.name : 'the country'} — cash, a SIM, and the cheapest safe way from the airport into town. It all works offline.`));
   wrap.append(countryChips((id) => { arrivalPick = ''; go(`#arrival-${id}`); }, cc));
   if (gws.length > 1) {
     const gwRow = h('div', { class: 'chips' });
@@ -5465,7 +5474,7 @@ export function planCard(pl, primary) {
 function planRouteScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Journey planner', '#home'));
-  wrap.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Chain buses, trains, boats and flights across Thailand, Laos, Cambodia and Vietnam — including overland border crossings. Times and fares are guidance and work offline.'));
+  wrap.append(screenHint('Chain buses, trains, boats and flights across Thailand, Laos, Cambodia and Vietnam — including overland border crossings. Times and fares are guidance and work offline.'));
 
   const nodes = routeNodes();
   const opts = [['', 'Choose…'], ...nodes.map((n) => [n, n])];
@@ -7338,8 +7347,10 @@ function searchScreen() {
       const phase0 = store.profile.prefs.phase || inferPhase();
       const live = new Set(visibleGroups(phase0).flatMap((g) => g.items.map((it) => it.hash)));
       const feats = navItems().filter((it) => live.has(it.hash)
-        && `${it.label} ${it.blurb || ''} ${it.groupTitle}`.toLowerCase().includes(q));
-      section('Features', feats.map((it) => link(`${it.ic} ${it.label} · ${it.groupTitle}`, resolveHash(it, cc0))));
+        && `${itemLabel(it, whoName())} ${it.label} ${it.blurb || ''} ${it.groupTitle}`.toLowerCase().includes(q));
+      // Searchable under BOTH names: a traveller called Sam finds "Sam’s dictionary" by
+      // typing their own name and still finds it by typing "your dictionary".
+      section('Features', feats.map((it) => link(`${it.ic} ${itemLabel(it, whoName())} · ${it.groupTitle}`, resolveHash(it, cc0))));
     }
     // Places: filter by category and/or text; when a location is known, order by distance.
     let places = allPlaces();
@@ -8450,7 +8461,7 @@ function foryouScreen() {
   // (who's travelling, baby, accessibility, trip length, budget, interests) is set in ONE
   // place — Settings — so preferences are not scattered across the app.
   if (!profileIsSet()) {
-    wrap.append(h('p', { class: 'muted' }, 'Set who you are and how you travel, and every list ranks what fits you first — and the trip plans match your situation. It all stays on your device.'));
+    wrap.append(screenHint('Set who you are and how you travel, and every list ranks what fits you first — and the trip plans match your situation. It all stays on your device.'));
     wrap.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#settings') }, '⚙️ Set up your travel profile in Settings'));
     mount(wrap, '#home');
     return;
