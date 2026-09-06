@@ -8,6 +8,7 @@
 // (index.html) or the browser will block the request. Settings explains this.
 
 import { store } from './state.js';
+import { fetchTimeout } from './util.js';
 
 // A free, no-key translation endpoint (CORS-enabled, fair-use daily limit) so the
 // feature works with zero setup. Users who want higher volume or full privacy can
@@ -35,7 +36,7 @@ export async function translate(text, target, source = 'en') {
     const key = store.profile && store.profile.translateKey;
     const body = { q, source: src, target, format: 'text' };
     if (key) body.api_key = key;
-    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetchTimeout(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, 15000);
     if (!res.ok) throw new Error(`Translate service error (${res.status}).`);
     const data = await res.json();
     const out = data && (data.translatedText || data.translation || data.text);
@@ -45,7 +46,7 @@ export async function translate(text, target, source = 'en') {
 
   // Free fallback: MyMemory. Returns { responseData: { translatedText }, responseStatus }.
   const url = `${MYMEMORY}?q=${encodeURIComponent(q)}&langpair=${encodeURIComponent(`${src}|${target}`)}`;
-  const res = await fetch(url);
+  const res = await fetchTimeout(url, {}, 15000);
   if (!res.ok) throw new Error(`Translate service error (${res.status}).`);
   const data = await res.json();
   const out = data && data.responseData && data.responseData.translatedText;

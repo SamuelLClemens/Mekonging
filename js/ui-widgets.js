@@ -8,7 +8,7 @@ import { store, save } from './state.js';
 import { speak, stop as stopSpeak } from './tts.js';
 import { WEATHER_SPOTS, spotKey, spotsForCountry } from './weather.js';
 import { COUNTRIES } from './data/regions.js';
-import { CURRENCY_CODES } from './currency.js';
+import { CURRENCY_CODES, currencyFlag } from './currency.js';
 
 // ---- Read-aloud reader ------------------------------------------------------
 // Play/pause long-form text (history, guides, first aid) at a chosen speed. Speech is
@@ -242,7 +242,8 @@ export function promptAction(opts = {}) {
 // budgetSummaryCard's totalsCurrencyRow), so the widget supports both without a second,
 // parallel picker to keep in sync.
 export function currencySelect(current, onchange) {
-  return selectEl(CURRENCY_CODES, current, onchange || (() => {}), 'Currency');
+  return selectEl(CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${c}`.trim()]),
+    current, onchange || (() => {}), 'Currency');
 }
 
 let _fieldSeq = 0;

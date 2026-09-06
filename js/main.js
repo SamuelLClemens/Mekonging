@@ -80,7 +80,7 @@ import * as personal from './personal.js';
 import * as gamify from './gamify.js';
 // Server-free reminders (per-entry lead time + daily journal nudge; in-app + best-effort notifications).
 import * as reminders from './reminders.js';
-import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase } from './util.js';
+import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase, fetchTimeout } from './util.js';
 import {
   haversineKm, distanceChip, driveLabel, estDriveMin, withinNear, withinDayTrip, DAYTRIP_MAX_MIN,
   attrClass, attrTag, starsStr, isMarket, placeBucket,
@@ -335,7 +335,17 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       // reg.update() forces the check. The `online` trigger matters most for travellers: the app
       // often sits open while offline (plane, subway, remote area), so the instant signal returns
       // it fetches any new build and — with the controllerchange reload below — adopts it silently.
-      const checkForUpdate = () => { try { reg.update(); } catch { /* offline or not ready */ } };
+      // reg.update() returns a PROMISE, so the synchronous try/catch this used to carry never
+      // caught anything: being offline — the single most likely outcome on this app, and the
+      // exact case the `online` trigger below exists for — rejected into nowhere. It was
+      // invisible until the global unhandledrejection handler added in this release started
+      // reporting it, which is precisely what that handler is for. Being offline is not a
+      // failure worth telling a traveller about, so it is swallowed HERE, deliberately,
+      // rather than by widening the filter that catches real faults.
+      const checkForUpdate = () => {
+        try { const r = reg.update(); if (r && r.catch) r.catch(() => { /* offline, or no new worker */ }); }
+        catch { /* not ready */ }
+      };
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
       window.addEventListener('online', checkForUpdate);
@@ -428,6 +438,106 @@ function showUndoToast(message, undoFn) {
   undoToastTimer = setTimeout(close, 5000);
 }
 
+// ---- NOTHING FAILS SILENTLY -------------------------------------------------
+// render() has always wrapped the screen switch in a try/catch, so an error thrown while
+// PAINTING a screen was caught and shown. Nothing covered anything else. An error thrown
+// inside a click handler, a timer, or a rejected promise escaped to the console — which on a
+// phone nobody can open — and the traveller was left with a control that simply did nothing.
+// That is the worst failure this app can have, because it is indistinguishable from the app
+// deciding to ignore them, and it produces the one bug report that cannot be acted on: "it
+// stopped working".
+//
+// These listeners are the floor, not a fix. What they guarantee is that no failure is
+// invisible: it is recorded on the device, it rides along with any feedback the traveller
+// sends, and the first one in a session says so out loud instead of leaving a dead button.
+const ERR_KEY = 'mk-errors';
+const ERR_MAX = 20;
+
+// Kept in localStorage rather than memory so the log survives the reload that a traveller
+// will almost certainly perform before they think to report anything. Every access is
+// defensive: storage can be full, disabled, or throw outright in private browsing, and an
+// error recorder that throws while recording an error is worse than no recorder at all.
+function recordError(kind, err) {
+  try {
+    const entry = {
+      at: Date.now(),
+      kind,
+      hash: (typeof location !== 'undefined' && location.hash) || '',
+      msg: String((err && (err.message || err.reason || err)) || 'unknown').slice(0, 300),
+      v: APP_VERSION,
+    };
+    const log = recentErrors();
+    log.unshift(entry);
+    localStorage.setItem(ERR_KEY, JSON.stringify(log.slice(0, ERR_MAX)));
+  } catch { /* the log is best-effort by definition */ }
+}
+
+export function recentErrors() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ERR_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch { return []; }
+}
+
+export function clearRecentErrors() {
+  try { localStorage.removeItem(ERR_KEY); } catch { /* noop */ }
+}
+
+// One quiet toast per session. Repeating it would turn a bad moment into a worse one, and
+// the log is the durable record — this exists only so the traveller knows the app heard the
+// tap and something went wrong, rather than assuming the button is decorative.
+let errToastShown = false;
+function showErrorToast() {
+  if (errToastShown) return;
+  errToastShown = true;
+  const toast = h('div', { class: 'update-toast', role: 'status' }, [
+    h('span', {}, 'That did not work. The rest of the app is still fine.'),
+    h('button', { class: 'update-toast-btn', onclick: () => { toast.remove(); go('#feedback'); } }, 'Report'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: () => toast.remove() }, '✕'),
+  ]);
+  document.body.append(toast);
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    // Resource load failures (a missing image) also raise this, and they are not the
+    // traveller's problem — only script errors carry an `error` object worth surfacing.
+    if (!e || !e.error) return;
+    recordError('script', e.error);
+    showErrorToast();
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    // An aborted fetch is this app working AS DESIGNED — util.js fetchTimeout and the
+    // service worker both abort deliberately, and every caller falls back to cached data.
+    // Recording those would bury the real failures under routine offline behaviour.
+    const r = e && e.reason;
+    if (r && (r.name === 'AbortError' || String(r.message || r) === 'timeout')) return;
+    recordError('promise', r);
+    showErrorToast();
+  });
+}
+
+// Recovery that actually recovers. A traveller told to "reload" cannot fix a bad build,
+// because the service worker is cache-first for code and will serve the same broken files
+// back on every reload until a new CACHE_VERSION lands. This clears the app-code caches and
+// the worker, so the next load fetches the current release.
+//
+// It deliberately does NOT touch mk-tiles-* or mk-tts-*: those are offline map packs and
+// phrase audio the traveller chose to download, possibly over an expensive connection they
+// no longer have. Wiping someone's offline maps to clear a rendering bug would be a far
+// worse failure than the one being recovered from.
+export async function resetAndReload() {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map((r) => r.unregister()));
+  } catch { /* no worker, or unsupported */ }
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => /^mk-v/.test(k)).map((k) => caches.delete(k)));
+  } catch { /* storage unavailable */ }
+  location.reload();
+}
+
 // Capture the Android/Chrome install prompt so the app can offer an "Install" button in
 // Settings (browsers only fire this once, and only when the PWA is installable). Cleared
 // once installed. iOS Safari never fires it, so Settings shows a Share-sheet hint instead.
@@ -514,7 +624,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.508.1';
+const APP_VERSION = 'mk-v0.509.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -696,6 +806,25 @@ function goBack(fallback) {
 }
 
 // ---- shell ------------------------------------------------------------------
+// Which country am I reading about? A screen whose entire content is one country's rules —
+// visas, scams, prices, accessibility — carried a title identical to every other country's
+// version of it, so a traveller who crossed a border last week and opened "Entry & visa" had
+// nothing on screen telling them whose rules these were. On a trip through four countries
+// that is not a small ambiguity.
+//
+// The flag goes here rather than into the topbar title, for two measured reasons. At 375px
+// "🇹🇭 Entry & visa" wraps the title to two lines where "Entry & visa" fits on one — and the
+// interface ships in 29 languages, most of which render these titles longer than English, so
+// a title that only just fits here would wrap outright in German or Russian. This line also
+// says the country's NAME, which a flag alone does not: flags are recognisable, not
+// self-explanatory, and a traveller who cannot yet tell the Lao flag from the Thai one is
+// exactly the traveller this is for.
+export function countryContextLine(cc) {
+  const c = getCountry(cc);
+  if (!c) return null;
+  return h('p', { class: 'country-context' }, `${c.flag} ${c.name}`);
+}
+
 export function topbar(title, backHash) {
   const hash = location.hash || '';
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
@@ -1842,6 +1971,7 @@ function accessScreen(cc) {
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Accessibility', c ? `#country-${cc}` : '#home'));
+  wrap.append(countryContextLine(cc));
   if (!a) { wrap.append(h('p', { class: 'empty' }, 'Accessibility guidance for this country is on the way.')); mount(wrap, 'home'); return; }
   wrap.append(h('p', { class: 'muted' }, `How ${c ? c.name : 'this country'} works for travellers with disabilities — honestly. ${a.overview}`));
   const needs = store.profile.prefs.access || [];
@@ -1885,7 +2015,8 @@ const DIAPER_WHERE = {
 function babyScreen(cc) {
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Travelling with a baby', c ? `#country-${cc}` : '#home'));
+  wrap.append(topbar('With a baby', c ? `#country-${cc}` : '#home'));
+  wrap.append(countryContextLine(cc));
   wrap.append(h('p', { class: 'muted' }, `Where to find nappies, formula and baby basics in ${c ? c.name : 'this country'} — cheapest first — plus family tips. Guidance; verify locally.`));
   const dc = h('div', { class: 'card' }, [h('h2', {}, '🧷 Where to buy nappies (diapers)')]);
   dc.append(h('p', {}, DIAPER_WHERE[cc] || 'Look for the largest supermarket or pharmacy in town and buy larger packs for the best price per nappy.'));
@@ -2009,6 +2140,7 @@ function visaScreen(cc) {
   const c = getCountry(cc);
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Entry & visa', c ? `#country-${cc}` : '#home'));
+  wrap.append(countryContextLine(cc));
   if (!v) { wrap.append(h('p', { class: 'empty' }, 'Entry guidance for this country is on the way.')); mount(wrap, 'home'); return; }
   wrap.append(h('div', { class: 'banner' }, 'Visa rules depend on your nationality and change often. Treat this as orientation, then confirm on the official site for your passport before you travel.'));
   const fresh = freshnessNotice(v.asOf, v.officialEvisa && v.officialEvisa.url, v.officialEvisa && v.officialEvisa.name);
@@ -2075,6 +2207,7 @@ function scamsScreen(cc) {
   const c = getCountry(getActiveCountry());
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Common scams', c ? `#country-${getActiveCountry()}` : '#home'));
+  wrap.append(countryContextLine(getActiveCountry()));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
 
   wrap.append(h('p', { class: 'muted' }, `The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
@@ -2584,18 +2717,43 @@ export function homeWeatherCard(want) {
   return card;
 }
 
-// Shared collapsible wrapper for Home's stage-block pieces — same home-group-d visual
-// language as Tools/Identify/Quick access/Where you are, so collapsibility reads as one
-// consistent site-wide pattern rather than a one-off look for these three. Defaults OPEN
-// (nothing here was hidden before this split existed); once a traveller actually toggles
-// one, that choice persists under its own pref, exactly like Quick access/Where you are do.
-function homeFold(label, inner, prefKey) {
-  const open = store.profile.prefs[prefKey] !== false;
+// Shared collapsible wrapper for Home's sections — same home-group-d visual language
+// everywhere, so collapsibility reads as one consistent site-wide pattern rather than a
+// per-section one-off. Once a traveller actually toggles one, that choice persists under its
+// own pref and survives relaunches; a fold that forgets itself on every launch saves nobody
+// anything, which is the entire point of the feature.
+//
+// Now exported, because it was private here while Home carried eleven stacked sections and
+// only four of them could be folded at all. Everything else was permanently expanded, so a
+// traveller who never uses a given section scrolled past it on every single launch, forever.
+//
+// `defaultOpen: false` is for sections that are worth offering and not worth opening unasked.
+// `action` is an optional control rendered inside the summary (Back to's "Clear"); its click
+// is stopped from reaching the <summary> so pressing it does not also toggle the section.
+export function homeFold(label, inner, prefKey, { defaultOpen = true, action = null } = {}) {
+  if (!inner) return null;
+  const pref = store.profile.prefs[prefKey];
+  const open = pref === undefined ? defaultOpen : pref !== false;
   const det = h('details', { class: 'home-group-d', open: open ? '' : null });
   det.addEventListener('toggle', () => { store.profile.prefs[prefKey] = det.open; save(); });
-  det.append(h('summary', { class: 'home-group' }, label), inner);
+  const sum = h('summary', { class: 'home-group' }, label);
+  if (action) {
+    action.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+    sum.append(action);
+  }
+  det.append(sum, inner);
   return det;
 }
+
+// Every Home section's pref key, in the order they appear on the screen. One list, used by
+// both the folds themselves and Home's minimise-all control — so a section added without
+// being listed here simply keeps its own toggle and misses the bulk control, rather than
+// breaking it.
+export const HOME_FOLD_KEYS = [
+  'quickAccessOpen', 'homeRecentsOpen', 'homeIdentifyOpen', 'homeRightNowOpen',
+  'homeBudgetOpen', 'homeNextStopOpen', 'homeWeatherOpen', 'whereYouAreOpen',
+  'homeDoorsOpen', 'homeGiveBackOpen',
+];
 
 function homeNowCard(phase, cc) {
   const ctx = contextNow();
@@ -3032,14 +3190,12 @@ export function recentRoutesRow() {
     .filter((it) => it && live.has(it.hash)).slice(0, 4);
   if (!items.length) return null;
   const cc = getActiveCountry();
-  const box = h('div', { class: 'home-recents' });
-  box.append(h('div', { class: 'row-between', style: 'margin:16px 0 2px' }, [
-    h('h2', { class: 'home-section', style: 'margin:0' }, '🕘 Back to'),
-    h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
-      onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear'),
-  ]));
-  box.append(featureChips(items, cc));
-  return box;
+  const box = h('div', { class: 'home-recents' }, [featureChips(items, cc)]);
+  // Clear rides in the summary rather than above the chips, so the whole row costs one line
+  // when folded away instead of two.
+  const clear = h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
+    onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear');
+  return homeFold('🕘 Back to', box, 'homeRecentsOpen', { action: clear });
 }
 
 // Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
@@ -3052,13 +3208,11 @@ export function identifyRow() {
   const phase = store.profile.prefs.phase || inferPhase();
   const items = visibleItems(group, phase);
   if (!items.length) return null;
-  const box = h('div', { class: 'home-identify' });
-  // The group's TITLE, not its blurb: .home-section uppercases, and "WHAT IS THIS DISH, FRUIT
-  // OR BIRD?" wrapped to two shouted lines at 375px. Naming it exactly as its door is named
-  // also tells a traveller that these chips are that section, brought forward.
-  box.append(h('h2', { class: 'home-section', style: 'margin:16px 0 2px' }, `${group.ic} ${group.title}`));
-  box.append(featureChips(items, getActiveCountry()));
-  return box;
+  const box = h('div', { class: 'home-identify' }, [featureChips(items, getActiveCountry())]);
+  // The group's TITLE, not its blurb: the summary style uppercases, and "WHAT IS THIS DISH,
+  // FRUIT OR BIRD?" wrapped to two shouted lines at 375px. Naming it exactly as its door is
+  // named also tells a traveller that these chips are that section, brought forward.
+  return homeFold(`${group.ic} ${group.title}`, box, 'homeIdentifyOpen');
 }
 
 // The hub itself. Unknown id falls through to the full index rather than an error screen:
@@ -4827,6 +4981,7 @@ function pricesScreen(countryId) {
   // reads "Money & prices" — "Money & prices" measured 3 lines here (task #176's regression
   // threshold), and the converter card immediately below already makes the currency half obvious.
   wrap.append(topbar('Fair prices', getCountry(getActiveCountry()) ? `#country-${getActiveCountry()}` : '#home'));
+  wrap.append(countryContextLine(getActiveCountry()));
   wrap.append(countryChips((id) => go(`#prices-${id}`)));
 
   const country = getCountry(getActiveCountry());
@@ -5345,7 +5500,7 @@ function poolsScreen(arg) {
 
 function crossingsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Border crossings', '#places'));
+  wrap.append(topbar('Borders', '#places'));
   wrap.append(screenHint('Open land, bridge and river crossings used by foreign travellers. Hours and visa rules change often and vary by nationality — treat these as guidance and confirm with official sources before you travel.'));
   // Freshness badge: the oldest "verified" date across all crossings, so the whole set is
   // judged by its weakest link. Quiet ✓ while under ~6 months old, a prominent ⚠ nudge once
@@ -6031,7 +6186,7 @@ function scheduleCard(s) {
 function schedulesScreen(country) {
   if (country && getCountry(country)) { setActiveCountry(country); schedCountry = country; }
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Transport schedules', '#home'));
+  wrap.append(topbar('Schedules', '#home'));
   wrap.append(screenHint('Reference departure times for popular routes — guidance only; always reconfirm with the operator or the booking links below.'));
 
   const filters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
@@ -6622,7 +6777,7 @@ async function playCall(s, btn, statusEl) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
   btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
   try {
-    const res = await fetch(inatSoundUrl(s));
+    const res = await fetchTimeout(inatSoundUrl(s), {}, 15000);
     const d = await res.json();
     let snd = null;
     for (const r of (d.results || [])) { const a = (r.sounds || []).find((x) => x && x.file_url); if (a) { snd = a; break; } }
@@ -6647,7 +6802,7 @@ function callControl(s, label) {
 
 function soundsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Sounds around you', '#nature'));
+  wrap.append(topbar('Sounds nearby', '#nature'));
   wrap.append(screenHint('Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   let group = '';
@@ -7319,7 +7474,7 @@ function rememberSearch(q) {
 
 function searchScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Search everything', '#home'));
+  wrap.append(topbar('Search', '#home'));
   const input = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
     placeholder: 'Find places, phrases, wildlife, prices…',
     oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) });
@@ -8204,7 +8359,7 @@ function docKind(type) {
 }
 function vaultScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Secure documents', '#home'));
+  wrap.append(topbar('Documents', '#home'));
   const body = h('div', {});
   wrap.append(body);
   mount(wrap, '#home');
@@ -8505,7 +8660,7 @@ function forgottenPasscodeDetails(body) {
 // ---- YOUR CONTRIBUTIONS (on-device points + levels, Local Guides-style) ------
 function contributionsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Your contributions', '#home'));
+  wrap.append(topbar('Contributions', '#home'));
   const pts = gamify.contributionPoints(store);
   const lvl = gamify.levelInfo(pts);
   const rows = gamify.contributionBreakdown(store);
@@ -8619,6 +8774,12 @@ function feedbackScreen(arg) {
       place ? `Place: ${place.name} (${place.id})` : null,
       fromEmail.value.trim() ? `Reply-to: ${fromEmail.value.trim()}` : null,
       `App: ${APP_VERSION}`,
+      // Anything the app caught since this device last cleared it. Attached automatically
+      // because the traveller cannot be expected to have written down an error they saw
+      // three screens ago — and without it, "it stopped working" is unactionable.
+      ...(recentErrors().length
+        ? ['', 'Recent errors:', ...recentErrors().slice(0, 5).map((e) => `  ${new Date(e.at).toISOString()} ${e.kind} ${e.hash} — ${e.msg}`)]
+        : []),
     ].filter((x) => x != null).join('\n');
     return { subject: `[Mekonging] ${catLabel}${subject.value.trim() ? ': ' + subject.value.trim() : ''}`, text };
   }
@@ -9453,7 +9614,7 @@ function boardScreen(arg) {
 
   if (!board) {
     // picker: country chips + city list
-    wrap.append(topbar('Local noticeboard', '#home'));
+    wrap.append(topbar('Noticeboard', '#home'));
     wrap.append(h('p', { class: 'muted' }, 'Local knowledge, city by city: where locals shop for fruit and veg, market schedules, family supplies like nappies, the cheapest genuinely local food and the street-food spots worth queueing for. Curated with sources; add your own notes and share them with your circle.'));
     const selected = cc || getActiveCountry();
     wrap.append(countryChips((id) => { setActiveCountry(id); go(`#board-${id}`); }, selected));
@@ -10239,12 +10400,28 @@ export function render() {
       default: return homeScreen();
     }
   } catch (err) {
+    // This used to print the raw exception message as the entire explanation, which is how a
+    // traveller came to be reading "Can't find variable: wxMetric" on a phone in Vietnam.
+    // That string is for whoever fixes it, not for whoever hit it: it names no cause they can
+    // act on and reads like the whole app is broken, when in fact one screen is.
+    //
+    // So: say what is true (this screen, not the app), offer the two things that actually
+    // help — go somewhere that works, or clear a bad cached build — and keep the technical
+    // detail one tap away for the person who reports it.
+    recordError('screen', err);
     const app = document.getElementById('app');
     app.innerHTML = '';
+    const detail = h('details', { class: 'err-detail' }, [
+      h('summary', {}, 'Technical details'),
+      h('p', { class: 'muted mono' }, `${String(err && err.message || err)}\n${location.hash || '#home'} · ${APP_VERSION}`),
+    ]);
     app.append(h('div', { class: 'screen' }, [
-      h('h1', {}, 'Something went wrong'),
-      h('p', { class: 'muted' }, String(err && err.message || err)),
-      h('button', { class: 'btn', onclick: () => go('#home') }, 'Back to home'),
+      h('h1', {}, 'This screen could not open'),
+      h('p', { class: 'muted' }, 'The rest of the app still works. Everything you have saved is safe on this device.'),
+      h('button', { class: 'btn block', onclick: () => go('#home') }, 'Go to Home'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => resetAndReload() }, 'Reload the app'),
+      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#feedback') }, 'Report this'),
+      detail,
     ]));
   }
 }

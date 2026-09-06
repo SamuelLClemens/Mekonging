@@ -87,6 +87,25 @@ export const LANG_BY_CODE = Object.fromEntries(LANGS.map((l) => [l.code, l]));
 // The code to hand the translation service. Identical to `code` for every language we carry
 // today; kept as a seam so a service that spells one of them differently needs a one-line
 // registry change rather than edits at the call sites.
+// The flag for a language code, for any control that names a language.
+//
+// LANGS covers the 29 INTERFACE languages, and the phrasebook's own set is not the same
+// list: it uses 'zh' where LANGS uses 'zh-CN', and it carries two languages the interface
+// does not offer at all. So a bare LANG_BY_CODE lookup silently returns nothing for exactly
+// the languages a traveller in this region is most likely to be translating into.
+//
+// Hmong deliberately has no flag. It is a language without a state — spoken across the
+// highlands of Laos, Vietnam and Thailand — and picking any national flag for it would
+// misrepresent its speakers rather than help anyone find their row. The speech mark is the
+// honest answer, and it keeps the column aligned with the flagged rows around it.
+const EXTRA_LANG_FLAGS = { zh: '🇨🇳', my: '🇲🇲', hmn: '🗣️' };
+export function langFlag(code) {
+  if (!code) return '';
+  const hit = LANG_BY_CODE[code];
+  if (hit && hit.flag) return hit.flag;
+  return EXTRA_LANG_FLAGS[code] || '';
+}
+
 export function transCode(code) {
   const l = LANG_BY_CODE[code];
   return (l && l.trans) || code;

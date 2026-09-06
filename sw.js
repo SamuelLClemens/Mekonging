@@ -8,7 +8,7 @@
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 
-const CACHE_VERSION = 'mk-v0.508.1';
+const CACHE_VERSION = 'mk-v0.509.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -281,10 +281,27 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Navigation timeout. Long enough that a merely-slow link still delivers the newest deploy,
-// short enough that it is not a blank screen. Falls back to the cached shell, which the app
-// then refreshes in the background via the service-worker update check.
+// Navigation timeout. The navigation no longer blocks the launch (see the isNav branch: the
+// cached shell is served immediately and this fetch runs behind it), so this is now just the
+// deadline on that BACKGROUND refresh — the point at which a stalled connection stops holding
+// the worker alive for a copy of index.html it is never going to deliver.
 const NAV_TIMEOUT_MS = 3000;
+
+// Deadlines for everything else the worker fetches. Navigation was the only request kind
+// that could ever give up: every other branch below awaited a bare fetch(), which on a
+// captive portal or a half-connected VPN neither resolves nor rejects. The consequences
+// were not cosmetic — a hung SUB-RESOURCE fetch is a lazily-loaded screen module that
+// never arrives, so the app sits on its loading card indefinitely with no error and no
+// retry, and a hung fetch inside the offline-pack loops stalls the whole download at
+// whatever percentage it had reached.
+//
+// Longer than NAV_TIMEOUT_MS because these are not racing a cached shell that is already
+// on the device — timing one out costs the traveller the thing they asked for, so it is
+// worth waiting out a genuinely slow link first. Timing out returns the same 504 the
+// offline path returns, which every caller already handles.
+const SUB_TIMEOUT_MS = 10000;    // js/css/json — a screen module the app is waiting on
+const ASSET_TIMEOUT_MS = 20000;  // map engine, fonts, geojson — large but rarely needed
+const MEDIA_TIMEOUT_MS = 12000;  // map tiles and phrase audio — degrade quietly
 
 function withTimeout(promise, ms) {
   return new Promise((resolve, reject) => {
@@ -327,13 +344,38 @@ self.addEventListener('fetch', (e) => {
   const isSub = /\.(js|css|json|webmanifest|html)$/.test(p);
 
   if (isNav) {
+    // STALE-WHILE-REVALIDATE, not network-first-with-a-timeout.
+    //
+    // Every sub-resource is already served cache-first from this version's own cache, so by
+    // the time a returning traveller launches the app, the entire application is on the
+    // device. The navigation was the one request still going to the network first, and it
+    // held the whole launch: on a slow link that is up to NAV_TIMEOUT_MS of blank screen
+    // before falling back to a shell that was sitting in the cache the entire time. On a
+    // hotel connection that accepts the request and stalls, it was that wait on every single
+    // launch, to end up exactly where it started.
+    //
+    // So the cached shell is served immediately when there is one — the app opens at local
+    // speed on any network, including none — and the network copy is fetched behind it and
+    // written back for next time. A deploy is therefore not lost, only deferred by one
+    // launch, and it does not even wait that long in practice: the service worker's own
+    // update check runs on load and main.js raises the "new version is ready" toast in the
+    // same session. That is a better answer than making everyone wait to find out.
     e.respondWith((async () => {
       const cache = await caches.open(CACHE_VERSION);
-      try {
-        return await withTimeout(fetch(req, { cache: 'no-cache' }), NAV_TIMEOUT_MS);
-      } catch {
-        return (await cache.match('index.html')) || Response.error();
+      const cached = await cache.match('index.html');
+      const fresh = withTimeout(fetch(req, { cache: 'no-cache' }), NAV_TIMEOUT_MS)
+        .then((res) => {
+          if (res && res.ok) cache.put('index.html', res.clone()).catch(() => { /* storage full */ });
+          return res;
+        })
+        .catch(() => null);
+      if (cached) {
+        // Keep the worker alive for the background refresh; the traveller is not waiting on it.
+        e.waitUntil(fresh);
+        return cached;
       }
+      // First ever launch: there is nothing cached to be fast with, so the network it is.
+      return (await fresh) || Response.error();
     })());
     return;
   }
@@ -344,7 +386,7 @@ self.addEventListener('fetch', (e) => {
       const hit = await cache.match(req, { ignoreSearch: true });
       if (hit) return hit;
       try {
-        const res = await fetch(req, { cache: 'no-cache' });
+        const res = await withTimeout(fetch(req, { cache: 'no-cache' }), SUB_TIMEOUT_MS);
         if (res && res.ok) cache.put(req, res.clone()).catch(() => { /* storage full */ });
         return res;
       } catch {
@@ -358,7 +400,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       if (hit) return hit;
-      return fetch(req).then((res) => {
+      return withTimeout(fetch(req), ASSET_TIMEOUT_MS).then((res) => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE_VERSION).then((c) => c.put(req, copy)); }
         return res;
       }).catch(() => {
@@ -377,7 +419,7 @@ async function handleTile(req) {
   const hit = await cache.match(keyUrl);
   if (hit) return rebuildRanged(hit);
   try {
-    const res = await fetch(req);
+    const res = await withTimeout(fetch(req), MEDIA_TIMEOUT_MS);
     if (res.status === 200 || res.status === 206) {
       const buf = await res.clone().arrayBuffer();
       const stored = new Response(buf, { status: 200, headers: {
@@ -410,7 +452,7 @@ async function handleTTS(req) {
   const hit = await cache.match(req, { ignoreVary: true });
   if (hit) return hit;
   try {
-    const res = await fetch(req);
+    const res = await withTimeout(fetch(req), MEDIA_TIMEOUT_MS);
     if (res && (res.ok || res.type === 'opaque')) { cache.put(req, res.clone()).catch(() => {}); }
     return res;
   } catch {
@@ -446,7 +488,7 @@ async function prefetchTTS(urls, client, lang) {
     try {
       if (await cache.match(url, { ignoreVary: true })) { ok++; }
       else {
-        const res = await fetch(url, { mode: 'no-cors' });
+        const res = await withTimeout(fetch(url, { mode: 'no-cors' }), MEDIA_TIMEOUT_MS);
         if (res && (res.ok || res.type === 'opaque')) { await cache.put(url, res.clone()); ok++; }
       }
     } catch (err) {
@@ -488,7 +530,7 @@ async function prefetchTiles(urls, client, protect = []) {
     try {
       if (await cache.match(keyUrl)) { ok++; }
       else {
-        const res = await fetch(url);
+        const res = await withTimeout(fetch(url), MEDIA_TIMEOUT_MS);
         if (res.ok) {
           const buf = await res.arrayBuffer();
           await cache.put(keyUrl, new Response(buf, { status: 200, headers: {

@@ -2624,3 +2624,63 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
   padding: var(--sp-2) 0; font-weight: 600;
 }
 .switch-row input { width: 20px; height: 20px; flex: none; accent-color: var(--teal); }
+
+/* Error-boundary technical details. The exception text is real and worth keeping — it is
+   what makes a bug report actionable — but it is written for whoever fixes the bug, not
+   whoever hit it, so it sits behind a disclosure under plain-language copy rather than
+   being the entire explanation a traveller is given. */
+.err-detail { margin-top: var(--sp-4); }
+.err-detail > summary { cursor: pointer; color: var(--ink-soft); font-size: var(--fs-sm); padding: var(--sp-2) 0; }
+.err-detail .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-label); white-space: pre-wrap; word-break: break-word; margin-top: var(--sp-4);
+}
+
+/* Minimise-all: one small control, right-aligned above the first section, so it reads as a
+   property of the screen rather than a member of any one section. */
+.home-foldall { display: flex; justify-content: flex-end; margin: var(--sp-1) 0 0; }
+/* A control carried in a section summary (Back to's "Clear") sits beside the fold arrow, not
+   floating in the middle of the row — summary is space-between and would otherwise strand it
+   between the title and the chevron. */
+.home-group-d > summary > .chip { margin-left: auto; }
+
+/* --- every dropdown looks like a dropdown ---------------------------------------
+   A <select> here was left with whatever chevron the platform chose to draw, which on iOS
+   and on several Android browsers is nearly invisible against a dark card — so a control
+   that opens a menu of options read as a plain box, and travellers did not know to tap it.
+
+   The arrow is drawn from two gradients rather than an SVG so it takes its colour from the
+   theme's own --ink-soft and stays legible on all seven skins with nothing to re-export.
+
+   On !important: this app styles selects PER CONTEXT (.field select, .talk-top-row select,
+   .fx-side select, .plan-picker select, .rn-filter-row select …) and every one of those sets
+   `background:` as a shorthand, which resets background-image to none. A chevron declared on
+   a bare `select` selector therefore loses to all of them no matter where it sits in the
+   file. Forcing only the arrow properties is what lets one rule reach every select in the
+   app, including ones added later; the background COLOUR is untouched, so each context keeps
+   its own surface. */
+select {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+    linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%) !important;
+  background-position: right 15px center, right 10px center !important;
+  background-size: 6px 6px, 6px 6px !important;
+  background-repeat: no-repeat !important;
+  padding-right: 30px !important;
+}
+/* Right-to-left interface languages (Arabic, Hebrew, Farsi, Urdu): the arrow belongs on the
+   side the text ends on, not stranded across the field from it. */
+[dir="rtl"] select {
+  background-position: left 15px center, left 10px center !important;
+  padding-right: var(--sp-3) !important;
+  padding-left: 30px !important;
+}
+/* Which country this screen is about. Sits directly under the topbar on country-scoped
+   screens, quiet enough not to compete with the heading and specific enough to answer the
+   question the heading cannot. */
+.country-context {
+  margin: 0 0 var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
+  color: var(--ink-soft); letter-spacing: 0.02em;
+}

@@ -34,7 +34,7 @@ import { getActiveCountry } from '../app-state.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { fmtTemp, citySlug } from '../render-utils.js';
 import { planRoutes, isRouteNode } from '../journey.js';
-import { confirmAction, netMode, setNetMode, online } from '../ui-widgets.js';
+import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../ui-widgets.js';
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import {
@@ -43,7 +43,7 @@ import {
   ensureHomeWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
-  recentRoutesRow, identifyRow,
+  recentRoutesRow, identifyRow, homeFold, HOME_FOLD_KEYS,
 } from '../main.js';
 
 export function homeScreen() {
@@ -109,6 +109,7 @@ export function homeScreen() {
   // nothing from navigation — every value here still has its own full screen — an individual
   // chip simply does not render until it has a real value.
   const ctx = contextNow();
+  wrap.append(foldAllRow());
   wrap.append(quickAccessRow(phase, storedPhase, ctx));
 
   // "Just arrived" — a dismissible chip to the first-hour arrival guide. Only while on the
@@ -166,7 +167,9 @@ export function homeScreen() {
   // fills in or omits itself entirely if no bundled route exists — never a dead-end card.
   if (onGround) {
     const card = nextStopCard(ctx);
-    if (card) wrap.append(card);
+    // collapsibleCard lifts the card's own <h2> into the summary, so this needs no separate
+    // heading — and it persists under the same prefs mechanism every other fold here uses.
+    if (card) wrap.append(collapsibleCard(card, 'homeNextStopOpen'));
   }
 
   // H5 — "Where you are": real, sourced city history and context, collapsed by default. Moved
@@ -246,17 +249,23 @@ export function homeScreen() {
   // is unchanged, only moved — it now lives on the items in the manifest (hidePost /
   // planningOnly), so a returned traveller still never sees Cash swap or a pre-trip
   // checklist, and a section whose every item is hidden drops out entirely.
-  wrap.append(h('h2', { class: 'home-section', style: 'margin:16px 0 6px' }, '🧰 What do you need?'));
-  wrap.append(groupDoors(onGround ? ['admin', 'identify'] : ['admin']));
-  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
-    '🗂️ All features, A–Z →'));
+  // The doors are the directory, and a traveller who knows their way around the app does not
+  // need the whole directory standing open under today's content every single launch. Folded
+  // like everything else, open by default so nothing changes for anyone who never touches it.
+  const doors = h('div', {}, [
+    groupDoors(onGround ? ['admin', 'identify'] : ['admin']),
+    h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
+      '🗂️ All features, A–Z →'),
+  ]);
+  wrap.append(homeFold('🧰 What do you need?', doors, 'homeDoorsOpen'));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
-  wrap.append(h('div', { class: 'card give-back', style: 'margin-top:10px' }, [
-    h('strong', {}, '❤️ Give back to the region'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
+  // Closed by default: it is worth offering and it is not today's business, and standing it
+  // open on every launch is exactly the kind of permanent scroll this pass exists to remove.
+  wrap.append(homeFold('❤️ Give back', h('div', { class: 'card give-back' }, [
+    h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
     h('button', { class: 'btn block', onclick: () => go('#donate') }, 'See causes to support'),
-  ]));
+  ]), 'homeGiveBackOpen', { defaultOpen: false }));
 
   wrap.append(h('p', { class: 'disclaimer' },
     'Works offline. Everything stays on your device — no accounts, no tracking. Prices and rules are guidance with sources; verify locally.'));
@@ -419,15 +428,12 @@ function quickAccessRow(phase, stored, ctx) {
 
   // Open by default — it only ever collapses because the traveller closed it themselves
   // (prefs.quickAccessOpen explicitly false); an unset/undefined pref still means "open".
-  const open = store.profile.prefs.quickAccessOpen !== false;
-  const details = h('details', { class: 'home-group-d quick-access', open: open ? '' : null });
-  details.addEventListener('toggle', () => { store.profile.prefs.quickAccessOpen = details.open; save(); });
-  details.append(h('summary', { class: 'home-group' }, '⚡ Quick access'));
   const body = h('div', { style: 'padding-top:8px' });
   body.append(phaseSwitchRow(phase, stored, false));   // the segmented control only — no repeated caption
   body.append(h('div', { class: 'card home-status', style: 'margin-top:8px', role: 'group', 'aria-label': 'Quick access' }, chips));
-  details.append(body);
-  return details;
+  const det = homeFold('⚡ Quick access', body, 'quickAccessOpen');
+  det.classList.add('quick-access');
+  return det;
 }
 
 // The traveller's next planned stop from today onward (store.trip.stops), independent of
@@ -477,6 +483,26 @@ function nextStopCard(ctx) {
   return null;   // nothing to show until the check above resolves — never a placeholder card
 }
 
+// Minimise or expand every section at once. Per-section folds are the precise control; this
+// is the blunt one, and it is the one that answers "I open the app to check one thing and
+// scroll past nine sections to reach it". Collapsing everything leaves Home as a short list
+// of section names — every one still a single tap from its content — and that shape persists
+// until the traveller changes it.
+//
+// The label reflects what the NEXT tap will do, decided by whether anything is currently
+// open, so one control covers both directions without becoming a pair of buttons.
+function foldAllRow() {
+  const prefs = store.profile.prefs;
+  const anyOpen = HOME_FOLD_KEYS.some((k) => prefs[k] !== false);
+  return h('div', { class: 'home-foldall' }, [
+    h('button', {
+      class: 'chip ghost',
+      'aria-label': anyOpen ? 'Minimise every section on this screen' : 'Expand every section on this screen',
+      onclick: () => { HOME_FOLD_KEYS.forEach((k) => { prefs[k] = !anyOpen; }); save(); render(); },
+    }, anyOpen ? '⌃ Minimise all' : '⌄ Expand all'),
+  ]);
+}
+
 // H5 — real, sourced city context, collapsed by default so it does not compete with today's
 // content. cityAboutCard() already returns null when there is no curated history for the
 // city, so this naturally omits itself rather than showing an empty card.
@@ -484,12 +510,7 @@ function whereYouAreCard(cc, cityName) {
   if (!cityName) return null;
   const inner = cityAboutCard(cc, citySlug(cityName));
   if (!inner) return null;
-  const open = !!store.profile.prefs.whereYouAreOpen;
-  const details = h('details', { class: 'home-group-d', open: open ? '' : null });
-  details.addEventListener('toggle', () => { store.profile.prefs.whereYouAreOpen = details.open; save(); });
-  details.append(h('summary', { class: 'home-group' }, '📍 Where you are'));
-  details.append(inner);
-  return details;
+  return homeFold('📍 Where you are', inner, 'whereYouAreOpen', { defaultOpen: false });
 }
 
 // Stand-in body for the weather fold when no forecast is cached yet. The section must never
@@ -526,10 +547,5 @@ function homeWeatherPending(spot) {
 // split existed; a traveller who collapses it keeps it collapsed next visit, same as Where you
 // are/Quick access already do).
 function weatherFold(inner) {
-  const open = store.profile.prefs.homeWeatherOpen !== false;
-  const details = h('details', { class: 'home-group-d', open: open ? '' : null });
-  details.addEventListener('toggle', () => { store.profile.prefs.homeWeatherOpen = details.open; save(); });
-  details.append(h('summary', { class: 'home-group' }, '🌦 Weather'));
-  details.append(inner);
-  return details;
+  return homeFold('🌦 Weather', inner, 'homeWeatherOpen');
 }

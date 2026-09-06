@@ -36,7 +36,7 @@ import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../p
 import { field, selectEl, openModal, confirmAction, online } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
-import { LANGS, LANG_BY_CODE, uiLang, transCode } from '../i18n.js';
+import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../data/regions.js';
 import { ALLERGENS } from '../data/allergens.js';
 // Namespace import kept (rather than named imports for every piece) so the moved code below —
@@ -389,7 +389,11 @@ export function phrasebookScreen(lang) {
   // Language + My Dictionary: a compact dropdown replaces the old row of 8 language chips
   // (a wall of buttons to save space on and not overwhelm with), paired with a direct route
   // to the cross-language dictionary — already reachable via You, but one tap closer from here.
-  const langSelect = selectEl(Object.values(LANGUAGES).map((b) => [b.lang, b.label]), code,
+  // Leading with the flag, exactly as the "translating from" picker below already does. That
+  // one was flagged and this one was not, which is backwards: this is the language the whole
+  // screen is about, and it is the one a traveller changes when they cross a border.
+  const langSelect = selectEl(
+    Object.values(LANGUAGES).map((b) => [b.lang, `${langFlag(b.lang)} ${b.label}`.trim()]), code,
     (val) => { phraseQuery = ''; go(`#phrasebook-${val}`); }, 'Language');
   const dictName = (store.profile.name || '').trim();
   wrap.append(h('div', { class: 'talk-top-row' }, [
@@ -789,7 +793,7 @@ function phraseRow(p, locale, opts) {
 // (free online service); the offline phrasebook below covers the essentials.
 function liveTranslateBox(code, label, locale) {
   const box = h('div', { class: 'card translate-card' }, [
-    h('h2', {}, `Say it in ${label}`),
+    h('h2', {}, `Say it in ${langFlag(code)} ${label}`.replace('  ', ' ')),
     h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
   ]);
   // The language the traveller is speaking FROM. This used to offer English and Hebrew only,

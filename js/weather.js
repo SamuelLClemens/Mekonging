@@ -3,7 +3,7 @@
 // a timestamp (shown as "last updated"); a refresh only happens when online. When
 // offline the cached reading is returned so the screen still works.
 
-import { haversineKm } from './util.js';
+import { haversineKm, fetchTimeout } from './util.js';
 
 const PREFIX = 'mk.wx.';
 const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
@@ -265,7 +265,7 @@ async function refreshMany(spots) {
   const lngs = spots.map((s) => s.lng).join(',');
   const url = `${ENDPOINT}?latitude=${lats}&longitude=${lngs}&current=temperature_2m,weather_code&timezone=auto`;
   try {
-    const res = await fetch(url);
+    const res = await fetchTimeout(url);
     const d = await res.json();
     const arr = Array.isArray(d) ? d : [d];
     const data = {};
@@ -290,7 +290,7 @@ async function refreshWeather(spot) {
     + 'precipitation_probability_max,precipitation_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
     + '&timezone=auto&forecast_days=16';
   try {
-    const res = await fetch(url);
+    const res = await fetchTimeout(url);
     const d = await res.json();
     if (d && d.current && d.daily && d.hourly) {
       const H = d.hourly;
@@ -340,7 +340,7 @@ async function refreshMarine(coords) {
   const url = `${MARINE_ENDPOINT}?latitude=${coords.lat}&longitude=${coords.lng}`
     + '&current=wave_height,wave_period,sea_surface_temperature&timezone=auto';
   try {
-    const res = await fetch(url);
+    const res = await fetchTimeout(url);
     const d = await res.json();
     const c = d && d.current;
     if (c && c.wave_height != null) {
@@ -364,7 +364,7 @@ async function refreshAir(spot) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedAir(key);
   const url = `${AIR_ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}&current=us_aqi,pm2_5&timezone=auto`;
   try {
-    const res = await fetch(url);
+    const res = await fetchTimeout(url);
     const d = await res.json();
     const c = d && d.current;
     if (c && c.us_aqi != null) {

@@ -19,6 +19,8 @@
 // fallback for a response that omits it, and MIN_GAP_MS stops a flapping connection from
 // hammering the endpoint.
 
+import { fetchTimeout } from './util.js';
+
 const KEY = 'mk.rates';
 const ENDPOINT = 'https://open.er-api.com/v6/latest/USD';
 const TTL_MS = 6 * 60 * 60 * 1000;    // fallback staleness window when the API gives no next-update time
@@ -34,6 +36,16 @@ let _inFlight = null;
 // log an expense in Thai Baht but could never choose Baht as the currency totals are shown
 // in. Order matches the rates object above (major currencies first, Mekong-region last).
 export const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'CNY', 'MYR', 'ILS', 'THB', 'VND', 'KHR', 'LAK'];
+
+// A currency is a three-letter code, and three-letter codes are the hardest possible thing to
+// scan under pressure — KHR and LAK and THB look alike at the moment a traveller is holding
+// notes they do not recognise. The flag is the part that is actually read at a glance, so
+// every control naming a currency leads with it.
+const CURRENCY_FLAGS = {
+  USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', AUD: '🇦🇺', CAD: '🇨🇦', SGD: '🇸🇬', CNY: '🇨🇳',
+  MYR: '🇲🇾', ILS: '🇮🇱', THB: '🇹🇭', VND: '🇻🇳', KHR: '🇰🇭', LAK: '🇱🇦',
+};
+export function currencyFlag(code) { return CURRENCY_FLAGS[code] || ''; }
 
 // Approximate baseline (per 1 USD). Labelled "approximate" until a live refresh.
 const FALLBACK = {
@@ -82,7 +94,7 @@ export async function maybeRefreshRates(force = false) {
 export async function refreshRates() {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getRates();
   try {
-    const res = await fetch(ENDPOINT);
+    const res = await fetchTimeout(ENDPOINT);
     const d = await res.json();
     if (d && d.rates && d.rates.USD) {
       // time_next_update_unix is SECONDS since epoch; everything else here is ms.

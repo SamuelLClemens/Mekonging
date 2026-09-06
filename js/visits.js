@@ -23,6 +23,7 @@
 // only the coarsened cell, the country and a count. Never a track, never a timestamp
 // precise enough to follow, never an identifier.
 import { store, save } from './state.js';
+import { fetchTimeout } from './util.js';
 
 // 0.5° ≈ 55 km at the equator. Deliberately coarse: fine enough that a country reads
 // correctly on a world map, far too coarse to place anyone.
@@ -107,7 +108,7 @@ export async function loadSharedVisits(signal) {
   if (!url) return { ok: false, reason: 'no-feed', points: [] };
   if (!/^https:\/\//i.test(url)) return { ok: false, reason: 'not-https', points: [] };
   try {
-    const res = await fetch(url, { signal, credentials: 'omit', cache: 'no-store' });
+    const res = await fetchTimeout(url, { signal, credentials: 'omit', cache: 'no-store' });
     if (!res.ok) return { ok: false, reason: `http-${res.status}`, points: [] };
     return { ok: true, points: normaliseFeed(await res.json()) };
   } catch (err) {
@@ -122,7 +123,7 @@ export async function contributeVisit(cell, cc) {
   const url = visitsFeedUrl();
   if (!visitsShareEnabled() || !url || !/^https:\/\//i.test(url) || !cell) return false;
   try {
-    await fetch(url, {
+    await fetchTimeout(url, {
       method: 'POST', credentials: 'omit', mode: 'cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lat: cell.lat, lng: cell.lng, cc: cc || '' }),
