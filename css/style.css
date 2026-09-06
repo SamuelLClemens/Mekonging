@@ -2684,3 +2684,17 @@ select {
   margin: 0 0 var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
   color: var(--ink-soft); letter-spacing: 0.02em;
 }
+
+/* Talk — My translations: the intro line under the heading and the footer under the list.
+   Classes rather than inline margins because the spacing guard ratchets inline declarations
+   down and these are the same two gaps every card in the app already uses. Safe at (0,1,0):
+   collapsibleCard() replaces the <h2> with a <summary>, so `.card > :first-child` binds to
+   that summary and never to these. */
+.mytr-note { margin: 0 0 var(--sp-2); }
+.mytr-foot { margin: var(--sp-2) 0 0; }
+
+/* Talk — "Translate & save to my dictionary" sits under the primary Translate row, full width.
+   Keeping a phrase forever is the deliberate action of the two, so it gets its own line and
+   spells itself out rather than competing for space with the one used ten times a day. */
+.translate-keep { margin-top: var(--sp-2); }
+.translate-keep .btn { width: 100%; }
