@@ -82,7 +82,7 @@ export function homeScreen() {
   // backHash — Home is a root tab) brings the 🆘 emergency button, Saved and Settings icons for
   // free: Home was previously the only screen without 🆘, since the hero displaced the top bar.
   const dateLabel = new Date().toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
-  wrap.append(topbar(`📍 ${focus.spot.city || 'Your trip'} · ${dateLabel}`, null));
+  wrap.append(topbar(`${focus.spot.city || 'Your trip'} · ${dateLabel}`, null));
 
   // The headline above names focus.spot.city with full confidence regardless of WHY it was
   // picked — a live GPS fix, a city merely browsed or set days ago, or (with neither) the

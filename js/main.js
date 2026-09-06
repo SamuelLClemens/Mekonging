@@ -492,7 +492,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.499.0';
+const APP_VERSION = 'mk-v0.500.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2052,7 +2052,7 @@ function scamsScreen(cc) {
   else if (near) setActiveCountry(near.spot.country);
   const c = getCountry(getActiveCountry());
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('⚠️ Common scams', c ? `#country-${getActiveCountry()}` : '#home'));
+  wrap.append(topbar('Common scams', c ? `#country-${getActiveCountry()}` : '#home'));
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
 
   wrap.append(h('p', { class: 'muted' }, `The scams travellers report most in ${c.name}. Almost all are about money, not danger — recognise the setup, agree prices first, and a calm “no, thank you” ends most of them.`));
@@ -4125,7 +4125,7 @@ function arrivalScreen(arg) {
   const arr = getArrival(activeGw);
 
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('🛬 Just arrived', '#home'));
+  wrap.append(topbar('Just arrived', '#home'));
   wrap.append(h('p', { class: 'muted' }, `Your first hour in ${c ? c.name : 'the country'} — cash, a SIM, and the cheapest safe way from the airport into town. It all works offline.`));
   wrap.append(countryChips((id) => { arrivalPick = ''; go(`#arrival-${id}`); }, cc));
   if (gws.length > 1) {
@@ -4221,7 +4221,7 @@ function nearbySafetyStrip(country, fix) {
 
 function nearbyScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('📍 Near me', '#home'));
+  wrap.append(topbar('Near me', '#home'));
   const status = h('p', { class: 'muted' }, [h('span', { class: 'spinner' }), 'Finding your location…']);
   const body = h('div', {});
   wrap.append(status, body);
@@ -8962,7 +8962,7 @@ function threadScreen(userId, fallbackCard, justImported = false) {
   const wrap = h('div', { class: 'screen' });
   const contact = getContact(userId) || fallbackCard || null;
   const name = contact ? contact.name : 'Traveller';
-  wrap.append(topbar('💬 ' + name, '#circle'));
+  wrap.append(topbar(name, '#circle'));
   wrap.append(h('p', { class: 'muted' }, `Messages travel as links — no server. Write a note, then hand the link to ${name} (share sheet, AirDrop, any app). They open it to receive it and reply the same way.`));
   if (contact && !getContact(userId)) {
     wrap.append(h('div', { class: 'card' }, [
@@ -9398,7 +9398,7 @@ function boardScreen(arg) {
     return;
   }
 
-  wrap.append(topbar(`📋 ${board.city}`, `#board-${board.country}`));
+  wrap.append(topbar(board.city, `#board-${board.country}`));
   if (board.intro) wrap.append(h('p', { class: 'muted' }, board.intro));
 
   // Highest-recommended places in this city — your own ratings count first.

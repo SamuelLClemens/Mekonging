@@ -135,7 +135,7 @@ function commitCard(candidate) {
 
 export function nextStopScreen(arg) {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('🧭 Plan your next stop', '#home'));
+  wrap.append(topbar('Plan your next stop', '#home'));
 
   const focus = focusSpot(arg && getCountry(arg) ? arg : undefined);
   const cc = focus.spot.country;
