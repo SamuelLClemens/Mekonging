@@ -33,7 +33,7 @@ import { h, debounce } from '../util.js';
 // js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
-import { field, selectEl, openModal, confirmAction, online } from '../ui-widgets.js';
+import { field, selectEl, openModal, confirmAction, online, collapsibleCard } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
@@ -213,23 +213,86 @@ function removeCustomPhrase(code, key) {
   const i = a.findIndex((c) => c.key === key);
   if (i >= 0) { a.splice(i, 1); save(); }
 }
-// Cross-language propagation for custom phrases — the free-translate equivalent of
-// propagatePinAcrossLanguages above. That function can just LOOK UP an already-translated
-// static entry in each other language's phrasebook; a custom phrase has no such entry to
-// find, so it has to actually be translated into each other language via the same
-// translate() call liveTranslateBox already makes for the primary language. Runs in the
-// background (the caller does not await this) and is fully best-effort per language via
-// Promise.allSettled: one language being offline, rate-limited, or an unsupported pair never
-// blocks the others or the phrase already saved in fromCode. Idempotent the same way
-// addCustomPhrase itself is (by the English/source text typed), so re-translating the same
-// phrase later, in any language, never duplicates it.
-async function propagateCustomPhraseAcrossLanguages(fromCode, text, sourceLang) {
-  const targets = Object.keys(LANGUAGES).filter((code) => code !== fromCode);
-  await Promise.allSettled(targets.map(async (code) => {
-    const script = await translate(text, code, sourceLang);
-    addCustomPhrase(code, text, script);
-  }));
+// --- "My translations": everything translated, whether or not the traveller kept it.
+//
+// Live translation used to write straight into the dictionary, every time, with no way to
+// translate something without keeping it. That made the dictionary useless AS a dictionary — a
+// one-off "where is the bus station" typed once at a station sat in it forever, next to the
+// phrases the traveller actually chose. The two are now separate stores with separate intents:
+//
+//   My translations — automatic history. Everything translated lands here and stays readable
+//                     OFFLINE, which is the real point: the phrase looked up on hotel wifi is
+//                     still there in the market with no signal.
+//   Your dictionary — deliberate. Only an explicit "save to my dictionary" tap puts a phrase
+//                     there, and only from there does it reach the You section.
+//
+// ONE record per unique source text, holding EVERY language's script in a single object rather
+// than a copy per language. That shape is what makes "save in all languages, show only one"
+// cheap: propagateTranslation fills scripts{} in the background, the UI reads scripts[code],
+// and promoting a record to the dictionary later costs no network at all, because every
+// language's text is already sitting in the record.
+const TRANSLATION_CAP = 60;   // bounded — this shares localStorage with the rest of the trip
+function translationsList() { const p = store.profile.prefs; return p.translations || (p.translations = []); }
+function recordTranslation(text, srcLang, code, script) {
+  const en = String(text || '').trim();
+  if (!en || !script) return null;
+  const key = phraseSlug(en);
+  const list = translationsList();
+  let rec = list.find((t) => t.key === key);
+  if (!rec) {
+    rec = { key, en, src: srcLang, ts: Date.now(), scripts: {} };
+    list.push(rec);
+    // Oldest out first. Anything the traveller actually cared about is in the dictionary by
+    // then, and this never touches the dictionary.
+    while (list.length > TRANSLATION_CAP) list.shift();
+  }
+  rec.ts = Date.now();
+  rec.scripts[code] = script;
+  save();
+  return rec;
 }
+function removeTranslation(key) {
+  const list = translationsList();
+  const i = list.findIndex((t) => t.key === key);
+  if (i >= 0) { list.splice(i, 1); save(); }
+}
+// Fill in every other language for a record, in the background. Same best-effort contract as
+// the pin propagation it replaces: Promise.allSettled, never awaited, so one unsupported
+// or rate-limited pair never blocks the others or the translation already on screen. Skips any
+// language already present, so re-translating a known phrase costs nothing.
+async function propagateTranslation(rec, sourceLang) {
+  const targets = Object.keys(LANGUAGES).filter((code) => !rec.scripts[code]);
+  if (!targets.length) return;
+  await Promise.allSettled(targets.map(async (code) => {
+    const script = await translate(rec.en, code, sourceLang);
+    if (script) rec.scripts[code] = script;
+  }));
+  save();
+}
+// The ONLY path from live translation into the dictionary, and it is always an explicit tap.
+// Costs no network: every language's text is already in the record. Returns how many languages
+// gained a new entry (addCustomPhrase is idempotent, so a re-save reports 0).
+async function saveTranslationToDictionary(rec) {
+  let n = 0;
+  for (const code of Object.keys(rec.scripts)) {
+    if (addCustomPhrase(code, rec.en, rec.scripts[code])) n += 1;
+  }
+  // Everything above is synchronous, so a caller that does not await this still gets the
+  // languages already translated saved before its next line runs. The rest matters when the
+  // background propagation has not finished — or the traveller translated, went offline, and
+  // saved later: without this, "saved in every language" would quietly mean "saved in one".
+  const missing = Object.keys(LANGUAGES).filter((c) => !rec.scripts[c]);
+  if (missing.length) {
+    await propagateTranslation(rec, rec.src);
+    for (const code of Object.keys(rec.scripts)) addCustomPhrase(code, rec.en, rec.scripts[code]);
+  }
+  return n;
+}
+function inDictionary(code, text) {
+  const key = `${code}|custom|${phraseSlug(text)}`;
+  return customPhrasesFor(code).some((c) => c.key === key);
+}
+
 // Map every phrase (incl. the allergens category) to its derived key, so pinned/hidden
 // keys can be resolved back to the phrase object regardless of which category it lives in.
 function phraseIndexFor(categories, code) {
@@ -426,7 +489,17 @@ export function phrasebookScreen(lang) {
   // worse than no control at all, so it renders only when actually online — and, since it is
   // the one thing on this whole screen that truly cannot work without a connection, it leads
   // (right after the header row, before the always-usable search below).
-  if (online()) wrap.append(liveTranslateBox(code, book.label, book.locale));
+  // A stable host so saving or removing a translation repaints just this card, in place,
+  // instead of re-rendering the whole screen and losing the traveller's scroll position.
+  const trHost = h('div', {});
+  const paintTranslations = () => {
+    trHost.innerHTML = '';
+    const c = myTranslationsCard(code, book.label, book.locale, paintTranslations);
+    if (c) trHost.append(c);
+  };
+  paintTranslations();
+  if (online()) wrap.append(liveTranslateBox(code, book.label, book.locale, paintTranslations));
+  wrap.append(trHost);
 
   // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
   // always has. A jump-chip row sits right under it — one tap clears any active search and
@@ -641,8 +714,13 @@ function customPhraseRow(code, entry, locale, repaint) {
 let dictLangSel = null;
 export function dictionaryScreen() {
   const wrap = h('div', { class: 'screen' });
-  const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s dictionary` : 'Your dictionary', '#me'));
+  // Just 'Dictionary'. The topbar gives a title ~102px at 375px and clamps it to two lines,
+  // and "dictionary" is a long enough word on its own that BOTH the personalised
+  // ("Zim’s dictionary") and the neutral ("Your dictionary") forms needed three — so every
+  // traveller, named or not, was reading a silently truncated heading. The personalisation is
+  // not lost: the button on Talk that leads here still says "📖 Zim’s dictionary", which is
+  // where it reads as a nice touch rather than as an overflowing heading.
+  wrap.append(topbar('Dictionary', '#me'));
   const repaint = () => dictionaryScreen();
 
   const pinsMap = store.profile.prefs.phrasePins || {};
@@ -789,9 +867,53 @@ function phraseRow(p, locale, opts) {
 
 
 
+
+// The traveller's own translation history, for the language currently on screen.
+//
+// Deliberately shows ONE language — the one this screen is set to, which itself follows GPS
+// unless the traveller picked one — while every record underneath holds all of them. Printing
+// every script for every phrase would be a wall of alphabets nobody on this screen can read;
+// the point of translating into all of them is that crossing a border makes the right one
+// appear, not that they are all visible at once.
+//
+// Renders whether or not there is a connection, unlike the translate box above it. That is the
+// entire value: the phrase looked up on hotel wifi is the phrase needed in the market with no
+// signal, and until now it was only ever reachable online.
+function myTranslationsCard(code, label, locale, onChange) {
+  const recs = translationsList().filter((t) => t.scripts && t.scripts[code]).sort((a, b) => b.ts - a.ts);
+  if (!recs.length) return null;   // nothing to show yet, and Talk is a screen worth keeping short
+  const card = h('div', { class: 'card' }, [
+    h('h2', {}, `🕘 My translations (${recs.length})`),
+    h('p', { class: 'tiny muted mytr-note' },
+      `Kept on this device in all ${Object.keys(LANGUAGES).length} languages · showing ${langFlag(code)} ${label}`.replace('  ', ' ')),
+  ]);
+  const able = canSay(locale);
+  for (const t of recs) {
+    const script = t.scripts[code];
+    const grow = h('div', { class: 'grow tappable', role: 'button', tabindex: '0', 'aria-label': `Show large: ${t.en}`, title: 'Tap to show large to a local' }, [
+      h('div', { class: 'en' }, t.en),
+      h('div', { class: 'native', lang: locale }, script),
+    ]);
+    const big = () => showBigPhrase({ en: t.en, script }, locale, {});
+    grow.addEventListener('click', big);
+    grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); big(); } });
+    const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${t.en}`, disabled: able ? null : '', onclick: () => say(script, locale) }, '🔊');
+    const keepBtn = inDictionary(code, t.en)
+      ? h('button', { class: 'speak', disabled: '', title: 'Already in your dictionary', 'aria-label': `${t.en} is already in your dictionary` }, '✓')
+      : h('button', { class: 'speak', title: 'Save to my dictionary', 'aria-label': `Save ${t.en} to my dictionary`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
+    const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { removeTranslation(t.key); onChange(); } }, '✕');
+    card.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
+  }
+  card.append(h('p', { class: 'tiny muted mytr-foot' }, [
+    '📖 keeps a phrase for good · ',
+    h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'Open your dictionary →'),
+  ]));
+  return collapsibleCard(card, 'talkTranslationsOpen', true);
+}
+
 // Speak/type-in-English → local-language text + spoken audio. Works with no setup
 // (free online service); the offline phrasebook below covers the essentials.
-function liveTranslateBox(code, label, locale) {
+function liveTranslateBox(code, label, locale, onChange) {
   const box = h('div', { class: 'card translate-card' }, [
     h('h2', {}, `Say it in ${langFlag(code)} ${label}`.replace('  ', ' ')),
     h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
@@ -829,12 +951,15 @@ function liveTranslateBox(code, label, locale) {
   };
   syncSrc();
 
-  const doTranslate = async () => {
+  // `alsoSave` is the difference between the two buttons below: both translate and both are
+  // remembered in My translations, but only the second one puts the phrase in the dictionary.
+  const doTranslate = async (alsoSave) => {
     const text = input.value.trim();
     if (!text) return;
     out.innerHTML = ''; out.append(h('p', { class: 'muted' }, 'Translating…'));
     try {
-      const res = await translate(text, code, transCode(srcSel.value));
+      const srcLang = transCode(srcSel.value);
+      const res = await translate(text, code, srcLang);
       out.innerHTML = '';
       out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
       const able = canSay(locale);
@@ -843,27 +968,40 @@ function liveTranslateBox(code, label, locale) {
       out.append(speakBtn);
       if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
       else say(res, locale);   // best-effort auto-play; the button always works (direct tap)
-      // Translating something yourself is as strong a signal it belongs in the dictionary as
-      // searching the phrasebook (which already auto-pins) — saved with no separate tap.
-      // Idempotent (re-translating the same text again is a no-op), so this never spams a
-      // repeat lookup — only a genuinely new phrase gets the confirmation line.
-      if (addCustomPhrase(code, text, res)) {
-        out.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-          '✓ Saved to your dictionary · ',
-          h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'View →'),
-        ]));
-        // Fire-and-forget: also translate this phrase into every other phrasebook language
-        // and save it there too, so searching/translating one phrase populates the whole
-        // dictionary rather than only the language it was typed in. Not awaited — the primary
-        // translation above is already shown; the traveller should never wait on N more
-        // network calls just to see the one they asked for.
-        propagateCustomPhraseAcrossLanguages(code, text, transCode(srcSel.value));
+      // Remembered either way — a local write, nothing leaves the device and nothing reaches
+      // the dictionary without the explicit tap.
+      const rec = recordTranslation(text, srcLang, code, res);
+      // Fire-and-forget: translate it into every OTHER language too, so the phrase is already
+      // waiting in whichever country the traveller crosses into next. Not awaited — the
+      // translation they asked for is on screen already and must never wait on 12 more calls.
+      if (rec) propagateTranslation(rec, srcLang);
+
+      const status = h('p', { class: 'tiny muted mytr-foot' });
+      const keep = () => {
+        saveTranslationToDictionary(rec);
+        status.innerHTML = '';
+        status.append('✓ Saved to your dictionary · ',
+          h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'View →'));
+        if (onChange) onChange();
+      };
+      if (rec && alsoSave) keep();
+      else if (rec && inDictionary(code, text)) status.textContent = '📖 Already in your dictionary';
+      else if (rec) {
+        // Translated but not kept. Offer the dictionary anyway — changing your mind after
+        // seeing the result should not mean typing it again.
+        status.append(h('button', { class: 'linklike', onclick: keep }, '📖 Save to my dictionary'),
+          ' · kept in My translations below either way');
       }
+      out.append(status);
+      if (onChange) onChange();
     } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
   };
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(); } });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(false); } });
 
-  const btn = h('button', { class: 'btn', onclick: doTranslate }, 'Translate');
+  // Two buttons, because they are two different intentions. Translate is the common one and
+  // leads; keeping a phrase forever is the deliberate one and says so in full.
+  const btn = h('button', { class: 'btn', onclick: () => doTranslate(false) }, 'Translate');
+  const saveBtn = h('button', { class: 'btn ghost', onclick: () => doTranslate(true) }, '📖 Translate & save to my dictionary');
   // Optional voice input via the Web Speech API (Chrome/Edge; hidden where absent).
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let micBtn = null;
@@ -878,13 +1016,15 @@ function liveTranslateBox(code, label, locale) {
         rec.lang = (LANG_BY_CODE[srcSel.value] || {}).speech || 'en-US';
         rec.interimResults = false; rec.maxAlternatives = 1;
         micBtn.textContent = '🎙 Listening…'; micBtn.disabled = true;
-        rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(); };
+        rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(false); };
         rec.onerror = () => { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; };
         rec.onend = () => { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; };
         rec.start();
       } catch { micBtn.textContent = '🎤 Speak'; micBtn.disabled = false; }
     });
   }
-  box.append(srcSel, input, h('div', { class: 'row-between', style: 'gap:8px;margin-top:8px' }, [btn, micBtn].filter(Boolean)), out);
+  box.append(srcSel, input,
+    h('div', { class: 'row-between', style: 'gap:8px;margin-top:8px' }, [btn, micBtn].filter(Boolean)),
+    h('div', { class: 'translate-keep' }, saveBtn), out);
   return box;
 }
