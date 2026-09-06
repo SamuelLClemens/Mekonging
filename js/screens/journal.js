@@ -794,7 +794,33 @@ export function journeyScreen() {
   canvas.append(loading);
   const zoomHint = h('p', { class: 'tiny muted jr-map-hint' },
     'Pinch, or use + / −, to zoom right in — the imagery goes down to street level. Drag to pan, 🗺/🛰 swaps map and satellite.');
-  holder.append(canvas, zoomHint);
+  // Full-screen, done with a CSS class rather than the Fullscreen API: iOS Safari does not
+  // implement requestFullscreen on anything but a <video>, and a phone is where a traveller
+  // most needs the whole screen to read a map. The map's own ResizeObserver (js/map.js) sees
+  // the container change size and re-fits the canvas, so nothing here has to call resize().
+  const full = h('button', { class: 'btn ghost jr-map-full-btn', 'aria-expanded': 'false',
+    title: 'Show the map full screen' }, '⤢ Full screen');
+  const setFull = (on) => {
+    canvas.classList.toggle('is-full', on);
+    document.body.classList.toggle('jr-map-is-full', on);
+    full.textContent = on ? '✕ Close full screen' : '⤢ Full screen';
+    full.setAttribute('aria-expanded', String(on));
+    full.classList.toggle('jr-map-full-open', on);
+  };
+  full.addEventListener('click', () => setFull(!canvas.classList.contains('is-full')));
+  // Escape is what everyone tries first, and without it a full-screen map is a trap.
+  const onKey = (e) => { if (e.key === 'Escape' && canvas.classList.contains('is-full')) setFull(false); };
+  document.addEventListener('keydown', onKey);
+  // Chain rather than replace — the map controller adds its own cleanup below once initMap
+  // resolves, and whichever runs second must not discard the first. Leaving the route while
+  // full screen has to drop the body class too, or every later screen renders under it.
+  const prevCleanup = getLiveCleanup();
+  setLiveCleanup(() => {
+    try { if (prevCleanup) prevCleanup(); } catch { /* noop */ }
+    document.removeEventListener('keydown', onKey);
+    document.body.classList.remove('jr-map-is-full');
+  });
+  holder.append(canvas, h('div', { class: 'jr-map-tools' }, full), zoomHint);
   const panel = h('div', { class: 'jr-panel' });
   // Foldable like every other section on the app, open by default because it is the screen.
   wrap.append(homeFold('🗺 Your map', holder, 'journeyMapOpen'), panel);

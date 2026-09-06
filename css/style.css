@@ -2721,3 +2721,23 @@ select {
    heading to read as a heading and the cards under it to keep their normal spacing. */
 .autofold-run > summary { font-size: var(--fs-h2); margin: var(--sp-4) 0 var(--sp-2); }
 .autofold-run > summary:first-of-type { margin-top: var(--sp-2); }
+
+/* Journey map, full screen. A CSS class rather than the Fullscreen API: iOS Safari does not
+   implement requestFullscreen for anything but a <video>, and a phone is exactly where a
+   traveller needs the whole screen to read a map. The map's ResizeObserver handles the canvas. */
+.jr-map-tools { display: flex; justify-content: flex-end; margin-top: var(--sp-2); }
+.jr-map-live.is-full {
+  position: fixed; inset: 0; z-index: 60;
+  width: 100vw; height: 100vh; max-height: none; min-height: 0; aspect-ratio: auto;
+  border: 0; border-radius: 0;
+}
+/* Full screen means full screen: the tab bar goes too, or it eats the bottom of the map and
+   sits on top of the only way out. The close control then has to be unmissable, so it is
+   pinned bottom-right above the safe area with a solid background of its own. */
+body.jr-map-is-full { overflow: hidden; }
+body.jr-map-is-full .tabbar { display: none; }
+.jr-map-full-btn.jr-map-full-open {
+  position: fixed; z-index: 61;
+  right: var(--sp-3); bottom: calc(var(--sp-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--card); border-color: var(--line); box-shadow: var(--shadow-soft);
+}
