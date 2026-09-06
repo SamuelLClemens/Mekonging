@@ -235,7 +235,10 @@ function scrapAlbumSection() {
 
 export function scrapbookScreen() {
   const wrap = h('div', { class: 'screen scrapbook' });
-  wrap.append(topbar('Trip scrapbook', '#me'));
+  // 'Scrapbook' alone: measured clipped at 375px, where the title column is 102px and clamps
+  // to two lines. The nav manifest keeps the full 'Trip scrapbook', which is where a
+  // traveller reads it before tapping.
+  wrap.append(topbar('Scrapbook', '#me'));
 
   const entries = (store.journal.entries || []).slice()
     .sort((a, b) => String(a.ts || a.date || '').localeCompare(String(b.ts || b.date || '')));
