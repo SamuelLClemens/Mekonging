@@ -30,11 +30,14 @@ import {
 import { getActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import { h } from '../util.js';
 import { fmtTemp } from '../render-utils.js';
-import { field, confirmAction } from '../ui-widgets.js';
+import { field, confirmAction, locationSelect, spotForKey } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
-import { trailPoints, trailStats, trailEnabled, setTrailEnabled, clearTrail } from '../trail.js';
+import {
+  trailPoints, trailStats, trailEnabled, setTrailEnabled, clearTrail,
+  addTrailStop, updateTrailStops, deleteTrailStops,
+} from '../trail.js';
 import { WEATHER_SPOTS } from '../weather.js';
 import { dateLocale } from '../i18n.js';
 import {
@@ -579,7 +582,7 @@ function journeyStops() {
     for (const s of stops) { const d = jkm(coords, s); if (d < bestKm) { bestKm = d; best = s; } }
     if (best && bestKm < NEAR_KM) return best;
     const st = { lat: coords.lat, lng: coords.lng, label: '', first: '', last: '', cc: '',
-      entries: [], places: [], auto: false, ...seed };
+      entries: [], places: [], auto: false, manual: false, _trailIds: [], ...seed };
     stops.push(st);
     return st;
   };
@@ -594,6 +597,8 @@ function journeyStops() {
     if (p.city && !st.label) st.label = p.city;
     if (p.cc && !st.cc) st.cc = p.cc;
     st.auto = true;
+    if (p.manual) st.manual = true;
+    if (p.id) st._trailIds.push(p.id);
     stamp(st, p.first); stamp(st, p.last);
   });
 
@@ -643,6 +648,12 @@ function jrDateRange(from, to) {
   const f = (iso) => { try { return new Date(iso + 'T00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return iso; } };
   return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
 }
+
+// Which stop's inline editor is open, and whether the "add a stop you missed" form is —
+// module-level so both survive journeyScreen's own render() (a full rebuild each time), the
+// same idiom as tripScreen's editStopId/placePickerOpenFor in main.js.
+let editingIdx = null;
+let addingStop = false;
 
 export function journeyScreen() {
   const wrap = h('div', { class: 'screen' });
@@ -734,7 +745,8 @@ export function journeyScreen() {
       h('span', { class: 'muted tiny' }, jrDateRange(s.first, s.last)),
     ]));
     const tags = [];
-    if (s.auto) tags.push('recorded automatically');
+    if (s.manual) tags.push('added by you');
+    else if (s.auto) tags.push('recorded automatically');
     if (s.planned) tags.push('a planned stop');
     if (tags.length) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, tags.join(' · ')));
 
@@ -775,8 +787,34 @@ export function journeyScreen() {
 
   // Every stop in order, so the whole trip is readable without hunting for pins on a map,
   // and tapping a row lights its pin. Same select() as the map, so they cannot diverge.
+  //
+  // Edit/delete only for a stop with a trail.js component (s._trailIds.length) — one written
+  // purely from a journal entry, a planned trip stop or a saved place is already editable on
+  // its own screen (the journal entry, #trip, the place itself); giving it a second edit path
+  // here would let the two silently disagree about what a "rename" even changed.
   const list = h('div', { class: 'card', style: 'margin-top:10px' }, [h('h2', {}, '🧭 Your stops, in order')]);
   stops.forEach((s, i) => {
+    if (editingIdx === i) {
+      const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.label });
+      const dt = h('input', { 'aria-label': 'Arrive date', type: 'date', value: s.first || '' });
+      const dt2 = h('input', { 'aria-label': 'Leave date', type: 'date', value: s.last || '' });
+      list.append(h('div', { class: 'trip-stop', style: 'display:block' }, [
+        h('div', { class: 'field' }, [h('label', {}, `Edit stop ${i + 1}`), t,
+          h('div', { class: 'trip-dates' }, [
+            h('label', { class: 'trip-date-lbl' }, ['Arrived', dt]),
+            h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dt2]),
+          ])]),
+        h('div', { class: 'chips' }, [
+          h('button', { class: 'btn', onclick: () => {
+            if (!dt.value) return;
+            updateTrailStops(s._trailIds, { city: t.value.trim() || s.label, first: dt.value, last: dt2.value || dt.value });
+            editingIdx = null; render();
+          } }, 'Save'),
+          h('button', { class: 'btn ghost', onclick: () => { editingIdx = null; render(); } }, 'Cancel'),
+        ]),
+      ]));
+      return;
+    }
     const bits = [];
     if (s.entries.length) bits.push(`${s.entries.length} 📔`);
     if (s.photos.length) bits.push(`${s.photos.length} 📸`);
@@ -789,8 +827,50 @@ export function journeyScreen() {
       ]),
       h('span', { class: 'jr-row-go' }, '›'),
     ]));
+    if (s._trailIds.length) {
+      list.append(h('div', { class: 'jr-row-actions' }, [
+        h('button', { class: 'chip', 'aria-label': `Edit stop ${i + 1}`, onclick: () => { editingIdx = i; render(); } }, '✎ Edit'),
+        h('button', { class: 'chip', 'aria-label': `Remove stop ${i + 1}`, onclick: () => {
+          confirmAction({ title: 'Remove this stop?', body: `This removes ${s.label || 'this pin'} from your recorded journey. Your journal, photos and saved places are not touched.`, confirmLabel: 'Remove', danger: true })
+            .then((ok) => { if (ok) { deleteTrailStops(s._trailIds); render(); } });
+        } }, '✕ Remove'),
+      ]));
+    }
   });
   wrap.append(list);
+
+  // For a place visited without the app open — the gap the automatic pins cannot close on
+  // their own. Location comes from the same curated city list a trip stop matches against
+  // (WEATHER_SPOTS), so an added stop looks and merges exactly like one the app inferred from
+  // a matching trip stop's title, and the date is what places it correctly among the rest —
+  // there is no separate reorder control; re-dating a stop here or above is how you move it.
+  if (addingStop) {
+    let chosen = WEATHER_SPOTS[0];
+    const loc = locationSelect(spotKey(chosen), (key) => { chosen = spotForKey(key) || chosen; });
+    const dateIn = h('input', { 'aria-label': 'Arrive date', type: 'date' });
+    const dateOut = h('input', { 'aria-label': 'Leave date', type: 'date' });
+    const err = h('p', { class: 'muted tiny', style: 'margin:4px 0 0' });
+    wrap.append(h('div', { class: 'card', style: 'margin-top:8px' }, [
+      h('h3', { style: 'margin:0 0 8px' }, '+ Add a stop you missed'),
+      field('Place', loc),
+      h('div', { class: 'trip-dates' }, [
+        h('label', { class: 'trip-date-lbl' }, ['Arrived', dateIn]),
+        h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dateOut]),
+      ]),
+      err,
+      h('div', { class: 'chips', style: 'margin-top:8px' }, [
+        h('button', { class: 'btn', onclick: () => {
+          if (!dateIn.value) { err.textContent = 'Set when you arrived.'; return; }
+          addTrailStop({ lat: chosen.lat, lng: chosen.lng, city: chosen.city, cc: chosen.country, first: dateIn.value, last: dateOut.value || dateIn.value });
+          addingStop = false; render();
+        } }, 'Add stop'),
+        h('button', { class: 'btn ghost', onclick: () => { addingStop = false; render(); } }, 'Cancel'),
+      ]),
+    ]));
+  } else {
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { addingStop = true; render(); } },
+      '+ Add a stop you missed'));
+  }
 
   // Unmatched planned stops: named, so the list is not quietly incomplete.
   const unmatched = (store.trip.stops || []).filter((s) => {

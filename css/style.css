@@ -1532,6 +1532,11 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
 .jr-row-lbl { display: block; font-weight: 700; }
 .jr-row-sub { display: block; color: var(--ink-soft); font-size: var(--fs-sm); }
 .jr-row-go { flex: none; color: var(--ink-soft); font-size: 1.2rem; }
+/* Edit/Remove for a stop with its own trail.js record — a quiet sub-row rather than crowding
+   chips into .jr-row itself (which is a <button>; a chip inside it would be a nested control).
+   38px left-indent roughly matches .jr-row-n's 26px badge plus its row gap, so the chips line
+   up under the label rather than the number. */
+.jr-row-actions { display: flex; gap: var(--sp-2); padding: 0 0 var(--sp-2) 38px; }
 
 .journey-wrap { display: flex; justify-content: center; margin-bottom: var(--sp-3); }
 .journey-svg { width: 100%; max-width: 360px; background: var(--sunburst), var(--card); border-radius: var(--r-lg); }

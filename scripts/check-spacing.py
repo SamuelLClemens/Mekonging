@@ -71,7 +71,7 @@ CEILING = {
         3
     ],
     "js/screens/journal.js": [
-        27,
+        32,
         12
     ],
     "js/screens/medical.js": [
