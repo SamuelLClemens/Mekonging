@@ -25,6 +25,14 @@ export const WX_METRICS = {
   wind:  { label: '💨 Wind',     hourly: (x) => x.wind, daily: (d) => d.windMax,  fmt: (v) => (v == null ? 'N/A' : fmtWind(v)) },
 };
 
+// Which metric the ring + calendar below are currently coloured by. Module-level (not a
+// wxVizCard-local closure, unlike selectedIdx there) so it persists across repeated opens of
+// the weather screen within one session, matching this file's original design in
+// js/screens/weather.js before the mk-v0.504.0 launch-graph split moved the code that reads
+// and writes it here without moving the variable itself — the cause of a live
+// ReferenceError (wxMetric undefined) on every ring/calendar render since that release.
+let wxMetric = 'temp';
+
 export function wxUvColor(v) {
   if (v <= 2) return '#4CAF50';
   if (v <= 5) return '#FBC02D';
