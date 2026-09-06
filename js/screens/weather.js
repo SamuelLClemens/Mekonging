@@ -244,7 +244,7 @@ export function weatherScreen(country) {
       body.append(rightNow);
       if (rec.hourly && rec.hourly.length) body.append(wxVizCard(rec, spot));
       const fc = h('div', { class: 'card' }, [
-        h('h3', { style: 'margin-top:0' }, '7-day forecast'),
+        h('h3', {}, '7-day forecast'),
         h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
       ]);
       rec.daily.slice(0, 7).forEach((d) => {

@@ -47,7 +47,7 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        244,
+        225,
         125
     ],
     "js/place-ui.js": [
@@ -75,7 +75,7 @@ CEILING = {
         7
     ],
     "js/screens/contributions.js": [
-        5,
+        3,
         1
     ],
     "js/screens/export.js": [
@@ -147,7 +147,7 @@ CEILING = {
         2
     ],
     "js/screens/weather.js": [
-        17,
+        16,
         9
     ],
     "js/ui-widgets.js": [

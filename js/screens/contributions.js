@@ -28,14 +28,14 @@ export function contributionsScreen() {
 
   // Ways to earn more (encouragement).
   if (suggestions.length) {
-    const card = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'Ways to earn more')]);
+    const card = h('div', { class: 'card' }, [h('h3', {}, 'Ways to earn more')]);
     suggestions.forEach((s) => card.append(h('button', { class: 'btn ghost block contrib-suggest btn-spaced', onclick: () => go(s.hash) },
       `${s.emoji} ${s.text}  ·  +${s.pts}`)));
     wrap.append(card);
   }
 
   // Full breakdown of what counts.
-  const bd = h('div', { class: 'card' }, [h('h3', { style: 'margin-top:0' }, 'What you have added')]);
+  const bd = h('div', { class: 'card' }, [h('h3', {}, 'What you have added')]);
   rows.forEach((r) => bd.append(h('div', { class: 'row-between contrib-row' }, [
     h('span', {}, `${r.emoji} ${r.label}`),
     h('span', { class: 'muted' }, `${r.count} · ${r.points} pt${r.points === 1 ? '' : 's'}`),
