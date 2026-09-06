@@ -857,6 +857,31 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    otherwise sit alone beside an empty gap when the row holds an odd count. */
 .chip-wide { grid-column: 1 / -1; }
 
+/* The You hub's quick access: four equal tiles, and equal is the whole point. Three separate
+   things made them ragged and all three are fixed here rather than nudged:
+     - grid-auto-rows: 1fr, so every row is the same height and a chip whose label wraps
+       cannot leave its neighbour looking short;
+     - the live figure moved onto its own line in the markup, because `Budget · 36 USD` glued
+       into one string is what forced the wrapping in the first place;
+     - the fifth, both-column chip is gone — it was a third route to the same screen.
+   The icon gets a disc so the four read as a set rather than as four different labels that
+   happen to start with an emoji. */
+.you-chips { gap: var(--sp-2); grid-auto-rows: 1fr; padding: 0; margin: 0; }
+.you-chips .status-chip { align-items: center; gap: var(--sp-2); padding: 10px 12px; min-height: 60px; }
+.you-chips .status-ic {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: color-mix(in srgb, var(--teal) 18%, transparent); font-size: 1.05rem;
+}
+.you-chips .status-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+/* Wrap at spaces, never inside a word. The shared .status-lbl carries
+   `overflow-wrap: break-word`, which on a 151px tile split "Chittraporn’s trip" across the
+   apostrophe as "Chittraporn" / "’s trip". Breaking at the space gives "Chittraporn’s" /
+   "trip", which reads. Same rule, and the same reason, as the topbar titles. */
+.you-chips .status-lbl { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+.you-chips .status-sub { font-weight: 600; font-size: var(--fs-xs); color: var(--ink-soft); margin-top: 3px; }
+/* The fold wrapper carries the box now, so the inner grid must not add a second one. */
+.foldcard > .you-chips { margin-top: var(--sp-2); }
+
 /* Home Quick access — Budget chip pace ring, once a target + spend both exist: green on
    track to land under budget, yellow if the current pace projects going over, red if over.
    -red is also the sitewide "needs your attention" accent — reused as-is (not a new class)
@@ -2800,7 +2825,7 @@ body.jr-map-is-full .tabbar { display: none; }
 .lg-say { font-weight: 700; }
 .lg-native { font-size: var(--fs-lg); line-height: 1.5; }
 .lg-means { margin-top: 2px; }
-.lg-note { font-size: var(--fs-small); margin-top: 2px; }
+.lg-note { font-size: var(--fs-xs); margin-top: 2px; }
 .lg-sources { margin: var(--sp-1) 0 0; }
 
 /* The colour key, directly under the map's category chips rather than at the foot of the
