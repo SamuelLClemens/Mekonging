@@ -5302,4 +5302,22 @@ export const PLACES_LA_EXT = [
     bookHint: "No booking; walk in before 08:00.", verified: "2026-08",
     sources: [{ org: "Adventures of Jellie - Nong Khiaw complete guide", url: "https://www.adventuresofjellie.com/laos/nong-khiaw-the-complete-guide" }, { org: "Take Your Backpack - Nong Khiaw village guide", url: "https://www.takeyourbackpack.com/backpacking-in-laos/visit-nong-khiaw/" }],
   },
+  // ---- ATTAPEU PROVINCE — first entry for this province; previously zero curated
+  // places existed here. Found by check-place-fields-style coverage analysis against
+  // regions.la.js's own 18-province list, not chosen arbitrarily.
+  {
+    id: "la-ext-xaysetha-stupa", name: "Xaysetha Stupa", city: "Xaysetha", country: "la",
+    recognition: "A weathered brick-and-stucco stupa inside an old pagoda compound beside National Highway 11, in the small river town of Xaysetha a few kilometres east of Attapeu town — look for the whitewashed chedi rising above the temple wall on the north side of the road.",
+    categories: ["culture", "temple"], budgetTier: "low",
+    blurb: "One of the oldest religious structures recorded in Attapeu province: regional tourism sources date the pagoda and its stupa at Xaysetha to the 16th century (1579), well before Attapeu town itself grew into the provincial capital. Xaysetha district sits on the road toward the remote Phou Keua-Bo Y crossing into Vietnam's Kon Tum province, so most travellers only pass through rather than stop — this is one of the few things in the district worth the five minutes.",
+    whyItFits: "For travellers already in Attapeu province - most plausibly en route to or from the Phou Keua/Bo Y border crossing to Vietnam - who want a brief, genuinely old cultural stop rather than driving straight through Xaysetha district.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "LAK", note: "Free to enter, as is standard for Lao temple compounds; no source consulted specifically documents a fee or donation custom at this site, so treat that as convention rather than a confirmed local fact." },
+    hours: "Daylight hours; no fixed opening times were found in any source consulted",
+    tips: ["This is a working temple, not a museum - dress modestly and remove shoes before entering any hall.", "Combine with a stop in Attapeu town itself; there is little else in Xaysetha district to detain a traveller.", "Treat the 1579 construction date as the figure regional tourism sources report, not as independently verified - documentation on this specific site is thin online."],
+    scamWarnings: [],
+    mapQuery: "Xaysetha stupa pagoda, Attapeu province, Laos",
+    coords: { lat: 14.8144, lng: 106.9344 },
+    verified: "2026-09",
+    sources: [{ org: "Vivutravel - Attapeu travel guide", url: "https://www.vivutravel.com/laos-travel-destinations/attapeu-travel-guide" }, { org: "Wikipedia - Xaysetha", url: "https://en.wikipedia.org/wiki/Xaysetha" }, { org: "GT-Rider - Phou Keua/Bo Y border crossing", url: "https://www.gt-rider.com/se-asia-motorcycling/threads/border-crossing-laos-to-vietnam-phou-keua-attapeu-l-bo-y-ngoc-hoi-v.13876/" }],
+  },
 ];
