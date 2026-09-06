@@ -736,11 +736,22 @@ export function dictionaryScreen() {
   const allCodes = Array.from(new Set([...langCodes, ...customCodes]));
   const total = pinTotal + customTotal;
 
+  // Translations are kept separately now and only reach this screen on an explicit save, so
+  // anything translated and not kept would otherwise be un-findable — a traveller looks for it
+  // here, because here is where saved things live. Shown only when there is something to find.
+  const unsaved = translationsList().filter((t) => !Object.keys(t.scripts || {}).some((c) => inDictionary(c, t.en)));
+  if (unsaved.length) {
+    wrap.append(h('p', { class: 'tiny muted mytr-foot' }, [
+      `🕘 ${unsaved.length} recent ${unsaved.length === 1 ? 'translation is' : 'translations are'} not saved here · `,
+      h('button', { class: 'linklike', onclick: () => go('#phrasebook') }, 'My translations in Talk →'),
+    ]));
+  }
+
   if (!total) {
     wrap.append(h('div', { class: 'card', style: 'text-align:center' }, [
       h('div', { style: 'font-size:2.4rem;margin-bottom:6px' }, '📖'),
       h('h2', { style: 'margin:0 0 4px' }, 'No saved phrases yet'),
-      h('p', { class: 'muted', style: 'margin:0 0 12px' }, 'Open the phrasebook, then tap 📌 on any phrase to save it here — or translate something in "Say it" and it saves itself. Build your own pocket dictionary of the words you actually use.'),
+      h('p', { class: 'muted', style: 'margin:0 0 12px' }, 'Open the phrasebook and tap 📌 on any phrase, or translate something in Talk and tap “Save to my dictionary”. Build your own pocket dictionary of the words you actually use.'),
       h('button', { class: 'btn block', onclick: () => go('#phrasebook') }, '💬 Browse phrases'),
     ]));
     mount(wrap, '#me');
