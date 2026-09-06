@@ -639,7 +639,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.519.0';
+export const APP_VERSION = 'mk-v0.520.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1286,7 +1286,17 @@ function autoFoldSections(root) {
     const label = (head.textContent || '').trim();
     if (!label) continue;
     const key = `${routeKey}:${label.slice(0, 40)}`;
-    const det = h('details', { class: `${card.className || ''} foldcard autofold`.trim() });
+    // A card that lays ITS OWN children out — the You hub's quick-access grid is
+    // `display: grid; grid-template-columns: 1fr 1fr` — cannot simply become the <details>,
+    // because the <summary> then becomes a grid item too. That is exactly what happened: the
+    // heading took the whole left column and all five chips stacked down the right one at five
+    // different widths. Read the display BEFORE the card is detached, and when it lays out its
+    // children, keep that layout on an inner body and leave <details> a plain block.
+    let laidOut = '';
+    try { laidOut = getComputedStyle(card).display; } catch { /* detached or no view */ }
+    const ownLayout = laidOut === 'grid' || laidOut === 'flex'
+      || laidOut === 'inline-grid' || laidOut === 'inline-flex';
+    const det = h('details', { class: ownLayout ? 'card foldcard autofold' : `${card.className || ''} foldcard autofold`.trim() });
     if (prefs[key] !== false) det.setAttribute('open', '');
     // Carry over anything the screen set on the card itself (inline height, ids, data-*), or
     // folding would silently drop a screen's own styling.
@@ -1314,8 +1324,16 @@ function autoFoldSections(root) {
       head.remove();
       sum.textContent = label;
     }
-    while (card.firstChild) det.append(card.firstChild);
-    det.insertBefore(sum, det.firstChild);
+    if (ownLayout) {
+      // The card's own classes, minus `card` — the <details> is the box now, and two nested
+      // .card boxes would draw two borders and double the padding.
+      const inner = h('div', { class: (card.className || '').split(/\s+/).filter((c) => c && c !== 'card').join(' ') });
+      while (card.firstChild) inner.append(card.firstChild);
+      det.append(sum, inner);
+    } else {
+      while (card.firstChild) det.append(card.firstChild);
+      det.insertBefore(sum, det.firstChild);
+    }
     det.addEventListener('toggle', () => rememberFold(key, det.open));
     card.replaceWith(det);
   }
@@ -1336,9 +1354,17 @@ export async function exportOnePlaceReviewHtml(id, name) {
 export function mount(node, showTabbar) {
   const app = document.getElementById('app');
   app.innerHTML = '';
-  // Fold before it is on screen, so nothing is ever seen jumping from flat to folded.
-  try { autoFoldSections(node); } catch { /* a folding miss must never block a render */ }
+  // Insert FIRST, then fold. This used to fold the detached node "so nothing is ever seen
+  // jumping from flat to folded" — but a detached element has no layout at all, and the fold
+  // needs to know whether a card lays its own children out (the You hub's quick-access grid
+  // does) so it can keep the <summary> out of that layout. getComputedStyle on a node outside
+  // the document reports the initial value for everything, so that check silently answered
+  // "block" for every card and the summary became a grid item: the heading took a whole
+  // column and the chips stacked down the other one.
+  //
+  // Nothing flashes. Both steps run in the same task, so the browser paints once, at the end.
   app.append(node);
+  try { autoFoldSections(node); } catch { /* a folding miss must never block a render */ }
   if (showTabbar) app.append(tabbar());
   // Interface language: this is THE choke point every screen passes through, so translating
   // here covers all of them — including the forty-odd screens that know nothing about i18n.
@@ -3091,9 +3117,19 @@ function meHubScreen() {
   // yellow/tight, red/over colour ring. "Buy or sell" is renamed "Traveller board" here to
   // match the name the destination screen itself already uses everywhere else (its own
   // topbar, and the "🤝 Traveller board" chip inside Explore) — one name for one place.
+  // Label on one line, live figure on its own beneath it. They used to be glued together as
+  // `${label} · ${sub}`, which is what made "Chittraporn’s trip" and "Budget · 36 USD" wrap to
+  // two lines while "Calendar" and "Travel circle" did not — four chips at four heights.
   const chip = (ic, label, sub, onclick, extraClass) => h('button', {
     class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick,
-  }, [h('span', { class: 'status-ic' }, ic), h('span', { class: 'status-lbl' }, sub ? `${label} · ${sub}` : label)]);
+    'aria-label': sub ? `${label}, ${sub}` : label,
+  }, [
+    h('span', { class: 'status-ic', 'aria-hidden': 'true' }, ic),
+    h('span', { class: 'status-txt' }, [
+      h('span', { class: 'status-lbl' }, label),
+      sub ? h('span', { class: 'status-sub' }, sub) : null,
+    ]),
+  ]);
 
   const startISO = tripStartISO();
   const calLabel = (startISO && daysUntilISO(startISO) <= 0) ? `Day ${1 - daysUntilISO(startISO)}` : 'Calendar';
@@ -3143,10 +3179,11 @@ function meHubScreen() {
     chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
     chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
     chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
-    // Fifth chip, spanning both columns (chip-wide) rather than sitting alone beside a gap —
-    // "Your journey" per direct request, same live-status rule as the four above: a bare
-    // label until there is a first recorded place, then the count that justifies the shortcut.
-    chip('🗺', 'Your journey', jStats.places ? `${jStats.places} ${jStats.places === 1 ? 'place' : 'places'}` : null, () => go('#journey'), 'chip-wide'),
+    // There is no fifth chip. "Your journey" was one, spanning both columns, which is what
+    // made this row uneven by construction — and it was the THIRD route to #journey on this
+    // one screen: the My stuff list below carries it, and its own card (with the place count
+    // and a "View your journey →" button) sits directly beneath this. Four chips is a clean
+    // 2x2 and nothing is lost.
   ]));
 
   // (The old "Trip in numbers" strip — a second, static status-chip row directly below this
