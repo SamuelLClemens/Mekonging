@@ -282,6 +282,24 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking; buy zone tickets at each entrance. Stay in New or Old Sukhothai.", verified: "2026-08",
     sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org/en/list/574" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Thailand.go.th", url: "https://thailand.go.th/event-detail/sukhothai-light-and-sound-show" }],
   },
+  // ---- KAMPHAENG PHET PROVINCE — first entry for this province; found by re-running the
+  // Laos province-coverage method (point-in-polygon against regions.th.js, not city-name
+  // guessing) against Thailand for the first time this session.
+  {
+    id: "th-ext-kamphaeng-phet-historical-park", name: "Kamphaeng Phet Historical Park", city: "Kamphaeng Phet", country: "th",
+    recognition: "Beside the Ping River in Kamphaeng Phet's old town, split into two ticketed zones: the walled Old Town around Wat Phra Kaew, and the wilder Arunyik forest zone across the old moat where laterite ruins sit half-swallowed by jungle.",
+    localName: 'อุทยานประวัติศาสตร์กำแพงเพชร · Utthayan Prawattisat Kamphaeng Phet',
+    categories: ["culture", "history"], budgetTier: "low",
+    blurb: "The least-visited of the three UNESCO-listed Sukhothai-period capitals (with Sukhothai and Si Satchanalai): 13th-15th century laterite temple ruins split between manicured old-town grounds and the wilder, jungle-reclaimed Arunyik forest zone across the old moat.",
+    whyItFits: "For travellers who have already done Sukhothai or Ayutthaya and want the same period of ruins without the tour buses — Kamphaeng Phet sees a fraction of the visitors for a site on the same World Heritage listing.",
+    priceRange: { low: 100, typical: 150, high: 150, currency: "THB", note: "100 THB for one zone (Old Town or the Arunyik forest zone), 150 THB for both; bicycle hire at the visitor centre is roughly 30-50 THB per day and is genuinely useful given the distances between temples." },
+    hours: "Daily, roughly 08:00-16:30",
+    tips: ["Hire a bicycle at the visitor centre — the Old Town and Arunyik zones are too far apart to see on foot in one visit.", "The Arunyik forest zone across the old moat holds the most atmospheric, least-visited ruins; do not stop at the Old Town zone alone.", "Bring water and sun protection — there is little shade and few facilities once inside the grounds."],
+    scamWarnings: [],
+    mapQuery: "Kamphaeng Phet Historical Park", coords: { lat: 16.467, lng: 99.500 },
+    verified: "2026-09",
+    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org/en/list/574" }, { org: "Wikipedia — Kamphaeng Phet Historical Park", url: "https://en.wikipedia.org/wiki/Kamphaeng_Phet_Historical_Park" }, { org: "Lonely Planet — Kamphaeng Phet Historical Park", url: "https://www.lonelyplanet.com/thailand/kamphaeng-phet-province/kamphaeng-phet/attractions/kamphaeng-phet-historical-park/a/poi-sig/1175239/357679" }],
+  },
   {
     id: "th-ext-ayutthaya-historical-park", name: "Ayutthaya Historical Park", city: "Ayutthaya", country: "th",
     access: { stepFree: "partial", note: "A wheelchair user (Cory Lee) reports Wat Mahathat has smooth paths and well-placed ramps reaching the famous Buddha head, but many other Ayutthaya ruins have uneven ground and steps up into the temple interiors." },

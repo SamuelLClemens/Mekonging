@@ -3211,4 +3211,21 @@ export const PLACES_KH_EXT = [
     bookHint: "No advance booking; buy at the pier ticket office on the day.", verified: "2026-08",
     sources: [{ org: "Travelfish - Koh Tonsay travel guide", url: "https://www.travelfish.org/location/cambodia/southern_cambodia/kampot/koh_tonsay" }, { org: "Lonely Planet - Koh Tonsay", url: "https://www.lonelyplanet.com/cambodia/south-coast/kep/attractions/koh-tonsay/a/poi-sig/1382629/355893" }],
   },
+  // ---- BANTEAY MEANCHEY PROVINCE — first entry for this province; found by re-running the
+  // Laos province-coverage method (point-in-polygon against regions.kh.js, not city-name
+  // guessing) against Cambodia for the first time this session.
+  {
+    id: "kh-ext-banteay-chhmar", name: "Banteay Chhmar", city: "Banteay Chhmar", country: "kh",
+    recognition: "A half-collapsed Angkorian temple complex in Banteay Meanchey province, roughly 65 km north of Sisophon near the Thai border, its giant stone face-towers and gallery walls still half-buried in jungle rubble rather than cleared and restored the way Angkor is.",
+    categories: ["culture", "temple", "history"], budgetTier: "low",
+    blurb: "One of the largest Angkorian-era temple complexes outside the main Angkor park, built under Jayavarman VII in the late 12th-early 13th century and one of only two sites anywhere (besides the Bayon itself) carrying the same giant serene face-towers. Nearly a kilometre of gallery-wall bas-reliefs depict Khmer-Cham naval battles and royal processions, and the site is on Cambodia's own UNESCO tentative list — largely unrestored, and far less visited than Angkor.",
+    whyItFits: "For travellers who have already done Angkor and Bayon and want the same imagery — face-towers, bas-relief galleries — at a real, still-crumbling site with almost no other visitors, run through a respected community-based tourism (CBT) program instead of mass tour infrastructure.",
+    priceRange: { low: 5, typical: 5, high: 20, currency: "USD", note: "$5 entrance fee at the gate. The village CBT program adds optional extras: local guide ~$5, ox-cart tour ~$5, bicycle hire ~$1.50, homestay ~$7 per person, meals $2-4." },
+    hours: "Daylight hours; no fixed gate times were found in any source consulted",
+    tips: ["This is roughly 65 km north of Sisophon and 2.5-3 hours from Siem Reap by road — plan it as an overnight through the CBT homestay rather than a rushed day trip, to do the site justice.", "Book through the Banteay Chhmar CBT program rather than an independent guide; it funds the village's own conservation and hosting work.", "Wear sturdy shoes - much of the complex is unrestored rubble and uneven fallen stone, unlike the cleared paths at Angkor."],
+    scamWarnings: [],
+    mapQuery: "Banteay Chhmar temple Cambodia", coords: { lat: 14.0711, lng: 103.0997 },
+    bookHint: "Book a homestay or guide in advance through the Banteay Chhmar CBT program's own site; independent visits are also possible, paying the entrance fee at the gate.", verified: "2026-09",
+    sources: [{ org: "UNESCO World Heritage tentative list — Banteay Chhmar", url: "https://whc.unesco.org/en/tentativelists/6456/" }, { org: "Wikipedia — Banteay Chhmar", url: "https://en.wikipedia.org/wiki/Banteay_Chhmar" }, { org: "Visit Banteay Chhmar (official community-based tourism site)", url: "https://www.visitbanteaychhmar.org/" }],
+  },
 ];
