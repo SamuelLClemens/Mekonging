@@ -47,8 +47,8 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        225,
-        125
+        223,
+        120
     ],
     "js/place-ui.js": [
         8,

@@ -639,7 +639,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.523.0';
+export const APP_VERSION = 'mk-v0.524.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3173,7 +3173,7 @@ function meHubScreen() {
   // Headed, so it can fold like everything else on this screen. It had only an aria-label,
   // which meant a screen reader knew what the group was and a sighted traveller did not —
   // and the auto-fold, which keys on a real heading, skipped it entirely.
-  wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:10px', role: 'group', 'aria-label': 'Quick access' }, [
+  wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:12px', role: 'group', 'aria-label': 'Quick access' }, [
     h('h3', { class: 'you-chips-head' }, '⚡ Quick access'),
     chip('📅', calLabel, null, () => go('#calendar')),
     chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
@@ -3205,7 +3205,7 @@ function meHubScreen() {
       const f = (iso) => { try { return new Date(iso + 'T00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return iso; } };
       return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
     };
-    jc.append(h('h3', { style: 'margin:0 0 6px' }, '🗺 Your journey'));
+    jc.append(h('h3', {}, '🗺 Your journey'));
     jc.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
       [`${jStats.places} ${jStats.places === 1 ? 'place' : 'places'}`,
         jStats.countries > 1 ? `${jStats.countries} countries` : null,
@@ -3251,15 +3251,15 @@ function meHubScreen() {
     mineBody,
   ]));
 
-  wrap.append(h('h2', { class: 'home-section', style: 'margin:16px 0 6px' }, '🗂️ Everything else'));
+  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:16px' }, '🗂️ Everything else'));
   wrap.append(groupDoors(['mine']));
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#everything') },
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
     '🗂️ All features, A–Z →'));
   // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
   // quiet dismissible line near the foot. Same trigger (a single expense is still "something
   // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
-    wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top:14px' }, [
+    wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top:16px' }, [
       h('button', { class: 'btn ghost', style: 'flex:1;text-align:left', onclick: () => go('#settings') }, '⬇️ Back up your journal & budget'),
       h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
     ]));
