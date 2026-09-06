@@ -351,7 +351,18 @@ p { margin: 0 0 var(--sp-4); }
    'Plan your next stop' the third line this column does not have. Measured over the ten
    longest titles in this 102px column: Avenir at 0.03em averages 183.05px, Be Vietnam Pro
    at 0.015em averages 184.98px — parity, with real tracking still on the uppercase. */
-.topbar h1 { font-size: clamp(1rem, 4.4vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: 0.015em; color: var(--orange); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* NOT uppercase, and the reason is measured rather than stylistic. This column is 102px of a
+   343px row at 375px, and uppercase costs 22-28% of a word's width: "Contributions" sets at
+   147px uppercase and 115px mixed, "Accessibility" at 134 and 108. Vietnamese pays the same
+   tax, 18-22% ("Bảng tin địa phương": 200px against 164px). At the old spec NONE of the nine
+   single-word titles in the app fitted the column — every one of them broke mid-word, so the
+   traveller read DOCUMENT/S and ACCESSIBILI/TY. In mixed case six of the nine fit the same
+   102px unchanged, and all nine fit the 115px the tightened row gap below now provides.
+   Shortening the titles was tried twice, ten of them across two sessions, and the tenth one
+   still did not fit; dropping a control cannot work either, since removing one buys 34px and
+   the widest title needs 45. The tracking goes with it: letter-spacing on a column this
+   narrow is width spent on air. */
+.topbar h1 { font-size: clamp(1rem, 4.4vw, var(--fs-h1)); margin: 0; flex: 1; min-width: 0; color: var(--orange); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 /* Filled with --teal-deep, not --teal: white on the light-mode --teal (#16A39A) is only
    3.12:1, under AA for this 14px bold label. The deep teal takes the same white label to
    7.6:1 and matches the ghost button and card headings that already use it. */
@@ -2508,7 +2519,13 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
    padding (4→2px) returns ~40px to the title, putting it slightly AHEAD of where it was before
    the flag existed rather than merely level. No tap target shrinks: the 44x44 minimum comes
    from the invisible ::before boxes on .topbar-ic/.topbar-sos, which padding does not touch. */
-.topbar { gap: var(--sp-2); padding-inline: var(--sp-3); }
+/* 5px rather than --sp-2's 8px, and only on this row. Six gaps at 3px each return 18px to the
+   title column — 102px to 120px. 6px was tried first and measured 114px, which carried every
+   title but left "Contributions" (115px mixed, the widest in the app) overflowing by one
+   pixel; a single pixel of margin is not a margin, and any font fallback or longer
+   translation would take it. Nothing leaves the row and no icon shrinks: the tap targets are
+   the invisible 44x44 ::before boxes, which a gap change does not touch. */
+.topbar { gap: 5px; padding-inline: var(--sp-3); }
 .topbar-ic { padding-inline: 2px; }
 .topbar .back { display: inline-flex; align-items: baseline; gap: 3px; }
 /* The last of the width the title was missing. At 375px the header spends 254 of its 319
@@ -2541,7 +2558,13 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
    line of its own, and `hyphens: auto` so the break is marked with a hyphen instead of looking
    like a typo — that hyphenation is language-aware, and works precisely because applyDocLang()
    now keeps <html lang> accurate for whichever language is active. */
-.topbar h1 { overflow-wrap: break-word; hyphens: auto; }
+/* A title may wrap onto its second line at a SPACE — "Share my / journey" reads fine — but it
+   must never break inside a word. `overflow-wrap: break-word` was doing exactly that, and
+   `hyphens: auto` never softened it because the hyphenation dictionary does not apply to
+   text-transformed uppercase, so the break arrived with no hyphen to explain it. Anything
+   still too wide is now ellipsised by the -webkit-line-clamp above, which is a legible
+   failure rather than a confusing one. */
+.topbar h1 { overflow-wrap: normal; word-break: normal; hyphens: manual; }
 /* A column layout in which ONLY the language list scrolls. The generic .sheet scrolls its own
    whole body, which on a short viewport pushed the heading and the filter box off the top and
    the Close button off the bottom — leaving a list of thirty languages and no visible way to
