@@ -38,6 +38,23 @@ export function routeNodes() {
   return [..._display.values()].sort((x, y) => x.localeCompare(y));
 }
 
+// The recommended option for a DIRECT edge between two names, if the graph has one — a
+// different question from planRoutes, which optimises for total time and will happily route
+// a "suggested" itinerary through a third city even when a direct leg exists (e.g. Bangkok
+// to Chiang Mai's fastest plan flies via Chiang Rai, though a direct sleeper train is also in
+// the graph). The journey map's transport-mode inference wants exactly the direct edge: how
+// THIS specific, actually-taken hop was probably travelled, not a theoretical faster
+// itinerary through a city the traveller may never have visited. null if there is no direct
+// edge (the map still falls back to a distance/time guess).
+export function directLeg(fromName, toName) {
+  const G = graph();
+  const edges = G.get(norm(fromName));
+  if (!edges) return null;
+  const b = norm(toName);
+  const hit = edges.find((e) => e.to === b);
+  return hit ? chosenOption(hit.edge) : null;
+}
+
 export function isRouteNode(name) { return graph().has(norm(name)); }
 
 function chosenOption(edge) { return edge.options.find((o) => o.recommended) || edge.options[0]; }

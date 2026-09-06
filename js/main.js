@@ -514,7 +514,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-const APP_VERSION = 'mk-v0.506.0';
+const APP_VERSION = 'mk-v0.507.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3231,8 +3231,10 @@ function seasonalFitSection(cc, cityName, slug) {
 // journey.js's route graph memoises PERMANENTLY on first build, so isRouteNode()/planRoutes()
 // must never run before all four countries are loaded (the same constraint documented in
 // Home's next-stop card, F1) — gated on _routeGraphLoaded below, set once, never inline.
+// Exported so any other caller needing the route graph (the journey map's transport-mode
+// inference, js/screens/journal.js) shares this one gate instead of a fourth copy of it.
 let _routeGraphLoaded = false;
-function ensureRouteGraph(onReady) {
+export function ensureRouteGraph(onReady) {
   if (_routeGraphLoaded) { onReady(); return; }
   loadAllCountries().then(() => { _routeGraphLoaded = true; onReady(); })
     .catch(() => { /* offline with nothing cached yet — this session stays without it */ });

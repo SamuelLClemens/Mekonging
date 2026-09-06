@@ -30,7 +30,7 @@ import {
 import { getActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import { h } from '../util.js';
 import { fmtTemp } from '../render-utils.js';
-import { field, confirmAction, locationSelect, spotForKey } from '../ui-widgets.js';
+import { field, confirmAction, locationSelect, spotForKey, openModal } from '../ui-widgets.js';
 import { getCountry, getPlace } from '../data/regions.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
 import { getBlob, putBlob, delBlob } from '../idb.js';
@@ -40,9 +40,10 @@ import {
 } from '../trail.js';
 import { WEATHER_SPOTS } from '../weather.js';
 import { dateLocale } from '../i18n.js';
+import { isRouteNode, directLeg } from '../journey.js';
 import {
   go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal,
-  entryPhotoKeys,
+  entryPhotoKeys, ensureRouteGraph,
 } from '../main.js';
 
 export function journalDispatch(arg) {
@@ -582,7 +583,7 @@ function journeyStops() {
     for (const s of stops) { const d = jkm(coords, s); if (d < bestKm) { bestKm = d; best = s; } }
     if (best && bestKm < NEAR_KM) return best;
     const st = { lat: coords.lat, lng: coords.lng, label: '', first: '', last: '', cc: '',
-      entries: [], places: [], auto: false, manual: false, _trailIds: [], ...seed };
+      entries: [], places: [], auto: false, manual: false, arriveMode: '', _trailIds: [], ...seed };
     stops.push(st);
     return st;
   };
@@ -598,6 +599,7 @@ function journeyStops() {
     if (p.cc && !st.cc) st.cc = p.cc;
     st.auto = true;
     if (p.manual) st.manual = true;
+    if (p.arriveMode) st.arriveMode = p.arriveMode;
     if (p.id) st._trailIds.push(p.id);
     stamp(st, p.first); stamp(st, p.last);
   });
@@ -647,6 +649,88 @@ function jrDateRange(from, to) {
   if (!from) return '';
   const f = (iso) => { try { return new Date(iso + 'T00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return iso; } };
   return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
+}
+
+// ---- TRANSPORT MODE, per leg between two consecutive stops -------------------
+// Six modes the traveller asked for, plus boat/ferry — genuinely common in this region (the
+// Mekong itself, island-hopping) and, without it, every ferry leg would show a flatly wrong
+// bus glyph rather than a merely-generic one.
+const MODE_GLYPHS = { flight: '✈️', train: '🚂', bus: '🚌', boat: '⛴️', walk: '🚶', bike: '🚲', moto: '🛵' };
+const MODE_LABELS = { flight: 'Flight', train: 'Train', bus: 'Bus / van / car', boat: 'Boat / ferry', walk: 'Walking', bike: 'Bicycle', moto: 'Motorbike' };
+
+// Bucket one of the route graph's ~90 free-text mode strings ("Direct sleeper bus (via Nam
+// Phao/Cau Treo)", "Bus to Phnom Penh + flight") into one of the glyphs above. Checked in
+// this order because in a composite description the most distinctive leg is usually the one
+// worth telling the two cities apart by: a bus ride that ends in a flight is still, on this
+// map, a flight.
+function modeFromRouteText(mode) {
+  const m = (mode || '').toLowerCase();
+  if (m.includes('flight')) return 'flight';
+  if (m.includes('train') || m.includes('railway')) return 'train';
+  if (m.includes('ferry') || m.includes('boat') || m.includes('catamaran') || m.includes('cruise')) return 'boat';
+  if (m.includes('bus') || m.includes('van') || m.includes('car') || m.includes('taxi') || m.includes('tuk-tuk')) return 'bus';
+  return null;
+}
+
+function daysBetween(fromIso, toIso) {
+  if (!fromIso || !toIso) return null;
+  try { return Math.round((new Date(toIso + 'T00:00') - new Date(fromIso + 'T00:00')) / 86400000); } catch { return null; }
+}
+
+// No route-graph match (a village too small to be a node, or the graph not loaded yet) — a
+// guess from how far apart the two stops are and how long the gap between them was. Rough on
+// purpose: it is one tap to correct (pickModeSheet below), so a wrong guess costs the
+// traveller far less than an unlabelled leg costs the map's readability.
+function heuristicMode(km, days) {
+  if (km < 3) return 'walk';
+  if (km < 20) return 'moto';
+  if (km > 500 && days !== null && days <= 2) return 'flight';
+  return 'bus';
+}
+
+// One glyph per leg: an explicit correction first, then the route graph's direct edge (via
+// directLeg — deliberately not planRoutes, which optimises for total time and will route a
+// "suggested" itinerary through a third city even when a direct leg exists), then the
+// distance/time guess. `graphReady` is false until ensureRouteGraph's callback has actually
+// fired; journeyScreen computes this twice for exactly that reason; see there.
+function journeyLegs(stops, graphReady) {
+  const legs = [];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i], b = stops[i + 1];
+    const midLat = (a.lat + b.lat) / 2, midLng = (a.lng + b.lng) / 2;
+    if (b.arriveMode && MODE_GLYPHS[b.arriveMode]) { legs.push({ i, midLat, midLng, mode: b.arriveMode }); continue; }
+    let mode = null;
+    if (graphReady && a.label && b.label && isRouteNode(a.label) && isRouteNode(b.label)) {
+      const opt = directLeg(a.label, b.label);
+      if (opt) mode = modeFromRouteText(opt.mode);
+    }
+    legs.push({ i, midLat, midLng, mode: mode || heuristicMode(jkm(a, b), daysBetween(a.last, b.first)) });
+  }
+  return legs;
+}
+
+// A small sheet listing every mode, for the one-tap correction on a leg whose arriving stop
+// has its own trail.js record (a stop with no trail component has nowhere to persist the
+// correction — see the caller). Resolves the picked mode key, '' (a real, distinct value —
+// "clear it back to inferred"), or null if cancelled.
+function pickModeSheet() {
+  return new Promise((resolve) => {
+    let close = null, settled = false;
+    const done = (val) => { if (settled) return; settled = true; resolve(val); if (close) close(); };
+    const backdrop = h('div', { class: 'sheet-backdrop center' });
+    const dialog = h('div', { class: 'sheet confirm-card', role: 'dialog', 'aria-label': 'How did you get here?' }, [
+      h('h3', {}, 'How did you get here?'),
+      h('div', { class: 'chips' }, Object.keys(MODE_GLYPHS).map((k) => h('button', { class: 'status-chip', onclick: () => done(k) },
+        [h('span', { class: 'status-ic' }, MODE_GLYPHS[k]), h('span', { class: 'status-lbl' }, MODE_LABELS[k])]))),
+      h('div', { class: 'confirm-actions' }, [
+        h('button', { class: 'btn ghost', onclick: () => done(null) }, 'Cancel'),
+        h('button', { class: 'btn ghost', onclick: () => done('') }, 'Not sure — guess for me'),
+      ]),
+    ]);
+    backdrop.append(dialog);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) done(null); });
+    close = openModal(backdrop, () => done(null));
+  });
 }
 
 // Which stop's inline editor is open, and whether the "add a stop you missed" form is —
@@ -700,6 +784,7 @@ export function journeyScreen() {
 
   let selected = -1;
   let mapCtrl = null;
+  let legMarkers = [];
   const select = (i) => {
     selected = i;
     if (mapCtrl) mapCtrl.setSelected(String(i));
@@ -707,6 +792,46 @@ export function journeyScreen() {
     panel.append(stopCard(stops[i], i));
     panel.scrollIntoView({ block: 'nearest' });
   };
+
+  // One glyph per leg, roughly at its midpoint. Drawn as a plain HTML marker (like the
+  // numbered pins), not a MapLibre text layer — this style has no glyphs/sprites configured
+  // (js/map.js), so a GL text layer would simply never render. Redrawn (old markers removed
+  // first) whenever the legs are recomputed with better data — see the two calls below.
+  function drawLegMarkers(map, legs) {
+    legMarkers.forEach((m) => { try { m.remove(); } catch { /* noop */ } });
+    legMarkers = [];
+    const maplibregl = window.maplibregl;
+    if (!maplibregl) return;
+    legs.forEach((leg) => {
+      const dest = stops[leg.i + 1];
+      const editable = dest._trailIds && dest._trailIds.length > 0;
+      const el0 = document.createElement('div');
+      el0.className = 'mk-leg-glyph';
+      el0.textContent = MODE_GLYPHS[leg.mode] || MODE_GLYPHS.bus;
+      // Same ordering addSingle uses in map.js: the Marker construction itself claims the
+      // element (getElement() is the live reference afterwards), so aria-label/role/listeners
+      // set beforehand on el0 do not reliably stick — set them on m.getElement() instead.
+      const m = new maplibregl.Marker({ element: el0, anchor: 'center' }).setLngLat([leg.midLng, leg.midLat]).addTo(map);
+      const el = m.getElement();
+      el.setAttribute('aria-label', `${MODE_LABELS[leg.mode] || 'Transport'} to ${dest.label || 'the next stop'}`
+        + (editable ? ' — tap to correct' : ''));
+      if (editable) {
+        el.setAttribute('role', 'button');
+        el.setAttribute('tabindex', '0');
+        const open = (ev) => {
+          ev.stopPropagation();
+          pickModeSheet().then((picked) => {
+            if (picked === null) return;
+            updateTrailStops(dest._trailIds, { arriveMode: picked });
+            render();
+          });
+        };
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(ev); } });
+      }
+      legMarkers.push(m);
+    });
+  }
 
   const mapPlaces = stops.map((s, i) => ({
     id: String(i), _num: i + 1,
@@ -726,6 +851,12 @@ export function journeyScreen() {
   })).then((c) => {
     mapCtrl = c;
     if (selected >= 0) c.setSelected(String(selected));
+    // Draw immediately with the distance/time guess (always available, no network or lazy
+    // data needed), then upgrade to the route graph's actual recorded mode once it is
+    // loaded — ensureRouteGraph's callback never fires on failure (offline, nothing cached
+    // yet), so the guess drawn here is not just a placeholder, it is the real fallback.
+    drawLegMarkers(c.map, journeyLegs(stops, false));
+    ensureRouteGraph(() => { if (mapCtrl) drawLegMarkers(mapCtrl.map, journeyLegs(stops, true)); });
     // One WebGL context per screen visit — without disposing on the way out, opening this
     // screen repeatedly over a session leaks contexts until maps silently stop starting.
     // Same idiom as Places and Visitors: chain onto any cleanup already registered.

@@ -1225,6 +1225,12 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 /* Selected pin (tapped from the map or the stops list below it) — an outline ring rather than
    a colour change, so it never has to fight the marker's own inline background colour. */
 .mk-pin-selected { outline: 3px solid var(--sun); outline-offset: 2px; border-radius: 999px; z-index: 5; }
+/* One glyph per leg on the journey map (Your journey) — a lighter, secondary marker than the
+   numbered stop pins, so it reads as context on the route rather than competing with them. */
+.mk-leg-glyph { width: 22px; height: 22px; border-radius: 999px; background: rgba(30,24,46,0.72);
+  font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.mk-leg-glyph[role="button"] { cursor: pointer; }
+.mk-leg-glyph[role="button"]:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
 
 /* Cluster badge: shown when many pins would overlap at low zoom; tap to zoom into its members. */
 .mk-cluster { min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; border: 2px solid #fff;
