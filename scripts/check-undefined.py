@@ -196,7 +196,51 @@ VAR_KW = re.compile(r'\b(?:const|let|var)\s')
 IMPORT_NAMED = re.compile(r'\bimport\s*(?:[A-Za-z_$][\w$]*\s*,\s*)?\{([^}]*)\}\s*from')
 # Any parenthesised group introducing a body: function params, method params, arrow params,
 # and — harmlessly — `if (...) {`. Over-collecting here loses findings; it never invents one.
-PARAMS = re.compile(r'\(([^()]*)\)\s*(?:=>|\{)')
+# A parameter list, found by balancing rather than by regex. `[^()]*` was the first attempt
+# and it silently skips any list containing a call — so
+# `function countryChips(onPick, selected = getActiveCountry())` declared NEITHER parameter.
+# That went unnoticed for as long as it did because an unrelated `const selected` elsewhere in
+# main.js happened to cover the name; the moment that line moved to another file, `selected`
+# was reported as a ReferenceError in a function that had always been correct.
+#
+# A CONTROL clause is not a parameter list. `if (store.profile) {` used to be read as one,
+# declaring `store` — and that cost real findings: a file split left js/screens/trip.js
+# without its `store` import and js/screens/schedules.js without `getCountry`, both genuine
+# ReferenceErrors, and both invisible to this script until these keywords were excluded. The
+# screens simply failed to open. `catch (e)` is NOT in this list because it really does bind.
+CONTROL_HEAD = re.compile(r'\b(?:if|while|for|switch|with|return|typeof|void|delete|await|yield)\s*$')
+
+
+def param_blobs(code):
+    out = []
+    i = 0
+    while True:
+        i = code.find('(', i)
+        if i < 0:
+            return out
+        depth = 0
+        j = i
+        while j < len(code):
+            if code[j] == '(':
+                depth += 1
+            elif code[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        if j >= len(code):
+            # An unclosed '(' — main.js has four, and returning here silently abandoned the
+            # rest of the file, so every parameter after that point read as undeclared. Skip
+            # the one bad opener and keep scanning.
+            i += 1
+            continue
+        k = j + 1
+        while k < len(code) and code[k] in ' \t\r\n':
+            k += 1
+        if (code[k:k + 2] == '=>' or code[k:k + 1] == '{') \
+                and not CONTROL_HEAD.search(code[max(0, i - 12):i]):
+            out.append(code[i + 1:j])
+        i += 1
 BARE_ARROW = re.compile(r'\b([A-Za-z_$][\w$]*)\s*=>')
 # Object/class method shorthand — `{ acceptNode(node) { ... } }` defines a property, it does
 # not reference a variable named acceptNode.
@@ -247,8 +291,11 @@ def declared_names(code):
             names.update(IDENT.findall(lhs))
     for blob in IMPORT_NAMED.findall(code):
         names.update(IDENT.findall(blob))
-    for blob in PARAMS.findall(code):
-        names.update(IDENT.findall(blob))
+    for blob in param_blobs(code):
+        # Only the binding side of a default: `(a, b = someCall())` binds a and b, and must
+        # not also declare someCall.
+        for one in _split_top(blob):
+            names.update(IDENT.findall(_split_top(one, '=')[0]))
     names.update(BARE_ARROW.findall(code))
     names.update(METHOD_SHORTHAND.findall(code))
     # Nested destructuring in params spans more than one paren level; sweep any `{...}`

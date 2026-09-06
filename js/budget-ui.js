@@ -213,6 +213,18 @@ export function fmtLogDateFor(b) {
   return fmtLogDate(b ? b.date : '');
 }
 
+// Which log row is currently flipped open into its inline editor, or null. All four reads and
+// writes are in this file, and this is where the declaration has to live: it used to sit in
+// js/screens/budget.js, one module away, and a module's `let` CANNOT be written — or read —
+// from another module. ES modules are strict mode, so `editExpenseId` here was a plain
+// ReferenceError, not an implicit global. The ✎ Edit control on every budget-log row, on both
+// Expenses and My Trip, threw the moment it was tapped.
+//
+// This is the third time this exact shape has shipped (see also wxMetric and weatherKey). It
+// was found by scripts/check-undefined.py only after that guard stopped treating `if (x) {` as
+// a declaration of x — which is what had been hiding it.
+let editExpenseId = null;
+
 export function budgetLogRow(b) {
   if (editExpenseId === b.id) {
     const amt = h('input', { type: 'number', inputmode: 'decimal', value: b.amount });

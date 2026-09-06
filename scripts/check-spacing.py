@@ -47,12 +47,20 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        312,
-        150
+        255,
+        125
     ],
     "js/place-ui.js": [
         8,
         3
+    ],
+    "js/screens/bargain.js": [
+        2,
+        1
+    ],
+    "js/screens/board.js": [
+        6,
+        2
     ],
     "js/screens/budget.js": [
         22,
@@ -61,6 +69,14 @@ CEILING = {
     "js/screens/calendar.js": [
         22,
         10
+    ],
+    "js/screens/circle.js": [
+        18,
+        7
+    ],
+    "js/screens/contributions.js": [
+        6,
+        2
     ],
     "js/screens/export.js": [
         6,
@@ -98,6 +114,14 @@ CEILING = {
         55,
         35
     ],
+    "js/screens/produce.js": [
+        6,
+        3
+    ],
+    "js/screens/schedules.js": [
+        4,
+        2
+    ],
     "js/screens/settings.js": [
         30,
         11
@@ -105,6 +129,14 @@ CEILING = {
     "js/screens/share-journey.js": [
         15,
         7
+    ],
+    "js/screens/streetfood.js": [
+        7,
+        2
+    ],
+    "js/screens/trip.js": [
+        8,
+        6
     ],
     "js/screens/vault.js": [
         13,
