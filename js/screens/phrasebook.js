@@ -499,10 +499,11 @@ export function phrasebookScreen(lang) {
   paintTranslations();
   // ALWAYS render something here. This used to be `if (online())`, which meant the entire
   // Say-it feature — the reason most travellers open Talk — simply was not on the screen for
-  // anyone whose network question was unanswered. netMode defaults to 'ask', and online()
-  // treats 'ask' as offline, so that is every new install: the traveller saw a phrasebook and
-  // concluded Talk was broken. A feature that needs a connection must SAY it needs one and
-  // offer the switch; it must never quietly not exist.
+  // anyone whose network question was unanswered: netMode defaulted to 'ask' and online()
+  // read 'ask' as offline, so that was every new install, and the traveller saw a phrasebook
+  // and concluded Talk was broken. The default is now on, so that particular cause is gone —
+  // but the rule it taught still holds and this still renders unconditionally: a feature that
+  // needs a connection must SAY so and offer the switch, never quietly not exist.
   wrap.append(online()
     ? liveTranslateBox(code, book.label, book.locale, paintTranslations)
     : offlineTranslateBox(code, book.label));
@@ -1048,19 +1049,24 @@ function myTranslationsCard(code, label, locale, onChange) {
 }
 
 
-// What "Say it in X" looks like with no connection — or, far more often, with the network
-// question never answered. Same card, same heading, so the feature is visibly THERE and its
-// absence is never mistaken for a broken app. One tap turns the connection on and re-renders
-// straight into the working control; nothing is fetched before that tap, so the privacy
-// promise the rest of the app makes is kept exactly.
+// What "Say it in X" looks like without a working connection. Same card, same heading, so the
+// feature is visibly THERE and its absence is never mistaken for a broken app.
+//
+// Two genuinely different reasons land here and they need different words, because only one of
+// them has a fix the traveller can apply in this moment: they have switched data off (one tap
+// undoes it), or there is no signal where they are standing (nothing to tap; the phrasebook
+// below is the answer). The old version could not tell these apart — its condition was
+// `netMode() !== 'offline'`, which was written to detect a third state that no longer exists.
 function offlineTranslateBox(code, label) {
-  const asking = netMode() !== 'offline';   // 'ask' — never answered — versus a real choice
+  const dataOff = netMode() === 'offline';
   const box = h('div', { class: 'card translate-card' }, [
     h('h2', {}, `Say it in ${langFlag(code)} ${label}`.replace('  ', ' ')),
-    h('p', { class: 'muted mytr-note' }, asking
-      ? `Translating anything you type needs an internet connection, and the app has not been given permission to use one yet.`
-      : `You are in offline mode, so live translation is switched off. The ${label} phrasebook below works with no connection at all.`),
-    h('button', { class: 'btn block', onclick: () => { setNetMode('online'); render(); } }, '📶 Turn on internet and translate'),
+    h('p', { class: 'muted mytr-note' }, dataOff
+      ? `You have data switched off, so live translation is off with it. The ${label} phrasebook below works with no connection at all.`
+      : `Translating anything you type needs a connection, and there is none right now. The ${label} phrasebook below works without one.`),
+    dataOff
+      ? h('button', { class: 'btn block', onclick: () => { setNetMode('online'); render(); } }, '📶 Turn data on and translate')
+      : null,
     h('p', { class: 'tiny muted mytr-foot' }, `Everything below — the ${label} phrasebook, your dictionary and My translations — works offline either way.`),
   ]);
   return box;

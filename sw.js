@@ -7,8 +7,12 @@
 // map works offline once an area has been downloaded/viewed. The Cache API refuses
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
+//
+// Three caches outlive a release — TILE_CACHE, TTS_CACHE and MEDIA_CACHE — because none of
+// them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
+// of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.537.0';
+const CACHE_VERSION = 'mk-v0.538.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -17,6 +21,25 @@ const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when 
 const TTS_CACHE = 'mk-tts-v1';
 const TTS_HOST = 'translate.google.com';
 const TTS_CACHE_MAX = 4000;
+
+// MEDIA_CACHE holds the identify field guide's own bytes: every photo under img/ and every
+// call recording under audio/. It exists as a SEPARATE cache for one reason, and it is a bug
+// fix rather than a feature.
+//
+// Photos were already being cached — the heavy-asset branch of the fetch handler below stored
+// each one after it was viewed — but it stored them in CACHE_VERSION, and activate() deletes
+// every cache except this build's. So the entire field guide a traveller had accumulated by
+// browsing was thrown away by the next deploy, silently, and re-downloaded photo by photo the
+// next time they were online. An offline-first field guide cannot hold its images in a cache
+// keyed to the release number: img/king-cobra.jpg does not change when main.js does. Keyed by
+// content location instead, it survives every version bump, exactly like the map tiles and the
+// phrase-audio packs already did.
+//
+// Nothing here is capped or evicted. A tile cache is unbounded input — a traveller can pan a
+// map forever — so TILE_CACHE_MAX is real. This one is bounded by the app itself: 567 files
+// and about 95 MB is the whole registry (js/data/photos.js + js/data/sounds.js), and a file
+// that is no longer referenced is dropped by pruneMedia() when the page sends the manifest.
+const MEDIA_CACHE = 'mk-media-v1';
 
 // `index.html` is the navigation fallback and so must cache for offline install to
 // be meaningful; it is listed in CRITICAL. Everything else is best-effort: a single
@@ -276,9 +299,12 @@ async function warmCache() {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      // keep the current app-shell cache AND the tile cache (offline map packs)
-      // AND the TTS pack cache (offline phrase audio) across version bumps
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== TILE_CACHE && k !== TTS_CACHE).map((k) => caches.delete(k))))
+      // Kept across version bumps: the tile cache (offline map packs), the TTS pack cache
+      // (offline phrase audio) and the media cache (identify photos and calls). Only the
+      // app-shell cache is release-scoped, because only code is.
+      .then((keys) => Promise.all(keys
+        .filter((k) => k !== CACHE_VERSION && k !== TILE_CACHE && k !== TTS_CACHE && k !== MEDIA_CACHE)
+        .map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -344,6 +370,10 @@ self.addEventListener('fetch', (e) => {
   const isNav = req.mode === 'navigate';
   const heavy = p.startsWith('/lib/') || /\.(png|jpe?g|webp|gif|svg|ico|woff2?|ttf|otf|geojson)$/.test(p);
   const isSub = /\.(js|css|json|webmanifest|html)$/.test(p);
+  // Field-guide media: the photos and call recordings the identify screens are built on.
+  // Same cache-first strategy as any other heavy asset, but stored in MEDIA_CACHE so a
+  // release does not delete it — see the note on MEDIA_CACHE above.
+  if (isMedia(p)) { e.respondWith(handleMedia(req)); return; }
 
   if (isNav) {
     // STALE-WHILE-REVALIDATE, not network-first-with-a-timeout.
@@ -462,6 +492,130 @@ async function handleTTS(req) {
   }
 }
 
+// ---- FIELD-GUIDE MEDIA (img/, audio/) -------------------------------------
+// Matched on the path segment rather than an absolute prefix so the app still works when
+// served from a subdirectory.
+function isMedia(pathname) { return /(^|\/)(img|audio)\//.test(pathname); }
+
+// Cache-first, and on a miss fetch and store — identical in behaviour to the heavy-asset
+// branch it replaces, except for WHICH cache it writes to. An offline miss throws rather than
+// returning a 504 body, because an <img> or <audio> element wants a failed request, not a
+// successful response containing an error message.
+async function handleMedia(req) {
+  const cache = await caches.open(MEDIA_CACHE);
+  const hit = await cache.match(req, { ignoreSearch: true });
+  if (hit) return hit;
+  const res = await withTimeout(fetch(req), MEDIA_TIMEOUT_MS);
+  if (res && res.ok) cache.put(req, res.clone()).catch(() => { /* storage full */ });
+  return res;
+}
+
+// Download the field guide ahead of need. Called from the page (see js/offline-pack.js), which
+// decides WHICH tier to ask for and when; this function's only judgements are how hard to push
+// and when to stop.
+//
+// Serial, not batched. warmCache() above runs four at a time because it is fetching a 1.5 MB
+// app shell the traveller is about to need. This is up to 95 MB of photos they will need later,
+// so it deliberately takes the slow lane: one request at a time, so a shared hostel connection
+// stays usable while it runs. It reports progress every file (the page shows a byte count, and
+// a stalled number is indistinguishable from a stalled download otherwise).
+//
+// QuotaExceededError stops the whole run rather than skipping the file: once storage is full,
+// every subsequent write fails too, and hammering a full disk 400 more times is pure cost. The
+// page is told, so it can say so instead of showing a progress bar that never finishes.
+let mediaBusy = false;
+async function prefetchMedia(urls, client, tier) {
+  if (mediaBusy) { if (client) client.postMessage({ type: 'MEDIA_BUSY', tier }); return; }
+  mediaBusy = true;
+  const cache = await caches.open(MEDIA_CACHE);
+  let done = 0, ok = 0, had = 0, bytes = 0, quotaHit = false, failed = 0;
+  try {
+    for (const url of urls) {
+      try {
+        if (await cache.match(url, { ignoreSearch: true })) { had++; ok++; }
+        else {
+          const res = await withTimeout(fetch(url, { cache: 'no-cache' }), MEDIA_TIMEOUT_MS);
+          if (res && res.ok) {
+            const copy = res.clone();
+            await cache.put(url, res);
+            ok++;
+            try { bytes += (await copy.blob()).size; } catch { /* size unknown */ }
+          } else failed++;
+        }
+      } catch (err) {
+        if (err && err.name === 'QuotaExceededError') { quotaHit = true; break; }
+        failed++;
+      }
+      done++;
+      if (client) client.postMessage({ type: 'MEDIA_PROGRESS', done, total: urls.length, ok, bytes, tier });
+    }
+  } finally {
+    mediaBusy = false;
+  }
+  if (client) client.postMessage({ type: 'MEDIA_DONE', done, total: urls.length, ok, had, bytes, failed, quotaHit, tier });
+}
+
+// What is actually on the device, counted from the cache rather than from what the app believes
+// it downloaded. Those two disagree in practice and the gap is not academic: a Cache Storage
+// bucket that has not been granted persistent storage can be evicted whole under disk pressure,
+// which iOS does readily. The app's own record would then claim a complete field guide sitting
+// in an empty cache, and — because the driver skips tiers it has recorded as done — it would
+// never download them again. So the count is returned PER TIER, and js/offline-pack.js discards
+// any tier record the cache does not back up.
+async function mediaStatus(tiers, client) {
+  const cache = await caches.open(MEDIA_CACHE);
+  const stored = {};
+  let total = 0, have = 0;
+  for (const name of Object.keys(tiers)) {
+    const urls = Array.isArray(tiers[name]) ? tiers[name] : [];
+    let n = 0;
+    for (const url of urls) {
+      try { if (await cache.match(url, { ignoreSearch: true })) n++; } catch { /* skip */ }
+    }
+    stored[name] = { have: n, total: urls.length };
+    total += urls.length;
+    have += n;
+  }
+  // Real byte total, from the stored responses. Content-Length where the server sent one (the
+  // cheap path), else the blob — a same-origin static file normally has the header.
+  let bytes = 0;
+  try {
+    for (const k of await cache.keys()) {
+      const r = await cache.match(k);
+      if (!r) continue;
+      const len = Number(r.headers.get('content-length'));
+      bytes += Number.isFinite(len) && len > 0 ? len : (await r.blob()).size;
+    }
+  } catch { /* best-effort */ }
+  if (client) client.postMessage({ type: 'MEDIA_STATUS', stored, have, total, bytes });
+}
+
+// Drop cached media the app no longer references, so a photo replaced in a later release does
+// not sit on the device forever. The page sends the CURRENT full manifest; anything outside it
+// is dead weight. Deliberately keyed on pathname, so a cache-busting query string on a stored
+// entry does not read as a different file.
+async function pruneMedia(urls, client) {
+  const keep = new Set(urls.map((u) => { try { return new URL(u, self.location.href).pathname; } catch { return u; } }));
+  const cache = await caches.open(MEDIA_CACHE);
+  let removed = 0;
+  try {
+    for (const k of await cache.keys()) {
+      const path = new URL(k.url).pathname;
+      if (!keep.has(path)) { if (await cache.delete(k)) removed++; }
+    }
+  } catch { /* best-effort */ }
+  if (client) client.postMessage({ type: 'MEDIA_PRUNED', removed });
+}
+
+// Forget the whole field guide (Settings → offline data). Photos come back on view, and the
+// automatic download will refill the pack on the next unmetered connection unless the
+// traveller has turned it off.
+async function clearMedia(client) {
+  let ok = false;
+  try { ok = await caches.delete(MEDIA_CACHE); } catch { /* nothing stored */ }
+  if (client) client.postMessage({ type: 'MEDIA_CLEARED', ok });
+}
+
 // "Download this area for offline": the page posts the satellite-tile URLs covering the
 // current view; we fetch each FULL tile and store it under the same '__r=full' key that
 // handleTile() reads for non-ranged requests, so the area then renders with no signal.
@@ -478,6 +632,17 @@ self.addEventListener('message', (e) => {
     // The page has finished loading and gone idle, so filling the offline copy can no longer
     // steal bandwidth from what the traveller is actually looking at.
     e.waitUntil(warmCache());
+  } else if (d.type === 'PREFETCH_MEDIA' && Array.isArray(d.urls)) {
+    // The field guide's photos and calls. No slice cap here, unlike the tile and TTS messages
+    // above: the manifest is generated from js/data/photos.js and js/data/sounds.js, so its
+    // length is a property of the build (567) and not of anything a user can grow.
+    e.waitUntil(prefetchMedia(d.urls, e.source, d.tier || ''));
+  } else if (d.type === 'MEDIA_STATUS' && d.tiers) {
+    e.waitUntil(mediaStatus(d.tiers, e.source));
+  } else if (d.type === 'PRUNE_MEDIA' && Array.isArray(d.urls)) {
+    e.waitUntil(pruneMedia(d.urls, e.source));
+  } else if (d.type === 'CLEAR_MEDIA') {
+    e.waitUntil(clearMedia(e.source));
   }
 });
 

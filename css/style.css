@@ -1952,11 +1952,7 @@ html[data-theme="dark"] .rlabel,
 html[data-theme="dark"] .src-link,
 html[data-theme="dark"] .lang-tick,
 html[data-theme="dark"] .info-tip[open] > summary,
-html[data-theme="dark"] .nc-tick,
 html[data-theme="dark"] .screen-hint[open] > summary { color: var(--teal); }
-/* Same reason, non-text: the selected row's border is the only indicator that it is chosen,
-   so it needs 3:1 of its own under WCAG 1.4.11 and --teal-deep does not reach it on dark. */
-html[data-theme="dark"] .net-choice[aria-pressed="true"] { border-color: var(--teal); }
 html[data-theme="dark"] .border-flag,
 html[data-theme="dark"] .rn-event-when { color: var(--magenta); }
 
@@ -2425,35 +2421,37 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
 .welcome-skip { margin-top: 8px; }
 .welcome-more { margin-top: 12px; }
 
-/* Onboarding step 1 — the network answer.
-   A two-option answer, not a navigation row, so selection reads as a state (accent border +
-   tick) rather than as "tap to go somewhere". Selection deliberately does NOT tint the
-   background: every text token here is measured against --card by scripts/check-contrast.py,
-   and a tinted fill would make that measurement untruthful for the selected row. */
-.net-choices { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-3) 0 0; }
-.net-choice {
-  /* flex-start, not center: the body runs to three lines at 375px, and an icon floating at the
-     vertical middle of that reads as unattached to the label it belongs to. */
-  display: flex; align-items: flex-start; gap: var(--sp-3); width: 100%; text-align: left;
-  background: var(--card); color: var(--ink); font-family: inherit; font-size: var(--fs-body);
-  cursor: pointer; border: 2px solid var(--line); border-radius: var(--r-md);
-  padding: var(--sp-3); min-height: 64px;
-  transition: border-color var(--dur) var(--ease);
-}
-.net-choice:hover { border-color: var(--teal); }
-.net-choice[aria-pressed="true"] { border-color: var(--teal-deep); }
-.nc-ic { flex: none; width: 28px; text-align: center; font-size: 1.4rem; line-height: 1.35; }
-.nc-txt { flex: 1 1 auto; min-width: 0; }
-.nc-lbl { display: block; font-weight: 700; }
-.nc-sub { display: block; color: var(--ink-soft); font-size: var(--fs-sm); margin-top: 2px; }
-/* Reserved space, not display:none — the row must not resize when the tick appears. */
-.nc-tick { flex: none; align-self: center; width: 20px; text-align: center; font-weight: 700; color: var(--teal-deep); visibility: hidden; }
-.net-choice[aria-pressed="true"] .nc-tick { visibility: visible; }
-.net-hint { margin: var(--sp-3) 0 0; }
-.net-hint[hidden] { display: none; }
+/* The .net-choice block that used to sit here — a two-option "data, or fully offline?" answer —
+   went with onboarding's network step (see welcomeScreen in js/main.js). The app now uses a
+   connection when it has one instead of asking, and the state lives in the topbar signal icon,
+   so there is nothing left on any screen carrying these classes. */
 /* A disabled "Next →" must still read as text, not as a smudge: dim the whole control, and
    say why with the cursor rather than by making the label unreadable. */
 .welcome-nav .btn[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* The field-guide download, reporting itself on Home (packStatusLine, js/screens/home.js).
+   Quiet by construction: this is a background task announcing itself, not something asking to
+   be dealt with, so it gets a normal card and no accent, no alarm colour and no progress bar
+   racing across the screen. The percentage in the text is the progress indicator. */
+.pack-line { display: flex; align-items: center; gap: var(--sp-3); }
+.pack-line-txt { margin: 0; flex: 1 1 auto; min-width: 0; color: var(--ink-soft); font-size: var(--fs-sm); }
+.pack-line-act { flex: none; }
+/* A secondary control inside a status line, not a call to action — small enough to stay
+   subordinate to the sentence beside it, still a 34px target. */
+.tiny-btn { min-height: 34px; padding: var(--sp-1) var(--sp-3); font-size: var(--fs-sm); }
+
+/* Settings → offline field guide: which tiers are on the device. */
+.pack-state { margin: var(--sp-1) 0 var(--sp-2); }
+.pack-count { margin: var(--sp-2) 0 0; }
+.pack-tiers { list-style: none; margin: 0 0 var(--sp-2); padding: 0; }
+.pack-tier { display: flex; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--ink-soft); }
+.pack-tier.is-done { color: var(--ink); }
+.pt-ic { flex: none; width: 16px; text-align: center; font-weight: 700; }
+.pack-tier.is-done .pt-ic { color: var(--good); }
+.pack-btns { display: flex; flex-direction: column; gap: var(--sp-2); }
+/* No signal while data is ON is a fact about the room, not a setting — so the icon dims
+   rather than changing colour, which would read as a warning about something to fix. */
+.topbar-net.is-nosignal { opacity: 0.6; }
 .setup-recap { border: 1px solid var(--sun, #E0A21A); background: var(--sun-soft, rgba(240,180,40,.12)); margin-bottom: 10px; }
 .setup-recap > strong { display: block; font-size: 16px; margin-bottom: 6px; }
 .recap-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }

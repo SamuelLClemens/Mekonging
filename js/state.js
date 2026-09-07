@@ -6,7 +6,7 @@ import { putMeta, getMeta } from './idb.js';
 import { MERGED_PLACE_IDS, canonicalPlaceId } from './data/place-merges.js';
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 13;
+const CURRENT_VERSION = 14;
 
 function defaults() {
   return {
@@ -33,10 +33,24 @@ function defaults() {
         // then hidden until brought back from Settings. Not gone for good: rank-collapse-
         // never-remove — the arrival guide itself stays reachable via Explore either way.
         justArrivedHidden: false,
-        // Network consent: the app must never use mobile data / Wi-Fi silently. 'ask' = do
-        // not auto-fetch until the traveller chooses; 'online' = use data when available;
-        // 'offline' = stay fully offline. Set in onboarding, changeable any time.
-        netMode: 'ask',         // 'ask' | 'online' | 'offline'
+        // Network use: 'online' = use the connection whenever there is one; 'offline' = never
+        // touch it. Changeable any time from the topbar signal icon and Settings.
+        //
+        // This DEFAULTS TO ON, and it used to default to a third state, 'ask', which auto-
+        // fetched nothing until the traveller answered a question in onboarding. That was the
+        // wrong shape twice over. It made the app's most consequential setting reachable by
+        // not answering — tapping past step one opted you out of everything — and the opt-out
+        // silently disabled live weather, live exchange rates, sea conditions and the offline
+        // photo pack, none of which announce their absence. Two defects shipped from exactly
+        // that cause (Home rendered with no weather section at all; the rates froze on a
+        // fallback table measured 8% out) and both were repaired downstream while the cause
+        // sat here. A travel app whose reason to exist is working without a signal still has
+        // to USE the signal when there is one.
+        //
+        // What replaces the question is a visible state, not a hidden default: the topbar
+        // carries a live signal icon that says which mode is on and switches it in one tap.
+        // A legacy 'ask' is migrated to 'online' in migrate() below.
+        netMode: 'online',      // 'online' | 'offline'
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
@@ -229,6 +243,15 @@ function migrate(data) {
   if (dv < 13) {
     ['homeRecentsOpen', 'youEverythingOpen', 'homeWeatherOpen'].forEach((k) => { delete out.profile.prefs[k]; });
   }
+  // v13 -> v14: 'ask' is no longer a network mode (see the netMode default above). Anyone
+  // carrying it never answered onboarding's network question, so they have been running with
+  // every live source silently switched off — no weather, no exchange rates, no sea state.
+  // They are moved to 'online', which is now the default for a new install.
+  //
+  // A DELIBERATE choice of 'offline' is untouched. That distinction is the whole reason this
+  // migration reads the stored value rather than resetting the field: 'ask' means the question
+  // was never answered, and 'offline' means it was.
+  if (dv < 14 && out.profile.prefs.netMode === 'ask') out.profile.prefs.netMode = 'online';
   return out;
 }
 

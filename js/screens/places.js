@@ -51,7 +51,7 @@ import { shareUrl, encodeShare } from '../social.js';
 import {
   go, mount, topbar, render, focusSpot, setFocusSpot, spotForCity,
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
-  priceLine, stopDateLabel, shareButton, profileFitCard, exportOnePlaceReviewHtml,
+  priceLine, approxHome, stopDateLabel, shareButton, profileFitCard, exportOnePlaceReviewHtml,
   setBlobThumb, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
   nearestSpotGlobal,
 } from '../main.js';
@@ -1775,6 +1775,24 @@ export function placeScreen(id) {
   if (hasPrice) {
     card.append(h('h3', {}, 'Price'));
     card.append(h('p', {}, `${priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free'}${p.priceRange.note ? ' · ' + p.priceRange.note : ''}`));
+    // `priceRange.typical` — researched and stored on 728 place records, and read by nothing at
+    // all until now (found by scripts/orphan-fields.py). It is the most useful of the three
+    // figures and the one a traveller actually budgets against: Chatuchak's range is
+    // "฿0–800", which tells you nothing, while its typical spend of ฿200 tells you what to
+    // bring.
+    //
+    // Shown ONLY where it adds something, which is a narrower test than "is it set":
+    // 34 records have no real range at all and 61 more put typical on one end of theirs, so a
+    // simple non-empty check would print "Most people pay about ฿300" directly beneath "฿300"
+    // — 95 places given a redundant line, which is its own kind of noise. Strictly inside the
+    // range leaves 633 where the sentence carries information the line above does not.
+    const t = Number(p.priceRange.typical);
+    const lo = Number(p.priceRange.low), hi = Number(p.priceRange.high);
+    if (Number.isFinite(t) && Number.isFinite(lo) && Number.isFinite(hi) && t > lo && t < hi) {
+      const approx = approxHome(t, p.priceRange.currency);
+      card.append(h('p', { class: 'muted price-typical' },
+        `Most people pay about ${money(t, p.priceRange.currency)}${approx ? ` (${approx})` : ''}.`));
+    }
   }
   if (p.hours && !isMarket(p)) card.append(h('p', { class: 'muted' }, `Hours: ${p.hours}`));
   if (p.bookHint) card.append(h('p', { class: 'muted' }, `Booking: ${p.bookHint}`));

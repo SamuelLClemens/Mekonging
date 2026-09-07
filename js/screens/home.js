@@ -37,6 +37,7 @@ import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../ui-widgets.js';
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
+import { packState, onPackChange, deferPack } from '../offline-pack.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
@@ -103,6 +104,12 @@ export function homeScreen() {
   // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
   // value-first first run — proof that the few taps already personalised the app.
   if (store.profile.prefs.showSetupRecap) wrap.append(setupRecapCard());
+
+  // The field-guide download announces itself while it runs (js/offline-pack.js). It is the
+  // one thing in this app that uses the network without being asked, so it does not get to be
+  // invisible: the line says what is happening, and it carries the off-switch.
+  const packLine = packStatusLine();
+  if (packLine) wrap.append(packLine);
 
   // H2/H3 — Quick access: phase switcher + Calendar / Budget / Weather (Scrapbook, post) /
   // Journal / Online-offline, every phase — see quickAccessRow() below. One collapsible,
@@ -542,19 +549,69 @@ function whereYouAreCard(cc, cityName) {
 
 // Stand-in body for the weather fold when no forecast is cached yet. The section must never
 // silently vanish — that is exactly how a traveller ends up thinking the app has no weather.
-// This NEVER fetches: the app's whole network contract is that nothing touches mobile data or
-// Wi-Fi until the traveller says so (see ui-widgets.js online()), so when consent is missing
-// this offers the switch rather than flipping it.
+// This NEVER fetches: a traveller who has deliberately switched data off gets the switch
+// offered back, not flipped for them (see ui-widgets.js online()).
+// ---- the field-guide download, while it is happening ------------------------
+// The app downloads roughly 95 MB of photos and animal calls on its own, without asking (see
+// js/offline-pack.js for why that is the right default and why it is staged). Doing that
+// silently would not be acceptable: on an unrecognised connection — which on iOS is every
+// connection, since Safari ships no Network Information API — the app cannot tell Wi-Fi from
+// a metered foreign SIM, and data in this region is sold by the megabyte.
+//
+// So this line is the safeguard, and it is deliberately not a permission dialog. Nobody
+// standing in an airport wants to arbitrate a storage decision before they have seen the app,
+// and a prompt would be dismissed unread by exactly the travellers who most need the photos.
+// It states what is happening, in bytes, and carries one tap to stop and wait for Wi-Fi.
+//
+// It disappears the moment the pack is complete. A permanent status line for a finished
+// background task is clutter, and there is a full account in Settings for anyone who wants it.
+function packStatusLine() {
+  const s = packState();
+  if (!s.running && !s.deferred && !s.quotaHit) return null;
+  const mb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(0)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+
+  const line = h('div', { class: 'card pack-line' });
+  const txt = h('p', { class: 'pack-line-txt' });
+  const act = h('div', { class: 'pack-line-act' });
+  line.append(txt, act);
+
+  const paint = () => {
+    const st = packState();
+    if (!st.running && !st.deferred && !st.quotaHit) { line.remove(); return; }
+    act.innerHTML = '';
+    if (st.quotaHit) {
+      txt.textContent = `📥 This device is out of space, so not all the field-guide photos could be saved. ${mb(st.storedBytes)} is here and works offline.`;
+      act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => go('#settings') }, 'Manage'));
+    } else if (st.deferred) {
+      txt.textContent = `📥 The rest of the field guide is waiting for Wi-Fi. The dangerous-species photos are already on this device.`;
+      act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => go('#settings') }, 'Manage'));
+    } else {
+      // Only the safety tier is named. It is the one tier worth a traveller knowing about in
+      // the moment — 9 MB of photographs of what can hurt them — and the other two are
+      // scenery and dinner by comparison.
+      const what = st.tier === 'safety' ? 'photos of dangerous species' : 'the field guide';
+      const pct = st.total ? Math.round((st.done / st.total) * 100) : 0;
+      txt.textContent = `📥 Saving ${what} for offline use — ${pct}%${st.bytes ? ` · ${mb(st.bytes)}` : ''}`;
+      act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => { deferPack(); paint(); } }, 'Not now'));
+    }
+  };
+  paint();
+  // Same lifetime rule as the Settings card: unsubscribe when the node leaves the DOM, or
+  // every Home render leaves another live closure behind.
+  const off = onPackChange(() => { if (line.isConnected) paint(); else off(); });
+  return line;
+}
+
 function homeWeatherPending(spot) {
   const card = h('div', { class: 'card' });
   const where = (spot && spot.city) ? ` for ${spot.city}` : '';
-  if (netMode() !== 'online') {
+  if (netMode() === 'offline') {
     card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
-      'The forecast needs data. Everything else here works offline.'));
+      'You have data switched off, so the forecast cannot update. Everything else here works offline.'));
     card.append(h('button', {
       class: 'btn block',
       onclick: () => { setNetMode('online'); ratesOnConsent(); render(); },
-    }, '📶 Use data when I have it'));
+    }, '📶 Turn data back on'));
     return card;
   }
   if (!online()) {
