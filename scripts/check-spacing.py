@@ -47,12 +47,16 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        207,
+        206,
         112
     ],
     "js/place-ui.js": [
         8,
         3
+    ],
+    "js/screens/arrival-info.js": [
+        1,
+        0
     ],
     "js/screens/bargain.js": [
         2,
