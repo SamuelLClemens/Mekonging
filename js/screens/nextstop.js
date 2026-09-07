@@ -24,8 +24,12 @@ import { citySlug, personalScore } from '../render-utils.js';
 import { placeCard } from '../place-ui.js';
 import {
   go, mount, topbar, render, focusSpot, todayISO, daysUntilISO,
-  whereNextSection, nextChainTail, planCard, twelveGoUrl,
+  planCard, twelveGoUrl,
 } from '../main.js';
+// whereNextSection moved to js/screens/explore.js with the rest of the Explore cluster
+// (screen split, mk-v0.539.0). Imported from there so this screen no longer reaches into the
+// eagerly-parsed main.js for it.
+import { whereNextSection, nextChainTail } from './explore.js';
 
 // Re-render this screen in place, preserving scroll — the same idiom whereNextSection's own
 // candidate taps already use for Explore, and nextStopCard (home.js) uses for its own

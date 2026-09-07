@@ -38,8 +38,14 @@ import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import { packState, onPackChange, deferPack } from '../offline-pack.js';
+// setupRecapCard moved to js/screens/welcome.js with the onboarding flow it belongs to
+// (screen split, mk-v0.539.0). Home is its only caller and shows it once ever, so it is
+// fetched on demand below rather than imported statically — a static import here would pull
+// the whole onboarding module into the launch graph on every launch, which is the opposite of
+// the point of moving it.
+let _recap = null;
 import {
-  go, mount, topbar, contextNow, setupRecapCard, render,
+  go, mount, topbar, contextNow, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
   ensureHomeWeather, ensurePlannedStopsWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
@@ -103,7 +109,14 @@ export function homeScreen() {
 
   // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
   // value-first first run — proof that the few taps already personalised the app.
-  if (store.profile.prefs.showSetupRecap) wrap.append(setupRecapCard());
+  if (store.profile.prefs.showSetupRecap) {
+    // Normally already resolved: the traveller has just come through onboarding, so the module
+    // is in memory and this renders in the same pass. The import path covers the other case —
+    // the flag set in an earlier session and never dismissed — and re-renders once it lands
+    // rather than leaving a promise the traveller never sees the result of.
+    if (_recap) wrap.append(_recap());
+    else import('./welcome.js').then((m) => { _recap = m.setupRecapCard; render(); }).catch(() => {});
+  }
 
   // The field-guide download announces itself while it runs (js/offline-pack.js). It is the
   // one thing in this app that uses the network without being asked, so it does not get to be
