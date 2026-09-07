@@ -50,6 +50,18 @@ EXTRA_EDGES = {
     'myIdentifierScreen': ['getProduce', 'getDish'],
 }
 
+# Files that load their own lazy data and AWAIT it before reading, so ROUTE_DATA has nothing to
+# say about them. This is a narrow exemption and it is not for screens: the bug this script
+# exists to catch is a screen rendering synchronously against a module that has not landed, and
+# a file here has no route to gate because it is not reached from the router at all.
+#
+# js/offline-pack.js builds the offline media manifest from js/data/sounds.js. It runs on idle
+# from the app's boot sequence, not from any route, and its one read is
+# `(await loadData('sounds')).SOUNDS`. Without this entry the derived map attributes 'sounds' to
+# every route in the app — because main.js imports the module at top level — and the only way
+# to satisfy that would be to declare a data dependency that ten routes do not have.
+SELF_GATED = {'js/offline-pack.js'}
+
 DECL = re.compile(r'^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(')
 ARROW = re.compile(r'^(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(')
 
@@ -149,7 +161,7 @@ def main():
 
     # The lazy modules' own source is not a consumer — exclude it, or every export reads as a
     # top-level reference to itself.
-    lazy_src = {'js/data/%s.js' % n for n in set(owner.values())} | {LAZY_DATA}
+    lazy_src = {'js/data/%s.js' % n for n in set(owner.values())} | {LAZY_DATA} | SELF_GATED
     files = [f for f in eager_files() if f not in lazy_src] + sorted(set(screen_files.values()))
     fns, refs, owner_file = {}, {}, {}
     overrun = []

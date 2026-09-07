@@ -301,12 +301,19 @@ export function locationSelect(currentKey, onChange) {
   return sel;
 }
 
-// ---- NETWORK CONSENT -------------------------------------------------------
-// The app must never touch mobile data or Wi-Fi without the traveller choosing to.
-// online() is the SINGLE gate for every AUTOMATIC fetch (weather, exchange rates); a
-// user-initiated action (tapping "refresh", "play a call", a deep link) is its own
-// consent and is allowed regardless. 'ask' means we have not asked yet — treat as
-// offline until the traveller decides in onboarding or the Home toggle.
-export function netMode() { return store.profile.prefs.netMode || 'ask'; }
-export function setNetMode(m) { store.profile.prefs.netMode = m; save(); }
-export function online() { return netMode() === 'online' && (typeof navigator === 'undefined' || navigator.onLine !== false); }
+// ---- NETWORK MODE ----------------------------------------------------------
+// online() is the SINGLE gate for every AUTOMATIC fetch — weather, exchange rates, sea
+// conditions, the offline photo pack. A user-initiated action (tapping "refresh", playing a
+// call, following a deep link) is its own consent and is allowed regardless.
+//
+// The default is ON: the app uses the connection when there is one and never asks. Turning it
+// off is a deliberate act, from the topbar signal icon or Settings, and it is absolute.
+//
+// Note the SHAPE of the test — "not offline", not "equals online". It used to be the other way
+// round, and that is how a third state ('ask', set on every new install until onboarding was
+// answered) silently disabled every live source in the app. Written this way, no value this
+// field could ever hold — a legacy 'ask', a future mode, a corrupted store — can turn the
+// network off by accident. Only the one string that means it does that.
+export function netMode() { return store.profile.prefs.netMode === 'offline' ? 'offline' : 'online'; }
+export function setNetMode(m) { store.profile.prefs.netMode = m === 'offline' ? 'offline' : 'online'; save(); }
+export function online() { return netMode() !== 'offline' && (typeof navigator === 'undefined' || navigator.onLine !== false); }

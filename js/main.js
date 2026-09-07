@@ -61,6 +61,10 @@ import {
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
 import { PHOTOS } from './data/photos.js';
+// Automatic offline download of the identify field guide (photos + animal calls). Adds nothing
+// to the launch graph beyond itself: everything heavy it needs — nature.js for the dangerous-
+// species list, sounds.js for the calls — it imports dynamically, on idle.
+import { startPack } from './offline-pack.js';
 import { putBlob, getBlob, delBlob } from './idb.js';
 // Private personal calendar (cycle/period, mood, symptoms, intimacy, pregnancy). On-device,
 // opt-in, optional PIN. See js/personal.js. Namespaced to keep the many helpers clear.
@@ -674,7 +678,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.537.0';
+export const APP_VERSION = 'mk-v0.538.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -913,7 +917,16 @@ export function topbar(title, backHash) {
   // (Home chip-merge follow-up) instead of living only inside Home's own Quick access row, so
   // it sits alongside the other always-available controls (Saved, Settings, Emergency) no
   // matter where in the app a traveller happens to be.
-  const netOnline = netMode() === 'online';
+  //
+  // This control now carries more weight than when it was added. Onboarding no longer asks
+  // whether to use data — the app just uses a connection when it has one — so this icon IS
+  // the disclosure: it is where a traveller sees which mode they are in and the only place
+  // they need to go to change it. Hence the third state below. It used to show ✈️ both for
+  // "the traveller chose offline" and for "there is no signal right now", which are not the
+  // same thing at all: one is a setting they can undo and the other is a fact about the room
+  // they are standing in, and conflating them made a subway ride look like a settings change.
+  const netOnline = netMode() !== 'offline';
+  const noSignal = typeof navigator !== 'undefined' && navigator.onLine === false;
   const lang = uiLangMeta();
   return h('header', { class: 'topbar' }, [
     // The word "Back" is dropped below 420px (css/style.css) so the screen title gets its
@@ -932,9 +945,13 @@ export function topbar(title, backHash) {
       onclick: () => languageSheet(),
     }, lang.flag),
     h('button', {
-      class: 'topbar-ic topbar-net', 'aria-label': netOnline ? 'Online — tap to go offline' : 'Offline — tap to go online',
-      title: netOnline ? 'Online' : 'Offline', onclick: () => { const on = !netOnline; setNetMode(on ? 'online' : 'offline'); if (on) ratesOnConsent(); render(); },
-    }, netOnline ? '📶' : '✈️'),
+      class: 'topbar-ic topbar-net' + (netOnline && noSignal ? ' is-nosignal' : ''),
+      'aria-label': !netOnline ? 'Data off — tap to use a connection'
+        : (noSignal ? 'No connection right now — data is on. Tap to stay fully offline.'
+          : 'Using data — tap to stay fully offline'),
+      title: !netOnline ? 'Data off' : (noSignal ? 'No connection' : 'Using data'),
+      onclick: () => { const on = !netOnline; setNetMode(on ? 'online' : 'offline'); if (on) ratesOnConsent(); render(); },
+    }, !netOnline ? '✈️' : (noSignal ? '📵' : '📶')),
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     // Find anything, from anywhere — a magnifying glass rather than the full-width
     // "🔎 Search everything" button that used to sit partway down Home. Search is the
@@ -5264,8 +5281,13 @@ export function priceLine(low, high, currency) {
   const lo = low != null ? convert(Number(low), currency, home) : null;
   const hi = high != null ? convert(Number(high), currency, home) : null;
   if ((lo == null || !isFinite(lo)) && (hi == null || !isFinite(hi))) return local;
+  // The unit once, on the end it belongs to — the same rule range() follows for the local
+  // price, and this half was not following it: Chatuchak read "(≈ $0–$24.30)", repeating the
+  // symbol mid-range where no one writes it twice. range() already knows where a given
+  // currency's symbol goes (leading for the dollar family and the baht, trailing for the dong
+  // and the kip), so hand it the converted pair rather than formatting both ends separately.
   let approx;
-  if (lo != null && hi != null && low !== high) approx = `${money(lo, home)}–${money(hi, home)}`;
+  if (lo != null && hi != null && low !== high) approx = range(lo, hi, home);
   else approx = money(lo != null ? lo : hi, home);
   return `${local} (≈ ${approx})`;
 }
@@ -8384,8 +8406,8 @@ function prefChips(pairs, current, onPick) {
 // where they are — then the whole app leads with what fits their situation, place and
 // moment. Short, skippable, editable later in "For you" and Settings. Fully offline.
 // NAV-1: a value-first stepped first run. Rather than a single wall of six cards, the
-// traveller answers four focused, high-leverage questions — one per step: network, location,
-// who, diet — then lands on Home with a "here is what I set up for you" recap that proves the
+// traveller answers three focused, high-leverage questions — one per step: location, who,
+// diet — then lands on Home with a "here is what I set up for you" recap that proves the
 // payoff. The interface language is not one of these steps; it is a persistent chip in the
 // header above them (js/i18n.js languageSheet()) so a wrong first-run guess can be fixed
 // before a single question has to be read in it. The richer, lower-urgency fields
@@ -8393,11 +8415,23 @@ function prefChips(pairs, current, onPick) {
 // step, so nothing is lost but nothing is front-loaded. Location got promoted OUT of that
 // foldable into its own step — it used to be folded away and easy to never see, which is how
 // a traveller ends up permanently "in Hanoi" while standing in Sapa: no fix, no correction.
+//
+// THE NETWORK QUESTION USED TO BE STEP ONE, and removing it is the point of this change. It
+// asked a first-time user to choose between "use data when I have it" and "stay fully offline"
+// before they had seen the app, and the honest answer to that question is "use it when it is
+// there, do not when it is not" — which is a job for software, not a decision to hand someone
+// standing in an airport. Worse, it was answerable by accident: tapping past it opted the
+// traveller out of every live source in the app, silently, and that shipped two defects (Home
+// with no weather at all, exchange rates frozen 8% out). The app now uses the connection when
+// it has one and the offline copy when it does not. The state is still visible and still one
+// tap to change — the topbar carries a live signal icon — but it is no longer a question, and
+// no route through this flow can turn the network off by accident.
 // welcomeStep is module state so Next/Back re-render the same focused flow without a route.
+const WELCOME_STEPS = 3;
 let welcomeStep = 0;
 function welcomeScreen() {
   const prefs = store.profile.prefs;
-  const step = Math.min(Math.max(welcomeStep | 0, 0), 3);
+  const step = Math.min(Math.max(welcomeStep | 0, 0), WELCOME_STEPS - 1);
   const wrap = h('div', { class: 'screen welcome' });
 
   // Finishing = leave onboarding for a personalised Home. Show the recap only when the
@@ -8408,16 +8442,15 @@ function welcomeScreen() {
   const finish = () => {
     store.profile.seenWelcome = true;
     prefs.geoAsked = true;
-    if (netMode() === 'ask') setNetMode('offline');
     prefs.showSetupRecap = somethingSet();
     welcomeStep = 0;
     save();
     go('#home');
   };
-  const goStep = (n) => { welcomeStep = Math.min(Math.max(n, 0), 3); welcomeScreen(); };
+  const goStep = (n) => { welcomeStep = Math.min(Math.max(n, 0), WELCOME_STEPS - 1); welcomeScreen(); };
 
   // Compact header: small logo + a progress indicator so the traveller always knows where
-  // they are and that the flow is short (four steps). The language chip sits here — not
+  // they are and that the flow is short (three steps). The language chip sits here — not
   // gated behind any step — so a wrong first-run guess (detectPreferredLang(), js/i18n.js) can
   // be corrected before the traveller has to read a single question in it. Reuses the exact
   // picker every other screen's topbar flag opens (languageSheet()), so it is one consistent
@@ -8432,79 +8465,28 @@ function welcomeScreen() {
       onclick: () => languageSheet(),
     }, `${lang.flag} ${lang.native}`),
   ]));
-  wrap.append(h('div', { class: 'welcome-progress', role: 'group', 'aria-label': `Step ${step + 1} of 4` },
-    [0, 1, 2, 3].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
+  wrap.append(h('div', { class: 'welcome-progress', role: 'group', 'aria-label': `Step ${step + 1} of ${WELCOME_STEPS}` },
+    [0, 1, 2].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
 
-  // ---- Step 1 — Network choice (the gate: no data touched without it) ----
-  //
-  // THIS STEP REQUIRES AN ANSWER, and that is the entire point of it. Both answers are
-  // legitimate and offline-first is the product, so finish()'s fallback above — an unanswered
-  // flow lands on 'offline' — is correct and stays, for the skip path it was written for.
-  //
-  // What was wrong was reaching Home *through* this step without answering. "Next →" used to
-  // advance whether or not a choice had been made, so a traveller who tapped straight past was
-  // opted out of all network use having declined nothing. That silently cost them live weather
-  // and live exchange rates — two defects shipped and then repaired downstream in mk-v0.477.0,
-  // while this, their actual cause, was left in place.
-  if (step === 0) {
-    const netCard = h('div', { class: 'card' });
-    netCard.append(h('h2', {}, 'Data, or fully offline?'));
-    netCard.append(h('p', { class: 'muted' }, 'This app works fully offline. It will not use mobile data or Wi-Fi unless you allow it — handy when you have no SIM. You can change this any time.'));
-
-    // Full-width rows rather than two small chips: this is the most consequential setting in
-    // the app, so each option states what it will actually do, not just what it is called.
-    const netRow = h('div', { class: 'net-choices', role: 'group', 'aria-label': 'Network use' });
-    // Sits inside the card, so enabling "Next →" never moves "Next →" out from under a thumb.
-    const netHint = h('p', { class: 'muted net-hint' }, 'Pick one to continue — or skip setup below.');
-    const nextBtn = h('button', { class: 'btn block', onclick: () => { if (netMode() !== 'ask') goStep(1); } }, 'Next →');
-    // Updated in place rather than by re-rendering the step: a re-render would drop keyboard
-    // focus back to the top of the document the moment a choice was made.
-    const syncNet = () => {
-      const answered = netMode() !== 'ask';
-      netRow.querySelectorAll('.net-choice').forEach((c) =>
-        c.setAttribute('aria-pressed', c.dataset.n === netMode() ? 'true' : 'false'));
-      nextBtn.disabled = !answered;
-      nextBtn.setAttribute('aria-disabled', answered ? 'false' : 'true');
-      netHint.hidden = answered;
-    };
-    [['online', '📶', 'Use data when I have it',
-      'Live weather, exchange rates and sea conditions refresh while you are connected.'],
-     ['offline', '✈️', 'Stay fully offline',
-      'Nothing leaves your device. Everything you see is already downloaded.'],
-    ].forEach(([id, ic, lbl, sub]) => netRow.append(h('button', {
-      class: 'net-choice', dataset: { n: id }, 'aria-pressed': 'false',
-      onclick: () => { setNetMode(id); syncNet(); },
-    }, [
-      h('span', { class: 'nc-ic', 'aria-hidden': 'true' }, ic),
-      h('span', { class: 'nc-txt' }, [h('span', { class: 'nc-lbl' }, lbl), h('span', { class: 'nc-sub' }, sub)]),
-      h('span', { class: 'nc-tick', 'aria-hidden': 'true' }, '✓'),
-    ])));
-    netCard.append(netRow);
-    netCard.append(netHint);
-    wrap.append(netCard);
-    wrap.append(h('div', { class: 'welcome-nav' }, [nextBtn]));
-    // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
-    // That path still lands on offline via finish(), which is the honest reading of "skip".
-    wrap.append(h('button', { class: 'btn ghost block welcome-skip', onclick: finish }, 'Skip — just explore'));
-    syncNet();
-  }
-
-  // ---- Step 2 — Location (the second gate) ----
+  // ---- Step 1 — Location ----
   // Promoted out of the old collapsed "Fine-tune" foldable at the very end of setup, where it
   // was easy to never see at all: with no live fix and nothing focused yet, every screen that
   // reads "where am I" falls back to the country default (js/main.js focusSpot()) — which is
   // exactly how a traveller ends up reading "Hanoi" while standing in Sapa. Asked plainly here,
   // with a working manual fallback right beside it, and still fully skippable via Next.
-  if (step === 1) {
+  if (step === 0) {
     wrap.append(locationFixCard());
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
+      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(1) }, 'Next →'),
     ]));
+    // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
+    // Nothing is lost by skipping and nothing is silently switched off by it — which was not
+    // true while this flow opened on the network question.
+    wrap.append(h('button', { class: 'btn ghost block welcome-skip', onclick: finish }, 'Skip — just explore'));
   }
 
-  // ---- Step 3 — Who is travelling (+ baby, solo female) ----
-  if (step === 2) {
+  // ---- Step 2 — Who is travelling (+ baby, solo female) ----
+  if (step === 1) {
     const whoCard = h('div', { class: 'card' });
     whoCard.append(h('h2', {}, 'Who is travelling?'));
     whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
@@ -8518,13 +8500,13 @@ function welcomeScreen() {
     whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
     wrap.append(whoCard);
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(3) }, 'Next →'),
+      h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
+      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
     ]));
   }
 
-  // ---- Step 4 — Food allergies / diet (the most visibly personalised surface) ----
-  if (step === 3) {
+  // ---- Step 3 — Food allergies / diet (the most visibly personalised surface) ----
+  if (step === 2) {
     const dietCard = h('div', { class: 'card' });
     dietCard.append(h('h2', {}, 'Any food allergies or diet?'));
     dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
@@ -8569,7 +8551,7 @@ function welcomeScreen() {
     }, { cls: 'welcome-more' }));
 
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(2) }, '← Back'),
+      h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
       h('button', { class: 'btn', style: 'margin-left:auto', onclick: finish }, 'See what I set up →'),
     ]));
   }
@@ -8585,9 +8567,13 @@ function welcomeScreen() {
 export function setupRecapCard() {
   const p = store.profile.prefs;
   const rows = [];
-  rows.push([netMode() === 'offline' ? '✈️' : '📶',
-    netMode() === 'offline' ? 'Fully offline' : 'Data when you have it',
-    netMode() === 'offline' ? 'The app will not use mobile data or Wi-Fi until you allow it.' : 'The app uses data only when a connection is available.']);
+  // This row used to report the traveller's answer to onboarding's network question. There is
+  // no such question any more, so reporting the setting back as a personalisation would be
+  // claiming credit for a default. What IS worth naming here is the thing the app is doing on
+  // their behalf without being asked: putting the field guide on the device.
+  rows.push(netMode() === 'offline'
+    ? ['✈️', 'Fully offline', 'You have turned data off. Tap the signal icon at the top to use a connection when you have one.']
+    : ['📥', 'Downloading for offline use', 'Photos of what can hurt you first, then the rest of the field guide — so identifying works with no signal.']);
   const partyLbl = { solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[p.party];
   if (partyLbl || p.withBaby || p.soloFemale) {
     const who = [partyLbl, p.withBaby && 'with a baby', p.soloFemale && 'solo female'].filter(Boolean).join(', ');
@@ -9009,8 +8995,34 @@ applyDocLang();
 // appear. Awaiting one file here is what keeps a Thai or Arabic launch from painting an
 // English screen and then flipping. ensureUiStrings never rejects, so a failed fetch still
 // renders — in English, which is the documented fallback for a missing dictionary anyway.
-if (uiStringsReady()) render();
-else ensureUiStrings().then(render, render);
+// Launch timing, measured on the device that actually matters.
+//
+// Every performance figure in this project so far has been INFERRED — from source bytes, from
+// a module count, or from a warm desktop reload. That is how the launch budget came to be
+// argued in kilobytes while nobody knew what a launch costs on a mid-range Android phone on a
+// hotel connection, which is this app's real deployment. Those two numbers can disagree by an
+// order of magnitude, and the whole priority order of the performance work depends on which is
+// true.
+//
+// So the app measures its own launch and keeps the marks. Three points, from the navigation
+// start the browser already records: when this module finished evaluating (everything eager,
+// parsed and run), when the first screen was handed to the DOM, and the browser's own first
+// contentful paint. Settings shows them; scripts/cold-start.js reads them over the same
+// Performance API, so a phone and a laptop are measured identically.
+//
+// The cost of this is three performance.mark() calls, which is why it is done unconditionally
+// rather than behind a debug flag nobody would turn on before wanting the number.
+function bootMark(name) {
+  try { performance.mark(name); } catch { /* no Performance API — the readout degrades to '—' */ }
+}
+bootMark('mk-eval-done');
+// The mark goes AFTER the render in both branches, not after the if/else: the second path
+// renders asynchronously (it is waiting on a dictionary fetch), so a mark placed below would
+// record a screen that has not been built yet — and would do it only on the launches where the
+// figure is most interesting, a non-English one on a slow connection.
+const firstRender = () => { render(); bootMark('mk-first-render'); };
+if (uiStringsReady()) firstRender();
+else ensureUiStrings().then(firstRender, firstRender);
 
 // Location on from the start: request a live fix immediately (browser permission still
 // gates it) and keep it current; denial degrades to the manual city picker.
@@ -9081,7 +9093,13 @@ function syncWeather(force = false) {
 
 // One call for every live source, so a trigger can never be wired to one and forgotten for
 // the other — which is how the rates ended up with four triggers and the forecast with none.
-function syncLive(force = false) { syncRates(force); syncWeather(force); }
+//
+// The planned stops are refreshed here too, not only on a Home render in the planning phase.
+// The point of caching a forecast for a city you have not reached yet is that it is there when
+// you get there with no signal, and the moment worth spending a request on is the one where a
+// connection appears — which is exactly what calls this. Its own cap (four soonest stops) and
+// staleness window make it cheap to call on every trigger.
+function syncLive(force = false) { syncRates(force); syncWeather(force); ensurePlannedStopsWeather(); }
 
 // Exported so the two places that turn data ON can fetch immediately rather than waiting for
 // the next poll — enabling data and then seeing "approximate" rates for half an hour reads
@@ -9128,3 +9146,10 @@ function warmLazyData() {
 }
 if ('requestIdleCallback' in window) requestIdleCallback(warmLazyData, { timeout: 12000 });
 else setTimeout(warmLazyData, 6000);
+
+// And LAST of everything: put the identify field guide on the device — every photo and animal
+// call, automatically, so recognising a snake or a mushroom works with no signal. It is by far
+// the largest thing the app downloads (95 MB against the app shell's 1.5 MB), so it goes at the
+// very end of the launch sequence and schedules its own work on idle; js/offline-pack.js
+// stages it by connection cost and reports itself on Home while it runs.
+startPack();

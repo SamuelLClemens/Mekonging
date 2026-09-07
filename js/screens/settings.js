@@ -24,7 +24,10 @@
 // uses for activeCountry.
 import { store, save, resetAll, exportData, importData, storageStatus, requestPersistence } from '../state.js';
 import { h } from '../util.js';
-import { field, selectEl, infoTip, confirmAction } from '../ui-widgets.js';
+import { field, selectEl, infoTip, confirmAction, netMode, setNetMode } from '../ui-widgets.js';
+import {
+  packState, packManifest, onPackChange, refreshPackStatus, deferPack, resumePack, clearPack,
+} from '../offline-pack.js';
 import { visitsEnabled, myVisits } from '../visits.js';
 import { trailEnabled, setTrailEnabled, clearTrail, trailStats } from '../trail.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
@@ -42,6 +45,138 @@ import {
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
 // the stored choice everywhere else. Tapping a button is what actually saves the phase.
+// ---- How long this launch took ---------------------------------------------
+// The one performance number this project has never had: what a launch costs on the device it
+// is running on. Everything else has been inferred from source bytes on a desktop, and the
+// priority order of the remaining performance work (splitting main.js, adding a webfont,
+// converting the spacing system) depends entirely on whether a real mid-range Android launch is
+// half a second or eight.
+//
+// Read from the marks main.js sets at boot, against the navigation start the browser records
+// itself, so it measures the same thing here as scripts/cold-start.js measures in a browser
+// session. Shown in Settings rather than hidden behind a debug flag because the person who
+// needs it is holding the phone.
+function launchTimeLine() {
+  const p = h('p', { class: 'tiny muted pack-count' });
+  try {
+    const at = (name) => {
+      const e = performance.getEntriesByName(name);
+      return e.length ? Math.round(e[e.length - 1].startTime) : null;
+    };
+    const paint = performance.getEntriesByName('first-contentful-paint');
+    const evald = at('mk-eval-done');
+    const first = at('mk-first-render');
+    const fcp = paint.length ? Math.round(paint[0].startTime) : null;
+    const bits = [];
+    if (evald != null) bits.push(`code ready ${evald} ms`);
+    if (first != null) bits.push(`first screen ${first} ms`);
+    if (fcp != null) bits.push(`painted ${fcp} ms`);
+    // navigator.connection is Chromium-only, so this is often absent — worth printing when it
+    // is there, because a launch time without the connection it happened on is half a number.
+    const c = navigator.connection;
+    if (c && c.effectiveType) bits.push(c.effectiveType);
+    p.textContent = bits.length ? `⏱ This launch: ${bits.join(' · ')}` : '';
+    if (!bits.length) p.hidden = true;
+  } catch { p.hidden = true; }
+  return p;
+}
+
+// ---- Offline data ----------------------------------------------------------
+// The disclosure for a download that starts on its own (js/offline-pack.js). The app does not
+// ask permission for the field guide, which makes showing what it did non-negotiable: how much
+// is on the device, which tiers are complete, and the two controls — hold it back, or forget
+// it. Also the one place the network switch is a labelled setting rather than an icon.
+//
+// Numbers come from the service worker counting its own cache, not from what the app believes
+// it downloaded. Those disagree whenever the browser evicts a non-persistent cache, and only
+// the first is worth showing anyone.
+const TIER_LABEL = {
+  safety: 'Dangerous species',
+  guide: 'Wildlife, dishes, market produce & calls',
+  places: 'Place photos',
+};
+function offlineDataCard() {
+  const card = h('div', { class: 'card' }, [
+    h('div', { class: 'row-between' }, [
+      h('h2', {}, '📥 Offline field guide'),
+      infoTip('Photos are the part of this app you are most likely to need with no signal — you identify a snake, a mushroom or a dish while standing in front of it. So the app downloads them by itself: the dangerous species first, on any connection, then the rest of the guide once you are on Wi-Fi. Nothing here is required; the app works either way.'),
+    ]),
+  ]);
+  const line = h('p', { class: 'muted pack-state' }, 'Checking what is on this device…');
+  const tiers = h('ul', { class: 'pack-tiers' });
+  const btns = h('div', { class: 'pack-btns' });
+  card.append(line, tiers, btns);
+
+  let total = 0;
+  packManifest().then((m) => { total = m.all.length; paint(); }).catch(() => {});
+
+  const paint = () => {
+    const s = packState();
+    const mb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(0)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+    if (s.running) {
+      const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+      line.textContent = `Downloading ${TIER_LABEL[s.tier] ? TIER_LABEL[s.tier].toLowerCase() : s.tier} — ${s.done} of ${s.total} (${pct}%).`;
+    } else if (s.quotaHit) {
+      line.textContent = `This device is out of storage, so the rest of the guide could not be saved. ${mb(s.storedBytes)} is already here and works offline.`;
+    } else if (netMode() === 'offline') {
+      line.textContent = `Data is switched off, so nothing is downloading. ${mb(s.storedBytes)} is already on this device.`;
+    } else if (s.deferred) {
+      line.textContent = `Waiting for Wi-Fi. ${mb(s.storedBytes)} is on this device — the dangerous-species photos are included.`;
+    } else if (Object.keys(s.tiers).length >= 3) {
+      line.textContent = `The whole field guide is on this device — ${mb(s.storedBytes)}, every photo and call. Nothing here needs a connection.`;
+    } else if (s.kind === 'metered' || s.kind === 'slow') {
+      line.textContent = `${mb(s.storedBytes)} on this device. The rest waits for Wi-Fi so it never runs up a data bill.`;
+    } else {
+      line.textContent = `${mb(s.storedBytes)} on this device.`;
+    }
+
+    tiers.innerHTML = '';
+    ['safety', 'guide', 'places'].forEach((t) => {
+      const done = !!s.tiers[t];
+      tiers.append(h('li', { class: 'pack-tier' + (done ? ' is-done' : '') }, [
+        h('span', { class: 'pt-ic', 'aria-hidden': 'true' }, done ? '✓' : (s.running && s.tier === t ? '↓' : '·')),
+        h('span', {}, TIER_LABEL[t]),
+      ]));
+    });
+
+    btns.innerHTML = '';
+    if (netMode() === 'offline') {
+      btns.append(h('button', { class: 'btn block', onclick: () => { setNetMode('online'); resumePack(); render(); } },
+        '📶 Turn data on and finish the download'));
+    } else if (s.deferred || s.quotaHit) {
+      btns.append(h('button', { class: 'btn block', onclick: () => { resumePack(); paint(); } },
+        '📥 Download the rest now'));
+    } else if (s.running) {
+      btns.append(h('button', { class: 'btn ghost block', onclick: () => { deferPack(); paint(); } },
+        '⏸ Not now — wait for Wi-Fi'));
+    }
+    if (s.storedBytes > 0) {
+      btns.append(h('button', {
+        class: 'btn ghost block', onclick: async () => {
+          const ok = await confirmAction({
+            title: 'Forget the downloaded photos?',
+            body: 'The photos and calls come back as you view them online, and the app will download them again on your next Wi-Fi connection. Your own data is not touched.',
+            confirmLabel: 'Forget them',
+            danger: true,
+          });
+          if (ok) { clearPack(); paint(); }
+        },
+      }, '🗑 Forget the downloaded photos'));
+    }
+    if (total && !s.running) {
+      btns.append(h('p', { class: 'tiny muted pack-count' },
+        `${total} photos and recordings in the full guide.`));
+    }
+  };
+  card.append(launchTimeLine());
+  paint();
+  refreshPackStatus().catch(() => {});
+  // The card is rebuilt on every Settings render, so the subscription has to be released with
+  // it — otherwise each visit leaves another closure repainting a card that is off the DOM.
+  const off = onPackChange(() => { if (card.isConnected) paint(); else off(); });
+  return card;
+}
+
 function phaseSelector(active) {
   const cur = active || store.profile.prefs.phase || '';
   return h('div', { class: 'phase-seg', role: 'group', 'aria-label': 'Your journey phase' },
@@ -394,6 +529,8 @@ export function settingsScreen() {
     rset.journalDaily ? '📔 Daily journal reminder: on' : '📔 Remind me to journal each day'));
   if (rset.journalDaily) remCard.append(field('Journal reminder time', h('input', { type: 'time', value: rset.journalTime, onchange: (e) => { reminders.setJournalTime(e.target.value); reminders.tick(); } })));
   wrap.append(remCard);
+
+  wrap.append(offlineDataCard());
 
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [
