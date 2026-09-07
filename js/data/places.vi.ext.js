@@ -4975,4 +4975,59 @@ export const PLACES_VI_EXT = [
     bookHint: "Cable car tickets can be bought at the gate or online in advance through Sun World's own site.", verified: "2026-09",
     sources: [{ org: "Wikipedia — Black Virgin Mountain", url: "https://en.wikipedia.org/wiki/Black_Virgin_Mountain" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel/sun-world-ba-den" }, { org: "Sun World Ba Den Mountain (official)", url: "https://badenmountain.sunworld.vn/en/" }],
   },
+  // ---- TIEN GIANG PROVINCE — first entry for this province, found by the point-in-polygon
+  // coverage sweep this session (see the Núi Bà Đen entry above for the method). Deliberately
+  // scoped against the existing Cai Rang/Can Tho records (11 already in this file) rather than
+  // duplicating them — this is the smaller, closer market most HCMC day tours actually visit.
+  {
+    id: "vi-ext-cai-be-floating-market", name: "Cai Be Floating Market", city: "Cai Be", country: "vi",
+    recognition: "A stretch of the Tien River off Cai Be town where wholesale boats moor and trade fruit and produce directly off the water, roughly 100 km southwest of Ho Chi Minh City in Tien Giang province.",
+    localName: 'Chợ nổi Cái Bè · Cho noi Cai Be',
+    categories: ["market", "culture", "food"], budgetTier: "mid",
+    blurb: "The classic first stop of the Mekong Delta day-tour circuit out of Ho Chi Minh City: a river market, coconut-candy workshops, and narrow palm-lined canals navigated by small hand-rowed sampans. Quieter and smaller than Can Tho's Cai Rang floating market further south, and closer to the city for travellers with only a day to spare.",
+    whyItFits: "For travellers based in Ho Chi Minh City who want a genuine river-market and canal experience without the longer trip to Can Tho — this is the Delta market most day tours actually visit.",
+    priceRange: { low: 400000, typical: 700000, high: 1200000, currency: "VND", note: "A shared day tour from Ho Chi Minh City (transport, guide, boat, lunch) typically runs 400,000-900,000 VND per person; private tours and add-ons push higher." },
+    hours: "Best early morning, roughly 06:00-09:00, when wholesale trading is busiest",
+    tips: ["Go early - the market thins out by mid-morning as boats finish trading.", "A day tour bundles this with a coconut-candy workshop and a canal sampan ride; confirm what is included before booking.", "This is a lower-key alternative to Can Tho's Cai Rang floating market, not a replacement for it - the two suit different amounts of travel time."],
+    scamWarnings: [],
+    mapQuery: "Cai Be floating market Tien Giang", coords: { lat: 10.333, lng: 106.033 },
+    verified: "2026-09",
+    sources: [{ org: "Tien Giang Provincial Government — Cai Be Floating Market", url: "https://en.tiengiang.gov.vn/tourist/-/asset_publisher/qbjWPmGoCXDS/content/cai-be-floating-market" }, { org: "Wikivoyage — Cai Be", url: "https://en.wikivoyage.org/wiki/Cai_Be" }],
+  },
+  // ---- VINH LONG PROVINCE — first entry for this province, same method. Scoped as an
+  // overnight garden-homestay experience, distinct from both Cai Be's market focus above and
+  // Can Tho's Cai Rang floating market.
+  {
+    id: "vi-ext-an-binh-island", name: "An Binh Island", city: "Vinh Long", country: "vi",
+    recognition: "A cluster of low, green river islands in the Tien and Co Chien rivers just across the water from Vinh Long town, criss-crossed by narrow canals and covered almost entirely in fruit orchards.",
+    localName: 'Cù lao An Bình · Con dao An Binh',
+    categories: ["nature", "culture"], budgetTier: "mid",
+    blurb: "A cluster of four communes on a roughly 60 sq km river island opposite Vinh Long town, known for family-run garden homestays set inside working fruit orchards — longan, rambutan, mango, durian, jackfruit, pomelo and more. Quieter and cheaper than the more touristed stops further along the Delta circuit, and set up for an overnight rather than a rushed day trip.",
+    whyItFits: "For travellers who want an actual night in the Mekong Delta rather than a bus-in, bus-out day tour — waking up on the island, eating with the host family, and being poled through the orchard canals by boat rather than driven past them.",
+    priceRange: { low: 300000, typical: 600000, high: 1200000, currency: "VND", note: "A homestay night with meals typically runs 300,000-600,000 VND per person; a day-tour version (boat, orchard visit, lunch, no overnight) is usually bundled into wider Vinh Long/Delta tour packages." },
+    hours: "Homestays and orchards are visited by day; overnight stays check in during the afternoon",
+    tips: ["Book a specific homestay in advance rather than arriving and hoping — the good ones are small family operations with a handful of rooms.", "An early-morning boat from Vinh Long can also reach Cai Rang floating market near Can Tho, but that trip is longer from here than from Can Tho itself.", "Bring cash; this is a small-scale, family-run circuit with little card infrastructure."],
+    scamWarnings: [],
+    mapQuery: "An Binh Island Vinh Long", coords: { lat: 10.2938, lng: 105.9821 },
+    verified: "2026-09",
+    sources: [{ org: "Wikipedia — An Bình Island", url: "https://en.wikipedia.org/wiki/An_B%C3%ACnh_Island" }, { org: "Travelfish — Vinh Long", url: "https://www.travelfish.org/location/vietnam/mekong_delta/vinh_long/vinh_long" }],
+  },
+  // ---- BEN TRE PROVINCE — first entry for this province, same method. Scoped around the
+  // coconut industry and canals, distinct from the market focus (Cai Be) and homestay-orchard
+  // focus (An Binh Island) of the two entries above.
+  {
+    id: "vi-ext-ben-tre-coconut-village", name: "Ben Tre Coconut Village & Canals", city: "Ben Tre", country: "vi",
+    recognition: "A province nicknamed Xu Dua — 'Coconutland' — about 90 km southwest of Ho Chi Minh City, its waterways lined with coconut palms and its family workshops built around turning the coconut into candy, oil, rope and handicrafts.",
+    localName: 'Xứ Dừa · Xu Dua (Coconutland)',
+    categories: ["nature", "culture", "food"], budgetTier: "mid",
+    blurb: "Vietnam's coconut-growing heartland, most often visited on a half-day boat trip: a motorboat along the wider canals, a switch to a small hand-rowed sampan through narrower ones shaded by nipa palm, and a stop at a family workshop to watch coconut candy made by hand. Quieter and greener than the more market-focused stops elsewhere in the Delta circuit.",
+    whyItFits: "For travellers who want the canal-and-village side of the Mekong Delta rather than the market side — this is the boat-through-the-palms experience most brochures picture, with a genuine local industry (coconut candy, coir rope, handicrafts) behind the stop rather than a staged show.",
+    priceRange: { low: 400000, typical: 700000, high: 1200000, currency: "VND", note: "A shared day tour from Ho Chi Minh City bundling Ben Tre with My Tho typically runs 400,000-900,000 VND per person including transport, guide, boat and lunch." },
+    hours: "Day tours typically run 07:00-17:00; independent visits are flexible",
+    tips: ["Tours here are commonly paired with My Tho as a single day out of Ho Chi Minh City — check the itinerary before booking to see how much time is actually spent on the water versus in transit.", "Sample the coconut candy and coconut wine at a workshop stop; both are made on-site, not shipped in.", "The narrow sampan canals are the highlight — a tour that skips them for motorboat-only canals is missing the actual draw."],
+    scamWarnings: [],
+    mapQuery: "Ben Tre coconut village Vietnam", coords: { lat: 10.167, lng: 106.5 },
+    verified: "2026-09",
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Wikipedia — Bến Tre province", url: "https://en.wikipedia.org/wiki/B%E1%BA%BFn_Tre_province" }],
+  },
 ];

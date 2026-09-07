@@ -3228,4 +3228,35 @@ export const PLACES_KH_EXT = [
     bookHint: "Book a homestay or guide in advance through the Banteay Chhmar CBT program's own site; independent visits are also possible, paying the entrance fee at the gate.", verified: "2026-09",
     sources: [{ org: "UNESCO World Heritage tentative list — Banteay Chhmar", url: "https://whc.unesco.org/en/tentativelists/6456/" }, { org: "Wikipedia — Banteay Chhmar", url: "https://en.wikipedia.org/wiki/Banteay_Chhmar" }, { org: "Visit Banteay Chhmar (official community-based tourism site)", url: "https://www.visitbanteaychhmar.org/" }],
   },
+  // ---- PURSAT PROVINCE — first entry for this province, found by the point-in-polygon
+  // coverage sweep this session (see the Banteay Chhmar entry above for the method).
+  {
+    id: "kh-ext-kompong-luong-floating-village", name: "Kompong Luong Floating Village", city: "Pursat", country: "kh",
+    recognition: "A cluster of houses, shops and a church built entirely on floating rafts on Tonle Sap Lake north of Krakor, reached by tuk-tuk from Pursat town followed by a motorboat ride onto the water itself.",
+    categories: ["culture", "nature"], budgetTier: "low",
+    blurb: "A living floating community of around 1,200 families - roughly 7,000 people, a mix of Khmer, Vietnamese, Cham and Chinese - with its own petrol stations, medical clinics and a Catholic church, all built on rafts that rise and fall, and drift, with Tonle Sap's dramatic seasonal water level. Far less visited than the better-known floating villages near Siem Reap.",
+    whyItFits: "For travellers who want to see real floating-village life on the Tonle Sap without the tour-boat crowds of the villages closer to Siem Reap - Kompong Luong sees little tourism, and a visit here is a half-day trip from Pursat rather than a full detour.",
+    priceRange: { low: 0, typical: 10, high: 20, currency: "USD", note: "No admission fee; the cost is transport - a tuk-tuk from Pursat plus roughly an hour's motorboat hire, negotiated on the spot." },
+    hours: "Daylight hours; visit in the November-April dry season for easier access and calmer water",
+    tips: ["Base yourself in Pursat town, not Siem Reap - the village is a short tuk-tuk-plus-boat trip from there, not a day trip from anywhere further.", "Agree the motorboat price before setting out; there is no fixed posted rate.", "The village's position and distance from shore shifts with the lake's dramatic seasonal rise and fall - do not expect it in the same spot on a return visit."],
+    scamWarnings: [],
+    mapQuery: "Kompong Luong floating village Pursat Cambodia", coords: { lat: 12.5733, lng: 104.2084 },
+    verified: "2026-09",
+    sources: [{ org: "Wikipedia — Kampong Luong", url: "https://en.wikipedia.org/wiki/Kampong_Luong" }, { org: "About Asia Travel — Kompong Luong", url: "https://www.aboutasiatravel.com/cambodia/guide/cambodia-tourist-attractions/kompong-luong/" }],
+  },
+  // ---- PAILIN PROVINCE — first entry for this province, same method.
+  {
+    id: "kh-ext-pailin-town", name: "Pailin", city: "Pailin", country: "kh",
+    recognition: "A quiet former gem-mining boomtown in the low hills of far-western Cambodia near the Thai border, centred on an old market and a hilltop temple, Wat Phnom Yat, that looks out over the town and surrounding forest.",
+    categories: ["culture", "nature", "hike"], budgetTier: "low",
+    blurb: "A ruby and sapphire mining town whose gem wealth funded the Khmer Rouge's last stronghold for nearly two decades after 1979 - the movement's remnants only fully integrated into the Cambodian state in the late 1990s. The mining boom itself has faded as accessible gem deposits ran out, leaving a low-key town built around Wat Phnom Yat's hilltop temple, the old gem market, and forested hills with waterfalls and hiking trails on its outskirts.",
+    whyItFits: "For travellers with a specific interest in Cambodia's recent history who want to see a real former Khmer Rouge stronghold rather than read about one - Pailin is a functioning, low-tourism town, not a preserved site, and it rewards that kind of interest more than a casual stop.",
+    priceRange: { low: 0, typical: 5, high: 20, currency: "USD", note: "No fee to walk the town, the old market or Wat Phnom Yat; a hired moto or guide for the outlying waterfalls and hiking trails is the main cost." },
+    hours: "Daylight hours; the old market is busiest in the morning",
+    tips: ["This is a genuine border town with limited tourist infrastructure - go with cash and modest expectations of English being spoken.", "Wat Phnom Yat's hilltop position gives the best view over the town; climb it in the cooler morning hours.", "Pailin sits on a direct border crossing to Thailand (Pailin/Psar Pruhm), so it can work as a stop en route rather than a dedicated detour."],
+    scamWarnings: [],
+    mapQuery: "Pailin Cambodia", coords: { lat: 12.8544, lng: 102.6064 },
+    verified: "2026-09",
+    sources: [{ org: "Wikipedia — Pailin municipality", url: "https://en.wikipedia.org/wiki/Pailin_municipality" }, { org: "Travelfish — Pailin", url: "https://www.travelfish.org/sights/cambodia/western_cambodia/pailin/pailin" }],
+  },
 ];
