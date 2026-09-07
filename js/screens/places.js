@@ -163,7 +163,7 @@ export function placesScreen(arg) {
   // lock DOM order.
   const mapSection = h('div', { class: 'places-map-section' });
   const modeBar = h('div', { class: 'places-mode-bar' });
-  const layerChipsRow = h('div', { class: 'layer-chips' });
+  const layerChipsRow = h('div', { class: 'layer-chips' });   // holds the one category-picker fold
   const mapWrap = h('div', {});
   const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
   // Map FIRST, then the things that describe it. The category chips used to sit above the
@@ -564,25 +564,59 @@ export function placesScreen(arg) {
   // An empty selection means "all layers". Persisted so a chosen set survives navigation.
   const selLayers = new Set(Array.isArray(prefs.placesLayers) ? prefs.placesLayers : []);
   const presentBuckets = new Set(allPlaces({ country: getActiveCountry() }).map((p) => placeBucket(p)));
+  // ONE control, not a button per category (direct request). All / Food / Markets / Places to
+  // stay / … was up to nine buttons wrapping to three rows above the map, permanently, on the
+  // busiest screen in the app — and it read as nine separate things to decide rather than one
+  // question with several answers. It is now a single pill that names what is showing and
+  // opens a checkbox list: tap once for the list, then tick one, several, or All.
+  //
+  // Multi-select is preserved exactly (the old chips already toggled independently); what
+  // changed is that the choices cost no standing height until asked for. Checkboxes rather
+  // than more chips inside, because a checkbox is unambiguous about "several at once" in a way
+  // a row of pills is not — which is the confusion the request describes.
+  //
+  // Direct node references throughout: mount()'s folding re-parents these, so a querySelector
+  // through the row from a later handler would return null.
+  const layerSummaryLbl = h('span', { class: 'layer-pick-state' });
+  const layerList = h('div', { class: 'layer-pick-list' });
+  const layerDet = h('details', { class: 'layer-pick', 'data-nofold': '' }, [
+    h('summary', {}, [h('span', { class: 'layer-pick-lbl' }, '🗂 Showing'), layerSummaryLbl]),
+    layerList,
+  ]);
   function buildLayerChips() {
-    layerChipsRow.innerHTML = '';
     const allOn = selLayers.size === 0;
-    layerChipsRow.append(h('button', {
-      class: 'layer-chip', 'aria-pressed': allOn ? 'true' : 'false',
-      style: allOn ? 'background:var(--ink);border-color:transparent;color:var(--card)' : '',
+    const present = PLACE_BUCKETS.filter(([key]) => presentBuckets.has(key));
+    layerSummaryLbl.textContent = allOn
+      ? `Everything · ${present.length} kinds`
+      : present.filter(([key]) => selLayers.has(key)).map(([, label]) => label.replace(/^\S+\s/, '')).join(', ');
+    layerDet.classList.toggle('is-on', !allOn);
+    layerList.replaceChildren();
+    // "All" clears the selection rather than ticking every box, because an empty set is what
+    // the filter itself treats as "no filter" — ticking all nine and clearing all nine would
+    // otherwise be two different states that look the same.
+    layerList.append(h('button', {
+      class: 'btn ghost block layer-pick-all', 'aria-pressed': allOn ? 'true' : 'false',
       onclick: () => { selLayers.clear(); prefs.placesLayers = []; save(); buildLayerChips(); renderList(); },
-    }, 'All'));
-    PLACE_BUCKETS.forEach(([key, label]) => {
-      if (!presentBuckets.has(key)) return;
+    }, allOn ? '✓ Showing everything' : 'Show everything'));
+    present.forEach(([key, label]) => {
       const on = selLayers.has(key);
       const color = BUCKET_COLOR[key] || BUCKET_COLOR.other;
-      layerChipsRow.append(h('button', {
-        class: 'layer-chip', 'aria-pressed': on ? 'true' : 'false', dataset: { layer: key },
-        style: on ? `background:${color};border-color:transparent` : '',
-        onclick: () => { if (selLayers.has(key)) selLayers.delete(key); else selLayers.add(key); prefs.placesLayers = [...selLayers]; save(); buildLayerChips(); renderList(); },
-      }, [h('span', { class: 'layer-dot', style: `background:${color}` }), label.replace(/^\S+\s/, '')]));
+      const box = h('input', { type: 'checkbox', checked: on ? '' : null, 'aria-label': label });
+      // dataset.layer is kept on the row: the "no results" pills below reach for it by
+      // key to turn a filter off from the empty state (see pillsRow).
+      const row = h('label', { class: 'layer-pick-row', dataset: { layer: key } }, [
+        box,
+        h('span', { class: 'layer-dot', style: `background:${color}` }),
+        h('span', {}, label.replace(/^\S+\s/, '')),
+      ]);
+      box.addEventListener('change', () => {
+        if (box.checked) selLayers.add(key); else selLayers.delete(key);
+        prefs.placesLayers = [...selLayers]; save(); buildLayerChips(); renderList();
+      });
+      layerList.append(row);
     });
   }
+  layerChipsRow.append(layerDet);
   buildLayerChips();
 
   // Mode bar: a plain STATUS label (where "near" is centred) on the left, and up to two
@@ -650,7 +684,7 @@ export function placesScreen(arg) {
     if (searchTerm.trim()) pillsRow.append(pill(`🔎 “${searchTerm.trim()}”`, () => { searchTerm = ''; searchBox.value = ''; renderList(); }));
     selLayers.forEach((key) => {
       const b = PLACE_BUCKETS.find((x) => x[0] === key);
-      if (b) pillsRow.append(pill(b[1].replace(/^\S+\s/, ''), () => layerChipsRow.querySelector(`[data-layer="${key}"]`)?.click()));
+      if (b) pillsRow.append(pill(b[1].replace(/^\S+\s/, ''), () => layerList.querySelector(`[data-layer="${key}"] input`)?.click()));
     });
     selInterests.forEach((id) => {
       const it = INTERESTS.find((x) => x.id === id);

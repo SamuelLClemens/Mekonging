@@ -116,39 +116,86 @@ export function expCatPicker(current) {
   return row;
 }
 
+// Every distinct thing the traveller has logged before, most-used first (ties broken by most
+// recent), each carrying the category it is most often filed under so picking it fills both
+// fields in one go.
+//
+// Two thresholds changed when the chip row became a dropdown, and both changes are the point
+// rather than incidental:
+//   * n >= 1, not n >= 2. "When something is added to the list it should go in the dropdown"
+//     is about a single log, not a repeat — under the old rule the first beer you logged was
+//     invisible and the second one materialised a button.
+//   * 40 entries, not 6. Six was a chip-row budget: a seventh chip wrapped the row to a third
+//     line. A dropdown is the same height whether it holds three entries or thirty, which is
+//     exactly why this control belongs in one.
 export function frequentExpenseTitles() {
-  const counts = new Map();   // key: lowercased title -> { title, n, cats: Map<category,count> }
-  (store.trip.budgetLog || []).forEach((b) => {
+  const counts = new Map();   // key: lowercased title -> { title, n, last, cats: Map<category,count> }
+  (store.trip.budgetLog || []).forEach((b, i) => {
     const t = (b.note || '').trim();
     if (!t) return;
     const key = t.toLowerCase();
-    const rec = counts.get(key) || { title: t, n: 0, cats: new Map() };
+    const rec = counts.get(key) || { title: t, n: 0, last: -1, cats: new Map() };
     rec.n++;
+    rec.last = i;
+    rec.title = t;              // keep the most recent spelling/casing the traveller used
     const cat = expCatOf(b);
     rec.cats.set(cat, (rec.cats.get(cat) || 0) + 1);
     counts.set(key, rec);
   });
   return [...counts.values()]
-    .filter((r) => r.n >= 2)
-    .sort((a, b) => b.n - a.n)
-    .slice(0, 6)
-    .map((r) => ({ title: r.title, category: [...r.cats.entries()].sort((a, b) => b[1] - a[1])[0][0] }));
+    .sort((a, b) => (b.n - a.n) || (b.last - a.last))
+    .slice(0, 40)
+    .map((r) => ({ title: r.title, n: r.n, category: [...r.cats.entries()].sort((a, b) => b[1] - a[1])[0][0] }));
 }
 
-export function expTitleChips(noteEl, catPicker) {
-  const freq = frequentExpenseTitles();
-  if (!freq.length) return null;
-  return h('div', { class: 'chips exp-title-chips' }, freq.map((f) =>
-    h('button', { type: 'button', class: 'chip ghost', onclick: () => { noteEl.value = f.title; if (catPicker) catPicker.set(f.category); } }, f.title)));
+// The "On what?" field. A dropdown of everything logged before plus free text for anything
+// new — NOT a row of one-tap chips, which is what this was and what had to go: a logged
+// expense must land in the dropdown and must never spawn a button of its own, and logging
+// the same thing twice must not produce a second control (direct request, made repeatedly).
+//
+// Free text stays reachable at all times rather than hiding behind the dropdown's "something
+// new" option, because the first expense of a trip is always new and a picker offering one
+// option and an escape hatch is worse than a plain field. The dropdown simply does not render
+// until there is something remembered to put in it.
+//
+// Returns the wrapper with `.get()` for the typed-or-picked title. Direct node references
+// throughout: mount()'s automatic folding re-parents a card's children, so anything looked up
+// through the wrapper from a later handler would come back null.
+export function expTitlePicker(catPicker, opts = {}) {
+  const seen = frequentExpenseTitles();
+  const input = h('input', {
+    type: 'text', 'aria-label': 'What the expense was on',
+    placeholder: seen.length ? 'Or type something new' : 'On what? (e.g. lunch, taxi, room)',
+    value: opts.value || '',
+  });
+  const wrap = h('div', { class: 'exp-title-pick' });
+  if (seen.length) {
+    const sel = selectEl(
+      [['', `Pick from your ${seen.length} logged…`], ...seen.map((f) => [f.title, f.n > 1 ? `${f.title} (${f.n}×)` : f.title])],
+      '',
+      (v) => {
+        if (!v) return;
+        const f = seen.find((x) => x.title === v);
+        input.value = v;
+        if (f && catPicker) catPicker.set(f.category);
+        sel.value = '';           // reset so re-picking the same entry works a second time
+      },
+      'Pick something you have logged before',
+    );
+    wrap.append(sel);
+  }
+  wrap.append(input);
+  wrap.get = () => input.value.trim();
+  wrap.set = (v) => { input.value = v; };
+  return wrap;
 }
 
 export function expenseAddCard(opts = {}) {
   const bAmt = h('input', { 'aria-label': 'Amount', type: 'number', inputmode: 'decimal', placeholder: 'Amount' });
   const bCur = currencySelect(opts.currency || 'THB');
   const bDate = h('input', { 'aria-label': 'Date', type: 'date', value: todayISO() });
-  const bNote = h('input', { 'aria-label': 'What the expense was on', type: 'text', placeholder: 'On what? (e.g. lunch, taxi, room)' });
   const bCat = expCatPicker('other');
-  const bChips = expTitleChips(bNote, bCat);
+  const bNote = expTitlePicker(bCat);
   const dateField = field('Date', bDate);
   // A rent payment or a month-long SIM plan does not belong to one day — checking this swaps
   // the day picker for a month picker (native <input type=month>) and the logged date
@@ -166,13 +213,13 @@ export function expenseAddCard(opts = {}) {
     if (!bAmt.value || !bDate.value) return;
     const monthly = bMonthly.checked;
     const date = monthly ? `${bDate.value}-01` : bDate.value;
-    const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.value.trim(), category: bCat.get(), date, monthly });
+    const item = addBudgetItem({ amount: bAmt.value, currency: bCur.value, note: bNote.get(), category: bCat.get(), date, monthly });
     if (opts.afterAdd) opts.afterAdd(item);
   };
   return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
     h('h2', {}, 'Log an expense'),
     h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
-    field('On what?', bNote), bChips, field('Category', bCat), monthlyToggle, dateField,
+    field('On what?', bNote), field('Category', bCat), monthlyToggle, dateField,
     h('button', { class: 'btn block btn-spaced', onclick: add }, '＋ Add expense'),
   ]);
 }
@@ -238,15 +285,14 @@ export function budgetLogRow(b) {
     const amt = h('input', { type: 'number', inputmode: 'decimal', value: b.amount });
     const cur = currencySelect(b.currency || 'THB');
     const dt = h('input', { type: 'date', value: b.date || todayISO() });
-    const note = h('input', { type: 'text', value: b.note || '', placeholder: 'On what?' });
     const cat = expCatPicker(expCatOf(b));
-    const chips = expTitleChips(note, cat);
+    const note = expTitlePicker(cat, { value: b.note || '' });
     return h('div', { class: 'card', style: 'margin:6px 0' }, [
       h('div', { style: 'display:flex;gap:10px' }, [field('Amount', amt), field('Currency', cur)]),
-      field('On what?', note), chips, field('Category', cat), field('Date', dt),
+      field('On what?', note), field('Category', cat), field('Date', dt),
       h('div', { class: 'row-between', style: 'margin-top:6px' }, [
         h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
-        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), category: cat.get(), date: dt.value || b.date }); editExpenseId = null; render(); } }, 'Save'),
+        h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.get(), category: cat.get(), date: dt.value || b.date }); editExpenseId = null; render(); } }, 'Save'),
       ]),
     ]);
   }

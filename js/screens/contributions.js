@@ -5,11 +5,11 @@ import * as gamify from '../gamify.js';
 import { store } from '../state.js';
 import { h } from '../util.js';
 import { screenHint } from '../ui-widgets.js';
-import { go, mount, topbar } from '../main.js';
+import { go, mount, ownTitle, topbar } from '../main.js';
 
 export function contributionsScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Contributions', '#home'));
+  wrap.append(topbar(ownTitle('contributions', 'Contributions'), '#home'));
   const pts = gamify.contributionPoints(store);
   const lvl = gamify.levelInfo(pts);
   const rows = gamify.contributionBreakdown(store);

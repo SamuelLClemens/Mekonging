@@ -47,6 +47,22 @@ const CURRENCY_FLAGS = {
 };
 export function currencyFlag(code) { return CURRENCY_FLAGS[code] || ''; }
 
+// Currency symbols and the ONE money formatter both live in js/util.js — this file imports
+// them (util.js has no imports of its own, so the table can be shared without a cycle) and
+// re-exports the accessors, because "what symbol does this currency use" is a question
+// callers naturally bring here alongside currencyFlag().
+// Imported and then re-exported rather than `export … from`: check-undefined.py reads a
+// bare re-export as a USE of those names in this file and reports three ReferenceErrors.
+import { currencySymbol, currencySymbolAfter, money } from './util.js';
+export { currencySymbol, currencySymbolAfter, money };
+
+// A figure with its flag as well as its symbol, for the controls that name the currency and
+// show it at once — the converter's rate line, the quick-guide heading.
+export function fmtMoneyFlag(amount, code) {
+  const f = currencyFlag(code);
+  return `${f ? f + ' ' : ''}${money(amount, code)}`;
+}
+
 // Approximate baseline (per 1 USD). Labelled "approximate" until a live refresh.
 const FALLBACK = {
   base: 'USD', date: 'approximate', live: false,

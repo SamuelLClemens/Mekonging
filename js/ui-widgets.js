@@ -8,7 +8,7 @@ import { store, save } from './state.js';
 import { speak, stop as stopSpeak } from './tts.js';
 import { WEATHER_SPOTS, spotKey, spotsForCountry } from './weather.js';
 import { COUNTRIES } from './data/regions.js';
-import { CURRENCY_CODES, currencyFlag } from './currency.js';
+import { CURRENCY_CODES, currencyFlag, currencySymbol } from './currency.js';
 
 // ---- Read-aloud reader ------------------------------------------------------
 // Play/pause long-form text (history, guides, first aid) at a chosen speed. Speech is
@@ -257,8 +257,13 @@ export function promptAction(opts = {}) {
 // submit, but a display-currency switcher needs to react immediately (see
 // budgetSummaryCard's totalsCurrencyRow), so the widget supports both without a second,
 // parallel picker to keep in sync.
+// Labelled by flag + symbol rather than the ISO code (direct request): "🇹🇭 ฿" is what is
+// printed on the price tag the traveller is holding, where "THB" is a code they have to
+// translate. The flag carries the disambiguation the symbol alone cannot — $, A$, C$ and S$
+// are four different currencies — so both are kept and the code is dropped. `aria-label`
+// still names the currency in full so a screen reader is not left reading out an emoji.
 export function currencySelect(current, onchange) {
-  return selectEl(CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${c}`.trim()]),
+  return selectEl(CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${currencySymbol(c) || c}`.trim()]),
     current, onchange || (() => {}), 'Currency');
 }
 

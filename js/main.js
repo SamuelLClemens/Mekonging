@@ -96,7 +96,7 @@ import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPac
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
-import { getRates, refreshRates, maybeRefreshRates, convert } from './currency.js';
+import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany } from './weather.js';
 import {
   COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
@@ -229,7 +229,7 @@ const ROUTE_SCREENS = {
   donate: ['giveback'],
   circle: ['circle'], add: ['circle'], in: ['circle'],
   inbox: ['circle'], thread: ['circle'], msg: ['circle'],
-  produce: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
+  produce: ['produce'], pantry: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
   trip: ['trip'], plans: ['trip'], checklist: ['trip'],
   help: ['help'], feedback: ['help'], contributions: ['contributions'],
   board: ['board'], streetfood: ['streetfood'],
@@ -317,6 +317,7 @@ const ROUTE_DATA = {
   plans: ['itineraries'],
   pools: ['pools'],
   produce: ['produce'],
+  pantry: ['produce'],
   region: ['zones'],
   scams: ['accessibility', 'scams', 'visa'],
   schedules: ['schedules'],
@@ -666,7 +667,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.534.0';
+export const APP_VERSION = 'mk-v0.535.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -872,6 +873,17 @@ export function countryContextLine(cc) {
 // phrasebook, the dictionary, the hubs, the chips and the search index cannot drift apart.
 export function whoName() { return (store.profile.name || '').trim(); }
 
+// A screen that holds the traveller's OWN content is titled with their name once they have
+// given one — "Sam’s journey", not "Your journey" (direct request, applied to all of them, not
+// just the map). The nav taxonomy already did this for its rows through itemLabel(); this is
+// the same rule for the screen a row opens, so the door and the room behind it agree.
+// `fallback` is what the screen is called before a name exists, which is not always "Your X"
+// ("Journal", "My identifier", "Saved & collections"), so it stays the caller's to state.
+export function ownTitle(noun, fallback) {
+  const who = whoName();
+  return who ? `${who}’s ${noun}` : fallback;
+}
+
 // "Sam’s dictionary" once a name is set, "my dictionary" before that — written to read
 // correctly MID-SENTENCE, which is where it is mostly used ("Translate & save to …").
 export function dictionaryName() {
@@ -879,11 +891,9 @@ export function dictionaryName() {
   return who ? `${who}’s dictionary` : 'my dictionary';
 }
 
-// The same thing as a heading or a button label, where it starts the phrase.
-export function dictionaryTitle() {
-  const who = whoName();
-  return who ? `${who}’s dictionary` : 'My dictionary';
-}
+// The same thing as a heading or a button label, where it starts the phrase. Now the shared
+// ownTitle() — this function was the pattern every other own-content screen was given.
+export function dictionaryTitle() { return ownTitle('dictionary', 'My dictionary'); }
 
 export function topbar(title, backHash) {
   const hash = location.hash || '';
@@ -1247,6 +1257,33 @@ function rememberFold(key, open) {
 // heading becomes one fold. Runs first, so the card pass below only ever sees what is left at
 // screen level and nothing gets folded twice.
 function foldHeadingRuns(root, routeKey) {
+  const prefs = sectionFoldPrefs();
+  // Turn `head` plus `body` into one remembered fold, replacing `replace` in the document.
+  const foldInto = (head, body, replace) => {
+    const label = (head.textContent || '').trim();
+    if (!label || !body.length) return;
+    const key = `${routeKey}:${label.slice(0, 40)}`;
+    const det = h('details', { class: 'foldcard autofold autofold-run' });
+    if (prefs[key] !== false) det.setAttribute('open', '');
+    det.append(h('summary', { class: 'foldcard-sum' }, label));
+    body.forEach((n) => det.append(n));
+    det.addEventListener('toggle', () => rememberFold(key, det.open));
+    replace.replaceWith(det);
+  };
+
+  // A screen that wraps a heading and its body in a <section> hides that heading from the
+  // root-level pass below, which only looks at root's OWN children. Explore builds several of
+  // its blocks that way — "Right now, seasonally" and "You might not know" among them — and
+  // every one of them stood permanently expanded while the rest of the screen folded, with no
+  // arrow to suggest otherwise. Same treatment, one level in: the <section> becomes the fold.
+  // Runs before the root pass so a section is never also caught by it.
+  for (const sec of [...root.children]) {
+    if (sec.tagName !== 'SECTION' || sec.hasAttribute('data-nofold')) continue;
+    const head = sec.firstElementChild;
+    if (!head || head.tagName !== 'H2' || head.hasAttribute('data-nofold')) continue;
+    foldInto(head, [...sec.children].slice(1), sec);
+  }
+
   const kids = [...root.children];
   const heads = kids.filter((el) => el.tagName === 'H2' && !el.hasAttribute('data-nofold'));
   // Two or more headings are obviously a section list. ONE heading is usually a screen title
@@ -1256,10 +1293,7 @@ function foldHeadingRuns(root, routeKey) {
   // around it folded.
   if (!heads.length) return;
   if (heads.length < 2 && !heads[0].classList.contains('home-section')) return;
-  const prefs = sectionFoldPrefs();
   for (const head of heads) {
-    const label = (head.textContent || '').trim();
-    if (!label) continue;
     // The run stops at the next heading — and also at anything that is plainly a page-level
     // trailer rather than part of this section. Without that, collapsing the You hub's last
     // heading would also hide the backup prompt and the on-device privacy line that follow it.
@@ -1269,15 +1303,7 @@ function foldHeadingRuns(root, routeKey) {
         || (n.classList && (n.classList.contains('disclaimer') || n.classList.contains('backup-line')))) break;
       body.push(n);
     }
-    if (!body.length) continue;
-    const key = `${routeKey}:${label.slice(0, 40)}`;
-    const det = h('details', { class: 'foldcard autofold autofold-run' });
-    if (prefs[key] !== false) det.setAttribute('open', '');
-    const sum = h('summary', { class: 'foldcard-sum' }, label);
-    det.append(sum);
-    body.forEach((n) => det.append(n));
-    det.addEventListener('toggle', () => rememberFold(key, det.open));
-    head.replaceWith(det);
+    foldInto(head, body, head);
   }
 }
 
@@ -2004,15 +2030,24 @@ function homeRightNowCard(ctx) {
       class: 'chip', 'aria-pressed': catSet.has(f.key) ? 'true' : 'false',
       onclick: () => { if (catSet.has(f.key)) catSet.delete(f.key); else catSet.add(f.key); refreshChips(); drawPicks(); },
     }, [swatch(FAMILY_COLOR[f.key]), ` ${f.emoji} ${f.label}`]));
+    // The control reads as a BUTTON, not a line of text (direct request: "so users know to
+    // use it and that it is clickable"). Three things do that work: the summary is styled as
+    // a filled pill; the wording is one word, "Filter", instead of the sentence it was; and
+    // `is-on` takes the accent whenever a filter is actually applied, so an active filter
+    // announces itself from the collapsed state rather than hiding inside it. Direct node
+    // reference, not a querySelector through the card — mount()'s folding re-parents the
+    // card's children and would strand a lookup made from a later handler.
+    const filterFold = h('details', { class: 'rn-filter-fold', 'data-nofold': '' });
     function refreshChips() {
       allChip.setAttribute('aria-pressed', catSet.size ? 'false' : 'true');
       famChips.forEach((btn, i) => btn.setAttribute('aria-pressed', catSet.has(famsPresent[i].key) ? 'true' : 'false'));
-      // Keep the collapsed summary honest about what is applied, so a traveller who folded
+      // Keep the collapsed control honest about what is applied, so a traveller who folded
       // the panel away can still see at a glance why they are being shown these five.
       const names = famsPresent.filter((f) => catSet.has(f.key)).map((f) => f.label);
       const price = tierFilter !== 'all' ? PRICE_TIER_LABEL[tierFilter] : null;
-      const parts = [names.length ? names.join(', ') : 'Everything', price].filter(Boolean);
-      filterSummary.textContent = parts.join(' · ');
+      const on = names.length > 0 || price != null;
+      filterSummary.textContent = on ? [names.join(', '), price].filter(Boolean).join(' · ') : 'All';
+      filterFold.classList.toggle('is-on', on);
     }
     const panel = h('div', { class: 'rn-filter-row' }, [
       h('div', { class: 'chips' }, [allChip, ...famChips]),
@@ -2021,14 +2056,15 @@ function homeRightNowCard(ctx) {
         (v) => { tierFilter = v; refreshChips(); drawPicks(); }, 'Filter nearby picks by price',
       ) : null,
     ]);
-    refreshChips();
     // data-nofold: mount()'s automatic section folding must not wrap this a second time —
     // this <details> IS the fold. Its open/closed state is deliberately not persisted: it is
     // a control panel, not a content section, and it should reopen closed every visit.
-    card.append(h('details', { class: 'rn-filter-fold', 'data-nofold': '' }, [
-      h('summary', {}, [h('span', {}, '⚙ Filter these picks'), filterSummary]),
+    filterFold.append(
+      h('summary', {}, [h('span', { class: 'rn-filter-lbl' }, '⚙ Filter'), filterSummary]),
       panel,
-    ]));
+    );
+    refreshChips();
+    card.append(filterFold);
   }
   card.append(tipEl, listWrap, footEl);
   card.append(screenHint('Picks match the time of day, weather and the filters above — tweak them anytime. ✓ done or ✕ skip swaps in a new one.', 'About these picks'));
@@ -2498,7 +2534,7 @@ function returnRecapCard() {
   if (ratedN) stats.push(stat(ratedN, ratedN === 1 ? 'place rated' : 'places rated'));
   if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
   if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
-  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, `Spent ≈ ${Math.round(homeSum).toLocaleString()} ${home}${allKnown ? '' : ' (some rates unknown)'}`));
+  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, `Spent ≈ ${money(Math.round(homeSum), home)}${allKnown ? '' : ' (some rates unknown)'}`));
   const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
   if (unrated.length) {
     const first = getPlace(unrated[0]);
@@ -2734,7 +2770,7 @@ function quickSpendRow(id) {
     ]);
     box.append(logDet);
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur}${unknownToday ? ' (some unknown)' : ''} · ` : '',
+      spent > 0 ? `Spent today: ${money(Math.round(spent), cur)}${unknownToday ? ' (some unknown)' : ''} · ` : '',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
   };
@@ -2929,12 +2965,12 @@ function meHubScreen() {
   ]);
 
   const startISO = tripStartISO();
-  const calLabel = (startISO && daysUntilISO(startISO) <= 0) ? `Day ${1 - daysUntilISO(startISO)}` : 'Calendar';
+  const calLabel = (startISO && daysUntilISO(startISO) <= 0) ? `Day ${1 - daysUntilISO(startISO)}` : quickChipLabel('calendar');
 
   const sp = tripSpendHome();
   const target = budgetTarget();
-  let budgetLabel = 'Budget';
-  let budgetSub = (sp.any && sp.sum > 0) ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : null;
+  let budgetLabel = quickChipLabel('budget');
+  let budgetSub = (sp.any && sp.sum > 0) ? `${money(Math.round(sp.sum), sp.home)}${sp.allKnown ? '' : '+'}` : null;
   let budgetClass = '';
   if (target && sp.sum > 0) {
     const span = tripSpanDays();
@@ -3048,10 +3084,17 @@ function meHubScreen() {
     mineBody,
   ]));
 
-  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:16px' }, '🗂️ Everything else'));
-  wrap.append(groupDoors(['mine']));
-  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
-    '🗂️ All features, A–Z →'));
+  // "Everything else" folds, and CLOSED by default (direct request). It is a door-grid to the
+  // eight sections You does not own — a browse surface, not something to read on arrival — and
+  // it was the tallest permanently-expanded block on the screen.
+  //
+  // The "All features, A–Z →" button that used to sit under it is GONE, and only because the
+  // condition the request set is actually met: everythingScreen() builds its A–Z list from
+  // `visibleGroups(phase)`, the same set groupDoors() renders, so every feature in that index
+  // is inside one of these doors already, and My stuff — the ninth group, the one skipped
+  // here — is the full section rendered directly above. Nothing lost a path. #everything is
+  // still reached from Home and from search.
+  wrap.append(homeFold('🗂️ Everything else', groupDoors(['mine']), 'youEverythingOpen', { defaultOpen: false }));
   // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
   // quiet dismissible line near the foot. Same trigger (a single expense is still "something
   // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
@@ -3086,18 +3129,37 @@ function meHubScreen() {
 //
 // One table, read by both Home's row and the Settings editor, so the two can never drift.
 // `live` is the liveStatus() key for the figure shown under the label, where there is one.
+// `own` is the possessive noun for the chips that point at the traveller's OWN content, the
+// same convention nav-groups.js uses (see itemLabel there). Without it these chips said
+// "Journal" and "Budget" while the rows immediately below them on the You screen said
+// "Sam's journal" and "Sam's budget" — the same destination under two names, on one screen.
+// A chip with no `own` is not the traveller's (Weather, Travel circle, Shared with you).
 export const QUICK_CHIPS = [
-  { key: 'calendar', ic: '📅', label: 'Calendar', hash: '#calendar', live: 'calendar' },
-  { key: 'budget', ic: '💰', label: 'Budget', hash: '#expenses', live: 'budget' },
+  { key: 'calendar', ic: '📅', label: 'Calendar', own: 'calendar', hash: '#calendar', live: 'calendar' },
+  { key: 'budget', ic: '💰', label: 'Budget', own: 'budget', hash: '#expenses', live: 'budget' },
   { key: 'weather', ic: '🌤', label: 'Weather', hash: '#weather', live: 'weather' },
-  { key: 'journal', ic: '📔', label: 'Journal', hash: '#journal', live: 'journal' },
+  { key: 'journal', ic: '📔', label: 'Journal', own: 'journal', hash: '#journal', live: 'journal' },
   { key: 'rate', ic: '💱', label: 'Currency converter', hash: '#currency', live: 'rate' },
-  { key: 'saved', ic: '⭐', label: 'Saved places', hash: '#saved', live: 'saved' },
-  { key: 'identified', ic: '🔍', label: 'My identifier', hash: '#identified', live: 'identified' },
-  { key: 'phrases', ic: '💬', label: 'Your dictionary', hash: '#dictionary', live: 'phrases' },
+  { key: 'saved', ic: '⭐', label: 'Saved places', own: 'saved places', hash: '#saved', live: 'saved' },
+  { key: 'identified', ic: '🔍', label: 'My identifier', own: 'identifier', hash: '#identified', live: 'identified' },
+  { key: 'phrases', ic: '💬', label: 'Your dictionary', own: 'dictionary', hash: '#dictionary', live: 'phrases' },
   { key: 'inbox', ic: '📥', label: 'Shared with you', hash: '#inbox', live: 'inbox' },
   { key: 'circle', ic: '👥', label: 'Travel circle', hash: '#circle', live: 'circle' },
 ];
+
+// A chip's visible label: named after the traveller where the thing is theirs. Accepts a key
+// or the table row itself.
+//
+// This is the PLAIN-NAME label only. Calendar and Budget replace it outright with a live
+// figure once there is one — "Day 3", "18% spent" — and those must not be personalised, since
+// "Sam’s 18% spent" is not a phrase. So callers use this for the fallback name and let the
+// figure win where a figure exists, which is exactly the behaviour those two chips already had.
+export function quickChipLabel(keyOrDef) {
+  const def = typeof keyOrDef === 'string' ? QUICK_CHIPS.find((c) => c.key === keyOrDef) : keyOrDef;
+  if (!def) return '';
+  const who = whoName();
+  return (who && def.own) ? `${who}’s ${def.own}` : def.label;
+}
 export const QUICK_CHIPS_DEFAULT = ['calendar', 'budget', 'weather', 'journal'];
 
 // The traveller's chosen chips, or the default four. Unknown keys are dropped (so a renamed
@@ -3306,10 +3368,18 @@ export function identifyRow() {
   const items = visibleItems(group, phase);
   if (!items.length) return null;
   const box = h('div', { class: 'home-identify' }, [featureChips(items, getActiveCountry())]);
-  // The group's TITLE, not its blurb: the summary style uppercases, and "WHAT IS THIS DISH,
-  // FRUIT OR BIRD?" wrapped to two shouted lines at 375px. Naming it exactly as its door is
-  // named also tells a traveller that these chips are that section, brought forward.
-  return homeFold(`${group.ic} ${group.title}`, box, 'homeIdentifyOpen');
+  // A named way in to the whole section, at the foot of the chips (direct request: "a button
+  // for identify what's around you ... that takes you to a choice of what you want to
+  // identify"). The chips above ARE that choice, one tap each, and they stay — the button is
+  // for the traveller who wants the section rather than one thing in it, and the hub is where
+  // each entry also carries its blurb.
+  box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#hub-identify') },
+    '🔎 Identify what’s around you →'));
+  // "Identify what's around you", not the group's bare title: the section is a question a
+  // traveller asks while standing in front of something, and the heading now says so.
+  // Not the group blurb either — the summary style uppercases, and "WHAT IS THIS DISH, FRUIT
+  // OR BIRD?" wrapped to two shouted lines at 375px.
+  return homeFold(`${group.ic} Identify what’s around you`, box, 'homeIdentifyOpen');
 }
 
 // The hub itself. Unknown id falls through to the full index rather than an error screen:
@@ -4636,20 +4706,36 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
   const toSel = currencySelect(toDefault);
   const out = h('input', { type: 'text', readonly: '', tabindex: '-1', class: 'fx-out', 'aria-label': 'Converted amount', 'aria-live': 'polite' });
   const rates = getRates();
+  // The rate itself, spelled the way both currencies are actually written — "🇺🇸 $1 = 🇹🇭 ฿36".
+  // The converter answers "what is this worth"; this line answers "what is the rate", which is
+  // the number a traveller carries in their head all day, and it used to be nowhere on screen.
+  const rateLine = h('p', { class: 'fx-rate' });
   function recompute() {
     const v = parseFloat(amount.value) || 0;
     const r = convert(v, fromSel.value, toSel.value);
     out.value = r == null ? '—' : r.toLocaleString(dateLocale(), { maximumFractionDigits: r >= 100 ? 0 : 2 });
+    const one = convert(1, fromSel.value, toSel.value);
+    rateLine.textContent = one == null
+      ? 'Rate unavailable for this pair offline.'
+      : `${currencyFlag(fromSel.value)} ${money(1, fromSel.value)} = ${currencyFlag(toSel.value)} ${money(one, toSel.value)}`;
   }
   amount.addEventListener('input', recompute);
   fromSel.addEventListener('change', recompute);
   toSel.addEventListener('change', recompute);
+  // Each figure now sits on ONE line with its own currency beside it (direct request). The
+  // sides used to be columns — number stacked above currency — which read as four controls in
+  // two columns and made the pairing between a number and its currency something you had to
+  // infer from position. Stacked from/to rows instead of side-by-side columns because at
+  // 375px two inputs and two selects in a single row leaves each control about 60px wide.
+  const swap = h('button', {
+    type: 'button', class: 'fx-eq', title: 'Swap currencies', 'aria-label': 'Swap currencies',
+    onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); },
+  }, '⇅');
   const wrap = h('div', { class: 'fx-widget' }, [
-    h('div', { class: 'fx-row' }, [
-      h('div', { class: 'fx-side' }, [amount, fromSel]),
-      h('button', { type: 'button', class: 'fx-eq', title: 'Swap currencies', 'aria-label': 'Swap currencies', onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); } }, '='),
-      h('div', { class: 'fx-side' }, [out, toSel]),
-    ]),
+    h('div', { class: 'fx-line' }, [amount, fromSel]),
+    h('div', { class: 'fx-swap-row' }, [swap]),
+    h('div', { class: 'fx-line' }, [out, toSel]),
+    rateLine,
     opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
   ]);
   recompute();
@@ -4668,12 +4754,14 @@ function currencyScreen() {
   wrap.append(topbar('Currency', '#home'));
   wrap.append(h('div', { class: 'card' }, [fxConverterControl(home, local)]));
 
-  const quick = h('div', { class: 'card' }, [h('h2', {}, `Quick guide: ${home} → ${local}`)]);
+  const quick = h('div', { class: 'card' }, [
+    h('h2', {}, `Quick guide: ${currencyFlag(home)} ${currencySymbol(home) || home} → ${currencyFlag(local)} ${currencySymbol(local) || local}`),
+  ]);
   [1, 5, 10, 20, 50, 100].forEach((n) => {
     const r = convert(n, home, local);
     quick.append(h('div', { class: 'price-item row-between' }, [
-      h('span', {}, `${n} ${home}`),
-      h('strong', { class: 'fair' }, r == null ? '—' : `${r.toLocaleString(dateLocale(), { maximumFractionDigits: 0 })} ${local}`),
+      h('span', {}, money(n, home)),
+      h('strong', { class: 'fair' }, r == null ? '—' : money(r, local)),
     ]));
   });
   wrap.append(quick);
@@ -4711,19 +4799,19 @@ function bbSubKinds(cat) {
   return [['free', '🎁 Free / giveaway'], ['sale', '🏷 For sale'], ['wanted', '🙋 Wanted'], ['other', '📦 Other']];
 }
 const HOUSE_KIND = { room: 'Room / bed', place: 'Whole place', looking: 'Looking for a place' };
-function fmtMoney(n, cur) { return `${Number(n).toLocaleString(dateLocale(), { maximumFractionDigits: n >= 100 ? 0 : 2 })} ${cur || ''}`.trim(); }
+// fmtMoney now comes from js/currency.js — see the note there on why the private copy went.
 
 // A listing's one-line headline and a short subline, shared by the card + import views.
 export function bbHeadline(cat, d) {
-  if (cat === 'swap') return `${fmtMoney((d.have && d.have.a) || 0, (d.have && d.have.c) || '?')} → ${(d.want && d.want.c) || '?'}`;
+  if (cat === 'swap') return `${money((d.have && d.have.a) || 0, (d.have && d.have.c) || '?')} → ${(d.want && d.want.c) || '?'}`;
   if (cat === 'ride') return `${d.from || '?'} → ${d.to || '?'}`;
   if (cat === 'house') return d.title || HOUSE_KIND[d.g] || 'Stay share';
   return d.title || 'Item';
 }
 export function bbSubline(cat, d) {
-  if (cat === 'ride') return [d.when, d.seats ? `${d.seats} seat${d.seats === 1 ? '' : 's'}` : '', (d.price && d.price.a) ? `${fmtMoney(d.price.a, d.price.c)} share` : ''].filter(Boolean).join(' · ');
-  if (cat === 'house') return [HOUSE_KIND[d.g] || '', d.when, (d.price && d.price.a) ? fmtMoney(d.price.a, d.price.c) : ''].filter(Boolean).join(' · ');
-  if (cat !== 'swap' && d.price && d.price.a) return fmtMoney(d.price.a, d.price.c);
+  if (cat === 'ride') return [d.when, d.seats ? `${d.seats} seat${d.seats === 1 ? '' : 's'}` : '', (d.price && d.price.a) ? `${money(d.price.a, d.price.c)} share` : ''].filter(Boolean).join(' · ');
+  if (cat === 'house') return [HOUSE_KIND[d.g] || '', d.when, (d.price && d.price.a) ? money(d.price.a, d.price.c) : ''].filter(Boolean).join(' · ');
+  if (cat !== 'swap' && d.price && d.price.a) return money(d.price.a, d.price.c);
   return '';
 }
 // A category-appropriate safety line (shown under each post form).
@@ -4742,8 +4830,8 @@ export function swapCalcNodes(a, have, want) {
   const got = convert(a, have, want);
   if (got == null) return [document.createTextNode('No offline rate for this pair yet — open Currency with internet once to refresh.')];
   return [
-    h('strong', { class: 'fair' }, `${fmtMoney(a, have)} ≈ ${fmtMoney(got, want)}`),
-    document.createTextNode(` at mid-market. A money changer usually keeps ~3–7%, so roughly ${fmtMoney(got * 0.03, want)}–${fmtMoney(got * 0.07, want)} stays between you two.`),
+    h('strong', { class: 'fair' }, `${money(a, have)} ≈ ${money(got, want)}`),
+    document.createTextNode(` at mid-market. A money changer usually keeps ~3–7%, so roughly ${money(got * 0.03, want)}–${money(got * 0.07, want)} stays between you two.`),
   ];
 }
 
@@ -5310,7 +5398,7 @@ function planRouteScreen() {
 // ---- SAVED / COLLECTIONS ----------------------------------------------------
 function savedScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Saved & collections'));
+  wrap.append(topbar(ownTitle('saved places', 'Saved & collections')));
 
   // favourites + every collection as a tappable row
   const hub = h('div', { class: 'card' });
@@ -6598,6 +6686,35 @@ function eventScreen(id) {
 // ---- NATURE FIELD GUIDE -----------------------------------------------------
 let natureQuery = '';
 let natureGroup = '';
+// Which country the identify screens are scoped to (direct request: "identify should be by
+// country"). Defaults to wherever the traveller is — see idCountry() — and '*' means all four.
+// Module-level so the choice survives moving between #nature, #danger and #sounds within one
+// session, which is the same reason wxMetric lives at module level in weather-ui.js.
+let idCountryChoice = '';
+
+// The country the identify screens open scoped to: the traveller's own, resolved the same way
+// Places, Weather and Budget resolve theirs, so all of them agree about "where I am".
+export function idCountry() {
+  if (idCountryChoice) return idCountryChoice;
+  const fs = focusSpot();
+  return (fs && fs.spot && fs.spot.country) || getActiveCountry() || 'th';
+}
+
+// One control, used by every identify screen, so the scope reads and behaves identically on
+// all of them. Deliberately a <select> and not four flag chips plus an "All": the same
+// site-wide pass that collapsed the weather metrics and the expense categories — one compact
+// control naming its current value, rather than a row of five buttons above every list.
+// `onchange` re-renders the caller's list; the choice is remembered for the session.
+export function idCountryPicker(onchange) {
+  const cur = idCountry();
+  const opts = [...COUNTRIES.map((c) => [c.id, `${c.flag} ${c.name}`]), ['*', '✶ All four countries']];
+  const sel = selectEl(opts, idCountryChoice === '*' ? '*' : cur, (v) => { idCountryChoice = v; onchange(); },
+    'Which country to identify things for');
+  return h('label', { class: 'id-country-pick' }, [h('span', {}, 'Where you are'), sel]);
+}
+// The value to hand allSpecies()/produce filters: undefined when the traveller has asked for
+// everything, so "all four" genuinely means unfiltered rather than a fifth country code.
+export function idCountryFilter() { return idCountryChoice === '*' ? undefined : idCountry(); }
 export function imageSearch(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
 
 // ---- ANIMAL SOUNDS (bundled offline; falls back to iNaturalist online) -----
@@ -6675,6 +6792,7 @@ function soundsScreen() {
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search sounds', placeholder: 'Search by name…',
     oninput: debounce((e) => { query = e.target.value; renderList(); }, 120) });
   wrap.append(search);
+  wrap.append(idCountryPicker(() => { renderChips(); renderList(); }));
 
   // Chips live in their own wrapper, rebuilt by renderChips() rather than computed once,
   // so the group counts pick up nature.js once it lands (see loadNature() near the top of
@@ -6685,8 +6803,9 @@ function soundsScreen() {
   wrap.append(listEl);
 
   function renderChips() {
-    // Every callable species, recomputed each call so the group chips show live counts.
-    const callable = allSpecies().filter(hasCall);
+    // Every callable species IN SCOPE, recomputed each call so the group chips show live
+    // counts for the chosen country rather than for the whole region.
+    const callable = allSpecies({ cc: idCountryFilter() }).filter(hasCall);
     const GROUPS = [
       { id: '', label: 'All', emoji: '✶' },
       { id: 'bird', label: 'Birds', emoji: '🐦' },
@@ -6705,7 +6824,7 @@ function soundsScreen() {
   function renderList() {
     listEl.innerHTML = '';
     if (!isNatureLoaded()) { listEl.append(h('p', { class: 'empty' }, 'Loading the sounds library…')); return; }
-    const results = allSpecies({ group: group || undefined, q: query.trim() || undefined }).filter(hasCall);
+    const results = allSpecies({ group: group || undefined, q: query.trim() || undefined, cc: idCountryFilter() }).filter(hasCall);
     if (!results.length) { listEl.append(h('p', { class: 'empty' }, query.trim() ? 'No calls match your search.' : 'No calls in this group yet.')); return; }
     results.forEach((s) => {
       const status = h('div', { class: 'muted', style: 'font-size:13px' });
@@ -6733,6 +6852,13 @@ function natureScreen() {
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search by name…', value: natureQuery,
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
+  // Scoped to one country, the traveller's own by default. Everything that lives across the
+  // region still shows in every country; what drops out is what is not there — the reef and
+  // open-water species for a traveller in landlocked Laos, and the dozen range-restricted
+  // animals. "All four countries" is one tap away for anyone planning rather than looking.
+  wrap.append(idCountryPicker(() => { renderCount(); renderList(); }));
+  const countEl = h('p', { class: 'tiny muted id-country-count' }, '');
+  wrap.append(countEl);
 
   // Group chips live in their own wrapper, rebuilt by renderChips() rather than computed
   // once, so they pick up NATURE_GROUPS once nature.js lands (see loadNature() near the
@@ -6760,20 +6886,38 @@ function natureScreen() {
         `${g.emoji} ${g.label}`)));
     chipsWrap.append(groupChips);
   }
+  // Direct node reference (countEl), never a lookup through wrap — mount()'s automatic
+  // section folding re-parents these children and a querySelector from here would come back
+  // null on the second call.
+  function renderCount() {
+    const cc = idCountryFilter();
+    const total = allSpecies().length;
+    if (!total) { countEl.textContent = ''; return; }
+    if (!cc) { countEl.textContent = `All ${total} records, across all four countries.`; return; }
+    const here = allSpecies({ cc }).length;
+    const c = getCountry(cc);
+    countEl.textContent = here === total
+      ? `All ${total} records occur in ${c ? c.name : 'this country'}.`
+      : `${here} of ${total} records occur in ${c ? c.name : 'this country'} — the other ${total - here} are elsewhere in the region.`;
+  }
   function renderList() {
     listEl.innerHTML = '';
-    const results = allSpecies({ q: natureQuery.trim(), group: natureGroup });
+    const results = allSpecies({ q: natureQuery.trim(), group: natureGroup, cc: idCountryFilter() });
     if (!results.length) {
       listEl.append(h('p', { class: 'empty' }, allSpecies().length === 0
         ? 'The nature guide is being prepared — reconnect once to download it.'
-        : 'No species match. Try a different search or group.'));
+        : 'No species match here. Try a different search or group, or switch to all four countries above.'));
       return;
     }
     results.forEach((s) => listEl.append(speciesCard(s)));
   }
   renderChips();
+  renderCount();
   renderList();
-  if (!isNatureLoaded()) { loadNature().then(() => { renderChips(); renderList(); }, () => { renderChips(); renderList(); }); }
+  if (!isNatureLoaded()) {
+    const redraw = () => { renderChips(); renderCount(); renderList(); };
+    loadNature().then(redraw, redraw);
+  }
   mount(wrap, '#home');
 }
 
@@ -6906,7 +7050,7 @@ function idSavedRow(type, spec, o, groupKeys) {
 
 function myIdentifierScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('My identifier', '#me'));
+  wrap.append(topbar(ownTitle('identifier', 'My identifier'), '#me'));
   const list = idPinList();
   const exploreTiles = [
     { ic: ICON.bowl, t: 'Food', d: 'Street dishes', hash: '#food' },
@@ -7865,10 +8009,19 @@ function dangerScreen() {
   // and at 25 characters it was also the worst of the topbar 3-line-wrap family (4 lines here).
   wrap.append(topbar('Dangerous', '#sos'));
   wrap.append(screenHint('Know what to avoid and what to do. Tap any animal for a photo, how to identify it, and first aid if you are bitten or stung. If in doubt, keep your distance and get to a hospital.'));
-  const list = allSpecies().filter((s) => s.dangerous);
+  // Scoped by country like the rest of Identify. This is the screen where it matters most:
+  // in Laos the whole "In the sea" section is gone, because Laos has no sea — a traveller in
+  // Vientiane was reading box-jellyfish first aid. `render` re-runs the router, which rebuilds
+  // this screen from the new choice; the screen holds no other state to preserve.
+  wrap.append(idCountryPicker(render));
+  const list = allSpecies({ cc: idCountryFilter() }).filter((s) => s.dangerous);
   const groups = [
     { label: '🐍 Snakes', match: (s) => /cobra|krait|viper|python|snake/i.test(s.commonName) },
-    { label: '🌊 In the sea', match: (s) => /jellyfish|stonefish|lionfish|ray|triggerfish|urchin/i.test(s.commonName) },
+    // `marine`, not a substring of the common name. The old regex tested for "ray", which
+    // filed the GIANT FRESHWATER STINGRAY — a Mekong river fish — under "In the sea", and
+    // caught "Giant Moray" only by luck. In Laos, which has no coast, that river ray was the
+    // single entry under a heading reading "In the sea". The flag is on the records.
+    { label: '🌊 In the sea', match: (s) => !!s.marine },
     { label: '🦂 Scorpions & centipedes', match: (s) => /scorpion|centipede/i.test(s.commonName) },
     { label: '🐒 Larger animals', match: (s) => /macaque|elephant|boar|dog|buffalo/i.test(s.commonName) },
   ];
@@ -7882,7 +8035,14 @@ function dangerScreen() {
   });
   const rest = list.filter((s) => !shown.has(s.id));
   if (rest.length) { wrap.append(h('h2', { class: 'home-section' }, '⚠️ Other hazards')); rest.forEach((s) => wrap.append(speciesCard(s))); }
-  if (!list.length) wrap.append(h('p', { class: 'empty' }, 'The wildlife library is still downloading — reconnect once to fetch it.'));
+  if (!list.length) {
+    wrap.append(h('p', { class: 'empty' }, allSpecies().length
+      // Not a loading state: the data is here and this country simply has none of it. Only
+      // reachable if a future country tag excludes every dangerous record, but an "is still
+      // downloading" message would be a lie in that case and travellers act on this screen.
+      ? 'Nothing flagged dangerous for this country. Switch to all four countries above to see the region’s full list.'
+      : 'The wildlife library is still downloading — reconnect once to fetch it.'));
+  }
   wrap.append(sourcesNote(DANGER_SOURCES, 'July 2026'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Most animals leave you alone if you leave them alone. Wear shoes at night, do not reach into holes or thick leaf litter, and never handle or corner wildlife.'));
   // Mosquitoes & dengue — moved to the end of this screen per direct request (was the
@@ -8493,6 +8653,11 @@ export function render() {
       case 'food': return foodScreen(arg);
       case 'dish': return dishScreen(arg);
       case 'produce': { const m = screenMod('produce'); return arg ? m.produceDetail(arg) : m.produceScreen(); }
+      // "Market products" — the stall goods that are not fruit and veg: sauces, rices, pastes,
+      // sugars and spices. Not a second dataset; it is the produce guide opened straight into
+      // its "Stall & pantry" category, because a traveller looking at a wall of unlabelled
+      // bottles is asking a different question from one holding a mango.
+      case 'pantry': { const m = screenMod('produce'); return m.produceScreen('pantry'); }
       case 'nature': return natureScreen();
       case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);

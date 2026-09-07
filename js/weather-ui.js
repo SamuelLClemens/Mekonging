@@ -10,7 +10,6 @@
 // plus the WX_METRICS table, and stop — weatherScreen is not reachable from any of them.
 
 import { esc, h } from './util.js';
-import { selectEl } from './ui-widgets.js';
 import { wmo } from './weather.js';
 import { fmtTemp, fmtWind } from './render-utils.js';
 import { fmtClock } from './main.js';
@@ -218,16 +217,29 @@ export function wxVizCard(rec, spot) {
     paintRing();
   });
 
-  // One <select>, not one button per metric. Temp/Rain/Humidity/UV/Feels/Wind are mutually
-  // exclusive — the ring is coloured by exactly one at a time — so this is a single-select,
-  // and six pills wrapping to two rows above the ring cost more height than the ring itself
-  // on a 375px screen. Same site-wide pass as expCatPicker: compact control, every option
-  // still reachable, and the native picker is the better touch target.
-  chipsRow.append(h('label', { class: 'wx-metric-lbl' }, [
-    h('span', {}, 'Colour by'),
-    selectEl(Object.keys(WX_METRICS).map((m) => [m, WX_METRICS[m].label]), wxMetric,
-      (v) => { wxMetric = v; paintMetric(); }, 'Which measurement to colour the forecast by'),
-  ]));
+  // A segmented control, not a <select> and not six wrapping pills. The six measurements are
+  // mutually exclusive — the ring is coloured by exactly one — so a single-select is right,
+  // but a dropdown hides which options exist and costs two taps to compare two of them, and
+  // the traveller comparing "is it the heat or the humidity" flips between exactly two
+  // repeatedly. Six equal segments carrying the emoji over an abbreviated label fit one 40px
+  // row at 375px, which is less height than the select-plus-caption it replaces, and every
+  // option is visible and one tap away. `aria-label` carries the unabbreviated name.
+  const METRIC_SHORT = { temp: 'Temp', rain: 'Rain', hum: 'Humid', uv: 'UV', feels: 'Feels', wind: 'Wind' };
+  const segs = Object.keys(WX_METRICS).map((m) => {
+    const [ic, ...rest] = WX_METRICS[m].label.split(' ');
+    const b = h('button', {
+      type: 'button', class: 'wx-seg', 'data-m': m,
+      'aria-pressed': m === wxMetric ? 'true' : 'false',
+      'aria-label': `Colour the forecast by ${rest.join(' ') || m}`,
+      onclick: () => {
+        wxMetric = m;
+        segs.forEach((x) => x.setAttribute('aria-pressed', x.dataset.m === m ? 'true' : 'false'));
+        paintMetric();
+      },
+    }, [h('span', { class: 'wx-seg-ic' }, ic), h('span', { class: 'wx-seg-lbl' }, METRIC_SHORT[m] || m)]);
+    return b;
+  });
+  chipsRow.append(h('div', { class: 'wx-metric-seg', role: 'group', 'aria-label': 'Which measurement to colour the forecast by' }, segs));
 
   card.append(h('h3', { class: 'wx-cal-h', style: 'margin:0 0 6px' }, 'Next 24 hours'), chipsRow, ringSlot, detailSlot);
   const hourly = wxHourlyListNode(rec);

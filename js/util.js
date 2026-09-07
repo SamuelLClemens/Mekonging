@@ -53,26 +53,71 @@ function numLocale() {
   } catch { return undefined; }
 }
 
-// Currency formatting. Falls back gracefully for codes Intl does not know.
+// The symbol each currency is actually printed with, and — the part that is not cosmetic —
+// which SIDE of the number it goes on. Vietnamese and Lao usage put it after (45.000₫,
+// 90.000₭); the dollar family, sterling, euro, baht, riel, yuan and shekel lead with it.
+//
+// This table exists because Intl.NumberFormat's `style: 'currency'` cannot be trusted here on
+// either count. In the `en` locale it has no symbol for THB, KHR or LAK and silently falls
+// back to the ISO code, so every Thai street-food price in the app was rendering as
+// "THB 40–THB 120" — in the app's most-covered country, on its most-read screen, against a
+// comment on range() below that has said "e.g. ฿40–120" the whole time. And the placement it
+// chooses follows the UI LANGUAGE, so the same dong price sat on either side of the number
+// depending on which of the 29 interface languages the traveller had picked.
+//
+// Lives in util.js rather than currency.js only because currency.js imports this file; this
+// one imports nothing, so the table can be shared without an import cycle. currency.js
+// re-exports the two accessors.
+const CURRENCY_SYMBOLS = {
+  USD: { s: '$' }, EUR: { s: '€' }, GBP: { s: '£' }, AUD: { s: 'A$' }, CAD: { s: 'C$' },
+  SGD: { s: 'S$' }, CNY: { s: '¥' }, JPY: { s: '¥' }, MYR: { s: 'RM' }, ILS: { s: '₪' },
+  THB: { s: '฿' }, KHR: { s: '៛' },
+  VND: { s: '₫', after: true }, LAK: { s: '₭', after: true },
+};
+export function currencySymbol(code) { const m = CURRENCY_SYMBOLS[code]; return m ? m.s : ''; }
+export function currencySymbolAfter(code) { return !!(CURRENCY_SYMBOLS[code] && CURRENCY_SYMBOLS[code].after); }
+
+// A figure written the way its own currency is written: "$12", "฿1,250", "45,000₫".
+// THE one money formatter in the app — main.js and currency.js each grew a private version of
+// this, which is how "20 USD", "1250 THB" and "฿1,250" all ended up on screen at once.
+// Digit grouping still follows the interface language (numLocale); only the unit is fixed.
+// Sub-units are dropped where nobody quotes them and above 100 in any currency; below that a
+// real fraction is padded to two places, so "$3.50" but still "฿45" rather than "฿45.00".
+// An unmapped currency falls back to "<number> CODE", which is what this did before.
 export function money(amount, currency) {
-  if (amount == null) return '';
-  const whole = NO_MINOR_UNITS.includes(currency) || amount >= 1000;
+  if (amount == null || amount === '') return '';
+  const n = typeof amount === 'number' ? amount : parseFloat(amount);
+  if (!Number.isFinite(n)) return typeof amount === 'string' ? amount : '';
+  const whole = NO_MINOR_UNITS.includes(currency) || Math.abs(n) >= 100;
+  const frac = !whole && n % 1 !== 0;
+  let txt;
   try {
-    return new Intl.NumberFormat(numLocale(), {
-      style: 'currency', currency,
-      minimumFractionDigits: whole ? 0 : undefined,
+    txt = new Intl.NumberFormat(numLocale(), {
+      minimumFractionDigits: frac ? 2 : 0,
       maximumFractionDigits: whole ? 0 : 2,
-    }).format(amount);
-  } catch {
-    return `${amount} ${currency}`;
-  }
+    }).format(n);
+  } catch { txt = String(n); }
+  const sym = currencySymbol(currency);
+  if (!sym) return `${txt} ${currency || ''}`.trim();
+  return currencySymbolAfter(currency) ? `${txt}${sym}` : `${sym}${txt}`;
 }
 
-// Render a low–high range as a compact string, e.g. "฿40–120".
+// Render a low–high range as a compact string, e.g. "฿40–120" — the unit ONCE, on whichever
+// end of the range it belongs to. This printed the unit on both numbers ("THB 40–THB 120"),
+// against its own example, which is half the reason a price range read as noise.
 export function range(low, high, currency) {
   if (low == null && high == null) return '';
-  if (low != null && high != null && low !== high) return `${money(low, currency)}–${money(high, currency)}`;
-  return money(low != null ? low : high, currency);
+  const one = low != null ? low : high;
+  if (low == null || high == null || low === high) return money(one, currency);
+  const lo = money(low, currency);
+  const hi = money(high, currency);
+  const sym = currencySymbol(currency);
+  if (!sym) return `${lo}–${high.toLocaleString(numLocale())} ${currency || ''}`.trim();
+  // Trailing-symbol currencies keep it on the high end (40.000–120.000₫); leading-symbol
+  // ones keep it on the low end (฿40–120). Either way the reader sees it exactly once.
+  return currencySymbolAfter(currency)
+    ? `${lo.slice(0, -sym.length)}–${hi}`
+    : `${lo}–${hi.slice(sym.length)}`;
 }
 
 // Coordinates are only trusted for a map link if they sit inside the mainland-SE-Asia

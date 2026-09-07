@@ -16,9 +16,9 @@ import { encodeShare, shareUrl } from '../social.js';
 import { store, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, removePlaceVisit, removeStop,
   toggleChecklistItem, unscheduledVisits, updatePlaceVisit, updateStop, visitsForStop } from '../state.js';
 import { confirmAction, promptAction, screenHint } from '../ui-widgets.js';
-import { h } from '../util.js';
+import { h, money } from '../util.js';
 import { checklistFor, countryChips, go, homeCurrency, mount, profileIsSet, render, shareButton, stopDateLabel,
-  topbar } from '../main.js';
+  ownTitle, topbar } from '../main.js';
 
 let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
 
@@ -85,7 +85,7 @@ export function tripScreen() {
   // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
   // buttons that lead here, which is where it reads as a nice touch rather than as an
   // overflowing heading.
-  wrap.append(topbar('Your trip', '#me'));
+  wrap.append(topbar(ownTitle('trip', 'Your trip'), '#me'));
 
   // itinerary
   const itin = h('div', { class: 'card' }, [h('h2', {}, 'Itinerary')]);
@@ -193,7 +193,7 @@ export function tripScreen() {
     }
     if (homeSum > 0 && Object.keys(totals).some((c) => c !== home)) {
       bud.append(h('p', { class: 'muted', style: 'margin:-4px 0 0' },
-        `≈ ${Math.round(homeSum).toLocaleString()} ${home} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
+        `≈ ${money(Math.round(homeSum), home)} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
     }
   }
   store.trip.budgetLog.forEach((b) => bud.append(budgetLogRow(b)));

@@ -4,14 +4,14 @@
 // contiguous 666-line block with exactly five outside call-in points, none of which touch
 // map/GPS/live-teardown infra, unlike the far more entangled Places screen (deferred).
 import { store, save, addBudgetItem, updateBudgetItem, deleteBudgetItem, addWithdrawal, updateWithdrawal, deleteWithdrawal, todayKey } from '../state.js';
-import { h, esc } from '../util.js';
+import { h, esc, money } from '../util.js';
 import { field, selectEl, currencySelect, confirmAction, collapsibleCard, infoTip } from '../ui-widgets.js';
 import { convert } from '../currency.js';
 import { getCountry } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
 import { dateLocale } from '../i18n.js';
 import {
-  go, mount, topbar, render, homeCurrency, focusSpot, todayISO, fxConverterControl, approxHome,
+  go, mount, topbar, render, homeCurrency, focusSpot, todayISO, fxConverterControl, approxHome, ownTitle,
 } from '../main.js';
 
 // Shared with the modules that stay in the launch graph; see js/budget-ui.js. These moved out so
@@ -141,7 +141,7 @@ export function budgetSummaryCard() {
     legend.append(h('div', { class: 'blg-row' }, [
       h('span', { class: 'blg-dot', style: `background:${c.color}` }),
       h('span', { class: 'blg-lbl' }, `${c.emoji} ${c.label}`),
-      h('span', { class: 'blg-val' }, `${Math.round(sums[c.id]).toLocaleString()} ${home} · ${pct}%`),
+      h('span', { class: 'blg-val' }, `${money(Math.round(sums[c.id]), home)} · ${pct}%`),
     ]));
   });
   if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin:0' }, 'Log a few expenses to see the breakdown.'));
@@ -155,22 +155,22 @@ export function budgetSummaryCard() {
       const pctSpent = Math.round(spent / target.amount * 100);
       card.append(h('div', { class: 'budget-bar' }, [h('span', { class: 'budget-bar-fill' + (remaining < 0 ? ' over' : ''), style: `width:${Math.min(100, Math.max(0, spent / target.amount * 100))}%` })]));
       card.append(h('p', { style: 'margin:6px 0 0' }, [
-        h('strong', { style: remaining < 0 ? 'color:var(--magenta)' : '' }, remaining >= 0 ? `${Math.round(remaining).toLocaleString()} ${home} left` : `${Math.round(-remaining).toLocaleString()} ${home} over`),
-        h('span', { class: 'muted' }, ` of ${target.amount.toLocaleString()} ${home} · ${pctSpent}% spent`),
+        h('strong', { style: remaining < 0 ? 'color:var(--magenta)' : '' }, remaining >= 0 ? `${money(Math.round(remaining), home)} left` : `${money(Math.round(-remaining), home)} over`),
+        h('span', { class: 'muted' }, ` of ${money(target.amount, home)} · ${pctSpent}% spent`),
       ]));
       if (span && span.total && spent > 0) {
         const projected = dailyRate * span.total; const diff = projected - target.amount;
-        card.append(h('p', { class: 'budget-proj ' + (diff > 0 ? 'over' : 'under') }, `${diff > 0 ? '⚠️' : '✓'} At ~${Math.round(dailyRate).toLocaleString()} ${home}/day, you are on track to ${diff > 0 ? 'go over by ' + Math.round(diff).toLocaleString() : 'finish ' + Math.round(-diff).toLocaleString() + ' under'} ${home} across ${span.total} days.`));
+        card.append(h('p', { class: 'budget-proj ' + (diff > 0 ? 'over' : 'under') }, `${diff > 0 ? '⚠️' : '✓'} At ~${money(Math.round(dailyRate), home)}/day, you are on track to ${diff > 0 ? 'go over by ' + money(Math.round(diff), home) : 'finish ' + money(Math.round(-diff), home) + ' under'} across ${span.total} days.`));
       } else if (spent > 0) {
-        card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, `Spending ~${Math.round(dailyRate).toLocaleString()} ${home}/day so far. Add trip dates in My trip for a full projection.`));
+        card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, `Spending ~${money(Math.round(dailyRate), home)}/day so far. Add trip dates in My trip for a full projection.`));
       }
     } else {
       const overUnder = dailyRate - target.amount;
       card.append(h('p', { style: 'margin:6px 0 0' }, [
-        h('strong', { style: overUnder > 0 ? 'color:var(--magenta)' : '' }, `~${Math.round(dailyRate).toLocaleString()} ${home}/day`),
-        h('span', { class: 'muted' }, ` vs ${target.amount.toLocaleString()} ${home}/day budget`),
+        h('strong', { style: overUnder > 0 ? 'color:var(--magenta)' : '' }, `~${money(Math.round(dailyRate), home)}/day`),
+        h('span', { class: 'muted' }, ` vs ${money(target.amount, home)}/day budget`),
       ]));
-      if (spent > 0) card.append(h('p', { class: 'budget-proj ' + (overUnder > 0 ? 'over' : 'under') }, overUnder > 0 ? `⚠️ About ${Math.round(overUnder).toLocaleString()} ${home}/day over budget at this rate.` : `✓ About ${Math.round(-overUnder).toLocaleString()} ${home}/day under budget — nicely on track.`));
+      if (spent > 0) card.append(h('p', { class: 'budget-proj ' + (overUnder > 0 ? 'over' : 'under') }, overUnder > 0 ? `⚠️ About ${money(Math.round(overUnder), home)}/day over budget at this rate.` : `✓ About ${money(Math.round(-overUnder), home)}/day under budget — nicely on track.`));
     }
   }
   if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some expenses use a currency with no cached rate — refresh in Currency to include them.'));
@@ -238,9 +238,9 @@ function budgetTrendCard() {
     // category always occupies the same band across every bar, day to day.
     const segs = cats.filter((c) => sums[c.id] > 0).map((c) => h('span', {
       style: `height:${Math.max(2, sums[c.id] / max * 100)}%;background:${c.color}`,
-      title: `${dLbl} · ${c.emoji} ${c.label}: ${Math.round(sums[c.id]).toLocaleString()} ${home}`,
+      title: `${dLbl} · ${c.emoji} ${c.label}: ${money(Math.round(sums[c.id]), home)}`,
     }));
-    return h('div', { class: 'spark-bar', 'aria-label': `${dLbl}: ${Math.round(total).toLocaleString()} ${home}` },
+    return h('div', { class: 'spark-bar', 'aria-label': `${dLbl}: ${money(Math.round(total), home)}` },
       segs.length ? segs : [h('span', { style: 'height:0;background:var(--line)' })]);
   });
   const card = h('div', { class: 'card' });
@@ -308,8 +308,8 @@ function budgetWithdrawalsCard() {
     const segs = [{ value: total, color: WD_COLOR }, { value: remaining, color: 'var(--line)' }];
     const donut = h('div', { class: 'budget-donut', html: donutSVG(segs, total > 0 ? Math.round(total).toLocaleString() : '—', home) });
     const legend = h('div', { class: 'budget-legend' }, [
-      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: `background:${WD_COLOR}` }), h('span', { class: 'blg-lbl' }, 'Withdrawn'), h('span', { class: 'blg-val' }, `${Math.round(total).toLocaleString()} ${home} · ${Math.round(total / wTarget.amount * 100)}%`)]),
-      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, `${Math.round(remaining).toLocaleString()} ${home}`)]),
+      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: `background:${WD_COLOR}` }), h('span', { class: 'blg-lbl' }, 'Withdrawn'), h('span', { class: 'blg-val' }, `${money(Math.round(total), home)} · ${Math.round(total / wTarget.amount * 100)}%`)]),
+      h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, money(Math.round(remaining), home))]),
     ]);
     card.append(h('div', { class: 'budget-head' }, [donut, legend]));
     if (!wTarget.custom) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Using your whole-trip budget — set a separate one below to track this on its own.'));
@@ -342,7 +342,7 @@ function budgetWithdrawalsCard() {
     }
   } else {
     card.append(h('p', { style: 'margin:0 0 10px' }, [
-      h('strong', {}, `${total.toLocaleString()} ${home}`), h('span', { class: 'muted' }, ' withdrawn so far'),
+      h('strong', {}, money(total, home)), h('span', { class: 'muted' }, ' withdrawn so far'),
     ]));
     card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' }, 'Set a budget below to see this as a share of a total.'));
   }
@@ -454,7 +454,7 @@ function budgetSetupEditor() {
 // spends logged here show up there and roll into the home-currency total.
 export function expensesScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Budget', '#me'));
+  wrap.append(topbar(ownTitle('budget', 'Budget'), '#me'));
   const fc = focusSpot().spot.country || getActiveCountry();
   const c = getCountry(fc);
 

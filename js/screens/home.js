@@ -28,7 +28,7 @@
 // to Home alone.
 
 import { store, save } from '../state.js';
-import { h } from '../util.js';
+import { h, money } from '../util.js';
 import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
 import { getCachedWeather, spotKey, wmo } from '../weather.js';
@@ -44,7 +44,7 @@ import {
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
   recentRoutesRow, identifyRow, homeFold,
-  homeBudgetFold, homeRightNowFold, liveStatus, QUICK_CHIPS, quickChipKeys,
+  homeBudgetFold, homeRightNowFold, liveStatus, QUICK_CHIPS, quickChipKeys, quickChipLabel,
 } from '../main.js';
 
 export function homeScreen() {
@@ -363,7 +363,7 @@ function quickAccessRow(phase, stored, ctx) {
   // way. The next plan item's own title + timing rides along as the sub-label, folded in from
   // the old, now-removed, standalone 📍 chip.
   const startISO = tripStartISO();
-  let calLabel = 'Calendar';
+  let calLabel = quickChipLabel('calendar');
   if (startISO && daysUntilISO(startISO) <= 0) calLabel = `Day ${1 - daysUntilISO(startISO)}`;
   const calItem = nextPlanItem();
   let calSub = null;
@@ -380,8 +380,8 @@ function quickAccessRow(phase, stored, ctx) {
   // budget, yellow if the current pace projects going over, red if already over.
   const sp = tripSpendHome();
   const target = budgetTarget();
-  let budgetLabel = 'Budget';
-  let budgetSub = (sp.any && sp.sum > 0) ? `${Math.round(sp.sum).toLocaleString()} ${sp.home}${sp.allKnown ? '' : '+'}` : null;
+  let budgetLabel = quickChipLabel('budget');
+  let budgetSub = (sp.any && sp.sum > 0) ? `${money(Math.round(sp.sum), sp.home)}${sp.allKnown ? '' : '+'}` : null;
   let budgetClass = '';
   if (target && sp.sum > 0) {
     const span = tripSpanDays();
@@ -435,7 +435,7 @@ function quickAccessRow(phase, stored, ctx) {
     calendar: { ic: '📅', label: calLabel, sub: calSub },
     budget: { ic: '💰', label: budgetLabel, sub: budgetSub, cls: budgetClass },
     weather: { ic: wxIc, label: 'Weather', sub: wxSub },
-    journal: { ic: '📔', label: 'Journal', sub: journalSub },
+    journal: { ic: '📔', label: quickChipLabel('journal'), sub: journalSub },
   };
   const chips = quickChipKeys().map((key) => {
     const def = QUICK_CHIPS.find((c) => c.key === key);
@@ -448,7 +448,7 @@ function quickAccessRow(phase, stored, ctx) {
     // An opt-in chip the traveller deliberately chose renders whether or not it has a figure
     // yet — they asked for the shortcut, so a bare label is still the shortcut they wanted.
     const live = def.live ? liveStatus(def.live) : null;
-    return chip(def.ic, def.label, live && live.sub ? live.sub : null, () => go(def.hash), live && live.cls);
+    return chip(def.ic, quickChipLabel(def), live && live.sub ? live.sub : null, () => go(def.hash), live && live.cls);
   }).filter(Boolean);
   // Online/offline used to be a chip here too — moved to the shared topbar() (main.js),
   // next to Saved/Settings/Emergency, so it is reachable from every screen, not just Home.

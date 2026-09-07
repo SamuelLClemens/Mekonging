@@ -5,7 +5,7 @@ import { photoBlock } from '../render-utils.js';
 import { canSay, say } from '../tts.js';
 import { screenHint } from '../ui-widgets.js';
 import { debounce, h } from '../util.js';
-import { go, idPinButton, idPinStar, imageSearch, mount, priceLine, recogThumb, topbar } from '../main.js';
+import { go, idCountryFilter, idCountryPicker, idPinButton, idPinStar, imageSearch, mount, priceLine, recogThumb, topbar } from '../main.js';
 
 let produceQuery = '';
 
@@ -23,9 +23,13 @@ function produceCard(p) {
   return h('div', { class: 'card species-card id-cardrow' }, [main, idPinStar('produce', p.id)]);
 }
 
-export function produceScreen() {
+// `openCat` opens the screen already filtered to one category — how #pantry ("Market
+// products") is served, rather than duplicating the whole screen for a subset of its own data.
+export function produceScreen(openCat) {
+  if (openCat) produceCat = openCat;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Market produce', '#home'));
+  const catOpen = openCat ? PRODUCE_CATEGORIES.find((c) => c.id === openCat) : null;
+  wrap.append(topbar(catOpen ? `${catOpen.emoji} Market products` : 'Market produce', '#home'));
   wrap.append(screenHint('What is on the stall — fruit, vegetables, herbs, and the sauces, rices and pastes everyone else seems to recognise. Names in every local language, when it is in season, how to eat and pick it, and a fair price.'));
   const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(PRODUCE_CATEGORIES);
   const chips = h('div', { class: 'chips' }, cats.map((g) =>
@@ -36,15 +40,22 @@ export function produceScreen() {
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search produce…', value: produceQuery,
     oninput: debounce((e) => { produceQuery = e.target.value; renderList(); }, 120) });
   wrap.append(search);
+  // Scoped by country, same control as the rest of Identify. Market produce is TRADED, so
+  // nearly all of it turns up on a stall in all four countries and the filter changes little
+  // here — the handful it does change are the items whose own record ties them to one place
+  // (Shan Tuyet tea, sator, the Vietnamese herb-basket leaves, padaek).
+  wrap.append(idCountryPicker(() => renderList()));
   const listEl = h('div', {});
   wrap.append(listEl);
   function renderList() {
     listEl.innerHTML = '';
     let items = produceByCategory(produceCat);
+    const cc = idCountryFilter();
+    if (cc) items = items.filter((p) => !p.cc || p.cc.includes(cc));
     const q = produceQuery.trim().toLowerCase();
     if (q) items = items.filter((p) => p.name.toLowerCase().includes(q)
       || Object.values(p.names || {}).some((n) => (n || '').toLowerCase().includes(q) || (n || '').includes(produceQuery.trim())));
-    if (!items.length) { listEl.append(h('p', { class: 'empty' }, 'No produce matches.')); return; }
+    if (!items.length) { listEl.append(h('p', { class: 'empty' }, 'No produce matches here — try all four countries above.')); return; }
     items.forEach((p) => listEl.append(produceCard(p)));
   }
   renderList();
