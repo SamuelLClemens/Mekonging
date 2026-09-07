@@ -2,7 +2,7 @@
 // dangerous species across Thailand/Vietnam/Cambodia/Laos. Description-based ID +
 // photo-search link; no bundled photos. Data auto-assembled from the content workflow.
 
-export const NATURE_GROUPS = [{"id": "bird", "label": "Birds", "emoji": "🐦"}, {"id": "mammal", "label": "Mammals", "emoji": "🐘"}, {"id": "fish", "label": "Fish & marine", "emoji": "🐠"}, {"id": "reptile", "label": "Reptiles & amphibians", "emoji": "🦎"}, {"id": "plant", "label": "Plants & trees", "emoji": "🌿"}, {"id": "insect", "label": "Insects", "emoji": "🦋"}, {"id": "danger", "label": "Dangerous", "emoji": "⚠️"}];
+export const NATURE_GROUPS = [{"id": "bird", "label": "Birds", "emoji": "🐦"}, {"id": "mammal", "label": "Mammals", "emoji": "🐘"}, {"id": "fish", "label": "Fish & marine", "emoji": "🐠"}, {"id": "reptile", "label": "Reptiles & amphibians", "emoji": "🦎"}, {"id": "plant", "label": "Plants & trees", "emoji": "🌿"}, {"id": "fungus", "label": "Mushrooms & fungi", "emoji": "🍄"}, {"id": "insect", "label": "Insects", "emoji": "🦋"}, {"id": "danger", "label": "Dangerous", "emoji": "⚠️"}];
 
 export const NATURE = [
   {
@@ -2246,6 +2246,946 @@ export const NATURE = [
     "dangerNote": "",
     "emoji": "🌲",
     "names": {"th": "", "vi": "", "km": "", "lo": ""}
+  },
+  {
+    "id": "nat-fungus-amanita-exitialis",
+    "group": "fungus",
+    "commonName": "Guangzhou Destroying Angel",
+    "sciName": "Amanita exitialis",
+    "localNames": [],
+    "blurb": "One of the two mushrooms responsible for most fatal poisonings in Thailand. Small, plain and entirely white — it looks harmless.",
+    "idTips": "A modest all-white mushroom: smooth white cap 4-7 cm, white gills, a white ring on the stem, and a cup-like sac (volva) at the base that is often buried and missed unless the whole base is dug up. There is no colour, smell or taste that warns you. Critically, laboratory work in Thailand has shown that deadly and edible Amanita species cannot be reliably separated by appearance alone — identification needs DNA analysis.",
+    "habitat": "On the ground in broadleaf and oak forest, often near villages; fruits in the rainy season.",
+    "where": "Northern and north-eastern Thailand and neighbouring uplands of Laos; the peak season is the May-September rains.",
+    "dangerous": true,
+    "dangerNote": "Deadly. Contains amatoxins that destroy the liver. Symptoms are delayed 6-24 hours — vomiting starts long after the poison is absorbed, then often eases, giving false reassurance while liver failure develops. Never eat any wild white mushroom with a ring and a cup at the base. If eaten, go to hospital immediately and say the word amatoxin; do not wait for symptoms.",
+    "emoji": "☠️",
+    "names": {
+      "th": "เห็ดระโงกหิน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-amanita-brunneitoxicaria",
+    "group": "fungus",
+    "commonName": "Brown Death Cap",
+    "sciName": "Amanita brunneitoxicaria",
+    "localNames": [],
+    "blurb": "Named for its toxicity and described from Thailand — with A. exitialis, one of the main causes of fatal mushroom poisoning in the country.",
+    "idTips": "A brown-capped Amanita with white gills, a white stem carrying a ring, and a sac-like volva at the buried base. The brown cap makes travellers assume it cannot be a 'death cap', which is exactly the error that kills. As with all Amanita, appearance alone is not a safe guide.",
+    "habitat": "Forest floor in broadleaf and dipterocarp woodland during the wet season.",
+    "where": "Thailand, with the same species group occurring across the wider Mekong uplands.",
+    "dangerous": true,
+    "dangerNote": "Deadly. Amatoxin poisoning with the same delayed 6-24 hour onset and the same deceptive recovery phase before liver failure. Assume any wild Amanita is lethal.",
+    "emoji": "☠️",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-amanita-fuliginea",
+    "group": "fungus",
+    "commonName": "East Asian Death Cap",
+    "sciName": "Amanita fuliginea",
+    "localNames": [],
+    "blurb": "A dark-capped amatoxin mushroom of East and Southeast Asia, recorded among the protoplasmic poisons behind deaths in the region.",
+    "idTips": "Cap 3-7 cm, sooty grey to blackish-brown, often with a faintly radially-streaked surface; white gills; white stem with a ring; sac-like volva at the base. Small and unassuming.",
+    "habitat": "Broadleaf forest floor, especially oak and chestnut, in the rainy season.",
+    "where": "Recorded across southern China and mainland Southeast Asia including northern Thailand and Laos.",
+    "dangerous": true,
+    "dangerNote": "Deadly. Amatoxins, delayed onset, liver failure. There is no home test and no cooking method that makes it safe — boiling, drying and soaking do not destroy amatoxins.",
+    "emoji": "☠️",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-chlorophyllum-molybdites",
+    "group": "fungus",
+    "commonName": "Green-spored Parasol",
+    "sciName": "Chlorophyllum molybdites",
+    "localNames": [],
+    "blurb": "The single most common cause of mushroom poisoning worldwide, and a leading cause of gastrointestinal poisoning across all regions of Thailand. It grows on mown grass in towns.",
+    "idTips": "A large, handsome parasol-shaped mushroom: cap 8-30 cm, white with coarse pale-brown scales, on a tall stem with a movable ring. The one reliable mark is the spore colour — mature gills turn a dull grey-green, and a spore print on white paper is green, never white. It often grows in rings or arcs on lawns after rain.",
+    "habitat": "Lawns, parks, hotel grounds, playing fields, roadside verges and other mown grass — not deep forest.",
+    "where": "Common throughout Thailand, Vietnam, Cambodia and Laos, including in cities, appearing within a day or two of heavy rain.",
+    "dangerous": true,
+    "dangerNote": "Not usually fatal but violently poisoning: severe vomiting and bloody diarrhoea for hours, occasionally needing a drip for dehydration. It is dangerous mainly because it looks exactly like the edible parasols people know from home. Children are most at risk because it grows where they play.",
+    "emoji": "🍄",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-russula-subnigricans",
+    "group": "fungus",
+    "commonName": "Poison Blackening Russula",
+    "sciName": "Russula subnigricans",
+    "localNames": [],
+    "blurb": "An innocuous-looking brittlegill that causes one of the nastiest poisonings in Asia — it breaks down muscle tissue.",
+    "idTips": "A sturdy dull greyish-brown to sooty mushroom with a dry cap 5-12 cm, thick widely-spaced pale gills, and flesh that reddens when cut and then fails to blacken fully, unlike its harmless relatives. The distinction from edible blackening russulas is subtle and unreliable in the field.",
+    "habitat": "Broadleaf and oak forest floor in the rainy season.",
+    "where": "East and Southeast Asia, including northern Thailand, Laos and Vietnam.",
+    "dangerous": true,
+    "dangerNote": "Can be fatal. Causes rhabdomyolysis — muscle tissue breaks down and the released protein destroys the kidneys — often with chest pain and dark, tea-coloured urine several hours after eating. Requires hospital treatment. Do not eat wild russulas here.",
+    "emoji": "☠️",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-psilocybe-cubensis",
+    "group": "fungus",
+    "commonName": "Magic Mushroom",
+    "sciName": "Psilocybe cubensis",
+    "localNames": [],
+    "blurb": "The hallucinogenic mushroom sold openly in some backpacker areas as shakes or teas. It is illegal in all four countries, and openness of sale is not a sign of legality.",
+    "idTips": "A medium mushroom with a golden to pale-tan cap that is often paler and more conical when young, purple-brown to blackish gills, a ring on the stem, and — the well-known field mark — bruising blue where handled or damaged. Grows directly on buffalo and cattle dung in pasture.",
+    "habitat": "Cattle and buffalo pasture, growing straight out of dung, in the wet season.",
+    "where": "Widespread in the region; associated with Koh Phangan and Vang Vieng in traveller lore, but present anywhere cattle graze.",
+    "dangerous": true,
+    "dangerNote": "Illegal in Thailand, Vietnam, Cambodia and Laos regardless of how openly it is offered; possession can mean arrest, a large fine, or a payment demanded to avoid one. Beyond the law: strength varies enormously between mushrooms, effects last 4-6 hours and cannot be stopped, and shakes bought from a bar are of unknown content and dose. Serious accidents in Vang Vieng have involved the river and the road, not the mushroom itself.",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดขี้ควาย",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-straw-mushroom",
+    "group": "fungus",
+    "commonName": "Straw Mushroom",
+    "sciName": "Volvariella volvacea",
+    "localNames": [],
+    "blurb": "The small brown-grey mushroom in your tom yum. Grown on rice straw across the region and sold everywhere, usually still closed like little eggs.",
+    "idTips": "Sold young as firm grey-brown ovals 3-5 cm, which is why it is called an egg mushroom; opened specimens have a grey-brown cap, a sac-like volva at the base, no ring on the stem, and — the key mark — pink gills and a pink spore print when mature.",
+    "habitat": "Cultivated on beds of rice straw; also found wild on straw and compost heaps.",
+    "where": "Sold fresh and canned in every market in Thailand, Vietnam, Cambodia and Laos.",
+    "dangerous": false,
+    "dangerNote": "Safe as sold and cooked — this caution is about wild collecting only. Young straw mushrooms and deadly Amanita 'eggs' look very alike: both are pale ovals with a sac at the base. Straw mushrooms have pink gills and a pink spore print; deadly Amanita have white gills, a white spore print and a ring on the stem. People have died overseas making exactly this substitution. Buy them, do not pick them.",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดฟาง",
+      "vi": "nấm rơm",
+      "km": "ផ្សិតចំបើង",
+      "lo": "ເຫັດຟາງ"
+    }
+  },
+  {
+    "id": "nat-fungus-termite-mushroom",
+    "group": "fungus",
+    "commonName": "Termite Mushroom",
+    "sciName": "Termitomyces spp.",
+    "localNames": [],
+    "blurb": "The most prized wild mushroom of the region — grown by termites in their nests and impossible to farm, so it appears only briefly and sells at a premium.",
+    "idTips": "A pale grey-brown conical cap with a distinct sharp central point, white gills, and a remarkably long tapering root-like stem that runs deep into the ground to the termite nest. That deep pseudorhiza is the giveaway; sellers often leave it attached to prove authenticity.",
+    "habitat": "Growing from underground termite nests in forest, orchards and field margins, after heavy rain.",
+    "where": "Northeast Thailand, Laos, Cambodia and Vietnam; a highlight of wet-season markets and priced accordingly.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดโคน",
+      "vi": "nấm mối",
+      "km": "",
+      "lo": "ເຫັດປວກ"
+    }
+  },
+  {
+    "id": "nat-fungus-astraeus",
+    "group": "fungus",
+    "commonName": "Barometer Earthstar",
+    "sciName": "Astraeus asiaticus / A. odoratus",
+    "localNames": [],
+    "blurb": "A wet-season delicacy of Isan and Laos, sold as hard little brown balls by the bagful and eaten whole in soup — quite unlike any mushroom most visitors know.",
+    "idTips": "Collected young as a firm brown sphere 2-4 cm, resembling a small potato and sold with soil still on it. Left to mature it splits open into a star of thick rays that flex open when damp and curl shut when dry, which is the origin of 'barometer'.",
+    "habitat": "Sandy soil in dipterocarp forest, in partnership with the tree roots — which is why it cannot be cultivated.",
+    "where": "Northeast and northern Thailand and across Laos in the May-October rains. It commands high prices, roughly 90-150 baht per kg in northern Thailand and 300-400 baht early in the season.",
+    "dangerous": false,
+    "dangerNote": "Buy it prepared or from a market seller. Only the young, solid white-fleshed interior is eaten; once the inside has turned powdery and brown it is past use.",
+    "emoji": "🌰",
+    "names": {
+      "th": "เห็ดเผาะ",
+      "vi": "",
+      "km": "",
+      "lo": "ເຫັດເຜາະ"
+    }
+  },
+  {
+    "id": "nat-fungus-split-gill",
+    "group": "fungus",
+    "commonName": "Split Gill",
+    "sciName": "Schizophyllum commune",
+    "localNames": [],
+    "blurb": "Probably the most widespread mushroom on earth, and in Thailand and Laos a genuinely popular food — small, tough, fan-shaped and full of flavour.",
+    "idTips": "Tiny fan or shell-shaped brackets 1-4 cm across, greyish-white and densely hairy on top, growing in overlapping tiers on dead wood. Underneath, the 'gills' are split lengthwise down their edges — visible with a close look and unique to this fungus. Dry specimens shrivel and revive after rain.",
+    "habitat": "Dead and fallen hardwood, cut logs, rubber-tree stumps and firewood piles.",
+    "where": "Everywhere in the region; sold in bundles in Thai and Lao markets, including Luang Prabang, and cooked in soups, omelettes and curries.",
+    "dangerous": false,
+    "dangerNote": "Eaten widely in Thailand, Laos and Vietnam and cultivated commercially. It is always cooked, never raw.",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดแครง",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-wood-ear",
+    "group": "fungus",
+    "commonName": "Wood Ear",
+    "sciName": "Auricularia spp.",
+    "localNames": [],
+    "blurb": "The dark, rubbery, almost tasteless mushroom in noodle soups and spring rolls, valued for texture rather than flavour.",
+    "idTips": "Thin, floppy, ear- or cup-shaped brackets 2-8 cm, translucent brown to near-black, gelatinous and springy when fresh, shrinking to hard black flakes when dried. No gills — the underside is smooth or faintly veined.",
+    "habitat": "Dead hardwood logs and stumps, particularly in damp shade; widely farmed on sawdust blocks.",
+    "where": "Sold fresh and dried across all four countries; a standard ingredient in Vietnamese spring rolls and Thai and Lao soups.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดหูหนู",
+      "vi": "mộc nhĩ",
+      "km": "",
+      "lo": "ເຫັດຫູໜູ"
+    }
+  },
+  {
+    "id": "nat-fungus-oyster",
+    "group": "fungus",
+    "commonName": "Oyster Mushroom",
+    "sciName": "Pleurotus spp.",
+    "localNames": [],
+    "blurb": "The soft, pale, fan-shaped mushroom stacked in bags at every fresh market — farmed, cheap and reliable.",
+    "idTips": "Shell or fan-shaped caps 5-15 cm in white, pale grey or soft brown, growing in overlapping clusters. The gills run right down onto a short stem set to one side, rather than stopping at it. The flesh is soft and smells faintly sweet.",
+    "habitat": "Cultivated on sawdust or straw blocks; wild relatives grow on dead hardwood.",
+    "where": "Farmed and sold year-round throughout the region, often still attached to the growing bag.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดนางฟ้า",
+      "vi": "nấm bào ngư",
+      "km": "",
+      "lo": "ເຫັດນາງຟ້າ"
+    }
+  },
+  {
+    "id": "nat-fungus-shiitake",
+    "group": "fungus",
+    "commonName": "Shiitake",
+    "sciName": "Lentinula edodes",
+    "localNames": [],
+    "blurb": "The dense, meaty brown mushroom of upland farms, sold fresh in the cool north and dried everywhere else.",
+    "idTips": "Domed tan to dark-brown cap 5-12 cm, often cracked into a pale pattern in dry weather, with crowded white gills and a fibrous, tough stem that is usually trimmed off before cooking. A strong savoury smell, especially when dried.",
+    "habitat": "Cultivated on hardwood logs and sawdust blocks in cooler uplands.",
+    "where": "Grown in northern Thailand, northern Vietnam and the Lao highlands; sold dried nationwide.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดหอม",
+      "vi": "nấm hương",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-phlebopus",
+    "group": "fungus",
+    "commonName": "Thai Bolete",
+    "sciName": "Phlebopus portentosus",
+    "localNames": [],
+    "blurb": "A large black-brown bolete that northern Thailand has managed to cultivate — unusual, since most boletes refuse to be farmed.",
+    "idTips": "A heavy mushroom with a smooth, dry, olive- to black-brown cap 6-20 cm, and no gills at all: the underside is a sponge of fine yellow pores that bruise blue-green when pressed. The stem is thick and swollen.",
+    "habitat": "Under trees in gardens, orchards and open forest; commercially cultivated in northern Thailand.",
+    "where": "Northern and northeastern Thailand and Laos; a familiar sight in Chiang Mai wet-season markets.",
+    "dangerous": false,
+    "dangerNote": "This species is safe and sold commercially, but wild boletes generally are not a beginner's group — several regional look-alikes cause severe stomach upset.",
+    "emoji": "🍄",
+    "names": {
+      "th": "เห็ดตับเต่า",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-lingzhi",
+    "group": "fungus",
+    "commonName": "Lingzhi (Reishi)",
+    "sciName": "Ganoderma lingzhi",
+    "localNames": [],
+    "blurb": "The hard, glossy, fan-shaped bracket sold whole or sliced at herbal-medicine stalls and in tourist markets.",
+    "idTips": "A woody, kidney- or fan-shaped bracket 5-25 cm with a lacquered, varnished-looking surface in deep red-brown shading to white at the growing edge, and a pale cream pore surface beneath. Hard and corky, not fleshy — it cannot be cut with a fingernail.",
+    "habitat": "On the trunks and stumps of dead and dying hardwoods; also cultivated on logs and sawdust.",
+    "where": "Sold across the region at medicine stalls and markets, usually dried whole or in slices for tea.",
+    "dangerous": false,
+    "dangerNote": "Traditionally taken as a bitter tea rather than eaten. It is not a food mushroom, and claimed medical benefits are not established; it can interact with blood-thinning medication.",
+    "emoji": "🟤",
+    "names": {
+      "th": "เห็ดหลินจือ",
+      "vi": "nấm linh chi",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fungus-ophiocordyceps",
+    "group": "fungus",
+    "commonName": "Zombie-Ant Fungus",
+    "sciName": "Ophiocordyceps unilateralis",
+    "localNames": [],
+    "blurb": "Not food and not a danger — one of the strangest things you can spot on a rainforest walk: a fungus that takes over an ant's behaviour before killing it.",
+    "idTips": "Look on the undersides of leaves about knee to waist height for a dead ant clamped by its jaws to a leaf vein, with a thin brown or orange stalk 1-3 cm growing out of the back of its head. Once you have seen one you will start finding them.",
+    "habitat": "Humid closed-canopy rainforest, on leaves in the understorey.",
+    "where": "Rainforest across the region — Khao Sok, Cat Tien, Bokor and the Bolaven Plateau are all good places to look.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐜",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-bodhi",
+    "group": "plant",
+    "commonName": "Sacred Fig (Bodhi Tree)",
+    "sciName": "Ficus religiosa",
+    "localNames": [],
+    "blurb": "The tree the Buddha is said to have been sitting under when he reached enlightenment, and for that reason planted in the grounds of almost every temple in the region.",
+    "idTips": "A big fig with a pale grey trunk and, unmistakably, heart-shaped leaves drawn out into a long slender tail-like tip that trembles in the lightest breeze. New leaves flush copper-pink. Often wrapped in saffron or striped cloth and standing on a built-up platform with offerings at its base.",
+    "habitat": "Temple courtyards, monastery grounds and village shrines; occasionally self-seeded on walls and old buildings.",
+    "where": "At Buddhist temples throughout Thailand, Cambodia and Laos, and at pagodas in Vietnam.",
+    "dangerous": false,
+    "dangerNote": "Cutting or damaging a bodhi tree at a temple causes real offence. Do not pull off leaves for a souvenir.",
+    "emoji": "🌳",
+    "names": {
+      "th": "โพธิ์",
+      "vi": "cây bồ đề",
+      "km": "ដើមពោធិ៍",
+      "lo": "ໂພ"
+    }
+  },
+  {
+    "id": "nat-plant-sugar-palm",
+    "group": "plant",
+    "commonName": "Sugar Palm",
+    "sciName": "Borassus flabellifer",
+    "localNames": [],
+    "blurb": "Cambodia's national tree, and the shape that defines the Cambodian countryside — a lone straight trunk standing above flat green paddy.",
+    "idTips": "A tall unbranched grey trunk to 30 m topped by a stiff crown of large fan-shaped (not feather-shaped) leaves. Female trees carry clusters of heavy brown fruit the size of a coconut. Look for bamboo ladders lashed up the trunks where climbers collect the sap.",
+    "habitat": "Paddy field margins, village edges and dykes on the lowland plains.",
+    "where": "Ubiquitous across Cambodia, and common in northeastern Thailand, southern Laos and southern Vietnam.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌴",
+    "names": {
+      "th": "ตาล",
+      "vi": "thốt nốt",
+      "km": "ដើមត្នោត",
+      "lo": "ຕານ"
+    }
+  },
+  {
+    "id": "nat-plant-jasmine",
+    "group": "plant",
+    "commonName": "Arabian Jasmine",
+    "sciName": "Jasminum sambac",
+    "localNames": [],
+    "blurb": "The small white flower in the garlands sold at temple gates and traffic lights, and in Thailand the symbol of motherhood.",
+    "idTips": "A scrambling shrub with glossy dark oval leaves and small waxy pure-white flowers, single or double, no more than 2-3 cm across, with an intense sweet scent that carries strongest after dark. The flowers yellow and bruise within a day of picking.",
+    "habitat": "Gardens, pots, temple grounds and commercial flower farms.",
+    "where": "Sold everywhere in the region as loose buds, strung garlands (phuang malai) and floating offerings.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🤍",
+    "names": {
+      "th": "มะลิ",
+      "vi": "hoa nhài",
+      "km": "ម្លិះ",
+      "lo": "ມະລິ"
+    }
+  },
+  {
+    "id": "nat-plant-marigold",
+    "group": "plant",
+    "commonName": "Marigold",
+    "sciName": "Tagetes erecta",
+    "localNames": [],
+    "blurb": "The dense orange pompom flower heaped in baskets outside every temple and shrine as an offering.",
+    "idTips": "A knee-high annual with strongly-scented, finely divided dark-green leaves and tightly packed globular flower heads in saturated orange and yellow, 4-8 cm across. The smell of the crushed foliage is pungent and unmistakable.",
+    "habitat": "Commercial flower fields, temple stalls, shrines and household gardens.",
+    "where": "Grown and sold throughout the region for offerings, garlands and festivals.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🟠",
+    "names": {
+      "th": "ดาวเรือง",
+      "vi": "cúc vạn thọ",
+      "km": "ផ្កាម្លិះស្វាយ",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-areca",
+    "group": "plant",
+    "commonName": "Areca (Betel Nut) Palm",
+    "sciName": "Areca catechu",
+    "localNames": [],
+    "blurb": "The slender palm whose nut, wrapped in a betel leaf with lime, is the region's oldest stimulant — and the reason for the deep red stains on pavements and older people's teeth.",
+    "idTips": "A very slim, straight, ringed grey trunk 10-20 m with a small crown of feathery leaves — much more slender than a coconut palm. Clusters of egg-shaped fruit ripen from green to orange-yellow beneath the crown.",
+    "habitat": "Village gardens, smallholdings and plantations, especially in wetter areas.",
+    "where": "Grown across the region; chewing is now most common among older people and in rural and highland communities.",
+    "dangerous": false,
+    "dangerNote": "Chewing areca nut is strongly linked to mouth cancer and is classed as a carcinogen. It is offered to visitors as hospitality in some communities; declining politely is fine.",
+    "emoji": "🌴",
+    "names": {
+      "th": "หมาก",
+      "vi": "cây cau",
+      "km": "ដើមស្លា",
+      "lo": "ຫມາກ"
+    }
+  },
+  {
+    "id": "nat-plant-betel-pepper",
+    "group": "plant",
+    "commonName": "Betel Pepper",
+    "sciName": "Piper betle",
+    "localNames": [],
+    "blurb": "The heart-shaped leaf that the areca nut is wrapped in — a climbing pepper vine, and nothing to do with the nut itself.",
+    "idTips": "A climbing vine with glossy, slightly leathery heart-shaped leaves 8-15 cm long, alternating up a jointed green stem, with a peppery smell when torn. Trained up posts and trellises rather than allowed to sprawl.",
+    "habitat": "Village gardens, trellises and market gardens in humid ground.",
+    "where": "Cultivated throughout the region; the leaves are sold in bundles beside areca nut and slaked lime.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🍃",
+    "names": {
+      "th": "พลู",
+      "vi": "trầu",
+      "km": "ម្លូ",
+      "lo": "ພູ"
+    }
+  },
+  {
+    "id": "nat-plant-golden-shower",
+    "group": "plant",
+    "commonName": "Golden Shower Tree",
+    "sciName": "Cassia fistula",
+    "localNames": [],
+    "blurb": "Thailand's national tree and national flower, and one of the great sights of the hot season — bare branches hung with cascades of yellow.",
+    "idTips": "A medium tree 8-15 m that drops much of its foliage and then flowers in long pendulous chains of bright yellow blossom 20-40 cm long. Later it carries distinctive slender cylindrical dark-brown pods up to 60 cm, like long thin sausages, which rattle when dry.",
+    "habitat": "Roadsides, parks, temple grounds and open dry forest.",
+    "where": "Throughout the region; flowers around March to May, peaking with Songkran.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "💛",
+    "names": {
+      "th": "ราชพฤกษ์",
+      "vi": "muồng hoàng yến",
+      "km": "ផ្ការាជព្រឹក្ស",
+      "lo": "ດອກຄູນ"
+    }
+  },
+  {
+    "id": "nat-plant-flame-tree",
+    "group": "plant",
+    "commonName": "Flame Tree (Royal Poinciana)",
+    "sciName": "Delonix regia",
+    "localNames": [],
+    "blurb": "The tree that turns whole streets scarlet at the start of the rains — in Vietnam, so bound up with the end of the school year that it has its own songs.",
+    "idTips": "A wide, flat-topped, umbrella-shaped canopy of very fine twice-divided feathery leaflets, blazing with large scarlet-orange flowers 8-10 cm across. Afterwards it carries flat woody dark-brown pods up to 60 cm long that persist for months.",
+    "habitat": "Avenues, schoolyards, parks and city streets.",
+    "where": "Planted throughout the region; flowers roughly April to June. Hai Phong in Vietnam is nicknamed the red-flower city for it.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "❤️",
+    "names": {
+      "th": "หางนกยูง",
+      "vi": "phượng vĩ",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-rain-tree",
+    "group": "plant",
+    "commonName": "Rain Tree",
+    "sciName": "Samanea saman",
+    "localNames": [],
+    "blurb": "The enormous low-domed shade tree that whole markets, bus stops and temple courtyards are built underneath.",
+    "idTips": "A short thick trunk carrying a vast spreading crown far wider than the tree is tall, of small feathery leaflets that fold shut at dusk and in rain — the origin of the name. Powderpuff flowers of fine pink stamens, and curved brown pods with sticky sweet pulp.",
+    "habitat": "Village greens, roadsides, temple grounds, school yards and car parks.",
+    "where": "Planted throughout the region as a shade tree, often reaching great size and age.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌳",
+    "names": {
+      "th": "ก้ามปู",
+      "vi": "cây me tây",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-bougainvillea",
+    "group": "plant",
+    "commonName": "Bougainvillea",
+    "sciName": "Bougainvillea spectabilis",
+    "localNames": [],
+    "blurb": "The blaze of magenta over guesthouse walls and hotel gates — and the colour is not from petals at all.",
+    "idTips": "A vigorous thorny scrambler with papery, triangular, brightly coloured bracts in magenta, purple, orange, white or brick-red surrounding tiny inconspicuous cream tubular true flowers. Stems carry sharp curved spines.",
+    "habitat": "Walls, fences, gates, roundabouts, pots and hotel gardens.",
+    "where": "Planted everywhere in the region; flowers most heavily in the dry season.",
+    "dangerous": false,
+    "dangerNote": "The curved thorns are sharp and the sap can irritate skin. Watch children near clipped hedges.",
+    "emoji": "💜",
+    "names": {
+      "th": "เฟื่องฟ้า",
+      "vi": "hoa giấy",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-hibiscus",
+    "group": "plant",
+    "commonName": "Chinese Hibiscus",
+    "sciName": "Hibiscus rosa-sinensis",
+    "localNames": [],
+    "blurb": "The big trumpet flower on hedges everywhere, with a long tongue of stamens sticking out of the middle.",
+    "idTips": "A glossy-leaved shrub 1-4 m with flowers 8-15 cm across in red, pink, yellow, apricot or white, each with a prominent central column of fused stamens projecting well beyond the petals and tipped with five knobs. Individual flowers last only a day.",
+    "habitat": "Hedges, gardens, hotel grounds and roadside plantings.",
+    "where": "Planted throughout the region and flowering more or less year-round.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌺",
+    "names": {
+      "th": "ชบา",
+      "vi": "hoa dâm bụt",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-tetrameles",
+    "group": "plant",
+    "commonName": "Thitpok",
+    "sciName": "Tetrameles nudiflora",
+    "localNames": [],
+    "blurb": "The huge pale-trunked tree that grows out of the ruins at Ta Prohm — the one in every photograph of the temple.",
+    "idTips": "A very large deciduous tree over 30 m with a smooth pale grey trunk and, most distinctively, enormous fan-shaped buttress roots that flare out and run along the ground for many metres. Leafless in the dry season. Note that sources genuinely disagree on which species the largest Ta Prohm trees are: thitpok and the silk-cotton tree (Ceiba pentandra) are both named, and the two are often confused in guidebooks.",
+    "habitat": "Lowland semi-evergreen forest; at Angkor, rooted directly in and on the temple masonry.",
+    "where": "Ta Prohm and Preah Khan at Angkor are the famous examples; the species occurs in forest across the region.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌳",
+    "names": {
+      "th": "สมพง",
+      "vi": "cây thung",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-kapok",
+    "group": "plant",
+    "commonName": "Kapok (Silk-Cotton Tree)",
+    "sciName": "Ceiba pentandra",
+    "localNames": [],
+    "blurb": "A giant with a spiny trunk whose pods burst into clouds of silky fluff that once stuffed every mattress and life jacket in the region.",
+    "idTips": "A very tall tree to 40 m or more with a straight buttressed trunk, often studded with stout conical spines, and horizontal tiers of branches. Palmate leaves with 5-9 leaflets. Woody pods split to release masses of pale cotton-like fibre around small black seeds.",
+    "habitat": "Villages, roadsides, temple grounds and open forest; often left standing when land is cleared.",
+    "where": "Throughout the region; also one of the trees named among the great trees at Ta Prohm.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌳",
+    "names": {
+      "th": "นุ่น",
+      "vi": "cây gòn",
+      "km": "ដើមគ",
+      "lo": "ງີ້ວ"
+    }
+  },
+  {
+    "id": "nat-plant-strangler-fig",
+    "group": "plant",
+    "commonName": "Strangler Fig",
+    "sciName": "Ficus spp.",
+    "localNames": [],
+    "blurb": "Not a species but a strategy — a fig that starts life in the crown of another tree and lets gravity do the rest, ending as a hollow lattice around a host that has rotted away.",
+    "idTips": "Look for a cage or basket of fused, flattened, snaking roots running down the trunk of another tree, sometimes with a hollow core where the host has died. Leaves are typically thick, glossy and oval; broken twigs and leaves bleed white latex. Small figs grow directly on the branches.",
+    "habitat": "Rainforest and monsoon forest, and very commonly on temple ruins, old walls and bridges.",
+    "where": "Region-wide; spectacular at Angkor, and often seen colonising buildings in towns.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌳",
+    "names": {
+      "th": "ไทร",
+      "vi": "cây bóp cổ",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-yang-na",
+    "group": "plant",
+    "commonName": "Yang Na",
+    "sciName": "Dipterocarpus alatus",
+    "localNames": [],
+    "blurb": "One of the towering dipterocarps that form the roof of the region's forests, with winged seeds that spin down like little helicopters.",
+    "idTips": "A very tall straight-trunked tree to 40 m with a high clean bole and pale flaking bark. Large leathery leaves with prominent parallel veins and a concertina look when young. The fruit is a nut carrying two long strap-like red-brown wings that spin as it falls.",
+    "habitat": "Evergreen and semi-evergreen forest, often along rivers; also planted along old roads and at temples.",
+    "where": "Thailand, Laos, Cambodia and Vietnam; some enormous individuals are protected and cloth-wrapped as sacred trees.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌲",
+    "names": {
+      "th": "ยางนา",
+      "vi": "dầu rái",
+      "km": "",
+      "lo": "ຢາງນາ"
+    }
+  },
+  {
+    "id": "nat-plant-sea-almond",
+    "group": "plant",
+    "commonName": "Sea Almond",
+    "sciName": "Terminalia catappa",
+    "localNames": [],
+    "blurb": "The layered, pagoda-shaped shade tree on nearly every beach in the region — the one whose big leaves turn red before they fall.",
+    "idTips": "Distinct horizontal tiers of branches giving a stepped, pagoda outline, with very large leathery obovate leaves clustered at the twig tips that turn yellow, then deep red, before dropping. Flattened almond-shaped fruit with a keel, green ripening to brown.",
+    "habitat": "Sandy shores just above the tide line, coastal roads and beach resorts.",
+    "where": "Coasts of Thailand, Vietnam and Cambodia, and planted inland for shade.",
+    "dangerous": false,
+    "dangerNote": "The fruit falls hard and heavy from a good height — do not pitch a tent or park directly underneath.",
+    "emoji": "🌳",
+    "names": {
+      "th": "หูกวาง",
+      "vi": "cây bàng",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-casuarina",
+    "group": "plant",
+    "commonName": "Beach Sheoak",
+    "sciName": "Casuarina equisetifolia",
+    "localNames": [],
+    "blurb": "The wispy, pine-looking tree in long windbreak rows behind the sand — not a pine at all.",
+    "idTips": "Looks like a conifer from a distance, with drooping grey-green needle-like branchlets that are in fact jointed green twigs; the true leaves are microscopic scales at the joints. Small woody cone-like fruit about 1-2 cm. The ground beneath is deep in soft needle litter.",
+    "habitat": "Sand dunes, beach ridges and planted coastal windbreaks and erosion barriers.",
+    "where": "Beaches throughout Thailand, Vietnam and Cambodia.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌲",
+    "names": {
+      "th": "สนทะเล",
+      "vi": "phi lao",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-nipa",
+    "group": "plant",
+    "commonName": "Nipa Palm",
+    "sciName": "Nypa fruticans",
+    "localNames": [],
+    "blurb": "The trunkless palm that lines the creeks of the Mekong Delta, arching straight out of the mud — and thatches half the roofs you will see.",
+    "idTips": "No visible trunk: huge upright feather leaves 5-9 m spring directly from a creeping underground stem in the mud. Fruit forms a hard woody brown ball the size of a football, made of tightly packed wedge-shaped segments.",
+    "habitat": "Tidal, brackish creeks and estuaries, in soft mud.",
+    "where": "The Mekong Delta and coastal Cambodia and southern Thailand; leaves are cut for thatch and walls, and the sap is tapped for sugar.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌴",
+    "names": {
+      "th": "จาก",
+      "vi": "dừa nước",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-water-lily",
+    "group": "plant",
+    "commonName": "Water Lily",
+    "sciName": "Nymphaea spp.",
+    "localNames": [],
+    "blurb": "Constantly confused with the lotus, and the difference is easy once you know it: water lilies float, lotuses stand up.",
+    "idTips": "Leaves and flowers sit flat ON the water surface. Leaves are round with a distinct notch or slit cut from the edge to the centre, and have a waxy shine. Flowers are pointed-petalled, in white, pink, red, blue or purple, close in the afternoon. A lotus, by contrast, holds round unnotched leaves and flowers well clear of the water on stiff stalks.",
+    "habitat": "Ponds, canals, moats, temple tanks and slow backwaters.",
+    "where": "Everywhere in the region; the stalks (bua sai) are also eaten as a vegetable.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌸",
+    "names": {
+      "th": "บัวสาย",
+      "vi": "hoa súng",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-taro",
+    "group": "plant",
+    "commonName": "Taro (Elephant Ear)",
+    "sciName": "Colocasia esculenta",
+    "localNames": [],
+    "blurb": "The huge arrow-shaped leaves crowding every ditch and wet margin, grown for the starchy corm beneath.",
+    "idTips": "Clumps to 1.5 m of very large heart- to arrow-shaped leaves held on thick fleshy stalks, the leaf surface water-repellent so drops bead and run off. The leaf stalk joins the blade inside the notch, not at its edge.",
+    "habitat": "Ditches, canal banks, paddy margins and wet garden plots.",
+    "where": "Cultivated and wild throughout the region; corms and stalks are both eaten after cooking.",
+    "dangerous": false,
+    "dangerNote": "All parts contain needle-like calcium oxalate crystals and are intensely irritating raw — burning mouth and throat. Only ever eaten thoroughly cooked. Handling cut stems can itch.",
+    "emoji": "🌿",
+    "names": {
+      "th": "บอน",
+      "vi": "khoai nước",
+      "km": "",
+      "lo": "ເຜືອກ"
+    }
+  },
+  {
+    "id": "nat-plant-oil-palm",
+    "group": "plant",
+    "commonName": "Oil Palm",
+    "sciName": "Elaeis guineensis",
+    "localNames": [],
+    "blurb": "The squat, shaggy palm in endless rows across southern Thailand — the source of the palm oil in almost everything.",
+    "idTips": "A stout trunk to 20 m, usually still ragged with the stubs of old leaf bases, and a dense crown of large feather leaves with spiny stalks. Tight clusters of hard fruit at the crown ripen from black to orange-red and are cut out whole in heavy bunches.",
+    "habitat": "Large plantations on lowland and former forest land.",
+    "where": "Dominant in southern Thailand, with plantations also in Cambodia and Laos.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌴",
+    "names": {
+      "th": "ปาล์มน้ำมัน",
+      "vi": "cọ dầu",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-pandan",
+    "group": "plant",
+    "commonName": "Pandan",
+    "sciName": "Pandanus amaryllifolius",
+    "localNames": [],
+    "blurb": "The long strap leaf tied in a knot and dropped into rice or coconut desserts — the green flavour and colour behind a lot of the region's sweets.",
+    "idTips": "Long, narrow, bright-green strap-like leaves 40-80 cm in a fan-shaped clump, smooth-edged and without spines (unlike the big coastal screwpines), with a strong sweet grassy scent when bruised or torn.",
+    "habitat": "Garden clumps, pots and market-garden beds in damp shade.",
+    "where": "Grown throughout the region; sold in tied bundles at fresh markets.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🌿",
+    "names": {
+      "th": "ใบเตย",
+      "vi": "lá dứa",
+      "km": "",
+      "lo": "ໃບຕຽຫອມ"
+    }
+  },
+  {
+    "id": "nat-plant-rattan",
+    "group": "plant",
+    "commonName": "Rattan",
+    "sciName": "Calamus spp.",
+    "localNames": [],
+    "blurb": "The climbing palm behind every woven chair, basket and mat in the region — and the reason some jungle trails snag your clothing constantly.",
+    "idTips": "A scrambling palm, not a tree: slender jointed canes carrying feather leaves whose stalks and long whip-like extensions are armed with backward-hooked spines that catch and hold. Cut cane is pale, solid and flexible.",
+    "habitat": "Rainforest understorey and forest edge, climbing through other trees.",
+    "where": "Forests across the region; young shoots of some species are eaten and the cane underpins the furniture trade.",
+    "dangerous": false,
+    "dangerNote": "The hooked spines tear skin and clothing and are the most common minor injury on off-trail forest walks. Never grab an unidentified vine for balance.",
+    "emoji": "🪴",
+    "names": {
+      "th": "หวาย",
+      "vi": "cây mây",
+      "km": "",
+      "lo": "ຫວາຍ"
+    }
+  },
+  {
+    "id": "nat-plant-mimosa",
+    "group": "plant",
+    "commonName": "Sensitive Plant",
+    "sciName": "Mimosa pudica",
+    "localNames": [],
+    "blurb": "The weed that folds its leaves shut the instant you touch it — a guaranteed hit with children, and growing on almost every verge.",
+    "idTips": "A low sprawling plant with fine twice-divided feathery leaflets that snap closed within a second of being touched and reopen after some minutes, and small pink spherical powderpuff flowers about 1 cm. The stems carry small sharp prickles.",
+    "habitat": "Roadsides, lawns, waste ground and paths — anywhere disturbed and sunny.",
+    "where": "Common throughout the region, an introduced weed.",
+    "dangerous": false,
+    "dangerNote": "The stems have fine prickles, so demonstrate it with a fingertip on a leaf rather than by grabbing the plant.",
+    "emoji": "🌿",
+    "names": {
+      "th": "ไมยราบ",
+      "vi": "cây trinh nữ",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-stinging-tree",
+    "group": "plant",
+    "commonName": "Stinging Tree",
+    "sciName": "Dendrocnide spp.",
+    "localNames": [],
+    "blurb": "A relative of the nettle scaled up to a tree, with a sting far beyond anything a European nettle can manage — pain that can recur for weeks.",
+    "idTips": "A shrub or small tree with large, soft, oval to heart-shaped leaves, often reddish-veined, held on stalks that join the blade well inside the edge. The whole plant — leaves, stalks and young stems — is covered in fine, almost invisible glassy hairs. Leaves often show insect holes, which is a clue that little else will eat them.",
+    "habitat": "Rainforest edges, clearings, landslips and stream banks in the understorey.",
+    "where": "The genus is native across Southeast Asia; the exact species and their distribution in Thailand and Laos are poorly documented, so treat any large soft-leaved understorey shrub with caution.",
+    "dangerous": true,
+    "dangerNote": "Do not touch. The silica-tipped hairs inject a toxin on the lightest contact, causing immediate severe burning that can last days and may flare again for weeks or months whenever the skin gets wet or cold. Do not rub the area — that drives the hairs in. Remove hairs by applying and peeling off adhesive tape (hair-removal wax strips work well), then use cold packs and painkillers, and seek medical help if the pain is severe or the reaction spreads.",
+    "emoji": "⚠️",
+    "names": {
+      "th": "",
+      "vi": "cây lá han",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-yellow-oleander",
+    "group": "plant",
+    "commonName": "Yellow Oleander",
+    "sciName": "Cascabela thevetia",
+    "localNames": [],
+    "blurb": "A pretty yellow-flowered hedge shrub with some of the most dangerous seeds of any plant in the region — a handful of kernels can stop a heart.",
+    "idTips": "A shrub 2-4 m with narrow, glossy, dark-green willow-like leaves arranged in spirals, and funnel-shaped bright-yellow (sometimes apricot) flowers 4-6 cm. The fruit is a distinctive flattened green globe that dries to black and splits into segments containing a few large pale kernels. Broken stems bleed sticky white latex.",
+    "habitat": "Hedges, hotel and roadside plantings, car parks and gardens on poor dry soil.",
+    "where": "Widely planted as an ornamental throughout the region.",
+    "dangerous": true,
+    "dangerNote": "All parts are poisonous, and the seed kernels intensely so — they contain cardiac glycosides that disturb the heart rhythm and are a well-known cause of fatal poisoning in South and Southeast Asia. Keep children away from the fallen fruit, never use the stems as skewers or cooking sticks, and do not burn the wood in a cooking fire. Any ingestion is a hospital matter.",
+    "emoji": "☠️",
+    "names": {
+      "th": "รำเพย",
+      "vi": "thông thiên",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-jatropha",
+    "group": "plant",
+    "commonName": "Physic Nut",
+    "sciName": "Jatropha curcas",
+    "localNames": [],
+    "blurb": "A very common living-fence shrub whose seeds look and taste pleasantly nutty — which is precisely why children are poisoned by them.",
+    "idTips": "A soft-wooded shrub 2-5 m with pale grey-green stems that bleed watery, sticky, staining sap when cut, and large three- to five-lobed maple-like leaves. Small green-yellow flowers, then green fruit in threes ripening to yellow-black, each holding three smooth dark seeds like small oval nuts.",
+    "habitat": "Living fences and field boundaries, village edges, and biofuel plantings.",
+    "where": "Planted throughout the region as a hedge that cattle will not eat.",
+    "dangerous": true,
+    "dangerNote": "The seeds are poisonous and, unusually, taste pleasant, so children eat several. Two or three can cause violent vomiting, cramping diarrhoea and dehydration. The sap stains skin and clothing and irritates eyes. Treat any ingestion by a child as urgent.",
+    "emoji": "⚠️",
+    "names": {
+      "th": "สบู่ดำ",
+      "vi": "cây cọc rào",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-castor",
+    "group": "plant",
+    "commonName": "Castor Bean",
+    "sciName": "Ricinus communis",
+    "localNames": [],
+    "blurb": "A fast, weedy, handsome plant with mottled seeds that contain one of the most toxic natural substances known.",
+    "idTips": "A coarse plant 1-4 m, often with red-purple stems and leaf stalks, carrying very large glossy palmate leaves with 7-11 pointed lobes. Spiny red-green seed capsules in upright clusters split to release glossy, beautifully mottled brown-and-grey beans about 1 cm — the mottling is unmistakable.",
+    "habitat": "Waste ground, riverbanks, roadsides, rubbish tips and abandoned lots.",
+    "where": "A common weed throughout the region.",
+    "dangerous": true,
+    "dangerNote": "The seeds contain ricin. Chewing even a very small number can be fatal, and children are drawn to the attractive mottled beans, which are also strung as beads. Swallowed whole and intact they may pass harmlessly, but chewed they are extremely dangerous. Never let a child collect them; any chewed seed is a medical emergency.",
+    "emoji": "☠️",
+    "names": {
+      "th": "ละหุ่ง",
+      "vi": "thầu dầu",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-brugmansia",
+    "group": "plant",
+    "commonName": "Angel's Trumpet",
+    "sciName": "Brugmansia spp.",
+    "localNames": [],
+    "blurb": "A spectacular ornamental with huge hanging trumpet flowers, and a plant occasionally brewed deliberately as a drug — with disastrous results.",
+    "idTips": "A soft-wooded shrub or small tree 2-5 m with large soft downy oval leaves and dramatic pendulous trumpet flowers 15-30 cm long in white, cream, peach or pink, strongly scented at night. Hanging downwards distinguishes Brugmansia from the related Datura, whose flowers point up.",
+    "habitat": "Cool-climate gardens, guesthouse grounds and hill-town plantings; commonest in the northern uplands.",
+    "where": "Planted as an ornamental, particularly in the cooler hills of northern Thailand, Vietnam and Laos.",
+    "dangerous": true,
+    "dangerNote": "Every part is strongly poisonous. It contains deliriant tropane alkaloids that cause frightening hallucinations with no insight, complete disorientation, racing heart, very high temperature and sometimes death; the dose is wildly unpredictable between plants. It is sometimes sold or suggested to travellers as a tea — do not drink any preparation of it. Ingestion needs immediate hospital care.",
+    "emoji": "☠️",
+    "names": {
+      "th": "ลำโพง",
+      "vi": "cà độc dược",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-rengas",
+    "group": "plant",
+    "commonName": "Rengas Tree",
+    "sciName": "Gluta spp.",
+    "localNames": [],
+    "blurb": "A forest tree in the same family as poison ivy and the mango, whose black sap causes a severe, slow-blistering burn that people often do not connect to a tree they brushed past.",
+    "idTips": "A tall forest tree with simple leathery leaves clustered towards the twig ends and, diagnostically, sap that runs milky then oxidises to a distinctive glossy black on the bark and on any cut. Freshly felled timber and sawdust are the worst hazard. Old wounds on the trunk are streaked black.",
+    "habitat": "Lowland and hill evergreen forest; the timber is also worked locally.",
+    "where": "Thailand, Laos, Cambodia and Vietnam. In Thailand the related rak yai has long been tapped for black lacquer, which is worked by skilled artisans who know how to handle it.",
+    "dangerous": true,
+    "dangerNote": "The sap causes a delayed contact dermatitis like a severe poison-ivy reaction — intense itching, redness, then weeping blisters appearing 12-48 hours after contact and lasting one to two weeks. Sensitivity worsens with repeat exposure. Wash the area with soap and plenty of water as soon as you suspect contact, do not scratch, and see a doctor for a widespread or facial reaction. Never handle fresh-cut timber or burn the wood — the smoke can affect eyes and airways.",
+    "emoji": "⚠️",
+    "names": {
+      "th": "รักใหญ่",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-plant-cashew",
+    "group": "plant",
+    "commonName": "Cashew",
+    "sciName": "Anacardium occidentale",
+    "localNames": [],
+    "blurb": "The source of the nut you are eating on the bus, growing in an arrangement no one expects — the nut hangs outside the fruit.",
+    "idTips": "A low spreading tree 6-12 m with thick, rounded, blunt-tipped leathery leaves. Unmistakable in fruit: a fleshy pear-shaped red or yellow 'apple' with a single kidney-shaped grey-green nut hanging from its lower end.",
+    "habitat": "Plantations and smallholdings on dry sandy soils; village gardens.",
+    "where": "Grown widely in Vietnam — one of the world's largest producers — and in Cambodia and southern Thailand.",
+    "dangerous": true,
+    "dangerNote": "The nut shell contains a caustic oil closely related to the poison-ivy toxin, which blisters skin and lips; this is why cashews are always sold shelled and roasted and are never eaten raw from the tree. Do not try to crack a raw cashew from a plantation. The fleshy apple itself is harmless and is eaten and juiced locally.",
+    "emoji": "⚠️",
+    "names": {
+      "th": "มะม่วงหิมพานต์",
+      "vi": "cây điều",
+      "km": "",
+      "lo": ""
+    }
   }
 ];
 

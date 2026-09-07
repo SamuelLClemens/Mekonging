@@ -26,7 +26,7 @@ function produceCard(p) {
 export function produceScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Market produce', '#home'));
-  wrap.append(screenHint('Fruits, vegetables and herbs you will see at the market — names in every local language, when they are in season, how to eat and pick them, and a fair price.'));
+  wrap.append(screenHint('What is on the stall — fruit, vegetables, herbs, and the sauces, rices and pastes everyone else seems to recognise. Names in every local language, when it is in season, how to eat and pick it, and a fair price.'));
   const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(PRODUCE_CATEGORIES);
   const chips = h('div', { class: 'chips' }, cats.map((g) =>
     h('button', { class: 'chip', 'aria-pressed': produceCat === g.id ? 'true' : 'false', dataset: { g: g.id },
@@ -79,6 +79,8 @@ export function produceDetail(id) {
   if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Sources: ${p.sources.join('; ')}`));
   wrap.append(card);
   wrap.append(idPinButton('produce', p.id));
-  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${p.name} fruit vegetable`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
+  // Search on the item's own category, not a hardcoded "fruit vegetable" — that wording
+  // made nonsense queries of the stall/pantry entries ("fish sauce fruit vegetable").
+  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${p.name} ${cat ? cat.label : 'market'} Southeast Asia`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
   mount(wrap, '#home');
 }
