@@ -76,7 +76,7 @@ export function nearbyScreen() {
     // merged on-the-ground stage.
     body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'traveling' && !store.profile.prefs.justArrivedHidden));
     body.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
-    body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
+    body.append(h('div', { class: 'chips', style: 'margin: var(--sp-3) 0' }, [
       h('button', { class: 'chip', onclick: () => go(`#places-${country}`) }, [chipIcon('map'), 'See on the map']),
       h('button', { class: 'chip', onclick: () => go('#places') }, [chipIcon('pin'), 'Set my stay']),
       h('button', { class: 'chip', onclick: () => go('#exchange') }, '🤝 Traveller board'),
@@ -97,9 +97,9 @@ export function nearbyScreen() {
       }, lbl)));
     const listEl = h('div', {});
     body.append(
-      h('h3', { style: 'margin:14px 2px 4px' }, 'Closest to you'),
+      h('h3', { style: 'margin: var(--sp-4) var(--sp-0h) var(--sp-1)' }, 'Closest to you'),
       catRow,
-      h('p', { class: 'tiny muted', style: 'margin:6px 2px 8px' },
+      h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) var(--sp-0h) var(--sp-2)' },
         'Distances are straight-line and drive times are rough estimates — mountain roads (for example around Pai, Sapa or the Bolaven Plateau) take considerably longer.'),
       listEl,
     );
@@ -149,13 +149,13 @@ export function nearbyScreen() {
         return;
       }
       if (near.length) near.forEach(({ p, km }) => renderRow(listEl, p, km));
-      else listEl.append(h('p', { class: 'muted small', style: 'margin:2px 2px 8px' }, 'Nothing within about an hour’s drive in this category — the nearest are further afield, below.'));
+      else listEl.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-2)' }, 'Nothing within about an hour’s drive in this category — the nearest are further afield, below.'));
       if (afield.length) {
         const afBody = h('div', { class: 'near-afield-body' });
         afield.forEach(({ p, km }) => renderRow(afBody, p, km));
         listEl.append(h('details', { class: 'card near-afield', open: near.length ? null : '' }, [
           h('summary', {}, `🚌 Further afield · next destinations (${afield.length})`),
-          h('p', { class: 'muted small', style: 'margin:2px 0 8px' }, 'Beyond an hour’s drive — worth a day trip or your next stop.'),
+          h('p', { class: 'muted small', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Beyond an hour’s drive — worth a day trip or your next stop.'),
           afBody,
         ]));
       }

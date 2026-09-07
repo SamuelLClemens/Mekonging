@@ -49,7 +49,7 @@ export function searchScreen() {
   // that kind with no query typed (a "nearest food / nearest stay" tool when GPS is on).
   let cat = 'all';
   const CATS = [['all', 'All'], ['food', '🍜 Food'], ['stay', '🛏 Stay'], ['culture', '🏛 Culture'], ['nature', '🌿 Nature'], ['nightlife', '🌃 Nightlife']];
-  const catRow = h('div', { class: 'chips', style: 'margin:6px 0' }, CATS.map(([id, lbl]) =>
+  const catRow = h('div', { class: 'chips', style: 'margin: var(--sp-1h) 0' }, CATS.map(([id, lbl]) =>
     h('button', { class: 'chip', 'aria-pressed': id === 'all' ? 'true' : 'false', dataset: { c: id },
       onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); renderResults(); } }, lbl)));
   wrap.append(catRow);
@@ -141,7 +141,7 @@ export function searchScreen() {
         out.append(h('h2', { class: 'cat-title' }, 'Try searching for'));
         out.append(h('div', { class: 'chips search-launch' },
           SEARCH_EXAMPLES.map((s) => h('button', { class: 'chip', onclick: () => setQuery(s) }, s))));
-        out.append(h('p', { class: 'muted tiny', style: 'margin:8px 2px 0' }, 'Or type any word — places, phrases, wildlife and prices are all searchable. Pick a category above to browse the nearest places to you.'));
+        out.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-2) var(--sp-0h) 0' }, 'Or type any word — places, phrases, wildlife and prices are all searchable. Pick a category above to browse the nearest places to you.'));
       } else {
         out.append(h('p', { class: 'muted' }, 'Nothing found. Try another word or category.'));
       }

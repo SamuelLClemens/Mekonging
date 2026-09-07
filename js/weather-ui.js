@@ -179,7 +179,7 @@ export function wxMonthCalendarNode(rec, metric) {
   });
   return h('div', {}, [
     grid,
-    h('p', { class: 'muted small', style: 'margin:6px 2px 0' }, `Forecast covers the next ${daily.length} day${daily.length === 1 ? '' : 's'}; later days fill in as the forecast extends.`),
+    h('p', { class: 'muted small', style: 'margin: var(--sp-1h) var(--sp-0h) 0' }, `Forecast covers the next ${daily.length} day${daily.length === 1 ? '' : 's'}; later days fill in as the forecast extends.`),
   ]);
 }
 
@@ -241,7 +241,7 @@ export function wxVizCard(rec, spot) {
   });
   chipsRow.append(h('div', { class: 'wx-metric-seg', role: 'group', 'aria-label': 'Which measurement to colour the forecast by' }, segs));
 
-  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:0 0 6px' }, 'Next 24 hours'), chipsRow, ringSlot, detailSlot);
+  card.append(h('h3', { class: 'wx-cal-h', style: 'margin: 0 0 var(--sp-1h)' }, 'Next 24 hours'), chipsRow, ringSlot, detailSlot);
   const hourly = wxHourlyListNode(rec);
   if (hourly) card.append(hourly);
   // "Upcoming forecast" is the month calendar — the tallest thing in this card by some

@@ -50,7 +50,7 @@ function arrivalScreen(arg) {
       h('div', { class: 'tiny muted' }, `${o.detail}${o.fare ? ` · 💰 ${o.fare}` : ''}`),
       o.tip ? h('div', { class: 'list-note' }, o.tip) : null,
     ])));
-    if (arr.scam) t.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, `⚠️ ${arr.scam}`));
+    if (arr.scam) t.append(h('p', { class: 'disclaimer', style: 'margin-bottom: 0' }, `⚠️ ${arr.scam}`));
     wrap.append(t);
   }
 

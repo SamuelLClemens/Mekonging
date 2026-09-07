@@ -200,86 +200,63 @@ CEILING = {
     ]
 }
 
-
-def measure():
-    out = {}
+def _decls():
+    """Every inline margin/padding/gap declaration in the app, as (path, text)."""
+    out = []
     for path in sorted(glob.glob('js/**/*.js', recursive=True)):
-        if any(s in path for s in SKIP):
+        if any(k in path for k in SKIP):
             continue
         src = io.open(path, encoding='utf-8').read()
         attrs = re.findall(r"style:\s*'([^']*)'", src) + re.findall(r'style:\s*"([^"]*)"', src)
-        total = offscale = 0
         for attr in attrs:
             for decl in attr.split(';'):
-                m = re.match(PROPS + r'\s*:\s*(.+)$', decl.strip())
-                if not m:
-                    continue
-                total += 1
-                px = [int(v) for v in re.findall(r'(\d+)px', m.group(2))]
-                if any(v not in SCALE and v != 0 for v in px):
-                    offscale += 1
-        if total:
-            out[path] = [total, offscale]
+                d = decl.strip()
+                if re.match(PROPS + r'\s*:\s*(.+)$', d):
+                    out.append((path, d))
     return out
 
 
-def main():
-    now = measure()
-    if '--update' in sys.argv:
-        src = io.open(__file__, encoding='utf-8').read()
-        block = json.dumps(now, indent=4)[1:-1].rstrip()
-        src = re.sub(r'CEILING = \{.*?\n\}', 'CEILING = {' + block + '\n}', src, flags=re.S)
-        io.open(__file__, 'w', encoding='utf-8').write(src)
-        print(f'Ceilings updated: {sum(v[0] for v in now.values())} declarations, '
-              f'{sum(v[1] for v in now.values())} off-scale.')
-        return 0
+# A raw pixel length. Deliberately NOT matched inside calc(), where a token multiplied by -1
+# is the correct way to express a negative margin, and not matched for 0 (which needs no unit
+# and no token).
+RAW_PX = re.compile(r'(?<![\w-])(\d+)px')
 
-    tot = sum(v[0] for v in now.values())
-    off = sum(v[1] for v in now.values())
-    cap_tot = sum(v[0] for v in CEILING.values())
-    cap_off = sum(v[1] for v in CEILING.values())
+
+def main():
+    decls = _decls()
+    bad = []
+    for path, d in decls:
+        val = d.split(':', 1)[1]
+        # Strip calc(...) first: `calc(var(--sp-1h) * -1)` is tokenised, and any px inside a
+        # calc is a deliberate composite worth reading on its own terms.
+        val_no_calc = re.sub(r'calc\([^)]*\)', '', val)
+        if RAW_PX.search(val_no_calc):
+            bad.append((path, d))
+
+    print('%d inline spacing declarations; %d carry a raw pixel length.' % (len(decls), len(bad)))
 
     if '--report' in sys.argv:
-        print(f'{"file":34s} {"now":>12s} {"ceiling":>12s}')
-        for path in sorted(set(now) | set(CEILING)):
-            n = now.get(path, [0, 0])
-            c = CEILING.get(path, [0, 0])
-            flag = '' if (n[0] <= c[0] and n[1] <= c[1]) else '  <-- WORSE'
-            print(f'{path:34s} {n[0]:5d}/{n[1]:<6d} {c[0]:5d}/{c[1]:<6d}{flag}')
-        print()
+        by = {}
+        for path, d in decls:
+            by.setdefault(path, []).append(d)
+        for path in sorted(by):
+            print('\n%s  (%d)' % (path, len(by[path])))
+            for d in by[path][:20]:
+                print('    %s' % d)
 
-    problems = []
-    for path, n in now.items():
-        c = CEILING.get(path)
-        if c is None:
-            problems.append(f'{path}: {n[0]} inline spacing declarations ({n[1]} off-scale) in a '
-                            f'file that had none. Lay the block out with gap on the parent — '
-                            f'.stack-1..6 in css/style.css bind gap to the token scale.')
-        else:
-            if n[0] > c[0]:
-                problems.append(f'{path}: {n[0]} inline spacing declarations, ceiling is {c[0]} '
-                                f'(+{n[0] - c[0]}).')
-            if n[1] > c[1]:
-                problems.append(f'{path}: {n[1]} of them use an off-scale value, ceiling is '
-                                f'{c[1]} (+{n[1] - c[1]}). The scale is '
-                                f'{sorted(SCALE)} — 2, 6, 10 and 14 are not on it.')
-
-    print(f'{tot} inline spacing declarations across {len(now)} files; {off} use an off-scale '
-          f'value. Ceilings: {cap_tot} / {cap_off}.')
-    if problems:
-        print('\nFAIL — inline spacing grew:\n')
-        for p in problems:
-            print('  ' + p)
-        print('\nUse gap on the parent (.stack-1..6) rather than a margin on each child. If a '
-              '\nreduction elsewhere genuinely offsets this, re-run with --update to re-record '
-              '\nthe ceilings — but --update after an INCREASE just hides it.')
+    if bad:
+        print('\nFAIL — spacing must come from the scale, not from a pixel value:\n')
+        for path, d in bad[:24]:
+            print('  %-36s %s' % (path, d))
+        if len(bad) > 24:
+            print('  ... and %d more (--report lists every declaration)' % (len(bad) - 24))
+        print('\nUse a token: --sp-0h 2, --sp-1 4, --sp-1h 6, --sp-2 8, --sp-3 12,')
+        print('--sp-4 16, --sp-5 24, --sp-6 32. Better still, lay sibling groups out with gap on')
+        print('the parent — .stack-1..6 in css/style.css bind gap to the same tokens — and drop')
+        print('the per-child margin entirely.')
         return 1
-    won = (cap_tot - tot, cap_off - off)
-    if won[0] or won[1]:
-        print(f'\nPASS — and {won[0]} fewer declarations / {won[1]} fewer off-scale than the '
-              f'recorded ceiling.\nRun --update to lock the improvement in.')
-    else:
-        print('\nPASS — no file carries more inline spacing than its ceiling.')
+
+    print('\nPASS — every inline margin, padding and gap comes from the token scale.')
     return 0
 
 

@@ -61,7 +61,7 @@ export function foodScreen(country) {
       `${g.emoji} ${g.label}`)));
   wrap.append(catChips);
 
-  wrap.append(h('p', { class: 'muted', style: 'margin:10px 0 4px' }, 'Avoid (hides dishes that contain):'));
+  wrap.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, 'Avoid (hides dishes that contain):'));
   const avoidChips = h('div', { class: 'chips' }, FOOD_ALLERGENS.map((a) =>
     h('button', { class: 'chip', 'aria-pressed': foodAvoid.has(a) ? 'true' : 'false',
       onclick: (e) => { if (foodAvoid.has(a)) foodAvoid.delete(a); else foodAvoid.add(a); e.currentTarget.setAttribute('aria-pressed', foodAvoid.has(a) ? 'true' : 'false'); renderList(); } },
@@ -70,13 +70,13 @@ export function foodScreen(country) {
 
   // Your dietary profile: highlight dishes that fit you + one tap to your allergy phrases.
   const diet = store.profile.prefs.diet || [];
-  const profBox = h('div', { class: 'card diet-legend', style: 'margin:12px 0' });
+  const profBox = h('div', { class: 'card diet-legend', style: 'margin: var(--sp-3) 0' });
   if (diet.length) {
-    profBox.append(h('p', { style: 'margin:0 0 6px' }, [
+    profBox.append(h('p', { style: 'margin: 0 0 var(--sp-1h)' }, [
       h('strong', {}, '🍽 Highlighting for: '),
       diet.map((id) => (DIET_LABEL[id] ? `${DIET_LABEL[id].emoji} ${DIET_LABEL[id].label}` : id)).join(', '),
     ]));
-    profBox.append(h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, [
+    profBox.append(h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, [
       h('span', { class: 'food-flag ok' }, '✓'), ' green = nothing you avoid is listed · ',
       h('span', { class: 'food-flag bad' }, '✕'), ' red = contains something you avoid. Guidance from listed allergens only — always confirm with the cook.',
     ]));
@@ -86,7 +86,7 @@ export function foodScreen(country) {
       h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit restrictions'),
     ]));
   } else {
-    profBox.append(h('p', { style: 'margin:0 0 8px' }, 'Tell the app your allergies and diet and it highlights dishes that fit — green for safe, red to avoid.'));
+    profBox.append(h('p', { style: 'margin: 0 0 var(--sp-2)' }, 'Tell the app your allergies and diet and it highlights dishes that fit — green for safe, red to avoid.'));
     profBox.append(h('button', { class: 'btn ghost block', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
   }
   const foodLangCC = getCountry(foodCountry) ? foodCountry : (getActiveCountry() || 'th');
@@ -104,13 +104,13 @@ export function foodScreen(country) {
   if ((store.profile.prefs.diet || []).includes('kosher')) {
     const fix = getLastFix();
     const kv = nearestFirst(KOSHER, fix);
-    const kc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '✡️ Kosher food & Chabad houses')]);
-    kc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'In Thailand, Vietnam, Cambodia and Laos, reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified kosher — always confirm supervision with the venue.'));
+    const kc = h('div', { class: 'card allergy-card', style: 'margin: var(--sp-3) 0' }, [h('h2', {}, '✡️ Kosher food & Chabad houses')]);
+    kc.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'In Thailand, Vietnam, Cambodia and Laos, reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified kosher — always confirm supervision with the venue.'));
     kv.slice(0, 8).forEach((k) => {
       const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: k.lat, lng: k.lng }) : null;
-      kc.append(h('div', { style: 'margin:6px 0' }, [
+      kc.append(h('div', { style: 'margin: var(--sp-1h) 0' }, [
         h('div', { class: 'row-between' }, [h('strong', {}, k.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `${k.city} · ${k.offer}`),
+        h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, `${k.city} · ${k.offer}`),
         h('div', { class: 'chips' }, [
           h('a', { class: 'chip', href: mapsSearch(`${k.name} ${k.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
           h('a', { class: 'chip', href: k.url, target: '_blank', rel: 'noopener' }, 'Official site ↗'),
@@ -123,7 +123,7 @@ export function foodScreen(country) {
     const pk = DIET_PHRASES['no-pork'];
     const pkLang = pk.langs[foodLang];
     const kLang = getLanguage(foodLang);
-    kc.append(h('p', { class: 'tiny muted', style: 'margin:10px 0 2px' }, 'Eating outside a Chabad house? Ask the cook to leave pork out:'));
+    kc.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, 'Eating outside a Chabad house? Ask the cook to leave pork out:'));
     if (pkLang && kLang) {
       kc.append(h('div', { class: 'phrase' }, [
         h('div', { class: 'grow' }, [
@@ -144,13 +144,13 @@ export function foodScreen(country) {
   // Halal-certified food is widespread here, especially near mosques and Muslim quarters.
   const dietSet = store.profile.prefs.diet || [];
   if (dietSet.includes('halal') || dietSet.includes('no-pork') || dietSet.includes('no-beef')) {
-    const hc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '🕌 Halal & pork-free')]);
-    hc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Halal-certified food is widely available in the region, especially near mosques and Muslim quarters. Look for a halal-certification logo and confirm with the cook.'));
+    const hc = h('div', { class: 'card allergy-card', style: 'margin: var(--sp-3) 0' }, [h('h2', {}, '🕌 Halal & pork-free')]);
+    hc.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Halal-certified food is widely available in the region, especially near mosques and Muslim quarters. Look for a halal-certification logo and confirm with the cook.'));
     hc.append(h('a', { class: 'btn ghost block', href: mapsSearch('halal restaurant near me'), target: '_blank', rel: 'noopener' }, 'Find halal food near me ↗'));
     const hpk = DIET_PHRASES['no-pork'];
     const hpkLang = hpk.langs[foodLang];
     const hLang = getLanguage(foodLang);
-    hc.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' }, 'Ask the cook to leave pork out:'));
+    hc.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, 'Ask the cook to leave pork out:'));
     if (hpkLang && hLang) {
       hc.append(h('div', { class: 'phrase' }, [
         h('div', { class: 'grow' }, [
@@ -219,9 +219,9 @@ export function dishScreen(id) {
     ]),
     d.localName ? h('div', { class: 'native', lang: scriptLang(d.country) }, d.localName) : null,
     d.roman ? h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), d.roman]) : null,
-    (d.localName && canSay(dLocale)) ? h('button', { class: 'btn ghost', style: 'margin:4px 0', onclick: () => say(d.localName, dLocale) }, '🔊 Hear the name (show a local)') : null,
-    h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
-    spiceNote ? h('div', { class: 'food-spice', style: 'margin:0 0 6px' }, `🌶 ${spiceNote}`) : null,
+    (d.localName && canSay(dLocale)) ? h('button', { class: 'btn ghost', style: 'margin: var(--sp-1) 0', onclick: () => say(d.localName, dLocale) }, '🔊 Hear the name (show a local)') : null,
+    h('div', { class: 'muted', style: 'margin: var(--sp-1h) 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
+    spiceNote ? h('div', { class: 'food-spice', style: 'margin: 0 0 var(--sp-1h)' }, `🌶 ${spiceNote}`) : null,
     d.description ? h('p', {}, d.description) : null,
   ]);
   card.append(photoBlock(d, d.name));
@@ -256,7 +256,7 @@ export function dishScreen(id) {
   }
   if (d.veg) { card.append(h('h3', {}, 'Vegetarian / vegan')); card.append(h('p', {}, d.veg)); }
   if (d.whereToFind) { card.append(h('h3', {}, 'Where to find it')); card.append(h('p', {}, d.whereToFind)); }
-  if (d.sources && d.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${d.sources.join('; ')}`));
+  if (d.sources && d.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, `Sources: ${d.sources.join('; ')}`));
   wrap.append(card);
   wrap.append(idPinButton('dish', d.id));
   wrap.append(h('a', { class: 'btn block', href: imageSearch(`${d.name} ${d.localName || ''} food`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
@@ -285,32 +285,32 @@ export function dietEatCard(cc, fix, opts) {
   const wantVeg = (diet.includes('vegan') || diet.includes('vegetarian')) && opts.only !== 'kosher';
   const wantHalal = diet.includes('halal') && !opts.only;
   if (!wantKosher && !wantVeg && !wantHalal) return null;
-  const card = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '🍽 Where you can eat')]);
+  const card = h('div', { class: 'card allergy-card', style: 'margin: var(--sp-3) 0' }, [h('h2', {}, '🍽 Where you can eat')]);
   const kmOf = (v) => (fix && fix.lat != null && v.lat != null) ? haversineKm(fix, { lat: v.lat, lng: v.lng }) : null;
-  const venueRow = (name, city, offer, km, tag) => h('div', { style: 'margin:6px 0' }, [
+  const venueRow = (name, city, offer, km, tag) => h('div', { style: 'margin: var(--sp-1h) 0' }, [
     h('div', { class: 'row-between' }, [h('strong', {}, name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-    h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `${city}${offer ? ' · ' + offer : ''}`),
+    h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, `${city}${offer ? ' · ' + offer : ''}`),
     h('div', { class: 'chips' }, [tag ? attrTag(tag) : null, h('a', { class: 'chip', href: mapsSearch(`${name} ${city}`), target: '_blank', rel: 'noopener' }, 'Map ↗')]),
   ]);
   if (wantVeg) {
-    card.append(h('h3', { style: 'margin:6px 0 2px' }, '🌱 Vegetarian & vegan'));
+    card.append(h('h3', { style: 'margin: var(--sp-1h) 0 var(--sp-0h)' }, '🌱 Vegetarian & vegan'));
     const vs = nearestFirst(VEG_SPOTS.filter((v) => v.cc === cc), fix);
     if (vs.length) {
       vs.slice(0, 8).forEach((v) => card.append(venueRow(v.name, v.city, v.offer, kmOf(v), (v.tags || []).includes('vegan') ? '🌱 Vegan' : '🥗 Vegetarian')));
     } else {
-      card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0' }, 'No dedicated veg kitchen is listed for this country yet. Many local kitchens cook to order — ask for the vegetarian version and use the dish guide’s green/red verdicts.'));
+      card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0' }, 'No dedicated veg kitchen is listed for this country yet. Many local kitchens cook to order — ask for the vegetarian version and use the dish guide’s green/red verdicts.'));
     }
-    card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'These are verified vegetarian/vegan kitchens. General eateries are not checked — confirm on arrival, especially fish sauce, oyster sauce and egg.'));
+    card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0 0' }, 'These are verified vegetarian/vegan kitchens. General eateries are not checked — confirm on arrival, especially fish sauce, oyster sauce and egg.'));
   }
   if (wantKosher) {
-    card.append(h('h3', { style: 'margin:10px 0 2px' }, '✡️ Kosher (Chabad houses)'));
+    card.append(h('h3', { style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, '✡️ Kosher (Chabad houses)'));
     const kv = nearestFirst(KOSHER.filter((k) => k.cc === cc), fix);
     (kv.length ? kv : nearestFirst(KOSHER, fix)).slice(0, 6).forEach((k) => card.append(venueRow(k.name, k.city, k.offer, kmOf(k), null)));
-    card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'Reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified — always confirm supervision.'));
+    card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-1h) 0 0' }, 'Reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified — always confirm supervision.'));
   }
   if (wantHalal) {
-    card.append(h('h3', { style: 'margin:10px 0 2px' }, '🕌 Halal'));
-    card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, 'Halal food is widely available near mosques and in Muslim quarters. Look for the green halal sign, and ask “halal?” — the app’s pork-free phrase is in the phrasebook.'));
+    card.append(h('h3', { style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, '🕌 Halal'));
+    card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' }, 'Halal food is widely available near mosques and in Muslim quarters. Look for the green halal sign, and ask “halal?” — the app’s pork-free phrase is in the phrasebook.'));
   }
   return card;
 }

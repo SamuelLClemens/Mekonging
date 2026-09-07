@@ -49,8 +49,8 @@ function famCard(e, meta) {
     h('h3', {}, e.name),
     e.city ? h('span', { class: 'cat-tag' }, e.city) : null,
   ]));
-  if (meta) card.append(h('p', { class: 'tiny muted', style: 'margin:4px 0' }, meta));
-  if (e.note) card.append(h('p', { style: 'margin:4px 0' }, e.note));
+  if (meta) card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1) 0' }, meta));
+  if (e.note) card.append(h('p', { style: 'margin: var(--sp-1) 0' }, e.note));
   if (e.url) card.append(h('a', { class: 'btn ghost block', href: e.url, target: '_blank', rel: 'noopener' }, 'Official site ↗'));
   return card;
 }
@@ -81,8 +81,8 @@ export function familyScreen(cc) {
   const acts = f.kidActivities || [];
   const doNodes = [];
   if (kidPlaces.length) {
-    doNodes.push(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, 'Kid-friendly places from your guide:'));
-    doNodes.push(h('div', { class: 'chips', style: 'margin-bottom:8px' }, kidPlaces.map((p) =>
+    doNodes.push(h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-1h)' }, 'Kid-friendly places from your guide:'));
+    doNodes.push(h('div', { class: 'chips', style: 'margin-bottom: var(--sp-2)' }, kidPlaces.map((p) =>
       h('button', { class: 'chip', onclick: () => go(`#place-${p.id}`) }, p.name))));
   }
   acts.forEach((a) => doNodes.push(famCard(a, [kidKindLabel(a.kind), a.ages ? `Ages ${a.ages}` : null].filter(Boolean).join(' · '))));
@@ -120,7 +120,7 @@ export function familyCard(cc) {
   if (!getFamily(cc)) return null;
   const card = h('div', { class: 'card' });
   card.append(h('h2', {}, '👨‍👩‍👧 Travelling with kids'));
-  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'What to do with the kids, childcare & daycare, and international schools for longer stays.'));
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0' }, 'What to do with the kids, childcare & daycare, and international schools for longer stays.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#family-${cc}`) }, 'Open the family guide'));
   return card;
 }

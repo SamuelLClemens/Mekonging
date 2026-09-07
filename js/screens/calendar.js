@@ -167,8 +167,8 @@ function calendarScreen() {
     const ps = personal.pregnancyStatus();
     if (ps) wrap.append(h('div', { class: 'card preg-banner' }, [
       h('strong', {}, `🤰 Week ${ps.weeks}${ps.days ? ' +' + ps.days + 'd' : ''} · trimester ${ps.trimester}`),
-      h('p', { class: 'muted', style: 'margin:4px 0 0' }, `${ps.dueInDays != null && ps.dueInDays >= 0 ? `~${ps.dueInDays} day${ps.dueInDays === 1 ? '' : 's'} to your due date (${ps.edd}). ` : `Due date ${ps.edd}. `}${ps.milestone}`),
-      h('p', { class: 'disclaimer', style: 'margin:6px 0 0' }, 'Informational estimate from your dates — not medical advice. Every pregnancy differs; follow your midwife or doctor.'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 0' }, `${ps.dueInDays != null && ps.dueInDays >= 0 ? `~${ps.dueInDays} day${ps.dueInDays === 1 ? '' : 's'} to your due date (${ps.edd}). ` : `Due date ${ps.edd}. `}${ps.milestone}`),
+      h('p', { class: 'disclaimer', style: 'margin: var(--sp-1h) 0 0' }, 'Informational estimate from your dates — not medical advice. Every pregnancy differs; follow your midwife or doctor.'),
     ]));
   }
 
@@ -191,14 +191,14 @@ function calendarScreen() {
 
   // Quick-add row: the common entries in one tap (all open the editable form, prefilled to
   // the selected day + type, so every entry stays fully editable afterwards).
-  wrap.append(h('div', { class: 'chips', style: 'margin:8px 0 2px' }, [
+  wrap.append(h('div', { class: 'chips', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, [
     h('button', { class: 'chip', onclick: () => go(`#calendar-add-${calSelDate}`) }, '＋ Plan / booking'),
     h('button', { class: 'chip', onclick: () => go(`#calendar-add-${calSelDate}-laundry`) }, '🧺 Laundry day'),
     h('button', { class: 'chip', onclick: () => go(`#calendar-add-${calSelDate}-appointment`) }, '📌 Appointment'),
   ]));
 
   // Selected day panel.
-  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top:14px' }, calDateLabel(calSelDate)));
+  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top: var(--sp-4)' }, calDateLabel(calSelDate)));
   const dayMarks = (byDate[calSelDate] || []).filter((m) => ['event', 'journal', 'item'].includes(m.kind));
   if (!dayMarks.length) wrap.append(h('p', { class: 'muted' }, 'Nothing planned on this day. Use the quick-add above, or “Add” below.'));
   dayMarks.forEach((mk) => {
@@ -206,8 +206,8 @@ function calendarScreen() {
       const e = mk.ref; const ec = getCountry(mk.cc);
       wrap.append(h('div', { class: 'card' }, [
         h('div', { class: 'row-between' }, [h('strong', {}, [calDot(mk.color), ' ' + e.name]), ec ? h('span', { class: 'cat-tag' }, ec.flag) : null]),
-        e.blurb ? h('p', { class: 'muted', style: 'margin:4px 0' }, e.blurb) : null,
-        h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+        e.blurb ? h('p', { class: 'muted', style: 'margin: var(--sp-1) 0' }, e.blurb) : null,
+        h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
           h('button', { class: 'btn ghost', onclick: () => go(`#event-${e.id}`) }, 'Details'),
           h('button', { class: 'btn ghost', onclick: (ev) => addEventToCalendar(e, ev.currentTarget) }, 'Add to my plans'),
         ]),
@@ -216,8 +216,8 @@ function calendarScreen() {
       const j = mk.ref;
       const card = h('div', { class: 'card' }, [
         h('strong', {}, [calDot(mk.color), ` ${j.photoKey ? '📷 ' : ''}${j.title || 'Journal entry'}`]),
-        j.text ? h('p', { class: 'muted', style: 'margin:4px 0' }, j.text.slice(0, 140) + (j.text.length > 140 ? '…' : '')) : null,
-        h('button', { class: 'btn ghost', style: 'margin-top:4px', onclick: () => go(`#journal-entry-${j.id}`) }, 'Open entry'),
+        j.text ? h('p', { class: 'muted', style: 'margin: var(--sp-1) 0' }, j.text.slice(0, 140) + (j.text.length > 140 ? '…' : '')) : null,
+        h('button', { class: 'btn ghost', style: 'margin-top: var(--sp-1)', onclick: () => go(`#journal-entry-${j.id}`) }, 'Open entry'),
       ]);
       // Show the entry's photo inline, loaded from IndexedDB, so the day reads like a diary.
       if (j.photoKey) {
@@ -236,7 +236,7 @@ function calendarScreen() {
         it.place ? h('p', { class: 'muted' }, it.place) : null,
         it.rating ? h('div', { class: 'stars-static' }, starsStr(it.rating)) : null,
         it.note ? h('p', {}, it.note) : null,
-        h('div', { class: 'row-between', style: 'margin-top:8px' }, [
+        h('div', { class: 'row-between', style: 'margin-top: var(--sp-2)' }, [
           h('button', { class: 'btn ghost', onclick: () => go(`#calendar-edit-${it.id}`) }, '✎ Edit'),
           h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteCalendarItem(it.id); reminders.tick(); render(); } }); } }, 'Delete'),
         ]),
@@ -249,16 +249,16 @@ function calendarScreen() {
   if (pOn) wrap.append(personalDayCard(calSelDate));
 
   // Full editable add form for the selected day.
-  wrap.append(h('button', { class: 'btn block', style: 'margin-top:12px', onclick: () => go(`#calendar-add-${calSelDate}`) }, '＋ Add to this day'));
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top: var(--sp-3)', onclick: () => go(`#calendar-add-${calSelDate}`) }, '＋ Add to this day'));
 
   // ===== Layer toggles — placed AFTER the calendar display, as requested. =====
-  wrap.append(h('div', { class: 'row-between', style: 'margin-top:18px' }, [h('h3', { class: 'cat-title', style: 'margin:0' }, 'Show on the calendar'), infoTip('Your choices are remembered.')]));
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-4)' }, [h('h3', { class: 'cat-title', style: 'margin: 0' }, 'Show on the calendar'), infoTip('Your choices are remembered.')]));
   wrap.append(h('div', { class: 'chips' }, CAL_LAYERS.map((ly) =>
     h('button', { class: 'chip', 'aria-pressed': L[ly.key] ? 'true' : 'false',
       onclick: () => { const cur = calLayerState(); store.profile.prefs.calLayers = { ...cur, [ly.key]: !cur[ly.key] }; save(); render(); } },
       [calDot(ly.color), ' ' + ly.label]))));
   if (pUnlocked) {
-    wrap.append(h('div', { class: 'chips', style: 'margin-top:6px' }, personal.PERSONAL_LAYERS.map((ly) =>
+    wrap.append(h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, personal.PERSONAL_LAYERS.map((ly) =>
       h('button', { class: 'chip', 'aria-pressed': PL[ly.key] ? 'true' : 'false',
         onclick: () => { personal.setLayer(ly.key, !PL[ly.key]); render(); } },
         [calDot(ly.color), ` ${ly.emoji} ${ly.label}`]))));
@@ -287,19 +287,19 @@ function personalDayCard(date) {
   card.append(h('button', { class: 'btn ghost block btn-spaced', 'aria-pressed': g.period ? 'true' : 'false',
     onclick: () => { personal.setPeriod(date, !personal.isPeriodDay(date)); render(); } },
     g.period ? '🩸 Period day ✓ (tap to clear)' : '🩸 Mark period day'));
-  card.append(h('div', { class: 'field-lbl', style: 'margin-top:8px' }, 'Mood'));
+  card.append(h('div', { class: 'field-lbl', style: 'margin-top: var(--sp-2)' }, 'Mood'));
   card.append(h('div', { class: 'chips' }, [1, 2, 3, 4, 5].map((n) =>
     h('button', { class: 'chip', 'aria-pressed': (day.mood === n) ? 'true' : 'false',
       onclick: () => { personal.setMood(date, day.mood === n ? '' : n); render(); } }, personal.MOODS[n]))));
-  card.append(h('div', { class: 'field-lbl', style: 'margin-top:8px' }, 'Energy'));
+  card.append(h('div', { class: 'field-lbl', style: 'margin-top: var(--sp-2)' }, 'Energy'));
   card.append(h('div', { class: 'chips' }, [1, 2, 3, 4, 5].map((n) =>
     h('button', { class: 'chip', 'aria-pressed': (day.energy === n) ? 'true' : 'false',
       onclick: () => { personal.setEnergy(date, day.energy === n ? '' : n); render(); } }, '▁▂▃▅▇'.charAt(n - 1) || String(n)))));
-  card.append(h('div', { class: 'field-lbl', style: 'margin-top:8px' }, 'How you feel'));
+  card.append(h('div', { class: 'field-lbl', style: 'margin-top: var(--sp-2)' }, 'How you feel'));
   card.append(h('div', { class: 'chips' }, personal.SYMPTOMS.map((s) =>
     h('button', { class: 'chip', 'aria-pressed': personal.hasSymptom(date, s.id) ? 'true' : 'false',
       onclick: () => { personal.toggleSymptom(date, s.id); render(); } }, s.label))));
-  card.append(h('div', { class: 'field-lbl', style: 'margin-top:10px' }, 'Intimacy (optional, private)'));
+  card.append(h('div', { class: 'field-lbl', style: 'margin-top: var(--sp-3)' }, 'Intimacy (optional, private)'));
   (day.encounters || []).forEach((e) => {
     const who = e.solo ? '🌙 Solo' : (e.partnerId ? `💞 ${personal.partnerName(e.partnerId) || 'Partner'}` : '💞 Partnered');
     card.append(h('div', { class: 'row-between price-item' }, [
@@ -310,12 +310,12 @@ function personalDayCard(date) {
   });
   card.append(personalEncounterForm(date));
   const ps = personal.pregnancyStatus(date);
-  if (ps) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `🤰 On this day: week ${ps.weeks}${ps.days ? ' +' + ps.days + 'd' : ''} · trimester ${ps.trimester}.`));
+  if (ps) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, `🤰 On this day: week ${ps.weeks}${ps.days ? ' +' + ps.days + 'd' : ''} · trimester ${ps.trimester}.`));
   return card;
 }
 
 function personalEncounterForm(date) {
-  const det = h('details', { class: 'filters-collapse', style: 'margin-top:6px' });
+  const det = h('details', { class: 'filters-collapse', style: 'margin-top: var(--sp-1h)' });
   det.append(h('summary', {}, '＋ Add intimacy'));
   const solo = h('input', { type: 'checkbox' });
   const partners = personal.listPartners();
@@ -340,7 +340,7 @@ function personalEncounterForm(date) {
 }
 
 function personalControlCard() {
-  const card = h('div', { class: 'card', style: 'margin-top:14px' });
+  const card = h('div', { class: 'card', style: 'margin-top: var(--sp-4)' });
   if (!personal.isEnabled()) {
     card.append(
       h('h3', {}, '🔒 Private calendar (optional)'),
@@ -415,7 +415,7 @@ function personalControlCard() {
   ]));
   card.append(pinDet);
   card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => { confirmAction({ title: 'Turn off the private calendar?', body: 'Your entries are kept and return when you turn it back on.', confirmLabel: 'Turn off' }).then((ok) => { if (ok) { personal.setEnabled(false); personal.lock(); render(); } }); } }, 'Turn off private calendar'));
-  card.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'This calendar is descriptive and informational, not medical advice or contraception guidance. In this region, pregnant and trying-to-conceive travellers should note dengue and Zika risk and discuss travel, vaccines and insurance with a health professional. Sources: ACOG, NHS, WHO, US CDC Travelers’ Health.'));
+  card.append(h('p', { class: 'disclaimer', style: 'margin-top: var(--sp-2)' }, 'This calendar is descriptive and informational, not medical advice or contraception guidance. In this region, pregnant and trying-to-conceive travellers should note dengue and Zika risk and discuss travel, vaccines and insurance with a health professional. Sources: ACOG, NHS, WHO, US CDC Travelers’ Health.'));
   return card;
 }
 
@@ -466,6 +466,6 @@ function calendarFormScreen(editId, prefill) {
     reminders.tick();
     go('#calendar');
   } }, editing ? 'Save changes' : 'Save'));
-  wrap.append(h('p', { class: 'disclaimer', style: 'margin-top:8px' }, 'Shows on the “Coming up” card on Home. Device alerts need notifications allowed and the app open — not fully closed, so Home is the reliable one.'));
+  wrap.append(h('p', { class: 'disclaimer', style: 'margin-top: var(--sp-2)' }, 'Shows on the “Coming up” card on Home. Device alerts need notifications allowed and the app open — not fully closed, so Home is the reliable one.'));
   mount(wrap, '#home');
 }

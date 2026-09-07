@@ -115,7 +115,7 @@ function planCityPanels() {
   const { cities, unresolved } = planCities();
   const wrap = h('div', { class: 'wx-cities' });
   if (!cities.length) {
-    if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin:4px 2px' },
+    if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin: var(--sp-1) var(--sp-0h)' },
       `No forecast station matched your stops (${unresolved.map((s) => s.title).slice(0, 6).join(', ')}). Rename a stop to a nearby city to see its weather.`));
     return wrap;
   }
@@ -147,11 +147,11 @@ function planCityPanels() {
       );
       bodyBox.innerHTML = '';
       if (!cur) {
-        bodyBox.append(h('p', { class: 'muted', style: 'margin:8px 0' },
+        bodyBox.append(h('p', { class: 'muted', style: 'margin: var(--sp-2) 0' },
           'Connect once and tap Refresh below to download this city’s forecast for offline use.'));
         return;
       }
-      bodyBox.append(h('div', { class: 'muted', style: 'margin:8px 0 4px' },
+      bodyBox.append(h('div', { class: 'muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' },
         `${clabel} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}`));
       (rec.daily || []).slice(0, 7).forEach((d) => {
         const de = wmo(d.code)[1];
@@ -162,19 +162,19 @@ function planCityPanels() {
         bodyBox.append(h('div', { class: 'row-between wx-city-day' }, [
           h('span', { style: 'min-width:92px;font-weight:600' }, wxDayDate(d.date)),
           h('span', { style: 'font-size:18px' }, de),
-          h('span', { class: 'muted grow', style: 'margin:0 8px' },
+          h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2)' },
             `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
           h('span', { style: 'font-weight:700;white-space:nowrap' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
         ]));
       });
-      if (rec.fetchedAt) bodyBox.append(h('div', { class: 'muted', style: 'text-align:right;font-size:12px;margin-top:6px' }, `Updated ${wxAgo(rec.fetchedAt)}`));
+      if (rec.fetchedAt) bodyBox.append(h('div', { class: 'muted', style: 'text-align:right;font-size:12px;margin-top: var(--sp-1h)' }, `Updated ${wxAgo(rec.fetchedAt)}`));
     };
     paintCity(getCachedWeather(c.key));
     // Background refresh only if the traveller has opted online; repaint if still here.
     if (online()) maybeRefreshWeather(c.spot).then((r) => { if (r && (location.hash || '').startsWith('#weather')) paintCity(r); });
     wrap.append(det);
   });
-  if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin:6px 2px 0;font-size:12px' },
+  if (unresolved.length) wrap.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) var(--sp-0h) 0;font-size:12px' },
     `Also on your calendar (no forecast station matched): ${unresolved.map((s) => s.title).slice(0, 6).join(', ')}.`));
   return wrap;
 }
@@ -198,7 +198,7 @@ export function weatherScreen(country) {
   const setTemp = (u) => { store.profile.wxTempUnit = u; store.profile.unitsManual = true; save(); render(); };
   const setWind = (u) => { store.profile.wxWindUnit = u; store.profile.unitsManual = true; save(); render(); };
   const unitChip = (label, active, onclick) => h('button', { class: 'chip', 'aria-pressed': active ? 'true' : 'false', onclick }, label);
-  wrap.append(h('div', { class: 'chips wx-units', style: 'margin-bottom:6px' }, [
+  wrap.append(h('div', { class: 'chips wx-units', style: 'margin-bottom: var(--sp-1h)' }, [
     h('span', { class: 'wx-units-label' }, 'Units'),
     unitChip('°C', wxTempU() === 'C', () => setTemp('C')),
     unitChip('°F', wxTempU() === 'F', () => setTemp('F')),
@@ -235,7 +235,7 @@ export function weatherScreen(country) {
             h('div', { class: 'muted' }, clabel),
           ]),
         ]),
-        h('div', { class: 'muted', style: 'margin-top:8px' },
+        h('div', { class: 'muted', style: 'margin-top: var(--sp-2)' },
           `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
       ]);
       rightNow.append(h('div', { class: 'wx-now-div' }), airBlock(spot));
@@ -247,23 +247,23 @@ export function weatherScreen(country) {
       if (rec.hourly && rec.hourly.length) body.append(wxVizCard(rec, spot));
       const fc = h('div', { class: 'card' }, [
         h('h3', {}, '7-day forecast'),
-        h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
+        h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-1)' }, 'Tap a day for the morning / afternoon / evening / night breakdown.'),
       ]);
       rec.daily.slice(0, 7).forEach((d) => {
         const [dl, de] = wmo(d.code);
-        const detail = h('div', { style: 'display:none;margin-top:6px' });
+        const detail = h('div', { style: 'display:none;margin-top: var(--sp-1h)' });
         const segs = daySegments(rec.hourly, d.date);
         const dayHums = segs.map((s) => s.hum).filter((v) => v != null);
         const dayHum = dayHums.length ? Math.round(dayHums.reduce((a, b) => a + b, 0) / dayHums.length) : null;
-        detail.append(h('div', { class: 'muted', style: 'margin:4px 0 6px' },
+        detail.append(h('div', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-1h)' },
           `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : 'N/A'}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : 'N/A'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         if (segs.length) {
           segs.forEach((s) => {
             const [sl, se] = wmo(s.code);
-            detail.append(h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
+            detail.append(h('div', { class: 'row-between', style: 'padding: var(--sp-1) 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
               h('span', { style: 'min-width:78px;font-weight:600' }, s.label),
               h('span', { style: 'font-size:18px' }, se),
-              h('span', { class: 'muted grow', style: 'margin:0 8px;text-align:left' }, `${sl} · 💧${s.pp}%${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
+              h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2);text-align:left' }, `${sl} · 💧${s.pp}%${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
               h('span', {}, `${fmtTemp(s.tmin)}/${fmtTemp(s.tmax)}`),
             ]));
           });
@@ -271,15 +271,15 @@ export function weatherScreen(country) {
           detail.append(h('p', { class: 'muted' }, 'Hourly breakdown unavailable — tap Refresh while online.'));
         }
         const head = h('button', {
-          style: 'display:block;width:100%;background:none;border:none;padding:6px 0;text-align:left;cursor:pointer;font:inherit;color:inherit;border-top:1px solid rgba(0,0,0,0.07)',
+          style: 'display:block;width:100%;background:none;border:none;padding: var(--sp-1h) 0;text-align:left;cursor:pointer;font:inherit;color:inherit;border-top:1px solid rgba(0,0,0,0.07)',
           onclick: () => { detail.style.display = detail.style.display === 'none' ? 'block' : 'none'; },
         }, [
           h('div', { class: 'row-between' }, [
             h('span', { style: 'min-width:104px;font-weight:700' }, wxDayDate(d.date)),
             h('span', { style: 'font-size:20px' }, de),
-            h('span', { class: 'muted grow', style: 'margin:0 8px' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
+            h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2)' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
             h('span', { style: 'font-weight:700' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
-            h('span', { class: 'muted', style: 'margin-left:6px' }, '⌄'),
+            h('span', { class: 'muted', style: 'margin-left: var(--sp-1h)' }, '⌄'),
           ]),
         ]);
         fc.append(head, detail);

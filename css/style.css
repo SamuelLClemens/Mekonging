@@ -83,7 +83,16 @@
 
   /* Radius / spacing / type */
   --r-pill: 999px; --r-lg: 24px; --r-md: 16px; --r-sm: 10px;
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  /* The spacing scale, and the two half-steps below it.
+     --sp-1..6 is a 4px scale and was the whole of it. The code disagreed, at volume: 135
+     inline declarations used 6px and 112 used 2px, against 335 off-scale uses in total. That
+     is not 247 mistakes — it is the design's actual rhythm, and a scale with nothing between
+     "touching" and 4px cannot express a caption sitting under its label. So the two smallest
+     steps are named rather than left as raw pixels for every author to re-invent. Everything
+     else that was off the scale (10, 14, 18, 22, 5, 3px — 88 uses) snapped ONTO it; those
+     were genuine drift. */
+  --sp-0h: 2px; --sp-1: 4px; --sp-1h: 6px;
+  --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
   /* Type scale. One declaration site: the fluid display/h1/h2 values below used to live in a
      second :root block further down, which silently won, so these three were read as 2.2/1.45/
      1.18rem by anyone auditing this line and were in fact dead. Same computed values, one home.

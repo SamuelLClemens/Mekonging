@@ -308,7 +308,7 @@ export function homeScreen() {
   // Closed by default: it is worth offering and it is not today's business, and standing it
   // open on every launch is exactly the kind of permanent scroll this pass exists to remove.
   wrap.append(homeFold('❤️ Give back', h('div', { class: 'card give-back' }, [
-    h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
+    h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
     h('button', { class: 'btn block', onclick: () => go('#donate') }, 'See causes to support'),
   ]), 'homeGiveBackOpen', { defaultOpen: false }));
 
@@ -486,9 +486,9 @@ function quickAccessRow(phase, stored, ctx) {
 
   // Open by default — it only ever collapses because the traveller closed it themselves
   // (prefs.quickAccessOpen explicitly false); an unset/undefined pref still means "open".
-  const body = h('div', { style: 'padding-top:8px' });
+  const body = h('div', { style: 'padding-top: var(--sp-2)' });
   body.append(phaseSwitchRow(phase, stored, false));   // the segmented control only — no repeated caption
-  body.append(h('div', { class: 'card home-status', style: 'margin-top:8px', role: 'group', 'aria-label': 'Quick access' }, chips));
+  body.append(h('div', { class: 'card home-status', style: 'margin-top: var(--sp-2)', role: 'group', 'aria-label': 'Quick access' }, chips));
   const det = homeFold('⚡ Quick access', body, 'quickAccessOpen');
   det.classList.add('quick-access');
   return det;
@@ -525,7 +525,7 @@ function nextStopCard(ctx) {
     const timeStr = pl.totalHrs[1] ? `~${pl.totalHrs[0]}–${pl.totalHrs[1]}h moving` : '';
     return h('div', { class: 'card next-stop-card' }, [
       h('h2', {}, `🚌 Getting to ${stop.title}`),
-      h('p', { style: 'margin:2px 0 8px' }, [changes, timeStr].filter(Boolean).join(' · ')),
+      h('p', { style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, [changes, timeStr].filter(Boolean).join(' · ')),
       h('button', { class: 'btn ghost block', onclick: () => go('#route') }, 'Full journey planner →'),
     ]);
   }
@@ -619,7 +619,7 @@ function homeWeatherPending(spot) {
   const card = h('div', { class: 'card' });
   const where = (spot && spot.city) ? ` for ${spot.city}` : '';
   if (netMode() === 'offline') {
-    card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
+    card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' },
       'You have data switched off, so the forecast cannot update. Everything else here works offline.'));
     card.append(h('button', {
       class: 'btn block',
@@ -628,13 +628,13 @@ function homeWeatherPending(spot) {
     return card;
   }
   if (!online()) {
-    card.append(h('p', { class: 'muted', style: 'margin:0' },
+    card.append(h('p', { class: 'muted', style: 'margin: 0' },
       'No connection right now — the forecast updates as soon as you are back online.'));
     return card;
   }
   // Consent given and a connection present: ensureHomeWeather() above is already fetching and
   // re-renders Home when it lands, so this is a genuinely transient state.
-  card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, `Getting the latest forecast${where}…`));
+  card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `Getting the latest forecast${where}…`));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go('#weather') }, 'Full forecast →'));
   return card;
 }

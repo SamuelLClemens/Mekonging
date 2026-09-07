@@ -115,7 +115,7 @@ function journeyCard(j, onChange) {
     const fold = h('details', { class: 'fold' }, [
       h('summary', {}, `Which entries? (${chosen ? chosen.length : entries.length} of ${entries.length})`),
     ]);
-    const all = h('button', { class: 'btn ghost tiny', style: 'margin:6px 6px 6px 0', onclick: () => { updateJourney(j.id, { journalIds: null }); onChange(); } }, 'Include all');
+    const all = h('button', { class: 'btn ghost tiny', style: 'margin: var(--sp-1h) var(--sp-1h) var(--sp-1h) 0', onclick: () => { updateJourney(j.id, { journalIds: null }); onChange(); } }, 'Include all');
     const none = h('button', { class: 'btn ghost tiny', onclick: () => { updateJourney(j.id, { journalIds: [] }); onChange(); } }, 'Include none');
     fold.append(h('div', {}, [all, none]));
     entries.forEach((e) => {
@@ -143,11 +143,11 @@ function journeyCard(j, onChange) {
 
   const nPhotos = photoCount(j.include, j.journalIds);
   const nPts = journeyPoints(j.include, j.journalIds).length;
-  card.append(h('p', { class: 'tiny muted', style: 'margin:10px 0 6px' },
+  card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-3) 0 var(--sp-1h)' },
     `${nPts} place${nPts === 1 ? '' : 's'} on the map · ${nPhotos} photo${nPhotos === 1 ? '' : 's'}`
     + (nPhotos > 150 ? ' · a big one — expect a minute to build' : '')));
 
-  const status = h('p', { class: 'tiny muted', style: 'margin:6px 0 0' });
+  const status = h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' });
   const build = h('button', { class: 'btn block' }, '📤 Build and share');
   build.onclick = () => buildAndShare(j, build, status);
   card.append(build);
@@ -170,7 +170,7 @@ function journeyCard(j, onChange) {
     } catch { status.textContent = 'Could not copy the link on this device — use Build and share instead.'; }
   };
   card.append(link);
-  card.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, fits
+  card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, fits
     ? `Link is ${Math.round(url.length / 100) / 10} KB of characters — well within what messaging apps carry.`
     : 'A link carries the map and your written entries, but this journey is too long for one. The file has everything.'));
   card.append(status);
@@ -195,13 +195,13 @@ export function sharedJourneyScreen(arg) {
   }
 
   const head = h('div', { class: 'card' }, [h('h2', {}, d.name)]);
-  if (d.subtitle) head.append(h('p', { class: 'muted', style: 'margin:0' }, d.subtitle));
+  if (d.subtitle) head.append(h('p', { class: 'muted', style: 'margin: 0' }, d.subtitle));
   wrap.append(head);
 
   if (d.points.length) {
     const box = h('div', { class: 'card' });
     box.append(h('div', { class: 'journey-preview', html: journeyMapSVG(d.points, []) }));
-    box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+    box.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' },
       `${d.points.length} place${d.points.length === 1 ? '' : 's'} along the way, in order.`));
     wrap.append(box);
   }
@@ -219,13 +219,13 @@ export function sharedJourneyScreen(arg) {
   d.entries.forEach((e) => {
     const box = h('div', { class: 'card' }, [h('h2', {}, e.title || 'Untitled')]);
     const meta = [e.date, e.place].filter(Boolean).join(' · ');
-    if (meta) box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, meta));
-    if (e.text) String(e.text).split('\n').forEach((line) => box.append(h('p', { style: 'margin:0 0 6px' }, line)));
+    if (meta) box.append(h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-1h)' }, meta));
+    if (e.text) String(e.text).split('\n').forEach((line) => box.append(h('p', { style: 'margin: 0 0 var(--sp-1h)' }, line)));
     wrap.append(box);
   });
 
   wrap.append(h('div', { class: 'card' }, [
-    h('p', { class: 'tiny muted', style: 'margin:0' },
+    h('p', { class: 'tiny muted', style: 'margin: 0' },
       'Shared from Mekonging. A link carries the map and the writing; photographs travel in the file version, so ask the sender for that if you would like to see them. Nothing here was uploaded anywhere — the whole journey arrived inside the link you opened.'),
   ]));
   mount(wrap, '#home');
@@ -239,9 +239,9 @@ export function shareJourneyScreen() {
     h('h2', {}, '🗺 Your journey, as one page'),
     infoTip('Everything is built here on your device and nothing is uploaded. A journey comes out as a single file that holds its own map and pictures, so whoever you send it to can open it in any browser, offline, with no app and no account.'),
   ])]);
-  intro.append(h('p', { class: 'muted', style: 'margin:6px 0 0' },
+  intro.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' },
     'Pick what goes in, then send it however you like — message, email, AirDrop. It opens as a normal web page on any phone or computer.'));
-  intro.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+  intro.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' },
     'There are no accounts here, so a shared journey cannot be taken back: anyone holding the file sees everything you put in it. Make a second journey with less in it for a wider circle.'));
   wrap.append(intro);
 
@@ -251,12 +251,12 @@ export function shareJourneyScreen() {
     const box = h('div', { class: 'card' });
     box.append(h('h2', {}, 'Where you have been'));
     box.append(h('div', { class: 'journey-preview', html: journeyMapSVG(preview, []) }));
-    box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+    box.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' },
       `${preview.length} place${preview.length === 1 ? '' : 's'}, from your journal entries and dated stops.`));
     wrap.append(box);
   } else {
     wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'empty', style: 'margin:0' },
+      h('p', { class: 'empty', style: 'margin: 0' },
         'No map yet. Stamp a journal entry with your location, or add a dated stop to your trip, and your route appears here.'),
     ]));
   }

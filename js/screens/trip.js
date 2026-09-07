@@ -127,7 +127,7 @@ export function tripScreen() {
     // see addPlaceVisit in state.js). Tagged from placeScreen / Explore / Places cards.
     const visits = visitsForStop(s.id).map((v) => ({ visit: v, place: resolveItem(v.placeId) })).filter((x) => x.place);
     if (visits.length) {
-      itin.append(h('p', { class: 'muted', style: 'margin:6px 0 2px 22px;font-size:12px' }, 'Things to see here:'));
+      itin.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-0h) var(--sp-5);font-size:12px' }, 'Things to see here:'));
       itin.append(h('div', { class: 'trip-visits' }, visits.map(({ visit, place }) => tripVisitRow(visit, place, '📍 '))));
     }
     if (placePickerOpenFor === s.id) {
@@ -136,9 +136,9 @@ export function tripScreen() {
         ? h('div', { class: 'chips' }, pickable.map((sp) => h('button', {
             class: 'chip', onclick: () => { addPlaceVisit({ placeId: sp.id, stopId: s.id }); placePickerOpenFor = null; go('#trip'); },
           }, sp.name)))
-        : h('p', { class: 'muted', style: 'font-size:12px;margin:2px 0' }, 'Nothing saved yet — save places from Explore or Places, then add them here.')));
+        : h('p', { class: 'muted', style: 'font-size:12px;margin: var(--sp-0h) 0' }, 'Nothing saved yet — save places from Explore or Places, then add them here.')));
     } else {
-      itin.append(h('button', { class: 'chip', style: 'margin:4px 0 4px 22px', onclick: () => { placePickerOpenFor = s.id; render(); } }, '+ Add a place'));
+      itin.append(h('button', { class: 'chip', style: 'margin: var(--sp-1) 0 var(--sp-1) var(--sp-5)', onclick: () => { placePickerOpenFor = s.id; render(); } }, '+ Add a place'));
     }
   });
   // S4 — places added from Explore/a place page before this trip has a matching leg yet
@@ -154,16 +154,16 @@ export function tripScreen() {
   const stopName = h('input', { 'aria-label': 'Stop name', type: 'text', placeholder: 'Place or city' });
   const stopDate = h('input', { 'aria-label': 'Arrive date', type: 'date' });
   const stopEnd = h('input', { 'aria-label': 'Leave date', type: 'date' });
-  itin.append(h('div', { class: 'field', style: 'margin-top:10px' }, [h('label', {}, 'Add a stop'), stopName,
+  itin.append(h('div', { class: 'field', style: 'margin-top: var(--sp-3)' }, [h('label', {}, 'Add a stop'), stopName,
     h('div', { class: 'trip-dates' }, [
       h('label', { class: 'trip-date-lbl' }, ['Arrive', stopDate]),
       h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', stopEnd]),
     ]),
-    h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
-    h('button', { class: 'btn', style: 'margin-top:8px', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: getActiveCountry(), date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
+    h('p', { class: 'muted', style: 'font-size:12px;margin: var(--sp-1h) 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
+    h('button', { class: 'btn', style: 'margin-top: var(--sp-2)', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: getActiveCountry(), date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
   // quick add from saved (`saved` is hoisted above the stops loop — see comment there)
   if (saved.length) {
-    itin.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Quick-add from saved:'));
+    itin.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Quick-add from saved:'));
     itin.append(h('div', { class: 'chips' }, saved.slice(0, 12).map((p) => h('button', { class: 'chip', onclick: () => { addStop({ title: p.name, country: p.country }); go('#trip'); } }, p.name))));
   }
   wrap.append(itin);
@@ -193,7 +193,7 @@ export function tripScreen() {
       if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
     }
     if (homeSum > 0 && Object.keys(totals).some((c) => c !== home)) {
-      bud.append(h('p', { class: 'muted', style: 'margin:-4px 0 0' },
+      bud.append(h('p', { class: 'muted', style: 'margin:calc(var(--sp-1) * -1) 0 0' },
         `≈ ${money(Math.round(homeSum), home)} total${allKnown ? '' : ' (some rates unknown — refresh in Currency)'}`));
     }
   }

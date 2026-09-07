@@ -45,7 +45,7 @@ import { getActiveCountry, setActiveCountry } from '../app-state.js';
 // fallback for a device with neither.
 function routeLinks(lat, lng, label) {
   const q = encodeURIComponent(label || '');
-  return h('div', { class: 'chips', style: 'margin-top:6px' }, [
+  return h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [
     h('a', { class: 'chip', href: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, target: '_blank', rel: 'noopener' }, 'Directions ↗'),
     h('a', { class: 'chip', href: `geo:${lat},${lng}?q=${lat},${lng}(${q})` }, 'Open in map app'),
     h('a', { class: 'chip', href: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`, target: '_blank', rel: 'noopener' }, 'OpenStreetMap ↗'),
@@ -63,14 +63,14 @@ function tierChip(tier) {
 function hospitalCard(x, fix) {
   const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
   const drive = km != null ? driveLabel(km, x.cc) : null;
-  return h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
+  return h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
     h('div', { class: 'row-between' }, [
       h('strong', {}, x.name),
       km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null,
     ]),
-    h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' },
+    h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' },
       [x.city, x.prov && x.prov !== x.city ? x.prov : null, drive].filter(Boolean).join(' · ')),
-    x.note ? h('div', { class: 'tiny', style: 'margin:0 0 4px' }, x.note) : null,
+    x.note ? h('div', { class: 'tiny', style: 'margin: 0 0 var(--sp-1)' }, x.note) : null,
     h('div', { class: 'chips' }, [tierChip(x.tier), ...(x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
     routeLinks(x.lat, x.lng, x.name),
   ]);
@@ -103,11 +103,11 @@ function showMedCard() {
   const inner = h('div', { class: 'card', style: 'max-width:520px;text-align:left' }, [
     h('h2', {}, '🏥 Medical information'),
     rows.length
-      ? h('div', {}, rows.map((f) => h('p', { style: 'margin:10px 0;font-size:1.15rem' }, [
+      ? h('div', {}, rows.map((f) => h('p', { style: 'margin: var(--sp-3) 0;font-size:1.15rem' }, [
         h('strong', {}, `${f.label}: `), (m[f.k] || '').trim(),
       ])))
       : h('p', { class: 'muted' }, 'Nothing filled in yet. Close this and complete the card below — it takes a minute and it is read by someone else, at the worst possible time.'),
-    h('p', { class: 'tiny muted', style: 'margin-bottom:0' }, 'Stored on this device only. Tap anywhere to close.'),
+    h('p', { class: 'tiny muted', style: 'margin-bottom: 0' }, 'Stored on this device only. Tap anywhere to close.'),
   ]);
   overlay.append(inner);
   overlay.addEventListener('click', () => overlay.remove());
@@ -204,12 +204,12 @@ export function hospitalScreen(cc) {
   });
   show.append(h('button', { class: 'btn ghost block btn-spaced', onclick: showMedCard }, '🏥 Show my medical card'));
   if (sys) {
-    show.append(h('p', { class: 'tiny muted', style: 'margin:10px 0 2px' }, 'The word for “hospital” here — say it, or type it into any map app:'));
-    show.append(h('p', { style: 'margin:0;font-size:1.3rem', lang: book ? book.locale : null }, [
+    show.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, 'The word for “hospital” here — say it, or type it into any map app:'));
+    show.append(h('p', { style: 'margin: 0;font-size:1.3rem', lang: book ? book.locale : null }, [
       h('strong', {}, sys.hospitalWord.script),
       h('span', { class: 'muted', style: 'font-size:0.9rem' }, `  (${sys.hospitalWord.roman})`),
     ]));
-    show.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
+    show.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, [
       'Emergency room: ', h('strong', { lang: book ? book.locale : null }, sys.erWord.script), ` (${sys.erWord.roman})`,
     ]));
   }
@@ -237,11 +237,11 @@ export function hospitalScreen(cc) {
   // exists for, so it is not buried in a list — it is the first thing under the heading.
   const heroSlot = h('div', {});
   const listSlot = h('div', {});
-  const countLine = h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, '');
+  const countLine = h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, '');
   go2.append(heroSlot, listSlot);
   go2.append(h('a', { class: 'btn ghost block btn-spaced', href: liveSearch, target: '_blank', rel: 'noopener' }, '🔎 Search every hospital around me (needs internet) ↗'));
   go2.append(countLine);
-  go2.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Not a ranking of quality. For a child, a pregnancy or a complex condition, telephone ahead so the right department is open when you arrive.'));
+  go2.append(h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-1h)' }, 'Not a ranking of quality. For a child, a pregnancy or a complex condition, telephone ahead so the right department is open when you arrive.'));
   wrap.append(go2);
 
   // Painted once from curated data and again when the OSM layer arrives, so the same code
@@ -260,8 +260,8 @@ export function hospitalScreen(cc) {
     heroSlot.replaceChildren();
     if (hero && fix && fix.lat != null) {
       const drive = hero.km != null ? driveLabel(hero.km, hero.cc) : null;
-      heroSlot.append(h('div', { class: 'card sos-card', style: 'margin:0 0 10px' }, [
-        h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, heroForeign
+      heroSlot.append(h('div', { class: 'card sos-card', style: 'margin: 0 0 var(--sp-3)' }, [
+        h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, heroForeign
           ? `Closest hospital to you right now — across the border in ${heroForeign.flag} ${heroForeign.name}`
           : 'Closest hospital to you right now'),
         h('div', { class: 'row-between' }, [
@@ -269,7 +269,7 @@ export function hospitalScreen(cc) {
           h('span', { class: 'fair' }, kmLabel(hero.km)),
         ]),
         hero.en ? h('div', { class: 'tiny muted' }, hero.en) : null,
-        h('div', { class: 'tiny muted', style: 'margin:2px 0 6px' },
+        h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-1h)' },
           [hero.city || null, drive].filter(Boolean).join(' · ')),
         hero.curated
           ? h('div', { class: 'chips' }, [tierChip(hero.tier), ...(hero.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean))
@@ -285,13 +285,13 @@ export function hospitalScreen(cc) {
         const known = nearestAnywhere(fix, { hospitalsOnly: true }).find((x) => x.curated);
         if (known && known.km != null && known.km > hero.km) {
           const kc = known.cc !== active ? getCountry(known.cc) : null;
-          heroSlot.append(h('div', { class: 'card', style: 'margin:0 0 10px' }, [
-            h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, 'Further, but a known quantity — for anything serious, go here instead'),
+          heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
+            h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, 'Further, but a known quantity — for anything serious, go here instead'),
             h('div', { class: 'row-between' }, [
               h('strong', {}, known.name),
               h('span', { class: 'fair' }, kmLabel(known.km)),
             ]),
-            h('div', { class: 'tiny muted', style: 'margin:2px 0 4px' },
+            h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-1)' },
               [known.city, kc ? `${kc.flag} ${kc.name}` : null, driveLabel(known.km, known.cc)].filter(Boolean).join(' · ')),
             h('div', { class: 'chips' }, [tierChip(known.tier), ...(known.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
             routeLinks(known.lat, known.lng, known.name),
@@ -305,16 +305,16 @@ export function hospitalScreen(cc) {
       // with the framing on which to pick beats silently hiding the nearer one.
       const clinic = anyCare.find((x) => x.kind !== 1);
       if (clinic && hero.km != null && clinic.km != null && clinic.km < hero.km - 1) {
-        heroSlot.append(h('div', { class: 'card', style: 'margin:0 0 10px' }, [
-          h('p', { class: 'tiny muted', style: 'margin:0 0 2px' }, `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`),
+        heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
+          h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`),
           h('div', { class: 'row-between' }, [h('strong', {}, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
           clinic.en ? h('div', { class: 'tiny muted' }, clinic.en) : null,
-          h('div', { class: 'tiny muted', style: 'margin:2px 0 0' }, driveLabel(clinic.km, clinic.cc) || ''),
+          h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, driveLabel(clinic.km, clinic.cc) || ''),
           routeLinks(clinic.lat, clinic.lng, clinic.name),
         ]));
       }
     } else if (hero) {
-      heroSlot.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Turn on location and this shows the hospital closest to you. Until then, the strongest options in the country:'));
+      heroSlot.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Turn on location and this shows the hospital closest to you. Until then, the strongest options in the country:'));
     }
 
     listSlot.replaceChildren();
@@ -322,7 +322,7 @@ export function hospitalScreen(cc) {
     const nearRest = rest.filter((r) => r.km != null && r.km <= 60).slice(0, 7);
     const shown = nearRest.length ? nearRest : rest.slice(0, 6);
     if (shown.length) {
-      listSlot.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, fix && fix.lat != null ? 'Then:' : `Hospitals in ${c.name}:`));
+      listSlot.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-1)' }, fix && fix.lat != null ? 'Then:' : `Hospitals in ${c.name}:`));
       shown.forEach((x) => listSlot.append(hospitalCard(x, fix)));
     }
     // Curated entries the distance sort pushed out of view still matter: they are the ones
@@ -347,11 +347,11 @@ export function hospitalScreen(cc) {
     const nothingClose = !hero || hero.km == null || hero.km > 60;
     if (nothingClose && sys) {
       const provLine = provName ? `You are in ${provName}. ` : '';
-      listSlot.append(h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [
-        h('h3', { style: 'margin:0 0 6px' }, hero ? 'That is a long way — here is what else is near you' : 'Nothing mapped close to you — here is what is there anyway'),
-        h('p', { class: 'tiny', style: 'margin:0 0 6px' }, `${provLine}Not every facility is on the map, and a village health centre rarely is. What the health system guarantees where you are:`),
+      listSlot.append(h('div', { class: 'card allergy-card', style: 'margin: var(--sp-3) 0' }, [
+        h('h3', { style: 'margin: 0 0 var(--sp-1h)' }, hero ? 'That is a long way — here is what else is near you' : 'Nothing mapped close to you — here is what is there anyway'),
+        h('p', { class: 'tiny', style: 'margin: 0 0 var(--sp-1h)' }, `${provLine}Not every facility is on the map, and a village health centre rarely is. What the health system guarantees where you are:`),
         h('ul', { class: 'sos-aid' }, sys.levels.map((li) => h('li', {}, li))),
-        h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [
+        h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [
           'Ask for, or search for, ', h('strong', { lang: book ? book.locale : null }, sys.hospitalWord.script),
           ` (${sys.hospitalWord.roman}) — plus the name of the town you are in.`,
         ]),
@@ -381,16 +381,16 @@ export function hospitalScreen(cc) {
   ])]);
   REACH_STEPS.forEach((s) => {
     const d = h('details', { class: 'filters-collapse' }, [h('summary', {}, `${s.ic} ${s.t}`)]);
-    d.append(h('p', { class: 'tiny', style: 'margin:6px 0' }, s.d));
+    d.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0' }, s.d));
     how.append(d);
   });
   if (sys) {
-    how.append(h('p', { style: 'margin:10px 0 4px' }, [h('strong', {}, '🚑 Ambulances here: ')]));
-    how.append(h('p', { class: 'tiny', style: 'margin:0 0 8px' }, sys.ambulance));
-    how.append(h('p', { style: 'margin:8px 0 4px' }, [h('strong', {}, '💳 Paying: ')]));
-    how.append(h('p', { class: 'tiny', style: 'margin:0 0 8px' }, sys.payment));
-    how.append(h('p', { style: 'margin:8px 0 4px' }, [h('strong', {}, '💊 Pharmacies: ')]));
-    how.append(h('p', { class: 'tiny', style: 'margin:0' }, sys.pharmacy));
+    how.append(h('p', { style: 'margin: var(--sp-3) 0 var(--sp-1)' }, [h('strong', {}, '🚑 Ambulances here: ')]));
+    how.append(h('p', { class: 'tiny', style: 'margin: 0 0 var(--sp-2)' }, sys.ambulance));
+    how.append(h('p', { style: 'margin: var(--sp-2) 0 var(--sp-1)' }, [h('strong', {}, '💳 Paying: ')]));
+    how.append(h('p', { class: 'tiny', style: 'margin: 0 0 var(--sp-2)' }, sys.payment));
+    how.append(h('p', { style: 'margin: var(--sp-2) 0 var(--sp-1)' }, [h('strong', {}, '💊 Pharmacies: ')]));
+    how.append(h('p', { class: 'tiny', style: 'margin: 0' }, sys.pharmacy));
   }
   wrap.append(how);
 
@@ -409,9 +409,9 @@ export function hospitalScreen(cc) {
       h('h2', {}, '6. If you have to be moved'),
       infoTip('Where a serious case actually goes when the local hospital cannot treat it. Your insurer arranges and pays for this — which is why the assistance line is worth calling early, before a decision has already been made for you.'),
     ])]);
-    evac.forEach((e) => ev.append(h('div', { class: 'card', style: 'margin:6px 0' }, [
+    evac.forEach((e) => ev.append(h('div', { class: 'card', style: 'margin: var(--sp-1h) 0' }, [
       h('div', {}, [h('strong', {}, e.from), ' → ', h('strong', {}, e.to)]),
-      h('div', { class: 'tiny muted', style: 'margin-top:2px' }, e.how),
+      h('div', { class: 'tiny muted', style: 'margin-top: var(--sp-0h)' }, e.how),
     ])));
     wrap.append(ev);
   }

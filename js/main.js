@@ -1069,7 +1069,7 @@ export function languageSheet() {
     ...bundled.map((l) => row(l, false)),
     ...(mtOnly.length ? [
       h('p', { class: 'lang-section' }, 'Online translation only'),
-      h('p', { class: 'tiny muted', style: 'margin:0 0 8px;padding:0 12px' },
+      h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2);padding: 0 var(--sp-3)' },
         'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
       ...mtOnly.map((l) => row(l, true)),
     ] : []),
@@ -1107,8 +1107,8 @@ export function languageSheet() {
   ]);
 
   const dialog = h('div', { class: 'sheet lang-sheet', role: 'dialog', 'aria-label': 'Choose your language' }, [
-    h('h3', { style: 'margin:0 0 2px' }, 'Choose your language'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 10px' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
+    h('h3', { style: 'margin: 0 0 var(--sp-0h)' }, 'Choose your language'),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-3)' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
     filter,
     list,
     mtRow,
@@ -1147,7 +1147,7 @@ export function locationFixCard(opts = {}) {
   } else {
     card.append(h('p', { class: 'muted' }, 'Location is not available on this device — set it manually below.'));
   }
-  card.append(h('p', { class: 'muted', style: 'margin-top:10px' },
+  card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' },
     'Not right, or GPS unavailable? Set your city instead — used for weather and distances until GPS updates it:'));
   card.append(locationSelect(spotKey(focusSpot().spot), (key) => {
     const s = spotForKey(key);
@@ -1933,7 +1933,7 @@ export function profileFitCard(p) {
   f.warn.forEach((t) => ul.append(h('li', { class: 'fit-warn' }, t)));
   f.unknown.forEach((t) => ul.append(h('li', { class: 'fit-unknown' }, t)));
   card.append(ul);
-  card.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, 'Not recorded means nobody has checked it yet — not that the answer is no. Verify anything that matters on the day.'));
+  card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, 'Not recorded means nobody has checked it yet — not that the answer is no. Verify anything that matters on the day.'));
   card.append(travellingAsLine());
   return card;
 }
@@ -2069,8 +2069,8 @@ function homeRightNowCard(ctx) {
   if (!ctx.fix) {
     // Nothing to rank yet — the location invite is the whole story. The privacy detail moves
     // behind ⓘ instead of standing as its own sentence (site-wide copy purge, W3).
-    card.append(h('p', { style: 'margin:8px 0 2px' }, meta.tip));
-    card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, ['Turn on location for live picks nearby.', infoTip('Nothing is sent anywhere — this stays on your device.')]));
+    card.append(h('p', { style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, meta.tip));
+    card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, ['Turn on location for live picks nearby.', infoTip('Nothing is sent anywhere — this stays on your device.')]));
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       card.append(h('button', { class: 'btn block', onclick: async (e) => {
         store.profile.prefs.geoAsked = true; save();
@@ -2106,7 +2106,7 @@ function homeRightNowCard(ctx) {
     if (i === 'food' && famsPresent.some((f) => f.key === 'market')) catSet.add('market');
   });
   let tierFilter = tiersPresent.includes(store.profile.prefs.budget) ? store.profile.prefs.budget : 'all';
-  const tipEl = h('p', { class: 'muted', style: 'margin:4px 0 8px' }, meta.tip);
+  const tipEl = h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, meta.tip);
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
   // The filters used to stand permanently open: one chip per category family present
@@ -2299,7 +2299,7 @@ export function whereAmICard(cc) {
   const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
   return h('div', { class: 'card' }, [
     h('h2', {}, '📍 Where are you?'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
     field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); render(); } })),
   ]);
 }
@@ -2314,7 +2314,7 @@ export function cityAboutCard(cc, slug) {
   const card = h('div', { class: 'card history-card' }, [h('h2', {}, `About ${hi.name}`)]);
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
-  if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom:0' }, `🗓 Best time: ${hi.bestTime}`));
+  if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom: 0' }, `🗓 Best time: ${hi.bestTime}`));
   return card;
 }
 
@@ -2324,7 +2324,7 @@ export function cityEssentials(cc, cityName, slug) {
   const c = getCountry(cc);
   const meta = PART_META[partOfDay(new Date().getHours())];
   const card = h('div', { class: 'card' }, [
-    h('p', { class: 'muted', style: 'margin:0 0 8px' }, `🕒 Right now: ${meta.tip}`),
+    h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `🕒 Right now: ${meta.tip}`),
   ]);
   card.append(h('div', { class: 'chips' }, [
     isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, [chipIcon('route'), 'Get here']) : null,
@@ -2343,7 +2343,7 @@ export function accessCard(cc) {
   const hasNeed = (store.profile.prefs.access || []).length > 0;
   const card = h('div', { class: 'card' + (hasNeed ? ' access-focus' : '') });
   card.append(h('h2', {}, '♿ Accessibility'));
-  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, hasNeed
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0' }, hasNeed
     ? 'Honest, practical guidance tailored to the needs you set — your groups come first.'
     : 'How this country works for travellers with limited mobility, low vision or hearing.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#access-${cc}`) }, 'Open the accessibility guide'));
@@ -2384,12 +2384,12 @@ export function freshnessLine(dateStr, noun = 'This data', staleDays = 365, labe
   if (age == null) return null;
   const shown = label || dateStr;
   if (age <= staleDays) {
-    return h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `✓ ${noun} verified ${shown}; the app re-checks this date on every open and flags it here once it ages.`);
+    return h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, `✓ ${noun} verified ${shown}; the app re-checks this date on every open and flags it here once it ages.`);
   }
   const months = Math.max(1, Math.round(age / 30));
-  return h('div', { class: 'card', style: 'border:1px solid var(--orange); margin:6px 0' }, [
+  return h('div', { class: 'card', style: 'border:1px solid var(--orange); margin: var(--sp-1h) 0' }, [
     h('strong', {}, `⚠ ${noun} may be out of date`),
-    h('p', { class: 'muted', style: 'margin:4px 0 0' }, `Last verified ${shown} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 0' }, `Last verified ${shown} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
   ]);
 }
 
@@ -2397,7 +2397,7 @@ export function visaCard(cc) {
   if (!getVisa(cc)) return null;
   const card = h('div', { class: 'card' });
   card.append(h('h2', {}, '🛂 Entry & visa'));
-  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#visa-${cc}`) }, 'Open the entry guide'));
   return card;
 }
@@ -2539,9 +2539,9 @@ function journeyCompanionCard(phase, cc) {
 function tripCountdownCard(cc) {
   const start = tripStartISO();
   if (!start) {
-    return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
+    return h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' }, [
       h('strong', {}, '📅 Add your travel dates'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Add your first stop with a date and Home counts down the days and surfaces what is still on your checklist.'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Add your first stop with a date and Home counts down the days and surfaces what is still on your checklist.'),
       h('button', { class: 'btn', onclick: () => go('#trip') }, 'Plan your trip'),
     ]);
   }
@@ -2555,7 +2555,7 @@ function tripCountdownCard(cc) {
   // gone for good — Settings → Journey phase can always turn it back on.
   if (days <= 0) {
     if (store.profile.prefs.tripStartedHidden) return null;
-    return h('div', { class: 'just-arrived-chip', style: 'margin-top:8px' }, [
+    return h('div', { class: 'just-arrived-chip', style: 'margin-top: var(--sp-2)' }, [
       h('button', { class: 'ja-main', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, [
         h('span', { class: 'status-ic' }, days === 0 ? '🎉' : '🛬'),
         h('span', { class: 'status-lbl' }, days === 0 ? 'Today’s the day — switch to Traveling' : 'Trip started — switch to Traveling'),
@@ -2572,15 +2572,15 @@ function tripCountdownCard(cc) {
       }, '✕'),
     ]);
   }
-  const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
+  const card = h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' });
   card.append(h('div', { class: 'countdown-num' }, [h('b', {}, String(days)), ` day${days === 1 ? '' : 's'} to go`]));
   const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
   if (todo.length) {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
+    card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-1)' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
     todo.slice(0, 3).forEach((it) => card.append(h('div', { class: 'companion-todo' }, `☐ ${it.title}`)));
     card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
   } else {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
+    card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
   }
   return card;
 }
@@ -2613,13 +2613,13 @@ function returnRecapCard() {
     if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
   }
   if (!jEntries && !stops && !loved && !any) {
-    return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
+    return h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' }, [
       h('strong', {}, '📖 Welcome back'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
       h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
     ]);
   }
-  const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
+  const card = h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' });
   card.append(h('strong', {}, '📖 Welcome back'));
   const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
   const stats = [];
@@ -2628,7 +2628,7 @@ function returnRecapCard() {
   if (ratedN) stats.push(stat(ratedN, ratedN === 1 ? 'place rated' : 'places rated'));
   if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
   if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
-  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, `Spent ≈ ${money(Math.round(homeSum), home)}${allKnown ? '' : ' (some rates unknown)'}`));
+  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, `Spent ≈ ${money(Math.round(homeSum), home)}${allKnown ? '' : ' (some rates unknown)'}`));
   const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
   if (unrated.length) {
     const first = getPlace(unrated[0]);
@@ -2658,7 +2658,7 @@ function planningStageBlock(cc) {
   const wrap = h('div', {});
   const tc = tripCountdownCard(cc);   // null once X'd out past trip-start — see tripCountdownCard
   if (tc) wrap.append(tc);
-  wrap.append(h('div', { class: 'home-actions', style: 'margin-top:10px' }, [
+  wrap.append(h('div', { class: 'home-actions', style: 'margin-top: var(--sp-3)' }, [
     h('button', { class: 'btn', onclick: () => go('#plans') }, '🧭 Plan your trip'),
     // "Best for Sam", not "Tune 'For you'" (direct request). The old label named the control
     // and not the thing it produces; this one says whose recommendations these are, and it is
@@ -2739,7 +2739,7 @@ export function plannedStopsOutlook() {
     ]));
   });
   card.append(rows);
-  card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+  card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' },
     'Dates inside the forecast window show a real forecast; the rest show that month’s usual season for that city. Tap a stop for its full forecast.'));
   card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#trip') }, '🧳 Edit your stops →'));
   return card;
@@ -2904,7 +2904,7 @@ function quickSpendRow(id) {
       expenseAddCard({ currency: cur, afterAdd: draw, compact: true }),
     ]);
     box.append(logDet);
-    box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
+    box.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, [
       spent > 0 ? `Spent today: ${money(Math.round(spent), cur)}${unknownToday ? ' (some unknown)' : ''} · ` : '',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
@@ -3049,7 +3049,7 @@ export function nameEntryCard() {
   input.addEventListener('blur', commit);
   return h('div', { class: 'card name-entry-card' }, [
     h('h2', {}, '👋 What should we call you?'),
-    h('p', { class: 'muted', style: 'margin-top:0' }, 'Personalises this section and your journal exports. Optional — skip any time; add it later from here or Settings.'),
+    h('p', { class: 'muted', style: 'margin-top: 0' }, 'Personalises this section and your journal exports. Optional — skip any time; add it later from here or Settings.'),
     input,
   ]);
 }
@@ -3341,7 +3341,7 @@ function hubScreen(id) {
   // uppercased "KNOW THIS COUNTRY" pushes it to three lines. The accent stripe down every
   // row below already carries the section's identity.
   wrap.append(topbar(group.title, '#home'));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, group.intro || group.blurb));
+  wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-3)' }, group.intro || group.blurb));
 
   // Sub-headings only where a group carries more than one question — Plan & travel splits
   // into "your trip" and "when to go", which are different enough that a flat list of eight
@@ -3356,7 +3356,7 @@ function hubScreen(id) {
     else sections.push({ key, items: [it] });
   });
   sections.forEach((sec) => {
-    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin:14px 0 2px' }, sec.key));
+    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, sec.key));
     sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
   });
 
@@ -3365,7 +3365,7 @@ function hubScreen(id) {
   // hold the long tail — nothing is ever more than two taps from anywhere.
   const others = visibleGroups(phase).filter((g) => g.id !== group.id);
   if (others.length) {
-    wrap.append(h('h2', { class: 'home-section', style: 'margin:18px 0 2px' }, 'Other sections'));
+    wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, 'Other sections'));
     wrap.append(h('div', { class: 'chips' }, others.map((g) => h('button', {
       class: 'status-chip', onclick: () => go(groupHash(g.id)), 'aria-label': `${g.title}. ${g.intro || g.blurb}`,
     }, [h('span', { class: 'status-ic' }, g.ic), h('span', { class: 'status-lbl' }, g.title)]))));
@@ -3386,7 +3386,7 @@ function hubScreen(id) {
 function everythingScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('All features', '#me'));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' },
+  wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-3)' },
     'Everything on the site, in nine sections. The five tabs at the bottom — Home, Talk, You, Places, Explore — and Emergency are always one tap away, so they are not repeated here.'));
   wrap.append(groupDoors());
 
@@ -3397,9 +3397,9 @@ function everythingScreen() {
     .sort((a, b) => a.label.localeCompare(b.label, 'en'));
   const list = h('div', {});
   az.forEach((it) => list.append(hubRow({ ...it, blurb: `${it.groupTitle} · ${it.blurb}` }, cc, '')));
-  wrap.append(foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🔤 Every feature, A–Z · ${az.length}`), list));
+  wrap.append(foldable(h('span', { class: 'home-section', style: 'margin: 0' }, `🔤 Every feature, A–Z · ${az.length}`), list));
 
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#search') },
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', onclick: () => go('#search') },
     '🔎 Search everything'));
   mount(wrap, '#me');
 }
@@ -3450,14 +3450,14 @@ export function fitsYourTripSection(cc) {
   if (lists.length) {
     body.append(h('div', { class: 'grid' }, lists.slice(0, 4).map((l) => h('button', { class: 'card bestof-card', onclick: () => go(`#bestlist-${l.id}`) }, [
       h('strong', {}, l.title),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, l.blurb),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' }, l.blurb),
     ]))));
   }
   if (plans.length) {
     const top = plans[0];
-    body.append(h('div', { class: 'card', style: 'margin-top:8px' }, [
+    body.append(h('div', { class: 'card', style: 'margin-top: var(--sp-2)' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, top.title), h('span', { class: 'muted tiny' }, `~${top.days}d`)]),
-      h('p', { class: 'muted tiny', style: 'margin:4px 0 8px' }, top.summary),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, top.summary),
       h('button', { class: 'btn ghost block', onclick: () => go('#plans') }, plans.length > 1 ? `See all ${plans.length} matching trip plans →` : 'See this trip plan →'),
     ]));
   }
@@ -3492,7 +3492,7 @@ function crowdsAndPriceBlocks(cc, hi) {
   if (crowds) blocks.push(['👥', crowds]);
   if (price) blocks.push(['💰', price]);
   return blocks.flatMap(([emoji, f]) => [
-    h('p', { style: 'margin:4px 0' }, `${emoji} ${f.text}`),
+    h('p', { style: 'margin: var(--sp-1) 0' }, `${emoji} ${f.text}`),
     sourcesNote(f.sources, null, null),
   ]);
 }
@@ -3520,7 +3520,7 @@ export function seasonalFitSection(cc, cityName, slug) {
   if (!lines.length) return null;
   return h('section', {}, [
     h('h2', { class: 'home-section' }, '📅 Right now, seasonally'),
-    h('div', { class: 'card' }, [...lines.map((t) => h('p', { style: 'margin:4px 0' }, t)), ...crowdsAndPriceBlocks(cc, hi)]),
+    h('div', { class: 'card' }, [...lines.map((t) => h('p', { style: 'margin: var(--sp-1) 0' }, t)), ...crowdsAndPriceBlocks(cc, hi)]),
     soon.length ? h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#events-${cc}`) }, 'All festivals & holidays →') : null,
   ]);
 }
@@ -3574,7 +3574,7 @@ export function mightNotKnowSection(cc) {
     h('h2', { class: 'home-section' }, '✨ You might not know'),
     h('div', { class: 'grid' }, picks.map((p) => h('button', { class: 'card', onclick: () => go(`#place-${p.id}`) }, [
       h('strong', {}, p.name),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, `${p.city} · ${p.rating}★`),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' }, `${p.city} · ${p.rating}★`),
     ]))),
   ]);
 }
@@ -3936,7 +3936,7 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
     h('div', { class: 'fx-swap-row' }, [swap]),
     h('div', { class: 'fx-line' }, [out, toSel]),
     rateLine,
-    opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
+    opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
   ]);
   recompute();
   return wrap;
@@ -4190,9 +4190,9 @@ function bulletinScreen(arg) {
 
     formWrap.innerHTML = '';
     if (cat === 'all') {
-      formWrap.append(h('p', { class: 'muted small', style: 'margin:2px 2px 8px' }, 'Pick a category above to post, or browse everything below.'));
+      formWrap.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-2)' }, 'Pick a category above to post, or browse everything below.'));
     } else {
-      formWrap.append(h('p', { class: 'muted small', style: 'margin:2px 2px 6px' }, bbCat(cat).blurb));
+      formWrap.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-1h)' }, bbCat(cat).blurb));
       formWrap.append(buildBBForm(cat));
     }
 
@@ -4317,12 +4317,12 @@ function pricesScreen(countryId) {
   // cash-swap link, manual refresh) stays reachable from here and from Home Tools.
   if (country) {
     wrap.append(h('div', { class: 'card' }, [
-      h('h2', { style: 'margin:0 0 8px' }, `💱 ${homeCurrency()} → ${country.currency}`),
+      h('h2', { style: 'margin: 0 0 var(--sp-2)' }, `💱 ${homeCurrency()} → ${country.currency}`),
       fxConverterControl(homeCurrency(), country.currency, { compact: true }),
       h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#currency') }, 'More currency tools →'),
     ]));
   }
-  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top:14px' }, '🏷 Fair prices'));
+  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top: var(--sp-4)' }, '🏷 Fair prices'));
 
   const data = country && country.prices;
   if (!data) {
@@ -4404,11 +4404,11 @@ export function planCard(pl, primary) {
       primary ? h('span', { class: 'pill-best' }, 'Suggested') : null,
     ]),
     h('div', { class: 'plan-chain' }, chain.join('  →  ')),
-    h('p', { class: 'muted', style: 'margin:2px 0 10px' }, [changes, timeStr, priceStr].filter(Boolean).join(' · ')),
+    h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-3)' }, [changes, timeStr, priceStr].filter(Boolean).join(' · ')),
   ]);
   pl.legs.forEach((l, i) => card.append(planLegRow(l, i)));
-  if (pl.borders.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Carry your passport — ${pl.borders.length} border crossing${pl.borders.length > 1 ? 's' : ''} on this route.`));
-  card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: twelveGoUrl(chain[0], chain[chain.length - 1]), target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
+  if (pl.borders.length) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-2)' }, `Carry your passport — ${pl.borders.length} border crossing${pl.borders.length > 1 ? 's' : ''} on this route.`));
+  card.append(h('a', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', href: twelveGoUrl(chain[0], chain[chain.length - 1]), target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
   return card;
 }
 
@@ -4443,7 +4443,7 @@ function planRouteScreen() {
     const plans = planRoutes(planFrom, planTo);
     if (!plans.length) {
       results.append(h('div', { class: 'card' }, [
-        h('p', { style: 'margin-top:0' }, `No bundled overland route between ${planFrom} and ${planTo} yet.`),
+        h('p', { style: 'margin-top: 0' }, `No bundled overland route between ${planFrom} and ${planTo} yet.`),
         h('p', { class: 'muted' }, 'Try planning via a major hub (Bangkok, Vientiane, Phnom Penh or Hanoi), or check live options:'),
         h('a', { class: 'btn ghost block', href: twelveGoUrl(planFrom, planTo), target: '_blank', rel: 'noopener' }, 'Search 12Go for this trip ↗'),
       ]));
@@ -4480,7 +4480,7 @@ function savedScreen() {
   create.append(input, h('button', { class: 'btn', onclick: () => {
     if (input.value.trim()) { createCollection(input.value.trim(), '⭐'); render(); }
   } }, 'Create'));
-  create.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Or pick a quick theme'));
+  create.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, 'Or pick a quick theme'));
   create.append(h('div', { class: 'chips' }, COLLECTION_PRESETS
     .filter((pr) => !store.collections.some((c) => c.name.toLowerCase() === pr.name.toLowerCase()))
     .map((pr) => h('button', { class: 'chip', onclick: () => { createCollection(pr.name, pr.emoji); render(); } }, `${pr.emoji} ${pr.name}`))));
@@ -4500,11 +4500,11 @@ function savedScreen() {
   const doneIds = store.profile.prefs.doneSpots || [];
   if (doneIds.length) {
     const doneCard = h('div', { class: 'card' }, [h('h2', {}, `✓ Done · ${doneIds.length}`)]);
-    doneCard.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Places you have ticked off — they no longer show in your near-me suggestions. Tap ↩ to put one back.'));
+    doneCard.append(h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Places you have ticked off — they no longer show in your near-me suggestions. Tap ↩ to put one back.'));
     doneIds.slice().reverse().forEach((id) => {
       const p = resolveItem(id);
       const name = p ? p.name : id;
-      doneCard.append(h('div', { class: 'rn-item', style: 'margin-top:8px' }, [
+      doneCard.append(h('div', { class: 'rn-item', style: 'margin-top: var(--sp-2)' }, [
         h('button', { class: 'rn-open', onclick: () => go(`#place-${id}`) }, h('span', { class: 'near-name' }, `✓ ${name}`)),
         h('div', { class: 'rn-actions' }, [
           h('button', { class: 'rn-act', title: 'Undo — show it in suggestions again', 'aria-label': `Un-mark ${name} as done`, onclick: () => { toggleSpotDone(id); render(); } }, '↩'),
@@ -4518,7 +4518,7 @@ function savedScreen() {
 }
 
 function collectionLinkRow(emoji, name, count, onClick) {
-  return h('button', { class: 'btn ghost block', style: 'margin-bottom:8px; justify-content:space-between', onclick: onClick }, [
+  return h('button', { class: 'btn ghost block', style: 'margin-bottom: var(--sp-2); justify-content:space-between', onclick: onClick }, [
     h('span', {}, `${emoji} ${name}`), h('span', { class: 'muted' }, `${count}`),
   ]);
 }
@@ -4572,7 +4572,7 @@ function poolCard(p, ref) {
   const km = (ref && p.coords) ? haversineKm(ref, p.coords) : null;
   const card = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [h('strong', {}, p.name), h('span', { class: 'cat-tag' }, POOL_TYPE_LABEL[p.type] || p.type)]),
-    h('p', { class: 'tiny muted', style: 'margin:2px 0' }, km != null
+    h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0' }, km != null
       ? `📍 ${p.city} · ${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min walk` : ''} · ${compass(bearing(ref, p.coords))}`
       : p.city),
     h('p', { class: 'price-line' }, [
@@ -4589,7 +4589,7 @@ function poolCard(p, ref) {
                       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapQuery)}`,
       target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
   ]);
-  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
+  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top: var(--sp-1h)' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
   return card;
 }
 
@@ -4619,7 +4619,7 @@ function poolsScreen(arg) {
     const withKm = list.filter((p) => p.coords).map((p) => ({ p, km: haversineKm(ref, p.coords) })).sort((a, b) => a.km - b.km);
     const near = withKm.slice(0, 6);
     const rest = withKm.slice(6).map((x) => x.p).concat(list.filter((p) => !p.coords));
-    wrap.append(h('h2', { class: 'cat-title', style: 'margin:12px 2px 6px' }, refCity ? `🏊 Nearest to ${refCity}` : '🏊 Nearest to you'));
+    wrap.append(h('h2', { class: 'cat-title', style: 'margin: var(--sp-3) var(--sp-0h) var(--sp-1h)' }, refCity ? `🏊 Nearest to ${refCity}` : '🏊 Nearest to you'));
     near.forEach((x) => wrap.append(poolCard(x.p, ref)));
     if (rest.length) {
       wrap.append(h('details', { class: 'filters-collapse' }, [
@@ -4631,7 +4631,7 @@ function poolsScreen(arg) {
     const groups = {};
     list.forEach((p) => { (groups[p.city] = groups[p.city] || []).push(p); });
     Object.keys(groups).forEach((city) => {
-      wrap.append(h('h2', { style: 'margin:16px 0 6px' }, city));
+      wrap.append(h('h2', { style: 'margin: var(--sp-4) 0 var(--sp-1h)' }, city));
       groups[city].forEach((p) => wrap.append(poolCard(p, null)));
     });
   }
@@ -4656,23 +4656,23 @@ function crossingsScreen() {
     }
   }
   // Per-country entry/visa guides (visa type, official portal, land-border tips, overstay).
-  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
+  wrap.append(h('div', { class: 'chips', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
     h('button', { class: 'chip', onclick: () => go(`#visa-${c.id}`) }, `🛂 ${c.flag} ${c.name} entry`))));
   const groups = {};
   CROSSINGS.forEach((x) => { (groups[x.pair] = groups[x.pair] || []).push(x); });
   Object.keys(groups).forEach((pair) => {
-    wrap.append(h('h2', { style: 'margin:16px 0 6px' }, pair));
+    wrap.append(h('h2', { style: 'margin: var(--sp-4) 0 var(--sp-1h)' }, pair));
     groups[pair].forEach((x) => {
       const card = h('div', { class: 'card' }, [
         h('div', { class: 'row-between' }, [h('strong', {}, x.name), h('span', { class: 'cat-tag' }, x.type)]),
-        h('p', { class: 'muted', style: 'margin:4px 0' }, `${x.a.town} ↔ ${x.b.town}`),
+        h('p', { class: 'muted', style: 'margin: var(--sp-1) 0' }, `${x.a.town} ↔ ${x.b.town}`),
         h('p', {}, [h('strong', {}, 'Hours: '), x.hours]),
         x.visa ? h('p', {}, [h('strong', {}, 'Visa: '), x.visa]) : null,
         x.notes ? h('p', { class: 'muted' }, x.notes) : null,
         x.scam ? h('div', { class: 'warn-note' }, `⚠ ${x.scam}`) : null,
         x.coords ? h('a', { class: 'btn ghost block btn-spaced', href: `https://www.google.com/maps/search/?api=1&query=${x.coords.lat},${x.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
       ]);
-      if (x.sources && x.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${x.sources.map((s) => s.org).join(', ')} · verified ${x.verified}`));
+      if (x.sources && x.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top: var(--sp-1h)' }, `Source: ${x.sources.map((s) => s.org).join(', ')} · verified ${x.verified}`));
       wrap.append(card);
     });
   });
@@ -4759,7 +4759,7 @@ export function dietPicker(onChange) {
   const sel = new Set(store.profile.prefs.diet || []);
   const box = h('div', {});
   DIET_OPTIONS.forEach((grp) => {
-    box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, grp.group));
+    box.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' }, grp.group));
     box.append(h('div', { class: 'chips', role: 'group', 'aria-label': grp.group }, grp.items.map((it) =>
       h('button', {
         class: 'chip', 'aria-pressed': sel.has(it.id) ? 'true' : 'false',
@@ -5072,12 +5072,12 @@ export function todoCard(x, maxReasons) {
         h('h2', {}, p.name),
         er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
       ]),
-      h('div', { class: 'row-between', style: 'margin:2px 0' }, [
+      h('div', { class: 'row-between', style: 'margin: var(--sp-0h) 0' }, [
         h('div', { class: 'cats' }, cats.slice(0, 3).map((c) => catTag(c))),
         (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
       ]),
       rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
-      h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, todoDistLabel(dist)].filter(Boolean).join(' · ')),
+      h('p', { class: 'muted small', style: 'margin: var(--sp-0h) 0 0' }, [p.city, todoDistLabel(dist)].filter(Boolean).join(' · ')),
     ]),
     thumb,
   ]);
@@ -5156,8 +5156,8 @@ function eventCard(e) {
       h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
     ]),
     e.localName ? h('div', { class: 'native', lang: scriptLang(e.country) }, e.localName) : null,
-    h('div', { class: 'muted', style: 'margin:2px 0' }, `${evRange(e)}${e.lunar ? ' · date varies yearly' : ''} · ${(e.regions && e.regions[0]) || e.countryName}`),
-    h('p', { style: 'margin:8px 0 6px' }, e.blurb),
+    h('div', { class: 'muted', style: 'margin: var(--sp-0h) 0' }, `${evRange(e)}${e.lunar ? ' · date varies yearly' : ''} · ${(e.regions && e.regions[0]) || e.countryName}`),
+    h('p', { style: 'margin: var(--sp-2) 0 var(--sp-1h)' }, e.blurb),
     h('div', { class: 'row-between' }, [
       h('button', { class: 'btn ghost', onclick: () => go(`#event-${e.id}`) }, 'Details'),
       addBtn,
@@ -5240,14 +5240,14 @@ function eventScreen(id) {
       h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
     ]),
     e.localName ? h('div', { class: 'native', lang: scriptLang(e.country) }, e.localName) : null,
-    h('div', { class: 'muted', style: 'margin:4px 0' }, `${evRange(e)} · ${e.countryName}`),
+    h('div', { class: 'muted', style: 'margin: var(--sp-1) 0' }, `${evRange(e)} · ${e.countryName}`),
     e.lunar ? h('div', { class: 'muted' }, '↻ Movable date — shifts each year.') : null,
     h('p', {}, e.blurb),
   ]);
   card.append(h('h3', {}, 'When'), h('p', {}, e.rule));
   card.append(h('h3', {}, 'Where'), h('p', {}, (e.regions || []).join(' · ')));
   card.append(h('h3', {}, 'What it means for you'), h('p', {}, e.impact));
-  if (e.sources && e.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${e.sources.join('; ')}`));
+  if (e.sources && e.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, `Sources: ${e.sources.join('; ')}`));
   wrap.append(card);
   const addBtn = h('button', { class: 'btn block' }, 'Add to my calendar');
   addBtn.addEventListener('click', () => addEventToCalendar(e, addBtn));
@@ -5348,7 +5348,7 @@ async function playCall(s, btn, statusEl) {
   }
 }
 function callControl(s, label) {
-  const status = h('div', { class: 'muted', style: 'font-size:13px;margin-top:4px' });
+  const status = h('div', { class: 'muted', style: 'font-size:13px;margin-top: var(--sp-1)' });
   const btn = h('button', { class: 'btn ghost', onclick: () => playCall(s, btn, status) }, label || '🔊 Hear its call');
   return h('div', {}, [btn, status]);
 }
@@ -5401,7 +5401,7 @@ function soundsScreen() {
     results.forEach((s) => {
       const status = h('div', { class: 'muted', style: 'font-size:13px' });
       const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
-      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px' }, [
+      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap: var(--sp-3)' }, [
         recogThumb(s, s.emoji || '🔎'),
         h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
           h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
@@ -5437,10 +5437,10 @@ function natureScreen() {
   // top of this file) instead of freezing at the empty pre-load default (just "All").
   const chipsWrap = h('div', {});
   wrap.append(chipsWrap);
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin: var(--sp-1h) 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
 
   wrap.append(h('div', { class: 'card' }, [
-    h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Have a photo? Identify it online (needs internet):'),
+    h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Have a photo? Identify it online (needs internet):'),
     h('div', { class: 'row-between' }, [
       h('a', { class: 'btn ghost', href: 'https://lens.google.com/', target: '_blank', rel: 'noopener' }, 'Google Lens ↗'),
       h('a', { class: 'btn ghost', href: 'https://www.inaturalist.org/observations/identify', target: '_blank', rel: 'noopener' }, 'iNaturalist ↗'),
@@ -5546,7 +5546,7 @@ function speciesScreen(id) {
   const sLangs = [['th', '🇹🇭', 'th-TH'], ['vi', '🇻🇳', 'vi-VN'], ['km', '🇰🇭', 'km-KH'], ['lo', '🇱🇦', 'lo-LA']];
   if (s.names && sLangs.some(([k]) => s.names[k])) {
     card.append(h('h3', {}, 'Local names (tap 🔊 to hear)'));
-    card.append(h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0' },
+    card.append(h('div', { style: 'display:flex;flex-wrap:wrap;gap: var(--sp-1h);margin: var(--sp-1) 0' },
       sLangs.filter(([k]) => s.names[k]).map(([k, flag, loc]) => (canSay(loc)
         ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(s.names[k], loc) }, `${flag} ${s.names[k]} 🔊`)
         : h('span', { class: 'cat-tag' }, `${flag} ${s.names[k]}`)))));
@@ -5612,7 +5612,7 @@ function idSavedRow(type, spec, o, groupKeys) {
     onchange: (e) => { idSetNote(key, e.target.value); } });
   const panel = h('div', { class: 'id-edit-panel' }, [
     h('div', { class: 'id-edit-label' }, 'Categories / tags'),
-    tagChips.length ? h('div', { class: 'id-edit-tags' }, tagChips) : h('div', { class: 'muted', style: 'font-size:13px;margin:2px 0' }, 'No tags yet — add one to file this into a category.'),
+    tagChips.length ? h('div', { class: 'id-edit-tags' }, tagChips) : h('div', { class: 'muted', style: 'font-size:13px;margin: var(--sp-0h) 0' }, 'No tags yet — add one to file this into a category.'),
     h('div', { class: 'id-tag-add' }, [tagInput, addBtn]),
     h('div', { class: 'id-edit-label' }, 'Note'),
     noteInput,
@@ -5634,7 +5634,7 @@ function myIdentifierScreen() {
   if (!list.length) {
     wrap.append(h('div', { class: 'card' }, [
       h('strong', {}, '🔎 Your personal identifier'),
-      h('p', { class: 'muted', style: 'margin:6px 0 10px' },
+      h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-3)' },
         'Save any dish, fruit, or animal you identify and it collects here — offline, on your device. Tap ☆ on any item in the identify tools, or ★ Save on its page. Nothing saved yet — start with a tool below.'),
       h('div', { class: 'grid' }, exploreTiles.map(sectionTile)),
     ]));
@@ -5661,7 +5661,7 @@ function myIdentifierScreen() {
         .filter(Boolean);
       if (!items.length) return;
       const groupKeys = items.map((o) => idPinKey(type, o.id));
-      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [
+      const card = h('div', { class: 'card', style: 'margin-bottom: var(--sp-3)' }, [
         h('h3', {}, `${spec.emoji} ${spec.label} · ${items.length}`),
       ]);
       items.forEach((o) => card.append(idSavedRow(type, spec, o, groupKeys)));
@@ -5671,7 +5671,7 @@ function myIdentifierScreen() {
     const cats = idAllTags();
     if (!cats.length) {
       wrap.append(h('div', { class: 'card' }, [
-        h('p', { class: 'muted', style: 'margin:0' }, 'No categories yet. Switch to “By type”, tap ✎ on any item, and add a tag — your categories appear here.'),
+        h('p', { class: 'muted', style: 'margin: 0' }, 'No categories yet. Switch to “By type”, tap ✎ on any item, and add a tag — your categories appear here.'),
       ]));
     }
     const resolve = (k) => { const type = k.slice(0, k.indexOf(':')); const spec = ID_TYPES[type]; const o = spec && spec.get(k.slice(type.length + 1)); return o ? { type, spec, o, key: k } : null; };
@@ -5683,7 +5683,7 @@ function myIdentifierScreen() {
       if (!resolved.length) return;
       const groupKeys = resolved.map((r) => r.key);
       const header = tag ? `🏷 ${tag} · ${resolved.length}` : `• Untagged · ${resolved.length}`;
-      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [h('h3', {}, header)]);
+      const card = h('div', { class: 'card', style: 'margin-bottom: var(--sp-3)' }, [h('h3', {}, header)]);
       resolved.forEach((r) => card.append(idSavedRow(r.type, r.spec, r.o, groupKeys)));
       wrap.append(card);
     });
@@ -6219,10 +6219,10 @@ function sosScreen(cc) {
     const list = nearestCare(fix, cc, { hospitalsOnly: true, limit: 3 });
     hospSlot.replaceChildren();
     if (!list.length) return;
-    hospSlot.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
-    list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
+    hospSlot.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
-      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city || x.en || ''),
+      h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, x.city || x.en || ''),
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
       h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
     ])));
@@ -6242,10 +6242,10 @@ function sosScreen(cc) {
   FIRST_AID.forEach((fa) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, fa.t)]);
     const inner = h('div', {});
-    inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do')]));
+    inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, 'Do')]));
     inner.append(h('ul', { class: 'sos-aid' }, fa.do.map((li) => h('li', {}, li))));
     if (fa.dont && fa.dont.length) {
-      inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, 'Do not')]));
       inner.append(h('ul', { class: 'sos-aid dont' }, fa.dont.map((li) => h('li', {}, li))));
     }
     // Read the steps aloud — hands are often busy in a bite/sting emergency.
@@ -6264,7 +6264,7 @@ function sosScreen(cc) {
   LIFESAVING.forEach((ls) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, ls.t)]);
     const inner = h('div', {});
-    ls.body.forEach((p) => inner.append(h('p', { class: 'tiny', style: 'margin:6px 0' }, p)));
+    ls.body.forEach((p) => inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0' }, p)));
     dd.append(inner);
     life.append(dd);
   });
@@ -6287,8 +6287,8 @@ function sosScreen(cc) {
   const safe = SAFETY[getActiveCountry()];
   const safeCard = safe ? h('div', { class: 'card' }, [
     h('h2', {}, 'Water & food safety'),
-    h('p', { style: 'margin:6px 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
-    h('p', { style: 'margin:6px 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
+    h('p', { style: 'margin: var(--sp-1h) 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
+    h('p', { style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
   ]) : null;
 
   // Solo & women travellers — practical, non-alarmist safety, opened by default when the
@@ -6303,7 +6303,7 @@ function sosScreen(cc) {
   sInner.append(h('ul', { class: 'sos-aid' }, SOLO_SAFETY.general.map((li) => h('li', {}, li))));
   const cSolo = SOLO_SAFETY[getActiveCountry()];
   if (cSolo) {
-    sInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, `In ${c.name}`)]));
+    sInner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, `In ${c.name}`)]));
     sInner.append(h('ul', { class: 'sos-aid' }, cSolo.map((li) => h('li', {}, li))));
   }
   sInner.append(sourcesNote(SOLO_SOURCES, 'July 2026'));
@@ -6322,15 +6322,15 @@ function sosScreen(cc) {
   EMERGENCIES.forEach((e) => {
     const d = h('details', { class: 'filters-collapse' }, [h('summary', {}, `${e.ic} ${e.t}`)]);
     const inner = h('div', {});
-    if (e.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, e.lead));
-    inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Right now')]));
+    if (e.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, e.lead));
+    inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'Right now')]));
     inner.append(h('ul', { class: 'sos-aid' }, e.now.map((li) => h('li', {}, li))));
     if (e.then && e.then.length) {
-      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Then')]));
+      inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'Then')]));
       inner.append(h('ul', { class: 'sos-aid' }, e.then.map((li) => h('li', {}, li))));
     }
     if (e.avoid && e.avoid.length) {
-      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'Do not')]));
       inner.append(h('ul', { class: 'sos-aid dont' }, e.avoid.map((li) => h('li', {}, li))));
     }
     { const rd = readAloudBar(() => [`${e.t}.`, 'Right now:', e.now.join(' '), (e.then || []).length ? 'Then: ' + e.then.join(' ') : '', (e.avoid || []).length ? 'Do not: ' + e.avoid.join(' ') : ''].filter(Boolean).join(' ')); if (rd) inner.append(rd); }
@@ -6346,11 +6346,11 @@ function sosScreen(cc) {
   ])]);
   const embD = h('details', { class: 'filters-collapse' }, [h('summary', {}, 'What an embassy can and cannot do')]);
   const embInner = h('div', {});
-  embInner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'It can')]));
+  embInner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, 'It can')]));
   embInner.append(h('ul', { class: 'sos-aid' }, EMBASSY.can.map((li) => h('li', {}, li))));
-  embInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'It cannot')]));
+  embInner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'It cannot')]));
   embInner.append(h('ul', { class: 'sos-aid dont' }, EMBASSY.cannot.map((li) => h('li', {}, li))));
-  embInner.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, EMBASSY.note));
+  embInner.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, EMBASSY.note));
   embD.append(embInner);
   emb.append(embD);
   emb.append(h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`embassy consulate ${c.name}`), target: '_blank', rel: 'noopener' }, `🔎 Find your embassy in ${c.name} ↗`));
@@ -6485,7 +6485,7 @@ function worshipScreen(cc) {
 
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, 'Find a place of worship near me'),
-    h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Opens a live map search (needs internet).'),
+    h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1h)' }, 'Opens a live map search (needs internet).'),
     h('div', { class: 'chips' }, Object.keys(WORSHIP_FAITH).map((f) =>
       h('a', { class: 'chip', href: mapsSearch(`${WORSHIP_SEARCH[f]} near me`), target: '_blank', rel: 'noopener' }, `${WORSHIP_FAITH[f]} ↗`))),
   ]));
@@ -6496,7 +6496,7 @@ function worshipScreen(cc) {
   local.forEach((w) => { (byCity[w.city] = byCity[w.city] || []).push(w); });
   Object.keys(byCity).forEach((city) => {
     const card = h('div', { class: 'card' }, [h('h2', {}, city)]);
-    byCity[city].forEach((w) => card.append(h('div', { class: 'row-between', style: 'margin:4px 0' }, [
+    byCity[city].forEach((w) => card.append(h('div', { class: 'row-between', style: 'margin: var(--sp-1) 0' }, [
       h('div', { class: 'grow' }, [h('strong', {}, w.name), h('div', { class: 'muted tiny' }, WORSHIP_FAITH[w.faith] || '')]),
       h('a', { class: 'chip', href: mapsSearch(`${w.name} ${w.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
     ])));
@@ -6602,8 +6602,8 @@ function countryLoadingScreen(ccs) {
   const names = ccs.map((id) => { const c = getCountry(id); return c ? `${c.flag} ${c.name}` : id; }).join(', ');
   return h('div', { class: 'screen' }, [
     h('div', { class: 'card', role: 'status', style: 'text-align:center;margin-top:15vh' }, [
-      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
-      h('h2', { style: 'margin:0 0 4px' }, `Loading ${names}…`),
+      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom: var(--sp-2)' }, '🧭'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1)' }, `Loading ${names}…`),
       h('p', { class: 'muted' }, 'One-time — this stays on your device after.'),
     ]),
   ]);
@@ -6615,8 +6615,8 @@ function countryLoadingScreen(ccs) {
 function screenLoadingScreen() {
   return h('div', { class: 'screen' }, [
     h('div', { class: 'card', role: 'status', style: 'text-align:center;margin-top:15vh' }, [
-      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
-      h('h2', { style: 'margin:0 0 4px' }, 'Opening…'),
+      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom: var(--sp-2)' }, '🧭'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1)' }, 'Opening…'),
       h('p', { class: 'muted' }, 'One moment.'),
     ]),
   ]);
@@ -6630,7 +6630,7 @@ function screenUnavailableScreen(names) {
   return h('div', { class: 'screen' }, [
     topbar('Not downloaded yet', '#home'),
     h('div', { class: 'card' }, [
-      h('h2', { style: 'margin:0 0 6px' }, 'This screen is not on your device yet'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1h)' }, 'This screen is not on your device yet'),
       h('p', { class: 'muted' }, online()
         ? 'It could not be fetched just now. Tap retry.'
         : 'It needs a connection the first time you open it. Emergency numbers, phrases and the hospital finder all work offline.'),

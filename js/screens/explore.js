@@ -141,7 +141,7 @@ export function exploreScreen(argCc) {
     // tapping the Explore tab with nothing yet to land on, or explicitly via #explore-all.
     // Lead with the map: plain and always visible (no anchor to default to yet, so "choose
     // on the map" IS the default view here) — not a collapsible fold, the map is the focus.
-    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, '🗺 Choose on the map'));
+    wrap.append(h('div', { class: 'home-section', style: 'margin: var(--sp-2) 0 var(--sp-1)' }, '🗺 Choose on the map'));
     wrap.append(regionPicker());
 
     // "At a glance": each country's real figures (mapped-place count, language, currency) and
@@ -178,7 +178,7 @@ export function exploreScreen(argCc) {
         tags.length ? h('span', { class: 'explore-tags' }, tags.map((t) => h('span', { class: 'explore-tag' }, t))) : null,
       ]));
     });
-    const glanceFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🌏 Four countries at a glance'),
+    const glanceFold = foldable(h('span', { class: 'home-section', style: 'margin: 0' }, '🌏 Four countries at a glance'),
       grid, { open: store.profile.prefs.exploreGlanceOpen !== false, cls: 'home-group-d' });
     glanceFold.addEventListener('toggle', () => { store.profile.prefs.exploreGlanceOpen = glanceFold.open; save(); });
     wrap.append(glanceFold);
@@ -231,7 +231,7 @@ export function exploreScreen(argCc) {
   // depth is before tapping. The map and the list drive the same route — the map for people
   // who think geographically, the list for people who read.
   if (zonesFor(cc).length) {
-    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, `🗺 ${c.name} by region`));
+    wrap.append(h('div', { class: 'home-section', style: 'margin: var(--sp-2) 0 var(--sp-1)' }, `🗺 ${c.name} by region`));
     const zm = zonesMap(cc, { onPick: (zid) => go(`#region-${cc}-${zid}`) });
     if (zm) wrap.append(zm);
     const zl = zonePickList(cc);
@@ -248,7 +248,7 @@ export function exploreScreen(argCc) {
     const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === fslug).length;
     wrap.append(h('div', { class: 'card access-focus' }, [
       h('h2', {}, `📍 You’re around ${fcity}`),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' },
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' },
         here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
       here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${fslug}`) }, `Places in ${fcity}`) : null,
       // Weather dropped from this row — it duplicated the "Get oriented" deck's own Weather
@@ -256,7 +256,7 @@ export function exploreScreen(argCc) {
       // (found in the sitewide duplicate-chip audit). "Get oriented" is the fuller reference
       // list, so it keeps Weather; this row stays focused on the two truly location-specific
       // actions (what's near THIS spot, is this even the right city).
-      h('div', { class: 'chips', style: 'margin-top:6px' }, [
+      h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [
         h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
         h('button', { class: 'chip', onclick: () => go(`#setcity-${cc}`) }, [chipIcon('pin'), 'Not here? Change city']),
       ]),
@@ -279,8 +279,8 @@ export function exploreScreen(argCc) {
   // than features, and so are deliberately absent from the taxonomy: this country's own
   // place list, and its language.
   const lang = getLanguage(c.lang);
-  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
-  wrap.append(h('div', { class: 'chips', style: 'margin-bottom:10px' }, [
+  wrap.append(h('h2', { class: 'home-section', style: 'margin-top: var(--sp-4)' }, `More for ${c.name}`));
+  wrap.append(h('div', { class: 'chips', style: 'margin-bottom: var(--sp-3)' }, [
     h('button', { class: 'status-chip', onclick: () => go(`#places-${cc}`), 'aria-label': `Places in ${c.name}. For your taste and price` },
       [h('span', { class: 'status-ic' }, '📍'), h('span', { class: 'status-lbl' }, `Places in ${c.name}`)]),
     h('button', { class: 'status-chip', onclick: () => go(`#phrasebook-${c.lang}`), 'aria-label': `Phrasebook. ${lang ? lang.label : 'Language'}` },
@@ -302,7 +302,7 @@ export function exploreScreen(argCc) {
   if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
     wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
       h('strong', {}, '🧭 Travelling solo'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
       h('button', { class: 'btn block', onclick: () => go(`#sos-${cc}`) }, 'See solo & women’s safety'),
     ]));
   }
@@ -370,23 +370,23 @@ export function whereNextSection(argCc, fromCity, onChange) {
       if (p) { totLo += p.totalHrs[0] || 0; totHi += p.totalHrs[1] || p.totalHrs[0] || 0; changes += p.changes; }
       prev = city;
     }
-    body.append(h('p', { style: 'margin:0 0 4px' }, `${fromCity} → ${_nextChain.join(' → ')}`));
-    body.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
+    body.append(h('p', { style: 'margin: 0 0 var(--sp-1)' }, `${fromCity} → ${_nextChain.join(' → ')}`));
+    body.append(h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-2)' },
       `~${round1(totLo)}–${round1(totHi)}h of travel across ${_nextChain.length} stop${_nextChain.length > 1 ? 's' : ''} · ${changes} change${changes === 1 ? '' : 's'}`));
-    body.append(h('div', { class: 'chips', style: 'margin-bottom:8px' }, [
+    body.append(h('div', { class: 'chips', style: 'margin-bottom: var(--sp-2)' }, [
       h('button', { class: 'chip', onclick: () => { _nextChain.pop(); rerender(); } }, '↶ Remove last'),
       h('button', { class: 'chip', onclick: () => { _nextChain = []; rerender(); } }, 'Clear'),
     ]));
   }
 
   if (_nextChain.length < 3 && candidates.length) {
-    body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' },
+    body.append(h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-1h)' },
       _nextChain.length ? `Next, from ${tail}:` : 'Tap a city to start building your next few stops:'));
     body.append(h('div', { class: 'grid' }, candidates.map((r) => h('button', {
       class: 'card', style: 'text-align:left', onclick: () => { _nextChain.push(r.name); rerender(); },
     }, [
       h('strong', {}, r.name),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' },
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' },
         `${r.hrs[1] ? `~${r.hrs[0]}–${r.hrs[1]}h` : ''} · ${r.changes === 0 ? 'Direct' : `${r.changes} change${r.changes > 1 ? 's' : ''}`}`),
     ]))));
   }
@@ -395,7 +395,7 @@ export function whereNextSection(argCc, fromCity, onChange) {
     const tripName = (store.profile.name || '').trim();
     const tripLabel = tripName ? `${tripName}’s trip` : 'My Trip';
     body.append(h('button', {
-      class: 'btn block', style: 'margin-top:4px',
+      class: 'btn block', style: 'margin-top: var(--sp-1)',
       onclick: (e) => {
         _nextChain.forEach((city) => addStop({ title: city, country: countryForCityName(city) }));
         e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
@@ -443,8 +443,8 @@ export function regionScreen(arg) {
 
   const mini = zonesMap(cc, { activeId: z.id, onPick: (nid) => go(`#region-${cc}-${nid}`) });
   if (mini) {
-    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 ${c.name} by region`),
-      h('div', { style: 'padding:6px 0 0' }, [mini]), { open: store.profile.prefs.regionMapOpen !== false, cls: 'home-group-d' });
+    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin: 0' }, `🗺 ${c.name} by region`),
+      h('div', { style: 'padding: var(--sp-1h) 0 0' }, [mini]), { open: store.profile.prefs.regionMapOpen !== false, cls: 'home-group-d' });
     mapFold.addEventListener('toggle', () => { store.profile.prefs.regionMapOpen = mapFold.open; save(); });
     wrap.append(mapFold);
   }
@@ -467,17 +467,17 @@ export function regionScreen(arg) {
     wrap.append(collapsibleCard(pc, 'regionPlacesOpen', false));
   } else {
     wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${z.name} yet. Tap another region on the map above, or browse all of ${c.name}.`),
+      h('p', { class: 'muted', style: 'margin: 0' }, `No places are mapped in ${z.name} yet. Tap another region on the map above, or browse all of ${c.name}.`),
       h('button', { class: 'btn block btn-spaced', onclick: () => go(`#places-${cc}`) }, `All places in ${c.name}`),
     ]));
   }
 
   if (cc === 'vi') {
-    wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
+    wrap.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-3)' },
       'Note: Vietnam reorganised its provinces in 2025. The region outlines reflect the earlier boundaries until open map data is updated.'));
   }
 
-  wrap.append(h('div', { class: 'chips', style: 'margin-top:6px' }, [
+  wrap.append(h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [
     h('button', { class: 'chip', onclick: () => go(`#country-${cc}`) }, [chipIcon('compass'), `About ${c.name}`]),
     h('button', { class: 'chip', onclick: () => go(`#history-${cc}`) }, [chipIcon('book'), 'History & culture']),
     h('button', { class: 'chip', onclick: () => go(`#info-${cc}`) }, [chipIcon('compass'), 'Country guide']),
@@ -556,11 +556,11 @@ function zonePickList(cc) {
   }
   const stripKids = [strip];
   if (has) {
-    stripKids.push(h('div', { class: 'chips', style: 'margin-top:6px' }, [
+    stripKids.push(h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [
       h('button', { class: 'chip ghost', onclick: () => { zoneMonths.clear(); render(); } }, '↺ Clear months'),
     ]));
   } else {
-    stripKids.push(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' },
+    stripKids.push(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' },
       'Pick as many months as your trip covers — the regions re-sort and each one says whether it is a good time.'));
   }
   // The twelve-month strip sits behind a "By month" button rather than standing open: twelve

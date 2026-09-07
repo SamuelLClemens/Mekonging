@@ -35,7 +35,7 @@ export function transportScreen(countryId) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Getting around', '#home'));
   wrap.append(countryChips((id) => go(`#transport-${id}`)));
-  wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:12px', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
+  wrap.append(h('button', { class: 'btn block', style: 'margin-bottom: var(--sp-3)', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
   // Rent & ride, tickets and schedules — always shown, even where intercity routes are sparse.
   const ga = getAroundSection(getActiveCountry());
   if (ga) wrap.append(ga);
@@ -66,7 +66,7 @@ export function transportScreen(countryId) {
         o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
       ]));
     }
-    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: 'https://12go.asia', target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
+    card.append(h('a', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', href: 'https://12go.asia', target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
     return card;
   };
 
@@ -117,12 +117,12 @@ export function getAroundSection(cc) {
     rentDet.append(h('h3', {}, '🛵 Scooter / motorbike'));
     rentDet.append(h('p', { class: 'muted' }, g.scooter.note));
     (g.scooter.tips || []).forEach((t) => rentDet.append(h('div', { class: 'list-note' }, t)));
-    if (g.scooter.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.scooter.book.map(chip)));
+    if (g.scooter.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, g.scooter.book.map(chip)));
   }
   if (g.car) {
     rentDet.append(h('h3', {}, '🚗 Car'));
     rentDet.append(h('p', { class: 'muted' }, g.car.note));
-    if (g.car.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.car.book.map(chip)));
+    if (g.car.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, g.car.book.map(chip)));
   }
   // Per-city price ranges so a traveller can budget before tapping out to a booking site.
   if (g.rentalPrices && g.rentalPrices.rows && g.rentalPrices.rows.length) {
@@ -132,9 +132,9 @@ export function getAroundSection(cc) {
       h('tbody', {}, g.rentalPrices.rows.map((r) => h('tr', {}, [h('td', {}, r.city), h('td', {}, r.scooter || '—'), h('td', {}, r.car || '—')]))),
     ]);
     rentDet.append(tbl);
-    if (g.rentalPrices.note) rentDet.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' }, g.rentalPrices.note));
+    if (g.rentalPrices.note) rentDet.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1) 0 0' }, g.rentalPrices.note));
   }
-  rentDet.append(h('p', { class: 'tiny muted', style: 'margin-top:8px' }, `Reminder: ${g.name} drives on the ${g.drivesOn}. An International Driving Permit plus your home licence keeps you legal and insured.`));
+  rentDet.append(h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-2)' }, `Reminder: ${g.name} drives on the ${g.drivesOn}. An International Driving Permit plus your home licence keeps you legal and insured.`));
   wrap.append(rentDet);
 
   // City transit — a stored, offline line list for the metro cities (plus an honest note
@@ -145,7 +145,7 @@ export function getAroundSection(cc) {
       ctDet.append(h('div', { class: 'transit-row' }, [
         h('strong', {}, c.city),
         (c.lines && c.lines.length) ? h('ul', { class: 'transit-lines' }, c.lines.map((ln) => h('li', {}, ln))) : null,
-        c.note ? h('div', { class: 'muted tiny', style: 'margin-top:2px' }, c.note) : null,
+        c.note ? h('div', { class: 'muted tiny', style: 'margin-top: var(--sp-0h)' }, c.note) : null,
       ]));
     });
     wrap.append(ctDet);
@@ -153,22 +153,22 @@ export function getAroundSection(cc) {
 
   const t = g.tickets || {};
   const tkDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🎫 Buy tickets — flights, trains, buses & boats')]);
-  const tkRow = (label, arr) => { if (arr && arr.length) tkDet.append(h('div', { class: 'transit-row' }, [h('strong', {}, label), h('div', { class: 'chips', style: 'margin-top:4px' }, arr.map(chip))])); };
+  const tkRow = (label, arr) => { if (arr && arr.length) tkDet.append(h('div', { class: 'transit-row' }, [h('strong', {}, label), h('div', { class: 'chips', style: 'margin-top: var(--sp-1)' }, arr.map(chip))])); };
   tkRow('✈️ Flights', t.flight);
   tkRow('🚆 Trains', t.train);
   tkRow('🚌 Buses', t.bus);
   tkRow('⛴️ Boats & ferries', t.ferry);
-  tkDet.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Prices and seats are live on these sites. For trains and the fast Laos railway, book a day or two ahead.'));
+  tkDet.append(h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-1h)' }, 'Prices and seats are live on these sites. For trains and the fast Laos railway, book a day or two ahead.'));
   wrap.append(tkDet);
 
   if (g.schedules && g.schedules.length) {
     const scDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🕘 Timetables & live schedules')]);
     g.schedules.forEach((s) => scDet.append(h('div', { class: 'transit-row' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, s.what), h('span', { class: 'muted tiny' }, s.org)]),
-      s.note ? h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, s.note) : null,
-      h('a', { class: 'btn ghost block', style: 'margin-top:2px', href: s.url, target: '_blank', rel: 'noopener' }, `Open ${s.org} ↗`),
+      s.note ? h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, s.note) : null,
+      h('a', { class: 'btn ghost block', style: 'margin-top: var(--sp-0h)', href: s.url, target: '_blank', rel: 'noopener' }, `Open ${s.org} ↗`),
     ])));
-    scDet.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'Live times need internet; the guidance above works offline. Schedules shift with season and demand — always confirm on the day.'));
+    scDet.append(h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-1)' }, 'Live times need internet; the guidance above works offline. Schedules shift with season and demand — always confirm on the day.'));
     wrap.append(scDet);
   }
   return wrap;
@@ -222,7 +222,7 @@ export function addPinScreen(editId) {
     } else {
       card.append(field('Add to collections', h('p', { class: 'muted' }, 'You have no collections yet. Save the pin, then tap “＋ Save” on it to file it under a theme.')));
     }
-    card.append(h('label', { style: 'display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px' },
+    card.append(h('label', { style: 'display:flex;align-items:center;gap: var(--sp-2);cursor:pointer;margin-top: var(--sp-2)' },
       [stayChk, h('span', {}, '🏠 Also set this as my accommodation (My stay)')]));
   }
   wrap.append(card);
@@ -239,6 +239,6 @@ export function addPinScreen(editId) {
     if (stayChk.checked && state.coords) setMyStay({ name: name.value.trim(), coords: state.coords });
     go(`#place-${pin.id}`);   // open the new place so photos, a rating and a review are one tap away
   } }, editing ? 'Save changes' : 'Save place'));
-  wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 2px' }, 'After saving, open the place to add your photos, a star rating and a review — everything stays on your device.'));
+  wrap.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) var(--sp-0h)' }, 'After saving, open the place to add your photos, a star rating and a review — everything stays on your device.'));
   mount(wrap, true);
 }

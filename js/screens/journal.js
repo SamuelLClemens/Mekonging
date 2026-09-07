@@ -80,7 +80,7 @@ function journalCover() {
     ]),
   ]);
   wrap.append(book);
-  wrap.append(h('button', { class: 'btn block', style: 'margin-top:16px', onclick: () => go('#journal-add') }, '✒ New entry'));
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top: var(--sp-4)', onclick: () => go('#journal-add') }, '✒ New entry'));
   mount(wrap, '#home');
 }
 
@@ -107,7 +107,7 @@ function journalTOC() {
     ]),
   ]);
   wrap.append(spread);
-  wrap.append(h('div', { class: 'row-between', style: 'margin-top:16px' }, [
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-4)' }, [
     h('button', { class: 'btn', onclick: () => go('#journal-add') }, '✒ New entry'),
     h('button', { class: 'btn ghost', onclick: () => go('#journey') }, '🗺 Journey map'),
   ]));
@@ -138,11 +138,11 @@ function journalEntryScreen(id) {
   if (e.audioKey) {
     const au = h('audio', { class: 'entry-audio', controls: '' });
     getBlob(e.audioKey).then((b) => { if (b) au.src = URL.createObjectURL(b); }).catch(() => { /* recording missing */ });
-    page.append(h('div', { class: 'entry-audio-wrap' }, [h('div', { class: 'muted tiny', style: 'margin:8px 0 2px' }, '🎙 Your recording'), au]));
+    page.append(h('div', { class: 'entry-audio-wrap' }, [h('div', { class: 'muted tiny', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, '🎙 Your recording'), au]));
   }
   wrap.append(page);
-  wrap.append(h('button', { class: 'btn block', style: 'margin-top:14px', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
-  wrap.append(h('div', { class: 'row-between', style: 'margin-top:10px' }, [
+  wrap.append(h('button', { class: 'btn block', style: 'margin-top: var(--sp-4)', onclick: () => go(`#journal-edit-${e.id}`) }, '✎ Edit this entry'));
+  wrap.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-3)' }, [
     h('button', { class: 'btn ghost', disabled: idx <= 0 ? '' : null, onclick: () => idx > 0 && go(`#journal-entry-${entries[idx - 1].id}`) }, '‹ Prev'),
     h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Delete this entry?', body: 'This removes the journal entry and its photos from this device.', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { entryPhotoKeys(e).forEach((k) => delBlob(k)); if (e.audioKey) delBlob(e.audioKey); deleteJournalEntry(e.id); go('#journal-open'); } }); } }, 'Delete'),
     h('button', { class: 'btn ghost', disabled: idx >= entries.length - 1 ? '' : null, onclick: () => idx < entries.length - 1 && go(`#journal-entry-${entries[idx + 1].id}`) }, 'Next ›'),
@@ -201,7 +201,7 @@ function scrapAlbumSection() {
   } });
   card.append(h('div', { class: 'chips' }, [h('button', { class: 'chip', onclick: () => inp.click() }, '＋ Add pictures to album'), inp]));
   if (!album.length && !journalPhotos.length && !placePhotos.length) {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Add pictures here, or add photos to your journal entries and the places you rate — they all gather in this album.'));
+    card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, 'Add pictures here, or add photos to your journal entries and the places you rate — they all gather in this album.'));
     return card;
   }
   const grid = h('div', { class: 'photo-gallery' });
@@ -267,8 +267,8 @@ export function scrapbookScreen() {
   const range = allDates.length ? sbDateRange(allDates[0], allDates[allDates.length - 1]) : '';
 
   wrap.append(h('div', { class: 'card scrap-cover' }, [
-    h('h2', { style: 'margin:0' }, store.profile.name ? `${store.profile.name}’s journey` : 'My journey'),
-    range ? h('p', { class: 'muted', style: 'margin:4px 0 8px' }, range) : null,
+    h('h2', { style: 'margin: 0' }, store.profile.name ? `${store.profile.name}’s journey` : 'My journey'),
+    range ? h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, range) : null,
     h('div', { class: 'scrap-stats' }, [
       sbStatPill(entries.length, entries.length === 1 ? 'journal entry' : 'journal entries'),
       sbStatPill(loved.length, 'places loved'),
@@ -303,7 +303,7 @@ export function scrapbookScreen() {
     entries.forEach((e) => {
       const card = h('div', { class: 'card scrap-entry' }, [
         h('div', { class: 'scrap-date' }, [sbFmtDate(e.date || String(e.ts || '').slice(0, 10)), e.place ? '📍 ' + e.place : ''].filter(Boolean).join(' · ')),
-        h('h3', { style: 'margin:2px 0' }, e.title || 'Untitled'),
+        h('h3', { style: 'margin: var(--sp-0h) 0' }, e.title || 'Untitled'),
         e.text ? h('div', { class: 'scrap-text' }, (e.text || '').split('\n').map((p) => h('p', {}, p))) : null,
       ]);
       entryPhotoKeys(e).forEach((k, i) => {
@@ -395,7 +395,7 @@ function journalFormScreen(editId) {
   const thumbs = h('div', { class: 'photo-thumbs' });
   const renderThumbs = () => {
     thumbs.innerHTML = '';
-    if (!st.photos.length) { thumbs.append(h('p', { class: 'muted', style: 'margin:0' }, 'No photos yet.')); return; }
+    if (!st.photos.length) { thumbs.append(h('p', { class: 'muted', style: 'margin: 0' }, 'No photos yet.')); return; }
     st.photos.forEach((p, i) => {
       const img = h('img', { alt: '', loading: 'lazy' });
       if (p.url) img.src = p.url;
@@ -419,7 +419,7 @@ function journalFormScreen(editId) {
   // the original audio. Denial of the microphone degrades to typing with no loss.
   const SR = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
   st.audio = (existing && existing.audioKey) ? { key: existing.audioKey, url: null } : null;
-  const recStatus = h('div', { class: 'muted tiny', style: 'margin:4px 0' }, '');
+  const recStatus = h('div', { class: 'muted tiny', style: 'margin: var(--sp-1) 0' }, '');
   const audioBox = h('div', { class: 'jr-audio-box' });
   const drawAudio = () => {
     audioBox.innerHTML = '';
@@ -427,7 +427,7 @@ function journalFormScreen(editId) {
       const au = h('audio', { class: 'entry-audio', controls: '' });
       if (st.audio.url) au.src = st.audio.url;
       else if (st.audio.key) getBlob(st.audio.key).then((b) => { if (b) { st.audio.url = URL.createObjectURL(b); au.src = st.audio.url; } }).catch(() => { /* missing */ });
-      audioBox.append(au, h('button', { class: 'btn ghost', style: 'margin-top:4px', onclick: () => {
+      audioBox.append(au, h('button', { class: 'btn ghost', style: 'margin-top: var(--sp-1)', onclick: () => {
         if (st.audio && st.audio.url) { try { URL.revokeObjectURL(st.audio.url); } catch { /* noop */ } }
         st.audio = null; drawAudio(); recBtn.style.display = ''; recStatus.textContent = '';
       } }, '🗑 Remove recording'));
@@ -510,7 +510,7 @@ function journalFormScreen(editId) {
         h('button', { class: 'chip', onclick: () => camIn.click() }, '📷 Take a photo'),
         h('button', { class: 'chip', onclick: () => libIn.click() }, '🖼 Add pictures'),
       ]),
-      h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Saved with this entry once you tap Save below — then gathers into your scrapbook automatically.'),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 0' }, 'Saved with this entry once you tap Save below — then gathers into your scrapbook automatically.'),
       camIn, libIn,
     ])),
   ]);
@@ -757,10 +757,10 @@ export function journeyScreen() {
 
   if (!stops.length) {
     wrap.append(h('div', { class: 'card' }, [
-      h('p', { style: 'margin:0 0 8px' }, trailEnabled()
+      h('p', { style: 'margin: 0 0 var(--sp-2)' }, trailEnabled()
         ? 'Your map draws itself as you travel. Open the app where you are and this fills in — no pins to add.'
         : 'Recording your journey is switched off, so there is nothing to draw yet.'),
-      h('p', { class: 'muted tiny', style: 'margin:0 0 8px' }, trailEnabled()
+      h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-2)' }, trailEnabled()
         ? 'It needs your device to have given the app a location at least once. Journal entries with a stamped place, and planned stops that name a city, show up here too.'
         : 'Switch it back on and the map starts filling in from your next trip.'),
       // The fix for "it is switched off" belongs on the screen that is empty because of it,
@@ -773,7 +773,7 @@ export function journeyScreen() {
     return;
   }
 
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
+  wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' },
     [`${stops.length} ${stops.length === 1 ? 'place' : 'places'}`,
       st.countries > 1 ? `${st.countries} countries` : null,
       jrDateRange(stops[0].first, stops[stops.length - 1].last) || null,
@@ -926,7 +926,7 @@ export function journeyScreen() {
     if (s.manual) tags.push('added by you');
     else if (s.auto) tags.push('recorded automatically');
     if (s.planned) tags.push('a planned stop');
-    if (tags.length) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, tags.join(' · ')));
+    if (tags.length) card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1h)' }, tags.join(' · ')));
 
     if (s.photos.length) {
       const strip = h('div', { class: 'jr-photos' });
@@ -942,22 +942,22 @@ export function journeyScreen() {
         setBlobThumb(img, k);
       });
       card.append(strip);
-      if (s.photos.length > 12) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, `…and ${s.photos.length - 12} more in your scrapbook`));
+      if (s.photos.length > 12) card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' }, `…and ${s.photos.length - 12} more in your scrapbook`));
     }
 
     if (s.entries.length) {
-      card.append(h('h3', { style: 'margin:10px 0 2px' }, `📔 Your journal here · ${s.entries.length}`));
+      card.append(h('h3', { style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, `📔 Your journal here · ${s.entries.length}`));
       s.entries.forEach((e) => card.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:left',
         onclick: () => go(`#journal-entry-${e.id}`) }, `${e.date || ''} — ${e.title || 'Untitled entry'}`)));
     }
     if (s.places.length) {
-      card.append(h('h3', { style: 'margin:10px 0 2px' }, `⭐ Places you saved here · ${s.places.length}`));
+      card.append(h('h3', { style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, `⭐ Places you saved here · ${s.places.length}`));
       card.append(h('div', { class: 'chips' }, s.places.slice(0, 8).map((pl) => h('button', {
         class: 'status-chip', onclick: () => go(`#place-${pl.id}`) },
       [h('span', { class: 'status-ic' }, '📍'), h('span', { class: 'status-lbl' }, pl.name)]))));
     }
     if (!s.entries.length && !s.photos.length && !s.places.length) {
-      card.append(h('p', { class: 'muted', style: 'margin:6px 0 8px' }, 'Nothing written here yet — this pin came from having the app open at this place.'));
+      card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-2)' }, 'Nothing written here yet — this pin came from having the app open at this place.'));
       card.append(h('button', { class: 'btn block', onclick: () => go('#journal-new') }, '✎ Write about this place'));
     }
     return card;
@@ -970,7 +970,7 @@ export function journeyScreen() {
   // purely from a journal entry, a planned trip stop or a saved place is already editable on
   // its own screen (the journal entry, #trip, the place itself); giving it a second edit path
   // here would let the two silently disagree about what a "rename" even changed.
-  const list = h('div', { class: 'card', style: 'margin-top:10px' }, [h('h2', {}, '🧭 Your stops, in order')]);
+  const list = h('div', { class: 'card', style: 'margin-top: var(--sp-3)' }, [h('h2', {}, '🧭 Your stops, in order')]);
   stops.forEach((s, i) => {
     if (editingIdx === i) {
       const t = h('input', { 'aria-label': 'Stop name', type: 'text', value: s.label });
@@ -1027,16 +1027,16 @@ export function journeyScreen() {
     const loc = locationSelect(spotKey(chosen), (key) => { chosen = spotForKey(key) || chosen; });
     const dateIn = h('input', { 'aria-label': 'Arrive date', type: 'date' });
     const dateOut = h('input', { 'aria-label': 'Leave date', type: 'date' });
-    const err = h('p', { class: 'muted tiny', style: 'margin:4px 0 0' });
-    wrap.append(h('div', { class: 'card', style: 'margin-top:8px' }, [
-      h('h3', { style: 'margin:0 0 8px' }, '+ Add a stop you missed'),
+    const err = h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 0' });
+    wrap.append(h('div', { class: 'card', style: 'margin-top: var(--sp-2)' }, [
+      h('h3', { style: 'margin: 0 0 var(--sp-2)' }, '+ Add a stop you missed'),
       field('Place', loc),
       h('div', { class: 'trip-dates' }, [
         h('label', { class: 'trip-date-lbl' }, ['Arrived', dateIn]),
         h('label', { class: 'trip-date-lbl' }, ['Left (optional)', dateOut]),
       ]),
       err,
-      h('div', { class: 'chips', style: 'margin-top:8px' }, [
+      h('div', { class: 'chips', style: 'margin-top: var(--sp-2)' }, [
         h('button', { class: 'btn', onclick: () => {
           if (!dateIn.value) { err.textContent = 'Set when you arrived.'; return; }
           addTrailStop({ lat: chosen.lat, lng: chosen.lng, city: chosen.city, cc: chosen.country, first: dateIn.value, last: dateOut.value || dateIn.value });
@@ -1046,7 +1046,7 @@ export function journeyScreen() {
       ]),
     ]));
   } else {
-    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:8px', onclick: () => { addingStop = true; render(); } },
+    wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => { addingStop = true; render(); } },
       '+ Add a stop you missed'));
   }
 
@@ -1056,18 +1056,18 @@ export function journeyScreen() {
     return t && !WEATHER_SPOTS.some((w) => (w.city || '').toLowerCase() === t);
   });
   if (unmatched.length) {
-    wrap.append(h('p', { class: 'muted tiny', style: 'margin:8px 0 0' },
+    wrap.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-2) 0 0' },
       `Not on the map yet: ${unmatched.map((s) => s.title).join(', ')} — the app does not know where ${unmatched.length === 1 ? 'that is' : 'those are'}.`));
   }
 
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#sharejourney') },
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', onclick: () => go('#sharejourney') },
     '📤 Share this journey →'));
 
   // Said plainly, on the screen that does it, not only in Settings. Automatic recording is
   // defensible precisely because it never leaves the device and can be stopped and erased
   // here in one tap.
-  const foot = h('div', { class: 'card', style: 'margin-top:12px' }, [
-    h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
+  const foot = h('div', { class: 'card', style: 'margin-top: var(--sp-3)' }, [
+    h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-2)' },
       'Your pins are recorded automatically, on this device only, whenever the app has your location. Nothing about where you have been is ever sent anywhere.'),
   ]);
   foot.append(h('div', { class: 'chips' }, [

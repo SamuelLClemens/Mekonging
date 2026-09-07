@@ -59,7 +59,7 @@ function whereYouAreLine(cc, cityName) {
   const bits = [`📍 ${cityName}${c ? `, ${c.name}` : ''}`];
   if (days != null && days > 0) bits.push(`Day ${days} here`);
   if (unsaved > 0) bits.push(`${unsaved} place${unsaved === 1 ? '' : 's'} nearby you haven’t saved`);
-  return h('p', { class: 'muted', style: 'margin:0 0 10px' }, bits.join(' · '));
+  return h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-3)' }, bits.join(' · '));
 }
 
 // Step 3 — "Getting there": the same planRoutes graph as Home's next-stop card and the full
@@ -116,7 +116,7 @@ function whatIsThereSection(candCc, cityName) {
 function commitCard(candidate) {
   const dateIn = h('input', { 'aria-label': 'Arrive date', type: 'date' });
   const endIn = h('input', { 'aria-label': 'Leave date', type: 'date' });
-  const hint = h('p', { class: 'muted', style: 'font-size:12px;margin:6px 0 0' }, 'Set an arrival date to commit this stop.');
+  const hint = h('p', { class: 'muted', style: 'font-size:12px;margin: var(--sp-1h) 0 0' }, 'Set an arrival date to commit this stop.');
   const btn = h('button', { class: 'btn block btn-spaced', disabled: '' }, `＋ Add ${candidate.name} to My Trip`);
   dateIn.addEventListener('input', () => { btn.disabled = !dateIn.value; });
   btn.onclick = () => {

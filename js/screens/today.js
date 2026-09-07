@@ -92,7 +92,7 @@ export function daySuggestScreen(country) {
     if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) cond.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
     if (ctx.aqi != null) { const ab = aqiBand(ctx.aqi); if (ab) cond.push(`AQI ${Math.round(ctx.aqi)}`); }
     header.append(h('div', { class: 'todo-cond' }, cond.map((b) => h('span', { class: 'todo-cond-chip' }, b))));
-    header.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, today ? moodLine(ctx.weather) : 'Connect once for weather-aware picks; meanwhile these are ranked by rating and distance.'));
+    header.append(h('p', { class: 'muted small', style: 'margin: var(--sp-1) 0 0' }, today ? moodLine(ctx.weather) : 'Connect once for weather-aware picks; meanwhile these are ranked by rating and distance.'));
     // Always show WHO these picks are ranked for — not just a prompt when unset. One line,
     // doubling as the edit control, so the traveller can always see and correct the app's
     // assumption about them from the surface that assumption is shaping.
@@ -135,7 +135,7 @@ export function daySuggestScreen(country) {
     // --- Plan ahead (progressive disclosure): re-rank for a different time or weather. ---
     const PLANS = [['now', 'Now'], ['heat', '☀️ Beat the heat'], ['rain', '🌧 If it rains'], ['morning', '🌅 Morning'], ['evening', '🌇 Evening'], ['night', '🌙 Tonight']];
     const PLAN_NOTE = { heat: 'to beat the midday heat', rain: 'for if it rains', morning: 'for the morning', evening: 'for the evening', night: 'for tonight' };
-    const planNote = h('p', { class: 'muted small', style: 'margin:6px 0 0' });
+    const planNote = h('p', { class: 'muted small', style: 'margin: var(--sp-1h) 0 0' });
     const updatePlanNote = () => { planNote.textContent = todoPlan === 'now' ? '' : `Re-ranked ${PLAN_NOTE[todoPlan]}. The live conditions above are unchanged.`; };
     const planChips = h('div', { class: 'chips todo-plan' }, PLANS.map(([k, lbl]) =>
       h('button', {
@@ -193,7 +193,7 @@ export function daySuggestScreen(country) {
         if (items.length) { renderTier(t.label, items); rendered += items.length; }
       });
       if (closedNow) {
-        listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' },
+        listBody.append(h('p', { class: 'muted small', style: 'margin: var(--sp-2) 0 0' },
           `${closedNow} more ${closedNow === 1 ? 'is' : 'are'} closed right now, so ${closedNow === 1 ? "it's" : "they're"} hidden — see “Plan for a different time” above.`));
       }
       if (!rendered) {
@@ -202,7 +202,7 @@ export function daySuggestScreen(country) {
         const far = scored.filter((x) => withinNear(x.dist) && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
           .sort((a, b) => a.dist - b.dist).slice(0, 12);
         if (far.length) {
-          listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' }, `Nothing mapped close to ${spot.city} yet — here are the nearest.`));
+          listBody.append(h('p', { class: 'muted small', style: 'margin: var(--sp-2) 0 0' }, `Nothing mapped close to ${spot.city} yet — here are the nearest.`));
           renderTier('Nearest to you', far);
         } else {
           listBody.append(h('p', { class: 'empty' }, `Nothing to do mapped within about an hour’s drive of ${spot.city} yet. Open a nearby city, or browse all places.`));
@@ -213,7 +213,7 @@ export function daySuggestScreen(country) {
 
     // Festivals have their own screen; surface only a single quiet link when any fall in the trip window.
     const fests = festivalsInWindow().filter((e) => e.country === id);
-    if (fests.length) listWrap.append(h('button', { class: 'linklike', style: 'display:block;margin:14px 0 0', onclick: () => go('#events') }, `🎉 ${fests.length} festival${fests.length === 1 ? '' : 's'} during your trip →`));
+    if (fests.length) listWrap.append(h('button', { class: 'linklike', style: 'display:block;margin: var(--sp-4) 0 0', onclick: () => go('#events') }, `🎉 ${fests.length} festival${fests.length === 1 ? '' : 's'} during your trip →`));
     // Home's "Right now" card used to end in "See more near me →" straight to #nearby. That
     // button merged into one onward action pointing here, so this screen now carries the
     // distance-sorted list itself — the destination moved one tap, it was not removed.

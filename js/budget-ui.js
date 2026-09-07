@@ -218,7 +218,7 @@ export function expenseAddCard(opts = {}) {
   };
   return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
     h('h2', {}, 'Log an expense'),
-    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', bAmt), field('Currency', bCur)]),
+    h('div', { style: 'display:flex;gap: var(--sp-3)' }, [field('Amount', bAmt), field('Currency', bCur)]),
     field('On what?', bNote), field('Category', bCat), monthlyToggle, dateField,
     h('button', { class: 'btn block btn-spaced', onclick: add }, '＋ Add expense'),
   ]);
@@ -287,10 +287,10 @@ export function budgetLogRow(b) {
     const dt = h('input', { type: 'date', value: b.date || todayISO() });
     const cat = expCatPicker(expCatOf(b));
     const note = expTitlePicker(cat, { value: b.note || '' });
-    return h('div', { class: 'card', style: 'margin:6px 0' }, [
-      h('div', { style: 'display:flex;gap:10px' }, [field('Amount', amt), field('Currency', cur)]),
+    return h('div', { class: 'card', style: 'margin: var(--sp-1h) 0' }, [
+      h('div', { style: 'display:flex;gap: var(--sp-3)' }, [field('Amount', amt), field('Currency', cur)]),
       field('On what?', note), field('Category', cat), field('Date', dt),
-      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+      h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
         h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
         h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.get(), category: cat.get(), date: dt.value || b.date }); editExpenseId = null; render(); } }, 'Save'),
       ]),

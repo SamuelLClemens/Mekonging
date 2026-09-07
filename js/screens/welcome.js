@@ -56,9 +56,9 @@ export function welcomeScreen() {
   const lang = uiLangMeta();
   wrap.append(h('section', { class: 'hero welcome-hero' }, [
     h('div', { class: 'logo-wrap', html: logoSVG() }),
-    h('p', { style: 'margin:0' }, 'A few quick taps and Home fits you — or skip and explore. Everything stays on your device.'),
+    h('p', { style: 'margin: 0' }, 'A few quick taps and Home fits you — or skip and explore. Everything stays on your device.'),
     h('button', {
-      class: 'chip', 'data-no-i18n': '', style: 'margin-top:10px',
+      class: 'chip', 'data-no-i18n': '', style: 'margin-top: var(--sp-3)',
       'aria-label': `Language: ${lang.name} — tap to change`, title: `${lang.native} — change language`,
       onclick: () => languageSheet(),
     }, `${lang.flag} ${lang.native}`),
@@ -75,7 +75,7 @@ export function welcomeScreen() {
   if (step === 0) {
     wrap.append(locationFixCard());
     wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(1) }, 'Next →'),
+      h('button', { class: 'btn', style: 'margin-left: auto', onclick: () => goStep(1) }, 'Next →'),
     ]));
     // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
     // Nothing is lost by skipping and nothing is silently switched off by it — which was not
@@ -88,18 +88,18 @@ export function welcomeScreen() {
     const whoCard = h('div', { class: 'card' });
     whoCard.append(h('h2', {}, 'Who is travelling?'));
     whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
-    whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Bringing little ones?'));
+    whoCard.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Bringing little ones?'));
     const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
       onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 Travelling with a baby or toddler');
     whoCard.append(h('div', { class: 'chips' }, [babyChip]));
-    whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Travelling alone? We will surface tailored, non-alarmist safety notes.'));
+    whoCard.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Travelling alone? We will surface tailored, non-alarmist safety notes.'));
     const soloFemChip = h('button', { class: 'chip', 'aria-pressed': prefs.soloFemale ? 'true' : 'false',
       onclick: (e) => { prefs.soloFemale = !prefs.soloFemale; save(); e.currentTarget.setAttribute('aria-pressed', prefs.soloFemale ? 'true' : 'false'); } }, '🧭 Solo female traveller');
     whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
     wrap.append(whoCard);
     wrap.append(h('div', { class: 'welcome-nav' }, [
       h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
+      h('button', { class: 'btn', style: 'margin-left: auto', onclick: () => goStep(2) }, 'Next →'),
     ]));
   }
 
@@ -128,7 +128,7 @@ export function welcomeScreen() {
           onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
       });
       accCard.append(accRow);
-      accCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Text size'));
+      accCard.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Text size'));
       accCard.append(prefChips([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], store.profile.textScale || 'm', (v) => { store.profile.textScale = v; save(); applyTheme(); }));
       box.push(accCard);
       // How you like to travel
@@ -136,9 +136,9 @@ export function welcomeScreen() {
       fitCard.append(h('h3', {}, 'How you like to travel'));
       fitCard.append(h('p', { class: 'muted' }, 'Price'));
       fitCard.append(prefChips([['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['flexible', PRICE_TIER_LABEL.flexible]], prefs.budget, (v) => { prefs.budget = v; save(); }));
-      fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
+      fitCard.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Trip length'));
       fitCard.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
-      fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
+      fitCard.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Interests'));
       const intRow = h('div', { class: 'chips' });
       INTERESTS.forEach((it) => { const on = () => (prefs.interests || []).includes(it.id);
         intRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
@@ -150,7 +150,7 @@ export function welcomeScreen() {
 
     wrap.append(h('div', { class: 'welcome-nav' }, [
       h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: finish }, 'See what I set up →'),
+      h('button', { class: 'btn', style: 'margin-left: auto', onclick: finish }, 'See what I set up →'),
     ]));
   }
 
@@ -187,7 +187,7 @@ export function setupRecapCard() {
   card.append(h('strong', {}, '✨ Here is what I set up for you'));
   card.append(h('ul', { class: 'recap-list' }, rows.map(([ic, t, d]) =>
     h('li', {}, [h('span', { class: 'recap-ic' }, ic), h('span', {}, [h('b', {}, t), h('span', { class: 'muted' }, ' — ' + d)])]))));
-  card.append(h('div', { class: 'row-between', style: 'margin-top:8px' }, [
+  card.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-2)' }, [
     h('button', { class: 'btn', onclick: () => { p.showSetupRecap = false; save(); go('#settings'); } }, 'Add more in Settings'),
     h('button', { class: 'btn ghost', onclick: dismiss }, 'Got it'),
   ]));

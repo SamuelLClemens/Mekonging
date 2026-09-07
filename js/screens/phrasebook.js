@@ -364,7 +364,7 @@ function essentialsCard(code, book, onChange, open) {
   const details = h('details', { class: 'phrase-cat-group essentials-cat', id: 'phrase-cat-essentials', open: open ? '' : null });
   details.append(h('summary', { class: 'phrase-cat-summary' }, '⭐ Essentials'));
   const body = h('div', { class: 'phrase-cat-body' });
-  body.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' },
+  body.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-2)' },
     'Your most-needed phrases, first. Tap one to show it large — pin, hide and copy from there.'));
 
   const chipsRow = h('div', { class: 'chips phrase-chips' });
@@ -387,7 +387,7 @@ function essentialsCard(code, book, onChange, open) {
   const diet = store.profile.prefs.diet || [];
   const allergy = allergyPhrasesForProfile(code);
   if (allergy.length) {
-    body.append(h('p', { class: 'tiny', style: 'margin:8px 0 2px;font-weight:600' },
+    body.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 var(--sp-0h);font-weight:600' },
       '⚠️ ' + (diet.length ? 'Your allergies & diet — show the cook' : 'Food allergy — show the cook')));
     allergy.forEach((p) => body.append(phraseRow(p, book.locale, { code, catId: 'allergies', onChange, noHide: true, essential: true })));
     // Honest gap: some flagged allergens (currently sesame) have no verified phrase in ANY
@@ -398,9 +398,9 @@ function essentialsCard(code, book, onChange, open) {
       .map((id) => (DIET_LABEL[id] || {}).label || id);
     if (pending.length) body.append(h('p', { class: 'warn-note', role: 'note' },
       `No verified ${joinList(pending)} phrase yet — the phrases above do not name ${pending.length > 1 ? 'them' : 'it'}. Show the dish’s red warning, point to it on a menu, or write the word down.`));
-    if (!diet.length) body.append(h('button', { class: 'btn ghost block', style: 'margin:4px 0 2px', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
+    if (!diet.length) body.append(h('button', { class: 'btn ghost block', style: 'margin: var(--sp-1) 0 var(--sp-0h)', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
   } else if (!diet.length) {
-    body.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' },
+    body.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 var(--sp-0h)' },
       'Have an allergy? Set it in Settings and your exact phrase appears here automatically.'));
   }
 
@@ -515,7 +515,7 @@ export function phrasebookScreen(lang) {
   // needed phrases first" promise — always the first fold in the list (closed by default,
   // like every other category, until the traveller opens it).
   wrap.append(h('h2', { class: 'cat-title' }, 'All phrases'));
-  const searchStatus = h('p', { class: 'tiny muted', style: 'margin:2px 0 0;min-height:1.2em' });
+  const searchStatus = h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0;min-height:1.2em' });
   const filterNow = debounce((e) => { phraseQuery = e.target.value; renderPhrases(); }, 120);
   // Searching for a phrase yourself is already a strong enough signal that it belongs in
   // your dictionary — added automatically, no separate pin tap required (the traveller's
@@ -875,16 +875,16 @@ export function dictionaryScreen() {
 
   if (!total) {
     wrap.append(h('div', { class: 'card', style: 'text-align:center' }, [
-      h('div', { style: 'font-size:2.4rem;margin-bottom:6px' }, '📖'),
-      h('h2', { style: 'margin:0 0 4px' }, 'No saved phrases yet'),
-      h('p', { class: 'muted', style: 'margin:0 0 12px' }, `Open the phrasebook and tap 📌 on any phrase, or translate something in Talk and tap “Save to ${dictionaryName()}”. Build your own pocket dictionary of the words you actually use.`),
+      h('div', { style: 'font-size:2.4rem;margin-bottom: var(--sp-1h)' }, '📖'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1)' }, 'No saved phrases yet'),
+      h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-3)' }, `Open the phrasebook and tap 📌 on any phrase, or translate something in Talk and tap “Save to ${dictionaryName()}”. Build your own pocket dictionary of the words you actually use.`),
       h('button', { class: 'btn block', onclick: () => go('#phrasebook') }, '💬 Browse phrases'),
     ]));
     mount(wrap, '#me');
     return;
   }
 
-  wrap.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 10px' },
+  wrap.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-3)' },
     `${total} saved ${total === 1 ? 'phrase' : 'phrases'} across ${allCodes.length} ${allCodes.length === 1 ? 'language' : 'languages'}. Sorted A–Z · tap a line to show it large · 📝 add a note · 🗑 remove.`));
 
   // More than one language in play: a dropdown picks which one to view, instead of every
@@ -1077,7 +1077,7 @@ function offlineTranslateBox(code, label) {
 function liveTranslateBox(code, label, locale, onChange) {
   const box = h('div', { class: 'card translate-card' }, [
     h('h2', {}, `Say it in ${langFlag(code)} ${label}`.replace('  ', ' ')),
-    h('p', { class: 'muted', style: 'margin-top:0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
+    h('p', { class: 'muted', style: 'margin-top: 0' }, `Type or speak in your language; get the ${label} text and hear it spoken. Needs internet.`),
   ]);
   // The language the traveller is speaking FROM. This used to offer English and Hebrew only,
   // which quietly excluded every other visitor to the region — and they are the majority.
@@ -1102,7 +1102,7 @@ function liveTranslateBox(code, label, locale, onChange) {
   // same screen — the two were previously visually identical, which caused real confusion
   // during the UX interview (typing a test query into the wrong box).
   const input = h('input', { class: 'search translate-input', type: 'text', placeholder: 'e.g. Where is the bus station?' });
-  const out = h('div', { class: 'tr-out', style: 'margin-top:10px' });
+  const out = h('div', { class: 'tr-out', style: 'margin-top: var(--sp-3)' });
   // The input's accessible name has to name the ACTUAL source language, not a hard-coded
   // "English" — a screen-reader user who picked Japanese was previously told they were typing
   // English. Re-run whenever the picker changes.
@@ -1127,7 +1127,7 @@ function liveTranslateBox(code, label, locale, onChange) {
       const speakBtn = h('button', { class: 'btn', disabled: able ? null : '', onclick: () => say(res, locale) },
         able ? '🔊 Hear it' : '🔇 Voice needs internet');
       out.append(speakBtn);
-      if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
+      if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
       else say(res, locale);   // best-effort auto-play; the button always works (direct tap)
       // Remembered either way — a local write, nothing leaves the device and nothing reaches
       // the dictionary without the explicit tap.
@@ -1155,7 +1155,7 @@ function liveTranslateBox(code, label, locale, onChange) {
       }
       out.append(status);
       if (onChange) onChange();
-    } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom:0' }, err.message)); }
+    } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, err.message)); }
   };
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(false); } });
 

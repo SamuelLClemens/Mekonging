@@ -128,7 +128,7 @@ export function meHubScreen() {
   // Headed, so it can fold like everything else on this screen. It had only an aria-label,
   // which meant a screen reader knew what the group was and a sighted traveller did not —
   // and the auto-fold, which keys on a real heading, skipped it entirely.
-  wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:12px', role: 'group', 'aria-label': 'Quick access' }, [
+  wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top: var(--sp-3)', role: 'group', 'aria-label': 'Quick access' }, [
     h('h3', { class: 'you-chips-head' }, '⚡ Quick access'),
     chip('📅', calLabel, null, () => go('#calendar')),
     chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
@@ -154,14 +154,14 @@ export function meHubScreen() {
   // opening. Still hidden entirely until there is a first pin — an empty door is a promise
   // with nothing behind it.
   if (jStats.places > 0) {
-    const jc = h('div', { class: 'card', style: 'margin-top:12px' });
+    const jc = h('div', { class: 'card', style: 'margin-top: var(--sp-3)' });
     const jrange = (from, to) => {
       if (!from) return '';
       const f = (iso) => { try { return new Date(iso + 'T00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return iso; } };
       return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
     };
     jc.append(h('h3', {}, '🗺 Your journey'));
-    jc.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
+    jc.append(h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-2)' },
       [`${jStats.places} ${jStats.places === 1 ? 'place' : 'places'}`,
         jStats.countries > 1 ? `${jStats.countries} countries` : null,
         jrange(jStats.from, jStats.to) || null,
@@ -173,7 +173,7 @@ export function meHubScreen() {
   // Coming up: reminders set on calendar entries in the next week — one tap to open.
   const up = reminders.upcoming(7);
   if (up.length) {
-    const rc = h('div', { class: 'card', style: 'margin-top:12px' }, [h('h3', {}, '🔔 Coming up')]);
+    const rc = h('div', { class: 'card', style: 'margin-top: var(--sp-3)' }, [h('h3', {}, '🔔 Coming up')]);
     up.slice(0, 4).forEach((u) => {
       const it = u.item;
       const when = u.eventAt.toLocaleDateString(dateLocale(), { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
@@ -202,7 +202,7 @@ export function meHubScreen() {
   visibleItems(mine, store.profile.prefs.phase || inferPhase())
     .forEach((it) => mineBody.append(hubRow(it, getActiveCountry(), mine.accent)));
   wrap.append(h('details', { class: 'home-group-d', open: '' }, [
-    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${mine.ic} ${mine.title}`)),
+    h('summary', {}, h('span', { class: 'home-section', style: 'margin: 0' }, `${mine.ic} ${mine.title}`)),
     mineBody,
   ]));
 
@@ -221,7 +221,7 @@ export function meHubScreen() {
   // quiet dismissible line near the foot. Same trigger (a single expense is still "something
   // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
   if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
-    wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top:16px' }, [
+    wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top: var(--sp-4)' }, [
       h('button', { class: 'btn ghost', style: 'flex:1;text-align:left', onclick: () => go('#settings') }, '⬇️ Back up your journal & budget'),
       h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
     ]));
@@ -253,8 +253,8 @@ export function foryouScreen() {
     prefs.budget && PRICE_TIER_LABEL[prefs.budget],
     (prefs.diet && prefs.diet.length) && `${prefs.diet.length} diet ${prefs.diet.length > 1 ? 'flags' : 'flag'}`,
   ].filter(Boolean).join(' · ');
-  wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap:8px' }, [
-    h('p', { class: 'muted', style: 'margin:0' }, profSummary ? `Ranked for: ${profSummary}` : 'Ranked to how you travel.'),
+  wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap: var(--sp-2)' }, [
+    h('p', { class: 'muted', style: 'margin: 0' }, profSummary ? `Ranked for: ${profSummary}` : 'Ranked to how you travel.'),
     h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit profile'),
   ]));
 
@@ -268,7 +268,7 @@ export function foryouScreen() {
     !(prefs.diet || []).length && 'Diet & allergies',
   ].filter(Boolean);
   if (missing.length) {
-    wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, 'Add these and your picks fit you even better:'));
+    wrap.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' }, 'Add these and your picks fit you even better:'));
     wrap.append(h('div', { class: 'chips' }, missing.map((m) =>
       h('button', { class: 'chip', onclick: () => go('#settings') }, `＋ ${m}`))));
   }

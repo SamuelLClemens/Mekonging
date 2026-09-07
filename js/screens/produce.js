@@ -74,8 +74,8 @@ export function produceDetail(id) {
       h('strong', {}, `${p.emoji || ''} ${p.name}`),
       cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
     ]),
-    h('p', { class: 'muted', style: 'margin:6px 0 2px' }, 'Local names (tap 🔊 to hear):'),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px' },
+    h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-0h)' }, 'Local names (tap 🔊 to hear):'),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap: var(--sp-1h);margin: var(--sp-1) 0 var(--sp-2)' },
       langs.filter(([k]) => p.names && p.names[k]).map(([k, flag, loc]) => (canSay(loc)
         ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(p.names[k], loc) }, `${flag} ${p.names[k]} 🔊`)
         : h('span', { class: 'cat-tag' }, `${flag} ${p.names[k]}`)))),
@@ -85,9 +85,9 @@ export function produceDetail(id) {
   if (p.taste) card.append(h('h3', {}, 'Taste'), h('p', {}, p.taste));
   if (p.howToEat) card.append(h('h3', {}, 'How to eat'), h('p', {}, p.howToEat));
   if (p.selectTip) card.append(h('h3', {}, 'Picking a good one'), h('p', {}, p.selectTip));
-  if (p.caution) card.append(h('div', { class: 'warn-note', style: 'margin-top:8px' }, `⚠ ${p.caution}`));
-  if (p.price) card.append(h('p', { style: 'margin-top:10px' }, [h('strong', {}, 'Typical price: '), `${priceLine(p.price.low, p.price.high, p.price.currency)}${p.price.unit ? ' ' + p.price.unit : ''}`]));
-  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Sources: ${p.sources.join('; ')}`));
+  if (p.caution) card.append(h('div', { class: 'warn-note', style: 'margin-top: var(--sp-2)' }, `⚠ ${p.caution}`));
+  if (p.price) card.append(h('p', { style: 'margin-top: var(--sp-3)' }, [h('strong', {}, 'Typical price: '), `${priceLine(p.price.low, p.price.high, p.price.currency)}${p.price.unit ? ' ' + p.price.unit : ''}`]));
+  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-2)' }, `Sources: ${p.sources.join('; ')}`));
   wrap.append(card);
   wrap.append(idPinButton('produce', p.id));
   // Search on the item's own category, not a hardcoded "fruit vegetable" — that wording

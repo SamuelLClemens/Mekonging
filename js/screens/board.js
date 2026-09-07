@@ -53,7 +53,7 @@ export function boardScreen(arg) {
       h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}`),
       h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)),
     ])));
-    tc.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Blends the guide’s rating and yours — rate a place and it climbs your list.'));
+    tc.append(h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-1h)' }, 'Blends the guide’s rating and yours — rate a place and it climbs your list.'));
     wrap.append(tc);
   }
 
@@ -71,12 +71,12 @@ export function boardScreen(arg) {
   if (ess) {
     const ec = h('div', { class: 'card' });
     ec.append(h('h2', {}, '🛒 Cheapest essentials'));
-    if (ess.note) ec.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, ess.note));
+    if (ess.note) ec.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, ess.note));
     ess.items.forEach((it) => ec.append(boardRow(
       `${it.icon} ${it.item}`,
       [it.cheapest, (it.price && it.price !== '—') ? `💰 ${it.price}` : null].filter(Boolean).join(' · '),
       it.tip)));
-    ec.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Countrywide guidance — prices move; the cheapest option rarely does.'));
+    ec.append(h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-1h)' }, 'Countrywide guidance — prices move; the cheapest option rarely does.'));
     wrap.append(ec);
   }
   section('👶 Family supplies', (board.family || []).map((f) =>
@@ -91,7 +91,7 @@ export function boardScreen(arg) {
   if (board.dispensaries && board.dispensaries.length) {
     const dc = h('div', { class: 'card' });
     dc.append(h('h2', {}, '🌿 Cannabis & dispensaries'));
-    if (board.dispensaryNote) dc.append(h('p', { class: 'disclaimer', style: 'margin:0 0 8px' }, board.dispensaryNote));
+    if (board.dispensaryNote) dc.append(h('p', { class: 'disclaimer', style: 'margin: 0 0 var(--sp-2)' }, board.dispensaryNote));
     board.dispensaries.forEach((d) => dc.append(boardRow(d.area, d.where || '', d.note)));
     if (board.dispensarySources && board.dispensarySources.length) dc.append(sourcesNote(board.dispensarySources, board.dispensaryVerified));
     wrap.append(dc);
@@ -112,7 +112,7 @@ export function boardScreen(arg) {
         h('button', { class: 'chip', 'aria-label': 'Delete note', onclick: () => { deleteBoardPost(key, p.id); go(`#board-${key}`); } }, '✕'),
       ]),
     ]),
-    h('p', { style: 'margin-top:4px' }, p.text),
+    h('p', { style: 'margin-top: var(--sp-1)' }, p.text),
     h('div', { class: 'tiny muted' }, p.at),
   ])));
   let newTopic = 'tip';
@@ -121,7 +121,7 @@ export function boardScreen(arg) {
       newTopic = id; topicChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.t === id ? 'true' : 'false'));
     } }, lbl)));
   const ta = h('textarea', { class: 'ta', rows: '2', maxlength: '500', placeholder: 'e.g. The mango lady at the north gate is the best deal in town…' });
-  notes.append(h('div', { style: 'margin-top:8px' }, [topicChips, ta,
+  notes.append(h('div', { style: 'margin-top: var(--sp-2)' }, [topicChips, ta,
     h('button', { class: 'btn block', onclick: () => { if (ta.value.trim()) { addBoardPost(key, { topic: newTopic, text: ta.value.trim() }); go(`#board-${key}`); } } }, '＋ Post to my board')]));
   wrap.append(notes);
 
