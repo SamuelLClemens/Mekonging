@@ -10,6 +10,7 @@
 // plus the WX_METRICS table, and stop — weatherScreen is not reachable from any of them.
 
 import { esc, h } from './util.js';
+import { selectEl } from './ui-widgets.js';
 import { wmo } from './weather.js';
 import { fmtTemp, fmtWind } from './render-utils.js';
 import { fmtClock } from './main.js';
@@ -217,24 +218,30 @@ export function wxVizCard(rec, spot) {
     paintRing();
   });
 
-  Object.keys(WX_METRICS).forEach((m) => {
-    chipsRow.append(h('button', {
-      class: 'chip', 'aria-pressed': wxMetric === m ? 'true' : 'false',
-      onclick: () => {
-        wxMetric = m;
-        chipsRow.querySelectorAll('.chip').forEach((c, i) => {
-          const on = Object.keys(WX_METRICS)[i] === m;
-          c.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
-        paintMetric();
-      },
-    }, WX_METRICS[m].label));
-  });
+  // One <select>, not one button per metric. Temp/Rain/Humidity/UV/Feels/Wind are mutually
+  // exclusive — the ring is coloured by exactly one at a time — so this is a single-select,
+  // and six pills wrapping to two rows above the ring cost more height than the ring itself
+  // on a 375px screen. Same site-wide pass as expCatPicker: compact control, every option
+  // still reachable, and the native picker is the better touch target.
+  chipsRow.append(h('label', { class: 'wx-metric-lbl' }, [
+    h('span', {}, 'Colour by'),
+    selectEl(Object.keys(WX_METRICS).map((m) => [m, WX_METRICS[m].label]), wxMetric,
+      (v) => { wxMetric = v; paintMetric(); }, 'Which measurement to colour the forecast by'),
+  ]));
 
   card.append(h('h3', { class: 'wx-cal-h', style: 'margin:0 0 6px' }, 'Next 24 hours'), chipsRow, ringSlot, detailSlot);
   const hourly = wxHourlyListNode(rec);
   if (hourly) card.append(hourly);
-  card.append(h('h3', { class: 'wx-cal-h', style: 'margin:14px 0 6px' }, 'Upcoming forecast'), calSlot);
+  // "Upcoming forecast" is the month calendar — the tallest thing in this card by some
+  // margin, and it is a look-ahead rather than a look-at-now. Folded and CLOSED by default so
+  // the card opens on the next 24 hours (which is what "right now" means) and the traveller
+  // chooses to look further. data-nofold keeps mount()'s automatic section folding from
+  // wrapping this a second time; the <details> here already is the fold.
+  const calDet = h('details', { class: 'wx-cal-fold', 'data-nofold': '' }, [
+    h('summary', { class: 'wx-cal-h' }, 'Upcoming forecast'),
+    calSlot,
+  ]);
+  card.append(calDet);
   paintMetric();
   return card;
 }

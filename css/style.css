@@ -920,6 +920,14 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    nothing above it, so the divider line the merged-card layout needed would just be a stray
    hairline right under the group heading. */
 .home-group-d > summary + .now-spend { margin-top: 8px; border-top: none; padding-top: 0; }
+/* "＋ Log an expense" — the whole add-expense form, folded closed by default inside Home's
+   Budget section. It was most of that section's height for an action taken a few times a day
+   rather than on every launch. The summary is styled as a full-width control so it reads as
+   the button it replaces. */
+.now-spend-log > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 44px; margin-top: var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); color: var(--ink); font-weight: 600; }
+.now-spend-log > summary::-webkit-details-marker { display: none; }
+.now-spend-log[open] > summary { margin-bottom: var(--sp-2); }
+.now-spend-log .exp-add-card { margin: 0; }
 
 /* --- YOU hub: name-entry prompt (shown only until a name is set — see nameEntryCard()) --- */
 .name-entry-card input { font-size: var(--fs-h3); font-family: var(--font-display); font-weight: 700; }
@@ -1070,12 +1078,13 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
    white is the readable choice (5.13:1). */
 .exp-cat-pick .chip.on { background: var(--sun); color: var(--badge-ink); border-color: transparent; font-weight: 700; }
 :root[data-skin="silk"] .exp-cat-pick .chip.on { color: #fff; }
-/* A custom category's chip in the picker itself: a select area + its own small ✕, so removing
-   one never needs a second, separate "manage categories" list elsewhere on the screen. */
-.exp-cat-chip-custom { padding: 0; overflow: hidden; }
-.exp-cat-chip-custom .exp-cat-sel { background: none; border: none; color: inherit; font: inherit; font-weight: inherit; padding: 0 var(--sp-3); min-height: 44px; cursor: pointer; }
-.exp-cat-chip-custom .exp-cat-rm { background: none; border: none; border-left: 1px solid currentColor; opacity: 0.55; color: inherit; font-size: 0.82em; padding: 0 10px; min-height: 44px; min-width: 32px; cursor: pointer; }
-.exp-cat-chip-custom .exp-cat-rm:hover, .exp-cat-chip-custom .exp-cat-rm:active { opacity: 1; }
+/* expCatPicker is now a <select> plus one optional action row (＋ New category / ✕ Remove this
+   one), replacing the wrap-to-three-rows wall of one chip per category. The select inherits the
+   app's normal form styling; only the action row needs laying out. gap on the parent rather
+   than margins on the children, per the spacing pass. */
+.exp-cat-pick { display: flex; flex-direction: column; gap: var(--sp-2); }
+.exp-cat-pick > select { width: 100%; }
+.exp-cat-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
 .exp-cat-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
 /* Custom expense categories: the in-place "+ Add" text field inside expCatPicker (mirrors
    .id-tag's shape). */
@@ -1361,6 +1370,17 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .rn-filter-row .chip { font-size: var(--fs-label); padding: 4px 10px; gap: 3px; }
 .rn-filter-row .chip .swatch { width: 8px; height: 8px; }
 .rn-filter-row select { flex: 0 0 auto; font-size: var(--fs-sm); padding: 4px var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); color: var(--ink); }
+/* The filter panel above now lives inside a <details> that is closed by default, so the picks
+   lead the card instead of the controls for the picks. The summary carries the applied state
+   ("Everything", or "Culture, Nature · Budget") so a folded-away active filter is still
+   visible — a hidden filter would be worse than the chip wall this replaced. */
+.rn-filter-fold { margin: 0 0 var(--sp-2); }
+.rn-filter-fold > summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); cursor: pointer; font-size: var(--fs-sm); color: var(--muted); padding: var(--sp-1) 0; min-height: 32px; }
+.rn-filter-fold > summary .rn-filter-state { font-size: var(--fs-label); opacity: 0.85; text-align: right; }
+.rn-filter-fold[open] > summary { margin-bottom: var(--sp-2); }
+/* Categories, price tier, the fit warning and the why-now reason share ONE wrapping row per
+   pick now, instead of two stacked rows — five picks, five fewer rows of height. */
+.rn-tagrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) 6px; margin: 3px 0; }
 .rn-item { display: flex; align-items: stretch; gap: var(--sp-2); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; border-left: 4px solid var(--cat, var(--line)); }
 .rn-open { flex: 1; min-width: 0; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink); background: none; border: none; padding: var(--sp-2) var(--sp-3); }
 .rn-open:active { transform: scale(0.99); }
@@ -2426,6 +2446,14 @@ html[data-theme="dark"] .id-edit-panel { background: rgba(255,255,255,0.06); }
 
 /* Weather visualisation — hourly watch-face ring + month calendar (mk-v0.327.0) */
 .wx-viz .wx-metric-row { margin: 2px 0 8px; justify-content: center; }
+/* The metric picker is now one labelled <select> ("Colour by") instead of six chips that
+   wrapped to two rows above the ring. Laid out as a single centred row. */
+.wx-metric-lbl { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--muted); }
+.wx-metric-lbl select { flex: 0 1 auto; min-width: 0; }
+/* "Upcoming forecast" folded closed by default — it is the tallest block in the card and a
+   look-ahead, so the card opens on the next 24 hours instead. */
+.wx-cal-fold > summary { cursor: pointer; margin: var(--sp-3) 0 var(--sp-2); font-weight: 700; }
+.wx-cal-fold > summary::marker { color: var(--muted); }
 .wx-ring-wrap { display: flex; justify-content: center; margin: 2px 0; }
 .wx-ring { width: min(80vw, 290px); height: auto; }
 /* Hour labels around the ring — bumped from 11px/muted (hard to read at a glance, especially

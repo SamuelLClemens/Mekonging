@@ -29,7 +29,11 @@
 //     screen, where a gate would add a blocking round trip to the one route that must be
 //     instant, and a non-blocking load would shift the layout under the traveller.
 //   • history.js (50 KB) — homeScreen -> whereYouAreCard -> cityAboutCard -> cityHistory.
-//   • checklist.js (29 KB) — homeScreen -> homeStageBlock -> homeNowCard -> checklistFor.
+//   • checklist.js (29 KB) — homeScreen -> homeStageBlock -> planningStageBlock ->
+//     tripCountdownCard -> checklistFor. (This used to name homeNowCard, which never read it:
+//     homeStageBlock only ever passed 'traveling' to that function, so its checklist branch
+//     was unreachable. homeNowCard is now gone entirely — split into homeBudgetFold and
+//     homeRightNowFold so Home can order its sections independently.)
 //   • diet.js (9 KB) — dish verdicts fan in across every food list.
 //   • medical.js (62 KB) — the emergency screen itself.
 //
