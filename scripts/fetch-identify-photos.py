@@ -383,6 +383,13 @@ NO_ORGANISM = {'padaek', 'nam-phrik-phao', 'century-egg', 'shrimp-paste', 'edibl
                'palm-sugar', 'coconut-milk', 'tamarind-paste', 'jasmine-rice', 'rice-noodles',
                'sticky-rice', 'dried-shrimp', 'tofu'}
 
+# Records where an automated fetch found the right SPECIES but the wrong FORM, and a field
+# guide needs the form: a flowering Brassica rapa field is not the napa head on the stall,
+# peach blossom is not a peach, a man drinking from a coconut is not coconut milk, and
+# turmeric on a stall is a rhizome, not a leafy plant. Each was reviewed as an image and
+# deleted; listing them here stops a later run silently restoring the same picture.
+WRONG_FORM = {'chinese-cabbage', 'sapa-peach', 'coconut-milk', 'turmeric'}
+
 
 def produce_records():
     src = open(os.path.join(ROOT, 'js', 'data', 'produce.js'), encoding='utf-8').read()
@@ -406,7 +413,8 @@ def main():
 
     have, src = load_photos()
     recs = nature_records() + produce_records()
-    missing = [r for r in recs if r['id'] not in have]
+    missing = [r for r in recs if r['id'] not in have
+               and r['id'] not in NO_ORGANISM and r['id'] not in WRONG_FORM]
     if args.only:
         want = set(args.only.split(','))
         missing = [r for r in missing if r['id'] in want]
