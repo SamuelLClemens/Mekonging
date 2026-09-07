@@ -201,6 +201,7 @@ const SCREEN_LOADERS = {
   schedules: (b) => import('./screens/schedules.js' + b),
   trip: (b) => import('./screens/trip.js' + b),
   bargain: (b) => import('./screens/bargain.js' + b),
+  etiquette: (b) => import('./screens/etiquette.js' + b),
   help: (b) => import('./screens/help.js' + b),
   contributions: (b) => import('./screens/contributions.js' + b),
   board: (b) => import('./screens/board.js' + b),
@@ -230,6 +231,7 @@ const ROUTE_SCREENS = {
   circle: ['circle'], add: ['circle'], in: ['circle'],
   inbox: ['circle'], thread: ['circle'], msg: ['circle'],
   produce: ['produce'], pantry: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
+  etiquette: ['etiquette'],
   trip: ['trip'], plans: ['trip'], checklist: ['trip'],
   help: ['help'], feedback: ['help'], contributions: ['contributions'],
   board: ['board'], streetfood: ['streetfood'],
@@ -667,7 +669,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.535.0';
+export const APP_VERSION = 'mk-v0.536.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1568,6 +1570,47 @@ function forecastOutlook(rec) {
 // online use, pull the focus city's forecast once (skipped when a fresh copy is already cached,
 // and de-duplicated so repeated renders never stack fetches), then re-render Home so the outlook
 // and the "right now" forecast line fill in. Never fetches when offline or without consent.
+// The same, for every city the traveller has planned a stop in — so the planning screen's
+// per-stop outlook shows a real forecast wherever one exists rather than falling back to the
+// month's normals for want of a fetch. Without this, only the focus city was ever cached: a
+// stop eight days away, comfortably inside the forecast window, still read "shoulder season".
+// maybeRefreshMany carries the same staleness, retry-gap and de-duplication rules as the
+// single-spot path, and one batched request covers all the stops.
+export function ensurePlannedStopsWeather() {
+  if (!online()) return;
+  const spots = [];
+  const seen = new Set();
+  (store.trip.stops || []).forEach((st) => {
+    if (!st.date) return;
+    const s = spotForCity(st.country, st.title) || (getCountry(st.country) ? defaultSpot(st.country) : null);
+    if (!s) return;
+    const k = spotKey(s);
+    if (seen.has(k)) return;
+    seen.add(k);
+    spots.push(s);
+  });
+  // maybeRefreshWeather PER SPOT, deliberately, and not maybeRefreshMany: the batched call
+  // fetches only CURRENT conditions (temperature and a weather code) into one shared cache
+  // key, while the per-stop outlook reads `.daily` from each spot's own cache. Batching here
+  // looked cheaper and fetched nothing this screen could use — every stop stayed on its
+  // seasonal fallback with the requests going out regardless.
+  //
+  // Four is the cap: this runs on every Home render in the planning phase, one request each,
+  // and the stops are in date order — so it is the four soonest that get a real forecast,
+  // which is also the only range a forecast reaches. maybeRefreshWeather's own staleness
+  // window and in-flight de-duplication mean repeated renders do not stack fetches.
+  if (!spots.length) return;
+  let repainted = false;
+  spots.slice(0, 4).forEach((s) => {
+    maybeRefreshWeather(s).then((r) => {
+      const hash = location.hash || '';
+      if (!r || repainted || !(hash === '' || hash === '#' || hash === '#home')) return;
+      repainted = true;         // one repaint for the batch, not one per stop
+      render();
+    }).catch(() => {});
+  });
+}
+
 export function ensureHomeWeather(spot) {
   if (!spot || !online()) return;
   // The staleness window, the minimum retry gap and the in-flight de-duplication that used
@@ -2546,50 +2589,13 @@ function returnRecapCard() {
   return card;
 }
 
-// A multi-day destination outlook for the PLANNING stage — the focus city's forecast (next few
-// days: condition, temp range, rain chance), the days that best suit being outside, and a broad
-// pack note. All from the real cached/refreshed forecast; offline with no cache it invites one
-// connection rather than inventing conditions. ensureHomeWeather() re-renders Home when a fetch
-// lands, so this card rebuilds from fresh cache without its own refresh loop.
-function destinationOutlookCard(spot) {
-  const card = h('div', { class: 'card home-outlook' });
-  const cityName = spot ? spot.city : 'your destination';
-  card.append(h('h2', {}, `🌤 ${cityName} outlook`));
-  const body = h('div', {});
-  card.append(body);
-  const dayName = (iso, k) => {
-    if (k === 0) return 'Today';
-    if (k === 1) return 'Tomorrow';
-    const dt = new Date(iso + 'T00:00:00');
-    return isNaN(dt) ? iso : dt.toLocaleDateString(dateLocale(), { weekday: 'short' });
-  };
-  const days = spot ? ((getCachedWeather(spotKey(spot)) || {}).daily || []).slice(0, 6) : [];
-  if (!days.length) {
-    body.append(h('p', { class: 'muted', style: 'margin:0' }, online()
-      ? 'Loading the forecast…'
-      : 'Connect once and this shows a multi-day forecast for where you are going — the best days to be outside and what to pack. It then works offline.'));
-    return card;
-  }
-  const rows = h('div', { class: 'outlook-days' });
-  days.forEach((d, k) => rows.append(h('div', { class: 'outlook-day' }, [
-    h('span', { class: 'od-day' }, dayName(d.date, k)),
-    h('span', { class: 'od-emoji' }, wmo(d.code)[1]),
-    h('span', { class: 'od-temp' }, `${fmtTemp(d.tmin)}–${fmtTemp(d.tmax)}`),
-    h('span', { class: 'od-rain muted' }, d.rainProb != null ? `☔ ${d.rainProb}%` : ''),
-  ])));
-  body.append(rows);
-  const good = days.map((d, k) => ({ d, k })).filter(({ d }) => (d.rainProb == null || d.rainProb < 40) && (d.tmax == null || d.tmax < 36));
-  if (good.length) body.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' },
-    `Best for being outside: ${good.slice(0, 3).map(({ d, k }) => dayName(d.date, k).toLowerCase()).join(', ')}.`));
-  const anyWet = days.some((d) => (d.rainProb || 0) >= 50 || isWet(d.code));
-  const anyHeat = days.some((d) => (d.tmax != null && d.tmax >= 34) || (d.uv != null && d.uv >= 8));
-  const pack = [];
-  if (anyWet) pack.push('a light rain layer');
-  if (anyHeat) pack.push('sun protection and water');
-  if (pack.length) body.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, `Pack ${pack.join(' and ')}.`));
-  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#weather') }, 'Full forecast →'));
-  return card;
-}
+// destinationOutlookCard() lived here: a six-day forecast for the focus city, rendered inside
+// the planning block. It is gone rather than merely unused — it was the SECOND copy of that
+// city's weather on the planning screen (Home's own "🌦 Weather" fold has carried the full
+// widget for the same city since the fold pass), and plannedStopsOutlook() above answers the
+// question a planner was actually asking: what is the weather at the places I am going. Its
+// two genuinely distinct touches — "best days to be outside" and the pack note — are worth
+// re-adding to plannedStopsOutlook per stop if they are missed; see git history for the code.
 
 // PLANNING stage Home block — a planning hub in place of "what's near you": the days-to-go
 // countdown and remaining checklist, the plan / "For you" actions, then the multi-day
@@ -2603,11 +2609,89 @@ function planningStageBlock(cc) {
   if (tc) wrap.append(tc);
   wrap.append(h('div', { class: 'home-actions', style: 'margin-top:10px' }, [
     h('button', { class: 'btn', onclick: () => go('#plans') }, '🧭 Plan your trip'),
-    h('button', { class: 'btn ghost', onclick: () => go('#foryou') }, '🎯 Tune “For you”'),
+    // "Best for Sam", not "Tune 'For you'" (direct request). The old label named the control
+    // and not the thing it produces; this one says whose recommendations these are, and it is
+    // the same possessive convention the rest of the traveller's own screens now use.
+    h('button', { class: 'btn ghost', onclick: () => go('#foryou') },
+      `🎯 ${whoName() ? `Best for ${whoName()}` : 'Best for you'}`),
   ]));
-  const spot = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
-  wrap.append(destinationOutlookCard(spot));
+  // The weather card that used to sit here is GONE (direct request: it was redundant). Home's
+  // own "🌦 Weather" fold already carried the full forecast widget for the SAME city, so the
+  // planning screen showed one place's weather twice, in two different formats, a section
+  // apart. What is not redundant — and is what a planner actually wants — is the weather for
+  // the places they are going, which is now what that fold shows in this phase. See
+  // plannedStopsOutlook() and js/screens/home.js.
   return wrap;
+}
+
+// The forecast for every stop the traveller has actually planned, in trip order — replacing a
+// second copy of the focus city's forecast. A planner is choosing between places and dates,
+// so one line per stop that can be compared beats one city in detail.
+//
+// Two horizons, and the card says which it is using for each stop, because the difference
+// matters: inside the forecast window these are real predictions, and beyond it they are the
+// month's normals from the same sourced bestM/avoidM data Explore's "when to go" uses. A
+// planner shown a "forecast" for a date four months out would be reading a fiction.
+const shortDate = (iso) => {
+  const d = new Date(iso + 'T00:00:00');
+  return isNaN(d) ? iso : d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
+};
+
+export function plannedStopsOutlook() {
+  const stops = (store.trip.stops || []).filter((s) => s.date).sort((a, b) => a.date.localeCompare(b.date));
+  if (!stops.length) return null;
+  const card = h('div', { class: 'card home-outlook' });
+  card.append(h('h2', {}, '🧳 Weather where you are going'));
+  const rows = h('div', { class: 'stopwx-list' });
+  const today = todayISO();
+  stops.forEach((st) => {
+    const spot = spotForCity(st.country, st.title) || (getCountry(st.country) ? defaultSpot(st.country) : null);
+    const rec = spot ? getCachedWeather(spotKey(spot)) : null;
+    const days = (rec && rec.daily) || [];
+    // The stop's own arrival date, matched against the forecast we actually hold.
+    const hit = days.find((d) => d.date === st.date);
+    // "Sep 12–15", not "Sep 12–Sep 15": the month repeated in a range is wasted width on a
+    // 375px row, and the width was coming out of the city name — which was clipping to
+    // "Bang…" and "Chian…", the two things the row exists to tell you apart.
+    const sameMonth = st.endDate && st.endDate.slice(0, 7) === st.date.slice(0, 7);
+    const dLabel = !st.endDate || st.endDate === st.date
+      ? shortDate(st.date)
+      : (sameMonth ? `${shortDate(st.date)}–${Number(st.endDate.slice(8, 10))}`
+                   : `${shortDate(st.date)}–${shortDate(st.endDate)}`);
+    const month = Number((st.date || '').slice(5, 7)) || 0;
+    let detail = null;
+    if (hit) {
+      // The unit once, on the high end: "75–82°F", not "75°F–82°F".
+      const lo = String(fmtTemp(hit.tmin)).replace(/°[CF]$/, '');
+      detail = h('span', { class: 'stopwx-fc' }, [
+        h('span', { class: 'od-emoji' }, wmo(hit.code)[1]),
+        h('span', {}, `${lo}–${fmtTemp(hit.tmax)}`),
+        hit.rainProb != null ? h('span', { class: 'muted' }, ` ☔${hit.rainProb}%`) : null,
+      ]);
+    } else if (month) {
+      // Beyond the forecast: the month's own verdict for that city, from history.js's
+      // bestM/avoidM — sourced, and honest about being a seasonal norm rather than a forecast.
+      const hi = cityHistory(st.country, citySlug(st.title || ''));
+      const v = hi ? verdictFor(hi, month) : 'shoulder';
+      const mark = { best: '✓ good season', avoid: '✗ poor season', mixed: '± mixed' }[v] || '· shoulder season';
+      const wet = (WET_MONTHS[st.country] || []).includes(month);
+      detail = h('span', { class: `stopwx-season v-${v}` }, `${mark}${wet ? ' · wet' : ''}`);
+    }
+    rows.append(h('button', {
+      class: 'stopwx-row', onclick: () => { setFocusSpot(spot || defaultSpot(st.country)); go('#weather'); },
+    }, [
+      h('span', { class: 'stopwx-name' }, [
+        h('span', { class: 'stopwx-city' }, st.title || (getCountry(st.country) || {}).name || '—'),
+        h('span', { class: 'stopwx-date muted' }, dLabel),
+      ]),
+      detail || h('span', { class: 'muted tiny' }, st.date < today ? 'past' : 'no data yet'),
+    ]));
+  });
+  card.append(rows);
+  card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+    'Dates inside the forecast window show a real forecast; the rest show that month’s usual season for that city. Tap a stop for its full forecast.'));
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#trip') }, '🧳 Edit your stops →'));
+  return card;
 }
 
 // One stage-appropriate situational block for Home, replacing the old one-size "right now" card
@@ -8671,6 +8755,10 @@ export function render() {
       case 'trip': return screenMod('trip').tripScreen();
       case 'expenses': return screenMod('budget').expensesScreen();
       case 'bargain': return screenMod('bargain').bargainScreen();
+      // Culture & etiquette. Its own screen rather than four lines inside the country guide
+      // (direct request): the traveller needs this BEFORE they show someone the soles of
+      // their feet, and nobody finds it where it was.
+      case 'etiquette': return screenMod('etiquette').etiquetteScreen(arg);
       case 'checklist': return screenMod('trip').checklistScreen(arg);
       case 'bestof': return bestofScreen(arg);
       case 'bestlist': return bestListScreen(arg);

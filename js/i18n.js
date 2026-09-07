@@ -144,14 +144,52 @@ export function uiLang() {
 export function uiLangMeta() { return LANG_BY_CODE[uiLang()] || LANG_BY_CODE[FALLBACK]; }
 export function isRTL() { return uiLangMeta().dir === 'rtl'; }
 
+// Picking a language says more than which words to show (direct request): it is also the best
+// single guess at which currency the traveller thinks in and which temperature scale they
+// read. A phone set to French should not be quoting prices in dollars and highs in
+// Fahrenheit, and a traveller who chose English should not have to go and find the °F switch.
+//
+// `cur` is set only where the app already supports that currency (see CURRENCY_CODES in
+// js/currency.js) — mapping French to francs, as literally requested, would be wrong twice
+// over: France has used the euro since 2002, and the app has no franc rate. Where the natural
+// currency is one the app cannot convert (won, rupee, rouble, zloty…), the currency is left
+// alone and only the units are set, which is better than quoting a rate that does not exist.
+//
+// English takes USD and °F per direct request. That is the US convention rather than the
+// British or Australian one, and English is not only American — but a default has to pick,
+// and it is one tap to change in Settings.
+const LOCALE_DEFAULTS = {
+  en: { cur: 'USD', temp: 'F', wind: 'mph' },
+  th: { cur: 'THB' }, vi: { cur: 'VND' }, km: { cur: 'KHR' }, lo: { cur: 'LAK' },
+  'zh-CN': { cur: 'CNY' }, ms: { cur: 'MYR' }, he: { cur: 'ILS' },
+  fr: { cur: 'EUR' }, es: { cur: 'EUR' }, de: { cur: 'EUR' },
+  pt: { cur: 'EUR' }, it: { cur: 'EUR' }, nl: { cur: 'EUR' },
+};
+
 // Persist a choice. Callers re-render afterwards; this deliberately does NOT render itself so
 // it stays usable from Settings, the topbar picker, and first-run onboarding alike.
 export function setUiLang(code) {
   if (!LANG_BY_CODE[code]) return false;
   store.profile.prefs.uiLang = code;
+  applyLocaleDefaults(code);
   save();
   applyDocLang();
   return true;
+}
+
+// Currency and units implied by a language, applied ONLY while the traveller has not set them
+// themselves. Settings' own currency and unit controls set the `*Manual` flags, so a deliberate
+// choice is never overwritten by later changing the interface language — which is the whole
+// difference between a helpful default and the app arguing with you.
+export function applyLocaleDefaults(code) {
+  const d = LOCALE_DEFAULTS[code];
+  if (!d) return;
+  const p = store.profile;
+  if (d.cur && !p.currencyManual) p.homeCurrency = d.cur;
+  if (!p.unitsManual) {
+    p.wxTempUnit = d.temp || 'C';
+    p.wxWindUnit = d.wind || 'kmh';
+  }
 }
 
 // Mirror the active language onto <html>, which is what makes screen readers pick the right

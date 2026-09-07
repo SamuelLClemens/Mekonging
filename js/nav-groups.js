@@ -150,6 +150,7 @@ export const NAV_GROUPS = [
       { ic: '📜', label: 'History & culture', hash: '#history-{cc}', blurb: 'Enough to make sense of what you see' },
       { ic: '♿', label: 'Accessibility', hash: '#access-{cc}', blurb: 'Step-free routes, ramps, accessible toilets' },
       { ic: '🍼', label: 'Travelling with a baby', hash: '#baby-{cc}', blurb: 'Formula, nappies, clinics, prams' },
+      { ic: '🙏', label: 'Culture & etiquette', hash: '#etiquette-{cc}', blurb: 'What is rude, what is polite, what is illegal' },
       { ic: '👪', label: 'Travelling with kids', hash: '#family-{cc}', blurb: 'Childcare, schools, things they will like' },
     ],
   },

@@ -1470,13 +1470,9 @@ html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color
 
 /* Planning-stage destination outlook: a compact multi-day forecast for where you are going. */
 .home-outlook { border-top: 4px solid var(--teal); }
-.outlook-days { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
-.outlook-day { display: grid; grid-template-columns: 4.5em 1.6em 1fr auto; align-items: center; gap: var(--sp-2); padding: 4px 0; border-bottom: 1px solid var(--line); }
-.outlook-day:last-child { border-bottom: none; }
-.od-day { font-weight: 700; color: var(--ink); }
+/* .outlook-days / .outlook-day went with destinationOutlookCard (see the note in js/main.js);
+   .od-emoji survives because plannedStopsOutlook still uses it for the condition glyph. */
 .od-emoji { font-size: 1.05rem; line-height: 1; text-align: center; }
-.od-temp { color: var(--ink-soft); }
-.od-rain { font-size: var(--fs-sm); text-align: right; white-space: nowrap; }
 
 /* Weather section: in-section unit toggle label and per-city panels. The old trip-itinerary
    calendar's CSS (.wx-cal-leg/-leghead/-day/-date/-emoji/-temp, plus a first `.wx-cal { border-
@@ -2999,3 +2995,61 @@ html[data-theme="dark"] .layer-pick.is-on > summary .layer-pick-state { color: v
 .layer-pick-row { display: flex; align-items: center; gap: var(--sp-2); min-height: 40px; font-size: var(--fs-sm); cursor: pointer; }
 .layer-pick-row input { flex: none; width: 18px; height: 18px; accent-color: var(--teal-deep); }
 .layer-pick-all { grid-column: 1 / -1; margin: 0 0 var(--sp-1); min-height: 40px; }
+
+/* --- Culture & etiquette (#etiquette-{cc}) ----------------------------------------
+   Cards are ranked by consequence, and the left stripe carries that rank so the page can be
+   skimmed for severity alone. The "against the law" group is never folded (see
+   js/screens/etiquette.js), so its stripe is the one that must read as a warning. */
+.etiq-card { border-left: 4px solid var(--line); margin: var(--sp-2) 0; }
+.etiq-law { border-left-color: #C0392B; }
+.etiq-never { border-left-color: #E0663A; }
+.etiq-avoid { border-left-color: #C89B2A; }
+.etiq-do { border-left-color: #2F8F5B; }
+.etiq-head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.etiq-badge { flex: none; color: #fff; font-size: var(--fs-label); font-weight: 800; padding: 3px 9px; border-radius: var(--r-pill); letter-spacing: 0.01em; }
+.etiq-group { font-size: var(--fs-label); }
+.etiq-text { margin: 0; font-weight: 600; }
+/* The reason sits in from the rule it explains, so the two do not read as one paragraph. */
+.etiq-why { margin: var(--sp-2) 0 0; padding-left: var(--sp-3); border-left: 2px solid var(--line); font-size: var(--fs-sm); }
+.etiq-fold, .etiq-region { margin: var(--sp-3) 0; }
+
+/* --- Planning: the forecast at every planned stop (plannedStopsOutlook, main.js) --------
+   One comparable row per stop, replacing a second copy of the focus city's forecast. The
+   row is a button — it opens that stop's full forecast — so it takes a real tap target. */
+.stopwx-list { display: flex; flex-direction: column; gap: 2px; margin-top: var(--sp-2); }
+.stopwx-row {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%;
+  min-height: 44px; padding: var(--sp-2) 0; text-align: left; cursor: pointer;
+  background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font-family: inherit;
+}
+.stopwx-row:last-child { border-bottom: 0; }
+/* City over its dates rather than beside them. Side by side, the forecast column took the
+   width and the city clipped to "Bang…" / "Chian…" — the one thing the row must get right. */
+.stopwx-name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.stopwx-city { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stopwx-date { font-size: var(--fs-label); font-variant-numeric: tabular-nums; }
+.stopwx-fc { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; font-size: var(--fs-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* A seasonal norm is not a forecast, so it is styled as a verdict rather than as numbers. */
+.stopwx-season { flex: 0 0 auto; font-size: var(--fs-label); font-weight: 700; }
+.stopwx-season.v-best { color: var(--good); }
+.stopwx-season.v-avoid { color: var(--warn); }
+.stopwx-season.v-mixed, .stopwx-season.v-shoulder { color: var(--ink-soft); }
+
+/* --- Trip plans: an editable suggestion (js/screens/trip.js) ---------------------------
+   The stops were a read-only list; each row now carries a nights stepper and a drop control
+   so a plan can be reshaped before it is taken. Grid rather than flex so the stepper and the
+   drop button line up down the column whatever length the city names are. */
+.plan-start { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-3) 0 var(--sp-2); font-size: var(--fs-sm); color: var(--ink-soft); font-weight: 600; }
+.plan-start input { flex: 1 1 auto; min-width: 0; font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); min-height: 44px; }
+.plan-stops { display: flex; flex-direction: column; }
+.plan-stop { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: 1px solid var(--line); }
+.plan-stop:last-child { border-bottom: 0; }
+.plan-stop-main { min-width: 0; }
+/* The "why" line is worth reading while choosing and not worth three wrapped lines per stop
+   on a card that already holds three stops and a stepper each. Two lines, then ellipsis. */
+.plan-stop-main > .tiny { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.plan-nights { display: flex; align-items: center; gap: 2px; }
+.plan-step { min-width: 36px; min-height: 36px; padding: 0; font-size: 1.05rem; line-height: 1; }
+.plan-n { min-width: 1.6em; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
+.plan-drop { min-width: 36px; min-height: 36px; padding: 0; color: var(--ink-soft); }
+.plan-total { margin: var(--sp-2) 0 0; font-weight: 600; }

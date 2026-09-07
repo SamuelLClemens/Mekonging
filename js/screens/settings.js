@@ -33,7 +33,7 @@ import { getFamily } from '../data/family.js';
 import { getAccessibility } from '../lazy-data.js';   // route-scoped: see js/lazy-data.js
 import { getAllBlobs, putBlob } from '../idb.js';
 import * as reminders from '../reminders.js';
-import { CURRENCY_CODES } from '../currency.js';
+import { CURRENCY_CODES, currencyFlag, currencySymbol } from '../currency.js';
 import {
   go, mount, topbar, render, focusSpot, daysUntilISO, todayISO, applyTheme, dietPicker,
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
@@ -204,8 +204,12 @@ export function settingsScreen() {
   // whatever is chosen here before being summed — nothing is dropped, just re-expressed in
   // one currency (see budgetSummaryCard's totalsCurrencyRow for the same control, live,
   // right next to the totals it drives).
-  card.append(field('Home currency', selectEl(CURRENCY_CODES, p.homeCurrency,
-    (v) => { p.homeCurrency = v; save(); })));
+  // The picker leads with flag + symbol, like every other currency control in the app, and
+  // sets currencyManual so a later interface-language change cannot move it (see
+  // applyLocaleDefaults in js/i18n.js — a language implies a currency only until you choose).
+  card.append(field('Home currency', selectEl(
+    CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${currencySymbol(c) || c} · ${c}`.trim()]),
+    p.homeCurrency, (v) => { p.homeCurrency = v; p.currencyManual = true; save(); })));
   card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' },
     'Used for every total and percentage across the app, however each expense was logged.'));
 
