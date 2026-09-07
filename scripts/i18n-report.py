@@ -34,6 +34,7 @@ content is a commissioning decision, not a coding one; run --content for the cur
 
 Usage:
     python3 scripts/i18n-report.py --missing            # strings with no key, by file
+    python3 scripts/i18n-report.py --priority           # the same queue, ordered by who reads it
     python3 scripts/i18n-report.py --missing --limit 40
     python3 scripts/i18n-report.py --export he          # review sheet to stdout
     python3 scripts/i18n-report.py --export he -o he.tsv
@@ -124,6 +125,50 @@ def cmd_missing(limit):
     return 0
 
 
+
+# Screens a traveller cannot avoid, in the order a translation budget should be spent. Home and
+# the tab bar are seen on every launch; the emergency and medical screens are read in the worst
+# moment of a trip and by someone who may not read English at all. Everything else is ordinary.
+PRIORITY = [
+    ('critical — emergency & medical', ('js/screens/medical.js', 'js/main.js:sos')),
+    ('every launch — Home & navigation', ('js/screens/home.js', 'js/nav-groups.js')),
+    ('high traffic — places, talk, money', ('js/screens/places.js', 'js/screens/phrasebook.js',
+                                            'js/screens/budget.js', 'js/screens/trip.js')),
+]
+
+
+def cmd_priority(limit):
+    """The work queue, ordered by who reads it and how often — not alphabetically.
+
+    877 untranslated strings is a number nobody can act on. The first hundred, chosen by where
+    they appear, is a decision somebody can fund."""
+    keys = key_set()
+    rendered = rendered_strings()
+    missing = {t: sorted(fs) for t, fs in rendered.items() if t not in keys}
+    used = set()
+    print('%d rendered interface strings have no dictionary key in any of the 29 languages.'
+          % len(missing))
+    print('Ordered by where they appear, because that is how the work should be funded.\n')
+    for label, files in PRIORITY:
+        want = [t for t, fs in sorted(missing.items())
+                if t not in used and any(any(f.startswith(pfx.split(':')[0]) for pfx in files) for f in fs)]
+        used |= set(want)
+        print('%s — %d strings' % (label, len(want)))
+        for t in want[:limit or 12]:
+            print('    %s' % t)
+        if limit and len(want) > limit:
+            print('    ... and %d more' % (len(want) - limit))
+        print()
+    rest = [t for t in missing if t not in used]
+    print('everything else — %d strings' % len(rest))
+    print('\nTranslating the first two groups (%d strings) covers what a traveller sees on every'
+          % sum(1 for t, fs in missing.items()
+                if any(any(f.startswith(pfx.split(':')[0]) for pfx in PRIORITY[0][1] + PRIORITY[1][1])
+                       for f in fs)))
+    print('launch and in an emergency. Run --export <lang> for the review sheet.')
+    return 0
+
+
 def cmd_export(code, out_path):
     d = dictionary(code)
     if d is None:
@@ -182,6 +227,7 @@ def main():
     ap.add_argument('--missing', action='store_true')
     ap.add_argument('--export', metavar='LANG')
     ap.add_argument('--content', action='store_true')
+    ap.add_argument('--priority', action='store_true')
     ap.add_argument('--limit', type=int, default=0)
     ap.add_argument('-o', '--out')
     a = ap.parse_args()
@@ -189,6 +235,8 @@ def main():
         return cmd_export(a.export, a.out)
     if a.content:
         return cmd_content()
+    if a.priority:
+        return cmd_priority(a.limit)
     if a.missing:
         return cmd_missing(a.limit)
     ap.print_help()

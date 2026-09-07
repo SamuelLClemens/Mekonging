@@ -97,5 +97,19 @@ export const FOOD_KH_EXT = [
     "allergens": ["egg", "soy", "shellfish", "gluten"], "veg": "Can be made vegetarian without meat and with a fried egg; ask the cook.",
     "spice": "mild", "price": { "low": 1, "high": 3, "currency": "USD" },
     "whereToFind": "Evening street carts and night markets, especially in Siem Reap and Phnom Penh.",
-    "sources": ["Wikipedia", "TasteAtlas", "Cambodian food blogs"] }
+    "sources": ["Wikipedia", "TasteAtlas", "Cambodian food blogs"] },
+  { "id": "kh-bai-chha", "name": "Bai Chha (Khmer Fried Rice)", "localName": "បាយឆា", "roman": "bai chha", "category": "rice",
+    "description": "Fried rice in the Khmer style — lighter on soy than its Thai and Chinese cousins, built on garlic, fish sauce and often a spoon of kroeung or a scatter of Kampot pepper, with egg and pork, chicken or seafood. Frequently topped with a fried egg and eaten with pickled vegetables.",
+    "ingredients": ["jasmine rice", "egg", "garlic", "fish sauce", "soy sauce", "spring onion", "Kampot pepper", "pork, chicken or prawn"],
+    "allergens": ["egg", "fish", "soy", "shellfish", "gluten"], "veg": "Ask for it without meat and without fish sauce; soy sauce usually replaces it. Prawn and fish sauce are the two things to name explicitly.",
+    "spice": "none", "price": { "low": 6000, "high": 14000, "currency": "KHR" },
+    "whereToFind": "Market stalls, roadside eateries and every guesthouse menu in the country — the reliable order anywhere.",
+    "sources": ["Wikipedia", "TasteAtlas", "Cambodia Travel Guide"] },
+  { "id": "kh-samlor-kari", "name": "Samlor Kari (Khmer Yellow Curry)", "localName": "សម្លការី", "roman": "samlor kari", "category": "curry",
+    "description": "A mild coconut curry of chicken, sweet potato and long beans, coloured and scented with turmeric, lemongrass and galangal rather than heat. Gentler than a Thai curry and often served at weddings and festivals, with a baguette or rice noodles to soak it up.",
+    "ingredients": ["chicken", "coconut milk", "sweet potato", "long beans", "turmeric", "lemongrass", "galangal", "kaffir lime leaf", "fish sauce", "palm sugar", "peanuts"],
+    "allergens": ["fish", "peanut"], "veg": "Not vegetarian as served — chicken and fish sauce. The coconut-and-turmeric base itself is plant-based, so a meat-free version is possible where the kitchen will do it.",
+    "spice": "mild", "price": { "low": 12000, "high": 28000, "currency": "KHR" },
+    "whereToFind": "Family restaurants and celebration tables; more common at a sit-down meal than at a street cart.",
+    "sources": ["Wikipedia", "TasteAtlas", "Cambodia Travel Guide"] }
 ];
