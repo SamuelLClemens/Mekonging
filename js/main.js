@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.542.0';
+export const APP_VERSION = 'mk-v0.545.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -6674,7 +6674,7 @@ export function render() {
   const NEEDS_COUNTRY_DATA = new Set([
     'country', 'region', 'nearby', 'places', 'place', 'prices', 'transport',
     'calendar', 'events', 'event', 'today', 'food', 'dish', 'board', 'streetfood',
-    'sos', 'hospital', 'foryou',
+    'sos', 'hospital', 'foryou', 'info',
   ]);
   // Read across every country at once: universal search; the full multi-country map
   // (NOT the small embedded per-country Places map, which is caller-scoped via a

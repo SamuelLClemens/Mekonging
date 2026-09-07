@@ -110,7 +110,7 @@ function infoScreen(countryId) {
 
   const info = country && country.info;
   if (!info) {
-    wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} guide is coming soon. Thailand is fully covered in this build.`));
+    wrap.append(h('p', { class: 'empty' }, `${country ? country.name : 'This country'} guide is coming soon.`));
     mount(wrap, '#home'); return;
   }
   // emergency numbers
