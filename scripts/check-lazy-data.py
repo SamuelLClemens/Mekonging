@@ -137,7 +137,14 @@ def main():
     # Screen modules are route-scoped; roll their data needs up to the routes that load them.
     route_screens = parse_map(main_src, 'ROUTE_SCREENS') or {}
     screen_files = {}
-    for m in re.finditer(r"(\w+):\s*\(b\)\s*=>\s*import\('\./(screens/[\w.]+\.js)'", main_src):
+    # [\w.-]: a screen filename may be hyphenated (share-journey.js, country-info.js) even
+    # though its SCREEN_LOADERS/ROUTE_SCREENS key never is (sharejourney, countryinfo) — see
+    # main.js's own SCREEN_LOADERS table. Plain \w. missed this silently: it dropped the file
+    # from screen_files, which only ever surfaced as a problem once a hyphenated-filename
+    # screen ALSO needed lazy-data gating (country-info.js's access/visa/scams routes, in the
+    # module split that added it) — share-journey.js needs no lazy-data bucket, so the same gap
+    # sat there latent and harmless before this.
+    for m in re.finditer(r"(\w+):\s*\(b\)\s*=>\s*import\('\./(screens/[\w.-]+\.js)'", main_src):
         screen_files[m.group(1)] = 'js/' + m.group(2)
 
     # The lazy modules' own source is not a consumer — exclude it, or every export reads as a
