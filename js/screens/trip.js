@@ -17,8 +17,9 @@ import { store, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, removePla
   toggleChecklistItem, unscheduledVisits, updatePlaceVisit, updateStop, visitsForStop } from '../state.js';
 import { confirmAction, promptAction, screenHint } from '../ui-widgets.js';
 import { h, money } from '../util.js';
+import { dateLocale } from '../i18n.js';
 import { checklistFor, countryChips, go, homeCurrency, mount, profileIsSet, render, shareButton, stopDateLabel,
-  ownTitle, topbar } from '../main.js';
+  ownTitle, todayISO, addDaysISO, tripStartISO, topbar } from '../main.js';
 
 let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
 
@@ -256,15 +257,94 @@ export function plansScreen() {
   wrap.append(countryChips((id) => { setActiveCountry(id); go('#plans'); }));
   const plans = suggestPlans({ country: getActiveCountry(), tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
   const PARTY_LBL = { solo: '🎒 solo', couple: '👫 couples', family: '👨‍👩‍👧 families', group: '👥 groups' };
+  // "Sep 12–15" for a range inside one month, "Sep 28–Oct 2" across a boundary. Local to this
+  // screen: the trip screen's own stopDateLabel is the ISO/day-count form used on saved stops,
+  // and a suggestion being shaped wants the compact reading form instead.
+  const planDay = (iso) => {
+    const d = new Date(iso + 'T00:00:00');
+    return isNaN(d) ? iso : d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
+  };
+  const planRange = (a, b) => (a.slice(0, 7) === b.slice(0, 7)
+    ? `${planDay(a)}–${Number(b.slice(8, 10))}`
+    : `${planDay(a)}–${planDay(b)}`);
+
   plans.forEach((pl, idx) => {
     const card = h('div', { class: 'card' });
     card.append(h('div', { class: 'row-between' }, [h('h2', {}, pl.title), idx === 0 && profileIsSet() ? h('span', { class: 'cat-tag' }, 'Best match') : null]));
     card.append(h('p', { class: 'muted' }, `~${pl.days} days · ${pl.pace} pace · suits ${pl.party.map((x) => PARTY_LBL[x] || x).join(', ')}`));
     card.append(h('p', {}, pl.summary));
-    card.append(h('ol', {}, pl.stops.map((s) => h('li', {}, [h('strong', {}, s.title), ` — ${s.nights} night${s.nights === 1 ? '' : 's'}. `, h('span', { class: 'muted' }, s.why)]))));
+
+    // EDITABLE BEFORE YOU TAKE IT (direct request). The stops used to be a read-only <ol>:
+    // a plan that offered two nights in Pai and three in Chiang Mai could be accepted or
+    // ignored, and nothing in between, when "make it a week in Pai and one night in Chiang
+    // Mai" is the normal thing a traveller wants to do with a suggestion.
+    //
+    // Adding a plan was ALSO dropping the nights entirely — addStop() was called with only a
+    // title and a country, so a plan that carefully said "3 nights in Chiang Mai" produced an
+    // undated stop and the trip's own day count stayed at zero. Editable nights plus a start
+    // date fix both at once: the plan now lands as real arrival and departure dates.
+    //
+    // Local copy, so editing one card never mutates the shared ITINERARIES data.
+    const draft = pl.stops.map((s) => ({ ...s }));
+    const startEl = h('input', {
+      type: 'date', 'aria-label': 'Start date for this plan',
+      value: tripStartISO() || addDaysISO(todayISO(), 30),
+    });
+    const rows = h('div', { class: 'plan-stops' });
+    const totalEl = h('p', { class: 'tiny muted plan-total' }, '');
+    // Direct node references throughout — mount()'s automatic folding re-parents a card's
+    // children, so anything looked up through `card` from a handler would come back null.
+    const draw = () => {
+      rows.replaceChildren();
+      let cursor = startEl.value || todayISO();
+      draft.forEach((s, i) => {
+        const from = cursor;
+        const to = addDaysISO(cursor, Math.max(1, s.nights));
+        cursor = to;
+        const nEl = h('span', { class: 'plan-n' }, String(s.nights));
+        const step = (d) => {
+          s.nights = Math.min(30, Math.max(1, s.nights + d));
+          draw();
+        };
+        rows.append(h('div', { class: 'plan-stop' }, [
+          h('div', { class: 'plan-stop-main' }, [
+            h('strong', {}, s.title),
+            // A compact friendly range, and counted in NIGHTS to match the stepper beside it.
+            // stopDateLabel prints raw ISO and counts calendar DAYS ("2026-09-12 → 2026-09-14
+            // · 3 days"), which on a card whose control says "2" read as a contradiction.
+            h('div', { class: 'tiny muted' },
+              `${planRange(from, to)} · ${s.nights} night${s.nights === 1 ? '' : 's'}${s.why ? ` · ${s.why}` : ''}`),
+          ]),
+          h('div', { class: 'plan-nights' }, [
+            h('button', { class: 'btn ghost plan-step', 'aria-label': `One night fewer in ${s.title}`, onclick: () => step(-1) }, '−'),
+            nEl,
+            h('button', { class: 'btn ghost plan-step', 'aria-label': `One night more in ${s.title}`, onclick: () => step(1) }, '＋'),
+          ]),
+          h('button', {
+            class: 'btn ghost plan-drop', 'aria-label': `Drop ${s.title} from this plan`,
+            onclick: () => { draft.splice(i, 1); draw(); },
+          }, '✕'),
+        ]));
+      });
+      const nights = draft.reduce((a, s) => a + Math.max(1, s.nights), 0);
+      totalEl.textContent = draft.length
+        ? `${nights} night${nights === 1 ? '' : 's'} · ${draft.length} stop${draft.length === 1 ? '' : 's'} · back ${planDay(addDaysISO(startEl.value || todayISO(), nights))}`
+        : 'Every stop dropped — add one back to use this plan.';
+    };
+    startEl.addEventListener('change', draw);
+    card.append(h('label', { class: 'plan-start' }, [h('span', {}, 'Starting'), startEl]));
+    card.append(rows, totalEl);
+    draw();
+
     (pl.tips || []).forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
     card.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => {
-      pl.stops.forEach((s) => addStop({ title: s.title, country: pl.country }));
+      if (!draft.length) return;
+      let cursor = startEl.value || todayISO();
+      draft.forEach((s) => {
+        const to = addDaysISO(cursor, Math.max(1, s.nights));
+        addStop({ title: s.title, country: pl.country, date: cursor, endDate: to });
+        cursor = to;
+      });
       e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
     } }, `＋ Add this plan to ${tripLabel}`));
     card.append(sourcesNote(pl.sources, null));

@@ -193,8 +193,10 @@ export function weatherScreen(country) {
   let spot = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey()) || defaultSpot('th');
 
   // Unit toggles (°C/°F, km/h/mph) — persist in the profile and re-render.
-  const setTemp = (u) => { store.profile.wxTempUnit = u; save(); render(); };
-  const setWind = (u) => { store.profile.wxWindUnit = u; save(); render(); };
+  // unitsManual: once the traveller picks a scale themselves, changing the interface language
+  // must never move it back (see applyLocaleDefaults in js/i18n.js).
+  const setTemp = (u) => { store.profile.wxTempUnit = u; store.profile.unitsManual = true; save(); render(); };
+  const setWind = (u) => { store.profile.wxWindUnit = u; store.profile.unitsManual = true; save(); render(); };
   const unitChip = (label, active, onclick) => h('button', { class: 'chip', 'aria-pressed': active ? 'true' : 'false', onclick }, label);
   wrap.append(h('div', { class: 'chips wx-units', style: 'margin-bottom:6px' }, [
     h('span', { class: 'wx-units-label' }, 'Units'),

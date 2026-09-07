@@ -39,8 +39,8 @@ import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import {
   go, mount, topbar, contextNow, setupRecapCard, render,
-  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard,
-  ensureHomeWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
+  inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
+  ensureHomeWeather, ensurePlannedStopsWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
   recentRoutesRow, identifyRow, homeFold,
@@ -179,6 +179,10 @@ export function homeScreen() {
     ? (ctx.near ? ctx.near.spot : focus.spot)
     : focusSpot(getCountry(leadCC) ? leadCC : undefined).spot;
   ensureHomeWeather(phaseSpot);
+  // Planning also needs the forecast for each PLANNED stop, not just the focus city, or the
+  // per-stop outlook below falls back to seasonal normals for dates that are well inside the
+  // forecast window. One batched request; no-ops offline or without consent.
+  if (phase === 'planning') ensurePlannedStopsWeather();
 
   // The by-category budget donut used to render here too — dropped as a duplicated CARD (Home
   // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
@@ -199,7 +203,14 @@ export function homeScreen() {
   // network question to 'offline' (welcomeScreen's finish()), so nothing was ever fetched
   // to display. Each condition alone hid the section, silently, with nothing on screen
   // saying why. A forecast is just as useful while planning a trip as during one.
-  wrap.append(weatherFold(homeWeatherCard(phaseSpot) || homeWeatherPending(phaseSpot)));
+  // While PLANNING, the weather that matters is the weather at the stops on the itinerary,
+  // not at whichever city the app happens to be focused on — and showing the focus city here
+  // was also the second copy of it on the screen, since the planning block above carried the
+  // same city's outlook (direct request: "that is redundant info"). The outlook card is gone
+  // from that block and this fold carries the planned stops instead. With no stops entered
+  // yet there is nothing to be redundant with, so the ordinary widget stands in.
+  const plannedWx = phase === 'planning' ? plannedStopsOutlook() : null;
+  wrap.append(weatherFold(plannedWx || homeWeatherCard(phaseSpot) || homeWeatherPending(phaseSpot)));
   // Search everything used to be a full-width button spliced in here (and, in the other two
   // phases, further up). It is now the magnifying glass in the topbar — see topbar() in
   // main.js — so it is one tap from EVERY screen instead of from a scroll position on this
@@ -263,15 +274,15 @@ export function homeScreen() {
   // CLOSED by default (direct request) — the point of this pass is that Home fits on a screen
   // or two, and the door grid is the tallest block on it. Nothing is removed: the section is
   // one tap from open, and it remembers the choice.
-  wrap.append(homeFold('🧰 What do you need?', groupDoors(onGround ? ['admin', 'identify'] : ['admin']),
+  // EVERY section, in every phase — nothing skipped (direct request). It used to drop the
+  // Settings door always and the Identify door while on the ground, on the grounds that both
+  // were covered elsewhere on the screen; that made this section an almost-complete directory,
+  // which is exactly why a separate "All features, A–Z" button had to sit under it as the
+  // catch-all. With all nine doors here there is a path to every feature in the app from this
+  // one fold, in planning, traveling and post alike, so the A–Z button is gone from Home as
+  // well as from You. #everything is still reachable from search and by its own hash.
+  wrap.append(homeFold('🧰 What do you need?', groupDoors(),
     'homeDoorsOpen', { defaultOpen: false }));
-
-  // "All features, A–Z" is now its own row rather than the last child inside the doors fold.
-  // Folding that section closed by default would otherwise have hidden the app's complete
-  // index behind two taps, and the A-Z list is exactly what someone reaches for when the
-  // doors did not obviously contain what they wanted.
-  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
-    '🗂️ All features, A–Z →'));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
   // Closed by default: it is worth offering and it is not today's business, and standing it
