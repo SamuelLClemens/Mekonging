@@ -1961,6 +1961,9 @@ html[data-theme="dark"] .rlabel,
 html[data-theme="dark"] .src-link,
 html[data-theme="dark"] .lang-tick,
 html[data-theme="dark"] .info-tip[open] > summary,
+html[data-theme="dark"] .fy-hero-why,
+html[data-theme="dark"] .fy-pick-why,
+html[data-theme="dark"] .fy-common,
 html[data-theme="dark"] .screen-hint[open] > summary { color: var(--teal); }
 html[data-theme="dark"] .border-flag,
 html[data-theme="dark"] .rn-event-when { color: var(--magenta); }
@@ -2458,6 +2461,37 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
 .pt-ic { flex: none; width: 16px; text-align: center; font-weight: 700; }
 .pack-tier.is-done .pt-ic { color: var(--good); }
 .pack-btns { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+/* "Best for <name>" (foryouScreen, js/screens/you.js).
+   The screen ranks places and now has to SHOW its reasoning, so the layout is built around a
+   reason line rather than a name and a star count. Two densities on purpose: the lead pick
+   gets the photograph at full width because it is the screen's answer to "where should I go",
+   and the runners-up get a 44px thumbnail because they are a shortlist to scan. */
+.fy-controls > summary { font-weight: 700; }
+.fy-controls-body { padding-top: var(--sp-2); }
+.fy-lbl { margin: var(--sp-2) 0 var(--sp-1); }
+.fy-hero-name { margin: var(--sp-2) 0 var(--sp-1); font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 700; }
+.fy-hero-blurb { margin: 0 0 var(--sp-2); }
+/* The reason line is the point of the card, so it is the one thing here that takes an accent —
+   as TEXT on --card, which is what scripts/check-contrast.py measures. */
+.fy-hero-why { margin: 0 0 var(--sp-3); color: var(--teal-deep); font-weight: 600; }
+.fy-plan-title { margin: 0 0 var(--sp-2); }
+
+.fy-pick {
+  display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left;
+  background: none; border: 0; border-top: 1px solid var(--line); cursor: pointer;
+  padding: var(--sp-2) 0; color: var(--ink); font-family: inherit; font-size: var(--fs-body);
+  min-height: 56px;
+}
+.fy-pick:first-of-type { border-top: 0; }
+.fy-pick-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-0h); }
+.fy-pick-name { font-weight: 600; }
+.fy-pick-meta { color: var(--ink-soft); font-size: var(--fs-sm); }
+.fy-pick-why { color: var(--teal-deep); font-size: var(--fs-sm); }
+.fy-common { margin: 0 0 var(--sp-2); color: var(--teal-deep); }
+.fy-pick-warn { color: var(--warn); font-size: var(--fs-sm); }
+/* Tabular figures so a column of ratings lines up on the decimal point. */
+.fy-pick-rate { flex: none; color: var(--ink-soft); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
 /* No signal while data is ON is a fact about the room, not a setting — so the icon dims
    rather than changing colour, which would read as a warning about something to fix. */
 .topbar-net.is-nosignal { opacity: 0.6; }

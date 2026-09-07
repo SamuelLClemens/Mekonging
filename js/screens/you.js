@@ -5,11 +5,21 @@
 import * as reminders from '../reminders.js';
 import { getActiveCountry } from '../app-state.js';
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
-import { allPlaces, getCountry } from '../data/regions.js';
+import {
+  allFood,
+  allPlaces,
+  getCountry,
+} from '../data/regions.js';
 import { dateLocale } from '../i18n.js';
 import { suggestPlans } from '../lazy-data.js';
 import { navGroup, visibleItems } from '../nav-groups.js';
-import { PRICE_TIER_LABEL, effectiveRating, personalScore, starsStr } from '../render-utils.js';
+import {
+  PRICE_TIER_LABEL,
+  effectiveRating,
+  personalScore,
+  photoBlock,
+  starsStr,
+} from '../render-utils.js';
 import {
   save,
   store,
@@ -25,6 +35,7 @@ import {
 import {
   CAL_ICON,
   daysUntilISO,
+  dishDietVerdict,
   go,
   groupDoors,
   homeFold,
@@ -32,12 +43,17 @@ import {
   inferPhase,
   mount,
   nameEntryCard,
+  placeFitReason,
+  prefChips,
+  priceLine,
   profileIsSet,
   quickChipLabel,
   render,
+  rnThumb,
   topbar,
   tripSpendHome,
   tripStartISO,
+  whoName,
 } from '../main.js';
 
 
@@ -232,70 +248,208 @@ export function meHubScreen() {
   mount(wrap, '#me');
 }
 
+// ---- Best for <name> --------------------------------------------------------
+// REBUILT (mk-v0.539.0). What was here ranked places by personalScore() and printed them as a
+// column of ghost buttons reading "★★★★☆ Wat Pho" — a list that ASSERTED it was personal and
+// showed nothing to back the claim. Three things were wrong with that, and they are the brief:
+//
+//  1. It never said WHY. personalScore() has explicit, enumerable reasons — it rewards a
+//     matching price tier, kid-friendliness for a family, a hostel for a solo traveller, an
+//     interest that matches a category. None of them reached the screen, so a traveller had no
+//     way to tell a ranking from a shuffle, and no way to spot one built on a wrong assumption.
+//     personalWhy() below reads the SAME facts the score used, so the explanation cannot drift
+//     from the ranking; when nothing matched, it says nothing rather than inventing a reason.
+//  2. It sent you to Settings to change anything. Five "＋ Trip length" chips, each a trip to
+//     another screen and back. The things driving the ranking are now editable in place.
+//  3. It had no photographs, in an app that self-hosts 527 of them, and it ignored food
+//     entirely — the most personal thing the app knows, since it holds the traveller's diet and
+//     allergies and 126 dishes tagged with allergens.
+function personalWhy(p, prefs) {
+  const cats = p.categories || [];
+  const r = Number(p.rating) || 0;
+  const why = [];
+  // Read in the same order and on the same fields as personalScore (js/render-utils.js), so
+  // the sentence a traveller reads is the arithmetic that put the place where it is.
+  if (prefs.interests && prefs.interests.length) {
+    const hit = prefs.interests.find((i) => cats.includes(i));
+    if (hit) why.push(`matches your interest in ${String(hit).replace(/-/g, ' ')}`);
+  }
+  if ((prefs.party === 'family' || prefs.withBaby) && p.kidFriendly === true) why.push('good with children');
+  if (prefs.party === 'solo' && p.stayType === 'hostel') why.push('sociable base for a solo trip');
+  if (prefs.party === 'couple' && r >= 4.4) why.push('one of the highest-rated');
+  if (prefs.party === 'group' && (p.stayType === 'hostel' || p.stayType === 'apartment')) why.push('room for a group');
+  if (prefs.tripLength === 'long' && (p.stayDuration === 'long' || p.stayDuration === 'both')) why.push('suits a long stay');
+  if (prefs.tripLength === 'short' && r >= 4.5) why.push('a highlight worth a short trip');
+  // Price tier LAST, and only when nothing else matched. It contributes to the score like the
+  // rest, but as a sentence it is the weakest thing here: every mid-tier place in the country
+  // satisfies it, so leading with it printed the identical reason on all five picks — which is
+  // worse than no reason at all, because it looks like an explanation and explains nothing.
+  // A reason earns its place on this screen by distinguishing this pick from the next one.
+  if (!why.length && prefs.budget && prefs.budget !== 'flexible' && p.budgetTier === prefs.budget) {
+    why.push('priced how you travel');
+  }
+  return why.slice(0, 3);
+}
+
+// The controls that actually drive the ranking, editable where they are read. prefChips writes
+// straight to the store; the callback re-renders so the list below reorders as you tap, which
+// is the whole point — you can see the ranking respond instead of taking it on faith.
+function rankingControls(prefs) {
+  const box = h('details', { class: 'card fy-controls' });
+  const active = [
+    prefs.party && ({ solo: '🎒 Solo', couple: '👫 Couple', family: '👨‍👩‍👧 Family', group: '👥 Group' }[prefs.party]),
+    prefs.withBaby && '🍼 With a baby',
+    prefs.tripLength && ({ short: '≤1 week', medium: '2–3 weeks', long: '1 month +' }[prefs.tripLength]),
+    prefs.budget && prefs.budget !== 'flexible' && PRICE_TIER_LABEL[prefs.budget],
+    (prefs.interests || []).length && `${prefs.interests.length} interest${prefs.interests.length > 1 ? 's' : ''}`,
+    (prefs.diet || []).length && `${prefs.diet.length} diet note${prefs.diet.length > 1 ? 's' : ''}`,
+  ].filter(Boolean);
+  box.append(h('summary', {}, active.length ? `⚙ Ranked for ${active.join(' · ')}` : '⚙ Nothing set yet — tap to tune'));
+  const body = h('div', { class: 'fy-controls-body' });
+  const line = (label, node) => { body.append(h('p', { class: 'tiny muted fy-lbl' }, label)); body.append(node); };
+  line('Who is travelling', prefChips(
+    [['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']],
+    prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); render(); }));
+  line('How long', prefChips(
+    [['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']],
+    prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); render(); }));
+  line('Price', prefChips(
+    [['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['flexible', PRICE_TIER_LABEL.flexible]],
+    prefs.budget, (v) => { prefs.budget = v; save(); render(); }));
+  body.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#settings') },
+    '⚙️ Interests, diet, accessibility — in Settings'));
+  box.append(body);
+  return box;
+}
+
+// One pick. A photograph, the name, what it costs, and why it is here — the four things that
+// let a traveller decide whether to tap. `why` is omitted when there is nothing true to say.
+function pickRow(p, prefs, common) {
+  // Only the reasons that are NOT shared by every pick. A reason common to the whole list is
+  // hoisted to one line above it (see the caller): with a baby in the party every top-ranked
+  // place is kid-friendly, so printing "good with children" on all five rows looked like an
+  // explanation and distinguished nothing. What is left here is what actually separates this
+  // pick from the one below it — and often that is nothing, which is fine and says so by
+  // rendering no line at all.
+  const why = personalWhy(p, prefs).filter((w) => !common.has(w)).slice(0, 2).join(' · ');
+  const warn = placeFitReason(p, prefs);
+  const price = (p.priceRange && p.priceRange.currency)
+    ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
+  const meta = [p.city, price].filter(Boolean).join(' · ');
+  return h('button', { class: 'fy-pick', onclick: () => go(`#place-${p.id}`) }, [
+    rnThumb(p),
+    h('span', { class: 'fy-pick-txt' }, [
+      h('span', { class: 'fy-pick-name' }, p.name),
+      meta ? h('span', { class: 'fy-pick-meta' }, meta) : null,
+      why ? h('span', { class: 'fy-pick-why' }, `✓ ${why}`) : null,
+      warn ? h('span', { class: 'fy-pick-warn' }, `! ${warn}`) : null,
+    ]),
+    h('span', { class: 'fy-pick-rate' }, `★ ${Number(effectiveRating(p.id, p.rating)).toFixed(1)}`),
+  ]);
+}
+
 export function foryouScreen() {
   const prefs = store.profile.prefs;
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('For you', '#home'));
+  const name = whoName();
+  wrap.append(topbar(name ? `Best for ${name}` : 'Best for you', '#home'));
 
-  // "For you" now shows your personalised RESULTS. The traveller profile that drives them
-  // (who's travelling, baby, accessibility, trip length, budget, interests) is set in ONE
-  // place — Settings — so preferences are not scattered across the app.
+  // Nothing set at all: one honest invitation rather than a screen pretending to rank. The
+  // controls open expanded here, so the first tap tunes the ranking instead of navigating away.
   if (!profileIsSet()) {
-    wrap.append(screenHint('Set who you are and how you travel, and every list ranks what fits you first — and the trip plans match your situation. It all stays on your device.'));
-    wrap.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#settings') }, '⚙️ Set up your travel profile in Settings'));
+    wrap.append(screenHint('Tell the app how you travel and every list in it puts what fits you first — places, dishes, trip plans. It stays on your device.'));
+    const ctl = rankingControls(prefs);
+    ctl.open = true;
+    wrap.append(ctl);
     mount(wrap, '#home');
     return;
   }
-  const profSummary = [
-    prefs.party && ({ solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[prefs.party]),
-    prefs.withBaby && 'with a baby',
-    prefs.tripLength && ({ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[prefs.tripLength]),
-    prefs.budget && PRICE_TIER_LABEL[prefs.budget],
-    (prefs.diet && prefs.diet.length) && `${prefs.diet.length} diet ${prefs.diet.length > 1 ? 'flags' : 'flag'}`,
-  ].filter(Boolean).join(' · ');
-  wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap: var(--sp-2)' }, [
-    h('p', { class: 'muted', style: 'margin: 0' }, profSummary ? `Ranked for: ${profSummary}` : 'Ranked to how you travel.'),
-    h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit profile'),
-  ]));
 
-  // Inline "finish your profile" nudges — one quiet chip per unset field, each opening the
-  // one place profiles live (Settings). More you fill, more the ranking is truly yours.
-  const missing = [
-    !prefs.party && "Who's travelling",
-    !prefs.tripLength && 'Trip length',
-    (!prefs.budget || prefs.budget === 'flexible') && 'Price',
-    !(prefs.interests || []).length && 'Interests',
-    !(prefs.diet || []).length && 'Diet & allergies',
-  ].filter(Boolean);
-  if (missing.length) {
-    wrap.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' }, 'Add these and your picks fit you even better:'));
-    wrap.append(h('div', { class: 'chips' }, missing.map((m) =>
-      h('button', { class: 'chip', onclick: () => go('#settings') }, `＋ ${m}`))));
+  wrap.append(rankingControls(prefs));
+
+  const cc = getActiveCountry();
+  const c = getCountry(cc);
+  const ranked = allPlaces({ country: cc }).slice().sort((a, b) => personalScore(b) - personalScore(a));
+
+  // The lead pick gets the photograph at full width. One place, chosen by the same score as
+  // the rest, presented as a recommendation rather than a row — this is the screen's answer to
+  // "where should I go", and a 40px thumbnail is not an answer.
+  const top = ranked[0];
+  if (top) {
+    const why = personalWhy(top, prefs).slice(0, 2).join(' · ');
+    const card = h('div', { class: 'card fy-hero' });
+    // The card's own h2 is the SECTION title, not the place name. mount() turns a card's first
+    // heading into the fold summary and hoists it to the top, so making the place name the h2
+    // put it above the "Top pick in Thailand" eyebrow that was supposed to introduce it. The
+    // heading names the card, the place name is a strong line inside it, and folding now reads
+    // correctly either way.
+    card.append(h('h2', {}, `Top pick${c ? ' in ' + c.name : ''}`));
+    card.append(photoBlock(top, top.name));
+    card.append(h('p', { class: 'fy-hero-name' }, top.name));
+    if (top.blurb) card.append(h('p', { class: 'muted fy-hero-blurb' }, top.blurb));
+    if (why) card.append(h('p', { class: 'fy-hero-why' }, `✓ Why you: ${why}`));
+    card.append(h('button', { class: 'btn block', onclick: () => go(`#place-${top.id}`) }, `Open ${top.name}`));
+    wrap.append(card);
   }
 
-  {
-    // top personalised picks in the active country
-    const picks = allPlaces({ country: getActiveCountry() }).slice().sort((a, b) => personalScore(b) - personalScore(a)).slice(0, 5);
-    const c = getCountry(getActiveCountry());
-    if (picks.length) {
-      const pk = h('div', { class: 'card' });
-      pk.append(h('h2', {}, `Top picks for you${c ? ' — ' + c.name : ''}`));
-      picks.forEach((p) => pk.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) },
-        `${starsStr(Math.round(effectiveRating(p.id, p.rating)))} ${p.name}`)));
-      pk.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#places-${getActiveCountry()}`) }, 'See all places, ranked for you'));
-      wrap.append(pk);
+  const rest = ranked.slice(1, 6);
+  if (rest.length) {
+    // The reasons every pick shares, said once. Computed as the intersection so the claim is
+    // exactly true of the list it sits above.
+    const sets = rest.map((p) => new Set(personalWhy(p, prefs)));
+    const common = new Set([...(sets[0] || [])].filter((w) => sets.every((st) => st.has(w))));
+    const pk = h('div', { class: 'card' });
+    pk.append(h('h2', {}, 'Then these'));
+    if (common.size) {
+      pk.append(h('p', { class: 'tiny fy-common' },
+        `✓ All ${rest.length} are ${[...common].join(' and ')}.`));
     }
-    // the best-matching plan
-    const plans = suggestPlans({ country: getActiveCountry(), tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
-    if (plans.length) {
-      const pl = plans[0];
-      wrap.append(h('div', { class: 'card' }, [
-        h('h2', {}, 'A plan that fits you'),
-        h('p', {}, [h('strong', {}, pl.title), ` — ~${pl.days} days, ${pl.pace} pace.`]),
-        h('p', { class: 'muted' }, pl.summary),
-        h('button', { class: 'btn block', onclick: () => go('#plans') }, 'See matching trip plans'),
-      ]));
+    rest.forEach((p) => pk.append(pickRow(p, prefs, common)));
+    pk.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#places-${cc}`) },
+      'All places, ranked for you'));
+    wrap.append(pk);
+  }
+
+  // Dishes the traveller can actually eat. New here, and the clearest gap in the old screen:
+  // the app holds their diet and allergies and 126 dishes tagged with allergens, and a screen
+  // called "Best for you" said nothing about food. Only rendered when there is a diet to
+  // respect — with none set, a list of dishes is not personal, it is just a list.
+  if ((prefs.diet || []).length || (prefs.allergies || []).length) {
+    const fits = allFood({ country: cc })
+      .filter((d) => d && d.name)
+      .map((d) => ({ d, v: dishDietVerdict(d) }))
+      .filter((x) => x.v === 'ok' || x.v === 'good')
+      .slice(0, 5);
+    if (fits.length) {
+      const fc = h('div', { class: 'card' });
+      fc.append(h('h2', {}, '🍽 Dishes that fit your diet'));
+      fc.append(h('p', { class: 'tiny muted fy-lbl' }, 'Checked against what you told the app. Always confirm in person for a serious allergy.'));
+      fits.forEach(({ d }) => fc.append(h('button', { class: 'fy-pick', onclick: () => go(`#dish-${d.id}`) }, [
+        h('span', { class: 'fy-pick-txt' }, [
+          h('span', { class: 'fy-pick-name' }, d.name),
+          d.roman ? h('span', { class: 'fy-pick-meta' }, d.roman) : null,
+        ]),
+        h('span', { class: 'fy-pick-rate' }, '✓'),
+      ])));
+      fc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#food') }, 'Identify any dish'));
+      wrap.append(fc);
     }
   }
+
+  // The matching plan, with the action that makes it theirs. Trip plans became editable in
+  // mk-v0.537.0, so "take this plan" is no longer a commitment to someone else's itinerary —
+  // which is what made this card worth keeping rather than cutting.
+  const plans = suggestPlans({ country: cc, tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
+  if (plans.length) {
+    const pl = plans[0];
+    wrap.append(h('div', { class: 'card' }, [
+      h('h2', {}, 'A plan shaped like your trip'),
+      h('p', { class: 'fy-plan-title' }, [h('strong', {}, pl.title), ` — about ${pl.days} days, ${pl.pace} pace.`]),
+      pl.summary ? h('p', { class: 'muted' }, pl.summary) : null,
+      h('p', { class: 'tiny muted fy-lbl' }, 'Take it and change it — nights, stops and order are all yours to edit.'),
+      h('button', { class: 'btn block', onclick: () => go('#plans') }, 'See plans that match'),
+    ]));
+  }
+
   mount(wrap, '#home');
 }
