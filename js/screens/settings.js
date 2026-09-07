@@ -37,6 +37,7 @@ import { CURRENCY_CODES } from '../currency.js';
 import {
   go, mount, topbar, render, focusSpot, daysUntilISO, todayISO, applyTheme, dietPicker,
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
+  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys,
 } from '../main.js';
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
@@ -145,6 +146,49 @@ export function settingsScreen() {
     }, '🧭 Show the “Planning your next stop” chip again'));
   }
   wrap.append(phaseCard);
+
+  // Home screen — which Quick access chips appear. Home ships with exactly four (Calendar,
+  // Budget, Weather, Journal) and never adds more on its own; this is where a traveller who
+  // wants the currency rate, their saved count or their travel circle on Home puts it there.
+  // The list and the default both come from main.js (QUICK_CHIPS / quickChipKeys), so this
+  // editor and the row it edits cannot drift apart.
+  const qcCard = h('div', { class: 'card qc-card' }, [
+    h('h2', {}, '🏠 Home screen'),
+    h('p', { class: 'muted' }, 'Which shortcuts show in Quick access, each with its own live figure.'),
+  ]);
+  const qcList = h('div', { class: 'qc-choices' });
+  // Both of these are held as direct node references and never re-found by querying through
+  // qcCard. mount()'s automatic section folding re-parents a card's children into the fold it
+  // builds, which leaves the original card element detached — so `qcCard.querySelector(...)`
+  // returns null from any handler that runs after mount(), and the live element on screen goes
+  // stale while the write throws. A node reference keeps working wherever the node ends up.
+  const qcCount = h('p', { class: 'tiny muted qc-count' }, '');
+  const drawQc = () => {
+    qcList.replaceChildren();
+    const chosen = quickChipKeys();
+    QUICK_CHIPS.forEach((c) => {
+      const on = chosen.includes(c.key);
+      const box = h('input', { type: 'checkbox', checked: on ? '' : null, 'aria-label': c.label });
+      box.addEventListener('change', () => {
+        const now = quickChipKeys();
+        const next = box.checked ? [...now, c.key] : now.filter((k) => k !== c.key);
+        // Never allow the row to empty out entirely — unticking the last one would leave Home
+        // with a Quick access section containing nothing. Keep the change, restore the default.
+        store.profile.prefs.quickChips = next.length ? next : QUICK_CHIPS_DEFAULT.slice();
+        save();
+        drawQc();
+      });
+      qcList.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${c.ic} ${c.label}`)]));
+    });
+    qcCount.textContent = `${chosen.length} showing${chosen.length > 4 ? ' — more than four makes the row longer than it is quick' : ''}`;
+  };
+  qcCard.append(qcList, qcCount);
+  qcCard.append(h('button', {
+    class: 'btn ghost block btn-spaced',
+    onclick: () => { delete store.profile.prefs.quickChips; save(); drawQc(); render(); },
+  }, '↺ Back to the default four'));
+  drawQc();
+  wrap.append(qcCard);
 
   const card = h('div', { class: 'card' });
 

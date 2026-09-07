@@ -666,7 +666,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.533.0';
+export const APP_VERSION = 'mk-v0.534.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3077,9 +3077,42 @@ function meHubScreen() {
 // screen, which is what let "Budget" show a percentage in one place and a raw total in
 // another. Anything absent from the table simply shows its blurb. Wrapped in try/catch as a
 // whole: a status line is decoration, and must never be the reason a hub fails to render.
-// Exported: js/screens/home.js's Quick access row reads the same table for its extra live
-// chips (Currency, Saved, Identified, Your words, Shared with you, Travel circle), so a
-// figure can never disagree between Home's chip and the hub row for the same feature.
+// ---- Home's Quick access chips: what MAY appear, and what does by default ----------
+// Home shows exactly four chips out of the box — Calendar, Budget, Weather (Scrapbook in the
+// post phase) and Journal. That is deliberate and it is the cap: a quick-access row is only
+// quick while it is short, and an auto-growing row of everything with a number attached is
+// just the feature list again. Anything beyond those four is opt-in, chosen by the traveller
+// in Settings → Home screen, and nothing is added on their behalf.
+//
+// One table, read by both Home's row and the Settings editor, so the two can never drift.
+// `live` is the liveStatus() key for the figure shown under the label, where there is one.
+export const QUICK_CHIPS = [
+  { key: 'calendar', ic: '📅', label: 'Calendar', hash: '#calendar', live: 'calendar' },
+  { key: 'budget', ic: '💰', label: 'Budget', hash: '#expenses', live: 'budget' },
+  { key: 'weather', ic: '🌤', label: 'Weather', hash: '#weather', live: 'weather' },
+  { key: 'journal', ic: '📔', label: 'Journal', hash: '#journal', live: 'journal' },
+  { key: 'rate', ic: '💱', label: 'Currency converter', hash: '#currency', live: 'rate' },
+  { key: 'saved', ic: '⭐', label: 'Saved places', hash: '#saved', live: 'saved' },
+  { key: 'identified', ic: '🔍', label: 'My identifier', hash: '#identified', live: 'identified' },
+  { key: 'phrases', ic: '💬', label: 'Your dictionary', hash: '#dictionary', live: 'phrases' },
+  { key: 'inbox', ic: '📥', label: 'Shared with you', hash: '#inbox', live: 'inbox' },
+  { key: 'circle', ic: '👥', label: 'Travel circle', hash: '#circle', live: 'circle' },
+];
+export const QUICK_CHIPS_DEFAULT = ['calendar', 'budget', 'weather', 'journal'];
+
+// The traveller's chosen chips, or the default four. Unknown keys are dropped (so a renamed
+// or removed feature degrades to absence rather than a dead chip), and an empty or malformed
+// selection falls back to the default rather than leaving Home with no quick access at all.
+export function quickChipKeys() {
+  const sel = store.profile.prefs.quickChips;
+  if (!Array.isArray(sel)) return QUICK_CHIPS_DEFAULT.slice();
+  const valid = sel.filter((k) => QUICK_CHIPS.some((c) => c.key === k));
+  return valid.length ? valid : QUICK_CHIPS_DEFAULT.slice();
+}
+
+// Exported: js/screens/home.js's Quick access row reads the same table for any chip beyond
+// the four it computes richer figures for itself, so a figure can never disagree between
+// Home's chip and the hub row for the same feature.
 export function liveStatus(id) {
   try {
     switch (id) {

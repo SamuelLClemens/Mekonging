@@ -44,7 +44,7 @@ import {
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
   recentRoutesRow, identifyRow, homeFold,
-  homeBudgetFold, homeRightNowFold, liveStatus,
+  homeBudgetFold, homeRightNowFold, liveStatus, QUICK_CHIPS, quickChipKeys,
 } from '../main.js';
 
 export function homeScreen() {
@@ -404,57 +404,54 @@ function quickAccessRow(phase, stored, ctx) {
   const jN = store.journal.entries.length;
   const journalSub = jN ? `${jN} ${jN === 1 ? 'entry' : 'entries'}` : null;
 
-  const chips = [
-    chip('📅', calLabel, calSub, () => go('#calendar')),
-    chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
-  ];
-
-  if (phase === 'post') {
-    chips.push(chip('🏆', 'Scrapbook', null, () => go('#scrapbook')));
-  } else {
-    let wxIc = '🌤', wxSub = null;
-    if (ctx.wx && ctx.wx.temp != null) {
-      const temp = fmtTemp(ctx.wx.temp);
-      if (temp) {
-        wxIc = (wmo(ctx.wx.code) || [])[1] || '🌤';
-        let rainNote = '';
-        const spot = ctx.near ? ctx.near.spot : null;
-        if (spot) {
-          const rec = getCachedWeather(spotKey(spot));
-          const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;
-          if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${today.rainProb}%`;
-        }
-        wxSub = `${temp}${rainNote}`;
+  // Weather's own figure is richer than liveStatus's ("30°C · ☔ 95%" — today's rain
+  // probability as well as the temperature), so it stays computed here.
+  let wxIc = '🌤', wxSub = null;
+  if (ctx.wx && ctx.wx.temp != null) {
+    const temp = fmtTemp(ctx.wx.temp);
+    if (temp) {
+      wxIc = (wmo(ctx.wx.code) || [])[1] || '🌤';
+      let rainNote = '';
+      const spot = ctx.near ? ctx.near.spot : null;
+      if (spot) {
+        const rec = getCachedWeather(spotKey(spot));
+        const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;
+        if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${today.rainProb}%`;
       }
+      wxSub = `${temp}${rainNote}`;
     }
-    chips.push(chip(wxIc, 'Weather', wxSub, () => go('#weather')));
   }
 
-  chips.push(chip('📔', 'Journal', journalSub, () => go('#journal')));
-  // Online/offline used to be a fifth chip here too — moved to the shared topbar() (main.js),
-  // next to Saved/Settings/Emergency, so it is reachable from every screen, not just Home.
-
-  // More chips of the same kind, per direct request: a door that already tells you the thing
-  // you were going to open it to find out. Each reads its figure from liveStatus() — the one
-  // shared live-status table hubRow() uses for the same features — rather than recomputing it
-  // here, so a count can never disagree between Home and the hub it links to.
+  // Which chips appear is the traveller's choice, defaulting to exactly four — Calendar,
+  // Budget, Weather and Journal. Nothing is ever added automatically: a quick-access row is
+  // only quick while it is short. The table and the default both live in main.js
+  // (QUICK_CHIPS / quickChipKeys) so the Settings editor cannot drift from what Home draws.
   //
-  // liveStatus() returns null when there is nothing real to report (no rate cached, nothing
-  // saved yet, no unread), and these are appended ONLY when it returns a value. That is Home's
-  // standing rule and it is what keeps this row from growing into a wall of bare labels:
-  // rank-collapse-never-remove — an empty cell simply does not draw, and every one of these
-  // features is still reachable from its own section door below.
-  [
-    ['💱', 'Currency', 'rate', '#currency'],
-    ['⭐', 'Saved', 'saved', '#saved'],
-    ['🔍', 'Identified', 'identified', '#identified'],
-    ['💬', 'Your words', 'phrases', '#dictionary'],
-    ['📥', 'Shared with you', 'inbox', '#inbox'],
-    ['👥', 'Travel circle', 'circle', '#circle'],
-  ].forEach(([ic, label, key, hash]) => {
-    const live = liveStatus(key);
-    if (live && live.sub) chips.push(chip(ic, label, live.sub, () => go(hash), live.cls));
-  });
+  // Calendar, Budget and Weather keep the Home-specific figures computed above (a running day
+  // count with the next plan item, a colour-graded percentage of budget, temperature plus rain
+  // probability) rather than liveStatus's plainer versions. Everything else takes its figure
+  // straight from liveStatus, the same table the hub rows use.
+  const RICH = {
+    calendar: { ic: '📅', label: calLabel, sub: calSub },
+    budget: { ic: '💰', label: budgetLabel, sub: budgetSub, cls: budgetClass },
+    weather: { ic: wxIc, label: 'Weather', sub: wxSub },
+    journal: { ic: '📔', label: 'Journal', sub: journalSub },
+  };
+  const chips = quickChipKeys().map((key) => {
+    const def = QUICK_CHIPS.find((c) => c.key === key);
+    if (!def) return null;
+    // Post-trip there is no forecast worth a slot: the Weather chip becomes Scrapbook, which
+    // is what a returned traveller actually wants in that position.
+    if (key === 'weather' && phase === 'post') return chip('🏆', 'Scrapbook', null, () => go('#scrapbook'));
+    const rich = RICH[key];
+    if (rich) return chip(rich.ic, rich.label, rich.sub, () => go(def.hash), rich.cls);
+    // An opt-in chip the traveller deliberately chose renders whether or not it has a figure
+    // yet — they asked for the shortcut, so a bare label is still the shortcut they wanted.
+    const live = def.live ? liveStatus(def.live) : null;
+    return chip(def.ic, def.label, live && live.sub ? live.sub : null, () => go(def.hash), live && live.cls);
+  }).filter(Boolean);
+  // Online/offline used to be a chip here too — moved to the shared topbar() (main.js),
+  // next to Saved/Settings/Emergency, so it is reachable from every screen, not just Home.
 
   // Open by default — it only ever collapses because the traveller closed it themselves
   // (prefs.quickAccessOpen explicitly false); an unset/undefined pref still means "open".
