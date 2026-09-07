@@ -6,7 +6,7 @@ import { putMeta, getMeta } from './idb.js';
 import { MERGED_PLACE_IDS, canonicalPlaceId } from './data/place-merges.js';
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 12;
+const CURRENT_VERSION = 13;
 
 function defaults() {
   return {
@@ -219,6 +219,16 @@ function migrate(data) {
   // rating written against the losing id would otherwise resolve to nothing and disappear
   // from every list. Runs once; new merges bump the version again.
   if (dv < 12) remapMergedPlaceIds(out);
+  // v12 -> v13: three sections changed their DEFAULT fold state to closed (Home's "Back to",
+  // Home's weather forecast calendar, You's "Everything else"). A fold's state is remembered
+  // per traveller under its own pref, and that pref outlives the default — so anyone who had
+  // the app before this release carried a stored `true` from when the section opened by
+  // default, and would have gone on seeing it expanded no matter what the new default said.
+  // Deleting only these three keys lets the new default take effect once; every fold the
+  // traveller has deliberately opened since keeps its state, and so does every other pref.
+  if (dv < 13) {
+    ['homeRecentsOpen', 'youEverythingOpen', 'homeWeatherOpen'].forEach((k) => { delete out.profile.prefs[k]; });
+  }
   return out;
 }
 

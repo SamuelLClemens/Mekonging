@@ -31,7 +31,7 @@ import {
   removeRecoveryCode as vaultRemoveRecovery,
   unlockWithRecovery as vaultUnlockRecovery, resetPasscodeWithRecovery as vaultResetWithRecovery,
 } from '../vault.js';
-import { mount, topbar } from '../main.js';
+import { mount, ownTitle, topbar } from '../main.js';
 
 function vaultWarning() {
   return h('div', { class: 'banner' },
@@ -46,7 +46,7 @@ function docKind(type) {
 }
 export function vaultScreen() {
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Documents', '#home'));
+  wrap.append(topbar(ownTitle('documents', 'Documents'), '#home'));
   const body = h('div', {});
   wrap.append(body);
   mount(wrap, '#home');

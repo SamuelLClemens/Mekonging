@@ -8,7 +8,7 @@ export const NATURE = [
   {
     "id": "nat-bird-white-throated-kingfisher",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "White-throated Kingfisher",
     "sciName": "Halcyon smyrnensis",
     "localNames": [],
@@ -29,7 +29,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-kingfisher",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Common Kingfisher",
     "sciName": "Alcedo atthis",
     "localNames": [],
@@ -50,7 +50,7 @@ export const NATURE = [
   {
     "id": "nat-bird-oriental-pied-hornbill",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Oriental Pied Hornbill",
     "sciName": "Anthracoceros albirostris",
     "localNames": [],
@@ -71,7 +71,7 @@ export const NATURE = [
   {
     "id": "nat-bird-great-hornbill",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Great Hornbill",
     "sciName": "Buceros bicornis",
     "localNames": [],
@@ -92,7 +92,7 @@ export const NATURE = [
   {
     "id": "nat-bird-little-egret",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Little Egret",
     "sciName": "Egretta garzetta",
     "localNames": [],
@@ -113,7 +113,7 @@ export const NATURE = [
   {
     "id": "nat-bird-cattle-egret",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Eastern Cattle Egret",
     "sciName": "Bubulcus coromandus",
     "localNames": [],
@@ -134,7 +134,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-myna",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Common Myna",
     "sciName": "Acridotheres tristis",
     "localNames": [],
@@ -155,7 +155,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-hill-myna",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Common Hill Myna",
     "sciName": "Gracula religiosa",
     "localNames": [],
@@ -176,7 +176,7 @@ export const NATURE = [
   {
     "id": "nat-bird-olive-backed-sunbird",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Olive-backed Sunbird",
     "sciName": "Cinnyris jugularis",
     "localNames": [],
@@ -197,7 +197,7 @@ export const NATURE = [
   {
     "id": "nat-bird-crimson-sunbird",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Crimson Sunbird",
     "sciName": "Aethopyga siparaja",
     "localNames": [],
@@ -218,7 +218,7 @@ export const NATURE = [
   {
     "id": "nat-bird-black-drongo",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Black Drongo",
     "sciName": "Dicrurus macrocercus",
     "localNames": [],
@@ -239,7 +239,7 @@ export const NATURE = [
   {
     "id": "nat-bird-greater-racket-tailed-drongo",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Greater Racket-tailed Drongo",
     "sciName": "Dicrurus paradiseus",
     "localNames": [],
@@ -260,7 +260,7 @@ export const NATURE = [
   {
     "id": "nat-bird-green-bee-eater",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Asian Green Bee-eater",
     "sciName": "Merops orientalis",
     "localNames": [],
@@ -281,7 +281,7 @@ export const NATURE = [
   {
     "id": "nat-bird-blue-tailed-bee-eater",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Blue-tailed Bee-eater",
     "sciName": "Merops philippinus",
     "localNames": [],
@@ -302,7 +302,7 @@ export const NATURE = [
   {
     "id": "nat-danger-king-cobra",
     "group": "reptile",
-    "commonName": "King Cobra",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "King Cobra",
     "sciName": "Ophiophagus hannah",
     "localNames": [
       "งูจงอาง (ngu chong-ang)",
@@ -325,7 +325,7 @@ export const NATURE = [
   {
     "id": "nat-danger-monocled-cobra",
     "group": "reptile",
-    "commonName": "Monocled Cobra",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Monocled Cobra",
     "sciName": "Naja kaouthia",
     "localNames": [
       "งูเห่าหม้อ (ngu hao mo)",
@@ -348,7 +348,7 @@ export const NATURE = [
   {
     "id": "nat-danger-banded-krait",
     "group": "reptile",
-    "commonName": "Banded Krait",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Banded Krait",
     "sciName": "Bungarus fasciatus",
     "localNames": [
       "งูสามเหลี่ยม (ngu sam liam)",
@@ -371,7 +371,7 @@ export const NATURE = [
   {
     "id": "nat-danger-malayan-krait",
     "group": "reptile",
-    "commonName": "Malayan Krait (Blue Krait)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Malayan Krait (Blue Krait)",
     "sciName": "Bungarus candidus",
     "localNames": [
       "งูทับสมิงคลา (ngu thap saming khla)",
@@ -394,7 +394,7 @@ export const NATURE = [
   {
     "id": "nat-danger-malayan-pit-viper",
     "group": "reptile",
-    "commonName": "Malayan Pit Viper",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Malayan Pit Viper",
     "sciName": "Calloselasma rhodostoma",
     "localNames": [
       "งูกะปะ (ngu kapa)",
@@ -417,7 +417,7 @@ export const NATURE = [
   {
     "id": "nat-danger-white-lipped-pit-viper",
     "group": "reptile",
-    "commonName": "White-lipped Pit Viper",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "White-lipped Pit Viper",
     "sciName": "Trimeresurus albolabris",
     "localNames": [
       "งูเขียวหางไหม้ (ngu khiao hang mai)",
@@ -440,7 +440,7 @@ export const NATURE = [
   {
     "id": "nat-danger-box-jellyfish",
     "group": "fish",
-    "commonName": "Box Jellyfish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Box Jellyfish",
     "sciName": "Chironex fleckeri",
     "localNames": [
       "แมงกะพรุนกล่อง (maeng kaphrun klong)",
@@ -463,7 +463,7 @@ export const NATURE = [
   {
     "id": "nat-danger-reef-stonefish",
     "group": "fish",
-    "commonName": "Reef Stonefish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Reef Stonefish",
     "sciName": "Synanceia verrucosa",
     "localNames": [
       "ปลาหิน (pla hin)",
@@ -486,7 +486,7 @@ export const NATURE = [
   {
     "id": "nat-danger-lionfish",
     "group": "fish",
-    "commonName": "Common Lionfish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Common Lionfish",
     "sciName": "Pterois volitans",
     "localNames": [
       "ปลาสิงโต (pla singto)",
@@ -509,7 +509,7 @@ export const NATURE = [
   {
     "id": "nat-danger-giant-centipede",
     "group": "insect",
-    "commonName": "Vietnamese Giant Centipede",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Vietnamese Giant Centipede",
     "sciName": "Scolopendra subspinipes",
     "localNames": [
       "ตะขาบ (takhap)",
@@ -532,7 +532,7 @@ export const NATURE = [
   {
     "id": "nat-danger-asian-forest-scorpion",
     "group": "insect",
-    "commonName": "Asian Forest Scorpion",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Forest Scorpion",
     "sciName": "Heterometrus laoticus",
     "localNames": [
       "แมงป่องช้าง (maeng pong chang)",
@@ -555,7 +555,7 @@ export const NATURE = [
   {
     "id": "nat-danger-thai-black-scorpion",
     "group": "insect",
-    "commonName": "Thai Black Scorpion",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Thai Black Scorpion",
     "sciName": "Heterometrus longimanus",
     "localNames": [
       "แมงป่อง (maeng pong)",
@@ -578,7 +578,7 @@ export const NATURE = [
   {
     "id": "nat-fish-mekong-giant-catfish",
     "group": "fish",
-    "commonName": "Mekong Giant Catfish",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Mekong Giant Catfish",
     "sciName": "Pangasianodon gigas",
     "localNames": [
       "Pla buek"
@@ -600,7 +600,7 @@ export const NATURE = [
   {
     "id": "nat-fish-giant-barb",
     "group": "fish",
-    "commonName": "Giant Barb",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Giant Barb",
     "sciName": "Catlocarpio siamensis",
     "localNames": [
       "Pla kabok",
@@ -623,7 +623,7 @@ export const NATURE = [
   {
     "id": "nat-fish-giant-freshwater-stingray",
     "group": "fish",
-    "commonName": "Giant Freshwater Stingray",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Giant Freshwater Stingray",
     "sciName": "Urogymnus polylepis",
     "localNames": [
       "Pla kraben"
@@ -645,7 +645,7 @@ export const NATURE = [
   {
     "id": "nat-fish-blacktip-reef-shark",
     "group": "fish",
-    "commonName": "Blacktip Reef Shark",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Blacktip Reef Shark",
     "sciName": "Carcharhinus melanopterus",
     "blurb": "A small, shy reef shark often seen patrolling shallow coral flats and lagoons.",
     "idTips": "Slim shark to about 1.6 m, brownish-grey above and pale below, with unmistakable black tips on all fins (the first dorsal and lower tail-lobe tips are especially conspicuous).",
@@ -664,7 +664,7 @@ export const NATURE = [
   {
     "id": "nat-fish-whitetip-reef-shark",
     "group": "fish",
-    "commonName": "Whitetip Reef Shark",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Whitetip Reef Shark",
     "sciName": "Triaenodon obesus",
     "blurb": "A slender, nocturnal reef shark frequently found resting on the seabed by day.",
     "idTips": "Grey shark to about 1.7 m with a short broad snout and distinctive white tips on the first dorsal fin and upper tail lobe; often seen lying motionless in caves or under ledges.",
@@ -683,7 +683,7 @@ export const NATURE = [
   {
     "id": "nat-fish-whale-shark",
     "group": "fish",
-    "commonName": "Whale Shark",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Whale Shark",
     "sciName": "Rhincodon typus",
     "blurb": "The largest fish in the ocean, a gentle filter-feeding shark prized by divers.",
     "idTips": "Massive grey-blue shark up to 12 m with a broad flattened head, wide terminal mouth, and a unique pattern of pale spots and stripes resembling a checkerboard; moves slowly near the surface.",
@@ -702,7 +702,7 @@ export const NATURE = [
   {
     "id": "nat-fish-clownfish",
     "group": "fish",
-    "commonName": "Clark's Anemonefish (Clownfish)",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Clark's Anemonefish (Clownfish)",
     "sciName": "Amphiprion clarkii",
     "blurb": "A small reef fish that lives in symbiosis among the stinging tentacles of sea anemones.",
     "idTips": "Stocky fish about 10-15 cm, orange to dark brown with two or three bold white vertical bands and often a yellow tail; always found darting in and out of a host anemone.",
@@ -721,7 +721,7 @@ export const NATURE = [
   {
     "id": "nat-fish-parrotfish",
     "group": "fish",
-    "commonName": "Bullethead Parrotfish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Bullethead Parrotfish",
     "sciName": "Chlorurus sordidus",
     "blurb": "A reef grazer that scrapes algae from coral with its fused beak-like teeth.",
     "idTips": "Robust fish to about 40 cm with a blunt rounded head and parrot-like beak; colours vary from drab brown-grey juveniles to vivid green-and-pink adults; you may hear it audibly crunching coral.",
@@ -740,7 +740,7 @@ export const NATURE = [
   {
     "id": "nat-fish-moorish-idol",
     "group": "fish",
-    "commonName": "Moorish Idol",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Moorish Idol",
     "sciName": "Zanclus cornutus",
     "blurb": "An elegant, instantly recognisable reef fish with a long trailing dorsal filament.",
     "idTips": "Disc-shaped fish about 20 cm with bold black, white, and yellow vertical bands, a pointed snorkel-like snout, and a long whip-like white dorsal streamer.",
@@ -759,7 +759,7 @@ export const NATURE = [
   {
     "id": "nat-fish-blue-spotted-stingray",
     "group": "fish",
-    "commonName": "Bluespotted Ribbontail Ray",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Bluespotted Ribbontail Ray",
     "sciName": "Taeniura lymma",
     "blurb": "A small, brightly marked ray commonly seen resting on sandy reef patches.",
     "idTips": "Oval disc up to about 35 cm, yellow-brown with vivid electric-blue spots and blue side-stripes along the tail; the tail carries one or two venomous spines.",
@@ -778,7 +778,7 @@ export const NATURE = [
   {
     "id": "nat-fish-manta-ray",
     "group": "fish",
-    "commonName": "Reef Manta Ray",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Reef Manta Ray",
     "sciName": "Mobula alfredi",
     "blurb": "A huge, graceful filter-feeding ray that glides over reefs and cleaning stations.",
     "idTips": "Diamond-shaped ray with a wingspan up to 4-5 m, black above and white below with individually unique belly spots, and two paddle-like cephalic lobes flanking the mouth.",
@@ -797,7 +797,7 @@ export const NATURE = [
   {
     "id": "nat-fish-titan-triggerfish",
     "group": "fish",
-    "commonName": "Titan Triggerfish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Titan Triggerfish",
     "sciName": "Balistoides viridescens",
     "blurb": "A large, robust reef fish notorious for aggressively defending its nest.",
     "idTips": "Stout oval fish up to 75 cm, greenish to grey with a dark cross-hatched pattern and a yellowish band across the cheek; strong beak-like teeth and a habit of facing intruders head-on.",
@@ -816,7 +816,7 @@ export const NATURE = [
   {
     "id": "nat-fish-yellow-tang-surgeonfish",
     "group": "fish",
-    "commonName": "Powder-Blue Surgeonfish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Powder-Blue Surgeonfish",
     "sciName": "Acanthurus leucosternon",
     "blurb": "A striking reef fish named for the scalpel-like spines at the base of its tail.",
     "idTips": "Oval fish about 25 cm with a powder-blue body, black face, bright yellow dorsal fin, and white throat; a sharp spine sits on each side of the tail base.",
@@ -835,7 +835,7 @@ export const NATURE = [
   {
     "id": "nat-insect-golden-birdwing",
     "group": "insect",
-    "commonName": "Golden Birdwing",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Golden Birdwing",
     "sciName": "Troides aeacus",
     "localNames": [
       "Common Birdwing"
@@ -857,7 +857,7 @@ export const NATURE = [
   {
     "id": "nat-insect-common-tiger",
     "group": "insect",
-    "commonName": "Common Tiger",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Tiger",
     "sciName": "Danaus genutia",
     "localNames": [
       "Striped Tiger"
@@ -879,7 +879,7 @@ export const NATURE = [
   {
     "id": "nat-insect-paper-kite",
     "group": "insect",
-    "commonName": "Paper Kite",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Paper Kite",
     "sciName": "Idea leuconoe",
     "localNames": [
       "Rice Paper Butterfly",
@@ -902,7 +902,7 @@ export const NATURE = [
   {
     "id": "nat-insect-common-mormon",
     "group": "insect",
-    "commonName": "Common Mormon",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Mormon",
     "sciName": "Papilio polytes",
     "localNames": [],
     "blurb": "A widespread swallowtail of gardens and villages whose females mimic toxic species.",
@@ -922,7 +922,7 @@ export const NATURE = [
   {
     "id": "nat-insect-southeast-asian-firefly",
     "group": "insect",
-    "commonName": "Mangrove Firefly",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Mangrove Firefly",
     "sciName": "Pteroptyx malaccae",
     "localNames": [
       "Hing hoi (Thai)"
@@ -944,7 +944,7 @@ export const NATURE = [
   {
     "id": "nat-insect-black-mountain-cicada",
     "group": "insect",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Black Mountain Cicada",
     "sciName": "Cryptotympana aquila",
     "localNames": [],
@@ -965,7 +965,7 @@ export const NATURE = [
   {
     "id": "nat-insect-empress-cicada",
     "group": "insect",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Empress Cicada",
     "sciName": "Megapomponia imperatoria",
     "localNames": [],
@@ -986,7 +986,7 @@ export const NATURE = [
   {
     "id": "nat-insect-common-flangetail",
     "group": "insect",
-    "commonName": "Common Scarlet Skimmer",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Scarlet Skimmer",
     "sciName": "Crocothemis servilia",
     "localNames": [
       "Ruddy Marsh Skimmer"
@@ -1008,7 +1008,7 @@ export const NATURE = [
   {
     "id": "nat-insect-globe-skimmer",
     "group": "insect",
-    "commonName": "Globe Skimmer",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Globe Skimmer",
     "sciName": "Pantala flavescens",
     "localNames": [
       "Wandering Glider"
@@ -1030,7 +1030,7 @@ export const NATURE = [
   {
     "id": "nat-insect-asian-weaver-ant",
     "group": "insect",
-    "commonName": "Asian Weaver Ant",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Weaver Ant",
     "sciName": "Oecophylla smaragdina",
     "localNames": [
       "Green Ant",
@@ -1054,7 +1054,7 @@ export const NATURE = [
   {
     "id": "nat-insect-atlas-beetle",
     "group": "insect",
-    "commonName": "Atlas Beetle",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Atlas Beetle",
     "sciName": "Chalcosoma atlas",
     "localNames": [],
     "blurb": "A massive horned rhinoceros beetle and one of the heaviest insects in the region.",
@@ -1074,7 +1074,7 @@ export const NATURE = [
   {
     "id": "nat-insect-three-horned-rhino-beetle",
     "group": "insect",
-    "commonName": "Five-horned Rhinoceros Beetle",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Five-horned Rhinoceros Beetle",
     "sciName": "Eupatorus gracilicornis",
     "localNames": [],
     "blurb": "A spectacular forest beetle prized locally and bred for traditional beetle-fighting contests.",
@@ -1094,7 +1094,7 @@ export const NATURE = [
   {
     "id": "nat-insect-jewel-beetle",
     "group": "insect",
-    "commonName": "Jewel Beetle",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Jewel Beetle",
     "sciName": "Sternocera aequisignata",
     "localNames": [
       "Maeng tap (Thai)"
@@ -1116,7 +1116,7 @@ export const NATURE = [
   {
     "id": "nat-insect-great-mormon-blue-glassy-tiger",
     "group": "insect",
-    "commonName": "Blue Glassy Tiger",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Blue Glassy Tiger",
     "sciName": "Ideopsis vulgaris",
     "localNames": [],
     "blurb": "A semi-transparent pale-blue butterfly that drifts slowly through forest and gardens.",
@@ -1136,7 +1136,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-long-tailed-macaque",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Long-tailed Macaque",
     "sciName": "Macaca fascicularis",
     "localNames": [
@@ -1160,7 +1160,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-pig-tailed-macaque",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Northern Pig-tailed Macaque",
     "sciName": "Macaca leonina",
     "localNames": [],
@@ -1181,7 +1181,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-white-handed-gibbon",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "White-handed (Lar) Gibbon",
     "sciName": "Hylobates lar",
     "localNames": [
@@ -1204,7 +1204,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-asian-elephant",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Asian Elephant",
     "sciName": "Elephas maximus",
     "localNames": [
@@ -1228,7 +1228,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-water-buffalo",
     "group": "mammal",
-    "commonName": "Domestic Water Buffalo",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Domestic Water Buffalo",
     "sciName": "Bubalus bubalis",
     "localNames": [
       "Khwai (Thai)",
@@ -1251,7 +1251,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-sambar-deer",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Sambar Deer",
     "sciName": "Rusa unicolor",
     "localNames": [
@@ -1274,7 +1274,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-common-muntjac",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Northern Red Muntjac (Barking Deer)",
     "sciName": "Muntiacus vaginalis",
     "localNames": [
@@ -1298,7 +1298,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-common-palm-civet",
     "group": "mammal",
-    "commonName": "Common Palm Civet",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Palm Civet",
     "sciName": "Paradoxurus hermaphroditus",
     "localNames": [
       "Toddy cat",
@@ -1321,7 +1321,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-irrawaddy-dolphin",
     "group": "mammal",
-    "commonName": "Irrawaddy Dolphin",
+    "cc": ["kh", "la"], "commonName": "Irrawaddy Dolphin",
     "sciName": "Orcaella brevirostris",
     "localNames": [
       "Pha kha (Lao/Khmer)"
@@ -1343,7 +1343,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-lyles-flying-fox",
     "group": "mammal",
-    "commonName": "Lyle's Flying Fox",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Lyle's Flying Fox",
     "sciName": "Pteropus lylei",
     "localNames": [
       "Fruit bat",
@@ -1366,7 +1366,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-finless-porpoise",
     "group": "mammal",
-    "commonName": "Indo-Pacific Finless Porpoise",
+    "cc": ["th", "vi"], "marine": true, "commonName": "Indo-Pacific Finless Porpoise",
     "sciName": "Neophocaena phocaenoides",
     "localNames": [],
     "blurb": "A small, shy, finless porpoise of shallow coastal waters.",
@@ -1386,7 +1386,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-wild-boar",
     "group": "mammal",
-    "commonName": "Eurasian Wild Boar",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Eurasian Wild Boar",
     "sciName": "Sus scrofa",
     "localNames": [
       "Mu pa (Thai)"
@@ -1408,7 +1408,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-variable-squirrel",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Variable Squirrel",
     "sciName": "Callosciurus finlaysonii",
     "localNames": [
@@ -1431,7 +1431,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-dusky-leaf-monkey",
     "group": "mammal",
-    "call": true,
+    "cc": ["th"], "call": true,
     "commonName": "Dusky Leaf Monkey (Spectacled Langur)",
     "sciName": "Trachypithecus obscurus",
     "localNames": [
@@ -1454,7 +1454,7 @@ export const NATURE = [
   {
     "id": "nat-plant-frangipani",
     "group": "plant",
-    "commonName": "Frangipani",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Frangipani",
     "sciName": "Plumeria rubra",
     "localNames": [
       "Lan Thom (Thai)",
@@ -1477,7 +1477,7 @@ export const NATURE = [
   {
     "id": "nat-plant-lotus",
     "group": "plant",
-    "commonName": "Sacred Lotus",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sacred Lotus",
     "sciName": "Nelumbo nucifera",
     "localNames": [
       "Bua (Thai)",
@@ -1500,7 +1500,7 @@ export const NATURE = [
   {
     "id": "nat-plant-banyan",
     "group": "plant",
-    "commonName": "Banyan Fig",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Banyan Fig",
     "sciName": "Ficus benghalensis",
     "localNames": [
       "Ton Sai (Thai)",
@@ -1523,7 +1523,7 @@ export const NATURE = [
   {
     "id": "nat-plant-rubber",
     "group": "plant",
-    "commonName": "Para Rubber Tree",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Para Rubber Tree",
     "sciName": "Hevea brasiliensis",
     "localNames": [
       "Yang phara (Thai)"
@@ -1545,7 +1545,7 @@ export const NATURE = [
   {
     "id": "nat-plant-durian",
     "group": "plant",
-    "commonName": "Durian",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Durian",
     "sciName": "Durio zibethinus",
     "localNames": [
       "Thurian (Thai)",
@@ -1568,7 +1568,7 @@ export const NATURE = [
   {
     "id": "nat-plant-rice",
     "group": "plant",
-    "commonName": "Asian Rice",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Rice",
     "sciName": "Oryza sativa",
     "localNames": [
       "Khao (Thai)",
@@ -1591,7 +1591,7 @@ export const NATURE = [
   {
     "id": "nat-plant-bamboo",
     "group": "plant",
-    "commonName": "Bamboo",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Bamboo",
     "sciName": "Bambusa spp.",
     "localNames": [
       "Mai phai (Thai)",
@@ -1614,7 +1614,7 @@ export const NATURE = [
   {
     "id": "nat-plant-orchid",
     "group": "plant",
-    "commonName": "Tropical Orchids",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Tropical Orchids",
     "sciName": "Dendrobium spp.",
     "localNames": [
       "Kluai mai (Thai)",
@@ -1637,7 +1637,7 @@ export const NATURE = [
   {
     "id": "nat-plant-mangrove",
     "group": "plant",
-    "commonName": "Red Mangrove",
+    "cc": ["th", "vi", "kh"], "commonName": "Red Mangrove",
     "sciName": "Rhizophora apiculata",
     "localNames": [
       "Kongkang (Thai)",
@@ -1660,7 +1660,7 @@ export const NATURE = [
   {
     "id": "nat-plant-coconut-palm",
     "group": "plant",
-    "commonName": "Coconut Palm",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Coconut Palm",
     "sciName": "Cocos nucifera",
     "localNames": [
       "Maphrao (Thai)",
@@ -1683,7 +1683,7 @@ export const NATURE = [
   {
     "id": "nat-plant-banana",
     "group": "plant",
-    "commonName": "Banana Plant",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Banana Plant",
     "sciName": "Musa acuminata",
     "localNames": [
       "Kluai (Thai)",
@@ -1706,7 +1706,7 @@ export const NATURE = [
   {
     "id": "nat-plant-teak",
     "group": "plant",
-    "commonName": "Teak",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Teak",
     "sciName": "Tectona grandis",
     "localNames": [
       "Mai sak (Thai)"
@@ -1728,7 +1728,7 @@ export const NATURE = [
   {
     "id": "nat-plant-water-hyacinth",
     "group": "plant",
-    "commonName": "Water Hyacinth",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Water Hyacinth",
     "sciName": "Eichhornia crassipes",
     "localNames": [
       "Phak top chawa (Thai)",
@@ -1751,7 +1751,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-tokay-gecko",
     "group": "reptile",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Tokay Gecko",
     "sciName": "Gekko gecko",
     "localNames": [
@@ -1775,7 +1775,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-common-house-gecko",
     "group": "reptile",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Asian House Gecko",
     "sciName": "Hemidactylus frenatus",
     "localNames": [
@@ -1799,7 +1799,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-asian-water-monitor",
     "group": "reptile",
-    "commonName": "Asian Water Monitor",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Water Monitor",
     "sciName": "Varanus salvator",
     "localNames": [
       "Hia",
@@ -1823,7 +1823,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-clouded-monitor",
     "group": "reptile",
-    "commonName": "Clouded Monitor",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Clouded Monitor",
     "sciName": "Varanus nebulosus",
     "localNames": [
       "Lan",
@@ -1846,7 +1846,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-asian-box-turtle",
     "group": "reptile",
-    "commonName": "Southeast Asian Box Turtle",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Southeast Asian Box Turtle",
     "sciName": "Cuora amboinensis",
     "localNames": [
       "Tao haep",
@@ -1869,7 +1869,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-chinese-softshell-turtle",
     "group": "reptile",
-    "commonName": "Chinese Softshell Turtle",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Chinese Softshell Turtle",
     "sciName": "Pelodiscus sinensis",
     "localNames": [
       "Tao kradong",
@@ -1892,7 +1892,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-reticulated-python",
     "group": "reptile",
-    "commonName": "Reticulated Python",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Reticulated Python",
     "sciName": "Malayopython reticulatus",
     "localNames": [
       "Ngu lueam",
@@ -1915,7 +1915,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-oriental-whip-snake",
     "group": "reptile",
-    "commonName": "Oriental Whip Snake",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Oriental Whip Snake",
     "sciName": "Ahaetulla prasina",
     "localNames": [
       "Ngu khiao hang mai",
@@ -1938,7 +1938,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-asian-common-toad",
     "group": "reptile",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Asian Common Toad",
     "sciName": "Duttaphrynus melanostictus",
     "localNames": [
@@ -1962,7 +1962,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-banded-bullfrog",
     "group": "reptile",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Banded Bullfrog",
     "sciName": "Kaloula pulchra",
     "localNames": [
@@ -1986,7 +1986,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-common-green-tree-frog",
     "group": "reptile",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Common Tree Frog",
     "sciName": "Polypedates leucomystax",
     "localNames": [
@@ -2010,7 +2010,7 @@ export const NATURE = [
   {
     "id": "nat-bird-asian-koel",
     "group": "bird",
-    "commonName": "Asian Koel",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Koel",
     "sciName": "Eudynamys scolopaceus",
     "localNames": [],
     "blurb": "A large cuckoo far more often heard than seen, famous for the male's loud, rising 'ko-EL' call repeated through the hot season.",
@@ -2026,7 +2026,7 @@ export const NATURE = [
   {
     "id": "nat-bird-greater-coucal",
     "group": "bird",
-    "commonName": "Greater Coucal",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Greater Coucal",
     "sciName": "Centropus sinensis",
     "localNames": [],
     "blurb": "A big, heavy, crow-like bird of thickets, known for a deep, resonant 'coop-coop-coop' that carries a long way.",
@@ -2042,7 +2042,7 @@ export const NATURE = [
   {
     "id": "nat-bird-zebra-dove",
     "group": "bird",
-    "commonName": "Zebra Dove",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Zebra Dove",
     "sciName": "Geopelia striata",
     "localNames": [],
     "blurb": "A tiny, tame ground-dove whose soft, bubbling coo is one of the constant background sounds of towns and villages.",
@@ -2058,7 +2058,7 @@ export const NATURE = [
   {
     "id": "nat-bird-spotted-dove",
     "group": "bird",
-    "commonName": "Spotted Dove",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Spotted Dove",
     "sciName": "Spilopelia chinensis",
     "localNames": [],
     "blurb": "A common medium dove recognised by the white-spotted black half-collar and a calm, repeated cooing.",
@@ -2074,7 +2074,7 @@ export const NATURE = [
   {
     "id": "nat-bird-oriental-magpie-robin",
     "group": "bird",
-    "commonName": "Oriental Magpie-Robin",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Oriental Magpie-Robin",
     "sciName": "Copsychus saularis",
     "localNames": [],
     "blurb": "A bold black-and-white garden songbird with a rich, varied, whistling song, often delivered from a high perch.",
@@ -2090,7 +2090,7 @@ export const NATURE = [
   {
     "id": "nat-bird-red-whiskered-bulbul",
     "group": "bird",
-    "commonName": "Red-whiskered Bulbul",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Red-whiskered Bulbul",
     "sciName": "Pycnonotus jocosus",
     "localNames": [],
     "blurb": "A perky crested bulbul with a red cheek-patch and a cheerful, chattering song, a favourite regional cage-bird.",
@@ -2106,7 +2106,7 @@ export const NATURE = [
   {
     "id": "nat-bird-coppersmith-barbet",
     "group": "bird",
-    "commonName": "Coppersmith Barbet",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Coppersmith Barbet",
     "sciName": "Psilopogon haemacephalus",
     "localNames": [],
     "blurb": "A small green barbet named for its monotonous, metronomic 'tuk...tuk...tuk' call, like a coppersmith tapping metal.",
@@ -2122,7 +2122,7 @@ export const NATURE = [
   {
     "id": "nat-bird-common-tailorbird",
     "group": "bird",
-    "commonName": "Common Tailorbird",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Tailorbird",
     "sciName": "Orthotomus sutorius",
     "localNames": [],
     "blurb": "A tiny, energetic warbler named for stitching leaves into a nest, with a surprisingly loud, ringing 'cheeup-cheeup' call.",
@@ -2138,7 +2138,7 @@ export const NATURE = [
   {
     "id": "nat-bird-collared-scops-owl",
     "group": "bird",
-    "commonName": "Collared Scops Owl",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Collared Scops Owl",
     "sciName": "Otus lettia",
     "localNames": [],
     "blurb": "A small, common night owl whose soft, single 'whoop' at regular intervals is a familiar after-dark sound of towns and gardens.",
@@ -2154,7 +2154,7 @@ export const NATURE = [
   {
     "id": "nat-bird-red-junglefowl",
     "group": "bird",
-    "commonName": "Red Junglefowl",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Red Junglefowl",
     "sciName": "Gallus gallus",
     "localNames": [],
     "blurb": "The wild ancestor of the domestic chicken, whose ringing dawn crow rises from forest edges across the region.",
@@ -2170,7 +2170,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-pileated-gibbon",
     "group": "mammal",
-    "commonName": "Pileated Gibbon",
+    "cc": ["th", "kh", "la"], "commonName": "Pileated Gibbon",
     "sciName": "Hylobates pileatus",
     "localNames": [],
     "blurb": "A tree-dwelling ape whose elaborate, whooping duet songs ring across the forest canopy at dawn.",
@@ -2186,7 +2186,7 @@ export const NATURE = [
   {
     "id": "nat-bird-silver-eared-mesia",
     "group": "bird",
-    "call": false,
+    "cc": ["vi"], "call": false,
     "commonName": "Silver-eared Mesia",
     "sciName": "Leiothrix argentauris",
     "localNames": [],
@@ -2202,7 +2202,7 @@ export const NATURE = [
   {
     "id": "nat-plant-sinofalconer-rhododendron",
     "group": "plant",
-    "call": false,
+    "cc": ["vi"], "call": false,
     "commonName": "Sinofalconer Rhododendron",
     "sciName": "Rhododendron sinofalconeri",
     "localNames": [],
@@ -2218,7 +2218,7 @@ export const NATURE = [
   {
     "id": "nat-insect-kaiser-i-hind",
     "group": "insect",
-    "call": false,
+    "cc": ["vi"], "call": false,
     "commonName": "Kaiser-i-Hind",
     "sciName": "Teinopalpus imperialis",
     "localNames": [],
@@ -2234,7 +2234,7 @@ export const NATURE = [
   {
     "id": "nat-plant-fansipan-fir",
     "group": "plant",
-    "call": false,
+    "cc": ["vi"], "call": false,
     "commonName": "Fansipan Fir",
     "sciName": "Abies delavayi subsp. fansipanensis",
     "localNames": [],
@@ -2250,7 +2250,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-amanita-exitialis",
     "group": "fungus",
-    "commonName": "Guangzhou Destroying Angel",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Guangzhou Destroying Angel",
     "sciName": "Amanita exitialis",
     "localNames": [],
     "blurb": "One of the two mushrooms responsible for most fatal poisonings in Thailand. Small, plain and entirely white — it looks harmless.",
@@ -2270,7 +2270,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-amanita-brunneitoxicaria",
     "group": "fungus",
-    "commonName": "Brown Death Cap",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Brown Death Cap",
     "sciName": "Amanita brunneitoxicaria",
     "localNames": [],
     "blurb": "Named for its toxicity and described from Thailand — with A. exitialis, one of the main causes of fatal mushroom poisoning in the country.",
@@ -2290,7 +2290,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-amanita-fuliginea",
     "group": "fungus",
-    "commonName": "East Asian Death Cap",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "East Asian Death Cap",
     "sciName": "Amanita fuliginea",
     "localNames": [],
     "blurb": "A dark-capped amatoxin mushroom of East and Southeast Asia, recorded among the protoplasmic poisons behind deaths in the region.",
@@ -2310,7 +2310,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-chlorophyllum-molybdites",
     "group": "fungus",
-    "commonName": "Green-spored Parasol",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Green-spored Parasol",
     "sciName": "Chlorophyllum molybdites",
     "localNames": [],
     "blurb": "The single most common cause of mushroom poisoning worldwide, and a leading cause of gastrointestinal poisoning across all regions of Thailand. It grows on mown grass in towns.",
@@ -2330,7 +2330,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-russula-subnigricans",
     "group": "fungus",
-    "commonName": "Poison Blackening Russula",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Poison Blackening Russula",
     "sciName": "Russula subnigricans",
     "localNames": [],
     "blurb": "An innocuous-looking brittlegill that causes one of the nastiest poisonings in Asia — it breaks down muscle tissue.",
@@ -2350,7 +2350,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-psilocybe-cubensis",
     "group": "fungus",
-    "commonName": "Magic Mushroom",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Magic Mushroom",
     "sciName": "Psilocybe cubensis",
     "localNames": [],
     "blurb": "The hallucinogenic mushroom sold openly in some backpacker areas as shakes or teas. It is illegal in all four countries, and openness of sale is not a sign of legality.",
@@ -2370,7 +2370,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-straw-mushroom",
     "group": "fungus",
-    "commonName": "Straw Mushroom",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Straw Mushroom",
     "sciName": "Volvariella volvacea",
     "localNames": [],
     "blurb": "The small brown-grey mushroom in your tom yum. Grown on rice straw across the region and sold everywhere, usually still closed like little eggs.",
@@ -2390,7 +2390,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-termite-mushroom",
     "group": "fungus",
-    "commonName": "Termite Mushroom",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Termite Mushroom",
     "sciName": "Termitomyces spp.",
     "localNames": [],
     "blurb": "The most prized wild mushroom of the region — grown by termites in their nests and impossible to farm, so it appears only briefly and sells at a premium.",
@@ -2410,7 +2410,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-astraeus",
     "group": "fungus",
-    "commonName": "Barometer Earthstar",
+    "cc": ["th", "la"], "commonName": "Barometer Earthstar",
     "sciName": "Astraeus asiaticus / A. odoratus",
     "localNames": [],
     "blurb": "A wet-season delicacy of Isan and Laos, sold as hard little brown balls by the bagful and eaten whole in soup — quite unlike any mushroom most visitors know.",
@@ -2430,7 +2430,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-split-gill",
     "group": "fungus",
-    "commonName": "Split Gill",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Split Gill",
     "sciName": "Schizophyllum commune",
     "localNames": [],
     "blurb": "Probably the most widespread mushroom on earth, and in Thailand and Laos a genuinely popular food — small, tough, fan-shaped and full of flavour.",
@@ -2450,7 +2450,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-wood-ear",
     "group": "fungus",
-    "commonName": "Wood Ear",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Wood Ear",
     "sciName": "Auricularia spp.",
     "localNames": [],
     "blurb": "The dark, rubbery, almost tasteless mushroom in noodle soups and spring rolls, valued for texture rather than flavour.",
@@ -2470,7 +2470,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-oyster",
     "group": "fungus",
-    "commonName": "Oyster Mushroom",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Oyster Mushroom",
     "sciName": "Pleurotus spp.",
     "localNames": [],
     "blurb": "The soft, pale, fan-shaped mushroom stacked in bags at every fresh market — farmed, cheap and reliable.",
@@ -2490,7 +2490,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-shiitake",
     "group": "fungus",
-    "commonName": "Shiitake",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Shiitake",
     "sciName": "Lentinula edodes",
     "localNames": [],
     "blurb": "The dense, meaty brown mushroom of upland farms, sold fresh in the cool north and dried everywhere else.",
@@ -2510,7 +2510,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-phlebopus",
     "group": "fungus",
-    "commonName": "Thai Bolete",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Thai Bolete",
     "sciName": "Phlebopus portentosus",
     "localNames": [],
     "blurb": "A large black-brown bolete that northern Thailand has managed to cultivate — unusual, since most boletes refuse to be farmed.",
@@ -2530,7 +2530,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-lingzhi",
     "group": "fungus",
-    "commonName": "Lingzhi (Reishi)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Lingzhi (Reishi)",
     "sciName": "Ganoderma lingzhi",
     "localNames": [],
     "blurb": "The hard, glossy, fan-shaped bracket sold whole or sliced at herbal-medicine stalls and in tourist markets.",
@@ -2550,7 +2550,7 @@ export const NATURE = [
   {
     "id": "nat-fungus-ophiocordyceps",
     "group": "fungus",
-    "commonName": "Zombie-Ant Fungus",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Zombie-Ant Fungus",
     "sciName": "Ophiocordyceps unilateralis",
     "localNames": [],
     "blurb": "Not food and not a danger — one of the strangest things you can spot on a rainforest walk: a fungus that takes over an ant's behaviour before killing it.",
@@ -2570,7 +2570,7 @@ export const NATURE = [
   {
     "id": "nat-plant-bodhi",
     "group": "plant",
-    "commonName": "Sacred Fig (Bodhi Tree)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sacred Fig (Bodhi Tree)",
     "sciName": "Ficus religiosa",
     "localNames": [],
     "blurb": "The tree the Buddha is said to have been sitting under when he reached enlightenment, and for that reason planted in the grounds of almost every temple in the region.",
@@ -2590,7 +2590,7 @@ export const NATURE = [
   {
     "id": "nat-plant-sugar-palm",
     "group": "plant",
-    "commonName": "Sugar Palm",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sugar Palm",
     "sciName": "Borassus flabellifer",
     "localNames": [],
     "blurb": "Cambodia's national tree, and the shape that defines the Cambodian countryside — a lone straight trunk standing above flat green paddy.",
@@ -2610,7 +2610,7 @@ export const NATURE = [
   {
     "id": "nat-plant-jasmine",
     "group": "plant",
-    "commonName": "Arabian Jasmine",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Arabian Jasmine",
     "sciName": "Jasminum sambac",
     "localNames": [],
     "blurb": "The small white flower in the garlands sold at temple gates and traffic lights, and in Thailand the symbol of motherhood.",
@@ -2630,7 +2630,7 @@ export const NATURE = [
   {
     "id": "nat-plant-marigold",
     "group": "plant",
-    "commonName": "Marigold",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Marigold",
     "sciName": "Tagetes erecta",
     "localNames": [],
     "blurb": "The dense orange pompom flower heaped in baskets outside every temple and shrine as an offering.",
@@ -2650,7 +2650,7 @@ export const NATURE = [
   {
     "id": "nat-plant-areca",
     "group": "plant",
-    "commonName": "Areca (Betel Nut) Palm",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Areca (Betel Nut) Palm",
     "sciName": "Areca catechu",
     "localNames": [],
     "blurb": "The slender palm whose nut, wrapped in a betel leaf with lime, is the region's oldest stimulant — and the reason for the deep red stains on pavements and older people's teeth.",
@@ -2670,7 +2670,7 @@ export const NATURE = [
   {
     "id": "nat-plant-betel-pepper",
     "group": "plant",
-    "commonName": "Betel Pepper",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Betel Pepper",
     "sciName": "Piper betle",
     "localNames": [],
     "blurb": "The heart-shaped leaf that the areca nut is wrapped in — a climbing pepper vine, and nothing to do with the nut itself.",
@@ -2690,7 +2690,7 @@ export const NATURE = [
   {
     "id": "nat-plant-golden-shower",
     "group": "plant",
-    "commonName": "Golden Shower Tree",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Golden Shower Tree",
     "sciName": "Cassia fistula",
     "localNames": [],
     "blurb": "Thailand's national tree and national flower, and one of the great sights of the hot season — bare branches hung with cascades of yellow.",
@@ -2710,7 +2710,7 @@ export const NATURE = [
   {
     "id": "nat-plant-flame-tree",
     "group": "plant",
-    "commonName": "Flame Tree (Royal Poinciana)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Flame Tree (Royal Poinciana)",
     "sciName": "Delonix regia",
     "localNames": [],
     "blurb": "The tree that turns whole streets scarlet at the start of the rains — in Vietnam, so bound up with the end of the school year that it has its own songs.",
@@ -2730,7 +2730,7 @@ export const NATURE = [
   {
     "id": "nat-plant-rain-tree",
     "group": "plant",
-    "commonName": "Rain Tree",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Rain Tree",
     "sciName": "Samanea saman",
     "localNames": [],
     "blurb": "The enormous low-domed shade tree that whole markets, bus stops and temple courtyards are built underneath.",
@@ -2750,7 +2750,7 @@ export const NATURE = [
   {
     "id": "nat-plant-bougainvillea",
     "group": "plant",
-    "commonName": "Bougainvillea",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Bougainvillea",
     "sciName": "Bougainvillea spectabilis",
     "localNames": [],
     "blurb": "The blaze of magenta over guesthouse walls and hotel gates — and the colour is not from petals at all.",
@@ -2770,7 +2770,7 @@ export const NATURE = [
   {
     "id": "nat-plant-hibiscus",
     "group": "plant",
-    "commonName": "Chinese Hibiscus",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Chinese Hibiscus",
     "sciName": "Hibiscus rosa-sinensis",
     "localNames": [],
     "blurb": "The big trumpet flower on hedges everywhere, with a long tongue of stamens sticking out of the middle.",
@@ -2790,7 +2790,7 @@ export const NATURE = [
   {
     "id": "nat-plant-tetrameles",
     "group": "plant",
-    "commonName": "Thitpok",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Thitpok",
     "sciName": "Tetrameles nudiflora",
     "localNames": [],
     "blurb": "The huge pale-trunked tree that grows out of the ruins at Ta Prohm — the one in every photograph of the temple.",
@@ -2810,7 +2810,7 @@ export const NATURE = [
   {
     "id": "nat-plant-kapok",
     "group": "plant",
-    "commonName": "Kapok (Silk-Cotton Tree)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Kapok (Silk-Cotton Tree)",
     "sciName": "Ceiba pentandra",
     "localNames": [],
     "blurb": "A giant with a spiny trunk whose pods burst into clouds of silky fluff that once stuffed every mattress and life jacket in the region.",
@@ -2830,7 +2830,7 @@ export const NATURE = [
   {
     "id": "nat-plant-strangler-fig",
     "group": "plant",
-    "commonName": "Strangler Fig",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Strangler Fig",
     "sciName": "Ficus spp.",
     "localNames": [],
     "blurb": "Not a species but a strategy — a fig that starts life in the crown of another tree and lets gravity do the rest, ending as a hollow lattice around a host that has rotted away.",
@@ -2850,7 +2850,7 @@ export const NATURE = [
   {
     "id": "nat-plant-yang-na",
     "group": "plant",
-    "commonName": "Yang Na",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Yang Na",
     "sciName": "Dipterocarpus alatus",
     "localNames": [],
     "blurb": "One of the towering dipterocarps that form the roof of the region's forests, with winged seeds that spin down like little helicopters.",
@@ -2870,7 +2870,7 @@ export const NATURE = [
   {
     "id": "nat-plant-sea-almond",
     "group": "plant",
-    "commonName": "Sea Almond",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sea Almond",
     "sciName": "Terminalia catappa",
     "localNames": [],
     "blurb": "The layered, pagoda-shaped shade tree on nearly every beach in the region — the one whose big leaves turn red before they fall.",
@@ -2890,7 +2890,7 @@ export const NATURE = [
   {
     "id": "nat-plant-casuarina",
     "group": "plant",
-    "commonName": "Beach Sheoak",
+    "cc": ["th", "vi", "kh"], "commonName": "Beach Sheoak",
     "sciName": "Casuarina equisetifolia",
     "localNames": [],
     "blurb": "The wispy, pine-looking tree in long windbreak rows behind the sand — not a pine at all.",
@@ -2910,7 +2910,7 @@ export const NATURE = [
   {
     "id": "nat-plant-nipa",
     "group": "plant",
-    "commonName": "Nipa Palm",
+    "cc": ["th", "vi", "kh"], "commonName": "Nipa Palm",
     "sciName": "Nypa fruticans",
     "localNames": [],
     "blurb": "The trunkless palm that lines the creeks of the Mekong Delta, arching straight out of the mud — and thatches half the roofs you will see.",
@@ -2930,7 +2930,7 @@ export const NATURE = [
   {
     "id": "nat-plant-water-lily",
     "group": "plant",
-    "commonName": "Water Lily",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Water Lily",
     "sciName": "Nymphaea spp.",
     "localNames": [],
     "blurb": "Constantly confused with the lotus, and the difference is easy once you know it: water lilies float, lotuses stand up.",
@@ -2950,7 +2950,7 @@ export const NATURE = [
   {
     "id": "nat-plant-taro",
     "group": "plant",
-    "commonName": "Taro (Elephant Ear)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Taro (Elephant Ear)",
     "sciName": "Colocasia esculenta",
     "localNames": [],
     "blurb": "The huge arrow-shaped leaves crowding every ditch and wet margin, grown for the starchy corm beneath.",
@@ -2970,7 +2970,7 @@ export const NATURE = [
   {
     "id": "nat-plant-oil-palm",
     "group": "plant",
-    "commonName": "Oil Palm",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Oil Palm",
     "sciName": "Elaeis guineensis",
     "localNames": [],
     "blurb": "The squat, shaggy palm in endless rows across southern Thailand — the source of the palm oil in almost everything.",
@@ -2990,7 +2990,7 @@ export const NATURE = [
   {
     "id": "nat-plant-pandan",
     "group": "plant",
-    "commonName": "Pandan",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Pandan",
     "sciName": "Pandanus amaryllifolius",
     "localNames": [],
     "blurb": "The long strap leaf tied in a knot and dropped into rice or coconut desserts — the green flavour and colour behind a lot of the region's sweets.",
@@ -3010,7 +3010,7 @@ export const NATURE = [
   {
     "id": "nat-plant-rattan",
     "group": "plant",
-    "commonName": "Rattan",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Rattan",
     "sciName": "Calamus spp.",
     "localNames": [],
     "blurb": "The climbing palm behind every woven chair, basket and mat in the region — and the reason some jungle trails snag your clothing constantly.",
@@ -3030,7 +3030,7 @@ export const NATURE = [
   {
     "id": "nat-plant-mimosa",
     "group": "plant",
-    "commonName": "Sensitive Plant",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sensitive Plant",
     "sciName": "Mimosa pudica",
     "localNames": [],
     "blurb": "The weed that folds its leaves shut the instant you touch it — a guaranteed hit with children, and growing on almost every verge.",
@@ -3050,7 +3050,7 @@ export const NATURE = [
   {
     "id": "nat-plant-stinging-tree",
     "group": "plant",
-    "commonName": "Stinging Tree",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Stinging Tree",
     "sciName": "Dendrocnide spp.",
     "localNames": [],
     "blurb": "A relative of the nettle scaled up to a tree, with a sting far beyond anything a European nettle can manage — pain that can recur for weeks.",
@@ -3070,7 +3070,7 @@ export const NATURE = [
   {
     "id": "nat-plant-yellow-oleander",
     "group": "plant",
-    "commonName": "Yellow Oleander",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Yellow Oleander",
     "sciName": "Cascabela thevetia",
     "localNames": [],
     "blurb": "A pretty yellow-flowered hedge shrub with some of the most dangerous seeds of any plant in the region — a handful of kernels can stop a heart.",
@@ -3090,7 +3090,7 @@ export const NATURE = [
   {
     "id": "nat-plant-jatropha",
     "group": "plant",
-    "commonName": "Physic Nut",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Physic Nut",
     "sciName": "Jatropha curcas",
     "localNames": [],
     "blurb": "A very common living-fence shrub whose seeds look and taste pleasantly nutty — which is precisely why children are poisoned by them.",
@@ -3110,7 +3110,7 @@ export const NATURE = [
   {
     "id": "nat-plant-castor",
     "group": "plant",
-    "commonName": "Castor Bean",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Castor Bean",
     "sciName": "Ricinus communis",
     "localNames": [],
     "blurb": "A fast, weedy, handsome plant with mottled seeds that contain one of the most toxic natural substances known.",
@@ -3130,7 +3130,7 @@ export const NATURE = [
   {
     "id": "nat-plant-brugmansia",
     "group": "plant",
-    "commonName": "Angel's Trumpet",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Angel's Trumpet",
     "sciName": "Brugmansia spp.",
     "localNames": [],
     "blurb": "A spectacular ornamental with huge hanging trumpet flowers, and a plant occasionally brewed deliberately as a drug — with disastrous results.",
@@ -3150,7 +3150,7 @@ export const NATURE = [
   {
     "id": "nat-plant-rengas",
     "group": "plant",
-    "commonName": "Rengas Tree",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Rengas Tree",
     "sciName": "Gluta spp.",
     "localNames": [],
     "blurb": "A forest tree in the same family as poison ivy and the mango, whose black sap causes a severe, slow-blistering burn that people often do not connect to a tree they brushed past.",
@@ -3170,7 +3170,7 @@ export const NATURE = [
   {
     "id": "nat-plant-cashew",
     "group": "plant",
-    "commonName": "Cashew",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Cashew",
     "sciName": "Anacardium occidentale",
     "localNames": [],
     "blurb": "The source of the nut you are eating on the bus, growing in an arrangement no one expects — the nut hangs outside the fruit.",
@@ -3190,7 +3190,7 @@ export const NATURE = [
   {
     "id": "nat-insect-aedes-aegypti",
     "group": "insect",
-    "commonName": "Dengue Mosquito",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Dengue Mosquito",
     "sciName": "Aedes aegypti",
     "localNames": [],
     "blurb": "The most medically important animal in the region, and it bites in the daytime — which is why a bed net alone is not enough protection here.",
@@ -3210,7 +3210,7 @@ export const NATURE = [
   {
     "id": "nat-insect-anopheles",
     "group": "insect",
-    "commonName": "Malaria Mosquito",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Malaria Mosquito",
     "sciName": "Anopheles spp.",
     "localNames": [],
     "blurb": "The night-biting mosquito behind malaria. Risk is now low in most places a traveller goes here, and concentrated in forested border areas.",
@@ -3230,7 +3230,7 @@ export const NATURE = [
   {
     "id": "nat-insect-asian-giant-hornet",
     "group": "insect",
-    "commonName": "Asian Giant Hornet",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Giant Hornet",
     "sciName": "Vespa mandarinia / V. soror",
     "localNames": [],
     "blurb": "The largest hornets in the world, and genuinely dangerous in numbers rather than as single insects.",
@@ -3250,7 +3250,7 @@ export const NATURE = [
   {
     "id": "nat-insect-giant-honey-bee",
     "group": "insect",
-    "commonName": "Giant Honey Bee",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Giant Honey Bee",
     "sciName": "Apis dorsata",
     "localNames": [],
     "blurb": "Builds a single huge open comb hanging from a branch, cliff or building — and defends it in the thousands.",
@@ -3270,7 +3270,7 @@ export const NATURE = [
   {
     "id": "nat-insect-tiger-leech",
     "group": "insect",
-    "commonName": "Tiger Leech",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Tiger Leech",
     "sciName": "Haemadipsa picta",
     "localNames": [],
     "blurb": "The land leech that finds trekkers in wet forest — harmless, alarming, and best removed properly rather than pulled.",
@@ -3290,7 +3290,7 @@ export const NATURE = [
   {
     "id": "nat-insect-tropical-fire-ant",
     "group": "insect",
-    "commonName": "Tropical Fire Ant",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Tropical Fire Ant",
     "sciName": "Solenopsis geminata",
     "localNames": [],
     "blurb": "A small reddish ant that swarms up a leg the instant you stand on its nest, then all sting at once.",
@@ -3310,7 +3310,7 @@ export const NATURE = [
   {
     "id": "nat-insect-giant-water-bug",
     "group": "insect",
-    "commonName": "Giant Water Bug",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Giant Water Bug",
     "sciName": "Lethocerus indicus",
     "localNames": [],
     "blurb": "A huge flat brown bug that turns up under streetlights — and is sold at markets as one of the region's most prized flavours.",
@@ -3330,7 +3330,7 @@ export const NATURE = [
   {
     "id": "nat-insect-thai-tarantula",
     "group": "insect",
-    "commonName": "Thai Zebra Tarantula",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Thai Zebra Tarantula",
     "sciName": "Cyriopagopus albostriatus",
     "localNames": [],
     "blurb": "The tarantula behind Cambodia's fried spiders — a ground-burrowing species, not a web-builder.",
@@ -3350,7 +3350,7 @@ export const NATURE = [
   {
     "id": "nat-insect-golden-orb-weaver",
     "group": "insect",
-    "commonName": "Golden Orb-weaver",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Golden Orb-weaver",
     "sciName": "Trichonephila spp.",
     "localNames": [],
     "blurb": "The big yellow-and-black spider sitting in an enormous, faintly golden web across a forest path.",
@@ -3370,7 +3370,7 @@ export const NATURE = [
   {
     "id": "nat-insect-lantern-bug",
     "group": "insect",
-    "commonName": "Lantern Bug",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Lantern Bug",
     "sciName": "Pyrops spp.",
     "localNames": [],
     "blurb": "One of the most beautiful insects in the region — a planthopper with a long upturned snout, sitting head-down on a tree trunk.",
@@ -3390,7 +3390,7 @@ export const NATURE = [
   {
     "id": "nat-insect-mound-termite",
     "group": "insect",
-    "commonName": "Mound-building Termite",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Mound-building Termite",
     "sciName": "Macrotermes spp.",
     "localNames": [],
     "blurb": "The builders of the hard earth towers you see in every dry forest — and the farmers of the region's most prized mushroom.",
@@ -3410,7 +3410,7 @@ export const NATURE = [
   {
     "id": "nat-insect-blister-beetle",
     "group": "insect",
-    "commonName": "Blister Beetle",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Blister Beetle",
     "sciName": "Mylabris / Epicauta spp.",
     "localNames": [],
     "blurb": "A pretty beetle that leaves a chemical burn if you brush it off your skin instead of blowing it away.",
@@ -3430,7 +3430,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-indochinese-spitting-cobra",
     "group": "reptile",
-    "commonName": "Indochinese Spitting Cobra",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Indochinese Spitting Cobra",
     "sciName": "Naja siamensis",
     "localNames": [],
     "blurb": "The one cobra here that attacks your eyes from a distance rather than needing to reach you.",
@@ -3450,7 +3450,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-russells-viper",
     "group": "reptile",
-    "commonName": "Russell's Viper",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Russell's Viper",
     "sciName": "Daboia siamensis",
     "localNames": [],
     "blurb": "One of the most medically serious snakes in Asia — heavy-bodied, well camouflaged in farmland, and it does not move away.",
@@ -3470,7 +3470,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-wolf-snake",
     "group": "reptile",
-    "commonName": "Common Wolf Snake",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Wolf Snake",
     "sciName": "Lycodon spp.",
     "localNames": [],
     "blurb": "A completely harmless snake that looks so much like a deadly krait that it is the reason you must never rely on banding alone.",
@@ -3490,7 +3490,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-burmese-python",
     "group": "reptile",
-    "commonName": "Burmese Python",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Burmese Python",
     "sciName": "Python bivittatus",
     "localNames": [],
     "blurb": "A giant, placid constrictor that turns up in city canals and temple grounds as often as in forest.",
@@ -3510,7 +3510,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-golden-tree-snake",
     "group": "reptile",
-    "commonName": "Golden Tree Snake",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Golden Tree Snake",
     "sciName": "Chrysopelea ornata",
     "localNames": [],
     "blurb": "The flying snake — it flattens its body and glides between trees, and it lives happily in city gardens.",
@@ -3530,7 +3530,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-siamese-crocodile",
     "group": "reptile",
-    "commonName": "Siamese Crocodile",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Siamese Crocodile",
     "sciName": "Crocodylus siamensis",
     "localNames": [],
     "blurb": "Critically endangered and effectively gone from the wild across most of its range — but very much present in farms and a few protected wetlands.",
@@ -3550,7 +3550,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-saltwater-crocodile",
     "group": "reptile",
-    "commonName": "Saltwater Crocodile",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Saltwater Crocodile",
     "sciName": "Crocodylus porosus",
     "localNames": [],
     "blurb": "The largest living reptile. Very rare in this region now, but the one animal here where a mistake is unsurvivable.",
@@ -3570,7 +3570,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-green-sea-turtle",
     "group": "reptile",
-    "commonName": "Green Sea Turtle",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Green Sea Turtle",
     "sciName": "Chelonia mydas",
     "localNames": [],
     "blurb": "The sea turtle you are most likely to snorkel with, grazing on seagrass in the shallows.",
@@ -3590,7 +3590,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-hawksbill-turtle",
     "group": "reptile",
-    "commonName": "Hawksbill Turtle",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Hawksbill Turtle",
     "sciName": "Eretmochelys imbricata",
     "localNames": [],
     "blurb": "The turtle whose beautiful shell nearly finished it — critically endangered, and the reason tortoiseshell souvenirs must never be bought.",
@@ -3610,7 +3610,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-flying-lizard",
     "group": "reptile",
-    "commonName": "Flying Lizard",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Flying Lizard",
     "sciName": "Draco spp.",
     "localNames": [],
     "blurb": "A small lizard that glides between tree trunks on ribbed wings — easy to miss until one launches.",
@@ -3630,7 +3630,7 @@ export const NATURE = [
   {
     "id": "nat-reptile-sun-skink",
     "group": "reptile",
-    "commonName": "Common Sun Skink",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Common Sun Skink",
     "sciName": "Eutropis multifasciata",
     "localNames": [],
     "blurb": "The glossy bronze lizard rustling through leaf litter beside every path — probably the reptile you will see most often.",
@@ -3650,7 +3650,7 @@ export const NATURE = [
   {
     "id": "nat-fish-sea-urchin",
     "group": "fish",
-    "commonName": "Long-spined Sea Urchin",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Long-spined Sea Urchin",
     "sciName": "Diadema setosum",
     "localNames": [],
     "blurb": "The commonest painful injury on a reef holiday, and it is almost always caused by standing up in the wrong place.",
@@ -3670,7 +3670,7 @@ export const NATURE = [
   {
     "id": "nat-fish-fire-coral",
     "group": "fish",
-    "commonName": "Fire Coral",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Fire Coral",
     "sciName": "Millepora spp.",
     "localNames": [],
     "blurb": "Not a coral at all, and it burns on contact — the mustard-coloured growth people grab for balance.",
@@ -3690,7 +3690,7 @@ export const NATURE = [
   {
     "id": "nat-fish-blue-ringed-octopus",
     "group": "fish",
-    "commonName": "Blue-ringed Octopus",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Blue-ringed Octopus",
     "sciName": "Hapalochlaena spp.",
     "localNames": [],
     "blurb": "Tiny, beautiful and one of the most venomous animals in the sea. It is not aggressive; the danger is picking one up.",
@@ -3710,7 +3710,7 @@ export const NATURE = [
   {
     "id": "nat-fish-cone-snail",
     "group": "fish",
-    "commonName": "Cone Snail",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Cone Snail",
     "sciName": "Conus spp.",
     "localNames": [],
     "blurb": "One of the prettiest shells on the beach, and among the few that can kill the person who pockets it.",
@@ -3730,7 +3730,7 @@ export const NATURE = [
   {
     "id": "nat-fish-bluebottle",
     "group": "fish",
-    "commonName": "Bluebottle (Portuguese Man o' War)",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Bluebottle (Portuguese Man o' War)",
     "sciName": "Physalia spp.",
     "localNames": [],
     "blurb": "Not a jellyfish but a colony, and it stings just as hard on the beach as in the water.",
@@ -3750,7 +3750,7 @@ export const NATURE = [
   {
     "id": "nat-fish-crown-of-thorns",
     "group": "fish",
-    "commonName": "Crown-of-Thorns Starfish",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Crown-of-Thorns Starfish",
     "sciName": "Acanthaster planci",
     "localNames": [],
     "blurb": "A big spiny starfish that eats living coral, and injures anyone who stands on one.",
@@ -3770,7 +3770,7 @@ export const NATURE = [
   {
     "id": "nat-fish-yellow-lipped-sea-krait",
     "group": "fish",
-    "commonName": "Yellow-lipped Sea Krait",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Yellow-lipped Sea Krait",
     "sciName": "Laticauda colubrina",
     "localNames": [],
     "blurb": "Highly venomous, remarkably docile, and often seen coming ashore — which is where people get into trouble with it.",
@@ -3790,7 +3790,7 @@ export const NATURE = [
   {
     "id": "nat-fish-moray-eel",
     "group": "fish",
-    "commonName": "Giant Moray",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Giant Moray",
     "sciName": "Gymnothorax javanicus",
     "localNames": [],
     "blurb": "The face in the hole. Not a threat unless a hand goes in after it — and then a serious wound.",
@@ -3810,7 +3810,7 @@ export const NATURE = [
   {
     "id": "nat-fish-snakehead",
     "group": "fish",
-    "commonName": "Striped Snakehead",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Striped Snakehead",
     "sciName": "Channa striata",
     "localNames": [],
     "blurb": "The dark, blunt-headed fish alive in a shallow tray at every fresh market — it breathes air, so it is sold living.",
@@ -3830,7 +3830,7 @@ export const NATURE = [
   {
     "id": "nat-fish-pangasius",
     "group": "fish",
-    "commonName": "Mekong Catfish (Pangasius)",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Mekong Catfish (Pangasius)",
     "sciName": "Pangasius spp.",
     "localNames": [],
     "blurb": "The silvery river catfish behind most of the region's farmed fish, and the fillets exported worldwide as basa.",
@@ -3850,7 +3850,7 @@ export const NATURE = [
   {
     "id": "nat-fish-mudskipper",
     "group": "fish",
-    "commonName": "Mudskipper",
+    "cc": ["th", "vi", "kh"], "marine": true, "commonName": "Mudskipper",
     "sciName": "Periophthalmodon / Boleophthalmus spp.",
     "localNames": [],
     "blurb": "A fish that walks, climbs and defends a territory on the mud — the best entertainment in any mangrove.",
@@ -3870,7 +3870,7 @@ export const NATURE = [
   {
     "id": "nat-fish-siamese-fighting-fish",
     "group": "fish",
-    "commonName": "Siamese Fighting Fish",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Siamese Fighting Fish",
     "sciName": "Betta splendens",
     "localNames": [],
     "blurb": "Thailand's national aquatic animal — and the wild version looks nothing like the ones in shops.",
@@ -3890,7 +3890,7 @@ export const NATURE = [
   {
     "id": "nat-bird-giant-ibis",
     "group": "bird",
-    "commonName": "Giant Ibis",
+    "cc": ["kh", "la"], "commonName": "Giant Ibis",
     "sciName": "Thaumatibis gigantea",
     "localNames": [],
     "blurb": "Cambodia's national bird, the largest ibis in the world, and critically endangered — perhaps only a few hundred remain.",
@@ -3910,7 +3910,7 @@ export const NATURE = [
   {
     "id": "nat-bird-sarus-crane",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Sarus Crane",
     "sciName": "Antigone antigone",
     "localNames": [],
@@ -3931,7 +3931,7 @@ export const NATURE = [
   {
     "id": "nat-bird-green-peafowl",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Green Peafowl",
     "sciName": "Pavo muticus",
     "localNames": [],
@@ -3952,7 +3952,7 @@ export const NATURE = [
   {
     "id": "nat-bird-asian-openbill",
     "group": "bird",
-    "commonName": "Asian Openbill",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asian Openbill",
     "sciName": "Anastomus oscitans",
     "localNames": [],
     "blurb": "A common stork with a bill that does not close — and it is built that way on purpose.",
@@ -3972,7 +3972,7 @@ export const NATURE = [
   {
     "id": "nat-bird-painted-stork",
     "group": "bird",
-    "commonName": "Painted Stork",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Painted Stork",
     "sciName": "Mycteria leucocephala",
     "localNames": [],
     "blurb": "A big, beautiful stork you can watch easily even in city parks and zoos-turned-wetlands.",
@@ -3992,7 +3992,7 @@ export const NATURE = [
   {
     "id": "nat-bird-brahminy-kite",
     "group": "bird",
-    "commonName": "Brahminy Kite",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Brahminy Kite",
     "sciName": "Haliastur indus",
     "localNames": [],
     "blurb": "The chestnut-and-white raptor circling every harbour, river mouth and fishing pier.",
@@ -4012,7 +4012,7 @@ export const NATURE = [
   {
     "id": "nat-bird-crested-serpent-eagle",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Crested Serpent Eagle",
     "sciName": "Spilornis cheela",
     "localNames": [],
@@ -4033,7 +4033,7 @@ export const NATURE = [
   {
     "id": "nat-bird-germains-swiftlet",
     "group": "bird",
-    "commonName": "Germain's Swiftlet",
+    "cc": ["th", "vi", "kh"], "commonName": "Germain's Swiftlet",
     "sciName": "Aerodramus germani",
     "localNames": [],
     "blurb": "The bird behind bird's-nest soup — and behind the strange windowless concrete towers you will see in delta towns.",
@@ -4053,7 +4053,7 @@ export const NATURE = [
   {
     "id": "nat-bird-black-naped-oriole",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Black-naped Oriole",
     "sciName": "Oriolus chinensis",
     "localNames": [],
@@ -4074,7 +4074,7 @@ export const NATURE = [
   {
     "id": "nat-bird-scarlet-minivet",
     "group": "bird",
-    "commonName": "Scarlet Minivet",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Scarlet Minivet",
     "sciName": "Pericrocotus flammeus",
     "localNames": [],
     "blurb": "Flocks of tiny scarlet and yellow birds working through the canopy together — one of the region's great forest sights.",
@@ -4094,7 +4094,7 @@ export const NATURE = [
   {
     "id": "nat-bird-spotted-owlet",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Spotted Owlet",
     "sciName": "Athene brama",
     "localNames": [],
@@ -4115,7 +4115,7 @@ export const NATURE = [
   {
     "id": "nat-bird-streak-eared-bulbul",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Streak-eared Bulbul",
     "sciName": "Pycnonotus conradi",
     "localNames": [],
@@ -4136,7 +4136,7 @@ export const NATURE = [
   {
     "id": "nat-bird-blue-whistling-thrush",
     "group": "bird",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Blue Whistling Thrush",
     "sciName": "Myophonus caeruleus",
     "localNames": [],
@@ -4157,7 +4157,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-slow-loris",
     "group": "mammal",
-    "commonName": "Sunda Slow Loris",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sunda Slow Loris",
     "sciName": "Nycticebus coucang",
     "localNames": [],
     "blurb": "The wide-eyed nocturnal primate offered for photographs on tourist streets — and every one of those animals is a victim.",
@@ -4177,7 +4177,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-sun-bear",
     "group": "mammal",
-    "commonName": "Sun Bear",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sun Bear",
     "sciName": "Helarctos malayanus",
     "localNames": [],
     "blurb": "The smallest bear in the world, and the one most likely to be encountered on a forest trail here.",
@@ -4197,7 +4197,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-asiatic-black-bear",
     "group": "mammal",
-    "commonName": "Asiatic Black Bear",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Asiatic Black Bear",
     "sciName": "Ursus thibetanus",
     "localNames": [],
     "blurb": "The moon bear — bigger than a sun bear, and the animal behind most serious bear injuries in the region.",
@@ -4217,7 +4217,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-indochinese-tiger",
     "group": "mammal",
-    "commonName": "Indochinese Tiger",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Indochinese Tiger",
     "sciName": "Panthera tigris corbetti",
     "localNames": [],
     "blurb": "Still here, just — a few hundred at most across the whole region, and the odds of seeing one are effectively nil.",
@@ -4237,7 +4237,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-indochinese-leopard",
     "group": "mammal",
-    "commonName": "Indochinese Leopard",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Indochinese Leopard",
     "sciName": "Panthera pardus delacouri",
     "localNames": [],
     "blurb": "Critically reduced and now rarer in this region than the tiger in some places — a genuine ghost of the forest.",
@@ -4257,7 +4257,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-gaur",
     "group": "mammal",
-    "commonName": "Gaur",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Gaur",
     "sciName": "Bos gaurus",
     "localNames": [],
     "blurb": "The largest wild cattle on earth — a bull can top a tonne, and this is one of the more genuinely dangerous animals you might meet on foot.",
@@ -4277,7 +4277,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-dhole",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Dhole",
     "sciName": "Cuon alpinus",
     "localNames": [],
@@ -4298,7 +4298,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-sunda-pangolin",
     "group": "mammal",
-    "commonName": "Sunda Pangolin",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sunda Pangolin",
     "sciName": "Manis javanica",
     "localNames": [],
     "blurb": "The most trafficked wild mammal in the world, and the reason you may see scales for sale in a medicine shop.",
@@ -4318,7 +4318,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-red-shanked-douc",
     "group": "mammal",
-    "commonName": "Red-shanked Douc Langur",
+    "cc": ["vi", "la"], "commonName": "Red-shanked Douc Langur",
     "sciName": "Pygathrix nemaeus",
     "localNames": [],
     "blurb": "Arguably the most spectacularly coloured primate in Asia, and Vietnam's flagship monkey.",
@@ -4338,7 +4338,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-saola",
     "group": "mammal",
-    "commonName": "Saola",
+    "cc": ["vi", "la"], "commonName": "Saola",
     "sciName": "Pseudoryx nghetinhensis",
     "localNames": [],
     "blurb": "The 'Asian unicorn' — found only in the Annamite mountains, never seen alive by a scientist in the wild, and possibly already gone.",
@@ -4358,7 +4358,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-smooth-coated-otter",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Smooth-coated Otter",
     "sciName": "Lutrogale perspicillata",
     "localNames": [],
@@ -4379,7 +4379,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-malayan-porcupine",
     "group": "mammal",
-    "commonName": "Malayan Porcupine",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Malayan Porcupine",
     "sciName": "Hystrix brachyura",
     "localNames": [],
     "blurb": "A big nocturnal rodent that announces itself by rattling — you will find dropped quills on trails long before you see one.",
@@ -4399,7 +4399,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-colugo",
     "group": "mammal",
-    "commonName": "Sunda Colugo",
+    "cc": ["th", "vi", "kh", "la"], "commonName": "Sunda Colugo",
     "sciName": "Galeopterus variegatus",
     "localNames": [],
     "blurb": "The 'flying lemur' — neither flying nor a lemur, but the most capable gliding mammal there is.",
@@ -4419,7 +4419,7 @@ export const NATURE = [
   {
     "id": "nat-mammal-black-giant-squirrel",
     "group": "mammal",
-    "call": true,
+    "cc": ["th", "vi", "kh", "la"], "call": true,
     "commonName": "Black Giant Squirrel",
     "sciName": "Ratufa bicolor",
     "localNames": [],
@@ -4439,14 +4439,33 @@ export const NATURE = [
   }
 ];
 
+// `cc` is the list of the app's countries a record actually occurs in. Most of these species
+// range across the whole Indochinese region, so most carry all four — the field earns its
+// keep on the two sets that do NOT:
+//   * everything that needs salt water or a tidal shore has no 'la'. Laos is landlocked, so a
+//     traveller in Vientiane was being shown box jellyfish, reef stonefish and sea kraits.
+//   * a dozen genuinely range-restricted species (saola, giant ibis, the Fansipan endemics,
+//     the dusky leaf monkey) that were appearing in three countries they do not live in.
+// Each value came from that record's own `where` prose, not from a country name mentioned
+// anywhere in the record — a citation or a language name is not a range.
 export function allSpecies(filter = {}) {
   let out = NATURE.slice();
   if (filter.group) out = out.filter((s) => s.group === filter.group || (filter.group === 'danger' && s.dangerous));
+  // An untagged record is treated as region-wide rather than filtered out: a missing range is
+  // missing information, and hiding a king cobra from a traveller is the worse error.
+  if (filter.cc) out = out.filter((s) => !s.cc || s.cc.includes(filter.cc));
   if (filter.q) {
     const q = filter.q.toLowerCase();
     out = out.filter((s) => [s.commonName, s.sciName, (s.localNames || []).join(' '), s.blurb]
       .join(' ').toLowerCase().includes(q));
   }
   return out;
+}
+// How many records the region has that the given country does not — the number the country
+// picker shows so switching country is an informed choice rather than a guess.
+export function speciesCountryCounts() {
+  const by = {};
+  ['th', 'vi', 'kh', 'la'].forEach((cc) => { by[cc] = NATURE.filter((s) => !s.cc || s.cc.includes(cc)).length; });
+  return { total: NATURE.length, by };
 }
 export function getSpecies(id) { return NATURE.find((s) => s.id === id) || null; }

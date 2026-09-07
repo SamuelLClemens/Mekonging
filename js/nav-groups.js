@@ -54,7 +54,7 @@ export const NAV_GROUPS = [
     intro: 'Convert, budget, and what things should cost',
     items: [
       { ic: '💱', label: 'Currency converter', hash: '#currency', blurb: 'Live rates, works offline', live: 'rate' },
-      { ic: '💰', label: 'Budget', hash: '#expenses', blurb: 'Log what you spend against a target', live: 'budget' },
+      { ic: '💰', label: 'Budget', hash: '#expenses', mine: true, own: 'budget', blurb: 'Log what you spend against a target', live: 'budget' },
       { ic: '🏷️', label: 'Fair prices', hash: '#prices-{cc}', blurb: 'What locals pay, so you are not overcharged' },
       { ic: '🤝', label: 'Bargain helper', hash: '#bargain', blurb: 'What to offer, and how to say it', hidePost: true },
       { ic: '💵', label: 'Cash swap', hash: '#swap', blurb: 'Swap currency with travellers going the other way', hidePost: true },
@@ -71,10 +71,11 @@ export const NAV_GROUPS = [
     items: [
       { ic: '🍜', label: 'Identify food', hash: '#food-{cc}', blurb: 'Dishes and what is in them' },
       { ic: '🍈', label: 'Market produce', hash: '#produce', blurb: 'Fruit, veg and herbs on the stall' },
+      { ic: '🧂', label: 'Market products', hash: '#pantry', blurb: 'The sauces, rices, pastes and spices everyone else recognises' },
       { ic: '🌿', label: 'Identify nature', hash: '#nature', blurb: 'Birds, fish, plants and insects' },
       { ic: '🔊', label: 'Sounds around you', hash: '#sounds', blurb: 'Match a call you can hear' },
       { ic: '⚠️', label: 'Dangerous', hash: '#danger', blurb: 'What to avoid, and first aid if it bites' },
-      { ic: '🔍', label: 'My identifier', hash: '#identified', blurb: 'Everything you have identified so far', live: 'identified' },
+      { ic: '🔍', label: 'My identifier', hash: '#identified', mine: true, own: 'identifier', blurb: 'Everything you have identified so far', live: 'identified' },
     ],
   },
   {
@@ -86,12 +87,12 @@ export const NAV_GROUPS = [
     intro: 'Where you are going, when, and how you get there',
     items: [
       { section: 'Your trip', ic: '🧭', label: 'Trip plans', hash: '#plans', blurb: 'Ready-made routes matched to how you travel', hidePost: true },
-      { section: 'Your trip', ic: '🧳', label: 'My trip', hash: '#trip', blurb: 'Your stops, dates and nights' },
+      { section: 'Your trip', ic: '🧳', label: 'My trip', hash: '#trip', mine: true, own: 'trip', blurb: 'Your stops, dates and nights' },
       { section: 'Your trip', ic: '👣', label: 'Plan your next stop', hash: '#nextstop', blurb: 'Where to go from here, and how long it takes', hidePost: true },
       { section: 'Your trip', ic: '✅', label: 'Pre-trip checklist', hash: '#checklist', blurb: 'Jabs, papers, packing', planningOnly: true },
       { section: 'Your trip', ic: '🎯', label: 'For you', hash: '#foryou', blurb: 'Tune what the app recommends', hidePost: true },
       { section: 'When to go', ic: '🌤', label: 'Weather', hash: '#weather-{cc}', blurb: 'Forecast, rain and heat by city', live: 'weather' },
-      { section: 'When to go', ic: '📅', label: 'Travel calendar', hash: '#calendar', blurb: 'Your dates, bookings and reminders', live: 'calendar' },
+      { section: 'When to go', ic: '📅', label: 'Travel calendar', hash: '#calendar', mine: true, own: 'calendar', blurb: 'Your dates, bookings and reminders', live: 'calendar' },
       { section: 'When to go', ic: '🎉', label: 'Festivals', hash: '#events-{cc}', blurb: 'Holidays worth planning around — or avoiding' },
     ],
   },
@@ -160,14 +161,14 @@ export const NAV_GROUPS = [
     blurb: 'Your journal, photos and saves',
     intro: 'Everything you have written, saved and made',
     items: [
-      { ic: '📔', label: 'Journal', hash: '#journal', blurb: 'Dated entries, photos and places', live: 'journal' },
-      { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook', blurb: 'Your trip as one page to keep' },
-      { ic: '🗺', label: 'Your journey', hash: '#journey', mine: true, blurb: 'Everywhere you have been, on a map' },
+      { ic: '📔', label: 'Journal', hash: '#journal', mine: true, own: 'journal', blurb: 'Dated entries, photos and places', live: 'journal' },
+      { ic: '📸', label: 'Trip scrapbook', hash: '#scrapbook', mine: true, own: 'scrapbook', blurb: 'Your trip as one page to keep' },
+      { ic: '🗺', label: 'Your journey', hash: '#journey', mine: true, own: 'journey', blurb: 'Everywhere you have been, on a map' },
       { ic: '📤', label: 'Share my journey', hash: '#sharejourney', blurb: 'One file or link, you choose what is in it' },
-      { ic: '⭐', label: 'Saved places', hash: '#saved', blurb: 'Your stars and collections', live: 'saved' },
-      { ic: '💬', label: 'Your dictionary', hash: '#dictionary', mine: true, blurb: 'Phrases you saved and words you added', live: 'phrases' },
-      { ic: '🏅', label: 'Your contributions', hash: '#contributions', mine: true, blurb: 'Reviews, pins and corrections you added', live: 'contributions' },
-      { ic: '🔒', label: 'Documents', hash: '#vault', blurb: 'Passport and papers, locked on this device' },
+      { ic: '⭐', label: 'Saved places', hash: '#saved', mine: true, own: 'saved places', blurb: 'Your stars and collections', live: 'saved' },
+      { ic: '💬', label: 'Your dictionary', hash: '#dictionary', mine: true, own: 'dictionary', blurb: 'Phrases you saved and words you added', live: 'phrases' },
+      { ic: '🏅', label: 'Your contributions', hash: '#contributions', mine: true, own: 'contributions', blurb: 'Reviews, pins and corrections you added', live: 'contributions' },
+      { ic: '🔒', label: 'Documents', hash: '#vault', mine: true, own: 'documents', blurb: 'Passport and papers, locked on this device' },
     ],
   },
   {
@@ -238,9 +239,16 @@ export function visibleGroups(phase) {
 // and every surface agrees because they all render from this one manifest. Items opt in with
 // `mine: true`; anything else is returned unchanged. Kept pure: the name arrives as an
 // argument, so this file still imports nothing and can be read from anywhere without a cycle.
+// `own` carries the possessive NOUN explicitly rather than deriving it from the label, because
+// deriving it needs grammar the manifest does not have: "Journal" → "Sam’s Journal" keeps a
+// capital that reads wrong mid-phrase, "My trip" and "Your dictionary" need different prefixes
+// stripped, and "Trip scrapbook" wants to become "scrapbook" rather than "Trip scrapbook".
+// The fallback still strips a leading Your/My so an item tagged `mine` without an `own` degrades
+// to something sensible instead of to nothing.
 export function itemLabel(item, who) {
   if (!item || !item.mine || !who) return item ? item.label : '';
-  return `${who}’s ${String(item.label).replace(/^Your\s+/i, '')}`;
+  const noun = item.own || String(item.label).replace(/^(?:Your|My)\s+/i, '').toLowerCase();
+  return `${who}’s ${noun}`;
 }
 
 export function navItems() {

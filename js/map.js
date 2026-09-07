@@ -168,6 +168,30 @@ function graticule(step = 30) {
   return { type: 'FeatureCollection', features };
 }
 
+// How far out any in-app map may zoom: far enough to see all four countries the app covers at
+// once, and no further.
+//   Thailand  5.6–20.5°N,  97.3–105.7°E
+//   Vietnam   8.2–23.4°N, 102.1–109.5°E   (mainland; the offshore island claims are ignored,
+//                                          they would drag the box 8° east for nothing)
+//   Cambodia 10.4–14.7°N, 102.3–107.6°E
+//   Laos     13.9–22.5°N, 100.1–107.7°E
+// So the four countries together span 97.3–109.5°E and 5.6–23.4°N.
+//
+// The box below is deliberately LARGER than that span, and the reason is worth stating because
+// the obvious tight box is wrong. MapLibre's maxBounds clamps zoom so the viewport stays
+// *inside* the box, and a viewport has an aspect ratio the box does not: on a phone the map is
+// about 343x320, so when the box's longitude fills the width, its latitude is cropped to
+// roughly width/height of the span. Fitting the box exactly to the four countries therefore
+// stopped the zoom at 7–22.3°N — southern Thailand and the top of Vietnam were unreachable at
+// maximum zoom-out, which is precisely what this was supposed to fix. The extra ~3° of
+// longitude buys the latitude back; the margin is sea, Myanmar and southern China, so panning
+// is still confined to the region rather than the planet.
+//
+// WHEN A COUNTRY IS ADDED TO THE APP, EXTEND THIS BOX — it is the single place that decides
+// how far out every map can go, and a new country outside it would be unreachable on the map
+// even though its data had loaded. Re-check the fit on a 375px screen after changing it.
+export const REGION_BOUNDS = [[92.0, 2.0], [115.0, 27.5]];   // [[west, south], [east, north]]
+
 function pointsFC(points) {
   return {
     type: 'FeatureCollection',
@@ -292,6 +316,15 @@ export async function initMap(containerEl, opts = {}) {
     style: basemapStyle(),
     center: [start.lng, start.lat],
     zoom: opts.zoom || 5.4,
+    // Zoom out far enough to see all four countries at once, and no further (direct request).
+    // maxBounds does BOTH halves of that on its own: MapLibre clamps the centre to the box and
+    // clamps zoom so the viewport never shows more than the box, which is why there is no
+    // matching minZoom here — a fixed one would be wrong on every container size but the one
+    // it was measured on. Pinching out on a phone now stops at the region instead of the
+    // planet, and panning cannot wander into the Pacific.
+    // `opts.worldBounds` opts out; the global visitors map (initVisitMap, below) is a
+    // different question and is deliberately left worldwide.
+    maxBounds: opts.worldBounds ? undefined : REGION_BOUNDS,
     attributionControl: true,
   });
   // Compass enabled so the map can be rotated and reset to north for orientation; a metric

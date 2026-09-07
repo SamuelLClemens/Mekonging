@@ -30,7 +30,7 @@ import * as personal from '../personal.js';
 import * as reminders from '../reminders.js';
 import { dateLocale } from '../i18n.js';
 import {
-  go, mount, topbar, render, focusSpot, setBlobThumb, CAL_ICON, addEventToCalendar,
+  go, mount, topbar, render, focusSpot, setBlobThumb, CAL_ICON, addEventToCalendar, ownTitle,
 } from '../main.js';
 
 export function calendarDispatch(arg) {
@@ -116,7 +116,7 @@ function calendarScreen() {
   // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
   // buttons that lead here, which is where it reads as a nice touch rather than as an
   // overflowing heading.
-  wrap.append(topbar('Calendar', '#me'));
+  wrap.append(topbar(ownTitle('calendar', 'Calendar'), '#me'));
   const L = calLayerState();
   const now = new Date();
   if (!calView) calView = { y: now.getFullYear(), m: now.getMonth() };

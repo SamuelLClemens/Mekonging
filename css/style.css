@@ -413,6 +413,32 @@ html[data-theme="dark"] .topbar .back { background: var(--teal); color: var(--cr
    teal so this underlined link clears AA on cream (6.1:1 vs the 2.6:1 of plain --teal). */
 html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 .rn-wx-link:hover { filter: brightness(1.1); }
+/* --- Every fold carries the arrow (site-wide rule) ---------------------------------
+   Anything expandable or collapsible must show a chevron, so a traveller can see that
+   it opens without tapping to find out. Declared ONCE here on `details > summary`
+   rather than per component: six folds — Log an expense (.now-spend-log), .hidden-reveal,
+   .budget-set, .todo-plan-d, .place-qrow and .fold — had no marker at all, and three
+   more swapped ▾/▴ glyphs while the rest rotated a ⌄, so the same gesture looked like
+   three different controls. Every fold added in future inherits this instead of needing
+   its own rule.
+   `margin-left: auto` pushes the chevron to the trailing edge inside the summaries that
+   are flex containers (most of them) and is inert in the ones that are not, where the
+   chevron simply follows the label.
+   The opt-out is `.no-caret`, plus the two disclosures whose <summary> IS an icon —
+   .info-tip's ⓘ and .screen-hint's ⓘ — where the icon is already the affordance and a
+   second glyph beside it would read as two controls. */
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::after {
+  content: '⌄'; display: inline-block; flex: none; font-size: 1.05em; line-height: 1;
+  color: var(--ink-soft); margin-left: auto; padding-left: var(--sp-2);
+  transition: transform var(--dur) var(--ease);
+}
+details[open] > summary::after { transform: rotate(180deg); }
+details.info-tip > summary::after,
+details.screen-hint > summary::after,
+details.no-caret > summary::after { content: none; padding-left: 0; }
+
 .filters-collapse { margin: 4px 0 10px; }
 .filters-collapse > summary {
   cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: var(--sp-2);
@@ -420,9 +446,10 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r-pill);
   padding: var(--sp-2) var(--sp-4); user-select: none;
 }
-.filters-collapse > summary::-webkit-details-marker { display: none; }
-.filters-collapse > summary::after { content: '▾'; color: var(--ink-soft); font-size: var(--fs-label); }
-.filters-collapse[open] > summary::after { content: '▴'; }
+/* Chevron and its rotation come from the shared `details > summary` rule above; this only
+   trims it to the pill's smaller type. The pill is inline-flex and sized to its content,
+   so the shared `margin-left: auto` must not stretch it — hence the explicit margin. */
+.filters-collapse > summary::after { font-size: var(--fs-label); margin-left: 0; }
 .filters-collapse > summary:hover { filter: brightness(0.98); }
 .filters-collapse > div { margin-top: var(--sp-2); }
 
@@ -441,9 +468,8 @@ html[data-theme="dark"] .rn-wx-link { color: var(--teal); }
 /* Places for you — collapsible category sections + city drill-down */
 .place-cat-group { border: 1px solid var(--line); border-left: 4px solid var(--cat, var(--ink-soft)); border-radius: var(--r-lg); margin: var(--sp-2) 0; overflow: hidden; }
 .place-cat-summary { cursor: pointer; list-style: none; user-select: none; font-weight: 800; color: var(--ink); background: var(--card); padding: var(--sp-4); display: flex; align-items: center; justify-content: space-between; }
-.place-cat-summary::-webkit-details-marker { display: none; }
-.place-cat-summary::after { content: '▾'; color: var(--ink-soft); font-size: var(--fs-sm); margin-left: var(--sp-2); }
-.place-cat-group[open] > .place-cat-summary::after { content: '▴'; }
+/* Chevron and rotation inherited from the shared `details > summary` rule. */
+.place-cat-summary::after { font-size: var(--fs-sm); }
 .place-cat-summary:hover { filter: brightness(0.98); }
 .place-cat-body { padding: var(--sp-2) var(--sp-2) var(--sp-4); }
 .closest-card { border-left-color: #0F9D8C; }
@@ -924,8 +950,12 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    Budget section. It was most of that section's height for an action taken a few times a day
    rather than on every launch. The summary is styled as a full-width control so it reads as
    the button it replaces. */
-.now-spend-log > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 44px; margin-top: var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); color: var(--ink); font-weight: 600; }
-.now-spend-log > summary::-webkit-details-marker { display: none; }
+/* Reads as a full-width control, so it takes the conventional disclosure arrow at its right
+   edge (direct request) while the label stays optically centred — hence the absolutely
+   positioned chevron rather than the shared rule's `margin-left: auto`, which would drag
+   the label off centre. */
+.now-spend-log > summary { position: relative; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 44px; margin-top: var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); color: var(--ink); font-weight: 600; }
+.now-spend-log > summary::after { position: absolute; right: var(--sp-3); margin-left: 0; padding-left: 0; }
 .now-spend-log[open] > summary { margin-bottom: var(--sp-2); }
 .now-spend-log .exp-add-card { margin: 0; }
 
@@ -984,9 +1014,8 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
    fold (.place-cat-group etc.), reused here under its own name for clarity in this section. */
 .place-cat-group, .phrase-cat-group { border: 1px solid var(--line); border-left: 4px solid var(--cat, var(--ink-soft)); border-radius: var(--r-lg); margin: var(--sp-2) 0; overflow: hidden; }
 .place-cat-summary, .phrase-cat-summary { cursor: pointer; list-style: none; user-select: none; font-weight: 800; color: var(--ink); background: var(--card); padding: var(--sp-4); display: flex; align-items: center; justify-content: space-between; }
-.place-cat-summary::-webkit-details-marker, .phrase-cat-summary::-webkit-details-marker { display: none; }
-.place-cat-summary::after, .phrase-cat-summary::after { content: '▾'; color: var(--ink-soft); font-size: var(--fs-sm); margin-left: var(--sp-2); }
-.place-cat-group[open] > .place-cat-summary::after, .phrase-cat-group[open] > .phrase-cat-summary::after { content: '▴'; }
+/* Chevron and rotation inherited from the shared `details > summary` rule. */
+.place-cat-summary::after, .phrase-cat-summary::after { font-size: var(--fs-sm); }
 .place-cat-summary:hover, .phrase-cat-summary:hover { filter: brightness(0.98); }
 .place-cat-body, .phrase-cat-body { padding: var(--sp-2) var(--sp-2) var(--sp-4); }
 /* Talk T3: jump-chip row above the phrase list; the Emergency chip gets a coral accent so it
@@ -1125,7 +1154,11 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .spark-bar span { display: block; width: 100%; min-height: 2px; }
 /* Modernised expense form + log row */
 .exp-add-card .field { margin-top: var(--sp-3); }
-.exp-title-chips { margin: 2px 0 var(--sp-2); }
+/* "On what?" — the remembered-titles dropdown stacked over the free-text field, as one
+   field. Replaces .exp-title-chips, a row of one-tap buttons that grew a new control for
+   every repeated expense; see expTitlePicker in js/budget-ui.js. */
+.exp-title-pick { display: flex; flex-direction: column; gap: var(--sp-2); }
+.exp-title-pick select, .exp-title-pick input { width: 100%; }
 /* Compact variant: same fields, same labels, same placeholder text — only the vertical
    rhythm tightens (card padding, field-to-field gaps, label-to-input gap). Used on Home's
    "Budget" fold, where this same shared card sits inside an already-scrolling stack of
@@ -1134,9 +1167,8 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 .exp-add-compact h2 { margin: 0 0 var(--sp-1); }
 .exp-add-compact .field { margin-top: var(--sp-2); margin-bottom: var(--sp-2); }
 .exp-add-compact .field label { margin-bottom: 2px; }
-.exp-add-compact .exp-title-chips { margin: 2px 0 var(--sp-1); }
+.exp-add-compact .exp-title-pick { gap: var(--sp-1); }
 .exp-add-compact .btn.block { margin-top: var(--sp-2); }
-.exp-title-chips .chip { font-size: var(--fs-xs); padding-top: 4px; padding-bottom: 4px; }
 .exp-row {
   display: flex; align-items: center; gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-2); border-radius: var(--r-lg);
@@ -1227,10 +1259,9 @@ html[data-theme="dark"] .mk-city.label { color: #fff; text-shadow: 0 0 3px #000,
 .todo-tier { display: flex; align-items: baseline; gap: 6px; font-size: var(--fs-h3); margin: 14px 0 6px; }
 /* "Plan ahead" — a quiet disclosure so it never competes with the picks by default. */
 .todo-plan-d { margin-top: 10px; }
-.todo-plan-d > summary { cursor: pointer; font-size: var(--fs-sm); color: var(--ink-soft); list-style: none; padding: 4px 0; }
-.todo-plan-d > summary::-webkit-details-marker { display: none; }
-.todo-plan-d > summary::before { content: '▸ '; }
-.todo-plan-d[open] > summary::before { content: '▾ '; }
+/* Leading ▸/▾ replaced by the shared trailing chevron (see `details > summary`); flex so
+   the chevron lands at the trailing edge rather than immediately after the label. */
+.todo-plan-d > summary { cursor: pointer; font-size: var(--fs-sm); color: var(--ink-soft); list-style: none; padding: 4px 0; display: flex; align-items: center; }
 .todo-plan { margin-top: 6px; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .place-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
@@ -1385,9 +1416,30 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
    lead the card instead of the controls for the picks. The summary carries the applied state
    ("Everything", or "Culture, Nature · Budget") so a folded-away active filter is still
    visible — a hidden filter would be worse than the chip wall this replaced. */
+/* The filter control reads as a button, not a caption. It was a borderless text row that
+   travellers had no reason to think was tappable; it is now a bordered pill with a 44px
+   target, one-word label, and the applied filters shown as a value beside it. `.is-on` takes
+   the accent so an active filter is visible while the panel is collapsed. */
 .rn-filter-fold { margin: 0 0 var(--sp-2); }
-.rn-filter-fold > summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); cursor: pointer; font-size: var(--fs-sm); color: var(--muted); padding: var(--sp-1) 0; min-height: 32px; }
-.rn-filter-fold > summary .rn-filter-state { font-size: var(--fs-label); opacity: 0.85; text-align: right; }
+.rn-filter-fold > summary {
+  display: flex; align-items: center; gap: var(--sp-2); cursor: pointer;
+  font-size: var(--fs-sm); color: var(--ink); font-weight: 700;
+  padding: var(--sp-2) var(--sp-3); min-height: 44px;
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card);
+}
+.rn-filter-fold > summary:hover { background: color-mix(in srgb, var(--teal) 8%, var(--card)); }
+.rn-filter-lbl { flex: 0 0 auto; }
+/* The value sits at the trailing edge but before the chevron, and truncates rather than
+   wrapping the pill to two lines when several categories are on. */
+.rn-filter-fold > summary .rn-filter-state {
+  flex: 1 1 auto; min-width: 0; margin-left: auto; text-align: right;
+  font-size: var(--fs-label); font-weight: 600; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rn-filter-fold.is-on > summary { border-color: var(--teal-deep); background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
+.rn-filter-fold.is-on > summary .rn-filter-state { color: var(--teal-deep); font-weight: 800; }
+html[data-theme="dark"] .rn-filter-fold.is-on > summary { border-color: var(--teal); }
+html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color: var(--teal); }
 .rn-filter-fold[open] > summary { margin-bottom: var(--sp-2); }
 /* Categories, price tier, the fit warning and the why-now reason share ONE wrapping row per
    pick now, instead of two stacked rows — five picks, five fewer rows of height. */
@@ -1749,11 +1801,22 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 /* Shared amount/currency <-> amount/currency control (fxConverterControl): two compact stacked
    boxes either side of a round "=" button that doubles as swap, used by both the standalone
    Currency screen and the Budget fold. */
-.fx-row { display: flex; align-items: center; gap: var(--sp-2); }
-.fx-side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.fx-side input, .fx-side select { width: 100%; font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
-.fx-side .fx-out { font-weight: 800; color: var(--teal-deep); }
-html[data-theme="dark"] .fx-side .fx-out { color: var(--teal); }
+/* Amount and its currency on ONE line, the two lines stacked from → to with the swap control
+   between them. See fxConverterControl in js/main.js for why this replaced the side-by-side
+   columns. The currency select is sized to its flag+symbol content and the number takes the
+   rest, so the figure — the thing actually being read — gets the width. */
+.fx-line { display: flex; align-items: center; gap: var(--sp-2); }
+.fx-line input { flex: 1 1 auto; min-width: 0; }
+.fx-line select { flex: 0 0 auto; width: auto; }
+.fx-line input, .fx-line select { font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
+.fx-line .fx-out { font-weight: 800; color: var(--teal-deep); }
+html[data-theme="dark"] .fx-line .fx-out { color: var(--teal); }
+/* The hairline runs the full width with the button sitting on it, so the two rows read as one
+   control with a direction rather than as two unrelated fields. */
+.fx-swap-row { display: flex; justify-content: center; align-items: center; margin: var(--sp-2) 0; position: relative; }
+.fx-swap-row::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--line); }
+.fx-swap-row .fx-eq { position: relative; }
+.fx-rate { margin: var(--sp-3) 0 0; font-weight: 700; font-size: var(--fs-sm); color: var(--ink); text-align: center; font-variant-numeric: tabular-nums; }
 .fx-eq { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-weight: 800; font-size: 1.1rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
 .fx-eq:hover { background: var(--sun); border-color: transparent; }
 
@@ -1783,10 +1846,9 @@ html[data-theme="dark"] .fx-side .fx-out { color: var(--teal); }
 .btn.toggle-on { background: var(--teal); color: #fff; border-color: var(--teal); }
 
 /* map key (legend): pins + every line, grouped and swatched */
-.map-key summary { font-weight: 800; cursor: pointer; color: var(--teal-deep); list-style: none; }
-.map-key summary::-webkit-details-marker { display: none; }
-.map-key summary::before { content: "▸ "; color: var(--orange); }
-.map-key[open] summary::before { content: "▾ "; }
+/* Leading ▸/▾ replaced by the shared trailing chevron (see `details > summary`). */
+.map-key summary { font-weight: 800; cursor: pointer; color: var(--teal-deep); list-style: none; display: flex; align-items: center; }
+.map-key summary::after { color: var(--orange); }
 html[data-theme="dark"] .map-key summary { color: var(--teal); }
 .key-subhead { font-weight: 800; color: var(--orange); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 5px; }
 .key-grid { display: flex; flex-wrap: wrap; gap: 7px 18px; }
@@ -2459,8 +2521,24 @@ html[data-theme="dark"] .id-edit-panel { background: rgba(255,255,255,0.06); }
 .wx-viz .wx-metric-row { margin: 2px 0 8px; justify-content: center; }
 /* The metric picker is now one labelled <select> ("Colour by") instead of six chips that
    wrapped to two rows above the ring. Laid out as a single centred row. */
-.wx-metric-lbl { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--muted); }
-.wx-metric-lbl select { flex: 0 1 auto; min-width: 0; }
+/* Segmented metric picker (weather-ui.js). One row, six equal segments, hairline dividers
+   instead of six separate borders so it reads as one control. The pressed segment takes the
+   card's own accent rather than a tint, because at this size a tint is not readable as
+   "selected" on the darker skins. */
+.wx-metric-seg { display: flex; width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--card); }
+.wx-seg {
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 1px; padding: var(--sp-2) 2px; min-height: 44px;
+  border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--ink-soft);
+  font-family: inherit; cursor: pointer; transition: background var(--dur) var(--ease);
+}
+.wx-seg:first-child { border-left: 0; }
+.wx-seg-ic { font-size: 1rem; line-height: 1; }
+.wx-seg-lbl { font-size: var(--fs-label); font-weight: 600; line-height: 1; white-space: nowrap; }
+.wx-seg:hover { background: color-mix(in srgb, var(--teal) 8%, transparent); }
+.wx-seg[aria-pressed="true"] { background: var(--teal-deep); color: #fff; }
+.wx-seg[aria-pressed="true"] .wx-seg-lbl { font-weight: 800; }
+html[data-theme="dark"] .wx-seg[aria-pressed="true"] { background: var(--teal); color: #0B1B1F; }
 /* "Upcoming forecast" folded closed by default — it is the tallest block in the card and a
    look-ahead, so the card opens on the next 24 hours instead. */
 .wx-cal-fold > summary { cursor: pointer; margin: var(--sp-3) 0 var(--sp-2); font-weight: 700; }
@@ -2758,7 +2836,7 @@ html[dir="rtl"] .tabbar button { direction: rtl; }
    theme's own --ink-soft and stays legible on all seven skins with nothing to re-export.
 
    On !important: this app styles selects PER CONTEXT (.field select, .talk-top-row select,
-   .fx-side select, .plan-picker select, .rn-filter-row select …) and every one of those sets
+   .fx-line select, .plan-picker select, .rn-filter-row select …) and every one of those sets
    `background:` as a shorthand, which resets background-image to none. A chevron declared on
    a bare `select` selector therefore loses to all of them no matter where it sits in the
    file. Forcing only the arrow properties is what lets one rule reach every select in the
@@ -2883,3 +2961,41 @@ body.jr-map-is-full .tabbar { display: none; }
    section on that screen. Sized as a section label rather than a card title — it names a strip
    of chips, not a body of content. */
 .you-chips-head { margin: 0 0 var(--sp-2); font-size: var(--fs-sm); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* --- Identify: the country scope control -----------------------------------------
+   One compact control on every identify screen (nature, produce, sounds, dangerous) so the
+   scope reads the same on all of them, rather than four flag chips plus an "All" above every
+   list — the same pass that collapsed the weather metrics and the expense categories. */
+.id-country-pick { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-2) 0; }
+.id-country-pick > span { flex: 0 0 auto; font-size: var(--fs-sm); color: var(--ink-soft); font-weight: 600; }
+.id-country-pick select { flex: 1 1 auto; min-width: 0; font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); min-height: 44px; }
+.id-country-count { margin: 0 0 var(--sp-2); }
+
+/* --- Places: the ONE category picker -----------------------------------------------
+   Replaces .layer-chip, a button per category (up to nine, wrapping to three rows above the
+   map, permanently). Reads as a single control that names what is showing; opens a checkbox
+   list so "one, several or all" is unambiguous. Same pass as the Right-now filter. */
+.layer-pick { margin: var(--sp-2) 0; }
+.layer-pick > summary {
+  display: flex; align-items: center; gap: var(--sp-2); cursor: pointer;
+  min-height: 44px; padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card);
+  font-size: var(--fs-sm); font-weight: 700; color: var(--ink);
+}
+.layer-pick > summary:hover { background: color-mix(in srgb, var(--teal) 8%, var(--card)); }
+.layer-pick-lbl { flex: 0 0 auto; }
+.layer-pick-state {
+  flex: 1 1 auto; min-width: 0; margin-left: auto; text-align: right;
+  font-size: var(--fs-label); font-weight: 600; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.layer-pick.is-on > summary { border-color: var(--teal-deep); background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
+.layer-pick.is-on > summary .layer-pick-state { color: var(--teal-deep); font-weight: 800; }
+html[data-theme="dark"] .layer-pick.is-on > summary { border-color: var(--teal); }
+html[data-theme="dark"] .layer-pick.is-on > summary .layer-pick-state { color: var(--teal); }
+/* Two columns at phone width: nine categories in one column is a long scroll inside a
+   control that exists to save vertical space. */
+.layer-pick-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px var(--sp-3); margin-top: var(--sp-2); }
+.layer-pick-row { display: flex; align-items: center; gap: var(--sp-2); min-height: 40px; font-size: var(--fs-sm); cursor: pointer; }
+.layer-pick-row input { flex: none; width: 18px; height: 18px; accent-color: var(--teal-deep); }
+.layer-pick-all { grid-column: 1 / -1; margin: 0 0 var(--sp-1); min-height: 40px; }

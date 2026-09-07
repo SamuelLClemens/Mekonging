@@ -43,7 +43,7 @@ import { dateLocale } from '../i18n.js';
 import { isRouteNode, directLeg } from '../journey.js';
 import {
   go, mount, topbar, render, focusSpot, chipIcon, setBlobThumb, nearestSpotGlobal, homeFold,
-  entryPhotoKeys, ensureRouteGraph,
+  entryPhotoKeys, ensureRouteGraph, ownTitle,
 } from '../main.js';
 
 export function journalDispatch(arg) {
@@ -68,7 +68,7 @@ function journalCover() {
   // mk-v0.510.0). The traveller's name still appears throughout the screen body and on the
   // buttons that lead here, which is where it reads as a nice touch rather than as an
   // overflowing heading.
-  wrap.append(topbar('Journal', '#me'));
+  wrap.append(topbar(ownTitle('journal', 'Journal'), '#me'));
   const n = journalEntries().length;
   const book = h('button', { class: 'book closed', 'aria-label': 'Open journal', onclick: () => go('#journal-open') }, [
     h('div', { class: 'book-spine' }),
@@ -238,7 +238,7 @@ export function scrapbookScreen() {
   // 'Scrapbook' alone: measured clipped at 375px, where the title column is 102px and clamps
   // to two lines. The nav manifest keeps the full 'Trip scrapbook', which is where a
   // traveller reads it before tapping.
-  wrap.append(topbar('Scrapbook', '#me'));
+  wrap.append(topbar(ownTitle('scrapbook', 'Scrapbook'), '#me'));
 
   const entries = (store.journal.entries || []).slice()
     .sort((a, b) => String(a.ts || a.date || '').localeCompare(String(b.ts || b.date || '')));
@@ -750,7 +750,7 @@ let addingStop = false;
 export function journeyScreen() {
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
-  wrap.append(topbar('Journey', '#me'));
+  wrap.append(topbar(ownTitle('journey', 'Journey'), '#me'));
 
   const stops = journeyStops();
   const st = trailStats();
