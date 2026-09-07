@@ -47,8 +47,8 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        223,
-        120
+        207,
+        112
     ],
     "js/place-ui.js": [
         8,
@@ -77,6 +77,10 @@ CEILING = {
     "js/screens/contributions.js": [
         3,
         1
+    ],
+    "js/screens/country-info.js": [
+        16,
+        8
     ],
     "js/screens/export.js": [
         6,
