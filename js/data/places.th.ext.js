@@ -5792,4 +5792,53 @@ export const PLACES_TH_EXT = [
     verified: "2026-09",
     sources: [{ org: "UNESCO World Heritage Centre", url: "https://whc.unesco.org/en/list/1761/" }, { org: "Wat Phra Mahathat World Heritage — official history", url: "https://www.phramahathatworldheritage.org/index.php/en/history" }],
   },
+  // ---- LAMPANG PROVINCE — first entry for this province, found by the point-in-polygon
+  // coverage sweep this session (see the Kamphaeng Phet entry earlier in this file for the
+  // method).
+  {
+    id: "th-ext-wat-phra-that-lampang-luang", name: "Wat Phra That Lampang Luang", city: "Lampang", country: "th",
+    recognition: "A walled Lanna temple compound on a low raised mound outside Lampang town, its weathered teak viharns and gilded chedi ringed by a laterite wall and gate towers unlike any temple in Chiang Mai.",
+    localName: 'วัดพระธาตุลำปางหลวง · Wat Phra That Lampang Luang',
+    categories: ["culture", "temple"], budgetTier: "low",
+    blurb: "One of the best-preserved Lanna-era temple compounds in northern Thailand, with wooden viharns dating from as early as the 15th century that survived largely intact where similar structures elsewhere were rebuilt or lost. Local tradition traces worship on the site back much further, to the Hariphunchai kingdom.",
+    whyItFits: "For travellers who want an authentic, still-in-use Lanna temple without Chiang Mai's crowds — this is 15 minutes outside a quieter provincial capital rather than inside a tourist city.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Free to enter; donations toward the temple's upkeep are customary." },
+    hours: "Daily 07:30-17:00",
+    tips: ["Combine with Lampang town itself, one of the few places in Thailand where horse-drawn carriages are still a working form of local transport, not just a tourist ride.", "Dress as for any active Thai temple: shoulders and knees covered.", "The wooden viharns are original structures, not reconstructions — move carefully and follow any roped-off areas."],
+    scamWarnings: [],
+    mapQuery: "Wat Phra That Lampang Luang", coords: { lat: 18.2172, lng: 99.3889 },
+    verified: "2026-09",
+    sources: [{ org: "Wikipedia — Wat Phra That Lampang Luang", url: "https://en.wikipedia.org/wiki/Wat_Phra_That_Lampang_Luang" }, { org: "Renown Travel — Wat Phra That Lampang Luang", url: "https://www.renown-travel.com/temples/wat-phra-that-lampang-luang.html" }],
+  },
+  // ---- PHITSANULOK PROVINCE — first entry for this province, same method.
+  {
+    id: "th-ext-wat-phra-si-rattana-mahathat-phitsanulok", name: "Wat Phra Si Rattana Mahathat (Wat Yai)", city: "Phitsanulok", country: "th",
+    recognition: "A riverside royal temple on the east bank of the Nan River by Naresuan Bridge, opposite the Phitsanulok provincial hall, its single tall prang rising above a mother-of-pearl-inlaid viharn.",
+    localName: 'วัดพระศรีรัตนมหาธาตุ (วัดใหญ่) · Wat Phra Si Rattana Mahathat (Wat Yai)',
+    categories: ["culture", "temple"], budgetTier: "low",
+    blurb: "Home to Phra Buddha Chinnarat, widely considered the most beautiful Buddha image in Thailand after the Emerald Buddha itself. Founded in 1357 by King Lithai of Sukhothai and gilded during the Ayutthaya period, the temple remains a major, still-active pilgrimage site rather than a museum piece.",
+    whyItFits: "For travellers who want to see one specific, genuinely revered image rather than a broad temple-hopping itinerary — this is a single, focused stop that Thai pilgrims travel across the country for.",
+    priceRange: { low: 0, typical: 0, high: 40, currency: "THB", note: "The temple itself is free to enter with customary donations; the separate on-site Buddha Chinnarat National Museum charges a modest entry fee and keeps its own hours." },
+    hours: "Temple daily 06:30-18:00; the on-site museum Wednesday-Sunday 09:00-16:00",
+    tips: ["Go early or late in the day to see the image without the tour-group crush around midday.", "The mother-of-pearl-inlaid doors of the main viharn are as worth seeing as the Buddha image itself.", "Dress as for any active Thai temple: shoulders and knees covered."],
+    scamWarnings: [],
+    mapQuery: "Wat Phra Si Rattana Mahathat Phitsanulok", coords: { lat: 16.8236, lng: 100.2625 },
+    verified: "2026-09",
+    sources: [{ org: "Wikipedia — Wat Phra Si Rattana Mahathat", url: "https://en.wikipedia.org/wiki/Wat_Phra_Si_Rattana_Mahathat" }, { org: "Renown Travel — Wat Phra Si Rattana Mahathat", url: "https://www.renown-travel.com/temples/wat-phra-si-rattana-mahathat.html" }],
+  },
+  // ---- SONGKHLA PROVINCE — first entry for this province, same method.
+  {
+    id: "th-ext-songkhla-old-town", name: "Songkhla Old Town", city: "Songkhla", country: "th",
+    recognition: "A walkable grid of two- and three-storey Sino-Portuguese shophouses along Nakhon Nok and Nakhon Nai roads in Songkhla town, their peach, ochre and yellow facades now mixed with cafes, boutique hotels and large street-art murals.",
+    categories: ["culture", "history"], budgetTier: "low",
+    blurb: "A well-preserved trading-port old town on the southern peninsula between the Gulf of Thailand and Songkhla Lake, built up over centuries as a regional hub, with Sino-Portuguese shophouse architecture close in style to Phuket Old Town or Georgetown but with a fraction of the visitors. The Songkhla National Museum, itself housed in a Sino-Portuguese building, covers the town's trading history in more depth.",
+    whyItFits: "For travellers heading through the deep south (commonly via Hat Yai) who want a genuine, walkable heritage district without committing to a longer trip to Phuket's old town.",
+    priceRange: { low: 0, typical: 0, high: 30, currency: "THB", note: "The old town streets are free to walk; the Songkhla National Museum charges a modest entrance fee." },
+    hours: "Streets always open; shops and cafes generally 09:00-18:00, later at weekends",
+    tips: ["Walk Nakhon Nok and Nakhon Nai roads at a slow pace — the street-art murals reward looking closely at building-scale.", "Songkhla is a short ride from Hat Yai, the region's main transport hub, not a standalone destination to fly into directly.", "Pair with the Songkhla National Museum for the history behind the architecture, not just the facades."],
+    scamWarnings: [],
+    mapQuery: "Songkhla Old Town", coords: { lat: 7.2061, lng: 100.5967 },
+    verified: "2026-09",
+    sources: [{ org: "Lonely Planet — Songkhla Old Town", url: "https://www.lonelyplanet.com/points-of-interest/songkhla-old-town/1622117" }, { org: "Trip.com — Songkhla Old Town", url: "https://us.trip.com/moments/detail/songkhla-649-132161444/" }],
+  },
 ];
