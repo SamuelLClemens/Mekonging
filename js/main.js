@@ -666,7 +666,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.532.0';
+export const APP_VERSION = 'mk-v0.533.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1989,6 +1989,15 @@ function homeRightNowCard(ctx) {
   const tipEl = h('p', { class: 'muted', style: 'margin:4px 0 8px' }, meta.tip);
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
+  // The filters used to stand permanently open: one chip per category family present
+  // (Culture, History, Nature, Outdoors, Food, Market…) plus "All" plus a price select, which
+  // on a 375px screen wrapped to two or three rows and pushed the actual picks below the
+  // fold. They are now behind ONE row that folds closed and names its own state, so the
+  // default Home shows suggestions rather than the controls for suggestions. Every option is
+  // still there, one tap away, and the summary always says what is currently applied — a
+  // collapsed filter that hid an active filter would be worse than the wall it replaces.
+  // Same site-wide pass as expCatPicker and the weather metric picker.
+  const filterSummary = h('span', { class: 'rn-filter-state' });
   if (famsPresent.length > 1 || tiersPresent.length > 1) {
     const allChip = h('button', { class: 'chip', 'aria-pressed': catSet.size ? 'false' : 'true', onclick: () => { catSet.clear(); refreshChips(); drawPicks(); } }, 'All');
     const famChips = famsPresent.map((f) => h('button', {
@@ -1998,27 +2007,48 @@ function homeRightNowCard(ctx) {
     function refreshChips() {
       allChip.setAttribute('aria-pressed', catSet.size ? 'false' : 'true');
       famChips.forEach((btn, i) => btn.setAttribute('aria-pressed', catSet.has(famsPresent[i].key) ? 'true' : 'false'));
+      // Keep the collapsed summary honest about what is applied, so a traveller who folded
+      // the panel away can still see at a glance why they are being shown these five.
+      const names = famsPresent.filter((f) => catSet.has(f.key)).map((f) => f.label);
+      const price = tierFilter !== 'all' ? PRICE_TIER_LABEL[tierFilter] : null;
+      const parts = [names.length ? names.join(', ') : 'Everything', price].filter(Boolean);
+      filterSummary.textContent = parts.join(' · ');
     }
-    card.append(h('div', { class: 'rn-filter-row' }, [
+    const panel = h('div', { class: 'rn-filter-row' }, [
       h('div', { class: 'chips' }, [allChip, ...famChips]),
       tiersPresent.length > 1 ? selectEl(
         [['all', 'Any price'], ...tiersPresent.map((t) => [t, PRICE_TIER_LABEL[t]])], tierFilter,
-        (v) => { tierFilter = v; drawPicks(); }, 'Filter nearby picks by price',
+        (v) => { tierFilter = v; refreshChips(); drawPicks(); }, 'Filter nearby picks by price',
       ) : null,
+    ]);
+    refreshChips();
+    // data-nofold: mount()'s automatic section folding must not wrap this a second time —
+    // this <details> IS the fold. Its open/closed state is deliberately not persisted: it is
+    // a control panel, not a content section, and it should reopen closed every visit.
+    card.append(h('details', { class: 'rn-filter-fold', 'data-nofold': '' }, [
+      h('summary', {}, [h('span', {}, '⚙ Filter these picks'), filterSummary]),
+      panel,
     ]));
   }
   card.append(tipEl, listWrap, footEl);
   card.append(screenHint('Picks match the time of day, weather and the filters above — tweak them anytime. ✓ done or ✕ skip swaps in a new one.', 'About these picks'));
 
-  // When the picks are seeded from the country default (no GPS, nothing focused yet), keep a
-  // gentle one-tap upgrade to real local picks — the invite is not lost just because we seeded.
-  if (ctx.seeded && typeof navigator !== 'undefined' && navigator.geolocation) {
+  // ONE location upgrade, when the picks are not coming from a real fix — either seeded from
+  // the country default (no GPS, nothing focused) or ranked from an approximate position.
+  //
+  // These used to be two separate blocks appended to the same card: `ctx.seeded` printed "Use
+  // my location for picks where you are" here, and `ctx.approx` printed "Use my exact
+  // location" further down after drawPicks(). The two conditions are not exclusive — in the
+  // ordinary no-GPS state BOTH are true — so the card rendered two full-width buttons, one
+  // above the other, that ran the same refreshLocation() call. Merged into one, worded for
+  // whichever case applies, and it keeps the geoAsked side-effect the seeded branch had.
+  if ((ctx.seeded || ctx.approx) && typeof navigator !== 'undefined' && navigator.geolocation) {
     card.append(h('button', { class: 'btn ghost block rn-geo-upgrade', onclick: async (e) => {
       store.profile.prefs.geoAsked = true; save();
       e.currentTarget.textContent = 'Locating…';
       try { await refreshLocation(); } catch { /* denied/unavailable */ }
       render();
-    } }, '📍 Use my location for picks where you are'));
+    } }, ctx.seeded ? '📍 Use my location for picks where you are' : '📍 Use my exact location'));
   }
 
   function drawPicks() {
@@ -2059,11 +2089,14 @@ function homeRightNowCard(ctx) {
                 h('span', { class: 'rn-name' }, p.name),
                 er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
               ]),
-              h('div', { class: 'row-between', style: 'margin:2px 0' }, [
-                h('div', { class: 'cats' }, cats.slice(0, 3).map((c) => catTag(c))),
+              // Categories, price tier, the profile-fit warning and the why-now reason used to
+              // occupy TWO stacked rows per pick. They are all short tags of the same shape, so
+              // they now share one wrapping row — five picks, five fewer rows of height, with
+              // nothing dropped. Two categories rather than three keeps that row to one line
+              // at 375px once a tier badge and a reason are also in it.
+              h('div', { class: 'rn-tagrow' }, [
+                ...cats.slice(0, 2).map((c) => catTag(c)),
                 (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
-              ]),
-              h('div', { class: 'rn-item-main' }, [
                 (() => { const fit = placeFitReason(p, store.profile.prefs); return fit ? attrTag('⚠️ ' + fit) : null; })(),
                 reason ? attrTag(reason) : null,
               ]),
@@ -2085,13 +2118,9 @@ function homeRightNowCard(ctx) {
     }
   }
   drawPicks();
-  if (ctx.approx && typeof navigator !== 'undefined' && navigator.geolocation) {
-    card.append(h('button', { class: 'btn ghost block rn-geo-upgrade', onclick: async (e) => {
-      e.currentTarget.textContent = 'Locating…';
-      try { await refreshLocation(); } catch { /* denied/unavailable */ }
-      render();
-    } }, '📍 Use my exact location'));
-  }
+  // The `ctx.approx` "📍 Use my exact location" button stood here. It is folded into the single
+  // location-upgrade button above (see there) — both conditions are true at once in the
+  // ordinary no-GPS state, so this rendered a second identical button in the same card.
   const evs = eventsNow(ctx.country, ctx.now);
   if (evs.length) {
     const strip = h('div', { class: 'rn-events' });
@@ -2104,7 +2133,18 @@ function homeRightNowCard(ctx) {
     });
     card.append(strip);
   }
-  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#nearby') }, 'See more near me →'));
+  // ONE way onward, at the foot of the card. This card used to be bracketed by two buttons
+  // that a traveller reads as the same offer: "🧭 Things to do right now →" lifted on top of
+  // it by homeNowCard (phaseNextBest), and "See more near me →" here at the bottom. Both mean
+  // "show me more of this". They are now a single primary action in the place a "more" link
+  // belongs — after the five picks, not before them.
+  //
+  // It leads to Things to do (#today), the richer of the two screens and the one that shares
+  // this card's time-of-day logic. #nearby is not lost: daySuggestScreen carries its own
+  // "What's near me" button (see there), so the distance-sorted list is still one tap from
+  // here — rank-collapse-never-remove.
+  card.append(h('button', { class: 'btn block btn-spaced', onclick: () => go(`#today-${ctx.country}`) },
+    '🧭 More things to do & places near me →'));
   return card;
 }
 
@@ -2287,22 +2327,12 @@ function phaseLead(phase, cc) {
     }, `${x.e} ${x.t}`)));
 }
 
-// One prominent, phase-aware "next best action" for the top of Home. Mirrors the primary
-// action of each phase in phaseLead, so a traveller (especially a fresh one) has a single
-// obvious next step above the collapsed tool decks instead of a wall of equal-weight tiles.
-function phaseNextBest(phase, cc) {
-  const primary = {
-    planning: { e: '🧭', t: 'Plan your trip', h: '#plans' },
-    traveling: { e: '🧭', t: 'Things to do right now', h: `#today-${cc}` },
-    post: { e: '📖', t: 'Build your scrapbook', h: '#scrapbook' },
-  }[phase];
-  if (!primary) return null;
-  // Spacing lives on .home-next-best in the stylesheet. It used to be set twice inline — 8px 0 2px
-  // here and then 10px 0 2px by the only caller a line after inserting it, so the value written
-  // here never once reached the screen and neither value was on the scale.
-  return h('button', { class: 'btn block home-next-best', onclick: () => go(primary.h) },
-    `${primary.e} ${primary.t} →`);
-}
+// phaseNextBest() used to live here: one prominent phase-aware "next best action" lifted to
+// the top of Home's Right-now card. Removed with its only caller — on the ground it duplicated
+// the "See more near me" button at the foot of the same card (both merged into the single
+// "More things to do & places near me" action there), and the planning/post phases reach the
+// same destinations through phaseLead's own primary tile. Nothing referenced it afterwards.
+// The .home-next-best style it used is still applied by that merged button's siblings.
 
 // Best-guess journey stage when the traveller has NOT picked one, so Home opens on a sensible
 // phase instead of an unanswered question. Reads existing signals only — the earliest dated
@@ -2551,7 +2581,10 @@ function planningStageBlock(cc) {
 export function homeStageBlock(phase, cc) {
   if (phase === 'planning') return planningStageBlock(cc);
   if (phase === 'post') return returnRecapCard();
-  return homeNowCard(phase, cc);   // arrived / traveling: live near-me, now forecast-aware
+  // The on-the-ground phase no longer has a single stage block: its two halves are ordered
+  // independently by js/screens/home.js as homeBudgetFold() then homeRightNowFold(), so that
+  // Weather can sit above both and Identify below them.
+  return null;
 }
 
 // A photo-forward "Signature sights" showcase for Home: iconic, highly-rated, photographed
@@ -2689,9 +2722,19 @@ function quickSpendRow(id) {
     // occasion the home and local currencies match, the target falls back to another major
     // rather than showing a currency converted into itself.
     box.append(fxConverterControl(home, home !== cur ? cur : (home === 'USD' ? 'EUR' : 'USD'), { compact: true }));
-    box.append(expenseAddCard({ currency: cur, afterAdd: draw, compact: true }));
+    // "Log an expense" is a whole form — amount, currency, note, category, monthly toggle,
+    // date, submit — and it stood permanently open inside Home's Budget section, which is
+    // most of that section's height for an action taken a few times a day, not on every
+    // launch. Folded CLOSED by default: the traveller taps when they have something to log.
+    // data-nofold because this <details> is already the fold (mount() must not re-wrap it),
+    // and the state is not persisted — it should greet you closed each time.
+    const logDet = h('details', { class: 'now-spend-log', 'data-nofold': '' }, [
+      h('summary', {}, '＋ Log an expense'),
+      expenseAddCard({ currency: cur, afterAdd: draw, compact: true }),
+    ]);
+    box.append(logDet);
     box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
-      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur}${unknownToday ? ' (some unknown)' : ''} · ` : 'Log an expense above. ',
+      spent > 0 ? `Spent today: ${spent.toLocaleString()} ${cur}${unknownToday ? ' (some unknown)' : ''} · ` : '',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
   };
@@ -2757,28 +2800,27 @@ export function homeFold(label, inner, prefKey, { defaultOpen = true, action = n
   return det;
 }
 
-function homeNowCard(phase, cc) {
+// "Right now" and "Budget" used to be returned together, in that order, as one block — which
+// meant home.js could not place anything between them or put Budget first. Home's section
+// order is now Back to / Weather / Budget / Right now / Identify / Where you are (per direct
+// request), so each is its own exported fold and js/screens/home.js appends them in order.
+// homeNowCard() is gone; homeStageBlock no longer covers the on-the-ground phase at all.
+export function homeRightNowFold(phase, cc) {
   const ctx = contextNow();
-  const wrap = h('div', {});
-
   const card = homeRightNowCard(ctx);
-  const head = card.firstChild;                  // .rn-head; the primary action slots in just below it
+  const head = card.firstChild;                  // .rn-head; the checklist nudge slots in just below it
   // The weather ring used to insert itself here (top of this card) — now rendered by home.js
   // as its own standalone foldable, swapped in placement with "Search everything" instead.
-  const nb = phaseNextBest(phase, cc);
-  if (nb) card.insertBefore(nb, head ? head.nextSibling : null);
-  // Planning only: one concise checklist nudge for a DATED trip. The "add your dates" empty
-  // state is intentionally omitted here — the status band already shows "No dates yet".
-  if (phase === 'planning') {
-    const startISO = tripStartISO();
-    if (startISO && daysUntilISO(startISO) > 0) {
-      const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
-      if (todo.length) {
-        card.insertBefore(h('button', { class: 'btn ghost block now-line', onclick: () => go(`#checklist-${cc}`) },
-          `☐ ${todo[0].title} · ${todo.length} left on your checklist →`), nb ? nb.nextSibling : (head ? head.nextSibling : null));
-      }
-    }
-  }
+  // phaseNextBest's "🧭 Things to do right now →" used to be lifted in here too. It read as
+  // the same offer as the "See more near me →" button at the card's foot, so the two merged
+  // into one action at the foot — see the end of homeRightNowCard.
+  //
+  // A `phase === 'planning'` checklist nudge used to be inserted here as well. It was already
+  // unreachable before this split and had never once rendered: homeStageBlock routed the
+  // planning phase to planningStageBlock() and only ever passed 'traveling' down to this
+  // code, so the branch could not run. Planning's checklist nudge is the one that does show,
+  // from tripCountdownCard() inside planningStageBlock. `phase` is still taken as a parameter
+  // because the fold is phase-labelled by its caller and may want it again.
   // Migrate the two old independent fold prefs (from when "Right now" and "Nearby picks" were
   // separate collapsibles) into this merged card's single pref, once — an existing traveller's
   // choice is honoured (open if either was open), never silently reset. See W1.
@@ -2787,9 +2829,11 @@ function homeNowCard(phase, cc) {
     store.profile.prefs.homeRightNowOpen = (store.profile.prefs.rightNowHeadOpen !== false) || (store.profile.prefs.rightNowPicksOpen !== false);
     save();
   }
-  wrap.append(homeFold('🕒 Right now', card, 'homeRightNowOpen'));
-  wrap.append(homeFold('💰 Budget', quickSpendRow(cc), 'homeBudgetOpen'));   // one-tap spend (high-value daily action)
-  return wrap;
+  return homeFold('🕒 Right now', card, 'homeRightNowOpen');
+}
+
+export function homeBudgetFold(cc) {
+  return homeFold('💰 Budget', quickSpendRow(cc), 'homeBudgetOpen');   // one-tap spend (high-value daily action)
 }
 
 // homeScreen() now lives in js/screens/home.js — the Great Split's proof case (OVERHAUL.md
@@ -3033,7 +3077,10 @@ function meHubScreen() {
 // screen, which is what let "Budget" show a percentage in one place and a raw total in
 // another. Anything absent from the table simply shows its blurb. Wrapped in try/catch as a
 // whole: a status line is decoration, and must never be the reason a hub fails to render.
-function liveStatus(id) {
+// Exported: js/screens/home.js's Quick access row reads the same table for its extra live
+// chips (Currency, Saved, Identified, Your words, Shared with you, Travel circle), so a
+// figure can never disagree between Home's chip and the hub row for the same feature.
+export function liveStatus(id) {
   try {
     switch (id) {
       case 'budget': {
@@ -3209,7 +3256,10 @@ export function recentRoutesRow() {
   // when folded away instead of two.
   const clear = h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
     onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear');
-  return homeFold('🕘 Back to', box, 'homeRecentsOpen', { action: clear });
+  // Collapsed by default (direct request). It is the first section on Home, and a shortcut
+  // row is worth having available rather than standing open above today's content every
+  // launch — a traveller who wants it opens it once and the choice persists.
+  return homeFold('🕘 Back to', box, 'homeRecentsOpen', { defaultOpen: false, action: clear });
 }
 
 // Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
@@ -6333,6 +6383,13 @@ function daySuggestScreen(country) {
     // Festivals have their own screen; surface only a single quiet link when any fall in the trip window.
     const fests = festivalsInWindow().filter((e) => e.country === id);
     if (fests.length) listWrap.append(h('button', { class: 'linklike', style: 'display:block;margin:14px 0 0', onclick: () => go('#events') }, `🎉 ${fests.length} festival${fests.length === 1 ? '' : 's'} during your trip →`));
+    // Home's "Right now" card used to end in "See more near me →" straight to #nearby. That
+    // button merged into one onward action pointing here, so this screen now carries the
+    // distance-sorted list itself — the destination moved one tap, it was not removed.
+    // This list is ranked by what suits the time of day and weather; #nearby ranks purely by
+    // distance, which is a different question and worth keeping reachable.
+    listWrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#nearby') },
+      '📍 What’s nearest to me, by distance →'));
   }
 
   let lastRec = getCachedWeather(spotKey(spot));

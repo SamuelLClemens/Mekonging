@@ -11,7 +11,7 @@
 
 import { h } from './util.js';
 import { dateLocale } from './i18n.js';
-import { confirmAction, currencySelect, field } from './ui-widgets.js';
+import { confirmAction, currencySelect, field, selectEl } from './ui-widgets.js';
 import { approxHome, render, todayISO } from './main.js';
 import {
   addBudgetItem, deleteBudgetItem, save, store, todayKey, updateBudgetItem,
@@ -58,48 +58,56 @@ export function removeCustomExpCat(id) {
   save();
 }
 
+// The expense category picker. This used to render one chip per category — every built-in
+// plus every custom one, plus an "＋ Add" chip — which on a phone wrapped to three or four
+// rows inside a card whose whole job is a two-field form. Categories are a single-select, and
+// a single-select of a dozen options is what a <select> is for: one row, every option still
+// reachable, and the native picker is a better touch target than a 60px pill. Part of the
+// site-wide pass replacing walls of individual filter/option buttons with compact controls.
+//
+// The two things a chip row gave that a bare <select> does not — adding a custom category and
+// removing one — are kept as a single trailing action row rather than N inline ✕ buttons:
+// "＋ New" is always offered (up to EXP_CUSTOM_MAX), and "✕ Remove" appears only while a
+// custom category is the one selected, which is exactly when it is meaningful.
 export function expCatPicker(current) {
   let val = expCatsAll().some((c) => c.id === current) ? current : 'other';
   let adding = false;
-  const row = h('div', { class: 'chips exp-cat-pick' });
+  const row = h('div', { class: 'exp-cat-pick' });
   function build() {
     row.replaceChildren();
     const customIds = new Set(customExpCats().map((c) => c.id));
-    expCatsAll().forEach((c) => {
-      if (!customIds.has(c.id)) {
-        row.append(h('button', {
-          type: 'button', class: 'chip' + (c.id === val ? ' on' : ''), 'aria-pressed': c.id === val ? 'true' : 'false',
-          onclick: () => { val = c.id; build(); },
-        }, `${c.emoji} ${c.label}`));
-        return;
-      }
-      // A custom category: the same pill, but split into a select area and a small ✕ that
-      // removes it on the spot (confirmed first — a stray tap while logging an expense must
-      // never silently delete one). Two sibling buttons, never a button nested in a button.
-      row.append(h('span', { class: 'chip exp-cat-chip-custom' + (c.id === val ? ' on' : '') }, [
-        h('button', {
-          type: 'button', class: 'exp-cat-sel', 'aria-pressed': c.id === val ? 'true' : 'false',
-          onclick: () => { val = c.id; build(); },
-        }, `${c.emoji} ${c.label}`),
-        h('button', {
-          type: 'button', class: 'exp-cat-rm', 'aria-label': `Remove category ${c.label}`,
-          onclick: () => {
-            confirmAction({ title: `Remove “${c.label}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true })
-              .then((ok) => { if (ok) { removeCustomExpCat(c.id); if (val === c.id) val = 'other'; build(); } });
-          },
-        }, '✕'),
+    row.append(selectEl(
+      expCatsAll().map((c) => [c.id, `${c.emoji} ${c.label}`]), val,
+      (v) => { val = v; build(); }, 'Category',
+    ));
+    if (adding) {
+      const input = h('input', { type: 'text', class: 'exp-cat-new', placeholder: 'New category name', maxlength: '20', 'aria-label': 'New category name' });
+      const commit = () => { const cat = addCustomExpCat(input.value); adding = false; if (cat) val = cat.id; build(); };
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { adding = false; build(); } });
+      row.append(h('div', { class: 'exp-cat-actions' }, [
+        input,
+        h('button', { type: 'button', class: 'chip', 'aria-label': 'Add this category', onclick: commit }, '✓'),
+        h('button', { type: 'button', class: 'chip ghost', 'aria-label': 'Cancel adding a category', onclick: () => { adding = false; build(); } }, '✕'),
       ]));
-    });
-    if (customExpCats().length < EXP_CUSTOM_MAX) {
-      if (adding) {
-        const input = h('input', { type: 'text', class: 'exp-cat-new', placeholder: 'Category name', maxlength: '20', 'aria-label': 'New category name' });
-        const commit = () => { const cat = addCustomExpCat(input.value); adding = false; if (cat) val = cat.id; build(); };
-        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { adding = false; build(); } });
-        row.append(input, h('button', { type: 'button', class: 'chip', 'aria-label': 'Add this category', onclick: commit }, '✓'));
-        setTimeout(() => input.focus(), 0);
-      } else {
-        row.append(h('button', { type: 'button', class: 'chip ghost', onclick: () => { adding = true; build(); } }, '＋ Add'));
+      setTimeout(() => input.focus(), 0);
+    } else {
+      const actions = [];
+      if (customExpCats().length < EXP_CUSTOM_MAX) {
+        actions.push(h('button', { type: 'button', class: 'chip ghost', onclick: () => { adding = true; build(); } }, '＋ New category'));
       }
+      // Removing is confirmed first — a stray tap while logging an expense must never
+      // silently delete a category the traveller has been filing things under.
+      if (customIds.has(val)) {
+        const c = expCatsAll().find((x) => x.id === val);
+        actions.push(h('button', {
+          type: 'button', class: 'chip ghost', 'aria-label': `Remove category ${c ? c.label : ''}`,
+          onclick: () => {
+            confirmAction({ title: `Remove “${c ? c.label : ''}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true })
+              .then((ok) => { if (ok) { removeCustomExpCat(val); val = 'other'; build(); } });
+          },
+        }, '✕ Remove this one'));
+      }
+      if (actions.length) row.append(h('div', { class: 'exp-cat-actions' }, actions));
     }
   }
   build();

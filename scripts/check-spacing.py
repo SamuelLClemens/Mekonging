@@ -47,8 +47,8 @@ CEILING = {
         4
     ],
     "js/main.js": [
-        206,
-        112
+        205,
+        111
     ],
     "js/place-ui.js": [
         8,
@@ -163,8 +163,8 @@ CEILING = {
         2
     ],
     "js/weather-ui.js": [
-        3,
-        3
+        2,
+        2
     ]
 }
 

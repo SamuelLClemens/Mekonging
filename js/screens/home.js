@@ -44,6 +44,7 @@ import {
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
   recentRoutesRow, identifyRow, homeFold,
+  homeBudgetFold, homeRightNowFold, liveStatus,
 } from '../main.js';
 
 export function homeScreen() {
@@ -138,12 +139,12 @@ export function homeScreen() {
   // Chips, not hub rows: six rows would add ~340px, more height than the consolidation saved.
   // Both of these already come back as their own collapsible (see recentRoutesRow /
   // identifyRow in main.js) — wrapping them again would nest a fold inside a fold.
+  // "Back to" leads the sections, collapsed by default (per direct request): it is the
+  // traveller's own recent four, useful when wanted and not worth a permanent block of
+  // chips at the top of every launch. Identify is NO LONGER here — it moved below Right
+  // now, further down this function, per the requested section order.
   const recents = recentRoutesRow();
   if (recents) wrap.append(recents);
-  if (onGround) {
-    const ident = identifyRow();
-    if (ident) wrap.append(ident);
-  }
 
   // Search everything — while travelling, this leads (moved up from its old spot just before
   // "Plan & tools") and the weather widget moves down to take its place instead, further below —
@@ -159,33 +160,18 @@ export function homeScreen() {
   // Kept as a variable (rather than appended inline) because the planning phase needs to
   // insert Search everything into its middle, below — see that block's comment.
   const stageBlock = homeStageBlock(phase, leadCC);
-  // The traveling block (homeNowCard) already folds its own two sections — "🕒 Right now" and
-  // "💰 Budget" — so it is appended as-is; wrapping it would nest a fold inside a fold. The
-  // planning and post blocks were the ones still rendering as bare cards, outside the folding
-  // system entirely, which is why "Minimise all" appeared to skip part of the screen in those
-  // two phases. They get their own key so neither can fight homeNowCard's.
+  // Planning and post still have a single stage block, and both were rendering as bare cards
+  // outside the folding system entirely — which is why "Minimise all" appeared to skip part of
+  // the screen in those two phases. They get their own key.
+  //
+  // The on-the-ground phase returns null here now: its two halves ("💰 Budget" and "🕒 Right
+  // now") are appended separately below, in the requested order, with Weather above them —
+  // which a single combined block made impossible.
   if (stageBlock) {
     if (phase === 'planning') wrap.append(homeFold('🗓 Your trip', stageBlock, 'homeStageOpen'));
     else if (phase === 'post') wrap.append(homeFold('👋 Welcome back', stageBlock, 'homeStageOpen'));
     else wrap.append(stageBlock);
   }
-
-  // H4 — next-stop card: real transport options between where you are and your next planned
-  // stop. Background-loads all four countries' route data (journey.js's route graph memoises
-  // across all of them on first build, so it must never run before that finishes) and quietly
-  // fills in or omits itself entirely if no bundled route exists — never a dead-end card.
-  if (onGround) {
-    const card = nextStopCard(ctx);
-    // collapsibleCard lifts the card's own <h2> into the summary, so this needs no separate
-    // heading — and it persists under the same prefs mechanism every other fold here uses.
-    if (card) wrap.append(collapsibleCard(card, 'homeNextStopOpen'));
-  }
-
-  // H5 — "Where you are": real, sourced city history and context, collapsed by default. Moved
-  // to directly before the Tools group, below, per direct request ("where you are should be
-  // moved to before the tools") — it used to sit here, with the weather widget and (in
-  // planning) Search everything landing after it and before Tools; now nothing but Tools
-  // itself follows it.
 
   // On the first online visit, pull the relevant city's forecast once (respects offline &
   // consent, de-duplicated) so the outlook and the "right now" forecast line populate.
@@ -219,9 +205,33 @@ export function homeScreen() {
   // main.js — so it is one tap from EVERY screen instead of from a scroll position on this
   // one, and Home is a section shorter.
 
-  // H5 — "Where you are": moved to directly before Tools, per direct request — the last
-  // situational card before the trip-wide chip groups below.
+  // --- The requested on-the-ground section order, from here down ---------------------
+  // Back to · Weather · Budget · Right now · Identify · Where you are · What do you need ·
+  // All features A-Z · Give back. Weather went above (it used to sit below both of these);
+  // Budget and Right now used to arrive together as one block from homeStageBlock, in the
+  // opposite order, which is why they are appended individually now.
   if (onGround) {
+    wrap.append(homeBudgetFold(leadCC));
+    wrap.append(homeRightNowFold(phase, leadCC));
+
+    // Next stop: real transport options between here and the next planned stop. Background-
+    // loads all four countries' route data (journey.js's route graph memoises across all of
+    // them on first build, so it must never run before that finishes) and quietly fills in or
+    // omits itself entirely if no bundled route exists — never a dead-end card. It answers
+    // "what's after this place", so it follows "what's happening here".
+    const card = nextStopCard(ctx);
+    // collapsibleCard lifts the card's own <h2> into the summary, so this needs no separate
+    // heading — and it persists under the same prefs mechanism every other fold here uses.
+    if (card) wrap.append(collapsibleCard(card, 'homeNextStopOpen'));
+
+    // Identify — moved down here from Home's launcher zone at the top, per direct request.
+    // Still inline (not behind a door) while on the ground, since identifying a dish or a
+    // snake is a one-handed action performed standing in front of the thing; it is simply no
+    // longer competing with weather, budget and today's picks for the top of the screen.
+    const ident = identifyRow();
+    if (ident) wrap.append(ident);
+
+    // "Where you are": real, sourced city history and context, collapsed by default.
     const about = whereYouAreCard(leadCC, ctx.near ? ctx.near.spot.city : focus.spot.city);
     if (about) wrap.append(about);
   }
@@ -249,14 +259,19 @@ export function homeScreen() {
   // planningOnly), so a returned traveller still never sees Cash swap or a pre-trip
   // checklist, and a section whose every item is hidden drops out entirely.
   // The doors are the directory, and a traveller who knows their way around the app does not
-  // need the whole directory standing open under today's content every single launch. Folded
-  // like everything else, open by default so nothing changes for anyone who never touches it.
-  const doors = h('div', {}, [
-    groupDoors(onGround ? ['admin', 'identify'] : ['admin']),
-    h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
-      '🗂️ All features, A–Z →'),
-  ]);
-  wrap.append(homeFold('🧰 What do you need?', doors, 'homeDoorsOpen'));
+  // need the whole directory standing open under today's content every single launch. Now
+  // CLOSED by default (direct request) — the point of this pass is that Home fits on a screen
+  // or two, and the door grid is the tallest block on it. Nothing is removed: the section is
+  // one tap from open, and it remembers the choice.
+  wrap.append(homeFold('🧰 What do you need?', groupDoors(onGround ? ['admin', 'identify'] : ['admin']),
+    'homeDoorsOpen', { defaultOpen: false }));
+
+  // "All features, A–Z" is now its own row rather than the last child inside the doors fold.
+  // Folding that section closed by default would otherwise have hidden the app's complete
+  // index behind two taps, and the A-Z list is exactly what someone reaches for when the
+  // doors did not obviously contain what they wanted.
+  wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#everything') },
+    '🗂️ All features, A–Z →'));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
   // Closed by default: it is worth offering and it is not today's business, and standing it
@@ -418,6 +433,28 @@ function quickAccessRow(phase, stored, ctx) {
   chips.push(chip('📔', 'Journal', journalSub, () => go('#journal')));
   // Online/offline used to be a fifth chip here too — moved to the shared topbar() (main.js),
   // next to Saved/Settings/Emergency, so it is reachable from every screen, not just Home.
+
+  // More chips of the same kind, per direct request: a door that already tells you the thing
+  // you were going to open it to find out. Each reads its figure from liveStatus() — the one
+  // shared live-status table hubRow() uses for the same features — rather than recomputing it
+  // here, so a count can never disagree between Home and the hub it links to.
+  //
+  // liveStatus() returns null when there is nothing real to report (no rate cached, nothing
+  // saved yet, no unread), and these are appended ONLY when it returns a value. That is Home's
+  // standing rule and it is what keeps this row from growing into a wall of bare labels:
+  // rank-collapse-never-remove — an empty cell simply does not draw, and every one of these
+  // features is still reachable from its own section door below.
+  [
+    ['💱', 'Currency', 'rate', '#currency'],
+    ['⭐', 'Saved', 'saved', '#saved'],
+    ['🔍', 'Identified', 'identified', '#identified'],
+    ['💬', 'Your words', 'phrases', '#dictionary'],
+    ['📥', 'Shared with you', 'inbox', '#inbox'],
+    ['👥', 'Travel circle', 'circle', '#circle'],
+  ].forEach(([ic, label, key, hash]) => {
+    const live = liveStatus(key);
+    if (live && live.sub) chips.push(chip(ic, label, live.sub, () => go(hash), live.cls));
+  });
 
   // Open by default — it only ever collapses because the traveller closed it themselves
   // (prefs.quickAccessOpen explicitly false); an unset/undefined pref still means "open".
