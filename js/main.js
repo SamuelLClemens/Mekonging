@@ -666,7 +666,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.530.0';
+export const APP_VERSION = 'mk-v0.531.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -6730,6 +6730,13 @@ function speciesScreen(id) {
   if (s.idTips) card.append(h('h3', {}, 'How to identify'), h('p', {}, s.idTips));
   if (s.habitat) card.append(h('h3', {}, 'Habitat'), h('p', {}, s.habitat));
   if (s.where) card.append(h('h3', {}, 'Where you might see it'), h('p', {}, s.where));
+  // A dangerNote on a species that is NOT flagged dangerous is a "worth knowing" caution
+  // rather than a warning — falling coconuts, a bodhi tree you must not cut, raw taro's
+  // oxalate crystals, the straw-mushroom/death-cap confusion. These used to be written and
+  // then silently dropped: the warn-note above renders only when `dangerous` is true, so 15
+  // existing records carried advice the app never showed anyone. Shown here in the calmer
+  // list-note style so a genuine hazard still reads differently from a useful heads-up.
+  if (!s.dangerous && s.dangerNote) card.append(h('h3', {}, 'Worth knowing'), h('div', { class: 'list-note' }, s.dangerNote));
   const sLangs = [['th', '🇹🇭', 'th-TH'], ['vi', '🇻🇳', 'vi-VN'], ['km', '🇰🇭', 'km-KH'], ['lo', '🇱🇦', 'lo-LA']];
   if (s.names && sLangs.some(([k]) => s.names[k])) {
     card.append(h('h3', {}, 'Local names (tap 🔊 to hear)'));
