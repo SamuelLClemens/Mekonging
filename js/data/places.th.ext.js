@@ -5759,4 +5759,37 @@ export const PLACES_TH_EXT = [
     bookHint: "Book park accommodation through DNP well ahead; day trips leave from Khuraburi pier.", verified: "2026-09",
     sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
+  // ---- NAKHON PATHOM PROVINCE — first entry for this province, found by the point-in-polygon
+  // coverage sweep this session (see the Kamphaeng Phet entry above for the method).
+  {
+    id: "th-ext-phra-pathommachedi", name: "Phra Pathommachedi", city: "Nakhon Pathom", country: "th",
+    recognition: "An enormous orange-tiled stupa dominating the skyline of Nakhon Pathom town, its bell-shaped dome rising in tiers above a wide circular terrace and four surrounding viharns, with the town's streets and market wrapped around its base.",
+    localName: 'พระปฐมเจดีย์ · Phra Pathommachedi',
+    categories: ["culture", "temple"], budgetTier: "low",
+    blurb: "The tallest stupa in Thailand and the second-tallest in the world at 120.45 m — a claim some tourism sites overstate as an outright world record; Myanmar's Shwemawdaw Pagoda is roughly 4.5 m taller. Built over the remains of a Dvaravati-period Mon stupa dating to the 6th-8th centuries, re-encased in Sri Lankan style under King Mongkut (Rama IV) and completed under King Chulalongkorn (Rama V) after 17 years of construction.",
+    whyItFits: "An easy day trip or stopover from Bangkok for travellers who want one major Dvaravati-era site without committing to the longer trip to Sukhothai or Kamphaeng Phet.",
+    priceRange: { low: 0, typical: 0, high: 40, currency: "THB", note: "Free to enter the temple grounds and climb the terraces; the small on-site museum charges a modest entry fee and keeps separate hours." },
+    hours: "Temple grounds daily 07:00-20:00; the on-site museum Wednesday-Sunday 09:00-16:30",
+    tips: ["Climb to the circular terrace around the base of the chedi itself, not just the surrounding courtyard.", "Combine with the Sanam Chan Palace or the town's night market, both a short ride away.", "Dress as for any active Thai temple: shoulders and knees covered."],
+    scamWarnings: [],
+    mapQuery: "Phra Pathommachedi Nakhon Pathom", coords: { lat: 13.8197, lng: 100.0603 },
+    verified: "2026-09",
+    sources: [{ org: "Wikipedia — Phra Pathommachedi", url: "https://en.wikipedia.org/wiki/Phra_Pathommachedi" }, { org: "History Hit — Phra Pathom Chedi", url: "https://www.historyhit.com/locations/phra-pathom-chedi/" }],
+  },
+  // ---- NAKHON SI THAMMARAT PROVINCE — first entry for this province, same method.
+  {
+    id: "th-ext-wat-phra-mahathat-nakhon-si-thammarat", name: "Wat Phra Mahathat Woramahawihan", city: "Nakhon Si Thammarat", country: "th",
+    recognition: "A walled temple complex in Nakhon Si Thammarat town centred on a single towering golden-spired chedi, visible above the surrounding vihaans and courtyards from well outside the temple walls.",
+    localName: 'วัดพระมหาธาตุวรมหาวิหาร · Wat Phra Mahathat Woramahawihan',
+    categories: ["culture", "temple", "history"], budgetTier: "low",
+    blurb: "The spiritual centre of Nakhon Si Thammarat since at least the 13th century and, as of July 2026, Thailand's newest UNESCO World Heritage Site — its ninth overall, sixth cultural listing, and the first anywhere in the country's southern region. The central Golden-Spired Phra Borommathat Chedi is said to enshrine a relic of the Buddha, and the complex shows a genuine mix of Brahmanic, Mahayana and Theravada influence built up over thirteen centuries.",
+    whyItFits: "For travellers who want a major, still-living Buddhist pilgrimage site in the deep south rather than the more heavily-touristed temples of Bangkok or Chiang Mai — this is a working temple central to the city around it, not a roped-off monument.",
+    priceRange: { low: 0, typical: 0, high: 0, currency: "THB", note: "Admission is free; donations toward the temple's upkeep are welcomed but not required." },
+    hours: "Daily 08:30-16:30",
+    tips: ["November-February is the most comfortable season to visit; the south is hot and humid the rest of the year.", "Dress as for any active Thai temple: shoulders and knees covered, shoes off before entering the vihaans.", "The temple is roughly 13 km from Nakhon Si Thammarat Airport — budget 300-500 THB for a taxi."],
+    scamWarnings: [],
+    mapQuery: "Wat Phra Mahathat Woramahawihan Nakhon Si Thammarat", coords: { lat: 8.4114, lng: 99.9667 },
+    verified: "2026-09",
+    sources: [{ org: "UNESCO World Heritage Centre", url: "https://whc.unesco.org/en/list/1761/" }, { org: "Wat Phra Mahathat World Heritage — official history", url: "https://www.phramahathatworldheritage.org/index.php/en/history" }],
+  },
 ];
