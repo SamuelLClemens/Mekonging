@@ -86,7 +86,12 @@ import {
 // name is reserved for zones.js's own export, the one scripts/check-lazy-data.py gates the
 // 'zones' lazy module on — see the comment in month-verdict.js. Used here for the CITY tier,
 // which has nothing to do with that module and must not gain an incidental dependency on it.
-import { verdictFor } from './data/month-verdict.js';
+import { verdictFor, VERDICT_RANK } from './data/month-verdict.js';
+// The place tier of "when to go" (52 hand-curated entries). Already in the eager graph via
+// render-utils.js's placeWhen, so this import costs nothing; read here directly because the
+// region chooser needs the raw bestM/avoidM to spot a PLACE that disagrees with its region,
+// which is a different question from placeWhen's "what does this one place say".
+import { PLACE_MONTHS } from './data/place-months.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction, promptAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
@@ -669,7 +674,7 @@ let pendingPinCoords = null; // coords captured by tapping the map, consumed by 
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.536.0';
+export const APP_VERSION = 'mk-v0.537.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4081,24 +4086,124 @@ function zonesMap(cc, opts = {}) {
   return box;
 }
 
-// The month a traveller is asking about on the region chooser. 0 means "follow today", which
-// is the state a fresh load starts in; picking a month pins it for the session only, because
-// this is a browsing filter and not a preference worth persisting.
-let zoneMonth = 0;
+// The MONTHS a traveller is asking about on the region chooser — a set, not a single month
+// (direct request: "users should be able to choose more than one month at a time"). A trip is
+// rarely one calendar month, and "is October or November better for the north" is a question
+// the single-month version could not be asked. Empty means nothing chosen, and that state now
+// means something: no verdict is shown at all until the traveller names a month, because a
+// verdict against today's date that they never asked for is a claim about a trip they may not
+// be taking. Session-only — a browsing filter, not a preference worth persisting.
+const zoneMonths = new Set();
 
-// The verdict as a traveller reads it, plus the sentence that justifies it. The sentence is
-// not optional: js/data/zones.js only puts a month in bestM/avoidM when its prose recommends
-// or warns, so "mixed" and "shoulder" BOTH mean "read the sentence" — a bare badge would be
-// the one thing worse than no badge, because Vietnam's Central Coast in September is a
-// typhoon shoreline and a perfectly pleasant highland in the same breath.
-function zoneWhenLine(z, verdict, monthName) {
-  if (verdict === 'best') return { label: `✓ Good in ${monthName}`, cls: 'is-best', why: z.bestMonths };
-  if (verdict === 'avoid') return { label: `✗ Poor in ${monthName}`, cls: 'is-avoid', why: z.avoidMonths };
-  if (verdict === 'mixed') {
-    return { label: `± Depends where in ${monthName}`, cls: 'is-mixed', why: `${z.bestMonths} · Avoid: ${z.avoidMonths}` };
-  }
-  return { label: '· Shoulder month', cls: 'is-shoulder', why: `Best months: ${z.bestMonths}` };
+// A region's verdict across a SET of months, plus the split when the months disagree.
+//
+// The combining rule is deliberately not "worst wins". A traveller choosing June, July and
+// August wants to know that the first two are poor and the third is fine, not that the block
+// is "poor" — that is the difference between ruling a region out and moving the trip by a
+// fortnight. So the verdict is 'best' or 'avoid' only when EVERY chosen month agrees, and
+// otherwise it is 'mixed' with the months named.
+function zoneVerdictAcross(z, months) {
+  const list = [...months].sort((a, b) => a - b);
+  const byMonth = list.map((m) => ({ m, v: monthVerdict(z, m) }));
+  const kinds = new Set(byMonth.map((x) => x.v));
+  if (kinds.size === 1) return { verdict: [...kinds][0], byMonth };
+  if (kinds.has('best') || kinds.has('avoid') || kinds.has('mixed')) return { verdict: 'mixed', byMonth };
+  return { verdict: 'shoulder', byMonth };
 }
+
+// WHERE THE REGION'S VERDICT IS WRONG FOR SOMEWHERE INSIDE IT (direct request).
+//
+// "It isn't good to go to the Northern Highlands in June, July, August, but it is good in Sapa
+// and Ta Van" — a region-level verdict flattens a region, and the app already holds the finer
+// data to unflatten it: js/data/history.js carries bestM/avoidM per CITY and
+// js/data/place-months.js carries them per PLACE, both under the same editorial rule as the
+// region tier (every month claimed must be named by that record's own prose — enforced by
+// scripts/check-month-arrays.py).
+//
+// So: for the months in hand, find the towns and places inside this region whose verdict
+// disagrees with the region's, in the direction that matters. A poor region with somewhere
+// good in it is a trip saved; a good region with somewhere closed in it is a wasted day.
+// Returns { better: string[], worse: string[] } — names only, capped for a phone row.
+function zoneExceptions(cc, z, months, regionVerdict) {
+  const list = [...months];
+  if (!list.length) return { better: [], worse: [] };
+  const anyIs = (obj, want) => obj && list.some((m) => verdictFor(obj, m) === want);
+
+  // MEMBERSHIP HAS TO BE REAL, or the line states something false. Zone membership is
+  // geometric (point-in-province over simplified outlines — see zoneAssignment), so a single
+  // place can drift over a border: one of Ninh Binh's 22 records, Cuc Phuong National Park,
+  // sits on the Hoa Binh line and lands in the Northern Highlands. That was enough for
+  // townsInZone to call Ninh Binh a town of the Northern Highlands, and for this line to
+  // read "Northern Highlands — still good: Ninh Binh", which is simply not where it is.
+  // So a town qualifies only when MOST of its places are in this zone.
+  const byPlace = zoneAssignment(cc);
+  const totals = {};
+  const here = {};
+  allPlaces({ country: cc }).forEach((pl) => {
+    if (!pl.city) return;
+    totals[pl.city] = (totals[pl.city] || 0) + 1;
+    if (byPlace.get(pl.id) === z.id) here[pl.city] = (here[pl.city] || 0) + 1;
+  });
+  const belongs = (city) => (here[city] || 0) * 2 >= (totals[city] || 0);
+
+  // A guide-style record is not a place a traveller avoids in a month. These read as
+  // sentences ("Where to stay in Ha Long: the Bai Chay side") and only ever made the line
+  // longer and less believable.
+  const isArticle = (name) => /^(where|how|what|getting|when)\b/i.test(name) || name.includes(': ');
+  const better = new Map();      // display name -> normalised key, so near-duplicates collapse
+  const worse = new Map();
+  const norm = (x) => x.toLowerCase().replace(/\b(islands?|national park|complex|province|city)\b/g, '').replace(/[^a-z]/g, '');
+  // SHORTEN a long name rather than drop it. A first pass rejected anything over 32
+  // characters and so lost the very exception this feature exists to surface: "Silver
+  // Waterfall (Thac Bac) & Love Waterfall (Thac Tinh Yeu)" is 60 characters, is in Sapa, and
+  // is at its best in exactly the June-to-August window the Northern Highlands is poor in.
+  // Two records joined by "&" become the first of them, and a parenthetical local name comes
+  // off — both are already shown in full on the place's own page.
+  const shorten = (name) => {
+    let out = String(name).split(/\s+[&\/]\s+/)[0];
+    out = out.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    return out;
+  };
+  const add = (map, raw) => {
+    const name = shorten(raw);
+    if (!name || isArticle(name) || name.length > 32) return;
+    const k = norm(name);
+    if (!k) return;
+    // Keep the SHORTER of two names for the same thing: "Con Dao" over "Con Dao Islands".
+    const existing = [...map.entries()].find(([, kk]) => kk === k);
+    if (existing) { if (name.length < existing[0].length) { map.delete(existing[0]); map.set(name, k); } return; }
+    map.set(name, k);
+  };
+
+  // City tier first: a town name is what a traveller recognises and can act on.
+  townsInZone(cc, z.id).forEach(({ city }) => {
+    if (!belongs(city)) return;
+    const hi = cityHistory(cc, citySlug(city));
+    if (!hi) return;
+    if (regionVerdict !== 'best' && anyIs(hi, 'best')) add(better, city);
+    if (regionVerdict !== 'avoid' && anyIs(hi, 'avoid')) add(worse, city);
+  });
+  // Place tier: only where the city tier said nothing about that city, so a row never names
+  // both "Sapa" and three waterfalls in Sapa. PLACE_MONTHS is 52 hand-curated entries, so
+  // this adds a handful of genuinely specific exceptions rather than noise.
+  placesInZone(cc, z.id).forEach((pl) => {
+    const pm = PLACE_MONTHS[pl.id];
+    if (!pm || !pl.city || !belongs(pl.city)) return;
+    if (better.has(pl.city) || worse.has(pl.city)) return;
+    if (regionVerdict !== 'best' && anyIs(pm, 'best')) add(better, pl.name);
+    if (regionVerdict !== 'avoid' && anyIs(pm, 'avoid')) add(worse, pl.name);
+  });
+  // Three names is what a phone row holds and what a reader takes in.
+  return { better: [...better.keys()].slice(0, 3), worse: [...worse.keys()].slice(0, 3) };
+}
+
+// zoneWhenLine() — the single-month verdict label — lived here. It is superseded by
+// zoneWhenAcross() below, which does the same job for a SET of months and, when they
+// disagree, names which are good and which are not rather than collapsing to "mixed". Its
+// editorial point still holds and still applies there: js/data/zones.js only puts a month in
+// bestM/avoidM when its own prose recommends or warns, so "mixed" and "shoulder" BOTH mean
+// "read the sentence" — a bare badge would be worse than none, because Vietnam's Central
+// Coast in September is a typhoon shoreline and a pleasant highland in the same breath.
 
 // The region chooser used on Explore: one row per region with its own facts, live town and
 // place counts, so a traveller can see where the depth actually is before tapping in.
@@ -4111,47 +4216,70 @@ function zonePickList(cc) {
   const zones = zonesFor(cc);
   if (!zones.length) return null;
   const nowM = new Date().getMonth() + 1;
-  const m = zoneMonth || nowM;
   const monthName = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'long' });
   const monthShort = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'short' });
+  const picked = [...zoneMonths].sort((a, b) => a - b);
+  const has = picked.length > 0;
 
   const wrap = h('div', { class: 'zone-when-wrap' });
+  // The heading no longer asserts a month the traveller did not choose. Before, a fresh load
+  // read "Where to go this month · September" and ranked every region against September —
+  // a verdict about a trip nobody had said they were taking.
   wrap.append(h('h3', { class: 'zone-when-head' },
-    zoneMonth ? `Where to go in ${monthName(m)}` : `Where to go this month · ${monthName(m)}`));
-  const strip = h('div', { class: 'chips month-strip', role: 'group', 'aria-label': 'Choose a month' });
+    has ? `Where to go in ${picked.map(monthShort).join(', ')}` : 'Where to go'));
+  const strip = h('div', { class: 'chips month-strip', role: 'group', 'aria-label': 'Choose one or more months' });
   for (let i = 1; i <= 12; i++) {
     strip.append(h('button', {
       // aria-pressed carries BOTH the state and the styling here: .chip[aria-pressed="true"]
       // is the app's existing selected-chip rule, so there is no second visual convention.
       class: 'chip',
-      'aria-pressed': String(i === m),
-      onclick: () => { zoneMonth = (zoneMonth === i) ? 0 : i; render(); },
+      'aria-pressed': String(zoneMonths.has(i)),
+      onclick: () => { if (zoneMonths.has(i)) zoneMonths.delete(i); else zoneMonths.add(i); render(); },
     }, monthShort(i) + (i === nowM ? ' •' : '')));
   }
-  // The twelve-month strip sits behind a "By month" button rather than standing open. The
-  // common question is "what about now?", which the heading and the list below already
-  // answer, so twelve chips were costing three rows of a phone screen to serve the planning
-  // case alone. It opens automatically whenever a month IS pinned — leaving it shut would
-  // strand a traveller on a June ordering with no visible reason for it and no way back.
-  const monthFold = foldable('📅 By month', zoneMonth
-    ? [strip, h('button', { class: 'chip ghost', style: 'margin-top:6px', onclick: () => { zoneMonth = 0; render(); } }, '↺ Back to this month')]
-    : strip, { open: !!zoneMonth });
-  wrap.append(monthFold);
+  const stripKids = [strip];
+  if (has) {
+    stripKids.push(h('div', { class: 'chips', style: 'margin-top:6px' }, [
+      h('button', { class: 'chip ghost', onclick: () => { zoneMonths.clear(); render(); } }, '↺ Clear months'),
+    ]));
+  } else {
+    stripKids.push(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' },
+      'Pick as many months as your trip covers — the regions re-sort and each one says whether it is a good time.'));
+  }
+  // The twelve-month strip sits behind a "By month" button rather than standing open: twelve
+  // chips cost three rows of a phone screen. It opens automatically once months ARE chosen —
+  // leaving it shut would strand a traveller on a June ordering with no visible reason for it.
+  wrap.append(foldable(has ? `📅 By month · ${picked.map(monthShort).join(', ')}` : '📅 By month',
+    stripKids, { open: has }));
+
+  // With no month chosen the list keeps the manifest's own north-to-south order and shows no
+  // verdict; with months chosen it re-sorts worst-last and every row carries its verdict.
+  const ordered = has
+    ? zones.map((z, i) => ({ zone: z, ...zoneVerdictAcross(z, zoneMonths), i }))
+      .sort((a, b) => (VERDICT_RANK[a.verdict] - VERDICT_RANK[b.verdict]) || (a.i - b.i))
+    : zones.map((z, i) => ({ zone: z, verdict: null, byMonth: [], i }));
 
   const list = h('div', { class: 'zone-list' });
-  zonesByMonth(cc, m).forEach(({ zone: z, verdict }) => {
+  ordered.forEach(({ zone: z, verdict, byMonth }) => {
     const n = placesInZone(cc, z.id).length;
     const towns = townsInZone(cc, z.id).length;
-    const when = zoneWhenLine(z, verdict, monthName(m));
+    const kids = [h('span', { class: 'zone-name' }, z.name)];
+    if (verdict) {
+      const when = zoneWhenAcross(z, verdict, byMonth, monthShort);
+      kids.push(h('span', { class: `zone-when ${when.cls}` }, when.label));
+      // The exceptions line: where somewhere INSIDE this region disagrees with it.
+      const ex = zoneExceptions(cc, z, zoneMonths, verdict);
+      if (ex.better.length) kids.push(h('span', { class: 'zone-exc is-best' }, `↑ Still good: ${ex.better.join(', ')}`));
+      if (ex.worse.length) kids.push(h('span', { class: 'zone-exc is-avoid' }, `↓ Not then: ${ex.worse.join(', ')}`));
+      kids.push(h('span', { class: 'zone-tag' }, z.tagline));
+      if (when.why) kids.push(h('span', { class: 'zone-why muted' }, when.why));
+    } else {
+      kids.push(h('span', { class: 'zone-tag' }, z.tagline));
+    }
+    kids.push(h('span', { class: 'zone-count muted' }, `${towns} town${towns === 1 ? '' : 's'} · ${n} place${n === 1 ? '' : 's'}`));
     list.append(h('button', { class: 'zone-row', onclick: () => go(`#region-${cc}-${z.id}`) }, [
       h('span', { class: 'zone-emoji' }, z.emoji || '📍'),
-      h('span', { class: 'zone-text' }, [
-        h('span', { class: 'zone-name' }, z.name),
-        h('span', { class: `zone-when ${when.cls}` }, when.label),
-        h('span', { class: 'zone-tag' }, z.tagline),
-        when.why ? h('span', { class: 'zone-why muted' }, when.why) : null,
-        h('span', { class: 'zone-count muted' }, `${towns} town${towns === 1 ? '' : 's'} · ${n} place${n === 1 ? '' : 's'}`),
-      ]),
+      h('span', { class: 'zone-text' }, kids),
       h('span', { class: 'zone-go' }, '›'),
     ]));
   });
@@ -4159,10 +4287,29 @@ function zonePickList(cc) {
   return wrap;
 }
 
+// The verdict label for a set of months. When the months disagree it names WHICH are good and
+// which are not, rather than collapsing to "mixed" and leaving the traveller to guess — that
+// split is the whole reason multi-month selection is useful.
+function zoneWhenAcross(z, verdict, byMonth, monthShort) {
+  const names = (want) => byMonth.filter((x) => x.v === want).map((x) => monthShort(x.m));
+  const all = byMonth.map((x) => monthShort(x.m)).join(', ');
+  if (verdict === 'best') return { label: `✓ Good in ${all}`, cls: 'is-best', why: z.bestMonths };
+  if (verdict === 'avoid') return { label: `✗ Poor in ${all}`, cls: 'is-avoid', why: z.avoidMonths };
+  if (verdict === 'shoulder') return { label: `· Shoulder in ${all}`, cls: 'is-shoulder', why: `Best months: ${z.bestMonths}` };
+  const good = names('best');
+  const bad = names('avoid');
+  const parts = [good.length ? `✓ ${good.join(', ')}` : '', bad.length ? `✗ ${bad.join(', ')}` : ''].filter(Boolean);
+  return {
+    label: parts.length ? parts.join(' · ') : `± Depends in ${all}`,
+    cls: 'is-mixed',
+    why: [z.bestMonths, z.avoidMonths ? `Avoid: ${z.avoidMonths}` : ''].filter(Boolean).join(' · '),
+  };
+}
+
 // The region's facts as a compact definition grid — deliberately terse rows, not prose, so
 // the whole orientation reads in one glance. `notFor` is the honest counterweight: what this
 // region is NOT good for, which is usually the fastest way to rule a place in or out.
-function zoneFactsCard(z) {
+function zoneFactsCard(z, cc) {
   const rows = [
     ['Good for', z.suits],
     ['Not for', z.notFor],
@@ -4174,15 +4321,23 @@ function zoneFactsCard(z) {
   ].filter(([, v]) => v);
   const card = h('div', { class: 'card zone-facts' }, [h('h2', {}, `${z.emoji || '📍'} ${z.name}`)]);
   card.append(h('p', { class: 'zone-lead' }, z.tagline));
-  // Lead with the verdict for the month in hand. The two prose rows are still in the grid
-  // below, which is what makes this honest: "Depends where" is a pointer to the sentence, not
-  // a substitute for it. Follows the same pinned month as the region chooser, so a traveller
-  // planning September does not have to re-pick it on every region they open.
-  const vm = zoneMonth || (new Date().getMonth() + 1);
-  const verdict = monthVerdict(z, vm);
-  const vName = new Date(2020, vm - 1, 1).toLocaleDateString(dateLocale(), { month: 'long' });
-  const vLine = zoneWhenLine(z, verdict, vName);
-  card.append(h('p', { class: `zone-when ${vLine.cls}`, style: 'margin:0 0 6px' }, vLine.label));
+  // Lead with the verdict for the months the traveller chose on the region chooser — the same
+  // set, so planning October and November does not have to be re-picked on every region page.
+  // With none chosen there is no verdict here either: the "Best months" and "Avoid" rows of
+  // the grid below carry the region's own sentences, which is the honest answer to "when",
+  // and a badge asserting today's month is not.
+  if (zoneMonths.size) {
+    const monthShort = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'short' });
+    const { verdict, byMonth } = zoneVerdictAcross(z, zoneMonths);
+    const vLine = zoneWhenAcross(z, verdict, byMonth, monthShort);
+    card.append(h('p', { class: `zone-when ${vLine.cls}` }, vLine.label));
+    // And the same within-region exceptions the chooser shows, because this is the page a
+    // traveller lands on after reading "✗ Poor in Jun, Jul" and wanting to know if any of it
+    // is still worth the trip.
+    const ex = cc ? zoneExceptions(cc, z, zoneMonths, verdict) : { better: [], worse: [] };
+    if (ex.better.length) card.append(h('p', { class: 'zone-exc is-best' }, `↑ Still good then: ${ex.better.join(', ')}`));
+    if (ex.worse.length) card.append(h('p', { class: 'zone-exc is-avoid' }, `↓ Not then: ${ex.worse.join(', ')}`));
+  }
   const dl = h('dl', { class: 'zone-dl' });
   rows.forEach(([k, v]) => { dl.append(h('dt', {}, k), h('dd', {}, v)); });
   card.append(dl);
@@ -4218,7 +4373,7 @@ function regionScreen(arg) {
 
   // Facts first — what this region is, who it suits, who it does not, when to come. Every
   // row is one line; the whole orientation is meant to be read in a glance, not studied.
-  wrap.append(zoneFactsCard(z));
+  wrap.append(zoneFactsCard(z, cc));
 
   const mini = zonesMap(cc, { activeId: z.id, onPick: (nid) => go(`#region-${cc}-${nid}`) });
   if (mini) {

@@ -3053,3 +3053,15 @@ html[data-theme="dark"] .layer-pick.is-on > summary .layer-pick-state { color: v
 .plan-n { min-width: 1.6em; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
 .plan-drop { min-width: 36px; min-height: 36px; padding: 0; color: var(--ink-soft); }
 .plan-total { margin: var(--sp-2) 0 0; font-weight: 600; }
+
+/* --- Explore: within-region month exceptions (zoneExceptions, main.js) -----------------
+   "Poor in Jun, Jul — but still good in Sapa" needs to read as a correction to the verdict
+   directly above it, not as another fact about the region, so it takes the verdict's own
+   colours and sits tight under it. */
+.zone-exc { display: block; font-size: var(--fs-label); font-weight: 700; margin-top: 2px; }
+.zone-exc.is-best { color: var(--good); }
+.zone-exc.is-avoid { color: var(--warn); }
+/* Spacing for the region-detail verdict and its exception lines, on the parent rather than
+   inline on each child — inline margins here were three off-scale 6px values and the spacing
+   guard was right to say so. */
+.zone-facts > .zone-when, .zone-facts > .zone-exc { margin: 0 0 var(--sp-2); }
