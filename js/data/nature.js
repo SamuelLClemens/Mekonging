@@ -3186,6 +3186,1256 @@ export const NATURE = [
       "km": "",
       "lo": ""
     }
+  },
+  {
+    "id": "nat-insect-aedes-aegypti",
+    "group": "insect",
+    "commonName": "Dengue Mosquito",
+    "sciName": "Aedes aegypti",
+    "localNames": [],
+    "blurb": "The most medically important animal in the region, and it bites in the daytime — which is why a bed net alone is not enough protection here.",
+    "idTips": "A small dark mosquito with bright white markings: a lyre-shaped pattern of white lines on the back of the thorax and clear white bands ringing the legs, giving a striped appearance. It flies low, approaches from behind and below, and goes for ankles and elbows.",
+    "habitat": "Cities and villages rather than jungle. It breeds in clean standing water in small containers — plant pots, tyres, buckets, roof gutters, the water tray under an air-conditioner, the dish under a potted plant.",
+    "where": "Throughout Thailand, Vietnam, Cambodia and Laos, all of which are dengue-endemic, with the biggest surges in the monsoon months. Vietnam and Cambodia both reported rising case numbers through 2026.",
+    "dangerous": true,
+    "dangerNote": "Carries dengue, and also chikungunya and Zika. It bites by DAY, peaking early morning and late afternoon, so repellent during the day matters more than a net at night. Use a DEET or picaridin repellent on exposed skin, cover up at dawn and dusk, and tip out any standing water around where you are staying. Dengue is not preventable by tablets and there is no reliable traveller vaccine — bite avoidance is the whole defence. See a doctor for any fever within two weeks of being bitten, and do NOT take ibuprofen or aspirin for it (bleeding risk) — paracetamol only.",
+    "emoji": "🦟",
+    "names": {
+      "th": "ยุงลาย",
+      "vi": "muỗi vằn",
+      "km": "",
+      "lo": "ຍຸງລາຍ"
+    }
+  },
+  {
+    "id": "nat-insect-anopheles",
+    "group": "insect",
+    "commonName": "Malaria Mosquito",
+    "sciName": "Anopheles spp.",
+    "localNames": [],
+    "blurb": "The night-biting mosquito behind malaria. Risk is now low in most places a traveller goes here, and concentrated in forested border areas.",
+    "idTips": "Told from other mosquitoes by its posture: it rests with the body tilted at a steep angle, tail-up, rather than parallel to the surface. Wings often show blocks of pale and dark scales. It is quiet and bites mainly between dusk and dawn.",
+    "habitat": "Breeds in clean, still or slow water — rice paddy edges, forest pools, stream margins. Rural and forested areas rather than city centres.",
+    "where": "Malaria in the region is now largely confined to forested and hilly border zones — the Thai-Myanmar and Thai-Cambodian borders, parts of southern Laos and the Vietnamese central highlands. Bangkok, Hanoi, Ho Chi Minh City, Phnom Penh, Vientiane, Chiang Mai, Siem Reap and the main beach and island resorts are considered malaria-free.",
+    "dangerous": true,
+    "dangerNote": "Get current advice for your exact route from a travel clinic before you go — whether tablets are recommended depends on which areas you will enter, and the answer for a city-and-islands trip is usually no. Wherever you are: sleep under a net or in a screened room, cover up after dark, and use repellent. Any fever during or after a trip needs a malaria test even if you took tablets. Drug resistance is a known issue in the Greater Mekong, which is why the advice must come from a clinician and not an app.",
+    "emoji": "🦟",
+    "names": {
+      "th": "ยุงก้นปล่อง",
+      "vi": "muỗi sốt rét",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-insect-asian-giant-hornet",
+    "group": "insect",
+    "commonName": "Asian Giant Hornet",
+    "sciName": "Vespa mandarinia / V. soror",
+    "localNames": [],
+    "blurb": "The largest hornets in the world, and genuinely dangerous in numbers rather than as single insects.",
+    "idTips": "Enormous — 3.5-5 cm with a wingspan to 7 cm — with a broad bright orange-yellow head that looks disproportionately large, dark brown thorax and a boldly banded orange-and-brown abdomen. The flight is loud and heavy enough to hear.",
+    "habitat": "Forest and forest edge in hills and mountains; nests underground or in tree cavities.",
+    "where": "Northern Thailand, northern Vietnam, northern Laos and the uplands generally.",
+    "dangerous": true,
+    "dangerNote": "A single sting is intensely painful; a mass attack near a disturbed nest is a medical emergency and has killed people. They defend a nest aggressively out to several metres. If one investigates you, stay still and let it leave — swatting and running provoke pursuit. Never poke into holes in banks or hollow trees. If stung many times, or if you have any breathing difficulty, swelling of the face or throat, or feel faint, get to a hospital immediately.",
+    "emoji": "🐝",
+    "names": {
+      "th": "ต่อหัวเสือ",
+      "vi": "ong bắp cày",
+      "km": "",
+      "lo": "ຕໍ່ຫົວເສືອ"
+    }
+  },
+  {
+    "id": "nat-insect-giant-honey-bee",
+    "group": "insect",
+    "commonName": "Giant Honey Bee",
+    "sciName": "Apis dorsata",
+    "localNames": [],
+    "blurb": "Builds a single huge open comb hanging from a branch, cliff or building — and defends it in the thousands.",
+    "idTips": "A large bee, around 2 cm, with a golden-brown abdomen banded in black. The real field mark is the nest: one enormous flat comb up to a metre across, hanging exposed with a living blanket of bees over it, often high on a tall tree, a cliff face, or under the eaves of a temple or water tower.",
+    "habitat": "Tall trees, cliffs and tall buildings; combs are often clustered, with several on the same tree.",
+    "where": "Widespread across all four countries; honey from these combs is collected and sold as wild honey.",
+    "dangerous": true,
+    "dangerNote": "Far more defensive than a domestic honeybee, and a disturbed colony pursues in numbers over long distances. Do not throw anything at a comb, and do not stand under one taking photographs with a flash. Mass stinging is a medical emergency regardless of allergy. If bees begin bumping into you, walk away immediately and get indoors or into a vehicle.",
+    "emoji": "🐝",
+    "names": {
+      "th": "ผึ้งหลวง",
+      "vi": "ong khoái",
+      "km": "",
+      "lo": "ເຜິ້ງຫຼວງ"
+    }
+  },
+  {
+    "id": "nat-insect-tiger-leech",
+    "group": "insect",
+    "commonName": "Tiger Leech",
+    "sciName": "Haemadipsa picta",
+    "localNames": [],
+    "blurb": "The land leech that finds trekkers in wet forest — harmless, alarming, and best removed properly rather than pulled.",
+    "idTips": "A small terrestrial leech 2-5 cm, olive-green to brown with distinct yellow-orange lengthwise stripes, waving the front of its body in the air from the tip of a leaf. Unlike aquatic leeches it moves fast, in a looping inchworm crawl, and it climbs.",
+    "habitat": "Damp closed-canopy forest, especially after rain, on low vegetation beside trails.",
+    "where": "Rainforest across the region — Khao Sok, Cat Tien, Bokor, the Bolaven Plateau and Sapa's wetter valleys.",
+    "dangerous": false,
+    "dangerNote": "Not dangerous and it carries no disease here, but the bite bleeds for a while because of the anticoagulant, and the tiger leech's bite is noticeably itchy. Do not pull, burn or salt it — that makes it regurgitate into the wound and raises the infection risk. Slide a fingernail or a card under the mouth to break the seal, then dress the bite and keep it clean. Leech socks or trousers tucked into boots are the real answer.",
+    "emoji": "🪱",
+    "names": {
+      "th": "ทาก",
+      "vi": "con đỉa",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-insect-tropical-fire-ant",
+    "group": "insect",
+    "commonName": "Tropical Fire Ant",
+    "sciName": "Solenopsis geminata",
+    "localNames": [],
+    "blurb": "A small reddish ant that swarms up a leg the instant you stand on its nest, then all sting at once.",
+    "idTips": "Tiny, 3-6 mm, reddish-brown to orange with a darker abdomen, and workers in noticeably different sizes within one nest — the largest have a big square head. Nests are low untidy mounds of loose soil in sun, often at path edges and in lawns.",
+    "habitat": "Open sunny ground: verges, lawns, beaches above the tide line, farmland, building sites.",
+    "where": "Common throughout the region, including on beaches and in city parks.",
+    "dangerous": true,
+    "dangerNote": "The sting burns like a spark and leaves a small itchy pustule a day later that can last a week. The danger is numbers: brushing a nest brings dozens at once. Check before sitting or putting a bag down on sandy ground, and shake out shoes left outside. Multiple stings with any swelling beyond the site, or any difficulty breathing, needs urgent care.",
+    "emoji": "🐜",
+    "names": {
+      "th": "มดคันไฟ",
+      "vi": "kiến lửa",
+      "km": "",
+      "lo": "ມົດໄຟ"
+    }
+  },
+  {
+    "id": "nat-insect-giant-water-bug",
+    "group": "insect",
+    "commonName": "Giant Water Bug",
+    "sciName": "Lethocerus indicus",
+    "localNames": [],
+    "blurb": "A huge flat brown bug that turns up under streetlights — and is sold at markets as one of the region's most prized flavours.",
+    "idTips": "Very large and flat, 6-8 cm, oval, uniformly khaki-brown, with strongly hooked front legs for grabbing prey and a short sharp beak. Comes to lights at night in numbers during the rains.",
+    "habitat": "Ponds, paddies and slow water; disperses by flying at night, which is when people catch them at lights.",
+    "where": "Across the region; the male's scent gland gives Thai maeng da chilli paste and Lao and Isan dips their distinctive intense pear-and-apple aroma.",
+    "dangerous": true,
+    "dangerNote": "Handle with care rather than fear: it hunts by stabbing, and it will stab a finger that grips it. The bite is famously painful — the insect's nickname in some places is the toe-biter — but it is not venomous in a medical sense and does no lasting harm. As food it is entirely safe and highly regarded.",
+    "emoji": "🪲",
+    "names": {
+      "th": "แมงดานา",
+      "vi": "cà cuống",
+      "km": "",
+      "lo": "ແມງດານາ"
+    }
+  },
+  {
+    "id": "nat-insect-thai-tarantula",
+    "group": "insect",
+    "commonName": "Thai Zebra Tarantula",
+    "sciName": "Cyriopagopus albostriatus",
+    "localNames": [],
+    "blurb": "The tarantula behind Cambodia's fried spiders — a ground-burrowing species, not a web-builder.",
+    "idTips": "A stocky black tarantula with a leg span around 12 cm, marked with crisp white or cream stripes on the legs. Lives in a silk-lined burrow in the ground rather than in a web.",
+    "habitat": "Burrows in dry forest, scrub, plantations and field banks.",
+    "where": "Thailand, Cambodia and Laos. Fried tarantula is a well-known speciality of Skuon in Cambodia, on the road between Phnom Penh and Kampong Cham.",
+    "dangerous": true,
+    "dangerNote": "Defensive rather than aggressive, but it will bite if handled and this genus has a reputation for a bad temper. The venom is not dangerous to a healthy adult — the bite is mechanically painful, like deep puncture wounds, and can throb for a day. Do not handle wild tarantulas, and do not put a hand into a burrow. Clean the wound and watch for infection.",
+    "emoji": "🕷️",
+    "names": {
+      "th": "บึ้ง",
+      "vi": "",
+      "km": "",
+      "lo": "ບຶ້ງ"
+    }
+  },
+  {
+    "id": "nat-insect-golden-orb-weaver",
+    "group": "insect",
+    "commonName": "Golden Orb-weaver",
+    "sciName": "Trichonephila spp.",
+    "localNames": [],
+    "blurb": "The big yellow-and-black spider sitting in an enormous, faintly golden web across a forest path.",
+    "idTips": "Females are large and unmistakable — a body 3-5 cm on very long legs with dark and yellow bands and tufts of hair, hanging head-down in the middle. Males are tiny and sit at the web's edge. The silk has a genuine golden sheen in sunlight and the web can be over a metre across.",
+    "habitat": "Forest edges, gardens, trail gaps and between buildings.",
+    "where": "Common throughout the region; you will walk into one before you see it.",
+    "dangerous": false,
+    "dangerNote": "Harmless and worth stopping to look at. It bites only if squeezed, and the effect is no worse than a bee sting locally. Carry a stick held up in front of you on an overgrown trail rather than clearing webs with your face.",
+    "emoji": "🕷️",
+    "names": {
+      "th": "แมงมุมใยทอง",
+      "vi": "nhện vàng",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-insect-lantern-bug",
+    "group": "insect",
+    "commonName": "Lantern Bug",
+    "sciName": "Pyrops spp.",
+    "localNames": [],
+    "blurb": "One of the most beautiful insects in the region — a planthopper with a long upturned snout, sitting head-down on a tree trunk.",
+    "idTips": "About 3-4 cm with a slender, upward-curving red-and-white snout longer than its head, brilliant green or red-brown wings spotted with white, and orange-yellow hindwings that flash when it hops. Sits vertically on the trunk of a longan or lychee tree in small groups.",
+    "habitat": "Trunks of forest and orchard trees, especially longan, lychee and other fruit trees.",
+    "where": "Northern Thailand, Vietnam, Laos and Cambodia; commonest in and around orchards.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦋",
+    "names": {
+      "th": "แมลงงวงช้าง",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-insect-mound-termite",
+    "group": "insect",
+    "commonName": "Mound-building Termite",
+    "sciName": "Macrotermes spp.",
+    "localNames": [],
+    "blurb": "The builders of the hard earth towers you see in every dry forest — and the farmers of the region's most prized mushroom.",
+    "idTips": "The insects themselves are pale and soft, with soldiers carrying oversized dark heads and jaws. What you actually see is the mound: a hard, wind-sculpted earth tower from knee-height to over two metres, rock-solid, often with a small tree growing out of it. After the first heavy rain, winged reproductives pour out in clouds at dusk.",
+    "habitat": "Dry dipterocarp and deciduous forest, scrub and farmland.",
+    "where": "Throughout the region. The termite mushroom (Termitomyces) grows only from these nests, which is why it cannot be farmed.",
+    "dangerous": false,
+    "dangerNote": "Harmless to people, though soldiers give a sharp pinch if you dig into a mound. The mounds themselves are habitat for a lot else — do not break them open. The winged swarmers that come to lights after the first rains are edible and are collected and fried.",
+    "emoji": "🐜",
+    "names": {
+      "th": "ปลวก",
+      "vi": "mối",
+      "km": "",
+      "lo": "ປວກ"
+    }
+  },
+  {
+    "id": "nat-insect-blister-beetle",
+    "group": "insect",
+    "commonName": "Blister Beetle",
+    "sciName": "Mylabris / Epicauta spp.",
+    "localNames": [],
+    "blurb": "A pretty beetle that leaves a chemical burn if you brush it off your skin instead of blowing it away.",
+    "idTips": "Slender, soft-bodied beetles 1-3 cm, often boldly patterned in black with orange, yellow or red bands or spots, with a narrow neck and a head wider than the thorax. Frequently found on flowers in numbers.",
+    "habitat": "Flowering plants, field margins, gardens; comes to lights at night.",
+    "where": "Throughout the region.",
+    "dangerous": true,
+    "dangerNote": "It does not bite or sting — the harm is chemical. Crushed or pressed against skin it releases cantharidin, which causes a painful blistering burn over the following hours, and is much worse if rubbed into an eye. Blow it off or flick it away with a piece of paper; never slap one on your skin. Wash the area with soap and water if one is crushed on you, and see a doctor for eye exposure or a large blister.",
+    "emoji": "🪲",
+    "names": {
+      "th": "ด้วงน้ำมัน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-indochinese-spitting-cobra",
+    "group": "reptile",
+    "commonName": "Indochinese Spitting Cobra",
+    "sciName": "Naja siamensis",
+    "localNames": [],
+    "blurb": "The one cobra here that attacks your eyes from a distance rather than needing to reach you.",
+    "idTips": "A medium, fairly slender cobra to about 1.5 m, hugely variable: the striking black-and-white speckled or striped phase is common in central Thailand, western animals are mostly black, and elsewhere plain brown. Hoods like any cobra. It can spray venom forward at a face from up to 2.5 metres.",
+    "habitat": "Dry lowland forest, scrub, farmland, plantations and the edges of villages and towns.",
+    "where": "Common and widespread in Thailand, and present in Cambodia, Laos and Vietnam.",
+    "dangerous": true,
+    "dangerNote": "Venomous, and uniquely a spitter: it causes the great majority of cobra spat-venom eye injuries in Thailand, though the monocled cobra is behind most actual cobra bites. Back away — do not crouch to photograph a hooding cobra. If venom reaches an eye, flush it immediately with lots of clean water or any bland fluid for 15 minutes and get to hospital; untreated it can scar the cornea and cost sight. A bite needs antivenom and a hospital, not a tourniquet.",
+    "emoji": "🐍",
+    "names": {
+      "th": "งูเห่าพ่นพิษ",
+      "vi": "hổ mang phun nọc",
+      "km": "",
+      "lo": "ງູເຫົ່າ"
+    }
+  },
+  {
+    "id": "nat-reptile-russells-viper",
+    "group": "reptile",
+    "commonName": "Russell's Viper",
+    "sciName": "Daboia siamensis",
+    "localNames": [],
+    "blurb": "One of the most medically serious snakes in Asia — heavy-bodied, well camouflaged in farmland, and it does not move away.",
+    "idTips": "A thick, stocky viper to about 1.2 m, pale to mid-brown with three rows of large dark chain-like or almond-shaped blotches ringed in black and white down the back. The head is broad and triangular with a blunt snout. It hisses very loudly when threatened.",
+    "habitat": "Open country rather than forest: farmland, grassland, scrub, field bunds and the edges of villages.",
+    "where": "Thailand, Cambodia and parts of Laos and Vietnam, usually in agricultural land.",
+    "dangerous": true,
+    "dangerNote": "Venomous and dangerous. The bite causes severe pain and swelling, widespread bleeding and clotting failure, and can lead to kidney failure — it needs antivenom and hospital care urgently. It relies on camouflage and often stays put rather than fleeing, so most bites happen to a foot or hand placed near one. Watch where you step in farmland at dusk, use a torch, and never put a hand into vegetation you cannot see into.",
+    "emoji": "🐍",
+    "names": {
+      "th": "งูแมวเซา",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-wolf-snake",
+    "group": "reptile",
+    "commonName": "Common Wolf Snake",
+    "sciName": "Lycodon spp.",
+    "localNames": [],
+    "blurb": "A completely harmless snake that looks so much like a deadly krait that it is the reason you must never rely on banding alone.",
+    "idTips": "Small and slender, 40-70 cm, dark brown to black with pale cream or white crossbands. The bands are noticeably THINNER than a krait's and often break up or fade towards the tail, the head is flattened and slightly wider than the neck, and the eye is comparatively large. It is a common house snake and is often found indoors.",
+    "habitat": "Around buildings, gardens, walls and rubbish, hunting geckos at night.",
+    "where": "Common throughout the region, including inside houses and guesthouses.",
+    "dangerous": false,
+    "dangerNote": "Genuinely harmless — it may bite if grabbed and it barely breaks skin. The important point is the reverse direction: this snake is routinely mistaken for a Malayan krait, and the mistake also runs the other way, which is lethal. There is NO reliable field mark that separates them with certainty. Treat every banded snake as if it were a krait, do not handle it, and if you are bitten by any banded snake go to hospital and let them decide.",
+    "emoji": "🐍",
+    "names": {
+      "th": "งูปล้องฉนวน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-burmese-python",
+    "group": "reptile",
+    "commonName": "Burmese Python",
+    "sciName": "Python bivittatus",
+    "localNames": [],
+    "blurb": "A giant, placid constrictor that turns up in city canals and temple grounds as often as in forest.",
+    "idTips": "Very large and heavy — commonly 3-4 m — patterned in irregular dark brown saddles on tan, with a distinct pale arrowhead marking on top of the head. Shorter-headed and blunter than the reticulated python, and the pattern is browner and less geometric.",
+    "habitat": "Marshes, canals, paddies, forest and scrub; frequently found in Bangkok's canals and drains.",
+    "where": "Throughout the region, and remarkably tolerant of urban areas.",
+    "dangerous": false,
+    "dangerNote": "Not venomous and generally slow to react, but a large python's bite is a serious wound of dozens of backward-facing teeth, and a big animal can constrict. Never handle one, and never let anyone drape one over you for a photograph. In Thailand, call 199 and the fire service will remove a snake from a property — this is a routine, free call-out.",
+    "emoji": "🐍",
+    "names": {
+      "th": "งูหลาม",
+      "vi": "trăn đất",
+      "km": "",
+      "lo": "ງູຫຼວມ"
+    }
+  },
+  {
+    "id": "nat-reptile-golden-tree-snake",
+    "group": "reptile",
+    "commonName": "Golden Tree Snake",
+    "sciName": "Chrysopelea ornata",
+    "localNames": [],
+    "blurb": "The flying snake — it flattens its body and glides between trees, and it lives happily in city gardens.",
+    "idTips": "Slender and around a metre, bright green-yellow with a black network pattern, sometimes with orange-red flecks along the spine. Very fast and agile, climbing vertical walls and tree trunks with ease. In a glide it flattens its body into a ribbon and undulates through the air.",
+    "habitat": "Gardens, parks, palms, roofs and forest edge; common in Bangkok and other cities.",
+    "where": "Widespread across all four countries.",
+    "dangerous": false,
+    "dangerNote": "Mildly venomous but rear-fanged and of no real consequence to people — a bite causes local swelling at worst. It is one of the most common snakes in urban gardens here and is entirely harmless to have around.",
+    "emoji": "🐍",
+    "names": {
+      "th": "งูเขียวดอกหมาก",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-siamese-crocodile",
+    "group": "reptile",
+    "commonName": "Siamese Crocodile",
+    "sciName": "Crocodylus siamensis",
+    "localNames": [],
+    "blurb": "Critically endangered and effectively gone from the wild across most of its range — but very much present in farms and a few protected wetlands.",
+    "idTips": "A medium crocodile, usually 2-3 m, olive to dark green with a relatively broad, smooth snout and a distinct raised bony crest between the eyes. Juveniles are yellow-green with black bands.",
+    "habitat": "Slow rivers, lakes, marshes and oxbows.",
+    "where": "Wild populations survive mainly in Cambodia's Cardamom Mountains and a few Lao and Vietnamese sites. The animals most visitors see are on Siem Reap and Tonle Sap crocodile farms.",
+    "dangerous": true,
+    "dangerNote": "Wild encounters are very unlikely, but crocodiles are dangerous at any size and farm enclosures are not always as secure as they look. Never dangle limbs over a farm enclosure rail, and heed local advice about swimming in Cambodian rivers and lakes. Around Tonle Sap and the Cardamoms, ask locally before entering the water.",
+    "emoji": "🐊",
+    "names": {
+      "th": "จรเข้น้ำจืด",
+      "vi": "cá sấu Xiêm",
+      "km": "ក្រពើ",
+      "lo": "ແຂ້"
+    }
+  },
+  {
+    "id": "nat-reptile-saltwater-crocodile",
+    "group": "reptile",
+    "commonName": "Saltwater Crocodile",
+    "sciName": "Crocodylus porosus",
+    "localNames": [],
+    "blurb": "The largest living reptile. Very rare in this region now, but the one animal here where a mistake is unsurvivable.",
+    "idTips": "Enormous — males can exceed 6 m — grey to dark brown with a heavy, broad snout, a wide head and no bony crest between the eyes. Juveniles pale tan with dark bars.",
+    "habitat": "Estuaries, mangroves, coastal creeks and open sea; it genuinely travels between islands.",
+    "where": "Effectively extinct in Thailand and Vietnam's wild and very rare in Cambodia, but individuals occasionally appear along coasts and in mangroves, and the species is farmed.",
+    "dangerous": true,
+    "dangerNote": "If you are ever anywhere one is reported, take local warning signs completely literally: do not swim, wade, clean fish or stand at the water's edge in estuaries and mangrove creeks, and do not assume a small creek is too small. Attacks are usually fatal. This is one where local knowledge beats any guide.",
+    "emoji": "🐊",
+    "names": {
+      "th": "จรเข้น้ำเค็ม",
+      "vi": "cá sấu hoa cà",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-green-sea-turtle",
+    "group": "reptile",
+    "commonName": "Green Sea Turtle",
+    "sciName": "Chelonia mydas",
+    "localNames": [],
+    "blurb": "The sea turtle you are most likely to snorkel with, grazing on seagrass in the shallows.",
+    "idTips": "A large turtle, shell 80-120 cm, smooth and rounded with olive-brown to dark shell plates that do not overlap, and a small blunt head with a single pair of scales between the eyes. Grazes head-down on seagrass beds.",
+    "habitat": "Seagrass meadows, reef flats and shallow bays; nests on sandy beaches.",
+    "where": "The Andaman coast and Gulf of Thailand, Vietnam's Con Dao and Nha Trang, and Cambodia's islands.",
+    "dangerous": false,
+    "dangerNote": "Protected everywhere in the region. Do not touch, chase, ride or feed a turtle, and never block one heading up to breathe — that is what actually harms them. Stay several metres back and let it come to you. Buying any turtle-shell product is illegal and drives the trade.",
+    "emoji": "🐢",
+    "names": {
+      "th": "เต่าตนุ",
+      "vi": "vích",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-hawksbill-turtle",
+    "group": "reptile",
+    "commonName": "Hawksbill Turtle",
+    "sciName": "Eretmochelys imbricata",
+    "localNames": [],
+    "blurb": "The turtle whose beautiful shell nearly finished it — critically endangered, and the reason tortoiseshell souvenirs must never be bought.",
+    "idTips": "Shell 60-90 cm with a strongly serrated rear edge and thick overlapping plates that give a tiled look, richly marbled amber, brown and black. The head is narrow with a sharply hooked, bird-like beak, which is the give-away.",
+    "habitat": "Coral reefs, where it feeds on sponges; nests on small sandy beaches.",
+    "where": "Reefs of the Andaman Sea, the Gulf of Thailand, Cambodia's islands and Con Dao in Vietnam.",
+    "dangerous": false,
+    "dangerNote": "Critically endangered and fully protected. Anything sold as tortoiseshell — combs, bracelets, sunglasses frames, inlay — is almost certainly this animal, is illegal to buy or take home, and is the single biggest reason it is disappearing. Watch it, keep your distance, buy nothing.",
+    "emoji": "🐢",
+    "names": {
+      "th": "เต่ากระ",
+      "vi": "đồi mồi",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-flying-lizard",
+    "group": "reptile",
+    "commonName": "Flying Lizard",
+    "sciName": "Draco spp.",
+    "localNames": [],
+    "blurb": "A small lizard that glides between tree trunks on ribbed wings — easy to miss until one launches.",
+    "idTips": "A slim lizard 20 cm including the whip tail, bark-coloured and almost invisible pressed to a trunk. In a glide it spreads bright orange, yellow or spotted flaps of skin between elongated ribs. Males flash a coloured throat flag when displaying.",
+    "habitat": "Tree trunks in open forest, plantations, parks and gardens, especially rubber and coconut.",
+    "where": "Throughout the region wherever there are trees, including in towns.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦎",
+    "names": {
+      "th": "กิ้งก่าบิน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-reptile-sun-skink",
+    "group": "reptile",
+    "commonName": "Common Sun Skink",
+    "sciName": "Eutropis multifasciata",
+    "localNames": [],
+    "blurb": "The glossy bronze lizard rustling through leaf litter beside every path — probably the reptile you will see most often.",
+    "idTips": "A sturdy skink 20-30 cm, glossy bronze-brown above with a coppery sheen, often with an orange or reddish flush along the flanks (brightest in breeding males) and faint dark stripes. Short legs, smooth overlapping scales, and a fast rustling dash for cover.",
+    "habitat": "Leaf litter, gardens, walls, plantation floors, roadsides and temple grounds.",
+    "where": "Extremely common across all four countries.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦎",
+    "names": {
+      "th": "จิ้งเหลนบ้าน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-sea-urchin",
+    "group": "fish",
+    "commonName": "Long-spined Sea Urchin",
+    "sciName": "Diadema setosum",
+    "localNames": [],
+    "blurb": "The commonest painful injury on a reef holiday, and it is almost always caused by standing up in the wrong place.",
+    "idTips": "A black globe 5-9 cm carrying very long, fine, needle-sharp black spines up to 30 cm, with a bright orange ring and five white dots on top of the body. Sits in crevices and on rubble, often in groups, and is easy to miss in shadow.",
+    "habitat": "Reef flats, rubble, seagrass and rocky shallows — including exactly the depth you stand up in.",
+    "where": "Reefs and rocky shores throughout Thailand, Vietnam and Cambodia.",
+    "dangerous": true,
+    "dangerNote": "The brittle spines puncture deeply and snap off in the wound, and they hurt for hours. Do not walk on a reef, and put fins on in deeper water rather than standing on rubble. If you are spined: soak the area in water as hot as you can tolerate for 30-45 minutes, remove any spine you can grip cleanly, and see a doctor for spines in a joint or the sole of a foot, or for any spreading redness — fragments left in cause infection. The black dye is harmless and fades.",
+    "emoji": "🌑",
+    "names": {
+      "th": "หอยเม่น",
+      "vi": "cầu gai",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-fire-coral",
+    "group": "fish",
+    "commonName": "Fire Coral",
+    "sciName": "Millepora spp.",
+    "localNames": [],
+    "blurb": "Not a coral at all, and it burns on contact — the mustard-coloured growth people grab for balance.",
+    "idTips": "Smooth, hard, mustard-yellow to tan branching or plate-like growths with pale, almost white tips, and a finely pitted surface without the obvious cups of a true coral. Often forms sheets over dead coral or encrusts gorgonians and ropes.",
+    "habitat": "Shallow reef tops and edges in bright light, and on wrecks and mooring lines.",
+    "where": "Reefs throughout the Andaman Sea, the Gulf of Thailand and Vietnamese and Cambodian waters.",
+    "dangerous": true,
+    "dangerNote": "Brushing it causes an immediate hot sting, then a red, itching, blistering welt that can last a week or more and may flare again later. Rinse with seawater — NOT fresh water, which fires more stinging cells — then douse with vinegar if available, and do not rub. Never grab a reef for balance, and wear a rash vest. See a doctor for a large area, a facial sting, or any breathing difficulty.",
+    "emoji": "🔥",
+    "names": {
+      "th": "ปะการังไฟ",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-blue-ringed-octopus",
+    "group": "fish",
+    "commonName": "Blue-ringed Octopus",
+    "sciName": "Hapalochlaena spp.",
+    "localNames": [],
+    "blurb": "Tiny, beautiful and one of the most venomous animals in the sea. It is not aggressive; the danger is picking one up.",
+    "idTips": "Very small — body the size of a golf ball, arms to about 10 cm. At rest it is drab beige-brown and easily mistaken for a stone. When alarmed it flashes brilliant iridescent blue rings or lines all over the body and arms. That display is the warning.",
+    "habitat": "Shallow rubble, tide pools, seagrass and reef flats; hides in shells, bottles and cans.",
+    "where": "Recorded in the shallow waters of Thailand, Vietnam and Cambodia; uncommon but present.",
+    "dangerous": true,
+    "dangerNote": "The venom is a powerful neurotoxin and there is no antivenom. The bite is often painless and can be missed. If someone is bitten: call for emergency help immediately, and if breathing weakens, rescue breathing must be started and CONTINUED until help arrives — the victim can stay conscious while paralysed, and people survive with nothing more than sustained artificial respiration. Never pick up a small octopus, and never reach into shells, bottles or cans on the seabed.",
+    "emoji": "🐙",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-cone-snail",
+    "group": "fish",
+    "commonName": "Cone Snail",
+    "sciName": "Conus spp.",
+    "localNames": [],
+    "blurb": "One of the prettiest shells on the beach, and among the few that can kill the person who pockets it.",
+    "idTips": "A smooth, heavy, cone-shaped shell 3-15 cm with a narrow opening running most of its length, patterned in intricate browns, oranges and whites — often a tent-like or dotted marbling. A live animal extends a fleshy foot and a tube; an empty shell is safe.",
+    "habitat": "Sand and rubble on reef flats and in shallow water; also washed up alive at the tide line.",
+    "where": "Beaches and reefs throughout the region.",
+    "dangerous": true,
+    "dangerNote": "A live cone snail fires a harpoon-like tooth that can penetrate a glove or wetsuit, and the larger fish-eating species have killed people. It can strike any part of the shell, so there is no safe way to hold one. Never pick up a cone-shaped shell in the water or at the tide line, and do not put shells in a pocket. A sting is a medical emergency — get help immediately and monitor breathing.",
+    "emoji": "🐚",
+    "names": {
+      "th": "หอยเต้าปูน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-bluebottle",
+    "group": "fish",
+    "commonName": "Bluebottle (Portuguese Man o' War)",
+    "sciName": "Physalia spp.",
+    "localNames": [],
+    "blurb": "Not a jellyfish but a colony, and it stings just as hard on the beach as in the water.",
+    "idTips": "A translucent blue or blue-purple gas-filled float 3-10 cm sitting on the surface like a small inflated bag, trailing long blue tentacles that may extend metres. Blown ashore in numbers on a windy day.",
+    "habitat": "The open sea surface, driven onshore by wind; strands along the tide line.",
+    "where": "Both Thai coasts, and Vietnamese and Cambodian shores, most often in the windy months.",
+    "dangerous": true,
+    "dangerNote": "A painful linear sting with red weals, occasionally with nausea and cramps. Stranded animals sting for days — do not touch one on the sand, and keep children away. Treatment: pick off tentacles with a gloved hand or stick, rinse with SEAWATER (fresh water fires more stinging cells), then immerse in hot water for 20 minutes; do not rub with sand. Vinegar is NOT recommended for this one. Seek help for a very large sting, a sting to the face, or breathing trouble. Note this is a different animal from the box jellyfish, which is far more dangerous — check for local warning signs and vinegar stations.",
+    "emoji": "🪼",
+    "names": {
+      "th": "แมงกะพรุนไฟ",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-crown-of-thorns",
+    "group": "fish",
+    "commonName": "Crown-of-Thorns Starfish",
+    "sciName": "Acanthaster planci",
+    "localNames": [],
+    "blurb": "A big spiny starfish that eats living coral, and injures anyone who stands on one.",
+    "idTips": "Large, 25-50 cm, with 10-20 arms covered in stout, sharp venomous spines 2-5 cm long, in mottled purple-grey, red-brown, or green. Often sitting on a patch of coral it has bleached white while feeding.",
+    "habitat": "Coral reefs, sometimes in destructive outbreaks.",
+    "where": "Reefs across the Andaman Sea, the Gulf of Thailand and Vietnamese and Cambodian waters.",
+    "dangerous": true,
+    "dangerNote": "The spines are venomous and brittle, causing immediate intense pain, swelling and lingering aching, and they break off in the wound. Never handle one and never stand on a reef. Treat by soaking in hot water and get medical help to remove fragments — retained spines commonly cause persistent infection and can involve a joint.",
+    "emoji": "⭐",
+    "names": {
+      "th": "ดาวมงกุฎหนาม",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-yellow-lipped-sea-krait",
+    "group": "fish",
+    "commonName": "Yellow-lipped Sea Krait",
+    "sciName": "Laticauda colubrina",
+    "localNames": [],
+    "blurb": "Highly venomous, remarkably docile, and often seen coming ashore — which is where people get into trouble with it.",
+    "idTips": "A banded sea snake 1-1.4 m, pale silvery-blue to grey with clean black rings all along the body, a yellow snout and upper lip, and a flattened paddle-like tail. Unlike true sea snakes it comes onto land to rest and digest.",
+    "habitat": "Coral reefs, rocky shallows and adjacent beaches and rock crevices.",
+    "where": "Both Thai coasts, Vietnamese and Cambodian islands and reefs.",
+    "dangerous": true,
+    "dangerNote": "The venom is far stronger than a cobra's, but the animal is famously placid and bites are very rare — divers regularly swim beside them. Almost every bite involves someone picking one up, usually on a beach where it looks helpless. Do not touch it, on land or in the water, and warn children. A bite may be nearly painless and needs immediate hospital care regardless; effects can be delayed by hours.",
+    "emoji": "🐍",
+    "names": {
+      "th": "งูสมิงทะเล",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-moray-eel",
+    "group": "fish",
+    "commonName": "Giant Moray",
+    "sciName": "Gymnothorax javanicus",
+    "localNames": [],
+    "blurb": "The face in the hole. Not a threat unless a hand goes in after it — and then a serious wound.",
+    "idTips": "A very large eel, commonly 1.5-2.5 m, mottled dark brown and pale in a leopard pattern with a dark blotch around the gill opening. No pectoral fins; the dorsal fin runs the length of the body. Sits with the head out of a crevice, mouth opening and closing to breathe — which is not aggression.",
+    "habitat": "Reef crevices, caves and wrecks by day.",
+    "where": "Reefs throughout the Andaman Sea, the Gulf of Thailand and Vietnamese waters.",
+    "dangerous": true,
+    "dangerNote": "It bites only defensively or when a hand is mistaken for food, but the teeth are long and backward-curving, the jaws do not release easily, and the wounds get infected readily. Never put a hand into a hole, never feed one, and never let a guide hand-feed for a photograph — that is exactly what teaches an eel to approach hands. Any moray bite needs cleaning and a doctor.",
+    "emoji": "🐟",
+    "names": {
+      "th": "ปลาไหลมอเรย์",
+      "vi": "cá chình",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-snakehead",
+    "group": "fish",
+    "commonName": "Striped Snakehead",
+    "sciName": "Channa striata",
+    "localNames": [],
+    "blurb": "The dark, blunt-headed fish alive in a shallow tray at every fresh market — it breathes air, so it is sold living.",
+    "idTips": "Long and cylindrical, 20-60 cm, dark grey-brown above with pale chevron bars along the flanks, a flattened snake-like head with large scales, and long dorsal and anal fins running most of the body. Kept alive out of water in a damp tray.",
+    "habitat": "Paddies, canals, swamps and ponds; can breathe air and cross wet ground.",
+    "where": "Farmed and wild-caught across all four countries; a staple of grilled fish, sour soups and Isan and Lao larb pla.",
+    "dangerous": false,
+    "dangerNote": "Handle with respect at the market: it thrashes hard and has sharp teeth and gill covers. As with all freshwater fish here, eat it cooked — raw or fermented freshwater fish carries liver fluke, a serious regional health problem.",
+    "emoji": "🐟",
+    "names": {
+      "th": "ปลาช่อน",
+      "vi": "cá lóc",
+      "km": "ត្រីរ៉ស់",
+      "lo": "ປາຄໍ່"
+    }
+  },
+  {
+    "id": "nat-fish-pangasius",
+    "group": "fish",
+    "commonName": "Mekong Catfish (Pangasius)",
+    "sciName": "Pangasius spp.",
+    "localNames": [],
+    "blurb": "The silvery river catfish behind most of the region's farmed fish, and the fillets exported worldwide as basa.",
+    "idTips": "A smooth, scaleless, silvery-grey catfish with a slightly forked tail, a large eye set low on the head, and two short barbels. Farmed fish are commonly 40-70 cm; wild river species grow far larger.",
+    "habitat": "The Mekong and its tributaries, and enormous floating cage farms — especially in the Vietnamese delta.",
+    "where": "Farmed at huge scale in the Mekong Delta and sold fresh throughout the region.",
+    "dangerous": false,
+    "dangerNote": "Not to be confused with the Mekong giant catfish, which is critically endangered and must not be eaten — if a restaurant offers giant catfish, decline. Cook thoroughly, like all freshwater fish here.",
+    "emoji": "🐟",
+    "names": {
+      "th": "ปลาสวาย",
+      "vi": "cá basa",
+      "km": "ត្រីប្រា",
+      "lo": "ປາສະວາຍ"
+    }
+  },
+  {
+    "id": "nat-fish-mudskipper",
+    "group": "fish",
+    "commonName": "Mudskipper",
+    "sciName": "Periophthalmodon / Boleophthalmus spp.",
+    "localNames": [],
+    "blurb": "A fish that walks, climbs and defends a territory on the mud — the best entertainment in any mangrove.",
+    "idTips": "5-25 cm, brown-grey and often blue-speckled, with bulging periscope eyes on top of the head, and stubby muscular pectoral fins used as crutches to haul across mud. Males flash a raised dorsal fin and leap in territorial displays.",
+    "habitat": "Mangrove mudflats and tidal creeks at low tide.",
+    "where": "Mangrove coasts across Thailand, Vietnam and Cambodia.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐟",
+    "names": {
+      "th": "ปลาตีน",
+      "vi": "cá thòi lòi",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-fish-siamese-fighting-fish",
+    "group": "fish",
+    "commonName": "Siamese Fighting Fish",
+    "sciName": "Betta splendens",
+    "localNames": [],
+    "blurb": "Thailand's national aquatic animal — and the wild version looks nothing like the ones in shops.",
+    "idTips": "Wild fish are drab greenish-brown, 5-6 cm, with short fins and red flashes on the gill covers, brightening dramatically when displaying. The long-finned scarlet, blue and white fish sold in jars are centuries of selective breeding, not wild animals.",
+    "habitat": "Shallow, still, vegetated water: paddies, ditches, marshes and roadside pools.",
+    "where": "Native to the central Thai plains and the Mekong basin; wild populations are declining as habitat is drained.",
+    "dangerous": false,
+    "dangerNote": "Males fight, which is why they are sold one to a jar. The wild form is now assessed as vulnerable, so admire wild fish in the ditch and buy captive-bred if you buy at all.",
+    "emoji": "🐠",
+    "names": {
+      "th": "ปลากัด",
+      "vi": "cá xiêm",
+      "km": "",
+      "lo": "ປາກັດ"
+    }
+  },
+  {
+    "id": "nat-bird-giant-ibis",
+    "group": "bird",
+    "commonName": "Giant Ibis",
+    "sciName": "Thaumatibis gigantea",
+    "localNames": [],
+    "blurb": "Cambodia's national bird, the largest ibis in the world, and critically endangered — perhaps only a few hundred remain.",
+    "idTips": "Enormous for an ibis at over a metre tall, dark grey-brown with a bare dark grey head, pale banding on the wing coverts, red eyes and reddish legs, and a long down-curved bill. Usually in pairs or small family groups, and remarkably wary.",
+    "habitat": "Open dry dipterocarp forest with seasonal pools and wet grassy clearings.",
+    "where": "Northern and eastern Cambodia — the Northern Plains and Western Siem Pang — with tiny numbers in southern Laos. Tmatboey in Preah Vihear is the place people go to see it.",
+    "dangerous": false,
+    "dangerNote": "Critically endangered. If you go looking, use the community-based ecotourism operations at Tmatboey and Western Siem Pang: the fees are what makes protecting the nests worth more to villages than the alternatives.",
+    "emoji": "🐦",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "ត្រយងយក្ស",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-sarus-crane",
+    "group": "bird",
+    "call": true,
+    "commonName": "Sarus Crane",
+    "sciName": "Antigone antigone",
+    "localNames": [],
+    "blurb": "The tallest flying bird in the world, and a genuine spectacle over the Mekong floodplains.",
+    "idTips": "Up to 1.8 m tall, uniform pale grey with a bare red head and upper neck, a small grey crown patch, and long pale pink legs. Pairs are inseparable and duet loudly with heads thrown back — a far-carrying trumpeting.",
+    "habitat": "Seasonally flooded grassland, wet paddies, marshes and shallow wetlands.",
+    "where": "The Cambodia-Vietnam border wetlands, notably Tram Chim in the Mekong Delta and Ang Trapeang Thmor in Cambodia; small numbers in Laos.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกกระเรียนไทย",
+      "vi": "sếu đầu đỏ",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-green-peafowl",
+    "group": "bird",
+    "call": true,
+    "commonName": "Green Peafowl",
+    "sciName": "Pavo muticus",
+    "localNames": [],
+    "blurb": "The wild peafowl of Southeast Asia — endangered, far shyer than the Indian bird, and stunning.",
+    "idTips": "Male over 2 m including the train, glossy metallic green and blue with a tall upright tuft-like crest and blue-and-yellow bare facial skin. Females similar but without the train. Its loud, ringing 'ki-wao' carries a long way at dawn.",
+    "habitat": "Riverine and dry deciduous forest with open ground and water.",
+    "where": "Best in northern Thailand's Huai Kha Khaeng and around Mae Ping, plus parts of Cambodia, Laos and Vietnam.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦚",
+    "names": {
+      "th": "นกยูงไทย",
+      "vi": "công",
+      "km": "",
+      "lo": "ນົກຍູງ"
+    }
+  },
+  {
+    "id": "nat-bird-asian-openbill",
+    "group": "bird",
+    "commonName": "Asian Openbill",
+    "sciName": "Anastomus oscitans",
+    "localNames": [],
+    "blurb": "A common stork with a bill that does not close — and it is built that way on purpose.",
+    "idTips": "About 80 cm, dull white with glossy black wings and tail, on long pinkish legs. The heavy pale bill has a permanent gap between the mandibles even when shut, used for gripping and extracting apple snails. Soars in flocks on thermals.",
+    "habitat": "Paddies, marshes, canals and irrigation reservoirs.",
+    "where": "Abundant across the lowlands of Thailand, Cambodia and Vietnam — often the commonest large bird over paddy fields.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกปากห่าง",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-painted-stork",
+    "group": "bird",
+    "commonName": "Painted Stork",
+    "sciName": "Mycteria leucocephala",
+    "localNames": [],
+    "blurb": "A big, beautiful stork you can watch easily even in city parks and zoos-turned-wetlands.",
+    "idTips": "About 1 m, white with fine dark barring across the breast, glossy dark flight feathers, and a striking rose-pink flush on the lower back and tail. Bare orange-yellow face and a long, slightly down-curved yellow bill.",
+    "habitat": "Freshwater marshes, paddies, reservoirs and lakes; nests colonially in trees.",
+    "where": "Central Thailand and Cambodia especially; a familiar sight at Wat Phai Lom and around Bangkok's wetlands.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกกาบบัว",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-brahminy-kite",
+    "group": "bird",
+    "commonName": "Brahminy Kite",
+    "sciName": "Haliastur indus",
+    "localNames": [],
+    "blurb": "The chestnut-and-white raptor circling every harbour, river mouth and fishing pier.",
+    "idTips": "Medium raptor with a pure white head, neck and breast contrasting sharply with rich chestnut wings, back and belly, and a rounded tail. Juveniles are streaky brown. Glides low over water on slightly bowed wings.",
+    "habitat": "Coasts, estuaries, harbours, rivers, canals and fish farms.",
+    "where": "Common along coasts and major rivers throughout the region, including in cities.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦅",
+    "names": {
+      "th": "เหยี่ยวแดง",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-crested-serpent-eagle",
+    "group": "bird",
+    "call": true,
+    "commonName": "Crested Serpent Eagle",
+    "sciName": "Spilornis cheela",
+    "localNames": [],
+    "blurb": "The forest raptor you hear before you see — a piercing whistle from high overhead on a hot afternoon.",
+    "idTips": "A dark brown eagle with a short black-and-white crest raised when perched, white spotting below, and bare bright yellow face and legs. In flight the broad wings and tail show a bold black-and-white banded pattern from beneath. The call is a loud, rising 'kluee-wip'.",
+    "habitat": "Forest and forest edge, plantations and wooded farmland.",
+    "where": "Widespread across all four countries.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦅",
+    "names": {
+      "th": "เหยี่ยวรุ้ง",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-germains-swiftlet",
+    "group": "bird",
+    "commonName": "Germain's Swiftlet",
+    "sciName": "Aerodramus germani",
+    "localNames": [],
+    "blurb": "The bird behind bird's-nest soup — and behind the strange windowless concrete towers you will see in delta towns.",
+    "idTips": "A small, uniformly sooty-brown swift about 12 cm with a slightly notched tail, in constant fast fluttering flight, never perching in the open. It navigates dark caves by echolocating with sharp audible clicks.",
+    "habitat": "Sea caves and limestone caves; now heavily farmed in purpose-built 'bird houses' — tall breeze-block buildings that broadcast recorded calls.",
+    "where": "Coastal Thailand, southern Vietnam and Cambodia; the nest trade is a major industry in the Mekong Delta.",
+    "dangerous": false,
+    "dangerNote": "The nests are made of the bird's own hardened saliva. Harvesting is legal and farmed nests are the bulk of supply, but cave harvesting can be destructive and dangerous, and the trade is a target for fraud. Nothing about the soup is a health necessity.",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกแอ่นกินรัง",
+      "vi": "chim yến",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-black-naped-oriole",
+    "group": "bird",
+    "call": true,
+    "commonName": "Black-naped Oriole",
+    "sciName": "Oriolus chinensis",
+    "localNames": [],
+    "blurb": "A brilliant golden-yellow bird with a black mask, common in city parks and easy to spot once you know the call.",
+    "idTips": "About 26 cm, vivid golden-yellow with black wings, a broad black band running through the eye and around the nape, and a pinkish-red bill. The song is a rich, liquid, fluting whistle.",
+    "habitat": "Open woodland, parks, gardens, temple grounds and roadside trees.",
+    "where": "Widespread across the region, including in Bangkok, Hanoi and Phnom Penh parks.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกขมิ้นท้ายทอยดำ",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-scarlet-minivet",
+    "group": "bird",
+    "commonName": "Scarlet Minivet",
+    "sciName": "Pericrocotus flammeus",
+    "localNames": [],
+    "blurb": "Flocks of tiny scarlet and yellow birds working through the canopy together — one of the region's great forest sights.",
+    "idTips": "About 20 cm. Males are glossy black on the head and back with brilliant scarlet underparts, rump and wing patches; females replace every red with bright yellow. They move through the canopy in loose, restless parties.",
+    "habitat": "Broadleaf forest, forest edge and well-wooded hill country.",
+    "where": "Hill and montane forest across all four countries — Doi Inthanon, Cat Ba, Bokor and the Bolaven Plateau are all reliable.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกพญาไฟใหญ่",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-spotted-owlet",
+    "group": "bird",
+    "call": true,
+    "commonName": "Spotted Owlet",
+    "sciName": "Athene brama",
+    "localNames": [],
+    "blurb": "A small, cross-looking owl that is active at dusk in the middle of cities — often on a temple roof or a wire.",
+    "idTips": "Only about 21 cm, grey-brown liberally spotted with white, with a pale face, bold white eyebrows and staring lemon-yellow eyes. Often in pairs, bobbing and glaring. The call is a harsh chattering squabble at dusk.",
+    "habitat": "Temple grounds, old buildings, palm trees, parks and farmland — very tolerant of people.",
+    "where": "Common throughout the lowlands of all four countries, including in city centres.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦉",
+    "names": {
+      "th": "นกเค้าจุด",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-streak-eared-bulbul",
+    "group": "bird",
+    "call": true,
+    "commonName": "Streak-eared Bulbul",
+    "sciName": "Pycnonotus conradi",
+    "localNames": [],
+    "blurb": "If you are in a Thai city and a nondescript brown bird is singing in the garden, this is very likely it.",
+    "idTips": "About 20 cm, plain grey-brown with a paler belly, a whitish eye, and fine pale streaks on the ear coverts that give it its name — a genuinely unremarkable bird, which is itself the identification. Noisy and constantly active.",
+    "habitat": "Gardens, parks, scrub, plantations and city streets.",
+    "where": "Abundant across Thailand, Cambodia and Laos in nearly any inhabited landscape.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกปรอดสวน",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-bird-blue-whistling-thrush",
+    "group": "bird",
+    "call": true,
+    "commonName": "Blue Whistling Thrush",
+    "sciName": "Myophonus caeruleus",
+    "localNames": [],
+    "blurb": "A big dark thrush by a hill stream whose song is one of the finest sounds in the mountains here.",
+    "idTips": "About 32 cm, appearing black in shade but resolving in good light into deep midnight blue spangled with fine pale spots, with a bright yellow bill and dark legs. Bounds along wet rocks flicking a fanned tail. The song is a loud, rich, human-sounding whistle.",
+    "habitat": "Rocky streams, waterfalls, damp ravines and hill-station gardens.",
+    "where": "Hills and mountains of northern Thailand, northern Vietnam, northern Laos and Cambodia's Cardamoms.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐦",
+    "names": {
+      "th": "นกเอี้ยงถ้ำ",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-slow-loris",
+    "group": "mammal",
+    "commonName": "Sunda Slow Loris",
+    "sciName": "Nycticebus coucang",
+    "localNames": [],
+    "blurb": "The wide-eyed nocturnal primate offered for photographs on tourist streets — and every one of those animals is a victim.",
+    "idTips": "Small and round, 27-38 cm with no visible tail, dense woolly grey-brown fur, a dark stripe down the back and dark rings around enormous forward-facing eyes. Moves slowly and deliberately, hand over hand, and is silent.",
+    "habitat": "Rainforest, bamboo and plantations, strictly at night, high in vegetation.",
+    "where": "Southern Thailand, Vietnam, Cambodia and Laos. The ones travellers actually meet are on the streets of Bangkok, Phuket and Patong.",
+    "dangerous": true,
+    "dangerNote": "Never pay for a photograph with one. They are protected; the animals are taken from the wild, their teeth are usually cut out with nail clippers so they cannot bite, and most die within weeks — paying is what keeps the supply moving. They are also one of the very few venomous primates: a bite mixes saliva with a toxin from a gland in the elbow and can cause a severe reaction. If you see one being touted, do not engage, and report it to the tourist police (1155 in Thailand).",
+    "emoji": "🐒",
+    "names": {
+      "th": "นางอาย",
+      "vi": "khỉ gió",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-sun-bear",
+    "group": "mammal",
+    "commonName": "Sun Bear",
+    "sciName": "Helarctos malayanus",
+    "localNames": [],
+    "blurb": "The smallest bear in the world, and the one most likely to be encountered on a forest trail here.",
+    "idTips": "1.2-1.5 m long, sleek short black fur, a pale orange-yellow crescent on the chest, a grey-brown muzzle, very long curved claws and an absurdly long tongue. Much smaller and lighter-built than a black bear.",
+    "habitat": "Lowland and hill rainforest; an excellent climber that often feeds and rests in trees.",
+    "where": "Thailand, Cambodia, Laos and Vietnam, though numbers are much reduced.",
+    "dangerous": true,
+    "dangerNote": "Small but powerful and, by reputation, quick to defend itself, particularly a female with cubs. On foot in bear country make noise on blind corners, never approach one, and never get between a bear and a cub. If you meet one: do not run, back away slowly while facing it, and make yourself look large. Do not leave food in a tent.",
+    "emoji": "🐻",
+    "names": {
+      "th": "หมีหมา",
+      "vi": "gấu chó",
+      "km": "ឆ្កែឃ្មុំ",
+      "lo": "ໝີ"
+    }
+  },
+  {
+    "id": "nat-mammal-asiatic-black-bear",
+    "group": "mammal",
+    "commonName": "Asiatic Black Bear",
+    "sciName": "Ursus thibetanus",
+    "localNames": [],
+    "blurb": "The moon bear — bigger than a sun bear, and the animal behind most serious bear injuries in the region.",
+    "idTips": "1.2-1.9 m, glossy black with a broad white or cream V on the chest, a distinctly rounded head, large flared ears and a shaggy ruff around the neck.",
+    "habitat": "Hill and montane broadleaf forest, generally higher and cooler than sun bear country.",
+    "where": "Northern Thailand, northern and central Vietnam, Laos and Cambodia's mountains.",
+    "dangerous": true,
+    "dangerNote": "The species responsible for most bear attacks in Asia; injuries are typically to the head and face and encounters are usually sudden and at close range. Same rules: noise on the trail, no approach, never between mother and cub, back away facing the animal, do not run or climb. If a bear charges and contact is unavoidable, fight back and protect your head and neck — do not play dead with this species.",
+    "emoji": "🐻",
+    "names": {
+      "th": "หมีควาย",
+      "vi": "gấu ngựa",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-indochinese-tiger",
+    "group": "mammal",
+    "commonName": "Indochinese Tiger",
+    "sciName": "Panthera tigris corbetti",
+    "localNames": [],
+    "blurb": "Still here, just — a few hundred at most across the whole region, and the odds of seeing one are effectively nil.",
+    "idTips": "A tiger, and unmistakable: 2.5-2.8 m including tail, orange with narrow black stripes, paler and more slender than a Bengal tiger. In practice you will find pugmarks, scrapes or a scent-marked tree, not the animal.",
+    "habitat": "Large blocks of dry and evergreen forest with wild prey and little human pressure.",
+    "where": "Realistically only Thailand's Western Forest Complex (Huai Kha Khaeng and Thap Lan) holds a breeding population; Cambodia's wild tigers are considered functionally extinct and Vietnam's and Laos's nearly so.",
+    "dangerous": true,
+    "dangerNote": "A genuine wild encounter is vanishingly unlikely, and this entry is here mostly so you know that: any 'tiger experience', tiger temple, cub-petting or walk-with-tigers attraction is a captive operation, not conservation, and paying for one supports breeding for entertainment. In the improbable event of meeting a wild tiger, do not run — back away slowly, facing it, and stay in a group.",
+    "emoji": "🐅",
+    "names": {
+      "th": "เสือโคร่ง",
+      "vi": "hổ",
+      "km": "ខ្លា",
+      "lo": "ເສືອ"
+    }
+  },
+  {
+    "id": "nat-mammal-indochinese-leopard",
+    "group": "mammal",
+    "commonName": "Indochinese Leopard",
+    "sciName": "Panthera pardus delacouri",
+    "localNames": [],
+    "blurb": "Critically reduced and now rarer in this region than the tiger in some places — a genuine ghost of the forest.",
+    "idTips": "1.6-2.1 m including tail, tawny with dense rosettes; a high proportion of animals here are black (melanistic 'black panthers'), in which the rosettes are still visible in raking light. Much smaller and lower-slung than a tiger.",
+    "habitat": "Dry and evergreen forest, and more tolerant of degraded habitat than a tiger.",
+    "where": "Peninsular Thailand and eastern Cambodia hold the last significant populations; the black form is notably frequent in southern Thailand.",
+    "dangerous": true,
+    "dangerNote": "Very rarely a threat to people and almost never seen. The same rules apply as for any big cat: no running, back away facing it, keep children close and stay grouped after dark in forest.",
+    "emoji": "🐆",
+    "names": {
+      "th": "เสือดาว",
+      "vi": "báo hoa mai",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-gaur",
+    "group": "mammal",
+    "commonName": "Gaur",
+    "sciName": "Bos gaurus",
+    "localNames": [],
+    "blurb": "The largest wild cattle on earth — a bull can top a tonne, and this is one of the more genuinely dangerous animals you might meet on foot.",
+    "idTips": "Massive and unmistakable: 1.7-2.2 m at the shoulder, glossy blackish-brown with striking white 'stockings' on all four legs, a high muscular ridge along the shoulders and a pronounced grey dorsal ridge between the horns.",
+    "habitat": "Evergreen and deciduous forest with grassy clearings and salt licks.",
+    "where": "Thailand's Western Forest Complex and Khao Yai, eastern Cambodia, and parts of Laos and Vietnam.",
+    "dangerous": true,
+    "dangerNote": "Usually shy, but bulls and cows with calves will charge with very little warning, and an animal this size is lethal. Keep a very wide berth, never approach for a photograph, stay in a vehicle where one is available, and back off immediately if an animal turns to face you or lowers its head. Never get between a herd and cover.",
+    "emoji": "🐃",
+    "names": {
+      "th": "กระทิง",
+      "vi": "bò tót",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-dhole",
+    "group": "mammal",
+    "call": true,
+    "commonName": "Dhole",
+    "sciName": "Cuon alpinus",
+    "localNames": [],
+    "blurb": "The Asiatic wild dog — a russet, whistling pack hunter, and one of the best sightings in a Thai national park.",
+    "idTips": "The size of a border collie, 12-20 kg, rich rusty-red with a paler belly and a full bushy black-tipped tail. The muzzle is short and the ears large and rounded. Packs communicate with an eerie whistling rather than barking.",
+    "habitat": "Deciduous and evergreen forest with open ground; often seen on park roads early and late.",
+    "where": "Khao Yai and the Western Forest Complex in Thailand, plus parts of Cambodia and Laos.",
+    "dangerous": false,
+    "dangerNote": "No real risk to people. Never feed them — habituated dholes on park roads get killed by vehicles, which is the main threat to the ones you are most likely to see.",
+    "emoji": "🐕",
+    "names": {
+      "th": "หมาใน",
+      "vi": "sói đỏ",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-sunda-pangolin",
+    "group": "mammal",
+    "commonName": "Sunda Pangolin",
+    "sciName": "Manis javanica",
+    "localNames": [],
+    "blurb": "The most trafficked wild mammal in the world, and the reason you may see scales for sale in a medicine shop.",
+    "idTips": "65-100 cm including a long prehensile tail, entirely armoured in overlapping olive-brown keratin scales, with a small conical head, no teeth, and a long sticky tongue. Rolls into a tight ball when threatened. Strictly nocturnal.",
+    "habitat": "Forest, plantations and scrub; digs for ants and termites and shelters in burrows and hollow trees.",
+    "where": "All four countries, though it is now critically endangered and rarely seen.",
+    "dangerous": false,
+    "dangerNote": "Critically endangered and driven there almost entirely by trafficking for scales and meat. Do not buy pangolin scales or anything containing them — the claimed medicinal properties have no evidence behind them (the scales are keratin, the same material as fingernails) — and report anything offered for sale.",
+    "emoji": "🦔",
+    "names": {
+      "th": "ลิ่น",
+      "vi": "tê tê",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-red-shanked-douc",
+    "group": "mammal",
+    "commonName": "Red-shanked Douc Langur",
+    "sciName": "Pygathrix nemaeus",
+    "localNames": [],
+    "blurb": "Arguably the most spectacularly coloured primate in Asia, and Vietnam's flagship monkey.",
+    "idTips": "About 60-75 cm plus a long white tail, with grey body, deep maroon-red lower legs, black hands and feet, white forearms, and a golden face fringed with long white cheek whiskers and a chestnut band across the throat.",
+    "habitat": "Tall primary and secondary forest canopy, in noisy troops.",
+    "where": "Central Vietnam and adjacent Laos — Son Tra peninsula above Da Nang is the reliable place to see them, plus Bach Ma and Pu Mat.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐒",
+    "names": {
+      "th": "",
+      "vi": "chà vá chân nâu",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-saola",
+    "group": "mammal",
+    "commonName": "Saola",
+    "sciName": "Pseudoryx nghetinhensis",
+    "localNames": [],
+    "blurb": "The 'Asian unicorn' — found only in the Annamite mountains, never seen alive by a scientist in the wild, and possibly already gone.",
+    "idTips": "A dark brown forest bovid about 80-90 cm at the shoulder with two long, nearly straight, parallel horns up to 50 cm, and vivid white facial markings — spots above the eyes, stripes on the cheeks and chin.",
+    "habitat": "Wet evergreen forest in the Annamite range, with steep terrain and streams.",
+    "where": "The Vietnam-Laos border mountains only. Discovered in 1992; the last confirmed record was a camera-trap photograph in 2013.",
+    "dangerous": false,
+    "dangerNote": "Included because it matters, not because you might see it. The threat is snaring: indiscriminate wire snares set for any animal blanket these forests. If you trek in the Annamites, use operators that fund snare-removal patrols, and report any snare line you come across to your guide.",
+    "emoji": "🦌",
+    "names": {
+      "th": "",
+      "vi": "sao la",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-smooth-coated-otter",
+    "group": "mammal",
+    "call": true,
+    "commonName": "Smooth-coated Otter",
+    "sciName": "Lutrogale perspicillata",
+    "localNames": [],
+    "blurb": "Family groups fishing noisily along a river or through a flooded forest — one of the region's most enjoyable sightings.",
+    "idTips": "0.7-1.3 m including a flattened tail, with short, sleek, glossy dark brown fur that looks almost velvet when wet, a paler throat and belly, and a broad flat muzzle. Travels and hunts in extended family parties, whistling and chirruping constantly.",
+    "habitat": "Large rivers, lakes, canals, mangroves and flooded forest.",
+    "where": "The Mekong and Tonle Sap systems, Thai rivers and reservoirs, and Vietnamese delta channels.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🦦",
+    "names": {
+      "th": "นากใหญ่ขนเรียบ",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-malayan-porcupine",
+    "group": "mammal",
+    "commonName": "Malayan Porcupine",
+    "sciName": "Hystrix brachyura",
+    "localNames": [],
+    "blurb": "A big nocturnal rodent that announces itself by rattling — you will find dropped quills on trails long before you see one.",
+    "idTips": "60-75 cm and heavily built, dark brown to blackish, covered in long black-and-white banded quills that lie flat until raised. A white band runs across the throat. Rattles hollow tail quills loudly when alarmed.",
+    "habitat": "Forest, plantations and scrub, sheltering in burrows and rock crevices by day.",
+    "where": "Common across all four countries, including close to villages.",
+    "dangerous": true,
+    "dangerNote": "Not aggressive and it cannot shoot its quills, but a cornered porcupine reverses hard into a threat and the quills drive in deeply and detach, which is a nasty and easily infected wound. Give one room, keep dogs away, and do not corner one on a trail at night.",
+    "emoji": "🦔",
+    "names": {
+      "th": "เม่นใหญ่",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-colugo",
+    "group": "mammal",
+    "commonName": "Sunda Colugo",
+    "sciName": "Galeopterus variegatus",
+    "localNames": [],
+    "blurb": "The 'flying lemur' — neither flying nor a lemur, but the most capable gliding mammal there is.",
+    "idTips": "About 35-40 cm, mottled grey-brown and lichen-patterned for perfect bark camouflage, with a membrane joining neck, all four limbs and tail into a single kite. Clings flat and motionless to a trunk by day; glides over 100 m between trees at dusk.",
+    "habitat": "Lowland and hill rainforest and plantations.",
+    "where": "Southern Thailand and parts of Cambodia, Laos and Vietnam.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐿️",
+    "names": {
+      "th": "",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
+  },
+  {
+    "id": "nat-mammal-black-giant-squirrel",
+    "group": "mammal",
+    "call": true,
+    "commonName": "Black Giant Squirrel",
+    "sciName": "Ratufa bicolor",
+    "localNames": [],
+    "blurb": "An enormous squirrel — nearly a metre long including tail — crashing about high in the canopy.",
+    "idTips": "Head and body 35-40 cm with a tail of similar length. Glossy blue-black above and rich buff-orange below, with pale tufted ears. Moves in long, heavy leaps with a loud rustle, often the first sign of it.",
+    "habitat": "Tall evergreen and semi-evergreen forest canopy.",
+    "where": "Hill forest across all four countries — Khao Yai, Doi Inthanon, Cat Tien and Bokor.",
+    "dangerous": false,
+    "dangerNote": "",
+    "emoji": "🐿️",
+    "names": {
+      "th": "พญากระรอกดำ",
+      "vi": "",
+      "km": "",
+      "lo": ""
+    }
   }
 ];
 
