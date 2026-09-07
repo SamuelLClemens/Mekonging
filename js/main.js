@@ -163,8 +163,8 @@ import * as Diet from './data/diet.js';
 let NATURE_GROUPS = [];
 let _natureMod = null;
 let _natureLoad = null;
-function isNatureLoaded() { return !!_natureMod; }
-function loadNature() {
+export function isNatureLoaded() { return !!_natureMod; }
+export function loadNature() {
   if (_natureMod) return Promise.resolve(_natureMod);
   if (_natureLoad) return _natureLoad;
   _natureLoad = import('./data/nature.js')
@@ -221,6 +221,14 @@ const SCREEN_LOADERS = {
   weather: (b) => import('./screens/weather.js' + b),
   countryinfo: (b) => import('./screens/country-info.js' + b),
   arrivalinfo: (b) => import('./screens/arrival-info.js' + b),
+  food: (b) => import('./screens/food.js' + b),
+  nearby: (b) => import('./screens/nearby.js' + b),
+  explore: (b) => import('./screens/explore.js' + b),
+  you: (b) => import('./screens/you.js' + b),
+  today: (b) => import('./screens/today.js' + b),
+  search: (b) => import('./screens/search.js' + b),
+  welcome: (b) => import('./screens/welcome.js' + b),
+  transport: (b) => import('./screens/transport.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -231,7 +239,9 @@ const ROUTE_SCREENS = {
   nextstop: ['nextstop'],
   settings: ['settings'],
   visitors: ['visitors'],
-  family: ['family'], explore: ['family'], country: ['family'],
+  family: ['family'],
+  explore: ['family', 'explore'],
+  country: ['family', 'explore'],
   sharejourney: ['sharejourney'], jr: ['sharejourney'],
   hospital: ['medical'],
   vault: ['vault'],
@@ -261,6 +271,15 @@ const ROUTE_SCREENS = {
   scams: ['countryinfo'],
   arrival: ['arrivalinfo'],
   info: ['arrivalinfo'],
+  // nearby.js statically imports food.js for dietEatCard, so requesting 'nearby' brings both.
+  food: ['food'],
+  dish: ['food'],
+  nearby: ['nearby'],
+  region: ['explore'],
+  me: ['you'], foryou: ['you'], welcome: ['welcome'],
+  today: ['today'],
+  search: ['search'],
+  transport: ['transport'], addpin: ['transport'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -269,7 +288,7 @@ const _screenPending = Object.create(null);
 // failure, and without a record of the failure it would ask for the same module again, fail
 // again, and leave the traveller on a loading card forever.
 const _screenFailed = Object.create(null);
-function screenMod(name) { return _screenMods[name] || null; }
+export function screenMod(name) { return _screenMods[name] || null; }
 const _screenTries = Object.create(null);
 function loadScreenMod(name) {
   if (_screenMods[name]) return Promise.resolve(_screenMods[name]);
@@ -307,7 +326,12 @@ const ROUTE_DATA = {
   country: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
   crossings: ['borders', 'visa'],
   explore: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  // #me and #foryou share js/screens/you.js (screen split, mk-v0.539.0), so the guard rolls
+  // foryouScreen's data need up to both — the same over-approximation explore/country accept.
+  // Only foryouScreen reads it; warmLazyData() has normally already fetched it on idle, so in
+  // practice the YOU tab awaits nothing.
   foryou: ['itineraries'],
+  me: ['itineraries'],
   history: ['accessibility', 'scams', 'visa'],
   // arrival/info share js/screens/arrival-info.js (see the country-info comment above for why
   // that means an identical union, not each route's own narrower need).
@@ -329,7 +353,12 @@ const ROUTE_DATA = {
   pools: ['pools'],
   produce: ['produce'],
   pantry: ['produce'],
-  region: ['zones'],
+  // #region now shares js/screens/explore.js with exploreScreen (screen split, mk-v0.539.0),
+  // so it inherits that screen's data needs — the same over-approximation explore/country
+  // above already accept, and it costs a #region visit nothing in practice: the route is only
+  // reachable from Explore, which has already awaited all four, and warmLazyData() warms them
+  // on idle regardless. 'zones' is the only one regionScreen reads itself.
+  region: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
   scams: ['accessibility', 'scams', 'visa'],
   schedules: ['schedules'],
   setcity: ['accessibility', 'scams', 'visa'],
@@ -479,7 +508,7 @@ function showUpdateToast() {
 // no longer fires a blocking confirm. Only one shows at a time; it auto-dismisses after a few
 // seconds. Pinned above the tab bar and appended to <body>, so it survives a subtree redraw.
 let undoToastTimer = null;
-function showUndoToast(message, undoFn) {
+export function showUndoToast(message, undoFn) {
   document.querySelectorAll('.snack-toast').forEach((n) => n.remove());
   if (undoToastTimer) { clearTimeout(undoToastTimer); undoToastTimer = null; }
   const close = () => { if (undoToastTimer) { clearTimeout(undoToastTimer); undoToastTimer = null; } toast.remove(); };
@@ -674,11 +703,11 @@ function detectCountryId() {
 }
 export function langForCountry(id) { const c = getCountry(id); return c ? c.lang : 'th'; }
 setActiveCountry(detectCountryId());   // current destination context (country id) — see js/app-state.js
-let pendingPinCoords = null; // coords captured by tapping the map, consumed by #addpin
+// pendingPinCoords moved to js/screens/transport.js with addPinScreen (screen split).
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.538.0';
+export const APP_VERSION = 'mk-v0.539.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1040,7 +1069,7 @@ export function languageSheet() {
     ...bundled.map((l) => row(l, false)),
     ...(mtOnly.length ? [
       h('p', { class: 'lang-section' }, 'Online translation only'),
-      h('p', { class: 'tiny muted', style: 'margin:0 0 8px;padding:0 12px' },
+      h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2);padding: 0 var(--sp-3)' },
         'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
       ...mtOnly.map((l) => row(l, true)),
     ] : []),
@@ -1078,8 +1107,8 @@ export function languageSheet() {
   ]);
 
   const dialog = h('div', { class: 'sheet lang-sheet', role: 'dialog', 'aria-label': 'Choose your language' }, [
-    h('h3', { style: 'margin:0 0 2px' }, 'Choose your language'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 10px' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
+    h('h3', { style: 'margin: 0 0 var(--sp-0h)' }, 'Choose your language'),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-3)' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
     filter,
     list,
     mtRow,
@@ -1118,7 +1147,7 @@ export function locationFixCard(opts = {}) {
   } else {
     card.append(h('p', { class: 'muted' }, 'Location is not available on this device — set it manually below.'));
   }
-  card.append(h('p', { class: 'muted', style: 'margin-top:10px' },
+  card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' },
     'Not right, or GPS unavailable? Set your city instead — used for weather and distances until GPS updates it:'));
   card.append(locationSelect(spotKey(focusSpot().spot), (key) => {
     const s = spotForKey(key);
@@ -1750,14 +1779,14 @@ function markSpotDone(id) {
   p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id);
   save();
 }
-function hideSpot(id) {
+export function hideSpot(id) {
   const p = store.profile.prefs;
   p.hiddenSpots = p.hiddenSpots || [];
   if (!p.hiddenSpots.includes(id)) p.hiddenSpots.push(id);
   save();
 }
-function isSpotDone(id) { return (store.profile.prefs.doneSpots || []).includes(id); }
-function toggleSpotDone(id) {
+export function isSpotDone(id) { return (store.profile.prefs.doneSpots || []).includes(id); }
+export function toggleSpotDone(id) {
   const p = store.profile.prefs;
   p.doneSpots = p.doneSpots || [];
   if (p.doneSpots.includes(id)) p.doneSpots = p.doneSpots.filter((x) => x !== id);
@@ -1765,8 +1794,8 @@ function toggleSpotDone(id) {
   save();
 }
 function unmarkSpotDone(id) { const p = store.profile.prefs; p.doneSpots = (p.doneSpots || []).filter((x) => x !== id); save(); }
-function unhideSpot(id) { const p = store.profile.prefs; p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id); save(); }
-function clearSuggestionMarks() { const p = store.profile.prefs; p.doneSpots = []; p.hiddenSpots = []; save(); }
+export function unhideSpot(id) { const p = store.profile.prefs; p.hiddenSpots = (p.hiddenSpots || []).filter((x) => x !== id); save(); }
+export function clearSuggestionMarks() { const p = store.profile.prefs; p.doneSpots = []; p.hiddenSpots = []; save(); }
 
 // Bend a place's "right now" score toward the traveller's SITUATION, so a family with a
 // baby is steered to calm, kid-friendly, accessible spots and away from nightlife, while
@@ -1904,20 +1933,20 @@ export function profileFitCard(p) {
   f.warn.forEach((t) => ul.append(h('li', { class: 'fit-warn' }, t)));
   f.unknown.forEach((t) => ul.append(h('li', { class: 'fit-unknown' }, t)));
   card.append(ul);
-  card.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, 'Not recorded means nobody has checked it yet — not that the answer is no. Verify anything that matters on the day.'));
+  card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, 'Not recorded means nobody has checked it yet — not that the answer is no. Verify anything that matters on the day.'));
   card.append(travellingAsLine());
   return card;
 }
 
 // Best-effort open/closed at the current local hour (null when hours are unknown/unparseable,
 // so we never wrongly call an unknown place "closed").
-function openStateNow(p) { return isOpenNow(p.hours, new Date().getHours()); }
+export function openStateNow(p) { return isOpenNow(p.hours, new Date().getHours()); }
 
 // Whether a place is a POOR fit for who the traveller is travelling as, with a short reason.
 // Only flags what the data actually supports (kid-suitability, mobility) — it never invents a
 // diet verdict for an eatery, since places carry no per-venue diet data (dishes do). Poor fits
 // are sorted after good fits and tagged, never hidden.
-function placeFitReason(p, prefs) {
+export function placeFitReason(p, prefs) {
   const cats = p.categories || [];
   const family = prefs.withBaby || prefs.kids || prefs.party === 'family';
   if (family && p.kidFriendly === false) return 'May not suit kids';
@@ -2040,8 +2069,8 @@ function homeRightNowCard(ctx) {
   if (!ctx.fix) {
     // Nothing to rank yet — the location invite is the whole story. The privacy detail moves
     // behind ⓘ instead of standing as its own sentence (site-wide copy purge, W3).
-    card.append(h('p', { style: 'margin:8px 0 2px' }, meta.tip));
-    card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, ['Turn on location for live picks nearby.', infoTip('Nothing is sent anywhere — this stays on your device.')]));
+    card.append(h('p', { style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, meta.tip));
+    card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, ['Turn on location for live picks nearby.', infoTip('Nothing is sent anywhere — this stays on your device.')]));
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       card.append(h('button', { class: 'btn block', onclick: async (e) => {
         store.profile.prefs.geoAsked = true; save();
@@ -2077,7 +2106,7 @@ function homeRightNowCard(ctx) {
     if (i === 'food' && famsPresent.some((f) => f.key === 'market')) catSet.add('market');
   });
   let tierFilter = tiersPresent.includes(store.profile.prefs.budget) ? store.profile.prefs.budget : 'all';
-  const tipEl = h('p', { class: 'muted', style: 'margin:4px 0 8px' }, meta.tip);
+  const tipEl = h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, meta.tip);
   const listWrap = h('div', { class: 'rn-list' });
   const footEl = h('div', {});
   // The filters used to stand permanently open: one chip per category family present
@@ -2265,12 +2294,12 @@ export function knownForRow(tags) {
 
 // Offline manual location: pick your city so distances, weather, "near me" and local
 // prices all match — no GPS required. Used inline on the hub and full-screen at #setcity.
-function whereAmICard(cc) {
+export function whereAmICard(cc) {
   const c = getCountry(cc);
   const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
   return h('div', { class: 'card' }, [
     h('h2', {}, '📍 Where are you?'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, `Set your city so distances, weather and “near me” match where you are${c ? ' in ' + c.name : ''}. Works offline — no GPS needed.`),
     field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); render(); } })),
   ]);
 }
@@ -2285,7 +2314,7 @@ export function cityAboutCard(cc, slug) {
   const card = h('div', { class: 'card history-card' }, [h('h2', {}, `About ${hi.name}`)]);
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
-  if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom:0' }, `🗓 Best time: ${hi.bestTime}`));
+  if (hi.bestTime) card.append(h('p', { class: 'culture-tip', style: 'margin-bottom: 0' }, `🗓 Best time: ${hi.bestTime}`));
   return card;
 }
 
@@ -2295,7 +2324,7 @@ export function cityEssentials(cc, cityName, slug) {
   const c = getCountry(cc);
   const meta = PART_META[partOfDay(new Date().getHours())];
   const card = h('div', { class: 'card' }, [
-    h('p', { class: 'muted', style: 'margin:0 0 8px' }, `🕒 Right now: ${meta.tip}`),
+    h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `🕒 Right now: ${meta.tip}`),
   ]);
   card.append(h('div', { class: 'chips' }, [
     isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, [chipIcon('route'), 'Get here']) : null,
@@ -2309,12 +2338,12 @@ export function cityEssentials(cc, cityName, slug) {
 
 // accessScreen moved to js/screens/country-info.js.
 // Country-hub entry to the accessibility guide (prominent when the traveller has a need).
-function accessCard(cc) {
+export function accessCard(cc) {
   if (!getAccessibility(cc)) return null;
   const hasNeed = (store.profile.prefs.access || []).length > 0;
   const card = h('div', { class: 'card' + (hasNeed ? ' access-focus' : '') });
   card.append(h('h2', {}, '♿ Accessibility'));
-  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, hasNeed
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0' }, hasNeed
     ? 'Honest, practical guidance tailored to the needs you set — your groups come first.'
     : 'How this country works for travellers with limited mobility, low vision or hearing.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#access-${cc}`) }, 'Open the accessibility guide'));
@@ -2355,20 +2384,20 @@ export function freshnessLine(dateStr, noun = 'This data', staleDays = 365, labe
   if (age == null) return null;
   const shown = label || dateStr;
   if (age <= staleDays) {
-    return h('p', { class: 'muted', style: 'margin:2px 0 8px' }, `✓ ${noun} verified ${shown}; the app re-checks this date on every open and flags it here once it ages.`);
+    return h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, `✓ ${noun} verified ${shown}; the app re-checks this date on every open and flags it here once it ages.`);
   }
   const months = Math.max(1, Math.round(age / 30));
-  return h('div', { class: 'card', style: 'border:1px solid var(--orange); margin:6px 0' }, [
+  return h('div', { class: 'card', style: 'border:1px solid var(--orange); margin: var(--sp-1h) 0' }, [
     h('strong', {}, `⚠ ${noun} may be out of date`),
-    h('p', { class: 'muted', style: 'margin:4px 0 0' }, `Last verified ${shown} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 0' }, `Last verified ${shown} (about ${months} month${months === 1 ? '' : 's'} ago). Treat these as a guide and confirm current figures on the ground.`),
   ]);
 }
 
-function visaCard(cc) {
+export function visaCard(cc) {
   if (!getVisa(cc)) return null;
   const card = h('div', { class: 'card' });
   card.append(h('h2', {}, '🛂 Entry & visa'));
-  card.append(h('p', { class: 'muted', style: 'margin:6px 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0' }, 'Visa-free, e-visa or visa-on-arrival, the official portal, land-border tips and overstay rules — depends on your nationality.'));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go(`#visa-${cc}`) }, 'Open the entry guide'));
   return card;
 }
@@ -2510,9 +2539,9 @@ function journeyCompanionCard(phase, cc) {
 function tripCountdownCard(cc) {
   const start = tripStartISO();
   if (!start) {
-    return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
+    return h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' }, [
       h('strong', {}, '📅 Add your travel dates'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Add your first stop with a date and Home counts down the days and surfaces what is still on your checklist.'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Add your first stop with a date and Home counts down the days and surfaces what is still on your checklist.'),
       h('button', { class: 'btn', onclick: () => go('#trip') }, 'Plan your trip'),
     ]);
   }
@@ -2526,7 +2555,7 @@ function tripCountdownCard(cc) {
   // gone for good — Settings → Journey phase can always turn it back on.
   if (days <= 0) {
     if (store.profile.prefs.tripStartedHidden) return null;
-    return h('div', { class: 'just-arrived-chip', style: 'margin-top:8px' }, [
+    return h('div', { class: 'just-arrived-chip', style: 'margin-top: var(--sp-2)' }, [
       h('button', { class: 'ja-main', onclick: () => { store.profile.prefs.phase = 'traveling'; save(); render(); } }, [
         h('span', { class: 'status-ic' }, days === 0 ? '🎉' : '🛬'),
         h('span', { class: 'status-lbl' }, days === 0 ? 'Today’s the day — switch to Traveling' : 'Trip started — switch to Traveling'),
@@ -2543,15 +2572,15 @@ function tripCountdownCard(cc) {
       }, '✕'),
     ]);
   }
-  const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
+  const card = h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' });
   card.append(h('div', { class: 'countdown-num' }, [h('b', {}, String(days)), ` day${days === 1 ? '' : 's'} to go`]));
   const todo = checklistFor(cc).filter((it) => !isChecked(it.id));
   if (todo.length) {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 4px' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
+    card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-1)' }, `${todo.length} thing${todo.length === 1 ? '' : 's'} still on your pre-trip checklist:`));
     todo.slice(0, 3).forEach((it) => card.append(h('div', { class: 'companion-todo' }, `☐ ${it.title}`)));
     card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#checklist-${cc}`) }, 'Open pre-trip checklist'));
   } else {
-    card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
+    card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, 'Your checklist is done — you are ready. Safe travels!'));
   }
   return card;
 }
@@ -2584,13 +2613,13 @@ function returnRecapCard() {
     if (conv == null || isNaN(conv)) allKnown = false; else homeSum += conv;
   }
   if (!jEntries && !stops && !loved && !any) {
-    return h('div', { class: 'card companion-card', style: 'margin-top:8px' }, [
+    return h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' }, [
       h('strong', {}, '📖 Welcome back'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
+      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Turn your trip into a keepsake — a scrapbook of your journal, photos, places and spending.'),
       h('button', { class: 'btn', onclick: () => go('#scrapbook') }, 'Build your scrapbook'),
     ]);
   }
-  const card = h('div', { class: 'card companion-card', style: 'margin-top:8px' });
+  const card = h('div', { class: 'card companion-card', style: 'margin-top: var(--sp-2)' });
   card.append(h('strong', {}, '📖 Welcome back'));
   const stat = (n, label) => h('span', { class: 'recap-stat' }, [h('b', {}, String(n)), ' ' + label]);
   const stats = [];
@@ -2599,7 +2628,7 @@ function returnRecapCard() {
   if (ratedN) stats.push(stat(ratedN, ratedN === 1 ? 'place rated' : 'places rated'));
   if (stops) stats.push(stat(stops, stops === 1 ? 'stop' : 'stops'));
   if (stats.length) card.append(h('div', { class: 'recap-stats' }, stats));
-  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin:6px 0 0' }, `Spent ≈ ${money(Math.round(homeSum), home)}${allKnown ? '' : ' (some rates unknown)'}`));
+  if (any && homeSum > 0) card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' }, `Spent ≈ ${money(Math.round(homeSum), home)}${allKnown ? '' : ' (some rates unknown)'}`));
   const unrated = (store.favorites || []).filter((id) => (getPlaceData(id).rating || 0) === 0);
   if (unrated.length) {
     const first = getPlace(unrated[0]);
@@ -2629,7 +2658,7 @@ function planningStageBlock(cc) {
   const wrap = h('div', {});
   const tc = tripCountdownCard(cc);   // null once X'd out past trip-start — see tripCountdownCard
   if (tc) wrap.append(tc);
-  wrap.append(h('div', { class: 'home-actions', style: 'margin-top:10px' }, [
+  wrap.append(h('div', { class: 'home-actions', style: 'margin-top: var(--sp-3)' }, [
     h('button', { class: 'btn', onclick: () => go('#plans') }, '🧭 Plan your trip'),
     // "Best for Sam", not "Tune 'For you'" (direct request). The old label named the control
     // and not the thing it produces; this one says whose recommendations these are, and it is
@@ -2710,7 +2739,7 @@ export function plannedStopsOutlook() {
     ]));
   });
   card.append(rows);
-  card.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' },
+  card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' },
     'Dates inside the forecast window show a real forecast; the rest show that month’s usual season for that city. Tap a stop for its full forecast.'));
   card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#trip') }, '🧳 Edit your stops →'));
   return card;
@@ -2733,7 +2762,7 @@ export function homeStageBlock(phase, cc) {
 // places across the four countries, interleaved so every country appears (≤3 each, one per
 // city). Inspiration on open and a warm, premium first impression — offline, self-hosted
 // images only, and every card taps through to the real place. Returns null if too few map.
-function signatureSightsStrip(cc) {
+export function signatureSightsStrip(cc) {
   const list = cc ? [getCountry(cc)].filter(Boolean) : COUNTRIES;
   if (!list.length) return null;
   const cap = cc ? 8 : 3;              // sights per country (more when scoped to one)
@@ -2875,7 +2904,7 @@ function quickSpendRow(id) {
       expenseAddCard({ currency: cur, afterAdd: draw, compact: true }),
     ]);
     box.append(logDet);
-    box.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, [
+    box.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, [
       spent > 0 ? `Spent today: ${money(Math.round(spent), cur)}${unknownToday ? ' (some unknown)' : ''} · ` : '',
       h('button', { class: 'linklike', onclick: () => go('#expenses') }, 'See all expenses →'),
     ]));
@@ -3005,7 +3034,7 @@ function countSavedPhrases() {
 // actually commit it (Enter, or moving on), never on every keystroke, so typing is never
 // interrupted by a mid-word repaint. Re-typing the exact same (or still-empty) value is a
 // no-op, so leaving the field without changing anything never re-renders for nothing.
-function nameEntryCard() {
+export function nameEntryCard() {
   const input = h('input', {
     type: 'text', placeholder: 'e.g. Sam, Alex, Nok…', 'aria-label': 'Your name', value: store.profile.name || '',
   });
@@ -3020,201 +3049,11 @@ function nameEntryCard() {
   input.addEventListener('blur', commit);
   return h('div', { class: 'card name-entry-card' }, [
     h('h2', {}, '👋 What should we call you?'),
-    h('p', { class: 'muted', style: 'margin-top:0' }, 'Personalises this section and your journal exports. Optional — skip any time; add it later from here or Settings.'),
+    h('p', { class: 'muted', style: 'margin-top: 0' }, 'Personalises this section and your journal exports. Optional — skip any time; add it later from here or Settings.'),
     input,
   ]);
 }
 
-function meHubScreen() {
-  const wrap = h('div', { class: 'screen' });
-  const name = (store.profile.name || '').trim();
-  wrap.append(topbar(name ? `${name}’s space` : 'Your space'));
-
-  // Per direct request: the name (and the identity card's live stats, incl. phrase count) no
-  // longer show as their own lead card here — the name now IDENTIFIES this whole section
-  // instead (the tab label above, meTabLabel(), and the topbar title just above read the
-  // name directly), and every stat that card used to summarise already shows live on one of
-  // the chips below (Journal's entry count, "Saved places · N", My Dictionary's phrase count)
-  // — rank-collapse-never-remove, nothing here is a lost destination, only a duplicated card.
-  // Until a name is set, this is where the option to add one leads instead — one tap, right
-  // at the top, rather than a trip to Settings — and it steps aside for good the moment a
-  // name is saved, so the chips below become the true lead.
-  if (!name) wrap.append(nameEntryCard());
-
-  // The journal, saved-place, phrase and identifier counts used to be read here for their own
-  // chips. All four now show as live status on their rows inside My stuff below, through the
-  // one liveStatus() table, rather than being counted a second time here.
-
-  // Quick access chips — Calendar, My Dictionary, Budget and Journal lead (the four asked
-  // for), then Documents, My trip, Traveller board, For you and Travel circle promoted to
-  // chips too, so the whole "Trip tools" set has an at-a-glance status here. Every one of
-  // these is now ALSO a chip, so the "Trip tools" tile group that used to sit below is gone
-  // entirely (rank-collapse-never-remove: nothing here loses a destination — it is now
-  // reached exactly one tap away, from this row, instead of two). Calendar and Budget reuse
-  // Home's exact live logic — a bare label until the trip actually starts / a target is
-  // actually set, then a day count and a live percentage with the same green/on-track,
-  // yellow/tight, red/over colour ring. "Buy or sell" is renamed "Traveller board" here to
-  // match the name the destination screen itself already uses everywhere else (its own
-  // topbar, and the "🤝 Traveller board" chip inside Explore) — one name for one place.
-  // Label on one line, live figure on its own beneath it. They used to be glued together as
-  // `${label} · ${sub}`, which is what made "Chittraporn’s trip" and "Budget · 36 USD" wrap to
-  // two lines while "Calendar" and "Travel circle" did not — four chips at four heights.
-  const chip = (ic, label, sub, onclick, extraClass) => h('button', {
-    class: 'status-chip' + (extraClass ? ' ' + extraClass : ''), onclick,
-    'aria-label': sub ? `${label}, ${sub}` : label,
-  }, [
-    h('span', { class: 'status-ic', 'aria-hidden': 'true' }, ic),
-    h('span', { class: 'status-txt' }, [
-      h('span', { class: 'status-lbl' }, label),
-      sub ? h('span', { class: 'status-sub' }, sub) : null,
-    ]),
-  ]);
-
-  const startISO = tripStartISO();
-  const calLabel = (startISO && daysUntilISO(startISO) <= 0) ? `Day ${1 - daysUntilISO(startISO)}` : quickChipLabel('calendar');
-
-  const sp = tripSpendHome();
-  const target = budgetTarget();
-  let budgetLabel = quickChipLabel('budget');
-  let budgetSub = (sp.any && sp.sum > 0) ? `${money(Math.round(sp.sum), sp.home)}${sp.allKnown ? '' : '+'}` : null;
-  let budgetClass = '';
-  if (target && sp.sum > 0) {
-    const span = tripSpanDays();
-    const dailyRate = span && span.elapsed > 0 ? sp.sum / span.elapsed : sp.sum;
-    if (target.per === 'trip') {
-      const pct = Math.round(sp.sum / target.amount * 100);
-      budgetLabel = `${pct}% spent`; budgetSub = null;
-      if (sp.sum > target.amount) budgetClass = 'budget-red';
-      else if (span && span.total) budgetClass = (dailyRate * span.total > target.amount) ? 'budget-yellow' : 'budget-green';
-      else budgetClass = pct >= 90 ? 'budget-yellow' : 'budget-green';
-    } else {
-      const pct = Math.round(dailyRate / target.amount * 100);
-      budgetLabel = `${pct}% of daily budget`; budgetSub = null;
-      if (dailyRate > target.amount) budgetClass = 'budget-red';
-      else budgetClass = dailyRate >= target.amount * 0.9 ? 'budget-yellow' : 'budget-green';
-    }
-  }
-
-  // Shared-with-you items AND circle messages both count as "things waiting for you in
-  // Travel circle" — one badge, so a new chat reply is just as visible as a new shared place.
-  const unread = unreadInboxCount() + unreadMessagesCount();
-  // Quick access is now exactly the shortcuts You does NOT itself contain: a day count, the
-  // trip's stops, spend against target, and anything waiting in the circle — each living in
-  // another section (Plan & travel, Money, People) and each with a live figure to justify
-  // the shortcut. Nine chips became four, on two counts. Documents, Traveller board and For
-  // you were bare labels with nothing live to report, which made them duplicate doors rather
-  // than status. Journal and Your dictionary were worse: both are the FIRST rows of My stuff
-  // directly below, open by default and carrying the same live counts — the same destination
-  // twice on one screen. Everything dropped is one tap away, from the row or door that owns
-  // it, which is the rule the rest of this refactor follows.
-  const stopN = (store.trip.stops || []).length;
-  const jStats = trailStats();
-  // Headed, so it can fold like everything else on this screen. It had only an aria-label,
-  // which meant a screen reader knew what the group was and a sighted traveller did not —
-  // and the auto-fold, which keys on a real heading, skipped it entirely.
-  wrap.append(h('div', { class: 'card home-status you-chips', style: 'margin-top:12px', role: 'group', 'aria-label': 'Quick access' }, [
-    h('h3', { class: 'you-chips-head' }, '⚡ Quick access'),
-    chip('📅', calLabel, null, () => go('#calendar')),
-    chip('🧳', name ? `${name}’s trip` : 'My trip', stopN ? `${stopN} ${stopN === 1 ? 'stop' : 'stops'}` : null, () => go('#trip')),
-    chip('💰', budgetLabel, budgetSub, () => go('#expenses'), budgetClass),
-    chip('👥', 'Travel circle', unread ? `${unread} unread` : null, () => go('#circle'), unread ? 'budget-red' : ''),
-    // There is no fifth chip. "Your journey" was one, spanning both columns, which is what
-    // made this row uneven by construction — and it was the THIRD route to #journey on this
-    // one screen: the My stuff list below carries it, and its own card (with the place count
-    // and a "View your journey →" button) sits directly beneath this. Four chips is a clean
-    // 2x2 and nothing is lost.
-  ]));
-
-  // (The old "Trip in numbers" strip — a second, static status-chip row directly below this
-  // one, duplicating its Calendar day-count/Journal-entries/Budget-spend figures a second
-  // time — is gone. Removed as a duplicate CHIP ROW, not a duplicate destination: every
-  // figure it showed still shows live on the one chip above that already owns it.)
-
-  // Your journey: the numbers and a door, no map. A static SVG preview used to sit here, and
-  // it was the wrong thing in the wrong place — a thumbnail of a map is not a map. It cannot
-  // be panned or zoomed, so it answers no question a traveller actually has, while taking the
-  // vertical space of something that could. #journey renders the real, live, zoomable
-  // satellite map; this is the door to it, and the stats line is what makes the door worth
-  // opening. Still hidden entirely until there is a first pin — an empty door is a promise
-  // with nothing behind it.
-  if (jStats.places > 0) {
-    const jc = h('div', { class: 'card', style: 'margin-top:12px' });
-    const jrange = (from, to) => {
-      if (!from) return '';
-      const f = (iso) => { try { return new Date(iso + 'T00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }); } catch { return iso; } };
-      return (!to || to === from) ? f(from) : `${f(from)} – ${f(to)}`;
-    };
-    jc.append(h('h3', {}, '🗺 Your journey'));
-    jc.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
-      [`${jStats.places} ${jStats.places === 1 ? 'place' : 'places'}`,
-        jStats.countries > 1 ? `${jStats.countries} countries` : null,
-        jrange(jStats.from, jStats.to) || null,
-      ].filter(Boolean).join(' · ')));
-    jc.append(h('button', { class: 'btn block', onclick: () => go('#journey') }, 'View your journey →'));
-    wrap.append(jc);
-  }
-
-  // Coming up: reminders set on calendar entries in the next week — one tap to open.
-  const up = reminders.upcoming(7);
-  if (up.length) {
-    const rc = h('div', { class: 'card', style: 'margin-top:12px' }, [h('h3', {}, '🔔 Coming up')]);
-    up.slice(0, 4).forEach((u) => {
-      const it = u.item;
-      const when = u.eventAt.toLocaleDateString(dateLocale(), { weekday: 'short', month: 'short', day: 'numeric' }) + (it.time ? ` ${it.time}` : '');
-      rc.append(h('button', { class: 'btn ghost block reminder-row btn-spaced', onclick: () => go('#calendar') },
-        `${CAL_ICON[it.type] || '🗓'} ${it.title} · ${when}`));
-    });
-    wrap.append(rc);
-  }
-
-  // (You Y3 — the by-category spend donut used to render again here, identical to Home's own
-  // copy of budgetSummaryCard(). Dropped as a duplicated CARD, not a duplicated destination:
-  // spend still shows in the numbers strip above and stays one tap away via the Money tile
-  // below; the donut itself still renders on Home.)
-
-  // --- The rest of You: its own section in full, then a door to each of the others.
-  //
-  // This used to be four hand-written chip groups — Your stuff, Everything, Plan & prepare,
-  // You & settings — twenty-odd chips listing destinations that Home, the country hub and
-  // #everything each listed again under their own names. You now shows the ONE group it
-  // actually owns (My stuff, js/nav-groups.js) as full rows that say what each thing is,
-  // and the other eight as doors. Nothing has moved further away: every destination those
-  // four groups held is either a row below, or one tap inside the door of the section that
-  // owns it, and Settings & help is a door of its own rather than a chip inside a bag.
-  const mine = navGroup('mine');
-  const mineBody = h('div', {});
-  visibleItems(mine, store.profile.prefs.phase || inferPhase())
-    .forEach((it) => mineBody.append(hubRow(it, getActiveCountry(), mine.accent)));
-  wrap.append(h('details', { class: 'home-group-d', open: '' }, [
-    h('summary', {}, h('span', { class: 'home-section', style: 'margin:0' }, `${mine.ic} ${mine.title}`)),
-    mineBody,
-  ]));
-
-  // "Everything else" folds, and CLOSED by default (direct request). It is a door-grid to the
-  // eight sections You does not own — a browse surface, not something to read on arrival — and
-  // it was the tallest permanently-expanded block on the screen.
-  //
-  // The "All features, A–Z →" button that used to sit under it is GONE, and only because the
-  // condition the request set is actually met: everythingScreen() builds its A–Z list from
-  // `visibleGroups(phase)`, the same set groupDoors() renders, so every feature in that index
-  // is inside one of these doors already, and My stuff — the ninth group, the one skipped
-  // here — is the full section rendered directly above. Nothing lost a path. #everything is
-  // still reached from Home and from search.
-  wrap.append(homeFold('🗂️ Everything else', groupDoors(['mine']), 'youEverythingOpen', { defaultOpen: false }));
-  // You Y4 — the backup nudge, demoted from a full-width card in second position to a single
-  // quiet dismissible line near the foot. Same trigger (a single expense is still "something
-  // worth protecting") and same dismiss behaviour; only the visual weight and position changed.
-  if ((store.journal.entries.length || store.trip.budgetLog.length) && !store.profile.prefs.dataBackupDone) {
-    wrap.append(h('div', { class: 'row-between backup-line', style: 'margin-top:16px' }, [
-      h('button', { class: 'btn ghost', style: 'flex:1;text-align:left', onclick: () => go('#settings') }, '⬇️ Back up your journal & budget'),
-      h('button', { class: 'btn ghost', onclick: () => { store.profile.prefs.dataBackupDone = true; save(); render(); } }, 'Dismiss'),
-    ]));
-  }
-
-  wrap.append(h('p', { class: 'disclaimer' },
-    'Everything here stays on your device — no account, no tracking. Back it up in Settings so an update or a lost phone never loses your story.'));
-  mount(wrap, '#me');
-}
 
 // ---- FEATURE HUBS (one door per group in js/nav-groups.js) -------------------
 // Eight screens rendered from one manifest, instead of the same destinations hand-listed on
@@ -3352,7 +3191,7 @@ function groupBadge(group) {
 // One directory row: icon, the feature's ONE name, its live figure when it has one, and a
 // line saying what you actually get. The blurb is folded into the accessible name, so a
 // screen reader hears the same description a sighted traveller reads.
-function hubRow(item, cc, accent) {
+export function hubRow(item, cc, accent) {
   const live = item.live ? liveStatus(item.live) : null;
   const name = itemLabel(item, whoName());
   const label = live && live.sub ? `${name} · ${live.sub}` : name;
@@ -3502,7 +3341,7 @@ function hubScreen(id) {
   // uppercased "KNOW THIS COUNTRY" pushes it to three lines. The accent stripe down every
   // row below already carries the section's identity.
   wrap.append(topbar(group.title, '#home'));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' }, group.intro || group.blurb));
+  wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-3)' }, group.intro || group.blurb));
 
   // Sub-headings only where a group carries more than one question — Plan & travel splits
   // into "your trip" and "when to go", which are different enough that a flat list of eight
@@ -3517,7 +3356,7 @@ function hubScreen(id) {
     else sections.push({ key, items: [it] });
   });
   sections.forEach((sec) => {
-    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin:14px 0 2px' }, sec.key));
+    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, sec.key));
     sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
   });
 
@@ -3526,7 +3365,7 @@ function hubScreen(id) {
   // hold the long tail — nothing is ever more than two taps from anywhere.
   const others = visibleGroups(phase).filter((g) => g.id !== group.id);
   if (others.length) {
-    wrap.append(h('h2', { class: 'home-section', style: 'margin:18px 0 2px' }, 'Other sections'));
+    wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, 'Other sections'));
     wrap.append(h('div', { class: 'chips' }, others.map((g) => h('button', {
       class: 'status-chip', onclick: () => go(groupHash(g.id)), 'aria-label': `${g.title}. ${g.intro || g.blurb}`,
     }, [h('span', { class: 'status-ic' }, g.ic), h('span', { class: 'status-lbl' }, g.title)]))));
@@ -3547,7 +3386,7 @@ function hubScreen(id) {
 function everythingScreen() {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('All features', '#me'));
-  wrap.append(h('p', { class: 'muted', style: 'margin:0 0 10px' },
+  wrap.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-3)' },
     'Everything on the site, in nine sections. The five tabs at the bottom — Home, Talk, You, Places, Explore — and Emergency are always one tap away, so they are not repeated here.'));
   wrap.append(groupDoors());
 
@@ -3558,9 +3397,9 @@ function everythingScreen() {
     .sort((a, b) => a.label.localeCompare(b.label, 'en'));
   const list = h('div', {});
   az.forEach((it) => list.append(hubRow({ ...it, blurb: `${it.groupTitle} · ${it.blurb}` }, cc, '')));
-  wrap.append(foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🔤 Every feature, A–Z · ${az.length}`), list));
+  wrap.append(foldable(h('span', { class: 'home-section', style: 'margin: 0' }, `🔤 Every feature, A–Z · ${az.length}`), list));
 
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top:10px', onclick: () => go('#search') },
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', onclick: () => go('#search') },
     '🔎 Search everything'));
   mount(wrap, '#me');
 }
@@ -3575,7 +3414,7 @@ function everythingScreen() {
 // region, an explicitly chosen focus city, then a dated trip stop (soonest upcoming, else
 // most recent past — either is a real trip signal). Returns null — the four-country
 // chooser — only when none of these hold, e.g. planning from home with nothing set yet.
-function anchorCountry() {
+export function anchorCountry() {
   const gps = getLastFix();
   if (gps) {
     const near = nearestSpotGlobal(gps);
@@ -3600,7 +3439,7 @@ function anchorCountry() {
 // re-implemented). Universal lists ('everyone'/'firsttimers') always show; 'families'/
 // 'budget' lists only show when the traveller's own profile actually matches, so this never
 // claims relevance it cannot back up. Omits itself entirely if nothing qualifies.
-function fitsYourTripSection(cc) {
+export function fitsYourTripSection(cc) {
   const prefs = store.profile.prefs;
   const lists = bestForCountry(cc).filter((l) => l.forWho === 'everyone' || l.forWho === 'firsttimers'
     || (l.forWho === 'families' && prefs.party === 'family')
@@ -3611,14 +3450,14 @@ function fitsYourTripSection(cc) {
   if (lists.length) {
     body.append(h('div', { class: 'grid' }, lists.slice(0, 4).map((l) => h('button', { class: 'card bestof-card', onclick: () => go(`#bestlist-${l.id}`) }, [
       h('strong', {}, l.title),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, l.blurb),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' }, l.blurb),
     ]))));
   }
   if (plans.length) {
     const top = plans[0];
-    body.append(h('div', { class: 'card', style: 'margin-top:8px' }, [
+    body.append(h('div', { class: 'card', style: 'margin-top: var(--sp-2)' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, top.title), h('span', { class: 'muted tiny' }, `~${top.days}d`)]),
-      h('p', { class: 'muted tiny', style: 'margin:4px 0 8px' }, top.summary),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, top.summary),
       h('button', { class: 'btn ghost block', onclick: () => go('#plans') }, plans.length > 1 ? `See all ${plans.length} matching trip plans →` : 'See this trip plan →'),
     ]));
   }
@@ -3653,11 +3492,11 @@ function crowdsAndPriceBlocks(cc, hi) {
   if (crowds) blocks.push(['👥', crowds]);
   if (price) blocks.push(['💰', price]);
   return blocks.flatMap(([emoji, f]) => [
-    h('p', { style: 'margin:4px 0' }, `${emoji} ${f.text}`),
+    h('p', { style: 'margin: var(--sp-1) 0' }, `${emoji} ${f.text}`),
     sourcesNote(f.sources, null, null),
   ]);
 }
-function seasonalFitSection(cc, cityName, slug) {
+export function seasonalFitSection(cc, cityName, slug) {
   const now = new Date();
   const wet = (WET_MONTHS[cc] || []).includes(now.getMonth());
   const lines = [];
@@ -3681,7 +3520,7 @@ function seasonalFitSection(cc, cityName, slug) {
   if (!lines.length) return null;
   return h('section', {}, [
     h('h2', { class: 'home-section' }, '📅 Right now, seasonally'),
-    h('div', { class: 'card' }, [...lines.map((t) => h('p', { style: 'margin:4px 0' }, t)), ...crowdsAndPriceBlocks(cc, hi)]),
+    h('div', { class: 'card' }, [...lines.map((t) => h('p', { style: 'margin: var(--sp-1) 0' }, t)), ...crowdsAndPriceBlocks(cc, hi)]),
     soon.length ? h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#events-${cc}`) }, 'All festivals & holidays →') : null,
   ]);
 }
@@ -3698,134 +3537,27 @@ function seasonalFitSection(cc, cityName, slug) {
 // Exported so any other caller needing the route graph (the journey map's transport-mode
 // inference, js/screens/journal.js) shares this one gate instead of a fourth copy of it.
 let _routeGraphLoaded = false;
+// Read-only accessor for the gate above. explore.js needs to know whether the graph is ready
+// before it renders, and `_routeGraphLoaded` is a module `let` — not readable from another
+// module — so the answer is exposed as a function rather than the binding.
+export function routeGraphReady() { return _routeGraphLoaded; }
 export function ensureRouteGraph(onReady) {
   if (_routeGraphLoaded) { onReady(); return; }
   loadAllCountries().then(() => { _routeGraphLoaded = true; onReady(); })
     .catch(() => { /* offline with nothing cached yet — this session stays without it */ });
 }
-// Binary floating-point noise (e.g. 1.2 + 1.2 = 2.4000000000000004) surfaces the moment two
-// legs' hour ranges are summed — harmless as a number, but an unrounded string this long has
-// no natural break point and forces its grid track wider than the card, overflowing the
-// viewport. Round to one decimal at display time everywhere a summed range is shown.
-function round1(n) { return Math.round(n * 10) / 10; }
-function computeWhereNext(fromCity, exclude) {
-  if (!isRouteNode(fromCity)) return [];
-  const skip = new Set([fromCity, ...(exclude || [])]);
-  const scored = routeNodes().filter((n) => !skip.has(n)).map((n) => {
-    const plans = planRoutes(fromCity, n);
-    return plans.length ? { name: n, hrs: [round1(plans[0].totalHrs[0]), round1(plans[0].totalHrs[1])], changes: plans[0].changes } : null;
-  }).filter(Boolean);
-  scored.sort((a, b) => (a.hrs[0] || 99) - (b.hrs[0] || 99));
-  return scored.slice(0, 5);
-}
-// Which loaded country actually has a place tagged with this city — needed to hand addStop()
-// the right country when a chained mini-itinerary crosses a border.
-function countryForCityName(name) {
-  const slug = citySlug(name);
-  for (const x of COUNTRIES) {
-    if (isCountryLoaded(x.id) && allPlaces({ country: x.id }).some((p) => citySlug(p.city || '') === slug)) return x.id;
-  }
-  return '';
-}
-// The chain itself, and the anchor city it was built from — module state (same idiom as
-// planRouteScreen's planFrom/planTo) so it survives this section re-rendering as the
-// traveller keeps tapping, and resets the moment the anchor city changes.
-let _nextChain = [];
-let _nextChainFrom = '';
-// Read-only accessor for whichever screen wants to know "what has the traveller picked in
-// the Where-next builder for this city" without reaching into its private chain array — used
-// by #nextstop (screens/nextstop.js) to key its Getting there / What is there / Commit
-// sections off the same selection whereNextSection itself renders.
-export function nextChainTail(fromCity) {
-  if (_nextChainFrom !== fromCity || !_nextChain.length) return null;
-  const name = _nextChain[_nextChain.length - 1];
-  // The immediately preceding city on this chain — the original fromCity for a single hop,
-  // the second-to-last chained city once the traveller has chained more than one. #nextstop's
-  // Getting there section routes from here, not from fromCity, so a 2-3 hop chain shows the
-  // actual last leg rather than a direct-from-origin route that ignores the stops between.
-  const from = _nextChain.length > 1 ? _nextChain[_nextChain.length - 2] : fromCity;
-  return { name, country: countryForCityName(name), from };
-}
-export function whereNextSection(argCc, fromCity, onChange) {
-  if (!fromCity) return null;
-  if (_nextChainFrom !== fromCity) { _nextChainFrom = fromCity; _nextChain = []; }
-  // A caller may supply its own re-render (#nextstop re-rendering itself instead of
-  // Explore) — defaults to the original Explore-scroll-preserving behaviour, unchanged.
-  const rerender = onChange || (() => {
-    const y = window.scrollY;
-    exploreScreen(argCc);
-    requestAnimationFrame(() => window.scrollTo(0, y));
-  });
-  if (!_routeGraphLoaded) {
-    ensureRouteGraph(() => {
-      const headRoute = (location.hash || '').slice(1).split('-')[0];
-      if (headRoute === 'explore' || headRoute === 'country' || headRoute === 'nextstop') rerender();
-    });
-    return null;   // nothing to show until the graph above resolves — never a placeholder
-  }
-  if (!isRouteNode(fromCity)) return null;
-
-  const tail = _nextChain.length ? _nextChain[_nextChain.length - 1] : fromCity;
-  // Exclude the trip's own starting point too, not just the chain built so far — otherwise
-  // once you've chained one hop away, "back to where you started" reappears as a "next stop".
-  const candidates = computeWhereNext(tail, [fromCity, ..._nextChain]);
-  if (!candidates.length && !_nextChain.length) return null;   // nothing reachable at all
-
-  const body = h('div', {});
-
-  if (_nextChain.length) {
-    let totLo = 0, totHi = 0, changes = 0, prev = fromCity;
-    for (const city of _nextChain) {
-      const p = planRoutes(prev, city)[0];
-      if (p) { totLo += p.totalHrs[0] || 0; totHi += p.totalHrs[1] || p.totalHrs[0] || 0; changes += p.changes; }
-      prev = city;
-    }
-    body.append(h('p', { style: 'margin:0 0 4px' }, `${fromCity} → ${_nextChain.join(' → ')}`));
-    body.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' },
-      `~${round1(totLo)}–${round1(totHi)}h of travel across ${_nextChain.length} stop${_nextChain.length > 1 ? 's' : ''} · ${changes} change${changes === 1 ? '' : 's'}`));
-    body.append(h('div', { class: 'chips', style: 'margin-bottom:8px' }, [
-      h('button', { class: 'chip', onclick: () => { _nextChain.pop(); rerender(); } }, '↶ Remove last'),
-      h('button', { class: 'chip', onclick: () => { _nextChain = []; rerender(); } }, 'Clear'),
-    ]));
-  }
-
-  if (_nextChain.length < 3 && candidates.length) {
-    body.append(h('p', { class: 'muted', style: 'margin:2px 0 6px' },
-      _nextChain.length ? `Next, from ${tail}:` : 'Tap a city to start building your next few stops:'));
-    body.append(h('div', { class: 'grid' }, candidates.map((r) => h('button', {
-      class: 'card', style: 'text-align:left', onclick: () => { _nextChain.push(r.name); rerender(); },
-    }, [
-      h('strong', {}, r.name),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' },
-        `${r.hrs[1] ? `~${r.hrs[0]}–${r.hrs[1]}h` : ''} · ${r.changes === 0 ? 'Direct' : `${r.changes} change${r.changes > 1 ? 's' : ''}`}`),
-    ]))));
-  }
-
-  if (_nextChain.length) {
-    const tripName = (store.profile.name || '').trim();
-    const tripLabel = tripName ? `${tripName}’s trip` : 'My Trip';
-    body.append(h('button', {
-      class: 'btn block', style: 'margin-top:4px',
-      onclick: (e) => {
-        _nextChain.forEach((city) => addStop({ title: city, country: countryForCityName(city) }));
-        e.currentTarget.textContent = `✓ Added — open ${tripLabel} to edit`;
-        e.currentTarget.disabled = true;
-        e.currentTarget.onclick = null;
-      },
-    }, `＋ Add ${_nextChain.length === 1 ? 'this stop' : `these ${_nextChain.length} stops`} to ${tripLabel}`));
-  }
-
-  body.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#route') }, 'Full journey planner →'));
-
-  return h('section', {}, [h('h2', { class: 'home-section' }, `🚌 Where next, from ${fromCity}`), body]);
-}
+// The Where-next chain state and its four helpers (round1, computeWhereNext,
+// countryForCityName, nextChainTail) moved to js/screens/explore.js with whereNextSection
+// itself. They had to move rather than be imported: `let _nextChain` cannot be assigned from
+// another module, so the section that builds the chain and the state it builds into have to
+// live in the same file. js/screens/nextstop.js now imports nextChainTail from explore.js.
 
 // Explore E7 ("You might not know"): highly-rated places in cities the traveller has no
 // saved place in yet — real serendipity from the actual data, not a random pick. Only
 // SAVED PLACES are used as the "already knows about" signal (a reliable, structured field);
 // journal entries are free-text city names and too unreliable to match safely. Omits itself
 // if nothing qualifies.
-function mightNotKnowSection(cc) {
+export function mightNotKnowSection(cc) {
   const known = new Set();
   (store.favorites || []).forEach((id) => { const p = getPlace(id); if (p && p.city) known.add(p.city); });
   const candidates = allPlaces({ country: cc })
@@ -3842,7 +3574,7 @@ function mightNotKnowSection(cc) {
     h('h2', { class: 'home-section' }, '✨ You might not know'),
     h('div', { class: 'grid' }, picks.map((p) => h('button', { class: 'card', onclick: () => go(`#place-${p.id}`) }, [
       h('strong', {}, p.name),
-      h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, `${p.city} · ${p.rating}★`),
+      h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 0' }, `${p.city} · ${p.rating}★`),
     ]))),
   ]);
 }
@@ -3868,8 +3600,8 @@ const REGION_SET_LOADERS = {
 // In-flight/settled load promises, keyed by country id. Deleted on failure so a later retry
 // (e.g. the connection comes back) gets a fresh attempt rather than a stuck rejection.
 const _regionSetLoads = {};
-function regionSetFor(cc) { return REGIONS_BY_CC[cc] || null; }
-function isRegionSetLoaded(cc) { return !!REGIONS_BY_CC[cc]; }
+export function regionSetFor(cc) { return REGIONS_BY_CC[cc] || null; }
+export function isRegionSetLoaded(cc) { return !!REGIONS_BY_CC[cc]; }
 // Fetches and caches one country's province polygons. Safe to call repeatedly and from
 // several call sites at once — concurrent calls for the same country share one in-flight
 // load, same idiom as loadCountry(). Every reader below (regionsMap/zonesMap/zoneAssignment/
@@ -3877,7 +3609,7 @@ function isRegionSetLoaded(cc) { return !!REGIONS_BY_CC[cc]; }
 // null as "not loaded yet" and degrades gracefully rather than assuming synchronous data; the
 // router's region-data gate (see render() below) is what actually triggers this loader for
 // the two routes that render a province/zone map.
-function loadRegionSet(cc) {
+export function loadRegionSet(cc) {
   if (REGIONS_BY_CC[cc]) return Promise.resolve(REGIONS_BY_CC[cc]);
   if (_regionSetLoads[cc]) return _regionSetLoads[cc];
   const loader = REGION_SET_LOADERS[cc];
@@ -3923,7 +3655,7 @@ function projRegionPt(proj, lng, lat) {
 // this never prompts for permission and never starts the GPS; the live maps handle asking.
 // Skipped silently when there is no fix, or when the fix falls outside this country's frame
 // — a dot pinned to the edge of the wrong country is worse than no dot.
-function youAreHereMark(proj, viewBox) {
+export function youAreHereMark(proj, viewBox) {
   const fix = getLastFix();
   if (!fix || typeof fix.lat !== 'number' || typeof fix.lng !== 'number') return '';
   const [x, y] = projRegionPt(proj, fix.lng, fix.lat);
@@ -3937,7 +3669,7 @@ function youAreHereMark(proj, viewBox) {
     + `</g>`;
 }
 
-function provincePathD(prov, proj) {
+export function provincePathD(prov, proj) {
   const subs = [];
   for (const poly of prov.polys) {
     for (const ring of poly) {
@@ -3955,7 +3687,7 @@ function pointInRing(lng, lat, ring) {
   }
   return inside;
 }
-function pointInProvince(prov, lng, lat) {
+export function pointInProvince(prov, lng, lat) {
   for (const poly of prov.polys) {
     if (pointInRing(lng, lat, poly[0]) && !poly.slice(1).some((hole) => pointInRing(lng, lat, hole))) return true;
   }
@@ -3969,35 +3701,8 @@ function placesInProvince(cc, code) {
     && pointInProvince(prov, p.coords.lng, p.coords.lat));
 }
 // A stable, spread-out fill per province so neighbours differ (a political-map look).
-const REGION_PALETTE = ['#E0663A', '#3E8E5A', '#3E7CB1', '#C9902B', '#9C5780', '#4C9A6A', '#B0567F', '#2E8FB0', '#C77D2E', '#6E7BC0', '#4E9A52', '#8A5FA8'];
+export const REGION_PALETTE = ['#E0663A', '#3E8E5A', '#3E7CB1', '#C9902B', '#9C5780', '#4C9A6A', '#B0567F', '#2E8FB0', '#C77D2E', '#6E7BC0', '#4E9A52', '#8A5FA8'];
 
-// A clickable, coloured SVG map of one country's provinces. opts.activeCode highlights one;
-// opts.onPick(code) fires on tap/Enter. Pure SVG + offline — no tiles, no network.
-function regionsMap(cc, opts = {}) {
-  const set = regionSetFor(cc);
-  if (!set) return null;
-  const proj = set.proj;
-  const shapes = set.provinces.map((p, i) => {
-    const active = opts.activeCode && p.code === opts.activeCode;
-    // When one province is highlighted, the rest go a muted slate so the active one — in
-    // its own bright colour — clearly pops while neighbours stay visible and tappable.
-    const fill = active ? REGION_PALETTE[i % REGION_PALETTE.length]
-      : (opts.activeCode ? '#8A94A6' : REGION_PALETTE[i % REGION_PALETTE.length]);
-    const op = active ? 0.98 : (opts.activeCode ? 0.55 : 0.62);
-    return `<g class="prov-group${active ? ' active' : ''}" data-code="${esc(p.code)}" role="button" tabindex="0" aria-label="${esc(p.name)}">`
-      + `<path class="prov" d="${provincePathD(p, proj)}" fill="${fill}" fill-opacity="${op}"/></g>`;
-  }).join('');
-  const cName = (getCountry(cc) || {}).name || '';
-  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Provinces of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, set.viewBox)}</svg>`;
-  const box = h('div', { class: 'regions-map', html: svg });
-  box.querySelectorAll('.prov-group').forEach((g) => {
-    const code = g.getAttribute('data-code');
-    const pick = () => { if (opts.onPick) opts.onPick(code); };
-    g.addEventListener('click', pick);
-    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
-  });
-  return box;
-}
 
 // ---- Travel regions (zones): the browse layer above provinces --------------------
 // A "region" a traveller navigates is a GROUP of provinces (js/data/zones.js) — 4-6 per
@@ -4017,7 +3722,7 @@ function regionsMap(cc, opts = {}) {
 // region browse. Anything unmatched therefore falls back to its NEAREST province by centroid,
 // which for a coastal point is always the mainland province it belongs to.
 const _zoneAssign = {};      // cc -> { byPlace: Map(placeId -> zoneId), n }
-function provinceCentroids(set) {
+export function provinceCentroids(set) {
   if (set._centroids) return set._centroids;
   set._centroids = set.provinces.map((pr) => {
     let sx = 0, sy = 0, n = 0;
@@ -4026,7 +3731,7 @@ function provinceCentroids(set) {
   });
   return set._centroids;
 }
-function zoneAssignment(cc) {
+export function zoneAssignment(cc) {
   const cached = _zoneAssign[cc];
   const places = allPlaces({ country: cc });
   if (cached && cached.n === places.length) return cached.byPlace;   // invalidates if data grows
@@ -4060,48 +3765,18 @@ function zoneAssignment(cc) {
 }
 
 // Every place in a zone. One map lookup per place, no polygon maths at call time.
-function placesInZone(cc, zoneId) {
+export function placesInZone(cc, zoneId) {
   const byPlace = zoneAssignment(cc);
   return allPlaces({ country: cc }).filter((pl) => byPlace.get(pl.id) === zoneId);
 }
 
 // Towns in a zone, ranked by how many places each holds. Returns [{ city, n }].
-function townsInZone(cc, zoneId) {
+export function townsInZone(cc, zoneId) {
   const counts = {};
   placesInZone(cc, zoneId).forEach((pl) => { if (pl.city) counts[pl.city] = (counts[pl.city] || 0) + 1; });
   return Object.keys(counts).sort((a, b) => counts[b] - counts[a]).map((city) => ({ city, n: counts[city] }));
 }
 
-// The zone map: same SVG projection and province paths as regionsMap, but every province of
-// a zone shares one fill and one hit target, so the country reads as 4-6 tappable areas.
-// opts.activeId highlights one; opts.onPick(zoneId) fires on tap/Enter.
-function zonesMap(cc, opts = {}) {
-  const set = regionSetFor(cc);
-  const zones = zonesFor(cc);
-  if (!set || !zones.length) return null;
-  const proj = set.proj;
-  const byCode = {};
-  set.provinces.forEach((pr) => { byCode[pr.code] = pr; });
-  const shapes = zones.map((z, i) => {
-    const active = opts.activeId && z.id === opts.activeId;
-    const fill = (opts.activeId && !active) ? '#8A94A6' : REGION_PALETTE[i % REGION_PALETTE.length];
-    const op = active ? 0.98 : (opts.activeId ? 0.5 : 0.68);
-    const d = z.provinces.map((code) => (byCode[code] ? provincePathD(byCode[code], proj) : '')).filter(Boolean).join(' ');
-    if (!d) return '';
-    return `<g class="zone-group${active ? ' active' : ''}" data-zone="${esc(z.id)}" role="button" tabindex="0" aria-label="${esc(z.name)}">`
-      + `<path class="zone" d="${d}" fill="${fill}" fill-opacity="${op}"/></g>`;
-  }).join('');
-  const cName = (getCountry(cc) || {}).name || '';
-  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Regions of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, set.viewBox)}</svg>`;
-  const box = h('div', { class: 'regions-map', html: svg });
-  box.querySelectorAll('.zone-group').forEach((g) => {
-    const id = g.getAttribute('data-zone');
-    const pick = () => { if (opts.onPick) opts.onPick(id); };
-    g.addEventListener('click', pick);
-    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
-  });
-  return box;
-}
 
 // The MONTHS a traveller is asking about on the region chooser — a set, not a single month
 // (direct request: "users should be able to choose more than one month at a time"). A trip is
@@ -4110,109 +3785,10 @@ function zonesMap(cc, opts = {}) {
 // means something: no verdict is shown at all until the traveller names a month, because a
 // verdict against today's date that they never asked for is a claim about a trip they may not
 // be taking. Session-only — a browsing filter, not a preference worth persisting.
-const zoneMonths = new Set();
+// zoneMonths (the month multi-select behind the region verdicts) moved to
+// js/screens/explore.js — same reason: the code that mutates it went there.
 
-// A region's verdict across a SET of months, plus the split when the months disagree.
-//
-// The combining rule is deliberately not "worst wins". A traveller choosing June, July and
-// August wants to know that the first two are poor and the third is fine, not that the block
-// is "poor" — that is the difference between ruling a region out and moving the trip by a
-// fortnight. So the verdict is 'best' or 'avoid' only when EVERY chosen month agrees, and
-// otherwise it is 'mixed' with the months named.
-function zoneVerdictAcross(z, months) {
-  const list = [...months].sort((a, b) => a - b);
-  const byMonth = list.map((m) => ({ m, v: monthVerdict(z, m) }));
-  const kinds = new Set(byMonth.map((x) => x.v));
-  if (kinds.size === 1) return { verdict: [...kinds][0], byMonth };
-  if (kinds.has('best') || kinds.has('avoid') || kinds.has('mixed')) return { verdict: 'mixed', byMonth };
-  return { verdict: 'shoulder', byMonth };
-}
 
-// WHERE THE REGION'S VERDICT IS WRONG FOR SOMEWHERE INSIDE IT (direct request).
-//
-// "It isn't good to go to the Northern Highlands in June, July, August, but it is good in Sapa
-// and Ta Van" — a region-level verdict flattens a region, and the app already holds the finer
-// data to unflatten it: js/data/history.js carries bestM/avoidM per CITY and
-// js/data/place-months.js carries them per PLACE, both under the same editorial rule as the
-// region tier (every month claimed must be named by that record's own prose — enforced by
-// scripts/check-month-arrays.py).
-//
-// So: for the months in hand, find the towns and places inside this region whose verdict
-// disagrees with the region's, in the direction that matters. A poor region with somewhere
-// good in it is a trip saved; a good region with somewhere closed in it is a wasted day.
-// Returns { better: string[], worse: string[] } — names only, capped for a phone row.
-function zoneExceptions(cc, z, months, regionVerdict) {
-  const list = [...months];
-  if (!list.length) return { better: [], worse: [] };
-  const anyIs = (obj, want) => obj && list.some((m) => verdictFor(obj, m) === want);
-
-  // MEMBERSHIP HAS TO BE REAL, or the line states something false. Zone membership is
-  // geometric (point-in-province over simplified outlines — see zoneAssignment), so a single
-  // place can drift over a border: one of Ninh Binh's 22 records, Cuc Phuong National Park,
-  // sits on the Hoa Binh line and lands in the Northern Highlands. That was enough for
-  // townsInZone to call Ninh Binh a town of the Northern Highlands, and for this line to
-  // read "Northern Highlands — still good: Ninh Binh", which is simply not where it is.
-  // So a town qualifies only when MOST of its places are in this zone.
-  const byPlace = zoneAssignment(cc);
-  const totals = {};
-  const here = {};
-  allPlaces({ country: cc }).forEach((pl) => {
-    if (!pl.city) return;
-    totals[pl.city] = (totals[pl.city] || 0) + 1;
-    if (byPlace.get(pl.id) === z.id) here[pl.city] = (here[pl.city] || 0) + 1;
-  });
-  const belongs = (city) => (here[city] || 0) * 2 >= (totals[city] || 0);
-
-  // A guide-style record is not a place a traveller avoids in a month. These read as
-  // sentences ("Where to stay in Ha Long: the Bai Chay side") and only ever made the line
-  // longer and less believable.
-  const isArticle = (name) => /^(where|how|what|getting|when)\b/i.test(name) || name.includes(': ');
-  const better = new Map();      // display name -> normalised key, so near-duplicates collapse
-  const worse = new Map();
-  const norm = (x) => x.toLowerCase().replace(/\b(islands?|national park|complex|province|city)\b/g, '').replace(/[^a-z]/g, '');
-  // SHORTEN a long name rather than drop it. A first pass rejected anything over 32
-  // characters and so lost the very exception this feature exists to surface: "Silver
-  // Waterfall (Thac Bac) & Love Waterfall (Thac Tinh Yeu)" is 60 characters, is in Sapa, and
-  // is at its best in exactly the June-to-August window the Northern Highlands is poor in.
-  // Two records joined by "&" become the first of them, and a parenthetical local name comes
-  // off — both are already shown in full on the place's own page.
-  const shorten = (name) => {
-    let out = String(name).split(/\s+[&\/]\s+/)[0];
-    out = out.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
-    return out;
-  };
-  const add = (map, raw) => {
-    const name = shorten(raw);
-    if (!name || isArticle(name) || name.length > 32) return;
-    const k = norm(name);
-    if (!k) return;
-    // Keep the SHORTER of two names for the same thing: "Con Dao" over "Con Dao Islands".
-    const existing = [...map.entries()].find(([, kk]) => kk === k);
-    if (existing) { if (name.length < existing[0].length) { map.delete(existing[0]); map.set(name, k); } return; }
-    map.set(name, k);
-  };
-
-  // City tier first: a town name is what a traveller recognises and can act on.
-  townsInZone(cc, z.id).forEach(({ city }) => {
-    if (!belongs(city)) return;
-    const hi = cityHistory(cc, citySlug(city));
-    if (!hi) return;
-    if (regionVerdict !== 'best' && anyIs(hi, 'best')) add(better, city);
-    if (regionVerdict !== 'avoid' && anyIs(hi, 'avoid')) add(worse, city);
-  });
-  // Place tier: only where the city tier said nothing about that city, so a row never names
-  // both "Sapa" and three waterfalls in Sapa. PLACE_MONTHS is 52 hand-curated entries, so
-  // this adds a handful of genuinely specific exceptions rather than noise.
-  placesInZone(cc, z.id).forEach((pl) => {
-    const pm = PLACE_MONTHS[pl.id];
-    if (!pm || !pl.city || !belongs(pl.city)) return;
-    if (better.has(pl.city) || worse.has(pl.city)) return;
-    if (regionVerdict !== 'best' && anyIs(pm, 'best')) add(better, pl.name);
-    if (regionVerdict !== 'avoid' && anyIs(pm, 'avoid')) add(worse, pl.name);
-  });
-  // Three names is what a phone row holds and what a reader takes in.
-  return { better: [...better.keys()].slice(0, 3), worse: [...worse.keys()].slice(0, 3) };
-}
 
 // zoneWhenLine() — the single-month verdict label — lived here. It is superseded by
 // zoneWhenAcross() below, which does the same job for a SET of months and, when they
@@ -4222,219 +3798,9 @@ function zoneExceptions(cc, z, months, regionVerdict) {
 // "read the sentence" — a bare badge would be worse than none, because Vietnam's Central
 // Coast in September is a typhoon shoreline and a pleasant highland in the same breath.
 
-// The region chooser used on Explore: one row per region with its own facts, live town and
-// place counts, so a traveller can see where the depth actually is before tapping in.
-//
-// It also answers the question travellers actually ask first — not "when is the Northern
-// Highlands good?" but "it is September, where should I go?". The month strip re-sorts the
-// regions by that month's verdict (see monthVerdict() in js/data/zones.js) and prints the
-// region's own season sentence under each one, so the ordering is always shown its working.
-function zonePickList(cc) {
-  const zones = zonesFor(cc);
-  if (!zones.length) return null;
-  const nowM = new Date().getMonth() + 1;
-  const monthName = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'long' });
-  const monthShort = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'short' });
-  const picked = [...zoneMonths].sort((a, b) => a - b);
-  const has = picked.length > 0;
 
-  const wrap = h('div', { class: 'zone-when-wrap' });
-  // The heading no longer asserts a month the traveller did not choose. Before, a fresh load
-  // read "Where to go this month · September" and ranked every region against September —
-  // a verdict about a trip nobody had said they were taking.
-  wrap.append(h('h3', { class: 'zone-when-head' },
-    has ? `Where to go in ${picked.map(monthShort).join(', ')}` : 'Where to go'));
-  const strip = h('div', { class: 'chips month-strip', role: 'group', 'aria-label': 'Choose one or more months' });
-  for (let i = 1; i <= 12; i++) {
-    strip.append(h('button', {
-      // aria-pressed carries BOTH the state and the styling here: .chip[aria-pressed="true"]
-      // is the app's existing selected-chip rule, so there is no second visual convention.
-      class: 'chip',
-      'aria-pressed': String(zoneMonths.has(i)),
-      onclick: () => { if (zoneMonths.has(i)) zoneMonths.delete(i); else zoneMonths.add(i); render(); },
-    }, monthShort(i) + (i === nowM ? ' •' : '')));
-  }
-  const stripKids = [strip];
-  if (has) {
-    stripKids.push(h('div', { class: 'chips', style: 'margin-top:6px' }, [
-      h('button', { class: 'chip ghost', onclick: () => { zoneMonths.clear(); render(); } }, '↺ Clear months'),
-    ]));
-  } else {
-    stripKids.push(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' },
-      'Pick as many months as your trip covers — the regions re-sort and each one says whether it is a good time.'));
-  }
-  // The twelve-month strip sits behind a "By month" button rather than standing open: twelve
-  // chips cost three rows of a phone screen. It opens automatically once months ARE chosen —
-  // leaving it shut would strand a traveller on a June ordering with no visible reason for it.
-  wrap.append(foldable(has ? `📅 By month · ${picked.map(monthShort).join(', ')}` : '📅 By month',
-    stripKids, { open: has }));
 
-  // With no month chosen the list keeps the manifest's own north-to-south order and shows no
-  // verdict; with months chosen it re-sorts worst-last and every row carries its verdict.
-  const ordered = has
-    ? zones.map((z, i) => ({ zone: z, ...zoneVerdictAcross(z, zoneMonths), i }))
-      .sort((a, b) => (VERDICT_RANK[a.verdict] - VERDICT_RANK[b.verdict]) || (a.i - b.i))
-    : zones.map((z, i) => ({ zone: z, verdict: null, byMonth: [], i }));
 
-  const list = h('div', { class: 'zone-list' });
-  ordered.forEach(({ zone: z, verdict, byMonth }) => {
-    const n = placesInZone(cc, z.id).length;
-    const towns = townsInZone(cc, z.id).length;
-    const kids = [h('span', { class: 'zone-name' }, z.name)];
-    if (verdict) {
-      const when = zoneWhenAcross(z, verdict, byMonth, monthShort);
-      kids.push(h('span', { class: `zone-when ${when.cls}` }, when.label));
-      // The exceptions line: where somewhere INSIDE this region disagrees with it.
-      const ex = zoneExceptions(cc, z, zoneMonths, verdict);
-      if (ex.better.length) kids.push(h('span', { class: 'zone-exc is-best' }, `↑ Still good: ${ex.better.join(', ')}`));
-      if (ex.worse.length) kids.push(h('span', { class: 'zone-exc is-avoid' }, `↓ Not then: ${ex.worse.join(', ')}`));
-      kids.push(h('span', { class: 'zone-tag' }, z.tagline));
-      if (when.why) kids.push(h('span', { class: 'zone-why muted' }, when.why));
-    } else {
-      kids.push(h('span', { class: 'zone-tag' }, z.tagline));
-    }
-    kids.push(h('span', { class: 'zone-count muted' }, `${towns} town${towns === 1 ? '' : 's'} · ${n} place${n === 1 ? '' : 's'}`));
-    list.append(h('button', { class: 'zone-row', onclick: () => go(`#region-${cc}-${z.id}`) }, [
-      h('span', { class: 'zone-emoji' }, z.emoji || '📍'),
-      h('span', { class: 'zone-text' }, kids),
-      h('span', { class: 'zone-go' }, '›'),
-    ]));
-  });
-  wrap.append(list);
-  return wrap;
-}
-
-// The verdict label for a set of months. When the months disagree it names WHICH are good and
-// which are not, rather than collapsing to "mixed" and leaving the traveller to guess — that
-// split is the whole reason multi-month selection is useful.
-function zoneWhenAcross(z, verdict, byMonth, monthShort) {
-  const names = (want) => byMonth.filter((x) => x.v === want).map((x) => monthShort(x.m));
-  const all = byMonth.map((x) => monthShort(x.m)).join(', ');
-  if (verdict === 'best') return { label: `✓ Good in ${all}`, cls: 'is-best', why: z.bestMonths };
-  if (verdict === 'avoid') return { label: `✗ Poor in ${all}`, cls: 'is-avoid', why: z.avoidMonths };
-  if (verdict === 'shoulder') return { label: `· Shoulder in ${all}`, cls: 'is-shoulder', why: `Best months: ${z.bestMonths}` };
-  const good = names('best');
-  const bad = names('avoid');
-  const parts = [good.length ? `✓ ${good.join(', ')}` : '', bad.length ? `✗ ${bad.join(', ')}` : ''].filter(Boolean);
-  return {
-    label: parts.length ? parts.join(' · ') : `± Depends in ${all}`,
-    cls: 'is-mixed',
-    why: [z.bestMonths, z.avoidMonths ? `Avoid: ${z.avoidMonths}` : ''].filter(Boolean).join(' · '),
-  };
-}
-
-// The region's facts as a compact definition grid — deliberately terse rows, not prose, so
-// the whole orientation reads in one glance. `notFor` is the honest counterweight: what this
-// region is NOT good for, which is usually the fastest way to rule a place in or out.
-function zoneFactsCard(z, cc) {
-  const rows = [
-    ['Good for', z.suits],
-    ['Not for', z.notFor],
-    ['Best months', z.bestMonths],
-    ['Avoid', z.avoidMonths],
-    ['How long', z.howLong],
-    ['Getting around', z.gettingAround],
-    ['Arrive at', z.gateway],
-  ].filter(([, v]) => v);
-  const card = h('div', { class: 'card zone-facts' }, [h('h2', {}, `${z.emoji || '📍'} ${z.name}`)]);
-  card.append(h('p', { class: 'zone-lead' }, z.tagline));
-  // Lead with the verdict for the months the traveller chose on the region chooser — the same
-  // set, so planning October and November does not have to be re-picked on every region page.
-  // With none chosen there is no verdict here either: the "Best months" and "Avoid" rows of
-  // the grid below carry the region's own sentences, which is the honest answer to "when",
-  // and a badge asserting today's month is not.
-  if (zoneMonths.size) {
-    const monthShort = (n) => new Date(2020, n - 1, 1).toLocaleDateString(dateLocale(), { month: 'short' });
-    const { verdict, byMonth } = zoneVerdictAcross(z, zoneMonths);
-    const vLine = zoneWhenAcross(z, verdict, byMonth, monthShort);
-    card.append(h('p', { class: `zone-when ${vLine.cls}` }, vLine.label));
-    // And the same within-region exceptions the chooser shows, because this is the page a
-    // traveller lands on after reading "✗ Poor in Jun, Jul" and wanting to know if any of it
-    // is still worth the trip.
-    const ex = cc ? zoneExceptions(cc, z, zoneMonths, verdict) : { better: [], worse: [] };
-    if (ex.better.length) card.append(h('p', { class: 'zone-exc is-best' }, `↑ Still good then: ${ex.better.join(', ')}`));
-    if (ex.worse.length) card.append(h('p', { class: 'zone-exc is-avoid' }, `↓ Not then: ${ex.worse.join(', ')}`));
-  }
-  const dl = h('dl', { class: 'zone-dl' });
-  rows.forEach(([k, v]) => { dl.append(h('dt', {}, k), h('dd', {}, v)); });
-  card.append(dl);
-  return card;
-}
-
-// Region detail: arg is "<cc>-<CODE>" (the ISO code itself contains a hyphen, e.g.
-// "th-TH-50"), so split on the FIRST hyphen only. Lists the region's cities and mapped
-// places, keeps the province map one tap from its neighbours, and links up to the country.
-function regionScreen(arg) {
-  const raw = String(arg || '');
-  const dash = raw.indexOf('-');
-  const cc = dash >= 0 ? raw.slice(0, dash) : (raw || getActiveCountry());
-  let id = dash >= 0 ? raw.slice(dash + 1) : '';
-  const c = getCountry(cc);
-  // Back-compatibility: links minted before regions replaced provinces carry an ISO province
-  // code (e.g. "#region-th-TH-50"). Resolve those to the region that now contains them so an
-  // old bookmark, a saved link or a stale cache still lands somewhere true.
-  if (c && id && !getZone(cc, id)) {
-    const owner = zoneForProvince(cc, id);
-    if (owner) id = owner.id;
-  }
-  const z = getZone(cc, id);
-  const wrap = h('div', { class: 'screen' });
-  if (!c || !z) {
-    wrap.append(topbar('Region', `#country-${cc}`));
-    wrap.append(h('p', { class: 'empty' }, 'That region could not be found.'));
-    mount(wrap, '#explore');
-    return;
-  }
-  setActiveCountry(cc);
-  wrap.append(topbar(z.name, `#country-${cc}`));
-
-  // Facts first — what this region is, who it suits, who it does not, when to come. Every
-  // row is one line; the whole orientation is meant to be read in a glance, not studied.
-  wrap.append(zoneFactsCard(z, cc));
-
-  const mini = zonesMap(cc, { activeId: z.id, onPick: (nid) => go(`#region-${cc}-${nid}`) });
-  if (mini) {
-    const mapFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, `🗺 ${c.name} by region`),
-      h('div', { style: 'padding:6px 0 0' }, [mini]), { open: store.profile.prefs.regionMapOpen !== false, cls: 'home-group-d' });
-    mapFold.addEventListener('toggle', () => { store.profile.prefs.regionMapOpen = mapFold.open; save(); });
-    wrap.append(mapFold);
-  }
-
-  const inZone = placesInZone(cc, z.id);
-  const towns = townsInZone(cc, z.id);
-  if (towns.length) {
-    const counts = {}; towns.forEach((t) => { counts[t.city] = t.n; });
-    const cityCard = h('div', { class: 'card' }, [h('h2', {}, `🏙 ${towns.length} town${towns.length === 1 ? '' : 's'} in ${z.name}`)]);
-    cityCard.append(cityPickGrid(cc, towns.map((t) => t.city), counts));
-    wrap.append(collapsibleCard(cityCard, 'regionCitiesOpen'));
-  }
-
-  if (inZone.length) {
-    const pc = h('div', { class: 'card' }, [h('h2', {}, `📍 ${inZone.length} place${inZone.length > 1 ? 's' : ''} in ${z.name}`)]);
-    inZone.slice(0, 40).forEach((pl) => pc.append(placeCard(pl)));
-    if (inZone.length > 40) {
-      pc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#places-${cc}`) }, `See all ${inZone.length} on the map →`));
-    }
-    wrap.append(collapsibleCard(pc, 'regionPlacesOpen', false));
-  } else {
-    wrap.append(h('div', { class: 'card' }, [
-      h('p', { class: 'muted', style: 'margin:0' }, `No places are mapped in ${z.name} yet. Tap another region on the map above, or browse all of ${c.name}.`),
-      h('button', { class: 'btn block btn-spaced', onclick: () => go(`#places-${cc}`) }, `All places in ${c.name}`),
-    ]));
-  }
-
-  if (cc === 'vi') {
-    wrap.append(h('p', { class: 'muted tiny', style: 'margin:2px 2px 10px' },
-      'Note: Vietnam reorganised its provinces in 2025. The region outlines reflect the earlier boundaries until open map data is updated.'));
-  }
-
-  wrap.append(h('div', { class: 'chips', style: 'margin-top:6px' }, [
-    h('button', { class: 'chip', onclick: () => go(`#country-${cc}`) }, [chipIcon('compass'), `About ${c.name}`]),
-    h('button', { class: 'chip', onclick: () => go(`#history-${cc}`) }, [chipIcon('book'), 'History & culture']),
-    h('button', { class: 'chip', onclick: () => go(`#info-${cc}`) }, [chipIcon('compass'), 'Country guide']),
-  ]));
-  mount(wrap, '#explore');
-}
 
 
 // The front door: a stylised, offline SVG map of mainland Southeast Asia. Each of the
@@ -4442,283 +3808,13 @@ function regionScreen(arg) {
 // network — this always works. (The pannable street map with GPS lives on #map.)
 // Retro-modern palette: terracotta, plum, marigold, sage — distinct from the teal sea
 // and from each other; white labels read on all four.
-const REGION_COLORS = { th: '#C25E3A', vi: '#9C5780', kh: '#E0A526', la: '#6E9A52' };
+export const REGION_COLORS = { th: '#C25E3A', vi: '#9C5780', kh: '#E0A526', la: '#6E9A52' };
 
-function regionPicker() {
-  // Z-order: country fills (clickable) → the Mekong → labels on top (so a name is
-  // never hidden by the river).
-  const shapes = COUNTRIES.map((c) => {
-    if (!REGION_PATHS[c.id]) return '';
-    return `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
-         <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
-       </g>`;
-  }).join('');
-  const river = REGION_RIVER ? `<g class="mekong-group" aria-hidden="true">
-         <path class="mekong-casing" d="${REGION_RIVER}"/>
-         <path id="mk-river-path" class="mekong" d="${REGION_RIVER}"/>
-         <text class="mekong-name" dy="-7"><textPath href="#mk-river-path" startOffset="38%">~ Mekong ~</textPath></text>
-       </g>` : '';
-  const labels = COUNTRIES.map((c) => {
-    if (!REGION_PATHS[c.id]) return '';
-    // REGION_LABELS is each country's pole of inaccessibility — its true visual centre.
-    const [lx, ly] = REGION_LABELS[c.id];
-    return `<g class="ctry-label" aria-hidden="true">
-         <text class="ctry-flag" x="${lx}" y="${ly - 8}" text-anchor="middle">${c.flag}</text>
-         <text class="ctry-name" x="${lx}" y="${ly + 26}" text-anchor="middle">${esc(c.name)}</text>
-       </g>`;
-  }).join('');
-  const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of Thailand, Laos, Cambodia and Vietnam, with the Mekong River" xmlns="http://www.w3.org/2000/svg">
-      ${shapes}${river}${labels}
-    </svg>`;
-  const box = h('div', { class: 'region-map', html: svg });
-  box.querySelectorAll('.ctry-group').forEach((g) => {
-    const id = g.getAttribute('data-country');
-    const enter = () => { setActiveCountry(id); go(`#country-${id}`); };
-    g.addEventListener('click', enter);
-    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); } });
-  });
-  box.append(h('span', { class: 'region-cap' }, 'Tap a country to explore · the Mekong runs through all four'));
-  return box;
-}
 
 // Per-country hub reached after picking a country.
 // (The "chapter opener" hero photo band that used to sit here — countryHeroBand() — was
 // removed: Explore now leads with the map, not a photo, so it had zero call sites left.)
 
-// Explore E1 (OVERHAUL.md section 11): Explore and the country hub were the same section
-// split across two screens — the old bare #explore was a thin chooser (73 lines, no
-// photography, no curated content) while everything a traveller actually wants (hero photo,
-// signature sights, regions, cities, the full toolkit) lived one tap deeper, only reachable
-// via #country-<cc>. Merged into one renderer. #explore and #country-<cc> BOTH route here —
-// 21 existing links point at #country-<cc> and must keep working unchanged.
-//
-// argCc: an explicit country id from #country-<cc> (always wins), 'all' from #explore-all
-// (forces the four-country view even when anchored), or undefined from a bare #explore
-// (falls through to anchorCountry() — E2's landing logic).
-//
-// Root-tab note: unlike the old countryHubScreen, this never shows a "‹ Back" button —
-// Explore is a bottom-tab screen like Home/Places, not a sub-screen you navigate into, and
-// the four-country view is one tap away via the "🌏 All" chip in the switcher below,
-// consistent with rank-collapse-never-remove.
-function exploreScreen(argCc) {
-  const forceAll = argCc === 'all';
-  const cc = (!forceAll && argCc && getCountry(argCc)) ? argCc : (forceAll ? null : anchorCountry());
-  const c = cc ? getCountry(cc) : null;
-
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(c ? `${c.flag} ${c.name}` : 'Explore'));
-
-  // Country select — a single dropdown covering every country plus "All". The one
-  // consistent way to pick a country from Explore now, in both branches below —
-  // replaces the old scoped-only chip switcher and the unscoped grid-of-cards as two
-  // parallel, inconsistent pickers (and, before that, a horizontally-scrolling chip row).
-  const countrySelect = selectEl(
-    [['all', '🌏 All countries']].concat(COUNTRIES.map((x) => [x.id, `${x.flag} ${x.name}`])),
-    cc || 'all',
-    (v) => { if (v === 'all') { go('#explore-all'); } else { setActiveCountry(v); go(`#country-${v}`); } },
-    'Country',
-  );
-  wrap.append(h('div', { class: 'country-select-row' }, [countrySelect]));
-
-  if (!c) {
-    // No explicit country and no real anchor — the four-country comparison view. Reached by
-    // tapping the Explore tab with nothing yet to land on, or explicitly via #explore-all.
-    // Lead with the map: plain and always visible (no anchor to default to yet, so "choose
-    // on the map" IS the default view here) — not a collapsible fold, the map is the focus.
-    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, '🗺 Choose on the map'));
-    wrap.append(regionPicker());
-
-    // "At a glance": each country's real figures (mapped-place count, language, currency) and
-    // its top sourced "known for" tags — a comparison that helps a traveller CHOOSE. Explore
-    // itself must never block on all four countries loading (that would defeat lazy loading
-    // for the common case of one country); a country not yet loaded briefly reads 0 here, so
-    // kick each missing one off in the background and quietly repaint in place as each lands.
-    const unloaded = COUNTRIES.filter((x) => !isCountryLoaded(x.id));
-    if (unloaded.length) {
-      unloaded.forEach((x) => {
-        loadCountry(x.id).then(() => {
-          const headRoute = (location.hash || '').slice(1).split('-')[0];
-          if (headRoute === 'explore' && isCountryLoaded(x.id)) {
-            const y = window.scrollY;
-            exploreScreen(argCc);
-            requestAnimationFrame(() => window.scrollTo(0, y));
-          }
-        }).catch(() => { /* offline with nothing cached yet — leave today's 0 up */ });
-      });
-    }
-    const grid = h('div', { class: 'explore-grid' });
-    COUNTRIES.forEach((x) => {
-      const n = allPlaces({ country: x.id }).length;
-      const lang = getLanguage(x.lang);
-      const tags = ((countryHistory(x.id) || {}).knownFor || []).slice(0, 3);
-      grid.append(h('button', {
-        class: 'explore-card', style: `--ec:${REGION_COLORS[x.id] || 'var(--teal)'}`,
-        onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
-        'aria-label': `Explore ${x.name}`,
-      }, [
-        h('span', { class: 'explore-flag' }, x.flag),
-        h('span', { class: 'explore-name' }, x.name),
-        h('span', { class: 'explore-facts' }, `${n} place${n === 1 ? '' : 's'} · ${lang ? lang.label : x.lang} · ${x.currency}`),
-        tags.length ? h('span', { class: 'explore-tags' }, tags.map((t) => h('span', { class: 'explore-tag' }, t))) : null,
-      ]));
-    });
-    const glanceFold = foldable(h('span', { class: 'home-section', style: 'margin:0' }, '🌏 Four countries at a glance'),
-      grid, { open: store.profile.prefs.exploreGlanceOpen !== false, cls: 'home-group-d' });
-    glanceFold.addEventListener('toggle', () => { store.profile.prefs.exploreGlanceOpen = glanceFold.open; save(); });
-    wrap.append(glanceFold);
-
-    mount(wrap, '#explore');
-    return;
-  }
-
-  // Scoped to a country — an explicit choice (#country-<cc>, a switcher tap, a flag on the
-  // map/glance view above) or a real anchor from anchorCountry(). Either way this is now the
-  // traveller's active country.
-  setActiveCountry(cc);
-
-  // Bare #explore / anchor-driven landing is NOT gated by the router (only #country-<cc> is —
-  // see NEEDS_COUNTRY_DATA in render()), so an anchor pointing at a country nothing has loaded
-  // yet (e.g. a dated stop set for a country never opened this session) would otherwise render
-  // sparse forever. Background-load + quietly repaint, same idiom as the chooser above and as
-  // Home's own country-load block — never block first paint, never silently stay empty.
-  // Same non-blocking "load then quietly repaint if still here" idiom, run once per loader
-  // so either landing independently of the other — the region set gates only the "by
-  // region" map further down, not the whole screen.
-  const repaintExploreIfStillHere = () => {
-    const headRoute = (location.hash || '').slice(1).split('-')[0];
-    if (headRoute === 'explore' || headRoute === 'country') {
-      const y = window.scrollY;
-      exploreScreen(argCc);
-      requestAnimationFrame(() => window.scrollTo(0, y));
-    }
-  };
-  if (!isCountryLoaded(cc)) {
-    loadCountry(cc).then(repaintExploreIfStillHere)
-      .catch(() => { /* offline with nothing cached yet — sparse view stays up */ });
-  }
-  if (!isRegionSetLoaded(cc)) {
-    loadRegionSet(cc).then(repaintExploreIfStillHere)
-      .catch(() => { /* offline with nothing cached yet — region map stays hidden */ });
-  }
-
-  // Lead with the map: this country's regions, right after country select — plain and
-  // always visible, not a collapsible fold, the same "map is the focus" treatment as the
-  // unscoped branch above (and as Places' own living map). Country defaulting is already
-  // handled above (cc = the traveller's anchored country, or null → the "All" branch), so
-  // this alone satisfies "default to the country the traveller is in, or all if not yet in
-  // one." The old hero photo and the phrasebook/currency/places/map/emergency quick-link
-  // row that used to sit here are gone — every one of those destinations is still reachable
-  // via its own bottom tab or another existing link, never removed, just no longer a
-  // redundant row competing with the map for the lead position.
-  // Explore's spine: 4-6 travel REGIONS, not 184 provinces. Each row carries what the
-  // region is and how much is actually mapped there, so a traveller can judge where the
-  // depth is before tapping. The map and the list drive the same route — the map for people
-  // who think geographically, the list for people who read.
-  if (zonesFor(cc).length) {
-    wrap.append(h('div', { class: 'home-section', style: 'margin:8px 0 4px' }, `🗺 ${c.name} by region`));
-    const zm = zonesMap(cc, { onPick: (zid) => go(`#region-${cc}-${zid}`) });
-    if (zm) wrap.append(zm);
-    const zl = zonePickList(cc);
-    if (zl) wrap.append(zl);
-  }
-
-  // Lead with WHERE THE TRAVELLER IS: if their location or focus resolves to a city in
-  // this country, surface that city first and let them widen to the whole country. Only
-  // when it is a real signal (GPS or a chosen focus), never the capital default.
-  const fs = focusSpot(cc);
-  const fcity = (fs && (fs.source === 'gps' || fs.source === 'focus') && fs.spot) ? fs.spot.city : null;
-  const fslug = fcity ? citySlug(fcity) : null;
-  if (fcity) {
-    const here = allPlaces({ country: cc }).filter((p) => citySlug(p.city || '') === fslug).length;
-    wrap.append(h('div', { class: 'card access-focus' }, [
-      h('h2', {}, `📍 You’re around ${fcity}`),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' },
-        here ? `${here} place${here > 1 ? 's' : ''} here — start local, then widen out when you want.` : 'Start with what’s around you, then widen out.'),
-      here ? h('button', { class: 'btn block', onclick: () => go(`#places-${cc}-${fslug}`) }, `Places in ${fcity}`) : null,
-      // Weather dropped from this row — it duplicated the "Get oriented" deck's own Weather
-      // tile just below, same label, same destination, both visible on this screen at once
-      // (found in the sitewide duplicate-chip audit). "Get oriented" is the fuller reference
-      // list, so it keeps Weather; this row stays focused on the two truly location-specific
-      // actions (what's near THIS spot, is this even the right city).
-      h('div', { class: 'chips', style: 'margin-top:6px' }, [
-        h('button', { class: 'chip', onclick: () => go('#nearby') }, [chipIcon('pin'), 'Near me now']),
-        h('button', { class: 'chip', onclick: () => go(`#setcity-${cc}`) }, [chipIcon('pin'), 'Not here? Change city']),
-      ]),
-    ]));
-  } else {
-    // No location signal (offline / GPS off): let them SET where they are so distances,
-    // weather and "near me" all match. Fully offline — no GPS required.
-    wrap.append(whereAmICard(cc));
-  }
-
-  // "More for {country}" — the same six feature sections a traveller meets on Home, minus
-  // the two that are not about a country (My stuff, Settings & help). This was four
-  // hand-written decks holding twenty-five chips, and it was the third copy of the same
-  // destination list: Home had its own names for these, You had a third set, #everything a
-  // fourth. It now renders from js/nav-groups.js like every other surface, so "Money &
-  // prices" and "Fair prices" are one thing with one name, and a country-scoped feature
-  // still lands on THIS country — resolveHash() takes the country being viewed.
-  //
-  // Two destinations lead separately above the doors because they are bottom TABS rather
-  // than features, and so are deliberately absent from the taxonomy: this country's own
-  // place list, and its language.
-  const lang = getLanguage(c.lang);
-  wrap.append(h('h2', { class: 'home-section', style: 'margin-top:14px' }, `More for ${c.name}`));
-  wrap.append(h('div', { class: 'chips', style: 'margin-bottom:10px' }, [
-    h('button', { class: 'status-chip', onclick: () => go(`#places-${cc}`), 'aria-label': `Places in ${c.name}. For your taste and price` },
-      [h('span', { class: 'status-ic' }, '📍'), h('span', { class: 'status-lbl' }, `Places in ${c.name}`)]),
-    h('button', { class: 'status-chip', onclick: () => go(`#phrasebook-${c.lang}`), 'aria-label': `Phrasebook. ${lang ? lang.label : 'Language'}` },
-      [h('span', { class: 'status-ic' }, '💬'), h('span', { class: 'status-lbl' }, lang ? lang.label : 'Phrasebook')]),
-  ]));
-  wrap.append(groupDoors(['mine', 'admin']));
-
-  // Explore E4–E7: discovery leads, then the reference/admin cards — Signature sights leads
-  // ("What's here"), then Where next ("What's after this"), then the more occasional reads
-  // (Fits your trip / seasonal / You might not know / solo note / Explore by city), then
-  // History & culture last of the discovery run before the reference cards. Each section
-  // independently omits itself when it has nothing real to show.
-  const hubSights = signatureSightsStrip(cc);
-  if (hubSights) wrap.append(hubSights);
-  const whereNext = whereNextSection(argCc, fcity); if (whereNext) wrap.append(whereNext);
-  const fits = fitsYourTripSection(cc); if (fits) wrap.append(fits);
-  const seasonal = seasonalFitSection(cc, fcity, fslug); if (seasonal) wrap.append(seasonal);
-  const notKnow = mightNotKnowSection(cc); if (notKnow) wrap.append(notKnow);
-  if (store.profile.prefs.soloFemale || store.profile.prefs.party === 'solo') {
-    wrap.append(h('div', { class: 'card', style: 'border:1px solid var(--magenta)' }, [
-      h('strong', {}, '🧭 Travelling solo'),
-      h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Practical, non-alarmist safety notes for solo and women travellers here.'),
-      h('button', { class: 'btn block', onclick: () => go(`#sos-${cc}`) }, 'See solo & women’s safety'),
-    ]));
-  }
-
-  // The flat "Explore {country} by city" fold used to sit here: a 12-city grid plus a link
-  // to the Places map. Both jobs moved — towns are now reached through the region that
-  // contains them (above), which gives each one context instead of a bare name, and the
-  // same city grid was already being rendered a second time by Places' own city picker.
-  // History & culture is collapsed by default (minimise/maximise) with an in-depth read —
-  // it is not something a traveller reads every day, so it should not be the first thing.
-  const hi = countryHistory(cc);
-  if (hi && hi.blurb) {
-    wrap.append(foldable('History & culture', h('div', {}, [
-      h('p', {}, hi.blurb),
-      knownForRow(hi.knownFor),
-      hi.cultureTip ? h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`) : null,
-      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#history-${cc}`) }, '📖 In-depth history & culture'),
-    ])));
-  }
-  // Accessibility / Entry & visa / Travelling with kids default MINIMISED (defaultOpen=false)
-  // per direct request — reference material a traveller dips into, not something to read
-  // every visit; still one tap away, never removed.
-  const acc = accessCard(cc); if (acc) wrap.append(collapsibleCard(acc, 'hubAccessOpen', false));
-  const vc = visaCard(cc); if (vc) wrap.append(collapsibleCard(vc, 'hubVisaOpen', false));
-  // The family module is requested for 'explore'/'country' in ROUTE_SCREENS, so it is loaded
-  // by the time this runs; the guard is for any future caller that is not route-gated.
-  const famMod = screenMod('family');
-  const famc = famMod ? famMod.familyCard(cc) : null;
-  if (famc) wrap.append(collapsibleCard(famc, 'hubFamilyOpen', false));
-
-  mount(wrap, '#explore');
-}
 
 // ---- "NEAR ME" / JUST-ARRIVED HUB -------------------------------------------
 // The just-stepped-off-the-plane front door. Uses the device GPS (offline; last fix
@@ -4736,7 +3832,7 @@ export function catEmoji(c) { return c === 'eat' ? '🍜' : c === 'stay' ? '🛏
 // happens once, so this is FEATURED (open) only while the traveller is in the "arrived"
 // phase; afterwards it stays one tap away as a collapsed dropdown rather than always sitting
 // at the top of every "near me" visit.
-function arrivalEssentials(country, featured) {
+export function arrivalEssentials(country, featured) {
   const c = getCountry(country);
   const lang = c ? c.lang : 'th';
   const party = store.profile.prefs.party;
@@ -4770,7 +3866,7 @@ function arrivalEssentials(country, featured) {
 // readouts at the moment of arrival, where they matter most: air quality and sun (UV)
 // for the nearest city, a dengue-season flag for the country, and a one-tap hop to the
 // nearest beach (flagged when jellyfish are in season) and to the full Health screen.
-function nearbySafetyStrip(country, fix) {
+export function nearbySafetyStrip(country, fix) {
   const spot = nearestSpot(fix, country);
   const card = h('div', { class: 'card' }, [h('h3', {}, '🩺 Conditions & safety now')]);
   card.append(airBlock(spot, { compact: true }));
@@ -4794,158 +3890,6 @@ function nearbySafetyStrip(country, fix) {
   return card;
 }
 
-function nearbyScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Near me', '#home'));
-  const status = h('p', { class: 'muted' }, [h('span', { class: 'spinner' }), 'Finding your location…']);
-  const body = h('div', {});
-  wrap.append(status, body);
-  mount(wrap, '#nearby');
-
-  // Cached fix paints instantly; a live fix then refines it. Offline-safe throughout.
-  let fix = getLastFix();
-  if (fix) paint(fix);
-  geolocate()
-    .then((pos) => { fix = setLastFix(pos); paint(fix); })
-    .catch(() => { if (!fix) noLocation(); });
-
-  function nearestCityInfo(f) {
-    const w = whereAmI(f);
-    if (w) return { city: w.name, country: w.country, km: w.km != null ? w.km : 0, near: !!w.approx };
-    return null;
-  }
-
-  function noLocation() {
-    status.textContent = 'Location is off';
-    body.innerHTML = '';
-    body.append(h('div', { class: 'card' }, [
-      h('p', {}, 'Turn on location to see what is around you — distances, walking times and the closest places, all offline once you have a fix.'),
-      h('button', { class: 'btn block', onclick: () => go('#nearby') }, 'Try again'),
-      h('button', { class: 'btn ghost block btn-spaced', onclick: () => locationSheet() }, '📍 Set my city manually'),
-      h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#home') }, 'Or browse by country'),
-    ]));
-  }
-
-  function paint(f) {
-    const info = nearestCityInfo(f);
-    const country = info ? info.country : getActiveCountry();
-    setActiveCountry(country);
-    const nb = nearestSpotGlobal(f); if (nb) setFocusSpot(nb.spot);   // remember where they are for weather/today
-    const cName = getCountry(country) ? getCountry(country).name : '';
-    status.innerHTML = '';
-    status.append(
-      h('strong', {}, info ? `You are ${info.near ? 'near' : 'in'} ${info.city}` : 'You are here'),
-      (info && cName) ? h('span', { class: 'muted' }, ` · ${cName}${info.km > 60 ? ` (${fmtDistance(info.km)} away)` : ''}`) : null,
-    );
-
-    // Rank ALL nearby places once; drawList() filters "not interested" ones out on each draw
-    // (using the live set), so a reset — which clears the marks — restores them immediately
-    // without needing to leave and re-open the screen. "Done" places stay findable here (this
-    // is a directory, not the rotating suggestion feed) and only drop out of the Home picks.
-    const ranked = allPlaces({ country }).filter((p) => p.coords)
-      .map((p) => ({ p, km: haversineKm(f, p.coords) })).sort((a, b) => a.km - b.km);
-
-    body.innerHTML = '';
-    // Featured (open by default) while still "fresh off the plane": on the ground and the
-    // Just arrived chip has not been dismissed. Used to check the now-removed 'arrived'
-    // phase value directly; the dismissible chip (justArrivedChip, js/screens/home.js) is
-    // the new, narrower signal for "just landed" now that the phase itself only has one
-    // merged on-the-ground stage.
-    body.append(arrivalEssentials(country, (store.profile.prefs.phase || '') === 'traveling' && !store.profile.prefs.justArrivedHidden));
-    body.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#arrival-${country}`) }, '🛬 Full arrival guide — airport→town, cash, SIM'));
-    body.append(h('div', { class: 'chips', style: 'margin:10px 0' }, [
-      h('button', { class: 'chip', onclick: () => go(`#places-${country}`) }, [chipIcon('map'), 'See on the map']),
-      h('button', { class: 'chip', onclick: () => go('#places') }, [chipIcon('pin'), 'Set my stay']),
-      h('button', { class: 'chip', onclick: () => go('#exchange') }, '🤝 Traveller board'),
-      h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
-    ]));
-    body.append(nearbySafetyStrip(country, f));
-    // Diet-aware "where you can eat": for a kosher / vegan / vegetarian / halal traveller,
-    // point them straight at the verified places they can actually eat, nearest-first.
-    const dietCard = dietEatCard(country, f);
-    if (dietCard) body.append(dietCard);
-
-    let cat = 'all';
-    const cats = [['all', 'Everything'], ['eat', '🍜 Eat'], ['stay', '🛏 Stay'], ['do', '🎫 Do']];
-    const catRow = h('div', { class: 'chips' }, cats.map(([id, lbl]) =>
-      h('button', {
-        class: 'chip', 'aria-pressed': id === 'all' ? 'true' : 'false', dataset: { c: id },
-        onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); drawList(); },
-      }, lbl)));
-    const listEl = h('div', {});
-    body.append(
-      h('h3', { style: 'margin:14px 2px 4px' }, 'Closest to you'),
-      catRow,
-      h('p', { class: 'tiny muted', style: 'margin:6px 2px 8px' },
-        'Distances are straight-line and drive times are rough estimates — mountain roads (for example around Pai, Sapa or the Bolaven Plateau) take considerably longer.'),
-      listEl,
-    );
-
-    function drawList() {
-      listEl.innerHTML = '';
-      // Re-read the marks each draw so hiding one instantly promotes the next place into view,
-      // and "done" places show a tick but stay findable in this directory.
-      const hid = new Set(store.profile.prefs.hiddenSpots || []);
-      const prefs = store.profile.prefs;
-      const catOk = (p) => cat === 'all' || nearCat(p) === cat;
-      // Good fits that are open lead; poor fits (kids/mobility) and places closed right now
-      // sink to the bottom — kept and tagged, never hidden — then order by distance.
-      const fitKey = ({ p }) => (placeFitReason(p, prefs) ? 2 : 0) + (openStateNow(p) === false ? 1 : 0);
-      const bySort = (a, b) => fitKey(a) - fitKey(b) || a.km - b.km;
-      // "Near me" = within about an hour's DRIVE (road-time, not straight-line). Comprehensive
-      // within that reach (up to 40) rather than padded with far picks, so every row is truly
-      // reachable. A separate, collapsed tier holds real "further afield" next-destinations.
-      const near = ranked.filter(({ p, km }) => withinNear(km, p.country) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 40);
-      const afield = ranked.filter(({ p, km }) => withinDayTrip(km, p.country) && !hid.has(p.id) && catOk(p)).sort(bySort).slice(0, 20);
-
-      function renderRow(container, p, km) {
-        const done = isSpotDone(p.id);
-        const closed = openStateNow(p) === false;
-        const fit = placeFitReason(p, prefs);
-        const tags = [];
-        if (closed) tags.push(attrTag('🔒 Closed now'));
-        if (fit) tags.push(attrTag('⚠️ ' + fit));
-        container.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
-          h('button', { class: 'rn-open near-open', onclick: () => go(`#place-${p.id}`) }, [
-            rnThumb(p),
-            h('div', { class: 'near-text' }, [
-              h('span', { class: 'near-name' }, `${catEmoji(nearCat(p))} ${p.name}${done ? ' ✓' : ''}`),
-              h('span', { class: 'dist-chip' }, `${fmtDistance(km)} · ${driveLabel(km, p.country)} · ${compass(bearing(f, p.coords))}`),
-              tags.length ? h('div', { class: 'near-tags' }, tags) : null,
-            ]),
-          ]),
-          h('div', { class: 'rn-actions' }, [
-            h('button', { class: 'rn-act done' + (done ? ' on' : ''), title: done ? 'Done — tap to undo' : 'Mark as done', 'aria-label': `Mark ${p.name} as done`, onclick: () => { const wasDone = done; toggleSpotDone(p.id); drawList(); if (!wasDone) showUndoToast(`“${p.name}” marked done`, () => { toggleSpotDone(p.id); drawList(); }); } }, '✓'),
-            h('button', { class: 'rn-act', title: 'Not interested — hide this', 'aria-label': `Hide ${p.name}`, onclick: () => { hideSpot(p.id); drawList(); showUndoToast(`Hidden “${p.name}”`, () => { unhideSpot(p.id); drawList(); }); } }, '✕'),
-          ]),
-        ]));
-      }
-
-      if (!near.length && !afield.length) {
-        listEl.append(h('p', { class: 'empty' }, 'Nothing within about an hour’s drive in this category yet — try “Everything”, the map, or open a nearby city.'));
-        return;
-      }
-      if (near.length) near.forEach(({ p, km }) => renderRow(listEl, p, km));
-      else listEl.append(h('p', { class: 'muted small', style: 'margin:2px 2px 8px' }, 'Nothing within about an hour’s drive in this category — the nearest are further afield, below.'));
-      if (afield.length) {
-        const afBody = h('div', { class: 'near-afield-body' });
-        afield.forEach(({ p, km }) => renderRow(afBody, p, km));
-        listEl.append(h('details', { class: 'card near-afield', open: near.length ? null : '' }, [
-          h('summary', {}, `🚌 Further afield · next destinations (${afield.length})`),
-          h('p', { class: 'muted small', style: 'margin:2px 0 8px' }, 'Beyond an hour’s drive — worth a day trip or your next stop.'),
-          afBody,
-        ]));
-      }
-      const nHid = (store.profile.prefs.hiddenSpots || []).length;
-      const nDone = (store.profile.prefs.doneSpots || []).length;
-      if (nHid || nDone) {
-        listEl.append(h('button', { class: 'rn-reset', onclick: () => { clearSuggestionMarks(); drawList(); } },
-          `↺ ${[nDone ? `${nDone} done` : '', nHid ? `${nHid} hidden` : ''].filter(Boolean).join(' · ')} — reset`));
-      }
-    }
-    drawList();
-  }
-}
 
 // ---- CURRENCY CONVERTER -----------------------------------------------------
 // Shared amount/currency <-> amount/currency control: "[1][USD▾] = [x][THB▾]", the middle "="
@@ -4992,7 +3936,7 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
     h('div', { class: 'fx-swap-row' }, [swap]),
     h('div', { class: 'fx-line' }, [out, toSel]),
     rateLine,
-    opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
+    opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
   ]);
   recompute();
   return wrap;
@@ -5246,9 +4190,9 @@ function bulletinScreen(arg) {
 
     formWrap.innerHTML = '';
     if (cat === 'all') {
-      formWrap.append(h('p', { class: 'muted small', style: 'margin:2px 2px 8px' }, 'Pick a category above to post, or browse everything below.'));
+      formWrap.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-2)' }, 'Pick a category above to post, or browse everything below.'));
     } else {
-      formWrap.append(h('p', { class: 'muted small', style: 'margin:2px 2px 6px' }, bbCat(cat).blurb));
+      formWrap.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-1h)' }, bbCat(cat).blurb));
       formWrap.append(buildBBForm(cat));
     }
 
@@ -5324,7 +4268,7 @@ function cityRepPhoto(cc, slug) {
 // A photo grid of cities: each a tappable card with a representative photo (emoji fallback)
 // and a place count, scoping to that city. Shared by the Places-for-you city picker and the
 // country hub's "Explore" card so both drill down the same, recognisable way.
-function cityPickGrid(cc, cities, counts) {
+export function cityPickGrid(cc, cities, counts) {
   const grid = h('div', { class: 'city-pick-grid' });
   cities.forEach((city) => {
     const slug = citySlug(city);
@@ -5373,12 +4317,12 @@ function pricesScreen(countryId) {
   // cash-swap link, manual refresh) stays reachable from here and from Home Tools.
   if (country) {
     wrap.append(h('div', { class: 'card' }, [
-      h('h2', { style: 'margin:0 0 8px' }, `💱 ${homeCurrency()} → ${country.currency}`),
+      h('h2', { style: 'margin: 0 0 var(--sp-2)' }, `💱 ${homeCurrency()} → ${country.currency}`),
       fxConverterControl(homeCurrency(), country.currency, { compact: true }),
       h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#currency') }, 'More currency tools →'),
     ]));
   }
-  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top:14px' }, '🏷 Fair prices'));
+  wrap.append(h('h2', { class: 'cat-title', style: 'margin-top: var(--sp-4)' }, '🏷 Fair prices'));
 
   const data = country && country.prices;
   if (!data) {
@@ -5415,149 +4359,7 @@ function pricesScreen(countryId) {
   mount(wrap, '#prices');
 }
 
-// ---- TRANSPORT --------------------------------------------------------------
-// Rent & ride, buy tickets (flights, trains, buses, boats) and find live schedules for a
-// country. Guidance text is bundled and works offline; booking/timetable links open the
-// authoritative source (needs internet) — we never bundle fabricated times or fares.
-function getAroundSection(cc) {
-  const g = GET_AROUND[cc];
-  if (!g) return null;
-  const chip = (b) => h('a', { class: 'chip', href: b.url, target: '_blank', rel: 'noopener' }, `${b.name} ↗`);
-  const wrap = h('div', {});
 
-  if (g.hail && g.hail.length) {
-    const card = h('div', { class: 'card' }, [h('h2', {}, '🚕 Ride-hailing apps')]);
-    g.hail.forEach((a) => card.append(h('div', { class: 'transit-row' }, [h('strong', {}, a.name), h('div', { class: 'muted tiny' }, a.what)])));
-    wrap.append(card);
-  }
-
-  const rentDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🛵 Rent a scooter or car')]);
-  if (g.scooter) {
-    rentDet.append(h('h3', {}, '🛵 Scooter / motorbike'));
-    rentDet.append(h('p', { class: 'muted' }, g.scooter.note));
-    (g.scooter.tips || []).forEach((t) => rentDet.append(h('div', { class: 'list-note' }, t)));
-    if (g.scooter.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.scooter.book.map(chip)));
-  }
-  if (g.car) {
-    rentDet.append(h('h3', {}, '🚗 Car'));
-    rentDet.append(h('p', { class: 'muted' }, g.car.note));
-    if (g.car.book) rentDet.append(h('div', { class: 'chips', style: 'margin-top:6px' }, g.car.book.map(chip)));
-  }
-  // Per-city price ranges so a traveller can budget before tapping out to a booking site.
-  if (g.rentalPrices && g.rentalPrices.rows && g.rentalPrices.rows.length) {
-    rentDet.append(h('h3', {}, '💰 What it costs (per day)'));
-    const tbl = h('table', { class: 'rent-price' }, [
-      h('thead', {}, h('tr', {}, [h('th', {}, 'City'), h('th', {}, '🛵 Scooter'), h('th', {}, '🚗 Car')])),
-      h('tbody', {}, g.rentalPrices.rows.map((r) => h('tr', {}, [h('td', {}, r.city), h('td', {}, r.scooter || '—'), h('td', {}, r.car || '—')]))),
-    ]);
-    rentDet.append(tbl);
-    if (g.rentalPrices.note) rentDet.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' }, g.rentalPrices.note));
-  }
-  rentDet.append(h('p', { class: 'tiny muted', style: 'margin-top:8px' }, `Reminder: ${g.name} drives on the ${g.drivesOn}. An International Driving Permit plus your home licence keeps you legal and insured.`));
-  wrap.append(rentDet);
-
-  // City transit — a stored, offline line list for the metro cities (plus an honest note
-  // where there is no rail). No live times bundled; the schedule links below cover those.
-  if (g.cityTransit && g.cityTransit.length) {
-    const ctDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🚈 City transit (works offline)')]);
-    g.cityTransit.forEach((c) => {
-      ctDet.append(h('div', { class: 'transit-row' }, [
-        h('strong', {}, c.city),
-        (c.lines && c.lines.length) ? h('ul', { class: 'transit-lines' }, c.lines.map((ln) => h('li', {}, ln))) : null,
-        c.note ? h('div', { class: 'muted tiny', style: 'margin-top:2px' }, c.note) : null,
-      ]));
-    });
-    wrap.append(ctDet);
-  }
-
-  const t = g.tickets || {};
-  const tkDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🎫 Buy tickets — flights, trains, buses & boats')]);
-  const tkRow = (label, arr) => { if (arr && arr.length) tkDet.append(h('div', { class: 'transit-row' }, [h('strong', {}, label), h('div', { class: 'chips', style: 'margin-top:4px' }, arr.map(chip))])); };
-  tkRow('✈️ Flights', t.flight);
-  tkRow('🚆 Trains', t.train);
-  tkRow('🚌 Buses', t.bus);
-  tkRow('⛴️ Boats & ferries', t.ferry);
-  tkDet.append(h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Prices and seats are live on these sites. For trains and the fast Laos railway, book a day or two ahead.'));
-  wrap.append(tkDet);
-
-  if (g.schedules && g.schedules.length) {
-    const scDet = h('details', { class: 'filters-collapse' }, [h('summary', {}, '🕘 Timetables & live schedules')]);
-    g.schedules.forEach((s) => scDet.append(h('div', { class: 'transit-row' }, [
-      h('div', { class: 'row-between' }, [h('strong', {}, s.what), h('span', { class: 'muted tiny' }, s.org)]),
-      s.note ? h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, s.note) : null,
-      h('a', { class: 'btn ghost block', style: 'margin-top:2px', href: s.url, target: '_blank', rel: 'noopener' }, `Open ${s.org} ↗`),
-    ])));
-    scDet.append(h('p', { class: 'tiny muted', style: 'margin-top:4px' }, 'Live times need internet; the guidance above works offline. Schedules shift with season and demand — always confirm on the day.'));
-    wrap.append(scDet);
-  }
-  return wrap;
-}
-
-function transportScreen(countryId) {
-  if (countryId) setActiveCountry(countryId);
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Getting around', '#home'));
-  wrap.append(countryChips((id) => go(`#transport-${id}`)));
-  wrap.append(h('button', { class: 'btn block', style: 'margin-bottom:12px', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
-  // Rent & ride, tickets and schedules — always shown, even where intercity routes are sparse.
-  const ga = getAroundSection(getActiveCountry());
-  if (ga) wrap.append(ga);
-
-  const country = getCountry(getActiveCountry());
-  const routes = country && country.routes;
-  if (!routes) {
-    wrap.append(h('p', { class: 'empty' }, `Intercity routes for ${country ? country.name : 'this country'} are not listed yet — use “Plan a whole journey” above, or open any place to see its nearest transport connections.`));
-    mount(wrap, '#home'); return;
-  }
-  const routeCard = (r) => {
-    const card = h('div', { class: 'card' }, [
-      h('h2', {}, `${r.from} → ${r.to}`),
-      r.crossBorder ? h('p', { class: 'border-flag' }, `Border crossing: ${r.border}`) : null,
-      r.visa ? h('p', { class: 'muted' }, `Visa: ${r.visa.note}`) : null,
-    ]);
-    if (r.scamWarnings && r.scamWarnings.length) r.scamWarnings.forEach((w) => card.append(h('div', { class: 'warn-note' }, w)));
-    for (const o of r.options) {
-      const dur = o.durationHrs ? `${o.durationHrs[0]}–${o.durationHrs[1]} h` : '';
-      card.append(h('div', { class: `route-opt ${o.recommended ? 'best' : ''}` }, [
-        h('div', { class: 'row-between' }, [
-          h('span', { class: 'mode' }, o.mode),
-          o.recommended ? h('span', { class: 'pill-best' }, 'Best') : null,
-        ]),
-        h('div', { class: 'muted' }, `${dur} · ${priceLine(o.price.low, o.price.high, o.price.currency)} · ${o.freq}`),
-        o.comfort ? h('div', {}, o.comfort) : null,
-        o.notes ? h('div', { class: 'muted' }, o.notes) : null,
-        o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
-      ]));
-    }
-    card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: 'https://12go.asia', target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
-    return card;
-  };
-
-  // Context-first: lead with journeys leaving the city you are in (or focused on); the
-  // rest of the country network collapses behind one tap instead of a long scroll.
-  const fs = focusSpot(getActiveCountry());
-  const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
-  const here = focusCity ? routes.filter((r) => citySlug(r.from) === citySlug(focusCity)) : [];
-  const rest = routes.filter((r) => !here.includes(r));
-  const collapse = (list, label) => {
-    const det = h('details', { class: 'filters-collapse' }, [h('summary', {}, label)]);
-    list.forEach((r) => det.append(routeCard(r)));
-    wrap.append(det);
-  };
-
-  if (here.length) {
-    wrap.append(h('h3', { class: 'cat-title' }, `Leaving ${focusCity} · ${here.length}`));
-    here.forEach((r) => wrap.append(routeCard(r)));
-    if (rest.length) collapse(rest, `More routes across ${country.name} · ${rest.length}`);
-  } else {
-    // No known city context: show the first few (hub routes lead the data), collapse the tail.
-    const lead = rest.slice(0, 5), tail = rest.slice(5);
-    lead.forEach((r) => wrap.append(routeCard(r)));
-    if (tail.length) collapse(tail, `More routes across ${country.name} · ${tail.length}`);
-  }
-  wrap.append(h('p', { class: 'disclaimer' }, 'Times and prices are guidance and change with season and operator. Confirm before travel.'));
-  mount(wrap, '#home');
-}
 
 // ---- JOURNEY PLANNER --------------------------------------------------------
 // Point-to-point trip planning that chains the bundled route legs across towns and
@@ -5602,11 +4404,11 @@ export function planCard(pl, primary) {
       primary ? h('span', { class: 'pill-best' }, 'Suggested') : null,
     ]),
     h('div', { class: 'plan-chain' }, chain.join('  →  ')),
-    h('p', { class: 'muted', style: 'margin:2px 0 10px' }, [changes, timeStr, priceStr].filter(Boolean).join(' · ')),
+    h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-3)' }, [changes, timeStr, priceStr].filter(Boolean).join(' · ')),
   ]);
   pl.legs.forEach((l, i) => card.append(planLegRow(l, i)));
-  if (pl.borders.length) card.append(h('p', { class: 'muted', style: 'margin-top:8px' }, `Carry your passport — ${pl.borders.length} border crossing${pl.borders.length > 1 ? 's' : ''} on this route.`));
-  card.append(h('a', { class: 'btn ghost block', style: 'margin-top:10px', href: twelveGoUrl(chain[0], chain[chain.length - 1]), target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
+  if (pl.borders.length) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-2)' }, `Carry your passport — ${pl.borders.length} border crossing${pl.borders.length > 1 ? 's' : ''} on this route.`));
+  card.append(h('a', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', href: twelveGoUrl(chain[0], chain[chain.length - 1]), target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
   return card;
 }
 
@@ -5641,7 +4443,7 @@ function planRouteScreen() {
     const plans = planRoutes(planFrom, planTo);
     if (!plans.length) {
       results.append(h('div', { class: 'card' }, [
-        h('p', { style: 'margin-top:0' }, `No bundled overland route between ${planFrom} and ${planTo} yet.`),
+        h('p', { style: 'margin-top: 0' }, `No bundled overland route between ${planFrom} and ${planTo} yet.`),
         h('p', { class: 'muted' }, 'Try planning via a major hub (Bangkok, Vientiane, Phnom Penh or Hanoi), or check live options:'),
         h('a', { class: 'btn ghost block', href: twelveGoUrl(planFrom, planTo), target: '_blank', rel: 'noopener' }, 'Search 12Go for this trip ↗'),
       ]));
@@ -5678,7 +4480,7 @@ function savedScreen() {
   create.append(input, h('button', { class: 'btn', onclick: () => {
     if (input.value.trim()) { createCollection(input.value.trim(), '⭐'); render(); }
   } }, 'Create'));
-  create.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Or pick a quick theme'));
+  create.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, 'Or pick a quick theme'));
   create.append(h('div', { class: 'chips' }, COLLECTION_PRESETS
     .filter((pr) => !store.collections.some((c) => c.name.toLowerCase() === pr.name.toLowerCase()))
     .map((pr) => h('button', { class: 'chip', onclick: () => { createCollection(pr.name, pr.emoji); render(); } }, `${pr.emoji} ${pr.name}`))));
@@ -5698,11 +4500,11 @@ function savedScreen() {
   const doneIds = store.profile.prefs.doneSpots || [];
   if (doneIds.length) {
     const doneCard = h('div', { class: 'card' }, [h('h2', {}, `✓ Done · ${doneIds.length}`)]);
-    doneCard.append(h('p', { class: 'muted', style: 'margin:2px 0 8px' }, 'Places you have ticked off — they no longer show in your near-me suggestions. Tap ↩ to put one back.'));
+    doneCard.append(h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Places you have ticked off — they no longer show in your near-me suggestions. Tap ↩ to put one back.'));
     doneIds.slice().reverse().forEach((id) => {
       const p = resolveItem(id);
       const name = p ? p.name : id;
-      doneCard.append(h('div', { class: 'rn-item', style: 'margin-top:8px' }, [
+      doneCard.append(h('div', { class: 'rn-item', style: 'margin-top: var(--sp-2)' }, [
         h('button', { class: 'rn-open', onclick: () => go(`#place-${id}`) }, h('span', { class: 'near-name' }, `✓ ${name}`)),
         h('div', { class: 'rn-actions' }, [
           h('button', { class: 'rn-act', title: 'Undo — show it in suggestions again', 'aria-label': `Un-mark ${name} as done`, onclick: () => { toggleSpotDone(id); render(); } }, '↩'),
@@ -5716,7 +4518,7 @@ function savedScreen() {
 }
 
 function collectionLinkRow(emoji, name, count, onClick) {
-  return h('button', { class: 'btn ghost block', style: 'margin-bottom:8px; justify-content:space-between', onclick: onClick }, [
+  return h('button', { class: 'btn ghost block', style: 'margin-bottom: var(--sp-2); justify-content:space-between', onclick: onClick }, [
     h('span', {}, `${emoji} ${name}`), h('span', { class: 'muted' }, `${count}`),
   ]);
 }
@@ -5770,7 +4572,7 @@ function poolCard(p, ref) {
   const km = (ref && p.coords) ? haversineKm(ref, p.coords) : null;
   const card = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [h('strong', {}, p.name), h('span', { class: 'cat-tag' }, POOL_TYPE_LABEL[p.type] || p.type)]),
-    h('p', { class: 'tiny muted', style: 'margin:2px 0' }, km != null
+    h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0' }, km != null
       ? `📍 ${p.city} · ${fmtDistance(km)}${km <= 6 ? ` · ~${Math.max(1, Math.round((km / 4.8) * 60))} min walk` : ''} · ${compass(bearing(ref, p.coords))}`
       : p.city),
     h('p', { class: 'price-line' }, [
@@ -5787,7 +4589,7 @@ function poolCard(p, ref) {
                       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapQuery)}`,
       target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
   ]);
-  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
+  if (p.sources && p.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top: var(--sp-1h)' }, `Source: ${p.sources.map((s) => s.org).join(', ')} · verified ${p.verified}`));
   return card;
 }
 
@@ -5817,7 +4619,7 @@ function poolsScreen(arg) {
     const withKm = list.filter((p) => p.coords).map((p) => ({ p, km: haversineKm(ref, p.coords) })).sort((a, b) => a.km - b.km);
     const near = withKm.slice(0, 6);
     const rest = withKm.slice(6).map((x) => x.p).concat(list.filter((p) => !p.coords));
-    wrap.append(h('h2', { class: 'cat-title', style: 'margin:12px 2px 6px' }, refCity ? `🏊 Nearest to ${refCity}` : '🏊 Nearest to you'));
+    wrap.append(h('h2', { class: 'cat-title', style: 'margin: var(--sp-3) var(--sp-0h) var(--sp-1h)' }, refCity ? `🏊 Nearest to ${refCity}` : '🏊 Nearest to you'));
     near.forEach((x) => wrap.append(poolCard(x.p, ref)));
     if (rest.length) {
       wrap.append(h('details', { class: 'filters-collapse' }, [
@@ -5829,7 +4631,7 @@ function poolsScreen(arg) {
     const groups = {};
     list.forEach((p) => { (groups[p.city] = groups[p.city] || []).push(p); });
     Object.keys(groups).forEach((city) => {
-      wrap.append(h('h2', { style: 'margin:16px 0 6px' }, city));
+      wrap.append(h('h2', { style: 'margin: var(--sp-4) 0 var(--sp-1h)' }, city));
       groups[city].forEach((p) => wrap.append(poolCard(p, null)));
     });
   }
@@ -5854,100 +4656,32 @@ function crossingsScreen() {
     }
   }
   // Per-country entry/visa guides (visa type, official portal, land-border tips, overstay).
-  wrap.append(h('div', { class: 'chips', style: 'margin:2px 0 4px' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
+  wrap.append(h('div', { class: 'chips', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, COUNTRIES.filter((c) => getVisa(c.id)).map((c) =>
     h('button', { class: 'chip', onclick: () => go(`#visa-${c.id}`) }, `🛂 ${c.flag} ${c.name} entry`))));
   const groups = {};
   CROSSINGS.forEach((x) => { (groups[x.pair] = groups[x.pair] || []).push(x); });
   Object.keys(groups).forEach((pair) => {
-    wrap.append(h('h2', { style: 'margin:16px 0 6px' }, pair));
+    wrap.append(h('h2', { style: 'margin: var(--sp-4) 0 var(--sp-1h)' }, pair));
     groups[pair].forEach((x) => {
       const card = h('div', { class: 'card' }, [
         h('div', { class: 'row-between' }, [h('strong', {}, x.name), h('span', { class: 'cat-tag' }, x.type)]),
-        h('p', { class: 'muted', style: 'margin:4px 0' }, `${x.a.town} ↔ ${x.b.town}`),
+        h('p', { class: 'muted', style: 'margin: var(--sp-1) 0' }, `${x.a.town} ↔ ${x.b.town}`),
         h('p', {}, [h('strong', {}, 'Hours: '), x.hours]),
         x.visa ? h('p', {}, [h('strong', {}, 'Visa: '), x.visa]) : null,
         x.notes ? h('p', { class: 'muted' }, x.notes) : null,
         x.scam ? h('div', { class: 'warn-note' }, `⚠ ${x.scam}`) : null,
         x.coords ? h('a', { class: 'btn ghost block btn-spaced', href: `https://www.google.com/maps/search/?api=1&query=${x.coords.lat},${x.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps') : null,
       ]);
-      if (x.sources && x.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top:6px' }, `Source: ${x.sources.map((s) => s.org).join(', ')} · verified ${x.verified}`));
+      if (x.sources && x.sources.length) card.append(h('p', { class: 'muted', style: 'font-size:12px;margin-top: var(--sp-1h)' }, `Source: ${x.sources.map((s) => s.org).join(', ')} · verified ${x.verified}`));
       wrap.append(card);
     });
   });
   mount(wrap, true);
 }
 
-function addPinScreen(editId) {
-  const existing = editId ? getPin(editId) : null;
-  const editing = !!existing;
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(editing ? 'Edit place' : 'Add a place', editing ? `#place-${editId}` : '#places'));
-  if (editId && !existing) { wrap.append(h('p', { class: 'empty' }, 'Place not found.')); mount(wrap, '#places'); return; }
-  const state = { coords: existing ? existing.coords : (pendingPinCoords || null), colls: new Set() };
-  pendingPinCoords = null; // consume the tapped coordinate
 
-  const card = h('div', { class: 'card' });
-  const name = h('input', { type: 'text', placeholder: 'Place name (e.g. “Great noodle stall”)', value: existing ? existing.name : '' });
-  const note = h('input', { type: 'text', placeholder: 'A note (optional)', value: existing ? (existing.note || '') : '' });
-  card.append(field('Name', name), field('Note', note));
-
-  // What kind of place — single-select, stored as the pin's first tag so it reads as a type
-  // (like a category on a map) and can colour/group it later.
-  const PLACE_KINDS = [['food', '🍜 Food & drink'], ['stay', '🛏 Place to stay'], ['culture', '🏛 Culture'], ['nature', '🌿 Nature'], ['nightlife', '🌃 Nightlife'], ['shopping', '🛍 Shopping'], ['other', '📌 Other']];
-  let selKind = (existing && existing.tags && existing.tags[0]) || 'other';
-  const kindChips = h('div', { class: 'chips' }, PLACE_KINDS.map(([id, lbl]) =>
-    h('button', { class: 'chip', 'aria-pressed': selKind === id ? 'true' : 'false', dataset: { k: id },
-      onclick: (e) => { selKind = id; kindChips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.k === id ? 'true' : 'false')); } }, lbl)));
-  card.append(field('What kind of place?', kindChips));
-
-  const coordOut = h('p', { class: 'muted' }, state.coords
-    ? `Location: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`
-    : 'No location attached.');
-  card.append(field('Location', h('div', {}, [
-    h('button', { class: 'btn ghost', onclick: () => {
-      coordOut.textContent = 'Locating…';
-      if (!navigator.geolocation) { coordOut.textContent = 'Geolocation unavailable.'; return; }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { state.coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; coordOut.textContent = `Attached: ${state.coords.lat.toFixed(5)}, ${state.coords.lng.toFixed(5)}`; },
-        (err) => { coordOut.textContent = `No location: ${err.message}`; },
-        { enableHighAccuracy: true, timeout: 10000 });
-    } }, 'Use my current location'),
-    coordOut,
-  ])));
-
-  // Collections + "my stay" are creation-time extras; when editing, name/note/location
-  // are the editable fields (collections stay managed from the Save sheet).
-  const stayChk = h('input', { type: 'checkbox' });
-  if (!editing) {
-    if (store.collections.length) {
-      card.append(field('Add to collections', h('div', { class: 'chips' },
-        store.collections.map((c) => collToggleChip(c.name, c.emoji, () => toggleSet(state.colls, c.id))))));
-    } else {
-      card.append(field('Add to collections', h('p', { class: 'muted' }, 'You have no collections yet. Save the pin, then tap “＋ Save” on it to file it under a theme.')));
-    }
-    card.append(h('label', { style: 'display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px' },
-      [stayChk, h('span', {}, '🏠 Also set this as my accommodation (My stay)')]));
-  }
-  wrap.append(card);
-
-  wrap.append(h('button', { class: 'btn block', onclick: () => {
-    if (!name.value.trim()) { alert('Give the place a name.'); return; }
-    if (editing) {
-      updatePin(editId, { name: name.value.trim(), note: note.value.trim(), coords: state.coords, tags: [selKind] });
-      go(`#place-${editId}`);
-      return;
-    }
-    const pin = addPin({ name: name.value.trim(), note: note.value.trim(), tags: [selKind], coords: state.coords });
-    state.colls.forEach((cid) => togglePlaceInCollection(cid, pin.id));
-    if (stayChk.checked && state.coords) setMyStay({ name: name.value.trim(), coords: state.coords });
-    go(`#place-${pin.id}`);   // open the new place so photos, a rating and a review are one tap away
-  } }, editing ? 'Save changes' : 'Save place'));
-  wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 2px' }, 'After saving, open the place to add your photos, a star rating and a review — everything stays on your device.'));
-  mount(wrap, true);
-}
-
-function toggleSet(set, v) { if (set.has(v)) set.delete(v); else set.add(v); }
-function collToggleChip(name, emoji, onToggle) {
+export function toggleSet(set, v) { if (set.has(v)) set.delete(v); else set.add(v); }
+export function collToggleChip(name, emoji, onToggle) {
   return h('button', { class: 'chip', 'aria-pressed': 'false', onclick: (e) => {
     const c = e.currentTarget; const on = c.getAttribute('aria-pressed') === 'true';
     c.setAttribute('aria-pressed', on ? 'false' : 'true'); onToggle(c);
@@ -6004,15 +4738,15 @@ function calItems() {
 const { DIET_OPTIONS, DIET_LABEL, joinList, dishMeatHits } = Diet;
 // Thin wrappers injecting the saved profile (store.profile.prefs.diet) into the pure diet.js
 // functions, so every existing call site keeps working unchanged.
-function dietAvoidAllergens(diet) { return Diet.dietAvoidAllergens(diet || store.profile.prefs.diet || []); }
-function dietEvaluable(dietArr, av) { return Diet.dietEvaluable(dietArr || store.profile.prefs.diet || [], av); }
-function dishDietReasons(d, avoid, diet) { return Diet.dishDietReasons(d, avoid, diet || store.profile.prefs.diet || []); }
-function dishDietVerdict(d, avoid, diet) { return Diet.dishDietVerdict(d, avoid, diet || store.profile.prefs.diet || []); }
+export function dietAvoidAllergens(diet) { return Diet.dietAvoidAllergens(diet || store.profile.prefs.diet || []); }
+export function dietEvaluable(dietArr, av) { return Diet.dietEvaluable(dietArr || store.profile.prefs.diet || [], av); }
+export function dishDietReasons(d, avoid, diet) { return Diet.dishDietReasons(d, avoid, diet || store.profile.prefs.diet || []); }
+export function dishDietVerdict(d, avoid, diet) { return Diet.dishDietVerdict(d, avoid, diet || store.profile.prefs.diet || []); }
 
 // A gentle, non-safety spice note for travellers who said they are with a baby/kids or dislike
 // heat ("Not spicy at all"). This is guidance, NOT the red allergen verdict — Thai/Lao/Isan heat
 // is a real surprise for little ones, and most dishes can be ordered milder.
-function dishSpiceCaution(d, prefs) {
+export function dishSpiceCaution(d, prefs) {
   const family = prefs.withBaby || prefs.kids || prefs.party === 'family';
   const noChili = (prefs.diet || []).includes('no-chili');
   if (!family && !noChili) return '';
@@ -6025,7 +4759,7 @@ export function dietPicker(onChange) {
   const sel = new Set(store.profile.prefs.diet || []);
   const box = h('div', {});
   DIET_OPTIONS.forEach((grp) => {
-    box.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, grp.group));
+    box.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' }, grp.group));
     box.append(h('div', { class: 'chips', role: 'group', 'aria-label': grp.group }, grp.items.map((it) =>
       h('button', {
         class: 'chip', 'aria-pressed': sel.has(it.id) ? 'true' : 'false',
@@ -6041,12 +4775,12 @@ export function dietPicker(onChange) {
 }
 
 // ---- FOOD / DISH IDENTIFIER -------------------------------------------------
-let foodCountry = '';
-let foodQuery = '';
-let foodCat = '';
-let foodFitOnly = false;
-const foodAvoid = new Set();
-function spiceLabel(s) {
+// foodScreen, dishScreen and dietEatCard now live in js/screens/food.js, and the four filter
+// variables that used to sit here went with them. They had to: a module's `let` cannot be
+// assigned from another module (it is a ReferenceError, not an implicit global), so leaving
+// the state behind while moving the code that writes it would have broken every filter on the
+// screen. The helpers below stay because main.js's own search and Home cards call them.
+export function spiceLabel(s) {
   return s === 'hot' ? '🌶🌶🌶 Hot' : s === 'medium' ? '🌶🌶 Medium'
     : s === 'mild' ? '🌶 Mild' : s === 'varies' ? '🌶 Varies' : 'Not spicy';
 }
@@ -6062,7 +4796,7 @@ export function recogThumb(item, emoji, extra) {
   return h('span', { class: `species-emoji${cls}`, 'aria-hidden': 'true' }, emoji);
 }
 
-function foodCard(d) {
+export function foodCard(d) {
   const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
   const verdict = dishDietVerdict(d);
   const flagged = verdict === 'bad' ? dishDietReasons(d) : [];
@@ -6187,243 +4921,7 @@ export function idPinButton(type, id) {
   }, pinned ? '★ Saved to your identifier — tap to remove' : '☆ Save to my identifier');
 }
 
-function foodScreen(country) {
-  if (country) foodCountry = country;
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Identify food', '#home'));
-  wrap.append(screenHint('Search dishes by name or ingredient. Tap one for ingredients, allergens, vegetarian notes and a fair price. Set your allergies and diet below and dishes are highlighted for you — green fits, red to avoid. Use “Avoid” to hide dishes with an allergen.'));
 
-  const cFilters = [{ id: '', name: 'All', flag: '🌏' }].concat(COUNTRIES.map((c) => ({ id: c.id, name: c.name, flag: c.flag })));
-  const cChips = h('div', { class: 'chips' }, cFilters.map((f) =>
-    h('button', { class: 'chip', 'aria-pressed': foodCountry === f.id ? 'true' : 'false', dataset: { c: f.id },
-      onclick: () => { foodCountry = f.id; cChips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.c === f.id ? 'true' : 'false')); renderList(); } },
-      `${f.flag} ${f.name}`)));
-  wrap.append(cChips);
-
-  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search dishes or ingredients…', value: foodQuery,
-    oninput: debounce((e) => { foodQuery = e.target.value; renderList(); }, 120) });
-  wrap.append(search);
-
-  const cats = [{ id: '', label: 'All', emoji: '✶' }].concat(FOOD_CATEGORIES);
-  const catChips = h('div', { class: 'chips' }, cats.map((g) =>
-    h('button', { class: 'chip', 'aria-pressed': foodCat === g.id ? 'true' : 'false', dataset: { g: g.id },
-      onclick: () => { foodCat = g.id; catChips.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', x.dataset.g === g.id ? 'true' : 'false')); renderList(); } },
-      `${g.emoji} ${g.label}`)));
-  wrap.append(catChips);
-
-  wrap.append(h('p', { class: 'muted', style: 'margin:10px 0 4px' }, 'Avoid (hides dishes that contain):'));
-  const avoidChips = h('div', { class: 'chips' }, FOOD_ALLERGENS.map((a) =>
-    h('button', { class: 'chip', 'aria-pressed': foodAvoid.has(a) ? 'true' : 'false',
-      onclick: (e) => { if (foodAvoid.has(a)) foodAvoid.delete(a); else foodAvoid.add(a); e.currentTarget.setAttribute('aria-pressed', foodAvoid.has(a) ? 'true' : 'false'); renderList(); } },
-      `🚫 ${a}`)));
-  wrap.append(avoidChips);
-
-  // Your dietary profile: highlight dishes that fit you + one tap to your allergy phrases.
-  const diet = store.profile.prefs.diet || [];
-  const profBox = h('div', { class: 'card diet-legend', style: 'margin:12px 0' });
-  if (diet.length) {
-    profBox.append(h('p', { style: 'margin:0 0 6px' }, [
-      h('strong', {}, '🍽 Highlighting for: '),
-      diet.map((id) => (DIET_LABEL[id] ? `${DIET_LABEL[id].emoji} ${DIET_LABEL[id].label}` : id)).join(', '),
-    ]));
-    profBox.append(h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, [
-      h('span', { class: 'food-flag ok' }, '✓'), ' green = nothing you avoid is listed · ',
-      h('span', { class: 'food-flag bad' }, '✕'), ' red = contains something you avoid. Guidance from listed allergens only — always confirm with the cook.',
-    ]));
-    profBox.append(h('div', { class: 'chips' }, [
-      h('button', { class: 'chip', 'aria-pressed': foodFitOnly ? 'true' : 'false',
-        onclick: (e) => { foodFitOnly = !foodFitOnly; e.currentTarget.setAttribute('aria-pressed', foodFitOnly ? 'true' : 'false'); renderList(); } }, '✓ Only dishes that fit me'),
-      h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit restrictions'),
-    ]));
-  } else {
-    profBox.append(h('p', { style: 'margin:0 0 8px' }, 'Tell the app your allergies and diet and it highlights dishes that fit — green for safe, red to avoid.'));
-    profBox.append(h('button', { class: 'btn ghost block', onclick: () => go('#settings') }, '➕ Set my allergies & diet'));
-  }
-  const foodLangCC = getCountry(foodCountry) ? foodCountry : (getActiveCountry() || 'th');
-  const foodLang = (getCountry(foodLangCC) && getCountry(foodLangCC).lang) || 'th';
-  profBox.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#phrasebook-${foodLang}`) }, '🗣 Show my allergy phrases to the cook'));
-  wrap.append(profBox);
-
-  // Vegetarian / vegan travellers get the verified veg kitchens up front (kosher has its own
-  // card just below); general eateries are never assumed to be veg.
-  const vegCard = dietEatCard(foodCountry, getLastFix(), { only: 'veg' });
-  if (vegCard) wrap.append(vegCard);
-
-  // Kosher: reliably kosher food in this region is served by Chabad houses (supervised).
-  // Anything advertised only as "kosher-style" is not certified — never suggest it.
-  if ((store.profile.prefs.diet || []).includes('kosher')) {
-    const fix = getLastFix();
-    const kv = nearestFirst(KOSHER, fix);
-    const kc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '✡️ Kosher food & Chabad houses')]);
-    kc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'In Thailand, Vietnam, Cambodia and Laos, reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified kosher — always confirm supervision with the venue.'));
-    kv.slice(0, 8).forEach((k) => {
-      const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: k.lat, lng: k.lng }) : null;
-      kc.append(h('div', { style: 'margin:6px 0' }, [
-        h('div', { class: 'row-between' }, [h('strong', {}, k.name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-        h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `${k.city} · ${k.offer}`),
-        h('div', { class: 'chips' }, [
-          h('a', { class: 'chip', href: mapsSearch(`${k.name} ${k.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
-          h('a', { class: 'chip', href: k.url, target: '_blank', rel: 'noopener' }, 'Official site ↗'),
-        ]),
-      ]));
-    });
-    // A pork-free phrase for the current country's language — helpful when eating
-    // outside a Chabad house. Keeping fully kosher still means the Chabad houses above;
-    // this only asks to leave pork out, so it is framed that way.
-    const pk = DIET_PHRASES['no-pork'];
-    const pkLang = pk.langs[foodLang];
-    const kLang = getLanguage(foodLang);
-    kc.append(h('p', { class: 'tiny muted', style: 'margin:10px 0 2px' }, 'Eating outside a Chabad house? Ask the cook to leave pork out:'));
-    if (pkLang && kLang) {
-      kc.append(h('div', { class: 'phrase' }, [
-        h('div', { class: 'grow' }, [
-          h('div', { class: 'en' }, pk.en),
-          h('div', { class: 'native', lang: kLang.locale }, pkLang.script),
-          h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), pkLang.roman]),
-        ]),
-        h('button', { class: 'speak', disabled: hasVoiceFor(kLang.locale) ? null : '', 'aria-label': `Speak ${pk.en}`, onclick: () => speak(pkLang.script, kLang.locale) }, '🔊'),
-      ]));
-    } else {
-      kc.append(h('p', { class: 'tiny' }, `“${pk.en}” — show this to the cook. A verified ${kLang ? kLang.label : 'local'} phrase is not offered here yet, so the Chabad houses above remain the reliable source of kosher food.`));
-    }
-    kc.append(sourcesNote(KOSHER_SOURCES, 'July 2026'));
-    wrap.append(kc);
-  }
-
-  // Halal & pork-free: a pork-free phrase in the current language + a live halal search.
-  // Halal-certified food is widespread here, especially near mosques and Muslim quarters.
-  const dietSet = store.profile.prefs.diet || [];
-  if (dietSet.includes('halal') || dietSet.includes('no-pork') || dietSet.includes('no-beef')) {
-    const hc = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '🕌 Halal & pork-free')]);
-    hc.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Halal-certified food is widely available in the region, especially near mosques and Muslim quarters. Look for a halal-certification logo and confirm with the cook.'));
-    hc.append(h('a', { class: 'btn ghost block', href: mapsSearch('halal restaurant near me'), target: '_blank', rel: 'noopener' }, 'Find halal food near me ↗'));
-    const hpk = DIET_PHRASES['no-pork'];
-    const hpkLang = hpk.langs[foodLang];
-    const hLang = getLanguage(foodLang);
-    hc.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 2px' }, 'Ask the cook to leave pork out:'));
-    if (hpkLang && hLang) {
-      hc.append(h('div', { class: 'phrase' }, [
-        h('div', { class: 'grow' }, [
-          h('div', { class: 'en' }, hpk.en),
-          h('div', { class: 'native', lang: hLang.locale }, hpkLang.script),
-          h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), hpkLang.roman]),
-        ]),
-        h('button', { class: 'speak', disabled: hasVoiceFor(hLang.locale) ? null : '', 'aria-label': `Speak ${hpk.en}`, onclick: () => speak(hpkLang.script, hLang.locale) }, '🔊'),
-      ]));
-    } else {
-      hc.append(h('p', { class: 'tiny' }, `“${hpk.en}” — show this to the cook (a verified ${hLang ? hLang.label : 'local'} phrase is coming soon).`));
-    }
-    hc.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#worship') }, 'Mosques & Muslim quarters — Places of worship'));
-    wrap.append(hc);
-  }
-
-  const listEl = h('div', {});
-  // Persistent visually-hidden status so screen readers hear the result count and safety
-  // summary when a filter, the search box, or an "Avoid" chip re-runs renderList (WCAG 4.1.3).
-  // It lives outside listEl (which is wiped each render) so its updates are announced, and it
-  // summarises rather than re-reading every card.
-  const listStatus = h('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
-  wrap.append(listStatus);
-  wrap.append(listEl);
-  function renderList() {
-    listEl.innerHTML = '';
-    let dishes = foodCountry
-      ? getFood(foodCountry).map((d) => { const c = getCountry(foodCountry); return { ...d, country: c.id, countryName: c.name, flag: c.flag }; })
-      : allFood();
-    const q = foodQuery.trim().toLowerCase();
-    if (q) dishes = dishes.filter((d) => d.name.toLowerCase().includes(q) || (d.roman || '').toLowerCase().includes(q)
-      || (d.localName || '').includes(foodQuery.trim()) || (d.ingredients || []).some((i) => i.toLowerCase().includes(q)));
-    if (foodCat) dishes = dishes.filter((d) => d.category === foodCat);
-    if (foodAvoid.size) dishes = dishes.filter((d) => !(d.allergens || []).some((a) => foodAvoid.has(a)));
-    // Dietary profile: optionally drop dishes that conflict, and float the fitting ones up.
-    // `evaluable` (not avoid.size) so belief-only profiles — halal, no-beef, pescatarian — also
-    // filter and sort even when no allergen is ticked.
-    const avoid = dietAvoidAllergens();
-    const evaluable = dietEvaluable(store.profile.prefs.diet || [], avoid);
-    if (foodFitOnly && evaluable) dishes = dishes.filter((d) => dishDietVerdict(d, avoid) !== 'bad');
-    if (evaluable) dishes = dishes.slice().sort((a, b) =>
-      (dishDietVerdict(a, avoid) === 'bad' ? 1 : 0) - (dishDietVerdict(b, avoid) === 'bad' ? 1 : 0));
-    if (!dishes.length) { listEl.append(h('p', { class: 'empty' }, 'No dishes match. Try clearing a filter.')); listStatus.textContent = 'No dishes match. Try clearing a filter.'; return; }
-    dishes.forEach((d) => listEl.append(foodCard(d)));
-    const bad = evaluable ? dishes.filter((d) => dishDietVerdict(d, avoid) === 'bad').length : 0;
-    listStatus.textContent = `${dishes.length} dish${dishes.length === 1 ? '' : 'es'}${bad ? `, ${bad} to avoid` : ''}`;
-  }
-  renderList();
-  mount(wrap, '#home');
-}
-
-function dishScreen(id) {
-  const d = getDish(id);
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar(d ? d.name : 'Dish', '#food'));
-  if (!d) { wrap.append(h('p', { class: 'empty' }, 'Not found.')); mount(wrap, '#home'); return; }
-  const cat = FOOD_CATEGORIES.find((c) => c.id === d.category);
-  const dc = getCountry(d.country);
-  const dLocale = (dc && getLanguage(dc.lang)) ? getLanguage(dc.lang).locale : '';
-  const tagRow = 'display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';
-  const spiceNote = dishSpiceCaution(d, store.profile.prefs);
-  const card = h('div', { class: 'card' }, [
-    h('div', { class: 'row-between' }, [
-      h('strong', {}, `${d.flag ? d.flag + ' ' : ''}${d.name}`),
-      cat ? h('span', { class: 'cat-tag' }, `${cat.emoji} ${cat.label}`) : null,
-    ]),
-    d.localName ? h('div', { class: 'native', lang: scriptLang(d.country) }, d.localName) : null,
-    d.roman ? h('div', { class: 'roman' }, [h('span', { class: 'lbl' }, 'say:'), d.roman]) : null,
-    (d.localName && canSay(dLocale)) ? h('button', { class: 'btn ghost', style: 'margin:4px 0', onclick: () => say(d.localName, dLocale) }, '🔊 Hear the name (show a local)') : null,
-    h('div', { class: 'muted', style: 'margin:6px 0' }, `${spiceLabel(d.spice)}${d.countryName ? ' · ' + d.countryName : ''}`),
-    spiceNote ? h('div', { class: 'food-spice', style: 'margin:0 0 6px' }, `🌶 ${spiceNote}`) : null,
-    d.description ? h('p', {}, d.description) : null,
-  ]);
-  card.append(photoBlock(d, d.name));
-  if (d.price && (d.price.low != null || d.price.high != null)) {
-    card.append(h('p', {}, [h('strong', {}, 'Typical price: '), priceLine(d.price.low, d.price.high, d.price.currency)]));
-  }
-  if (d.ingredients && d.ingredients.length) {
-    card.append(h('h3', {}, 'Ingredients'));
-    card.append(h('div', { style: tagRow }, d.ingredients.map((i) => h('span', { class: 'cat-tag' }, i))));
-  }
-  // Your dietary profile: an at-a-glance verdict for this dish (guidance, not a guarantee).
-  const dv = dishDietVerdict(d);
-  if (dv === 'bad') {
-    const flagged = dishDietReasons(d);
-    card.append(h('div', { class: 'diet-banner bad', role: 'status' }, flagged.length
-      ? `⚠️ Typically contains ${joinList(flagged)} — you flagged ${flagged.length > 1 ? 'these' : 'this'}. Recipes vary, so check the allergens below and confirm with the cook.`
-      : '✕ This lists something you avoid — check the allergens below and confirm with the cook.'));
-  } else if (dv === 'ok') {
-    // Belief flags the data cannot fully verify (halal/kosher slaughter status): if the dish
-    // contains meat, do not present the green state as an endorsement — qualify it.
-    const beliefSet = new Set(store.profile.prefs.diet || []);
-    const beliefMeat = (beliefSet.has('halal') || beliefSet.has('kosher')) && dishMeatHits(d).length;
-    card.append(h('div', { class: 'diet-banner ok', role: 'status' }, beliefMeat
-      ? '✓ No pork or alcohol is listed, but this dish contains meat — confirm it is prepared halal/kosher.'
-      : '✓ Nothing you avoid is listed for this dish. Recipes vary, so still confirm with the cook.'));
-  }
-  card.append(h('h3', {}, 'Allergens'));
-  if (d.allergens && d.allergens.length) {
-    card.append(h('div', { style: tagRow }, d.allergens.map((a) => h('span', { class: 'tier high' }, a))));
-  } else {
-    card.append(h('p', { class: 'muted' }, 'No common allergens typically — always confirm at the stall.'));
-  }
-  if (d.veg) { card.append(h('h3', {}, 'Vegetarian / vegan')); card.append(h('p', {}, d.veg)); }
-  if (d.whereToFind) { card.append(h('h3', {}, 'Where to find it')); card.append(h('p', {}, d.whereToFind)); }
-  if (d.sources && d.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${d.sources.join('; ')}`));
-  wrap.append(card);
-  wrap.append(idPinButton('dish', d.id));
-  wrap.append(h('a', { class: 'btn block', href: imageSearch(`${d.name} ${d.localName || ''} food`), target: '_blank', rel: 'noopener' }, 'See photos ↗'));
-  mount(wrap, '#home');
-  // Proactively announce the safety verdict through the persistent route announcer — a live
-  // region born inside this just-mounted subtree would not reliably speak. Sequenced after
-  // mount()'s own 60 ms heading write so it is not overwritten.
-  if (dv === 'bad' || dv === 'ok') {
-    const live = document.getElementById('route-announce');
-    if (live) {
-      const msg = dv === 'bad'
-        ? `Warning: ${d.name} typically contains ${joinList(dishDietReasons(d))} that you flagged. Check the allergens and confirm with the cook.`
-        : `${d.name}: nothing you avoid is listed. Still confirm with the cook.`;
-      setTimeout(() => { live.textContent = msg; }, 120);
-    }
-  }
-}
 
 // ---- MARKET PRODUCE GUIDE (fruit / vegetable / herb) ------------------------
 
@@ -6435,10 +4933,8 @@ import { wxVizCard, seedWeatherKey, wxDiffDays } from './weather-ui.js';
 // ---- TRANSPORT SCHEDULES (curated reference, ships with the app) -------------
 
 // ---- DAY SUGGESTIONS (weather + nearby highly-rated) ------------------------
-let dayUserLoc = null;   // GPS captured this session, for "near me" sorting
-let todoFamily = 'all';  // active category filter on the Things-to-do screen
-let todoPlan = 'now';    // "plan ahead" scenario for the Things-to-do ranking
-function moodLine(m) {
+// dayUserLoc / todoFamily / todoPlan moved to js/screens/today.js with daySuggestScreen.
+export function moodLine(m) {
   return m === 'wet' ? 'a good day for indoor culture, markets and cafes.'
     : m === 'hot' ? 'do outdoor sights early, then escape the midday heat indoors.'
     : 'great for outdoor sights and nature.';
@@ -6464,14 +4960,14 @@ const TODO_RAIN_BAD = ['beach', 'hike', 'waterfall', 'viewpoint', 'park', 'natur
 const TODO_NIGHT = ['nightlife', 'bars', 'clubs', 'cocktail', 'rooftop', 'streetfood'];
 const TODO_CLOSED_AT_NIGHT = ['temple', 'museum', 'nature', 'hike', 'waterfall', 'park', 'viewpoint', 'wildlife', 'cave', 'garden'];
 const TODO_DOABLE = ['culture', 'temple', 'museum', 'spectacle', 'heritage', 'nature', 'waterfall', 'hike', 'viewpoint', 'park', 'wildlife', 'hotspring', 'cave', 'garden', 'sunset', 'riverside', 'beach', 'island', 'market', 'shopping', 'streetfood', 'food', 'seafood', 'cafe', 'nightlife', 'bars', 'clubs', 'cocktail', 'rooftop', 'wellness', 'spa', 'dive', 'snorkel'];
-function todoDoable(p) {
+export function todoDoable(p) {
   const c = p.categories || [];
   if (p.stayType) return false;
   if (c.includes('rental') || c.includes('transport')) return false;
   return c.some((x) => TODO_DOABLE.includes(x));
 }
 function todoHasCat(p, list) { return (p.categories || []).some((c) => list.includes(c)); }
-function todoContext(rec, spot) {
+export function todoContext(rec, spot) {
   const now = new Date();
   const hr = now.getHours();
   // hr < 5 must read as 'night', not fall through to the general "hr < 11 → morning" bucket —
@@ -6490,7 +4986,7 @@ function todoContext(rec, spot) {
   return { hr, daypart, dow, weekend: dow === 0 || dow === 6, weather, uv, aqi };
 }
 // Score a place for RIGHT NOW and collect human reasons. Higher = better fit.
-function todoScore(p, ctx, prefs, anchor) {
+export function todoScore(p, ctx, prefs, anchor) {
   const cats = p.categories || [];
   const er = effectiveRating(p.id, p.rating || 0);
   let s = er || 3;
@@ -6557,7 +5053,7 @@ export function rnThumb(p) {
 }
 // A "thing to do" result card: a recognition thumbnail, coloured category tags, rating,
 // distance and "why now" reason chips. Tapping opens the full detail page (with a photo).
-function todoCard(x, maxReasons) {
+export function todoCard(x, maxReasons) {
   const { p, er, dist, reasons, cats } = x;
   const rc = [];
   // Status/fit first (colour-coded): closed-now and "may not suit you" lead the chip row so
@@ -6576,12 +5072,12 @@ function todoCard(x, maxReasons) {
         h('h2', {}, p.name),
         er ? h('span', { class: 'stars-static', style: `color:${ratingColor(er)}` }, starsStr(er)) : null,
       ]),
-      h('div', { class: 'row-between', style: 'margin:2px 0' }, [
+      h('div', { class: 'row-between', style: 'margin: var(--sp-0h) 0' }, [
         h('div', { class: 'cats' }, cats.slice(0, 3).map((c) => catTag(c))),
         (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
       ]),
       rc.length ? h('div', { class: 'todo-reasons' }, rc) : null,
-      h('p', { class: 'muted small', style: 'margin:2px 0 0' }, [p.city, todoDistLabel(dist)].filter(Boolean).join(' · ')),
+      h('p', { class: 'muted small', style: 'margin: var(--sp-0h) 0 0' }, [p.city, todoDistLabel(dist)].filter(Boolean).join(' · ')),
     ]),
     thumb,
   ]);
@@ -6596,191 +5092,6 @@ function todoDistLabel(dist) {
   return lbl ? `${km} km · ${lbl}` : `${km} km away`;
 }
 
-function daySuggestScreen(country) {
-  const explicit = country && getCountry(country) ? country : null;
-  if (explicit) setActiveCountry(explicit);
-  const fs = focusSpot(explicit || undefined);
-  const spot = fs.spot;
-  const id = getCountry(spot.country) ? spot.country : (getCountry(getActiveCountry()) ? getActiveCountry() : 'th');
-  setActiveCountry(id);
-  todoFamily = 'all';   // fresh filter each visit, so a stale category never hides a new city's picks
-  todoPlan = 'now';     // always open on "now"; planning ahead is an explicit, per-visit choice
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Things to do', `#country-${id}`));
-
-  // A compact header (scope + conditions + filters) sits above the list, but the list itself
-  // starts near the top so the traveller never scrolls past chrome to reach what they can do now.
-  const header = h('div', { class: 'todo-header' });
-  const listWrap = h('div', {});
-  wrap.append(header, listWrap);
-
-  function paint(rec) {
-    header.innerHTML = ''; listWrap.innerHTML = '';
-    const today = rec && rec.daily && rec.daily[0];
-    const ctx = todoContext(rec, spot);
-    const prefs = store.profile.prefs;
-    const DAYPART_LBL = { morning: 'Morning', midday: 'Midday', afternoon: 'Afternoon', evening: 'Evening', night: 'Tonight' };
-
-    // --- Scope row: where the picks are for, plus a one-tap location control. ---
-    const gps = fs.source === 'gps';
-    header.append(h('div', { class: 'todo-scope' }, [
-      h('span', { class: 'todo-scope-city' }, `📍 ${gps ? 'Near ' : ''}${spot.city}`),
-      h('button', { class: 'chip', onclick: async (e) => {
-        const b = e.currentTarget; b.textContent = 'Locating…'; b.disabled = true;
-        try { await refreshLocation(); go('#today'); return; } catch { /* denied/offline */ }
-        b.textContent = 'Location off'; b.disabled = false;
-      } }, gps ? 'Update' : '📍 Use my location'),
-    ]));
-
-    // --- Conditions now: one glanceable chip row (weather · time · UV · air). ---
-    const cond = [];
-    if (today) {
-      const emo = wmo(today.code)[1];
-      cond.push(`${emo} ${fmtTemp(today.tmin)}–${fmtTemp(today.tmax)}`);
-      if (today.rainProb != null) cond.push(`☔ ${today.rainProb}%`);
-    }
-    cond.push(`🕑 ${DAYPART_LBL[ctx.daypart]}`);
-    if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) cond.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
-    if (ctx.aqi != null) { const ab = aqiBand(ctx.aqi); if (ab) cond.push(`AQI ${Math.round(ctx.aqi)}`); }
-    header.append(h('div', { class: 'todo-cond' }, cond.map((b) => h('span', { class: 'todo-cond-chip' }, b))));
-    header.append(h('p', { class: 'muted small', style: 'margin:4px 0 0' }, today ? moodLine(ctx.weather) : 'Connect once for weather-aware picks; meanwhile these are ranked by rating and distance.'));
-    // Always show WHO these picks are ranked for — not just a prompt when unset. One line,
-    // doubling as the edit control, so the traveller can always see and correct the app's
-    // assumption about them from the surface that assumption is shaping.
-    header.append(travellingAsLine());
-
-    // --- Rank the doable pool for RIGHT NOW, then keep only what is actually reachable. ---
-    const anchor = dayUserLoc || ((gps && getLastFix()) ? getLastFix() : { lat: spot.lat, lng: spot.lng });
-    const doable = allPlaces({ country: id }).filter(todoDoable);
-    // "Plan ahead" re-ranks the SAME reachable places for a hypothetical time or weather,
-    // without touching the live conditions shown above. Reachability (distance) is unchanged;
-    // only the score and the "why now" reasons shift, so the tiers stay stable.
-    const ctxForPlan = (base, plan) =>
-      plan === 'heat' ? { ...base, weather: 'hot' }
-        : plan === 'rain' ? { ...base, weather: 'wet' }
-          : plan === 'morning' ? { ...base, daypart: 'morning' }
-            : plan === 'evening' ? { ...base, daypart: 'evening' }
-              : plan === 'night' ? { ...base, daypart: 'night' }
-                : base;
-    let scored = doable.map((p) => todoScore(p, ctxForPlan(ctx, todoPlan), prefs, anchor));
-    const rescore = () => { scored = doable.map((p) => todoScore(p, ctxForPlan(ctx, todoPlan), prefs, anchor)); };
-    const sameCity = (x) => citySlug(x.p.city || '') === citySlug(spot.city || '');
-    // In scope only if reachability is trustworthy, tiered by estimated DRIVE time: walkable,
-    // within about an hour's drive ("near"), or up to a ~3-hour day trip ("trip"). When a place
-    // has no coordinates we fall back to same-city as "near". Anything further is hidden.
-    const tierOf = (x) => {
-      if (x.dist != null) return x.dist <= 2.5 ? 'walk' : withinNear(x.dist) ? 'near' : withinDayTrip(x.dist) ? 'trip' : null;
-      return sameCity(x) ? 'near' : null;
-    };
-    const inScope = scored.filter((x) => tierOf(x));
-
-    // --- Category filter chips (only the families that exist nearby). ---
-    const famsPresent = CATEGORY_FAMILIES.filter((f) => !['stay', 'transport', 'practical', 'other'].includes(f.key))
-      .filter((f) => inScope.some((x) => x.cats.some((c) => catFamily(c) === f.key)));
-    const chipRow = h('div', { class: 'chips todo-filter' });
-    const mkChip = (key, label) => h('button', { class: 'chip', dataset: { f: key }, 'aria-pressed': todoFamily === key ? 'true' : 'false', onclick: () => { todoFamily = key; drawList(); } }, label);
-    chipRow.append(mkChip('all', 'All'));
-    famsPresent.forEach((f) => chipRow.append(mkChip(f.key, [swatch(f.color), ` ${f.emoji} ${f.label}`])));
-    header.append(chipRow);
-
-    // --- Plan ahead (progressive disclosure): re-rank for a different time or weather. ---
-    const PLANS = [['now', 'Now'], ['heat', '☀️ Beat the heat'], ['rain', '🌧 If it rains'], ['morning', '🌅 Morning'], ['evening', '🌇 Evening'], ['night', '🌙 Tonight']];
-    const PLAN_NOTE = { heat: 'to beat the midday heat', rain: 'for if it rains', morning: 'for the morning', evening: 'for the evening', night: 'for tonight' };
-    const planNote = h('p', { class: 'muted small', style: 'margin:6px 0 0' });
-    const updatePlanNote = () => { planNote.textContent = todoPlan === 'now' ? '' : `Re-ranked ${PLAN_NOTE[todoPlan]}. The live conditions above are unchanged.`; };
-    const planChips = h('div', { class: 'chips todo-plan' }, PLANS.map(([k, lbl]) =>
-      h('button', {
-        class: 'chip', dataset: { p: k }, 'aria-pressed': todoPlan === k ? 'true' : 'false',
-        onclick: () => {
-          todoPlan = k;
-          planChips.querySelectorAll('.chip').forEach((el) => el.setAttribute('aria-pressed', el.dataset.p === k ? 'true' : 'false'));
-          rescore(); drawList(); updatePlanNote();
-        },
-      }, lbl)));
-    updatePlanNote();
-    header.append(h('details', { class: 'todo-plan-d', open: todoPlan !== 'now' ? '' : null }, [
-      h('summary', {}, '🗓 Plan for a different time or weather'),
-      planChips, planNote,
-    ]));
-
-    const listBody = h('div', {});
-    listWrap.append(listBody);
-    const TIERS = [
-      { key: 'walk', label: '🚶 Right here' },
-      { key: 'near', label: '📍 Nearby' },
-      { key: 'trip', label: '🚌 Worth a day trip' },
-    ];
-    function renderTier(label, items) {
-      listBody.append(h('h2', { class: 'home-section todo-tier' }, `${label} · ${items.length}`));
-      const CAP = 8;
-      items.slice(0, CAP).forEach((x) => listBody.append(todoCard(x, 2)));
-      if (items.length > CAP) {
-        const more = h('div', {});
-        const btn = h('button', { class: 'btn ghost block', onclick: () => { items.slice(CAP).forEach((x) => more.append(todoCard(x, 2))); btn.remove(); } }, `Show all ${items.length}`);
-        listBody.append(btn, more);
-      }
-    }
-    function drawList() {
-      chipRow.querySelectorAll('.chip').forEach((el) => el.setAttribute('aria-pressed', el.dataset.f === todoFamily ? 'true' : 'false'));
-      listBody.innerHTML = '';
-      let pool = scored.filter((x) => tierOf(x));
-      if (todoFamily !== 'all') pool = pool.filter((x) => x.cats.some((c) => catFamily(c) === todoFamily));
-      // Annotate each pick with fit + open status, then DROP known-closed places outright when
-      // planning for NOW — a shut restaurant is a dead end, not a suggestion, so it no longer
-      // just sinks to the bottom tagged; it is hidden, with a one-line note so nothing feels
-      // silently removed. "Closed now" only applies to the NOW plan — a place shut this minute
-      // is irrelevant when planning for tonight or tomorrow, and unknown hours are never treated
-      // as closed (we only ever act on what the data actually says).
-      const nowPlan = todoPlan === 'now';
-      pool.forEach((x) => { x._fit = placeFitReason(x.p, prefs); x._closed = nowPlan && openStateNow(x.p) === false; });
-      const closedNow = nowPlan ? pool.filter((x) => x._closed).length : 0;
-      if (nowPlan) pool = pool.filter((x) => !x._closed);
-      // Good fits lead; poor fits sink (but stay, tagged) — then score.
-      const fitKey = (x) => (x._fit ? 1 : 0);
-      pool.sort((a, b) => fitKey(a) - fitKey(b) || b.s - a.s);
-      let rendered = 0;
-      TIERS.forEach((t) => {
-        const items = pool.filter((x) => tierOf(x) === t.key);
-        if (items.length) { renderTier(t.label, items); rendered += items.length; }
-      });
-      if (closedNow) {
-        listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' },
-          `${closedNow} more ${closedNow === 1 ? 'is' : 'are'} closed right now, so ${closedNow === 1 ? "it's" : "they're"} hidden — see “Plan for a different time” above.`));
-      }
-      if (!rendered) {
-        // Nothing trustworthy nearby: fall back to the nearest we can measure — but still only
-        // within about an hour's drive, so we never pad a "near you" list with a 3-hour trip.
-        const far = scored.filter((x) => withinNear(x.dist) && (todoFamily === 'all' || x.cats.some((c) => catFamily(c) === todoFamily)))
-          .sort((a, b) => a.dist - b.dist).slice(0, 12);
-        if (far.length) {
-          listBody.append(h('p', { class: 'muted small', style: 'margin:8px 0 0' }, `Nothing mapped close to ${spot.city} yet — here are the nearest.`));
-          renderTier('Nearest to you', far);
-        } else {
-          listBody.append(h('p', { class: 'empty' }, `Nothing to do mapped within about an hour’s drive of ${spot.city} yet. Open a nearby city, or browse all places.`));
-        }
-      }
-    }
-    drawList();
-
-    // Festivals have their own screen; surface only a single quiet link when any fall in the trip window.
-    const fests = festivalsInWindow().filter((e) => e.country === id);
-    if (fests.length) listWrap.append(h('button', { class: 'linklike', style: 'display:block;margin:14px 0 0', onclick: () => go('#events') }, `🎉 ${fests.length} festival${fests.length === 1 ? '' : 's'} during your trip →`));
-    // Home's "Right now" card used to end in "See more near me →" straight to #nearby. That
-    // button merged into one onward action pointing here, so this screen now carries the
-    // distance-sorted list itself — the destination moved one tap, it was not removed.
-    // This list is ranked by what suits the time of day and weather; #nearby ranks purely by
-    // distance, which is a different question and worth keeping reachable.
-    listWrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#nearby') },
-      '📍 What’s nearest to me, by distance →'));
-  }
-
-  let lastRec = getCachedWeather(spotKey(spot));
-  paint(lastRec);
-  if (online()) {
-    maybeRefreshWeather(spot).then((r) => { if (r && (location.hash || '').startsWith('#today')) { lastRec = r; paint(r); } });
-  }
-  mount(wrap, '#home');
-}
 
 // ---- FESTIVALS & EVENTS -----------------------------------------------------
 // Local calendar date as YYYY-MM-DD via the local Y/M/D getters — NEVER via toISOString(),
@@ -6819,7 +5130,7 @@ function tripWindow() {
   const t = todayISO();
   return { start: t, end: addDaysISO(t, 90) };
 }
-function festivalsInWindow() {
+export function festivalsInWindow() {
   const { start, end } = tripWindow();
   return allEvents().filter((e) => e.end >= start && e.start <= end)
     .sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
@@ -6845,8 +5156,8 @@ function eventCard(e) {
       h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
     ]),
     e.localName ? h('div', { class: 'native', lang: scriptLang(e.country) }, e.localName) : null,
-    h('div', { class: 'muted', style: 'margin:2px 0' }, `${evRange(e)}${e.lunar ? ' · date varies yearly' : ''} · ${(e.regions && e.regions[0]) || e.countryName}`),
-    h('p', { style: 'margin:8px 0 6px' }, e.blurb),
+    h('div', { class: 'muted', style: 'margin: var(--sp-0h) 0' }, `${evRange(e)}${e.lunar ? ' · date varies yearly' : ''} · ${(e.regions && e.regions[0]) || e.countryName}`),
+    h('p', { style: 'margin: var(--sp-2) 0 var(--sp-1h)' }, e.blurb),
     h('div', { class: 'row-between' }, [
       h('button', { class: 'btn ghost', onclick: () => go(`#event-${e.id}`) }, 'Details'),
       addBtn,
@@ -6929,14 +5240,14 @@ function eventScreen(id) {
       h('span', { class: 'cat-tag' }, eventTypeLabel(e.type)),
     ]),
     e.localName ? h('div', { class: 'native', lang: scriptLang(e.country) }, e.localName) : null,
-    h('div', { class: 'muted', style: 'margin:4px 0' }, `${evRange(e)} · ${e.countryName}`),
+    h('div', { class: 'muted', style: 'margin: var(--sp-1) 0' }, `${evRange(e)} · ${e.countryName}`),
     e.lunar ? h('div', { class: 'muted' }, '↻ Movable date — shifts each year.') : null,
     h('p', {}, e.blurb),
   ]);
   card.append(h('h3', {}, 'When'), h('p', {}, e.rule));
   card.append(h('h3', {}, 'Where'), h('p', {}, (e.regions || []).join(' · ')));
   card.append(h('h3', {}, 'What it means for you'), h('p', {}, e.impact));
-  if (e.sources && e.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top:10px' }, `Sources: ${e.sources.join('; ')}`));
+  if (e.sources && e.sources.length) card.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, `Sources: ${e.sources.join('; ')}`));
   wrap.append(card);
   const addBtn = h('button', { class: 'btn block' }, 'Add to my calendar');
   addBtn.addEventListener('click', () => addEventToCalendar(e, addBtn));
@@ -7037,7 +5348,7 @@ async function playCall(s, btn, statusEl) {
   }
 }
 function callControl(s, label) {
-  const status = h('div', { class: 'muted', style: 'font-size:13px;margin-top:4px' });
+  const status = h('div', { class: 'muted', style: 'font-size:13px;margin-top: var(--sp-1)' });
   const btn = h('button', { class: 'btn ghost', onclick: () => playCall(s, btn, status) }, label || '🔊 Hear its call');
   return h('div', {}, [btn, status]);
 }
@@ -7090,7 +5401,7 @@ function soundsScreen() {
     results.forEach((s) => {
       const status = h('div', { class: 'muted', style: 'font-size:13px' });
       const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
-      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px' }, [
+      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap: var(--sp-3)' }, [
         recogThumb(s, s.emoji || '🔎'),
         h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
           h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
@@ -7126,10 +5437,10 @@ function natureScreen() {
   // top of this file) instead of freezing at the empty pre-load default (just "All").
   const chipsWrap = h('div', {});
   wrap.append(chipsWrap);
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin:6px 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
+  wrap.append(h('button', { class: 'btn ghost block', style: 'margin: var(--sp-1h) 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
 
   wrap.append(h('div', { class: 'card' }, [
-    h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Have a photo? Identify it online (needs internet):'),
+    h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Have a photo? Identify it online (needs internet):'),
     h('div', { class: 'row-between' }, [
       h('a', { class: 'btn ghost', href: 'https://lens.google.com/', target: '_blank', rel: 'noopener' }, 'Google Lens ↗'),
       h('a', { class: 'btn ghost', href: 'https://www.inaturalist.org/observations/identify', target: '_blank', rel: 'noopener' }, 'iNaturalist ↗'),
@@ -7235,7 +5546,7 @@ function speciesScreen(id) {
   const sLangs = [['th', '🇹🇭', 'th-TH'], ['vi', '🇻🇳', 'vi-VN'], ['km', '🇰🇭', 'km-KH'], ['lo', '🇱🇦', 'lo-LA']];
   if (s.names && sLangs.some(([k]) => s.names[k])) {
     card.append(h('h3', {}, 'Local names (tap 🔊 to hear)'));
-    card.append(h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:4px 0' },
+    card.append(h('div', { style: 'display:flex;flex-wrap:wrap;gap: var(--sp-1h);margin: var(--sp-1) 0' },
       sLangs.filter(([k]) => s.names[k]).map(([k, flag, loc]) => (canSay(loc)
         ? h('button', { class: 'cat-tag', style: 'cursor:pointer;border:none', onclick: () => say(s.names[k], loc) }, `${flag} ${s.names[k]} 🔊`)
         : h('span', { class: 'cat-tag' }, `${flag} ${s.names[k]}`)))));
@@ -7301,7 +5612,7 @@ function idSavedRow(type, spec, o, groupKeys) {
     onchange: (e) => { idSetNote(key, e.target.value); } });
   const panel = h('div', { class: 'id-edit-panel' }, [
     h('div', { class: 'id-edit-label' }, 'Categories / tags'),
-    tagChips.length ? h('div', { class: 'id-edit-tags' }, tagChips) : h('div', { class: 'muted', style: 'font-size:13px;margin:2px 0' }, 'No tags yet — add one to file this into a category.'),
+    tagChips.length ? h('div', { class: 'id-edit-tags' }, tagChips) : h('div', { class: 'muted', style: 'font-size:13px;margin: var(--sp-0h) 0' }, 'No tags yet — add one to file this into a category.'),
     h('div', { class: 'id-tag-add' }, [tagInput, addBtn]),
     h('div', { class: 'id-edit-label' }, 'Note'),
     noteInput,
@@ -7323,7 +5634,7 @@ function myIdentifierScreen() {
   if (!list.length) {
     wrap.append(h('div', { class: 'card' }, [
       h('strong', {}, '🔎 Your personal identifier'),
-      h('p', { class: 'muted', style: 'margin:6px 0 10px' },
+      h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-3)' },
         'Save any dish, fruit, or animal you identify and it collects here — offline, on your device. Tap ☆ on any item in the identify tools, or ★ Save on its page. Nothing saved yet — start with a tool below.'),
       h('div', { class: 'grid' }, exploreTiles.map(sectionTile)),
     ]));
@@ -7350,7 +5661,7 @@ function myIdentifierScreen() {
         .filter(Boolean);
       if (!items.length) return;
       const groupKeys = items.map((o) => idPinKey(type, o.id));
-      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [
+      const card = h('div', { class: 'card', style: 'margin-bottom: var(--sp-3)' }, [
         h('h3', {}, `${spec.emoji} ${spec.label} · ${items.length}`),
       ]);
       items.forEach((o) => card.append(idSavedRow(type, spec, o, groupKeys)));
@@ -7360,7 +5671,7 @@ function myIdentifierScreen() {
     const cats = idAllTags();
     if (!cats.length) {
       wrap.append(h('div', { class: 'card' }, [
-        h('p', { class: 'muted', style: 'margin:0' }, 'No categories yet. Switch to “By type”, tap ✎ on any item, and add a tag — your categories appear here.'),
+        h('p', { class: 'muted', style: 'margin: 0' }, 'No categories yet. Switch to “By type”, tap ✎ on any item, and add a tag — your categories appear here.'),
       ]));
     }
     const resolve = (k) => { const type = k.slice(0, k.indexOf(':')); const spec = ID_TYPES[type]; const o = spec && spec.get(k.slice(type.length + 1)); return o ? { type, spec, o, key: k } : null; };
@@ -7372,7 +5683,7 @@ function myIdentifierScreen() {
       if (!resolved.length) return;
       const groupKeys = resolved.map((r) => r.key);
       const header = tag ? `🏷 ${tag} · ${resolved.length}` : `• Untagged · ${resolved.length}`;
-      const card = h('div', { class: 'card', style: 'margin-bottom:10px' }, [h('h3', {}, header)]);
+      const card = h('div', { class: 'card', style: 'margin-bottom: var(--sp-3)' }, [h('h3', {}, header)]);
       resolved.forEach((r) => card.append(idSavedRow(r.type, r.spec, r.o, groupKeys)));
       wrap.append(card);
     });
@@ -7448,14 +5759,14 @@ import {
 
 
 // ---- GLOBAL SEARCH (find anything offline) ----------------------------------
-let searchQuery = '';
+// searchQuery moved to js/screens/search.js with searchScreen.
 // A handful of useful example searches for the empty state — each reliably hits a real
 // index (place names/blurbs, phrases and price labels), so a first-time user learns what
 // Search covers by tapping rather than guessing.
-const SEARCH_EXAMPLES = ['Market', 'Temple', 'Waterfall', 'Beach', 'Coffee', 'Massage', 'Hello', 'Thank you'];
+export const SEARCH_EXAMPLES = ['Market', 'Temple', 'Waterfall', 'Beach', 'Coffee', 'Massage', 'Hello', 'Thank you'];
 // Remember a committed search term (the user acted on a result). Most-recent first,
 // de-duplicated case-insensitively, capped at five. Self-defaulting pref, no store bump.
-function rememberSearch(q) {
+export function rememberSearch(q) {
   q = (q || '').trim();
   if (q.length < 2) return;
   const prefs = store.profile.prefs;
@@ -7465,128 +5776,6 @@ function rememberSearch(q) {
   save();
 }
 
-function searchScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Search', '#home'));
-  const input = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', autofocus: '', value: searchQuery,
-    placeholder: 'Find places, phrases, wildlife, prices…',
-    oninput: debounce((e) => { searchQuery = e.target.value; renderResults(); }, 150) });
-  wrap.append(input);
-  // Set the query from a tapped chip (recent or example) and refresh, keeping the box in sync.
-  const setQuery = (q) => { searchQuery = q; input.value = q; renderResults(); input.focus(); };
-
-  // Category filter for places. Picking one also lets you browse the nearest places of
-  // that kind with no query typed (a "nearest food / nearest stay" tool when GPS is on).
-  let cat = 'all';
-  const CATS = [['all', 'All'], ['food', '🍜 Food'], ['stay', '🛏 Stay'], ['culture', '🏛 Culture'], ['nature', '🌿 Nature'], ['nightlife', '🌃 Nightlife']];
-  const catRow = h('div', { class: 'chips', style: 'margin:6px 0' }, CATS.map(([id, lbl]) =>
-    h('button', { class: 'chip', 'aria-pressed': id === 'all' ? 'true' : 'false', dataset: { c: id },
-      onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); renderResults(); } }, lbl)));
-  wrap.append(catRow);
-
-  const out = h('div', {});
-  wrap.append(out);
-
-  function section(title, nodes) {
-    if (!nodes.length) return;
-    out.append(h('h2', { class: 'cat-title' }, `${title} (${nodes.length})`));
-    nodes.slice(0, 12).forEach((n) => out.append(n));
-    if (nodes.length > 12) out.append(h('p', { class: 'muted' }, `…and ${nodes.length - 12} more — refine your search`));
-  }
-  const link = (label, hash, extra) => h('button', { class: 'btn ghost block srch', onclick: () => { rememberSearch(searchQuery); if (extra) extra(); go(hash); } }, label);
-
-  function renderResults() {
-    out.innerHTML = '';
-    const q = searchQuery.trim().toLowerCase();
-    const fix = getLastFix();
-    // Features first. Search covered places, wildlife, phrases, fair prices and countries —
-    // everything EXCEPT the app's own screens, so typing "visa" or "budget" returned nothing
-    // and the only way to a feature was to know where it lived. Now that the long tail sits
-    // behind eight hubs (js/nav-groups.js), search is the fast path for anyone who remembers
-    // a name instead of a section, so this leads: it is the cheapest and most certain match.
-    // Matched on the feature's own name, its description and its section's name, and each hit
-    // says which section owns it, so a search also teaches where the thing lives.
-    if (q.length >= 2) {
-      const cc0 = getActiveCountry();
-      const phase0 = store.profile.prefs.phase || inferPhase();
-      const live = new Set(visibleGroups(phase0).flatMap((g) => g.items.map((it) => it.hash)));
-      const feats = navItems().filter((it) => live.has(it.hash)
-        && `${itemLabel(it, whoName())} ${it.label} ${it.blurb || ''} ${it.groupTitle}`.toLowerCase().includes(q));
-      // Searchable under BOTH names: a traveller called Sam finds "Sam’s dictionary" by
-      // typing their own name and still finds it by typing "your dictionary".
-      section('Features', feats.map((it) => link(`${it.ic} ${itemLabel(it, whoName())} · ${it.groupTitle}`, resolveHash(it, cc0))));
-    }
-    // Places: filter by category and/or text; when a location is known, order by distance.
-    let places = allPlaces();
-    if (cat !== 'all') places = places.filter((p) => placeBucket(p) === cat);
-    if (q.length >= 2) places = places.filter((p) => `${p.name} ${p.blurb || ''} ${p.city || ''}`.toLowerCase().includes(q));
-    if (q.length >= 2 || cat !== 'all') {
-      if (fix) places = places.slice().sort((a, b) => (a.coords ? haversineKm(fix, a.coords) : Infinity) - (b.coords ? haversineKm(fix, b.coords) : Infinity));
-      const catLbl = (CATS.find((x) => x[0] === cat) || [])[1] || 'Places';
-      const title = cat === 'all' ? 'Places' : `${catLbl}${fix ? ' near you' : ''}`;
-      // Place hits get a recognition thumbnail (photo when one exists, family emoji otherwise)
-      // so a search reads like a guide, not a text index. Other sections stay as text links.
-      const placeRow = (p) => {
-        const dist = (fix && p.coords) ? ` · ${fmtDistance(haversineKm(fix, p.coords))}` : '';
-        return h('button', { class: 'btn ghost block srch srch-place', onclick: () => { rememberSearch(searchQuery); go(`#place-${p.id}`); } }, [
-          recogThumb(p, (FAMILY_META[placeFamily(p)] || FAMILY_META.other).emoji),
-          h('span', { class: 'srch-place-text' }, [
-            h('span', { class: 'srch-place-name' }, p.name),
-            h('span', { class: 'srch-place-sub muted' }, `${p.city || ''}${dist}`),
-          ]),
-        ]);
-      };
-      section(title, places.map(placeRow));
-    }
-    // The wider indexes only apply to a text query and only when not scoped to a category.
-    if (q.length >= 2 && cat === 'all') {
-      section('Wildlife & plants', allSpecies({ q }).map((s) => link(`${s.emoji || '🔎'} ${s.commonName}`, `#species-${s.id}`)));
-      const phr = [];
-      for (const b of Object.values(LANGUAGES)) for (const cate of b.categories) for (const p of cate.phrases) {
-        if (`${p.en} ${p.roman || ''} ${p.script || ''}`.toLowerCase().includes(q)) phr.push(link(`💬 ${b.label}: ${p.en} — ${p.script}`, `#phrasebook-${b.lang}`));
-      }
-      section('Phrases', phr);
-      const pr = [];
-      for (const c of COUNTRIES) if (c.prices) for (const it of c.prices.items) {
-        if (it.label.toLowerCase().includes(q)) pr.push(link(`💵 ${c.name}: ${it.label}`, `#prices-${c.id}`));
-      }
-      section('Fair prices', pr);
-      section('Countries', COUNTRIES.filter((c) => c.name.toLowerCase().includes(q))
-        .map((c) => link(`${c.flag} ${c.name}`, `#country-${c.id}`, () => { setActiveCountry(c.id); })));
-    }
-    if (!out.children.length) {
-      if (q.length < 2 && cat === 'all') {
-        // Zero-state launchpad: recent searches (if any) then example queries, so the
-        // screen teaches what Search covers instead of showing a bare instruction line.
-        const prefs = store.profile.prefs;
-        const recent = (Array.isArray(prefs.recentSearches) ? prefs.recentSearches : []).filter((s) => s && s.trim());
-        if (recent.length) {
-          out.append(h('h2', { class: 'cat-title' }, 'Recent'));
-          out.append(h('div', { class: 'chips search-launch' }, [
-            ...recent.map((s) => h('button', { class: 'chip', onclick: () => setQuery(s) }, `🕘 ${s}`)),
-            h('button', { class: 'chip ghost', 'aria-label': 'Clear recent searches',
-              onclick: () => { prefs.recentSearches = []; save(); renderResults(); } }, 'Clear'),
-          ]));
-        }
-        out.append(h('h2', { class: 'cat-title' }, 'Try searching for'));
-        out.append(h('div', { class: 'chips search-launch' },
-          SEARCH_EXAMPLES.map((s) => h('button', { class: 'chip', onclick: () => setQuery(s) }, s))));
-        out.append(h('p', { class: 'muted tiny', style: 'margin:8px 2px 0' }, 'Or type any word — places, phrases, wildlife and prices are all searchable. Pick a category above to browse the nearest places to you.'));
-      } else {
-        out.append(h('p', { class: 'muted' }, 'Nothing found. Try another word or category.'));
-      }
-    }
-  }
-  renderResults();
-  // Wildlife results depend on nature.js — kick off its load as soon as Search opens
-  // (see loadNature() near the top of this file) rather than waiting for a keystroke, and
-  // refresh just the results (never the input above, so an in-progress query is never
-  // interrupted) once it resolves. Until then, section() already omits an empty "Wildlife
-  // & plants" heading entirely — a matching-text query simply surfaces those results a
-  // little later rather than showing anything misleading in the meantime.
-  if (!isNatureLoaded()) { loadNature().then(renderResults, renderResults); }
-  mount(wrap, '#home');
-}
 
 // ---- SAFETY, MEDICAL, KOSHER & WORSHIP DATA --------------------------------
 // Curated and self-hosted so every card renders fully offline. External links
@@ -7596,7 +5785,7 @@ function searchScreen() {
 // venue live) are the source of truth. City-centre coordinates drive "nearest
 // first"; they are for ordering and a map query, not a claim of a precise door.
 export function mapsSearch(q) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`; }
-function nearestFirst(list, fix) {
+export function nearestFirst(list, fix) {
   if (!fix || fix.lat == null) return list.slice();
   return list.slice().sort((a, b) => haversineKm(fix, { lat: a.lat, lng: a.lng }) - haversineKm(fix, { lat: b.lat, lng: b.lng }));
 }
@@ -7609,7 +5798,7 @@ export function kmLabel(km) { return km == null ? '' : (km < 1 ? '<1 km' : `${Ma
 
 // Actually kosher — in this region that means Chabad houses (supervised), never
 // "kosher-style". Each runs meals and/or a food shop for travellers.
-const KOSHER = [
+export const KOSHER = [
   { cc: 'th', city: 'Bangkok', lat: 13.7590, lng: 100.4970, name: 'Chabad House (Ohr Menachem), Khao San', offer: 'Kosher meat & dairy restaurants + food store', url: 'https://www.jewishthailand.com' },
   { cc: 'th', city: 'Bangkok', lat: 13.7380, lng: 100.5720, name: 'JCafe, Sukhumvit (Mille Malle)', offer: 'Kosher café', url: 'https://www.jewishthailand.com' },
   { cc: 'th', city: 'Chiang Mai', lat: 18.7900, lng: 98.9960, name: 'Chabad House Chiang Mai', offer: 'Kosher meat restaurant', url: 'https://www.jewishthailand.com' },
@@ -7627,7 +5816,7 @@ const KOSHER = [
 // are neighbourhood-level (the Map link resolves the exact venue), so nearest-first ordering
 // works without over-claiming precision. Only venues confirmed still operating and genuinely
 // veg/vegan are listed — general eateries are never assumed to be vegetarian.
-const VEG_SPOTS = [
+export const VEG_SPOTS = [
   { cc: 'th', city: 'Bangkok', lat: 13.7597, lng: 100.4972, name: 'May Kaidee (Khao San)', offer: 'Thai vegan, since 1988', tags: ['vegan'] },
   { cc: 'th', city: 'Bangkok', lat: 13.7365, lng: 100.5805, name: 'Broccoli Revolution', offer: 'Plant-based, Sukhumvit / Thong Lo', tags: ['vegan'] },
   { cc: 'th', city: 'Bangkok', lat: 13.7585, lng: 100.4965, name: 'Ethos', offer: 'Vegetarian & raw, off Khao San', tags: ['vegetarian'] },
@@ -7637,51 +5826,12 @@ const VEG_SPOTS = [
   { cc: 'kh', city: 'Siem Reap', lat: 13.3540, lng: 103.8560, name: 'Chamkar', offer: 'Khmer vegetarian, Old Market', tags: ['vegetarian'] },
 ];
 
-// Diet-aware "where you can actually eat" card for the traveller's declared diet: verified
-// kosher (Chabad) and/or vegetarian/vegan venues, nearest-first, plus an honest halal note.
-// Returns null when the profile needs none. opts.only = 'veg' | 'kosher' to show one section.
-function dietEatCard(cc, fix, opts) {
-  opts = opts || {};
-  const diet = store.profile.prefs.diet || [];
-  const wantKosher = diet.includes('kosher') && opts.only !== 'veg';
-  const wantVeg = (diet.includes('vegan') || diet.includes('vegetarian')) && opts.only !== 'kosher';
-  const wantHalal = diet.includes('halal') && !opts.only;
-  if (!wantKosher && !wantVeg && !wantHalal) return null;
-  const card = h('div', { class: 'card allergy-card', style: 'margin:12px 0' }, [h('h2', {}, '🍽 Where you can eat')]);
-  const kmOf = (v) => (fix && fix.lat != null && v.lat != null) ? haversineKm(fix, { lat: v.lat, lng: v.lng }) : null;
-  const venueRow = (name, city, offer, km, tag) => h('div', { style: 'margin:6px 0' }, [
-    h('div', { class: 'row-between' }, [h('strong', {}, name), km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null]),
-    h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `${city}${offer ? ' · ' + offer : ''}`),
-    h('div', { class: 'chips' }, [tag ? attrTag(tag) : null, h('a', { class: 'chip', href: mapsSearch(`${name} ${city}`), target: '_blank', rel: 'noopener' }, 'Map ↗')]),
-  ]);
-  if (wantVeg) {
-    card.append(h('h3', { style: 'margin:6px 0 2px' }, '🌱 Vegetarian & vegan'));
-    const vs = nearestFirst(VEG_SPOTS.filter((v) => v.cc === cc), fix);
-    if (vs.length) {
-      vs.slice(0, 8).forEach((v) => card.append(venueRow(v.name, v.city, v.offer, kmOf(v), (v.tags || []).includes('vegan') ? '🌱 Vegan' : '🥗 Vegetarian')));
-    } else {
-      card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0' }, 'No dedicated veg kitchen is listed for this country yet. Many local kitchens cook to order — ask for the vegetarian version and use the dish guide’s green/red verdicts.'));
-    }
-    card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'These are verified vegetarian/vegan kitchens. General eateries are not checked — confirm on arrival, especially fish sauce, oyster sauce and egg.'));
-  }
-  if (wantKosher) {
-    card.append(h('h3', { style: 'margin:10px 0 2px' }, '✡️ Kosher (Chabad houses)'));
-    const kv = nearestFirst(KOSHER.filter((k) => k.cc === cc), fix);
-    (kv.length ? kv : nearestFirst(KOSHER, fix)).slice(0, 6).forEach((k) => card.append(venueRow(k.name, k.city, k.offer, kmOf(k), null)));
-    card.append(h('p', { class: 'muted tiny', style: 'margin:6px 0 0' }, 'Reliably kosher food is served by Chabad houses. Anything sold only as “kosher-style” is not certified — always confirm supervision.'));
-  }
-  if (wantHalal) {
-    card.append(h('h3', { style: 'margin:10px 0 2px' }, '🕌 Halal'));
-    card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 0' }, 'Halal food is widely available near mosques and in Muslim quarters. Look for the green halal sign, and ask “halal?” — the app’s pork-free phrase is in the phrasebook.'));
-  }
-  return card;
-}
 
 // Verified pork-free phrase (kosher, halal and no-pork travellers). Only languages whose
 // script is verified against a reliable source are included (Thai, Vietnamese, Lao — Lao
 // from Wikivoyage); Khmer falls back to English because no reliable source confirmed the
 // phrase, so nothing wrong is ever shown. Shellfish avoidance is covered by ALLERGENS.
-const DIET_PHRASES = {
+export const DIET_PHRASES = {
   'no-pork': {
     en: 'No pork, please',
     langs: {
@@ -7813,7 +5963,7 @@ const DANGER_SOURCES = [
   { org: 'World Health Organization — snakebite envenoming', url: 'https://www.who.int/news-room/fact-sheets/detail/snakebite-envenoming' },
   { org: 'Species photos: Wikimedia Commons (CC BY-SA, credited per image)', url: 'https://commons.wikimedia.org' },
 ];
-const KOSHER_SOURCES = [
+export const KOSHER_SOURCES = [
   { org: 'Chabad of Thailand (JewishThailand.com)', url: 'https://www.jewishthailand.com' },
   { org: 'Chabad of Cambodia (JewishCambodia.com)', url: 'https://www.jewishcambodia.com' },
   { org: 'Chabad center directory', url: 'https://www.chabad.org/centers' },
@@ -8069,10 +6219,10 @@ function sosScreen(cc) {
     const list = nearestCare(fix, cc, { hospitalsOnly: true, limit: 3 });
     hospSlot.replaceChildren();
     if (!list.length) return;
-    hospSlot.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
-    list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin:6px 0' }, [
+    hospSlot.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
-      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, x.city || x.en || ''),
+      h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, x.city || x.en || ''),
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
       h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
     ])));
@@ -8092,10 +6242,10 @@ function sosScreen(cc) {
   FIRST_AID.forEach((fa) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, fa.t)]);
     const inner = h('div', {});
-    inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do')]));
+    inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, 'Do')]));
     inner.append(h('ul', { class: 'sos-aid' }, fa.do.map((li) => h('li', {}, li))));
     if (fa.dont && fa.dont.length) {
-      inner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, 'Do not')]));
       inner.append(h('ul', { class: 'sos-aid dont' }, fa.dont.map((li) => h('li', {}, li))));
     }
     // Read the steps aloud — hands are often busy in a bite/sting emergency.
@@ -8114,7 +6264,7 @@ function sosScreen(cc) {
   LIFESAVING.forEach((ls) => {
     const dd = h('details', { class: 'filters-collapse' }, [h('summary', {}, ls.t)]);
     const inner = h('div', {});
-    ls.body.forEach((p) => inner.append(h('p', { class: 'tiny', style: 'margin:6px 0' }, p)));
+    ls.body.forEach((p) => inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0' }, p)));
     dd.append(inner);
     life.append(dd);
   });
@@ -8137,8 +6287,8 @@ function sosScreen(cc) {
   const safe = SAFETY[getActiveCountry()];
   const safeCard = safe ? h('div', { class: 'card' }, [
     h('h2', {}, 'Water & food safety'),
-    h('p', { style: 'margin:6px 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
-    h('p', { style: 'margin:6px 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
+    h('p', { style: 'margin: var(--sp-1h) 0' }, [h('strong', {}, '💧 Water: '), safe.water]),
+    h('p', { style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, '🍢 Food: '), safe.food]),
   ]) : null;
 
   // Solo & women travellers — practical, non-alarmist safety, opened by default when the
@@ -8153,7 +6303,7 @@ function sosScreen(cc) {
   sInner.append(h('ul', { class: 'sos-aid' }, SOLO_SAFETY.general.map((li) => h('li', {}, li))));
   const cSolo = SOLO_SAFETY[getActiveCountry()];
   if (cSolo) {
-    sInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, `In ${c.name}`)]));
+    sInner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, `In ${c.name}`)]));
     sInner.append(h('ul', { class: 'sos-aid' }, cSolo.map((li) => h('li', {}, li))));
   }
   sInner.append(sourcesNote(SOLO_SOURCES, 'July 2026'));
@@ -8172,15 +6322,15 @@ function sosScreen(cc) {
   EMERGENCIES.forEach((e) => {
     const d = h('details', { class: 'filters-collapse' }, [h('summary', {}, `${e.ic} ${e.t}`)]);
     const inner = h('div', {});
-    if (e.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, e.lead));
-    inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Right now')]));
+    if (e.lead) inner.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, e.lead));
+    inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'Right now')]));
     inner.append(h('ul', { class: 'sos-aid' }, e.now.map((li) => h('li', {}, li))));
     if (e.then && e.then.length) {
-      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Then')]));
+      inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'Then')]));
       inner.append(h('ul', { class: 'sos-aid' }, e.then.map((li) => h('li', {}, li))));
     }
     if (e.avoid && e.avoid.length) {
-      inner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'Do not')]));
+      inner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'Do not')]));
       inner.append(h('ul', { class: 'sos-aid dont' }, e.avoid.map((li) => h('li', {}, li))));
     }
     { const rd = readAloudBar(() => [`${e.t}.`, 'Right now:', e.now.join(' '), (e.then || []).length ? 'Then: ' + e.then.join(' ') : '', (e.avoid || []).length ? 'Do not: ' + e.avoid.join(' ') : ''].filter(Boolean).join(' ')); if (rd) inner.append(rd); }
@@ -8196,11 +6346,11 @@ function sosScreen(cc) {
   ])]);
   const embD = h('details', { class: 'filters-collapse' }, [h('summary', {}, 'What an embassy can and cannot do')]);
   const embInner = h('div', {});
-  embInner.append(h('p', { class: 'tiny', style: 'margin:6px 0 0' }, [h('strong', {}, 'It can')]));
+  embInner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, [h('strong', {}, 'It can')]));
   embInner.append(h('ul', { class: 'sos-aid' }, EMBASSY.can.map((li) => h('li', {}, li))));
-  embInner.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, 'It cannot')]));
+  embInner.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, 'It cannot')]));
   embInner.append(h('ul', { class: 'sos-aid dont' }, EMBASSY.cannot.map((li) => h('li', {}, li))));
-  embInner.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, EMBASSY.note));
+  embInner.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, EMBASSY.note));
   embD.append(embInner);
   emb.append(embD);
   emb.append(h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`embassy consulate ${c.name}`), target: '_blank', rel: 'noopener' }, `🔎 Find your embassy in ${c.name} ↗`));
@@ -8335,7 +6485,7 @@ function worshipScreen(cc) {
 
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, 'Find a place of worship near me'),
-    h('p', { class: 'muted tiny', style: 'margin:2px 0 6px' }, 'Opens a live map search (needs internet).'),
+    h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1h)' }, 'Opens a live map search (needs internet).'),
     h('div', { class: 'chips' }, Object.keys(WORSHIP_FAITH).map((f) =>
       h('a', { class: 'chip', href: mapsSearch(`${WORSHIP_SEARCH[f]} near me`), target: '_blank', rel: 'noopener' }, `${WORSHIP_FAITH[f]} ↗`))),
   ]));
@@ -8346,7 +6496,7 @@ function worshipScreen(cc) {
   local.forEach((w) => { (byCity[w.city] = byCity[w.city] || []).push(w); });
   Object.keys(byCity).forEach((city) => {
     const card = h('div', { class: 'card' }, [h('h2', {}, city)]);
-    byCity[city].forEach((w) => card.append(h('div', { class: 'row-between', style: 'margin:4px 0' }, [
+    byCity[city].forEach((w) => card.append(h('div', { class: 'row-between', style: 'margin: var(--sp-1) 0' }, [
       h('div', { class: 'grow' }, [h('strong', {}, w.name), h('div', { class: 'muted tiny' }, WORSHIP_FAITH[w.faith] || '')]),
       h('a', { class: 'chip', href: mapsSearch(`${w.name} ${w.city}`), target: '_blank', rel: 'noopener' }, 'Map ↗'),
     ])));
@@ -8393,7 +6543,7 @@ export function shareButton(label, title, buildUrl, cls = 'btn ghost block') {
 
 
 // ---- FOR YOU (traveller profile + personalised picks) -----------------------
-function prefChips(pairs, current, onPick) {
+export function prefChips(pairs, current, onPick) {
   const box = h('div', { class: 'chips' });
   pairs.forEach(([val, lbl]) => box.append(h('button', {
     class: 'chip', 'aria-pressed': current === val ? 'true' : 'false', dataset: { v: val },
@@ -8427,242 +6577,9 @@ function prefChips(pairs, current, onPick) {
 // tap to change — the topbar carries a live signal icon — but it is no longer a question, and
 // no route through this flow can turn the network off by accident.
 // welcomeStep is module state so Next/Back re-render the same focused flow without a route.
-const WELCOME_STEPS = 3;
-let welcomeStep = 0;
-function welcomeScreen() {
-  const prefs = store.profile.prefs;
-  const step = Math.min(Math.max(welcomeStep | 0, 0), WELCOME_STEPS - 1);
-  const wrap = h('div', { class: 'screen welcome' });
+// WELCOME_STEPS / welcomeStep moved to js/screens/welcome.js with welcomeScreen.
 
-  // Finishing = leave onboarding for a personalised Home. Show the recap only when the
-  // traveller actually personalised something, so a pure "just explore" skip lands clean.
-  const somethingSet = () => !!(prefs.party || prefs.withBaby || prefs.soloFemale
-    || (prefs.diet || []).length || (prefs.access || []).length || prefs.tripLength
-    || (prefs.interests || []).length || (prefs.budget && prefs.budget !== 'flexible'));
-  const finish = () => {
-    store.profile.seenWelcome = true;
-    prefs.geoAsked = true;
-    prefs.showSetupRecap = somethingSet();
-    welcomeStep = 0;
-    save();
-    go('#home');
-  };
-  const goStep = (n) => { welcomeStep = Math.min(Math.max(n, 0), WELCOME_STEPS - 1); welcomeScreen(); };
 
-  // Compact header: small logo + a progress indicator so the traveller always knows where
-  // they are and that the flow is short (three steps). The language chip sits here — not
-  // gated behind any step — so a wrong first-run guess (detectPreferredLang(), js/i18n.js) can
-  // be corrected before the traveller has to read a single question in it. Reuses the exact
-  // picker every other screen's topbar flag opens (languageSheet()), so it is one consistent
-  // control rather than a second, onboarding-only implementation.
-  const lang = uiLangMeta();
-  wrap.append(h('section', { class: 'hero welcome-hero' }, [
-    h('div', { class: 'logo-wrap', html: logoSVG() }),
-    h('p', { style: 'margin:0' }, 'A few quick taps and Home fits you — or skip and explore. Everything stays on your device.'),
-    h('button', {
-      class: 'chip', 'data-no-i18n': '', style: 'margin-top:10px',
-      'aria-label': `Language: ${lang.name} — tap to change`, title: `${lang.native} — change language`,
-      onclick: () => languageSheet(),
-    }, `${lang.flag} ${lang.native}`),
-  ]));
-  wrap.append(h('div', { class: 'welcome-progress', role: 'group', 'aria-label': `Step ${step + 1} of ${WELCOME_STEPS}` },
-    [0, 1, 2].map((n) => h('span', { class: 'wp-dot' + (n === step ? ' on' : (n < step ? ' done' : '')) }))));
-
-  // ---- Step 1 — Location ----
-  // Promoted out of the old collapsed "Fine-tune" foldable at the very end of setup, where it
-  // was easy to never see at all: with no live fix and nothing focused yet, every screen that
-  // reads "where am I" falls back to the country default (js/main.js focusSpot()) — which is
-  // exactly how a traveller ends up reading "Hanoi" while standing in Sapa. Asked plainly here,
-  // with a working manual fallback right beside it, and still fully skippable via Next.
-  if (step === 0) {
-    wrap.append(locationFixCard());
-    wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(1) }, 'Next →'),
-    ]));
-    // A first-timer can bail out of setup entirely and personalise later (Settings, "For you").
-    // Nothing is lost by skipping and nothing is silently switched off by it — which was not
-    // true while this flow opened on the network question.
-    wrap.append(h('button', { class: 'btn ghost block welcome-skip', onclick: finish }, 'Skip — just explore'));
-  }
-
-  // ---- Step 2 — Who is travelling (+ baby, solo female) ----
-  if (step === 1) {
-    const whoCard = h('div', { class: 'card' });
-    whoCard.append(h('h2', {}, 'Who is travelling?'));
-    whoCard.append(prefChips([['solo', '🎒 Solo'], ['couple', '👫 Couple'], ['family', '👨‍👩‍👧 Family'], ['group', '👥 Group']], prefs.party, (v) => { prefs.party = prefs.party === v ? '' : v; save(); }));
-    whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Bringing little ones?'));
-    const babyChip = h('button', { class: 'chip', 'aria-pressed': prefs.withBaby ? 'true' : 'false',
-      onclick: (e) => { prefs.withBaby = !prefs.withBaby; save(); e.currentTarget.setAttribute('aria-pressed', prefs.withBaby ? 'true' : 'false'); } }, '🍼 Travelling with a baby or toddler');
-    whoCard.append(h('div', { class: 'chips' }, [babyChip]));
-    whoCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Travelling alone? We will surface tailored, non-alarmist safety notes.'));
-    const soloFemChip = h('button', { class: 'chip', 'aria-pressed': prefs.soloFemale ? 'true' : 'false',
-      onclick: (e) => { prefs.soloFemale = !prefs.soloFemale; save(); e.currentTarget.setAttribute('aria-pressed', prefs.soloFemale ? 'true' : 'false'); } }, '🧭 Solo female traveller');
-    whoCard.append(h('div', { class: 'chips' }, [soloFemChip]));
-    wrap.append(whoCard);
-    wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(0) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: () => goStep(2) }, 'Next →'),
-    ]));
-  }
-
-  // ---- Step 3 — Food allergies / diet (the most visibly personalised surface) ----
-  if (step === 2) {
-    const dietCard = h('div', { class: 'card' });
-    dietCard.append(h('h2', {}, 'Any food allergies or diet?'));
-    dietCard.append(h('p', { class: 'muted' }, 'Pick any that apply. The app will highlight dishes that fit you when identifying food, and pin your exact phrases at the top of the phrasebook to show a cook. Guidance only — always confirm in person for a serious allergy.'));
-    dietCard.append(dietPicker());
-    wrap.append(dietCard);
-
-    // Everything else is optional and tucked away — reachable now for keen setters, invisible
-    // to travellers who just want to get moving. All fields also live in Settings. Location
-    // used to be folded away in here too; it now has its own step (Step 2, above) since a
-    // missing or stale fix silently breaks weather/near-me everywhere else in the app.
-    wrap.append(foldable('⚙️ Fine-tune (optional): accessibility, price, interests', () => {
-      const box = [];
-      // Accessibility + text size
-      const accCard = h('div', { class: 'card' });
-      accCard.append(h('h3', {}, 'Accessibility needs'));
-      accCard.append(h('p', { class: 'muted' }, 'We will surface honest, practical guidance for how these countries work for you. Pick any that apply, or none.'));
-      const accRow = h('div', { class: 'chips' });
-      [['mobility', '♿ Wheelchair / limited mobility'], ['vision', '🦯 Blind / low vision'], ['hearing', '🦻 Deaf / hard of hearing']].forEach(([id, lbl]) => {
-        const on = () => (prefs.access || []).includes(id);
-        accRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
-          onclick: (e) => { prefs.access = prefs.access || []; const i = prefs.access.indexOf(id); if (i >= 0) prefs.access.splice(i, 1); else prefs.access.push(id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, lbl));
-      });
-      accCard.append(accRow);
-      accCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Text size'));
-      accCard.append(prefChips([['s', 'Small'], ['m', 'Medium'], ['l', 'Large']], store.profile.textScale || 'm', (v) => { store.profile.textScale = v; save(); applyTheme(); }));
-      box.push(accCard);
-      // How you like to travel
-      const fitCard = h('div', { class: 'card' });
-      fitCard.append(h('h3', {}, 'How you like to travel'));
-      fitCard.append(h('p', { class: 'muted' }, 'Price'));
-      fitCard.append(prefChips([['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['flexible', PRICE_TIER_LABEL.flexible]], prefs.budget, (v) => { prefs.budget = v; save(); }));
-      fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Trip length'));
-      fitCard.append(prefChips([['short', '≤ 1 week'], ['medium', '2–3 weeks'], ['long', '1 month +']], prefs.tripLength, (v) => { prefs.tripLength = prefs.tripLength === v ? '' : v; save(); }));
-      fitCard.append(h('p', { class: 'muted', style: 'margin-top:10px' }, 'Interests'));
-      const intRow = h('div', { class: 'chips' });
-      INTERESTS.forEach((it) => { const on = () => (prefs.interests || []).includes(it.id);
-        intRow.append(h('button', { class: 'chip', 'aria-pressed': on() ? 'true' : 'false',
-          onclick: (e) => { prefs.interests = prefs.interests || []; const i = prefs.interests.indexOf(it.id); if (i >= 0) prefs.interests.splice(i, 1); else prefs.interests.push(it.id); save(); e.currentTarget.setAttribute('aria-pressed', on() ? 'true' : 'false'); } }, `${it.emoji} ${it.label}`)); });
-      fitCard.append(intRow);
-      box.push(fitCard);
-      return box;
-    }, { cls: 'welcome-more' }));
-
-    wrap.append(h('div', { class: 'welcome-nav' }, [
-      h('button', { class: 'btn ghost', onclick: () => goStep(1) }, '← Back'),
-      h('button', { class: 'btn', style: 'margin-left:auto', onclick: finish }, 'See what I set up →'),
-    ]));
-  }
-
-  // No tab bar during first-run setup: onboarding is a focused flow with its own
-  // Next / Back / Skip exits, not something to wander out of mid-step.
-  mount(wrap);
-}
-
-// NAV-1: the "here is what I set up for you" recap, shown once on the first Home render after
-// the value-first setup. It names each active personalisation and what it does, then points to
-// Settings for the rest. Dismissed (or "add more") clears the one-shot flag.
-export function setupRecapCard() {
-  const p = store.profile.prefs;
-  const rows = [];
-  // This row used to report the traveller's answer to onboarding's network question. There is
-  // no such question any more, so reporting the setting back as a personalisation would be
-  // claiming credit for a default. What IS worth naming here is the thing the app is doing on
-  // their behalf without being asked: putting the field guide on the device.
-  rows.push(netMode() === 'offline'
-    ? ['✈️', 'Fully offline', 'You have turned data off. Tap the signal icon at the top to use a connection when you have one.']
-    : ['📥', 'Downloading for offline use', 'Photos of what can hurt you first, then the rest of the field guide — so identifying works with no signal.']);
-  const partyLbl = { solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[p.party];
-  if (partyLbl || p.withBaby || p.soloFemale) {
-    const who = [partyLbl, p.withBaby && 'with a baby', p.soloFemale && 'solo female'].filter(Boolean).join(', ');
-    rows.push(['🧭', who, 'Safety notes and picks are tuned to who is travelling.']);
-  }
-  if ((p.diet || []).length) rows.push(['🍽️', p.diet.join(', '), 'Dishes are flagged for you, and your phrases are pinned at the top of Talk.']);
-  if ((p.access || []).length) rows.push(['♿', 'Accessibility: ' + p.access.join(', '), 'Honest, practical access guidance is surfaced for you.']);
-  const fit = [{ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[p.tripLength], PRICE_TIER_LABEL[p.budget], (p.interests || []).length ? `${p.interests.length} ${p.interests.length > 1 ? 'interests' : 'interest'}` : ''].filter(Boolean).join(' · ');
-  if (fit) rows.push(['🎯', fit, 'Trip plans and the “For you” ranking match how you travel.']);
-
-  const dismiss = () => { p.showSetupRecap = false; save(); render(); };
-  const card = h('div', { class: 'card setup-recap' });
-  card.append(h('strong', {}, '✨ Here is what I set up for you'));
-  card.append(h('ul', { class: 'recap-list' }, rows.map(([ic, t, d]) =>
-    h('li', {}, [h('span', { class: 'recap-ic' }, ic), h('span', {}, [h('b', {}, t), h('span', { class: 'muted' }, ' — ' + d)])]))));
-  card.append(h('div', { class: 'row-between', style: 'margin-top:8px' }, [
-    h('button', { class: 'btn', onclick: () => { p.showSetupRecap = false; save(); go('#settings'); } }, 'Add more in Settings'),
-    h('button', { class: 'btn ghost', onclick: dismiss }, 'Got it'),
-  ]));
-  return card;
-}
-
-function foryouScreen() {
-  const prefs = store.profile.prefs;
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('For you', '#home'));
-
-  // "For you" now shows your personalised RESULTS. The traveller profile that drives them
-  // (who's travelling, baby, accessibility, trip length, budget, interests) is set in ONE
-  // place — Settings — so preferences are not scattered across the app.
-  if (!profileIsSet()) {
-    wrap.append(screenHint('Set who you are and how you travel, and every list ranks what fits you first — and the trip plans match your situation. It all stays on your device.'));
-    wrap.append(h('button', { class: 'btn block btn-spaced', onclick: () => go('#settings') }, '⚙️ Set up your travel profile in Settings'));
-    mount(wrap, '#home');
-    return;
-  }
-  const profSummary = [
-    prefs.party && ({ solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[prefs.party]),
-    prefs.withBaby && 'with a baby',
-    prefs.tripLength && ({ short: '≤1 week', medium: '2–3 weeks', long: '1 month+' }[prefs.tripLength]),
-    prefs.budget && PRICE_TIER_LABEL[prefs.budget],
-    (prefs.diet && prefs.diet.length) && `${prefs.diet.length} diet ${prefs.diet.length > 1 ? 'flags' : 'flag'}`,
-  ].filter(Boolean).join(' · ');
-  wrap.append(h('div', { class: 'row-between', style: 'align-items:center;gap:8px' }, [
-    h('p', { class: 'muted', style: 'margin:0' }, profSummary ? `Ranked for: ${profSummary}` : 'Ranked to how you travel.'),
-    h('button', { class: 'chip', onclick: () => go('#settings') }, '✎ Edit profile'),
-  ]));
-
-  // Inline "finish your profile" nudges — one quiet chip per unset field, each opening the
-  // one place profiles live (Settings). More you fill, more the ranking is truly yours.
-  const missing = [
-    !prefs.party && "Who's travelling",
-    !prefs.tripLength && 'Trip length',
-    (!prefs.budget || prefs.budget === 'flexible') && 'Price',
-    !(prefs.interests || []).length && 'Interests',
-    !(prefs.diet || []).length && 'Diet & allergies',
-  ].filter(Boolean);
-  if (missing.length) {
-    wrap.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 4px' }, 'Add these and your picks fit you even better:'));
-    wrap.append(h('div', { class: 'chips' }, missing.map((m) =>
-      h('button', { class: 'chip', onclick: () => go('#settings') }, `＋ ${m}`))));
-  }
-
-  {
-    // top personalised picks in the active country
-    const picks = allPlaces({ country: getActiveCountry() }).slice().sort((a, b) => personalScore(b) - personalScore(a)).slice(0, 5);
-    const c = getCountry(getActiveCountry());
-    if (picks.length) {
-      const pk = h('div', { class: 'card' });
-      pk.append(h('h2', {}, `Top picks for you${c ? ' — ' + c.name : ''}`));
-      picks.forEach((p) => pk.append(h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => go(`#place-${p.id}`) },
-        `${starsStr(Math.round(effectiveRating(p.id, p.rating)))} ${p.name}`)));
-      pk.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#places-${getActiveCountry()}`) }, 'See all places, ranked for you'));
-      wrap.append(pk);
-    }
-    // the best-matching plan
-    const plans = suggestPlans({ country: getActiveCountry(), tripLength: prefs.tripLength, party: prefs.party, budget: prefs.budget });
-    if (plans.length) {
-      const pl = plans[0];
-      wrap.append(h('div', { class: 'card' }, [
-        h('h2', {}, 'A plan that fits you'),
-        h('p', {}, [h('strong', {}, pl.title), ` — ~${pl.days} days, ${pl.pace} pace.`]),
-        h('p', { class: 'muted' }, pl.summary),
-        h('button', { class: 'btn block', onclick: () => go('#plans') }, 'See matching trip plans'),
-      ]));
-    }
-  }
-  mount(wrap, '#home');
-}
 
 // ---- TRIP PLANS (suggested routes matched to the profile) --------------------
 
@@ -8685,8 +6602,8 @@ function countryLoadingScreen(ccs) {
   const names = ccs.map((id) => { const c = getCountry(id); return c ? `${c.flag} ${c.name}` : id; }).join(', ');
   return h('div', { class: 'screen' }, [
     h('div', { class: 'card', role: 'status', style: 'text-align:center;margin-top:15vh' }, [
-      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
-      h('h2', { style: 'margin:0 0 4px' }, `Loading ${names}…`),
+      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom: var(--sp-2)' }, '🧭'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1)' }, `Loading ${names}…`),
       h('p', { class: 'muted' }, 'One-time — this stays on your device after.'),
     ]),
   ]);
@@ -8698,8 +6615,8 @@ function countryLoadingScreen(ccs) {
 function screenLoadingScreen() {
   return h('div', { class: 'screen' }, [
     h('div', { class: 'card', role: 'status', style: 'text-align:center;margin-top:15vh' }, [
-      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom:8px' }, '🧭'),
-      h('h2', { style: 'margin:0 0 4px' }, 'Opening…'),
+      h('div', { 'aria-hidden': 'true', style: 'font-size:2.4rem;margin-bottom: var(--sp-2)' }, '🧭'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1)' }, 'Opening…'),
       h('p', { class: 'muted' }, 'One moment.'),
     ]),
   ]);
@@ -8713,7 +6630,7 @@ function screenUnavailableScreen(names) {
   return h('div', { class: 'screen' }, [
     topbar('Not downloaded yet', '#home'),
     h('div', { class: 'card' }, [
-      h('h2', { style: 'margin:0 0 6px' }, 'This screen is not on your device yet'),
+      h('h2', { style: 'margin: 0 0 var(--sp-1h)' }, 'This screen is not on your device yet'),
       h('p', { class: 'muted' }, online()
         ? 'It could not be fetched just now. Tap retry.'
         : 'It needs a connection the first time you open it. Emergency numbers, phrases and the hospital finder all work offline.'),
@@ -8803,7 +6720,15 @@ export function render() {
   // js/lazy-data.js binding a route reads is guaranteed populated. The two kinds share one
   // loading card, one unavailable card and one retry, because to the traveller they are the
   // same event: this screen is not on the device yet.
-  const needScreens = ROUTE_SCREENS[head] || [];
+  const needScreens = (ROUTE_SCREENS[head] || []).slice();
+  // First run intercepts the home route BELOW this gate and renders welcomeScreen instead, so
+  // the module holding it has to be requested HERE — the switch never sees that route and a
+  // static ROUTE_SCREENS entry for 'home' would load onboarding on every launch forever, for
+  // a screen each traveller sees exactly once. Keyed on the same flag the interception uses,
+  // so it is requested on precisely the launches that will render it.
+  if (!store.profile.seenWelcome && (head === '' || head === 'home') && !needScreens.includes('welcome')) {
+    needScreens.push('welcome');
+  }
   const needData = ROUTE_DATA[head] || [];
   const wantScreens = needScreens.filter((n) => !screenMod(n) && !_screenFailed[n]);
   const wantData = needData.filter((n) => !isDataLoaded(n) && !_dataFailed[n]);
@@ -8825,17 +6750,17 @@ export function render() {
   try {
     // First run: learn the traveller before dropping them on the menu. Only intercepts the
     // home route, so any deep link (a shared place/board) still opens directly.
-    if (!store.profile.seenWelcome && (head === '' || head === 'home')) return welcomeScreen();
+    if (!store.profile.seenWelcome && (head === '' || head === 'home')) return screenMod('welcome').welcomeScreen();
     switch (head) {
       case '': case 'home': return homeScreen();
-      case 'me': return meHubScreen();
+      case 'me': return screenMod('you').meHubScreen();
       case 'everything': return everythingScreen();
       case 'hub': return hubScreen(arg);   // arg is a group id from js/nav-groups.js
-      case 'welcome': return welcomeScreen();
-      case 'explore': return exploreScreen(arg);   // arg is usually undefined; 'all' forces the four-country view
-      case 'country': return exploreScreen(arg);   // arg is always a valid country id — 21 existing links
-      case 'region': return regionScreen(arg);
-      case 'nearby': return nearbyScreen();
+      case 'welcome': return screenMod('welcome').welcomeScreen();
+      case 'explore': return screenMod('explore').exploreScreen(arg);   // arg is usually undefined; 'all' forces the four-country view
+      case 'country': return screenMod('explore').exploreScreen(arg);   // arg is always a valid country id — 21 existing links
+      case 'region': return screenMod('explore').regionScreen(arg);
+      case 'nearby': return screenMod('nearby').nearbyScreen();
       case 'currency': return currencyScreen();
       case 'exchange': return bulletinScreen(arg);
       case 'swap': return bulletinScreen('swap');
@@ -8845,7 +6770,7 @@ export function render() {
       case 'places': return screenMod('places').placesScreen(arg);
       case 'place': return screenMod('places').placeScreen(arg);
       case 'prices': return pricesScreen(arg);
-      case 'transport': return transportScreen(arg);
+      case 'transport': return screenMod('transport').transportScreen(arg);
       case 'route': return planRouteScreen();
       case 'nextstop': return screenMod('nextstop').nextStopScreen(arg);
       case 'info': return screenMod('arrivalinfo').infoScreen(arg);
@@ -8853,7 +6778,7 @@ export function render() {
       case 'collection': return collectionScreen(arg);
       case 'crossings': return crossingsScreen();
       case 'pools': return poolsScreen(arg);
-      case 'addpin': return addPinScreen(arg);
+      case 'addpin': return screenMod('transport').addPinScreen(arg);
       case 'journal': return screenMod('journal').journalDispatch(arg);
       case 'scrapbook': return screenMod('journal').scrapbookScreen();
       case 'contributions': return screenMod('contributions').contributionsScreen();
@@ -8866,7 +6791,7 @@ export function render() {
       case 'events': return eventsScreen(arg);
       case 'event': return eventScreen(arg);
       case 'weather': return screenMod('weather').weatherScreen(arg);
-      case 'today': return daySuggestScreen(arg);
+      case 'today': return screenMod('today').daySuggestScreen(arg);
       case 'access': return screenMod('countryinfo').accessScreen(arg);
       case 'baby': return screenMod('countryinfo').babyScreen(arg);
       case 'family': return screenMod('family').familyScreen(arg);
@@ -8875,8 +6800,8 @@ export function render() {
       case 'arrival': return screenMod('arrivalinfo').arrivalScreen(arg);
       case 'visa': return screenMod('countryinfo').visaScreen(arg);
       case 'schedules': return screenMod('schedules').schedulesScreen(arg);
-      case 'food': return foodScreen(arg);
-      case 'dish': return dishScreen(arg);
+      case 'food': return screenMod('food').foodScreen(arg);
+      case 'dish': return screenMod('food').dishScreen(arg);
       case 'produce': { const m = screenMod('produce'); return arg ? m.produceDetail(arg) : m.produceScreen(); }
       // "Market products" — the stall goods that are not fruit and veg: sauces, rices, pastes,
       // sugars and spices. Not a second dataset; it is the produce guide opened straight into
@@ -8887,7 +6812,7 @@ export function render() {
       case 'sounds': return soundsScreen();
       case 'species': return speciesScreen(arg);
       case 'identified': return myIdentifierScreen();
-      case 'search': return searchScreen();
+      case 'search': return screenMod('search').searchScreen();
       case 'sos': return sosScreen(arg);
       case 'hospital': return screenMod('medical').hospitalScreen(arg);
       case 'scams': return screenMod('countryinfo').scamsScreen(arg);
@@ -8912,7 +6837,7 @@ export function render() {
       case 'inbox': return screenMod('circle').inboxScreen();
       case 'thread': return screenMod('circle').threadScreen(arg);
       case 'msg': return screenMod('circle').importMessageScreen(arg);
-      case 'foryou': return foryouScreen();
+      case 'foryou': return screenMod('you').foryouScreen();
       case 'plans': return screenMod('trip').plansScreen();
       case 'board': return screenMod('board').boardScreen(arg);
       case 'streetfood': return screenMod('streetfood').streetfoodScreen();

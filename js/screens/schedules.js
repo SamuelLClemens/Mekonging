@@ -20,9 +20,9 @@ function scheduleCard(s) {
       h('strong', {}, `${c ? c.flag + ' ' : ''}${s.from} → ${s.to}`),
       h('span', { class: 'cat-tag' }, s.mode),
     ]),
-    h('div', { class: 'muted', style: 'margin:2px 0' }, `${s.operator} · ~${s.durationHrs[0]}–${s.durationHrs[1]} h · verified ${s.verified}`),
-    h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px;margin:8px 0' }, s.departures.map((t) => h('span', { class: 'cat-tag' }, t))),
-    s.note ? h('p', { class: 'muted', style: 'margin:4px 0' }, s.note) : null,
+    h('div', { class: 'muted', style: 'margin: var(--sp-0h) 0' }, `${s.operator} · ~${s.durationHrs[0]}–${s.durationHrs[1]} h · verified ${s.verified}`),
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap: var(--sp-1h);margin: var(--sp-2) 0' }, s.departures.map((t) => h('span', { class: 'cat-tag' }, t))),
+    s.note ? h('p', { class: 'muted', style: 'margin: var(--sp-1) 0' }, s.note) : null,
     s.book ? h('a', { class: 'btn ghost', href: s.book, target: '_blank', rel: 'noopener' }, 'Check / book ↗') : null,
   ]);
 }

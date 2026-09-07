@@ -187,7 +187,7 @@ export function screenHint(text, label = 'What this is') {
     h('span', { class: 'screen-hint-ic', 'aria-hidden': 'true' }, 'ⓘ'),
     h('span', { class: 'screen-hint-lbl' }, label),
   ]);
-  det.append(sum, h('p', { class: 'map-hint', style: 'margin-top:6px' }, text));
+  det.append(sum, h('p', { class: 'map-hint', style: 'margin-top: var(--sp-1h)' }, text));
   det.addEventListener('toggle', () => sum.setAttribute('aria-expanded', det.open ? 'true' : 'false'));
   return det;
 }
@@ -203,7 +203,7 @@ export function confirmAction(opts = {}) {
     const backdrop = h('div', { class: 'sheet-backdrop center' });
     const dialog = h('div', { class: 'sheet confirm-card', role: 'dialog', 'aria-label': title }, [
       h('h3', {}, title),
-      body ? h('p', { style: 'margin:0 0 14px' }, body) : null,
+      body ? h('p', { style: 'margin: 0 0 var(--sp-4)' }, body) : null,
       h('div', { class: 'confirm-actions' }, [
         h('button', { class: 'btn ghost', onclick: () => done(false) }, cancelLabel),
         h('button', { class: 'btn' + (danger ? ' danger' : ''), onclick: () => done(true) }, confirmLabel),

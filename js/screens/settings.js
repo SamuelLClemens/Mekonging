@@ -238,16 +238,16 @@ export function settingsScreen() {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
     const ic = h('div', { class: 'card' }, [h('h2', {}, '📲 Install the app')]);
     if (getDeferredInstallPrompt()) {
-      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Keeps Mekonging offline and one tap away.'));
+      ic.append(h('p', { class: 'muted', style: 'margin-top: 0' }, 'Keeps Mekonging offline and one tap away.'));
       ic.append(h('button', { class: 'btn', onclick: async () => {
         const dp = getDeferredInstallPrompt(); if (!dp) return;
         dp.prompt(); try { await dp.userChoice; } catch { /* dismissed */ }
         clearDeferredInstallPrompt(); render();
       } }, '➕ Install app'));
     } else if (isIOS) {
-      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Tap Share in Safari → “Add to Home Screen”.'));
+      ic.append(h('p', { class: 'muted', style: 'margin-top: 0' }, 'Tap Share in Safari → “Add to Home Screen”.'));
     } else {
-      ic.append(h('p', { class: 'muted', style: 'margin-top:0' }, 'Browser menu → “Install app” or “Add to Home Screen”.'));
+      ic.append(h('p', { class: 'muted', style: 'margin-top: 0' }, 'Browser menu → “Install app” or “Add to Home Screen”.'));
     }
     wrap.append(ic);
   }
@@ -256,27 +256,27 @@ export function settingsScreen() {
   // back to the picker once they have chosen a stage.
   const phaseCard = h('div', { class: 'card' }, [
     h('h2', {}, 'Journey phase'),
-    h('p', { class: 'muted', style: 'margin-top:0' }, 'Reshapes Home for your stage.'),
+    h('p', { class: 'muted', style: 'margin-top: 0' }, 'Reshapes Home for your stage.'),
     phaseSelector(),
   ]);
   // The "Just arrived" chip (Home, on the ground) is only ever hidden by an explicit,
   // confirmed X — never silently — so this is the one place it can be brought back.
   if (store.profile.prefs.justArrivedHidden) {
     phaseCard.append(h('button', {
-      class: 'btn ghost block', style: 'margin-top:10px',
+      class: 'btn ghost block', style: 'margin-top: var(--sp-3)',
       onclick: () => { store.profile.prefs.justArrivedHidden = false; save(); render(); },
     }, '🛬 Show the “Just arrived” chip again'));
   }
   // Same "never gone for good" recovery for the other two dismissible Home chips.
   if (store.profile.prefs.tripStartedHidden) {
     phaseCard.append(h('button', {
-      class: 'btn ghost block', style: 'margin-top:10px',
+      class: 'btn ghost block', style: 'margin-top: var(--sp-3)',
       onclick: () => { store.profile.prefs.tripStartedHidden = false; save(); render(); },
     }, '🎉 Show the “Trip started” chip again'));
   }
   if (store.profile.prefs.nextStopNudgeHidden) {
     phaseCard.append(h('button', {
-      class: 'btn ghost block', style: 'margin-top:10px',
+      class: 'btn ghost block', style: 'margin-top: var(--sp-3)',
       onclick: () => { store.profile.prefs.nextStopNudgeHidden = false; save(); render(); },
     }, '🧭 Show the “Planning your next stop” chip again'));
   }
@@ -345,7 +345,7 @@ export function settingsScreen() {
   card.append(field('Home currency', selectEl(
     CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${currencySymbol(c) || c} · ${c}`.trim()]),
     p.homeCurrency, (v) => { p.homeCurrency = v; p.currencyManual = true; save(); })));
-  card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' },
+  card.append(h('p', { class: 'muted tiny', style: 'margin:calc(var(--sp-1h) * -1) 0 var(--sp-3)' },
     'Used for every total and percentage across the app, however each expense was logged.'));
 
   card.append(field('Default phrasebook language',
@@ -397,7 +397,7 @@ export function settingsScreen() {
   // them once. These also drive "For you" and the baby / accessibility shortcuts.
   const who = h('div', { class: 'card' }, [
     h('h2', {}, 'Who’s travelling'),
-    h('p', { class: 'muted', style: 'margin-top:0' }, 'Tailors picks, plans and help to you.'),
+    h('p', { class: 'muted', style: 'margin-top: 0' }, 'Tailors picks, plans and help to you.'),
   ]);
   who.append(field('Travelling as', selectEl([['', 'Not set'], ['solo', 'Solo'], ['couple', 'Couple'], ['family', 'Family'], ['group', 'Group']],
     p.prefs.party || '', (v) => { p.prefs.party = v; save(); })));
@@ -412,15 +412,15 @@ export function settingsScreen() {
         e.currentTarget.setAttribute('aria-pressed', selAcc.has(id) ? 'true' : 'false');
       } }, lbl)));
   who.append(field('Accessibility needs', accChips));
-  who.append(h('p', { class: 'muted', style: 'margin:14px 0 0' }, [
+  who.append(h('p', { class: 'muted', style: 'margin: var(--sp-4) 0 0' }, [
     'Allergies & dietary restrictions',
     infoTip('Highlights dishes that fit you in “Identify food”, and pins your exact phrases at the top of the phrasebook to show a cook.'),
   ]));
-  who.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 0' }, 'Guidance only — always confirm in person.'));
+  who.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, 'Guidance only — always confirm in person.'));
   who.append(dietPicker());
   who.append(field('Trip length', selectEl([['', 'Not set'], ['short', 'Short (≤1 week)'], ['medium', '2–3 weeks'], ['long', '1 month+']],
     p.prefs.tripLength || '', (v) => { p.prefs.tripLength = v; save(); })));
-  who.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Budget and interests are set above.'));
+  who.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, 'Budget and interests are set above.'));
   // The guides that go WITH this profile (family/kids, baby supplies, accessibility) live
   // right here in Settings too, resolved to where the traveller is focused — so "travelling
   // with baby and kids and all that" is set AND opened from one place.
@@ -432,7 +432,7 @@ export function settingsScreen() {
     guideLinks.push(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#baby-${whoCC}`) }, '🍼 Baby: nappies, formula & family help'));
   if ((p.prefs.access || []).length && getAccessibility(whoCC))
     guideLinks.push(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#access-${whoCC}`) }, '♿ Accessibility where you are'));
-  if (guideLinks.length) { who.append(h('p', { class: 'muted', style: 'margin:12px 0 2px' }, 'Guides for your situation')); guideLinks.forEach((b) => who.append(b)); }
+  if (guideLinks.length) { who.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, 'Guides for your situation')); guideLinks.forEach((b) => who.append(b)); }
   wrap.append(who);
 
   // live translate
@@ -478,8 +478,8 @@ export function settingsScreen() {
       h('button', { class: 'chip', onclick: () => go('#visitors') }, '🌍 Open the world map'),
     ]),
     visitsEnabled()
-      ? h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, `Recording your pins — ${myVisits().length} ${myVisits().length === 1 ? 'place' : 'places'} so far.`)
-      : h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Not recording anything yet. Switch it on from the map.'),
+      ? h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, `Recording your pins — ${myVisits().length} ${myVisits().length === 1 ? 'place' : 'places'} so far.`)
+      : h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, 'Not recording anything yet. Switch it on from the map.'),
   ]));
 
   // Your journey map. A SEPARATE control from "Where people are" above, and the difference
@@ -494,7 +494,7 @@ export function settingsScreen() {
       h('h2', {}, 'Your journey map'),
       infoTip('Pins are recorded automatically whenever the app has your location, so a map of your trip builds itself. They stay on this device at all times — there is no code path that sends them anywhere — and you can stop or erase them here.'),
     ]),
-    h('p', { class: 'tiny muted', style: 'margin:6px 0 8px' }, trailEnabled()
+    h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 var(--sp-2)' }, trailEnabled()
       ? (ts.places
         ? `Recording — ${ts.places} ${ts.places === 1 ? 'place' : 'places'} so far, ${ts.countries || 1} ${ts.countries === 1 ? 'country' : 'countries'}.`
         : 'Recording. Your map fills in once your device gives the app a location.')
@@ -518,7 +518,7 @@ export function settingsScreen() {
       h('h2', {}, 'Reminders'),
       infoTip('Set a reminder on any calendar entry, with its own lead time — it always appears on the “Coming up” card on Home too. Allow notifications for a device alert while the app is open or when you next open it.'),
     ]),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'No background alerts once fully closed — there is no server.'),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'No background alerts once fully closed — there is no server.'),
   ]);
   remCard.append(h('button', { class: 'btn ghost block',
     onclick: async () => { const ok = await reminders.requestNotify(); reminders.tick(); alert(ok ? 'Device notifications are on.' : 'Notifications are off — you can enable them for this site in your browser settings.'); render(); } },
@@ -538,10 +538,10 @@ export function settingsScreen() {
       h('h2', {}, 'Your data'),
       infoTip('Everything you create — journal, photos, ratings, trip, budget, calendar, saved places and collections — is written to three places on this device after every change, so a single glitch can never wipe it.'),
     ]),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Kept safe across updates. Nothing is ever uploaded — download a copy below.'),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Kept safe across updates. Nothing is ever uploaded — download a copy below.'),
   ]);
   // On-device durability status — filled in asynchronously (persisted flag + space used).
-  const statusP = h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Checking on-device storage…');
+  const statusP = h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, 'Checking on-device storage…');
   dataCard.append(statusP);
   // A gentle reminder to keep an off-device copy when none exists or it has gone stale.
   const anyData = (store.journal.entries.length || store.trip.budgetLog.length || store.calendar.items.length
@@ -549,16 +549,16 @@ export function settingsScreen() {
   const lastBak = store.profile.prefs.lastBackupAt || '';
   const staleBak = anyData && (!lastBak || daysUntilISO(lastBak) <= -14);
   if (staleBak) {
-    dataCard.append(h('p', { class: 'nudge-line', style: 'margin:0 0 8px' },
+    dataCard.append(h('p', { class: 'nudge-line', style: 'margin: 0 0 var(--sp-2)' },
       lastBak ? '⏳ It has been a while since you saved a copy — a fresh one keeps your latest entries safe.'
         : '⭐ Save your first copy now so nothing can ever be lost.'));
   }
   // The readable, shareable deliverable comes first — this is what most people want when
   // they "download their trip". The raw JSON below it is a technical restore file, relabelled
   // so no one mistakes it for something to read.
-  dataCard.append(h('button', { class: 'btn block', style: 'margin-bottom:6px', onclick: () => go('#export') },
+  dataCard.append(h('button', { class: 'btn block', style: 'margin-bottom: var(--sp-1h)', onclick: () => go('#export') },
     '📖 Save or share my trip — readable book, photos & spreadsheet'));
-  dataCard.append(h('p', { class: 'tiny muted', style: 'margin:0 0 10px' },
+  dataCard.append(h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-3)' },
     'Your journal, reviews, photos and spending as files you can open, read and share on any device — beautifully laid out, not raw data.'));
   const dlBtn = h('button', { class: 'btn ' + (staleBak ? 'block' : 'ghost block') }, '💾 Download a safety copy (to move to a new device)');
   dlBtn.onclick = async () => {
@@ -578,7 +578,7 @@ export function settingsScreen() {
     dlBtn.disabled = false; dlBtn.textContent = label;
   };
   dataCard.append(dlBtn);
-  dataCard.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' },
+  dataCard.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1) 0 0' },
     'A complete data file for restoring everything onto a new phone. It is not meant to be read — for something nice to look at, use the travel book above.'));
   // "Extra protection" — the app's own safety (a triple on-device write + IndexedDB mirror)
   // is ALWAYS active, so this control never reports a failure or a browser limitation. It
@@ -586,7 +586,7 @@ export function settingsScreen() {
   // grants that flag, the result is framed positively and truthfully — and always points the
   // traveller to the one guaranteed safeguard: a downloaded copy.
   const persistBtn = h('button', { class: 'btn ghost block btn-spaced', style: 'display:none' }, '🔒 Turn on maximum protection');
-  const protectMsg = h('p', { class: 'tiny', style: 'margin:6px 0 0; display:none' });
+  const protectMsg = h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0; display:none' });
   persistBtn.onclick = async () => {
     persistBtn.disabled = true; const lbl = persistBtn.textContent; persistBtn.textContent = 'Turning on…';
     let granted = false;

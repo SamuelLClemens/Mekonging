@@ -70,11 +70,11 @@ export function placeCard(p, num) {
           (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
         ]) : null,
         travelerChips(p),
-        isMarket(p) ? h('div', { style: 'margin:2px 0' }, marketChip(p)) : null,
-        (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin:2px 0' }, bc) : null; })(),
+        isMarket(p) ? h('div', { style: 'margin: var(--sp-0h) 0' }, marketChip(p)) : null,
+        (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin: var(--sp-0h) 0' }, bc) : null; })(),
         p.blurb ? h('p', {}, p.blurb) : null,
         h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
-        dchip ? h('div', { style: 'margin:2px 0' }, dchip) : null,
+        dchip ? h('div', { style: 'margin: var(--sp-0h) 0' }, dchip) : null,
         p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
         colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
           h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,
@@ -98,7 +98,7 @@ export function travelerChips(p) {
   if (p.stayDuration === 'long') chips.push(attrTag('Long stay'));
   else if (p.stayDuration === 'short') chips.push(attrTag('Short stay'));
   else if (p.stayDuration === 'both') chips.push(attrTag('Short or long stay'));
-  return chips.length ? h('div', { class: 'cats', style: 'margin-top:4px' }, chips) : null;
+  return chips.length ? h('div', { class: 'cats', style: 'margin-top: var(--sp-1)' }, chips) : null;
 }
 
 export function saveSheet(itemId) {
@@ -120,7 +120,7 @@ export function saveSheet(itemId) {
         () => { togglePlaceInCollection(c.id, itemId); rebuild(); }));
     }
     // create new
-    const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'New collection name…', style: 'margin-top:8px' });
+    const input = h('input', { class: 'search', type: 'text', 'aria-label': 'Search', placeholder: 'New collection name…', style: 'margin-top: var(--sp-2)' });
     const add = h('button', { class: 'btn', onclick: () => {
       if (!input.value.trim()) return;
       const c = createCollection(input.value.trim(), '⭐');
@@ -129,7 +129,7 @@ export function saveSheet(itemId) {
     } }, 'Create & add');
     body.append(input, add);
     // preset quick-create
-    body.append(h('p', { class: 'muted', style: 'margin:12px 0 4px' }, 'Quick themes'));
+    body.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, 'Quick themes'));
     body.append(h('div', { class: 'chips presets' }, COLLECTION_PRESETS
       .filter((pr) => !store.collections.some((c) => c.name.toLowerCase() === pr.name.toLowerCase()))
       .map((pr) => h('button', { class: 'chip', onclick: () => {
@@ -137,7 +137,7 @@ export function saveSheet(itemId) {
         togglePlaceInCollection(c.id, itemId);
         rebuild();
       } }, `${pr.emoji} ${pr.name}`))));
-    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:12px', onclick: close }, 'Done'));
+    body.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', onclick: close }, 'Done'));
   }
   rebuild();
   sheet.append(body);
@@ -170,7 +170,7 @@ export function tripVisitSheet(placeId) {
     const unsched = mine.find((v) => !v.stopId);
     body.append(collRow('🗒️', 'Not scheduled yet', !!unsched,
       () => { if (unsched) removePlaceVisit(unsched.id); else addPlaceVisit({ placeId, stopId: null }); rebuild(); }));
-    body.append(h('button', { class: 'btn ghost block', style: 'margin-top:12px', onclick: close }, 'Done'));
+    body.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', onclick: close }, 'Done'));
   }
   rebuild();
   sheet.append(body);

@@ -224,30 +224,30 @@ export function exportScreen() {
   // Headline: the whole trip as one beautiful, readable web page (everything, photos inline).
   wrap.append(h('div', { class: 'card', style: 'border:2px solid var(--orange)' }, [
     h('h2', {}, '📖 My travel book'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Everything together — trip, journal, reviews, photos and spending — as one page you can read, print or share. Opens in any browser. This is the nice, readable one.'),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, 'Everything together — trip, journal, reviews, photos and spending — as one page you can read, print or share. Opens in any browser. This is the nice, readable one.'),
     saver(h('button', { class: 'btn block' }, '⬇️ Save my travel book (.html)'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
     sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share my travel book'), exportTravelBookHtml, `mekonging-travel-book-${exportStamp()}.html`, 'text/html'),
   ]));
-  wrap.append(h('p', { class: 'lbl', style: 'margin:12px 2px 2px' }, 'Or export one type at a time'));
+  wrap.append(h('p', { class: 'lbl', style: 'margin: var(--sp-3) var(--sp-0h) var(--sp-0h)' }, 'Or export one type at a time'));
 
   // Journal
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '📖 Journal'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${jCount} ${jCount === 1 ? 'entry' : 'entries'} — a web page with your writing and photos.`),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, `${jCount} ${jCount === 1 ? 'entry' : 'entries'} — a web page with your writing and photos.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Save journal (.html)'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
     sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share journal'), exportJournalHtml, `mekonging-journal-${exportStamp()}.html`, 'text/html'),
   ]));
   // Reviews & ratings
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '⭐ Ratings & reviews'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${rCount} ${rCount === 1 ? 'place' : 'places'} — your stars, reviews, notes and photos.`),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, `${rCount} ${rCount === 1 ? 'place' : 'places'} — your stars, reviews, notes and photos.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Save reviews (.html)'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
     sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share reviews'), exportReviewsHtml, `mekonging-reviews-${exportStamp()}.html`, 'text/html'),
   ]));
   // Photos
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '📷 Photos'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'A viewable album, or every picture as individual JPEGs in a zip.'),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, 'A viewable album, or every picture as individual JPEGs in a zip.'),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Photo album (.html)'), exportPhotosAlbumHtml, `mekonging-photos-${exportStamp()}.html`, 'text/html'),
     saver(h('button', { class: 'btn ghost block btn-spaced' }, '⬇️ All photos (.zip of JPEGs)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
     sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share photos (.zip)'), exportPhotosZip, `mekonging-photos-${exportStamp()}.zip`, 'application/zip'),
@@ -255,7 +255,7 @@ export function exportScreen() {
   // Expenses — both a true Excel workbook and a CSV, as requested.
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, '💸 Expenses'),
-    h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, `${bCount} logged ${bCount === 1 ? 'expense' : 'expenses'} — as a spreadsheet.`),
+    h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, `${bCount} logged ${bCount === 1 ? 'expense' : 'expenses'} — as a spreadsheet.`),
     saver(h('button', { class: 'btn ghost block' }, '⬇️ Excel (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
     saver(h('button', { class: 'btn ghost block btn-spaced' }, '⬇️ CSV (.csv)'), () => { const t = expenseTable(); return toCsv(t.headers, t.rows); }, `mekonging-expenses-${exportStamp()}.csv`, 'text/csv'),
     sharer(h('button', { class: 'btn ghost block btn-spaced' }, '📤 Share expenses (.xlsx)'), () => { const t = expenseTable(); return buildXlsx(t.headers, t.rows, 'Expenses'); }, `mekonging-expenses-${exportStamp()}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),

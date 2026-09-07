@@ -46,12 +46,12 @@ export function bargainScreen() {
   if (ess && ess.items && ess.items.length) {
     const card = h('div', { class: 'card' }, [
       h('h2', {}, `🛒 Cheapest essentials${fcName ? ' in ' + fcName : ''}`),
-      ess.note ? h('p', { class: 'muted', style: 'margin:4px 0 8px' }, ess.note) : null,
+      ess.note ? h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, ess.note) : null,
     ]);
     ess.items.forEach((it) => card.append(h('div', { class: 'list-note' }, [
       h('strong', {}, `${it.icon || ''} ${it.item}: `), it.cheapest,
       it.price && it.price !== '—' ? h('span', { class: 'muted' }, ` (${it.price})`) : null,
-      it.esim ? h('div', { class: 'tiny muted', style: 'margin-top:3px' }, it.esim) : null,
+      it.esim ? h('div', { class: 'tiny muted', style: 'margin-top: var(--sp-1)' }, it.esim) : null,
     ])));
     const slug = citySlug(focusSpot().spot.city || '');
     if (getBoard(fc, slug)) card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#board-${fc}-${slug}`) }, '📍 Local finds & markets near you'));

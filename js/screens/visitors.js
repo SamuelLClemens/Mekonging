@@ -42,12 +42,12 @@ export function visitorsScreen() {
   ])]);
   const mapBox = h('div', { class: 'visit-map', role: 'img', 'aria-label': 'World map of places this app has been opened from' });
   intro.append(mapBox);
-  const legend = h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, '🟠 your own pins · 🔵 shared feed · each pin is an area of about 55 km, never an address');
+  const legend = h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, '🟠 your own pins · 🔵 shared feed · each pin is an area of about 55 km, never an address');
   intro.append(legend);
   // The map's own attribution control is collapsed to a ⓘ so it does not cover the world on a
   // phone, so the credit is stated here in full as well — it is a licence condition, not a
   // decoration, and it should not depend on anyone opening a control.
-  intro.append(h('p', { class: 'tiny muted', style: 'margin:4px 0 0' }, 'Map: © OpenStreetMap contributors · Natural Earth · streets © Esri, HERE, Garmin, USGS.'));
+  intro.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1) 0 0' }, 'Map: © OpenStreetMap contributors · Natural Earth · streets © Esri, HERE, Garmin, USGS.'));
   wrap.append(intro);
 
   // ---- Your own pins ------------------------------------------------------
@@ -61,15 +61,15 @@ export function visitorsScreen() {
   ]);
   own.append(toggle);
   if (!on) {
-    own.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, 'Off. Nothing is being recorded.'));
+    own.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, 'Off. Nothing is being recorded.'));
   } else if (!mine.length) {
-    own.append(h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, getLastFix()
+    own.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, getLastFix()
       ? 'On. Your first pin appears the next time the app opens.'
       : 'On, but there is no location fix yet — allow location and reopen the app.'));
   } else {
     const total = mine.reduce((a, p) => a + (p.n || 1), 0);
     const ccs = [...new Set(mine.map((p) => p.cc).filter(Boolean))];
-    own.append(h('p', { style: 'margin:10px 0 4px' }, [
+    own.append(h('p', { style: 'margin: var(--sp-3) 0 var(--sp-1)' }, [
       h('strong', {}, `${mine.length} ${mine.length === 1 ? 'place' : 'places'}`),
       ` · ${total} ${total === 1 ? 'opening' : 'openings'}`,
       ccs.length ? ` · ${ccs.map(countryName).filter(Boolean).join(', ')}` : '',
@@ -80,7 +80,7 @@ export function visitorsScreen() {
     // the fallback name and again as the detail) is just noise.
     rows.forEach((p) => {
       const name = countryName(p.cc);
-      own.append(h('div', { class: 'row-between', style: 'padding:4px 0' }, [
+      own.append(h('div', { class: 'row-between', style: 'padding: var(--sp-1) 0' }, [
         h('span', { class: 'tiny' }, name
           ? [name, h('span', { class: 'muted' }, `  ${cellLabel(p)}`)]
           : [h('span', { class: 'muted' }, cellLabel(p))]),
@@ -99,7 +99,7 @@ export function visitorsScreen() {
     h('h2', {}, '🔵 Everyone else'),
     infoTip('No shared feed ships with this app, and none is switched on by default — a static site collecting its users’ locations is exactly what this project does not do. Point it at a collector you run and its pins appear alongside yours. The origin must also be listed in index.html’s Content-Security-Policy (connect-src), or the browser will block the request.'),
   ])]);
-  shared.append(h('p', { class: 'tiny muted', style: 'margin:0 0 8px' }, 'Expects HTTPS returning JSON: an array of { lat, lng, n, cc }, or { points: [ … ] }. Anything malformed is ignored.'));
+  shared.append(h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, 'Expects HTTPS returning JSON: an array of { lat, lng, n, cc }, or { points: [ … ] }. Anything malformed is ignored.'));
   shared.append(field('Shared pin feed URL', h('input', {
     type: 'url', value: visitsFeedUrl(), placeholder: 'https://your-collector.example/visits.json',
     oninput: (e) => setVisitsFeedUrl(e.target.value),
@@ -109,8 +109,8 @@ export function visitorsScreen() {
     h('span', {}, 'Also send my pins to that feed'),
   ]);
   shared.append(contribRow);
-  shared.append(h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, `Sends the rounded ${GRID}° cell and the country. Never a track, never a time, never anything that identifies you or this device.`));
-  const feedStatus = h('p', { class: 'tiny muted', style: 'margin:8px 0 0' }, '');
+  shared.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, `Sends the rounded ${GRID}° cell and the country. Never a track, never a time, never anything that identifies you or this device.`));
+  const feedStatus = h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, '');
   shared.append(feedStatus);
   wrap.append(shared);
 

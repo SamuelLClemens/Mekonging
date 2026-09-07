@@ -18,10 +18,10 @@ export function contributionsScreen() {
   // Level card with a progress bar to the next level.
   wrap.append(h('div', { class: 'card contrib-hero' }, [
     h('div', { class: 'contrib-badge' }, lvl.emoji),
-    h('h2', { style: 'margin:0' }, `${lvl.title}`),
-    h('p', { class: 'muted', style: 'margin:2px 0 10px' }, `Level ${lvl.level} · ${pts} point${pts === 1 ? '' : 's'}`),
+    h('h2', { style: 'margin: 0' }, `${lvl.title}`),
+    h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-3)' }, `Level ${lvl.level} · ${pts} point${pts === 1 ? '' : 's'}`),
     h('div', { class: 'contrib-bar' }, [h('span', { style: `width:${Math.round(lvl.pct * 100)}%` })]),
-    h('p', { class: 'muted', style: 'margin:8px 0 0' },
+    h('p', { class: 'muted', style: 'margin: var(--sp-2) 0 0' },
       lvl.nextTitle ? `${lvl.ptsToNext} point${lvl.ptsToNext === 1 ? '' : 's'} to ${lvl.nextTitle}` : 'You have reached the top level — thank you!'),
   ]));
   wrap.append(screenHint('Points come from what you add to your own guide. Everything stays on this device — there are no accounts and no leaderboard, just your own progress.'));

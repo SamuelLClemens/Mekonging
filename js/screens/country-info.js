@@ -41,7 +41,7 @@ function setCityScreen(cc) {
   const cur = focusSpot(cc && getCountry(cc) ? cc : undefined).spot;
   wrap.append(h('div', { class: 'card' }, [
     field('Your location', locationSelect(spotKey(cur), (key) => { const s = spotForKey(key); if (s) { setFocusSpot(s); go(`#country-${s.country}`); } })),
-    h('p', { class: 'tiny muted', style: 'margin:6px 0 0' }, `Currently: ${cur.city}. Works offline — no GPS needed.`),
+    h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, `Currently: ${cur.city}. Works offline — no GPS needed.`),
   ]));
   mount(wrap, '#home');
 }
@@ -54,7 +54,7 @@ function countryHistoryCard(cc) {
   card.append(h('p', {}, hi.blurb));
   const kf = knownForRow(hi.knownFor); if (kf) card.append(kf);
   if (hi.cultureTip) card.append(h('p', { class: 'culture-tip' }, `🙏 ${hi.cultureTip}`));
-  if (hi.sources && hi.sources.length) card.append(h('p', { class: 'disclaimer', style: 'margin-bottom:0' }, `Sources: ${hi.sources.join(', ')}`));
+  if (hi.sources && hi.sources.length) card.append(h('p', { class: 'disclaimer', style: 'margin-bottom: 0' }, `Sources: ${hi.sources.join(', ')}`));
   return card;
 }
 
@@ -130,7 +130,7 @@ function babyScreen(cc) {
   wrap.append(dc);
   const boards = boardsForCountry(cc).filter((b) => b.family && b.family.length);
   if (boards.length) {
-    wrap.append(h('h3', { style: 'margin:14px 2px 4px' }, 'City by city'));
+    wrap.append(h('h3', { style: 'margin: var(--sp-4) var(--sp-0h) var(--sp-1)' }, 'City by city'));
     boards.forEach((b) => {
       const card = h('div', { class: 'card' });
       card.append(h('div', { class: 'row-between' }, [h('h2', {}, b.city), h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${b.slug}`) }, 'Board')]));
@@ -207,12 +207,12 @@ function freshnessNotice(dateStr, officialUrl, officialName, staleDays = 150) {
   const age = dataAgeDays(dateStr);
   if (age == null) return null;
   if (age <= staleDays) {
-    return h('p', { class: 'muted', style: 'margin:2px 0 10px' }, `✓ Verified ${dateStr}. The app re-checks this date automatically and flags it here once it ages; always reconfirm on the official portal for your nationality.`);
+    return h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-3)' }, `✓ Verified ${dateStr}. The app re-checks this date automatically and flags it here once it ages; always reconfirm on the official portal for your nationality.`);
   }
   const months = Math.max(1, Math.round(age / 30));
   return h('div', { class: 'card', style: 'border:1px solid var(--orange)' }, [
     h('strong', {}, '⚠ This may be out of date'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, `Last verified ${dateStr} (about ${months} month${months === 1 ? '' : 's'} ago). Visa and entry rules change often — reconfirm on the official government portal for your nationality before you rely on this.`),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, `Last verified ${dateStr} (about ${months} month${months === 1 ? '' : 's'} ago). Visa and entry rules change often — reconfirm on the official government portal for your nationality before you rely on this.`),
     officialUrl ? h('a', { class: 'btn block', href: officialUrl, target: '_blank', rel: 'noopener' }, `🔄 Check ${officialName || 'the official portal'} now ↗`) : null,
   ]);
 }
@@ -231,8 +231,8 @@ function visaScreen(cc) {
   (v.options || []).forEach((o) => {
     const card = h('div', { class: 'card' });
     card.append(h('div', { class: 'row-between' }, [h('h3', {}, VISA_TYPE[o.type] || o.type), o.fee ? h('span', { class: 'cat-tag' }, o.fee) : null]));
-    if (o.who) card.append(h('p', { class: 'tiny muted', style: 'margin:4px 0' }, o.who));
-    if (o.duration) card.append(h('p', { style: 'margin:2px 0' }, `🕒 ${o.duration}`));
+    if (o.who) card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1) 0' }, o.who));
+    if (o.duration) card.append(h('p', { style: 'margin: var(--sp-0h) 0' }, `🕒 ${o.duration}`));
     if (o.howApply) card.append(h('div', { class: 'list-note' }, o.howApply));
     wrap.append(card);
   });
@@ -240,14 +240,14 @@ function visaScreen(cc) {
   const ls = LONG_STAY[cc];
   if (ls) {
     const lc = h('div', { class: 'card' }, [h('h3', {}, '🧳 Long stay & remote work')]);
-    if (ls.note) lc.append(h('p', { class: 'tiny muted', style: 'margin:2px 0 8px' }, ls.note));
-    ls.options.forEach((o) => lc.append(h('div', { style: 'margin:6px 0' }, [
+    if (ls.note) lc.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, ls.note));
+    ls.options.forEach((o) => lc.append(h('div', { style: 'margin: var(--sp-1h) 0' }, [
       h('strong', {}, o.name),
-      o.who ? h('div', { class: 'tiny muted', style: 'margin:2px 0' }, o.who) : null,
-      o.duration ? h('div', { style: 'margin:2px 0' }, `🕒 ${o.duration}`) : null,
+      o.who ? h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0' }, o.who) : null,
+      o.duration ? h('div', { style: 'margin: var(--sp-0h) 0' }, `🕒 ${o.duration}`) : null,
       o.note ? h('div', { class: 'list-note' }, o.note) : null,
     ])));
-    if (ls.nomad) lc.append(h('p', { class: 'tiny', style: 'margin:8px 0 0' }, [h('strong', {}, '💻 Nomad tip: '), ls.nomad]));
+    if (ls.nomad) lc.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 0' }, [h('strong', {}, '💻 Nomad tip: '), ls.nomad]));
     if (ls.official && ls.official.url) lc.append(h('a', { class: 'btn ghost block btn-spaced', href: ls.official.url, target: '_blank', rel: 'noopener' }, `${ls.official.name} ↗`));
     lc.append(sourcesNote(ls.sources, ls.asOf));
     wrap.append(lc);
@@ -291,15 +291,15 @@ function scamsScreen(cc) {
   if (s && s.hotline) {
     // data-no-mt: same reasoning as the SOS numbers — label and dialable digits share a text
     // node, so this one stays exactly as written. See js/i18n.js.
-    wrap.append(h('a', { class: 'btn block', 'data-no-mt': '', style: 'margin:8px 0', href: `tel:${String(s.hotline.number).replace(/\s/g, '')}` }, `🚔 ${s.hotline.label}: ${s.hotline.number}`));
+    wrap.append(h('a', { class: 'btn block', 'data-no-mt': '', style: 'margin: var(--sp-2) 0', href: `tel:${String(s.hotline.number).replace(/\s/g, '')}` }, `🚔 ${s.hotline.label}: ${s.hotline.number}`));
   }
 
   if (s && s.top && s.top.length) {
     s.top.forEach((x) => {
       wrap.append(h('div', { class: 'card scam-card' }, [
         h('h3', {}, x.title),
-        h('p', { class: 'scam-how', style: 'margin:4px 0' }, [h('strong', {}, '⚠ What happens: '), x.how]),
-        h('p', { class: 'scam-avoid', style: 'margin:4px 0 0' }, [h('strong', {}, '✓ Avoid it: '), x.avoid]),
+        h('p', { class: 'scam-how', style: 'margin: var(--sp-1) 0' }, [h('strong', {}, '⚠ What happens: '), x.how]),
+        h('p', { class: 'scam-avoid', style: 'margin: var(--sp-1) 0 0' }, [h('strong', {}, '✓ Avoid it: '), x.avoid]),
       ]));
     });
   } else {
@@ -318,7 +318,7 @@ function scamsScreen(cc) {
   // Point to the airport-transport scam note, which lives on the arrival hub.
   wrap.append(h('div', { class: 'card' }, [
     h('h3', {}, '🚕 Getting from the airport'),
-    h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'The most common first-hour trick is an airport transport overcharge. The arrival guide lists the cheapest safe way into town for each gateway.'),
+    h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'The most common first-hour trick is an airport transport overcharge. The arrival guide lists the cheapest safe way into town for each gateway.'),
     h('button', { class: 'btn ghost block', onclick: () => go(`#arrival-${getActiveCountry()}`) }, '🛬 Open the arrival guide'),
   ]));
 

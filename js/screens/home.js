@@ -38,8 +38,14 @@ import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import { packState, onPackChange, deferPack } from '../offline-pack.js';
+// setupRecapCard moved to js/screens/welcome.js with the onboarding flow it belongs to
+// (screen split, mk-v0.539.0). Home is its only caller and shows it once ever, so it is
+// fetched on demand below rather than imported statically — a static import here would pull
+// the whole onboarding module into the launch graph on every launch, which is the opposite of
+// the point of moving it.
+let _recap = null;
 import {
-  go, mount, topbar, contextNow, setupRecapCard, render,
+  go, mount, topbar, contextNow, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
   ensureHomeWeather, ensurePlannedStopsWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
@@ -103,7 +109,14 @@ export function homeScreen() {
 
   // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
   // value-first first run — proof that the few taps already personalised the app.
-  if (store.profile.prefs.showSetupRecap) wrap.append(setupRecapCard());
+  if (store.profile.prefs.showSetupRecap) {
+    // Normally already resolved: the traveller has just come through onboarding, so the module
+    // is in memory and this renders in the same pass. The import path covers the other case —
+    // the flag set in an earlier session and never dismissed — and re-renders once it lands
+    // rather than leaving a promise the traveller never sees the result of.
+    if (_recap) wrap.append(_recap());
+    else import('./welcome.js').then((m) => { _recap = m.setupRecapCard; render(); }).catch(() => {});
+  }
 
   // The field-guide download announces itself while it runs (js/offline-pack.js). It is the
   // one thing in this app that uses the network without being asked, so it does not get to be
@@ -295,7 +308,7 @@ export function homeScreen() {
   // Closed by default: it is worth offering and it is not today's business, and standing it
   // open on every launch is exactly the kind of permanent scroll this pass exists to remove.
   wrap.append(homeFold('❤️ Give back', h('div', { class: 'card give-back' }, [
-    h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
+    h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Support trusted non-profits helping people across Thailand, Vietnam, Cambodia and Laos. The app handles no money — you give directly on each charity’s own site.'),
     h('button', { class: 'btn block', onclick: () => go('#donate') }, 'See causes to support'),
   ]), 'homeGiveBackOpen', { defaultOpen: false }));
 
@@ -473,9 +486,9 @@ function quickAccessRow(phase, stored, ctx) {
 
   // Open by default — it only ever collapses because the traveller closed it themselves
   // (prefs.quickAccessOpen explicitly false); an unset/undefined pref still means "open".
-  const body = h('div', { style: 'padding-top:8px' });
+  const body = h('div', { style: 'padding-top: var(--sp-2)' });
   body.append(phaseSwitchRow(phase, stored, false));   // the segmented control only — no repeated caption
-  body.append(h('div', { class: 'card home-status', style: 'margin-top:8px', role: 'group', 'aria-label': 'Quick access' }, chips));
+  body.append(h('div', { class: 'card home-status', style: 'margin-top: var(--sp-2)', role: 'group', 'aria-label': 'Quick access' }, chips));
   const det = homeFold('⚡ Quick access', body, 'quickAccessOpen');
   det.classList.add('quick-access');
   return det;
@@ -512,7 +525,7 @@ function nextStopCard(ctx) {
     const timeStr = pl.totalHrs[1] ? `~${pl.totalHrs[0]}–${pl.totalHrs[1]}h moving` : '';
     return h('div', { class: 'card next-stop-card' }, [
       h('h2', {}, `🚌 Getting to ${stop.title}`),
-      h('p', { style: 'margin:2px 0 8px' }, [changes, timeStr].filter(Boolean).join(' · ')),
+      h('p', { style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, [changes, timeStr].filter(Boolean).join(' · ')),
       h('button', { class: 'btn ghost block', onclick: () => go('#route') }, 'Full journey planner →'),
     ]);
   }
@@ -606,7 +619,7 @@ function homeWeatherPending(spot) {
   const card = h('div', { class: 'card' });
   const where = (spot && spot.city) ? ` for ${spot.city}` : '';
   if (netMode() === 'offline') {
-    card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' },
+    card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' },
       'You have data switched off, so the forecast cannot update. Everything else here works offline.'));
     card.append(h('button', {
       class: 'btn block',
@@ -615,13 +628,13 @@ function homeWeatherPending(spot) {
     return card;
   }
   if (!online()) {
-    card.append(h('p', { class: 'muted', style: 'margin:0' },
+    card.append(h('p', { class: 'muted', style: 'margin: 0' },
       'No connection right now — the forecast updates as soon as you are back online.'));
     return card;
   }
   // Consent given and a connection present: ensureHomeWeather() above is already fetching and
   // re-renders Home when it lands, so this is a genuinely transient state.
-  card.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, `Getting the latest forecast${where}…`));
+  card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `Getting the latest forecast${where}…`));
   card.append(h('button', { class: 'btn ghost block', onclick: () => go('#weather') }, 'Full forecast →'));
   return card;
 }

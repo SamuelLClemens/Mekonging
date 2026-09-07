@@ -88,7 +88,7 @@ function openLocationPicker() {
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
   sheet.append(h('div', { class: 'sheet-grip', 'aria-hidden': 'true' }));
   sheet.append(h('h3', {}, '📍 Choose your location'));
-  sheet.append(h('p', { class: 'muted', style: 'margin:0 0 8px' }, 'Sets where the map, distances and “near me” match — works offline, no GPS needed.'));
+  sheet.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Sets where the map, distances and “near me” match — works offline, no GPS needed.'));
   const cur = focusSpot(getActiveCountry()).spot;
   sheet.append(field('Your location', locationSelect(spotKey(cur), (key) => {
     const s = spotForKey(key);
@@ -165,7 +165,7 @@ export function placesScreen(arg) {
   const modeBar = h('div', { class: 'places-mode-bar' });
   const layerChipsRow = h('div', { class: 'layer-chips' });   // holds the one category-picker fold
   const mapWrap = h('div', {});
-  const cap = h('p', { class: 'muted', style: 'margin:2px 2px 8px' }, '');
+  const cap = h('p', { class: 'muted', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-2)' }, '');
   // Map FIRST, then the things that describe it. The category chips used to sit above the
   // map and the colour key at the very bottom of the screen, several thousand pixels away
   // from the colours it explains — so the traveller met 122px of chips before seeing any map
@@ -205,7 +205,7 @@ export function placesScreen(arg) {
     if (key) det.addEventListener('toggle', () => { store.profile.prefs[key] = det.open; save(); });
     return det;
   }
-  const stayBannerP = h('p', { style: 'margin:4px 0;font-weight:700' }, '');
+  const stayBannerP = h('p', { style: 'margin: var(--sp-1) 0;font-weight:700' }, '');
   const stayCard = h('div', { class: 'card' });
   let stayFixP = null;
   function updateStayBannerP() {
@@ -231,7 +231,7 @@ export function placesScreen(arg) {
       stayCard.append(
         h('p', {}, [h('strong', {}, stay.name || 'My stay'), h('span', { class: 'muted' }, ` · ${stay.coords.lat.toFixed(4)}, ${stay.coords.lng.toFixed(4)}`)]),
         stayBannerP,
-        h('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:6px' }, [
+        h('div', { style: 'display:flex;flex-wrap:wrap;gap: var(--sp-2);margin-top: var(--sp-1h)' }, [
           h('button', { class: 'btn', onclick: () => {
             if (placesCtrl && stayFixP) { placesCtrl.setWayback(stayFixP, stay.coords); placesCtrl.frameBoth(stayFixP, stay.coords); }
             else if (placesCtrl) { placesCtrl.goToStay(stay.coords); }
@@ -253,8 +253,8 @@ export function placesScreen(arg) {
   renderStayCard();
   wrap.append(foldedCard('🏠 My accommodation', stayCard, 'placesStayOpen', false));
 
-  const areasStatusP = h('p', { class: 'muted', style: 'margin:4px 0;font-size:13px' }, '');
-  const storageLineP = h('p', { class: 'muted', style: 'margin:2px 0 8px;font-size:12px' }, '');
+  const areasStatusP = h('p', { class: 'muted', style: 'margin: var(--sp-1) 0;font-size:13px' }, '');
+  const storageLineP = h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-2);font-size:12px' }, '');
   const areasCard = h('div', { class: 'card' });
   const swAvailableP = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
   // Reported gap: nothing here ever showed how much offline map data actually exists, or
@@ -400,7 +400,7 @@ export function placesScreen(arg) {
     const q = mapSearchInputP.value.trim();
     if (!placesCtrl || q.length < 2) return;
     const matches = placesCtrl.search(q);
-    if (!matches.length) { mapSearchResultsP.append(h('p', { class: 'muted', style: 'padding:6px 4px;font-size:13px' }, 'No matches in the offline data.')); return; }
+    if (!matches.length) { mapSearchResultsP.append(h('p', { class: 'muted', style: 'padding: var(--sp-1h) var(--sp-1);font-size:13px' }, 'No matches in the offline data.')); return; }
     matches.forEach((m) => mapSearchResultsP.append(
       h('button', { class: 'btn ghost block btn-spaced', style: 'justify-content:flex-start', onclick: () => {
         placesCtrl.flyTo(m.lng, m.lat, m.z);
@@ -411,7 +411,7 @@ export function placesScreen(arg) {
   // Appended into mapSection (not toolsCard) — lands right after the map/caption, still
   // above every collapsed card, so it never depends on placesCtrl having resolved yet to be
   // visible (runMapSearchP itself already no-ops safely until it has).
-  mapSection.append(h('div', { class: 'map-search-wrap', style: 'margin:8px 0 2px' }, [mapSearchInputP, mapSearchResultsP]));
+  mapSection.append(h('div', { class: 'map-search-wrap', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, [mapSearchInputP, mapSearchResultsP]));
 
   // ---- More map tools: measure, borders -------------------------------------------
   // Task #196 Phase 2 slice 2: the same tools #map's standalone screen has always offered
@@ -421,7 +421,7 @@ export function placesScreen(arg) {
   // here too; it is now always-visible above (see comment there) — only the two tools a
   // traveller reaches for far less often stay tucked behind this collapsed card.
   let measuringP = false;
-  const measureOutP = h('p', { class: 'map-hint', style: 'margin:8px 0 0;display:none' }, '');
+  const measureOutP = h('p', { class: 'map-hint', style: 'margin: var(--sp-2) 0 0;display:none' }, '');
   function fmtKmP(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 2 : 1)} km`; }
   function toggleMeasureP() {
     if (!placesCtrl) return;
@@ -475,11 +475,11 @@ export function placesScreen(arg) {
   { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } wantWakeP = false; document.removeEventListener('visibilitychange', onVisP); if (wakeLockP) { try { wakeLockP.release(); } catch { /* noop */ } wakeLockP = null; } }); }
 
   const toolsCard = h('div', {}, [
-    h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap:10px' }, [
+    h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap: var(--sp-3)' }, [
       measureBtnP,
       // min-height 24px: the label is the checkbox's tap target and measured 149x21 on a 375px
       // screen, under the WCAG 2.5.8 minimum. See .exp-monthly-toggle in style.css for the twin.
-      h('label', { style: 'display:flex;align-items:center;gap:6px;min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
+      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
       wakeBtnP,
     ]),
     measureOutP,
@@ -677,7 +677,7 @@ export function placesScreen(arg) {
   // Active-filter pills sit directly above the results — every filter clears from here,
   // by triggering the exact control it mirrors (same click handler, no duplicated logic),
   // so state can never drift between a pill and its source chip.
-  const pillsRow = h('div', { class: 'chips', style: 'margin:2px 0 4px' });
+  const pillsRow = h('div', { class: 'chips', style: 'margin: var(--sp-0h) 0 var(--sp-1)' });
   function renderActivePills() {
     pillsRow.innerHTML = '';
     const pill = (label, onClear) => h('button', { class: 'chip', 'aria-pressed': 'true', onclick: onClear }, [label, ' ✕']);
@@ -758,7 +758,7 @@ export function placesScreen(arg) {
     wrap.append(h('details', { class: 'filters-collapse' }, [
       whenSummary,
       strip,
-      h('div', { class: 'chips', style: 'margin-top:6px' }, [hideChip, resetBtn]),
+      h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [hideChip, resetBtn]),
     ]));
   }
 
@@ -815,7 +815,7 @@ export function placesScreen(arg) {
     compareTray.innerHTML = '';
     if (!compareSet.size) { compareTray.style.display = 'none'; return; }
     compareTray.style.display = '';
-    const row = h('div', { class: 'chips', style: 'margin-bottom:6px' });
+    const row = h('div', { class: 'chips', style: 'margin-bottom: var(--sp-1h)' });
     [...compareSet].forEach((id) => {
       const p = resolveItem(id);
       if (!p) { compareSet.delete(id); return; }
@@ -872,7 +872,7 @@ export function placesScreen(arg) {
       ]));
     });
     sheet.append(table);
-    const openRow = h('div', { class: 'chips', style: 'margin-top:10px' });
+    const openRow = h('div', { class: 'chips', style: 'margin-top: var(--sp-3)' });
     places.forEach((p) => openRow.append(h('button', { class: 'btn ghost', onclick: () => { close(); go(`#place-${p.id}`); } }, `Open ${compareLabel(p)}`)));
     sheet.append(openRow);
     sheet.append(h('button', { class: 'btn block btn-spaced', onclick: () => close() }, 'Close'));
@@ -1042,7 +1042,7 @@ export function placesScreen(arg) {
   mapWrap.append(canvas);
   const mapList0 = numberedMapPlaces().ml;
   if (!mapList0.length) {
-    mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'No mapped places for these filters/layers yet — widen them, or add a place of your own.'));
+    mapWrap.append(h('p', { class: 'muted', style: 'padding: var(--sp-3) var(--sp-3)' }, 'No mapped places for these filters/layers yet — widen them, or add a place of your own.'));
   } else {
     import('../map.js').then((m) => m.initMap(canvas, {
       places: mapList0,
@@ -1098,7 +1098,7 @@ export function placesScreen(arg) {
         const st = getMyStay();
         if (st && st.coords) c.setWayback(fix, st.coords);
       });
-    }).catch(() => { mapWrap.append(h('p', { class: 'muted', style: 'padding:10px 12px' }, 'The map could not start here — the list below still works offline.')); });
+    }).catch(() => { mapWrap.append(h('p', { class: 'muted', style: 'padding: var(--sp-3) var(--sp-3)' }, 'The map could not start here — the list below still works offline.')); });
   }
 }
 
@@ -1112,12 +1112,12 @@ export function placesScreen(arg) {
 // placesScreen above — so it moved here in step 4 rather than waiting on step 5.)
 function colorKeyCard() {
   const wrap = h('div', { class: 'color-key' });
-  wrap.append(h('div', { class: 'muted', style: 'margin:2px 0 4px' }, 'Category colours'));
+  wrap.append(h('div', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, 'Category colours'));
   wrap.append(h('div', { class: 'cats' }, CATEGORY_FAMILIES.filter((f) => f.key !== 'other').map((f) =>
     // The colour key repeats the family fills, so it needs the same readable label colour
     // catTag() applies — white on the market amber measured 2.27:1 here.
     h('span', { class: 'cat-tag', style: `background:${f.color};color:${inkOn(f.color)}`, title: f.label }, `${f.emoji} ${f.label}`))));
-  wrap.append(h('div', { class: 'muted', style: 'margin:10px 0 4px' }, 'Price'));
+  wrap.append(h('div', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, 'Price'));
   wrap.append(h('div', { class: 'cats' }, [['low', PRICE_TIER_LABEL.low], ['mid', PRICE_TIER_LABEL.mid], ['high', PRICE_TIER_LABEL.high], ['any', PRICE_TIER_LABEL.any]].map(([t, l]) =>
     h('span', { class: `tier ${t}` }, l))));
   return wrap;
@@ -1177,9 +1177,9 @@ function placeQuickRow(p, num, compareCtl) {
     src ? h('img', { class: 'pqr-photo', src, alt: '', loading: 'lazy', decoding: 'async' }) : null,
     cats.length ? h('div', { class: 'cats' }, cats.map((c) => catTag(c))) : null,
     travelerChips(p),
-    p.blurb ? h('p', { style: 'margin:6px 0' }, p.blurb) : null,
-    h('p', { class: 'muted', style: 'margin:2px 0' }, [p.city, priceStr].filter(Boolean).join(' · ')),
-    h('div', { class: 'row-between', style: 'margin-top:6px;flex-wrap:wrap' }, [
+    p.blurb ? h('p', { style: 'margin: var(--sp-1h) 0' }, p.blurb) : null,
+    h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0' }, [p.city, priceStr].filter(Boolean).join(' · ')),
+    h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h);flex-wrap:wrap' }, [
       h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); go(`#place-${p.id}`); } }, 'Full details'),
       h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); saveSheet(p.id); } }, '＋ Save'),
       h('button', { class: 'btn ghost', onclick: (e) => { e.stopPropagation(); tripVisitSheet(p.id); } }, '🧭 Trip'),
@@ -1416,7 +1416,7 @@ function beachInfoCard(p) {
 // deep-link out to the live site. No reviews are scraped.
 function extStars(score, scale) { const s = (Number(score) / (Number(scale) || 5)) * 5; return isNaN(s) ? NaN : Math.round(s * 10) / 10; }
 function extRow(label, right, href) {
-  return h('div', { class: 'row-between', style: 'padding:5px 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
+  return h('div', { class: 'row-between', style: 'padding: var(--sp-1) 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
     h('span', { style: 'font-weight:600' }, label),
     href ? h('a', { class: 'rev-link', href, target: '_blank', rel: 'noopener' }, right) : h('span', { class: 'muted' }, right),
   ]);
@@ -1498,10 +1498,10 @@ function weatherNearbyCard(p) {
           h('div', { class: 'muted' }, clabel),
         ]),
       ]));
-      body.append(h('div', { class: 'muted', style: 'margin-top:6px' },
+      body.append(h('div', { class: 'muted', style: 'margin-top: var(--sp-1h)' },
         `Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`));
     } else {
-      body.append(h('p', { class: 'muted', style: 'margin:0' },
+      body.append(h('p', { class: 'muted', style: 'margin: 0' },
         loading ? 'Fetching the latest forecast…' : 'No saved forecast yet — tap below, then Refresh while online.'));
     }
   }
@@ -1515,7 +1515,7 @@ function weatherNearbyCard(p) {
   card.append(airBlock(spot, { compact: true }));
   card.append(uvTodayBlock(p.coords, p.country));
   card.append(
-    h('p', { class: 'muted', style: 'margin:6px 0 0' },
+    h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 0' },
       `Nearest listed city: ${spot.city}${km != null ? ` · ${fmtDistance(km)} away` : ''} · regional guide, not pinpoint.`),
     h('button', { class: 'btn ghost block btn-spaced', onclick: () => { seedWeatherKey(key); go('#weather'); } }, 'See full forecast'),
   );
@@ -1535,9 +1535,9 @@ function orientationCard(p) {
     h('strong', {}, 'How you will know you are there — '), h('span', {}, p.recognition),
   ]));
   const areaBits = [p.city ? `In ${p.city}` : null].filter(Boolean);
-  if (areaBits.length) card.append(h('p', { class: 'muted', style: 'margin:6px 0 2px' }, areaBits.join(' · ')));
+  if (areaBits.length) card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1h) 0 var(--sp-0h)' }, areaBits.join(' · ')));
   const dchip = distanceChip(p);
-  if (dchip) card.append(h('div', { style: 'margin:2px 0 8px' }, dchip));
+  if (dchip) card.append(h('div', { style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, dchip));
   if (p.coords) {
     const mini = h('div', { class: 'mini-map', style: 'height:210px;border-radius:14px;overflow:hidden;position:relative' });
     card.append(mini);
@@ -1563,7 +1563,7 @@ function placeAccessBlock(p) {
     const LBL = { yes: '♿ Step-free access', partial: '♿ Partly step-free', no: '⚠️ Not step-free' };
     const box = h('div', { class: 'card access-focus' });
     box.append(h('h3', {}, LBL[a.stepFree] || '♿ Accessibility'));
-    if (a.note) box.append(h('p', { class: 'muted', style: 'margin:4px 0' }, a.note));
+    if (a.note) box.append(h('p', { class: 'muted', style: 'margin: var(--sp-1) 0' }, a.note));
     if (a.toilet) box.append(h('div', { class: 'list-note' }, 'Accessible toilet reported on site.'));
     box.append(h('p', { class: 'tiny muted' }, 'Reported accessibility — always verify on the day.'));
     return box;
@@ -1573,7 +1573,7 @@ function placeAccessBlock(p) {
     const cc = p.country || (p.id || '').split('-')[0];
     if (getAccessibility(cc)) {
       const box = h('div', { class: 'card' });
-      box.append(h('p', { class: 'tiny muted', style: 'margin:0 0 6px' }, 'Step-free access here is not recorded yet.'));
+      box.append(h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-1h)' }, 'Step-free access here is not recorded yet.'));
       box.append(h('button', { class: 'btn ghost block', onclick: () => go(`#access-${cc}`) }, '♿ See the country accessibility guide'));
       return box;
     }
@@ -1632,7 +1632,7 @@ function transitCard(p) {
   const cc = p.country || (p.id || '').split('-')[0];
   const card = h('div', { class: 'card' }, [
     h('h2', {}, '🚉 Getting here & away'),
-    h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' },
+    h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-2)' },
       'Nearest airport, train, bus and boat connections. Distances are straight-line from this spot; tap for door-to-door directions (needs internet).'),
   ]);
   HUB_TYPES.forEach((t) => {
@@ -1645,7 +1645,7 @@ function transitCard(p) {
         h('strong', {}, `${t.emoji} ${hub.name}${hub.code ? ` (${hub.code})` : ''}`),
         h('span', { class: 'fair' }, `${kmLabel(km)} · ${dir}`),
       ]),
-      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, (hub.city && hub.city !== p.city) ? `${titleCase(t.label)} · ${hub.city}` : titleCase(t.label)),
+      h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, (hub.city && hub.city !== p.city) ? `${titleCase(t.label)} · ${hub.city}` : titleCase(t.label)),
       hub.into ? h('div', { class: 'list-note' }, hub.into) : null,
       hub.note ? h('div', { class: 'muted tiny' }, hub.note) : null,
       h('a', { class: 'btn ghost block btn-spaced', href: hubDirUrl(p.coords, hub), target: '_blank', rel: 'noopener' }, 'Directions ↗'),
@@ -1660,14 +1660,14 @@ function transitCard(p) {
         h('strong', {}, `🛂 ${bx.x.name}`),
         h('span', { class: 'fair' }, kmLabel(bx.km)),
       ]),
-      h('div', { class: 'muted tiny', style: 'margin:2px 0 4px' }, `Border crossing · ${bx.x.pair}`),
+      h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, `Border crossing · ${bx.x.pair}`),
       h('button', { class: 'btn ghost block', onclick: () => go('#crossings') }, 'Crossing details, hours & visa ↗'),
     ]));
   }
   // Always-on helpers: a live "transport near here" search, the country's intercity routes
   // and its arrival guide (airport → town, cash, SIM). These keep every place useful even
   // where no listed hub sits within range.
-  card.append(h('div', { class: 'chips', style: 'margin-top:8px' }, [
+  card.append(h('div', { class: 'chips', style: 'margin-top: var(--sp-2)' }, [
     h('a', { class: 'chip', href: mapsSearch(`bus station OR train station near ${p.coords.lat},${p.coords.lng}`), target: '_blank', rel: 'noopener' }, '🔎 Transport near here ↗'),
     h('button', { class: 'chip', onclick: () => go(`#transport-${cc}`) }, '🧭 Routes, rentals & tickets'),
     h('button', { class: 'chip', onclick: () => go(`#arrival-${cc}`) }, '🛬 Arrival guide'),
@@ -1689,9 +1689,9 @@ function localSecretsCard(p) {
   const card = h('details', { class: 'card local-secrets' });
   const summary = h('summary', {}, '');
   card.append(summary);
-  card.append(h('p', { class: 'muted small', style: 'margin:2px 0 8px' }, 'Insider tips for this place — from the guide, from you, and from travellers who shared a link. Kept on your device.'));
+  card.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Insider tips for this place — from the guide, from you, and from travellers who shared a link. Kept on your device.'));
   if (guideTips.length) {
-    card.append(h('h3', { style: 'margin:6px 0 2px' }, '📖 From the guide'));
+    card.append(h('h3', { style: 'margin: var(--sp-1h) 0 var(--sp-0h)' }, '📖 From the guide'));
     guideTips.forEach((t) => card.append(h('div', { class: 'list-note' }, t)));
   }
   const listEl = h('div', {});
@@ -1700,10 +1700,10 @@ function localSecretsCard(p) {
     listEl.innerHTML = '';
     const s = getPlaceSecrets(p.id);
     summary.textContent = `🔑 Local secrets & tips${s.length ? ` (${s.length})` : ''}`;
-    if (s.length) listEl.append(h('h3', { style: 'margin:10px 0 2px' }, '🔑 Traveller secrets'));
+    if (s.length) listEl.append(h('h3', { style: 'margin: var(--sp-3) 0 var(--sp-0h)' }, '🔑 Traveller secrets'));
     s.forEach((sec, i) => {
       listEl.append(h('div', { class: 'secret-item' }, [
-        h('p', { style: 'margin:0' }, sec.text),
+        h('p', { style: 'margin: 0' }, sec.text),
         h('div', { class: 'tiny muted' }, [sec.by, sec.at].filter(Boolean).join(' · ')),
         h('div', { class: 'listing-actions' }, [
           shareButton('🔗 Share', `A tip for ${p.name}`, () => shareUrl('in', encodeShare('secret', { id: p.id, n: p.name, text: sec.text, by: sec.by || (ensureMe().name || '') }, ensureMe())), 'btn ghost'),
@@ -1763,8 +1763,8 @@ export function placeScreen(id) {
       mixed: `± Depends where — ${monthNow}`,
     }[when.verdict];
     const attribution = when.tier === 'city' ? `${when.name}: ` : (when.tier === 'region' ? `${when.name} region: ` : '');
-    card.append(h('p', { class: `zone-when is-${when.verdict}`, style: 'margin:4px 0' }, label));
-    card.append(h('p', { class: 'zone-why muted', style: 'margin:0 0 8px' }, `${attribution}${when.why}`));
+    card.append(h('p', { class: `zone-when is-${when.verdict}`, style: 'margin: var(--sp-1) 0' }, label));
+    card.append(h('p', { class: 'zone-why muted', style: 'margin: 0 0 var(--sp-2)' }, `${attribution}${when.why}`));
   }
   // Show the synthesised rating only when there is no real external-ratings snapshot; when
   // externalRatings exists it is the single source of truth (rendered lower down), so the two
@@ -1894,7 +1894,7 @@ function placePhotoThumbs(id) {
   const renderThumbs = () => {
     thumbs.innerHTML = '';
     const keys = placePhotoKeys(id);
-    if (!keys.length) { thumbs.append(h('p', { class: 'muted', style: 'margin:0' }, 'No photos yet — add your own.')); return; }
+    if (!keys.length) { thumbs.append(h('p', { class: 'muted', style: 'margin: 0' }, 'No photos yet — add your own.')); return; }
     keys.forEach((k) => {
       const img = h('img', { alt: 'Your photo of this place', loading: 'lazy' });
       setBlobThumb(img, k);

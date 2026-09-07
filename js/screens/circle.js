@@ -72,9 +72,9 @@ export function circleScreen() {
     const bioIn = h('textarea', { class: 'ta', maxlength: '160', rows: '2', placeholder: 'One line about you (optional)' }, me.bio || '');
     cardBox.append(
       h('h2', {}, 'Your traveller card'),
-      h('div', { class: 'field' }, [h('label', {}, 'Emoji & name'), h('div', { style: 'display:flex; gap:8px' }, [avIn, nameIn])]),
+      h('div', { class: 'field' }, [h('label', {}, 'Emoji & name'), h('div', { style: 'display:flex; gap: var(--sp-2)' }, [avIn, nameIn])]),
       field('Short bio', bioIn),
-      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+      h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
         me.name ? h('button', { class: 'btn ghost', onclick: () => { editingMyCard = false; go('#circle'); } }, 'Cancel') : h('span', {}),
         h('button', { class: 'btn', onclick: () => { setMe({ name: nameIn.value, avatar: avIn.value, bio: bioIn.value }); editingMyCard = false; go('#circle'); } }, 'Save card'),
       ]),
@@ -124,7 +124,7 @@ export function circleScreen() {
         if (!tel) return;
         const digits = tel.replace(/[^\d]/g, '');
         const smsUrl = `sms:+${digits}${isIOS ? '&' : '?'}body=${encodeURIComponent(inviteMsg())}`;
-        pickedBox.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+        pickedBox.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
           h('span', {}, nm),
           h('div', { class: 'cats' }, [
             h('button', { class: 'chip', onclick: () => window.open(`https://wa.me/${digits}?text=${encodeURIComponent(inviteMsg())}`, '_blank', 'noopener') }, '💬 WhatsApp'),
@@ -147,7 +147,7 @@ export function circleScreen() {
     try { await navigator.clipboard.writeText(buildUrl()); status.textContent = 'Link copied — paste it to a friend.'; }
     catch { status.textContent = 'Could not copy automatically — select the link below to copy it.'; }
   } }, '🔗 Copy my link'));
-  shareCard.append(h('p', { class: 'tiny muted', style: 'word-break:break-all; margin-top:8px' }, buildUrl()));
+  shareCard.append(h('p', { class: 'tiny muted', style: 'word-break:break-all; margin-top: var(--sp-2)' }, buildUrl()));
   shareCard.append(status);
   wrap.append(shareCard);
 
@@ -191,10 +191,10 @@ export function addContactScreen(arg) {
   box.append(contactRow(card));
   const status = h('p', { class: 'muted' });
   if (isSelf) {
-    box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, 'This is your own card.'));
+    box.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-2)' }, 'This is your own card.'));
     box.append(h('button', { class: 'btn', onclick: () => go('#circle') }, 'Back to your circle'));
   } else {
-    box.append(h('p', { class: 'muted', style: 'margin-top:8px' }, existing ? `${card.name} is already in your circle — you can refresh their card.` : `Add ${card.name} to your travel circle?`));
+    box.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-2)' }, existing ? `${card.name} is already in your circle — you can refresh their card.` : `Add ${card.name} to your travel circle?`));
     box.append(h('button', { class: 'btn block', onclick: () => { const r = addContact(card); if (r.ok) go('#circle'); else status.textContent = 'Could not add this contact.'; } }, existing ? 'Refresh their card' : `Add ${card.name}`));
     box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#circle') }, 'Not now'));
   }
@@ -227,15 +227,15 @@ export function importShareScreen(arg) {
 
   const box = h('div', { class: 'card' });
   if (s.from) box.append(contactRow(s.from));
-  if (s.msg) box.append(h('p', { style: 'margin-top:6px' }, s.msg));
+  if (s.msg) box.append(h('p', { style: 'margin-top: var(--sp-1h)' }, s.msg));
   if (s.kind === 'place') {
     const exists = getPlace(s.data.id);
-    box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, s.data.name));
     box.append(h('p', { class: 'muted' }, exists ? 'A place they recommend.' : 'A place they recommend — not in your guide, so search for it by name.'));
     if (exists) box.append(h('button', { class: 'btn block', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
     box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: (e) => { toggleFavorite(s.data.id); e.currentTarget.textContent = '✓ Saved to favourites'; } }, '⭐ Save to favourites'));
   } else if (s.kind === 'collection') {
-    box.append(h('h2', { style: 'margin-top:8px' }, s.data.name));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, s.data.name));
     box.append(h('p', { class: 'muted' }, `${s.data.items.length} place${s.data.items.length === 1 ? '' : 's'} in this list.`));
     box.append(h('ul', {}, s.data.items.slice(0, 40).map((it) => h('li', {}, it.name || it.id))));
     box.append(h('button', { class: 'btn block', onclick: (e) => {
@@ -244,11 +244,11 @@ export function importShareScreen(arg) {
       e.currentTarget.textContent = `✓ Saved (${n} in your guide)`;
     } }, '＋ Save as a collection'));
   } else if (s.kind === 'trip') {
-    box.append(h('h2', { style: 'margin-top:8px' }, 'A shared trip'));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, 'A shared trip'));
     box.append(h('ol', {}, s.data.stops.slice(0, 40).map((st) => h('li', {}, st.title + (st.date ? ` — ${st.date}` : '')))));
     box.append(h('button', { class: 'btn block', onclick: (e) => { s.data.stops.forEach((st) => addStop({ title: st.title, country: st.country, date: st.date, endDate: st.endDate })); e.currentTarget.textContent = '✓ Added to my trip'; } }, '＋ Add these stops to my trip'));
   } else if (s.kind === 'tip') {
-    box.append(h('h2', { style: 'margin-top:8px' }, `Local tip — ${s.data.city}`));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, `Local tip — ${s.data.city}`));
     box.append(h('p', {}, s.data.text));
     const board = getBoard(s.data.cc, s.data.city.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
     box.append(h('button', { class: 'btn block', onclick: (e) => {
@@ -259,33 +259,33 @@ export function importShareScreen(arg) {
     if (board) box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#board-${board.country}-${board.slug}`) }, `📋 Open the ${board.city} board`));
   } else if (s.kind === 'jelly') {
     const exists = getPlace(s.data.id);
-    box.append(h('h2', { style: 'margin-top:8px' }, `🪼 Jellyfish sighting — ${s.data.name}`));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, `🪼 Jellyfish sighting — ${s.data.name}`));
     box.append(h('p', {}, `${SEV_LABEL[s.data.sev] || SEV_LABEL.seen}${s.data.note ? ` — ${s.data.note}` : ''}${s.data.d ? ` · ${fmtReportDate(s.data.d)}` : ''}`));
     box.append(h('button', { class: 'btn block', onclick: (e) => {
       addJellyReport(s.data.id, { d: s.data.d || todayKey(), sev: s.data.sev || 'seen', note: s.data.note || '', by: s.from ? s.from.name : 'a traveller' });
       e.currentTarget.textContent = '✓ Added to this beach';
     } }, '＋ Add this sighting to the beach'));
     if (exists) box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${s.data.id}`) }, 'Open this beach'));
-    else box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This beach is not in your guide, so the sighting cannot be pinned to it.'));
+    else box.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-1h)' }, 'This beach is not in your guide, so the sighting cannot be pinned to it.'));
   } else if (s.kind === 'secret') {
     const exists = getPlace(s.data.id);
-    box.append(h('h2', { style: 'margin-top:8px' }, `🔑 Local secret — ${s.data.name}`));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, `🔑 Local secret — ${s.data.name}`));
     box.append(h('p', {}, s.data.text));
     if (s.data.by) box.append(h('p', { class: 'tiny muted' }, `Shared by ${s.data.by}`));
     if (exists) {
       box.append(h('button', { class: 'btn block', onclick: (e) => { addPlaceSecret(s.data.id, { text: s.data.text, by: s.data.by || (s.from ? s.from.name : 'a traveller') }); e.currentTarget.textContent = '✓ Saved to this place'; } }, '＋ Save this secret to the place'));
       box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#place-${s.data.id}`) }, 'Open this place'));
     } else {
-      box.append(h('p', { class: 'muted', style: 'margin-top:6px' }, 'This place is not in your guide, so the secret cannot be pinned to it.'));
+      box.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-1h)' }, 'This place is not in your guide, so the secret cannot be pinned to it.'));
     }
   } else if (s.kind === 'bb') {
     const d = s.data; const cat = d.cat || 'other'; const meta = bbCat(cat);
-    box.append(h('h2', { style: 'margin-top:8px' }, `${meta.emoji} ${bbHeadline(cat, d)}`));
+    box.append(h('h2', { style: 'margin-top: var(--sp-2)' }, `${meta.emoji} ${bbHeadline(cat, d)}`));
     if (cat === 'swap') box.append(h('p', { class: 'muted small' }, swapCalcNodes((d.have && d.have.a) || 0, d.have && d.have.c, d.want && d.want.c)));
     else { const sub = bbSubline(cat, d); if (sub) box.append(h('p', { class: 'small', style: 'font-weight:700' }, sub)); }
     const line = [meta.label, d.city].filter(Boolean).join(' · ');
     if (line) box.append(h('p', { class: 'tiny muted' }, line));
-    if (d.note) box.append(h('p', { style: 'margin-top:6px' }, d.note));
+    if (d.note) box.append(h('p', { style: 'margin-top: var(--sp-1h)' }, d.note));
     if (d.contact) box.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
     box.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => { addListing({ cat, mine: false, from: s.from, data: d }); e.currentTarget.textContent = '✓ Saved to your board'; } }, '＋ Save to my board'));
     box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#exchange-' + cat) }, 'Open the traveller board'));
@@ -422,7 +422,7 @@ export function threadScreen(userId, fallbackCard, justImported = false) {
   const sendStatus = h('p', { class: 'tiny muted' });
   wrap.append(h('div', { class: 'card' }, [
     h('h3', {}, 'Reply'), ta, sendBtn, sendStatus,
-    h('p', { class: 'tiny muted', style: 'margin-top:6px' }, 'Your note is saved to this thread and a link is created to hand to them.'),
+    h('p', { class: 'tiny muted', style: 'margin-top: var(--sp-1h)' }, 'Your note is saved to this thread and a link is created to hand to them.'),
   ]));
   mount(wrap, '#circle');
 }

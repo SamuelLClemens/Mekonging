@@ -92,7 +92,7 @@ function donutSVG(segs, centerTop, centerSub) {
 // at a mixed-currency breakdown. render() (not just save()) so every number on the card
 // updates immediately, in place, without navigating away and back.
 function totalsCurrencyRow() {
-  return h('div', { class: 'row-between', style: 'margin:0 0 10px' }, [
+  return h('div', { class: 'row-between', style: 'margin: 0 0 var(--sp-3)' }, [
     h('span', { class: 'muted tiny' }, 'Show totals & percentages in'),
     currencySelect(homeCurrency(), (v) => { store.profile.homeCurrency = v; save(); render(); }),
   ]);
@@ -109,7 +109,7 @@ export function budgetSummaryCard() {
     const card = h('div', { class: 'card budget-card' });
     card.append(h('h2', {}, '💰 Budget'));
     card.append(totalsCurrencyRow());
-    card.append(h('p', { class: 'muted', style: 'margin:4px 0 8px' }, 'Log an expense below, or set a budget and your trip dates here to see stats before you do.'));
+    card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, 'Log an expense below, or set a budget and your trip dates here to see stats before you do.'));
     card.append(budgetSetupEditor());
     return card;
   }
@@ -144,7 +144,7 @@ export function budgetSummaryCard() {
       h('span', { class: 'blg-val' }, `${money(Math.round(sums[c.id]), home)} · ${pct}%`),
     ]));
   });
-  if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin:0' }, 'Log a few expenses to see the breakdown.'));
+  if (!segs.some((s) => s.value > 0)) legend.append(h('p', { class: 'muted tiny', style: 'margin: 0' }, 'Log a few expenses to see the breakdown.'));
   card.append(h('div', { class: 'budget-head' }, [donut, legend]));
 
   if (target) {
@@ -154,7 +154,7 @@ export function budgetSummaryCard() {
       const remaining = target.amount - spent;
       const pctSpent = Math.round(spent / target.amount * 100);
       card.append(h('div', { class: 'budget-bar' }, [h('span', { class: 'budget-bar-fill' + (remaining < 0 ? ' over' : ''), style: `width:${Math.min(100, Math.max(0, spent / target.amount * 100))}%` })]));
-      card.append(h('p', { style: 'margin:6px 0 0' }, [
+      card.append(h('p', { style: 'margin: var(--sp-1h) 0 0' }, [
         h('strong', { style: remaining < 0 ? 'color:var(--magenta)' : '' }, remaining >= 0 ? `${money(Math.round(remaining), home)} left` : `${money(Math.round(-remaining), home)} over`),
         h('span', { class: 'muted' }, ` of ${money(target.amount, home)} · ${pctSpent}% spent`),
       ]));
@@ -162,18 +162,18 @@ export function budgetSummaryCard() {
         const projected = dailyRate * span.total; const diff = projected - target.amount;
         card.append(h('p', { class: 'budget-proj ' + (diff > 0 ? 'over' : 'under') }, `${diff > 0 ? '⚠️' : '✓'} At ~${money(Math.round(dailyRate), home)}/day, you are on track to ${diff > 0 ? 'go over by ' + money(Math.round(diff), home) : 'finish ' + money(Math.round(-diff), home) + ' under'} across ${span.total} days.`));
       } else if (spent > 0) {
-        card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, `Spending ~${money(Math.round(dailyRate), home)}/day so far. Add trip dates in My trip for a full projection.`));
+        card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 0' }, `Spending ~${money(Math.round(dailyRate), home)}/day so far. Add trip dates in My trip for a full projection.`));
       }
     } else {
       const overUnder = dailyRate - target.amount;
-      card.append(h('p', { style: 'margin:6px 0 0' }, [
+      card.append(h('p', { style: 'margin: var(--sp-1h) 0 0' }, [
         h('strong', { style: overUnder > 0 ? 'color:var(--magenta)' : '' }, `~${money(Math.round(dailyRate), home)}/day`),
         h('span', { class: 'muted' }, ` vs ${money(target.amount, home)}/day budget`),
       ]));
       if (spent > 0) card.append(h('p', { class: 'budget-proj ' + (overUnder > 0 ? 'over' : 'under') }, overUnder > 0 ? `⚠️ About ${money(Math.round(overUnder), home)}/day over budget at this rate.` : `✓ About ${money(Math.round(-overUnder), home)}/day under budget — nicely on track.`));
     }
   }
-  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:4px 0 0' }, 'Some expenses use a currency with no cached rate — refresh in Currency to include them.'));
+  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 0' }, 'Some expenses use a currency with no cached rate — refresh in Currency to include them.'));
   card.append(budgetSetupEditor());
   return card;
 }
@@ -273,7 +273,7 @@ function withdrawalTargetEditor() {
   det.append(h('summary', {}, custom ? '✎ Change cash budget' : '＋ Set a separate cash budget'));
   const amt = h('input', { type: 'number', inputmode: 'decimal', placeholder: `Amount in ${home}`, value: custom ? custom.amount : '' });
   det.append(field(`Cash budget (${home})`, amt));
-  det.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+  det.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
     custom ? h('button', { class: 'btn ghost', onclick: () => { setWithdrawalTarget(null); render(); } }, 'Clear') : h('span', {}, ''),
     h('button', { class: 'btn', onclick: () => { if (amt.value) { setWithdrawalTarget(amt.value); render(); } } }, 'Save'),
   ]));
@@ -301,7 +301,7 @@ function budgetWithdrawalsCard() {
   });
   const card = h('div', { class: 'card budget-card withdrawals-card' });
   card.append(h('h2', {}, '🏧 Cash withdrawals'));
-  card.append(h('p', { class: 'muted', style: 'margin:4px 0 10px' }, 'Cash pulled out, tracked separately from itemised spending.'));
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-3)' }, 'Cash pulled out, tracked separately from itemised spending.'));
 
   if (wTarget) {
     const remaining = Math.max(0, wTarget.amount - total);
@@ -312,7 +312,7 @@ function budgetWithdrawalsCard() {
       h('div', { class: 'blg-row' }, [h('span', { class: 'blg-dot', style: 'background:var(--line)' }), h('span', { class: 'blg-lbl' }, 'Left in budget'), h('span', { class: 'blg-val' }, money(Math.round(remaining), home))]),
     ]);
     card.append(h('div', { class: 'budget-head' }, [donut, legend]));
-    if (!wTarget.custom) card.append(h('p', { class: 'muted tiny', style: 'margin:2px 0 8px' }, 'Using your whole-trip budget — set a separate one below to track this on its own.'));
+    if (!wTarget.custom) card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Using your whole-trip budget — set a separate one below to track this on its own.'));
 
     // Pace: the same percentage read on two different clocks — how far through the trip vs.
     // how far through this budget's been withdrawn. "% of trip elapsed" needs a known trip
@@ -332,21 +332,21 @@ function budgetWithdrawalsCard() {
         h('span', { class: 'pace-lbl' }, `${Math.min(999, withdrawnPct)}% of budget withdrawn`),
         h('div', { class: 'budget-bar pace-bar' }, [h('span', { class: 'budget-bar-fill pace-fill-wd' + (diff > 8 ? ' over' : ''), style: `width:${Math.min(100, withdrawnPct)}%` })]),
       ]));
-      card.append(h('p', { class: 'budget-proj ' + (diff > 8 ? 'over' : 'under'), style: 'margin:4px 0 10px' },
+      card.append(h('p', { class: 'budget-proj ' + (diff > 8 ? 'over' : 'under'), style: 'margin: var(--sp-1) 0 var(--sp-3)' },
         Math.abs(diff) <= 8 ? '✓ right on pace with the trip.' : diff > 8 ? `⚠️ withdrawing faster than the trip is passing (+${diff} pts).` : `✓ under pace — ${-diff} pts of runway to spare.`));
     } else {
-      card.append(h('div', { class: 'pace-row', style: 'margin-bottom:8px' }, [
+      card.append(h('div', { class: 'pace-row', style: 'margin-bottom: var(--sp-2)' }, [
         h('span', { class: 'pace-lbl' }, `${Math.min(999, withdrawnPct)}% of budget withdrawn`),
         h('div', { class: 'budget-bar pace-bar' }, [h('span', { class: 'budget-bar-fill pace-fill-wd', style: `width:${Math.min(100, withdrawnPct)}%` })]),
       ]));
     }
   } else {
-    card.append(h('p', { style: 'margin:0 0 10px' }, [
+    card.append(h('p', { style: 'margin: 0 0 var(--sp-3)' }, [
       h('strong', {}, money(total, home)), h('span', { class: 'muted' }, ' withdrawn so far'),
     ]));
-    card.append(h('p', { class: 'muted tiny', style: 'margin:-6px 0 10px' }, 'Set a budget below to see this as a share of a total.'));
+    card.append(h('p', { class: 'muted tiny', style: 'margin:calc(var(--sp-1h) * -1) 0 var(--sp-3)' }, 'Set a budget below to see this as a share of a total.'));
   }
-  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin:0 0 8px' }, 'Some withdrawals use a currency with no cached rate — refresh in Currency to include them.'));
+  if (unknown) card.append(h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-2)' }, 'Some withdrawals use a currency with no cached rate — refresh in Currency to include them.'));
   card.append(withdrawalTargetEditor());
 
   const wAmt = h('input', { type: 'number', inputmode: 'decimal', placeholder: 'Amount', 'aria-label': 'Withdrawal amount' });
@@ -356,7 +356,7 @@ function budgetWithdrawalsCard() {
   const det = h('details', { class: 'budget-set' });
   det.append(h('summary', {}, '＋ Log a withdrawal'));
   det.append(
-    h('div', { style: 'display:flex;gap:10px' }, [field('Amount', wAmt), field('Currency', wCur)]),
+    h('div', { style: 'display:flex;gap: var(--sp-3)' }, [field('Amount', wAmt), field('Currency', wCur)]),
     field('Note (optional)', wNote), field('Date', wDate),
     h('button', { class: 'btn block btn-spaced', onclick: () => { if (!wAmt.value) return; addWithdrawal({ amount: wAmt.value, currency: wCur.value, date: wDate.value, note: wNote.value.trim() }); render(); } }, '＋ Add withdrawal'),
   );
@@ -365,7 +365,7 @@ function budgetWithdrawalsCard() {
   // Editable and minimizeable — same idiom as Recent expenses (collapsibleCard over an
   // h2-led block), just nested inside this card instead of standing alone.
   if (list.length) {
-    const recent = h('div', {}, [h('h2', { style: 'margin:12px 0 4px' }, 'Recent withdrawals')]);
+    const recent = h('div', {}, [h('h2', { style: 'margin: var(--sp-3) 0 var(--sp-1)' }, 'Recent withdrawals')]);
     list.slice().reverse().slice(0, 20).forEach((w) => recent.append(withdrawalRow(w)));
     card.append(collapsibleCard(recent, 'budgetRecentWithdrawalsOpen', false));
   }
@@ -380,10 +380,10 @@ function withdrawalRow(w) {
     const cur = currencySelect(w.currency || homeCurrency());
     const dt = h('input', { type: 'date', value: w.date || todayISO() });
     const note = h('input', { type: 'text', value: w.note || '', placeholder: 'e.g. Bangkok airport ATM' });
-    return h('div', { class: 'card', style: 'margin:6px 0' }, [
-      h('div', { style: 'display:flex;gap:10px' }, [field('Amount', amt), field('Currency', cur)]),
+    return h('div', { class: 'card', style: 'margin: var(--sp-1h) 0' }, [
+      h('div', { style: 'display:flex;gap: var(--sp-3)' }, [field('Amount', amt), field('Currency', cur)]),
       field('Note (optional)', note), field('Date', dt),
-      h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+      h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
         h('button', { class: 'btn ghost', onclick: () => { editWithdrawalId = null; render(); } }, 'Cancel'),
         h('button', { class: 'btn', onclick: () => { updateWithdrawal(w.id, { amount: amt.value, currency: cur.value, note: note.value.trim(), date: dt.value || w.date }); editWithdrawalId = null; render(); } }, 'Save'),
       ]),
@@ -431,7 +431,7 @@ function budgetSetupEditor() {
     field('Trip start', startEl), field('Trip end', endEl),
     h('label', { class: 'exp-monthly-toggle' }, [undecided, ' End date undecided']),
   );
-  det.append(h('div', { class: 'row-between', style: 'margin-top:6px' }, [
+  det.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
     (t || dates.start) ? h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear budget & trip dates?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { store.profile.prefs.budgetCap = null; store.profile.prefs.tripDates = null; save(); render(); } }); } }, 'Clear') : h('span', {}, ''),
     h('button', {
       class: 'btn',

@@ -90,6 +90,12 @@ export const FOOD_LA_EXT = [
     "allergens": ["gluten", "fish", "soy", "egg"], "veg": "Can be made meat-free with vegetables and omelette; ask for no pate or meat.",
     "spice": "mild", "price": { "low": 10000, "high": 35000, "currency": "LAK" },
     "whereToFind": "Street carts and markets nationwide, a popular cheap breakfast or lunch.",
-    "sources": ["Wikipedia", "TasteAtlas", "Lao food blogs"] }
-
+    "sources": ["Wikipedia", "TasteAtlas", "Lao food blogs"] },
+  { "id": "la-khao-piak-khao", "name": "Khao Piak Khao (Lao Rice Porridge)", "localName": "ເຂົ້າປຽກເຂົ້າ", "roman": "khao piak khao", "category": "soup",
+    "description": "Rice simmered down in chicken broth with ginger and lemongrass until it thickens to porridge, topped with fried garlic, spring onion, black pepper and often a boiled egg or shredded chicken. The Lao breakfast when it is cold or you are unwell — the plainer cousin of khao piak sen, which uses noodles instead.",
+    "ingredients": ["jasmine rice", "chicken broth", "ginger", "lemongrass", "fried garlic", "spring onion", "coriander", "black pepper", "boiled egg"],
+    "allergens": ["egg", "fish"], "veg": "The broth is chicken-based and fish sauce is usual. Ask for it made with water rather than broth where a kitchen is willing; the rice, ginger and garlic are otherwise plant-based.",
+    "spice": "none", "price": { "low": 10000, "high": 25000, "currency": "LAK" },
+    "whereToFind": "Morning markets and breakfast stalls, ladled from a pot that has been going since before dawn; gone by mid-morning.",
+    "sources": ["Wikipedia", "TasteAtlas", "Lao Food Movement"] }
 ];
