@@ -15,7 +15,7 @@ import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
 import { topbar, mount, focusSpot, fmtClock, spotForCity, render } from '../main.js';
-import { dateLocale } from '../i18n.js';
+import { dateLocale, retranslate } from '../i18n.js';
 
 // Shared with the modules that stay in the launch graph; see js/weather-ui.js. These moved out so
 // this file could leave it — the router imports it on demand now.
@@ -296,6 +296,7 @@ export function weatherScreen(country) {
       paint(r, false);
     });
     body.append(refreshBtn);
+    retranslate(body);
   }
 
   // Loads the cached reading for the CURRENT spot, paints it, then refreshes in the

@@ -31,7 +31,7 @@ import {
 // import, safe because every one of them is only read inside a function body, never at
 // module-evaluation time — see js/data/regions.js's lazy-load fact 2 for the same reasoning).
 import {
-  LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree,
+  LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate,
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.540.0';
+export const APP_VERSION = 'mk-v0.542.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -6218,6 +6218,7 @@ function sosScreen(cc) {
       h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
     ])));
     hospSlot.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${cc}`) }, `Every hospital in ${c.name} →`));
+    retranslate(hospSlot);
   };
   paintSosHosp();
   if (!isHospitalsLoaded(getActiveCountry())) {

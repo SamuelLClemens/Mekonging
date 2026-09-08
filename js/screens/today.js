@@ -2,6 +2,7 @@
 //
 // Extracted from js/main.js (screen split, mk-v0.539.0).
 import { h } from '../util.js';
+import { retranslate } from '../i18n.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 import { allPlaces, getCountry } from '../data/regions.js';
 import {
@@ -221,6 +222,8 @@ export function daySuggestScreen(country) {
     // distance, which is a different question and worth keeping reachable.
     listWrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#nearby') },
       '📍 What’s nearest to me, by distance →'));
+    retranslate(header);
+    retranslate(listWrap);
   }
 
   let lastRec = getCachedWeather(spotKey(spot));
