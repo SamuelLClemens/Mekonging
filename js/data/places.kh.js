@@ -19,7 +19,12 @@ export const PLACES_KH = [
     scamWarnings: ["Ignore people offering cheaper tickets outside official counters; passes are photo-printed and non-transferable"],
     mapQuery: "Angkor Wat Siem Reap Cambodia", coords: { lat: 13.4125, lng: 103.8670 },
     bookHint: "Buy the Angkor Pass online at the official Angkor Enterprise site or at the Road 60 ticket centre", verified: "2026-06",
-    sources: [{ org: "Angkor Enterprise", url: "https://www.angkorenterprise.gov.kh" }]
+    sources: [
+      { org: "Angkor Enterprise", url: "https://www.angkorenterprise.gov.kh" },
+      { org: "UNESCO World Heritage Centre", url: "https://whc.unesco.org/en/list/668/" },
+      { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Angkor_Archaeological_Park" },
+      { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g297390-d317907-Reviews-Angkor_Wat-Siem_Reap_Siem_Reap_Province.html" },
+    ]
   },
   {
     id: "kh-siemreap-bayon", name: "Bayon Temple (Angkor Thom)", city: "Siem Reap", country: "kh",
@@ -41,7 +46,12 @@ export const PLACES_KH = [
     scamWarnings: [],
     mapQuery: "Bayon Temple Angkor Thom Siem Reap", coords: { lat: 13.4413, lng: 103.8590 },
     bookHint: "Covered by the same Angkor Pass; show your printed pass at park checkpoints", verified: "2026-06",
-    sources: [{ org: "Angkor Enterprise", url: "https://www.angkorenterprise.gov.kh" }]
+    sources: [
+      { org: "Angkor Enterprise", url: "https://www.angkorenterprise.gov.kh" },
+      { org: "Lonely Planet", url: "https://www.lonelyplanet.com/cambodia/angkor-thom/attractions/bayon/a/poi-sig/500534/1318768" },
+      { org: "UNESCO", url: "https://www.unesco.org/en/articles/30-years-safeguarding-bayon-temple-angkor-thom" },
+      { org: "Britannica", url: "https://www.britannica.com/topic/the-Bayon" },
+    ]
   },
   {
     id: "kh-siemreap-pub-street", name: "Pub Street", city: "Siem Reap", country: "kh",
@@ -57,7 +67,12 @@ export const PLACES_KH = [
     scamWarnings: ["Confirm whether a tuk-tuk fare is per trip or per person before getting in", "Keep bags zipped and in front of you in dense crowds"],
     mapQuery: "Pub Street Siem Reap Cambodia", coords: { lat: 13.3548, lng: 103.8554 },
     bookHint: "Walk-in; no booking needed", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }]
+    sources: [
+      { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" },
+      { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Siem_Reap" },
+      { org: "Travelfish", url: "https://www.travelfish.org/eatandmeet_profile/cambodia/western_cambodia/siem_reap/siem_reap/2427" },
+      { org: "Siemreap.net", url: "https://www.siemreap.net/guides/siem-reap/pub-street/" },
+    ]
   },
   {
     id: "kh-siemreap-cuisine-wat-damnak", name: "Cuisine Wat Damnak", city: "Siem Reap", country: "kh",
@@ -71,7 +86,12 @@ export const PLACES_KH = [
     scamWarnings: [],
     mapQuery: "Cuisine Wat Damnak Siem Reap", coords: { lat: 13.3490, lng: 103.8580 },
     bookHint: "Reserve in advance by phone or the restaurant website", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }]
+    sources: [
+      { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" },
+      { org: "Rusty Compass", url: "https://www.rustycompass.com/cambodia-travel-guide-37/siem-reap-6/eating-16/cuisine-wat-damnak-876" },
+      { org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g297390-d2021626-Reviews-Cuisine_Wat_Damnak_Siem_Reap-Siem_Reap_Siem_Reap_Province.html" },
+      { org: "AFAR", url: "https://www.afar.com/places/cuisine-wat-damnak-siem-reap" },
+    ]
   },
   {
     id: "kh-phnompenh-tuol-sleng", name: "Tuol Sleng Genocide Museum (S-21)", city: "Phnom Penh", country: "kh",
@@ -94,7 +114,12 @@ export const PLACES_KH = [
     scamWarnings: ["Buy tickets only at the official booth at the entrance, not from people outside the gate"],
     mapQuery: "Tuol Sleng Genocide Museum Phnom Penh", coords: { lat: 11.5497, lng: 104.9176 },
     bookHint: "Buy at the ticket booth at the museum entrance on arrival", verified: "2026-06",
-    sources: [{ org: "Tuol Sleng Genocide Museum (official)", url: "https://tuolsleng.gov.kh" }]
+    sources: [
+      { org: "Tuol Sleng Genocide Museum (official)", url: "https://tuolsleng.gov.kh" },
+      { org: "UNESCO Memory of the World", url: "https://www.unesco.org/en/memory-world/tuol-sleng-genocide-museum-archives" },
+      { org: "United States Holocaust Memorial Museum", url: "https://www.ushmm.org/genocide-prevention/countries/cambodia/s-21" },
+      { org: "Britannica", url: "https://www.britannica.com/topic/Tuol-Sleng-Genocide-Museum" },
+    ]
   },
   {
     id: "kh-phnompenh-royal-palace", name: "Royal Palace & Silver Pagoda", city: "Phnom Penh", country: "kh",
@@ -116,7 +141,12 @@ export const PLACES_KH = [
     scamWarnings: ["Decline unofficial guides who attach themselves near the gate and demand high fees afterwards"],
     mapQuery: "Royal Palace Phnom Penh Cambodia", coords: { lat: 11.5640, lng: 104.9310 },
     bookHint: "Buy tickets at the palace entrance; no advance booking required", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }]
+    sources: [
+      { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" },
+      { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Royal_Palace_of_Cambodia" },
+      { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Phnom_Penh" },
+      { org: "Lonely Planet", url: "https://www.lonelyplanet.com/cambodia/phnom-penh/attractions/royal-palace/a/poi-sig/1381202/355881" },
+    ]
   },
   {
     id: "kh-phnompenh-riverside-sisowath", name: "Sisowath Quay Riverside", city: "Phnom Penh", country: "kh",
@@ -133,7 +163,12 @@ export const PLACES_KH = [
     scamWarnings: ["Agree the price and duration of any river cruise before boarding", "Watch for drive-by bag snatching; keep phones away from the road edge"],
     mapQuery: "Sisowath Quay Riverside Phnom Penh", coords: { lat: 11.5710, lng: 104.9300 },
     bookHint: "Free to access; book cruises directly with operators on the quay", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }]
+    sources: [
+      { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" },
+      { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Sisowath_Quay" },
+      { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Phnom_Penh" },
+      { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g293940-d2073075-Reviews-Sisowath_Quay-Phnom_Penh.html" },
+    ]
   },
   {
     id: "kh-phnompenh-malis", name: "Malis Restaurant", city: "Phnom Penh", country: "kh",
@@ -148,7 +183,12 @@ export const PLACES_KH = [
     scamWarnings: [],
     mapQuery: "Malis Restaurant Phnom Penh", coords: { lat: 11.5560, lng: 104.9270 },
     bookHint: "Reserve by phone or walk in for lunch; dinner reservations advised", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }]
+    sources: [
+      { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" },
+      { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Malis_(restaurant)" },
+      { org: "Rusty Compass", url: "https://www.rustycompass.com/cambodia-travel-guide-37/phnom-penh-7/eating-16/malis-restaurant-phnom-penh-1065" },
+      { org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g293940-d1372181-Reviews-Malis_norodom_Boulevard-Phnom_Penh.html" },
+    ]
   },
   {
     id: "kh-siemreap-tonle-sap-floating", name: "Tonle Sap Floating Villages (Kampong Phluk)", city: "Siem Reap", country: "kh",
@@ -166,6 +206,11 @@ export const PLACES_KH = [
     scamWarnings: ["Avoid pressured stops at floating shops or orphanage visits; decline donation requests aboard the boat", "Confirm the all-in price covers the boat, not just transport"],
     mapQuery: "Kampong Phluk floating village Tonle Sap Siem Reap", coords: { lat: 13.2010, lng: 103.9900 },
     bookHint: "Book through a reputable Siem Reap tour operator or your guesthouse", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }]
+    sources: [
+      { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" },
+      { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g297390-d13424800-Reviews-Kampong_Phluk_Floating_Village-Siem_Reap_Siem_Reap_Province.html" },
+      { org: "AFAR", url: "https://www.afar.com/places/floating-village-kampong-phluk" },
+      { org: "Siemreap.net", url: "https://www.siemreap.net/attractions/sightseeing-nature/floating-villages/" },
+    ]
   }
 ];

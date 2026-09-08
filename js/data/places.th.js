@@ -47,8 +47,8 @@ export const PLACES_TH = [
       { site: 'TripAdvisor', score: 4.6, scale: 5, count: 51489, url: 'https://www.tripadvisor.com/Attraction_Review-g293916-d311043-Reviews-Wat_Phra_Chetuphon-Bangkok.html', asOf: '2026-07' },
     ],
     mapQuery: 'Wat Pho Bangkok', coords: { lat: 13.7465, lng: 100.4927 },
-    bookHint: 'Pay at the gate; no booking needed.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    bookHint: 'Pay at the gate; no booking needed.', verified: '2026-09',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'Wat Pho (official)', url: 'https://watpho.com/en' }, { org: 'Lonely Planet', url: 'https://www.lonelyplanet.com/thailand/bangkok/ko-ratanakosin-thonburi/attractions/wat-pho/a/poi-sig/1148214/1324177' }],
   },
   {
     id: 'th-bkk-grand-palace', name: 'Grand Palace & Wat Phra Kaew', city: 'Bangkok', country: 'th',
@@ -70,7 +70,7 @@ export const PLACES_TH = [
     ],
     mapQuery: 'Grand Palace Bangkok', coords: { lat: 13.75, lng: 100.4913 },
     bookHint: 'Buy at the official ticket office on site.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'The Grand Palace (official)', url: 'https://www.royalgrandpalace.th/en/home' }, { org: 'Lonely Planet', url: 'https://www.lonelyplanet.com/thailand/bangkok/ko-ratanakosin-thonburi/attractions/grand-palace/a/poi-sig/1271084/1324177' }],
   },
   {
     id: 'th-bkk-wat-arun', name: 'Wat Arun (Temple of Dawn)', city: 'Bangkok', country: 'th',
@@ -88,8 +88,8 @@ export const PLACES_TH = [
     tips: ['Cross on the public ferry from Tha Tien pier for a few baht.', 'Sunset light is the payoff.'],
     scamWarnings: [],
     mapQuery: 'Wat Arun Bangkok', coords: { lat: 13.7437, lng: 100.4889 },
-    bookHint: 'Pay at the gate.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    bookHint: 'Pay at the gate.', verified: '2026-09',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'Lonely Planet', url: 'https://www.lonelyplanet.com/points-of-interest/wat-arun/407510' }, { org: 'UNESCO World Heritage Centre — Wat Arun tentative listing', url: 'https://whc.unesco.org/en/tentativelists/6821/' }],
   },
   {
     // Merged 2026-09-05 with th-ext-chatuchak-weekend-market, which was the same market
@@ -117,8 +117,8 @@ export const PLACES_TH = [
     tips: ['Go early (before 11:00) to beat the midday heat in the covered lanes.', 'Note a landmark clock-tower or section number so you can find your way back in the maze.', 'Carry cash; many stalls do not take cards.', 'The BTS Mo Chit / MRT Chatuchak Park exits drop you at the edge of the market.'],
     scamWarnings: ['A first price quoted to obvious tourists can be high; bargain politely and be ready to walk away.', 'Keep bags zipped and to the front in the densest lanes.', 'Agree a price before any tailoring or custom work.'],
     mapQuery: 'Chatuchak Weekend Market Bangkok', coords: { lat: 13.7999, lng: 100.5503 },
-    bookHint: 'No booking; take the MRT or BTS to Chatuchak/Mo Chit.', verified: '2026-08',
-    sources: [{ org: 'Chatuchak Market (official)', url: 'https://www.chatuchakmarket.org/opening-times/' }, { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org/Attraction/chatuchak-weekend-market' }],
+    bookHint: 'No booking; take the MRT or BTS to Chatuchak/Mo Chit.', verified: '2026-09',
+    sources: [{ org: 'Chatuchak Market (official)', url: 'https://www.chatuchakmarket.org/opening-times/' }, { org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org/Attraction/chatuchak-weekend-market' }, { org: 'Lonely Planet', url: 'https://www.lonelyplanet.com/points-of-interest/chatuchak-weekend-market/407334' }],
   },
   {
     id: 'th-bkk-yaowarat', name: 'Yaowarat (Chinatown) street food', city: 'Bangkok', country: 'th',
@@ -136,8 +136,8 @@ export const PLACES_TH = [
     tips: ['Follow the queues of locals.', 'Try kuay jab, oyster omelette, and mango sticky rice.'],
     scamWarnings: [],
     mapQuery: 'Yaowarat Road Bangkok', coords: { lat: 13.74, lng: 100.509 },
-    bookHint: 'Just turn up; bring cash.', verified: '2026-06',
-    sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }, { org: 'Time Out Bangkok', url: 'https://timeout.com/bangkok/attractions/chinatown' }],
+    bookHint: 'Just turn up; bring cash.', verified: '2026-09',
+    sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }, { org: 'Time Out Bangkok', url: 'https://timeout.com/bangkok/attractions/chinatown' }, { org: 'CNN Travel — best Chinatowns worldwide', url: 'https://www.cnn.com/travel/article/world-best-chinatowns' }, { org: 'Wikivoyage — Bangkok/Yaowarat and Phahurat', url: 'https://en.wikivoyage.org/wiki/Bangkok/Yaowarat_and_Phahurat' }],
   },
   {
     id: 'th-bkk-jay-fai', name: 'Jay Fai', city: 'Bangkok', country: 'th',
@@ -155,7 +155,7 @@ export const PLACES_TH = [
     ],
     mapQuery: 'Jay Fai Bangkok', coords: { lat: 13.7547, lng: 100.5066 },
     bookHint: 'Walk-in queue; reservations are limited and costly.', verified: '2026-06',
-    sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }],
+    sources: [{ org: 'Michelin Guide', url: 'https://guide.michelin.com' }, { org: 'Wikipedia — Jay Fai', url: 'https://en.wikipedia.org/wiki/Jay_Fai' }, { org: 'Khaosod English', url: 'https://www.khaosodenglish.com/featured/2024/10/29/jay-fai-denies-retirement-still-going-strong-after-7-years-of-michelin-stars/' }],
   },
   {
     id: 'th-bkk-lumpini', name: 'Lumphini Park', city: 'Bangkok', country: 'th',
@@ -171,8 +171,8 @@ export const PLACES_TH = [
     tips: ['Go at dawn or dusk to avoid the heat.', 'Watch for large (harmless) water monitors near the lake.'],
     scamWarnings: [],
     mapQuery: 'Lumphini Park Bangkok', coords: { lat: 13.7307, lng: 100.5418 },
-    bookHint: 'Open access.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'North of Known — Lumpini Park guide', url: 'https://www.northofknown.com/lumpini-park-bangkok-guide/' }],
+    bookHint: 'Open access.', verified: '2026-09',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'North of Known — Lumpini Park guide', url: 'https://www.northofknown.com/lumpini-park-bangkok-guide/' }, { org: 'Lonely Planet', url: 'https://www.lonelyplanet.com/thailand/bangkok/riverside-silom-lumphini/attractions/lumphini-park/a/poi-sig/1244014/1324182' }],
   },
   {
     id: 'th-bkk-khaosan', name: 'Khaosan Road', city: 'Bangkok', country: 'th',
@@ -190,8 +190,8 @@ export const PLACES_TH = [
     tips: ['Keep valuables secure in crowds.', 'Quieter, more local bars sit one street over on Soi Rambuttri.'],
     scamWarnings: ['Watch your drink and your bill; check change.'],
     mapQuery: 'Khaosan Road Bangkok', coords: { lat: 13.7589, lng: 100.4977 },
-    bookHint: 'No booking.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    bookHint: 'No booking.', verified: '2026-09',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'Lonely Planet', url: 'https://www.lonelyplanet.com/thailand/bangkok/banglamphu/attractions/thanon-khao-san/a/poi-sig/1631869/1324178' }, { org: 'CNN Travel — Khao San Road feature', url: 'https://www.cnn.com/travel/article/bangkok-khao-san-road-evolution/index.html' }],
   },
   {
     id: 'th-bkk-rooftop', name: 'Rooftop bar (Vertigo / Sky Bar)', city: 'Bangkok', country: 'th',
@@ -208,7 +208,7 @@ export const PLACES_TH = [
     scamWarnings: [],
     mapQuery: 'Vertigo Rooftop Bar Bangkok', coords: { lat: 13.7223, lng: 100.5167 },
     bookHint: 'Reserve a table for sunset on weekends.', verified: '2026-06',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'The Rooftop Guide — Sky Bar by Lebua', url: 'https://www.therooftopguide.com/rooftop-bars-in-bangkok/sky-bar-lebua-at-state-tower.html' }],
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'The Rooftop Guide — Sky Bar by Lebua', url: 'https://www.therooftopguide.com/rooftop-bars-in-bangkok/sky-bar-lebua-at-state-tower.html' }, { org: 'lebua — Sky Bar (official)', url: 'https://lebua.com/restaurants/sky/' }],
   },
 
   // --- Where to stay (area guidance) -----------------------------------------
@@ -228,8 +228,8 @@ export const PLACES_TH = [
     tips: ['Rooms over the bars are loud — ask for a quiet side.', 'Book the first night or two ahead in high season, then compare in person.'],
     scamWarnings: ['Confirm the nightly rate and any deposit before paying.'],
     mapQuery: 'Soi Rambuttri Bangkok hostels', coords: { lat: 13.7595, lng: 100.4965 },
-    bookHint: 'Compare dorms on Hostelworld or Booking; many take walk-ins.', verified: '2026-07',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    bookHint: 'Compare dorms on Hostelworld or Booking; many take walk-ins.', verified: '2026-09',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'Wikivoyage — Bangkok/Banglamphu', url: 'https://en.wikivoyage.org/wiki/Bangkok/Banglamphu' }, { org: 'Tripadvisor — Bangkok backpacker hostels', url: 'https://www.tripadvisor.com/HotelsList-Bangkok-Backpacker-Hostels-zfp135627.html' }],
   },
   {
     id: 'th-bkk-stay-guesthouse-oldcity', name: 'Guesthouses (Old City / Phra Nakhon)', city: 'Bangkok', country: 'th',
@@ -244,8 +244,8 @@ export const PLACES_TH = [
     tips: ['Ask about weekly or monthly rates if you plan to linger.', 'Rooms facing the street are brighter but noisier.'],
     scamWarnings: [],
     mapQuery: 'Old City Bangkok guesthouse', coords: { lat: 13.7563, lng: 100.4980 },
-    bookHint: 'Book the first nights online, then negotiate longer stays in person.', verified: '2026-07',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    bookHint: 'Book the first nights online, then negotiate longer stays in person.', verified: '2026-09',
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'Booking.com — Phra Nakhon guesthouses', url: 'https://www.booking.com/guest-house/district/th/bangkok/phranakhon.ko.html' }, { org: "Fodor's Travel — The Old City hotels", url: 'https://www.fodors.com/world/asia/thailand/bangkok/neighborhoods/the-old-city/hotels' }],
   },
   {
     id: 'th-bkk-stay-apartment-sukhumvit', name: 'Serviced apartments (Sukhumvit, long-stay)', city: 'Bangkok', country: 'th',
@@ -262,6 +262,6 @@ export const PLACES_TH = [
     scamWarnings: ['Never wire a deposit before viewing the actual unit; use a reputable agent or platform.'],
     mapQuery: 'Sukhumvit serviced apartment Bangkok', coords: { lat: 13.7373, lng: 100.5600 },
     bookHint: 'Compare monthly listings; agents and long-stay platforms beat nightly OTAs.', verified: '2026-07',
-    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }],
+    sources: [{ org: 'Tourism Authority of Thailand', url: 'https://www.tourismthailand.org' }, { org: 'Thailand Starter Kit — Bangkok serviced apartments', url: 'https://www.thailandstarterkit.com/accommodation/serviced-apartment-bangkok/' }, { org: 'Lazudi — Bangkok serviced apartments', url: 'https://lazudi.com/th-en/blog/best-bangkok-serviced-apartments-where-to-rent-and-why-theyre-in-demand' }],
   },
 ];

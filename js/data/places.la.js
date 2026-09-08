@@ -23,7 +23,7 @@ export const PLACES_LA = [
     coords: { lat: 17.9620, lng: 102.6196 },
     bookHint: "Walk in; no ticket required.",
     verified: "2026-06",
-    sources: [{ org: "COPE Laos", url: "https://copelaos.org" }]
+    sources: [{ org: "COPE Laos", url: "https://copelaos.org" }, { org: "Legacies of War", url: "https://www.legaciesofwar.org/post/exploring-lao-history-and-healing-in-vientiane-with-article22" }, { org: "Travelfish", url: "https://www.travelfish.org/sight_profile/laos/vientiane_and_surrounds/vientiane/vientiane/3275" }]
   },
   {
     id: "la-vte-pha-that-luang",
@@ -50,7 +50,7 @@ export const PLACES_LA = [
     coords: { lat: 17.9757, lng: 102.6347 },
     bookHint: "Pay at the entrance on arrival.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Pha_That_Luang" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com/laos/vientiane/attractions/pha-that-luang/a/poi-sig/414444/356947" }]
   },
   {
     id: "la-vte-mekong-night-market",
@@ -72,7 +72,7 @@ export const PLACES_LA = [
     coords: { lat: 17.9587, lng: 102.6094 },
     bookHint: "Just turn up in the early evening.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Travel Authentic Asia", url: "https://travelauthenticasia.com/guides/laos/a-nighttime-experience-at-vientiane-night-market.aspx" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Travel Authentic Asia", url: "https://travelauthenticasia.com/guides/laos/a-nighttime-experience-at-vientiane-night-market.aspx" }, { org: "Discover Laos", url: "https://discoverlaos.today/vientiane/thing-to-do/vientiane-night-market" }]
   },
   {
     id: "la-vte-buddha-park",
@@ -99,7 +99,7 @@ export const PLACES_LA = [
     coords: { lat: 17.9136, lng: 102.7732 },
     bookHint: "Pay at the gate; arrange return transport in advance.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Buddha_Park" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g293950-d325750-Reviews-Buddha_Park-Vientiane_Vientiane_Prefecture.html" }]
   },
   {
     id: "la-lpb-kuang-si",
@@ -128,7 +128,7 @@ export const PLACES_LA = [
     coords: { lat: 19.7490, lng: 101.9890 },
     bookHint: "No booking; share a minivan/tuk-tuk from Luang Prabang to cut the cost, or cycle if you are fit.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }]
+    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Kuang_Si_Falls" }, { org: "Free the Bears", url: "https://freethebears.org/pages/laos-sanctuaries" }]
   },
   {
     id: "la-lpb-night-market",
@@ -154,7 +154,7 @@ export const PLACES_LA = [
     coords: { lat: 19.8909, lng: 102.1357 },
     bookHint: "Just walk the strip after dusk.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Luang Prabang View", url: "https://www.luangprabangview.com/post/the-ultimate-guide-to-the-luang-prabang-night-market-what-to-buy-eat-see" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Luang Prabang View", url: "https://www.luangprabangview.com/post/the-ultimate-guide-to-the-luang-prabang-night-market-what-to-buy-eat-see" }, { org: "Tourism Luang Prabang", url: "https://tourismluangprabang.org/things-to-do/arts-and-shopping/night-market/" }]
   },
   {
     id: "la-lpb-mekong-slow-boat",
@@ -175,7 +175,7 @@ export const PLACES_LA = [
     coords: { lat: 19.8856, lng: 102.1320 },
     bookHint: "Buy at the Huay Xai boat ticket office, or book through a guesthouse for added transfers.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Huay_Xai" }, { org: "GetYourGuide", url: "https://www.getyourguide.com/luang-prabang-l397/from-huay-xai-luang-prabang-by-slow-boat-2-days-t971941/" }]
   },
   {
     id: "la-lpb-tamarind",
@@ -196,7 +196,7 @@ export const PLACES_LA = [
     coords: { lat: 19.8907, lng: 102.1399 },
     bookHint: "Reserve a table in advance during high season.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g295415-d1575596-Reviews-Tamarind-Luang_Prabang_Luang_Prabang_Province.html" }, { org: "HappyCow", url: "https://www.happycow.net/reviews/tamarind-a-taste-of-laos-luang-prabang-35117" }]
   },
   {
     id: "la-lpb-amantaka",
@@ -216,6 +216,6 @@ export const PLACES_LA = [
     coords: { lat: 19.8869, lng: 102.1340 },
     bookHint: "Call or email the resort to reserve dining or bar service.",
     verified: "2026-06",
-    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }]
+    sources: [{ org: "Tourism Laos (Lao National Tourism Administration)", url: "https://www.tourismlaos.org" }, { org: "Aman", url: "https://www.aman.com/resorts/amantaka" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Amantaka" }]
   }
 ];

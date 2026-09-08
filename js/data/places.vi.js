@@ -17,8 +17,8 @@ export const PLACES_VI = [
     tips: ["Bring cash in Vietnamese Dong; the ticket office does not take cards", "Dress modestly as it is an active place of respect"],
     scamWarnings: ["Decline freelance 'guides' who attach themselves at the gate and demand a fee afterward"],
     mapQuery: "Temple of Literature Hanoi", coords: { lat: 21.0294, lng: 105.8354 },
-    bookHint: "Buy a paper ticket at the on-site booth; no advance booking needed", verified: "2026-06",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }]
+    bookHint: "Buy a paper ticket at the on-site booth; no advance booking needed", verified: "2026-09",
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Temple_of_Literature,_Hanoi" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Hanoi" }]
   },
   {
     id: "vi-hanoi-bun-cha-huong-lien", name: "Bun Cha Huong Lien", city: "Hanoi", country: "vi",
@@ -32,8 +32,8 @@ export const PLACES_VI = [
     tips: ["Go at off-peak hours to avoid the midday crowd", "Use Grab to reach it as it sits outside the Old Quarter core"],
     scamWarnings: [],
     mapQuery: "Bun Cha Huong Lien 24 Le Van Huu Hanoi", coords: { lat: 21.0163, lng: 105.8527 },
-    bookHint: "Walk in; no reservations", verified: "2026-06",
-    sources: [{ org: "Michelin Guide", url: "https://guide.michelin.com" }]
+    bookHint: "Walk in; no reservations", verified: "2026-09",
+    sources: [{ org: "Michelin Guide", url: "https://guide.michelin.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Restaurant_Review-g293924-d8088661-Reviews-Bun_Cha_Huong_Lien-Hanoi.html" }, { org: "CNN Travel", url: "https://www.cnn.com/travel/article/bourdain-parts-unknown-obama-hanoi" }]
   },
   {
     id: "vi-hanoi-ta-hien-beer-street", name: "Ta Hien Beer Street", city: "Hanoi", country: "vi",
@@ -49,8 +49,8 @@ export const PLACES_VI = [
     tips: ["Confirm the price per glass before ordering", "Keep bags zipped and on your lap in the crowd"],
     scamWarnings: ["Some stalls inflate the bill for foreigners; tally drinks as you go and check the total"],
     mapQuery: "Ta Hien Street Hanoi", coords: { lat: 21.0349, lng: 105.8521 },
-    bookHint: "Walk in and grab a stool", verified: "2026-06",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }]
+    bookHint: "Walk in and grab a stool", verified: "2026-09",
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g293924-d9983248-Reviews-or20-Ta_Hien_Street-Hanoi.html" }, { org: "Vietnam Tourism (vietnamtourism.com)", url: "https://www.vietnamtourism.com/en/bia-hoi-hanoi-s-fresh-beer-culture-and-where-to-drink-it" }]
   },
   {
     id: "vi-hcmc-war-remnants-museum", name: "War Remnants Museum", city: "Ho Chi Minh City", country: "vi",
@@ -71,8 +71,8 @@ export const PLACES_VI = [
     tips: ["Allow two hours and prepare for graphic imagery", "Arrive early to beat tour groups"],
     scamWarnings: [],
     mapQuery: "War Remnants Museum Ho Chi Minh City", coords: { lat: 10.7795, lng: 106.6920 },
-    bookHint: "Buy tickets at the entrance; cash or card", verified: "2026-06",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }]
+    bookHint: "Buy tickets at the entrance; cash or card", verified: "2026-09",
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/War_Remnants_Museum" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Ho_Chi_Minh_City" }]
   },
   {
     id: "vi-hcmc-ben-thanh-market", name: "Ben Thanh Market", city: "Ho Chi Minh City", country: "vi",
@@ -92,8 +92,8 @@ export const PLACES_VI = [
     tips: ["Haggle hard, starting near half the quoted price", "Use Grab to arrive and depart to avoid taxi disputes"],
     scamWarnings: ["Quoted prices for foreigners are inflated; agree a price before you eat or buy", "Watch for short-changing and aggressive vendor pressure"],
     mapQuery: "Ben Thanh Market Ho Chi Minh City", coords: { lat: 10.7721, lng: 106.6980 },
-    bookHint: "Walk in; no booking", verified: "2026-06",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }]
+    bookHint: "Walk in; no booking", verified: "2026-09",
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/B%E1%BA%BFn_Th%C3%A0nh_Market" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Ho_Chi_Minh_City" }]
   },
   {
     id: "vi-hcmc-rooftop-bar-saigon", name: "Saigon Skydeck & Rooftop Bars (Bitexco area)", city: "Ho Chi Minh City", country: "vi",
@@ -107,8 +107,8 @@ export const PLACES_VI = [
     tips: ["Check the dress code before arriving as some rooftops refuse shorts and sandals", "Reserve a window table at sunset for the best skyline view"],
     scamWarnings: [],
     mapQuery: "Bitexco Financial Tower Ho Chi Minh City", coords: { lat: 10.7717, lng: 106.7043 },
-    bookHint: "Book rooftop tables online or by phone; buy Skydeck tickets on site", verified: "2026-06",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }]
+    bookHint: "Book rooftop tables online or by phone; buy Skydeck tickets on site", verified: "2026-09",
+    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Bitexco_Financial_Tower" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g293925-d2037764-Reviews-Bitexco_Financial_Tower-Ho_Chi_Minh_City.html" }]
   },
   {
     id: "vi-hoian-ancient-town", name: "Hoi An Ancient Town", city: "Hoi An", country: "vi",
@@ -125,8 +125,8 @@ export const PLACES_VI = [
     tips: ["The official ticket includes entry to five tearable attraction coupons valid for 24 hours", "Buy at the small yellow booths near the bridges; visit on the monthly full-moon lantern night if you can"],
     scamWarnings: ["Touts sell unofficial or partial tickets; buy only at the yellow municipal booths"],
     mapQuery: "Hoi An Ancient Town", coords: { lat: 15.8801, lng: 108.3380 },
-    bookHint: "Buy the combined heritage ticket at official yellow booths around the old town", verified: "2026-06",
-    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }]
+    bookHint: "Buy the combined heritage ticket at official yellow booths around the old town", verified: "2026-09",
+    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }, { org: "UNESCO World Heritage Centre", url: "https://whc.unesco.org/en/list/948/" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Hoi_An" }]
   },
   {
     id: "vi-hoian-an-bang-beach", name: "An Bang Beach", city: "Hoi An", country: "vi",
@@ -141,8 +141,8 @@ export const PLACES_VI = [
     tips: ["Cycle or take a short Grab ride from the old town", "Many cafes lend free loungers if you order food or drink"],
     scamWarnings: [],
     mapQuery: "An Bang Beach Hoi An", coords: { lat: 15.9134, lng: 108.3447 },
-    bookHint: "Walk on; no entry fee", verified: "2026-06",
-    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }], recognition: "A relaxed white-sand beach north-east of Hoi An lined with driftwood beach bars and loungers, reached down a lane of homestays; the calmest swimming near town."
+    bookHint: "Walk on; no entry fee", verified: "2026-09",
+    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g298082-d6612712-Reviews-An_Bang_Beach-Hoi_An_Quang_Nam_Province.html" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Hoi_An" }], recognition: "A relaxed white-sand beach north-east of Hoi An lined with driftwood beach bars and loungers, reached down a lane of homestays; the calmest swimming near town."
   },
   {
     id: "vi-danang-marble-mountains", name: "Marble Mountains (Ngu Hanh Son)", city: "Da Nang", country: "vi",
@@ -159,8 +159,8 @@ export const PLACES_VI = [
     tips: ["Wear grippy shoes as the stone steps are steep and slick", "Pay extra for the elevator to skip the first climb in the heat"],
     scamWarnings: ["Marble souvenir shops at the base use high-pressure sales; you are not obliged to buy"],
     mapQuery: "Marble Mountains Da Nang", coords: { lat: 16.0042, lng: 108.2630 },
-    bookHint: "Buy tickets at the gate; Grab from Da Nang or Hoi An", verified: "2026-06",
-    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }]
+    bookHint: "Buy tickets at the gate; Grab from Da Nang or Hoi An", verified: "2026-09",
+    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }, { org: "Wikipedia", url: "https://en.wikipedia.org/wiki/Ng%C5%A9_H%C3%A0nh_S%C6%A1n_(mountains)" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel/things-to-do/around-marble-mountains" }]
   },
   {
     id: "vi-danang-han-market-seafood", name: "Han Market & Da Nang Seafood Eateries", city: "Da Nang", country: "vi",
@@ -175,7 +175,7 @@ export const PLACES_VI = [
     tips: ["Confirm the per-kilo price and have it weighed in front of you", "Use Grab between the market, the riverside and the beach restaurants"],
     scamWarnings: ["Some seafood spots swap or overweight your order; watch the scale and agree the total first"],
     mapQuery: "Han Market Da Nang", coords: { lat: 16.0688, lng: 108.2247 },
-    bookHint: "Walk in; larger seafood restaurants take phone or app bookings", verified: "2026-06",
-    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }]
+    bookHint: "Walk in; larger seafood restaurants take phone or app bookings", verified: "2026-09",
+    sources: [{ org: "Da Nang City Tourism (Danang Fantasticity)", url: "https://danangfantasticity.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Attraction_Review-g298085-d5599000-Reviews-or10-Han_Market-Da_Nang.html" }, { org: "Wikivoyage", url: "https://en.wikivoyage.org/wiki/Da_Nang" }]
   }
 ];
