@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.539.0';
+export const APP_VERSION = 'mk-v0.544.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1824,9 +1824,9 @@ function profileFitAdj(p, prefs) {
 // profileFitAdj()/personalScore(); this is the DISPLAY truth, so every surface says the same
 // thing about the same place.
 //
-// The hard rule: never invent a suitability or safety verdict. Measured across the 865 place
+// The hard rule: never invent a suitability or safety verdict. Measured across the 883 place
 // records (September 2026), the data supports some dimensions and not others — kidFriendly is set
-// on 470, afterDark on 208, access/stepFree on 230, scamWarnings on 748 (373 of them
+// on 480, afterDark on 208, access/stepFree on 233, scamWarnings on 766 (374 of them
 // non-empty), but per-venue safety,
 // women's-safety and baby-facility fields are effectively absent (access.babyChange is set on
 // none). So an unrecorded field returns an `unknown` entry that the UI prints as "not

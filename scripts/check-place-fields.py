@@ -109,10 +109,10 @@ def main():
         # September 2026: all six dropped by exactly one when th-ext-chatuchak-weekend-market
         # was merged into th-bkk-chatuchak — the deleted record carried every one of these
         # fields, which is why they moved together.
-        expect = [('865', total, 'total'), ('470', counts['kidFriendly'], 'kidFriendly'),
-                  ('208', counts['afterDark'], 'afterDark'), ('230', counts['stepFree'], 'stepFree'),
-                  ('748', counts['scamWarnings'], 'scamWarnings'),
-                  ('373', counts['scam_nonempty'], 'scam_nonempty')]
+        expect = [('883', total, 'total'), ('480', counts['kidFriendly'], 'kidFriendly'),
+                  ('208', counts['afterDark'], 'afterDark'), ('233', counts['stepFree'], 'stepFree'),
+                  ('766', counts['scamWarnings'], 'scamWarnings'),
+                  ('374', counts['scam_nonempty'], 'scam_nonempty')]
         for quoted, actual, _label in expect:
             if int(quoted) != actual:
                 problems.append(f'js/main.js quotes {quoted} where the data now says {actual} '

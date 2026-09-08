@@ -166,6 +166,45 @@ export const ROUTES_VI = [
     ]
   },
   {
+    "id": "vi-hanoi-maichau",
+    "from": "Hanoi",
+    "to": "Mai Chau",
+    "country": "vi",
+    "verified": "2026-09",
+    "options": [
+      {
+        "mode": "Limousine van",
+        "durationHrs": [3.5, 4],
+        "price": { "low": 250000, "high": 350000, "currency": "VND" },
+        "freq": "A few departures daily",
+        "comfort": "Air-conditioned van with reclining seats; more comfortable than a standard coach for the winding final stretch.",
+        "bookVia": "12Go or Baolau",
+        "recommended": true,
+        "notes": "Direct operators include Ha Loan, Cuong Coi, K Linh, Tuan Dung and Hoang Thao; departs My Dinh or Yen Nghia station."
+      },
+      {
+        "mode": "Standard bus",
+        "durationHrs": [3.5, 4],
+        "price": { "low": 80000, "high": 100000, "currency": "VND" },
+        "freq": "A few departures daily from My Dinh or Yen Nghia",
+        "comfort": "Basic seated coach; cheapest direct option.",
+        "bookVia": "Book at the station or via 12Go",
+        "recommended": false,
+        "notes": "If you miss a direct departure, take any frequent Hanoi-Hoa Binh City bus (about 50,000 VND, every 15 minutes) and transfer by local minibus to Mai Chau (about 100,000 VND) — this always works."
+      },
+      {
+        "mode": "Private car / driver",
+        "durationHrs": [3, 3.5],
+        "price": { "low": 1800000, "high": 2500000, "currency": "VND" },
+        "freq": "On demand",
+        "comfort": "Door-to-door for 4-7 passengers; fastest and most flexible option.",
+        "bookVia": "Hotel or a Hanoi tour operator",
+        "recommended": false,
+        "notes": "Worth it for a group splitting the cost, or if arriving with luggage for a multi-stop northern loop."
+      }
+    ]
+  },
+  {
     "id": "vi-hanoi-hagiang",
     "from": "Hanoi",
     "to": "Ha Giang",

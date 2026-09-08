@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.539.0';
+const CACHE_VERSION = 'mk-v0.544.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded

@@ -71,6 +71,8 @@ ACCEPTED = {
     ('th-ext-sukhothai-historical-park', 'th-sukhothai-old-city-guesthouses'),
     ('th-koh-lanta-longbeach-hostels', 'th-kohlanta-longbeach-resorts'),
     ('vi-ext-cai-rang', 'vi-ext-cantho-cairang-floating-breakfast'),
+    ('vi-ext-mai-chau', 'vi-ext-maichau-cycling'),
+    ('vi-ext-maichau-ecolodge', 'vi-ext-maichau-lodge-hotel'),
     ('vi-ext-tavan-best-view', 'vi-ext-tavan-madame-view'),
 }
 
