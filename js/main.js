@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.543.0';
+export const APP_VERSION = 'mk-v0.540.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5209,7 +5209,11 @@ function eventsScreen(country) {
       listEl.append(h('h2', { class: 'cat-title' }, 'Upcoming'));
       upcoming.forEach((e) => listEl.append(eventCard(e)));
     }
-    if (past.length) { listEl.append(h('h2', { class: 'cat-title' }, 'Earlier in 2026')); past.forEach((e) => listEl.append(eventCard(e))); }
+    // Not 'Earlier in 2026'. That literal was hard-coded, so from 1 January it labels this
+    // year's past festivals with last year's number — and it would have needed re-translating
+    // in 29 dictionaries every January. Each card carries its own date, so the year is
+    // redundant here anyway.
+    if (past.length) { listEl.append(h('h2', { class: 'cat-title' }, 'Earlier this year')); past.forEach((e) => listEl.append(eventCard(e))); }
     if (!evs.length) listEl.append(h('p', { class: 'empty' }, 'No festivals listed.'));
   }
   renderEvents();
