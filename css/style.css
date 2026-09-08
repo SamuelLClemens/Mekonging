@@ -1947,6 +1947,21 @@ html[data-theme="dark"] .recap-level { background: rgba(255,255,255,0.06); }
 
 .empty { text-align: center; color: var(--ink-soft); padding: var(--sp-6) var(--sp-4); }
 .disclaimer { font-size: var(--fs-sm); color: var(--ink-soft); font-style: italic; margin-top: var(--sp-3); }
+
+/* Small "Sources (n)" trigger that opens sourcesNote()'s sheet — quiet enough to sit on every
+   card that has one without competing with the card's own content, but a real 44px target. */
+.src-note-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  padding: var(--sp-1h) var(--sp-3); margin-top: var(--sp-3);
+  font-family: inherit; font-size: var(--fs-sm); font-style: italic; color: var(--ink-soft);
+  background: transparent; border: 1px solid var(--line); border-radius: var(--r-pill);
+  cursor: pointer;
+}
+.src-note-btn:active { transform: scale(0.97); }
+.src-note-ic svg { width: 15px; height: 15px; display: block; }
+.src-list { margin: 0; padding-left: 1.2em; }
+.src-list li { margin-bottom: var(--sp-2); }
+.src-list li:last-child { margin-bottom: 0; }
 a { color: var(--teal-deep); }
 html[data-theme="dark"] a { color: var(--teal); }
 

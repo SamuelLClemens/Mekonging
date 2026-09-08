@@ -6,7 +6,7 @@
 import { h, fmtDistance, compass, bearing, mapsUrl, haversineKm } from './util.js';
 import { store, getLastFix } from './state.js';
 import { spotKey, getCachedAir, getCachedWeather, nearestSpot, maybeRefreshWeather, maybeRefreshAir } from './weather.js';
-import { online } from './ui-widgets.js';
+import { online, openModal } from './ui-widgets.js';
 import { PHOTOS } from './data/photos.js';
 import { DRIVE_CURVE } from './data/drivetimes.js';
 import { getActiveCountry } from './app-state.js';
@@ -513,17 +513,47 @@ export function sourceHref(s, place) {
   if (isReviewSite && !path) return place ? extUrl({ site: s.org }, place) : null;
   return url;
 }
+// Mirrors main.js's svgIcon()/ICON_PATH wrapper exactly (main.js's own "book" glyph, otherwise
+// unused anywhere in the app), duplicated as one literal rather than imported: main.js imports
+// FROM render-utils.js (sourcesNote itself included), so importing back would be a cycle.
+const SRC_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4a1 1 0 0 1 1-1h13v18H6a1 1 0 0 1-1-1z"/><path d="M5 4v16M9 7h6M9 11h6"/></svg>';
+
+// Used to render as a standing "Sources: A, B, C · verified ... Guidance only — verify
+// locally" line under every card that had one — accurate, but permanent visual weight on
+// every place, weather tier, hospital and board listing in the app, all at once. Same
+// information, same links, same disclaimer, now behind one small button per card: a click
+// opens the existing openModal() sheet (the same "larger window" pattern confirmAction
+// already uses for its dialogs) listing the sources. Signature and every one of the 20+
+// existing call sites are unchanged, so this applies everywhere sourcesNote is already used
+// without touching another file.
 export function sourcesNote(sources, verified, place) {
-  const kids = ['Sources: '];
-  sources.forEach((s, i) => {
-    if (i) kids.push(', ');
-    const href = sourceHref(s, place);
-    kids.push(href
-      ? h('a', { class: 'src-link', href, target: '_blank', rel: 'noopener' }, s.org)
-      : s.org);
-  });
-  kids.push(`${verified ? ` · verified ${verified}` : ''}. Guidance only — verify locally.`);
-  return h('p', { class: 'disclaimer' }, kids);
+  if (!sources || !sources.length) return null;
+  function openSheet() {
+    let close = null;
+    const backdrop = h('div', { class: 'sheet-backdrop center' });
+    const list = h('ul', { class: 'src-list' }, sources.map((s) => {
+      const href = sourceHref(s, place);
+      return h('li', {}, href
+        ? h('a', { class: 'src-link', href, target: '_blank', rel: 'noopener' }, s.org)
+        : s.org);
+    }));
+    const dialog = h('div', { class: 'sheet confirm-card', role: 'dialog', 'aria-label': 'Sources' }, [
+      h('h3', {}, 'Sources'),
+      list,
+      h('p', { class: 'disclaimer', style: 'margin-top: var(--sp-3)' },
+        `${verified ? `Verified ${verified}. ` : ''}Guidance only — verify locally.`),
+      h('div', { class: 'confirm-actions' }, [
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => close && close() }, 'Close'),
+      ]),
+    ]);
+    backdrop.append(dialog);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close && close(); });
+    close = openModal(backdrop);
+  }
+  return h('button', { type: 'button', class: 'src-note-btn', onclick: openSheet }, [
+    h('span', { class: 'src-note-ic', 'aria-hidden': 'true', html: SRC_ICON }),
+    h('span', { class: 'src-note-lbl' }, `Sources (${sources.length})`),
+  ]);
 }
 
 // "For you" personalisation (task #205 step 3): once the traveller sets a profile
