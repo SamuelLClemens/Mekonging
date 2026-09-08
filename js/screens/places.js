@@ -38,7 +38,7 @@ import {
 import { VERDICT_RANK } from '../data/month-verdict.js';
 import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey, screenHint } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
-import { dateLocale, t } from '../i18n.js';
+import { dateLocale, t, retranslate } from '../i18n.js';
 // accessibility/borders/transit are route-scoped data, fetched by the gate in main.js before
 // the place screens render — read here through the one owner so this file and main.js share a
 // single copy. See js/lazy-data.js.
@@ -1294,6 +1294,7 @@ function beachSeaBlock(coords) {
     } else {
       box.append(h('p', { class: 'muted small' }, loading ? '🌊 Checking sea conditions…' : '🌊 Live sea conditions load when you are online.'));
     }
+    retranslate(box);
   }
   const cached = getCachedMarine(coords);
   paint(cached, !cached && online());
@@ -1504,6 +1505,7 @@ function weatherNearbyCard(p) {
       body.append(h('p', { class: 'muted', style: 'margin: 0' },
         loading ? 'Fetching the latest forecast…' : 'No saved forecast yet — tap below, then Refresh while online.'));
     }
+    retranslate(body);
   }
 
   const cached = getCachedWeather(key);

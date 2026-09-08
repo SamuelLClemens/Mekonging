@@ -11,6 +11,7 @@ import { getActiveCountry, setActiveCountry } from '../app-state.js';
 import { getCountry, allPlaces } from '../data/regions.js';
 import { attrTag, driveLabel, withinNear, withinDayTrip } from '../render-utils.js';
 import { dietEatCard } from './food.js';
+import { retranslate } from '../i18n.js';
 import {
   go, mount, topbar, whereAmI, nearestSpotGlobal, setFocusSpot, locationSheet, catEmoji, chipIcon,
   nearCat, nearbySafetyStrip, arrivalEssentials, placeFitReason, rnThumb, openStateNow,
@@ -167,5 +168,6 @@ export function nearbyScreen() {
       }
     }
     drawList();
+    retranslate(body);
   }
 }

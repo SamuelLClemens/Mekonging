@@ -21,6 +21,7 @@ import { haversineKm } from '../util.js';
 import { driveLabel, sourcesNote } from '../render-utils.js';
 import { infoTip, field } from '../ui-widgets.js';
 import { showBigPhrase } from '../phrase-ui.js';
+import { retranslate } from '../i18n.js';
 import {
   TIER_META,
   CARE_SYSTEM,
@@ -358,6 +359,8 @@ export function hospitalScreen(cc) {
         provName ? h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${sys.hospitalWord.script} ${provName}`), target: '_blank', rel: 'noopener' }, `🔎 Hospitals in ${provName} ↗`) : null,
       ]));
     }
+    retranslate(heroSlot);
+    retranslate(listSlot);
   }
   paintCare();
   // The active country first so the list fills as fast as possible, then the other three so

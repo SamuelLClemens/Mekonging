@@ -521,3 +521,18 @@ export async function autoTranslateTree(root) {
   if (wrote) mtSave(lang, cache);
   return painted + wrote;
 }
+
+// mount() translates the whole screen exactly once, right after it is built (see the comment
+// there) — so any card that paints from cache immediately and then repaints itself later, once
+// an async load resolves (weather, hospitals, sea state — anywhere a `paint()`-style inner
+// function is called a second time from a `.then()`), never gets that second pass. The card
+// stays in English in every other language, silently, because nothing throws.
+//
+// Call this at the end of such a paint function, on the smallest node that function actually
+// rewrites, so every call it ever makes — the first, synchronous one included — retranslates
+// itself the same way mount() would have. Safe on a still-detached node and safe to call twice
+// on the same tree, for the same reasons translateTree() itself is (see there).
+export function retranslate(root) {
+  try { translateTree(root); } catch { /* a translation miss must never block a render */ }
+  try { autoTranslateTree(root).catch(() => {}); } catch { /* best-effort */ }
+}
