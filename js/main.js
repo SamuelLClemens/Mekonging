@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.542.0';
+export const APP_VERSION = 'mk-v0.546.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2879,7 +2879,7 @@ function quickSpendRow(id) {
     // rendered — per direct request it must be visible while Traveling — so on the rare
     // occasion the home and local currencies match, the target falls back to another major
     // rather than showing a currency converted into itself.
-    box.append(fxConverterControl(home, home !== cur ? cur : (home === 'USD' ? 'EUR' : 'USD'), { compact: true }));
+    box.append(fxConverterControl(home, home !== cur ? cur : (home === 'USD' ? 'EUR' : 'USD'), { compact: true, oneLine: true }));
     // "Log an expense" is a whole form — amount, currency, note, category, monthly toggle,
     // date, submit — and it stood permanently open inside Home's Budget section, which is
     // most of that section's height for an action taken a few times a day, not on every
@@ -3225,68 +3225,6 @@ export function featureChips(items, cc) {
       h('span', { class: 'status-lbl' }, label),
     ]);
   }));
-}
-
-// Match a live hash against the manifest's hash TEMPLATES, so '#weather-vi' is recognised as
-// the Weather feature whatever country the traveller happens to be in.
-function routeItemFor(hash) {
-  const items = navItems();
-  const exact = items.find((it) => it.hash === hash);
-  if (exact) return exact;
-  return items.find((it) => {
-    const pat = String(it.hash);
-    if (!pat.includes('{cc}')) return false;
-    const rx = pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace('\\{cc\\}', '[a-z]{2}');
-    try { return new RegExp(`^${rx}$`).test(hash); } catch { return false; }
-  }) || null;
-}
-
-// Record a feature the traveller actually opened, for the row below. Recorded in render()
-// rather than in go() because render() is the one point EVERY arrival passes through: a tap,
-// a deep link, a Back, and the GPS watcher's own direct repaint all land here, where go()
-// catches only the first. A feature reached by Back is still a feature being used. Recording
-// the route that is already at the front is a no-op, so the repaints cost nothing.
-function rememberRoute(hash) {
-  try {
-    const item = routeItemFor(hash);
-    if (!item) return;
-    const prefs = store.profile.prefs;
-    const list = Array.isArray(prefs.recentRoutes) ? prefs.recentRoutes : [];
-    if (list[0] === item.hash) return;
-    prefs.recentRoutes = [item.hash, ...list.filter((x) => x !== item.hash)].slice(0, 6);
-    save();
-  } catch { /* a convenience row is never worth breaking navigation over */ }
-}
-
-// Home's learned one-tap row. The consolidation into nine doors bought a Home a traveller can
-// read at a glance, and it cost seventeen features an extra tap; the four features that kept
-// one-tap access are Quick access's live chips, which are MY choice and fixed. A traveller who
-// checks the phrasebook and the converter ten times a day should not pay two taps for both
-// forever, so this row is theirs: the features they actually open, most recent first.
-//
-// Stored as the manifest's own hash TEMPLATE (with the {cc} placeholder intact), so a route
-// recorded in Thailand opens the Vietnamese screen once the traveller crosses, and a feature
-// that is renamed or retired simply stops resolving instead of leaving a dead chip.
-export function recentRoutesRow() {
-  const prefs = store.profile.prefs;
-  const saved = Array.isArray(prefs.recentRoutes) ? prefs.recentRoutes : [];
-  if (!saved.length) return null;
-  const phase = prefs.phase || inferPhase();
-  const live = new Set(visibleGroups(phase).flatMap((g) => g.items.map((it) => it.hash)));
-  const all = navItems();
-  const items = saved.map((hsh) => all.find((it) => it.hash === hsh))
-    .filter((it) => it && live.has(it.hash)).slice(0, 4);
-  if (!items.length) return null;
-  const cc = getActiveCountry();
-  const box = h('div', { class: 'home-recents' }, [featureChips(items, cc)]);
-  // Clear rides in the summary rather than above the chips, so the whole row costs one line
-  // when folded away instead of two.
-  const clear = h('button', { class: 'chip ghost', 'aria-label': 'Clear recently used features',
-    onclick: () => { prefs.recentRoutes = []; save(); render(); } }, 'Clear');
-  // Collapsed by default (direct request). It is the first section on Home, and a shortcut
-  // row is worth having available rather than standing open above today's content every
-  // launch — a traveller who wants it opens it once and the choice persists.
-  return homeFold('🕘 Back to', box, 'homeRecentsOpen', { defaultOpen: false, action: clear });
 }
 
 // Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
@@ -3918,13 +3856,24 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
     type: 'button', class: 'fx-eq', title: 'Swap currencies', 'aria-label': 'Swap currencies',
     onclick: () => { const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t; recompute(); },
   }, '⇅');
-  const wrap = h('div', { class: 'fx-widget' }, [
-    h('div', { class: 'fx-line' }, [amount, fromSel]),
-    h('div', { class: 'fx-swap-row' }, [swap]),
-    h('div', { class: 'fx-line' }, [out, toSel]),
-    rateLine,
-    opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
-  ]);
+  // `opts.oneLine`: the calculator itself (amount, both currencies, the swap/"=" control and
+  // the result) collapsed onto a single flex row, with the rate as the only line beneath it —
+  // two lines total instead of four. Built for Home, where the fold already carries its own
+  // status line and the from/to stack read as tall for a card that opens on every launch.
+  // Narrower inputs than the stacked layout (see the comment above on why THAT one stacks) —
+  // this trades the wide, easy-to-read stack for a fixed height that never pushes the rest of
+  // Home down while still keeping amount and result each paired with its own currency inline.
+  const wrap = h('div', { class: 'fx-widget' + (opts.oneLine ? ' fx-widget-oneline' : '') },
+    opts.oneLine ? [
+      h('div', { class: 'fx-line-single' }, [amount, fromSel, swap, out, toSel]),
+      rateLine,
+    ] : [
+      h('div', { class: 'fx-line' }, [amount, fromSel]),
+      h('div', { class: 'fx-swap-row' }, [swap]),
+      h('div', { class: 'fx-line' }, [out, toSel]),
+      rateLine,
+      opts.compact ? null : h('p', { class: 'tiny muted', style: 'margin: var(--sp-1h) 0 0' }, rates.live ? `Live mid-market rates as of ${rates.date}.` : 'Approximate rates (offline baseline) — connect and refresh to update.'),
+    ]);
   recompute();
   return wrap;
 }
@@ -6658,7 +6607,6 @@ export function render() {
   const hash = location.hash || '#home';
   const [head, ...rest] = hash.slice(1).split('-');
   const arg = rest.join('-');
-  rememberRoute(hash);   // feeds Home's "Back to" row; ignores anything not a manifest feature
 
   // ---- Lazy country data gate --------------------------------------------------
   // See js/data/regions.js: COUNTRIES ships as metadata only; loadCountry(cc) fetches
@@ -6971,7 +6919,12 @@ try { reminders.tick(); } catch { /* reminders are best-effort */ }
 // online() is checked every time, not once: it is the traveller's data-consent gate, and it
 // must keep gating every automatic fetch (see ui-widgets.js). A traveller on "stay fully
 // offline" is never contacted by any of this.
-const RATE_POLL_MS = 30 * 60 * 1000;
+// 10 minutes — matches MIN_GAP_MS in js/currency.js, the tightest maybeRefreshRates() itself
+// permits (per direct request to keep the rate as current as possible). Polling any faster
+// than that floor would just be suppressed there, so this is the real ceiling on how often a
+// due refresh gets noticed; it does not mean the endpoint is hit every 10 minutes — that call
+// still no-ops unless the cached rates are actually stale.
+const RATE_POLL_MS = 10 * 60 * 1000;
 // Screens where a stale rate is actually visible, and where a repaint costs nothing. Home and
 // the place screens also show converted prices, but re-rendering those under someone's thumb
 // to move a third decimal place is not worth the scroll jump — they pick the new rate up on
