@@ -40,7 +40,7 @@ import { CURRENCY_CODES, currencyFlag, currencySymbol } from '../currency.js';
 import {
   go, mount, topbar, render, focusSpot, daysUntilISO, todayISO, applyTheme, dietPicker,
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
-  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys,
+  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent,
 } from '../main.js';
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
@@ -95,12 +95,31 @@ const TIER_LABEL = {
   guide: 'Wildlife, dishes, market produce & calls',
   places: 'Place photos',
 };
+// The general, always-reversible online/offline switch. Used to be an icon in the topbar;
+// that slot now opens this screen instead (js/main.js topbar()), so the mode itself needed a
+// home a traveller could still find. This card already claimed to be it — see the comment
+// above — so the switch lands here rather than a new card.
+function netModeSelector() {
+  const on = netMode() !== 'offline';
+  return h('div', { class: 'phase-seg compact', role: 'group', 'aria-label': 'Use data or stay offline' }, [
+    h('button', {
+      class: 'phase-btn', 'aria-pressed': on ? 'true' : 'false',
+      onclick: () => { const was = netMode(); setNetMode('online'); if (was === 'offline') ratesOnConsent(); render(); },
+    }, [h('span', { class: 'phase-emoji' }, '📶'), h('span', { class: 'phase-lbl' }, 'Use data')]),
+    h('button', {
+      class: 'phase-btn', 'aria-pressed': !on ? 'true' : 'false',
+      onclick: () => { setNetMode('offline'); render(); },
+    }, [h('span', { class: 'phase-emoji' }, '✈️'), h('span', { class: 'phase-lbl' }, 'Stay offline')]),
+  ]);
+}
+
 function offlineDataCard() {
   const card = h('div', { class: 'card' }, [
     h('div', { class: 'row-between' }, [
       h('h2', {}, '📥 Offline field guide'),
       infoTip('Photos are the part of this app you are most likely to need with no signal — you identify a snake, a mushroom or a dish while standing in front of it. So the app downloads them by itself: the dangerous species first, on any connection, then the rest of the guide once you are on Wi-Fi. Nothing here is required; the app works either way.'),
     ]),
+    netModeSelector(),
   ]);
   const line = h('p', { class: 'muted pack-state' }, 'Checking what is on this device…');
   const tiers = h('ul', { class: 'pack-tiers' });

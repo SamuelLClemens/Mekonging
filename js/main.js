@@ -99,7 +99,7 @@ import { PLACE_MONTHS } from './data/place-months.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction, promptAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
-  online, netMode, setNetMode, infoTip, screenHint,
+  online, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.541.0';
+export const APP_VERSION = 'mk-v0.543.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -940,22 +940,9 @@ export function topbar(title, backHash) {
   const onSaved = hash.startsWith('#saved') || hash.startsWith('#collection');
   const onSos = hash.startsWith('#sos');
   const onSearch = hash.startsWith('#search');
+  const onSettings = hash.startsWith('#settings');
   const iconBtn = (label, target, svg) =>
     h('button', { class: 'topbar-ic', 'aria-label': label, title: label, onclick: () => go(target), html: svg });
-  // Online/offline: one tap flips it and re-renders in place, from every screen — moved here
-  // (Home chip-merge follow-up) instead of living only inside Home's own Quick access row, so
-  // it sits alongside the other always-available controls (Saved, Settings, Emergency) no
-  // matter where in the app a traveller happens to be.
-  //
-  // This control now carries more weight than when it was added. Onboarding no longer asks
-  // whether to use data — the app just uses a connection when it has one — so this icon IS
-  // the disclosure: it is where a traveller sees which mode they are in and the only place
-  // they need to go to change it. Hence the third state below. It used to show ✈️ both for
-  // "the traveller chose offline" and for "there is no signal right now", which are not the
-  // same thing at all: one is a setting they can undo and the other is a fact about the room
-  // they are standing in, and conflating them made a subway ride look like a settings change.
-  const netOnline = netMode() !== 'offline';
-  const noSignal = typeof navigator !== 'undefined' && navigator.onLine === false;
   const lang = uiLangMeta();
   return h('header', { class: 'topbar' }, [
     // The word "Back" is dropped below 420px (css/style.css) so the screen title gets its
@@ -973,25 +960,25 @@ export function topbar(title, backHash) {
       'aria-label': `Language: ${lang.name} — tap to change`, title: `${lang.native} — change language`,
       onclick: () => languageSheet(),
     }, lang.flag),
-    h('button', {
-      class: 'topbar-ic topbar-net' + (netOnline && noSignal ? ' is-nosignal' : ''),
-      'aria-label': !netOnline ? 'Data off — tap to use a connection'
-        : (noSignal ? 'No connection right now — data is on. Tap to stay fully offline.'
-          : 'Using data — tap to stay fully offline'),
-      title: !netOnline ? 'Data off' : (noSignal ? 'No connection' : 'Using data'),
-      onclick: () => { const on = !netOnline; setNetMode(on ? 'online' : 'offline'); if (on) ratesOnConsent(); render(); },
-    }, !netOnline ? '✈️' : (noSignal ? '📵' : '📶')),
+    // Settings: takes the slot that used to hold the online/offline toggle, by request. That
+    // icon carried real weight — onboarding no longer asks whether to use data, so it was the
+    // only place a traveller could see which mode they were in and change it — so the flip
+    // itself moved rather than disappearing: it is now a labelled, always-reversible switch
+    // inside Settings' own "📥 Offline field guide" card (js/screens/settings.js), which
+    // already claimed to be "the one place the network switch is a labelled setting rather
+    // than an icon."
+    onSettings ? null : iconBtn('Settings', '#settings', ICON.gear),
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     // Find anything, from anywhere — a magnifying glass rather than the full-width
     // "🔎 Search everything" button that used to sit partway down Home. Search is the
     // fastest route to any of the 56 features, and it was reachable only from one screen,
     // below the fold, in two of three trip phases.
     //
-    // It REPLACES Settings here rather than joining it. This row is only 343px at 375px and
-    // already gave the screen's own title just 102px of that; a seventh control would have
-    // truncated titles again (see the dictionary fix in mk-v0.510.0). Settings is the right
-    // one to lose: it is not a control anybody needs mid-moment, and it keeps its place in
-    // the YOU tab's "Settings & help" section, one tap away, exactly like every other feature.
+    // Settings no longer costs this row a seventh slot — it moved into the one the
+    // online/offline icon used to occupy (see above), so the control count here is unchanged
+    // from when the 343px/102px truncation problem this comment used to describe was fixed.
+    // Settings also still keeps its place in the YOU tab's "Settings & help" section; this is
+    // a second, faster route to it, not the only one.
     onSearch ? null : iconBtn('Search everything', '#search', ICON.search),
     // Persistent safety anchor: emergency help one tap from every screen (kept as the
     // bold red marker so it stands out from the neutral menu icons).
