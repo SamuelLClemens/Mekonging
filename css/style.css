@@ -1809,9 +1809,14 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 /* Amount and its currency on ONE line, the two lines stacked from → to with the swap control
    between them. See fxConverterControl in js/main.js for why this replaced the side-by-side
    columns. The currency select is sized to its flag+symbol content and the number takes the
-   rest, so the figure — the thing actually being read — gets the width. */
-.fx-line { display: flex; align-items: center; gap: var(--sp-2); }
-.fx-line input { flex: 1 1 auto; min-width: 0; }
+   rest, so the figure — the thing actually being read — gets the width.
+   min-width: 11ch is a floor, not a hint — VND/KHR/LAK amounts routinely run to 9 digits
+   (hundreds of millions), and a bare `min-width: 0` let flex-shrink squeeze the field down to
+   a few visible characters on narrow phones, scrolling the digits a traveller just typed out
+   of view. flex-wrap on the row means the select gives way (drops to its own line) before the
+   number ever does, on any screen narrower than the two can share. */
+.fx-line { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.fx-line input { flex: 1 1 auto; min-width: 11ch; }
 .fx-line select { flex: 0 0 auto; width: auto; }
 .fx-line input, .fx-line select { font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
 .fx-line .fx-out { font-weight: 800; color: var(--teal-deep); }
