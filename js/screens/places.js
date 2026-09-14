@@ -239,7 +239,7 @@ export function placesScreen(arg) {
           h('a', { class: 'btn ghost', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'),
           h('button', { class: 'btn ghost', onclick: () => { if (placesCtrl) placesCtrl.goToStay(stay.coords); } }, 'Show on map'),
           h('button', { class: 'btn ghost', onclick: setStayHereP }, 'Move to here'),
-          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (placesCtrl) { placesCtrl.setMyStay(null); placesCtrl.setWayback(null, null); } renderStayCard(); } }, 'Clear'),
+          h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear your saved stay?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { clearMyStay(); if (placesCtrl) { placesCtrl.setMyStay(null); placesCtrl.setWayback(null, null); } renderStayCard(); } }); } }, 'Clear'),
         ]),
       );
       updateStayBannerP();
@@ -374,7 +374,7 @@ export function placesScreen(arg) {
         h('div', {}, [h('strong', {}, a.name), h('div', { class: 'muted', style: 'font-size:12px' }, `${a.count || 0} tiles · ~${mb} MB · saved ${a.savedAt}`)]),
         h('div', { class: 'cats' }, [
           h('button', { class: 'chip', title: 'Show on map', 'aria-label': `Show ${a.name} on map`, onclick: () => { if (placesCtrl && a.center) placesCtrl.flyTo(a.center.lng, a.center.lat, a.z || 12); } }, '◎'),
-          h('button', { class: 'chip', 'aria-label': `Delete ${a.name}`, onclick: () => deleteAreaP(a) }, '✕'),
+          h('button', { class: 'chip', 'aria-label': `Delete ${a.name}`, onclick: () => { confirmAction({ title: `Delete offline maps for ${a.name}?`, body: `This deletes ~${mb} MB of downloaded map tiles. You will need a connection to view this area offline again.`, confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) deleteAreaP(a); }); } }, '✕'),
         ]),
       ]));
     });
@@ -1709,7 +1709,7 @@ function localSecretsCard(p) {
         h('div', { class: 'tiny muted' }, [sec.by, sec.at].filter(Boolean).join(' · ')),
         h('div', { class: 'listing-actions' }, [
           shareButton('🔗 Share', `A tip for ${p.name}`, () => shareUrl('in', encodeShare('secret', { id: p.id, n: p.name, text: sec.text, by: sec.by || (ensureMe().name || '') }, ensureMe())), 'btn ghost'),
-          h('button', { class: 'btn ghost', 'aria-label': 'Remove this secret', onclick: () => { removePlaceSecret(p.id, i); drawSecrets(); } }, '🗑'),
+          h('button', { class: 'btn ghost', 'aria-label': 'Remove this secret', onclick: () => { confirmAction({ title: 'Remove this secret?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removePlaceSecret(p.id, i); drawSecrets(); } }); } }, '🗑'),
         ]),
       ]));
     });
@@ -1902,7 +1902,7 @@ function placePhotoThumbs(id) {
       setBlobThumb(img, k);
       thumbs.append(h('div', { class: 'photo-thumb' }, [
         img,
-        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { removePlacePhoto(id, k); renderThumbs(); } }, '✕'),
+        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { confirmAction({ title: 'Remove this photo?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removePlacePhoto(id, k); renderThumbs(); } }); } }, '✕'),
       ]));
     });
   };

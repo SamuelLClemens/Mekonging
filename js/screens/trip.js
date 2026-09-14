@@ -71,7 +71,7 @@ function tripVisitRow(visit, place, prefix = '', extraChip = null) {
     h('div', { class: 'chips' }, [
       extraChip,
       noteBtn,
-      h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
+      h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { confirmAction({ title: `Remove ${place.name}?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removePlaceVisit(visit.id); go('#trip'); } }); } }, '✕'),
     ]),
   ]));
   row.append(noteEl);
