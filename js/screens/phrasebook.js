@@ -1038,7 +1038,7 @@ function myTranslationsCard(code, label, locale, onChange) {
     const keepBtn = inDictionary(code, t.en)
       ? h('button', { class: 'speak', disabled: '', title: 'Already in your dictionary', 'aria-label': `${t.en} is already in your dictionary` }, '✓')
       : h('button', { class: 'speak', title: `Save to ${dictionaryName()}`, 'aria-label': `Save ${t.en} to ${dictionaryName()}`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
-    const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { removeTranslation(t.key); onChange(); } }, '✕');
+    const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { confirmAction({ title: 'Remove translation?', body: `Remove “${t.en}” from My translations?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeTranslation(t.key); onChange(); } }); } }, '✕');
     card.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
   }
   card.append(h('p', { class: 'tiny muted mytr-foot' }, [

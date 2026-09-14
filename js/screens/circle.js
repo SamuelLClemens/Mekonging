@@ -334,7 +334,7 @@ export function inboxScreen() {
     const card = h('div', { class: 'card stack-2' + (it.read ? '' : ' inbox-unread') }, [
       h('div', { class: 'row-between' }, [
         h('div', {}, [h('strong', {}, [unreadDot, title]), h('div', { class: 'tiny muted' }, `${KIND[it.kind] || it.kind}${it.from ? ' · from ' + it.from.name : ''} · ${it.at}`)]),
-        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { deleteInboxItem(it.id); go('#inbox'); } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { confirmAction({ title: 'Remove this item?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { deleteInboxItem(it.id); go('#inbox'); } }); } }, '✕'),
       ]),
       it.msg ? h('p', {}, it.msg) : null,
       (it.kind === 'place' && getPlace(it.data.id)) ? h('button', { class: 'btn ghost block', onclick: () => go(`#place-${it.data.id}`) }, 'Open place') : null,

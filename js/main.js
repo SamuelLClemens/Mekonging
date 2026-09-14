@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.547.0';
+export const APP_VERSION = 'mk-v0.550.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4028,7 +4028,7 @@ function listingCard(it) {
   if (d.contact) card.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
   card.append(h('div', { class: 'listing-actions' }, [
     shareButton('🔗 Share this', meta.label, () => shareUrl('in', encodeShare('bb', Object.assign({ cat }, d), ensureMe(), '')), 'btn ghost'),
-    h('button', { class: 'btn ghost', onclick: () => { removeListing(it.id); go('#exchange-' + cat); } }, '🗑 Remove'),
+    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Remove this listing?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeListing(it.id); go('#exchange-' + cat); } }); } }, '🗑 Remove'),
   ]));
   return card;
 }
@@ -4140,7 +4140,7 @@ function bulletinScreen(arg) {
     // Let the traveller sweep away their own long-past posts in one tap (backendless tidy).
     const old = items.filter((x) => x.mine && x.ts && (Date.now() - x.ts) > 14 * 86400000);
     if (old.length) {
-      listWrap.append(h('button', { class: 'btn ghost block tiny', onclick: () => { old.forEach((s) => removeListing(s.id)); repaint(); } },
+      listWrap.append(h('button', { class: 'btn ghost block tiny', onclick: () => { confirmAction({ title: `Clear ${old.length} old post${old.length > 1 ? 's' : ''}?`, confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { old.forEach((s) => removeListing(s.id)); repaint(); } }); } },
         `🧹 Clear ${old.length} old post${old.length > 1 ? 's' : ''} of yours (over 2 weeks)`));
     }
     items.forEach((it) => listWrap.append(listingCard(it)));

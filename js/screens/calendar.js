@@ -305,7 +305,7 @@ function personalDayCard(date) {
     card.append(h('div', { class: 'row-between price-item' }, [
       h('div', { class: 'grow' }, [h('strong', {}, who), h('div', { class: 'muted', style: 'font-size:.82rem' },
         `${e.time ? e.time + ' · ' : ''}${e.orgasms ? e.orgasms + ' orgasm' + (e.orgasms === 1 ? '' : 's') : ''}${e.satisfaction ? ' · ' + personal.moodFor(e.satisfaction) : ''}${e.protection ? ' · protected' : ''}`)]),
-      h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { personal.removeEncounter(date, e.id); render(); } }, '✕'),
+      h('button', { class: 'chip', 'aria-label': 'Remove', onclick: () => { confirmAction({ title: 'Remove this entry?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { personal.removeEncounter(date, e.id); render(); } }); } }, '✕'),
     ]));
   });
   card.append(personalEncounterForm(date));
@@ -410,7 +410,7 @@ function personalControlCard() {
   pinDet.append(h('div', {}, [
     field('PIN', np),
     h('button', { class: 'btn block', onclick: async () => { if (await personal.setPin(np.value)) { alert('PIN set.'); render(); } else alert('Use 4–8 digits.'); } }, 'Set PIN'),
-    personal.hasPin() ? h('button', { class: 'btn ghost block btn-spaced', onclick: () => { personal.clearPin(); render(); } }, 'Remove PIN') : null,
+    personal.hasPin() ? h('button', { class: 'btn ghost block btn-spaced', onclick: () => { confirmAction({ title: 'Remove the PIN lock?', body: 'This section will no longer be hidden from a casual glance.', confirmLabel: 'Remove PIN', danger: true }).then((ok) => { if (ok) { personal.clearPin(); render(); } }); } }, 'Remove PIN') : null,
     h('p', { class: 'disclaimer' }, 'A PIN hides this section from a casual glance. It is not encryption — the data is stored on this device like your journal. For documents you need encrypted, use the vault.'),
   ]));
   card.append(pinDet);

@@ -11,7 +11,7 @@ import { citySlug, effectiveRating, ratingColor, sourcesNote, starsStr } from '.
 import { encodeShare, shareUrl } from '../social.js';
 import { addBoardPost, deleteBoardPost, ensureMe, getBoardPosts } from '../state.js';
 import { h } from '../util.js';
-import { screenHint } from '../ui-widgets.js';
+import { confirmAction, screenHint } from '../ui-widgets.js';
 import { boardRow, catEmoji, countryChips, go, mount, nearCat, shareButton, topbar } from '../main.js';
 
 const BOARD_TOPICS = [['market', '🥬 Markets'], ['food', '🍜 Food'], ['family', '👶 Family'], ['tip', '💡 Tip']];
@@ -109,7 +109,7 @@ export function boardScreen(arg) {
       h('span', { class: 'cat-tag' }, topicLbl[p.topic] || p.topic),
       h('div', { class: 'cats' }, [
         shareButton('📤', `Local tip — ${board.city}`, () => shareUrl('in', encodeShare('tip', { cc: board.country, city: board.city, topic: p.topic, text: p.text }, ensureMe())), 'chip'),
-        h('button', { class: 'chip', 'aria-label': 'Delete note', onclick: () => { deleteBoardPost(key, p.id); go(`#board-${key}`); } }, '✕'),
+        h('button', { class: 'chip', 'aria-label': 'Delete note', onclick: () => { confirmAction({ title: 'Delete this note?', confirmLabel: 'Delete', danger: true }).then((ok) => { if (ok) { deleteBoardPost(key, p.id); go(`#board-${key}`); } }); } }, '✕'),
       ]),
     ]),
     h('p', { style: 'margin-top: var(--sp-1)' }, p.text),
