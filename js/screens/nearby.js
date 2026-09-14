@@ -26,12 +26,20 @@ export function nearbyScreen() {
   wrap.append(status, body);
   mount(wrap, '#nearby');
 
-  // Cached fix paints instantly; a live fix then refines it. Offline-safe throughout.
+  // Cached fix paints instantly. The app-wide watch (js/main.js) is already running by the
+  // time any screen can mount and re-renders #nearby on every real move (main.js:6052), so
+  // this screen must not open its own separate one-shot request on every visit — that used
+  // to fire a fresh getCurrentPosition() (and, on some browsers, a fresh permission prompt)
+  // each time the traveller tapped in here, on top of the ambient watch already doing the
+  // job. Only fall back to a direct request when there is truly no fix yet — e.g. the very
+  // first launch, before the watch has resolved anything.
   let fix = getLastFix();
   if (fix) paint(fix);
-  geolocate()
-    .then((pos) => { fix = setLastFix(pos); paint(fix); })
-    .catch(() => { if (!fix) noLocation(); });
+  else {
+    geolocate()
+      .then((pos) => { fix = setLastFix(pos); paint(fix); })
+      .catch(() => { if (!fix) noLocation(); });
+  }
 
   function nearestCityInfo(f) {
     const w = whereAmI(f);
