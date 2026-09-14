@@ -132,28 +132,6 @@ export function wxDayHumAvg(rec, date) {
   return hs.length ? Math.round(hs.reduce((a, b) => a + b.hum, 0) / hs.length) : null;
 }
 
-export function wxHourlyListNode(rec) {
-  const hrs = Array.isArray(rec.hourly) ? rec.hourly : [];
-  const now = new Date();
-  const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
-  let start = hrs.findIndex((x) => { const d = new Date(x.t); return !isNaN(d) && d >= nowFloor; });
-  if (start < 0) start = 0;
-  const win = hrs.slice(start, start + 24);
-  if (!win.length) return null;
-  const row = h('div', { class: 'wx-hourly-row' });
-  win.forEach((x, i) => {
-    const [label, emo] = wmo(x.code);
-    row.append(h('div', { class: 'wx-hourly-cell' }, [
-      h('div', { class: 'wx-hourly-t' }, i === 0 ? 'Now' : fmtClock(new Date(x.t).getHours())),
-      h('div', { class: 'wx-hourly-emo', title: label }, emo),
-      h('div', { class: 'wx-hourly-temp' }, fmtTemp(x.temp)),
-      x.pp != null ? h('div', { class: 'wx-hourly-pp' }, `💧${Math.round(x.pp)}%`) : null,
-      x.wind != null ? h('div', { class: 'wx-hourly-wind' }, fmtWind(x.wind)) : null,
-    ]));
-  });
-  return h('div', { class: 'wx-hourly-scroll' }, [row]);
-}
-
 export function wxMonthCalendarNode(rec, metric) {
   const cfg = WX_METRICS[metric];
   const daily = Array.isArray(rec.daily) ? rec.daily : [];
@@ -241,9 +219,14 @@ export function wxVizCard(rec, spot) {
   });
   chipsRow.append(h('div', { class: 'wx-metric-seg', role: 'group', 'aria-label': 'Which measurement to colour the forecast by' }, segs));
 
+  // The plain hourly strip (wxHourlyListNode) that used to render below the ring was a second,
+  // redundant view of exactly the same next-24-hours window as the ring — both driven by the
+  // same rec.hourly, both scoped to the same 24 entries from "now". This is the redundancy the
+  // owner flagged. The ring is the one kept: it is the richer view (tap a wedge to pin an hour,
+  // coloured by any of the six metrics, and it doubles as the calendar's colour legend below),
+  // and the strip was a flat duplicate with none of that. wxHourlyListNode had no other caller
+  // and was removed with it.
   card.append(h('h3', { class: 'wx-cal-h', style: 'margin: 0 0 var(--sp-1h)' }, 'Next 24 hours'), chipsRow, ringSlot, detailSlot);
-  const hourly = wxHourlyListNode(rec);
-  if (hourly) card.append(hourly);
   // "Upcoming forecast" is the month calendar — the tallest thing in this card by some
   // margin, and it is a look-ahead rather than a look-at-now. Folded and CLOSED by default so
   // the card opens on the next 24 hours (which is what "right now" means) and the traveller
