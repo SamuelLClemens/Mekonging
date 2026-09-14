@@ -50,7 +50,7 @@ import {
   ensureHomeWeather, ensurePlannedStopsWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
-  recentRoutesRow, identifyRow, homeFold,
+  identifyRow, homeFold,
   homeBudgetFold, homeRightNowFold, liveStatus, QUICK_CHIPS, quickChipKeys, quickChipLabel,
 } from '../main.js';
 
@@ -141,30 +141,6 @@ export function homeScreen() {
     const nsn = nextStopNudgeChip();
     if (nsn) wrap.append(nsn);
   }
-
-  // Two one-tap surfaces, both repaying taps the consolidation charged, and both placed HERE
-  // rather than above the doors on purpose. Measured at 375px, above the doors put them 1,293px
-  // down the page — past a screen and a half of scrolling. A one-tap affordance reached only
-  // after a scroll is not one tap, so they belong in Home's launcher zone with Quick access
-  // and Search everything, not in the directory zone with the doors.
-  //
-  // "Back to" is learned rather than chosen: the four features that kept one-tap access are
-  // Quick access's live chips, and those are a fixed guess of mine. This row is the traveller's
-  // own most-recent four, and it renders nothing at all until they have opened something, so a
-  // first run looks exactly as it did.
-  //
-  // Identify goes inline while on the ground and keeps its door while planning. All six of its
-  // features are performed standing in front of the thing being identified, one-handed — which
-  // is precisely when an extra tap costs most — and all six gained one in the consolidation.
-  // Chips, not hub rows: six rows would add ~340px, more height than the consolidation saved.
-  // Both of these already come back as their own collapsible (see recentRoutesRow /
-  // identifyRow in main.js) — wrapping them again would nest a fold inside a fold.
-  // "Back to" leads the sections, collapsed by default (per direct request): it is the
-  // traveller's own recent four, useful when wanted and not worth a permanent block of
-  // chips at the top of every launch. Identify is NO LONGER here — it moved below Right
-  // now, further down this function, per the requested section order.
-  const recents = recentRoutesRow();
-  if (recents) wrap.append(recents);
 
   // Search everything — while travelling, this leads (moved up from its old spot just before
   // "Plan & tools") and the weather widget moves down to take its place instead, further below —
