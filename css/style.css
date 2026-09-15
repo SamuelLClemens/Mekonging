@@ -2020,7 +2020,6 @@ html[data-theme="dark"] a { color: var(--teal); }
 html[data-theme="dark"] .plan-chain,
 html[data-theme="dark"] .rlabel,
 html[data-theme="dark"] .src-link,
-html[data-theme="dark"] .lang-tick,
 html[data-theme="dark"] .info-tip[open] > summary,
 html[data-theme="dark"] .fy-hero-why,
 html[data-theme="dark"] .fy-pick-why,
@@ -2798,44 +2797,12 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
    still too wide is now ellipsised by the -webkit-line-clamp above, which is a legible
    failure rather than a confusing one. */
 .topbar h1 { overflow-wrap: normal; word-break: normal; hyphens: manual; }
-/* A column layout in which ONLY the language list scrolls. The generic .sheet scrolls its own
-   whole body, which on a short viewport pushed the heading and the filter box off the top and
-   the Close button off the bottom — leaving a list of thirty languages and no visible way to
-   search or dismiss it. Pinning the chrome and giving the list the leftover height fixes that
-   at every viewport height instead of at a chosen one. */
-.lang-sheet {
-  max-width: 520px; border-radius: var(--r-lg);
-  display: flex; flex-direction: column; max-height: 86vh; overflow: hidden;
-}
-/* min-height, not just flex-grow: the list is the point of this sheet, and without a floor the
-   explanatory note below it was winning the height contest and leaving only three of thirty
-   languages on screen. */
-.lang-list {
-  flex: 1 1 auto; min-height: min(38vh, 260px); overflow-y: auto; margin: var(--sp-3) 0;
-  border: 1px solid var(--line); border-radius: var(--r-md);
-}
-.lang-sheet > h3, .lang-sheet > p, .lang-sheet > input, .lang-sheet > .lang-mt,
-.lang-sheet > .confirm-actions { flex: none; }
-.lang-row {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%;
-  padding: 10px var(--sp-3); border: none; border-bottom: 1px solid var(--line);
-  background: none; color: var(--ink); cursor: pointer; text-align: start; font: inherit;
-}
-.lang-row:last-child { border-bottom: none; }
-.lang-row:hover { background: rgba(128, 128, 128, 0.1); }
-.lang-row.on { background: rgba(22, 163, 154, 0.14); }
-.lang-flag { font-size: 1.4rem; line-height: 1; flex: none; }
-.lang-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-/* The language's own name is the primary label — it is the only one a speaker who reads no
-   English can use to find their row, so it gets the weight and the size. */
-.lang-native { font-weight: 700; font-size: var(--fs-md); }
-.lang-en { font-size: 11px; color: var(--ink-soft); }
-.lang-tick { color: var(--teal-deep); font-weight: 800; flex: none; }
-.lang-section {
-  margin: 0; padding: var(--sp-2) var(--sp-3); background: rgba(128, 128, 128, 0.08);
-  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--ink-soft); position: sticky; top: 0;
-}
+/* The language picker used to be a 30-row scrollable list, which needed this sheet pinned into
+   a flex column (heading/filter/Close held in place, only the list itself scrolling) just to
+   keep the filter box and Close button on screen alongside it. Replaced by a single <select>
+   (see languageSheet() in js/main.js) short enough that the generic .sheet's own scroll-the-
+   whole-body behaviour is plenty — only the width cap below is still needed. */
+.lang-sheet { max-width: 520px; }
 .lang-mt { display: flex; gap: var(--sp-3); align-items: flex-start; margin: 0 0 var(--sp-4); cursor: pointer; }
 .lang-mt input { margin-top: 3px; flex: none; }
 /* Talk's source-language picker. It shipped as a bare, unstyled <select>, which was easy to
