@@ -1106,7 +1106,12 @@ function liveTranslateBox(code, label, locale, onChange) {
   // Talk T3: its own class distinct from the phrase-filter '.search' input below it on this
   // same screen — the two were previously visually identical, which caused real confusion
   // during the UX interview (typing a test query into the wrong box).
-  const input = h('input', { class: 'search translate-input', type: 'text', placeholder: 'e.g. Where is the bus station?' });
+  // B3: a single-line <input> let a long phrase scroll out of view as it was typed, so
+  // reviewing or editing what you had already written meant scrolling blind — measured live
+  // at 375px, a 127-character sentence showed scrollWidth 934px against a 307px visible box.
+  // A wrapping <textarea> (the same `.ta` class every other multi-line field in the app uses)
+  // keeps the whole phrase on screen instead.
+  const input = h('textarea', { class: 'ta translate-input', rows: '3', placeholder: 'e.g. Where is the bus station?' });
   const out = h('div', { class: 'tr-out', style: 'margin-top: var(--sp-3)' });
   // The input's accessible name has to name the ACTUAL source language, not a hard-coded
   // "English" — a screen-reader user who picked Japanese was previously told they were typing
@@ -1162,7 +1167,9 @@ function liveTranslateBox(code, label, locale, onChange) {
       if (onChange) onChange();
     } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, err.message)); }
   };
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(false); } });
+  // No submit-on-Enter here: this is now a multi-line field, so Enter has to insert a
+  // newline like it does in every other `.ta` textarea in the app (see promptAction's
+  // multiline branch in ui-widgets.js) — the visible Translate button is the one way to submit.
 
   // Two buttons, because they are two different intentions. Translate is the common one and
   // leads; keeping a phrase forever is the deliberate one and says so in full.
@@ -1209,13 +1216,33 @@ function liveTranslateBox(code, label, locale, onChange) {
       } catch { resetMic(); }
     });
   }
+  // B3: an explicit way to start a new phrase. Per A2, clearing a field that already holds a
+  // real attempt is exactly the kind of loss a confirm should guard — but confirming a field
+  // that is already empty is a no-op with nothing to lose, and asking anyway just trains
+  // travellers to tap through the dialog without reading it. So the threshold is simply
+  // "is there anything typed at all", trimmed of whitespace.
+  const clearBtn = h('button', { class: 'btn talk-clear', onclick: async () => {
+    if (!input.value.trim()) { input.value = ''; out.innerHTML = ''; input.focus(); return; }
+    const ok = await confirmAction({
+      title: 'Clear this?',
+      body: 'This discards the phrase you have typed and its translation.',
+      confirmLabel: 'Clear',
+      cancelLabel: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+    input.value = '';
+    out.innerHTML = '';
+    input.focus();
+  } }, '✕ Clear');
   // One grid rather than a row plus a separate block: Translate and Speak share the top line
   // as equal columns, the save button spans both below them, and every gap is the same token.
   // The old layout used `row-between`, which pushed the two apart to the card edges with a
   // hole between them, and then a differently-spaced wrapper for the third — three buttons at
-  // three widths with two different gaps.
+  // three widths with two different gaps. Clear is a fourth full-width row below Save: reusing
+  // `.talk-save`'s own span rule (renamed `.talk-clear`) rather than inventing a new layout.
   const actions = h('div', { class: 'talk-actions' + (micBtn ? '' : ' one-up') },
-    [btn, micBtn, saveBtn].filter(Boolean));
+    [btn, micBtn, saveBtn, clearBtn].filter(Boolean));
   box.append(srcSel, input, actions, out);
   return box;
 }

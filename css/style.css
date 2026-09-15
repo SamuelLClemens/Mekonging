@@ -2987,6 +2987,9 @@ select {
 .talk-actions.one-up { grid-template-columns: 1fr; }
 .talk-actions .btn { width: 100%; justify-content: center; text-align: center; }
 .talk-actions .talk-save { grid-column: 1 / -1; }
+/* B3: Clear is a fourth action, added below Save as its own full-width row rather than
+   squeezed into the two-column top line. */
+.talk-actions .talk-clear { grid-column: 1 / -1; }
 
 /* Listening reads as a STATE of the same button, not a different button: the fill is
    untouched (all three actions are deliberately one colour) and the change is a ring that
