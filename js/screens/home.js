@@ -329,33 +329,25 @@ function justArrivedChip(cc) {
   ]);
 }
 
-// "Planning your next stop" — same dismissible-chip shape as Just arrived, filling the gap
-// left when nextStop() (below) has nothing to report. H4's real "🚌 Getting to X" card
-// (nextStopCard, below) only ever appears once a next stop already exists; while travelling
-// with no dated stop queued for today onward, Home otherwise says nothing here at all — this
-// nudges the traveller to #nextstop (screens/nextstop.js) to plan and add one instead of
-// leaving that silent — the real tool W2 built, not the bare My Trip form. Self-clears the
-// moment a next stop exists again, same as any other "nothing to say yet" cell in this file;
-// X-ing it out (for travellers deliberately not planning that far ahead) sets
-// prefs.nextStopNudgeHidden — never gone for good, restored from Settings → Journey phase,
-// same recovery path as Just arrived.
+// "Planning your next stop" — filling the gap left when nextStop() (below) has nothing to
+// report. H4's real "🚌 Getting to X" card (nextStopCard, below) only ever appears once a
+// next stop already exists; while travelling with no dated stop queued for today onward, Home
+// otherwise says nothing here at all — this nudges the traveller to #nextstop
+// (screens/nextstop.js) to plan and add one instead of leaving that silent — the real tool W2
+// built, not the bare My Trip form. Self-clears the moment a next stop exists again, same as
+// any other "nothing to say yet" cell in this file.
+//
+// Unlike Just arrived and Trip started, this one carries no dismiss control (Slice D, item 13,
+// direct request): it may not be hidden, only made moot by actually planning a next stop. A
+// previously-recorded `prefs.nextStopNudgeHidden` from before this change is simply no longer
+// read, so nobody who hid it earlier is left without the button now.
 function nextStopNudgeChip() {
-  if (store.profile.prefs.nextStopNudgeHidden || nextStop()) return null;
+  if (nextStop()) return null;
   return h('div', { class: 'just-arrived-chip' }, [
     h('button', { class: 'ja-main', onclick: () => go('#nextstop') }, [
       h('span', { class: 'status-ic' }, '🧭'),
       h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
     ]),
-    h('button', {
-      class: 'ja-x', 'aria-label': 'Hide the planning-your-next-stop chip',
-      onclick: () => {
-        confirmAction({
-          title: 'Hide this chip?',
-          body: 'It disappears from Home. Bring it back any time from Settings → Journey phase.',
-          confirmLabel: 'Hide',
-        }).then((ok) => { if (ok) { store.profile.prefs.nextStopNudgeHidden = true; save(); render(); } });
-      },
-    }, '✕'),
   ]);
 }
 
