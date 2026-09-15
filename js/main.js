@@ -714,7 +714,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.558.0';
+export const APP_VERSION = 'mk-v0.559.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2003,8 +2003,12 @@ function whyNow(p, ctx) {
   if (ctx.raining) {
     // A market only reads as rain-friendly when it is actually covered — an open-air night
     // market does not get "Good in the rain" just because it also happens to serve food.
+    // Same for anywhere else: a hilltop temple with a viewpoint (culture + viewpoint) is not
+    // "genuinely sheltered" just because one of its tags is indoor — the OUTDOOR_CATS check
+    // matches the stricter reasoning todoScore() already applies for the day-suggest screen
+    // (114 of 771 places carry both an indoor and an outdoor tag; see D3 audit).
     if (cats.includes('market')) { if (marketCovered(p)) return 'Covered market — good in the rain'; }
-    else if (cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
+    else if (cats.some((c) => INDOOR_CATS.includes(c)) && !cats.some((c) => OUTDOOR_CATS.includes(c))) return 'Good in the rain';
   }
   if (cats.includes('market') && marketOpenDays(p) && marketOnToday(p, ctx.dow)) return 'Market on today';
   if (ctx.isWeekend && cats.includes('market')) return 'Weekend market';
@@ -3217,47 +3221,19 @@ export function groupDoors(skip = []) {
   })));
 }
 
-// A row of features as chips: the icon and the feature's one name, nothing else. This is for
-// LAUNCHING something rather than browsing it, and it is deliberately not hubRow(): six hub
-// rows come to roughly 340px at 375px, which is more height than the whole consolidation
-// saved on Home. The blurb still reaches a screen reader through aria-label.
-export function featureChips(items, cc) {
-  const who = whoName();
-  return h('div', { class: 'chips' }, items.map((it) => {
-    const label = itemLabel(it, who);
-    return h('button', {
-      class: 'status-chip', onclick: () => go(resolveHash(it, cc)),
-      'aria-label': it.blurb ? `${label}. ${it.blurb}` : label,
-    }, [
-      h('span', { class: 'status-ic', 'aria-hidden': 'true' }, it.ic),
-      h('span', { class: 'status-lbl' }, label),
-    ]);
-  }));
-}
-
-// Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
-// one-handed action performed standing in front of the thing, which is precisely when an extra
-// tap costs most — and all six of these features gained one in the consolidation. Planning
-// keeps the door instead: nobody identifies a bird from the sofa three months out.
+// Identify, inline, while the traveller is on the ground: one button straight to the hub,
+// not a fold to open plus a row of six chips to choose from — that was two taps (and a
+// screen's worth of height) to do what one now does. The hub (hubScreen, below) still lists
+// every identify feature with its blurb, so nothing here loses reach, only the Home-screen
+// footprint shrinks (Slice D, item 9).
 export function identifyRow() {
   const group = navGroup('identify');
   if (!group) return null;
   const phase = store.profile.prefs.phase || inferPhase();
   const items = visibleItems(group, phase);
   if (!items.length) return null;
-  const box = h('div', { class: 'home-identify' }, [featureChips(items, getActiveCountry())]);
-  // A named way in to the whole section, at the foot of the chips (direct request: "a button
-  // for identify what's around you ... that takes you to a choice of what you want to
-  // identify"). The chips above ARE that choice, one tap each, and they stay — the button is
-  // for the traveller who wants the section rather than one thing in it, and the hub is where
-  // each entry also carries its blurb.
-  box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#hub-identify') },
-    '🔎 Identify what’s around you →'));
-  // "Identify what's around you", not the group's bare title: the section is a question a
-  // traveller asks while standing in front of something, and the heading now says so.
-  // Not the group blurb either — the summary style uppercases, and "WHAT IS THIS DISH, FRUIT
-  // OR BIRD?" wrapped to two shouted lines at 375px.
-  return homeFold(`${group.ic} Identify what’s around you`, box, 'homeIdentifyOpen');
+  return h('button', { class: 'btn block home-identify-btn', onclick: () => go('#hub-identify') },
+    `${group.ic} Identify what’s around you →`);
 }
 
 // The hub itself. Unknown id falls through to the full index rather than an error screen:
@@ -3296,7 +3272,12 @@ function hubScreen(id) {
   // Sideways, not back: the other eight groups as chips at the foot, so moving from Money to
   // Plan is one tap instead of Back-then-tap. This is the whole reason a hub can afford to
   // hold the long tail — nothing is ever more than two taps from anywhere.
-  const others = visibleGroups(phase).filter((g) => g.id !== group.id);
+  //
+  // Identify is the one exception (Slice D, item 9): it is reached from Home as a single,
+  // focused "what is this thing in front of me" button, not by browsing the door grid, so
+  // cross-links to unrelated sections here would just be clutter on a screen meant to answer
+  // one question fast.
+  const others = group.id === 'identify' ? [] : visibleGroups(phase).filter((g) => g.id !== group.id);
   if (others.length) {
     wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, 'Other sections'));
     wrap.append(h('div', { class: 'chips' }, others.map((g) => h('button', {
