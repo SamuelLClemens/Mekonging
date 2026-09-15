@@ -256,6 +256,16 @@ export function settingsScreen() {
   if (!standalone) {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
     const ic = h('div', { class: 'card' }, [h('h2', {}, '📲 Install the app')]);
+    // WebKit is mandatory on every iOS browser (Safari, Chrome-iOS, Firefox-iOS all use it),
+    // so isIOS is the right test for Safari's 7-day whole-origin storage sweep, not a
+    // narrower "actually Safari" check. This is the one place that risk is spelled out
+    // plainly and permanently rather than only in home.js's one-time nudge — see WORK_ORDER.md
+    // D2, which documented the sweep for audio packs specifically; it is really an app-wide
+    // exposure and this card is the app-wide fix.
+    if (isIOS) {
+      ic.append(h('p', { class: 'nudge-line', style: 'margin-top: 0' },
+        '⚠️ Not on your Home Screen — Safari can clear your entire saved trip (dictionary, journal, budget, photos) after 7 days without opening the app.'));
+    }
     if (getDeferredInstallPrompt()) {
       ic.append(h('p', { class: 'muted', style: 'margin-top: 0' }, 'Keeps Mekonging offline and one tap away.'));
       ic.append(h('button', { class: 'btn', onclick: async () => {
