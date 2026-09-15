@@ -615,6 +615,27 @@ Produce a vetted list of charities for Thailand, Laos, Cambodia, Vietnam, and re
 **Acceptance:** each charity carries a country, a cause, a source URL, and either a real rating
 with its evaluator or an explicit "unrated"; contested entries are flagged separately.
 
+### Slice F — done, 2026-09-15.
+
+All 10 entries in `js/screens/giveback.js`'s `DONATE_ORGS` (the original 7 plus 3 new
+candidates — Thrive Networks/East Meets West, PeaceTrees Vietnam, Pencils of Promise — found
+with real evaluator ratings during research) now carry a `rating` field: either
+`{ rated: true, label, evaluator, url }` linking straight to the evaluator's own profile page,
+or `{ rated: false, note }` stating plainly that no evaluator covers the org (checked Charity
+Navigator, Candid/GuideStar, ACNC and the UK Charity Commission in each case) — no rating was
+ever invented or approximated. 5 of 10 are unrated; that is treated as a normal, expected
+outcome for small regional NGOs, not a shortfall.
+
+One entry is flagged as contested: Cambodian Children's Fund carries a perfect Charity
+Navigator score, but a named critic ("Cambodia440" blog, Andy Ricketson) has alleged since 2015
+that it functions as a de facto orphanage with illegal-detention concerns, which CCF disputes
+publicly. Both sides are shown, sourced, with neither resolved nor removed — that judgement is
+left to the owner, per the brief. No other entry (including the orphanage-tourism question
+broadly) turned up documented controversy in this pass.
+
+The screen now shows the rating (or unrated note) and, where present, the contested flag on
+every card, at every scope, verified live at 375px.
+
 ---
 
 ## Slice G — Camera translation feasibility
