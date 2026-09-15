@@ -54,6 +54,8 @@ function defaults() {
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
+        // Size is not tracked per pack — see js/audio-packs.js's header for why a per-pack byte
+        // figure cannot be measured reliably from an opaque, no-cors TTS response.
         audioPacks: [],
         // Last known GPS fix { lat, lng, at } — cached so "distance from you" and the
         // near-me experience work across the whole app, offline, without re-locating.
