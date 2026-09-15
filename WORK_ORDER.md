@@ -538,6 +538,36 @@ not an acceptable result. If the honest finding is that it is already near the f
 splitting `main.js`, say that — splitting `main.js` is a large, high-risk pass of its own and is
 explicitly **out of scope here**.
 
+### Slice E — measured, 2026-09-15. No fix proposed.
+
+Measured against the local dev server (`scripts/serve.py`), Navigation Timing + Resource Timing,
+service worker and Cache Storage fully cleared beforehand for the cold run:
+
+- **Cold load** (no SW, no cache): 424–638 ms to `DOMContentLoadedEventEnd` across repeated runs,
+  `domInteractive` 192–310 ms. The HTML shell itself answers in 9–14 ms; every individual JS file
+  downloads in 9–53 ms even on the largest (`main.js`, 428 KB transferred/compressed, 31 ms). 65 JS
+  files, ~1,532 KB transferred in total. Attribution: essentially none of this is network wait on
+  a fast link — it is parse+execute of the eager module graph, and `main.js` is by a wide margin
+  the single largest file (428 KB vs. the next-largest, `nature.js`, at 237 KB).
+- **Warm load** (SW installed, cache-first): 253 ms to `DOMContentLoadedEventEnd`, `domInteractive`
+  38 ms, **zero network requests** — all 66 resources confirmed served from Cache Storage
+  (`transferSize === 0` on every one, `navigator.serviceWorker.controller` present). This matches
+  the cache-first behaviour already shipped in 4.6c/4.6d.
+
+These numbers land within noise of what Priority 4.6 already recorded (681 ms cold DCL / zero-
+request warm), not a regression and not a new opportunity. **No fix is proposed.** The one
+remaining large contributor is `main.js` itself (428 KB compressed, the single biggest file by a
+wide margin over everything else) — and splitting it is explicitly out of scope for this slice, per
+the acceptance criteria above.
+
+**Honest limitation, not glossed over:** this was measured on localhost, with no real network
+round-trip latency. It cannot reproduce a degraded mobile connection the way 4.6c's 36.7 s/launch
+finding was exposed — that required actual network throttling, which this environment has no tool
+to apply. So this result answers "is the JS graph itself lean" (yes, near the floor for this
+architecture) but not "does it still feel slow on a bad connection" — if the report resurfaces
+after this, the next step is throttled-network measurement on a real device, not another localhost
+pass.
+
 ---
 
 ## Slice F — Charity vetting research
