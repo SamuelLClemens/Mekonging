@@ -65,10 +65,12 @@ export function removeCustomExpCat(id) {
 // reachable, and the native picker is a better touch target than a 60px pill. Part of the
 // site-wide pass replacing walls of individual filter/option buttons with compact controls.
 //
-// The two things a chip row gave that a bare <select> does not — adding a custom category and
-// removing one — are kept as a single trailing action row rather than N inline ✕ buttons:
-// "＋ New" is always offered (up to EXP_CUSTOM_MAX), and "✕ Remove" appears only while a
-// custom category is the one selected, which is exactly when it is meaningful.
+// Choosing "Other" is how a new category gets created: it reveals a name field, and "✓ Save
+// for reuse" persists it via addCustomExpCat (every custom category is reusable everywhere —
+// this app has no notion of a one-off category). Leaving the field blank and moving on just
+// logs the expense as plain Other, same as before. "✕ Remove this one" appears only while a
+// custom category is the one selected, which is exactly when it is meaningful — a stray tap
+// while logging an expense must never silently delete a category the traveller files under.
 export function expCatPicker(current) {
   let val = expCatsAll().some((c) => c.id === current) ? current : 'other';
   let adding = false;
@@ -78,41 +80,36 @@ export function expCatPicker(current) {
     const customIds = new Set(customExpCats().map((c) => c.id));
     row.append(selectEl(
       expCatsAll().map((c) => [c.id, `${c.emoji} ${c.label}`]), val,
-      (v) => { val = v; build(); }, 'Category',
+      (v) => { val = v; adding = (v === 'other' && customExpCats().length < EXP_CUSTOM_MAX); build(); }, 'Category',
     ));
     if (adding) {
-      const input = h('input', { type: 'text', class: 'exp-cat-new', placeholder: 'New category name', maxlength: '20', 'aria-label': 'New category name' });
+      const input = h('input', { type: 'text', class: 'exp-cat-new', placeholder: 'Name this category (optional)', maxlength: '20', 'aria-label': 'New category name' });
       const commit = () => { const cat = addCustomExpCat(input.value); adding = false; if (cat) val = cat.id; build(); };
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { adding = false; build(); } });
       row.append(h('div', { class: 'exp-cat-actions' }, [
         input,
-        h('button', { type: 'button', class: 'chip', 'aria-label': 'Add this category', onclick: commit }, '✓'),
-        h('button', { type: 'button', class: 'chip ghost', 'aria-label': 'Cancel adding a category', onclick: () => { adding = false; build(); } }, '✕'),
+        h('button', { type: 'button', class: 'chip', 'aria-label': 'Save this category for reuse', onclick: commit }, '✓ Save for reuse'),
+        h('button', { type: 'button', class: 'chip ghost', 'aria-label': 'Skip, just use Other', onclick: () => { adding = false; build(); } }, 'Skip'),
       ]));
       setTimeout(() => input.focus(), 0);
-    } else {
-      const actions = [];
-      if (customExpCats().length < EXP_CUSTOM_MAX) {
-        actions.push(h('button', { type: 'button', class: 'chip ghost', onclick: () => { adding = true; build(); } }, '＋ New category'));
-      }
-      // Removing is confirmed first — a stray tap while logging an expense must never
-      // silently delete a category the traveller has been filing things under.
-      if (customIds.has(val)) {
-        const c = expCatsAll().find((x) => x.id === val);
-        actions.push(h('button', {
+    } else if (val === 'other' && customExpCats().length >= EXP_CUSTOM_MAX) {
+      row.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-1) 0 0' }, `Category limit reached (${EXP_CUSTOM_MAX}) — using Other.`));
+    } else if (customIds.has(val)) {
+      const c = expCatsAll().find((x) => x.id === val);
+      row.append(h('div', { class: 'exp-cat-actions' }, [
+        h('button', {
           type: 'button', class: 'chip ghost', 'aria-label': `Remove category ${c ? c.label : ''}`,
           onclick: () => {
             confirmAction({ title: `Remove “${c ? c.label : ''}”?`, body: 'Any expenses already logged under it move to Other.', confirmLabel: 'Remove', danger: true })
               .then((ok) => { if (ok) { removeCustomExpCat(val); val = 'other'; build(); } });
           },
-        }, '✕ Remove this one'));
-      }
-      if (actions.length) row.append(h('div', { class: 'exp-cat-actions' }, actions));
+        }, '✕ Remove this one'),
+      ]));
     }
   }
   build();
   row.get = () => val;
-  row.set = (id) => { if (expCatsAll().some((c) => c.id === id)) { val = id; build(); } };
+  row.set = (id) => { if (expCatsAll().some((c) => c.id === id)) { val = id; adding = false; build(); } };
   return row;
 }
 
@@ -164,8 +161,8 @@ export function frequentExpenseTitles() {
 export function expTitlePicker(catPicker, opts = {}) {
   const seen = frequentExpenseTitles();
   const input = h('input', {
-    type: 'text', 'aria-label': 'What the expense was on',
-    placeholder: seen.length ? 'Or type something new' : 'On what? (e.g. lunch, taxi, room)',
+    type: 'text', 'aria-label': 'Details (optional)',
+    placeholder: seen.length ? 'Or type something new' : 'Optional — e.g. lunch, taxi, room',
     value: opts.value || '',
   });
   const wrap = h('div', { class: 'exp-title-pick' });
@@ -219,7 +216,7 @@ export function expenseAddCard(opts = {}) {
   return h('div', { class: 'card exp-add-card' + (opts.compact ? ' exp-add-compact' : '') }, [
     h('h2', {}, 'Log an expense'),
     h('div', { style: 'display:flex;gap: var(--sp-3)' }, [field('Amount', bAmt), field('Currency', bCur)]),
-    field('On what?', bNote), field('Category', bCat), monthlyToggle, dateField,
+    field('Category', bCat), field('Details', bNote), monthlyToggle, dateField,
     h('button', { class: 'btn block btn-spaced', onclick: add }, '＋ Add expense'),
   ]);
 }
@@ -289,7 +286,7 @@ export function budgetLogRow(b) {
     const note = expTitlePicker(cat, { value: b.note || '' });
     return h('div', { class: 'card', style: 'margin: var(--sp-1h) 0' }, [
       h('div', { style: 'display:flex;gap: var(--sp-3)' }, [field('Amount', amt), field('Currency', cur)]),
-      field('On what?', note), field('Category', cat), field('Date', dt),
+      field('Category', cat), field('Details', note), field('Date', dt),
       h('div', { class: 'row-between', style: 'margin-top: var(--sp-1h)' }, [
         h('button', { class: 'btn ghost', onclick: () => { editExpenseId = null; render(); } }, 'Cancel'),
         h('button', { class: 'btn', onclick: () => { updateBudgetItem(b.id, { amount: amt.value, currency: cur.value, note: note.get(), category: cat.get(), date: dt.value || b.date }); editExpenseId = null; render(); } }, 'Save'),
