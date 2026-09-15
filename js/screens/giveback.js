@@ -19,23 +19,51 @@ import { sourcesNote } from '../render-utils.js';
 import { convert } from '../currency.js';
 import { mount, topbar, homeCurrency } from '../main.js';
 
+// Rating research (2026-09-15, Slice F, item 5.2): every entry below carries either a real
+// rating from a named independent evaluator with a direct link to that evaluator's own
+// profile page, or an explicit "unrated" — never a guessed or approximated number. "Unrated"
+// is an expected, normal outcome for a small regional NGO, not a failure of the org. Anything
+// with a genuine documented dispute is flagged via `contested` with both sides sourced, for
+// the owner to weigh — not resolved here. See WORK_ORDER.md Slice F for the full brief.
 const DONATE_ORGS = [
   { scope: 'Across the region', flag: '🌏', items: [
-    { name: 'MAG (Mines Advisory Group)', what: 'Finds and clears landmines and unexploded bombs left by war in Cambodia, Laos and Vietnam, so families can farm and children can play safely.', url: 'https://www.maginternational.org/' },
-    { name: 'Friends-International', what: 'Protects urban children and marginalised young people and trains them for work, across Cambodia, Laos and Thailand.', url: 'https://friends-international.org/' },
+    { name: 'MAG (Mines Advisory Group)', what: 'Finds and clears landmines and unexploded bombs left by war in Cambodia, Laos and Vietnam, so families can farm and children can play safely.', url: 'https://www.maginternational.org/',
+      rating: { rated: true, label: '2/4 stars', evaluator: 'Charity Navigator (MAG America)', url: 'https://www.charitynavigator.org/ein/522302253' } },
+    { name: 'Friends-International', what: 'Protects urban children and marginalised young people and trains them for work, across Cambodia, Laos and Thailand.', url: 'https://friends-international.org/',
+      rating: { rated: false, note: 'No independent evaluator profile found (checked Charity Navigator, Candid/GuideStar, ACNC, UK Charity Commission).' } },
+    { name: 'Thrive Networks (East Meets West)', what: 'Health, water, sanitation and education programmes for underserved communities across Vietnam, Cambodia and Laos.', url: 'https://thrivenetworks.org/',
+      rating: { rated: true, label: '4/4 stars', evaluator: 'Charity Navigator', url: 'https://www.charitynavigator.org/ein/330316095' } },
   ] },
   { scope: 'Thailand', flag: '🇹🇭', items: [
-    { name: 'The Mercy Centre (HDF)', what: 'Kindergartens, shelter and daily care for children of Bangkok’s Klong Toey community, serving the city’s poorest families since 1972.', url: 'https://mercycentre.org/' },
+    { name: 'The Mercy Centre (HDF)', what: 'Kindergartens, shelter and daily care for children of Bangkok’s Klong Toey community, serving the city’s poorest families since 1972.', url: 'https://mercycentre.org/',
+      rating: { rated: false, note: 'No confirmed independent rating (a Candid/GuideStar profile exists for its US support entity, Human Development and Children Foundation, but the seal tier could not be verified).' } },
   ] },
   { scope: 'Vietnam', flag: '🇻🇳', items: [
-    { name: 'Blue Dragon Children’s Foundation', what: 'Rescues children from trafficking and slavery and helps street kids rebuild their lives, based in Hanoi.', url: 'https://www.bluedragon.org/donate/' },
+    { name: 'Blue Dragon Children’s Foundation', what: 'Rescues children from trafficking and slavery and helps street kids rebuild their lives, based in Hanoi.', url: 'https://www.bluedragon.org/donate/',
+      rating: { rated: true, label: '4/4 stars', evaluator: 'Charity Navigator (Blue Dragon USA)', url: 'https://www.charitynavigator.org/ein/453771750' } },
+    { name: 'PeaceTrees Vietnam', what: 'Clears landmines and unexploded ordnance around Quang Tri and helps communities return the land to safe use.', url: 'https://www.peacetreesvietnam.org/',
+      rating: { rated: true, label: '4/4 stars', evaluator: 'Charity Navigator', url: 'https://www.charitynavigator.org/ein/201051471' } },
   ] },
   { scope: 'Cambodia', flag: '🇰🇭', items: [
-    { name: 'Cambodian Children’s Fund', what: 'Education, healthcare, childcare and family support in one of Phnom Penh’s poorest areas, Steung Meanchey.', url: 'https://www.cambodianchildrensfund.org/donate' },
+    { name: 'Cambodian Children’s Fund', what: 'Education, healthcare, childcare and family support in one of Phnom Penh’s poorest areas, Steung Meanchey.', url: 'https://www.cambodianchildrensfund.org/donate',
+      rating: { rated: true, label: '4/4 stars (100%)', evaluator: 'Charity Navigator', url: 'https://www.charitynavigator.org/ein/200764162' },
+      // Orphanage tourism and residential child-care in Cambodia are an area with genuine,
+      // active criticism (well-known "orphanages" separating children from families who could
+      // care for them) — this specific, named dispute is flagged rather than silently
+      // resolved, so the owner decides whether to keep, drop or annotate this entry further.
+      contested: { note: 'A named critic ("Cambodia440" blog, Andy Ricketson) has alleged since 2015 that CCF operates as a de facto orphanage with illegal-detention concerns; CCF disputes this publicly and calls the source uncredible. Shown here so the owner can weigh both sides.',
+        sources: [
+          { org: 'Cambodia440 — allegation', url: 'https://cambodia440.blogspot.com/2015/12/175-is-scott-neesons-cambodian.html' },
+          { org: 'Cambodian Children’s Fund — response', url: 'https://www.cambodianchildrensfund.org/fact-sheet-4/' },
+        ] } },
   ] },
   { scope: 'Laos', flag: '🇱🇦', items: [
-    { name: 'COPE', what: 'Free prosthetic limbs and rehabilitation for survivors of unexploded bombs, run from the visitor centre in Vientiane.', url: 'https://copelaos.org/' },
-    { name: 'Big Brother Mouse', what: 'A Lao-owned literacy project publishing books and running reading parties for village children, from Luang Prabang.', url: 'https://www.bigbrothermouse.com/' },
+    { name: 'COPE', what: 'Free prosthetic limbs and rehabilitation for survivors of unexploded bombs, run from the visitor centre in Vientiane.', url: 'https://copelaos.org/',
+      rating: { rated: false, note: 'No independent evaluator profile found (checked Charity Navigator, Candid/GuideStar, ACNC, GreatNonprofits). COPE has no charity registration of its own in donor countries; it is fiscally sponsored via Global Development Group (Australia) for tax-deductible giving.' } },
+    { name: 'Big Brother Mouse', what: 'A Lao-owned literacy project publishing books and running reading parties for village children, from Luang Prabang.', url: 'https://www.bigbrothermouse.com/',
+      rating: { rated: false, note: 'Profiled by Charity Navigator (as Laos Literacy Project Inc.) but rated as having insufficient data for a star score.', evaluator: 'Charity Navigator', url: 'https://www.charitynavigator.org/ein/320285330' } },
+    { name: 'Pencils of Promise', what: 'Builds schools and supports teachers and clean water access for rural communities, including in Laos.', url: 'https://pencilsofpromise.org/',
+      rating: { rated: true, label: '3/4 stars', evaluator: 'Charity Navigator', url: 'https://www.charitynavigator.org/ein/263618722' } },
   ] },
 ];
 
@@ -145,11 +173,27 @@ export function donateScreen() {
       orgsWrap.append(h('p', { class: 'empty' }, `No listed charities yet for ${scope}.`));
       return;
     }
-    grp.items.forEach((o) => orgsWrap.append(h('div', { class: 'card donate-card' }, [
-      h('strong', {}, o.name),
-      h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, o.what),
-      h('a', { class: 'btn ghost block', href: o.url, target: '_blank', rel: 'noopener noreferrer' }, 'Visit official site ↗'),
-    ])));
+    grp.items.forEach((o) => {
+      const r = o.rating;
+      const ratingLine = r ? h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-1)' }, [
+        r.rated ? `⭐ ${r.label} — ${r.evaluator} ` : `Unrated${r.evaluator ? ` (${r.evaluator}) ` : ' '}`,
+        r.url ? h('a', { class: 'linklike', href: r.url, target: '_blank', rel: 'noopener noreferrer' }, r.rated ? 'source ↗' : 'why ↗') : null,
+      ]) : null;
+      const ratingNote = r && !r.rated ? h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2)' }, r.note) : null;
+      const contestedBlock = o.contested ? h('div', { style: 'margin: var(--sp-1) 0 var(--sp-2)' }, [
+        h('div', { class: 'warn-note' }, `Contested: ${o.contested.note}`),
+        ...(o.contested.sources || []).map((s) => h('p', { class: 'tiny', style: 'margin: var(--sp-0h) 0 0' },
+          h('a', { class: 'linklike', href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.org))),
+      ]) : null;
+      orgsWrap.append(h('div', { class: 'card donate-card' }, [
+        h('strong', {}, o.name),
+        h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, o.what),
+        ratingLine,
+        ratingNote,
+        contestedBlock,
+        h('a', { class: 'btn ghost block', href: o.url, target: '_blank', rel: 'noopener noreferrer' }, 'Visit official site ↗'),
+      ]));
+    });
   }
   wrap.append(h('div', { class: 'card', style: 'margin-bottom: var(--sp-3)' }, [
     field('Show charities for', selectEl(
@@ -160,6 +204,6 @@ export function donateScreen() {
   wrap.append(orgsWrap);
   buildOrgs();
   wrap.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Prefer to help in person? Eating at their training restaurants, buying their books, or volunteering supports the same work — ask at each organisation’s visitor centre.'));
-  wrap.append(h('p', { class: 'disclaimer' }, 'Mekonging is not affiliated with these organisations and receives nothing from them. This is a starting point, not vetting or financial advice — confirm each charity independently before donating.'));
+  wrap.append(h('p', { class: 'disclaimer' }, 'Mekonging is not affiliated with these organisations and receives nothing from them. Ratings, where shown, are from the named independent evaluator linked, not Mekonging’s own judgement — this is a starting point, not financial advice, and does not resolve any flagged dispute. Confirm each charity independently before donating.'));
   mount(wrap, '#home');
 }
