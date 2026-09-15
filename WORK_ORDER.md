@@ -515,6 +515,35 @@ Everything in the user's trip starts collapsed. The app already folds sections a
 **Acceptance:** every trip section is collapsed on first visit; a section the user opens stays
 open for that session.
 
+### Slice D — verified, 2026-09-15.
+
+- **D1** — no code change needed. The flat-grid, one-folder-level pattern was already live
+  (introduced before this work order was written); confirmed by loading Home and `#hub-plan`
+  at 375px.
+- **D2** — done. Identify collapses to one button (`identifyRow()`); `#hub-identify` no longer
+  shows the "Other sections" cross-nav list. Verified live: the button leads to a full
+  Identify hub with all seven of its sections intact and nothing else appended.
+- **D3** — the category-chip half needed no change: Home's "Right now" filter already builds
+  its chips from whichever `CATEGORY_FAMILIES` are present in the ranked pool (up to 7 —
+  culture, nature, beach, food, market, nightlife, wellness — not just Culture and Nature),
+  from a pre-existing commit. The rain-tag half had a real bug: `whyNow()`'s "Good in the
+  rain" tag checked only for an indoor category, so a place tagged with BOTH an indoor and an
+  outdoor category (e.g. a hilltop temple that is also a viewpoint) got the tag despite not
+  being genuinely sheltered. Data audit across all 771 non-stay places: 114 (14.8%) carry both
+  an indoor and an outdoor tag and would have been mistagged; fixed by also requiring no
+  `OUTDOOR_CATS` match, matching the stricter logic `todoScore()` (day-suggest engine) already
+  used. After the fix, 193 places (185 non-market + 8 text-flagged covered markets) are
+  eligible for the tag, down from up to 307. The outdoor-market regression (an open-air market
+  needs `marketCovered()` text evidence, not just the `market` category) is untouched and still
+  passes — it lives in a separate branch of the same function.
+- **D4** — done. `nextStopNudgeChip()` no longer has a hide affordance or a hidden-pref check.
+  Verified live: with `nextStopNudgeHidden: true` set before load (simulating a pre-D4 user) and
+  phase forced to "traveling", the chip still renders with no dismiss control.
+- **D5** — done. `tripScreen()` seeds `Itinerary` / `Budget log` / `Share this trip` / `Log an
+  expense` closed once per session via the existing `sectionFolds` mechanism. Verified live in
+  an isolated tab: all sections collapsed on first visit; opening one and navigating away and
+  back within the same page load leaves it open.
+
 ---
 
 ## Slice E — Load performance

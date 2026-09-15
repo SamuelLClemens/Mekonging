@@ -403,12 +403,6 @@ export function settingsScreen() {
       onclick: () => { store.profile.prefs.tripStartedHidden = false; save(); render(); },
     }, '🎉 Show the “Trip started” chip again'));
   }
-  if (store.profile.prefs.nextStopNudgeHidden) {
-    phaseCard.append(h('button', {
-      class: 'btn ghost block', style: 'margin-top: var(--sp-3)',
-      onclick: () => { store.profile.prefs.nextStopNudgeHidden = false; save(); render(); },
-    }, '🧭 Show the “Planning your next stop” chip again'));
-  }
   wrap.append(phaseCard);
 
   // Home screen — which Quick access chips appear. Home ships with exactly four (Calendar,
