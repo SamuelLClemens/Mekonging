@@ -1237,5 +1237,13 @@ function liveTranslateBox(code, label, locale, onChange) {
   const actions = h('div', { class: 'talk-actions' + (micBtn ? '' : ' one-up') },
     [btn, micBtn, saveBtn, clearBtn].filter(Boolean));
   box.append(srcSel, input, actions, out);
+  // Point-camera-and-translate (Slice G, item 11.2) only recognises the four host-country
+  // scripts Tesseract carries data for — offered here, not on every phrasebook language, and
+  // routed with this exact page's code so it OCRs the language actually on screen rather than
+  // whatever the traveller's active country happens to be.
+  if (['th', 'vi', 'km', 'lo'].includes(code)) {
+    box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#signtranslate-${code}`) },
+      `📷 Point & translate a ${label} sign`));
+  }
   return box;
 }

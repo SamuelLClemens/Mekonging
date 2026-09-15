@@ -691,6 +691,54 @@ against a dozen real photographs of Thai and Lao signage and measure the accurac
 **Acceptance for this slice:** the owner has seen the above and made a build / defer / decline
 call. If declining, no code is written and the slice is complete.
 
+### Slice G — built, 2026-09-15. Owner's call: build the online-required version anyway.
+
+**Accuracy spike, run before writing any feature code, as required above.** Sourced 9 real
+photographs (not diagrams, not rendered text) of Thai and Lao signage — 5 Thai, 4 Lao, from
+Wikimedia Commons — ranging from a 960×768 lit night-market sign down to 120×90 road signs, and
+ran each through Tesseract.js v5's `tha`/`lao` "fast" traineddata in a real browser. Full
+image list and raw OCR output are in this branch's PR description.
+
+**Result: 2 of 9 produced a genuinely usable reading; 7 were unusable.** The clear pattern was
+framing, not language: both successes (`route450_welcome_lo.jpg`, `village_lao_sign_lo.jpg`)
+were shots where the sign filled the frame edge to edge with nothing else in view — one was
+recognised almost perfectly despite Tesseract's own confidence score reporting a bafflingly low
+6% (its confidence number is not trustworthy here). Every photo that also framed a market,
+street or embassy plaque around the sign came back as noise or near-empty, including the
+960×768 image, which is the highest resolution of the nine — resolution alone did not save it.
+This matches the WORK_ORDER's own caveat exactly: Tesseract is tuned for scanned documents, not
+camera-captured signage.
+
+**Consequence for the build:** the screen (`js/screens/signtranslate.js`, `#signtranslate`)
+asks for a tight crop of just the sign rather than a full scene, and never treats OCR output as
+final — every extracted string is shown in an editable field the traveller must confirm or fix
+before it is translated. Wired from each of the four host-language phrasebook pages
+(`js/screens/phrasebook.js`) as "📷 Point & translate a [language] sign", so it OCRs whichever
+script that page is actually showing rather than guessing from the active country.
+
+**Translation, not just recognition:** the app already had a working, no-key text-translate
+call (`js/translate.js`, `translate()`, free MyMemory endpoint) built for the phrasebook's
+live-translate box — reused as-is rather than inventing a new backend or an API key that would
+have to live in client-side code. Only the extracted text string is ever sent to it; the photo
+itself never leaves the device, per the WORK_ORDER's own privacy requirement.
+
+**Tesseract.js itself loads from a CDN (unpkg) on first use, not self-hosted.** This is a
+deliberate, narrow exception to the site's own self-hosting rule for critical dependencies: the
+feature is already online-required end to end (translation needs the network regardless), and
+a failed CDN load shows a plain error on this one screen without affecting anything else in the
+app — the exact "designed-in graceful degradation" the rule allows for.
+
+**Verified live** at 375px from all four supported phrasebook pages (Thai, Vietnamese, Khmer,
+Lao) and confirmed absent from unsupported ones (e.g. Chinese); confirmed the button opens with
+the correct language every time regardless of the traveller's active country; typed a known
+Thai phrase through the full pipeline and got a correct real translation back ("ตลาดสดมหาราช"
+→ "Maharaj Fresh Market", matching the actual market's own English signage). **Not verified:**
+the camera capture step itself — the browser sandbox used for this session blocks
+`getUserMedia`, so the capture → OCR path could only be exercised offline against the 9 saved
+test photographs (via the standalone harness, not the shipped screen), not against a live
+camera frame end to end in the app itself. The graceful "camera unavailable" fallback path was
+confirmed instead, and is the same path a desktop browser or a permission-denied phone will hit.
+
 ---
 
 ## Reporting
