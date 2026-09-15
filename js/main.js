@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.550.0';
+export const APP_VERSION = 'mk-v0.551.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1507,6 +1507,10 @@ const PART_META = {
 };
 const INDOOR_CATS = ['culture', 'food', 'market', 'wellness'];
 const OUTDOOR_CATS = ['nature', 'viewpoint', 'beach', 'park', 'hike', 'waterfall', 'island'];
+// Big enough to outrank every other term in scoreForNow combined (proximity 30 + part-of-day
+// match 30 + open 12 + rating ~6 + profile fit), so "raining" re-groups the picks into
+// sheltered / neutral / exposed bands instead of merely nudging one place past another.
+const RAIN_TIER = 200;
 const WET_MONTHS = { th: [4, 5, 6, 7, 8, 9], kh: [4, 5, 6, 7, 8, 9], la: [4, 5, 6, 7, 8, 9], vi: [4, 5, 6, 7, 8, 9, 10] };
 
 function partOfDay(hour) {
@@ -1962,12 +1966,22 @@ function scoreForNow(p, ctx) {
     else s -= 30;
   }
   if (ctx.raining) {
-    // 'market' is deliberately excluded from the blanket indoor treatment below: most
-    // night/walking-street markets in the region are open-air stalls, not shelter from rain
-    // (see marketCovered) — only a genuinely covered market should read as rain-friendly.
-    if (cats.some((c) => INDOOR_CATS.includes(c) && c !== 'market')) s += 16;
-    if (cats.some((c) => OUTDOOR_CATS.includes(c))) s -= 22;
-    if (cats.includes('market')) s += marketCovered(p) ? 16 : -18;
+    // Rain sorts into strict TIERS, not a nudge. The old ±16/22 competed directly with
+    // proximity (up to 30) and the time-of-day category match (+30), so a close open-air
+    // viewpoint still outranked a covered museum two streets further on — exactly the case
+    // this card exists to answer. Sheltered picks now sort above neutral ones and neutral
+    // above exposed ones outright; inside each tier the usual distance/open/rating order is
+    // untouched, so the list is re-grouped rather than re-shuffled.
+    //
+    // 'market' is deliberately excluded from the blanket indoor treatment: most night and
+    // walking-street markets in the region are open-air stalls, not shelter from rain (see
+    // marketCovered) — only a genuinely covered market reads as rain-friendly. A place
+    // tagged both indoor and outdoor counts as sheltered: it has somewhere to stand.
+    const isMarket = cats.includes('market');
+    const covered = isMarket ? marketCovered(p) : cats.some((c) => INDOOR_CATS.includes(c) && c !== 'market');
+    const exposed = cats.some((c) => OUTDOOR_CATS.includes(c)) || (isMarket && !marketCovered(p));
+    if (covered) s += RAIN_TIER;
+    else if (exposed) s -= RAIN_TIER;
   }
   if (ctx.part === 'midday' && !ctx.raining) {
     if (cats.includes('hike')) s -= 10;
@@ -3835,10 +3849,25 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
   // The converter answers "what is this worth"; this line answers "what is the rate", which is
   // the number a traveller carries in their head all day, and it used to be nowhere on screen.
   const rateLine = h('p', { class: 'fx-rate' });
+  // The region's currencies are not four-digit currencies: 2,000,000 VND is an ordinary ATM
+  // withdrawal and LAK runs longer still. Any fixed field width therefore clips a real amount
+  // sooner or later — and clipping the READONLY result is the dangerous half, because there is
+  // no caret to scroll it back and "8,308,6" reads as a whole number rather than a truncated
+  // one. Both figures are sized to their own content instead, in ch so tabular digits line up;
+  // the one-line layout then wraps to two lines when the pairs no longer fit (see .fx-pair).
+  // box-sizing is border-box app-wide, so a bare `Nch` width is the OUTER box and the padding
+  // eats into the digits — 7ch measured 60px of content for a 6-digit amount that needed 64.
+  // The padding and borders are added back explicitly; --sp-1h is what .fx-line-single sets.
+  const chW = (n) => `calc(${Math.max(4, n + 1)}ch + var(--sp-1h) * 2 + 2px)`;
+  function sizeFields() {
+    amount.style.width = chW(String(amount.value || '').length);
+    out.style.width = chW(String(out.value || '').length);
+  }
   function recompute() {
     const v = parseFloat(amount.value) || 0;
     const r = convert(v, fromSel.value, toSel.value);
     out.value = r == null ? '—' : r.toLocaleString(dateLocale(), { maximumFractionDigits: r >= 100 ? 0 : 2 });
+    sizeFields();
     const one = convert(1, fromSel.value, toSel.value);
     rateLine.textContent = one == null
       ? 'Rate unavailable for this pair offline.'
@@ -3865,7 +3894,14 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
   // Home down while still keeping amount and result each paired with its own currency inline.
   const wrap = h('div', { class: 'fx-widget' + (opts.oneLine ? ' fx-widget-oneline' : '') },
     opts.oneLine ? [
-      h('div', { class: 'fx-line-single' }, [amount, fromSel, swap, out, toSel]),
+      // Each figure is grouped with its own currency so that when the row runs out of width it
+      // wraps between the pairs — two tidy lines — rather than clipping a figure or orphaning a
+      // currency select onto its own line. See .fx-line-single in style.css.
+      h('div', { class: 'fx-line-single' }, [
+        h('div', { class: 'fx-pair' }, [amount, fromSel]),
+        swap,
+        h('div', { class: 'fx-pair' }, [out, toSel]),
+      ]),
       rateLine,
     ] : [
       h('div', { class: 'fx-line' }, [amount, fromSel]),

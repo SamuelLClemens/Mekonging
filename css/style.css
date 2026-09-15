@@ -1832,12 +1832,38 @@ html[data-theme="dark"] .fx-line .fx-out { color: var(--teal); }
 /* opts.oneLine (fxConverterControl): the whole calculator — amount, both currencies, swap,
    result — on one row, with the rate as the only second line. For Home's Budget fold, where
    the four-line stacked layout ran taller than the fold's other rows. Inputs are narrower
-   here than .fx-line's (smaller padding, a fixed amount width) because five controls share
-   one row instead of two per row; the figure still gets readonly-bold treatment so the
-   result reads as the answer, not another input. */
-.fx-line-single { display: flex; align-items: center; gap: var(--sp-1h); }
-.fx-line-single input[type="number"] { flex: 0 1 48px; width: 48px; min-width: 0; }
-.fx-line-single .fx-out { flex: 1 1 auto; min-width: 0; }
+   here than .fx-line's (smaller padding) because five controls share one row instead of two
+   per row; the figure still gets readonly-bold treatment so the result reads as the answer,
+   not another input.
+
+   The amount used to be pinned to 48px, and the row was five flex children with the two
+   selects locked at `flex: 0 0 auto`. Measured at 375px the fixed furniture (2 selects at
+   81px, the swap at 26px, four 6px gaps) ate 212px of a 343px row, leaving the amount 62px
+   and the result 69px — so 250000 clipped as you typed it and the answer rendered "8,308,6".
+   A readonly result that silently loses its leading digits is the worse half of that: there
+   is no caret to scroll it back into view, so the number on screen is simply wrong.
+
+   Three changes, in order of how much room each returns:
+   - The two figures now size themselves to their content in `ch` (fxConverterControl's
+     sizeFields), so they are never narrower than the number they hold. VND and LAK amounts
+     run to seven and eight digits; no fixed width survives that.
+   - Each number is grouped with its own currency in an .fx-pair, and the row may wrap. When
+     both pairs no longer fit it becomes two clean lines — each figure still beside its own
+     currency — instead of clipping. It stays one line whenever there is room.
+   - The chevron every select inherits was reserving 30px of padding for a 6px glyph. Pulled
+     in to 22px here, which hands 8px per select back to the figures.
+   Spin buttons are suppressed too: on a free-form amount they are useless, unhittable at
+   this size, and cost ~17px of the typing area in Chromium. */
+.fx-line-single { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-1h); }
+.fx-line-single .fx-pair { display: flex; align-items: center; gap: var(--sp-1h); flex: 0 1 auto; min-width: 0; }
+.fx-line-single .fx-pair input { flex: 0 1 auto; width: auto; min-width: 4ch; }
+.fx-line-single .fx-pair select { flex: 0 0 auto; padding-right: 22px; background-position: right 8px center !important; }
+.fx-line-single input, .fx-line input { font-variant-numeric: tabular-nums; }
+.fx-line-single input[type="number"]::-webkit-outer-spin-button,
+.fx-line-single input[type="number"]::-webkit-inner-spin-button,
+.fx-line input[type="number"]::-webkit-outer-spin-button,
+.fx-line input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.fx-line-single input[type="number"], .fx-line input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .fx-line-single select { flex: 0 0 auto; width: auto; }
 .fx-line-single input, .fx-line-single select { font-family: inherit; font-size: var(--fs-sm); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-1) var(--sp-1h); background: var(--card); color: var(--ink); }
 .fx-line-single .fx-out { font-weight: 800; color: var(--teal-deep); text-align: right; }
