@@ -707,7 +707,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.553.0';
+export const APP_VERSION = 'mk-v0.554.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1028,53 +1028,41 @@ export function languageSheet() {
     ensureUiStrings(code).then(render);
   };
 
-  const row = (l, needsMt) => h('button', {
-    class: 'lang-row' + (l.code === cur ? ' on' : ''),
-    'data-no-i18n': '',
-    lang: l.code,
-    'aria-current': l.code === cur ? 'true' : null,
-    onclick: () => pick(l.code),
-  }, [
-    h('span', { class: 'lang-flag', 'aria-hidden': 'true' }, l.flag),
-    h('span', { class: 'lang-names' }, [
-      h('span', { class: 'lang-native' }, l.native),
-      h('span', { class: 'lang-en' }, l.name),
-    ]),
-    l.code === cur ? h('span', { class: 'lang-tick', 'aria-hidden': 'true' }, '✓') : null,
-  ]);
-
   // NB: not named `online` — that is an imported helper (js/ui-widgets.js) and shadowing it
   // inside this function would be a trap for the next person to add a network check here.
   const bundled = LANGS.filter((l) => l.ui);
   const mtOnly = LANGS.filter((l) => !l.ui);
 
-  // Every language currently ships a bundled dictionary, so the second section renders
-  // nothing. It stays here rather than being deleted because the registry's `ui` flag is the
-  // thing that decides: add a language without a dictionary and it lands in a labelled section
-  // that explains itself, instead of silently appearing to work offline when it cannot.
-  const list = h('div', { class: 'lang-list' }, [
-    ...bundled.map((l) => row(l, false)),
-    ...(mtOnly.length ? [
-      h('p', { class: 'lang-section' }, 'Online translation only'),
-      h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2);padding: 0 var(--sp-3)' },
-        'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
-      ...mtOnly.map((l) => row(l, true)),
-    ] : []),
-  ]);
-
-  // A 30-row list is faster to filter than to scroll on a phone. Matches the native name, the
-  // English name, and the code, so "Deutsch", "German" and "de" all find German.
-  const filter = h('input', {
-    class: 'search', type: 'search', 'aria-label': 'Find a language',
-    placeholder: 'Find a language…',
+  // A single native dropdown, not a 30-row scrollable list — that list used to need its own
+  // pinned-header/pinned-footer layout (see the removed .lang-list/.lang-row rules) just to
+  // keep a filter box and the Close button on screen alongside thirty rows. A <select> gets
+  // the OS's own one-handed scroll-and-tap picker for free, and — like every other select in
+  // this app (js/ui-widgets.js selectEl) — only ever commits on an actual choice: dismissing
+  // it without picking leaves `cur` untouched, so "changed nothing" is the platform's own
+  // guarantee rather than something this code has to implement.
+  //
+  // Each option still leads with the language's OWN name (`native`), because the person who
+  // most needs this control cannot read the English one; the English name follows after a
+  // middot for anyone picking on someone else's behalf. Every language currently ships a
+  // bundled dictionary, so `mtOnly` is empty and the plain option list below is all there is —
+  // the `optgroup` split only appears once that stops being true, so a language landing in
+  // that group is still visibly labelled rather than blending in as if it worked the same
+  // offline.
+  const langOption = (l) => h('option', {
+    value: l.code, lang: l.code, selected: l.code === cur ? '' : null,
+  }, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`);
+  const sel = h('select', {
+    'aria-label': 'Choose your language', 'data-no-i18n': '',
+    onchange: (e) => pick(e.target.value),
   });
-  filter.addEventListener('input', () => {
-    const q = filter.value.trim().toLowerCase();
-    for (const el of list.querySelectorAll('.lang-row')) {
-      const hay = (el.textContent + ' ' + (el.getAttribute('lang') || '')).toLowerCase();
-      el.style.display = !q || hay.includes(q) ? '' : 'none';
-    }
-  });
+  if (mtOnly.length) {
+    sel.append(
+      h('optgroup', { label: 'Offline dictionary included' }, bundled.map(langOption)),
+      h('optgroup', { label: 'Online translation only' }, mtOnly.map(langOption)),
+    );
+  } else {
+    bundled.forEach((l) => sel.append(langOption(l)));
+  }
 
   // The old copy read "Also machine-translate the rest", which implied the app was already
   // translated and this was a bonus. It is the other way round: the dictionary covers the
@@ -1096,8 +1084,7 @@ export function languageSheet() {
   const dialog = h('div', { class: 'sheet lang-sheet', role: 'dialog', 'aria-label': 'Choose your language' }, [
     h('h3', { style: 'margin: 0 0 var(--sp-0h)' }, 'Choose your language'),
     h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-3)' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
-    filter,
-    list,
+    sel,
     mtRow,
     h('div', { class: 'confirm-actions' }, [
       h('button', { class: 'btn ghost', onclick: () => close && close() }, 'Close'),
