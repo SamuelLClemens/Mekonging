@@ -27,7 +27,7 @@
 // access row, the next-stop card) is written directly in this file instead, since it belongs
 // to Home alone.
 
-import { store, save } from '../state.js';
+import { store, save, daysSinceFirstUse } from '../state.js';
 import { h, money } from '../util.js';
 import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
@@ -117,6 +117,13 @@ export function homeScreen() {
     if (_recap) wrap.append(_recap());
     else import('./welcome.js').then((m) => { _recap = m.setupRecapCard; render(); }).catch(() => {});
   }
+
+  // One-time warning that Safari can wipe this traveller's whole trip after 7 days unopened
+  // if the app is never added to the Home Screen — see storageSafetyNudge() below. The
+  // persistent reminder lives in Settings (settingsScreen, always visible while at risk);
+  // this is the single interruption that makes sure it gets seen at least once.
+  const ssn = storageSafetyNudge();
+  if (ssn) wrap.append(ssn);
 
   // The field-guide download announces itself while it runs (js/offline-pack.js). It is the
   // one thing in this app that uses the network without being asked, so it does not get to be
@@ -342,6 +349,35 @@ function nextStopNudgeChip() {
       h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
     ]),
   ]);
+}
+
+// After a few days of real (non-installed) use, Safari's 7-day whole-origin eviction sweep
+// (localStorage + IndexedDB + Cache Storage + every service-worker cache, cleared together —
+// see WORK_ORDER.md D2 and settings.js's install card) is close enough to be worth a real
+// interruption, not just the persistent Settings line. Gated the same way as that card:
+// WebKit is mandatory on every iOS browser, so isIOS stands in for "actually at risk", and
+// standalone (already installed) is exempt outright. 3 days is long enough to know this is a
+// real, returning traveller rather than someone who opened the app once — and short enough
+// to leave 4 days of runway before the real 7-day cliff. One-time: dismissing (either button)
+// sets prefs.storageSafetyNudgeSeen and it never reappears — the Settings card is the
+// standing reminder from here on, so re-nagging on Home would just be noise.
+const STORAGE_NUDGE_MIN_DAYS = 3;
+function storageSafetyNudge() {
+  if (store.profile.prefs.storageSafetyNudgeSeen) return null;
+  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (standalone) return null;
+  if (!/iphone|ipad|ipod/i.test(navigator.userAgent || '')) return null;
+  if (daysSinceFirstUse() < STORAGE_NUDGE_MIN_DAYS) return null;
+  const dismiss = () => { store.profile.prefs.storageSafetyNudgeSeen = true; save(); render(); };
+  const card = h('div', { class: 'card setup-recap' });
+  card.append(h('strong', {}, '⚠️ Keep your trip safe from Safari'));
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' },
+    'Safari can clear an app’s saved data — your trip, dictionary, journal and photos — after 7 days unopened. Adding Mekonging to your Home Screen makes it exempt.'));
+  card.append(h('div', { class: 'row-between' }, [
+    h('button', { class: 'btn', onclick: () => { dismiss(); go('#settings'); } }, 'Add to Home Screen'),
+    h('button', { class: 'btn ghost', onclick: dismiss }, 'Got it'),
+  ]));
+  return card;
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every
