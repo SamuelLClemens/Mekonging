@@ -34,7 +34,7 @@ import { h, debounce } from '../util.js';
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
 import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard, screenHint } from '../ui-widgets.js';
-import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
+import { hasVoiceFor, say, canSay, audioSupport, ttsUrl, setSavedPacks } from '../tts.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../data/regions.js';
@@ -653,10 +653,15 @@ export function phrasebookScreen(lang) {
   if (audioCard) wrap.append(audioCard);
 
   if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
-  const voiceOk = hasVoiceFor(book.locale);
-  if (!voiceOk) {
-    wrap.append(h('div', { class: 'banner' },
-      `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
+  // The banner used to say, for any language without a device voice, "tap 🔊 to hear it spoken
+  // online". For Lao that was simply untrue — there is no online voice for Lao either, so the
+  // banner was sending travellers to a control that could never make a sound. It now reports
+  // the path that actually exists, and says plainly when none does.
+  if (!hasVoiceFor(book.locale)) {
+    const sup = audioSupport(book.locale);
+    wrap.append(h('div', { class: 'banner' }, sup.can
+      ? `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or download the audio pack above to use it offline.`
+      : `No ${book.label} voice on this device. ${sup.why}`));
   }
 
   // Last on the screen and closed by default: the phrasebook above gives a traveller
