@@ -641,6 +641,13 @@ if (typeof window !== 'undefined') {
 export function getDeferredInstallPrompt() { return deferredInstallPrompt; }
 export function clearDeferredInstallPrompt() { deferredInstallPrompt = null; }
 
+// Already installed to the Home Screen / app drawer? Shared by Settings' own install card and
+// js/audio-packs.js's post-download nudge, so both agree on when there is nothing left to ask.
+export function isStandalone() {
+  return (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+    || (typeof navigator !== 'undefined' && navigator.standalone === true);
+}
+
 // Classic light/dark. 'auto' first honours the DEVICE dark-mode setting (so a phone kept
 // in dark mode is respected all day, matching platform convention); when the device
 // expresses no dark preference it falls back to the local clock (06:00–18:00 = light),
@@ -707,7 +714,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.554.0';
+export const APP_VERSION = 'mk-v0.557.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS

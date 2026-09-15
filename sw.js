@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.554.0';
+const CACHE_VERSION = 'mk-v0.557.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -628,6 +628,8 @@ self.addEventListener('message', (e) => {
     e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
   } else if (d.type === 'PREFETCH_TTS' && Array.isArray(d.urls)) {
     e.waitUntil(prefetchTTS(d.urls.slice(0, 2000), e.source, d.lang || ''));
+  } else if (d.type === 'DELETE_TTS' && Array.isArray(d.urls)) {
+    e.waitUntil(deleteTTS(d.urls.slice(0, 2000), e.source));
   } else if (d.type === 'warm-cache') {
     // The page has finished loading and gone idle, so filling the offline copy can no longer
     // steal bandwidth from what the traveller is actually looking at.
@@ -667,6 +669,20 @@ async function prefetchTTS(urls, client, lang) {
   }
   await enforceTTSCap(cache);
   if (client) client.postMessage({ type: 'TTS_DONE', done, total: urls.length, ok, quotaHit, lang });
+}
+
+// Remove one language's saved clips from the shared TTS_CACHE (Settings' pack list, and the
+// phrasebook screen's own re-download card). The page recomputes the SAME url list the pack
+// was downloaded with (js/audio-packs.js packUrls()), so only that language's entries are
+// deleted — other languages' clips, and anything cached incidentally from ordinary tap-to-
+// speak use, are untouched.
+async function deleteTTS(urls, client) {
+  const cache = await caches.open(TTS_CACHE);
+  let removed = 0;
+  for (const url of urls) {
+    try { if (await cache.delete(url)) removed++; } catch { /* skip */ }
+  }
+  if (client) client.postMessage({ type: 'DELETE_TTS_DONE', removed, total: urls.length });
 }
 
 async function enforceTTSCap(cache) {

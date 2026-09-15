@@ -27,14 +27,15 @@
 // channel, not a resource this screen must tear down on navigation. Verified anyway (see the
 // shipping commit) since "no cleanup needed" is itself a claim worth confirming, not assuming.
 
-import { store, save, getAudioPacks, hasAudioPack, addAudioPack } from '../state.js';
+import { store, save, hasAudioPack } from '../state.js';
 import { h, debounce } from '../util.js';
 // scriptLang, phraseSlug, phraseKey, copyText and the big-phrase overlay live in
 // js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
 import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard, screenHint } from '../ui-widgets.js';
-import { hasVoiceFor, say, canSay, audioSupport, ttsUrl, setSavedPacks } from '../tts.js';
+import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
+import { packUrls, downloadPack, installNudge } from '../audio-packs.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../data/regions.js';
@@ -60,50 +61,42 @@ export { scriptLang, phraseSlug };
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
-// A "Save audio for offline" card for one phrasebook language. The service worker
-// prefetches every phrase's online-TTS clip into a dedicated cache, so playback then
-// works with no connection. Returns null when there is nothing to save (e.g. Hmong,
-// which has no online voice) or when no SW is available (native wrapper / insecure ctx).
+// A "Save audio for offline" card for one phrasebook language. Download/remove mechanics and
+// the URL list live in js/audio-packs.js, shared with Settings' full pack-management list —
+// see that file's header for which languages this even applies to (Thai/Vietnamese/Khmer
+// today; Lao and four other phrasebook languages have no audio source to bundle a pack from,
+// so they return no urls here and this card renders nothing for them, same as before).
 function audioPackControl(code, book) {
-  const swOk = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
-  const allergy = (ALLERGENS[code] && ALLERGENS[code].length) ? ALLERGENS[code] : [];
-  const phrases = book.categories.flatMap((c) => c.phrases).concat(allergy);
-  const urls = [...new Set(phrases.map((p) => ttsUrl(p.script, book.locale)).filter(Boolean))];
+  const urls = packUrls(code);
   if (!urls.length) return null;
   const saved = hasAudioPack(code);
-  const mb = (urls.length * 10 / 1024).toFixed(1); // clips average ~10 KB
   const card = h('div', { class: 'card' });
   card.append(h('h3', {}, '🔊 Offline audio'));
-  const status = h('p', { class: 'tiny muted' }, saved
-    ? `${book.label} pronunciations are saved on this device — 🔊 works with no signal.`
-    : `Save ${book.label} pronunciations (${urls.length} clips, ~${mb} MB) so 🔊 works offline — best done on wifi.`);
+  // Hidden once already saved — the button label ("Re-download audio") already says so, and
+  // repeating it here was the "explanatory blurb under the re-download button" asked to go.
+  const status = h('p', { class: 'tiny muted' }, saved ? '' : `Save ${book.label} pronunciations (${urls.length} clips) so 🔊 works offline — best done on wifi.`);
+  if (saved) status.hidden = true;
   card.append(status);
+  const swOk = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
   if (!swOk) {
     card.append(h('p', { class: 'tiny muted' }, 'Add this app to your home screen to save audio for offline use.'));
     return card;
   }
   const btn = h('button', { class: 'btn block btn-spaced' }, saved ? '↻ Re-download audio' : `⤓ Save ${book.label} audio`);
   btn.onclick = () => {
-    if (!navigator.serviceWorker.controller) return;
     btn.disabled = true;
+    status.hidden = false;
     status.textContent = `Downloading ${urls.length} clips…`;
-    const onMsg = (e) => {
-      const d = e.data || {};
-      if (d.lang !== code) return;
-      if (d.type === 'TTS_PROGRESS') { status.textContent = `Downloading… ${d.done}/${d.total}`; }
-      else if (d.type === 'TTS_DONE') {
-        navigator.serviceWorker.removeEventListener('message', onMsg);
-        btn.disabled = false;
-        if (!d.ok) { status.textContent = 'Could not download audio — check your connection and try again.'; return; }
-        addAudioPack(code); setSavedPacks(getAudioPacks());
-        status.textContent = d.quotaHit
-          ? `Saved ${d.ok} clips before hitting the storage limit — most phrases will play offline.`
-          : `Saved ${d.ok} clips — ${book.label} audio now works offline.`;
-        if (location.hash.replace(/^#/, '').startsWith('phrasebook')) go(`#phrasebook-${code}`);
-      }
-    };
-    navigator.serviceWorker.addEventListener('message', onMsg);
-    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TTS', urls, lang: code });
+    downloadPack(code, (done, total) => { status.textContent = `Downloading… ${done}/${total}`; }).then((r) => {
+      btn.disabled = false;
+      if (!r.ok) { status.textContent = 'Could not download audio — check your connection and try again.'; return; }
+      status.textContent = r.quotaHit
+        ? `Saved ${r.ok} clips before hitting the storage limit — most phrases will play offline.`
+        : `Saved ${r.ok} clips — ${book.label} audio now works offline.`;
+      const nudge = installNudge();
+      if (nudge) card.append(nudge);
+      if (location.hash.replace(/^#/, '').startsWith('phrasebook')) go(`#phrasebook-${code}`);
+    });
   };
   card.append(btn);
   return card;
