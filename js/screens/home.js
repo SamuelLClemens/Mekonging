@@ -277,14 +277,14 @@ export function homeScreen() {
   // CLOSED by default (direct request) — the point of this pass is that Home fits on a screen
   // or two, and the door grid is the tallest block on it. Nothing is removed: the section is
   // one tap from open, and it remembers the choice.
-  // EVERY section, in every phase — nothing skipped (direct request). It used to drop the
-  // Settings door always and the Identify door while on the ground, on the grounds that both
-  // were covered elsewhere on the screen; that made this section an almost-complete directory,
-  // which is exactly why a separate "All features, A–Z" button had to sit under it as the
-  // catch-all. With all nine doors here there is a path to every feature in the app from this
-  // one fold, in planning, traveling and post alike, so the A–Z button is gone from Home as
-  // well as from You. #everything is still reachable from search and by its own hash.
-  wrap.append(homeFold('🧰 What do you need?', groupDoors(),
+  // Identify is skipped here on the ground ONLY (direct request, reversing an earlier "every
+  // door, nothing skipped" pass): while travelling, Home already carries a dedicated one-tap
+  // "Identify what's around you" button above (identifyRow()), so the door would just be the
+  // same destination twice on one screen — and skipping it there also lands the grid on an
+  // even tile count, which was asked for separately. Planning and post never show that button
+  // (identifyRow() is on-the-ground-only, above), so the door stays in the grid for them —
+  // dropping it there too would leave Identify unreachable from Home in those two phases.
+  wrap.append(homeFold('🧰 What do you need?', groupDoors(onGround ? ['identify'] : []),
     'homeDoorsOpen', { defaultOpen: false }));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.

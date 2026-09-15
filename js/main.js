@@ -2000,8 +2000,20 @@ function whyNow(p, ctx) {
   const evening = ctx.part === 'evening' || ctx.part === 'night' || ctx.part === 'lateNight';
   // Make the situation-fit visible: when a family/with-a-baby traveller is shown a
   // kid-friendly place (which profileFitAdj boosted), say so — the "made for you" reason.
+  // Deliberately narrower than the `family` check profileFitAdj/profileFit use elsewhere:
+  // those also count prefs.kids, the Places screen's "Good for kids" browsing FILTER — someone
+  // toggling that to see what's around is not the same as having said they are travelling
+  // with children, and this tag reads as a statement about the traveller, not a filter echo.
   const prefs = store.profile.prefs;
-  if ((prefs.withBaby || prefs.kids || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
+  if ((prefs.withBaby || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
+  // Couples get the same treatment, one tier down: a "Romantic" nudge on the categories that
+  // read that way — sunset viewpoints, beaches, hot springs. No per-place "romantic" field
+  // exists (and none should be invented — see profileFit's own rule against inventing a
+  // suitability verdict the data does not support), so this leans on categories rather than a
+  // sourced fact. Checked at the same priority as "Good with kids" above, ahead of the
+  // time-of-day reasons below, so a couple sees it consistently rather than only when nothing
+  // more specific happens to apply.
+  if (prefs.party === 'couple' && cats.some((c) => ['viewpoint', 'beach', 'hotspring'].includes(c))) return 'Romantic';
   if (ctx.raining) {
     // A market only reads as rain-friendly when it is actually covered — an open-air night
     // market does not get "Good in the rain" just because it also happens to serve food.
