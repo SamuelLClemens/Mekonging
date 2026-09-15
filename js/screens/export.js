@@ -113,7 +113,7 @@ async function exportPhotosZip() {
 }
 function expenseTable() {
   const log = (store.trip.budgetLog || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  return { headers: ['Date', 'Amount', 'Currency', 'Category', 'On what'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', expCatLookup(expCatOf(b)).label, b.note || '']) };
+  return { headers: ['Date', 'Amount', 'Currency', 'Category', 'Details'], rows: log.map((b) => [b.date || '', parseFloat(b.amount) || 0, b.currency || '', expCatLookup(expCatOf(b)).label, b.note || '']) };
 }
 
 // The headline export: ONE beautiful, self-contained web page a traveller can open on any

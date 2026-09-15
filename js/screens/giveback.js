@@ -14,7 +14,7 @@
 // loading state for a lazily-loaded module.
 import { store, save } from '../state.js';
 import { h, money } from '../util.js';
-import { field, screenHint } from '../ui-widgets.js';
+import { field, screenHint, selectEl } from '../ui-widgets.js';
 import { sourcesNote } from '../render-utils.js';
 import { convert } from '../currency.js';
 import { mount, topbar, homeCurrency } from '../main.js';
@@ -46,14 +46,20 @@ const GIVING_SOURCES = [
   { org: 'The Life You Can Save', url: 'https://www.thelifeyoucansave.org/' },
 ];
 
-// Total logged trip spend converted to the home currency, or null if nothing is logged
-// or a rate is unknown — lets the giving tool prefill "% of trip spend" from real data.
-function loggedTripSpendHome() {
+// Total cash withdrawn, converted to the home currency, or null if nothing is logged or a
+// rate is unknown — lets the giving tool prefill "% of cash withdrawn" from real data.
+//
+// Withdrawals, not the itemised expense log: not every traveller logs every expense, so
+// logged spend understates the real total, whereas a cash withdrawal is a complete, discrete
+// event. This is still not the whole picture — card spending is not a withdrawal either, so
+// someone who pays mostly by card will see an understated figure here too — which is why the
+// field stays editable and the calculator says plainly what it is based on (see givingCalculator).
+function loggedWithdrawalsHome() {
   const home = homeCurrency();
   let sum = 0, known = true;
-  (store.trip.budgetLog || []).forEach((b) => {
-    const cur = b.currency || home;
-    const amt = parseFloat(b.amount) || 0;
+  (store.trip.withdrawals || []).forEach((w) => {
+    const cur = w.currency || home;
+    const amt = parseFloat(w.amount) || 0;
     if (cur === home) { sum += amt; return; }
     const c = convert(amt, cur, home);
     if (c == null || isNaN(c)) known = false; else sum += c;
@@ -72,7 +78,7 @@ function givingCalculator() {
   const card = h('div', { class: 'card give-back' }, [h('h2', {}, '🧮 How much to give?')]);
   card.append(h('p', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-2)' }, 'Giving is personal and entirely optional. Pick an amount whichever way suits you. Anything you type stays on this device and is never saved or sent — only the amount you choose to give, on the charity’s own site.'));
 
-  const methods = [['trip', '💸 % of trip spend'], ['day', '📅 Per day here'], ['income', '💰 % of income']];
+  const methods = [['trip', '💸 % of cash withdrawn'], ['day', '📅 Per day here'], ['income', '💰 % of income']];
   const methodRow = h('div', { class: 'chips' });
   const body = h('div', {});
   const result = h('p', { style: 'font-weight:800;font-size:1.25rem;margin: var(--sp-3) 0 var(--sp-0h)' });
@@ -84,13 +90,14 @@ function givingCalculator() {
   function renderBody() {
     body.innerHTML = '';
     if (g.method === 'trip') {
-      const logged = loggedTripSpendHome();
-      const amt = h('input', { type: 'number', inputmode: 'decimal', min: '0', placeholder: `Your trip spend in ${home}`, value: logged != null ? logged : '' });
-      body.append(field(`Trip spend (${home})${logged != null ? ' — from your logged budget' : ''}`, amt));
+      const logged = loggedWithdrawalsHome();
+      const amt = h('input', { type: 'number', inputmode: 'decimal', min: '0', placeholder: `Cash withdrawn in ${home}`, value: logged != null ? logged : '' });
+      body.append(field(`Cash withdrawn (${home})${logged != null ? ' — from your logged withdrawals' : ''}`, amt));
       const pctRow = h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [0.5, 1, 2, 5].map((p) =>
         h('button', { class: 'chip', 'aria-pressed': g.pct === p ? 'true' : 'false', onclick: (e) => { g.pct = p; save(); press(pctRow, e.currentTarget); calc(); } }, `${p}%`)));
       body.append(pctRow);
-      const calc = () => { const n = parseFloat(amt.value) || 0; setResult(n * (g.pct / 100), `${g.pct}% of ${fmt(n)}. Many travellers give around 1% of their trip budget to local causes.`); };
+      body.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-1) 0 0' }, 'Based on cash withdrawals, not the itemised expense log — not everyone logs every expense, so withdrawals are the more complete number. If you pay mostly by card, edit the amount above.'));
+      const calc = () => { const n = parseFloat(amt.value) || 0; setResult(n * (g.pct / 100), `${g.pct}% of ${fmt(n)}. Many travellers give around 1% of what they withdraw on a trip.`); };
       amt.addEventListener('input', calc); calc();
     } else if (g.method === 'day') {
       const days = h('input', { type: 'number', inputmode: 'numeric', min: '0', placeholder: 'Days in the region', value: g.days || '' });
@@ -126,14 +133,32 @@ export function donateScreen() {
   wrap.append(screenHint('Established non-profits working directly with people across Thailand, Vietnam, Cambodia and Laos. Each opens the organisation’s own official website, where you donate directly and securely.'));
   wrap.append(h('div', { class: 'banner' }, 'Mekonging takes no money and no cut, and never processes a payment. These links open external sites and need internet. Please do your own checks before giving.'));
   wrap.append(givingCalculator());
-  DONATE_ORGS.forEach((grp) => {
-    wrap.append(h('h2', { class: 'cat-title' }, `${grp.flag} ${grp.scope}`));
-    grp.items.forEach((o) => wrap.append(h('div', { class: 'card donate-card' }, [
+
+  // A dropdown in place of one heading per scope — the charity list filters to whichever
+  // region or country is chosen, so it reads as one list rather than a page of headings.
+  let scope = DONATE_ORGS[0].scope;
+  const orgsWrap = h('div', {});
+  function buildOrgs() {
+    orgsWrap.replaceChildren();
+    const grp = DONATE_ORGS.find((g) => g.scope === scope);
+    if (!grp || !grp.items.length) {
+      orgsWrap.append(h('p', { class: 'empty' }, `No listed charities yet for ${scope}.`));
+      return;
+    }
+    grp.items.forEach((o) => orgsWrap.append(h('div', { class: 'card donate-card' }, [
       h('strong', {}, o.name),
       h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' }, o.what),
       h('a', { class: 'btn ghost block', href: o.url, target: '_blank', rel: 'noopener noreferrer' }, 'Visit official site ↗'),
     ])));
-  });
+  }
+  wrap.append(h('div', { class: 'card', style: 'margin-bottom: var(--sp-3)' }, [
+    field('Show charities for', selectEl(
+      DONATE_ORGS.map((g) => [g.scope, `${g.flag} ${g.scope}`]), scope,
+      (v) => { scope = v; buildOrgs(); }, 'Show charities for',
+    )),
+  ]));
+  wrap.append(orgsWrap);
+  buildOrgs();
   wrap.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Prefer to help in person? Eating at their training restaurants, buying their books, or volunteering supports the same work — ask at each organisation’s visitor centre.'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Mekonging is not affiliated with these organisations and receives nothing from them. This is a starting point, not vetting or financial advice — confirm each charity independently before donating.'));
   mount(wrap, '#home');
