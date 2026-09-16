@@ -3278,9 +3278,30 @@ function hubScreen(id) {
     if (last && last.key === key) last.items.push(it);
     else sections.push({ key, items: [it] });
   });
+  // Identify is the one hub asked to start fully minimised (direct request): a traveller who
+  // has just tapped "Identify what's around you" is scanning for which of a few categories
+  // covers what they are looking at, not reading a list top to bottom, so the category names
+  // alone should be enough to pick one — everywhere else on the site a hub's sections default
+  // OPEN (autoFoldSections' own rule, js/main.js's sectionFoldPrefs), so this needs its own
+  // explicit default rather than reusing that shared one. `it.mine` items (My identifier) are
+  // left unsectioned — one row, not worth a fold of its own.
   sections.forEach((sec) => {
-    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, sec.key));
-    sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
+    if (!sec.key) { sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent))); return; }
+    if (group.id === 'identify') {
+      const prefKey = `identifyFold:${sec.key}`;
+      const det = h('details', { class: 'foldcard' });
+      if (store.profile.prefs[prefKey]) det.setAttribute('open', '');
+      det.append(h('summary', { class: 'foldcard-sum' }, sec.key));
+      sec.items.forEach((it) => det.append(hubRow(it, cc, group.accent)));
+      det.addEventListener('toggle', () => {
+        if (det.open) store.profile.prefs[prefKey] = true; else delete store.profile.prefs[prefKey];
+        save();
+      });
+      wrap.append(det);
+    } else {
+      wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, sec.key));
+      sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
+    }
   });
 
   // Sideways, not back: the other eight groups as chips at the foot, so moving from Money to
