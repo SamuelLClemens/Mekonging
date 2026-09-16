@@ -3628,6 +3628,51 @@ export function provincePathD(prov, proj) {
   }
   return subs.join(' ');
 }
+
+function ringArea(ring) {
+  let a = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
+    a += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(a) / 2;
+}
+// A region set's stored viewBox is sized to fit EVERY administrative ring, including remote
+// offshore exclaves (Vietnam's Trường Sa/Hoàng Sa island claims, attributed to Khánh Hòa/Đà
+// Nẵng, sit hundreds of km from the mainland). Those exclaves are invisible specks at this
+// zoom, but their bounding box alone can nearly double the frame width — squeezing the actual
+// landmass into one side of the SVG. It still renders centred within that oversized frame, so
+// nothing is technically broken, but it reads as badly off-centre to a viewer. This derives a
+// tighter display viewBox from only the rings that make up the real landmass (area >= 1% of
+// the country's largest ring) — excluded rings still render, via the same unchanged proj, they
+// just fall outside the visible crop, which is correct since they were never visually
+// meaningful at this zoom anyway. Memoised on the region set since it depends only on static
+// geometry.
+export function tightRegionViewBox(set) {
+  if (set._tightViewBox) return set._tightViewBox;
+  const rings = [];
+  for (const p of set.provinces) {
+    for (const poly of p.polys) {
+      for (const ring of poly) rings.push(ring);
+    }
+  }
+  const areas = rings.map(ringArea);
+  const maxArea = Math.max(...areas);
+  const proj = set.proj;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  rings.forEach((ring, i) => {
+    if (areas[i] < maxArea * 0.01) return;
+    for (const [lng, lat] of ring) {
+      const [x, y] = projRegionPt(proj, lng, lat);
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+  });
+  const pad = proj.pad;
+  set._tightViewBox = `${(minX - pad).toFixed(1)} ${(minY - pad).toFixed(1)} `
+    + `${(maxX - minX + 2 * pad).toFixed(1)} ${(maxY - minY + 2 * pad).toFixed(1)}`;
+  return set._tightViewBox;
+}
 function pointInRing(lng, lat, ring) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
