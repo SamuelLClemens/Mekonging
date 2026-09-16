@@ -37,7 +37,7 @@ import {
   go, mount, topbar, render, screenMod, focusSpot, groupDoors, chipIcon,
   ensureRouteGraph, routeGraphReady,
   regionSetFor, zoneAssignment, placesInZone, townsInZone,
-  provincePathD, provinceCentroids, pointInProvince, youAreHereMark,
+  provincePathD, provinceCentroids, pointInProvince, youAreHereMark, tightRegionViewBox,
   loadRegionSet, isRegionSetLoaded, anchorCountry, cityHistory, countryHistory,
   cityPickGrid, knownForRow, signatureSightsStrip, whereAmICard, accessCard, visaCard,
   seasonalFitSection, fitsYourTripSection, mightNotKnowSection,
@@ -780,7 +780,8 @@ function regionsMap(cc, opts = {}) {
       + `<path class="prov" d="${provincePathD(p, proj)}" fill="${fill}" fill-opacity="${op}"/></g>`;
   }).join('');
   const cName = (getCountry(cc) || {}).name || '';
-  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Provinces of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, set.viewBox)}</svg>`;
+  const viewBox = tightRegionViewBox(set);
+  const svg = `<svg viewBox="${viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Provinces of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, viewBox)}</svg>`;
   const box = h('div', { class: 'regions-map', html: svg });
   box.querySelectorAll('.prov-group').forEach((g) => {
     const code = g.getAttribute('data-code');
@@ -811,7 +812,8 @@ function zonesMap(cc, opts = {}) {
       + `<path class="zone" d="${d}" fill="${fill}" fill-opacity="${op}"/></g>`;
   }).join('');
   const cName = (getCountry(cc) || {}).name || '';
-  const svg = `<svg viewBox="${set.viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Regions of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, set.viewBox)}</svg>`;
+  const viewBox = tightRegionViewBox(set);
+  const svg = `<svg viewBox="${viewBox}" class="regions-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Regions of ${esc(cName)}" xmlns="http://www.w3.org/2000/svg">${shapes}${youAreHereMark(proj, viewBox)}</svg>`;
   const box = h('div', { class: 'regions-map', html: svg });
   box.querySelectorAll('.zone-group').forEach((g) => {
     const id = g.getAttribute('data-zone');
