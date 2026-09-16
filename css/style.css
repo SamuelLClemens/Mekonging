@@ -947,6 +947,18 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   background: transparent; color: var(--ink); opacity: 0.7; font-size: 15px; cursor: pointer; border-radius: var(--r-sm); }
 .just-arrived-chip .ja-x:hover { opacity: 1; }
 
+/* "Planning your next stop" nudge (home.js's nextStopNudgeChip): a <details> wearing the same
+   pill as the row above it, so it reads as one family of chips, plus a fold arrow and a
+   second row that only appears once opened. Collapsed, it is the same one-line reminder as
+   before; opened, it adds the actual "go plan it" button — minimisable so it is not
+   permanently in the way once a traveller already knows they mean to plan later. */
+.nsn-fold { display: block; }
+.nsn-fold > .ja-main { width: 100%; }
+.nsn-fold > .ja-main::-webkit-details-marker { display: none; }
+.nsn-fold > .ja-main::after { content: '⌄'; margin-left: auto; opacity: 0.7; transition: transform var(--dur) var(--ease); }
+.nsn-fold[open] > .ja-main::after { transform: rotate(180deg); }
+.nsn-fold .btn { margin-top: var(--sp-2); }
+
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
 .right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
@@ -1817,7 +1829,13 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
    number ever does, on any screen narrower than the two can share. */
 .fx-line { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
 .fx-line input { flex: 1 1 auto; min-width: 11ch; }
-.fx-line select { flex: 0 0 auto; width: auto; }
+/* The flag + symbol select only ever holds a handful of characters ("🇦🇺 A$" is the longest
+   option) — the chevron every select inherits was still reserving 30px of padding for a 6px
+   glyph on top of that, though, which is more box than the content needs. Pulled in to 22px,
+   the same tightening .fx-line-single already uses, so the space goes back to the amount/
+   result fields beside it instead of sitting empty inside the currency picker (direct request:
+   "the flag and currency symbol should have enough space for all the options... but not more"). */
+.fx-line select { flex: 0 0 auto; width: auto; padding-right: 22px !important; background-position: right 8px center !important; }
 .fx-line input, .fx-line select { font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
 .fx-line .fx-out { font-weight: 800; color: var(--teal-deep); }
 html[data-theme="dark"] .fx-line .fx-out { color: var(--teal); }
@@ -1857,7 +1875,7 @@ html[data-theme="dark"] .fx-line .fx-out { color: var(--teal); }
 .fx-line-single { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-1h); }
 .fx-line-single .fx-pair { display: flex; align-items: center; gap: var(--sp-1h); flex: 0 1 auto; min-width: 0; }
 .fx-line-single .fx-pair input { flex: 0 1 auto; width: auto; min-width: 4ch; }
-.fx-line-single .fx-pair select { flex: 0 0 auto; padding-right: 22px; background-position: right 8px center !important; }
+.fx-line-single .fx-pair select { flex: 0 0 auto; padding-right: 22px !important; background-position: right 8px center !important; }
 .fx-line-single input, .fx-line input { font-variant-numeric: tabular-nums; }
 .fx-line-single input[type="number"]::-webkit-outer-spin-button,
 .fx-line-single input[type="number"]::-webkit-inner-spin-button,
@@ -2641,7 +2659,13 @@ html[data-theme="dark"] .wx-seg[aria-pressed="true"] { background: var(--teal); 
 .wx-cal-fold > summary { cursor: pointer; margin: var(--sp-3) 0 var(--sp-2); font-weight: 700; }
 .wx-cal-fold > summary::marker { color: var(--muted); }
 .wx-ring-wrap { display: flex; justify-content: center; margin: 2px 0; }
-.wx-ring { width: min(80vw, 290px); height: auto; }
+/* A bit bigger everywhere there is room — the ring is a scalable SVG (its label padding is
+   part of the same viewBox, see wxHourlyRingSvg), so growing it never risks clipping a label
+   the way a fixed-size raster would. Measured against the card's own content width (343px
+   card - 2*16px padding = 311px at a 375px phone) so the ring still sits with a little air
+   inside the card at the narrowest common width, while smaller/older phones (down to ~320px)
+   end up bigger than the old min(80vw,290px) cap too, not just capped the same. */
+.wx-ring { width: min(85vw, 300px); height: auto; }
 /* Hour labels around the ring — bumped from 11px/muted (hard to read at a glance, especially
    at Home's old compact size) to 12px/bolder and full ink contrast instead of muted grey, plus
    a short tick connecting each label to its wedge and an accent-coloured "now" label — so it
@@ -2803,6 +2827,17 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
    (see languageSheet() in js/main.js) short enough that the generic .sheet's own scroll-the-
    whole-body behaviour is plenty — only the width cap below is still needed. */
 .lang-sheet { max-width: 520px; }
+/* The language <select> itself (languageSheet(), js/main.js) shipped with no context class,
+   so it fell back to plain browser sizing — a narrow, short box floating in the middle of an
+   otherwise roomy dialog. Matched to the same treatment every other select in the app gets in
+   its own context (.translate-card select, .fx-line select…): full width, a real 44px tap
+   target, and the app's own border/background rather than the platform default. */
+.lang-sheet select {
+  display: block; width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3); min-height: 48px; margin-bottom: var(--sp-3);
+}
+.lang-sheet select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
 .lang-mt { display: flex; gap: var(--sp-3); align-items: flex-start; margin: 0 0 var(--sp-4); cursor: pointer; }
 .lang-mt input { margin-top: 3px; flex: none; }
 /* Talk's source-language picker. It shipped as a bare, unstyled <select>, which was easy to
@@ -2954,9 +2989,21 @@ select {
 .talk-actions.one-up { grid-template-columns: 1fr; }
 .talk-actions .btn { width: 100%; justify-content: center; text-align: center; }
 .talk-actions .talk-save { grid-column: 1 / -1; }
-/* B3: Clear is a fourth action, added below Save as its own full-width row rather than
-   squeezed into the two-column top line. */
-.talk-actions .talk-clear { grid-column: 1 / -1; }
+
+/* B3: the phrase field's own small ✕, top-right corner (never bottom — .ta's resize handle
+   already lives there). Reserves room on the right of the text itself via padding, rather
+   than floating on top of it, so a long phrase never runs under the button. Hidden until
+   there is something to clear (see phrasebook.js's syncInputX). */
+.ta-wrap { position: relative; }
+.ta-wrap .ta { padding-right: calc(var(--sp-3) + 28px); }
+.ta-clear-x {
+  position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-soft);
+  font-size: 13px; line-height: 1; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.ta-clear-x:hover { color: var(--ink); border-color: var(--orange); }
+.ta-clear-x[hidden] { display: none; }
 
 /* Listening reads as a STATE of the same button, not a different button: the fill is
    untouched (all three actions are deliberately one colour) and the change is a ring that

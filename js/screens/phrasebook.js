@@ -27,15 +27,15 @@
 // channel, not a resource this screen must tear down on navigation. Verified anyway (see the
 // shipping commit) since "no cleanup needed" is itself a claim worth confirming, not assuming.
 
-import { store, save, hasAudioPack } from '../state.js';
+import { store, save } from '../state.js';
 import { h, debounce } from '../util.js';
 // scriptLang, phraseSlug, phraseKey, copyText and the big-phrase overlay live in
 // js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
-import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard, screenHint } from '../ui-widgets.js';
+import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, screenHint } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
-import { packUrls, downloadPack, installNudge } from '../audio-packs.js';
+import { audioPacksCard } from '../audio-packs.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../data/regions.js';
@@ -61,46 +61,6 @@ export { scriptLang, phraseSlug };
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
-// A "Save audio for offline" card for one phrasebook language. Download/remove mechanics and
-// the URL list live in js/audio-packs.js, shared with Settings' full pack-management list —
-// see that file's header for which languages this even applies to (Thai/Vietnamese/Khmer
-// today; Lao and four other phrasebook languages have no audio source to bundle a pack from,
-// so they return no urls here and this card renders nothing for them, same as before).
-function audioPackControl(code, book) {
-  const urls = packUrls(code);
-  if (!urls.length) return null;
-  const saved = hasAudioPack(code);
-  const card = h('div', { class: 'card' });
-  card.append(h('h3', {}, '🔊 Offline audio'));
-  // Hidden once already saved — the button label ("Re-download audio") already says so, and
-  // repeating it here was the "explanatory blurb under the re-download button" asked to go.
-  const status = h('p', { class: 'tiny muted' }, saved ? '' : `Save ${book.label} pronunciations (${urls.length} clips) so 🔊 works offline — best done on wifi.`);
-  if (saved) status.hidden = true;
-  card.append(status);
-  const swOk = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
-  if (!swOk) {
-    card.append(h('p', { class: 'tiny muted' }, 'Add this app to your home screen to save audio for offline use.'));
-    return card;
-  }
-  const btn = h('button', { class: 'btn block btn-spaced' }, saved ? '↻ Re-download audio' : `⤓ Save ${book.label} audio`);
-  btn.onclick = () => {
-    btn.disabled = true;
-    status.hidden = false;
-    status.textContent = `Downloading ${urls.length} clips…`;
-    downloadPack(code, (done, total) => { status.textContent = `Downloading… ${done}/${total}`; }).then((r) => {
-      btn.disabled = false;
-      if (!r.ok) { status.textContent = 'Could not download audio — check your connection and try again.'; return; }
-      status.textContent = r.quotaHit
-        ? `Saved ${r.ok} clips before hitting the storage limit — most phrases will play offline.`
-        : `Saved ${r.ok} clips — ${book.label} audio now works offline.`;
-      const nudge = installNudge();
-      if (nudge) card.append(nudge);
-      if (location.hash.replace(/^#/, '').startsWith('phrasebook')) go(`#phrasebook-${code}`);
-    });
-  };
-  card.append(btn);
-  return card;
-}
 
 // ---- personal phrasebook: derived keys + pin / hide -------------------------
 // Phrases carry no id, so derive a stable key from lang + category + english text.
@@ -481,15 +441,10 @@ export function phrasebookScreen(lang) {
   // worse than no control at all, so it renders only when actually online — and, since it is
   // the one thing on this whole screen that truly cannot work without a connection, it leads
   // (right after the header row, before the always-usable search below).
-  // A stable host so saving or removing a translation repaints just this card, in place,
-  // instead of re-rendering the whole screen and losing the traveller's scroll position.
-  const trHost = h('div', {});
-  const paintTranslations = () => {
-    trHost.innerHTML = '';
-    const c = myTranslationsCard(code, book.label, book.locale, paintTranslations);
-    if (c) trHost.append(c);
-  };
-  paintTranslations();
+  // Saving or removing a translation re-renders the category list below (renderPhrases,
+  // declared further down but already in scope by the time either callback can actually fire —
+  // both only ever run in response to a later tap), since "Translated by you" now lives there
+  // as one of the folds rather than its own standing card above it.
   // ALWAYS render something here. This used to be `if (online())`, which meant the entire
   // Say-it feature — the reason most travellers open Talk — simply was not on the screen for
   // anyone whose network question was unanswered: netMode defaulted to 'ask' and online()
@@ -498,9 +453,8 @@ export function phrasebookScreen(lang) {
   // but the rule it taught still holds and this still renders unconditionally: a feature that
   // needs a connection must SAY so and offer the switch, never quietly not exist.
   wrap.append(online()
-    ? liveTranslateBox(code, book.label, book.locale, paintTranslations)
+    ? liveTranslateBox(code, book.label, book.locale, () => renderPhrases())
     : offlineTranslateBox(code, book.label));
-  wrap.append(trHost);
 
   // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
   // always has. A jump-chip row sits right under it — one tap clears any active search and
@@ -573,6 +527,14 @@ export function phrasebookScreen(lang) {
     // had tapped it themselves. A click on the summary only ever happens from a real tap.
     es.querySelector('summary').addEventListener('click', () => setCatOpen('essentials', !es.open));
     listEl.append(es);
+    // "Translated by you" — everything Say-it has ever translated for this language, folded
+    // the same way as Essentials/Food/every other category below (direct request), rather
+    // than sitting apart in its own always-open card above the search box.
+    const tr = myTranslationsFold(code, book.label, book.locale, isCatOpen('mytranslations'), renderPhrases);
+    if (tr) {
+      tr.querySelector('summary').addEventListener('click', () => setCatOpen('mytranslations', !tr.open));
+      listEl.append(tr);
+    }
     const q = phraseQuery.trim().toLowerCase();
     // Talk T2: folded groups, ranked by trip phase + time of day (rankedPhraseCats). A live
     // search opens every matching fold (so results are actually visible); with no search,
@@ -640,10 +602,11 @@ export function phrasebookScreen(lang) {
   // here too — removed at the traveller's request; every phrase it rotated through is still
   // reachable via Essentials or its own category.)
 
-  // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
-  // no signal — essential for Khmer/Lao, which have no device voice on most phones.
-  const audioCard = audioPackControl(code, book);
-  if (audioCard) wrap.append(audioCard);
+  // Offline audio: every downloadable language in one manager, not just the one Talk happens
+  // to be showing — download all at once, download a chosen few, see what is already saved,
+  // remove what is no longer wanted. Shared with Settings (js/audio-packs.js) so the two never
+  // build a different url list, or a different notion of "downloaded", for the same language.
+  wrap.append(audioPacksCard());
 
   if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
   // The banner used to say, for any language without a device voice, "tap 🔊 to hear it spoken
@@ -1014,11 +977,15 @@ function phraseRow(p, locale, opts) {
 // Renders whether or not there is a connection, unlike the translate box above it. That is the
 // entire value: the phrase looked up on hotel wifi is the phrase needed in the market with no
 // signal, and until now it was only ever reachable online.
-function myTranslationsCard(code, label, locale, onChange) {
+// "Translated by you" — everything Say-it has translated for this language, whether or not it
+// was kept to the dictionary. A fold shaped exactly like every other category below it
+// (phrase-cat-group/-summary/-body) rather than its own standing card, per direct request —
+// closed by default, like the others, tracked the same way (isCatOpen/setCatOpen in the
+// caller) rather than collapsibleCard's own separate always-open default.
+function myTranslationsFold(code, label, locale, isOpen, onChange) {
   const recs = translationsList().filter((t) => t.scripts && t.scripts[code]).sort((a, b) => b.ts - a.ts);
   if (!recs.length) return null;   // nothing to show yet, and Talk is a screen worth keeping short
-  const card = h('div', { class: 'card' }, [
-    h('h2', {}, `🕘 My translations (${recs.length})`),
+  const body = h('div', { class: 'phrase-cat-body' }, [
     h('p', { class: 'tiny muted mytr-note' },
       `Kept on this device in all ${Object.keys(LANGUAGES).length} languages · showing ${langFlag(code)} ${label}`.replace('  ', ' ')),
   ]);
@@ -1037,13 +1004,16 @@ function myTranslationsCard(code, label, locale, onChange) {
       ? h('button', { class: 'speak', disabled: '', title: 'Already in your dictionary', 'aria-label': `${t.en} is already in your dictionary` }, '✓')
       : h('button', { class: 'speak', title: `Save to ${dictionaryName()}`, 'aria-label': `Save ${t.en} to ${dictionaryName()}`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
     const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { confirmAction({ title: 'Remove translation?', body: `Remove “${t.en}” from My translations?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeTranslation(t.key); onChange(); } }); } }, '✕');
-    card.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
+    body.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
   }
-  card.append(h('p', { class: 'tiny muted mytr-foot' }, [
+  body.append(h('p', { class: 'tiny muted mytr-foot' }, [
     '📖 keeps a phrase for good · ',
     h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'Open your dictionary →'),
   ]));
-  return collapsibleCard(card, 'talkTranslationsOpen', true);
+  return h('details', { class: 'phrase-cat-group', open: isOpen ? '' : null }, [
+    h('summary', { class: 'phrase-cat-summary' }, `🕘 Translated by you (${recs.length})`),
+    body,
+  ]);
 }
 
 
@@ -1209,34 +1179,27 @@ function liveTranslateBox(code, label, locale, onChange) {
       } catch { resetMic(); }
     });
   }
-  // B3: an explicit way to start a new phrase. Per A2, clearing a field that already holds a
-  // real attempt is exactly the kind of loss a confirm should guard — but confirming a field
-  // that is already empty is a no-op with nothing to lose, and asking anyway just trains
-  // travellers to tap through the dialog without reading it. So the threshold is simply
-  // "is there anything typed at all", trimmed of whitespace.
-  const clearBtn = h('button', { class: 'btn talk-clear', onclick: async () => {
-    if (!input.value.trim()) { input.value = ''; out.innerHTML = ''; input.focus(); return; }
-    const ok = await confirmAction({
-      title: 'Clear this?',
-      body: 'This discards the phrase you have typed and its translation.',
-      confirmLabel: 'Clear',
-      cancelLabel: 'Cancel',
-      danger: true,
-    });
-    if (!ok) return;
+  // B3: an explicit way to start a new phrase — a small ✕ inside the field itself (direct
+  // request), same corner every "clear this box" control sits in app-wide, rather than a
+  // fourth full-width button below Save. No confirm dialog: unlike the old full-width Clear,
+  // this is small and low-commitment by design, and retyping a discarded phrase costs nothing
+  // a confirm would meaningfully prevent. Shown only once there is something to clear.
+  const inputX = h('button', { class: 'ta-clear-x', title: 'Clear', 'aria-label': 'Clear phrase', type: 'button' }, '✕');
+  inputX.hidden = true;
+  const syncInputX = () => { inputX.hidden = !input.value; };
+  input.addEventListener('input', syncInputX);
+  inputX.onclick = () => {
     input.value = '';
     out.innerHTML = '';
+    syncInputX();
     input.focus();
-  } }, '✕ Clear');
+  };
+  const inputWrap = h('div', { class: 'ta-wrap' }, [input, inputX]);
   // One grid rather than a row plus a separate block: Translate and Speak share the top line
-  // as equal columns, the save button spans both below them, and every gap is the same token.
-  // The old layout used `row-between`, which pushed the two apart to the card edges with a
-  // hole between them, and then a differently-spaced wrapper for the third — three buttons at
-  // three widths with two different gaps. Clear is a fourth full-width row below Save: reusing
-  // `.talk-save`'s own span rule (renamed `.talk-clear`) rather than inventing a new layout.
+  // as equal columns, and the save button spans both below them, every gap the same token.
   const actions = h('div', { class: 'talk-actions' + (micBtn ? '' : ' one-up') },
-    [btn, micBtn, saveBtn, clearBtn].filter(Boolean));
-  box.append(srcSel, input, actions, out);
+    [btn, micBtn, saveBtn].filter(Boolean));
+  box.append(srcSel, inputWrap, actions, out);
   // Point-camera-and-translate (Slice G, item 11.2) only recognises the four host-country
   // scripts Tesseract carries data for — offered here, not on every phrasebook language, and
   // routed with this exact page's code so it OCRs the language actually on screen rather than

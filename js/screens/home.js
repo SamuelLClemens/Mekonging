@@ -333,22 +333,29 @@ function justArrivedChip(cc) {
 // report. H4's real "🚌 Getting to X" card (nextStopCard, below) only ever appears once a
 // next stop already exists; while travelling with no dated stop queued for today onward, Home
 // otherwise says nothing here at all — this nudges the traveller to #nextstop
-// (screens/nextstop.js) to plan and add one instead of leaving that silent — the real tool W2
-// built, not the bare My Trip form. Self-clears the moment a next stop exists again, same as
-// any other "nothing to say yet" cell in this file.
+// (screens/nextstop.js), the real, comprehensive planning tool (where you are, where next,
+// getting there, what's there, and committing to a date), to plan and add one instead of
+// leaving that silent.
 //
-// Unlike Just arrived and Trip started, this one carries no dismiss control (Slice D, item 13,
-// direct request): it may not be hidden, only made moot by actually planning a next stop. A
-// previously-recorded `prefs.nextStopNudgeHidden` from before this change is simply no longer
-// read, so nobody who hid it earlier is left without the button now.
+// Collapsible (direct request, superseding Slice D, item 13's "no dismiss control"): closed,
+// it is the same one-line reminder as before; opened, it adds the actual "Plan it now" button.
+// Minimising it does not hide it for good the way the old dismiss would have — it self-clears
+// the moment a next stop exists, same as every other "nothing to say yet" cell in this file —
+// it just stops sitting there expanded once a traveller already knows they mean to plan later.
 function nextStopNudgeChip() {
   if (nextStop()) return null;
-  return h('div', { class: 'just-arrived-chip' }, [
-    h('button', { class: 'ja-main', onclick: () => go('#nextstop') }, [
+  const det = h('details', { class: 'just-arrived-chip nsn-fold' });
+  const pref = store.profile.prefs.homeNextStopNudgeOpen;
+  if (pref === undefined ? true : pref) det.setAttribute('open', '');
+  det.append(
+    h('summary', { class: 'ja-main' }, [
       h('span', { class: 'status-ic' }, '🧭'),
       h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
     ]),
-  ]);
+    h('button', { class: 'btn block', onclick: () => go('#nextstop') }, 'Plan it now →'),
+  );
+  det.addEventListener('toggle', () => { store.profile.prefs.homeNextStopNudgeOpen = det.open; save(); });
+  return det;
 }
 
 // After a few days of real (non-installed) use, Safari's 7-day whole-origin eviction sweep

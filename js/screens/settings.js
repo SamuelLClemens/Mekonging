@@ -22,7 +22,7 @@
 // rather than a raw reverse-imported binding — an ES module import binding cannot be
 // reassigned from the importing side — the same getter/setter shape app-state.js already
 // uses for activeCountry.
-import { store, save, resetAll, exportData, importData, storageStatus, requestPersistence, hasAudioPack } from '../state.js';
+import { store, save, resetAll, exportData, importData, storageStatus, requestPersistence } from '../state.js';
 import { h } from '../util.js';
 import { field, selectEl, infoTip, confirmAction, netMode, setNetMode } from '../ui-widgets.js';
 import {
@@ -42,9 +42,7 @@ import {
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
   QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent, isStandalone,
 } from '../main.js';
-import {
-  downloadableLanguages, downloadPacks, removePack, estimateUsage, installNudge,
-} from '../audio-packs.js';
+import { audioPacksCard } from '../audio-packs.js';
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
 // the stored choice everywhere else. Tapping a button is what actually saves the phase.
@@ -200,112 +198,9 @@ function offlineDataCard() {
 }
 
 // ---- Offline phrase audio (item 2.4 / B4) -----------------------------------
-// Full pack management — every downloadable language, not only the one Talk happens to be
-// showing (that screen keeps its own single-language card too, for one-tap re-download while
-// browsing). Mechanics live in js/audio-packs.js so the two never build a different url list,
-// or a different notion of "downloaded", for the same language — see that file's header for
-// exactly which languages this applies to and why (Thai/Vietnamese/Khmer only, today).
-function audioPacksCard() {
-  const card = h('div', { class: 'card' }, [
-    h('div', { class: 'row-between' }, [
-      h('h2', {}, '🔊 Offline phrase audio'),
-      infoTip('Downloads each language’s pronunciations from an online voice once, so the phrasebook’s speaker then works with no signal. There is one audio quality — the online voice does not offer a choice. Lao has no online voice to download from at all yet (tracked separately); this app’s other phrasebook languages already have a voice built into most phones, so a downloaded pack would not buy them anything.'),
-    ]),
-  ]);
-  const status = h('p', { class: 'pack-state muted' }, '');
-  const totalLine = h('p', { class: 'tiny muted pack-count' }, '');
-  const downloaded = h('ul', { class: 'pack-tiers' });
-  const choices = h('div', { class: 'qc-choices' });
-  const btns = h('div', { class: 'pack-btns' });
-  const nudgeHost = h('div', {});
-  card.append(status, downloaded, choices, btns, nudgeHost, totalLine);
-
-  const all = downloadableLanguages();   // [{ code, book, urls }] — Thai/Vietnamese/Khmer today
-  let selected = new Set();
-  let busy = false;
-
-  const mb = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
-
-  const paintButtons = (remaining) => {
-    btns.innerHTML = '';
-    if (!remaining.length) return;
-    btns.append(h('button', {
-      class: 'btn block', disabled: (busy || !selected.size) ? '' : null,
-      onclick: () => runDownload(remaining.filter((l) => selected.has(l.code)).map((l) => l.code)),
-    }, `⤓ Download selected${selected.size ? ` (${selected.size})` : ''}`));
-    btns.append(h('button', {
-      class: 'btn ghost block', disabled: busy ? '' : null,
-      onclick: () => runDownload(remaining.map((l) => l.code)),
-    }, `⤓ Download all + my dictionary (${remaining.length})`));
-  };
-
-  const paint = () => {
-    const have = all.filter((l) => hasAudioPack(l.code));
-    const remaining = all.filter((l) => !hasAudioPack(l.code));
-
-    downloaded.innerHTML = '';
-    have.forEach((l) => {
-      downloaded.append(h('li', { class: 'pack-tier is-done' }, [
-        h('span', { class: 'pt-ic', 'aria-hidden': 'true' }, '✓'),
-        h('span', {}, `${l.book.label} — ${l.urls.length} clips`),
-        h('button', {
-          class: 'linklike', style: 'margin-left: auto',
-          onclick: async () => {
-            const ok = await confirmAction({
-              title: `Remove ${l.book.label} audio?`,
-              body: `The speaker falls back to an online voice whenever you have a signal. Your saved phrases and translations are not touched — only the downloaded audio.`,
-              confirmLabel: 'Remove', danger: true,
-            });
-            if (!ok) return;
-            await removePack(l.code);
-            paint();
-          },
-        }, '🗑 Remove'),
-      ]));
-    });
-
-    choices.innerHTML = '';
-    remaining.forEach((l) => {
-      const box = h('input', { type: 'checkbox', checked: selected.has(l.code) ? '' : null, 'aria-label': l.book.label });
-      // Repaints only the button row (not the whole card, and not this checkbox list) — a
-      // full paint() here would rebuild every checkbox mid-tap and cost the traveller their
-      // other selections' focus for nothing; the button row is the only thing a toggle changes.
-      box.addEventListener('change', () => { if (box.checked) selected.add(l.code); else selected.delete(l.code); paintButtons(remaining); });
-      choices.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${l.book.label} (${l.urls.length} clips)`)]));
-    });
-
-    paintButtons(remaining);
-
-    if (!busy) {
-      status.textContent = have.length
-        ? `${have.length} of ${all.length} downloadable ${all.length === 1 ? 'language is' : 'languages are'} saved on this device.`
-        : `${all.length} ${all.length === 1 ? 'language is' : 'languages are'} available to download.`;
-    }
-  };
-
-  const runDownload = (codes) => {
-    if (!codes.length || busy) return;
-    busy = true; nudgeHost.innerHTML = ''; paint();
-    downloadPacks(codes, (code, langIndex, langCount, done, total) => {
-      const label = (all.find((l) => l.code === code) || {}).book?.label || code;
-      status.textContent = `Downloading ${label} (${langIndex + 1} of ${langCount}) — ${done}/${total} clips…`;
-    }).then((results) => {
-      busy = false;
-      selected = new Set();
-      const failed = Object.values(results).some((r) => !r.skipped && !r.ok);
-      const nudge = installNudge();
-      if (nudge) nudgeHost.append(nudge);
-      paint();
-      if (failed) status.textContent = 'Could not download one or more languages — check your connection and try again.';
-    });
-  };
-
-  paint();
-  estimateUsage().then((bytes) => {
-    if (bytes != null) totalLine.textContent = `This app is using about ${mb(bytes)} of storage on this device (everything downloaded, not only audio).`;
-  });
-  return card;
-}
+// Full pack management now lives in js/audio-packs.js (audioPacksCard) — shared with Talk's
+// end-of-screen offline-audio manager (js/screens/phrasebook.js) so the two never build a
+// different url list, or a different notion of "downloaded", for the same language.
 
 function phaseSelector(active) {
   const cur = active || store.profile.prefs.phase || '';
