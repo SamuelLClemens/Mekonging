@@ -1105,10 +1105,14 @@ function liveTranslateBox(code, label, locale, onChange) {
       // Remembered either way — a local write, nothing leaves the device and nothing reaches
       // the dictionary without the explicit tap.
       const rec = recordTranslation(text, srcLang, code, res);
-      // Fire-and-forget: translate it into every OTHER language too, so the phrase is already
-      // waiting in whichever country the traveller crosses into next. Not awaited — the
-      // translation they asked for is on screen already and must never wait on 12 more calls.
-      if (rec) propagateTranslation(rec, srcLang);
+      // Pre-translating into every OTHER language used to fire here unconditionally — one
+      // visible request plus up to 7 silent ones against the same free, keyless MyMemory
+      // endpoint on EVERY tap, saved or not. That 8x amplification could exhaust the shared
+      // per-IP daily quota well before a traveller expected it, and every later translate —
+      // including the one actually on screen — would then fail with "offline" symptoms despite
+      // a working connection. Now it only happens on an explicit save, via
+      // saveTranslationToDictionary()'s own backfill below (keep()), so a phrase you are just
+      // reading once costs one request, not eight.
 
       const status = h('p', { class: 'tiny muted mytr-foot' });
       const keep = () => {
