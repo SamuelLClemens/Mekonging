@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.562.0';
+const CACHE_VERSION = 'mk-v0.563.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -98,6 +98,7 @@ const PRECACHE = [
   'js/state.js',
   'js/social.js',
   'js/tts.js',
+  'js/audio-control.js',
   'js/phrase-ui.js',
   'js/translate.js',
   // Interface language. i18n.js and the dictionary MANIFEST are shell. The 29 per-language

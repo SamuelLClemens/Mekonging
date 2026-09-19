@@ -3,6 +3,8 @@
 // Khmer (km) and Lao (lo) are frequently ABSENT — callers must handle that
 // gracefully (show script + romanisation, disable the speaker control).
 
+import { startPlayback, stopPlayback } from './audio-control.js';
+
 let voices = [];
 
 function refresh() {
@@ -68,8 +70,12 @@ export function speak(text, locale, opts = {}) {
     u.voice = voice;
     u.lang = voice.lang || locale;
     u.rate = opts.rate ? Math.min(4, Math.max(0.5, opts.rate)) : 0.9;
-    if (opts.onend) u.onend = opts.onend;
-    if (opts.onerror) u.onerror = opts.onerror;
+    // Registered with the shared audio-control so a global "stop" (or any other sound
+    // starting, e.g. an animal call) can silence this utterance — speechSynthesis has no
+    // other way to be interrupted from outside the code that started it.
+    const done = startPlayback(() => { try { window.speechSynthesis.cancel(); } catch { /* ignore */ } });
+    u.onend = () => { done(); if (opts.onend) opts.onend(); };
+    u.onerror = () => { done(); if (opts.onerror) opts.onerror(); };
     window.speechSynthesis.speak(u);
     return true;
   } catch {
@@ -77,8 +83,10 @@ export function speak(text, locale, opts = {}) {
   }
 }
 
+// Stops whatever is currently speaking or playing, device voice or online TTS alike.
 export function stop() {
   try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch { /* ignore */ }
+  stopPlayback();
 }
 
 // Online voice fallback for languages with NO device voice (Khmer and Lao are almost
@@ -124,10 +132,14 @@ export function speakOnline(text, locale) {
     // If it is genuinely uncached and offline, the <audio> 'error' fires and we reject.
     try {
       const a = new Audio(url);
-      a.addEventListener('ended', () => resolve(true));
-      a.addEventListener('error', () => reject(new Error('audio failed')));
+      // Same shared registry as the device-voice path (see speak()) — this is the ONLY
+      // playback path that previously had no way to be stopped once started at all, since
+      // an <audio> element started here was never held onto by the caller.
+      const done = startPlayback(() => { try { a.pause(); } catch { /* ignore */ } });
+      a.addEventListener('ended', () => { done(); resolve(true); });
+      a.addEventListener('error', () => { done(); reject(new Error('audio failed')); });
       const p = a.play();
-      if (p && p.then) p.then(() => resolve(true), (e) => reject(e));
+      if (p && p.then) p.then(() => resolve(true), (e) => { done(); reject(e); });
     } catch (e) { reject(e); }
   });
 }
