@@ -230,6 +230,7 @@ const SCREEN_LOADERS = {
   search: (b) => import('./screens/search.js' + b),
   welcome: (b) => import('./screens/welcome.js' + b),
   transport: (b) => import('./screens/transport.js' + b),
+  map: (b) => import('./screens/map.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -282,6 +283,8 @@ const ROUTE_SCREENS = {
   today: ['today'],
   search: ['search'],
   transport: ['transport'], addpin: ['transport'],
+  // Own line — see check-lazy-data.py's single-key-per-line note above.
+  map: ['map'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -716,7 +719,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.562.0';
+export const APP_VERSION = 'mk-v0.563.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2288,6 +2291,11 @@ function homeRightNowCard(ctx) {
   // here — rank-collapse-never-remove.
   card.append(h('button', { class: 'btn block btn-spaced', onclick: () => go(`#today-${ctx.country}`) },
     '🧭 More things to do & places near me →'));
+  // A second, deliberately different offer from the one above (not "more of this list" —
+  // whole-region orientation/navigation), so this does not recreate the redundant-CTA problem
+  // the comment above describes fixing.
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#map') },
+    '🗺️ Full offline map →'));
   return card;
 }
 
@@ -6721,7 +6729,7 @@ export function render() {
   // graph memoises forever on first build, so it must never run while only partly
   // loaded); and a traveller's own saved places/collections, which may span any
   // country they have visited.
-  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop']);
+  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop', 'map']);
   // The two routes that render a province/zone map or read placesInZone/townsInZone
   // (zoneAssignment) — all backed by the ADM1 region-set loader (loadRegionSet/
   // isRegionSetLoaded, defined above with REGIONS_BY_CC). This is a second, independent
@@ -6803,6 +6811,7 @@ export function render() {
       case 'place': return screenMod('places').placeScreen(arg);
       case 'prices': return pricesScreen(arg);
       case 'transport': return screenMod('transport').transportScreen(arg);
+      case 'map': return screenMod('map').mapScreen();
       case 'route': return planRouteScreen();
       case 'nextstop': return screenMod('nextstop').nextStopScreen(arg);
       case 'info': return screenMod('arrivalinfo').infoScreen(arg);

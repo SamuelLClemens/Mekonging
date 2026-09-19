@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.562.0';
+const CACHE_VERSION = 'mk-v0.563.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -230,6 +230,10 @@ const PRECACHE = [
   'js/data/transit.js',
   'js/data/schedules.js',
   'js/data/basemap.js',
+  // The standalone offline map screen and its shared offline-area download UI (also used by
+  // Places) — orientation and emergency-relevant layers, so this has to work with no signal.
+  'js/screens/map.js',
+  'js/offline-areas-ui.js',
   'lib/maplibre-gl.js',
   'lib/maplibre-gl.css',
   // The display face. The vietnamese subsets are listed even though a Latin-only screen
@@ -623,9 +627,12 @@ self.addEventListener('message', (e) => {
   const d = e.data || {};
   if (d.type === 'PREFETCH_TILES' && Array.isArray(d.urls)) {
     // `protect` = tile URLs of already-saved packs; the cap must never evict them.
-    e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source, Array.isArray(d.protect) ? d.protect : []));
+    // 2400, not 1200: map.js's tileUrlsForBounds now emits one URL per tile PER STYLE
+    // (satellite + street, the offline-imagery fix), so a places.js cap=1000 request can
+    // produce up to 2000 URLs — the old 1200 ceiling would silently truncate the street half.
+    e.waitUntil(prefetchTiles(d.urls.slice(0, 2400), e.source, Array.isArray(d.protect) ? d.protect : []));
   } else if (d.type === 'DELETE_TILES' && Array.isArray(d.urls)) {
-    e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
+    e.waitUntil(deleteTiles(d.urls.slice(0, 2400), e.source));
   } else if (d.type === 'PREFETCH_TTS' && Array.isArray(d.urls)) {
     e.waitUntil(prefetchTTS(d.urls.slice(0, 2000), e.source, d.lang || ''));
   } else if (d.type === 'DELETE_TTS' && Array.isArray(d.urls)) {

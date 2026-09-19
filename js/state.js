@@ -52,7 +52,9 @@ function defaults() {
         // A legacy 'ask' is migrated to 'online' in migrate() below.
         netMode: 'online',      // 'online' | 'offline'
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
-        mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
+        // hospitals defaults OFF (unlike every other key here) — a dense new ~7,400-point
+        // layer should not suddenly appear for a traveller who never asked for it.
+        mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true, hospitals: false },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
         // Size is not tracked per pack — see js/audio-packs.js's header for why a per-pack byte
         // figure cannot be measured reliably from an opaque, no-cors TTS response.

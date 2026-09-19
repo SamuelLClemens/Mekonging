@@ -5,6 +5,7 @@
 // markers, inter-city routes and the Mekong drawn on top, tap-to-drop-a-pin. Street
 // detail is intentionally omitted so the whole region ships in ~26 KB and never breaks.
 
+import { h } from './util.js';
 import { store, getMyStay, getLastFix } from './state.js';
 import { effectiveRating, RATING_BANDS, ratingColor, inkOn } from './render-utils.js';
 import { allPlaces } from './data/regions.js';
@@ -37,9 +38,17 @@ const SATELLITE_ATTR = 'Imagery © Esri — Source: Esri, Maxar, Earthstar Geogr
 const STREET_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
 const STREET_ATTR = 'Streets © Esri — HERE, Garmin, USGS, © OpenStreetMap contributors';
 
-// Build the list of satellite-tile URLs covering `bounds` from the current zoom down a
-// few levels (capped) so the service worker can pre-cache the area for offline use.
-function tileUrlsForBounds(bounds, z0, extraZoom = 2, cap = 600) {
+// Build the list of tile URLs covering `bounds` from the current zoom down a few levels
+// (capped) so the service worker can pre-cache the area for offline use.
+//
+// Bug fix: this used to hard-code SATELLITE_TILES only, so a traveller who downloaded an
+// area while viewing in street mode had zero usable offline raster imagery for that view once
+// offline — silently, since the vector basemap still shows through as a fallback and nothing
+// says imagery is missing. Now emits one URL per requested style for every tile coordinate.
+// `cap` bounds tile COORDINATES, not raw URLs, so a saved area's geographic footprint does not
+// silently shrink when a second style is added — the honest trade-off is ~2x storage per area,
+// not a smaller area.
+function tileUrlsForBounds(bounds, z0, extraZoom = 2, cap = 600, styles = [SATELLITE_TILES, STREET_TILES]) {
   const lon2tile = (lon, z) => Math.floor((lon + 180) / 360 * 2 ** z);
   const lat2tile = (lat, z) => {
     const r = lat * Math.PI / 180;
@@ -47,6 +56,7 @@ function tileUrlsForBounds(bounds, z0, extraZoom = 2, cap = 600) {
   };
   const clampTile = (t, z) => Math.max(0, Math.min(2 ** z - 1, t));
   const urls = [];
+  let coordCount = 0;
   const zStart = Math.max(1, Math.floor(z0));
   const zEnd = Math.min(zStart + extraZoom, 17);
   for (let z = zStart; z <= zEnd; z++) {
@@ -54,12 +64,66 @@ function tileUrlsForBounds(bounds, z0, extraZoom = 2, cap = 600) {
     const y0 = clampTile(lat2tile(bounds.getNorth(), z), z), y1 = clampTile(lat2tile(bounds.getSouth(), z), z);
     for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) {
       for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
-        urls.push(SATELLITE_TILES.replace('{z}', z).replace('{x}', x).replace('{y}', y));
-        if (urls.length >= cap) return urls;
+        for (const tpl of styles) urls.push(tpl.replace('{z}', z).replace('{x}', x).replace('{y}', y));
+        coordCount++;
+        if (coordCount >= cap) return urls;
       }
     }
   }
   return urls;
+}
+
+// ---- HOSPITALS MAP LAYER -----------------------------------------------------
+// The full OpenStreetMap-derived hospital/clinic/surgery dataset (js/data/hospitals.js,
+// ~7,400 facilities across all four countries) as a real, toggleable map layer — distinct
+// from the curated-place DOM-marker system above, which is built for a few hundred points per
+// country and would not scale to this. Native MapLibre GeoJSON source + circle layers with
+// built-in clustering instead; see addHospitalsLayers() inside initMap.
+//
+// Colours echo js/data/medical.js's TIER_META dot language (🟢 international, 🔵 private,
+// 🟡 government, 🟠 district, ⚪ clinic) without importing that module — it is deliberately
+// lazy for the SOS screen's own reasons, and pulling it in here just for five colours would
+// double-load it whenever a traveller has never opened Medical. OSM-only entries (no curated
+// tier) get a neutral grey, same as an unrecognised tier would.
+const HOSPITAL_TIER_COLOR = ['case',
+  ['==', ['get', 'curated'], 1],
+  ['match', ['get', 'tier'],
+    'intl', '#34C759',
+    'private', '#0A84FF',
+    'public', '#FFCC00',
+    'district', '#FF9500',
+    'clinic', '#C7C7CC',
+    '#8E8E93'],
+  '#8E8E93',
+];
+const HOSPITAL_TIER_LABEL = { intl: 'International', private: 'Private', public: 'Government', district: 'District', clinic: 'Clinic' };
+// Mirrors js/data/hospitals.js's own KIND_LABEL for the same reason the tier colours above
+// aren't imported from medical.js — three short strings, not worth pulling in a whole module.
+const KIND_LABEL_FALLBACK = { 1: 'Hospital', 2: 'Clinic', 3: 'Doctor’s surgery' };
+const HOSPITAL_COUNTRIES = ['th', 'vi', 'kh', 'la'];
+
+function hospitalsFC(rows) {
+  return {
+    type: 'FeatureCollection',
+    features: rows.filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lng)).map((x) => ({
+      type: 'Feature',
+      properties: { name: x.name || '', en: x.en || '', kind: x.kind || 2, curated: x.curated ? 1 : 0, tier: x.tier || '' },
+      geometry: { type: 'Point', coordinates: [x.lng, x.lat] },
+    })),
+  };
+}
+
+// Loaded once per app session (not per map instance) and cached at module scope, so opening a
+// second map or re-toggling the layer never re-fetches or re-merges all four countries' rows.
+let hospitalsFCPromise = null;
+function loadHospitalsFC() {
+  if (hospitalsFCPromise) return hospitalsFCPromise;
+  hospitalsFCPromise = import('./data/hospitals.js').then(async (mod) => {
+    await Promise.all(HOSPITAL_COUNTRIES.map((cc) => mod.loadHospitals(cc).catch(() => [])));
+    const rows = HOSPITAL_COUNTRIES.flatMap((cc) => mod.allCare(cc));
+    return hospitalsFC(rows);
+  });
+  return hospitalsFCPromise;
 }
 
 // The rating helpers (effectiveRating / RATING_BANDS / ratingColor) used to live here. They
@@ -537,6 +601,102 @@ export async function initMap(containerEl, opts = {}) {
     for (let i = 1; i < measurePts.length; i++) km += haversineKmLL(measurePts[i - 1], measurePts[i]);
     if (measureCb) measureCb(km, measurePts.length);
   }
+  // Hospitals layer: an empty source + two circle layers (clusters, individual points), added
+  // once and hidden — setHospitals(true) is what actually fetches/merges the four countries'
+  // data (loadHospitalsFC, module-scope cached) and fills the source. No cluster-count TEXT
+  // layer: the style is glyph-free (no `glyphs` URL anywhere), so "more hospitals here" is
+  // communicated by circle-radius scaled to point_count instead, same technique as
+  // initVisitMap's visit-halo/visit-dot pair above.
+  function addHospitalsLayers() {
+    if (map.getSource('mk-hospitals')) return;
+    map.addSource('mk-hospitals', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+      cluster: true,
+      clusterRadius: 50,
+      clusterMaxZoom: 14,
+    });
+    map.addLayer({
+      id: 'mk-hospitals-clusters', type: 'circle', source: 'mk-hospitals',
+      filter: ['has', 'point_count'],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': '#C0431A',
+        'circle-opacity': 0.85,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'point_count']], 1, 10, 12, 28],
+      },
+    });
+    map.addLayer({
+      id: 'mk-hospitals-points', type: 'circle', source: 'mk-hospitals',
+      filter: ['!', ['has', 'point_count']],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': HOSPITAL_TIER_COLOR,
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+          5, ['case', ['==', ['get', 'kind'], 1], 3, 2.2],
+          14, ['case', ['==', ['get', 'kind'], 1], 9, 6]],
+      },
+    });
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    map.on('mouseenter', 'mk-hospitals-clusters', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-hospitals-clusters', () => setCursor(''));
+    map.on('mouseenter', 'mk-hospitals-points', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-hospitals-points', () => setCursor(''));
+    map.on('click', 'mk-hospitals-clusters', (e) => {
+      const feats = map.queryRenderedFeatures(e.point, { layers: ['mk-hospitals-clusters'] });
+      const f = feats[0];
+      if (!f) return;
+      const src = map.getSource('mk-hospitals');
+      src.getClusterExpansionZoom(f.properties.cluster_id, (err, zoom) => {
+        if (err) return;
+        map.easeTo({ center: f.geometry.coordinates, zoom });
+      });
+    });
+    map.on('click', 'mk-hospitals-points', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      const p = f.properties;
+      // .setDOMContent(), never .setHTML(): hospital names come from OpenStreetMap and are
+      // untrusted external strings — h() sets textContent, so nothing is parsed as markup.
+      const body = h('div', {}, [
+        h('strong', {}, p.name || 'Unnamed facility'),
+        h('div', { class: 'muted', style: 'font-size:12px' },
+          p.tier ? (HOSPITAL_TIER_LABEL[p.tier] || p.tier) : `${KIND_LABEL_FALLBACK[p.kind] || 'Facility'} (OpenStreetMap)`),
+      ]);
+      new maplibregl.Popup({ closeButton: true, maxWidth: '240px' })
+        .setLngLat(f.geometry.coordinates)
+        .setDOMContent(body)
+        .addTo(map);
+    });
+  }
+  function setHospitals(on) {
+    // Unlike borders (baked into the initial style object, so map.getLayer('borders') exists
+    // the instant the Map is constructed), the hospitals source/layers are only added inside
+    // the style.load handler (addHospitalsLayers, above) — cheap to add once, but that means a
+    // caller reconciling a saved "on" preference immediately after initMap() resolves can race
+    // ahead of style.load and silently no-op (map.getSource returns undefined). Defer to that
+    // event when it hasn't fired yet; call straight through once it has (the common case —
+    // every interactive checkbox toggle happens long after the map has settled).
+    const apply = () => {
+      if (!on) {
+        if (map.getLayer('mk-hospitals-points')) map.setLayoutProperty('mk-hospitals-points', 'visibility', 'none');
+        if (map.getLayer('mk-hospitals-clusters')) map.setLayoutProperty('mk-hospitals-clusters', 'visibility', 'none');
+        return Promise.resolve();
+      }
+      return loadHospitalsFC().then((fc) => {
+        const src = map.getSource('mk-hospitals');
+        if (src) src.setData(fc);
+        if (map.getLayer('mk-hospitals-points')) map.setLayoutProperty('mk-hospitals-points', 'visibility', 'visible');
+        if (map.getLayer('mk-hospitals-clusters')) map.setLayoutProperty('mk-hospitals-clusters', 'visibility', 'visible');
+      });
+    };
+    if (map.getSource('mk-hospitals')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
   // Offline search index over the curated data + the user's own pins. No geocoder /
   // network: a simple case-insensitive name match across cities, places, pools and pins.
   function searchIndex(q) {
@@ -566,7 +726,7 @@ export async function initMap(containerEl, opts = {}) {
   // and any already-set accommodation marker exist even before — or without — basemap
   // tiles (which need the network on first load).
   map.on('style.load', () => {
-    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute();
+    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -772,6 +932,8 @@ export async function initMap(containerEl, opts = {}) {
     // ---- Shared, mode-independent methods (see the SHARED block above) -----------
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
     setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
+    // Toggle the hospitals layer; lazily loads+merges all four countries' data on first "on".
+    setHospitals,
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
