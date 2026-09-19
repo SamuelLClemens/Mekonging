@@ -102,6 +102,7 @@ import {
   online, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
+import { startPlayback, onPlaybackChange, stopPlayback } from './audio-control.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
@@ -505,6 +506,28 @@ function showUpdateToast() {
   document.body.append(toast);
 }
 
+// A small, persistent "stop audio" pill — the ONE place to silence sound anywhere in the app,
+// whether it is a phrasebook/translate speaker (device voice or online, js/tts.js) or an
+// animal-call recording (playCall above). Neither playback system previously offered any way
+// to stop once started (the online-TTS path could not be stopped at all, even in code), which
+// matters for a traveller who tapped by accident or is somewhere they cannot let it play out.
+// Shown only while js/audio-control.js reports something playing; both play systems register
+// with it, so this one pill covers every sound the app makes without touching each speaker
+// button individually.
+let audioStopToast = null;
+function showAudioStopToast() {
+  if (audioStopToast) return;
+  audioStopToast = h('div', { class: 'update-toast', role: 'status' }, [
+    h('span', {}, '🔊 Playing…'),
+    h('button', { class: 'update-toast-btn', onclick: () => stopPlayback() }, '⏹ Stop'),
+  ]);
+  document.body.append(audioStopToast);
+}
+function hideAudioStopToast() {
+  if (audioStopToast) { audioStopToast.remove(); audioStopToast = null; }
+}
+onPlaybackChange((playing) => { if (playing) showAudioStopToast(); else hideAudioStopToast(); });
+
 // A reusable, non-blocking "undo" toast for REVERSIBLE actions (mark done / not interested):
 // the tap acts immediately and an accidental tap is recoverable, so a repeated triage gesture
 // no longer fires a blocking confirm. Only one shows at a time; it auto-dismisses after a few
@@ -716,7 +739,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.562.0';
+export const APP_VERSION = 'mk-v0.563.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5339,17 +5362,20 @@ function inatSoundUrl(s) {
   return `https://api.inaturalist.org/v1/observations?taxon_name=${encodeURIComponent(xcQuery(s))}`
     + '&sounds=true&order_by=votes&per_page=12&license=cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc0';
 }
-let callAudio = null;   // one shared element so starting a call stops the previous one
 async function playCall(s, btn, statusEl) {
   const bundled = s && s.id && SOUNDS[s.id];
   const original = btn.textContent;
   if (bundled) {
     btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
     try {
-      if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
-      callAudio = new Audio(bundled.src);
-      callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not play the recording here.'; });
-      await callAudio.play();
+      const audio = new Audio(bundled.src);
+      // Shared registry (see js/audio-control.js): stops any TTS speech that's playing, and
+      // lets the global stop button silence this call too. Also stops a previous call's own
+      // audio, replacing the old "one shared element" pause-before-reassign approach.
+      const done = startPlayback(() => { try { audio.pause(); } catch { /* ignore */ } });
+      audio.addEventListener('ended', done);
+      audio.addEventListener('error', () => { done(); statusEl.textContent = 'Could not play the recording here.'; });
+      await audio.play();
       statusEl.textContent = `♪ ${s.commonName} — ${bundled.credit}`;
     } catch (e) {
       statusEl.textContent = 'Could not play the recording here.';
@@ -5366,10 +5392,11 @@ async function playCall(s, btn, statusEl) {
     let snd = null;
     for (const r of (d.results || [])) { const a = (r.sounds || []).find((x) => x && x.file_url); if (a) { snd = a; break; } }
     if (!snd) throw new Error('no recording');
-    if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
-    callAudio = new Audio(snd.file_url);
-    callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
-    await callAudio.play();
+    const audio = new Audio(snd.file_url);
+    const done = startPlayback(() => { try { audio.pause(); } catch { /* ignore */ } });
+    audio.addEventListener('ended', done);
+    audio.addEventListener('error', () => { done(); statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
+    await audio.play();
     const credit = (snd.attribution || '').replace(/^\(c\)\s*/, '').replace(/,\s*some rights reserved.*$/i, '') || 'an iNaturalist contributor';
     statusEl.textContent = `♪ ${s.commonName} — ${credit} · via iNaturalist (CC)`;
   } catch (e) {
