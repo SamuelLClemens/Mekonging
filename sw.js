@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.564.0';
+const CACHE_VERSION = 'mk-v0.565.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -89,6 +89,11 @@ const PRECACHE = [
   'js/data/drivetimes.js',
   'js/data/hospitals.js',
   'js/data/atms.js',
+  'js/data/bus.js',
+  'js/data/bus.th.js',
+  'js/data/bus.vi.js',
+  'js/data/bus.kh.js',
+  'js/data/bus.la.js',
   'js/data/hospitals.th.js',
   'js/data/hospitals.vi.js',
   'js/data/hospitals.kh.js',

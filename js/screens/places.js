@@ -318,6 +318,11 @@ export function placesScreen(arg) {
   // per-pin distinction, and scripts/build_atms.py for the sourcing).
   const atmsCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.atms === true ? '' : null,
     onchange: (e) => { mapLayersPrefsP.atms = e.target.checked; save(); if (placesCtrl) placesCtrl.setAtms(e.target.checked); } });
+  // Also opt-in. Bangkok's stops carry real route numbers; Vietnam/Cambodia/Laos are
+  // downtown-core-only with no route numbers — see js/data/bus.js for why, and the popup
+  // itself says so per-stop rather than leaving a silent gap.
+  const busCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.buses === true ? '' : null,
+    onchange: (e) => { mapLayersPrefsP.buses = e.target.checked; save(); if (placesCtrl) placesCtrl.setBus(e.target.checked); } });
 
   // Keep-screen-awake while navigating on foot (Screen Wake Lock API) — the one #map
   // feature task #196's own functional-parity check found genuinely missing here, ported
@@ -354,6 +359,7 @@ export function placesScreen(arg) {
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [hospitalsCheckP, h('span', {}, '🏥 Hospitals')]),
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [atmsCheckP, h('span', {}, '🏧 Lowest-fee ATMs')]),
+      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [busCheckP, h('span', {}, '🚌 Bus stops')]),
       wakeBtnP,
     ]),
     measureOutP,
@@ -952,6 +958,7 @@ export function placesScreen(arg) {
       c.setBorders(mapLayersPrefsP.borders !== false);
       if (mapLayersPrefsP.hospitals === true) c.setHospitals(true);
       if (mapLayersPrefsP.atms === true) c.setAtms(true);
+      if (mapLayersPrefsP.buses === true) c.setBus(true);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out

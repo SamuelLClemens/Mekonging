@@ -44,6 +44,8 @@ export function mapScreen() {
     onchange: (e) => { mapLayersPrefs.hospitals = e.target.checked; save(); if (mapCtrl) mapCtrl.setHospitals(e.target.checked); } });
   const atmsCheck = h('input', { type: 'checkbox', checked: mapLayersPrefs.atms === true ? '' : null,
     onchange: (e) => { mapLayersPrefs.atms = e.target.checked; save(); if (mapCtrl) mapCtrl.setAtms(e.target.checked); } });
+  const busCheck = h('input', { type: 'checkbox', checked: mapLayersPrefs.buses === true ? '' : null,
+    onchange: (e) => { mapLayersPrefs.buses = e.target.checked; save(); if (mapCtrl) mapCtrl.setBus(e.target.checked); } });
 
   // ---- Measure tool -----------------------------------------------------------------
   let measuring = false;
@@ -111,6 +113,7 @@ export function mapScreen() {
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheck, h('span', {}, '🗺️ Country borders')]),
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [hospitalsCheck, h('span', {}, '🏥 Hospitals')]),
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [atmsCheck, h('span', {}, '🏧 Lowest-fee ATMs')]),
+      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [busCheck, h('span', {}, '🚌 Bus stops')]),
       measureBtn,
       wakeBtn,
       h('button', { class: 'btn ghost', onclick: () => { if (mapCtrl) mapCtrl.triggerLocate(); } }, '📍 Locate me'),
@@ -148,6 +151,7 @@ export function mapScreen() {
     c.setBorders(mapLayersPrefs.borders !== false);
     if (mapLayersPrefs.hospitals === true) c.setHospitals(true);
     if (mapLayersPrefs.atms === true) c.setAtms(true);
+    if (mapLayersPrefs.buses === true) c.setBus(true);
     areasUI.refresh();
   }).catch(() => {
     canvas.replaceWith(h('p', { class: 'muted', style: 'padding: var(--sp-3) var(--sp-3)' }, 'The map could not start here.'));
