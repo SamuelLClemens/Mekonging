@@ -108,8 +108,8 @@ import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany } from './weather.js';
 import {
-  COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
-  getCountry, getLanguage, allPlaces, getPlace,
+  COUNTRIES, INTERESTS, COLLECTION_PRESETS,
+  getCountry, allPlaces, getPlace,
   boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
@@ -139,7 +139,7 @@ import {
   ARRIVAL, getArrival,
   SOUNDS,
   SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry,
-  DATA_MODULES, loadData, isDataLoaded,
+  DATA_MODULES, loadData, isDataLoaded, LANGUAGES, getLanguage,
 } from './lazy-data.js';
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
 // regions.<cc>.js (the ADM1 province-polygon files) are NOT statically imported here — they
@@ -316,6 +316,11 @@ function loadScreenMod(name) {
 // being listed here — which matters because the failure it prevents is silent: an ungated read
 // returns the same empty value an unknown key returns, so the screen renders with the section
 // simply absent. Run it after touching any consumer, and `--report` regenerates this map.
+// `phrasebooks` (the eight language books, 107.6 KB) appears on eleven routes. It used to be
+// a static import inside js/data/regions.js, so it loaded on EVERY launch for every traveller
+// — including the ones who never open Talk. The eleven were not chosen by hand: they are what
+// scripts/check-lazy-data.py derived from the call graph, which is the only way to get this
+// list right (a missed route renders a screen with its phrases silently absent).
 const ROUTE_DATA = {
   // access/baby/history/setcity/scams/visa all load the same js/screens/country-info.js module
   // (six screens, one lazy chunk — see ROUTE_SCREENS above), and check-lazy-data.py's route ->
@@ -328,9 +333,9 @@ const ROUTE_DATA = {
   baby: ['accessibility', 'scams', 'visa'],
   bestlist: ['bestof'],
   bestof: ['bestof'],
-  country: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  country: ['accessibility', 'bestof', 'itineraries', 'phrasebooks', 'visa', 'zones'],
   crossings: ['borders', 'visa'],
-  explore: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  explore: ['accessibility', 'bestof', 'itineraries', 'phrasebooks', 'visa', 'zones'],
   // #me and #foryou share js/screens/you.js (screen split, mk-v0.539.0), so the guard rolls
   // foryouScreen's data need up to both — the same over-approximation explore/country accept.
   // Only foryouScreen reads it; warmLazyData() has normally already fetched it on idle, so in
@@ -363,11 +368,11 @@ const ROUTE_DATA = {
   // above already accept, and it costs a #region visit nothing in practice: the route is only
   // reachable from Explore, which has already awaited all four, and warmLazyData() warms them
   // on idle regardless. 'zones' is the only one regionScreen reads itself.
-  region: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  region: ['accessibility', 'bestof', 'itineraries', 'phrasebooks', 'visa', 'zones'],
   scams: ['accessibility', 'scams', 'visa'],
   schedules: ['schedules'],
   setcity: ['accessibility', 'scams', 'visa'],
-  settings: ['accessibility'],
+  settings: ['accessibility', 'phrasebooks'],
   sounds: ['sounds'],
   species: ['sounds'],
   // #trip joins #plans here for the same reason #places did above: tripScreen used to live in
@@ -377,6 +382,13 @@ const ROUTE_DATA = {
   trip: ['itineraries'],
   transport: ['transit'],
   visa: ['accessibility', 'scams', 'visa'],
+  dictionary: ['phrasebooks'],
+  dish: ['phrasebooks'],
+  food: ['phrasebooks'],
+  hospital: ['phrasebooks'],
+  phrasebook: ['phrasebooks'],
+  search: ['phrasebooks'],
+  sos: ['phrasebooks'],
 };
 // Same failure record, and for the same reason, as _screenFailed above: the gate re-renders on
 // failure, so without this it would re-request forever and strand an offline traveller on a
@@ -741,7 +753,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.575.0';
+export const APP_VERSION = 'mk-v0.576.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS

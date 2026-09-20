@@ -16,7 +16,8 @@
 // Every one of those steps except (3)'s map links renders and functions fully offline.
 import { h } from '../util.js';
 import { store, save, getLastFix } from '../state.js';
-import { getCountry, getLanguage } from '../data/regions.js';
+import { getCountry } from '../data/regions.js';
+import { getLanguage } from '../lazy-data.js';
 import { haversineKm } from '../util.js';
 import { driveLabel, sourcesNote } from '../render-utils.js';
 import { infoTip, field } from '../ui-widgets.js';

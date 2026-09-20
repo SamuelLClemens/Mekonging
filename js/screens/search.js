@@ -3,7 +3,12 @@
 // Extracted from js/main.js (screen split, mk-v0.539.0).
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 import { allSpecies } from '../data/nature.js';
-import { allPlaces } from '../data/regions.js';
+// COUNTRIES and LANGUAGES were both READ here (the "Phrases", "Prices" and "Countries"
+// sections) without ever being imported — a latent ReferenceError on any two-character
+// unscoped query, which scripts/check-undefined.py does not catch. LANGUAGES now comes from
+// lazy-data.js along with the rest of the phrasebook data.
+import { COUNTRIES, allPlaces } from '../data/regions.js';
+import { LANGUAGES } from '../lazy-data.js';
 import { itemLabel, navItems, resolveHash, visibleGroups } from '../nav-groups.js';
 import { FAMILY_META, placeBucket } from '../render-utils.js';
 import {

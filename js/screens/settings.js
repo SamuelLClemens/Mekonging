@@ -31,7 +31,8 @@ import {
 import { visitsEnabled, myVisits } from '../visits.js';
 import { trailEnabled, setTrailEnabled, clearTrail, trailStats } from '../trail.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
-import { LANGUAGES, INTERESTS } from '../data/regions.js';
+import { INTERESTS } from '../data/regions.js';
+import { LANGUAGES } from '../lazy-data.js';
 import { getFamily } from '../data/family.js';
 import { getAccessibility } from '../lazy-data.js';   // route-scoped: see js/lazy-data.js
 import { getAllBlobs, putBlob } from '../idb.js';

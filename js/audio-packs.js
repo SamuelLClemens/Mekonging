@@ -28,7 +28,7 @@
 // print a guess as though it were a measurement.
 
 import { h } from './util.js';
-import { LANGUAGES, getLanguage } from './data/regions.js';
+import { LANGUAGES, getLanguage } from './lazy-data.js';
 import { ALLERGENS } from './data/allergens.js';
 import { ttsUrl, setSavedPacks } from './tts.js';
 import { store, getAudioPacks, hasAudioPack, addAudioPack, removeAudioPack } from './state.js';

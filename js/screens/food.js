@@ -23,8 +23,9 @@ import { sourcesNote, photoBlock, attrTag } from '../render-utils.js';
 import { hasVoiceFor, speak, canSay, say } from '../tts.js';
 import { scriptLang } from '../phrase-ui.js';
 import {
-  COUNTRIES, getCountry, getLanguage, getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
+  COUNTRIES, getCountry, getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
 } from '../data/regions.js';
+import { getLanguage } from '../lazy-data.js';
 import {
   go, mount, topbar, priceLine, foodCard, kmLabel, mapsSearch, imageSearch, idPinButton,
   nearestFirst, spiceLabel, dishSpiceCaution, dishDietVerdict, dishDietReasons,

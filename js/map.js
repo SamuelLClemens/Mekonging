@@ -38,6 +38,31 @@ const SATELLITE_ATTR = 'Imagery © Esri — Source: Esri, Maxar, Earthstar Geogr
 const STREET_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
 const STREET_ATTR = 'Streets © Esri — HERE, Garmin, USGS, © OpenStreetMap contributors';
 
+// How far each Esri basemap is actually surveyed in this region — NOT how far MapLibre will
+// let you zoom.
+//
+// Esri's tile services answer a request beyond their coverage with HTTP 200 and a 2,521-byte
+// grey JPEG reading "Map data not yet available". That is a real image, so MapLibre draws it:
+// zoom one notch too far and the map becomes a grey panel with an error message on it, which
+// is what this did everywhere outside a handful of big cities.
+//
+// Measured over 20 spots across all four countries (Bangkok, Chiang Mai, Krabi, Koh Lanta,
+// Pai, Hanoi, HCMC, Hoi An, Da Nang, Phu Quoc, Phnom Penh, Siem Reap, Vientiane, Luang
+// Prabang, Kep, Nong Khiaw and five rural points), 2026-09-20:
+//
+//   satellite  z17 0/20 missing   z18 0/20 missing   z19 11/20 missing
+//   street     z17 0/20 missing   z18 6/20 missing   z19  6/20 missing
+//
+// Declaring those as the source maxzoom makes MapLibre OVERZOOM — it scales the last real
+// tile up instead of asking for one that does not exist. A slightly soft image beats a grey
+// "no data" panel, and it is the only option that behaves the same in Bangkok and in rural
+// Laos. Re-measure before raising either: Esri backfills imagery.
+const SATELLITE_MAXZOOM = 18;
+const STREET_MAXZOOM = 17;
+// One level past the better of the two. Without it MapLibre's default of 22 lets a pinch turn
+// the map into a 16x magnification of a tile that has no more detail in it.
+const MAP_MAXZOOM = 19;
+
 // Build the list of tile URLs covering `bounds` from the current zoom down a few levels
 // (capped) so the service worker can pre-cache the area for offline use.
 //
@@ -157,8 +182,11 @@ function busStopsFC(rows) {
     })),
   };
 }
-const BUS_COUNTRIES = ['th', 'vi', 'kh', 'la'];
-let busStopsFCPromise = null;
+// The country keys come from js/data/bus.js itself (mod.BUS_COUNTRIES below), never from a
+// copy kept here. A hand-kept copy is exactly how Phu Quoc's 107 stops went missing: this list
+// read ['th','vi','kh','la'], the data module exported ['th','vi','pq','kh','la'], so the
+// island's route LINES drew (they load from BUS_ROUTE_NETWORKS) while every stop on them was
+// silently never fetched — bus lines with nowhere to get on.
 // Captured off the bus data module when it loads, so the popup can quote fares without
 // importing that module eagerly just to render a tooltip.
 let busFareFor = null;
@@ -182,43 +210,158 @@ function busRoutesFC(routesByCc) {
   return { type: 'FeatureCollection', features };
 }
 
-function loadBusStopsFC() {
-  if (busStopsFCPromise) return busStopsFCPromise;
-  busStopsFCPromise = import('./data/bus.js').then(async (mod) => {
-    const perCountry = await Promise.all(BUS_COUNTRIES.map((cc) => mod.loadBusStops(cc).catch(() => [])));
-    busFareFor = mod.fareFor;
-    busFaresChecked = mod.FARES_CHECKED;
+// Where each bus dataset actually has stops, as [west, south, east, north], measured from the
+// data rather than assumed from the country. They are far smaller than their countries:
+// Cambodia's file is a 3 km box in central Phnom Penh, Laos' a 5 km box in Vientiane,
+// Vietnam's the Hanoi Old Quarter. Only Thailand's is region-scale.
+//
+// This exists because turning the bus layer on used to download ALL FIVE files — 1,017 KB, of
+// which 892 KB is Bangkok — wherever the traveller was standing. Somebody in Vientiane paid a
+// megabyte over a guesthouse connection to see 65 stops that live in a 3.5 KB file. Now only
+// the datasets whose box is on screen load, and the rest load if the map is moved over them.
+const BUS_BBOX = {
+  th: [98.541, 9.583, 100.954, 14.191],   // 13,144 stops, 872 KB
+  vi: [105.820, 21.000, 105.870, 21.049], //    308 stops,  19 KB
+  pq: [103.853, 9.957, 104.037, 10.383],  //    107 stops, 116 KB
+  kh: [104.900, 11.550, 104.929, 11.598], //    128 stops,   7 KB
+  la: [102.601, 17.940, 102.645, 17.988], //     65 stops,   3 KB
+};
+// ~28 km of slack around the viewport, so panning towards a city starts its download slightly
+// before its stops would come into view rather than after.
+const BUS_BBOX_PAD = 0.25;
 
-    // Route lines, for the networks that have them, plus the ref -> colour map their stops
-    // inherit so a dot and the line it belongs to are always the same colour.
-    const routesByCc = {};
-    const colorByCc = {};
-    await Promise.all(mod.BUS_ROUTE_NETWORKS.map(async (cc) => {
-      const routes = await mod.loadBusRoutes(cc);
-      routesByCc[cc] = routes;
-      colorByCc[cc] = Object.fromEntries(routes.map((r) => [r.ref, r.color]));
-    }));
-    busRoutesData = busRoutesFC(routesByCc);
-    busRouteLegend = Object.entries(routesByCc).flatMap(([, routes]) =>
-      routes.map((r) => ({ ref: r.ref, color: r.color })));
+function boxVisible(box, bounds, pad) {
+  if (!box || !bounds) return true;
+  const [w, s, e, n] = box;
+  return !(bounds.getWest() - pad > e || bounds.getEast() + pad < w
+    || bounds.getSouth() - pad > n || bounds.getNorth() + pad < s);
+}
 
-    const tagged = perCountry.flatMap((rows, i) => {
-      const cc = BUS_COUNTRIES[i];
-      const colors = colorByCc[cc];
-      return rows.map((r) => {
-        // A stop serving several routes takes the first one's colour; the popup still lists
-        // every route calling there, so nothing is lost by the dot picking one.
-        const first = colors && r.routes ? r.routes.split(',')[0].trim() : '';
-        return { ...r, cc, color: (colors && colors[first]) || null };
-      });
+// Every dataset loaded so far stays loaded, so panning back and forth across a border never
+// re-fetches or drops what is already drawn.
+//
+// The per-dataset promise is stored SYNCHRONOUSLY, before the first await. That is the whole
+// point of the shape: setBus() and a moveend firing during the same flyTo both call in before
+// either finishes, and a "have I loaded this yet?" Set consulted AFTER an await lets both
+// append the same rows. Measured at 15x duplicate geometry during one zoom before this was
+// keyed per dataset.
+const busLoads = {};
+let busTaggedRows = [];
+let busModPromise = null;
+let busRoutesByCc = {};
+
+function busModule() {
+  if (!busModPromise) {
+    busModPromise = import('./data/bus.js').then((mod) => {
+      busFareFor = mod.fareFor;
+      busFaresChecked = mod.FARES_CHECKED;
+      return mod;
     });
-    const solo = new Set(mod.BUS_ROUTE_NETWORKS);
-    return {
-      clustered: busStopsFC(tagged.filter((r) => !solo.has(r.cc))),
-      solo: busStopsFC(tagged.filter((r) => solo.has(r.cc))),
-    };
+  }
+  return busModPromise;
+}
+
+// One dataset's stops, plus its route lines where the network draws them (only Phu Quoc does).
+// Scoped per dataset rather than loaded once globally, so looking at Chiang Mai does not pull
+// Phu Quoc's route geometry for lines 700 km off screen.
+function loadBusCc(cc, mod) {
+  if (busLoads[cc]) return busLoads[cc];
+  const wantsRoutes = mod.BUS_ROUTE_NETWORKS.includes(cc);
+  busLoads[cc] = Promise.all([
+    mod.loadBusStops(cc).catch(() => []),
+    wantsRoutes ? mod.loadBusRoutes(cc).catch(() => []) : Promise.resolve([]),
+  ]).then(([rows, routes]) => {
+    const colors = Object.fromEntries(routes.map((r) => [r.ref, r.color]));
+    if (routes.length) {
+      busRoutesByCc[cc] = routes;
+      busRoutesData = busRoutesFC(busRoutesByCc);
+      busRouteLegend = Object.values(busRoutesByCc).flat().map((r) => ({ ref: r.ref, color: r.color }));
+    }
+    busTaggedRows = busTaggedRows.concat(rows.map((r) => {
+      // A stop serving several routes takes the first one's colour; the popup still lists
+      // every route calling there, so nothing is lost by the dot picking one.
+      const first = r.routes ? r.routes.split(',')[0].trim() : '';
+      return { ...r, cc, color: colors[first] || null };
+    }));
   });
-  return busStopsFCPromise;
+  return busLoads[cc];
+}
+
+// `bounds` is the map's current LngLatBounds; null forces every dataset.
+async function loadBusStopsFC(bounds) {
+  const mod = await busModule();
+  await Promise.all(mod.BUS_COUNTRIES
+    .filter((cc) => boxVisible(BUS_BBOX[cc], bounds, BUS_BBOX_PAD))
+    .map((cc) => loadBusCc(cc, mod)));
+
+  // Clustering exists for Bangkok's 13,144 points. The route-coloured networks stay
+  // unclustered: clustering Phu Quoc's 107 meant that at the zoom you actually look at an
+  // island from, every stop collapsed into a count bubble — route lines drawn with nothing
+  // showing where to get on or off.
+  const solo = new Set(mod.BUS_ROUTE_NETWORKS);
+  return {
+    clustered: busStopsFC(busTaggedRows.filter((r) => !solo.has(r.cc))),
+    solo: busStopsFC(busTaggedRows.filter((r) => solo.has(r.cc))),
+  };
+}
+
+// ---- OUTDOOR MAP LAYERS (hiking trails, bike paths, viewpoints & waterfalls) --------------
+// Three more layers on exactly the pattern above: country-scoped dynamic import, only for the
+// countries on screen, accumulated across pans, one in-flight promise per dataset. See
+// js/data/outdoors.js and scripts/build_outdoor_layers.py for what the data is and is not.
+const outdoorLoads = { trails: {}, scenic: {} };
+let hikeFeatures = [];
+let bikeFeatures = [];
+let scenicFeatures = [];
+let outdoorsModPromise = null;
+// Country-scale boxes, so a full degree of slack rather than the bus layer's quarter.
+const OUTDOOR_BBOX_PAD = 0.5;
+
+function outdoorsModule() {
+  if (!outdoorsModPromise) outdoorsModPromise = import('./data/outdoors.js');
+  return outdoorsModPromise;
+}
+
+function lineFC(features) { return { type: 'FeatureCollection', features }; }
+
+function trailRowsToFeatures(rows) {
+  const out = [];
+  for (const [name, pts] of rows || []) {
+    if (!pts || pts.length < 2) continue;
+    out.push({
+      type: 'Feature',
+      properties: { name: name || '' },
+      geometry: { type: 'LineString', coordinates: pts.map((p) => [p[1], p[0]]) },
+    });
+  }
+  return out;
+}
+
+// A country whose generated file does not exist yet resolves to empty rather than rejecting,
+// and its promise is still kept, so a pan does not retry a missing import on every moveend.
+function loadOutdoorCc(kind, cc, mod) {
+  const slot = outdoorLoads[kind];
+  if (slot[cc]) return slot[cc];
+  slot[cc] = (kind === 'trails'
+    ? mod.loadTrails(cc).catch(() => [[], []]).then(([hike, bike]) => {
+      hikeFeatures = hikeFeatures.concat(trailRowsToFeatures(hike));
+      bikeFeatures = bikeFeatures.concat(trailRowsToFeatures(bike));
+    })
+    : mod.loadScenic(cc).catch(() => []).then((rows) => {
+      scenicFeatures = scenicFeatures.concat((rows || []).map(([lat, lng, name, tag]) => ({
+        type: 'Feature',
+        properties: { name: name || '', kind: tag || 'v' },
+        geometry: { type: 'Point', coordinates: [lng, lat] },
+      })));
+    }));
+  return slot[cc];
+}
+
+async function loadOutdoors(kind, bounds) {
+  const mod = await outdoorsModule();
+  await Promise.all(mod.OUTDOOR_COUNTRIES
+    .filter((cc) => boxVisible(mod.OUTDOOR_BBOX[cc], bounds, OUTDOOR_BBOX_PAD))
+    .map((cc) => loadOutdoorCc(kind, cc, mod)));
 }
 
 function hospitalsFC(rows) {
@@ -306,8 +449,8 @@ function basemapStyle() {
     sources: {
       land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
       mekong: { type: 'geojson', data: MEKONG_FC },
-      satellite: { type: 'raster', tiles: [SATELLITE_TILES], tileSize: 256, maxzoom: 19, attribution: SATELLITE_ATTR },
-      street: { type: 'raster', tiles: [STREET_TILES], tileSize: 256, maxzoom: 19, attribution: STREET_ATTR },
+      satellite: { type: 'raster', tiles: [SATELLITE_TILES], tileSize: 256, maxzoom: SATELLITE_MAXZOOM, attribution: SATELLITE_ATTR },
+      street: { type: 'raster', tiles: [STREET_TILES], tileSize: 256, maxzoom: STREET_MAXZOOM, attribution: STREET_ATTR },
       borderlines: { type: 'geojson', data: BORDER_LINES },
     },
     layers: [
@@ -395,7 +538,7 @@ export async function initVisitMap(containerEl, points) {
     style: {
       version: 8,
       sources: {
-        street: { type: 'raster', tiles: [STREET_TILES], tileSize: 256, maxzoom: 19, attribution: STREET_ATTR },
+        street: { type: 'raster', tiles: [STREET_TILES], tileSize: 256, maxzoom: STREET_MAXZOOM, attribution: STREET_ATTR },
         grid: { type: 'geojson', data: graticule() },
         land: { type: 'geojson', data: BASEMAP, attribution: '© OpenStreetMap · Natural Earth' },
         visits: { type: 'geojson', data: pointsFC(points) },
@@ -508,6 +651,9 @@ export async function initMap(containerEl, opts = {}) {
     // `opts.worldBounds` opts out; the global visitors map (initVisitMap, below) is a
     // different question and is deliberately left worldwide.
     maxBounds: opts.worldBounds ? undefined : REGION_BOUNDS,
+    // The far end of the same idea: stop the pinch where the imagery stops being real, so a
+    // traveller cannot zoom past the data into a magnified blur. See SATELLITE_MAXZOOM.
+    maxZoom: MAP_MAXZOOM,
     attributionControl: true,
   });
   // Compass enabled so the map can be rotated and reset to north for orientation; a metric
@@ -1087,26 +1233,242 @@ export async function initMap(containerEl, opts = {}) {
     map.on('click', 'mk-bus-points', busStopPopup);
     map.on('click', 'mk-bus-solo-points', busStopPopup);
   }
+  const BUS_LAYERS = ['mk-bus-points', 'mk-bus-clusters', 'mk-bus-solo-points',
+    'mk-bus-routes-line', 'mk-bus-routes-casing'];
+  let busOn = false;
+  let busMoveHandler = null;
+
+  function paintBus() {
+    return loadBusStopsFC(map.getBounds()).then(({ clustered, solo }) => {
+      const src = map.getSource('mk-bus');
+      if (src) src.setData(clustered);
+      const ssrc = map.getSource('mk-bus-solo');
+      if (ssrc) ssrc.setData(solo);
+      const rsrc = map.getSource('mk-bus-routes');
+      if (rsrc && busRoutesData) rsrc.setData(busRoutesData);
+    });
+  }
+
   function setBus(on) {
     // Same style.load race as setHospitals/setAtms above.
     const apply = () => {
-      const BUS_LAYERS = ['mk-bus-points', 'mk-bus-clusters', 'mk-bus-solo-points',
-        'mk-bus-routes-line', 'mk-bus-routes-casing'];
       const show = (v) => BUS_LAYERS.forEach((id) => {
         if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v);
       });
-      if (!on) { show('none'); return Promise.resolve(); }
-      return loadBusStopsFC().then(({ clustered, solo }) => {
-        const src = map.getSource('mk-bus');
-        if (src) src.setData(clustered);
-        const ssrc = map.getSource('mk-bus-solo');
-        if (ssrc) ssrc.setData(solo);
-        const rsrc = map.getSource('mk-bus-routes');
-        if (rsrc && busRoutesData) rsrc.setData(busRoutesData);
-        show('visible');
-      });
+      busOn = on;
+      if (!on) {
+        show('none');
+        if (busMoveHandler) { map.off('moveend', busMoveHandler); busMoveHandler = null; }
+        return Promise.resolve();
+      }
+      // Only the datasets under the current viewport load now (see BUS_BBOX); panning to a
+      // city whose stops have not been fetched pulls that one file in and repaints. The
+      // listener is added on "on" and removed on "off", so a screen with buses hidden is not
+      // paying for a moveend handler.
+      if (!busMoveHandler) {
+        busMoveHandler = () => { if (busOn) paintBus(); };
+        map.on('moveend', busMoveHandler);
+      }
+      return paintBus().then(() => show('visible'));
     };
     if (map.getSource('mk-bus')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
+
+  // ---- Hiking trails and bike paths ------------------------------------------------------
+  // Lines, added beneath the point layers so a hospital/ATM/bus dot is never hidden by a trail
+  // running through it, and both dashed so they read as "a way through" rather than as another
+  // road on the basemap. Green for walking, blue for cycling — the same two colours the rest
+  // of the app uses for those two ideas.
+  function addTrailLayers() {
+    if (map.getSource('mk-hike')) return;
+    map.addSource('mk-hike', { type: 'geojson', data: lineFC([]) });
+    map.addSource('mk-bike', { type: 'geojson', data: lineFC([]) });
+    // A dark casing under each, for the reason the bus routes have one: these sit over pale
+    // satellite sand as often as over the street basemap, and a thin coloured line alone is
+    // not reliably visible against either.
+    const casing = (id, source) => ({
+      id, type: 'line', source,
+      layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': 'rgba(0,0,0,0.40)',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 14, 5, 17, 8],
+      },
+    });
+    map.addLayer(casing('mk-hike-casing', 'mk-hike'));
+    map.addLayer({
+      id: 'mk-hike-line', type: 'line', source: 'mk-hike',
+      layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#34C759',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.6, 17, 4.5],
+        'line-dasharray': [2, 1.4],
+      },
+    });
+    map.addLayer(casing('mk-bike-casing', 'mk-bike'));
+    map.addLayer({
+      id: 'mk-bike-line', type: 'line', source: 'mk-bike',
+      layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#0A84FF',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.6, 17, 4.5],
+        'line-dasharray': [1.4, 1.2],
+      },
+    });
+
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    const trailPopup = (label) => (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      // .setDOMContent(), never .setHTML(): these names are untrusted OpenStreetMap strings.
+      new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+        .setLngLat(e.lngLat)
+        .setDOMContent(h('div', {}, [
+          h('strong', {}, f.properties.name || label),
+          h('div', { class: 'muted', style: 'font-size:12px' }, label),
+        ]))
+        .addTo(map);
+    };
+    [['mk-hike-line', 'Hiking trail'], ['mk-bike-line', 'Bike path']].forEach(([id, label]) => {
+      map.on('mouseenter', id, () => setCursor('pointer'));
+      map.on('mouseleave', id, () => setCursor(''));
+      map.on('click', id, trailPopup(label));
+    });
+  }
+
+  const trailState = { hike: false, bike: false };
+  let trailMoveHandler = null;
+  function paintTrails() {
+    return loadOutdoors('trails', map.getBounds()).then(() => {
+      const hs = map.getSource('mk-hike');
+      if (hs) hs.setData(lineFC(hikeFeatures));
+      const bs = map.getSource('mk-bike');
+      if (bs) bs.setData(lineFC(bikeFeatures));
+    });
+  }
+  // Both kinds come out of one per-country file, so turning either on loads the pair and only
+  // the visibility differs — which is also why they share one moveend handler.
+  function setTrailKind(kind, on) {
+    const ids = kind === 'hike'
+      ? ['mk-hike-casing', 'mk-hike-line']
+      : ['mk-bike-casing', 'mk-bike-line'];
+    const apply = () => {
+      const show = (v) => ids.forEach((id) => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v);
+      });
+      trailState[kind] = on;
+      if (!on) {
+        show('none');
+        if (!trailState.hike && !trailState.bike && trailMoveHandler) {
+          map.off('moveend', trailMoveHandler);
+          trailMoveHandler = null;
+        }
+        return Promise.resolve();
+      }
+      if (!trailMoveHandler) {
+        trailMoveHandler = () => { if (trailState.hike || trailState.bike) paintTrails(); };
+        map.on('moveend', trailMoveHandler);
+      }
+      return paintTrails().then(() => show('visible'));
+    };
+    // Same style.load race as every other layer here.
+    if (map.getSource('mk-hike')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
+  const setTrails = (on) => setTrailKind('hike', on);
+  const setBike = (on) => setTrailKind('bike', on);
+
+  // ---- Viewpoints and waterfalls ---------------------------------------------------------
+  // Clustered like the bus stops: ~5,000 points region-wide reads as nothing but noise drawn
+  // individually at country zoom.
+  function addScenicLayers() {
+    if (map.getSource('mk-scenic')) return;
+    map.addSource('mk-scenic', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+      cluster: true,
+      clusterRadius: 50,
+      clusterMaxZoom: 11,
+    });
+    map.addLayer({
+      id: 'mk-scenic-clusters', type: 'circle', source: 'mk-scenic',
+      filter: ['has', 'point_count'],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': '#30B0C7',
+        'circle-opacity': 0.85,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'point_count']], 1, 10, 12, 26],
+      },
+    });
+    map.addLayer({
+      id: 'mk-scenic-points', type: 'circle', source: 'mk-scenic',
+      filter: ['!', ['has', 'point_count']],
+      layout: { visibility: 'none' },
+      paint: {
+        // Two colours rather than two layers: a waterfall and a viewpoint are the same kind of
+        // answer ("worth walking to"), told apart at a glance.
+        'circle-color': ['case', ['==', ['get', 'kind'], 'w'], '#0A84FF', '#30B0C7'],
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2],
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 3, 12, 5.5, 16, 9],
+      },
+    });
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    ['mk-scenic-points', 'mk-scenic-clusters'].forEach((id) => {
+      map.on('mouseenter', id, () => setCursor('pointer'));
+      map.on('mouseleave', id, () => setCursor(''));
+    });
+    map.on('click', 'mk-scenic-clusters', (e) => {
+      const f = (map.queryRenderedFeatures(e.point, { layers: ['mk-scenic-clusters'] }) || [])[0];
+      if (!f) return;
+      map.getSource('mk-scenic').getClusterExpansionZoom(f.properties.cluster_id, (err, zoom) => {
+        if (err) return;
+        map.easeTo({ center: f.geometry.coordinates, zoom });
+      });
+    });
+    map.on('click', 'mk-scenic-points', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      const isFall = f.properties.kind === 'w';
+      // .setDOMContent(), never .setHTML(): untrusted OpenStreetMap names.
+      new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+        .setLngLat(f.geometry.coordinates)
+        .setDOMContent(h('div', {}, [
+          h('strong', {}, f.properties.name || (isFall ? 'Waterfall' : 'Viewpoint')),
+          h('div', { class: 'muted', style: 'font-size:12px' }, isFall ? '💧 Waterfall' : '👁 Viewpoint'),
+        ]))
+        .addTo(map);
+    });
+  }
+  let scenicOn = false;
+  let scenicMoveHandler = null;
+  function paintScenic() {
+    return loadOutdoors('scenic', map.getBounds()).then(() => {
+      const src = map.getSource('mk-scenic');
+      if (src) src.setData({ type: 'FeatureCollection', features: scenicFeatures });
+    });
+  }
+  function setScenic(on) {
+    const apply = () => {
+      const show = (v) => ['mk-scenic-clusters', 'mk-scenic-points'].forEach((id) => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v);
+      });
+      scenicOn = on;
+      if (!on) {
+        show('none');
+        if (scenicMoveHandler) { map.off('moveend', scenicMoveHandler); scenicMoveHandler = null; }
+        return Promise.resolve();
+      }
+      if (!scenicMoveHandler) {
+        scenicMoveHandler = () => { if (scenicOn) paintScenic(); };
+        map.on('moveend', scenicMoveHandler);
+      }
+      return paintScenic().then(() => show('visible'));
+    };
+    // Same style.load race as every other layer here.
+    if (map.getSource('mk-scenic')) return apply();
     return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
   }
   // Offline search index over the curated data + the user's own pins. No geocoder /
@@ -1139,6 +1501,7 @@ export async function initMap(containerEl, opts = {}) {
   // tiles (which need the network on first load).
   map.on('style.load', () => {
     addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addBusLayers(); addWalkLayers();
+    addTrailLayers(); addScenicLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -1347,6 +1710,10 @@ export async function initMap(containerEl, opts = {}) {
     // Toggle the hospitals layer; lazily loads+merges all four countries' data on first "on".
     setHospitals,
     setAtms,
+    // Outdoor layers: hiking trails, bike paths, and viewpoints/waterfalls.
+    setTrails,
+    setBike,
+    setScenic,
     // Draw or clear the offline walking route line (pass null/[] to clear).
     setWalkRoute,
     setBus,
