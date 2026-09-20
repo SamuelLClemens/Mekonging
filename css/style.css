@@ -1017,6 +1017,11 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
 }
 .chip[aria-pressed="true"] { background: var(--teal-deep); border-color: transparent; color: #fff; }
+/* Map-layer toggles: independent presses, any combination on at once — unlike the weather
+   widget's metric segments, which are one-of-N. Tighter than a default .chips row because this
+   sits directly under the map and its whole point is costing almost no vertical space. */
+.layer-chips { gap: var(--sp-1h); margin: var(--sp-2) 0 var(--sp-1); }
+.layer-chip { min-height: 38px; padding: var(--sp-1h) var(--sp-3); font-size: 13px; }
 .chip .chip-ic { display: inline-flex; margin-right: 6px; }
 .chip .chip-ic svg { width: 16px; height: 16px; display: block; }
 
