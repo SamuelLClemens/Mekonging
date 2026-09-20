@@ -95,7 +95,6 @@ import { verdictFor, VERDICT_RANK } from './data/month-verdict.js';
 // render-utils.js's placeWhen, so this import costs nothing; read here directly because the
 // region chooser needs the raw bestM/avoidM to spot a PLACE that disagrees with its region,
 // which is a different question from placeWhen's "what does this one place say".
-import { PLACE_MONTHS } from './data/place-months.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction, promptAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
@@ -742,7 +741,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.574.0';
+export const APP_VERSION = 'mk-v0.575.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
