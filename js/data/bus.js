@@ -32,6 +32,22 @@ export function loadBusStops(cc) {
 
 export const BUS_COUNTRIES = ['th', 'vi', 'pq', 'kh', 'la'];
 
+// Networks whose routes are drawn as coloured lines, and whose stops inherit those colours.
+// Only Phu Quoc qualifies: four route numbers read as four distinct colours, whereas Bangkok's
+// 708 drawn together would be an unreadable tangle — the same judgement that made this a
+// stops-first layer rather than a route-lines layer in the first place.
+const ROUTE_LOADERS = {
+  pq: () => import('./bus.pq.js').then((m) => m.BUS_ROUTES_PQ),
+};
+
+export const BUS_ROUTE_NETWORKS = Object.keys(ROUTE_LOADERS);
+
+export function loadBusRoutes(cc) {
+  const loader = ROUTE_LOADERS[cc];
+  if (!loader) return Promise.resolve([]);
+  return loader().catch(() => []);
+}
+
 // What a ride actually costs, per network. Checked 2026-09-20; sources in the comments below.
 //
 // Every entry is a RANGE or a rule, never a single invented number, because none of these
