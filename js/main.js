@@ -60,7 +60,6 @@ import {
 } from './place-ui.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
-import { PHOTOS } from './data/photos.js';
 // Automatic offline download of the identify field guide (photos + animal calls). Adds nothing
 // to the launch graph beyond itself: everything heavy it needs — nature.js for the dangerous-
 // species list, sounds.js for the calls — it imports dynamically, on idle.
@@ -85,6 +84,7 @@ import {
   photoBlock, extUrl, sourceHref, sourcesNote, personalScore, placeWhen,
   ratingColor, effectiveRating,
 } from './render-utils.js';
+import { isPhotosLoaded, loadPhotos, photoEntry } from './photo-registry.js';
 // The pure verdict function shared by all three "when to go" tiers (region/city/place — see
 // js/data/month-verdict.js), named `verdictFor` rather than `monthVerdict` on purpose: that
 // name is reserved for zones.js's own export, the one scripts/check-lazy-data.py gates the
@@ -143,7 +143,6 @@ import {
   DATA_MODULES, loadData, isDataLoaded,
 } from './lazy-data.js';
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
-import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 // regions.<cc>.js (the ADM1 province-polygon files) are NOT statically imported here — they
 // are large pure geometry (27-87 KB each) needed only by the region/zone drill-down, so they
 // are loaded lazily, one country at a time, by loadRegionSet() near REGIONS_BY_CC below.
@@ -175,6 +174,7 @@ export function loadNature() {
 }
 function allSpecies(filter = {}) { return _natureMod ? _natureMod.allSpecies(filter) : []; }
 function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; }
+
 
 // ---- lazy screen modules ----------------------------------------------------
 // Twenty-four screen modules are loaded on demand rather than statically imported. Every one of them
@@ -742,7 +742,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.567.0';
+export const APP_VERSION = 'mk-v0.568.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -5092,7 +5092,7 @@ export function placeFamily(p) { return placeFamilyKey(p); }
 // The self-hosted, openly-licensed photo path for a place, or null. Same lookup as
 // photoBlock, exposed so list cards can show a small recognition thumbnail offline.
 export function placePhotoSrc(p) {
-  const reg = (p && p.id && PHOTOS[p.id]) || null;
+  const reg = p ? photoEntry(p.id) : null;
   return (p && p.photo) || (reg && reg.src) || null;
 }
 // A small (44px) recognition thumbnail for compact "near me" rows: a self-hosted photo when
@@ -5102,7 +5102,18 @@ export function rnThumb(p) {
   const src = placePhotoSrc(p);
   if (src) return h('img', { class: 'rn-thumb', src, alt: '', loading: 'lazy', decoding: 'async' });
   const fam = placeFamily(p);
-  return h('span', { class: 'rn-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
+  const ph = h('span', { class: 'rn-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
+  // Upgrade this one node once the registry lands, rather than re-rendering the screen. The
+  // box is the same fixed 44px either way, so nothing around it moves.
+  if (!isPhotosLoaded()) {
+    loadPhotos().then(() => {
+      const late = placePhotoSrc(p);
+      if (late && ph.isConnected) {
+        ph.replaceWith(h('img', { class: 'rn-thumb', src: late, alt: '', loading: 'lazy', decoding: 'async' }));
+      }
+    }, () => { /* no registry, keep the placeholder */ });
+  }
+  return ph;
 }
 // A "thing to do" result card: a recognition thumbnail, coloured category tags, rating,
 // distance and "why now" reason chips. Tapping opens the full detail page (with a photo).

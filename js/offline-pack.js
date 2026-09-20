@@ -39,7 +39,6 @@
 // worker skips what it already holds — so a resumed pack costs only what is missing.
 
 import { store, save } from './state.js';
-import { PHOTOS } from './data/photos.js';
 import { loadData } from './lazy-data.js';
 import { netMode } from './ui-widgets.js';
 
@@ -97,6 +96,11 @@ export async function packManifest() {
   let sounds = {};
   let haveSounds = true;
   try { sounds = (await loadData('sounds')).SOUNDS || {}; } catch { haveSounds = false; }
+
+  // Imported here rather than at the top for the reason stated above: this function only runs
+  // on idle, and a static import would put the whole 69 KB registry back on the launch path —
+  // which is precisely what it was doing until mk-v0.568.0, contradicting this file's own note.
+  const PHOTOS = (await import('./data/photos.js')).PHOTOS;
 
   const safety = [], nature = [], food = [], produce = [], places = [];
   Object.keys(PHOTOS).forEach((id) => {
