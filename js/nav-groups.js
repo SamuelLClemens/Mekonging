@@ -117,6 +117,7 @@ export const NAV_GROUPS = [
       { ic: '📋', label: 'Transport schedules', hash: '#schedules-{cc}', blurb: 'Train, bus and boat times' },
       { ic: '🛂', label: 'Border crossings', hash: '#crossings', blurb: 'Where to cross, opening hours, visas' },
       { ic: '🧭', label: 'Journey planner', hash: '#route', blurb: 'Chain buses, trains and boats into one route' },
+      { ic: '🗺️', label: 'Full offline map', hash: '#map', blurb: 'Borders, hospitals and satellite view, all four countries' },
     ],
   },
   {

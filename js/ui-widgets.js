@@ -97,6 +97,22 @@ export function collapsibleCard(node, key, defaultOpen = true) {
   return det;
 }
 
+// A details/summary wrapper matching collapsibleCard's visual output (card+foldcard classes,
+// foldcard-sum summary) but — unlike collapsibleCard, which MOVES a card's children into the
+// new <details> once and discards the now-empty original node — keeps `bodyEl` itself as the
+// live child. Needed wherever the body re-renders its own content repeatedly (live GPS
+// updates, async data resolving) — collapsibleCard's one-shot child-extraction would silently
+// orphan every later re-render from the visible DOM. Originally a Places-only closure;
+// promoted here once the standalone map screen needed the identical behaviour.
+export function foldedCard(title, bodyEl, key, defaultOpen) {
+  const det = h('details', { class: 'card foldcard' });
+  const pref = key ? store.profile.prefs[key] : undefined;
+  if (pref === undefined ? defaultOpen : pref) det.setAttribute('open', '');
+  det.append(h('summary', { class: 'foldcard-sum' }, title), bodyEl);
+  if (key) det.addEventListener('toggle', () => { store.profile.prefs[key] = det.open; save(); });
+  return det;
+}
+
 // Shared modal behaviour for overlay dialogs: close on Escape, keep Tab focus inside the
 // dialog, and restore focus to whatever was focused before it opened. `rootEl` is the
 // backdrop appended to <body>; the element carrying role="dialog" (rootEl itself or a
