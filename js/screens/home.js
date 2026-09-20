@@ -228,6 +228,13 @@ export function homeScreen() {
     wrap.append(homeBudgetFold(leadCC));
     wrap.append(homeRightNowFold(phase, leadCC));
 
+    // The offline map and its layers (hospitals, ATMs, saved areas) live on Places. This sits
+    // AFTER the "Right now" card as its own row rather than inside it: orientation with no
+    // signal is a different job from "what is good here now", and a button nested inside a
+    // collapsed fold is a button nobody finds.
+    wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#places') },
+      '🗺️ Offline map & layers →'));
+
     // Next stop: real transport options between here and the next planned stop. Background-
     // loads all four countries' route data (journey.js's route graph memoises across all of
     // them on first build, so it must never run before that finishes) and quietly fills in or
@@ -337,25 +344,17 @@ function justArrivedChip(cc) {
 // getting there, what's there, and committing to a date), to plan and add one instead of
 // leaving that silent.
 //
-// Collapsible (direct request, superseding Slice D, item 13's "no dismiss control"): closed,
-// it is the same one-line reminder as before; opened, it adds the actual "Plan it now" button.
-// Minimising it does not hide it for good the way the old dismiss would have — it self-clears
-// the moment a next stop exists, same as every other "nothing to say yet" cell in this file —
-// it just stops sitting there expanded once a traveller already knows they mean to plan later.
+// The reminder IS the button (direct request): one row, one tap, straight to #nextstop. It was
+// briefly a fold wrapping a separate "Plan it now" button, which made the traveller open a
+// disclosure to reach a single destination they had already been told about. It still
+// self-clears the moment a next stop exists, same as every other "nothing to say yet" cell here.
 function nextStopNudgeChip() {
   if (nextStop()) return null;
-  const det = h('details', { class: 'just-arrived-chip nsn-fold' });
-  const pref = store.profile.prefs.homeNextStopNudgeOpen;
-  if (pref === undefined ? true : pref) det.setAttribute('open', '');
-  det.append(
-    h('summary', { class: 'ja-main' }, [
-      h('span', { class: 'status-ic' }, '🧭'),
-      h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
-    ]),
-    h('button', { class: 'btn block', onclick: () => go('#nextstop') }, 'Plan it now →'),
-  );
-  det.addEventListener('toggle', () => { store.profile.prefs.homeNextStopNudgeOpen = det.open; save(); });
-  return det;
+  return h('button', { class: 'just-arrived-chip ja-main nsn-btn', onclick: () => go('#nextstop') }, [
+    h('span', { class: 'status-ic' }, '🧭'),
+    h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
+    h('span', { class: 'status-go' }, '→'),
+  ]);
 }
 
 // After a few days of real (non-installed) use, Safari's 7-day whole-origin eviction sweep

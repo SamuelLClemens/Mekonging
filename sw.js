@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.564.0';
+const CACHE_VERSION = 'mk-v0.566.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -236,6 +236,12 @@ const PRECACHE = [
   // Places) — orientation and emergency-relevant layers, so this has to work with no signal.
   'js/screens/map.js',
   'js/offline-areas-ui.js',
+  // Offline walking directions. The graph is the largest single file here (~900 KB), but this
+  // list is warmed on idle rather than at install (see the install handler), so it costs
+  // nothing at launch — and walking directions with no signal is the entire point of it.
+  'js/walk-route.js',
+  'js/data/walk-index.js',
+  'js/data/walk.bangkok.js',
   'lib/maplibre-gl.js',
   'lib/maplibre-gl.css',
   // The display face. The vietnamese subsets are listed even though a Latin-only screen

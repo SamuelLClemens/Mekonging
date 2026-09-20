@@ -522,7 +522,10 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 
 /* Region/province maps: clickable coloured provinces (pure offline SVG). */
 .regions-map { width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
-.regions-svg { width: 100%; height: auto; display: block; max-height: 62vh; }
+/* 62vh made a tall country (Vietnam especially) fill almost the whole screen, pushing the
+   province list below the fold on every phone. 48vh keeps the shape readable while leaving
+   the list it exists to navigate visible at the same time. */
+.regions-svg { width: 100%; height: auto; display: block; max-height: 48vh; }
 .prov-group { cursor: pointer; outline: none; }
 .prov { stroke: var(--card); stroke-width: 0.8; transition: fill-opacity var(--dur) var(--ease); }
 .prov-group:hover .prov, .prov-group:focus-visible .prov { fill-opacity: 0.9 !important; }
@@ -947,17 +950,23 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   background: transparent; color: var(--ink); opacity: 0.7; font-size: 15px; cursor: pointer; border-radius: var(--r-sm); }
 .just-arrived-chip .ja-x:hover { opacity: 1; }
 
-/* "Planning your next stop" nudge (home.js's nextStopNudgeChip): a <details> wearing the same
-   pill as the row above it, so it reads as one family of chips, plus a fold arrow and a
-   second row that only appears once opened. Collapsed, it is the same one-line reminder as
-   before; opened, it adds the actual "go plan it" button — minimisable so it is not
-   permanently in the way once a traveller already knows they mean to plan later. */
-.nsn-fold { display: block; }
-.nsn-fold > .ja-main { width: 100%; }
-.nsn-fold > .ja-main::-webkit-details-marker { display: none; }
-.nsn-fold > .ja-main::after { content: '⌄'; margin-left: auto; opacity: 0.7; transition: transform var(--dur) var(--ease); }
-.nsn-fold[open] > .ja-main::after { transform: rotate(180deg); }
-.nsn-fold .btn { margin-top: var(--sp-2); }
+/* "Planning your next stop" nudge (home.js's nextStopNudgeChip): the reminder IS the button,
+   wearing the same orange pill as the chip row above it so it reads as one family. Both class
+   names sit on the single <button>, so these rules repeat the pill rather than relying on the
+   descendant selector above, which only matches a .ja-main nested inside a .just-arrived-chip. */
+.nsn-btn { width: 100%; display: flex; align-items: center; gap: 7px; min-width: 0;
+  cursor: pointer; text-align: left; font-family: inherit; font-weight: 700;
+  font-size: var(--fs-sm); color: var(--ink);
+  background: color-mix(in srgb, var(--orange) 12%, transparent); border: 1px solid var(--orange);
+  border-radius: var(--r-2, 12px); padding: 8px 10px; margin: 0 0 var(--sp-3);
+  min-height: 44px; transition: transform var(--dur-fast) var(--ease); }
+.nsn-btn:active { transform: scale(0.97); }
+
+/* Turn-by-turn list for offline walking directions (screens/map.js). Numbered because the
+   order is the instruction; distances sit inline so a glance answers "how far until the turn". */
+.walk-steps { margin: 0; padding-left: 1.3em; font-size: var(--fs-sm); line-height: 1.5; }
+.walk-steps li { margin: 0 0 var(--sp-1); }
+.nsn-btn .status-go { margin-left: auto; opacity: 0.75; }
 
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }

@@ -742,7 +742,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.564.0';
+export const APP_VERSION = 'mk-v0.566.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2314,11 +2314,6 @@ function homeRightNowCard(ctx) {
   // here — rank-collapse-never-remove.
   card.append(h('button', { class: 'btn block btn-spaced', onclick: () => go(`#today-${ctx.country}`) },
     '🧭 More things to do & places near me →'));
-  // A second, deliberately different offer from the one above (not "more of this list" —
-  // whole-region orientation/navigation), so this does not recreate the redundant-CTA problem
-  // the comment above describes fixing.
-  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#map') },
-    '🗺️ Full offline map →'));
   return card;
 }
 

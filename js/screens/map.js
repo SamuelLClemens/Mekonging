@@ -118,6 +118,71 @@ export function mapScreen() {
     measureOut,
   ]);
   wrap.append(foldedCard('🛠 Map layers & tools', toolsCard, 'mapToolsOpen', true));
+
+  // ---- Offline walking directions ---------------------------------------------------
+  // Routed on-device from a pedestrian graph (js/walk-route.js). Coverage is per city core,
+  // so the card says plainly where it works rather than failing mysteriously elsewhere.
+  let picking = false;
+  const walkOut = h('div', { style: 'margin-top: var(--sp-2)' });
+  const pickBtn = h('button', { class: 'btn ghost', onclick: () => setPicking(!picking) }, '🎯 Set destination');
+  const clearBtn = h('button', { class: 'btn ghost', style: 'display:none', onclick: clearWalk }, '✕ Clear');
+
+  function setPicking(on) {
+    picking = on;
+    pickBtn.textContent = on ? '🎯 Tap the map…' : '🎯 Set destination';
+    pickBtn.classList.toggle('toggle-on', on);
+    if (on) walkOut.textContent = 'Tap your destination on the map.';
+  }
+
+  function clearWalk() {
+    setPicking(false);
+    walkOut.textContent = '';
+    clearBtn.style.display = 'none';
+    if (mapCtrl) mapCtrl.setWalkRoute(null);
+  }
+
+  const fmtMins = (s) => (s < 60 ? 'under a minute' : `${Math.round(s / 60)} min`);
+
+  async function routeTo(dest) {
+    setPicking(false);
+    const fix = store.profile.prefs.lastFix;
+    if (!fix) { walkOut.textContent = 'Tap “Locate me” first — walking directions start from where you are.'; return; }
+    walkOut.textContent = 'Working out the route…';
+    const mod = await import('../walk-route.js');
+    const res = await mod.routeWalk({ lat: fix.lat, lng: fix.lng }, dest);
+    walkOut.textContent = '';
+
+    if (!res.ok) {
+      const why = res.reason === 'destination-outside'
+        ? 'That destination is outside the walking data for this area.'
+        : res.reason === 'no-path'
+          ? 'No walking path connects those two points in the mapped network.'
+          : `Walking directions are not available here yet. Covered so far: ${mod.WALK_AREAS.map((a) => a.label).join(', ')}.`;
+      walkOut.append(h('p', { class: 'muted', style: 'margin:0;font-size:13px' }, why));
+      return;
+    }
+
+    clearBtn.style.display = '';
+    mapCtrl.setWalkRoute(res.coords);
+    walkOut.append(h('p', { style: 'margin:0 0 var(--sp-1h);font-weight:700' },
+      `🚶 ${(res.metres / 1000).toFixed(res.metres < 1000 ? 2 : 1)} km · about ${fmtMins(res.seconds)}`));
+    // The snap distances are the walk to and from the mapped path network. Shown when they are
+    // large enough to matter, because the route genuinely does not start at the door.
+    if (res.snapStart > 60 || res.snapEnd > 60) {
+      walkOut.append(h('p', { class: 'muted', style: 'margin:0 0 var(--sp-1h);font-size:12px' },
+        `Starts ${res.snapStart} m and ends ${res.snapEnd} m from the nearest mapped path.`));
+    }
+    const list = h('ol', { class: 'walk-steps' });
+    res.instructions.forEach((s) => list.append(
+      h('li', {}, s.metres ? `${s.text} · ${s.metres} m` : s.text)));
+    walkOut.append(list);
+  }
+
+  const walkCard = h('div', {}, [
+    h('div', { style: 'display:flex;flex-wrap:wrap;gap: var(--sp-2)' }, [pickBtn, clearBtn]),
+    walkOut,
+  ]);
+  wrap.append(foldedCard('🚶 Walking directions (offline)', walkCard, 'mapWalkOpen', false));
   wrap.append(h('div', { class: 'map-search-wrap', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, [searchInput, searchResults]));
 
   const mapSection = h('div', { class: 'places-map-section' });
@@ -132,6 +197,9 @@ export function mapScreen() {
 
   import('../map.js').then((m) => m.initMap(canvas, {
     onLocate: (fix) => setLastFix(fix),
+    // Only consumed while the walking card is actively waiting for a destination, so a normal
+    // tap on the map keeps its existing meaning.
+    onMapClick: (pt) => { if (picking) routeTo(pt); },
   })).then((c) => {
     mapCtrl = c;
     const prevCleanup = getLiveCleanup();
