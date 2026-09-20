@@ -137,6 +137,32 @@ function loadAtmsFC() {
   return atmsFCPromise;
 }
 
+// Bus stop layer. Thailand's stops carry real route numbers (from a GTFS feed); Vietnam,
+// Cambodia and Laos are OpenStreetMap-sourced downtown-core coverage only, with no route
+// numbers — see js/data/bus.js and scripts/build_bus_osm.py for exactly why. `routes` is an
+// empty string for those three, and the popup below shows an honest "not available" line
+// rather than silently leaving a blank space where a traveller would expect an answer.
+function busStopsFC(rows) {
+  return {
+    type: 'FeatureCollection',
+    features: rows.filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lng)).map((x) => ({
+      type: 'Feature',
+      properties: { name: x.name || '', routes: x.routes || '' },
+      geometry: { type: 'Point', coordinates: [x.lng, x.lat] },
+    })),
+  };
+}
+const BUS_COUNTRIES = ['th', 'vi', 'kh', 'la'];
+let busStopsFCPromise = null;
+function loadBusStopsFC() {
+  if (busStopsFCPromise) return busStopsFCPromise;
+  busStopsFCPromise = import('./data/bus.js').then(async (mod) => {
+    const perCountry = await Promise.all(BUS_COUNTRIES.map((cc) => mod.loadBusStops(cc).catch(() => [])));
+    return busStopsFC(perCountry.flat());
+  });
+  return busStopsFCPromise;
+}
+
 function hospitalsFC(rows) {
   return {
     type: 'FeatureCollection',
@@ -871,6 +897,91 @@ export async function initMap(containerEl, opts = {}) {
     return new Promise((resolve) => { map.once('style.load', () => { apply(); resolve(); }); });
   }
 
+  // Bus stop layer: same shape again. ~13,600 points (13,144 of them Bangkok, which does carry
+  // route numbers; the rest are downtown-core-only for Vietnam/Cambodia/Laos with no route
+  // numbers) — clustering matters here, unlike the much smaller ATM layer.
+  function addBusLayers() {
+    if (map.getSource('mk-bus')) return;
+    map.addSource('mk-bus', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+      cluster: true,
+      clusterRadius: 50,
+      clusterMaxZoom: 14,
+    });
+    map.addLayer({
+      id: 'mk-bus-clusters', type: 'circle', source: 'mk-bus',
+      filter: ['has', 'point_count'],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': '#5E5CE6',
+        'circle-opacity': 0.85,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'point_count']], 1, 10, 12, 28],
+      },
+    });
+    map.addLayer({
+      id: 'mk-bus-points', type: 'circle', source: 'mk-bus',
+      filter: ['!', ['has', 'point_count']],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': '#5E5CE6',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2, 14, 5.5],
+      },
+    });
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    map.on('mouseenter', 'mk-bus-clusters', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-bus-clusters', () => setCursor(''));
+    map.on('mouseenter', 'mk-bus-points', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-bus-points', () => setCursor(''));
+    map.on('click', 'mk-bus-clusters', (e) => {
+      const feats = map.queryRenderedFeatures(e.point, { layers: ['mk-bus-clusters'] });
+      const f = feats[0];
+      if (!f) return;
+      const src = map.getSource('mk-bus');
+      src.getClusterExpansionZoom(f.properties.cluster_id, (err, zoom) => {
+        if (err) return;
+        map.easeTo({ center: f.geometry.coordinates, zoom });
+      });
+    });
+    map.on('click', 'mk-bus-points', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      const p = f.properties;
+      // .setDOMContent(), never .setHTML(): stop names come from OpenStreetMap/a GTFS feed and
+      // are untrusted external strings — h() sets textContent, so nothing is parsed as markup.
+      const body = h('div', {}, [
+        h('strong', {}, p.name || 'Bus stop'),
+        h('div', { class: 'muted', style: 'font-size:12px' },
+          p.routes ? `Routes: ${p.routes}` : 'Route numbers not available for this area — check the number board on the bus.'),
+      ]);
+      new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+        .setLngLat(f.geometry.coordinates)
+        .setDOMContent(body)
+        .addTo(map);
+    });
+  }
+  function setBus(on) {
+    // Same style.load race as setHospitals/setAtms above.
+    const apply = () => {
+      if (!on) {
+        if (map.getLayer('mk-bus-points')) map.setLayoutProperty('mk-bus-points', 'visibility', 'none');
+        if (map.getLayer('mk-bus-clusters')) map.setLayoutProperty('mk-bus-clusters', 'visibility', 'none');
+        return Promise.resolve();
+      }
+      return loadBusStopsFC().then((fc) => {
+        const src = map.getSource('mk-bus');
+        if (src) src.setData(fc);
+        if (map.getLayer('mk-bus-points')) map.setLayoutProperty('mk-bus-points', 'visibility', 'visible');
+        if (map.getLayer('mk-bus-clusters')) map.setLayoutProperty('mk-bus-clusters', 'visibility', 'visible');
+      });
+    };
+    if (map.getSource('mk-bus')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
   // Offline search index over the curated data + the user's own pins. No geocoder /
   // network: a simple case-insensitive name match across cities, places, pools and pins.
   function searchIndex(q) {
@@ -900,7 +1011,7 @@ export async function initMap(containerEl, opts = {}) {
   // and any already-set accommodation marker exist even before — or without — basemap
   // tiles (which need the network on first load).
   map.on('style.load', () => {
-    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addWalkLayers();
+    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addBusLayers(); addWalkLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -1111,6 +1222,7 @@ export async function initMap(containerEl, opts = {}) {
     setAtms,
     // Draw or clear the offline walking route line (pass null/[] to clear).
     setWalkRoute,
+    setBus,
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
