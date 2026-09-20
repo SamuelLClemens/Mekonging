@@ -52,7 +52,7 @@ export function mapScreen() {
   ];
   const layerChips = MAP_LAYERS.map((layer) => {
     const chip = h('button', {
-      type: 'button', class: 'chip layer-chip',
+      type: 'button', class: 'chip mk-layer-toggle',
       'aria-pressed': layer.isOn() ? 'true' : 'false',
       onclick: () => {
         const next = chip.getAttribute('aria-pressed') !== 'true';
@@ -135,7 +135,7 @@ export function mapScreen() {
     measureOut,
   ]);
   // Layers first and always visible; the occasional tools stay behind the fold.
-  wrap.append(h('div', { class: 'chips layer-chips', role: 'group', 'aria-label': 'Map layers' }, layerChips));
+  wrap.append(h('div', { class: 'chips mk-layer-toggles', role: 'group', 'aria-label': 'Map layers' }, layerChips));
   wrap.append(foldedCard('🛠 Map & tools', toolsCard, 'mapToolsOpen', true));
 
   // ---- Offline walking directions ---------------------------------------------------
