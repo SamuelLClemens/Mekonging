@@ -822,7 +822,7 @@ export async function initMap(containerEl, opts = {}) {
       const body = h('div', {}, [
         h('strong', {}, p.name || p.bank),
         h('div', { class: 'muted', style: 'font-size:12px' }, p.tier === 'free' ? '✅ No foreign-card fee' : '💲 Lowest fee available here'),
-        h('div', { class: 'muted', style: 'font-size:12px;margin-top:2px' }, p.note),
+        h('div', { class: 'muted', style: 'font-size:12px;margin-top: var(--sp-0h)' }, p.note),
       ]);
       new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
         .setLngLat(f.geometry.coordinates)
@@ -851,6 +851,52 @@ export async function initMap(containerEl, opts = {}) {
     if (map.getSource('mk-atms')) return apply();
     return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
   }
+  // The walking route line. Empty until setWalkRoute() receives a path from js/walk-route.js,
+  // which computes it on-device from a pedestrian graph with no network at route time.
+  function addWalkLayers() {
+    if (map.getSource('mk-walk')) return;
+    map.addSource('mk-walk', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    // A white casing under the line so the route stays legible over both satellite imagery
+    // and the street basemap, which the traveller can switch between mid-walk.
+    map.addLayer({
+      id: 'mk-walk-casing', type: 'line', source: 'mk-walk',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#FFFFFF', 'line-width': 9, 'line-opacity': 0.9 },
+    });
+    map.addLayer({
+      id: 'mk-walk-line', type: 'line', source: 'mk-walk',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#30D158', 'line-width': 5 },
+    });
+  }
+
+  // coords arrive as [[lat, lng], ...] (the routing engine's order); GeoJSON wants [lng, lat].
+  function setWalkRoute(coords) {
+    // Same style.load race as setHospitals/setAtms above — see setHospitals's comment.
+    const apply = () => {
+      const src = map.getSource('mk-walk');
+      if (!src) return;
+      if (!coords || coords.length < 2) {
+        src.setData({ type: 'FeatureCollection', features: [] });
+        return;
+      }
+      src.setData({
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature', properties: {},
+          geometry: { type: 'LineString', coordinates: coords.map((p) => [p[1], p[0]]) },
+        }],
+      });
+      try {
+        const b = new maplibregl.LngLatBounds([coords[0][1], coords[0][0]], [coords[0][1], coords[0][0]]);
+        for (const p of coords) b.extend([p[1], p[0]]);
+        map.fitBounds(b, { padding: 56, maxZoom: 17, duration: 600 });
+      } catch { /* noop */ }
+    };
+    if (map.getSource('mk-walk')) { apply(); return Promise.resolve(); }
+    return new Promise((resolve) => { map.once('style.load', () => { apply(); resolve(); }); });
+  }
+
   // Bus stop layer: same shape again. ~13,600 points (13,144 of them Bangkok, which does carry
   // route numbers; the rest are downtown-core-only for Vietnam/Cambodia/Laos with no route
   // numbers) — clustering matters here, unlike the much smaller ATM layer.
@@ -965,7 +1011,7 @@ export async function initMap(containerEl, opts = {}) {
   // and any already-set accommodation marker exist even before — or without — basemap
   // tiles (which need the network on first load).
   map.on('style.load', () => {
-    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addBusLayers();
+    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addBusLayers(); addWalkLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -1174,6 +1220,8 @@ export async function initMap(containerEl, opts = {}) {
     // Toggle the hospitals layer; lazily loads+merges all four countries' data on first "on".
     setHospitals,
     setAtms,
+    // Draw or clear the offline walking route line (pass null/[] to clear).
+    setWalkRoute,
     setBus,
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
