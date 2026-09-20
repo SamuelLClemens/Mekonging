@@ -312,6 +312,12 @@ export function placesScreen(arg) {
   // should not suddenly appear for existing travellers who never asked for it.
   const hospitalsCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.hospitals === true ? '' : null,
     onchange: (e) => { mapLayersPrefsP.hospitals = e.target.checked; save(); if (placesCtrl) placesCtrl.setHospitals(e.target.checked); } });
+  // Also opt-in, same reasoning as hospitals above. Label says "lowest-fee" rather than
+  // "free" because only Vietnam's pin is actually fee-free — Thailand/Cambodia/Laos show the
+  // cheapest available option, still a real fee (see js/map.js's ATM popup for the honest
+  // per-pin distinction, and scripts/build_atms.py for the sourcing).
+  const atmsCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.atms === true ? '' : null,
+    onchange: (e) => { mapLayersPrefsP.atms = e.target.checked; save(); if (placesCtrl) placesCtrl.setAtms(e.target.checked); } });
 
   // Keep-screen-awake while navigating on foot (Screen Wake Lock API) — the one #map
   // feature task #196's own functional-parity check found genuinely missing here, ported
@@ -347,6 +353,7 @@ export function placesScreen(arg) {
       // screen, under the WCAG 2.5.8 minimum. See .exp-monthly-toggle in style.css for the twin.
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
       h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [hospitalsCheckP, h('span', {}, '🏥 Hospitals')]),
+      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [atmsCheckP, h('span', {}, '🏧 Lowest-fee ATMs')]),
       wakeBtnP,
     ]),
     measureOutP,
@@ -944,6 +951,7 @@ export function placesScreen(arg) {
       // at construction regardless of a stored "off" pref from an earlier #map session).
       c.setBorders(mapLayersPrefsP.borders !== false);
       if (mapLayersPrefsP.hospitals === true) c.setHospitals(true);
+      if (mapLayersPrefsP.atms === true) c.setAtms(true);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out

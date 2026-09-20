@@ -102,6 +102,41 @@ const HOSPITAL_TIER_LABEL = { intl: 'International', private: 'Private', public:
 const KIND_LABEL_FALLBACK = { 1: 'Hospital', 2: 'Clinic', 3: 'Doctor’s surgery' };
 const HOSPITAL_COUNTRIES = ['th', 'vi', 'kh', 'la'];
 
+// ATM layer: real, OpenStreetMap-sourced locations of the one bank per country that
+// genuinely charges travellers the least on a foreign-card withdrawal. Vietnam (VPBank) is a
+// real FEE-FREE claim; Thailand/Cambodia/Laos are the LOWEST fee identified, never free — no
+// bank in those three waives the foreign-card fee, so the layer must never say "free" there.
+// See scripts/build_atms.py for the exact sourcing (Overpass queries, fee research, dates).
+// Colour distinguishes the one real "free" country from the three "lowest fee" countries —
+// green reads as an unambiguous win, the amber as "cheapest available, still a fee".
+const ATM_TIER_COLOR = ['match', ['get', 'tier'], 'free', '#34C759', 'low', '#FF9500', '#8E8E93'];
+
+function atmsFC(rows) {
+  return {
+    type: 'FeatureCollection',
+    features: rows.filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lng)).map((x) => ({
+      type: 'Feature',
+      properties: { name: x.name || '', bank: x.bank, tier: x.tier, note: x.note },
+      geometry: { type: 'Point', coordinates: [x.lng, x.lat] },
+    })),
+  };
+}
+
+// Loaded once per app session and cached at module scope, same rationale as loadHospitalsFC —
+// opening a second map or re-toggling the layer never re-parses the (small) data file again.
+let atmsFCPromise = null;
+function loadAtmsFC() {
+  if (atmsFCPromise) return atmsFCPromise;
+  atmsFCPromise = import('./data/atms.js').then((mod) => {
+    const rows = mod.ATM_ROWS.map(([cc, lat, lng, name]) => {
+      const [bank, tier, note] = mod.ATM_BANK[cc];
+      return { lat, lng, name, bank, tier, note };
+    });
+    return atmsFC(rows);
+  });
+  return atmsFCPromise;
+}
+
 function hospitalsFC(rows) {
   return {
     type: 'FeatureCollection',
@@ -697,6 +732,99 @@ export async function initMap(containerEl, opts = {}) {
     if (map.getSource('mk-hospitals')) return apply();
     return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
   }
+  // ATM layer: same empty-source-plus-two-circle-layers shape as hospitals above, added once
+  // and hidden until setAtms(true). Only ~240 points total (four countries combined) so no
+  // clustering is strictly necessary at low zoom, but the same cluster/point pair is used
+  // anyway for one consistent interaction pattern (tap cluster to zoom, tap point for details)
+  // rather than a special case for the smaller layer.
+  function addAtmsLayers() {
+    if (map.getSource('mk-atms')) return;
+    map.addSource('mk-atms', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+      cluster: true,
+      clusterRadius: 50,
+      clusterMaxZoom: 14,
+    });
+    map.addLayer({
+      id: 'mk-atms-clusters', type: 'circle', source: 'mk-atms',
+      filter: ['has', 'point_count'],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': '#0A84FF',
+        'circle-opacity': 0.85,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'point_count']], 1, 10, 12, 24],
+      },
+    });
+    map.addLayer({
+      id: 'mk-atms-points', type: 'circle', source: 'mk-atms',
+      filter: ['!', ['has', 'point_count']],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': ATM_TIER_COLOR,
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 14, 7],
+      },
+    });
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    map.on('mouseenter', 'mk-atms-clusters', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-atms-clusters', () => setCursor(''));
+    map.on('mouseenter', 'mk-atms-points', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-atms-points', () => setCursor(''));
+    map.on('click', 'mk-atms-clusters', (e) => {
+      const feats = map.queryRenderedFeatures(e.point, { layers: ['mk-atms-clusters'] });
+      const f = feats[0];
+      if (!f) return;
+      const src = map.getSource('mk-atms');
+      src.getClusterExpansionZoom(f.properties.cluster_id, (err, zoom) => {
+        if (err) return;
+        map.easeTo({ center: f.geometry.coordinates, zoom });
+      });
+    });
+    map.on('click', 'mk-atms-points', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      const p = f.properties;
+      // .setDOMContent(), never .setHTML(): the name tag comes from OpenStreetMap and is an
+      // untrusted external string — h() sets textContent, so nothing is parsed as markup.
+      // The tier label never says "free" for a 'low' tier — that distinction is the entire
+      // point of this layer, so it cannot be allowed to blur in the one place a traveller
+      // reads it right before choosing which machine to use.
+      const body = h('div', {}, [
+        h('strong', {}, p.name || p.bank),
+        h('div', { class: 'muted', style: 'font-size:12px' }, p.tier === 'free' ? '✅ No foreign-card fee' : '💲 Lowest fee available here'),
+        h('div', { class: 'muted', style: 'font-size:12px;margin-top:2px' }, p.note),
+      ]);
+      new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+        .setLngLat(f.geometry.coordinates)
+        .setDOMContent(body)
+        .addTo(map);
+    });
+  }
+  function setAtms(on) {
+    // Same style.load race as setHospitals above (see its comment) — the source/layers are
+    // added inside the style.load handler, not baked into the initial style, so a caller
+    // reconciling a saved "on" preference immediately after initMap() resolves must defer if
+    // that event hasn't fired yet.
+    const apply = () => {
+      if (!on) {
+        if (map.getLayer('mk-atms-points')) map.setLayoutProperty('mk-atms-points', 'visibility', 'none');
+        if (map.getLayer('mk-atms-clusters')) map.setLayoutProperty('mk-atms-clusters', 'visibility', 'none');
+        return Promise.resolve();
+      }
+      return loadAtmsFC().then((fc) => {
+        const src = map.getSource('mk-atms');
+        if (src) src.setData(fc);
+        if (map.getLayer('mk-atms-points')) map.setLayoutProperty('mk-atms-points', 'visibility', 'visible');
+        if (map.getLayer('mk-atms-clusters')) map.setLayoutProperty('mk-atms-clusters', 'visibility', 'visible');
+      });
+    };
+    if (map.getSource('mk-atms')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
   // Offline search index over the curated data + the user's own pins. No geocoder /
   // network: a simple case-insensitive name match across cities, places, pools and pins.
   function searchIndex(q) {
@@ -726,7 +854,7 @@ export async function initMap(containerEl, opts = {}) {
   // and any already-set accommodation marker exist even before — or without — basemap
   // tiles (which need the network on first load).
   map.on('style.load', () => {
-    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers();
+    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -934,6 +1062,7 @@ export async function initMap(containerEl, opts = {}) {
     setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
     // Toggle the hospitals layer; lazily loads+merges all four countries' data on first "on".
     setHospitals,
+    setAtms,
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
