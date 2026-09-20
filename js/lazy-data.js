@@ -25,9 +25,6 @@
 //
 // NOT HERE, deliberately, and every one of these was measured rather than assumed — see
 // `scripts/check-lazy-data.py --why <route> <module>` for the call path in each case:
-//   • photos.js (52 KB) — homeRightNowCard's recognition thumbnails put it on the landing
-//     screen, where a gate would add a blocking round trip to the one route that must be
-//     instant, and a non-blocking load would shift the layout under the traveller.
 //   • history.js (50 KB) — homeScreen -> whereYouAreCard -> cityAboutCard -> cityHistory.
 //   • checklist.js (29 KB) — homeScreen -> homeStageBlock -> planningStageBlock ->
 //     tripCountdownCard -> checklistFor. (This used to name homeNowCard, which never read it:
@@ -36,6 +33,13 @@
 //     homeRightNowFold so Home can order its sections independently.)
 //   • diet.js (9 KB) — dish verdicts fan in across every food list.
 //   • medical.js (62 KB) — the emergency screen itself.
+//
+// NO LONGER EAGER, so no longer listed above: photos.js (69 KB). Its entry here claimed a
+// non-blocking load "would shift the layout under the traveller". It cannot: .rn-thumb is a
+// fixed 44x44 flex:0 0 auto box in both the <img> and .ph placeholder states, so the swap
+// changes pixels inside the box and never its size. It is now loaded off the launch path by
+// loadPhotos() in main.js, and rnThumb() upgrades its own node when the registry lands.
+// Worth noting the module had grown 52 KB -> 69 KB while that stale note kept it eager.
 //
 // NO LONGER EAGER, so no longer listed above: allergens.js (24 KB). Its entry here read
 // "sosScreen/hospitalScreen -> showBigPhrase -> togglePhrasePin -> propagatePinAcrossLanguages
