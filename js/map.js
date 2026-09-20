@@ -150,7 +150,9 @@ function busStopsFC(rows) {
       // `cc` rides along so the popup can quote the right fare: the five networks charge
       // completely differently (flat, per-zone, per-kilometre, per-route), so a single
       // app-wide price would be wrong for four of them.
-      properties: { name: x.name || '', routes: x.routes || '', cc: x.cc || '' },
+      // `color` is present only where the network draws coloured routes (Phu Quoc); the layer
+      // falls back to its own violet everywhere else.
+      properties: { name: x.name || '', routes: x.routes || '', cc: x.cc || '', color: x.color || null },
       geometry: { type: 'Point', coordinates: [x.lng, x.lat] },
     })),
   };
@@ -161,13 +163,55 @@ let busStopsFCPromise = null;
 // importing that module eagerly just to render a tooltip.
 let busFareFor = null;
 let busFaresChecked = '';
+let busRoutesData = null;
+let busRouteLegend = [];
+function busRoutesFC(routesByCc) {
+  const features = [];
+  for (const routes of Object.values(routesByCc)) {
+    for (const r of routes) {
+      for (const line of r.lines || []) {
+        if (!line || line.length < 2) continue;
+        features.push({
+          type: 'Feature',
+          properties: { ref: r.ref, color: r.color },
+          geometry: { type: 'LineString', coordinates: line.map((p) => [p[1], p[0]]) },
+        });
+      }
+    }
+  }
+  return { type: 'FeatureCollection', features };
+}
+
 function loadBusStopsFC() {
   if (busStopsFCPromise) return busStopsFCPromise;
   busStopsFCPromise = import('./data/bus.js').then(async (mod) => {
     const perCountry = await Promise.all(BUS_COUNTRIES.map((cc) => mod.loadBusStops(cc).catch(() => [])));
     busFareFor = mod.fareFor;
     busFaresChecked = mod.FARES_CHECKED;
-    const tagged = perCountry.flatMap((rows, i) => rows.map((r) => ({ ...r, cc: BUS_COUNTRIES[i] })));
+
+    // Route lines, for the networks that have them, plus the ref -> colour map their stops
+    // inherit so a dot and the line it belongs to are always the same colour.
+    const routesByCc = {};
+    const colorByCc = {};
+    await Promise.all(mod.BUS_ROUTE_NETWORKS.map(async (cc) => {
+      const routes = await mod.loadBusRoutes(cc);
+      routesByCc[cc] = routes;
+      colorByCc[cc] = Object.fromEntries(routes.map((r) => [r.ref, r.color]));
+    }));
+    busRoutesData = busRoutesFC(routesByCc);
+    busRouteLegend = Object.entries(routesByCc).flatMap(([, routes]) =>
+      routes.map((r) => ({ ref: r.ref, color: r.color })));
+
+    const tagged = perCountry.flatMap((rows, i) => {
+      const cc = BUS_COUNTRIES[i];
+      const colors = colorByCc[cc];
+      return rows.map((r) => {
+        // A stop serving several routes takes the first one's colour; the popup still lists
+        // every route calling there, so nothing is lost by the dot picking one.
+        const first = colors && r.routes ? r.routes.split(',')[0].trim() : '';
+        return { ...r, cc, color: (colors && colors[first]) || null };
+      });
+    });
     return busStopsFC(tagged);
   });
   return busStopsFCPromise;
@@ -912,12 +956,40 @@ export async function initMap(containerEl, opts = {}) {
   // numbers) — clustering matters here, unlike the much smaller ATM layer.
   function addBusLayers() {
     if (map.getSource('mk-bus')) return;
+
+    // Route lines, drawn beneath the stops so a stop dot is never hidden by its own route.
+    // Only networks small enough to read as distinct colours get lines — Phu Quoc's four
+    // route numbers do; Bangkok's 708 would be an unreadable tangle on a phone, which is the
+    // same judgement that made this a stops-first layer in the first place.
+    map.addSource('mk-bus-routes', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    // A dark casing under each coloured line keeps all four legible over pale satellite sand
+    // and over the street basemap alike.
+    map.addLayer({
+      id: 'mk-bus-routes-casing', type: 'line', source: 'mk-bus-routes',
+      layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': 'rgba(0,0,0,0.45)',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 3.5, 14, 7.5],
+      },
+    });
+    map.addLayer({
+      id: 'mk-bus-routes-line', type: 'line', source: 'mk-bus-routes',
+      layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 9, 2, 14, 5],
+      },
+    });
+
     map.addSource('mk-bus', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] },
       cluster: true,
       clusterRadius: 50,
-      clusterMaxZoom: 14,
+      // Stops stop clustering two zooms earlier than before. At the island scale a traveller
+      // actually navigates at, 107 Phu Quoc stops were still collapsing into a handful of
+      // count bubbles, so the layer looked empty of real stops — the complaint this fixes.
+      clusterMaxZoom: 12,
     });
     map.addLayer({
       id: 'mk-bus-clusters', type: 'circle', source: 'mk-bus',
@@ -936,10 +1008,15 @@ export async function initMap(containerEl, opts = {}) {
       filter: ['!', ['has', 'point_count']],
       layout: { visibility: 'none' },
       paint: {
-        'circle-color': '#5E5CE6',
-        'circle-stroke-width': 1,
+        // A stop wears its route's colour where the network is small enough to have one
+        // (Phu Quoc); everywhere else it falls back to the layer's own violet.
+        'circle-color': ['coalesce', ['get', 'color'], '#5E5CE6'],
+        // A thicker white ring and a bigger dot at navigating zooms: these sit over satellite
+        // imagery as often as over the street map, and at 5.5px with a 1px ring they were not
+        // reliably visible against sand or built-up grey.
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2],
         'circle-stroke-color': '#FFFFFF',
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2, 14, 5.5],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 12, 5, 16, 8],
       },
     });
     const setCursor = (c) => { map.getCanvas().style.cursor = c; };
@@ -987,16 +1064,17 @@ export async function initMap(containerEl, opts = {}) {
   function setBus(on) {
     // Same style.load race as setHospitals/setAtms above.
     const apply = () => {
-      if (!on) {
-        if (map.getLayer('mk-bus-points')) map.setLayoutProperty('mk-bus-points', 'visibility', 'none');
-        if (map.getLayer('mk-bus-clusters')) map.setLayoutProperty('mk-bus-clusters', 'visibility', 'none');
-        return Promise.resolve();
-      }
+      const BUS_LAYERS = ['mk-bus-points', 'mk-bus-clusters', 'mk-bus-routes-line', 'mk-bus-routes-casing'];
+      const show = (v) => BUS_LAYERS.forEach((id) => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v);
+      });
+      if (!on) { show('none'); return Promise.resolve(); }
       return loadBusStopsFC().then((fc) => {
         const src = map.getSource('mk-bus');
         if (src) src.setData(fc);
-        if (map.getLayer('mk-bus-points')) map.setLayoutProperty('mk-bus-points', 'visibility', 'visible');
-        if (map.getLayer('mk-bus-clusters')) map.setLayoutProperty('mk-bus-clusters', 'visibility', 'visible');
+        const rsrc = map.getSource('mk-bus-routes');
+        if (rsrc && busRoutesData) rsrc.setData(busRoutesData);
+        show('visible');
       });
     };
     if (map.getSource('mk-bus')) return apply();
