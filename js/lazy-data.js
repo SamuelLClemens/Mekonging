@@ -83,6 +83,12 @@ export let SOUNDS = {};
 // LAZY-MODULE: schedules = SCHEDULES SCHEDULES_VERIFIED schedulesForCountry
 export let SCHEDULES = [];
 export let SCHEDULES_VERIFIED = '';
+// LAZY-MODULE: phrasebooks = LANGUAGES getLanguage
+// The eight phrasebooks (107.6 KB). They were static imports in js/data/regions.js, which
+// screens/home.js reaches, so every launch parsed all of them — including for a traveller who
+// never opens Talk. Eleven routes read them and the guard below knows which; see
+// js/data/phrasebooks.js.
+export let LANGUAGES = {};
 
 // The `bust` argument exists because a FAILED dynamic import is permanent: the spec records
 // the failure in the page's module map against that exact specifier, so re-importing the same
@@ -102,6 +108,7 @@ const LOADERS = {
   arrival: (b) => import('./data/arrival.js' + b),
   sounds: (b) => import('./data/sounds.js' + b),
   schedules: (b) => import('./data/schedules.js' + b),
+  phrasebooks: (b) => import('./data/phrasebooks.js' + b),
 };
 
 // Publish a landed module into the live bindings above. Only the value exports need this;
@@ -116,6 +123,7 @@ const PUBLISH = {
   arrival: (m) => { ARRIVAL = m.ARRIVAL; },
   sounds: (m) => { SOUNDS = m.SOUNDS; },
   schedules: (m) => { SCHEDULES = m.SCHEDULES; SCHEDULES_VERIFIED = m.SCHEDULES_VERIFIED; },
+  phrasebooks: (m) => { LANGUAGES = m.LANGUAGES; },
 };
 
 const _mods = Object.create(null);
@@ -160,3 +168,4 @@ export function getAccessibility(cc) { const m = _mods.accessibility; return m ?
 export function scamsFor(cc) { const m = _mods.scams; return m ? m.scamsFor(cc) : null; }
 export function getArrival(slug) { const m = _mods.arrival; return m ? m.getArrival(slug) : null; }
 export function schedulesForCountry(cc) { const m = _mods.schedules; return m ? m.schedulesForCountry(cc) : []; }
+export function getLanguage(code) { const m = _mods.phrasebooks; return m ? m.getLanguage(code) : null; }

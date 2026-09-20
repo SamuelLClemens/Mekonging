@@ -59,6 +59,7 @@ import {
 // slice) — this is the one screen module that needed an import-line edit on that extraction.
 import { phraseSlug, scriptLang } from '../phrase-ui.js';
 import { buildOfflineAreasCard } from '../offline-areas-ui.js';
+import { buildWalkCard } from '../walk-ui.js';
 
 // Shared with the screens still resident in main.js; see js/place-ui.js. These moved out
 // so this module could leave the launch graph — it is imported on demand by the router now.
@@ -327,6 +328,12 @@ export function placesScreen(arg) {
       apply: (v) => { if (placesCtrl) placesCtrl.setAtms(v); } },
     { key: 'buses', label: '🚌 Bus stops', isOn: () => mapLayersPrefsP.buses === true,
       apply: (v) => { if (placesCtrl) placesCtrl.setBus(v); } },
+    { key: 'trails', label: '🥾 Hiking trails', isOn: () => mapLayersPrefsP.trails === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setTrails(v); } },
+    { key: 'bike', label: '🚲 Bike paths', isOn: () => mapLayersPrefsP.bike === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setBike(v); } },
+    { key: 'scenic', label: '👁 Viewpoints & waterfalls', isOn: () => mapLayersPrefsP.scenic === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setScenic(v); } },
   ];
   const layerChipsP = MAP_LAYERS_P.map((layer) => {
     const chip = h('button', {
@@ -376,6 +383,12 @@ export function placesScreen(arg) {
   const onVisP = () => { if (wantWakeP && wakeLockP === null && document.visibilityState === 'visible') acquireWakeP().catch(() => { /* denied */ }); };
   document.addEventListener('visibilitychange', onVisP);
   { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } wantWakeP = false; document.removeEventListener('visibilitychange', onVisP); if (wakeLockP) { try { wakeLockP.release(); } catch { /* noop */ } wakeLockP = null; } }); }
+
+  // Offline walking directions, the same card js/screens/map.js shows (js/walk-ui.js). It used
+  // to exist only on the standalone #map screen — the map a traveller almost never opens — so
+  // from Places, which is the map they actually use, the feature read as missing entirely.
+  const walkP = buildWalkCard(() => placesCtrl);
+  wrap.append(walkP.card);
 
   // Only the two genuinely occasional tools stay behind the fold now that the layers are
   // always visible above: measuring a distance and pinning the screen awake.
@@ -963,6 +976,10 @@ export function placesScreen(arg) {
         const nb = nearestSpotGlobal(fix);
         if (nb && nb.spot.country !== getActiveCountry()) { setFocusSpot(nb.spot); render(); }
       },
+      // Only consumed while the walking card is actively waiting for a destination
+      // (handleMapClick returns false otherwise), so a normal tap on the map keeps its
+      // existing meaning.
+      onMapClick: (pt) => walkP.handleMapClick(pt),
       numbered: true,
       cluster: true,
       markerColor: (p) => bucketColor(p),
@@ -981,6 +998,9 @@ export function placesScreen(arg) {
       if (mapLayersPrefsP.hospitals === true) c.setHospitals(true);
       if (mapLayersPrefsP.atms === true) c.setAtms(true);
       if (mapLayersPrefsP.buses === true) c.setBus(true);
+      if (mapLayersPrefsP.trails === true) c.setTrails(true);
+      if (mapLayersPrefsP.bike === true) c.setBike(true);
+      if (mapLayersPrefsP.scenic === true) c.setScenic(true);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out

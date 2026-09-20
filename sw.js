@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.575.0';
+const CACHE_VERSION = 'mk-v0.576.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -99,6 +99,20 @@ const PRECACHE = [
   'js/data/hospitals.vi.js',
   'js/data/hospitals.kh.js',
   'js/data/hospitals.la.js',
+  // Hiking trails, bike paths and the viewpoints/waterfalls they lead to (~1.1 MB for all
+  // four countries). Warmed on idle like everything else in this list, never at install.
+  // Precached rather than left to the network for the same reason the bus stops are: a trail
+  // is used precisely where there is no signal, and a traveller who turned the layer on at the
+  // guesthouse should still have it on the hill.
+  'js/data/outdoors.js',
+  'js/data/trails.th.js',
+  'js/data/trails.vi.js',
+  'js/data/trails.kh.js',
+  'js/data/trails.la.js',
+  'js/data/scenic.th.js',
+  'js/data/scenic.vi.js',
+  'js/data/scenic.kh.js',
+  'js/data/scenic.la.js',
   'js/render-utils.js',
   'js/photo-registry.js',
   'js/lazy-data.js',
@@ -256,6 +270,7 @@ const PRECACHE = [
   // list is warmed on idle rather than at install (see the install handler), so it costs
   // nothing at launch — and walking directions with no signal is the entire point of it.
   'js/walk-route.js',
+  'js/walk-ui.js',
   'js/data/walk-index.js',
   'js/data/walk.bangkok.js',
   'lib/maplibre-gl.js',

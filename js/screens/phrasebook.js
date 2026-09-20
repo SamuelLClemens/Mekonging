@@ -38,7 +38,7 @@ import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { translate } from '../translate.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
-import { LANGUAGES, getLanguage } from '../data/regions.js';
+import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
 // Namespace import kept (rather than named imports for every piece) so the moved code below —
 // essentialsCard's Diet.PHRASE_PENDING_ALLERGENS and allergyPhrasesForProfile's Diet.PHRASE_KEYS/

@@ -19,8 +19,8 @@ import { h, debounce, titleCase, esc } from '../util.js';
 import { store, save } from '../state.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 import {
-  getCountry, allPlaces, COUNTRIES, isCountryLoaded, loadCountry, getLanguage,
-} from '../data/regions.js';
+  getCountry, allPlaces, COUNTRIES, isCountryLoaded, loadCountry, } from '../data/regions.js';
+import { getLanguage } from '../lazy-data.js';
 import { screenHint, infoTip, collapsibleCard, selectEl } from '../ui-widgets.js';
 import { citySlug } from '../render-utils.js';
 import { verdictFor, VERDICT_RANK } from '../data/month-verdict.js';
