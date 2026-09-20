@@ -306,23 +306,45 @@ export function placesScreen(arg) {
   // Same store.profile.prefs.mapLayers object #map itself reads/writes, so the borders
   // choice is one shared setting rather than a second, independent Places-only toggle.
   const mapLayersPrefsP = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { borders: true });
-  const bordersCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.borders !== false ? '' : null,
-    onchange: (e) => { mapLayersPrefsP.borders = e.target.checked; save(); if (placesCtrl) placesCtrl.setBorders(e.target.checked); } });
-  // Hospitals is opt-IN (unlike borders/satellite above) — a dense new ~7,400-point layer
-  // should not suddenly appear for existing travellers who never asked for it.
-  const hospitalsCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.hospitals === true ? '' : null,
-    onchange: (e) => { mapLayersPrefsP.hospitals = e.target.checked; save(); if (placesCtrl) placesCtrl.setHospitals(e.target.checked); } });
-  // Also opt-in, same reasoning as hospitals above. Label says "lowest-fee" rather than
-  // "free" because only Vietnam's pin is actually fee-free — Thailand/Cambodia/Laos show the
-  // cheapest available option, still a real fee (see js/map.js's ATM popup for the honest
-  // per-pin distinction, and scripts/build_atms.py for the sourcing).
-  const atmsCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.atms === true ? '' : null,
-    onchange: (e) => { mapLayersPrefsP.atms = e.target.checked; save(); if (placesCtrl) placesCtrl.setAtms(e.target.checked); } });
-  // Also opt-in. Bangkok's stops carry real route numbers; Vietnam/Cambodia/Laos are
-  // downtown-core-only with no route numbers — see js/data/bus.js for why, and the popup
-  // itself says so per-stop rather than leaving a silent gap.
-  const busCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.buses === true ? '' : null,
-    onchange: (e) => { mapLayersPrefsP.buses = e.target.checked; save(); if (placesCtrl) placesCtrl.setBus(e.target.checked); } });
+  // Map layers are press-toggle chips, not checkboxes: the same visual language as the weather
+  // widget's metric segments, but MULTI-select — every layer is independent, so any combination
+  // can be on at once. They also sit directly under the map rather than inside the collapsed
+  // tools fold below, because toggling a layer is the most frequent thing a traveller does with
+  // this map, and it should not cost a scroll plus opening a disclosure to reach.
+  //
+  // Borders defaults ON. Hospitals, ATMs and bus stops are opt-IN: each is a dense new layer
+  // (~7,400 / ~240 / ~13,600 points) that must not appear unannounced for existing travellers.
+  // "Lowest-fee ATMs" rather than "free" because only Vietnam's pins are actually fee-free —
+  // see js/map.js's popup for the honest per-pin distinction and scripts/build_atms.py for
+  // sourcing. Bangkok's bus stops carry real route numbers; the other three capitals are
+  // downtown-core-only and say so per-stop rather than leaving a silent gap.
+  const MAP_LAYERS_P = [
+    { key: 'borders', label: '🗺️ Borders', isOn: () => mapLayersPrefsP.borders !== false,
+      apply: (v) => { if (placesCtrl) placesCtrl.setBorders(v); } },
+    { key: 'hospitals', label: '🏥 Hospitals', isOn: () => mapLayersPrefsP.hospitals === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setHospitals(v); } },
+    { key: 'atms', label: '🏧 Lowest-fee ATMs', isOn: () => mapLayersPrefsP.atms === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setAtms(v); } },
+    { key: 'buses', label: '🚌 Bus stops', isOn: () => mapLayersPrefsP.buses === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setBus(v); } },
+  ];
+  const layerChipsP = MAP_LAYERS_P.map((layer) => {
+    const chip = h('button', {
+      type: 'button', class: 'chip layer-chip',
+      'aria-pressed': layer.isOn() ? 'true' : 'false',
+      onclick: () => {
+        const next = chip.getAttribute('aria-pressed') !== 'true';
+        chip.setAttribute('aria-pressed', next ? 'true' : 'false');
+        mapLayersPrefsP[layer.key] = next;
+        save();
+        layer.apply(next);
+      },
+    }, layer.label);
+    return chip;
+  });
+  const layerChipsRowP = h('div', { class: 'chips layer-chips', role: 'group', 'aria-label': 'Map layers' }, layerChipsP);
+  // Directly beneath the map and its search, above every fold on this screen.
+  mapSection.append(layerChipsRowP);
 
   // Keep-screen-awake while navigating on foot (Screen Wake Lock API) — the one #map
   // feature task #196's own functional-parity check found genuinely missing here, ported
@@ -351,15 +373,11 @@ export function placesScreen(arg) {
   document.addEventListener('visibilitychange', onVisP);
   { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } wantWakeP = false; document.removeEventListener('visibilitychange', onVisP); if (wakeLockP) { try { wakeLockP.release(); } catch { /* noop */ } wakeLockP = null; } }); }
 
+  // Only the two genuinely occasional tools stay behind the fold now that the layers are
+  // always visible above: measuring a distance and pinning the screen awake.
   const toolsCard = h('div', {}, [
     h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap: var(--sp-3)' }, [
       measureBtnP,
-      // min-height 24px: the label is the checkbox's tap target and measured 149x21 on a 375px
-      // screen, under the WCAG 2.5.8 minimum. See .exp-monthly-toggle in style.css for the twin.
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [hospitalsCheckP, h('span', {}, '🏥 Hospitals')]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [atmsCheckP, h('span', {}, '🏧 Lowest-fee ATMs')]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [busCheckP, h('span', {}, '🚌 Bus stops')]),
       wakeBtnP,
     ]),
     measureOutP,

@@ -38,14 +38,32 @@ export function mapScreen() {
 
   // Same store.profile.prefs.mapLayers object Places' own "🛠 More map tools" fold reads/
   // writes, so borders/hospitals are one shared setting rather than two independent toggles.
-  const bordersCheck = h('input', { type: 'checkbox', checked: mapLayersPrefs.borders !== false ? '' : null,
-    onchange: (e) => { mapLayersPrefs.borders = e.target.checked; save(); if (mapCtrl) mapCtrl.setBorders(e.target.checked); } });
-  const hospitalsCheck = h('input', { type: 'checkbox', checked: mapLayersPrefs.hospitals === true ? '' : null,
-    onchange: (e) => { mapLayersPrefs.hospitals = e.target.checked; save(); if (mapCtrl) mapCtrl.setHospitals(e.target.checked); } });
-  const atmsCheck = h('input', { type: 'checkbox', checked: mapLayersPrefs.atms === true ? '' : null,
-    onchange: (e) => { mapLayersPrefs.atms = e.target.checked; save(); if (mapCtrl) mapCtrl.setAtms(e.target.checked); } });
-  const busCheck = h('input', { type: 'checkbox', checked: mapLayersPrefs.buses === true ? '' : null,
-    onchange: (e) => { mapLayersPrefs.buses = e.target.checked; save(); if (mapCtrl) mapCtrl.setBus(e.target.checked); } });
+  // Press-toggle chips, multi-select — the same treatment Places uses, so the two screens keep
+  // reading as one feature rather than drifting into two different controls for one setting.
+  const MAP_LAYERS = [
+    { key: 'borders', label: '🗺️ Borders', isOn: () => mapLayersPrefs.borders !== false,
+      apply: (v) => { if (mapCtrl) mapCtrl.setBorders(v); } },
+    { key: 'hospitals', label: '🏥 Hospitals', isOn: () => mapLayersPrefs.hospitals === true,
+      apply: (v) => { if (mapCtrl) mapCtrl.setHospitals(v); } },
+    { key: 'atms', label: '🏧 Lowest-fee ATMs', isOn: () => mapLayersPrefs.atms === true,
+      apply: (v) => { if (mapCtrl) mapCtrl.setAtms(v); } },
+    { key: 'buses', label: '🚌 Bus stops', isOn: () => mapLayersPrefs.buses === true,
+      apply: (v) => { if (mapCtrl) mapCtrl.setBus(v); } },
+  ];
+  const layerChips = MAP_LAYERS.map((layer) => {
+    const chip = h('button', {
+      type: 'button', class: 'chip layer-chip',
+      'aria-pressed': layer.isOn() ? 'true' : 'false',
+      onclick: () => {
+        const next = chip.getAttribute('aria-pressed') !== 'true';
+        chip.setAttribute('aria-pressed', next ? 'true' : 'false');
+        mapLayersPrefs[layer.key] = next;
+        save();
+        layer.apply(next);
+      },
+    }, layer.label);
+    return chip;
+  });
 
   // ---- Measure tool -----------------------------------------------------------------
   let measuring = false;
@@ -110,17 +128,15 @@ export function mapScreen() {
   const toolsCard = h('div', {}, [
     h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap: var(--sp-3)' }, [
       h('div', { class: 'chips', style: 'margin:0' }, [mapBtn, satBtn]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheck, h('span', {}, '🗺️ Country borders')]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [hospitalsCheck, h('span', {}, '🏥 Hospitals')]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [atmsCheck, h('span', {}, '🏧 Lowest-fee ATMs')]),
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [busCheck, h('span', {}, '🚌 Bus stops')]),
       measureBtn,
       wakeBtn,
       h('button', { class: 'btn ghost', onclick: () => { if (mapCtrl) mapCtrl.triggerLocate(); } }, '📍 Locate me'),
     ]),
     measureOut,
   ]);
-  wrap.append(foldedCard('🛠 Map layers & tools', toolsCard, 'mapToolsOpen', true));
+  // Layers first and always visible; the occasional tools stay behind the fold.
+  wrap.append(h('div', { class: 'chips layer-chips', role: 'group', 'aria-label': 'Map layers' }, layerChips));
+  wrap.append(foldedCard('🛠 Map & tools', toolsCard, 'mapToolsOpen', true));
 
   // ---- Offline walking directions ---------------------------------------------------
   // Routed on-device from a pedestrian graph (js/walk-route.js). Coverage is per city core,
