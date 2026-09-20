@@ -330,7 +330,7 @@ export function placesScreen(arg) {
   ];
   const layerChipsP = MAP_LAYERS_P.map((layer) => {
     const chip = h('button', {
-      type: 'button', class: 'chip layer-chip',
+      type: 'button', class: 'chip mk-layer-toggle',
       'aria-pressed': layer.isOn() ? 'true' : 'false',
       onclick: () => {
         const next = chip.getAttribute('aria-pressed') !== 'true';
@@ -342,9 +342,13 @@ export function placesScreen(arg) {
     }, layer.label);
     return chip;
   });
-  const layerChipsRowP = h('div', { class: 'chips layer-chips', role: 'group', 'aria-label': 'Map layers' }, layerChipsP);
-  // Directly beneath the map and its search, above every fold on this screen.
-  mapSection.append(layerChipsRowP);
+  // `mk-layer-toggles`, not `layer-chips`: this screen already uses that class for the category
+  // picker fold a few lines above, and reusing it leaked this row's tighter spacing onto it.
+  const layerChipsRowP = h('div', { class: 'chips mk-layer-toggles', role: 'group', 'aria-label': 'Map layers' }, layerChipsP);
+  // Directly ABOVE the map rather than below it. On a phone the map is 320px tall, so anything
+  // placed under it starts off-screen — which defeated the point of promoting these out of the
+  // collapsed tools fold in the first place.
+  mapWrap.before(layerChipsRowP);
 
   // Keep-screen-awake while navigating on foot (Screen Wake Lock API) — the one #map
   // feature task #196's own functional-parity check found genuinely missing here, ported

@@ -12,7 +12,7 @@
 // them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
 // of the world around those four.
 
-const CACHE_VERSION = 'mk-v0.572.0';
+const CACHE_VERSION = 'mk-v0.574.0';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -102,6 +102,15 @@ const PRECACHE = [
   'js/render-utils.js',
   'js/photo-registry.js',
   'js/lazy-data.js',
+  // These three are EAGERLY imported by main.js but were missing from this list, so offline
+  // they 504'd and module evaluation stopped — the app hung on "Loading your companion…" with
+  // no map, no screens, nothing. An offline-first travel app that cannot boot offline is the
+  // worst failure it has, and it was invisible because every online load works fine.
+  // scripts/check-offline-boot.py now fails the build if the eager graph and this list ever
+  // disagree again.
+  'js/offline-pack.js',
+  'js/data/place-months.js',
+  'js/data/month-verdict.js',
   'js/ui-widgets.js',
   'js/state.js',
   'js/social.js',

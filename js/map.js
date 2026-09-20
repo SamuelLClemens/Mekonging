@@ -212,7 +212,11 @@ function loadBusStopsFC() {
         return { ...r, cc, color: (colors && colors[first]) || null };
       });
     });
-    return busStopsFC(tagged);
+    const solo = new Set(mod.BUS_ROUTE_NETWORKS);
+    return {
+      clustered: busStopsFC(tagged.filter((r) => !solo.has(r.cc))),
+      solo: busStopsFC(tagged.filter((r) => solo.has(r.cc))),
+    };
   });
   return busStopsFCPromise;
 }
@@ -981,14 +985,30 @@ export async function initMap(containerEl, opts = {}) {
       },
     });
 
+    // Stops for the small, route-coloured networks live in their own UNCLUSTERED source.
+    // Clustering exists for Bangkok's 13,144 points; applying it to Phu Quoc's 107 meant that
+    // at the zoom you actually look at an island from, every stop collapsed into a few count
+    // bubbles — so the route lines were drawn but there was nothing showing where to get on
+    // or off. 107 points render fine unclustered at any zoom, so they are simply always there.
+    map.addSource('mk-bus-solo', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({
+      id: 'mk-bus-solo-points', type: 'circle', source: 'mk-bus-solo',
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': ['coalesce', ['get', 'color'], '#5E5CE6'],
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 9, 1.5, 14, 2.5],
+        'circle-stroke-color': '#FFFFFF',
+        // Bigger than the clustered layer's dots at every zoom: these are the stops a
+        // traveller is actively looking for, on a network small enough that they can be.
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 12, 6.5, 16, 10],
+      },
+    });
+
     map.addSource('mk-bus', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] },
       cluster: true,
       clusterRadius: 50,
-      // Stops stop clustering two zooms earlier than before. At the island scale a traveller
-      // actually navigates at, 107 Phu Quoc stops were still collapsing into a handful of
-      // count bubbles, so the layer looked empty of real stops — the complaint this fixes.
       clusterMaxZoom: 12,
     });
     map.addLayer({
@@ -1022,6 +1042,8 @@ export async function initMap(containerEl, opts = {}) {
     const setCursor = (c) => { map.getCanvas().style.cursor = c; };
     map.on('mouseenter', 'mk-bus-clusters', () => setCursor('pointer'));
     map.on('mouseleave', 'mk-bus-clusters', () => setCursor(''));
+    map.on('mouseenter', 'mk-bus-solo-points', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-bus-solo-points', () => setCursor(''));
     map.on('mouseenter', 'mk-bus-points', () => setCursor('pointer'));
     map.on('mouseleave', 'mk-bus-points', () => setCursor(''));
     map.on('click', 'mk-bus-clusters', (e) => {
@@ -1034,7 +1056,9 @@ export async function initMap(containerEl, opts = {}) {
         map.easeTo({ center: f.geometry.coordinates, zoom });
       });
     });
-    map.on('click', 'mk-bus-points', (e) => {
+    // Both stop layers share one popup: the clustered one for the big networks and the
+    // unclustered one for the route-coloured islands.
+    const busStopPopup = (e) => {
       const f = e.features && e.features[0];
       if (!f) return;
       const p = f.properties;
@@ -1059,19 +1083,24 @@ export async function initMap(containerEl, opts = {}) {
         .setLngLat(f.geometry.coordinates)
         .setDOMContent(body)
         .addTo(map);
-    });
+    };
+    map.on('click', 'mk-bus-points', busStopPopup);
+    map.on('click', 'mk-bus-solo-points', busStopPopup);
   }
   function setBus(on) {
     // Same style.load race as setHospitals/setAtms above.
     const apply = () => {
-      const BUS_LAYERS = ['mk-bus-points', 'mk-bus-clusters', 'mk-bus-routes-line', 'mk-bus-routes-casing'];
+      const BUS_LAYERS = ['mk-bus-points', 'mk-bus-clusters', 'mk-bus-solo-points',
+        'mk-bus-routes-line', 'mk-bus-routes-casing'];
       const show = (v) => BUS_LAYERS.forEach((id) => {
         if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v);
       });
       if (!on) { show('none'); return Promise.resolve(); }
-      return loadBusStopsFC().then((fc) => {
+      return loadBusStopsFC().then(({ clustered, solo }) => {
         const src = map.getSource('mk-bus');
-        if (src) src.setData(fc);
+        if (src) src.setData(clustered);
+        const ssrc = map.getSource('mk-bus-solo');
+        if (ssrc) ssrc.setData(solo);
         const rsrc = map.getSource('mk-bus-routes');
         if (rsrc && busRoutesData) rsrc.setData(busRoutesData);
         show('visible');

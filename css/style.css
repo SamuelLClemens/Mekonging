@@ -253,7 +253,18 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: var(--font); font-size: var(--fs-body); color: var(--ink);
   background: var(--bg); line-height: 1.5; -webkit-font-smoothing: antialiased;
+  /* Double-tapping a card or control used to zoom the WHOLE PAGE, leaving the layout scaled
+     and misaligned until the traveller pinched back out. `manipulation` removes the
+     double-tap-zoom gesture while leaving genuine pinch-zoom intact.
+     Note this is the only half of it that can actually be fixed: iOS Safari has ignored
+     `user-scalable=no` since iOS 10, so blocking pinch-zoom outright is not available — and
+     blocking it would break the page for anyone who needs to enlarge text. */
+  touch-action: manipulation;
 }
+/* Belt and braces against the other cause of a "zoomed out" phone layout: one over-wide child
+   makes the whole document scrollable sideways and the browser shrinks to fit. Measured clean
+   at 375px today (scrollWidth === clientWidth), and this keeps it that way. */
+html, body { max-width: 100%; overflow-x: hidden; }
 html[data-reduced-motion="on"] *, html[data-reduced-motion="on"] *::before {
   animation: none !important; transition: none !important;
 }
@@ -1020,8 +1031,8 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
 /* Map-layer toggles: independent presses, any combination on at once — unlike the weather
    widget's metric segments, which are one-of-N. Tighter than a default .chips row because this
    sits directly under the map and its whole point is costing almost no vertical space. */
-.layer-chips { gap: var(--sp-1h); margin: var(--sp-2) 0 var(--sp-1); }
-.layer-chip { min-height: 38px; padding: var(--sp-1h) var(--sp-3); font-size: 13px; }
+.mk-layer-toggles { gap: var(--sp-1h); margin: var(--sp-2) 0 var(--sp-1); }
+.mk-layer-toggle { min-height: 38px; padding: var(--sp-1h) var(--sp-3); font-size: 13px; }
 .chip .chip-ic { display: inline-flex; margin-right: 6px; }
 .chip .chip-ic svg { width: 16px; height: 16px; display: block; }
 
