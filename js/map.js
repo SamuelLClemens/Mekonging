@@ -147,18 +147,28 @@ function busStopsFC(rows) {
     type: 'FeatureCollection',
     features: rows.filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lng)).map((x) => ({
       type: 'Feature',
-      properties: { name: x.name || '', routes: x.routes || '' },
+      // `cc` rides along so the popup can quote the right fare: the five networks charge
+      // completely differently (flat, per-zone, per-kilometre, per-route), so a single
+      // app-wide price would be wrong for four of them.
+      properties: { name: x.name || '', routes: x.routes || '', cc: x.cc || '' },
       geometry: { type: 'Point', coordinates: [x.lng, x.lat] },
     })),
   };
 }
 const BUS_COUNTRIES = ['th', 'vi', 'kh', 'la'];
 let busStopsFCPromise = null;
+// Captured off the bus data module when it loads, so the popup can quote fares without
+// importing that module eagerly just to render a tooltip.
+let busFareFor = null;
+let busFaresChecked = '';
 function loadBusStopsFC() {
   if (busStopsFCPromise) return busStopsFCPromise;
   busStopsFCPromise = import('./data/bus.js').then(async (mod) => {
     const perCountry = await Promise.all(BUS_COUNTRIES.map((cc) => mod.loadBusStops(cc).catch(() => [])));
-    return busStopsFC(perCountry.flat());
+    busFareFor = mod.fareFor;
+    busFaresChecked = mod.FARES_CHECKED;
+    const tagged = perCountry.flatMap((rows, i) => rows.map((r) => ({ ...r, cc: BUS_COUNTRIES[i] })));
+    return busStopsFC(tagged);
   });
   return busStopsFCPromise;
 }
@@ -953,10 +963,20 @@ export async function initMap(containerEl, opts = {}) {
       const p = f.properties;
       // .setDOMContent(), never .setHTML(): stop names come from OpenStreetMap/a GTFS feed and
       // are untrusted external strings — h() sets textContent, so nothing is parsed as markup.
+      const fare = busFareFor ? busFareFor(p.cc) : '';
       const body = h('div', {}, [
         h('strong', {}, p.name || 'Bus stop'),
         h('div', { class: 'muted', style: 'font-size:12px' },
           p.routes ? `Routes: ${p.routes}` : 'Route numbers not available for this area — check the number board on the bus.'),
+        fare ? h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, [
+          h('strong', {}, '💵 Fare: '),
+          h('span', {}, fare),
+        ]) : null,
+        // Dated on purpose: fares move, and two of these five changed within the past year.
+        fare && busFaresChecked
+          ? h('div', { class: 'muted', style: 'font-size:11px;margin-top: var(--sp-0h)' },
+            `Fares checked ${busFaresChecked}`)
+          : null,
       ]);
       new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
         .setLngLat(f.geometry.coordinates)

@@ -31,3 +31,49 @@ export function loadBusStops(cc) {
 }
 
 export const BUS_COUNTRIES = ['th', 'vi', 'pq', 'kh', 'la'];
+
+// What a ride actually costs, per network. Checked 2026-09-20; sources in the comments below.
+//
+// Every entry is a RANGE or a rule, never a single invented number, because none of these
+// networks charges one flat price for every trip — and a precise-looking fare that is wrong
+// costs a traveller more trust than a range that is honest. FARES_CHECKED is surfaced in the
+// popup for the same reason: bus fares move, and the traveller should see how fresh this is.
+export const FARES_CHECKED = '2026-09-20';
+
+const FARES = {
+  // bmta.co.th + Thai transit guides: non-aircon 8 THB flat (9.5 THB 23:00-05:00), aircon
+  // 11-32 THB by distance, +2 THB if the route uses an expressway, +10 THB to/from Suvarnabhumi.
+  th: { text: 'Non-aircon 8 ฿ flat (9.5 ฿ late night). Aircon 11–32 ฿ by distance. Add 2 ฿ on expressway routes, 10 ฿ to or from Suvarnabhumi. Pay the conductor on board.' },
+
+  // Hanoi suspended fares for journeys STARTING inside Ring Road 1, from 2026-07-01 to
+  // 2027-06-30. Every Hanoi stop in this dataset is inside that ring (the file is Old Quarter
+  // and French Quarter only), so the exemption covers all of them — but it expires, so it is
+  // encoded as a date the code checks rather than written into the text, where it would
+  // quietly become a lie on 1 July 2027. After it lapses the distance formula below applies.
+  vi: {
+    freeUntil: '2027-06-30',
+    freeText: 'Free until 30 June 2027 — Hanoi has suspended fares for journeys starting inside Ring Road 1, which covers every stop shown here.',
+    text: 'From 3,000 ₫, rising about 450 ₫ per kilometre. Pay cash on board.',
+  },
+
+  // VinBus began charging on Phu Quoc on 2026-01-01; it was free before that, so any guide
+  // written earlier says "free" and is now wrong. Zone-based, cash to the driver.
+  pq: { text: '20,000 ₫ within one zone or to the next. 50,000 ₫ across non-neighbouring zones. 10,000 ₫ for students. Cash to the driver — name your destination as you board.' },
+
+  // Phnom Penh City Bus: a genuine flat fare, the only one of the five.
+  kh: { text: '1,500 riel flat, any distance, any route.' },
+
+  // Vientiane has no single fare: it is set per route (about 4,000 kip to the Southern
+  // terminal, 8,000 to the Friendship Bridge), with a 10,000 kip flat trial on three electric
+  // routes in 2026. Quoted as a range rather than picking one route's price to stand for all.
+  la: { text: 'Roughly 4,000–10,000 kip depending on the route. Pay on board.' },
+};
+
+// The fare line for a network, honouring any dated free period. `now` is injectable so the
+// expiry is testable without waiting a year for it.
+export function fareFor(cc, now = new Date()) {
+  const f = FARES[cc];
+  if (!f) return '';
+  if (f.freeUntil && now <= new Date(f.freeUntil + 'T23:59:59')) return f.freeText;
+  return f.text;
+}
