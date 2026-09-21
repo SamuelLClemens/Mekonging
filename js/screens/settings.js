@@ -472,6 +472,17 @@ export function settingsScreen() {
     ]),
     h('p', { class: 'muted' }, 'Optional — your own server, for volume or privacy.'),
   ]);
+  // The free service counts its daily allowance per IP ADDRESS, not per person, so every
+  // guest on one hotel or cafe wifi shares a single allowance and they run it down together
+  // — which is why translation can stop working for a whole building at once. Giving the
+  // service an address to identify the caller raises that allowance roughly tenfold, and it
+  // is the one lever a traveller has over the problem. Optional, theirs, never sent anywhere
+  // else, and stored only on this device.
+  tcard.append(field('Your email for the free service (optional)', h('input', {
+    type: 'email', placeholder: 'you@example.com', value: p.translateEmail || '',
+    oninput: (e) => { p.translateEmail = e.target.value.trim(); save(); },
+  })));
+  tcard.append(h('p', { class: 'tiny muted' }, 'Raises the free daily translation limit about tenfold. Sent only to the translation service with your own translations; on shared hotel or cafe wifi this is what stops the allowance running out for everyone at once.'));
   tcard.append(field('Translate endpoint URL', h('input', {
     type: 'url', placeholder: 'https://your-endpoint/translate', value: p.translateEndpoint,
     oninput: (e) => { p.translateEndpoint = e.target.value.trim(); save(); },

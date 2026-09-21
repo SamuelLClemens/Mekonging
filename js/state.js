@@ -118,6 +118,12 @@ function defaults() {
       // the page CSP connect-src (see Settings copy).
       translateEndpoint: '',
       translateKey: '',
+      // Optional address handed to the FREE translation service as its `de` parameter, which
+      // raises that service's anonymous daily allowance roughly tenfold. The allowance is
+      // counted per IP, so on shared accommodation wifi one traveller setting this protects
+      // the whole building from exhausting it together. On-device, never committed, and sent
+      // nowhere but that service.
+      translateEmail: '',
       // Feedback: optional destination for the "Email feedback" action (set by the
       // owner in Settings) + the user's own reply-to. Both on-device; never committed.
       feedbackTo: '',

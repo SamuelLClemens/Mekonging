@@ -1055,10 +1055,22 @@ function liveTranslateBox(code, label, locale, onChange) {
   // row. The default is whatever the app's interface is set to (a phone running in Korean
   // should not make its owner re-pick Korean here), and the choice is remembered separately
   // from the interface language so changing one never silently moves the other.
+  //
+  // The target language is removed from this list, and that is a bug fix rather than tidying.
+  // The default below is the app's INTERFACE language, so reading the app in Thai and opening
+  // the Thai phrasebook — or handing the phone to a Thai speaker, which is the case this
+  // screen exists for — selected Thai on both sides. The service rejects that outright, and
+  // the traveller was told to simplify their wording for a sentence that was never the
+  // problem. translate.js short-circuits it too; this stops it being selectable at all.
+  const sameAsTarget = (a) => { const base = (x) => String(x || '').toLowerCase().split(/[-_]/)[0]; return base(a) === base(code); };
+  const srcOptions = LANGS.filter((l) => !sameAsTarget(l.code));
   const remembered = store.profile.prefs.talkSrcLang;
-  const srcDefault = (remembered && LANG_BY_CODE[remembered]) ? remembered : uiLang();
+  const preferred = (remembered && LANG_BY_CODE[remembered]) ? remembered : uiLang();
+  // Falling back to English keeps a working pair when the traveller's own language IS the
+  // target; their remembered choice is untouched and returns on any other phrasebook.
+  const srcDefault = sameAsTarget(preferred) ? 'en' : preferred;
   const srcSel = selectEl(
-    LANGS.map((l) => [l.code, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`]),
+    srcOptions.map((l) => [l.code, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`]),
     srcDefault,
     // syncSrc is declared below; the handler only ever runs on a user interaction, long after
     // this whole function body has finished evaluating.
