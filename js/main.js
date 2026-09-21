@@ -101,7 +101,7 @@ import {
   online, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
-import { startPlayback, onPlaybackChange, stopPlayback } from './audio-control.js';
+import { startPlayback, onPlaybackChange, stopPlayback, stopEverything, activeKind } from './audio-control.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
@@ -449,6 +449,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
       window.addEventListener('online', checkForUpdate);
+      // All three triggers above are EDGE-triggered — a launch, a return to the foreground, a
+      // reconnection. A session that simply stays open and stays online fires none of them
+      // again, so a deploy that lands mid-session is never noticed. That is not a rare shape
+      // for this app: an installed PWA left open on a phone in a pocket is the normal case.
+      // Hourly is cheap (a byte-check against one small file, skipped when offline because
+      // reg.update() rejects and is swallowed) and bounds how long any open app can lag a
+      // release.
+      setInterval(checkForUpdate, 60 * 60 * 1000);
 
       // Tell the worker it may now fill the offline copy. The worker no longer precaches at
       // install time, because those requests raced the page's own module loads on exactly the
@@ -508,14 +516,27 @@ function showOfflineIncompleteToast(count) {
 
 // A small, non-blocking "update ready" toast pinned above the tab bar. Tapping it reloads
 // so the newly-cached version takes over cleanly.
+// Dismissing it used to be permanent for the life of the page: the flag was set once and
+// never cleared, so a traveller who tapped ✕, or who glanced away while it was on screen,
+// kept running the old build with no way back to the offer. An installed PWA is not closed
+// the way a tab is — on iOS it can stay resident for days — so "for the life of the page" is
+// genuinely indefinite, and every update trigger had already fired by then. Dismiss now means
+// "not now" rather than "never": the offer returns after a cooling-off period. It still never
+// reloads on its own, which is the protection that removed the old controllerchange reload
+// after it wiped travellers' in-progress journal entries and staged photos.
 let updateToastShown = false;
+const UPDATE_REOFFER_MS = 30 * 60 * 1000;
 function showUpdateToast() {
   if (updateToastShown) return;
   updateToastShown = true;
+  const dismiss = () => {
+    toast.remove();
+    setTimeout(() => { updateToastShown = false; }, UPDATE_REOFFER_MS);
+  };
   const toast = h('div', { class: 'update-toast', role: 'status' }, [
     h('span', {}, 'A new version is ready.'),
     h('button', { class: 'update-toast-btn', onclick: () => location.reload() }, 'Refresh'),
-    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: () => toast.remove() }, '✕'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: dismiss }, '✕'),
   ]);
   document.body.append(toast);
 }
@@ -528,19 +549,29 @@ function showUpdateToast() {
 // Shown only while js/audio-control.js reports something playing; both play systems register
 // with it, so this one pill covers every sound the app makes without touching each speaker
 // button individually.
+// It now covers live translation too, which is not a sound but is the same problem wearing a
+// different hat: work the app has started, that the traveller cannot call off, that can run for
+// seconds on a weak link. One pill for both, rather than a second stop control appearing beside
+// the first — the label says which is running.
 let audioStopToast = null;
+let audioStopLabel = null;
+const STOP_LABEL = { sound: '🔊 Playing…', task: '🌐 Translating…' };
 function showAudioStopToast() {
-  if (audioStopToast) return;
+  const text = STOP_LABEL[activeKind()] || STOP_LABEL.sound;
+  // Already up: only the label can have changed (a phrase started speaking while a translation
+  // was still in flight, or the reverse), so retarget it rather than stacking a second pill.
+  if (audioStopToast) { if (audioStopLabel) audioStopLabel.textContent = text; return; }
+  audioStopLabel = h('span', { class: 'audio-stop-label' }, text);
   audioStopToast = h('div', { class: 'update-toast', role: 'status' }, [
-    h('span', {}, '🔊 Playing…'),
-    h('button', { class: 'update-toast-btn', onclick: () => stopPlayback() }, '⏹ Stop'),
+    audioStopLabel,
+    h('button', { class: 'update-toast-btn', onclick: () => stopEverything() }, '⏹ Stop'),
   ]);
   document.body.append(audioStopToast);
 }
 function hideAudioStopToast() {
-  if (audioStopToast) { audioStopToast.remove(); audioStopToast = null; }
+  if (audioStopToast) { audioStopToast.remove(); audioStopToast = null; audioStopLabel = null; }
 }
-onPlaybackChange((playing) => { if (playing) showAudioStopToast(); else hideAudioStopToast(); });
+onPlaybackChange((active) => { if (active) showAudioStopToast(); else hideAudioStopToast(); });
 
 // A reusable, non-blocking "undo" toast for REVERSIBLE actions (mark done / not interested):
 // the tap acts immediately and an accidental tap is recoverable, so a repeated triage gesture
@@ -7220,6 +7251,51 @@ function warmLazyData() {
 }
 if ('requestIdleCallback' in window) requestIdleCallback(warmLazyData, { timeout: 12000 });
 else setTimeout(warmLazyData, 6000);
+
+// And the SCREEN modules behind the bottom tabs, for the same reason and with one extra care.
+//
+// Four of the five tabs are lazy (ROUTE_SCREENS above: Talk→phrasebook, You→you,
+// Places→places, Explore→family+explore), so the first tap of each in a session hit the gate,
+// painted the "Opening… / One moment." card, and only then showed the screen. Taking those
+// modules off the launch path is right — they are not what the first paint needs — but the
+// cost landed on the traveller as a visible flash on four of five tabs, every session: after a
+// reload, after iOS discards a backgrounded tab, after every deploy. Warmed on idle the gate
+// finds the module already there and falls straight through, so the tap just opens.
+//
+// THE CARE: loadScreenMod() records a permanent failure (`_screenFailed`) on a rejected
+// import, and the gate SKIPS any module in that record — it stops the gate spinning on a dead
+// module, which is correct for a tap the traveller made. It is wrong for a fetch they never
+// asked for: a warm that fails offline, or on the flaky link this app is built for, would mark
+// the screen dead and send their FIRST real tap straight to the "not on your device yet"
+// dead-end, when today that tap would at least try. So a warm failure is unrecorded here —
+// the flag is cleared again, leaving the traveller exactly where they would have been.
+//
+// `you` and `explore` matter most: unlike phrasebook/places/family they are in no PRECACHE
+// list in sw.js, so they are the two with a real network fetch behind the card rather than a
+// cache read. They go first for that reason.
+const WARM_SCREENS = ['you', 'explore', 'phrasebook', 'places', 'family'];
+function warmScreens() {
+  const queue = WARM_SCREENS.slice();
+  const step = () => {
+    const name = queue.shift();
+    if (!name) return;
+    const next = () => {
+      if ('requestIdleCallback' in window) requestIdleCallback(step, { timeout: 3000 });
+      else setTimeout(step, 250);
+    };
+    if (!SCREEN_LOADERS[name] || screenMod(name) || _screenFailed[name]) { step(); return; }
+    loadScreenMod(name)
+      // Unrecord a background failure: this fetch was ours, not theirs, and it must not be
+      // allowed to close a door in front of a tap that has not happened yet.
+      .catch(() => { delete _screenFailed[name]; })
+      .then(next, next);
+  };
+  step();
+}
+// Last of the code warms, after the data ones above: a screen module is only needed when a tab
+// is tapped, which is always later than the first paint this is queued behind.
+if ('requestIdleCallback' in window) requestIdleCallback(warmScreens, { timeout: 20000 });
+else setTimeout(warmScreens, 10000);
 
 // And LAST of everything: put the identify field guide on the device — every photo and animal
 // call, automatically, so recognising a snake or a mushroom works with no signal. It is by far
