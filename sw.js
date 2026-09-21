@@ -1,7 +1,24 @@
-// Offline support: precache the app shell, then serve app CODE network-first (newest deploy
-// when online, last-cached copy when offline) and heavy/immutable assets cache-first. Bump
-// CACHE_VERSION per release. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON
-// basemap ARE precached so the offline map works from first launch with no connection.
+// Offline support: precache the app shell, then serve app CODE CACHE-FIRST out of a cache
+// named by CACHE_VERSION, and heavy/immutable assets cache-first too. Navigations are
+// stale-while-revalidate against the cached shell. The map engine (lib/maplibre-gl.*) and the
+// self-hosted GeoJSON basemap ARE precached so the offline map works from first launch with
+// no connection.
+//
+// ►► BUMPING CACHE_VERSION IS THE ONLY WAY ANY RETURNING USER EVER RECEIVES NEW CODE. ◄◄
+//
+// This header used to say code was served "network-first (newest deploy when online)". That
+// was false — read the sub-resource branch of the fetch handler below, which returns the
+// cached hit before it considers the network — and the falsehood was not harmless. It tells a
+// maintainer that an online user picks up the newest deploy on their own, which makes a
+// forgotten CACHE_VERSION bump look like a cache-eviction nicety instead of the difference
+// between shipping a fix and shipping nothing. That is exactly how a released translation fix
+// sat on the host, reachable by URL, while every existing traveller kept being served the
+// previous build out of the old cache with no error anywhere.
+//
+// scripts/check-cache-version.py exists to catch precisely that and fails when shipped code
+// changes without a bump. Run it before every deploy, and confirm the live worker afterwards:
+//   python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
+//   curl -s https://www.mekonging.com/sw.js | grep CACHE_VERSION
 //
 // TILE_CACHE holds the raster satellite-tile byte ranges from the external tile source so the
 // map works offline once an area has been downloaded/viewed. The Cache API refuses
