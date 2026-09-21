@@ -1211,10 +1211,27 @@ export async function initMap(containerEl, opts = {}) {
       // .setDOMContent(), never .setHTML(): stop names come from OpenStreetMap/a GTFS feed and
       // are untrusted external strings — h() sets textContent, so nothing is parsed as markup.
       const fare = busFareFor ? busFareFor(p.cc) : '';
+      // Why there is no departure time on this popup, stated ON the popup.
+      //
+      // No timetable is shown anywhere in this app, and that is a sourcing limit rather than an
+      // omission: the Bangkok feed's own schedule table is a 2023-04-21 snapshot whose upstream
+      // updater stopped, and no GTFS Realtime feed exists for these buses (scripts/
+      // build_bus_th.py documents both). A departure time drawn from that would look exact and
+      // be years wrong — which for someone actually standing at the stop is worse than no time
+      // at all, because they would wait on it.
+      //
+      // The build script's header says the popup tells the traveller this. It did not: the only
+      // sentence about what to do instead sat in the `!p.routes` branch, so Bangkok — the one
+      // network that HAS route numbers, and the one where a traveller is most likely to expect
+      // times beside them — showed route numbers and said nothing at all about timing. Every
+      // stop now carries the line, worded for what that stop actually knows.
+      const timing = p.routes
+        ? 'No published timetable — these routes run frequently through the day. The number board on the bus is what to match.'
+        : 'No route numbers or timetable for this area — match the number board on the bus, and ask the conductor for your stop.';
       const body = h('div', {}, [
         h('strong', {}, p.name || 'Bus stop'),
-        h('div', { class: 'muted', style: 'font-size:12px' },
-          p.routes ? `Routes: ${p.routes}` : 'Route numbers not available for this area — check the number board on the bus.'),
+        p.routes ? h('div', { class: 'muted', style: 'font-size:12px' }, `Routes: ${p.routes}`) : null,
+        h('div', { class: 'muted', style: 'font-size:12px' }, timing),
         fare ? h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, [
           h('strong', {}, '💵 Fare: '),
           h('span', {}, fare),
