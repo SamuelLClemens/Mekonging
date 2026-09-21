@@ -1152,11 +1152,17 @@ export function languageSheet() {
 export function locationFixCard(opts = {}) {
   const { onChange } = opts;
   const card = h('div', { class: 'card' });
-  card.append(h('h3', {}, '📍 Use your location?'));
-  card.append(h('p', { class: 'muted' },
-    'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
+  // Once the browser holds a granted permission, this card must stop asking for it. Putting
+  // "Use your location?" in front of a traveller who answered that question weeks ago is the
+  // behaviour that reads as the app having forgotten — so a granted permission gets a
+  // statement of what is already on, and only an unanswered one gets the question.
+  const granted = geoPermission() === 'granted';
+  card.append(h('h3', {}, granted ? '📍 Your location' : '📍 Use your location?'));
+  card.append(h('p', { class: 'muted' }, granted
+    ? 'Location is on, so the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'
+    : 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
   if (typeof navigator !== 'undefined' && navigator.geolocation) {
-    const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
+    const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : (granted ? '📍 Find me now' : '📍 Use my location'));
     lb.onclick = async () => {
       lb.textContent = 'Locating…'; lb.disabled = true;
       try { await refreshLocation(); lb.textContent = '📍 Location is on'; if (onChange) onChange(); }
@@ -6199,6 +6205,14 @@ function startLocationWatch() {
     );
   } catch { /* noop */ }
 }
+// Revoking location in browser settings has to actually stop the watch. Without this the
+// app holds a live subscription to a permission the traveller has just withdrawn, which is
+// both wrong and a battery cost they did not agree to.
+function stopLocationWatch() {
+  if (_geoWatchId == null) return;
+  try { navigator.geolocation.clearWatch(_geoWatchId); } catch { /* noop */ }
+  _geoWatchId = null;
+}
 // The journey trail (js/trail.js) — the traveller's own map of where they have been, built
 // without them having to add a single pin. Deliberately unlike logOpenLocation below: on by
 // default, at real precision, every fix rather than one a session, and never offered to any
@@ -6231,14 +6245,59 @@ function logOpenLocation() {
   } catch { /* a pin is never worth breaking a launch over */ }
 }
 
+// What the browser currently thinks, cached so any screen can ask without going async and
+// without touching the geolocation API (which is what triggers a prompt in the first place).
+// 'granted' | 'prompt' | 'denied' | 'unknown'.
+let _geoPerm = 'unknown';
+export function geoPermission() { return _geoPerm; }
+
 function initLocation() {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+
+  // The re-asking bug, and why the condition below is `=== 'granted'` rather than
+  // `!== 'denied'`.
+  //
+  // This used to start the watch for ANY state that was not an outright denial, which
+  // included 'prompt' — the state every traveller is in before they have answered. A
+  // watchPosition() call in that state makes the browser raise its permission dialog, so
+  // the app was raising it on load, every load, with no user gesture behind it and no
+  // explanation of what it was for.
+  //
+  // What made that permanent rather than a one-off is the third answer. A browser dialog
+  // can be granted, denied, or simply dismissed — and dismissing leaves the state at
+  // 'prompt', exactly where it started. So a traveller who swiped the dialog away, or
+  // tapped outside it, or was not looking at their phone when it appeared, got it again
+  // on the next launch, and the next, with nothing they could do from inside the app to
+  // stop it. That is the "asks me every single time" report.
+  //
+  // Now: a granted permission starts the watch silently, which is the whole point — answer
+  // once, never be asked again. An unanswered one waits for the traveller to tap one of
+  // the explicit "📍 Use my location" controls, so the dialog only ever appears attached to
+  // a request they just made and can understand. `onchange` picks the watch up the instant
+  // permission is granted from anywhere, so that tap is the last thing they ever need to do.
   const begin = () => { if (!store.profile.prefs.geoAsked) { store.profile.prefs.geoAsked = true; save(); } startLocationWatch(); };
   if (navigator.permissions && navigator.permissions.query) {
     navigator.permissions.query({ name: 'geolocation' })
-      .then((st) => { if (st.state !== 'denied') begin(); try { st.onchange = () => { if (st.state === 'granted') startLocationWatch(); }; } catch { /* noop */ } })
-      .catch(() => begin());
-  } else { begin(); }
+      .then((st) => {
+        _geoPerm = st.state;
+        if (st.state === 'granted') begin();
+        try {
+          st.onchange = () => {
+            _geoPerm = st.state;
+            // A fresh grant starts the watch; a revocation must stop it, or the app keeps
+            // consuming a permission the traveller has just taken away.
+            if (st.state === 'granted') { begin(); render(); }
+            else stopLocationWatch();
+          };
+        } catch { /* noop */ }
+      })
+      .catch(() => { _geoPerm = 'unknown'; if (getLastFix()) begin(); });
+  } else if (getLastFix()) {
+    // No Permissions API (older Safari). A cached fix is the only honest evidence that this
+    // traveller has granted location here before, so it is the only case that may start a
+    // watch unprompted. Everyone else waits for a tap rather than being asked on sight.
+    begin();
+  }
 }
 
 function sosScreen(cc) {
