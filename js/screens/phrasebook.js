@@ -36,7 +36,8 @@ import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../p
 import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, screenHint } from '../ui-widgets.js';
 import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
 import { audioPacksCard } from '../audio-packs.js';
-import { translate } from '../translate.js';
+import { translate, TranslateAborted } from '../translate.js';
+import { startTask, stopTask } from '../audio-control.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -1102,10 +1103,20 @@ function liveTranslateBox(code, label, locale, onChange) {
   const doTranslate = async (alsoSave) => {
     const text = input.value.trim();
     if (!text) return;
-    out.innerHTML = ''; out.append(h('p', { class: 'muted' }, 'Translating…'));
+    // A stop control next to the spinner, and the same one registered app-wide so the global
+    // pill stops it too. Long text is several requests with a retry behind each, so this is not
+    // theoretical: on a weak link "Translating…" can hold the screen for seconds with no way
+    // out. Cancelling is a decision the traveller already made — it reports nothing.
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const finish = startTask(() => { if (ctrl) ctrl.abort(); });
+    out.innerHTML = '';
+    out.append(h('p', { class: 'muted' }, [
+      'Translating… ',
+      h('button', { class: 'linklike', onclick: () => stopTask() }, '⏹ Stop'),
+    ]));
     try {
       const srcLang = transCode(srcSel.value);
-      const res = await translate(text, code, srcLang);
+      const res = await translate(text, code, srcLang, ctrl ? ctrl.signal : null);
       out.innerHTML = '';
       out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
       const able = canSay(locale);
@@ -1144,7 +1155,14 @@ function liveTranslateBox(code, label, locale, onChange) {
       }
       out.append(status);
       if (onChange) onChange();
-    } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, err.message)); }
+    } catch (err) {
+      out.innerHTML = '';
+      // A cancel is not a failure and needs no sentence explaining itself — the traveller
+      // stopped it on purpose and is looking at the box they will retype in.
+      if (!(err instanceof TranslateAborted) && err.name !== 'TranslateAborted') {
+        out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, err.message));
+      }
+    } finally { finish(); }
   };
   // No submit-on-Enter here: this is now a multi-line field, so Enter has to insert a
   // newline like it does in every other `.ta` textarea in the app (see promptAction's
