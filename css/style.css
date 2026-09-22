@@ -2631,7 +2631,7 @@ html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
 
 /* Quick-pin star on the identify browse cards (food / produce / wildlife). The card
    becomes a flex row: a transparent main button + the star, so both stay real buttons. */
-.id-cardrow { gap: 4px; }
+.id-cardrow { gap: 4px; flex-wrap: wrap; }
 .id-cardmain { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-3, 12px);
   text-align: left; background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; }
 .id-cardmain:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: var(--r-2, 10px); }
@@ -2639,6 +2639,19 @@ html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
   font-size: 20px; line-height: 1; padding: 6px 4px; color: var(--muted, #8A8F98); }
 .id-star.on { color: var(--sun, #E0A100); }
 .id-star:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+/* Plays a species' call from the browse row, beside the star. Only rendered for the 50
+   species that have a recording, so it is never a dead control; sized to the star's own
+   rhythm so the pair reads as one set of controls rather than a button next to a glyph. */
+.id-play { flex: 0 0 auto; align-self: center; background: none; border: none; cursor: pointer;
+  font-size: 18px; line-height: 1; padding: 6px 5px; color: var(--teal-deep, #0A615B); }
+.id-play.is-playing { color: var(--warn, #C2570F); }
+.id-play[disabled] { opacity: .5; cursor: default; }
+.id-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+/* The recordist credit, or why a call would not play. Takes its own row under the controls
+   (hence flex-wrap on .id-cardrow) and collapses while empty, so a card that has never been
+   played is exactly as tall as one with no call at all. */
+.id-callstatus { flex: 0 0 100%; font-size: 12px; line-height: 1.4; margin-top: 4px; color: var(--muted, #8A8F98); }
+.id-callstatus:empty { display: none; }
 
 /* My identifier: per-row controls, tag chips, note, and the inline edit panel. */
 .id-viewtoggle { margin: 4px 0 10px; }
