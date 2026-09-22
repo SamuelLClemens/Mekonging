@@ -16,6 +16,7 @@ Settings and quote in a bug report; a mismatch makes every report untrustworthy.
 Run before any deploy. Compares the working tree against a base ref (default: upstream of the
 current branch, else the previous commit).
 """
+import os
 import re
 import subprocess
 import sys
@@ -75,6 +76,19 @@ def main():
         problems.append(
             f'CACHE_VERSION ({now_cache!r}) and APP_VERSION ({now_app!r}) disagree — Settings '
             'would report a build the cache is not serving.')
+
+    # The version strings are only half the bookkeeping now. sw.js keeps its cache across
+    # releases and deletes only the entries whose hash moved in its generated MANIFEST, so a
+    # stale manifest means a changed file is served from cache forever — the same silent
+    # failure this script was written to catch, one level down. Run as part of THIS check
+    # rather than as its own step, because a separate step is a step that gets skipped.
+    print()
+    sys.stdout.flush()   # the child writes straight to the terminal; keep the order readable
+    manifest_rc = subprocess.run(
+        [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build-sw-manifest.py')],
+    ).returncode
+    if manifest_rc != 0:
+        problems.append('sw.js MANIFEST is stale — see the file list above.')
 
     if problems:
         print('\nFAIL')

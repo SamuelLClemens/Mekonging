@@ -660,7 +660,9 @@ export async function resetAndReload() {
   } catch { /* no worker, or unsupported */ }
   try {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => /^mk-v/.test(k)).map((k) => caches.delete(k)));
+    // mk-shell is the app-code cache (sw.js SHELL_CACHE); mk-v* are the release-scoped shells
+    // the old design left behind. Both hold code and both must go for this to be a recovery.
+    await Promise.all(keys.filter((k) => k === 'mk-shell' || /^mk-v/.test(k)).map((k) => caches.delete(k)));
   } catch { /* storage unavailable */ }
   location.reload();
 }
@@ -758,7 +760,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.578.0';
+export const APP_VERSION = 'mk-v0.579.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
