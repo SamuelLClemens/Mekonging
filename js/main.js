@@ -373,6 +373,12 @@ const ROUTE_DATA = {
   schedules: ['schedules'],
   setcity: ['accessibility', 'scams', 'visa'],
   settings: ['accessibility', 'phrasebooks'],
+  // #nature and #danger join #sounds and #species here: their browse cards now play a call
+  // in place, and SOUNDS ungated would resolve to the same empty object an unknown id does —
+  // the silent failure this map exists to prevent (the row would quietly fall through to the
+  // online lookup and fail offline, on a recording that is bundled on the device).
+  danger: ['sounds'],
+  nature: ['sounds'],
   sounds: ['sounds'],
   species: ['sounds'],
   // #trip joins #plans here for the same reason #places did above: tripScreen used to live in
@@ -760,7 +766,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.579.0';
+export const APP_VERSION = 'mk-v0.580.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -839,7 +845,7 @@ const SECTION_ACCENT = {
   map: '#1FA98A', addpin: '#1FA98A',
   // food & nature
   food: '#E0663A', dish: '#E0663A', streetfood: '#D2542E', produce: '#CE8A3A',
-  nature: '#4E9A52', species: '#4E9A52', sounds: '#3E9A7A', pools: '#2E8FB0',
+  nature: '#4E9A52', species: '#4E9A52', sounds: '#4E9A52', pools: '#2E8FB0',
   // talk
   phrasebook: '#7A5FB0', dictionary: '#8A5FA8', signtranslate: '#7A5FB0',
   // getting around & practicalities
@@ -1024,7 +1030,7 @@ export function topbar(title, backHash) {
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     // Find anything, from anywhere — a magnifying glass rather than the full-width
     // "🔎 Search everything" button that used to sit partway down Home. Search is the
-    // fastest route to any of the 56 features, and it was reachable only from one screen,
+    // fastest route to any feature in the taxonomy, and it was reachable only from one screen,
     // below the fold, in two of three trip phases.
     //
     // Settings no longer costs this row a seventh slot — it moved into the one the
@@ -4977,25 +4983,40 @@ function idMovePin(key, dir, groupKeys) {
 }
 // A compact save/remove star for the identify browse lists — quick-pin without opening
 // the detail page. Stops propagation so it never triggers the row's navigation.
+// The quick-save star on an identify browse card. It repaints ITSELF rather than re-running
+// the router, which is what it used to do. That matters now the species rows carry a ▶ next
+// to this star: a full re-render throws away the button holding a playing call's Stop while
+// the audio carries on, leaving the traveller no way to stop it. Repainting in place also
+// keeps the list where it was and leaves the search box focused — both of which the
+// re-render lost on every tap. Nothing on these screens shows a saved COUNT; the one place
+// that does (the "My identifier" nav row, via idPinCount) is a different screen and reads it
+// fresh when it renders.
 export function idPinStar(type, id) {
-  const pinned = isIdPinned(type, id);
-  return h('button', {
-    class: 'id-star' + (pinned ? ' on' : ''),
-    'aria-pressed': pinned ? 'true' : 'false',
-    'aria-label': pinned ? 'Saved to my identifier — tap to remove' : 'Save to my identifier',
-    title: pinned ? 'Saved — tap to remove' : 'Save to my identifier',
-    onclick: (e) => { e.stopPropagation(); toggleIdPin(type, id); render(); },
-  }, pinned ? '★' : '☆');
+  const btn = h('button', { class: 'id-star', onclick: (e) => { e.stopPropagation(); toggleIdPin(type, id); paint(); } });
+  function paint() {
+    const pinned = isIdPinned(type, id);
+    btn.classList.toggle('on', pinned);
+    btn.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+    btn.setAttribute('aria-label', pinned ? 'Saved to my identifier — tap to remove' : 'Save to my identifier');
+    btn.title = pinned ? 'Saved — tap to remove' : 'Save to my identifier';
+    btn.textContent = pinned ? '★' : '☆';
+  }
+  paint();
+  return btn;
 }
-// A full-width save/remove toggle for an identify detail screen. Re-renders the current
-// screen on tap so the label flips immediately and the count stays honest.
+// A full-width save/remove toggle for an identify detail screen. Repaints in place for the
+// same reason the star above does — the species screen's own call control can be mid-playback
+// when this is tapped.
 export function idPinButton(type, id) {
-  const pinned = isIdPinned(type, id);
-  return h('button', {
-    class: 'btn block id-pin-btn' + (pinned ? ' on' : ''),
-    'aria-pressed': pinned ? 'true' : 'false',
-    onclick: () => { toggleIdPin(type, id); render(); },
-  }, pinned ? '★ Saved to your identifier — tap to remove' : '☆ Save to my identifier');
+  const btn = h('button', { class: 'btn block id-pin-btn', onclick: () => { toggleIdPin(type, id); paint(); } });
+  function paint() {
+    const pinned = isIdPinned(type, id);
+    btn.classList.toggle('on', pinned);
+    btn.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+    btn.textContent = pinned ? '★ Saved to your identifier — tap to remove' : '☆ Save to my identifier';
+  }
+  paint();
+  return btn;
 }
 
 
@@ -5350,6 +5371,13 @@ function eventScreen(id) {
 // ---- NATURE FIELD GUIDE -----------------------------------------------------
 let natureQuery = '';
 let natureGroup = '';
+// "Sounds around you" used to be a screen of its own — the same search, the same country
+// picker and the same group chips as this one, over the 50 species that carry a recording.
+// It is now this filter. A traveller who HEARD something and one who SAW something land in
+// the same list, and either way the row they find already carries its ▶ and its ☆, so
+// there is no second place to go to hear it or to keep it. #sounds still resolves (shared
+// links, saved pins, the old Sounds tile) and opens the guide with this already on.
+let natureCallsOnly = false;
 // Which country the identify screens are scoped to (direct request: "identify should be by
 // country"). Defaults to wherever the traveller is — see idCountry() — and '*' means all four.
 // Module-level so the choice survives moving between #nature, #danger and #sounds within one
@@ -5405,20 +5433,45 @@ function inatSoundUrl(s) {
 // call resets whichever OTHER button was showing Stop — startPlayback() silently supersedes
 // the old audio without an 'ended'/'error' event of its own, so nothing else would revert it.
 let activeCallBtn = null;
+// …and the status line that belongs to it. Only matters now the controls live in a LIST: the
+// ♪ credit a superseded row is still showing would otherwise read as "this one is playing
+// too", with two or three rows claiming it at once. A call that ends on its own keeps its
+// credit — that is the attribution for what you just heard.
+let activeCallStatus = null;
+// Put a call button back to its idle look. Three separate paths have to do this — the same
+// button tapped again, a DIFFERENT button superseding this one, and playback ending — and
+// they used to each spell it out, so the visible state and the accessible state could drift
+// apart. One helper keeps them in step.
+function idleCallBtn(b) {
+  if (!b) return;
+  b.disabled = false;
+  b.textContent = b.dataset.idleLabel || b.textContent;
+  b.classList.remove('is-playing');
+  b.setAttribute('aria-pressed', 'false');
+  delete b.dataset.playing;
+}
 async function playCall(s, btn, statusEl) {
   // Tapping the same control again while its own call is playing stops it right there — the
   // button that started the sound is the one that can stop it, rather than a floating app-wide
   // pill (see js/screens/phrasebook.js's wireSpeak for the same pattern on the Talk screen).
-  if (btn.dataset.playing === '1') { stopPlayback(); btn.disabled = false; btn.textContent = btn.dataset.idleLabel; btn.classList.remove('is-playing'); delete btn.dataset.playing; activeCallBtn = null; return; }
+  if (btn.dataset.playing === '1') { stopPlayback(); idleCallBtn(btn); activeCallBtn = null; activeCallStatus = null; return; }
   if (activeCallBtn && activeCallBtn !== btn) {
-    activeCallBtn.disabled = false; activeCallBtn.textContent = activeCallBtn.dataset.idleLabel; activeCallBtn.classList.remove('is-playing'); delete activeCallBtn.dataset.playing;
+    idleCallBtn(activeCallBtn);
+    if (activeCallStatus && activeCallStatus !== statusEl) activeCallStatus.textContent = '';
   }
   const bundled = s && s.id && SOUNDS[s.id];
   btn.dataset.idleLabel = btn.textContent;
-  const resetBtn = () => { btn.disabled = false; btn.textContent = btn.dataset.idleLabel; btn.classList.remove('is-playing'); delete btn.dataset.playing; if (activeCallBtn === btn) activeCallBtn = null; };
-  const markPlaying = () => { btn.disabled = false; btn.textContent = '⏹ Stop'; btn.classList.add('is-playing'); btn.dataset.playing = '1'; activeCallBtn = btn; };
+  // Two callers now share this: a bare ▶ sitting in a browse row beside the star, and the
+  // detail screen's full-width labelled button. Each carries its own stop/busy wording rather
+  // than this hard-coding one string that has to fit both. On the icon button the visible
+  // label is the only thing that changes between states, so aria-pressed carries that state
+  // for a screen reader, which a text swap alone never announces.
+  const stopLabel = btn.dataset.stopLabel || '⏹ Stop';
+  const busyLabel = btn.dataset.busyLabel || 'Loading call…';
+  const resetBtn = () => { idleCallBtn(btn); if (activeCallBtn === btn) { activeCallBtn = null; activeCallStatus = null; } };
+  const markPlaying = () => { btn.disabled = false; btn.textContent = stopLabel; btn.classList.add('is-playing'); btn.setAttribute('aria-pressed', 'true'); btn.dataset.playing = '1'; activeCallBtn = btn; activeCallStatus = statusEl; };
   if (bundled) {
-    btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+    btn.disabled = true; btn.textContent = busyLabel; statusEl.textContent = '';
     try {
       const audio = new Audio(bundled.src);
       // Shared registry (see js/audio-control.js): stops any TTS speech that's playing, and
@@ -5437,7 +5490,7 @@ async function playCall(s, btn, statusEl) {
     return;
   }
   if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
-  btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+  btn.disabled = true; btn.textContent = busyLabel; statusEl.textContent = '';
   try {
     const res = await fetchTimeout(inatSoundUrl(s), {}, 15000);
     const d = await res.json();
@@ -5463,73 +5516,13 @@ function callControl(s, label) {
   return h('div', {}, [btn, status]);
 }
 
-function soundsScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Sounds nearby', '#nature'));
-  wrap.append(screenHint('Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
-
-  let group = '';
-  let query = '';
-
-  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search sounds', placeholder: 'Search by name…',
-    oninput: debounce((e) => { query = e.target.value; renderList(); }, 120) });
-  wrap.append(search);
-  wrap.append(idCountryPicker(() => { renderChips(); renderList(); }));
-
-  // Chips live in their own wrapper, rebuilt by renderChips() rather than computed once,
-  // so the group counts pick up nature.js once it lands (see loadNature() near the top of
-  // this file) instead of freezing at the empty pre-load default.
-  const chipsWrap = h('div', {});
-  wrap.append(chipsWrap);
-  const listEl = h('div', {});
-  wrap.append(listEl);
-
-  function renderChips() {
-    // Every callable species IN SCOPE, recomputed each call so the group chips show live
-    // counts for the chosen country rather than for the whole region.
-    const callable = allSpecies({ cc: idCountryFilter() }).filter(hasCall);
-    const GROUPS = [
-      { id: '', label: 'All', emoji: '✶' },
-      { id: 'bird', label: 'Birds', emoji: '🐦' },
-      { id: 'mammal', label: 'Mammals', emoji: '🐘' },
-      { id: 'insect', label: 'Insects', emoji: '🦗' },
-      { id: 'reptile', label: 'Frogs & geckos', emoji: '🐸' },
-    ].map((g) => ({ ...g, n: g.id ? callable.filter((s) => s.group === g.id).length : callable.length }))
-      .filter((g) => g.n > 0);
-    chipsWrap.innerHTML = '';
-    const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
-      h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
-        onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
-        `${g.emoji} ${g.label} (${g.n})`)));
-    chipsWrap.append(chips);
-  }
-  function renderList() {
-    listEl.innerHTML = '';
-    if (!isNatureLoaded()) { listEl.append(h('p', { class: 'empty' }, 'Loading the sounds library…')); return; }
-    const results = allSpecies({ group: group || undefined, q: query.trim() || undefined, cc: idCountryFilter() }).filter(hasCall);
-    if (!results.length) { listEl.append(h('p', { class: 'empty' }, query.trim() ? 'No calls match your search.' : 'No calls in this group yet.')); return; }
-    results.forEach((s) => {
-      const status = h('div', { class: 'muted', style: 'font-size:13px' });
-      const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
-      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap: var(--sp-3)' }, [
-        recogThumb(s, s.emoji || '🔎'),
-        h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
-          h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
-        ]),
-        play,
-      ]));
-    });
-  }
-  renderChips();
-  renderList();
-  if (!isNatureLoaded()) { loadNature().then(() => { renderChips(); renderList(); }, () => { renderChips(); renderList(); }); }
-  mount(wrap, '#home');
-}
-
-function natureScreen() {
+function natureScreen(open) {
+  // #sounds resolves here with the filter already on — see the natureCallsOnly note above.
+  if (open === 'calls') natureCallsOnly = true;
+  const viaSounds = open === 'calls';
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify nature', '#home'));
-  wrap.append(screenHint('Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
+  wrap.append(screenHint('Browse or search the region’s wildlife and plants. Tap a name for field marks and a photo search, ▶ to hear its call — the recordings are bundled, so they play offline — and ☆ to keep it in your identifier. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search by name…', value: natureQuery,
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
@@ -5538,7 +5531,7 @@ function natureScreen() {
   // region still shows in every country; what drops out is what is not there — the reef and
   // open-water species for a traveller in landlocked Laos, and the dozen range-restricted
   // animals. "All four countries" is one tap away for anyone planning rather than looking.
-  wrap.append(idCountryPicker(() => { renderCount(); renderList(); }));
+  wrap.append(idCountryPicker(() => { renderChips(); renderCallChip(); renderCount(); renderList(); }));
   const countEl = h('p', { class: 'tiny muted id-country-count' }, '');
   wrap.append(countEl);
 
@@ -5547,7 +5540,11 @@ function natureScreen() {
   // top of this file) instead of freezing at the empty pre-load default (just "All").
   const chipsWrap = h('div', {});
   wrap.append(chipsWrap);
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin: var(--sp-1h) 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
+  // The call filter is a SECOND axis: it cuts across every group, so it is its own toggle
+  // rather than a ninth chip in the single-select group row above, which would have made
+  // "Birds" and "Has a call" look mutually exclusive when they are not.
+  const callWrap = h('div', {});
+  wrap.append(callWrap);
 
   wrap.append(h('div', { class: 'card' }, [
     h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Have a photo? Identify it online (needs internet):'),
@@ -5559,8 +5556,18 @@ function natureScreen() {
 
   const listEl = h('div', {});
   wrap.append(listEl);
+  // Everything in the chosen country, before the group and search filters — what both chip
+  // rows count against, so their numbers agree with each other.
+  function scoped() { return allSpecies({ cc: idCountryFilter() }); }
   function renderChips() {
-    const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS);
+    // With the call filter on, a group with nothing audible in this country is dropped rather
+    // than offered and then found empty — exactly what the old Sounds screen did with its own
+    // chips. If the group the traveller was on is one of those, fall back to All rather than
+    // render a list that cannot have anything in it.
+    const audible = natureCallsOnly ? scoped().filter(hasCall) : null;
+    const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS)
+      .filter((g) => !g.id || !audible || audible.some((s) => s.group === g.id));
+    if (natureGroup && !groups.some((g) => g.id === natureGroup)) natureGroup = '';
     chipsWrap.innerHTML = '';
     const groupChips = h('div', { class: 'chips' }, groups.map((g) =>
       h('button', { class: 'chip', 'aria-pressed': natureGroup === g.id ? 'true' : 'false', dataset: { g: g.id },
@@ -5568,41 +5575,74 @@ function natureScreen() {
         `${g.emoji} ${g.label}`)));
     chipsWrap.append(groupChips);
   }
+  // The whole of the old Sounds screen, as one toggle. Carries the live count so the traveller
+  // knows what they are narrowing to before they tap, which is what that screen's own chip
+  // counts were for.
+  function renderCallChip() {
+    const n = scoped().filter(hasCall).length;
+    callWrap.innerHTML = '';
+    if (!n) { natureCallsOnly = false; return; }
+    const chip = h('button', { class: 'chip', 'aria-pressed': natureCallsOnly ? 'true' : 'false',
+      onclick: () => {
+        natureCallsOnly = !natureCallsOnly;
+        // Arrived on #sounds and turned the filter off: leave that route, so the hash keeps
+        // describing what is on screen and a later re-render cannot put the filter back on.
+        if (!natureCallsOnly && viaSounds) { go('#nature'); return; }
+        renderChips(); renderCallChip(); renderCount(); renderList();
+      } }, `🔊 Has a call (${n})`);
+    callWrap.append(h('div', { class: 'chips' }, [chip]));
+  }
   // Direct node reference (countEl), never a lookup through wrap — mount()'s automatic
   // section folding re-parents these children and a querySelector from here would come back
   // null on the second call.
   function renderCount() {
+    // The line has to describe what is actually being counted, or it contradicts the filter
+    // sitting right above it: 216 records, or the 50 of them you can hear.
+    const noun = natureCallsOnly ? 'species with a call' : 'records';
+    const keep = (arr) => (natureCallsOnly ? arr.filter(hasCall) : arr);
     const cc = idCountryFilter();
-    const total = allSpecies().length;
+    const total = keep(allSpecies()).length;
     if (!total) { countEl.textContent = ''; return; }
-    if (!cc) { countEl.textContent = `All ${total} records, across all four countries.`; return; }
-    const here = allSpecies({ cc }).length;
+    if (!cc) { countEl.textContent = `All ${total} ${noun}, across all four countries.`; return; }
+    const here = keep(allSpecies({ cc })).length;
     const c = getCountry(cc);
     countEl.textContent = here === total
-      ? `All ${total} records occur in ${c ? c.name : 'this country'}.`
-      : `${here} of ${total} records occur in ${c ? c.name : 'this country'} — the other ${total - here} are elsewhere in the region.`;
+      ? `All ${total} ${noun} occur in ${c ? c.name : 'this country'}.`
+      : `${here} of ${total} ${noun} occur in ${c ? c.name : 'this country'} — the other ${total - here} are elsewhere in the region.`;
   }
   function renderList() {
     listEl.innerHTML = '';
-    const results = allSpecies({ q: natureQuery.trim(), group: natureGroup, cc: idCountryFilter() });
+    let results = allSpecies({ q: natureQuery.trim(), group: natureGroup, cc: idCountryFilter() });
+    if (natureCallsOnly) results = results.filter(hasCall);
     if (!results.length) {
       listEl.append(h('p', { class: 'empty' }, allSpecies().length === 0
         ? 'The nature guide is being prepared — reconnect once to download it.'
-        : 'No species match here. Try a different search or group, or switch to all four countries above.'));
+        : natureCallsOnly
+          ? 'Nothing that matches here has a recorded call. Turn off “Has a call” to see the rest.'
+          : 'No species match here. Try a different search or group, or switch to all four countries above.'));
       return;
     }
     results.forEach((s) => listEl.append(speciesCard(s)));
   }
   renderChips();
+  renderCallChip();
   renderCount();
   renderList();
   if (!isNatureLoaded()) {
-    const redraw = () => { renderChips(); renderCount(); renderList(); };
+    const redraw = () => { renderChips(); renderCallChip(); renderCount(); renderList(); };
     loadNature().then(redraw, redraw);
   }
   mount(wrap, '#home');
 }
 
+// One row in the identify browse lists (#nature and #danger): the species, then — only when
+// there is a recording for it — a ▶ that plays its call without leaving the list, then the
+// ☆ that saves it to My identifier. Left to right in the order the question is actually
+// asked: what is it, what does it sound like, keep it. A species with no recording shows NO
+// play button rather than a disabled one, so every ▶ on screen is one that plays — and
+// since all 50 call-carrying species have a bundled clip, it plays offline too. The status
+// line (recordist credit, or why it could not play) takes its own row below and collapses
+// away while empty, so a silent card is exactly as tall as it was before.
 function speciesCard(s) {
   const g = NATURE_GROUPS.find((x) => x.id === s.group);
   const main = h('button', { class: 'id-cardmain', onclick: () => go(`#species-${s.id}`) }, [
@@ -5610,7 +5650,23 @@ function speciesCard(s) {
     h('span', { class: 'grow' }, [h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || '')]),
     s.dangerous ? h('span', { class: 'tier high' }, 'Caution') : null,
   ]);
-  return h('div', { class: 'card species-card id-cardrow' }, [main, idPinStar('species', s.id)]);
+  const row = [main];
+  let status = null;
+  if (hasCall(s)) {
+    status = h('div', { class: 'id-callstatus' });
+    const play = h('button', {
+      class: 'id-play',
+      'aria-pressed': 'false',
+      'aria-label': `Play the ${s.commonName} call`,
+      title: 'Hear its call',
+      dataset: { stopLabel: '⏹', busyLabel: '…' },
+      onclick: (e) => { e.stopPropagation(); playCall(s, play, status); },
+    }, '▶');
+    row.push(play);
+  }
+  row.push(idPinStar('species', s.id));
+  if (status) row.push(status);
+  return h('div', { class: 'card species-card id-cardrow' }, row);
 }
 
 function speciesScreen(id) {
@@ -5737,8 +5793,7 @@ function myIdentifierScreen() {
   const exploreTiles = [
     { ic: ICON.bowl, t: 'Food', d: 'Street dishes', hash: '#food' },
     { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-    { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
-    { ic: ICON.volume, t: 'Sounds', d: 'Animal calls', hash: '#sounds' },
+    { ic: ICON.leaf, t: 'Nature', d: 'Birds, plants, calls', hash: '#nature' },
     { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
   ];
   if (!list.length) {
@@ -6974,7 +7029,10 @@ export function render() {
       // bottles is asking a different question from one holding a mango.
       case 'pantry': { const m = screenMod('produce'); return m.produceScreen('pantry'); }
       case 'nature': return natureScreen();
-      case 'sounds': return soundsScreen();
+      // Kept as an alias, not a screen: it opens the nature guide with the call filter on, so
+      // every link and pin that already points at #sounds still lands somewhere that answers
+      // the same question.
+      case 'sounds': return natureScreen('calls');
       case 'species': return speciesScreen(arg);
       case 'identified': return myIdentifierScreen();
       case 'search': return screenMod('search').searchScreen();
