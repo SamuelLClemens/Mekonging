@@ -101,7 +101,7 @@ import {
   online, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
-import { startPlayback, onPlaybackChange, stopPlayback, stopEverything, activeKind } from './audio-control.js';
+import { startPlayback, stopPlayback } from './audio-control.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
@@ -541,37 +541,11 @@ function showUpdateToast() {
   document.body.append(toast);
 }
 
-// A small, persistent "stop audio" pill — the ONE place to silence sound anywhere in the app,
-// whether it is a phrasebook/translate speaker (device voice or online, js/tts.js) or an
-// animal-call recording (playCall above). Neither playback system previously offered any way
-// to stop once started (the online-TTS path could not be stopped at all, even in code), which
-// matters for a traveller who tapped by accident or is somewhere they cannot let it play out.
-// Shown only while js/audio-control.js reports something playing; both play systems register
-// with it, so this one pill covers every sound the app makes without touching each speaker
-// button individually.
-// It now covers live translation too, which is not a sound but is the same problem wearing a
-// different hat: work the app has started, that the traveller cannot call off, that can run for
-// seconds on a weak link. One pill for both, rather than a second stop control appearing beside
-// the first — the label says which is running.
-let audioStopToast = null;
-let audioStopLabel = null;
-const STOP_LABEL = { sound: '🔊 Playing…', task: '🌐 Translating…' };
-function showAudioStopToast() {
-  const text = STOP_LABEL[activeKind()] || STOP_LABEL.sound;
-  // Already up: only the label can have changed (a phrase started speaking while a translation
-  // was still in flight, or the reverse), so retarget it rather than stacking a second pill.
-  if (audioStopToast) { if (audioStopLabel) audioStopLabel.textContent = text; return; }
-  audioStopLabel = h('span', { class: 'audio-stop-label' }, text);
-  audioStopToast = h('div', { class: 'update-toast', role: 'status' }, [
-    audioStopLabel,
-    h('button', { class: 'update-toast-btn', onclick: () => stopEverything() }, '⏹ Stop'),
-  ]);
-  document.body.append(audioStopToast);
-}
-function hideAudioStopToast() {
-  if (audioStopToast) { audioStopToast.remove(); audioStopToast = null; audioStopLabel = null; }
-}
-onPlaybackChange((active) => { if (active) showAudioStopToast(); else hideAudioStopToast(); });
+// Sound and live-translation stop controls live on the button that started them (see
+// playCall() below and js/screens/phrasebook.js's wireSpeak) rather than in a floating
+// app-wide pill: a traveller who tapped by accident is already looking at the control that
+// can undo it. js/audio-control.js is still the shared "only one thing plays at a time"
+// registry those buttons coordinate through.
 
 // A reusable, non-blocking "undo" toast for REVERSIBLE actions (mark done / not interested):
 // the tap acts immediately and an accidental tap is recoverable, so a repeated triage gesture
@@ -5424,25 +5398,39 @@ function inatSoundUrl(s) {
   return `https://api.inaturalist.org/v1/observations?taxon_name=${encodeURIComponent(xcQuery(s))}`
     + '&sounds=true&order_by=votes&per_page=12&license=cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc0';
 }
+// Only one call button (of possibly many on the Sounds list) is ever mid-toggle, since only
+// one thing plays at a time app-wide (js/audio-control.js). Tracked here so starting a NEW
+// call resets whichever OTHER button was showing Stop — startPlayback() silently supersedes
+// the old audio without an 'ended'/'error' event of its own, so nothing else would revert it.
+let activeCallBtn = null;
 async function playCall(s, btn, statusEl) {
+  // Tapping the same control again while its own call is playing stops it right there — the
+  // button that started the sound is the one that can stop it, rather than a floating app-wide
+  // pill (see js/screens/phrasebook.js's wireSpeak for the same pattern on the Talk screen).
+  if (btn.dataset.playing === '1') { stopPlayback(); btn.disabled = false; btn.textContent = btn.dataset.idleLabel; btn.classList.remove('is-playing'); delete btn.dataset.playing; activeCallBtn = null; return; }
+  if (activeCallBtn && activeCallBtn !== btn) {
+    activeCallBtn.disabled = false; activeCallBtn.textContent = activeCallBtn.dataset.idleLabel; activeCallBtn.classList.remove('is-playing'); delete activeCallBtn.dataset.playing;
+  }
   const bundled = s && s.id && SOUNDS[s.id];
-  const original = btn.textContent;
+  btn.dataset.idleLabel = btn.textContent;
+  const resetBtn = () => { btn.disabled = false; btn.textContent = btn.dataset.idleLabel; btn.classList.remove('is-playing'); delete btn.dataset.playing; if (activeCallBtn === btn) activeCallBtn = null; };
+  const markPlaying = () => { btn.disabled = false; btn.textContent = '⏹ Stop'; btn.classList.add('is-playing'); btn.dataset.playing = '1'; activeCallBtn = btn; };
   if (bundled) {
     btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
     try {
       const audio = new Audio(bundled.src);
       // Shared registry (see js/audio-control.js): stops any TTS speech that's playing, and
-      // lets the global stop button silence this call too. Also stops a previous call's own
-      // audio, replacing the old "one shared element" pause-before-reassign approach.
+      // stops a previous call's own audio, replacing the old "one shared element"
+      // pause-before-reassign approach.
       const done = startPlayback(() => { try { audio.pause(); } catch { /* ignore */ } });
-      audio.addEventListener('ended', done);
-      audio.addEventListener('error', () => { done(); statusEl.textContent = 'Could not play the recording here.'; });
+      audio.addEventListener('ended', () => { done(); resetBtn(); });
+      audio.addEventListener('error', () => { done(); resetBtn(); statusEl.textContent = 'Could not play the recording here.'; });
       await audio.play();
+      markPlaying();
       statusEl.textContent = `♪ ${s.commonName} — ${bundled.credit}`;
     } catch (e) {
+      resetBtn();
       statusEl.textContent = 'Could not play the recording here.';
-    } finally {
-      btn.disabled = false; btn.textContent = original;
     }
     return;
   }
@@ -5456,15 +5444,15 @@ async function playCall(s, btn, statusEl) {
     if (!snd) throw new Error('no recording');
     const audio = new Audio(snd.file_url);
     const done = startPlayback(() => { try { audio.pause(); } catch { /* ignore */ } });
-    audio.addEventListener('ended', done);
-    audio.addEventListener('error', () => { done(); statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
+    audio.addEventListener('ended', () => { done(); resetBtn(); });
+    audio.addEventListener('error', () => { done(); resetBtn(); statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
     await audio.play();
+    markPlaying();
     const credit = (snd.attribution || '').replace(/^\(c\)\s*/, '').replace(/,\s*some rights reserved.*$/i, '') || 'an iNaturalist contributor';
     statusEl.textContent = `♪ ${s.commonName} — ${credit} · via iNaturalist (CC)`;
   } catch (e) {
+    resetBtn();
     statusEl.textContent = 'No recording is available for this one yet.';
-  } finally {
-    btn.disabled = false; btn.textContent = original;
   }
 }
 function callControl(s, label) {
