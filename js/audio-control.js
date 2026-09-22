@@ -4,14 +4,17 @@
 // path in particular has no pause/cancel control of its own), so a traveller who tapped a
 // speaker by accident, or needed to go quiet immediately, had no way to do so except waiting it
 // out. This module gives every playback call site a single place to register how to stop
-// itself, and gives the UI a single place to ask "is anything playing" and "stop it".
+// itself, and gives the UI a single place to ask "is anything playing" and "stop it" — each
+// button that starts a sound or a translation wires its OWN stop control through here (see
+// wireSpeak() in js/screens/phrasebook.js and playCall() in js/main.js) rather than a shared
+// floating control, so onPlaybackChange below is what lets a button revert itself the moment
+// its own playback ends, is superseded, or is stopped elsewhere.
 
 // Cancellable NON-SOUND work registers here too, for the same reason sound does: a live
 // translation is a thing the app is doing to the traveller's phone that they cannot call off.
 // A long phrase is now split into several requests, each with a retry, so "Translating…" can
 // sit there for seconds on a weak link with no way out but waiting — the exact complaint that
-// created this module for audio. One pill stops everything the app is doing out loud or over
-// the network, rather than a second stop control appearing beside the first.
+// created this module for audio.
 let stopFn = null;
 let taskFn = null;
 const listeners = new Set();
@@ -19,14 +22,6 @@ const listeners = new Set();
 function notify() {
   const active = !!stopFn || !!taskFn;
   listeners.forEach((cb) => { try { cb(active); } catch { /* ignore */ } });
-}
-
-// What the pill should call itself: sound wins the label when both are running, because it is
-// the one the people around the traveller can hear.
-export function activeKind() {
-  if (stopFn) return 'sound';
-  if (taskFn) return 'task';
-  return null;
 }
 
 // Register cancellable in-flight work (currently: a live translation). Unlike startPlayback
@@ -45,12 +40,6 @@ export function stopTask() {
   taskFn = null;
   notify();
   try { fn(); } catch { /* ignore */ }
-}
-
-// The one call every "stop" control should make: silences sound and cancels in-flight work.
-export function stopEverything() {
-  stopPlayback();
-  stopTask();
 }
 
 // Call when playback starts. Stops whatever was previously registered (only one thing plays

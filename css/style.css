@@ -676,6 +676,11 @@ html[data-theme="dark"] .card h3 { color: var(--teal); }
 .btn.ghost { background: none; color: var(--teal-deep); border: 2px solid var(--teal); box-shadow: none; }
 html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .btn.ghost:hover { background: rgba(22,163,154,0.1); }
+/* A play control (call recording, phrase speaker, Hear-it) toggled into its own Stop while
+   playing — see playCall() in js/main.js and wireSpeak() in js/screens/phrasebook.js. Distinct
+   from the ready-to-play look so the same button reads as a different action, not a state of
+   the sound. */
+.btn.ghost.is-playing { background: var(--warn); color: #fff; border-color: transparent; }
 .btn.block { display: flex; width: 100%; justify-content: center; }
 
 /* --- home hero: psychedelic 60s/70s SE-Asia sunset --- */
@@ -1086,6 +1091,10 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 }
 .speak:hover { filter: brightness(1.08); }
 .speak[disabled] { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+/* A speaker (or the Hear-it button) toggled into its own Stop control while playing — see
+   js/screens/phrasebook.js's wireSpeak. Distinct from the ready-to-play gradient so the same
+   button reads as a different action, not a state of the phrase. */
+.speak.is-playing, .btn.is-playing { background: var(--warn); }
 .phrase-ctrls { flex: none; display: flex; gap: var(--sp-1); align-items: center; }
 .phrase .grow.tappable { cursor: pointer; border-radius: var(--r-2); }
 .phrase .grow.tappable:hover { background: rgba(0,0,0,0.03); }

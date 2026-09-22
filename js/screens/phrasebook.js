@@ -37,7 +37,7 @@ import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode,
 import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { translate, TranslateAborted } from '../translate.js';
-import { startTask, stopTask } from '../audio-control.js';
+import { startTask, stopTask, stopPlayback, onPlaybackChange } from '../audio-control.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -62,6 +62,34 @@ export { scriptLang, phraseSlug };
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
+
+// One 🔊 → ⏹ toggle shared by every phrase-speaker button on this screen (lesson rows, phrase
+// rows, My translations, and the Hear-it button after a live translation). The button that
+// started a phrase is the button that stops it — tapping it again calls stopPlayback() — rather
+// than routing through the app-wide floating stop pill, which put the control somewhere other
+// than the sound it silenced. Only one phrase plays at a time (js/audio-control.js), so only
+// one button is ever mid-toggle; the shared listener below reverts it the moment that changes,
+// whether the phrase finished, was superseded by another tap, or was stopped right here.
+let activeSpeakBtn = null;
+function idleSpeakBtn(btn) { btn.textContent = btn.dataset.idleLabel; btn.title = 'Hear it'; btn.classList.remove('is-playing'); }
+onPlaybackChange((active) => { if (!active && activeSpeakBtn) { idleSpeakBtn(activeSpeakBtn); activeSpeakBtn = null; } });
+function wireSpeak(btn, text, locale, { idleLabel = btn.textContent, playingLabel = '⏹', failLabel = '🔇' } = {}) {
+  btn.dataset.idleLabel = idleLabel;
+  const run = async () => {
+    if (activeSpeakBtn === btn) { stopPlayback(); return; }
+    if (activeSpeakBtn) idleSpeakBtn(activeSpeakBtn);
+    activeSpeakBtn = btn;
+    btn.textContent = playingLabel; btn.title = 'Stop'; btn.classList.add('is-playing');
+    const ok = await say(text, locale);
+    if (!ok) {
+      if (activeSpeakBtn === btn) activeSpeakBtn = null;
+      btn.textContent = failLabel; btn.title = 'Audio unavailable'; btn.classList.remove('is-playing');
+      setTimeout(() => { if (activeSpeakBtn !== btn) idleSpeakBtn(btn); }, 1500);
+    }
+  };
+  btn.addEventListener('click', run);
+  return run;
+}
 
 // ---- personal phrasebook: derived keys + pin / hide -------------------------
 // Phrases carry no id, so derive a stable key from lang + category + english text.
@@ -663,15 +691,10 @@ function guideLessonRow(item, locale) {
     class: 'speak', 'aria-label': `Speak: ${item.say}`, title: 'Hear it',
     disabled: able ? null : '',
   }, '🔊') : null;
-  if (speak) {
-    // Same handling as every phrase row above: say() resolves to false when neither the
-    // device voice nor the online one could pronounce it, and the button says so instead of
-    // appearing to do nothing.
-    speak.addEventListener('click', async () => {
-      const ok = await say(item.native || item.say, locale);
-      if (!ok) { speak.textContent = '🔇'; speak.title = 'Audio unavailable'; setTimeout(() => { speak.textContent = '🔊'; speak.title = 'Hear it'; }, 1500); }
-    });
-  }
+  // wireSpeak handles both outcomes: say() resolving to false (neither device nor online voice
+  // could pronounce it) flashes 🔇 instead of appearing to do nothing, and a successful start
+  // turns this same button into ⏹ Stop for as long as it is playing.
+  if (speak) wireSpeak(speak, item.native || item.say, locale);
   return h('div', { class: 'phrase lg-lesson' }, [
     h('div', { class: 'lg-lesson-txt' }, [
       h('div', { class: 'lg-say' }, item.say),
@@ -781,10 +804,7 @@ function customPhraseRow(code, entry, locale, repaint) {
   grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showLarge(); } });
   const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${entry.en}`, title: 'Copy the local text', onclick: () => copyText(entry.script, copyBtn) }, '⧉');
   const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${entry.en}`, disabled: able ? null : '' }, '🔊');
-  speakBtn.addEventListener('click', async () => {
-    const ok = await say(entry.script, locale);
-    if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
-  });
+  wireSpeak(speakBtn, entry.script, locale);
   const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${entry.en}`, title: 'Add or edit a note' }, '📝');
   const rm = h('button', {
     class: 'speak hide', 'aria-label': `Remove ${entry.en}`, title: 'Remove from your phrases',
@@ -946,10 +966,7 @@ function phraseRow(p, locale, opts) {
   grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale, { ...opts, pins: PHRASE_PINS }); } });
   const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${p.en}`, title: 'Copy the local text', onclick: () => copyText(p.script, copyBtn) }, '⧉');
   const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: able ? null : '' }, '🔊');
-  speakBtn.addEventListener('click', async () => {
-    const ok = await say(p.script, locale);
-    if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
-  });
+  wireSpeak(speakBtn, p.script, locale);
   const ctrls = [copyBtn, speakBtn];
   if (key) {
     const pinned = isPhrasePinned(code, key);
@@ -1000,7 +1017,8 @@ function myTranslationsFold(code, label, locale, isOpen, onChange) {
     const big = () => showBigPhrase({ en: t.en, script }, locale, {});
     grow.addEventListener('click', big);
     grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); big(); } });
-    const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${t.en}`, disabled: able ? null : '', onclick: () => say(script, locale) }, '🔊');
+    const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${t.en}`, disabled: able ? null : '' }, '🔊');
+    wireSpeak(speakBtn, script, locale);
     const keepBtn = inDictionary(code, t.en)
       ? h('button', { class: 'speak', disabled: '', title: 'Already in your dictionary', 'aria-label': `${t.en} is already in your dictionary` }, '✓')
       : h('button', { class: 'speak', title: `Save to ${dictionaryName()}`, 'aria-label': `Save ${t.en} to ${dictionaryName()}`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
@@ -1103,10 +1121,10 @@ function liveTranslateBox(code, label, locale, onChange) {
   const doTranslate = async (alsoSave) => {
     const text = input.value.trim();
     if (!text) return;
-    // A stop control next to the spinner, and the same one registered app-wide so the global
-    // pill stops it too. Long text is several requests with a retry behind each, so this is not
-    // theoretical: on a weak link "Translating…" can hold the screen for seconds with no way
-    // out. Cancelling is a decision the traveller already made — it reports nothing.
+    // A stop control right next to the spinner it belongs to, rather than a floating app-wide
+    // pill. Long text is several requests with a retry behind each, so this is not theoretical:
+    // on a weak link "Translating…" can hold the screen for seconds with no way out. Cancelling
+    // is a decision the traveller already made — it reports nothing.
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const finish = startTask(() => { if (ctrl) ctrl.abort(); });
     out.innerHTML = '';
@@ -1120,11 +1138,17 @@ function liveTranslateBox(code, label, locale, onChange) {
       out.innerHTML = '';
       out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
       const able = canSay(locale);
-      const speakBtn = h('button', { class: 'btn', disabled: able ? null : '', onclick: () => say(res, locale) },
+      const speakBtn = h('button', { class: 'btn', disabled: able ? null : '' },
         able ? '🔊 Hear it' : '🔇 Voice needs internet');
       out.append(speakBtn);
       if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
-      else say(res, locale);   // best-effort auto-play; the button always works (direct tap)
+      else {
+        // Same toggle as every other 🔊 in this screen: this button doubles as Stop for as
+        // long as the auto-play below is speaking, right where the traveller is already
+        // looking, rather than a separate floating control.
+        const run = wireSpeak(speakBtn, res, locale, { idleLabel: '🔊 Hear it', failLabel: '🔇 Try again' });
+        run();   // best-effort auto-play; the button always works too (direct tap, or to stop it)
+      }
       // Remembered either way — a local write, nothing leaves the device and nothing reaches
       // the dictionary without the explicit tap.
       const rec = recordTranslation(text, srcLang, code, res);
