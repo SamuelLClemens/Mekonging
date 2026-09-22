@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.579.0';
+const CACHE_VERSION = 'mk-v0.580.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -338,7 +338,7 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': '6c16a4d6',
+  'css/style.css': '63363228',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': 'aff8f935',
@@ -499,9 +499,9 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '859119c8',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '3ef702f7',
+  'js/main.js': '77b5dce9',
   'js/map.js': '83e565e6',
-  'js/nav-groups.js': '670672d3',
+  'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
   'js/offline-pack.js': 'f3e74905',
   'js/personal.js': '34ddb915',
