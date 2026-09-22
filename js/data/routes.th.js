@@ -1311,5 +1311,454 @@ export const ROUTES_TH = [
         "notes": "Scenic and relaxed but slower than the direct van due to changes at Padang Besar and Butterworth."
       }
     ]
+  },
+  {
+    "id": "th-bangkok-kohchang",
+    "from": "Bangkok",
+    "to": "Koh Chang",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Koh Chang is reached by car ferry from Trat province, a crossing that runs all day. Ferries from Ao Thammachat pier land at Ao Sapparot on the island; songthaews wait there for the beaches.",
+    "options": [
+      {
+        "mode": "Bus + car ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          6,
+          8
+        ],
+        "price": {
+          "low": 340,
+          "high": 410,
+          "currency": "THB"
+        },
+        "freq": "Morning buses; ferries hourly 06:30–18:30",
+        "comfort": "Coach from Ekkamai, then the car ferry as a foot passenger. The ferry fare is 80 THB for adults and 30 THB for children.",
+        "operators": [
+          "bus999",
+          "cherdchai",
+          "ferrykohchang"
+        ],
+        "legs": [
+          "999 government bus from Ekkamai 07:45 and 08:45, ending at Ao Thammachat pier; 261–329 THB (two sources differ).",
+          "Ferry Koh Chang, Ao Thammachat → Ao Sapparot: hourly at 45 minutes past the hour, 06:30–18:30 both ways."
+        ],
+        "recommended": true,
+        "notes": "The 999 bus ends at the ferry pier, so there is no extra transfer. Cherdchai buses go to Trat town instead, and from there you need a songthaew to the pier."
+      },
+      {
+        "mode": "Direct bus from Suvarnabhumi Airport (ferry included)",
+        "tag": "simplest",
+        "durationHrs": [
+          6,
+          7
+        ],
+        "price": {
+          "low": 650,
+          "high": 650,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "Suvarnabhumi Burapha Bus from Entrance 8, Level 1 at 07:00 and 10:00, with the ferry included. Back from its White Sand Beach office at 10:00 and 13:00.",
+        "recommended": false,
+        "notes": "Only one published source lists this service, so confirm it is running before you rely on it."
+      },
+      {
+        "mode": "Flight to Trat + ferry",
+        "tag": "fastest",
+        "durationHrs": [
+          3,
+          4
+        ],
+        "price": {
+          "low": 1580,
+          "high": 4080,
+          "currency": "THB"
+        },
+        "freq": "Bangkok Airways from Suvarnabhumi",
+        "comfort": "Flight 1,500–4,000 THB plus the 80 THB ferry. Getting from the airport to the pier is extra.",
+        "operators": [
+          "bangkokair"
+        ],
+        "recommended": false,
+        "notes": "Check the current timetable with Bangkok Airways; schedules change between summer and winter."
+      }
+    ],
+    "kids": [
+      "Ferry Koh Chang: children pay 30 THB, adults 80 THB. The source gives no age or height limit, so ask at the ticket window.",
+      "Bangkok Airways: babies from 7 days to 24 months fly on an adult’s lap, and each needs an accompanying adult aged 16 or over.",
+      "Buses: no published child-fare rule. A child who takes a seat needs a ticket — confirm at the counter."
+    ],
+    "sources": [
+      {
+        "org": "I Am Koh Chang — bus, boat & plane (updated 21 Sep 2026)",
+        "url": "https://iamkohchang.com/getting-here/bus-boat-timetables.html"
+      },
+      {
+        "org": "I Am Koh Chang — 999 bus from Bangkok",
+        "url": "https://iamkohchang.com/getting-here/999-bus-bangkok-kohchang.html"
+      },
+      {
+        "org": "Cherdchai Tour — timetables",
+        "url": "https://www.cherdchaitour.com/en-us/timetables"
+      },
+      {
+        "org": "Explore Koh Chang — How to get to Koh Mak (updated 19 Aug 2026)",
+        "url": "https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/"
+      },
+      {
+        "org": "Bangkok Airways — travelling with infants",
+        "url": "https://www.bangkokair.com/young-travelers/travel-with-infant"
+      }
+    ]
+  },
+  {
+    "id": "th-bangkok-kohmak",
+    "from": "Bangkok",
+    "to": "Koh Mak",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "No train serves Trat. Every way in ends on a boat from one of two mainland piers: Krom Luang Chumphon pier at Laem Ngop (about 20 km from Trat town) or Laem Sok pier (40–45 min from Trat). Most boats run late morning to afternoon, so a same-day trip means leaving Bangkok early.",
+    "options": [
+      {
+        "mode": "Bus + songthaew + speedboat",
+        "tag": "cheapest",
+        "durationHrs": [
+          8,
+          10
+        ],
+        "price": {
+          "low": 890,
+          "high": 1000,
+          "currency": "THB"
+        },
+        "freq": "Buses all day; boats late morning–afternoon",
+        "comfort": "Air-conditioned coach to Trat, a shared songthaew to the pier, then a 50–60 min speedboat. Three separate tickets.",
+        "operators": [
+          "bus999",
+          "cherdchai",
+          "panan",
+          "kohmakferry",
+          "leelawadee"
+        ],
+        "legs": [
+          "Bus, Ekkamai → Trat: 999 government bus 07:45 and 08:45 (stops at Ao Thammachat pier), 261–329 THB; Cherdchai Tour from Ekkamai 11:30, 15:30, 17:30, 19:30, 23:30 and from Mo Chit 09:30, 19:45, about 280–315 THB; minivans from Ekkamai about 290 THB.",
+          "Songthaew from Saen Tung junction to Krom Luang Chumphon pier (Laem Ngop): about 80 THB.",
+          "Speedboat Laem Ngop → Koh Mak, 550 THB, 50–60 min."
+        ],
+        "timetable": [
+          "Until 30 Sep 2026: Koh Mak Ferry 11:30 (back 08:30), Panan 16:00 (back 10:00).",
+          "From 1 Oct 2026: Koh Mak Ferry 11:30 (back 08:30); Panan 12:30 and 16:00 (back 10:00 and 13:30).",
+          "Leelawadee 14:00 (back 11:30) did not run June–September 2026 and its return was not confirmed — call before relying on it."
+        ],
+        "recommended": false,
+        "notes": "Take a morning bus: the last speedboat leaves Laem Ngop at 16:00, and missing it means a night in Trat. The two sources for the 999 fare disagree (261 vs 329 THB) — budget for the higher one."
+      },
+      {
+        "mode": "Combined bus + boat ticket",
+        "tag": "simplest",
+        "durationHrs": [
+          7,
+          8
+        ],
+        "price": {
+          "low": 1000,
+          "high": 1300,
+          "currency": "THB"
+        },
+        "freq": "Early-morning departures daily",
+        "comfort": "One ticket: a coach from central Bangkok or Suvarnabhumi to Laem Sok pier, timed to meet the boat. Arrives on Koh Mak around midday.",
+        "operators": [
+          "boonsiri",
+          "kohkutexpress",
+          "cherdchai"
+        ],
+        "legs": [
+          "Boonsiri: 05:00 and 08:00 from its office on Tani Road, beside Khao San Road; about 1,100 THB (Boonsiri’s own older page says 900 THB — confirm when booking).",
+          "Koh Kut Express: 05:00 or 06:00 from the Khao San area, 06:00 or 07:00 from Suvarnabhumi Airport; about 1,000–1,100 THB.",
+          "Cherdchai Tour runs Ekkamai → Trat → Koh Kood/Koh Mak at 05:00 and 07:00; the fare is not published online — ask the call centre."
+        ],
+        "recommended": true,
+        "notes": "Be at the office 30 minutes before departure. The boat may call at Koh Kood before Koh Mak, which adds time."
+      },
+      {
+        "mode": "Flight to Trat + transfer + speedboat",
+        "tag": "fastest",
+        "durationHrs": [
+          3,
+          4.5
+        ],
+        "price": {
+          "low": 2050,
+          "high": 4550,
+          "currency": "THB"
+        },
+        "freq": "Bangkok Airways, 3 flights daily from Suvarnabhumi",
+        "comfort": "Under an hour in the air from Suvarnabhumi (BKK), then by road to Laem Ngop and the boat. The price covers the flight (1,500–4,000 THB) and the boat (550 THB); the pier transfer is extra.",
+        "operators": [
+          "bangkokair",
+          "panan",
+          "kohmakferry"
+        ],
+        "legs": [
+          "PG301 lands about 09:10 — connects with the 11:30 boat.",
+          "PG305 lands 12:40 (summer schedule) or 13:45 (winter schedule) — connects with the 16:00 boat.",
+          "PG307 lands 17:15, after the last boat — plan a night in Trat.",
+          "Trat Airport → Laem Ngop pier by private car about 975 THB; → Laem Sok pier about 1,500 THB. Shared taxis also meet flights."
+        ],
+        "recommended": false,
+        "notes": "Flights to Trat leave from Suvarnabhumi (BKK)."
+      },
+      {
+        "mode": "Private car to the pier + speedboat",
+        "durationHrs": [
+          5.5,
+          6.5
+        ],
+        "price": {
+          "low": 4200,
+          "high": 5200,
+          "currency": "THB"
+        },
+        "freq": "Any time, booked ahead",
+        "comfort": "Door-to-pier from a Bangkok hotel, Suvarnabhumi, Don Mueang or Pattaya in 4.5–5 hours. The price is per vehicle: 4,200 THB for an SUV, 5,200 THB for a 10-seat minibus. Boat fares are extra.",
+        "operators": [
+          "ekctransfer"
+        ],
+        "recommended": false,
+        "notes": "Child seats can be added for 200 THB each — ask when booking. Worth it for a family or group, and when the timing has to meet a boat."
+      }
+    ],
+    "kids": [
+      "Laem Ngop speedboats (Panan, Koh Mak Ferry, Leelawadee): under 100 cm free on a lap; 100–130 cm child fare (350 THB per Explore Koh Chang; Leelawadee’s own site says 300 THB); taller pays adult.",
+      "Laem Sok boats (Boonsiri, Koh Kut Express, Chonratee): age-based, not height — Koh Kut Express carries only under-4s free, on a lap; Boonsiri charges full fare from age 5. Ask Boonsiri about a 4-year-old before you travel.",
+      "Bangkok Airways: babies from 7 days to 24 months fly on an adult’s lap, and each needs an accompanying adult aged 16 or over. From age 2 a child needs their own seat.",
+      "Buses: neither Cherdchai nor the 999 bus publishes a child-fare rule. A child who takes a seat needs a ticket — confirm the price at the counter before you board.",
+      "Private transfers: child seats cost 200 THB each and must be requested when you book."
+    ],
+    "sources": [
+      {
+        "org": "Explore Koh Chang — How to get to Koh Mak (updated 19 Aug 2026)",
+        "url": "https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/"
+      },
+      {
+        "org": "Explore Koh Chang — Koh Mak boats (updated 19 Aug 2026)",
+        "url": "https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/koh-mak-ferry-speedboat-island-hopping/"
+      },
+      {
+        "org": "Koh Mak News — boat timetables (updated 17 Sep 2026)",
+        "url": "https://kohmaknews.com/boats-timetable-from-and-to-koh-mak/"
+      },
+      {
+        "org": "I Am Koh Chang — bus, boat & plane (updated 21 Sep 2026)",
+        "url": "https://iamkohchang.com/getting-here/bus-boat-timetables.html"
+      },
+      {
+        "org": "Cherdchai Tour — timetables",
+        "url": "https://www.cherdchaitour.com/en-us/timetables"
+      },
+      {
+        "org": "Boonsiri — How to get to Koh Mak",
+        "url": "https://boonsiriferry.com/en/island-detail/How%20to%20get%20to%20Koh%20Mak%20(Complete%20version)"
+      },
+      {
+        "org": "Leelawadee Speedboat (operator site)",
+        "url": "https://www.kohmakboat.com/"
+      },
+      {
+        "org": "Ko Kut Express (operator site)",
+        "url": "https://www.kokutexpress.in.th/"
+      },
+      {
+        "org": "Bangkok Airways — travelling with infants",
+        "url": "https://www.bangkokair.com/young-travelers/travel-with-infant"
+      }
+    ]
+  },
+  {
+    "id": "th-kohchang-kohmak",
+    "from": "Koh Chang",
+    "to": "Koh Mak",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Island-hopping boats run mainly November to May. Some call at Koh Wai on the way.",
+    "options": [
+      {
+        "mode": "Catamaran (Boonsiri)",
+        "tag": "cheapest",
+        "durationHrs": [
+          1,
+          1
+        ],
+        "price": {
+          "low": 600,
+          "high": 600,
+          "currency": "THB"
+        },
+        "freq": "Twice daily, once daily Jun–Sep",
+        "comfort": "Bang Bao pier → Ao Nid pier. A catamaran, steadier than a speedboat, with a free resort shuttle on both islands (Koh Chang pickup around 07:30).",
+        "operators": [
+          "boonsiri"
+        ],
+        "timetable": [
+          "From Koh Chang 09:00 and 13:00 (13:00 only, 1 Jun–30 Sep 2026); arrives 10:00 and 14:00.",
+          "From Koh Mak 11:30 and 15:00."
+        ],
+        "recommended": true,
+        "notes": "The only year-round service on this crossing."
+      },
+      {
+        "mode": "Speedboat (Koh Chang Express)",
+        "durationHrs": [
+          0.5,
+          0.75
+        ],
+        "price": {
+          "low": 600,
+          "high": 600,
+          "currency": "THB"
+        },
+        "freq": "Twice daily, Oct–May",
+        "comfort": "Bang Bao → Ao Nid, calling at Koh Wai (10:15, 13:15). Free shuttle to Koh Chang resorts.",
+        "operators": [
+          "kohchangexpress"
+        ],
+        "timetable": [
+          "From Koh Chang 10:00 and 13:00; arrives 10:30 and 13:30.",
+          "From Koh Mak 12:00 and 15:00.",
+          "Suspended 1 Jun–30 Sep 2026."
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Speedboat (Kai Bae Hut)",
+        "tag": "fastest",
+        "durationHrs": [
+          1,
+          1
+        ],
+        "price": {
+          "low": 800,
+          "high": 800,
+          "currency": "THB"
+        },
+        "freq": "Once daily, Nov–Apr",
+        "comfort": "Kai Bae beach → Makathanee Resort pier, calling at Koh Wai (09:30).",
+        "operators": [
+          "kaibaehut"
+        ],
+        "timetable": [
+          "From Koh Chang 09:00; arrives 10:00.",
+          "Suspended 1 May–31 Oct 2026."
+        ],
+        "recommended": false
+      }
+    ],
+    "kids": [
+      "Boonsiri charges full fare from age 5; under-4s ride free. Ask about a 4-year-old when booking.",
+      "Koh Chang Express and Kai Bae Hut do not publish a child fare — ask when booking."
+    ],
+    "sources": [
+      {
+        "org": "Explore Koh Chang — Koh Mak boats (updated 19 Aug 2026)",
+        "url": "https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/koh-mak-ferry-speedboat-island-hopping/"
+      },
+      {
+        "org": "koh-mak.com — boat timetables",
+        "url": "https://www.koh-mak.com/boat-timetables/"
+      }
+    ]
+  },
+  {
+    "id": "th-kohmak-kohkood",
+    "from": "Koh Mak",
+    "to": "Koh Kood",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "A short hop of about 30 minutes. Only Boonsiri runs through the rainy season.",
+    "options": [
+      {
+        "mode": "Catamaran (Boonsiri)",
+        "tag": "cheapest",
+        "durationHrs": [
+          0.5,
+          0.75
+        ],
+        "price": {
+          "low": 400,
+          "high": 400,
+          "currency": "THB"
+        },
+        "freq": "Twice daily, reduced Jun–Sep",
+        "comfort": "Ao Nid pier → Ao Salad pier, Koh Kood, with a free shuttle to resorts.",
+        "operators": [
+          "boonsiri"
+        ],
+        "timetable": [
+          "From Koh Mak 10:00 and 14:00 (reduced 1 Jun–30 Sep 2026)."
+        ],
+        "recommended": true,
+        "notes": "The only service that runs year-round."
+      },
+      {
+        "mode": "Speedboat (Koh Kut Express / Koh Chang Express)",
+        "durationHrs": [
+          0.5,
+          0.5
+        ],
+        "price": {
+          "low": 500,
+          "high": 500,
+          "currency": "THB"
+        },
+        "freq": "Twice daily each, Oct–May",
+        "comfort": "Ao Nid pier → Klong Mad pier, Koh Kood, with a free shuttle to resorts.",
+        "operators": [
+          "kohkutexpress",
+          "kohchangexpress"
+        ],
+        "timetable": [
+          "Koh Chang Express from Koh Mak 10:30 and 13:30.",
+          "Koh Kut Express from Koh Kood 09:00 and 14:00 (arrives Koh Mak 09:30 and 14:30).",
+          "Both suspended 1 Jun–30 Sep 2026."
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Speedboat (Kai Bae Hut)",
+        "durationHrs": [
+          0.75,
+          1
+        ],
+        "price": {
+          "low": 600,
+          "high": 600,
+          "currency": "THB"
+        },
+        "freq": "Once daily, Nov–Apr",
+        "comfort": "Makathanee Resort pier → Siam Beach Resort, Koh Kood. No shuttle at the Koh Kood end.",
+        "operators": [
+          "kaibaehut"
+        ],
+        "timetable": [
+          "Suspended 1 May–31 Oct 2026."
+        ],
+        "recommended": false
+      }
+    ],
+    "kids": [
+      "Koh Kut Express: only under-4s ride free, and only on a parent’s lap. Boonsiri charges full fare from age 5.",
+      "Koh Chang Express and Kai Bae Hut do not publish a child fare — ask when booking."
+    ],
+    "sources": [
+      {
+        "org": "Explore Koh Chang — Koh Mak boats (updated 19 Aug 2026)",
+        "url": "https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/koh-mak-ferry-speedboat-island-hopping/"
+      },
+      {
+        "org": "Ko Kut Express (operator site)",
+        "url": "https://www.kokutexpress.in.th/"
+      }
+    ]
   }
 ];
