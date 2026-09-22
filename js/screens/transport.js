@@ -92,7 +92,7 @@ export function transportScreen(countryId) {
     ]);
     if (r.scamWarnings && r.scamWarnings.length) r.scamWarnings.forEach((w) => card.append(h('div', { class: 'warn-note' }, tx(w))));
     for (const o of r.options) {
-      const dur = o.durationHrs ? `${o.durationHrs[0]}–${o.durationHrs[1]} h` : '';
+      const dur = o.durationHrs ? (o.durationHrs[0] === o.durationHrs[1] ? `${o.durationHrs[0]} h` : `${o.durationHrs[0]}–${o.durationHrs[1]} h`) : '';
       card.append(h('div', { class: `route-opt ${o.recommended ? 'best' : ''}` }, [
         h('div', { class: 'row-between' }, [
           h('span', { class: 'mode' }, o.mode),

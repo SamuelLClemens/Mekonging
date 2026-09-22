@@ -152,6 +152,9 @@ export function annotatePrices(text, home) {
     if (lo == null || !isFinite(lo)) return m;
     const approx = (hi != null && isFinite(hi)) ? range(lo, hi, home) : money(lo, home);
     // Already inside brackets — "(450 THB)" — so add to them rather than nesting a second pair.
-    return whole[at - 1] === '(' ? `${m} ≈ ${approx}` : `${m} (≈ ${approx})`;
+    // Already inside a bracket ("(about 60–80 THB)")? Add the conversion without a second one.
+    const before = whole.slice(0, at);
+    const inside = before.lastIndexOf('(') > before.lastIndexOf(')');
+    return inside ? `${m} ≈ ${approx}` : `${m} (≈ ${approx})`;
   });
 }

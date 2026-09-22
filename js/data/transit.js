@@ -75,8 +75,8 @@ export const TRANSPORT_HUBS = [
     note: 'Boats to Phi Phi, Krabi, Koh Lanta and the Andaman islands.' },
   { id: 'f-th-krabi', cc: 'th', city: 'Krabi', type: 'ferry', name: 'Klong Jilad Pier (Krabi)', coords: { lat: 8.062, lng: 98.905 },
     note: 'Ferries to Phi Phi, Koh Lanta and longtails to Railay.' },
-  { id: 'f-th-kohchang', cc: 'th', city: 'Trat', type: 'ferry', name: 'Koh Chang Ferry (Ao Thammachat / Center Point)', coords: { lat: 12.150, lng: 102.390 },
-    note: 'Vehicle ferries from the Trat mainland to Koh Chang.' },
+  { id: 'f-th-kohchang', cc: 'th', city: 'Trat', type: 'ferry', name: 'Koh Chang Ferry (Ao Thammachat pier)', coords: { lat: 12.1871, lng: 102.3014 },
+    note: 'Ferry Koh Chang car ferries to Ao Sapparot, 06:30–18:30. The Centrepoint pier ferry closed in 2024.' },
 
   // ============================ VIETNAM — AIRPORTS ============================
   { id: 'h-vi-han', cc: 'vi', city: 'Hanoi', type: 'airport', code: 'HAN', name: 'Noi Bai International Airport', coords: { lat: 21.221, lng: 105.807 },
