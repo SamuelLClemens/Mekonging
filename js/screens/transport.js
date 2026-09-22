@@ -5,7 +5,8 @@ import { h } from '../util.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 import { getCountry } from '../data/regions.js';
 import { GET_AROUND } from '../lazy-data.js';
-import { citySlug } from '../render-utils.js';
+import { citySlug, sourcesNote } from '../render-utils.js';
+import { OPERATORS, telHref } from '../data/operators.js';
 import {
   addPin,
   getPin,
@@ -30,6 +31,26 @@ import {
 // Coords captured by tapping the map, consumed by #addpin. Moved with the screen.
 let pendingPinCoords = null;
 
+const ROUTE_TAGS = { cheapest: '💰 Cheapest', fastest: '⚡ Fastest', simplest: '🎫 One ticket' };
+
+// Operator contacts, resolved by key from js/data/operators.js: tap-to-call numbers and the
+// booking site. Bundled, so the numbers are there on a pier with no signal.
+function operatorList(keys) {
+  const ops = keys.map((k) => OPERATORS[k]).filter(Boolean);
+  if (!ops.length) return null;
+  const det = h('details', { class: 'route-ops' }, [h('summary', {}, `📞 Operators & booking · ${ops.length}`)]);
+  ops.forEach((op) => det.append(h('div', { class: 'transit-row' }, [
+    h('strong', {}, op.name),
+    (op.phones && op.phones.length)
+      ? h('div', {}, op.phones.map((p, i) => [i ? ' · ' : '', h('a', { href: telHref(p) }, p)]).flat())
+      : null,
+    op.phoneNote ? h('div', { class: 'muted tiny' }, op.phoneNote) : null,
+    op.url ? h('a', { href: op.url, target: '_blank', rel: 'noopener' }, `${op.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')} ↗`) : null,
+    op.email ? h('div', { class: 'tiny' }, h('a', { href: `mailto:${op.email}` }, op.email)) : null,
+  ])));
+  return det;
+}
+
 export function transportScreen(countryId) {
   if (countryId) setActiveCountry(countryId);
   const wrap = h('div', { class: 'screen' });
@@ -51,6 +72,7 @@ export function transportScreen(countryId) {
       h('h2', {}, `${r.from} → ${r.to}`),
       r.crossBorder ? h('p', { class: 'border-flag' }, `Border crossing: ${r.border}`) : null,
       r.visa ? h('p', { class: 'muted' }, `Visa: ${r.visa.note}`) : null,
+      r.summary ? h('p', { class: 'muted' }, r.summary) : null,
     ]);
     if (r.scamWarnings && r.scamWarnings.length) r.scamWarnings.forEach((w) => card.append(h('div', { class: 'warn-note' }, w)));
     for (const o of r.options) {
@@ -58,14 +80,33 @@ export function transportScreen(countryId) {
       card.append(h('div', { class: `route-opt ${o.recommended ? 'best' : ''}` }, [
         h('div', { class: 'row-between' }, [
           h('span', { class: 'mode' }, o.mode),
-          o.recommended ? h('span', { class: 'pill-best' }, 'Best') : null,
+          h('span', {}, [
+            o.tag ? h('span', { class: 'pill-tag' }, ROUTE_TAGS[o.tag] || o.tag) : null,
+            o.recommended ? h('span', { class: 'pill-best' }, 'Best') : null,
+          ]),
         ]),
         h('div', { class: 'muted' }, `${dur} · ${priceLine(o.price.low, o.price.high, o.price.currency)} · ${o.freq}`),
         o.comfort ? h('div', {}, o.comfort) : null,
         o.notes ? h('div', { class: 'muted' }, o.notes) : null,
         o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
+        (o.legs && o.legs.length) ? h('ol', { class: 'route-legs' }, o.legs.map((l) => h('li', {}, l))) : null,
+        (o.timetable && o.timetable.length) ? h('div', { class: 'route-timetable' }, [
+          h('strong', {}, '🕘 Departures'),
+          h('ul', {}, o.timetable.map((t) => h('li', {}, t))),
+        ]) : null,
+        (o.operators && o.operators.length) ? operatorList(o.operators) : null,
       ]));
     }
+    // Who needs a ticket, by age or height, per operator — shown on the card rather than
+    // behind a tap because it decides what a family pays at the pier.
+    if (r.kids && r.kids.length) {
+      card.append(h('div', { class: 'route-kids' }, [
+        h('strong', {}, '👶 Travelling with children or a baby'),
+        h('ul', {}, r.kids.map((k) => h('li', {}, k))),
+      ]));
+    }
+    const src = sourcesNote(r.sources, r.verified);
+    if (src) card.append(src);
     card.append(h('a', { class: 'btn ghost block', style: 'margin-top: var(--sp-3)', href: 'https://12go.asia', target: '_blank', rel: 'noopener' }, 'Check live times & book (12Go) ↗'));
     return card;
   };

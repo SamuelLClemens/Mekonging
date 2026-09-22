@@ -50,6 +50,8 @@ export function mapScreen() {
       apply: (v) => { if (mapCtrl) mapCtrl.setAtms(v); } },
     { key: 'buses', label: '🚌 Bus stops', isOn: () => mapLayersPrefs.buses === true,
       apply: (v) => { if (mapCtrl) mapCtrl.setBus(v); } },
+    { key: 'ferries', label: '⛴️ Ferries', isOn: () => mapLayersPrefs.ferries === true,
+      apply: (v) => { if (mapCtrl) mapCtrl.setFerries(v); } },
     { key: 'trails', label: '🥾 Hiking trails', isOn: () => mapLayersPrefs.trails === true,
       apply: (v) => { if (mapCtrl) mapCtrl.setTrails(v); } },
     { key: 'bike', label: '🚲 Bike paths', isOn: () => mapLayersPrefs.bike === true,
@@ -184,6 +186,7 @@ export function mapScreen() {
     if (mapLayersPrefs.hospitals === true) c.setHospitals(true);
     if (mapLayersPrefs.atms === true) c.setAtms(true);
     if (mapLayersPrefs.buses === true) c.setBus(true);
+    if (mapLayersPrefs.ferries === true) c.setFerries(true);
     if (mapLayersPrefs.trails === true) c.setTrails(true);
     if (mapLayersPrefs.bike === true) c.setBike(true);
     if (mapLayersPrefs.scenic === true) c.setScenic(true);

@@ -371,14 +371,14 @@ export const PLACES_TH_EXT = [
     categories: ["beach", "nature"], budgetTier: "mid",
     blurb: "A small, palm-and-rubber-plantation island in the far-eastern Trat archipelago, deliberately developed low-key by its landowning families: no high-rises, quiet white-sand bays, clear water and a designated low-carbon tourism ethos.",
     whyItFits: "For travellers wanting a peaceful, eco-minded island with bicycle-friendly lanes and snorkelling, away from the party scene of the bigger islands.",
-    priceRange: { low: 450, typical: 600, high: 900, currency: "THB", note: "Speedboat fare from the Trat mainland each way; beaches are free and bicycle/kayak hire is cheap." },
-    hours: "Ferries run mostly mid-morning to afternoon; check the last return",
+    priceRange: { low: 500, typical: 550, high: 550, currency: "THB", note: "Boat fare from the Trat mainland each way; under 100 cm rides free on the Laem Ngop speedboats. Bicycle hire 150–250 THB a day." },
+    hours: "Mainland boats run late morning to afternoon; the last leaves Laem Ngop at 16:00",
     tips: ["Hire a bicycle or scooter; the island is small and flat.", "Snorkel the house reefs or take a boat to nearby Koh Kham and Koh Rang.", "It is quietest outside Thai public holidays."],
     scamWarnings: [],
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Mak island Trat Thailand", coords: { lat: 11.8200, lng: 102.4700 },
-    bookHint: "Book a speedboat from Laem Ngop (Trat) and reserve a bungalow ahead in high season.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Calm, shallow, gently shelving bays that are among the safest swimming in the eastern Gulf; no patrol.", jellyfishMonths: [7, 8, 9, 10], jellyfish: "Potentially fatal box jellyfish (Chironex) occur in Gulf of Thailand waters, with recorded stings peaking in the July–October wet season and after heavy rain. If stung, douse the area with vinegar and get medical help urgently.", recognition: "A small, flat, palm-and-rubber-plantation island in the far eastern Gulf with quiet coconut-fringed bays and almost no traffic; piers sit on the west and north coasts."
+    bookHint: "Boats leave Laem Ngop or Laem Sok pier — Getting around lists every operator, phone number and departure. Reserve a bungalow ahead in high season.", verified: "2026-09",
+    sources: [{ org: "Explore Koh Chang — How to get to Koh Mak", url: "https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/" }, { org: "Koh Mak News — boat timetables", url: "https://kohmaknews.com/boats-timetable-from-and-to-koh-mak/" }], lifeguard: "no", swim: "Calm, shallow, gently shelving bays that are among the safest swimming in the eastern Gulf; no patrol.", jellyfishMonths: [7, 8, 9, 10], jellyfish: "Potentially fatal box jellyfish (Chironex) occur in Gulf of Thailand waters, with recorded stings peaking in the July–October wet season and after heavy rain. If stung, douse the area with vinegar and get medical help urgently.", recognition: "A small, flat, palm-and-rubber-plantation island in the far eastern Gulf with quiet coconut-fringed bays and almost no traffic; piers sit on the west and north coasts."
   },
 {
     id: "th-ext-maya-bay", name: "Maya Bay (Koh Phi Phi Leh)", city: "Krabi", country: "th",
