@@ -70,17 +70,17 @@ export const FERRY_LEGS = [
   },
   {
     id: 'laemngop-aonid', a: 'laemngop', b: 'aonid', routeId: 'th-bangkok-kohmak', ops: ['kohmakferry'],
-    fare: 550, mins: [50, 60], season: 'Year-round: 11:30 from Laem Ngop, 08:30 from Koh Mak.',
+    fare: 550, mins: [50, 60], season: 'Year-round from Laem Ngop at 11:30 (Explore Koh Chang) or 12:30 (Koh Mak News, 17 Sep 2026) — call the day before. Back 08:30.',
     kids: 'Under 100 cm free on a lap; 100–130 cm 350 THB.',
   },
   {
     id: 'laemngop-aosuanyai', a: 'laemngop', b: 'aosuanyai', routeId: 'th-bangkok-kohmak', ops: ['panan'],
-    fare: 550, mins: [50, 60], season: '16:00 year-round, plus 12:30 from 1 Oct. Back 10:00, plus 13:30 from 1 Oct.',
+    fare: 550, mins: [50, 60], season: 'Afternoon boat year-round, at 16:00 (Explore Koh Chang) or 15:00 (Koh Mak News, 17 Sep 2026) — call the day before; plus 12:30 from 1 Oct. Back 10:00, plus 13:30 from 1 Oct.',
     kids: 'Under 100 cm free on a lap; 100–130 cm 350 THB.',
   },
   {
     id: 'laemngop-makathanee', a: 'laemngop', b: 'makathanee', routeId: 'th-bangkok-kohmak', ops: ['leelawadee'],
-    fare: 550, mins: [50, 60], season: '14:00 from Laem Ngop, 11:30 back — did not run Jun–Sep 2026 and the restart is unconfirmed. Call first.',
+    fare: 549, mins: [50, 60], season: '14:00 from Laem Ngop, 11:30 back. Its own site says it runs all year (Ao Nid in low season); both guides say it is suspended. Call 090 506 0020 first.',
     kids: 'Under 100 cm free on a lap; under 130 cm 300 THB (operator site).',
   },
   {

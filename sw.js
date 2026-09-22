@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.583.0';
+const CACHE_VERSION = 'mk-v0.584.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -357,7 +357,7 @@ const MANIFEST = {
   'js/data/atms.js': 'c35febfd',
   'js/data/basemap.js': '9427d471',
   'js/data/bestof.js': '911f4546',
-  'js/data/borders.js': '99c7881b',
+  'js/data/borders.js': '49d317f2',
   'js/data/borders_lines.js': '061e51d8',
   'js/data/bus.js': 'fd6f2755',
   'js/data/bus.kh.js': '69d89d27',
@@ -376,7 +376,7 @@ const MANIFEST = {
   'js/data/events.th.js': '5d9a7ad5',
   'js/data/events.vi.js': '293c3aa2',
   'js/data/family.js': '4af22afc',
-  'js/data/ferries.js': '0e93106a',
+  'js/data/ferries.js': '40f39990',
   'js/data/food.kh.ext.js': 'a65ea542',
   'js/data/food.kh.js': '721060ad',
   'js/data/food.la.ext.js': 'ef96a320',
@@ -450,7 +450,7 @@ const MANIFEST = {
   'js/data/regions.vi.js': '28be48aa',
   'js/data/routes.kh.js': '8e18e8c4',
   'js/data/routes.la.js': '3c9dd258',
-  'js/data/routes.th.js': '9f2ffdf8',
+  'js/data/routes.th.js': '4c29866a',
   'js/data/routes.vi.js': '09bbda24',
   'js/data/scams.js': '69bfed4a',
   'js/data/scenic.kh.js': '67589f36',
@@ -505,7 +505,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '6c17c1d4',
+  'js/main.js': 'c82bdc75',
   'js/map.js': 'facab57f',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
