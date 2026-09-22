@@ -3,8 +3,8 @@
 // Pier coordinates are OpenStreetMap objects (ids in the comments), read September 2026. A leg
 // is drawn as a straight line between its two piers: it shows WHICH piers connect, not the
 // boat's actual course, and the popup says so. Legs are only drawn where both piers are known —
-// Koh Kood's Klong Mad pier is not in OpenStreetMap, so the Klong Mad boats appear in the
-// Koh Mak → Koh Kood route card but have no line here.
+// Koh Kood's Klong Mad pier, Chonratee's Ban Laem Son and Sea Far piers, and Koh Wai's pier are
+// not in OpenStreetMap, so those boats appear on their route cards but have no line here.
 //
 // Operator contacts come from js/data/operators.js by key; the full timetables and journey
 // options are on the matching route card (routeId), in js/data/routes.th.js.
@@ -65,8 +65,8 @@ export const FERRY_LEGS = [
   },
   {
     id: 'aothammachat-aosapparot', a: 'aothammachat', b: 'aosapparot', routeId: 'th-bangkok-kohchang', ops: ['ferrykohchang'],
-    fare: 80, mins: null, season: 'Year-round, hourly at 45 minutes past the hour, 06:30–18:30 both ways. Cars 100 THB.',
-    kids: 'Children 30 THB (no age or height limit published — ask at the window).',
+    fare: 90, mins: [25, 40], season: 'Year-round, both ways: 06:30, then 07:45 to 17:45 at 45 minutes past the hour, and 18:30. Between the first and last boats a ferry may wait until it is full. Cars 200 THB, motorbikes 90 THB. The only ferry to Koh Chang — Centrepoint closed in 2024.',
+    kids: 'Sources differ: under 110 cm free and 110–150 cm 40 THB (Explore Koh Chang, May 2026), or children at the adult 90 THB (Koh Chang Ferries, Sep 2026).',
   },
   {
     id: 'laemngop-aonid', a: 'laemngop', b: 'aonid', routeId: 'th-bangkok-kohmak', ops: ['kohmakferry'],
@@ -85,13 +85,13 @@ export const FERRY_LEGS = [
   },
   {
     id: 'laemsok-aonid', a: 'laemsok', b: 'aonid', routeId: 'th-bangkok-kohmak', ops: ['boonsiri', 'kohkutexpress', 'chonratee'],
-    fare: '500–550', mins: [30, 45], season: 'Boonsiri year-round (10:30 and 15:30 from 1 Oct; 11:00 until 30 Sep). Koh Kut Express and Chonratee from 1 Oct.',
+    fare: '500–550', mins: [30, 45], season: 'Boonsiri year-round (10:30 and 15:30 from 1 Oct; 11:00 until 30 Sep). Koh Kut Express 11:45 and 16:00 from mid-October; Chonratee 14:00 from its Ban Laem Son pier, Oct–May.',
     kids: 'By age: Koh Kut Express only under-4s free, on a lap; Boonsiri full fare from age 5.',
   },
   {
     id: 'bangbao-aonid', a: 'bangbao', b: 'aonid', routeId: 'th-kohchang-kohmak', ops: ['boonsiri', 'kohchangexpress'],
-    fare: 600, mins: [30, 60], season: 'Boonsiri year-round (09:00 and 13:00; 13:00 only Jun–Sep). Koh Chang Express Oct–May, calling at Koh Wai.',
-    kids: 'Boonsiri full fare from age 5, under-4s free. Koh Chang Express: ask.',
+    fare: '500–600', mins: [30, 120], season: 'Boonsiri year-round (09:00 and 13:00; 13:00 only Jun–Sep). Koh Chang Express speedboat Oct–May, and Bang Bao Boat’s wooden boat (500 THB, 2 h) Nov–Apr, both calling at Koh Wai.',
+    kids: 'Boonsiri: under-4s free. Bang Bao Boat: under 3 free, 4–6 half price.',
   },
   {
     id: 'kaibae-makathanee', a: 'kaibae', b: 'makathanee', routeId: 'th-kohchang-kohmak', ops: ['kaibaehut'],
@@ -102,5 +102,15 @@ export const FERRY_LEGS = [
     id: 'aonid-aosalad', a: 'aonid', b: 'aosalad', routeId: 'th-kohmak-kohkood', ops: ['boonsiri'],
     fare: 400, mins: [30, 45], season: 'Year-round: 10:00 and 14:00 from Koh Mak, reduced Jun–Sep.',
     kids: 'Full fare from age 5, under-4s free.',
+  },
+  {
+    id: 'laemsok-aosalad', a: 'laemsok', b: 'aosalad', routeId: 'th-bangkok-kohkood', ops: ['boonsiri', 'seudamgo', 'kohkutexpress'],
+    fare: 600, mins: [60, 75], season: 'Boonsiri 10:45, 13:15, 15:00 and Seudamgo 12:00, 15:20 year-round (fewer Jun–Sep); Koh Kut Express express boat 14:00 year-round, its speedboats mid-Oct to Apr.',
+    kids: 'Boonsiri and Seudamgo: 4 and under free, 5+ adult. Koh Kut Express: under-4s free on a lap.',
+  },
+  {
+    id: 'bangbao-aosalad', a: 'bangbao', b: 'aosalad', routeId: 'th-kohchang-kohkood', ops: ['boonsiri'],
+    fare: 900, mins: [90, 105], season: 'Boonsiri year-round via Koh Mak: 09:00 and about 13:00 from Bang Bao, one boat a day Jun–Sep. Speedboats (1,000–1,200 THB) run Oct–May.',
+    kids: 'Under-4s free.',
   },
 ];

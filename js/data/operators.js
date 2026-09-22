@@ -35,27 +35,39 @@ export const OPERATORS = {
   },
   boonsiri: {
     name: 'Boonsiri High Speed Catamaran', mode: 'Catamaran',
-    phones: ['094 923 8883', '094 724 4555', '061 689 9222'],
-    phoneNote: '094 923 8883 is Boonsiri’s Koh Mak line; 094 724 4555 its Bangkok office.',
+    phones: ['094 724 4555', '061 689 9222', '086 333 8560', '094 923 8883'],
+    phoneNote: '094 724 4555 and 061 689 9222 are the Bangkok lines, 086 333 8560 the Trat office (all from Boonsiri’s own site); 094 923 8883 is its Koh Mak line.',
     url: 'https://boonsiriferry.com/',
-    sources: [{ org: 'Boonsiri — How to get to Koh Mak', url: 'https://boonsiriferry.com/en/island-detail/How%20to%20get%20to%20Koh%20Mak%20(Complete%20version)' }, EKC_KOHMAK],
+    sources: [{ org: 'Boonsiri — How to get to Koh Mak', url: 'https://boonsiriferry.com/en/island-detail/How%20to%20get%20to%20Koh%20Mak%20(Complete%20version)' }, { org: 'Boonsiri — Bus + ferry Bangkok to Koh Kood', url: 'https://boonsiriferry.com/en/news/koh-kood' }, EKC_KOHMAK],
   },
   kohkutexpress: {
     name: 'Koh Kut Express', mode: 'Speedboat',
-    phones: ['080 070 0764', '087 749 0030'],
+    phones: ['080 070 0764', '090 506 0020', '087 749 0030'],
+    phoneNote: 'The first two are on Ko Kut Express’s own contact page; 087 749 0030 is from Explore Koh Chang.',
     url: 'https://www.kokutexpress.in.th/', email: 'info@kokutexpress.in.th',
-    sources: [{ org: 'Ko Kut Express (operator site)', url: 'https://www.kokutexpress.in.th/' }, EKC_KOHMAK],
+    sources: [{ org: 'Ko Kut Express — contact', url: 'https://www.kokutexpress.in.th/contact.php' }, EKC_KOHMAK],
   },
   chonratee: {
     name: 'Chonratee Speedboat', mode: 'Speedboat',
     phones: ['084 265 3649'],
-    sources: [EKC_KOHMAK],
+    phoneNote: 'Sails from its own pier at Ban Laem Son, just behind Laem Sok pier, to Sea Far Resort (Ao Tapao) on Koh Kood.',
+    url: 'https://kohkoodchonratee.com/en-us',
+    sources: [{ org: 'Koh Kood Chonratee Speed Boat — timetable', url: 'https://kohkoodchonratee.com/en-us/timetables' }, EKC_KOHMAK],
+  },
+  // Seudamgo's own site returned HTTP 502 every time it was checked (Sep 2026), and the only
+  // phone numbers found were on resellers' pages, so none is listed.
+  seudamgo: {
+    name: 'Seudamgo Catamaran', mode: 'Catamaran',
+    phones: [],
+    phoneNote: 'No phone number could be confirmed from the operator. Book on its website or through its bus office.',
+    url: 'https://seudamgo.com/',
+    sources: [{ org: 'Explore Koh Chang — Koh Kood boats (updated 19 Aug 2026)', url: 'https://explorekohchang.com/koh-kood/how-to-get-to-koh-kood/koh-kood-ferry-speedboat-island-hopping/' }],
   },
   kohchangexpress: {
-    name: 'Koh Chang Express', mode: 'Speedboat',
+    name: 'Koh Chang Express (Bang Bao Boat)', mode: 'Speedboat',
     phones: [],
-    phoneNote: 'No direct number published — book through your resort or at Bang Bao pier.',
-    sources: [EKC_KOHMAK],
+    phoneNote: 'Formerly Bang Bao Boat. No direct number published — book through your resort, a Koh Chang tour desk or at Bang Bao pier.',
+    sources: [EKC_KOHMAK, { org: 'Koh Chang Ferries — boats to Koh Mak & Koh Kood (updated 22 Sep 2026)', url: 'https://kohchangferries.com/boats-koh-mak-koh-kood/' }],
   },
   kaibaehut: {
     name: 'Kai Bae Hut (Nor Nou) Speedboat', mode: 'Speedboat',
@@ -64,11 +76,11 @@ export const OPERATORS = {
     url: 'https://www.kaibaehut.com/',
     sources: [EKC_KOHMAK, { org: 'koh-mak.com — boat timetables', url: 'https://www.koh-mak.com/boat-timetables/' }],
   },
+  // The only ferry to Koh Chang since Trat Ferry (Centrepoint) stopped in mid-2024.
   ferrykohchang: {
     name: 'Ferry Koh Chang (Ao Thammachat)', mode: 'Car ferry',
-    phones: [],
-    phoneNote: 'No phone number published.',
-    sources: [{ org: 'I Am Koh Chang — bus, boat & plane (updated 21 Sep 2026)', url: 'https://iamkohchang.com/getting-here/bus-boat-timetables.html' }],
+    phones: ['081 943 5872', '081 814 4137', '039 555 188'],
+    sources: [{ org: 'Explore Koh Chang — Koh Chang ferries (updated 25 May 2026)', url: 'https://explorekohchang.com/koh-chang/how-to-get-to-koh-chang/koh-chang-ferries/' }, { org: 'Koh Chang Ferries — Ferry Koh Chang (updated Sep 2026)', url: 'https://kohchangferries.com/ferry-koh-chang/' }],
   },
   // Gulf of Thailand (Samui, Phangan, Tao). Lomprayah's numbers are from the contact page of its
   // own 2026 timetable (lomprayah.com/time-table); branch lines are listed so a traveller can ring
@@ -107,6 +119,21 @@ export const OPERATORS = {
     url: 'https://www.dticket.railway.co.th/',
     sources: [{ org: 'Seat61 — Train travel in Thailand (updated 8 Jul 2026)', url: 'https://www.seat61.com/Thailand.htm' }],
   },
+  // Thanatavee Transport, trading as Kohchang Bangkok Transport — the minivans from Ekkamai and Mo Chit.
+  thanatavee: {
+    name: 'Kohchang Bangkok Transport (Thanatavee)', mode: 'Minivan',
+    phones: ['080 668 8556', '080 668 8557', '090 818 1855'],
+    phoneNote: 'Also on LINE through its website.',
+    url: 'https://minibustrat.com/',
+    sources: [{ org: 'Kohchang Bangkok Transport (operator site)', url: 'https://minibustrat.com/' }, { org: 'Explore Koh Chang — Koh Kood bus and minibus (updated 19 Aug 2026)', url: 'https://explorekohchang.com/koh-kood/how-to-get-to-koh-kood/minibus-bus/' }],
+  },
+  swb: {
+    name: 'Suvarnabhumi Burapa (airport microbus)', mode: 'Microbus',
+    phones: ['092 939 9426', '083 794 2122', '081 660 5926', '080 357 1251'],
+    phoneNote: 'The first two are the Bangkok lines, the last two Koh Chang. Seats are non-refundable if your flight is late.',
+    url: 'https://www.busonlineticket.co.th/',
+    sources: [{ org: 'Explore Koh Chang — Suvarnabhumi to Koh Chang (updated Jun 2026)', url: 'https://explorekohchang.com/features/travel/suvarnabhumi-airport-to-koh-chang/' }],
+  },
   cherdchai: {
     name: 'Cherdchai Tour', mode: 'Bus',
     phones: ['061 023 9292', '084 982 7410'],
@@ -115,14 +142,15 @@ export const OPERATORS = {
   },
   bus999: {
     name: '999 government bus (Transport Co.)', mode: 'Bus',
-    phones: [],
-    phoneNote: 'Buy at the counter inside Ekkamai (Eastern) Bus Terminal, open from 06:30, or online.',
-    url: 'https://www.busonlineticket.co.th/bus/bus-999/',
-    sources: [{ org: 'I Am Koh Chang — 999 bus from Bangkok', url: 'https://iamkohchang.com/getting-here/999-bus-bangkok-kohchang.html' }],
+    phones: ['02 936 2852'],
+    phoneNote: 'Transport Co. head office (lines 02 936 2852–66). Buy at the counter inside Ekkamai (Eastern) Bus Terminal, open from 06:30, or online. At Ao Thammachat pier an agent has charged 350 THB for the return ticket — buy it at the bus instead.',
+    url: 'https://tcl99web.transport.co.th/Home',
+    sources: [{ org: 'I Am Koh Chang — 999 bus from Bangkok', url: 'https://iamkohchang.com/getting-here/999-bus-bangkok-kohchang.html' }, { org: 'Explore Koh Chang — minibus and bus to Koh Chang', url: 'https://explorekohchang.com/koh-chang/how-to-get-to-koh-chang/minibus-bus/' }, { org: 'BusOnlineTicket — Bus 999', url: 'https://www.busonlineticket.co.th/bus/bus-999/' }],
   },
   bangkokair: {
     name: 'Bangkok Airways', mode: 'Flight',
     phones: ['1771', '02 270 6699'],
+    branches: [['Trat Airport', '039 551 654']],
     url: 'https://www.bangkokair.com/',
     sources: [{ org: 'Bangkok Airways — travelling with infants', url: 'https://www.bangkokair.com/young-travelers/travel-with-infant' }],
   },
@@ -130,7 +158,7 @@ export const OPERATORS = {
     name: 'Explore Koh Chang private transfers', mode: 'Private car',
     phones: [],
     url: 'https://explorekohchang.com/contact-us/',
-    sources: [{ org: 'Explore Koh Chang — How to get to Koh Mak (updated 19 Aug 2026)', url: 'https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/' }],
+    sources: [{ org: 'Explore Koh Chang — How to get to Koh Mak (updated 19 Aug 2026)', url: 'https://explorekohchang.com/koh-mak/how-to-get-to-koh-mak/' }, { org: 'Explore Koh Chang — private transfers to Koh Chang (updated Jun 2026)', url: 'https://explorekohchang.com/koh-chang/how-to-get-to-koh-chang/private-transfers-prices-booking/' }],
   },
 };
 
