@@ -13,7 +13,7 @@
 import { getLiveCleanup, setLiveCleanup } from '../app-state.js';
 import { store, save, setLastFix } from '../state.js';
 import { h } from '../util.js';
-import { screenHint, foldedCard } from '../ui-widgets.js';
+import { screenHint, foldedCard, pricesInPicker } from '../ui-widgets.js';
 import { buildOfflineAreasCard } from '../offline-areas-ui.js';
 import { buildWalkCard } from '../walk-ui.js';
 import { mount, topbar } from '../main.js';
@@ -142,6 +142,8 @@ export function mapScreen() {
       h('button', { class: 'btn ghost', onclick: () => { if (mapCtrl) mapCtrl.triggerLocate(); } }, '📍 Locate me'),
     ]),
     measureOut,
+    // Ferry popups read this setting each time one opens, so nothing needs redrawing.
+    h('div', { style: 'margin-top: var(--sp-2)' }, pricesInPicker()),
   ]);
   // Layers first and always visible; the occasional tools stay behind the fold.
   wrap.append(h('div', { class: 'chips mk-layer-toggles', role: 'group', 'aria-label': 'Map layers' }, layerChips));

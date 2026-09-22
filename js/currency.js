@@ -53,7 +53,7 @@ export function currencyFlag(code) { return CURRENCY_FLAGS[code] || ''; }
 // callers naturally bring here alongside currencyFlag().
 // Imported and then re-exported rather than `export … from`: check-undefined.py reads a
 // bare re-export as a USE of those names in this file and reports three ReferenceErrors.
-import { currencySymbol, currencySymbolAfter, money } from './util.js';
+import { currencySymbol, currencySymbolAfter, money, range } from './util.js';
 export { currencySymbol, currencySymbolAfter, money };
 
 // A figure with its flag as well as its symbol, for the controls that name the currency and
@@ -135,3 +135,23 @@ export function convert(amount, from, to) {
 }
 
 export function hasRate(code) { return getRates().rates[code] != null; }
+
+// Prices written inside prose — "Speedboat Laem Ngop → Koh Mak, 550 THB", "261–329 THB" — are
+// data too, and a traveller reading in euros should not have to convert them in their head
+// while the structured fare right above is already converted. This finds every
+// "<amount>[–<amount>] <CODE>" in a string and appends "(≈ €14)" in `home`, formatted by the
+// same range() the structured prices use. It leaves the original figure in place, because
+// that is what is actually paid at the pier. Text with no rate for either side is untouched.
+const PRICE_IN_TEXT = /(\d{1,3}(?:,\d{3})+|\d+)(?:\s*[–-]\s*(\d{1,3}(?:,\d{3})+|\d+))?\s*(THB|VND|KHR|LAK|USD|MYR|SGD)\b/g;
+export function annotatePrices(text, home) {
+  if (!text || !home) return text;
+  return String(text).replace(PRICE_IN_TEXT, (m, a, b, cur, at, whole) => {
+    if (cur === home) return m;
+    const lo = convert(Number(a.replace(/,/g, '')), cur, home);
+    const hi = b != null ? convert(Number(b.replace(/,/g, '')), cur, home) : null;
+    if (lo == null || !isFinite(lo)) return m;
+    const approx = (hi != null && isFinite(hi)) ? range(lo, hi, home) : money(lo, home);
+    // Already inside brackets — "(450 THB)" — so add to them rather than nesting a second pair.
+    return whole[at - 1] === '(' ? `${m} ≈ ${approx}` : `${m} (≈ ${approx})`;
+  });
+}

@@ -20,6 +20,11 @@ function graph() {
   for (const c of COUNTRIES) {
     for (const r of (c.routes || [])) {
       if (!r.from || !r.to || !Array.isArray(r.options) || !r.options.length) continue;
+      // A connection card whose far end has no other route yet (e.g. Chumphon, reached only
+      // from Koh Tao in this data) would let the planner send "Bangkok → Chumphon" out to the
+      // island and back. planner:false keeps the card on screen and out of the graph until
+      // the missing mainland leg is added.
+      if (r.planner === false) continue;
       const a = norm(r.from), b = norm(r.to);
       if (a === b) continue;
       _display.set(a, r.from); _display.set(b, r.to);

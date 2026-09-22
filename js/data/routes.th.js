@@ -810,49 +810,6 @@ export const ROUTES_TH = [
     ]
   },
   {
-    "id": "th-suratthani-kohsamui",
-    "from": "Surat Thani",
-    "to": "Koh Samui",
-    "country": "th",
-    "verified": "2026-06",
-    "options": [
-      {
-        "mode": "Ferry",
-        "durationHrs": [
-          1.5,
-          2.5
-        ],
-        "price": {
-          "low": 300,
-          "high": 600,
-          "currency": "THB"
-        },
-        "freq": "Many daily from Donsak pier, roughly 09:30 onward",
-        "comfort": "Seatran and Raja car ferries from Donsak are stable and comfortable; the standard crossing to Koh Samui's Nathon pier.",
-        "bookVia": "Seatran Ferry, Raja Ferry, or 12Go",
-        "recommended": true,
-        "notes": "Combined bus+ferry tickets connect Surat Thani town and airport to Donsak pier. Around 11 daily departures in high season."
-      },
-      {
-        "mode": "High-speed catamaran",
-        "durationHrs": [
-          1,
-          1.5
-        ],
-        "price": {
-          "low": 500,
-          "high": 900,
-          "currency": "THB"
-        },
-        "freq": "Several daily",
-        "comfort": "Lomprayah high-speed catamaran is the quickest crossing and links onward to Koh Phangan and Koh Tao.",
-        "bookVia": "Lomprayah or 12Go",
-        "recommended": false,
-        "notes": "Best for island-hopping toward Koh Phangan and Koh Tao on the same operator; pricier than the car ferry."
-      }
-    ]
-  },
-  {
     "id": "th-phuket-krabi",
     "from": "Phuket",
     "to": "Krabi",
@@ -1758,6 +1715,782 @@ export const ROUTES_TH = [
       {
         "org": "Ko Kut Express (operator site)",
         "url": "https://www.kokutexpress.in.th/"
+      }
+    ]
+  },
+  {
+    "id": "th-bangkok-kohsamui",
+    "from": "Bangkok",
+    "to": "Koh Samui",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Fly direct, or go overland by bus or train to the coast and take a boat. Overland, Lomprayah sells one ticket from Bangkok all the way to the island.",
+    "options": [
+      {
+        "mode": "Overnight bus + ferry via Koh Tao",
+        "tag": "cheapest",
+        "durationHrs": [
+          13.75,
+          14.25
+        ],
+        "price": {
+          "low": 1250,
+          "high": 1400,
+          "currency": "THB"
+        },
+        "freq": "Nightly",
+        "comfort": "Lomprayah bus to Chumphon, then a ferry that changes onto a catamaran at Koh Tao and lands at Bangrak pier.",
+        "operators": [
+          "lomprayah"
+        ],
+        "timetable": [
+          "Khao San 21:30 → Bangrak 11:15, 1,250 THB (12:15 and 1,400 THB with drop-off at your hotel).",
+          "Pinklao 21:00 → Bangrak 11:15, same fares."
+        ],
+        "recommended": false,
+        "notes": "The longest way, but the cheapest through ticket. The change at Koh Tao is part of the ticket."
+      },
+      {
+        "mode": "Bus + catamaran (one ticket)",
+        "tag": "simplest",
+        "durationHrs": [
+          11.5,
+          13.5
+        ],
+        "price": {
+          "low": 1450,
+          "high": 1900,
+          "currency": "THB"
+        },
+        "freq": "Morning and overnight, daily",
+        "comfort": "Lomprayah coach to Chumphon, then its catamaran to Pralarn pier on Koh Samui. VIP coach seats recline further.",
+        "operators": [
+          "lomprayah"
+        ],
+        "timetable": [
+          "Khao San 06:00 → Pralarn 17:30; Khao San 22:00 → Pralarn 11:30. Bus 1,450 THB, VIP bus 1,750 THB.",
+          "Pinklao 21:30 → Pralarn 11:30, same fares.",
+          "Drop-off at your hotel adds an hour and costs 1,600 (bus) or 1,900 THB (VIP)."
+        ],
+        "recommended": true,
+        "notes": "Tickets are non-refundable; one free date change if asked at least 2 days before."
+      },
+      {
+        "mode": "Sleeper train + ferry",
+        "durationHrs": null,
+        "price": {
+          "low": 810,
+          "high": 2010,
+          "currency": "THB"
+        },
+        "freq": "Evening sleepers daily",
+        "comfort": "Overnight train to Surat Thani (Phun Phin station), then to Donsak pier and a Raja car ferry (210 THB) or Lomprayah catamaran (450 THB). The train fare is the 600–1,800 THB range on the Bangkok → Surat Thani card, checked June 2026.",
+        "operators": [
+          "srt",
+          "rajaferry",
+          "lomprayah"
+        ],
+        "recommended": false,
+        "notes": "Raja ferries leave Donsak every hour from 05:00 to 19:00, so any morning train connects."
+      },
+      {
+        "mode": "Flight",
+        "tag": "fastest",
+        "durationHrs": [
+          1,
+          1.5
+        ],
+        "price": {
+          "low": 68,
+          "high": null,
+          "currency": "USD"
+        },
+        "freq": "Several daily from Suvarnabhumi",
+        "comfort": "Bangkok Airways flies direct to Koh Samui airport. Fares vary widely; the lowest one-way listed in September 2026 was about US$68.",
+        "operators": [
+          "bangkokair"
+        ],
+        "recommended": false,
+        "notes": "Flying to Surat Thani and taking the ferry is usually cheaper — see the Bangkok → Surat Thani card."
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s.",
+      "Trains: under 100 cm and aged 0–3 free, sharing the adult’s seat or berth; aged 4–11 and under 150 cm reduced fare; 12 and over, or over 150 cm, full fare.",
+      "Raja Ferry: its online fare table does not list a child rule for the Koh Samui or Koh Phangan crossings — ask at the ticket window.",
+      "Bangkok Airways: babies from 7 days to 24 months fly on an adult’s lap, with an accompanying adult aged 16 or over. From age 2 a child needs their own seat."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      },
+      {
+        "org": "Raja Ferry Port — sailing schedule",
+        "url": "https://www.rajaferryport.com/sailing-schedule"
+      },
+      {
+        "org": "Raja Ferry Port — fares",
+        "url": "https://www.rajaferryport.com/"
+      },
+      {
+        "org": "Seat61 — Train travel in Thailand (updated 8 Jul 2026)",
+        "url": "https://www.seat61.com/Thailand.htm"
+      },
+      {
+        "org": "Skyscanner — Bangkok to Koh Samui (Sep 2026)",
+        "url": "https://www.skyscanner.com/routes/bkk/usm/bangkok-suvarnabhumi-to-samui-international.html"
+      },
+      {
+        "org": "Bangkok Airways — travelling with infants",
+        "url": "https://www.bangkokair.com/young-travelers/travel-with-infant"
+      }
+    ]
+  },
+  {
+    "id": "th-bangkok-kohphangan",
+    "from": "Bangkok",
+    "to": "Koh Phangan",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "No airport on Koh Phangan. Go overland on a through ticket, or fly to Koh Samui and cross by boat.",
+    "options": [
+      {
+        "mode": "Overnight bus + ferry via Koh Tao",
+        "tag": "cheapest",
+        "durationHrs": [
+          13,
+          13.5
+        ],
+        "price": {
+          "low": 1150,
+          "high": 1350,
+          "currency": "THB"
+        },
+        "freq": "Nightly",
+        "comfort": "Lomprayah bus to Chumphon, ferry to Koh Tao, then a catamaran to Thong Sala pier.",
+        "operators": [
+          "lomprayah"
+        ],
+        "timetable": [
+          "Khao San 21:30 → Thong Sala 10:30, 1,150 THB (11:30 and 1,350 THB with hotel drop-off).",
+          "Pinklao 21:00 → Thong Sala 10:30, same fares."
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Bus + catamaran (one ticket)",
+        "tag": "simplest",
+        "durationHrs": [
+          10.75,
+          12.5
+        ],
+        "price": {
+          "low": 1350,
+          "high": 1850,
+          "currency": "THB"
+        },
+        "freq": "Morning and overnight, daily",
+        "comfort": "Lomprayah coach to Chumphon, then its catamaran direct to Thong Sala.",
+        "operators": [
+          "lomprayah"
+        ],
+        "timetable": [
+          "Khao San 06:00 → Thong Sala 16:45; Khao San 22:00 → Thong Sala 10:30. Bus 1,350 THB, VIP bus 1,650 THB.",
+          "Pinklao 21:30 → Thong Sala 10:30, same fares.",
+          "Hotel drop-off adds an hour: 1,550 (bus) or 1,850 THB (VIP)."
+        ],
+        "recommended": true,
+        "notes": "Tickets are non-refundable; one free date change if asked at least 2 days before."
+      },
+      {
+        "mode": "Sleeper train + boat",
+        "durationHrs": null,
+        "price": {
+          "low": 880,
+          "high": 2350,
+          "currency": "THB"
+        },
+        "freq": "Evening sleepers daily",
+        "comfort": "Train to Chumphon then Lomprayah from the station (1,250 THB), or train to Surat Thani then Raja from Donsak (280 THB, 2 h 30 min) or Lomprayah (550 THB). Train fare: see the Bangkok → Surat Thani card.",
+        "operators": [
+          "srt",
+          "lomprayah",
+          "rajaferry"
+        ],
+        "legs": [
+          "Chumphon station → Thong Sala with Lomprayah: 06:00 → 10:30 or 12:00 → 16:45, 1,250 THB.",
+          "Donsak → Thong Sala with Lomprayah: 11:00 → 12:45 or 15:00 → 16:30, 550 THB."
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Flight to Koh Samui + boat",
+        "tag": "fastest",
+        "durationHrs": [
+          4,
+          5
+        ],
+        "price": {
+          "low": 68,
+          "high": null,
+          "currency": "USD"
+        },
+        "freq": "Several flights daily",
+        "comfort": "Bangkok Airways to Koh Samui (from about US$68 one way), then Lomprayah from Samui to Thong Sala: 500 THB with hotel pickup on Samui.",
+        "operators": [
+          "bangkokair",
+          "lomprayah"
+        ],
+        "recommended": false
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s.",
+      "Trains: under 100 cm and aged 0–3 free, sharing the adult’s seat or berth; aged 4–11 and under 150 cm reduced fare; 12 and over, or over 150 cm, full fare.",
+      "Raja Ferry: its online fare table does not list a child rule for the Koh Samui or Koh Phangan crossings — ask at the ticket window.",
+      "Bangkok Airways: babies from 7 days to 24 months fly on an adult’s lap, with an accompanying adult aged 16 or over. From age 2 a child needs their own seat."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      },
+      {
+        "org": "Raja Ferry Port — sailing schedule",
+        "url": "https://www.rajaferryport.com/sailing-schedule"
+      },
+      {
+        "org": "Raja Ferry Port — fares",
+        "url": "https://www.rajaferryport.com/"
+      },
+      {
+        "org": "Seat61 — Train travel in Thailand (updated 8 Jul 2026)",
+        "url": "https://www.seat61.com/Thailand.htm"
+      },
+      {
+        "org": "Skyscanner — Bangkok to Koh Samui (Sep 2026)",
+        "url": "https://www.skyscanner.com/routes/bkk/usm/bangkok-suvarnabhumi-to-samui-international.html"
+      },
+      {
+        "org": "Bangkok Airways — travelling with infants",
+        "url": "https://www.bangkokair.com/young-travelers/travel-with-infant"
+      }
+    ]
+  },
+  {
+    "id": "th-bangkok-kohtao",
+    "from": "Bangkok",
+    "to": "Koh Tao",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Koh Tao is closest to Chumphon, so every overland route goes through it. No airport on the island.",
+    "options": [
+      {
+        "mode": "Overnight bus + ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          10.75,
+          11.25
+        ],
+        "price": {
+          "low": 850,
+          "high": 850,
+          "currency": "THB"
+        },
+        "freq": "Nightly",
+        "comfort": "Lomprayah bus to Chumphon and the early slow ferry to Mae Haad pier.",
+        "operators": [
+          "lomprayah"
+        ],
+        "timetable": [
+          "Khao San 21:30 → Mae Haad 08:15.",
+          "Pinklao 21:00 → Mae Haad 08:15."
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Bus + catamaran (one ticket)",
+        "tag": "simplest",
+        "durationHrs": [
+          9,
+          11
+        ],
+        "price": {
+          "low": 1250,
+          "high": 1550,
+          "currency": "THB"
+        },
+        "freq": "Morning and overnight, daily",
+        "comfort": "Lomprayah coach to Chumphon, then its catamaran. VIP coach 1,550 THB.",
+        "operators": [
+          "lomprayah"
+        ],
+        "timetable": [
+          "Khao San 06:00 → Mae Haad 15:00; Khao San 22:00 → Mae Haad 08:45.",
+          "Pinklao 21:30 → Mae Haad 08:30."
+        ],
+        "recommended": true
+      },
+      {
+        "mode": "Sleeper train + catamaran",
+        "durationHrs": null,
+        "price": {
+          "low": 900,
+          "high": 900,
+          "currency": "THB"
+        },
+        "freq": "Evening sleepers daily",
+        "comfort": "Overnight train to Chumphon, then Lomprayah’s bus from the station to the pier and the catamaran (900 THB for both). The train fare is extra — ask State Railway or check dticket.railway.co.th.",
+        "operators": [
+          "srt",
+          "lomprayah"
+        ],
+        "legs": [
+          "Chumphon station → Mae Haad: 06:00 → 08:30 or 12:00 → 15:00, 900 THB including the transfer."
+        ],
+        "recommended": false,
+        "notes": "The price shown is the boat and transfer only."
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s.",
+      "Trains: under 100 cm and aged 0–3 free, sharing the adult’s seat or berth; aged 4–11 and under 150 cm reduced fare; 12 and over, or over 150 cm, full fare."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      },
+      {
+        "org": "Seat61 — Train travel in Thailand (updated 8 Jul 2026)",
+        "url": "https://www.seat61.com/Thailand.htm"
+      }
+    ]
+  },
+  {
+    "id": "th-chumphon-kohtao",
+    "planner": false,
+    "from": "Chumphon",
+    "to": "Koh Tao",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Lomprayah sails from Thung Makham Noi pier, south of Chumphon town.",
+    "options": [
+      {
+        "mode": "Slow ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          2.5,
+          2.5
+        ],
+        "price": {
+          "low": 450,
+          "high": 450,
+          "currency": "THB"
+        },
+        "freq": "Once daily",
+        "comfort": "05:45 from the pier, arriving Mae Haad 08:15.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Catamaran",
+        "tag": "fastest",
+        "durationHrs": [
+          1.75,
+          1.75
+        ],
+        "price": {
+          "low": 750,
+          "high": 750,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "07:00 → 08:45 and 13:15 → 15:00.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": true
+      },
+      {
+        "mode": "Bus from town or station + catamaran",
+        "durationHrs": [
+          2.5,
+          6
+        ],
+        "price": {
+          "low": 900,
+          "high": 1000,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "Lomprayah picks up from Chumphon hotels (05:45, 11:45) or the train station (06:00, 12:00) for 900 THB, or from Chumphon airport at 09:00 for 1,000 THB.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": false,
+        "notes": "A transfer alone costs 150 THB between pier and station, 250–300 THB between pier and airport."
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      }
+    ]
+  },
+  {
+    "id": "th-suratthani-kohsamui",
+    "from": "Surat Thani",
+    "to": "Koh Samui",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Boats leave from Donsak, about an hour east of Surat Thani town. Raja’s car ferry runs every hour; Lomprayah is faster but twice a day.",
+    "options": [
+      {
+        "mode": "Raja car ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          1.5,
+          1.5
+        ],
+        "price": {
+          "low": 210,
+          "high": 210,
+          "currency": "THB"
+        },
+        "freq": "Hourly, 05:00–19:00, both ways",
+        "comfort": "Donsak → Lipa Noi pier on Koh Samui. Large and steady; you can take a car or motorbike.",
+        "operators": [
+          "rajaferry"
+        ],
+        "legs": [
+          "From Surat Thani airport to Lipa Noi on Raja’s bus and ferry ticket: 540 THB."
+        ],
+        "recommended": true,
+        "notes": "05:00–06:00 and 12:00–16:00 are the busiest; Raja adds boats when one fills."
+      },
+      {
+        "mode": "Lomprayah catamaran",
+        "tag": "fastest",
+        "durationHrs": [
+          0.75,
+          0.75
+        ],
+        "price": {
+          "low": 450,
+          "high": 600,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "Donsak → Nathon pier 11:00 → 11:45 and 15:00 → 15:45, 450 THB (600 THB with hotel drop-off on Samui).",
+        "operators": [
+          "lomprayah"
+        ],
+        "legs": [
+          "From Tapee pier in Surat Thani town, bus and catamaran: 10:00 → 11:45 or 13:00 → 15:45, 600 THB."
+        ],
+        "recommended": false
+      }
+    ],
+    "kids": [
+      "Raja Ferry: its online fare table does not list a child rule for the Koh Samui or Koh Phangan crossings — ask at the ticket window.",
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s."
+    ],
+    "sources": [
+      {
+        "org": "Raja Ferry Port — sailing schedule",
+        "url": "https://www.rajaferryport.com/sailing-schedule"
+      },
+      {
+        "org": "Raja Ferry Port — fares",
+        "url": "https://www.rajaferryport.com/"
+      },
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      }
+    ]
+  },
+  {
+    "id": "th-suratthani-kohphangan",
+    "from": "Surat Thani",
+    "to": "Koh Phangan",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Direct boats from Donsak to Thong Sala, or bus-and-boat tickets from Surat Thani town.",
+    "options": [
+      {
+        "mode": "Raja car ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          2.5,
+          2.5
+        ],
+        "price": {
+          "low": 280,
+          "high": 280,
+          "currency": "THB"
+        },
+        "freq": "Several daily",
+        "comfort": "Donsak → Thong Sala. Raja’s Koh Phangan timetable is not published as text on its site — call or check at the pier.",
+        "operators": [
+          "rajaferry"
+        ],
+        "legs": [
+          "From Surat Thani airport on Raja’s bus and ferry ticket: 590 THB."
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Lomprayah catamaran",
+        "tag": "fastest",
+        "durationHrs": [
+          1.5,
+          1.75
+        ],
+        "price": {
+          "low": 550,
+          "high": 750,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "Donsak → Thong Sala 11:00 → 12:45 and 15:00 → 16:30, 550 THB (750 THB with hotel drop-off).",
+        "operators": [
+          "lomprayah"
+        ],
+        "legs": [
+          "From Tapee pier in town: catamaran 10:00 or 13:00 (700 THB), speedboat 12:00 → 14:50 (800 THB)."
+        ],
+        "recommended": true
+      }
+    ],
+    "kids": [
+      "Raja Ferry: its online fare table does not list a child rule for the Koh Samui or Koh Phangan crossings — ask at the ticket window.",
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s."
+    ],
+    "sources": [
+      {
+        "org": "Raja Ferry Port — sailing schedule",
+        "url": "https://www.rajaferryport.com/sailing-schedule"
+      },
+      {
+        "org": "Raja Ferry Port — fares",
+        "url": "https://www.rajaferryport.com/"
+      },
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      }
+    ]
+  },
+  {
+    "id": "th-kohsamui-kohphangan",
+    "from": "Koh Samui",
+    "to": "Koh Phangan",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "A short crossing with many boats. Lomprayah fares include a pickup from your Samui hotel.",
+    "options": [
+      {
+        "mode": "Lomprayah ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          2.25,
+          2.25
+        ],
+        "price": {
+          "low": 400,
+          "high": 600,
+          "currency": "THB"
+        },
+        "freq": "Once daily",
+        "comfort": "Hotel pickup 09:15, arriving Thong Sala 11:30, 400 THB (600 THB with drop-off at your Phangan hotel).",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Lomprayah catamaran",
+        "tag": "fastest",
+        "durationHrs": [
+          2,
+          2.5
+        ],
+        "price": {
+          "low": 500,
+          "high": 700,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "Hotel pickup 06:30 → Thong Sala 08:30, and 10:30 → 13:00; 500 THB, or 700 THB with drop-off.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": true,
+        "notes": "Coming back from Phangan the fare is 550 THB (700 with drop-off), with departures through the day to Nathon, Bangrak and Pralarn piers."
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s.",
+      "Seatran Discovery and Raja also cross; neither publishes a child fare online — ask when booking."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      },
+      {
+        "org": "Seatran Discovery (operator site)",
+        "url": "https://www.seatrandiscovery.com/"
+      }
+    ]
+  },
+  {
+    "id": "th-kohsamui-kohtao",
+    "from": "Koh Samui",
+    "to": "Koh Tao",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "Lomprayah boats call at Koh Phangan on the way. Fares include a pickup from your Samui hotel.",
+    "options": [
+      {
+        "mode": "Lomprayah ferry",
+        "tag": "cheapest",
+        "durationHrs": [
+          4.25,
+          4.25
+        ],
+        "price": {
+          "low": 700,
+          "high": 700,
+          "currency": "THB"
+        },
+        "freq": "Once daily",
+        "comfort": "Hotel pickup 09:15, arriving Mae Haad 13:30.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": false
+      },
+      {
+        "mode": "Lomprayah catamaran",
+        "tag": "fastest",
+        "durationHrs": [
+          3,
+          3.75
+        ],
+        "price": {
+          "low": 850,
+          "high": 850,
+          "currency": "THB"
+        },
+        "freq": "Twice daily",
+        "comfort": "Hotel pickup 06:30 → Mae Haad 09:30, and 10:30 → 14:15.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": true
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s.",
+      "Seatran Discovery also runs this route; it does not publish a child fare online — ask when booking."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      },
+      {
+        "org": "Seatran Discovery (operator site)",
+        "url": "https://www.seatrandiscovery.com/"
+      }
+    ]
+  },
+  {
+    "id": "th-kohphangan-kohtao",
+    "from": "Koh Phangan",
+    "to": "Koh Tao",
+    "country": "th",
+    "verified": "2026-09",
+    "summary": "The shortest island hop in the group. Lomprayah fares include a pickup from your Phangan hotel (not Thong Nai Pan).",
+    "options": [
+      {
+        "mode": "Lomprayah catamaran or speedboat",
+        "tag": "simplest",
+        "durationHrs": [
+          2,
+          2.35
+        ],
+        "price": {
+          "low": 800,
+          "high": 800,
+          "currency": "THB"
+        },
+        "freq": "Five a day",
+        "comfort": "Hotel pickup 07:30 → Mae Haad 09:30 (catamaran), 07:45 → 10:05 (speedboat), 12:00 → 14:15, 12:05 → 14:05 (direct) and 15:45 → 17:45.",
+        "operators": [
+          "lomprayah"
+        ],
+        "recommended": true
+      }
+    ],
+    "kids": [
+      "Lomprayah: under 2 free on the boat (a seat on its bus or van is charged); ages 2–11 half price; 11 and over pay the adult fare. Book the child ticket with the adult’s.",
+      "Seatran Discovery also runs this route; it does not publish a child fare online — ask when booking."
+    ],
+    "sources": [
+      {
+        "org": "Lomprayah — Timetable 2026",
+        "url": "https://lomprayah.com/time-table"
+      },
+      {
+        "org": "Lomprayah — Terms of service (child fares)",
+        "url": "https://lomprayah.com/terms"
+      },
+      {
+        "org": "Seatran Discovery (operator site)",
+        "url": "https://www.seatrandiscovery.com/"
       }
     ]
   }

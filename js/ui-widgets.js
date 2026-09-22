@@ -283,6 +283,20 @@ export function currencySelect(current, onchange) {
     current, onchange || (() => {}), 'Currency');
 }
 
+// "Show prices in" — the SAME setting as Settings' home currency (store.profile.homeCurrency),
+// offered where prices are actually read, so choosing euros on the transport screen also
+// re-expresses budget totals and every other converted price, rather than being a second,
+// screen-local preference that disagrees with the first. Sets currencyManual for the reason
+// Settings does (a later language change must not move it). The local price is always kept
+// beside the conversion, because that is what gets paid.
+export function pricesInPicker(onChange) {
+  const p = store.profile;
+  const sel = selectEl(CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${currencySymbol(c) || c} · ${c}`.trim()]),
+    p.homeCurrency || 'USD', (v) => { p.homeCurrency = v; p.currencyManual = true; save(); if (onChange) onChange(v); },
+    'Show prices in');
+  return h('label', { class: 'prices-in' }, [h('span', {}, '💱 Show prices in'), sel]);
+}
+
 let _fieldSeq = 0;
 export function field(labelText, control) {
   // Associate the <label> with its control (programmatic label for screen readers):
