@@ -168,7 +168,7 @@ function loadAtmsFC() {
 let ferriesPromise = null;
 function loadFerries() {
   if (ferriesPromise) return ferriesPromise;
-  ferriesPromise = Promise.all([import('./data/ferries.js'), import('./data/operators.js')]).then(([f, o]) => {
+  ferriesPromise = Promise.all([import('./data/ferries.js'), import('./data/operators.js'), import('./currency.js')]).then(([f, o, cur]) => {
     const legs = f.FERRY_LEGS.filter((l) => f.PIERS[l.a] && f.PIERS[l.b]);
     const lines = {
       type: 'FeatureCollection',
@@ -185,7 +185,7 @@ function loadFerries() {
         geometry: { type: 'Point', coordinates: [f.PIERS[k].lng, f.PIERS[k].lat] },
       })),
     };
-    return { lines, piers, legs: new Map(legs.map((l) => [l.id, l])), PIERS: f.PIERS, checked: f.FERRIES_CHECKED, OPS: o.OPERATORS, telHref: o.telHref };
+    return { lines, piers, legs: new Map(legs.map((l) => [l.id, l])), PIERS: f.PIERS, checked: f.FERRIES_CHECKED, OPS: o.OPERATORS, telHref: o.telHref, annotatePrices: cur.annotatePrices };
   });
   return ferriesPromise;
 }
@@ -1357,6 +1357,9 @@ export async function initMap(containerEl, opts = {}) {
       map.on('mouseleave', id, () => setCursor(''));
     });
     const small = (text, extra = '') => h('div', { class: 'muted', style: `font-size:12px;${extra}` }, text);
+    // Read at tap time, so a currency chosen after the map opened is honoured. Same fallback as
+    // main.js homeCurrency(), which this module does not import (map.js stays off main.js).
+    const tx = (d, text) => d.annotatePrices(text, (store.profile && store.profile.homeCurrency) || 'USD');
     const legBody = (d, leg) => {
       const pa = d.PIERS[leg.a], pb = d.PIERS[leg.b];
       const opRows = leg.ops.map((k) => d.OPS[k]).filter(Boolean).map((op) => h('div', { style: 'margin-top: var(--sp-1)' }, [
@@ -1370,9 +1373,9 @@ export async function initMap(containerEl, opts = {}) {
       const mins = !leg.mins ? '' : leg.mins[0] === leg.mins[1] ? ` · ${leg.mins[0]} min` : ` · ${leg.mins[0]}–${leg.mins[1]} min`;
       return h('div', {}, [
         h('strong', {}, `⛴️ ${pa.name} ↔ ${pb.name}`),
-        h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, `${leg.fare} THB adult${mins}`),
-        small(leg.season),
-        h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, [h('strong', {}, '👶 Children: '), h('span', {}, leg.kids)]),
+        h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, tx(d, `${leg.fare} THB adult`) + mins),
+        small(tx(d, leg.season)),
+        h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, [h('strong', {}, '👶 Children: '), h('span', {}, tx(d, leg.kids))]),
         ...opRows,
         h('div', { style: 'font-size:12px;margin-top: var(--sp-1h)' }, h('a', { href: '#transport-th' }, 'All options, prices & timetables →')),
         small(`Checked ${d.checked}. The line shows which piers connect, not the boat’s course. Confirm before travel — boats stop in rough weather.`, 'margin-top: var(--sp-1)'),
@@ -1398,7 +1401,7 @@ export async function initMap(containerEl, opts = {}) {
           h('strong', {}, `⛴️ ${f.properties.name}`),
           ...legs.map((l) => {
             const other = d.PIERS[l.a === f.properties.id ? l.b : l.a];
-            return small(`→ ${other.name}: ${l.fare} THB · ${l.ops.map((k) => (d.OPS[k] || {}).name).filter(Boolean).join(', ')}`, 'margin-top: var(--sp-1)');
+            return small(`→ ${other.name}: ${tx(d, `${l.fare} THB`)} · ${l.ops.map((k) => (d.OPS[k] || {}).name).filter(Boolean).join(', ')}`, 'margin-top: var(--sp-1)');
           }),
           small('Tap a line for phone numbers and child fares.', 'margin-top: var(--sp-1)'),
         ]);

@@ -15,12 +15,14 @@ import {
   togglePlaceInCollection,
   updatePin,
 } from '../state.js';
-import { field } from '../ui-widgets.js';
+import { field, pricesInPicker } from '../ui-widgets.js';
+import { annotatePrices } from '../currency.js';
 import {
   collToggleChip,
   countryChips,
   focusSpot,
   go,
+  homeCurrency,
   mount,
   priceLine,
   toggleSet,
@@ -45,6 +47,10 @@ function operatorList(keys) {
       ? h('div', {}, op.phones.map((p, i) => [i ? ' · ' : '', h('a', { href: telHref(p) }, p)]).flat())
       : null,
     op.phoneNote ? h('div', { class: 'muted tiny' }, op.phoneNote) : null,
+    // Per-pier lines, for ringing the office you are actually standing at.
+    (op.branches && op.branches.length)
+      ? h('ul', { class: 'route-branches' }, op.branches.map(([where, p]) => h('li', {}, [`${where}: `, h('a', { href: telHref(p) }, p)])))
+      : null,
     op.url ? h('a', { href: op.url, target: '_blank', rel: 'noopener' }, `${op.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')} ↗`) : null,
     op.email ? h('div', { class: 'tiny' }, h('a', { href: `mailto:${op.email}` }, op.email)) : null,
   ])));
@@ -57,6 +63,16 @@ export function transportScreen(countryId) {
   wrap.append(topbar('Getting around', '#home'));
   wrap.append(countryChips((id) => go(`#transport-${id}`)));
   wrap.append(h('button', { class: 'btn block', style: 'margin-bottom: var(--sp-3)', onclick: () => go('#route') }, '🧭 Plan a whole journey A → B (incl. borders)'));
+  // Re-render in place on a currency change, keeping the reader where they were in a long list.
+  wrap.append(pricesInPicker(() => {
+    const y = window.scrollY;
+    transportScreen(getActiveCountry());
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }));
+  // Prices inside the prose (legs, departures, child fares) get the same conversion as the
+  // structured fare; see annotatePrices in js/currency.js.
+  const home = homeCurrency();
+  const tx = (s) => annotatePrices(s, home);
   // Rent & ride, tickets and schedules — always shown, even where intercity routes are sparse.
   const ga = getAroundSection(getActiveCountry());
   if (ga) wrap.append(ga);
@@ -72,9 +88,9 @@ export function transportScreen(countryId) {
       h('h2', {}, `${r.from} → ${r.to}`),
       r.crossBorder ? h('p', { class: 'border-flag' }, `Border crossing: ${r.border}`) : null,
       r.visa ? h('p', { class: 'muted' }, `Visa: ${r.visa.note}`) : null,
-      r.summary ? h('p', { class: 'muted' }, r.summary) : null,
+      r.summary ? h('p', { class: 'muted' }, tx(r.summary)) : null,
     ]);
-    if (r.scamWarnings && r.scamWarnings.length) r.scamWarnings.forEach((w) => card.append(h('div', { class: 'warn-note' }, w)));
+    if (r.scamWarnings && r.scamWarnings.length) r.scamWarnings.forEach((w) => card.append(h('div', { class: 'warn-note' }, tx(w))));
     for (const o of r.options) {
       const dur = o.durationHrs ? `${o.durationHrs[0]}–${o.durationHrs[1]} h` : '';
       card.append(h('div', { class: `route-opt ${o.recommended ? 'best' : ''}` }, [
@@ -85,14 +101,14 @@ export function transportScreen(countryId) {
             o.recommended ? h('span', { class: 'pill-best' }, 'Best') : null,
           ]),
         ]),
-        h('div', { class: 'muted' }, `${dur} · ${priceLine(o.price.low, o.price.high, o.price.currency)} · ${o.freq}`),
-        o.comfort ? h('div', {}, o.comfort) : null,
-        o.notes ? h('div', { class: 'muted' }, o.notes) : null,
+        h('div', { class: 'muted' }, [dur, priceLine(o.price.low, o.price.high, o.price.currency), o.freq].filter(Boolean).join(' · ')),
+        o.comfort ? h('div', {}, tx(o.comfort)) : null,
+        o.notes ? h('div', { class: 'muted' }, tx(o.notes)) : null,
         o.bookVia ? h('div', { class: 'muted' }, `Book via: ${o.bookVia}`) : null,
-        (o.legs && o.legs.length) ? h('ol', { class: 'route-legs' }, o.legs.map((l) => h('li', {}, l))) : null,
+        (o.legs && o.legs.length) ? h('ol', { class: 'route-legs' }, o.legs.map((l) => h('li', {}, tx(l)))) : null,
         (o.timetable && o.timetable.length) ? h('div', { class: 'route-timetable' }, [
           h('strong', {}, '🕘 Departures'),
-          h('ul', {}, o.timetable.map((t) => h('li', {}, t))),
+          h('ul', {}, o.timetable.map((t) => h('li', {}, tx(t)))),
         ]) : null,
         (o.operators && o.operators.length) ? operatorList(o.operators) : null,
       ]));
@@ -102,7 +118,7 @@ export function transportScreen(countryId) {
     if (r.kids && r.kids.length) {
       card.append(h('div', { class: 'route-kids' }, [
         h('strong', {}, '👶 Travelling with children or a baby'),
-        h('ul', {}, r.kids.map((k) => h('li', {}, k))),
+        h('ul', {}, r.kids.map((k) => h('li', {}, tx(k)))),
       ]));
     }
     const src = sourcesNote(r.sources, r.verified);

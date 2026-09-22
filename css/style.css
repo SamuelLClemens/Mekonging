@@ -1439,7 +1439,10 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .route-legs li, .route-timetable li, .route-kids li { margin-top: var(--sp-0h); }
 .route-timetable { margin-top: var(--sp-2); font-size: var(--fs-sm); }
 .route-ops { margin-top: var(--sp-2); font-size: var(--fs-sm); }
+.prices-in { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); font-size: var(--fs-sm); font-weight: 700; }
+.prices-in select { flex: 1; min-width: 0; }
 .route-ops summary { cursor: pointer; font-weight: 700; }
+.route-branches { margin: var(--sp-1) 0; padding-left: var(--sp-4); font-size: var(--fs-label); }
 .route-kids { margin-top: var(--sp-3); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--card); }
 /* --- journey planner --- */
 .plan-picker { display: flex; flex-direction: column; gap: var(--sp-2); }

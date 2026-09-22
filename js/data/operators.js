@@ -70,6 +70,43 @@ export const OPERATORS = {
     phoneNote: 'No phone number published.',
     sources: [{ org: 'I Am Koh Chang — bus, boat & plane (updated 21 Sep 2026)', url: 'https://iamkohchang.com/getting-here/bus-boat-timetables.html' }],
   },
+  // Gulf of Thailand (Samui, Phangan, Tao). Lomprayah's numbers are from the contact page of its
+  // own 2026 timetable (lomprayah.com/time-table); branch lines are listed so a traveller can ring
+  // the pier they are actually standing at.
+  lomprayah: {
+    name: 'Lomprayah High Speed Catamaran', mode: 'Catamaran',
+    phones: ['065 350 9040', '089 873 0008', '093 576 6565'],
+    branches: [
+      ['Bangkok (Khao San)', '061 175 8007'], ['Bangkok (Pinklao)', '02 629 2569'],
+      ['Chumphon pier', '077 558 212'], ['Koh Tao', '077 456 176'], ['Koh Phangan', '061 172 4037'],
+      ['Koh Samui (Pralarn)', '077 950 700'], ['Koh Samui (Nathon)', '077 420 121'],
+      ['Koh Samui (Bangrak)', '077 430 081'], ['Surat Thani (Donsak)', '065 350 3562'],
+      ['Surat Thani (Tapee pier)', '065 350 3561'], ['Surat Thani Airport', '065 350 3560'],
+    ],
+    url: 'https://lomprayah.com/',
+    sources: [{ org: 'Lomprayah — Timetable 2026', url: 'https://lomprayah.com/time-table' }, { org: 'Lomprayah — Terms of service', url: 'https://lomprayah.com/terms' }],
+  },
+  rajaferry: {
+    name: 'Raja Ferry', mode: 'Car ferry',
+    phones: ['077 372 800', '02 277 4488'],
+    phoneNote: '077 372 800 is the Donsak head office; 02 277 4488 the Bangkok office.',
+    url: 'https://www.rajaferryport.com/',
+    sources: [{ org: 'Raja Ferry Port — sailing schedule', url: 'https://www.rajaferryport.com/sailing-schedule' }, { org: 'Raja Ferry Port — fares', url: 'https://www.rajaferryport.com/' }],
+  },
+  seatrandiscovery: {
+    name: 'Seatran Discovery', mode: 'Catamaran',
+    phones: ['086 476 4825'],
+    phoneNote: 'Fares and times are not published on its site — ask by phone, LINE or email.',
+    url: 'https://www.seatrandiscovery.com/', email: 'ebooking@seatrandiscovery.com',
+    sources: [{ org: 'Seatran Discovery (operator site)', url: 'https://www.seatrandiscovery.com/' }],
+  },
+  srt: {
+    name: 'State Railway of Thailand', mode: 'Train',
+    phones: [],
+    phoneNote: 'Book up to 90 days ahead online or at any station.',
+    url: 'https://www.dticket.railway.co.th/',
+    sources: [{ org: 'Seat61 — Train travel in Thailand (updated 8 Jul 2026)', url: 'https://www.seat61.com/Thailand.htm' }],
+  },
   cherdchai: {
     name: 'Cherdchai Tour', mode: 'Bus',
     phones: ['061 023 9292', '084 982 7410'],
