@@ -162,15 +162,16 @@ function serviceError(text, status) {
 }
 
 // One request for one chunk. Kept separate so the caller can retry it without
-// re-running the cache, chunking or validation around it.
-async function requestOne(q, target, src) {
+// re-running the cache, chunking or validation around it. `signal` lets the traveller call the
+// whole thing off — see translate()'s own note.
+async function requestOne(q, target, src, signal) {
   const endpoint = store.profile && store.profile.translateEndpoint;
   if (endpoint) {
     // LibreTranslate-compatible request shape. A proxy can adapt other providers.
     const key = store.profile && store.profile.translateKey;
     const body = { q, source: src, target, format: 'text' };
     if (key) body.api_key = key;
-    const res = await fetchTimeout(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, 15000);
+    const res = await fetchTimeout(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal }, 15000);
     if (!res.ok) throw new Error(`Your translation service answered with an error (${res.status}). Check the endpoint in Settings.`);
     const data = await res.json();
     const out = data && (data.translatedText || data.translation || data.text);
@@ -186,7 +187,7 @@ async function requestOne(q, target, src) {
   const email = store.profile && store.profile.translateEmail;
   const params = new URLSearchParams({ q, langpair: `${src}|${target}` });
   if (email) params.set('de', email);
-  const res = await fetchTimeout(`${MYMEMORY}?${params}`, {}, 15000);
+  const res = await fetchTimeout(`${MYMEMORY}?${params}`, { signal }, 15000);
   // A transport-level failure carries no body to inspect, so it is reported as itself.
   if (!res.ok && res.status !== 403) throw new Error(serviceError('', res.status));
   const data = await res.json();
@@ -201,10 +202,24 @@ async function requestOne(q, target, src) {
   return out;
 }
 
+// Thrown when the traveller calls the translation off. Its own class so the UI can tell a
+// deliberate cancel apart from a failure and stay silent instead of reporting an error at
+// somebody who already knows what happened.
+export class TranslateAborted extends Error {
+  constructor() { super('Translation stopped.'); this.name = 'TranslateAborted'; }
+}
+
 // Translate `text` into the target language code ('th','vi','km','lo') from a chosen
 // source language (defaults to English; every language in the picker is offered).
 // Resolves to the translated string, or throws an Error the UI can surface.
-export async function translate(text, target, source = 'en') {
+//
+// `signal` is an optional AbortSignal, and it exists because this can now take real time:
+// long text is several requests, each with a retry behind it, so on a weak link "Translating…"
+// can sit on screen for seconds. Sound has had a stop control for a while; work the app is
+// doing over the network had none, and waiting it out was the only option.
+export async function translate(text, target, source = 'en', signal = null) {
+  const stopped = () => signal && signal.aborted;
+  if (stopped()) throw new TranslateAborted();
   const q = (text || '').trim();
   if (!q) throw new Error('Type or say something first.');
   const src = apiLang(source || 'en');
@@ -232,14 +247,20 @@ export async function translate(text, target, source = 'en') {
     // standing at a counter far less than retyping the sentence does. A quota or
     // language-pair refusal is not transient and is surfaced immediately.
     let out;
+    if (stopped()) throw new TranslateAborted();
     try {
-      out = await requestOne(part, tgt, src);
+      out = await requestOne(part, tgt, src, signal);
     } catch (err) {
+      // An abort is not a network wobble — never burn the retry on one, and never report it
+      // as a failure. Checked before the message match because an aborted fetch's own message
+      // is browser-specific and would otherwise fall through to the retry.
+      if (stopped() || err.name === 'AbortError' || err instanceof TranslateAborted) throw new TranslateAborted();
       if (/daily limit|same language|pair of languages|too long/i.test(err.message)) throw err;
-      out = await requestOne(part, tgt, src);
+      out = await requestOne(part, tgt, src, signal);
     }
     done.push(out);
   }
+  if (stopped()) throw new TranslateAborted();
   const joined = done.join(' ').trim();
 
   // For a pair it cannot handle, the service echoes the input back with a 200. That is
