@@ -1230,7 +1230,11 @@ function liveTranslateBox(code, label, locale, onChange) {
         micBtn.classList.add('is-listening');
         micBtn.setAttribute('aria-pressed', 'true');
         micBtn.title = 'Listening — tap again to stop';
-        rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(false); };
+        // Fills the field and stops there — it does NOT auto-translate. Speech recognition
+        // gets things wrong often enough (names, numbers, background noise) that the traveller
+        // needs a chance to read and fix the transcript before it is sent anywhere; the visible
+        // Translate button is still the one way to submit, same as typed text.
+        rec.onresult = (e) => { input.value = e.results[0][0].transcript; syncInputX(); input.focus(); };
         rec.onerror = resetMic;
         rec.onend = resetMic;
         rec.start();
