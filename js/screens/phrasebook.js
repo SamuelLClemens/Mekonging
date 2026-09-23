@@ -1239,14 +1239,21 @@ function liveTranslateBox(code, label, locale, onChange) {
   }
   // B3: an explicit way to start a new phrase — a small ✕ inside the field itself (direct
   // request), same corner every "clear this box" control sits in app-wide, rather than a
-  // fourth full-width button below Save. No confirm dialog: unlike the old full-width Clear,
-  // this is small and low-commitment by design, and retyping a discarded phrase costs nothing
-  // a confirm would meaningfully prevent. Shown only once there is something to clear.
+  // fourth full-width button below Save. A short, low-commitment entry clears immediately —
+  // retyping a word or two costs nothing a confirm would meaningfully prevent — but per A2,
+  // clearing something substantial enough that retyping it is a real cost DOES confirm first,
+  // through the same shared confirmAction() helper every other destructive control on this
+  // screen uses. Shown only once there is something to clear.
+  const CLEAR_CONFIRM_CHARS = 40;   // roughly "a full sentence" — shorter phrases clear silently
   const inputX = h('button', { class: 'ta-clear-x', title: 'Clear', 'aria-label': 'Clear phrase', type: 'button' }, '✕');
   inputX.hidden = true;
   const syncInputX = () => { inputX.hidden = !input.value; };
   input.addEventListener('input', syncInputX);
-  inputX.onclick = () => {
+  inputX.onclick = async () => {
+    if (input.value.trim().length > CLEAR_CONFIRM_CHARS) {
+      const ok = await confirmAction({ title: 'Clear this phrase?', body: 'This clears what you have typed. It is not saved anywhere yet.', confirmLabel: 'Clear', danger: true });
+      if (!ok) return;
+    }
     input.value = '';
     out.innerHTML = '';
     syncInputX();
