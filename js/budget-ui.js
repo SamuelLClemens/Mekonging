@@ -145,10 +145,12 @@ export function frequentExpenseTitles() {
     .map((r) => ({ title: r.title, n: r.n, category: [...r.cats.entries()].sort((a, b) => b[1] - a[1])[0][0] }));
 }
 
-// The "On what?" field. A dropdown of everything logged before plus free text for anything
-// new — NOT a row of one-tap chips, which is what this was and what had to go: a logged
-// expense must land in the dropdown and must never spawn a button of its own, and logging
-// the same thing twice must not produce a second control (direct request, made repeatedly).
+// The "Details" field (renamed from "On what?" — category now leads the form, this is the
+// free-text description that used to be the only field). A dropdown of everything logged
+// before plus free text for anything new — NOT a row of one-tap chips, which is what this was
+// and what had to go: a logged expense must land in the dropdown and must never spawn a
+// button of its own, and logging the same thing twice must not produce a second control
+// (direct request, made repeatedly).
 //
 // Free text stays reachable at all times rather than hiding behind the dropdown's "something
 // new" option, because the first expense of a trip is always new and a picker offering one

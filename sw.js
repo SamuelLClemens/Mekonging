@@ -349,7 +349,7 @@ const MANIFEST = {
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'e25deee5',
-  'js/budget-ui.js': '77250e33',
+  'js/budget-ui.js': '6244d5ac',
   'js/currency.js': '34ce7a88',
   'js/data/accessibility.js': '48f9da6c',
   'js/data/allergens.js': 'df832414',
