@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.581.0';
+const CACHE_VERSION = 'mk-v0.585.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -310,6 +310,10 @@ const PRECACHE = [
   // Places) — orientation and emergency-relevant layers, so this has to work with no signal.
   'js/screens/map.js',
   'js/offline-areas-ui.js',
+  // The ferry layer and the operator contacts its popups (and the route cards) read: phone
+  // numbers for a pier are most needed exactly where there is no signal.
+  'js/data/ferries.js',
+  'js/data/operators.js',
   // Offline walking directions. The graph is the largest single file here (~900 KB), but this
   // list is warmed on idle rather than at install (see the install handler), so it costs
   // nothing at launch — and walking directions with no signal is the entire point of it.
@@ -338,7 +342,7 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': '63363228',
+  'css/style.css': 'ce632a85',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': 'aff8f935',
@@ -346,14 +350,14 @@ const MANIFEST = {
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'e25deee5',
   'js/budget-ui.js': '77250e33',
-  'js/currency.js': 'b43afa42',
+  'js/currency.js': '34ce7a88',
   'js/data/accessibility.js': '48f9da6c',
   'js/data/allergens.js': 'df832414',
   'js/data/arrival.js': '2d70ab12',
   'js/data/atms.js': 'c35febfd',
   'js/data/basemap.js': '9427d471',
   'js/data/bestof.js': '911f4546',
-  'js/data/borders.js': '99c7881b',
+  'js/data/borders.js': '49d317f2',
   'js/data/borders_lines.js': '061e51d8',
   'js/data/bus.js': 'fd6f2755',
   'js/data/bus.kh.js': '69d89d27',
@@ -372,6 +376,7 @@ const MANIFEST = {
   'js/data/events.th.js': '5d9a7ad5',
   'js/data/events.vi.js': '293c3aa2',
   'js/data/family.js': '4af22afc',
+  'js/data/ferries.js': '40f39990',
   'js/data/food.kh.ext.js': 'a65ea542',
   'js/data/food.kh.js': '721060ad',
   'js/data/food.la.ext.js': 'ef96a320',
@@ -409,6 +414,7 @@ const MANIFEST = {
   'js/data/medical.js': '5f520c4d',
   'js/data/month-verdict.js': '7bf2c3cc',
   'js/data/nature.js': '391fc20c',
+  'js/data/operators.js': 'd6495bb8',
   'js/data/outdoors.js': 'eab1a010',
   'js/data/photos.js': '82aa71fe',
   'js/data/phrasebook.hmn.js': '0afaf78a',
@@ -426,7 +432,7 @@ const MANIFEST = {
   'js/data/places.kh.js': '605dad3e',
   'js/data/places.la.ext.js': '95f62cfa',
   'js/data/places.la.js': '0eb59e15',
-  'js/data/places.th.ext.js': '09cf383b',
+  'js/data/places.th.ext.js': 'f82dd53a',
   'js/data/places.th.js': '3d8b3c90',
   'js/data/places.vi.ext.js': '12243874',
   'js/data/places.vi.js': '0460f94f',
@@ -444,7 +450,7 @@ const MANIFEST = {
   'js/data/regions.vi.js': '28be48aa',
   'js/data/routes.kh.js': '8e18e8c4',
   'js/data/routes.la.js': '3c9dd258',
-  'js/data/routes.th.js': '6d8e6df8',
+  'js/data/routes.th.js': '4c29866a',
   'js/data/routes.vi.js': '09bbda24',
   'js/data/scams.js': '69bfed4a',
   'js/data/scenic.kh.js': '67589f36',
@@ -457,7 +463,7 @@ const MANIFEST = {
   'js/data/trails.la.js': 'e4ee5cd9',
   'js/data/trails.th.js': '629ff4ff',
   'js/data/trails.vi.js': '12eb523a',
-  'js/data/transit.js': '1eb6f082',
+  'js/data/transit.js': '8b400be6',
   'js/data/ui-strings.ar.js': '4ebfd51e',
   'js/data/ui-strings.bn.js': 'f3e7fb26',
   'js/data/ui-strings.cs.js': '90b0cea4',
@@ -497,10 +503,10 @@ const MANIFEST = {
   'js/i18n.js': 'ab6832b5',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'd020ccad',
-  'js/journey.js': '859119c8',
+  'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'b35391d6',
-  'js/map.js': '83e565e6',
+  'js/main.js': 'ae0b62a3',
+  'js/map.js': 'facab57f',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
   'js/offline-pack.js': 'f3e74905',
@@ -527,7 +533,7 @@ const MANIFEST = {
   'js/screens/help.js': 'ec261fba',
   'js/screens/home.js': '3d581354',
   'js/screens/journal.js': 'a2702b95',
-  'js/screens/map.js': '69b29633',
+  'js/screens/map.js': '43c703b1',
   'js/screens/medical.js': '4277ae91',
   'js/screens/nearby.js': 'c25da527',
   'js/screens/nextstop.js': '657c8d05',
@@ -541,7 +547,7 @@ const MANIFEST = {
   'js/screens/signtranslate.js': '4494ce60',
   'js/screens/streetfood.js': '0ca4e2ad',
   'js/screens/today.js': 'af93bb70',
-  'js/screens/transport.js': '53c29a76',
+  'js/screens/transport.js': 'e79a065a',
   'js/screens/trip.js': '8c7b7e12',
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '5d20e664',
@@ -553,7 +559,7 @@ const MANIFEST = {
   'js/trail.js': 'c04f9efc',
   'js/translate.js': 'bb9a9517',
   'js/tts.js': '1c441cc8',
-  'js/ui-widgets.js': 'fed10179',
+  'js/ui-widgets.js': '70274759',
   'js/util.js': '33cd90f6',
   'js/vault.js': 'e0d57d7f',
   'js/visits.js': '523454b2',

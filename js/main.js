@@ -766,7 +766,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.581.0';
+export const APP_VERSION = 'mk-v0.585.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4458,7 +4458,7 @@ export function twelveGoUrl(from, to) {
 
 function planLegRow(l, i) {
   const o = l.option || {};
-  const dur = Array.isArray(o.durationHrs) ? `${o.durationHrs[0]}–${o.durationHrs[1]} h` : '';
+  const dur = Array.isArray(o.durationHrs) ? (o.durationHrs[0] === o.durationHrs[1] ? `${o.durationHrs[0]} h` : `${o.durationHrs[0]}–${o.durationHrs[1]} h`) : '';
   const box = h('div', { class: 'plan-leg' }, [
     h('div', { class: 'plan-leg-head' }, `${i + 1}. ${l.from} → ${l.to}`),
     l.edge.crossBorder ? h('div', { class: 'border-flag' }, `🛂 Border crossing: ${l.edge.border || ''}`) : null,

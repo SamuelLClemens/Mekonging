@@ -46,7 +46,7 @@ export const CROSSINGS = [
   { id: 'x-th-kh-hat-lek', name: 'Hat Lek – Cham Yeam', pair: 'Thailand ↔ Cambodia', type: 'land',
     a: { country: 'th', town: 'Trat (Hat Lek)' }, b: { country: 'kh', town: 'Koh Kong (Cham Yeam)' }, coords: { lat: 11.6200, lng: 102.9300 },
     hours: 'Roughly 07:00–20:00 daily', visa: 'Cambodian e-visa or visa on arrival; gateway to Koh Kong and the southern coast.',
-    notes: 'Quieter coastal crossing linking eastern Thailand with Cambodia’s southwest.', scam: 'Agree taxi fares before riding; overcharging is common on the Cambodian side.',
+    notes: 'Quieter coastal crossing linking eastern Thailand with Cambodia’s southwest. The Thailand–Cambodia land border was closed to travellers after the 2025 conflict, and no reopening of this crossing could be confirmed in September 2026 — check before you travel.', scam: 'Agree taxi fares before riding; overcharging is common on the Cambodian side.',
     sources: [{ org: 'Cambodia e-Visa (official)', url: 'https://www.evisa.gov.kh' }], verified: '2026-06' },
   { id: 'x-th-kh-chong-chom', name: 'Chong Chom – O Smach', pair: 'Thailand ↔ Cambodia', type: 'land',
     a: { country: 'th', town: 'Surin (Chong Chom)' }, b: { country: 'kh', town: 'O Smach' }, coords: { lat: 14.4300, lng: 103.5700 },

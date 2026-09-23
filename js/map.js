@@ -162,6 +162,34 @@ function loadAtmsFC() {
   return atmsFCPromise;
 }
 
+// Ferry layer: passenger boat legs between piers (js/data/ferries.js), with operator contacts
+// resolved from js/data/operators.js. Both files are small and precached, so the layer and its
+// popups (phone numbers included) work with no signal.
+let ferriesPromise = null;
+function loadFerries() {
+  if (ferriesPromise) return ferriesPromise;
+  ferriesPromise = Promise.all([import('./data/ferries.js'), import('./data/operators.js'), import('./currency.js')]).then(([f, o, cur]) => {
+    const legs = f.FERRY_LEGS.filter((l) => f.PIERS[l.a] && f.PIERS[l.b]);
+    const lines = {
+      type: 'FeatureCollection',
+      features: legs.map((l) => ({
+        type: 'Feature', properties: { id: l.id },
+        geometry: { type: 'LineString', coordinates: [[f.PIERS[l.a].lng, f.PIERS[l.a].lat], [f.PIERS[l.b].lng, f.PIERS[l.b].lat]] },
+      })),
+    };
+    const used = new Set(legs.flatMap((l) => [l.a, l.b]));
+    const piers = {
+      type: 'FeatureCollection',
+      features: [...used].map((k) => ({
+        type: 'Feature', properties: { id: k, name: f.PIERS[k].name },
+        geometry: { type: 'Point', coordinates: [f.PIERS[k].lng, f.PIERS[k].lat] },
+      })),
+    };
+    return { lines, piers, legs: new Map(legs.map((l) => [l.id, l])), PIERS: f.PIERS, checked: f.FERRIES_CHECKED, OPS: o.OPERATORS, telHref: o.telHref, annotatePrices: cur.annotatePrices };
+  });
+  return ferriesPromise;
+}
+
 // Bus stop layer. Thailand's stops carry real route numbers (from a GTFS feed); Vietnam,
 // Cambodia and Laos are OpenStreetMap-sourced downtown-core coverage only, with no route
 // numbers — see js/data/bus.js and scripts/build_bus_osm.py for exactly why. `routes` is an
@@ -1292,6 +1320,112 @@ export async function initMap(containerEl, opts = {}) {
     return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
   }
 
+  // ---- Ferries ---------------------------------------------------------------------------
+  // Teal dashed lines (a crossing, not a road) over a dark casing, with a white-ringed dot
+  // at each pier. Tapping a line lists the operators with tap-to-call numbers.
+  function addFerryLayers() {
+    if (map.getSource('mk-ferry')) return;
+    map.addSource('mk-ferry', { type: 'geojson', data: lineFC([]) });
+    map.addSource('mk-ferry-piers', { type: 'geojson', data: lineFC([]) });
+    map.addLayer({
+      id: 'mk-ferry-casing', type: 'line', source: 'mk-ferry',
+      layout: { visibility: 'none', 'line-cap': 'round' },
+      paint: { 'line-color': 'rgba(0,0,0,0.40)', 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 3, 12, 6, 16, 10] },
+    });
+    map.addLayer({
+      id: 'mk-ferry-line', type: 'line', source: 'mk-ferry',
+      layout: { visibility: 'none', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#1FC7C7',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.5, 12, 3, 16, 5],
+        'line-dasharray': [2, 1.5],
+      },
+    });
+    map.addLayer({
+      id: 'mk-ferry-piers', type: 'circle', source: 'mk-ferry-piers',
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': '#1FC7C7',
+        'circle-stroke-color': '#FFFFFF',
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 2],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 3, 12, 6, 16, 8],
+      },
+    });
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    ['mk-ferry-line', 'mk-ferry-piers'].forEach((id) => {
+      map.on('mouseenter', id, () => setCursor('pointer'));
+      map.on('mouseleave', id, () => setCursor(''));
+    });
+    const small = (text, extra = '') => h('div', { class: 'muted', style: `font-size:12px;${extra}` }, text);
+    // Read at tap time, so a currency chosen after the map opened is honoured. Same fallback as
+    // main.js homeCurrency(), which this module does not import (map.js stays off main.js).
+    const tx = (d, text) => d.annotatePrices(text, (store.profile && store.profile.homeCurrency) || 'USD');
+    const legBody = (d, leg) => {
+      const pa = d.PIERS[leg.a], pb = d.PIERS[leg.b];
+      const opRows = leg.ops.map((k) => d.OPS[k]).filter(Boolean).map((op) => h('div', { style: 'margin-top: var(--sp-1)' }, [
+        h('strong', { style: 'font-size:13px' }, op.name),
+        op.phones && op.phones.length
+          ? h('div', { style: 'font-size:12px' }, op.phones.map((p, i) => [i ? ' · ' : '', h('a', { href: d.telHref(p) }, p)]).flat())
+          : null,
+        op.phoneNote ? small(op.phoneNote) : null,
+        op.url ? h('div', { style: 'font-size:12px' }, h('a', { href: op.url, target: '_blank', rel: 'noopener' }, 'Website ↗')) : null,
+      ]));
+      const mins = !leg.mins ? '' : leg.mins[0] === leg.mins[1] ? ` · ${leg.mins[0]} min` : ` · ${leg.mins[0]}–${leg.mins[1]} min`;
+      return h('div', {}, [
+        h('strong', {}, `⛴️ ${pa.name} ↔ ${pb.name}`),
+        h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, tx(d, `${leg.fare} THB adult`) + mins),
+        small(tx(d, leg.season)),
+        h('div', { style: 'font-size:12px;margin-top: var(--sp-1)' }, [h('strong', {}, '👶 Children: '), h('span', {}, tx(d, leg.kids))]),
+        ...opRows,
+        h('div', { style: 'font-size:12px;margin-top: var(--sp-1h)' }, h('a', { href: '#transport-th' }, 'All options, prices & timetables →')),
+        small(`Checked ${d.checked}. The line shows which piers connect, not the boat’s course. Confirm before travel — boats stop in rough weather.`, 'margin-top: var(--sp-1)'),
+      ]);
+    };
+    // .setDOMContent(), never .setHTML(), as with every other popup here.
+    map.on('click', 'mk-ferry-line', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      loadFerries().then((d) => {
+        const leg = d.legs.get(f.properties.id);
+        if (!leg) return;
+        new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+          .setLngLat(e.lngLat).setDOMContent(legBody(d, leg)).addTo(map);
+      });
+    });
+    map.on('click', 'mk-ferry-piers', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      loadFerries().then((d) => {
+        const legs = [...d.legs.values()].filter((l) => l.a === f.properties.id || l.b === f.properties.id);
+        const body = h('div', {}, [
+          h('strong', {}, `⛴️ ${f.properties.name}`),
+          ...legs.map((l) => {
+            const other = d.PIERS[l.a === f.properties.id ? l.b : l.a];
+            return small(`→ ${other.name}: ${tx(d, `${l.fare} THB`)} · ${l.ops.map((k) => (d.OPS[k] || {}).name).filter(Boolean).join(', ')}`, 'margin-top: var(--sp-1)');
+          }),
+          small('Tap a line for phone numbers and child fares.', 'margin-top: var(--sp-1)'),
+        ]);
+        new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+          .setLngLat(f.geometry.coordinates).setDOMContent(body).addTo(map);
+      });
+    });
+  }
+  const FERRY_LAYERS = ['mk-ferry-casing', 'mk-ferry-line', 'mk-ferry-piers'];
+  function setFerries(on) {
+    // Same style.load race as every other layer here.
+    const apply = () => {
+      const show = (v) => FERRY_LAYERS.forEach((id) => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v); });
+      if (!on) { show('none'); return Promise.resolve(); }
+      return loadFerries().then((d) => {
+        const ls = map.getSource('mk-ferry'); if (ls) ls.setData(d.lines);
+        const ps = map.getSource('mk-ferry-piers'); if (ps) ps.setData(d.piers);
+        show('visible');
+      });
+    };
+    if (map.getSource('mk-ferry')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
+
   // ---- Hiking trails and bike paths ------------------------------------------------------
   // Lines, added beneath the point layers so a hospital/ATM/bus dot is never hidden by a trail
   // running through it, and both dashed so they read as "a way through" rather than as another
@@ -1518,7 +1652,7 @@ export async function initMap(containerEl, opts = {}) {
   // tiles (which need the network on first load).
   map.on('style.load', () => {
     addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addBusLayers(); addWalkLayers();
-    addTrailLayers(); addScenicLayers();
+    addTrailLayers(); addScenicLayers(); addFerryLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
   });
@@ -1734,6 +1868,8 @@ export async function initMap(containerEl, opts = {}) {
     // Draw or clear the offline walking route line (pass null/[] to clear).
     setWalkRoute,
     setBus,
+    // Passenger ferry/speedboat legs between piers, with operator contacts in the popup.
+    setFerries,
     // My-stay home marker: set/move/clear live, and centre on it.
     setMyStay: (coords) => placeStayMarker(coords),
     goToStay: (coords, z = 15) => { if (coords) map.flyTo({ center: [coords.lng, coords.lat], zoom: z }); },
