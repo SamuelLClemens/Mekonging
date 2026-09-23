@@ -117,6 +117,25 @@ export function visitorsScreen() {
   wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#settings') }, '← Back to settings'));
   mount(wrap, '#settings');
 
+  // A distinct "you are here" pin, separate from the orange/blue visit dots and not folded
+  // into fit()'s bounds — same white-disc marker idiom as the journey map's own here-marker
+  // (js/screens/journal.js), so the two never look like different things. The app-wide
+  // location watch (js/main.js) already keeps this current by the time any screen can mount,
+  // so this map does not need its own permission prompt or locate tap to show it.
+  function drawHereMarker(map) {
+    const fix = getLastFix();
+    if (!fix) return;
+    const maplibregl = window.maplibregl;
+    if (!maplibregl) return;
+    const el0 = document.createElement('div');
+    el0.textContent = '📍';
+    el0.style.cssText = 'font-size:16px;width:28px;height:28px;line-height:28px;text-align:center;background:#E3F0FF;border:2px solid #1A6FC0;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)';
+    const marker = new maplibregl.Marker({ element: el0, anchor: 'bottom' }).setLngLat([fix.lng, fix.lat]).addTo(map);
+    const el = marker.getElement();
+    el.title = 'You are here';
+    el.setAttribute('aria-label', 'Your current location');
+  }
+
   // ---- Draw, after mount so the container has a size ----------------------
   // The map is an enhancement: if MapLibre cannot start, the counts and the list above are
   // the screen and they still read correctly. Never let a map failure blank this page.
@@ -131,6 +150,7 @@ export function visitorsScreen() {
     // leaks contexts until the map silently stops starting at all. Same idiom as the Places
     // map: chain onto any cleanup already registered rather than replacing it.
     { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } try { c.dispose(); } catch { /* noop */ } ctrl = null; }); }
+    drawHereMarker(c.map);
     if (mine.length) c.fit(mine);
     if (!visitsFeedUrl()) return;
     feedStatus.textContent = 'Loading the shared feed…';
