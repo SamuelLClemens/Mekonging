@@ -60,7 +60,6 @@ import {
 } from './place-ui.js';
 import { encodeCard, parseCard, shareUrl, encodeShare, parseShare, encodeMessage, parseMessage } from './social.js';
 import { CHECKLIST, CHECKLIST_UNIVERSAL } from './data/checklist.js';
-import { PHOTOS } from './data/photos.js';
 // Automatic offline download of the identify field guide (photos + animal calls). Adds nothing
 // to the launch graph beyond itself: everything heavy it needs — nature.js for the dangerous-
 // species list, sounds.js for the calls — it imports dynamically, on idle.
@@ -85,6 +84,7 @@ import {
   photoBlock, extUrl, sourceHref, sourcesNote, personalScore, placeWhen,
   ratingColor, effectiveRating,
 } from './render-utils.js';
+import { isPhotosLoaded, loadPhotos, photoEntry } from './photo-registry.js';
 // The pure verdict function shared by all three "when to go" tiers (region/city/place — see
 // js/data/month-verdict.js), named `verdictFor` rather than `monthVerdict` on purpose: that
 // name is reserved for zones.js's own export, the one scripts/check-lazy-data.py gates the
@@ -95,21 +95,21 @@ import { verdictFor, VERDICT_RANK } from './data/month-verdict.js';
 // render-utils.js's placeWhen, so this import costs nothing; read here directly because the
 // region chooser needs the raw bestM/avoidM to spot a PLACE that disagrees with its region,
 // which is a different question from placeWhen's "what does this one place say".
-import { PLACE_MONTHS } from './data/place-months.js';
 import {
   field, selectEl, foldable, collapsibleCard, openModal, closeAllModals, confirmAction, promptAction,
   readAloudBar, stopAllReaders, currencySelect, locationSelect, spotForKey,
   online, infoTip, screenHint,
 } from './ui-widgets.js';
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
+import { startPlayback, stopPlayback } from './audio-control.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany } from './weather.js';
 import {
-  COUNTRIES, LANGUAGES, INTERESTS, COLLECTION_PRESETS,
-  getCountry, getLanguage, allPlaces, getPlace,
+  COUNTRIES, INTERESTS, COLLECTION_PRESETS,
+  getCountry, allPlaces, getPlace,
   boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
@@ -139,10 +139,9 @@ import {
   ARRIVAL, getArrival,
   SOUNDS,
   SCHEDULES, SCHEDULES_VERIFIED, schedulesForCountry,
-  DATA_MODULES, loadData, isDataLoaded,
+  DATA_MODULES, loadData, isDataLoaded, LANGUAGES, getLanguage,
 } from './lazy-data.js';
 import { ESSENTIALS, getEssentials } from './data/essentials.js';
-import { REGION_PATHS, REGION_LABELS, REGION_VIEWBOX, REGION_RIVER, REGION_PROJ } from './data/geo.js';
 // regions.<cc>.js (the ADM1 province-polygon files) are NOT statically imported here — they
 // are large pure geometry (27-87 KB each) needed only by the region/zone drill-down, so they
 // are loaded lazily, one country at a time, by loadRegionSet() near REGIONS_BY_CC below.
@@ -174,6 +173,7 @@ export function loadNature() {
 }
 function allSpecies(filter = {}) { return _natureMod ? _natureMod.allSpecies(filter) : []; }
 function getSpecies(id) { return _natureMod ? _natureMod.getSpecies(id) : null; }
+
 
 // ---- lazy screen modules ----------------------------------------------------
 // Twenty-four screen modules are loaded on demand rather than statically imported. Every one of them
@@ -216,6 +216,7 @@ const SCREEN_LOADERS = {
   board: (b) => import('./screens/board.js' + b),
   streetfood: (b) => import('./screens/streetfood.js' + b),
   phrasebook: (b) => import('./screens/phrasebook.js' + b),
+  signtranslate: (b) => import('./screens/signtranslate.js' + b),
   places: (b) => import('./screens/places.js' + b),
   budget: (b) => import('./screens/budget.js' + b),
   weather: (b) => import('./screens/weather.js' + b),
@@ -229,6 +230,7 @@ const SCREEN_LOADERS = {
   search: (b) => import('./screens/search.js' + b),
   welcome: (b) => import('./screens/welcome.js' + b),
   transport: (b) => import('./screens/transport.js' + b),
+  map: (b) => import('./screens/map.js' + b),
 };
 // Which modules a route needs before it can render. The router gate below awaits these the
 // same way it awaits country data, so by the time a case runs its module is guaranteed
@@ -255,6 +257,7 @@ const ROUTE_SCREENS = {
   help: ['help'], feedback: ['help'], contributions: ['contributions'],
   board: ['board'], streetfood: ['streetfood'],
   phrasebook: ['phrasebook'], dictionary: ['phrasebook'],
+  signtranslate: ['signtranslate'],
   places: ['places'], place: ['places'],
   expenses: ['budget'],
   weather: ['weather'],
@@ -280,6 +283,8 @@ const ROUTE_SCREENS = {
   today: ['today'],
   search: ['search'],
   transport: ['transport'], addpin: ['transport'],
+  // Own line — see check-lazy-data.py's single-key-per-line note above.
+  map: ['map'],
 };
 const _screenMods = Object.create(null);
 const _screenPending = Object.create(null);
@@ -311,6 +316,11 @@ function loadScreenMod(name) {
 // being listed here — which matters because the failure it prevents is silent: an ungated read
 // returns the same empty value an unknown key returns, so the screen renders with the section
 // simply absent. Run it after touching any consumer, and `--report` regenerates this map.
+// `phrasebooks` (the eight language books, 107.6 KB) appears on eleven routes. It used to be
+// a static import inside js/data/regions.js, so it loaded on EVERY launch for every traveller
+// — including the ones who never open Talk. The eleven were not chosen by hand: they are what
+// scripts/check-lazy-data.py derived from the call graph, which is the only way to get this
+// list right (a missed route renders a screen with its phrases silently absent).
 const ROUTE_DATA = {
   // access/baby/history/setcity/scams/visa all load the same js/screens/country-info.js module
   // (six screens, one lazy chunk — see ROUTE_SCREENS above), and check-lazy-data.py's route ->
@@ -323,9 +333,9 @@ const ROUTE_DATA = {
   baby: ['accessibility', 'scams', 'visa'],
   bestlist: ['bestof'],
   bestof: ['bestof'],
-  country: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  country: ['accessibility', 'bestof', 'itineraries', 'phrasebooks', 'visa', 'zones'],
   crossings: ['borders', 'visa'],
-  explore: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  explore: ['accessibility', 'bestof', 'itineraries', 'phrasebooks', 'visa', 'zones'],
   // #me and #foryou share js/screens/you.js (screen split, mk-v0.539.0), so the guard rolls
   // foryouScreen's data need up to both — the same over-approximation explore/country accept.
   // Only foryouScreen reads it; warmLazyData() has normally already fetched it on idle, so in
@@ -358,11 +368,17 @@ const ROUTE_DATA = {
   // above already accept, and it costs a #region visit nothing in practice: the route is only
   // reachable from Explore, which has already awaited all four, and warmLazyData() warms them
   // on idle regardless. 'zones' is the only one regionScreen reads itself.
-  region: ['accessibility', 'bestof', 'itineraries', 'visa', 'zones'],
+  region: ['accessibility', 'bestof', 'itineraries', 'phrasebooks', 'visa', 'zones'],
   scams: ['accessibility', 'scams', 'visa'],
   schedules: ['schedules'],
   setcity: ['accessibility', 'scams', 'visa'],
-  settings: ['accessibility'],
+  settings: ['accessibility', 'phrasebooks'],
+  // #nature and #danger join #sounds and #species here: their browse cards now play a call
+  // in place, and SOUNDS ungated would resolve to the same empty object an unknown id does —
+  // the silent failure this map exists to prevent (the row would quietly fall through to the
+  // online lookup and fail offline, on a recording that is bundled on the device).
+  danger: ['sounds'],
+  nature: ['sounds'],
   sounds: ['sounds'],
   species: ['sounds'],
   // #trip joins #plans here for the same reason #places did above: tripScreen used to live in
@@ -372,6 +388,13 @@ const ROUTE_DATA = {
   trip: ['itineraries'],
   transport: ['transit'],
   visa: ['accessibility', 'scams', 'visa'],
+  dictionary: ['phrasebooks'],
+  dish: ['phrasebooks'],
+  food: ['phrasebooks'],
+  hospital: ['phrasebooks'],
+  phrasebook: ['phrasebooks'],
+  search: ['phrasebooks'],
+  sos: ['phrasebooks'],
 };
 // Same failure record, and for the same reason, as _screenFailed above: the gate re-renders on
 // failure, so without this it would re-request forever and strand an offline traveller on a
@@ -432,6 +455,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       checkForUpdate();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
       window.addEventListener('online', checkForUpdate);
+      // All three triggers above are EDGE-triggered — a launch, a return to the foreground, a
+      // reconnection. A session that simply stays open and stays online fires none of them
+      // again, so a deploy that lands mid-session is never noticed. That is not a rare shape
+      // for this app: an installed PWA left open on a phone in a pocket is the normal case.
+      // Hourly is cheap (a byte-check against one small file, skipped when offline because
+      // reg.update() rejects and is swallowed) and bounds how long any open app can lag a
+      // release.
+      setInterval(checkForUpdate, 60 * 60 * 1000);
 
       // Tell the worker it may now fill the offline copy. The worker no longer precaches at
       // install time, because those requests raced the page's own module loads on exactly the
@@ -491,17 +522,36 @@ function showOfflineIncompleteToast(count) {
 
 // A small, non-blocking "update ready" toast pinned above the tab bar. Tapping it reloads
 // so the newly-cached version takes over cleanly.
+// Dismissing it used to be permanent for the life of the page: the flag was set once and
+// never cleared, so a traveller who tapped ✕, or who glanced away while it was on screen,
+// kept running the old build with no way back to the offer. An installed PWA is not closed
+// the way a tab is — on iOS it can stay resident for days — so "for the life of the page" is
+// genuinely indefinite, and every update trigger had already fired by then. Dismiss now means
+// "not now" rather than "never": the offer returns after a cooling-off period. It still never
+// reloads on its own, which is the protection that removed the old controllerchange reload
+// after it wiped travellers' in-progress journal entries and staged photos.
 let updateToastShown = false;
+const UPDATE_REOFFER_MS = 30 * 60 * 1000;
 function showUpdateToast() {
   if (updateToastShown) return;
   updateToastShown = true;
+  const dismiss = () => {
+    toast.remove();
+    setTimeout(() => { updateToastShown = false; }, UPDATE_REOFFER_MS);
+  };
   const toast = h('div', { class: 'update-toast', role: 'status' }, [
     h('span', {}, 'A new version is ready.'),
     h('button', { class: 'update-toast-btn', onclick: () => location.reload() }, 'Refresh'),
-    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: () => toast.remove() }, '✕'),
+    h('button', { class: 'update-toast-x', 'aria-label': 'Dismiss', onclick: dismiss }, '✕'),
   ]);
   document.body.append(toast);
 }
+
+// Sound and live-translation stop controls live on the button that started them (see
+// playCall() below and js/screens/phrasebook.js's wireSpeak) rather than in a floating
+// app-wide pill: a traveller who tapped by accident is already looking at the control that
+// can undo it. js/audio-control.js is still the shared "only one thing plays at a time"
+// registry those buttons coordinate through.
 
 // A reusable, non-blocking "undo" toast for REVERSIBLE actions (mark done / not interested):
 // the tap acts immediately and an accidental tap is recoverable, so a repeated triage gesture
@@ -616,7 +666,9 @@ export async function resetAndReload() {
   } catch { /* no worker, or unsupported */ }
   try {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => /^mk-v/.test(k)).map((k) => caches.delete(k)));
+    // mk-shell is the app-code cache (sw.js SHELL_CACHE); mk-v* are the release-scoped shells
+    // the old design left behind. Both hold code and both must go for this to be a recovery.
+    await Promise.all(keys.filter((k) => k === 'mk-shell' || /^mk-v/.test(k)).map((k) => caches.delete(k)));
   } catch { /* storage unavailable */ }
   location.reload();
 }
@@ -640,6 +692,13 @@ if (typeof window !== 'undefined') {
 // binding — an ES module import cannot be reassigned from the importing side.
 export function getDeferredInstallPrompt() { return deferredInstallPrompt; }
 export function clearDeferredInstallPrompt() { deferredInstallPrompt = null; }
+
+// Already installed to the Home Screen / app drawer? Shared by Settings' own install card and
+// js/audio-packs.js's post-download nudge, so both agree on when there is nothing left to ask.
+export function isStandalone() {
+  return (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+    || (typeof navigator !== 'undefined' && navigator.standalone === true);
+}
 
 // Classic light/dark. 'auto' first honours the DEVICE dark-mode setting (so a phone kept
 // in dark mode is respected all day, matching platform convention); when the device
@@ -707,7 +766,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.547.0';
+export const APP_VERSION = 'mk-v0.590.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -786,9 +845,9 @@ const SECTION_ACCENT = {
   map: '#1FA98A', addpin: '#1FA98A',
   // food & nature
   food: '#E0663A', dish: '#E0663A', streetfood: '#D2542E', produce: '#CE8A3A',
-  nature: '#4E9A52', species: '#4E9A52', sounds: '#3E9A7A', pools: '#2E8FB0',
+  nature: '#4E9A52', species: '#4E9A52', sounds: '#4E9A52', pools: '#2E8FB0',
   // talk
-  phrasebook: '#7A5FB0', dictionary: '#8A5FA8',
+  phrasebook: '#7A5FB0', dictionary: '#8A5FA8', signtranslate: '#7A5FB0',
   // getting around & practicalities
   transport: '#6E7BC0', route: '#6E7BC0', schedules: '#6E7BC0', crossings: '#5E6FB0',
   visa: '#B0567F', info: '#6E8FA0', history: '#9C7A3A', weather: '#3FA0C0', today: '#3FA0C0',
@@ -971,7 +1030,7 @@ export function topbar(title, backHash) {
     onSaved ? null : iconBtn('Saved & collections', '#saved', ICON.star),
     // Find anything, from anywhere — a magnifying glass rather than the full-width
     // "🔎 Search everything" button that used to sit partway down Home. Search is the
-    // fastest route to any of the 56 features, and it was reachable only from one screen,
+    // fastest route to any feature in the taxonomy, and it was reachable only from one screen,
     // below the fold, in two of three trip phases.
     //
     // Settings no longer costs this row a seventh slot — it moved into the one the
@@ -1028,53 +1087,41 @@ export function languageSheet() {
     ensureUiStrings(code).then(render);
   };
 
-  const row = (l, needsMt) => h('button', {
-    class: 'lang-row' + (l.code === cur ? ' on' : ''),
-    'data-no-i18n': '',
-    lang: l.code,
-    'aria-current': l.code === cur ? 'true' : null,
-    onclick: () => pick(l.code),
-  }, [
-    h('span', { class: 'lang-flag', 'aria-hidden': 'true' }, l.flag),
-    h('span', { class: 'lang-names' }, [
-      h('span', { class: 'lang-native' }, l.native),
-      h('span', { class: 'lang-en' }, l.name),
-    ]),
-    l.code === cur ? h('span', { class: 'lang-tick', 'aria-hidden': 'true' }, '✓') : null,
-  ]);
-
   // NB: not named `online` — that is an imported helper (js/ui-widgets.js) and shadowing it
   // inside this function would be a trap for the next person to add a network check here.
   const bundled = LANGS.filter((l) => l.ui);
   const mtOnly = LANGS.filter((l) => !l.ui);
 
-  // Every language currently ships a bundled dictionary, so the second section renders
-  // nothing. It stays here rather than being deleted because the registry's `ui` flag is the
-  // thing that decides: add a language without a dictionary and it lands in a labelled section
-  // that explains itself, instead of silently appearing to work offline when it cannot.
-  const list = h('div', { class: 'lang-list' }, [
-    ...bundled.map((l) => row(l, false)),
-    ...(mtOnly.length ? [
-      h('p', { class: 'lang-section' }, 'Online translation only'),
-      h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-2);padding: 0 var(--sp-3)' },
-        'No built-in dictionary yet. Picking one switches on machine translation: the app’s labels go to an online service, then stay saved on your device.'),
-      ...mtOnly.map((l) => row(l, true)),
-    ] : []),
-  ]);
-
-  // A 30-row list is faster to filter than to scroll on a phone. Matches the native name, the
-  // English name, and the code, so "Deutsch", "German" and "de" all find German.
-  const filter = h('input', {
-    class: 'search', type: 'search', 'aria-label': 'Find a language',
-    placeholder: 'Find a language…',
+  // A single native dropdown, not a 30-row scrollable list — that list used to need its own
+  // pinned-header/pinned-footer layout (see the removed .lang-list/.lang-row rules) just to
+  // keep a filter box and the Close button on screen alongside thirty rows. A <select> gets
+  // the OS's own one-handed scroll-and-tap picker for free, and — like every other select in
+  // this app (js/ui-widgets.js selectEl) — only ever commits on an actual choice: dismissing
+  // it without picking leaves `cur` untouched, so "changed nothing" is the platform's own
+  // guarantee rather than something this code has to implement.
+  //
+  // Each option still leads with the language's OWN name (`native`), because the person who
+  // most needs this control cannot read the English one; the English name follows after a
+  // middot for anyone picking on someone else's behalf. Every language currently ships a
+  // bundled dictionary, so `mtOnly` is empty and the plain option list below is all there is —
+  // the `optgroup` split only appears once that stops being true, so a language landing in
+  // that group is still visibly labelled rather than blending in as if it worked the same
+  // offline.
+  const langOption = (l) => h('option', {
+    value: l.code, lang: l.code, selected: l.code === cur ? '' : null,
+  }, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`);
+  const sel = h('select', {
+    'aria-label': 'Choose your language', 'data-no-i18n': '',
+    onchange: (e) => pick(e.target.value),
   });
-  filter.addEventListener('input', () => {
-    const q = filter.value.trim().toLowerCase();
-    for (const el of list.querySelectorAll('.lang-row')) {
-      const hay = (el.textContent + ' ' + (el.getAttribute('lang') || '')).toLowerCase();
-      el.style.display = !q || hay.includes(q) ? '' : 'none';
-    }
-  });
+  if (mtOnly.length) {
+    sel.append(
+      h('optgroup', { label: 'Offline dictionary included' }, bundled.map(langOption)),
+      h('optgroup', { label: 'Online translation only' }, mtOnly.map(langOption)),
+    );
+  } else {
+    bundled.forEach((l) => sel.append(langOption(l)));
+  }
 
   // The old copy read "Also machine-translate the rest", which implied the app was already
   // translated and this was a bonus. It is the other way round: the dictionary covers the
@@ -1096,8 +1143,7 @@ export function languageSheet() {
   const dialog = h('div', { class: 'sheet lang-sheet', role: 'dialog', 'aria-label': 'Choose your language' }, [
     h('h3', { style: 'margin: 0 0 var(--sp-0h)' }, 'Choose your language'),
     h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-3)' }, 'Language · Sprache · Idioma · 语言 · ภาษา · ngôn ngữ'),
-    filter,
-    list,
+    sel,
     mtRow,
     h('div', { class: 'confirm-actions' }, [
       h('button', { class: 'btn ghost', onclick: () => close && close() }, 'Close'),
@@ -1119,11 +1165,17 @@ export function languageSheet() {
 export function locationFixCard(opts = {}) {
   const { onChange } = opts;
   const card = h('div', { class: 'card' });
-  card.append(h('h3', {}, '📍 Use your location?'));
-  card.append(h('p', { class: 'muted' },
-    'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
+  // Once the browser holds a granted permission, this card must stop asking for it. Putting
+  // "Use your location?" in front of a traveller who answered that question weeks ago is the
+  // behaviour that reads as the app having forgotten — so a granted permission gets a
+  // statement of what is already on, and only an unanswered one gets the question.
+  const granted = geoPermission() === 'granted';
+  card.append(h('h3', {}, granted ? '📍 Your location' : '📍 Use your location?'));
+  card.append(h('p', { class: 'muted' }, granted
+    ? 'Location is on, so the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'
+    : 'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.'));
   if (typeof navigator !== 'undefined' && navigator.geolocation) {
-    const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : '📍 Use my location');
+    const lb = h('button', { class: 'btn block' }, getLastFix() ? '📍 Location is on' : (granted ? '📍 Find me now' : '📍 Use my location'));
     lb.onclick = async () => {
       lb.textContent = 'Locating…'; lb.disabled = true;
       try { await refreshLocation(); lb.textContent = '📍 Location is on'; if (onChange) onChange(); }
@@ -1211,7 +1263,7 @@ const TAB_FOR_HEAD = {
   // the country at large.
   places: '#places', place: '#places', map: '#places', addpin: '#places', nearby: '#places',
   arrival: '#places', weather: '#places', today: '#places', setcity: '#places',
-  phrasebook: '#phrasebook',
+  phrasebook: '#phrasebook', signtranslate: '#phrasebook',
   // The personal hub ("YOU"/name) owns everything that is about the traveller themselves:
   // their calendar, memories, money, saved things, documents — and Settings.
   me: '#me', dictionary: '#me', settings: '#me', export: '#me', identified: '#me',
@@ -1507,6 +1559,10 @@ const PART_META = {
 };
 const INDOOR_CATS = ['culture', 'food', 'market', 'wellness'];
 const OUTDOOR_CATS = ['nature', 'viewpoint', 'beach', 'park', 'hike', 'waterfall', 'island'];
+// Big enough to outrank every other term in scoreForNow combined (proximity 30 + part-of-day
+// match 30 + open 12 + rating ~6 + profile fit), so "raining" re-groups the picks into
+// sheltered / neutral / exposed bands instead of merely nudging one place past another.
+const RAIN_TIER = 200;
 const WET_MONTHS = { th: [4, 5, 6, 7, 8, 9], kh: [4, 5, 6, 7, 8, 9], la: [4, 5, 6, 7, 8, 9], vi: [4, 5, 6, 7, 8, 9, 10] };
 
 function partOfDay(hour) {
@@ -1962,12 +2018,22 @@ function scoreForNow(p, ctx) {
     else s -= 30;
   }
   if (ctx.raining) {
-    // 'market' is deliberately excluded from the blanket indoor treatment below: most
-    // night/walking-street markets in the region are open-air stalls, not shelter from rain
-    // (see marketCovered) — only a genuinely covered market should read as rain-friendly.
-    if (cats.some((c) => INDOOR_CATS.includes(c) && c !== 'market')) s += 16;
-    if (cats.some((c) => OUTDOOR_CATS.includes(c))) s -= 22;
-    if (cats.includes('market')) s += marketCovered(p) ? 16 : -18;
+    // Rain sorts into strict TIERS, not a nudge. The old ±16/22 competed directly with
+    // proximity (up to 30) and the time-of-day category match (+30), so a close open-air
+    // viewpoint still outranked a covered museum two streets further on — exactly the case
+    // this card exists to answer. Sheltered picks now sort above neutral ones and neutral
+    // above exposed ones outright; inside each tier the usual distance/open/rating order is
+    // untouched, so the list is re-grouped rather than re-shuffled.
+    //
+    // 'market' is deliberately excluded from the blanket indoor treatment: most night and
+    // walking-street markets in the region are open-air stalls, not shelter from rain (see
+    // marketCovered) — only a genuinely covered market reads as rain-friendly. A place
+    // tagged both indoor and outdoor counts as sheltered: it has somewhere to stand.
+    const isMarket = cats.includes('market');
+    const covered = isMarket ? marketCovered(p) : cats.some((c) => INDOOR_CATS.includes(c) && c !== 'market');
+    const exposed = cats.some((c) => OUTDOOR_CATS.includes(c)) || (isMarket && !marketCovered(p));
+    if (covered) s += RAIN_TIER;
+    else if (exposed) s -= RAIN_TIER;
   }
   if (ctx.part === 'midday' && !ctx.raining) {
     if (cats.includes('hike')) s -= 10;
@@ -1990,13 +2056,29 @@ function whyNow(p, ctx) {
   const evening = ctx.part === 'evening' || ctx.part === 'night' || ctx.part === 'lateNight';
   // Make the situation-fit visible: when a family/with-a-baby traveller is shown a
   // kid-friendly place (which profileFitAdj boosted), say so — the "made for you" reason.
+  // Deliberately narrower than the `family` check profileFitAdj/profileFit use elsewhere:
+  // those also count prefs.kids, the Places screen's "Good for kids" browsing FILTER — someone
+  // toggling that to see what's around is not the same as having said they are travelling
+  // with children, and this tag reads as a statement about the traveller, not a filter echo.
   const prefs = store.profile.prefs;
-  if ((prefs.withBaby || prefs.kids || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
+  if ((prefs.withBaby || prefs.party === 'family') && p.kidFriendly === true) return 'Good with kids';
+  // Couples get the same treatment, one tier down: a "Romantic" nudge on the categories that
+  // read that way — sunset viewpoints, beaches, hot springs. No per-place "romantic" field
+  // exists (and none should be invented — see profileFit's own rule against inventing a
+  // suitability verdict the data does not support), so this leans on categories rather than a
+  // sourced fact. Checked at the same priority as "Good with kids" above, ahead of the
+  // time-of-day reasons below, so a couple sees it consistently rather than only when nothing
+  // more specific happens to apply.
+  if (prefs.party === 'couple' && cats.some((c) => ['viewpoint', 'beach', 'hotspring'].includes(c))) return 'Romantic';
   if (ctx.raining) {
     // A market only reads as rain-friendly when it is actually covered — an open-air night
     // market does not get "Good in the rain" just because it also happens to serve food.
+    // Same for anywhere else: a hilltop temple with a viewpoint (culture + viewpoint) is not
+    // "genuinely sheltered" just because one of its tags is indoor — the OUTDOOR_CATS check
+    // matches the stricter reasoning todoScore() already applies for the day-suggest screen
+    // (114 of 771 places carry both an indoor and an outdoor tag; see D3 audit).
     if (cats.includes('market')) { if (marketCovered(p)) return 'Covered market — good in the rain'; }
-    else if (cats.some((c) => INDOOR_CATS.includes(c))) return 'Good in the rain';
+    else if (cats.some((c) => INDOOR_CATS.includes(c)) && !cats.some((c) => OUTDOOR_CATS.includes(c))) return 'Good in the rain';
   }
   if (cats.includes('market') && marketOpenDays(p) && marketOnToday(p, ctx.dow)) return 'Market on today';
   if (ctx.isWeekend && cats.includes('market')) return 'Weekend market';
@@ -3209,47 +3291,19 @@ export function groupDoors(skip = []) {
   })));
 }
 
-// A row of features as chips: the icon and the feature's one name, nothing else. This is for
-// LAUNCHING something rather than browsing it, and it is deliberately not hubRow(): six hub
-// rows come to roughly 340px at 375px, which is more height than the whole consolidation
-// saved on Home. The blurb still reaches a screen reader through aria-label.
-export function featureChips(items, cc) {
-  const who = whoName();
-  return h('div', { class: 'chips' }, items.map((it) => {
-    const label = itemLabel(it, who);
-    return h('button', {
-      class: 'status-chip', onclick: () => go(resolveHash(it, cc)),
-      'aria-label': it.blurb ? `${label}. ${it.blurb}` : label,
-    }, [
-      h('span', { class: 'status-ic', 'aria-hidden': 'true' }, it.ic),
-      h('span', { class: 'status-lbl' }, label),
-    ]);
-  }));
-}
-
-// Identify, inline, while the traveller is on the ground. Identifying a dish or a snake is a
-// one-handed action performed standing in front of the thing, which is precisely when an extra
-// tap costs most — and all six of these features gained one in the consolidation. Planning
-// keeps the door instead: nobody identifies a bird from the sofa three months out.
+// Identify, inline, while the traveller is on the ground: one button straight to the hub,
+// not a fold to open plus a row of six chips to choose from — that was two taps (and a
+// screen's worth of height) to do what one now does. The hub (hubScreen, below) still lists
+// every identify feature with its blurb, so nothing here loses reach, only the Home-screen
+// footprint shrinks (Slice D, item 9).
 export function identifyRow() {
   const group = navGroup('identify');
   if (!group) return null;
   const phase = store.profile.prefs.phase || inferPhase();
   const items = visibleItems(group, phase);
   if (!items.length) return null;
-  const box = h('div', { class: 'home-identify' }, [featureChips(items, getActiveCountry())]);
-  // A named way in to the whole section, at the foot of the chips (direct request: "a button
-  // for identify what's around you ... that takes you to a choice of what you want to
-  // identify"). The chips above ARE that choice, one tap each, and they stay — the button is
-  // for the traveller who wants the section rather than one thing in it, and the hub is where
-  // each entry also carries its blurb.
-  box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#hub-identify') },
-    '🔎 Identify what’s around you →'));
-  // "Identify what's around you", not the group's bare title: the section is a question a
-  // traveller asks while standing in front of something, and the heading now says so.
-  // Not the group blurb either — the summary style uppercases, and "WHAT IS THIS DISH, FRUIT
-  // OR BIRD?" wrapped to two shouted lines at 375px.
-  return homeFold(`${group.ic} Identify what’s around you`, box, 'homeIdentifyOpen');
+  return h('button', { class: 'btn block home-identify-btn', onclick: () => go('#hub-identify') },
+    `${group.ic} Identify what’s around you →`);
 }
 
 // The hub itself. Unknown id falls through to the full index rather than an error screen:
@@ -3280,15 +3334,41 @@ function hubScreen(id) {
     if (last && last.key === key) last.items.push(it);
     else sections.push({ key, items: [it] });
   });
+  // Identify is the one hub asked to start fully minimised (direct request): a traveller who
+  // has just tapped "Identify what's around you" is scanning for which of a few categories
+  // covers what they are looking at, not reading a list top to bottom, so the category names
+  // alone should be enough to pick one — everywhere else on the site a hub's sections default
+  // OPEN (autoFoldSections' own rule, js/main.js's sectionFoldPrefs), so this needs its own
+  // explicit default rather than reusing that shared one. `it.mine` items (My identifier) are
+  // left unsectioned — one row, not worth a fold of its own.
   sections.forEach((sec) => {
-    if (sec.key) wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, sec.key));
-    sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
+    if (!sec.key) { sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent))); return; }
+    if (group.id === 'identify') {
+      const prefKey = `identifyFold:${sec.key}`;
+      const det = h('details', { class: 'foldcard' });
+      if (store.profile.prefs[prefKey]) det.setAttribute('open', '');
+      det.append(h('summary', { class: 'foldcard-sum' }, sec.key));
+      sec.items.forEach((it) => det.append(hubRow(it, cc, group.accent)));
+      det.addEventListener('toggle', () => {
+        if (det.open) store.profile.prefs[prefKey] = true; else delete store.profile.prefs[prefKey];
+        save();
+      });
+      wrap.append(det);
+    } else {
+      wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, sec.key));
+      sec.items.forEach((it) => wrap.append(hubRow(it, cc, group.accent)));
+    }
   });
 
   // Sideways, not back: the other eight groups as chips at the foot, so moving from Money to
   // Plan is one tap instead of Back-then-tap. This is the whole reason a hub can afford to
   // hold the long tail — nothing is ever more than two taps from anywhere.
-  const others = visibleGroups(phase).filter((g) => g.id !== group.id);
+  //
+  // Identify is the one exception (Slice D, item 9): it is reached from Home as a single,
+  // focused "what is this thing in front of me" button, not by browsing the door grid, so
+  // cross-links to unrelated sections here would just be clutter on a screen meant to answer
+  // one question fast.
+  const others = group.id === 'identify' ? [] : visibleGroups(phase).filter((g) => g.id !== group.id);
   if (others.length) {
     wrap.append(h('h2', { class: 'home-section', style: 'margin: var(--sp-4) 0 var(--sp-0h)' }, 'Other sections'));
     wrap.append(h('div', { class: 'chips' }, others.map((g) => h('button', {
@@ -3604,6 +3684,51 @@ export function provincePathD(prov, proj) {
   }
   return subs.join(' ');
 }
+
+function ringArea(ring) {
+  let a = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
+    a += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(a) / 2;
+}
+// A region set's stored viewBox is sized to fit EVERY administrative ring, including remote
+// offshore exclaves (Vietnam's Trường Sa/Hoàng Sa island claims, attributed to Khánh Hòa/Đà
+// Nẵng, sit hundreds of km from the mainland). Those exclaves are invisible specks at this
+// zoom, but their bounding box alone can nearly double the frame width — squeezing the actual
+// landmass into one side of the SVG. It still renders centred within that oversized frame, so
+// nothing is technically broken, but it reads as badly off-centre to a viewer. This derives a
+// tighter display viewBox from only the rings that make up the real landmass (area >= 1% of
+// the country's largest ring) — excluded rings still render, via the same unchanged proj, they
+// just fall outside the visible crop, which is correct since they were never visually
+// meaningful at this zoom anyway. Memoised on the region set since it depends only on static
+// geometry.
+export function tightRegionViewBox(set) {
+  if (set._tightViewBox) return set._tightViewBox;
+  const rings = [];
+  for (const p of set.provinces) {
+    for (const poly of p.polys) {
+      for (const ring of poly) rings.push(ring);
+    }
+  }
+  const areas = rings.map(ringArea);
+  const maxArea = Math.max(...areas);
+  const proj = set.proj;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  rings.forEach((ring, i) => {
+    if (areas[i] < maxArea * 0.01) return;
+    for (const [lng, lat] of ring) {
+      const [x, y] = projRegionPt(proj, lng, lat);
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+  });
+  const pad = proj.pad;
+  set._tightViewBox = `${(minX - pad).toFixed(1)} ${(minY - pad).toFixed(1)} `
+    + `${(maxX - minX + 2 * pad).toFixed(1)} ${(maxY - minY + 2 * pad).toFixed(1)}`;
+  return set._tightViewBox;
+}
 function pointInRing(lng, lat, ring) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -3835,10 +3960,25 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
   // The converter answers "what is this worth"; this line answers "what is the rate", which is
   // the number a traveller carries in their head all day, and it used to be nowhere on screen.
   const rateLine = h('p', { class: 'fx-rate' });
+  // The region's currencies are not four-digit currencies: 2,000,000 VND is an ordinary ATM
+  // withdrawal and LAK runs longer still. Any fixed field width therefore clips a real amount
+  // sooner or later — and clipping the READONLY result is the dangerous half, because there is
+  // no caret to scroll it back and "8,308,6" reads as a whole number rather than a truncated
+  // one. Both figures are sized to their own content instead, in ch so tabular digits line up;
+  // the one-line layout then wraps to two lines when the pairs no longer fit (see .fx-pair).
+  // box-sizing is border-box app-wide, so a bare `Nch` width is the OUTER box and the padding
+  // eats into the digits — 7ch measured 60px of content for a 6-digit amount that needed 64.
+  // The padding and borders are added back explicitly; --sp-1h is what .fx-line-single sets.
+  const chW = (n) => `calc(${Math.max(4, n + 1)}ch + var(--sp-1h) * 2 + 2px)`;
+  function sizeFields() {
+    amount.style.width = chW(String(amount.value || '').length);
+    out.style.width = chW(String(out.value || '').length);
+  }
   function recompute() {
     const v = parseFloat(amount.value) || 0;
     const r = convert(v, fromSel.value, toSel.value);
     out.value = r == null ? '—' : r.toLocaleString(dateLocale(), { maximumFractionDigits: r >= 100 ? 0 : 2 });
+    sizeFields();
     const one = convert(1, fromSel.value, toSel.value);
     rateLine.textContent = one == null
       ? 'Rate unavailable for this pair offline.'
@@ -3865,7 +4005,14 @@ export function fxConverterControl(fromDefault, toDefault, opts = {}) {
   // Home down while still keeping amount and result each paired with its own currency inline.
   const wrap = h('div', { class: 'fx-widget' + (opts.oneLine ? ' fx-widget-oneline' : '') },
     opts.oneLine ? [
-      h('div', { class: 'fx-line-single' }, [amount, fromSel, swap, out, toSel]),
+      // Each figure is grouped with its own currency so that when the row runs out of width it
+      // wraps between the pairs — two tidy lines — rather than clipping a figure or orphaning a
+      // currency select onto its own line. See .fx-line-single in style.css.
+      h('div', { class: 'fx-line-single' }, [
+        h('div', { class: 'fx-pair' }, [amount, fromSel]),
+        swap,
+        h('div', { class: 'fx-pair' }, [out, toSel]),
+      ]),
       rateLine,
     ] : [
       h('div', { class: 'fx-line' }, [amount, fromSel]),
@@ -4028,7 +4175,7 @@ function listingCard(it) {
   if (d.contact) card.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
   card.append(h('div', { class: 'listing-actions' }, [
     shareButton('🔗 Share this', meta.label, () => shareUrl('in', encodeShare('bb', Object.assign({ cat }, d), ensureMe(), '')), 'btn ghost'),
-    h('button', { class: 'btn ghost', onclick: () => { removeListing(it.id); go('#exchange-' + cat); } }, '🗑 Remove'),
+    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Remove this listing?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeListing(it.id); go('#exchange-' + cat); } }); } }, '🗑 Remove'),
   ]));
   return card;
 }
@@ -4140,7 +4287,7 @@ function bulletinScreen(arg) {
     // Let the traveller sweep away their own long-past posts in one tap (backendless tidy).
     const old = items.filter((x) => x.mine && x.ts && (Date.now() - x.ts) > 14 * 86400000);
     if (old.length) {
-      listWrap.append(h('button', { class: 'btn ghost block tiny', onclick: () => { old.forEach((s) => removeListing(s.id)); repaint(); } },
+      listWrap.append(h('button', { class: 'btn ghost block tiny', onclick: () => { confirmAction({ title: `Clear ${old.length} old post${old.length > 1 ? 's' : ''}?`, confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { old.forEach((s) => removeListing(s.id)); repaint(); } }); } },
         `🧹 Clear ${old.length} old post${old.length > 1 ? 's' : ''} of yours (over 2 weeks)`));
     }
     items.forEach((it) => listWrap.append(listingCard(it)));
@@ -4311,7 +4458,7 @@ export function twelveGoUrl(from, to) {
 
 function planLegRow(l, i) {
   const o = l.option || {};
-  const dur = Array.isArray(o.durationHrs) ? `${o.durationHrs[0]}–${o.durationHrs[1]} h` : '';
+  const dur = Array.isArray(o.durationHrs) ? (o.durationHrs[0] === o.durationHrs[1] ? `${o.durationHrs[0]} h` : `${o.durationHrs[0]}–${o.durationHrs[1]} h`) : '';
   const box = h('div', { class: 'plan-leg' }, [
     h('div', { class: 'plan-leg-head' }, `${i + 1}. ${l.from} → ${l.to}`),
     l.edge.crossBorder ? h('div', { class: 'border-flag' }, `🛂 Border crossing: ${l.edge.border || ''}`) : null,
@@ -4836,25 +4983,40 @@ function idMovePin(key, dir, groupKeys) {
 }
 // A compact save/remove star for the identify browse lists — quick-pin without opening
 // the detail page. Stops propagation so it never triggers the row's navigation.
+// The quick-save star on an identify browse card. It repaints ITSELF rather than re-running
+// the router, which is what it used to do. That matters now the species rows carry a ▶ next
+// to this star: a full re-render throws away the button holding a playing call's Stop while
+// the audio carries on, leaving the traveller no way to stop it. Repainting in place also
+// keeps the list where it was and leaves the search box focused — both of which the
+// re-render lost on every tap. Nothing on these screens shows a saved COUNT; the one place
+// that does (the "My identifier" nav row, via idPinCount) is a different screen and reads it
+// fresh when it renders.
 export function idPinStar(type, id) {
-  const pinned = isIdPinned(type, id);
-  return h('button', {
-    class: 'id-star' + (pinned ? ' on' : ''),
-    'aria-pressed': pinned ? 'true' : 'false',
-    'aria-label': pinned ? 'Saved to my identifier — tap to remove' : 'Save to my identifier',
-    title: pinned ? 'Saved — tap to remove' : 'Save to my identifier',
-    onclick: (e) => { e.stopPropagation(); toggleIdPin(type, id); render(); },
-  }, pinned ? '★' : '☆');
+  const btn = h('button', { class: 'id-star', onclick: (e) => { e.stopPropagation(); toggleIdPin(type, id); paint(); } });
+  function paint() {
+    const pinned = isIdPinned(type, id);
+    btn.classList.toggle('on', pinned);
+    btn.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+    btn.setAttribute('aria-label', pinned ? 'Saved to my identifier — tap to remove' : 'Save to my identifier');
+    btn.title = pinned ? 'Saved — tap to remove' : 'Save to my identifier';
+    btn.textContent = pinned ? '★' : '☆';
+  }
+  paint();
+  return btn;
 }
-// A full-width save/remove toggle for an identify detail screen. Re-renders the current
-// screen on tap so the label flips immediately and the count stays honest.
+// A full-width save/remove toggle for an identify detail screen. Repaints in place for the
+// same reason the star above does — the species screen's own call control can be mid-playback
+// when this is tapped.
 export function idPinButton(type, id) {
-  const pinned = isIdPinned(type, id);
-  return h('button', {
-    class: 'btn block id-pin-btn' + (pinned ? ' on' : ''),
-    'aria-pressed': pinned ? 'true' : 'false',
-    onclick: () => { toggleIdPin(type, id); render(); },
-  }, pinned ? '★ Saved to your identifier — tap to remove' : '☆ Save to my identifier');
+  const btn = h('button', { class: 'btn block id-pin-btn', onclick: () => { toggleIdPin(type, id); paint(); } });
+  function paint() {
+    const pinned = isIdPinned(type, id);
+    btn.classList.toggle('on', pinned);
+    btn.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+    btn.textContent = pinned ? '★ Saved to your identifier — tap to remove' : '☆ Save to my identifier';
+  }
+  paint();
+  return btn;
 }
 
 
@@ -4975,7 +5137,7 @@ export function placeFamily(p) { return placeFamilyKey(p); }
 // The self-hosted, openly-licensed photo path for a place, or null. Same lookup as
 // photoBlock, exposed so list cards can show a small recognition thumbnail offline.
 export function placePhotoSrc(p) {
-  const reg = (p && p.id && PHOTOS[p.id]) || null;
+  const reg = p ? photoEntry(p.id) : null;
   return (p && p.photo) || (reg && reg.src) || null;
 }
 // A small (44px) recognition thumbnail for compact "near me" rows: a self-hosted photo when
@@ -4985,7 +5147,18 @@ export function rnThumb(p) {
   const src = placePhotoSrc(p);
   if (src) return h('img', { class: 'rn-thumb', src, alt: '', loading: 'lazy', decoding: 'async' });
   const fam = placeFamily(p);
-  return h('span', { class: 'rn-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
+  const ph = h('span', { class: 'rn-thumb ph' }, (FAMILY_META[fam] || FAMILY_META.other).emoji);
+  // Upgrade this one node once the registry lands, rather than re-rendering the screen. The
+  // box is the same fixed 44px either way, so nothing around it moves.
+  if (!isPhotosLoaded()) {
+    loadPhotos().then(() => {
+      const late = placePhotoSrc(p);
+      if (late && ph.isConnected) {
+        ph.replaceWith(h('img', { class: 'rn-thumb', src: late, alt: '', loading: 'lazy', decoding: 'async' }));
+      }
+    }, () => { /* no registry, keep the placeholder */ });
+  }
+  return ph;
 }
 // A "thing to do" result card: a recognition thumbnail, coloured category tags, rating,
 // distance and "why now" reason chips. Tapping opens the full detail page (with a photo).
@@ -5198,6 +5371,13 @@ function eventScreen(id) {
 // ---- NATURE FIELD GUIDE -----------------------------------------------------
 let natureQuery = '';
 let natureGroup = '';
+// "Sounds around you" used to be a screen of its own — the same search, the same country
+// picker and the same group chips as this one, over the 50 species that carry a recording.
+// It is now this filter. A traveller who HEARD something and one who SAW something land in
+// the same list, and either way the row they find already carries its ▶ and its ☆, so
+// there is no second place to go to hear it or to keep it. #sounds still resolves (shared
+// links, saved pins, the old Sounds tile) and opens the guide with this already on.
+let natureCallsOnly = false;
 // Which country the identify screens are scoped to (direct request: "identify should be by
 // country"). Defaults to wherever the traveller is — see idCountry() — and '*' means all four.
 // Module-level so the choice survives moving between #nature, #danger and #sounds within one
@@ -5248,43 +5428,86 @@ function inatSoundUrl(s) {
   return `https://api.inaturalist.org/v1/observations?taxon_name=${encodeURIComponent(xcQuery(s))}`
     + '&sounds=true&order_by=votes&per_page=12&license=cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa,cc0';
 }
-let callAudio = null;   // one shared element so starting a call stops the previous one
+// Only one call button (of possibly many on the Sounds list) is ever mid-toggle, since only
+// one thing plays at a time app-wide (js/audio-control.js). Tracked here so starting a NEW
+// call resets whichever OTHER button was showing Stop — startPlayback() silently supersedes
+// the old audio without an 'ended'/'error' event of its own, so nothing else would revert it.
+let activeCallBtn = null;
+// …and the status line that belongs to it. Only matters now the controls live in a LIST: the
+// ♪ credit a superseded row is still showing would otherwise read as "this one is playing
+// too", with two or three rows claiming it at once. A call that ends on its own keeps its
+// credit — that is the attribution for what you just heard.
+let activeCallStatus = null;
+// Put a call button back to its idle look. Three separate paths have to do this — the same
+// button tapped again, a DIFFERENT button superseding this one, and playback ending — and
+// they used to each spell it out, so the visible state and the accessible state could drift
+// apart. One helper keeps them in step.
+function idleCallBtn(b) {
+  if (!b) return;
+  b.disabled = false;
+  b.textContent = b.dataset.idleLabel || b.textContent;
+  b.classList.remove('is-playing');
+  b.setAttribute('aria-pressed', 'false');
+  delete b.dataset.playing;
+}
 async function playCall(s, btn, statusEl) {
+  // Tapping the same control again while its own call is playing stops it right there — the
+  // button that started the sound is the one that can stop it, rather than a floating app-wide
+  // pill (see js/screens/phrasebook.js's wireSpeak for the same pattern on the Talk screen).
+  if (btn.dataset.playing === '1') { stopPlayback(); idleCallBtn(btn); activeCallBtn = null; activeCallStatus = null; return; }
+  if (activeCallBtn && activeCallBtn !== btn) {
+    idleCallBtn(activeCallBtn);
+    if (activeCallStatus && activeCallStatus !== statusEl) activeCallStatus.textContent = '';
+  }
   const bundled = s && s.id && SOUNDS[s.id];
-  const original = btn.textContent;
+  btn.dataset.idleLabel = btn.textContent;
+  // Two callers now share this: a bare ▶ sitting in a browse row beside the star, and the
+  // detail screen's full-width labelled button. Each carries its own stop/busy wording rather
+  // than this hard-coding one string that has to fit both. On the icon button the visible
+  // label is the only thing that changes between states, so aria-pressed carries that state
+  // for a screen reader, which a text swap alone never announces.
+  const stopLabel = btn.dataset.stopLabel || '⏹ Stop';
+  const busyLabel = btn.dataset.busyLabel || 'Loading call…';
+  const resetBtn = () => { idleCallBtn(btn); if (activeCallBtn === btn) { activeCallBtn = null; activeCallStatus = null; } };
+  const markPlaying = () => { btn.disabled = false; btn.textContent = stopLabel; btn.classList.add('is-playing'); btn.setAttribute('aria-pressed', 'true'); btn.dataset.playing = '1'; activeCallBtn = btn; activeCallStatus = statusEl; };
   if (bundled) {
-    btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+    btn.disabled = true; btn.textContent = busyLabel; statusEl.textContent = '';
     try {
-      if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
-      callAudio = new Audio(bundled.src);
-      callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not play the recording here.'; });
-      await callAudio.play();
+      const audio = new Audio(bundled.src);
+      // Shared registry (see js/audio-control.js): stops any TTS speech that's playing, and
+      // stops a previous call's own audio, replacing the old "one shared element"
+      // pause-before-reassign approach.
+      const done = startPlayback(() => { try { audio.pause(); } catch { /* ignore */ } });
+      audio.addEventListener('ended', () => { done(); resetBtn(); });
+      audio.addEventListener('error', () => { done(); resetBtn(); statusEl.textContent = 'Could not play the recording here.'; });
+      await audio.play();
+      markPlaying();
       statusEl.textContent = `♪ ${s.commonName} — ${bundled.credit}`;
     } catch (e) {
+      resetBtn();
       statusEl.textContent = 'Could not play the recording here.';
-    } finally {
-      btn.disabled = false; btn.textContent = original;
     }
     return;
   }
   if (typeof navigator !== 'undefined' && navigator.onLine === false) { statusEl.textContent = 'Connect to the internet to hear calls.'; return; }
-  btn.disabled = true; btn.textContent = 'Loading call…'; statusEl.textContent = '';
+  btn.disabled = true; btn.textContent = busyLabel; statusEl.textContent = '';
   try {
     const res = await fetchTimeout(inatSoundUrl(s), {}, 15000);
     const d = await res.json();
     let snd = null;
     for (const r of (d.results || [])) { const a = (r.sounds || []).find((x) => x && x.file_url); if (a) { snd = a; break; } }
     if (!snd) throw new Error('no recording');
-    if (callAudio) { try { callAudio.pause(); } catch { /* ignore */ } }
-    callAudio = new Audio(snd.file_url);
-    callAudio.addEventListener('error', () => { statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
-    await callAudio.play();
+    const audio = new Audio(snd.file_url);
+    const done = startPlayback(() => { try { audio.pause(); } catch { /* ignore */ } });
+    audio.addEventListener('ended', () => { done(); resetBtn(); });
+    audio.addEventListener('error', () => { done(); resetBtn(); statusEl.textContent = 'Could not play the recording here — check your connection and try again.'; });
+    await audio.play();
+    markPlaying();
     const credit = (snd.attribution || '').replace(/^\(c\)\s*/, '').replace(/,\s*some rights reserved.*$/i, '') || 'an iNaturalist contributor';
     statusEl.textContent = `♪ ${s.commonName} — ${credit} · via iNaturalist (CC)`;
   } catch (e) {
+    resetBtn();
     statusEl.textContent = 'No recording is available for this one yet.';
-  } finally {
-    btn.disabled = false; btn.textContent = original;
   }
 }
 function callControl(s, label) {
@@ -5293,73 +5516,13 @@ function callControl(s, label) {
   return h('div', {}, [btn, status]);
 }
 
-function soundsScreen() {
-  const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Sounds nearby', '#nature'));
-  wrap.append(screenHint('Heard something? Tap ▶ to play the call — works offline once loaded — or tap a name for the full field guide. Only animals with a distinctive call are listed. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
-
-  let group = '';
-  let query = '';
-
-  const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search sounds', placeholder: 'Search by name…',
-    oninput: debounce((e) => { query = e.target.value; renderList(); }, 120) });
-  wrap.append(search);
-  wrap.append(idCountryPicker(() => { renderChips(); renderList(); }));
-
-  // Chips live in their own wrapper, rebuilt by renderChips() rather than computed once,
-  // so the group counts pick up nature.js once it lands (see loadNature() near the top of
-  // this file) instead of freezing at the empty pre-load default.
-  const chipsWrap = h('div', {});
-  wrap.append(chipsWrap);
-  const listEl = h('div', {});
-  wrap.append(listEl);
-
-  function renderChips() {
-    // Every callable species IN SCOPE, recomputed each call so the group chips show live
-    // counts for the chosen country rather than for the whole region.
-    const callable = allSpecies({ cc: idCountryFilter() }).filter(hasCall);
-    const GROUPS = [
-      { id: '', label: 'All', emoji: '✶' },
-      { id: 'bird', label: 'Birds', emoji: '🐦' },
-      { id: 'mammal', label: 'Mammals', emoji: '🐘' },
-      { id: 'insect', label: 'Insects', emoji: '🦗' },
-      { id: 'reptile', label: 'Frogs & geckos', emoji: '🐸' },
-    ].map((g) => ({ ...g, n: g.id ? callable.filter((s) => s.group === g.id).length : callable.length }))
-      .filter((g) => g.n > 0);
-    chipsWrap.innerHTML = '';
-    const chips = h('div', { class: 'chips' }, GROUPS.map((g) =>
-      h('button', { class: 'chip', 'aria-pressed': group === g.id ? 'true' : 'false', dataset: { g: g.id },
-        onclick: () => { group = g.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', c.dataset.g === group ? 'true' : 'false')); renderList(); } },
-        `${g.emoji} ${g.label} (${g.n})`)));
-    chipsWrap.append(chips);
-  }
-  function renderList() {
-    listEl.innerHTML = '';
-    if (!isNatureLoaded()) { listEl.append(h('p', { class: 'empty' }, 'Loading the sounds library…')); return; }
-    const results = allSpecies({ group: group || undefined, q: query.trim() || undefined, cc: idCountryFilter() }).filter(hasCall);
-    if (!results.length) { listEl.append(h('p', { class: 'empty' }, query.trim() ? 'No calls match your search.' : 'No calls in this group yet.')); return; }
-    results.forEach((s) => {
-      const status = h('div', { class: 'muted', style: 'font-size:13px' });
-      const play = h('button', { class: 'btn ghost', 'aria-label': `Play ${s.commonName} call`, onclick: (e) => { e.stopPropagation(); playCall(s, play, status); } }, '▶');
-      listEl.append(h('div', { class: 'card', style: 'display:flex;align-items:center;gap: var(--sp-3)' }, [
-        recogThumb(s, s.emoji || '🔎'),
-        h('button', { class: 'grow', style: 'background:none;border:none;text-align:left;cursor:pointer;font:inherit;color:inherit', onclick: () => go(`#species-${s.id}`) }, [
-          h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || ''), status,
-        ]),
-        play,
-      ]));
-    });
-  }
-  renderChips();
-  renderList();
-  if (!isNatureLoaded()) { loadNature().then(() => { renderChips(); renderList(); }, () => { renderChips(); renderList(); }); }
-  mount(wrap, '#home');
-}
-
-function natureScreen() {
+function natureScreen(open) {
+  // #sounds resolves here with the filter already on — see the natureCallsOnly note above.
+  if (open === 'calls') natureCallsOnly = true;
+  const viaSounds = open === 'calls';
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Identify nature', '#home'));
-  wrap.append(screenHint('Browse or search the region’s wildlife and plants. Tap a species for field marks and a photo search.'));
+  wrap.append(screenHint('Browse or search the region’s wildlife and plants. Tap a name for field marks and a photo search, ▶ to hear its call — the recordings are bundled, so they play offline — and ☆ to keep it in your identifier. Recordings are Creative Commons, from Xeno-canto and iNaturalist.'));
 
   const search = h('input', { class: 'search', type: 'search', 'aria-label': 'Search', placeholder: 'Search by name…', value: natureQuery,
     oninput: debounce((e) => { natureQuery = e.target.value; renderList(); }, 120) });
@@ -5368,7 +5531,7 @@ function natureScreen() {
   // region still shows in every country; what drops out is what is not there — the reef and
   // open-water species for a traveller in landlocked Laos, and the dozen range-restricted
   // animals. "All four countries" is one tap away for anyone planning rather than looking.
-  wrap.append(idCountryPicker(() => { renderCount(); renderList(); }));
+  wrap.append(idCountryPicker(() => { renderChips(); renderCallChip(); renderCount(); renderList(); }));
   const countEl = h('p', { class: 'tiny muted id-country-count' }, '');
   wrap.append(countEl);
 
@@ -5377,7 +5540,11 @@ function natureScreen() {
   // top of this file) instead of freezing at the empty pre-load default (just "All").
   const chipsWrap = h('div', {});
   wrap.append(chipsWrap);
-  wrap.append(h('button', { class: 'btn ghost block', style: 'margin: var(--sp-1h) 0', onclick: () => go('#sounds') }, '🔊 Sounds around you — hear calls'));
+  // The call filter is a SECOND axis: it cuts across every group, so it is its own toggle
+  // rather than a ninth chip in the single-select group row above, which would have made
+  // "Birds" and "Has a call" look mutually exclusive when they are not.
+  const callWrap = h('div', {});
+  wrap.append(callWrap);
 
   wrap.append(h('div', { class: 'card' }, [
     h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Have a photo? Identify it online (needs internet):'),
@@ -5389,8 +5556,18 @@ function natureScreen() {
 
   const listEl = h('div', {});
   wrap.append(listEl);
+  // Everything in the chosen country, before the group and search filters — what both chip
+  // rows count against, so their numbers agree with each other.
+  function scoped() { return allSpecies({ cc: idCountryFilter() }); }
   function renderChips() {
-    const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS);
+    // With the call filter on, a group with nothing audible in this country is dropped rather
+    // than offered and then found empty — exactly what the old Sounds screen did with its own
+    // chips. If the group the traveller was on is one of those, fall back to All rather than
+    // render a list that cannot have anything in it.
+    const audible = natureCallsOnly ? scoped().filter(hasCall) : null;
+    const groups = [{ id: '', label: 'All', emoji: '✶' }].concat(NATURE_GROUPS)
+      .filter((g) => !g.id || !audible || audible.some((s) => s.group === g.id));
+    if (natureGroup && !groups.some((g) => g.id === natureGroup)) natureGroup = '';
     chipsWrap.innerHTML = '';
     const groupChips = h('div', { class: 'chips' }, groups.map((g) =>
       h('button', { class: 'chip', 'aria-pressed': natureGroup === g.id ? 'true' : 'false', dataset: { g: g.id },
@@ -5398,41 +5575,74 @@ function natureScreen() {
         `${g.emoji} ${g.label}`)));
     chipsWrap.append(groupChips);
   }
+  // The whole of the old Sounds screen, as one toggle. Carries the live count so the traveller
+  // knows what they are narrowing to before they tap, which is what that screen's own chip
+  // counts were for.
+  function renderCallChip() {
+    const n = scoped().filter(hasCall).length;
+    callWrap.innerHTML = '';
+    if (!n) { natureCallsOnly = false; return; }
+    const chip = h('button', { class: 'chip', 'aria-pressed': natureCallsOnly ? 'true' : 'false',
+      onclick: () => {
+        natureCallsOnly = !natureCallsOnly;
+        // Arrived on #sounds and turned the filter off: leave that route, so the hash keeps
+        // describing what is on screen and a later re-render cannot put the filter back on.
+        if (!natureCallsOnly && viaSounds) { go('#nature'); return; }
+        renderChips(); renderCallChip(); renderCount(); renderList();
+      } }, `🔊 Has a call (${n})`);
+    callWrap.append(h('div', { class: 'chips' }, [chip]));
+  }
   // Direct node reference (countEl), never a lookup through wrap — mount()'s automatic
   // section folding re-parents these children and a querySelector from here would come back
   // null on the second call.
   function renderCount() {
+    // The line has to describe what is actually being counted, or it contradicts the filter
+    // sitting right above it: 216 records, or the 50 of them you can hear.
+    const noun = natureCallsOnly ? 'species with a call' : 'records';
+    const keep = (arr) => (natureCallsOnly ? arr.filter(hasCall) : arr);
     const cc = idCountryFilter();
-    const total = allSpecies().length;
+    const total = keep(allSpecies()).length;
     if (!total) { countEl.textContent = ''; return; }
-    if (!cc) { countEl.textContent = `All ${total} records, across all four countries.`; return; }
-    const here = allSpecies({ cc }).length;
+    if (!cc) { countEl.textContent = `All ${total} ${noun}, across all four countries.`; return; }
+    const here = keep(allSpecies({ cc })).length;
     const c = getCountry(cc);
     countEl.textContent = here === total
-      ? `All ${total} records occur in ${c ? c.name : 'this country'}.`
-      : `${here} of ${total} records occur in ${c ? c.name : 'this country'} — the other ${total - here} are elsewhere in the region.`;
+      ? `All ${total} ${noun} occur in ${c ? c.name : 'this country'}.`
+      : `${here} of ${total} ${noun} occur in ${c ? c.name : 'this country'} — the other ${total - here} are elsewhere in the region.`;
   }
   function renderList() {
     listEl.innerHTML = '';
-    const results = allSpecies({ q: natureQuery.trim(), group: natureGroup, cc: idCountryFilter() });
+    let results = allSpecies({ q: natureQuery.trim(), group: natureGroup, cc: idCountryFilter() });
+    if (natureCallsOnly) results = results.filter(hasCall);
     if (!results.length) {
       listEl.append(h('p', { class: 'empty' }, allSpecies().length === 0
         ? 'The nature guide is being prepared — reconnect once to download it.'
-        : 'No species match here. Try a different search or group, or switch to all four countries above.'));
+        : natureCallsOnly
+          ? 'Nothing that matches here has a recorded call. Turn off “Has a call” to see the rest.'
+          : 'No species match here. Try a different search or group, or switch to all four countries above.'));
       return;
     }
     results.forEach((s) => listEl.append(speciesCard(s)));
   }
   renderChips();
+  renderCallChip();
   renderCount();
   renderList();
   if (!isNatureLoaded()) {
-    const redraw = () => { renderChips(); renderCount(); renderList(); };
+    const redraw = () => { renderChips(); renderCallChip(); renderCount(); renderList(); };
     loadNature().then(redraw, redraw);
   }
   mount(wrap, '#home');
 }
 
+// One row in the identify browse lists (#nature and #danger): the species, then — only when
+// there is a recording for it — a ▶ that plays its call without leaving the list, then the
+// ☆ that saves it to My identifier. Left to right in the order the question is actually
+// asked: what is it, what does it sound like, keep it. A species with no recording shows NO
+// play button rather than a disabled one, so every ▶ on screen is one that plays — and
+// since all 50 call-carrying species have a bundled clip, it plays offline too. The status
+// line (recordist credit, or why it could not play) takes its own row below and collapses
+// away while empty, so a silent card is exactly as tall as it was before.
 function speciesCard(s) {
   const g = NATURE_GROUPS.find((x) => x.id === s.group);
   const main = h('button', { class: 'id-cardmain', onclick: () => go(`#species-${s.id}`) }, [
@@ -5440,7 +5650,23 @@ function speciesCard(s) {
     h('span', { class: 'grow' }, [h('div', { class: 'en' }, s.commonName), h('div', { class: 'sci' }, s.sciName || '')]),
     s.dangerous ? h('span', { class: 'tier high' }, 'Caution') : null,
   ]);
-  return h('div', { class: 'card species-card id-cardrow' }, [main, idPinStar('species', s.id)]);
+  const row = [main];
+  let status = null;
+  if (hasCall(s)) {
+    status = h('div', { class: 'id-callstatus' });
+    const play = h('button', {
+      class: 'id-play',
+      'aria-pressed': 'false',
+      'aria-label': `Play the ${s.commonName} call`,
+      title: 'Hear its call',
+      dataset: { stopLabel: '⏹', busyLabel: '…' },
+      onclick: (e) => { e.stopPropagation(); playCall(s, play, status); },
+    }, '▶');
+    row.push(play);
+  }
+  row.push(idPinStar('species', s.id));
+  if (status) row.push(status);
+  return h('div', { class: 'card species-card id-cardrow' }, row);
 }
 
 function speciesScreen(id) {
@@ -5567,8 +5793,7 @@ function myIdentifierScreen() {
   const exploreTiles = [
     { ic: ICON.bowl, t: 'Food', d: 'Street dishes', hash: '#food' },
     { ic: ICON.fruit, t: 'Produce', d: 'Fruit, veg & herbs', hash: '#produce' },
-    { ic: ICON.leaf, t: 'Nature', d: 'Birds, fish, plants', hash: '#nature' },
-    { ic: ICON.volume, t: 'Sounds', d: 'Animal calls', hash: '#sounds' },
+    { ic: ICON.leaf, t: 'Nature', d: 'Birds, plants, calls', hash: '#nature' },
     { ic: ICON.alert, t: 'Dangerous', d: 'Know the risks', hash: '#danger' },
   ];
   if (!list.length) {
@@ -6056,6 +6281,14 @@ function startLocationWatch() {
     );
   } catch { /* noop */ }
 }
+// Revoking location in browser settings has to actually stop the watch. Without this the
+// app holds a live subscription to a permission the traveller has just withdrawn, which is
+// both wrong and a battery cost they did not agree to.
+function stopLocationWatch() {
+  if (_geoWatchId == null) return;
+  try { navigator.geolocation.clearWatch(_geoWatchId); } catch { /* noop */ }
+  _geoWatchId = null;
+}
 // The journey trail (js/trail.js) — the traveller's own map of where they have been, built
 // without them having to add a single pin. Deliberately unlike logOpenLocation below: on by
 // default, at real precision, every fix rather than one a session, and never offered to any
@@ -6088,14 +6321,59 @@ function logOpenLocation() {
   } catch { /* a pin is never worth breaking a launch over */ }
 }
 
+// What the browser currently thinks, cached so any screen can ask without going async and
+// without touching the geolocation API (which is what triggers a prompt in the first place).
+// 'granted' | 'prompt' | 'denied' | 'unknown'.
+let _geoPerm = 'unknown';
+export function geoPermission() { return _geoPerm; }
+
 function initLocation() {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+
+  // The re-asking bug, and why the condition below is `=== 'granted'` rather than
+  // `!== 'denied'`.
+  //
+  // This used to start the watch for ANY state that was not an outright denial, which
+  // included 'prompt' — the state every traveller is in before they have answered. A
+  // watchPosition() call in that state makes the browser raise its permission dialog, so
+  // the app was raising it on load, every load, with no user gesture behind it and no
+  // explanation of what it was for.
+  //
+  // What made that permanent rather than a one-off is the third answer. A browser dialog
+  // can be granted, denied, or simply dismissed — and dismissing leaves the state at
+  // 'prompt', exactly where it started. So a traveller who swiped the dialog away, or
+  // tapped outside it, or was not looking at their phone when it appeared, got it again
+  // on the next launch, and the next, with nothing they could do from inside the app to
+  // stop it. That is the "asks me every single time" report.
+  //
+  // Now: a granted permission starts the watch silently, which is the whole point — answer
+  // once, never be asked again. An unanswered one waits for the traveller to tap one of
+  // the explicit "📍 Use my location" controls, so the dialog only ever appears attached to
+  // a request they just made and can understand. `onchange` picks the watch up the instant
+  // permission is granted from anywhere, so that tap is the last thing they ever need to do.
   const begin = () => { if (!store.profile.prefs.geoAsked) { store.profile.prefs.geoAsked = true; save(); } startLocationWatch(); };
   if (navigator.permissions && navigator.permissions.query) {
     navigator.permissions.query({ name: 'geolocation' })
-      .then((st) => { if (st.state !== 'denied') begin(); try { st.onchange = () => { if (st.state === 'granted') startLocationWatch(); }; } catch { /* noop */ } })
-      .catch(() => begin());
-  } else { begin(); }
+      .then((st) => {
+        _geoPerm = st.state;
+        if (st.state === 'granted') begin();
+        try {
+          st.onchange = () => {
+            _geoPerm = st.state;
+            // A fresh grant starts the watch; a revocation must stop it, or the app keeps
+            // consuming a permission the traveller has just taken away.
+            if (st.state === 'granted') { begin(); render(); }
+            else stopLocationWatch();
+          };
+        } catch { /* noop */ }
+      })
+      .catch(() => { _geoPerm = 'unknown'; if (getLastFix()) begin(); });
+  } else if (getLastFix()) {
+    // No Permissions API (older Safari). A cached fix is the only honest evidence that this
+    // traveller has granted location here before, so it is the only case that may start a
+    // watch unprompted. Everyone else waits for a tap rather than being asked on sight.
+    begin();
+  }
 }
 
 function sosScreen(cc) {
@@ -6622,7 +6900,7 @@ export function render() {
   const NEEDS_COUNTRY_DATA = new Set([
     'country', 'region', 'nearby', 'places', 'place', 'prices', 'transport',
     'calendar', 'events', 'event', 'today', 'food', 'dish', 'board', 'streetfood',
-    'sos', 'hospital', 'foryou',
+    'sos', 'hospital', 'foryou', 'info',
   ]);
   // Read across every country at once: universal search; the full multi-country map
   // (NOT the small embedded per-country Places map, which is caller-scoped via a
@@ -6630,7 +6908,7 @@ export function render() {
   // graph memoises forever on first build, so it must never run while only partly
   // loaded); and a traveller's own saved places/collections, which may span any
   // country they have visited.
-  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop']);
+  const NEEDS_ALL_COUNTRIES = new Set(['search', 'route', 'journey', 'saved', 'collection', 'nextstop', 'map']);
   // The two routes that render a province/zone map or read placesInZone/townsInZone
   // (zoneAssignment) — all backed by the ADM1 region-set loader (loadRegionSet/
   // isRegionSetLoaded, defined above with REGIONS_BY_CC). This is a second, independent
@@ -6707,10 +6985,12 @@ export function render() {
       case 'market': return bulletinScreen('gear');
       case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
       case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
+      case 'signtranslate': return screenMod('signtranslate').signTranslateScreen(arg);
       case 'places': return screenMod('places').placesScreen(arg);
       case 'place': return screenMod('places').placeScreen(arg);
       case 'prices': return pricesScreen(arg);
       case 'transport': return screenMod('transport').transportScreen(arg);
+      case 'map': return screenMod('map').mapScreen();
       case 'route': return planRouteScreen();
       case 'nextstop': return screenMod('nextstop').nextStopScreen(arg);
       case 'info': return screenMod('arrivalinfo').infoScreen(arg);
@@ -6749,7 +7029,10 @@ export function render() {
       // bottles is asking a different question from one holding a mango.
       case 'pantry': { const m = screenMod('produce'); return m.produceScreen('pantry'); }
       case 'nature': return natureScreen();
-      case 'sounds': return soundsScreen();
+      // Kept as an alias, not a screen: it opens the nature guide with the call filter on, so
+      // every link and pin that already points at #sounds still lands somewhere that answers
+      // the same question.
+      case 'sounds': return natureScreen('calls');
       case 'species': return speciesScreen(arg);
       case 'identified': return myIdentifierScreen();
       case 'search': return screenMod('search').searchScreen();
@@ -7016,6 +7299,51 @@ function warmLazyData() {
 }
 if ('requestIdleCallback' in window) requestIdleCallback(warmLazyData, { timeout: 12000 });
 else setTimeout(warmLazyData, 6000);
+
+// And the SCREEN modules behind the bottom tabs, for the same reason and with one extra care.
+//
+// Four of the five tabs are lazy (ROUTE_SCREENS above: Talk→phrasebook, You→you,
+// Places→places, Explore→family+explore), so the first tap of each in a session hit the gate,
+// painted the "Opening… / One moment." card, and only then showed the screen. Taking those
+// modules off the launch path is right — they are not what the first paint needs — but the
+// cost landed on the traveller as a visible flash on four of five tabs, every session: after a
+// reload, after iOS discards a backgrounded tab, after every deploy. Warmed on idle the gate
+// finds the module already there and falls straight through, so the tap just opens.
+//
+// THE CARE: loadScreenMod() records a permanent failure (`_screenFailed`) on a rejected
+// import, and the gate SKIPS any module in that record — it stops the gate spinning on a dead
+// module, which is correct for a tap the traveller made. It is wrong for a fetch they never
+// asked for: a warm that fails offline, or on the flaky link this app is built for, would mark
+// the screen dead and send their FIRST real tap straight to the "not on your device yet"
+// dead-end, when today that tap would at least try. So a warm failure is unrecorded here —
+// the flag is cleared again, leaving the traveller exactly where they would have been.
+//
+// `you` and `explore` matter most: unlike phrasebook/places/family they are in no PRECACHE
+// list in sw.js, so they are the two with a real network fetch behind the card rather than a
+// cache read. They go first for that reason.
+const WARM_SCREENS = ['you', 'explore', 'phrasebook', 'places', 'family'];
+function warmScreens() {
+  const queue = WARM_SCREENS.slice();
+  const step = () => {
+    const name = queue.shift();
+    if (!name) return;
+    const next = () => {
+      if ('requestIdleCallback' in window) requestIdleCallback(step, { timeout: 3000 });
+      else setTimeout(step, 250);
+    };
+    if (!SCREEN_LOADERS[name] || screenMod(name) || _screenFailed[name]) { step(); return; }
+    loadScreenMod(name)
+      // Unrecord a background failure: this fetch was ours, not theirs, and it must not be
+      // allowed to close a door in front of a tap that has not happened yet.
+      .catch(() => { delete _screenFailed[name]; })
+      .then(next, next);
+  };
+  step();
+}
+// Last of the code warms, after the data ones above: a screen module is only needed when a tab
+// is tapped, which is always later than the first paint this is queued behind.
+if ('requestIdleCallback' in window) requestIdleCallback(warmScreens, { timeout: 20000 });
+else setTimeout(warmScreens, 10000);
 
 // And LAST of everything: put the identify field guide on the device — every photo and animal
 // call, automatically, so recognising a snake or a mushroom works with no signal. It is by far

@@ -27,17 +27,19 @@
 // channel, not a resource this screen must tear down on navigation. Verified anyway (see the
 // shipping commit) since "no cleanup needed" is itself a claim worth confirming, not assuming.
 
-import { store, save, getAudioPacks, hasAudioPack, addAudioPack } from '../state.js';
+import { store, save } from '../state.js';
 import { h, debounce } from '../util.js';
 // scriptLang, phraseSlug, phraseKey, copyText and the big-phrase overlay live in
 // js/phrase-ui.js so that main.js and js/screens/places.js can use them without dragging
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
-import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, collapsibleCard, screenHint } from '../ui-widgets.js';
-import { hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from '../tts.js';
-import { translate } from '../translate.js';
+import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, screenHint } from '../ui-widgets.js';
+import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
+import { audioPacksCard } from '../audio-packs.js';
+import { translate, TranslateAborted } from '../translate.js';
+import { startTask, stopTask, stopPlayback, onPlaybackChange } from '../audio-control.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
-import { LANGUAGES, getLanguage } from '../data/regions.js';
+import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
 // Namespace import kept (rather than named imports for every piece) so the moved code below —
 // essentialsCard's Diet.PHRASE_PENDING_ALLERGENS and allergyPhrasesForProfile's Diet.PHRASE_KEYS/
@@ -60,53 +62,33 @@ export { scriptLang, phraseSlug };
 
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
-// A "Save audio for offline" card for one phrasebook language. The service worker
-// prefetches every phrase's online-TTS clip into a dedicated cache, so playback then
-// works with no connection. Returns null when there is nothing to save (e.g. Hmong,
-// which has no online voice) or when no SW is available (native wrapper / insecure ctx).
-function audioPackControl(code, book) {
-  const swOk = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
-  const allergy = (ALLERGENS[code] && ALLERGENS[code].length) ? ALLERGENS[code] : [];
-  const phrases = book.categories.flatMap((c) => c.phrases).concat(allergy);
-  const urls = [...new Set(phrases.map((p) => ttsUrl(p.script, book.locale)).filter(Boolean))];
-  if (!urls.length) return null;
-  const saved = hasAudioPack(code);
-  const mb = (urls.length * 10 / 1024).toFixed(1); // clips average ~10 KB
-  const card = h('div', { class: 'card' });
-  card.append(h('h3', {}, '🔊 Offline audio'));
-  const status = h('p', { class: 'tiny muted' }, saved
-    ? `${book.label} pronunciations are saved on this device — 🔊 works with no signal.`
-    : `Save ${book.label} pronunciations (${urls.length} clips, ~${mb} MB) so 🔊 works offline — best done on wifi.`);
-  card.append(status);
-  if (!swOk) {
-    card.append(h('p', { class: 'tiny muted' }, 'Add this app to your home screen to save audio for offline use.'));
-    return card;
-  }
-  const btn = h('button', { class: 'btn block btn-spaced' }, saved ? '↻ Re-download audio' : `⤓ Save ${book.label} audio`);
-  btn.onclick = () => {
-    if (!navigator.serviceWorker.controller) return;
-    btn.disabled = true;
-    status.textContent = `Downloading ${urls.length} clips…`;
-    const onMsg = (e) => {
-      const d = e.data || {};
-      if (d.lang !== code) return;
-      if (d.type === 'TTS_PROGRESS') { status.textContent = `Downloading… ${d.done}/${d.total}`; }
-      else if (d.type === 'TTS_DONE') {
-        navigator.serviceWorker.removeEventListener('message', onMsg);
-        btn.disabled = false;
-        if (!d.ok) { status.textContent = 'Could not download audio — check your connection and try again.'; return; }
-        addAudioPack(code); setSavedPacks(getAudioPacks());
-        status.textContent = d.quotaHit
-          ? `Saved ${d.ok} clips before hitting the storage limit — most phrases will play offline.`
-          : `Saved ${d.ok} clips — ${book.label} audio now works offline.`;
-        if (location.hash.replace(/^#/, '').startsWith('phrasebook')) go(`#phrasebook-${code}`);
-      }
-    };
-    navigator.serviceWorker.addEventListener('message', onMsg);
-    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TTS', urls, lang: code });
+
+// One 🔊 → ⏹ toggle shared by every phrase-speaker button on this screen (lesson rows, phrase
+// rows, My translations, and the Hear-it button after a live translation). The button that
+// started a phrase is the button that stops it — tapping it again calls stopPlayback() — rather
+// than routing through the app-wide floating stop pill, which put the control somewhere other
+// than the sound it silenced. Only one phrase plays at a time (js/audio-control.js), so only
+// one button is ever mid-toggle; the shared listener below reverts it the moment that changes,
+// whether the phrase finished, was superseded by another tap, or was stopped right here.
+let activeSpeakBtn = null;
+function idleSpeakBtn(btn) { btn.textContent = btn.dataset.idleLabel; btn.title = 'Hear it'; btn.classList.remove('is-playing'); }
+onPlaybackChange((active) => { if (!active && activeSpeakBtn) { idleSpeakBtn(activeSpeakBtn); activeSpeakBtn = null; } });
+function wireSpeak(btn, text, locale, { idleLabel = btn.textContent, playingLabel = '⏹', failLabel = '🔇' } = {}) {
+  btn.dataset.idleLabel = idleLabel;
+  const run = async () => {
+    if (activeSpeakBtn === btn) { stopPlayback(); return; }
+    if (activeSpeakBtn) idleSpeakBtn(activeSpeakBtn);
+    activeSpeakBtn = btn;
+    btn.textContent = playingLabel; btn.title = 'Stop'; btn.classList.add('is-playing');
+    const ok = await say(text, locale);
+    if (!ok) {
+      if (activeSpeakBtn === btn) activeSpeakBtn = null;
+      btn.textContent = failLabel; btn.title = 'Audio unavailable'; btn.classList.remove('is-playing');
+      setTimeout(() => { if (activeSpeakBtn !== btn) idleSpeakBtn(btn); }, 1500);
+    }
   };
-  card.append(btn);
-  return card;
+  btn.addEventListener('click', run);
+  return run;
 }
 
 // ---- personal phrasebook: derived keys + pin / hide -------------------------
@@ -488,15 +470,10 @@ export function phrasebookScreen(lang) {
   // worse than no control at all, so it renders only when actually online — and, since it is
   // the one thing on this whole screen that truly cannot work without a connection, it leads
   // (right after the header row, before the always-usable search below).
-  // A stable host so saving or removing a translation repaints just this card, in place,
-  // instead of re-rendering the whole screen and losing the traveller's scroll position.
-  const trHost = h('div', {});
-  const paintTranslations = () => {
-    trHost.innerHTML = '';
-    const c = myTranslationsCard(code, book.label, book.locale, paintTranslations);
-    if (c) trHost.append(c);
-  };
-  paintTranslations();
+  // Saving or removing a translation re-renders the category list below (renderPhrases,
+  // declared further down but already in scope by the time either callback can actually fire —
+  // both only ever run in response to a later tap), since "Translated by you" now lives there
+  // as one of the folds rather than its own standing card above it.
   // ALWAYS render something here. This used to be `if (online())`, which meant the entire
   // Say-it feature — the reason most travellers open Talk — simply was not on the screen for
   // anyone whose network question was unanswered: netMode defaulted to 'ask' and online()
@@ -505,9 +482,8 @@ export function phrasebookScreen(lang) {
   // but the rule it taught still holds and this still renders unconditionally: a feature that
   // needs a connection must SAY so and offer the switch, never quietly not exist.
   wrap.append(online()
-    ? liveTranslateBox(code, book.label, book.locale, paintTranslations)
+    ? liveTranslateBox(code, book.label, book.locale, () => renderPhrases())
     : offlineTranslateBox(code, book.label));
-  wrap.append(trHost);
 
   // Talk T3: search box, above the fold, feeding the same renderPhrases()/phraseQuery this
   // always has. A jump-chip row sits right under it — one tap clears any active search and
@@ -580,6 +556,14 @@ export function phrasebookScreen(lang) {
     // had tapped it themselves. A click on the summary only ever happens from a real tap.
     es.querySelector('summary').addEventListener('click', () => setCatOpen('essentials', !es.open));
     listEl.append(es);
+    // "Translated by you" — everything Say-it has ever translated for this language, folded
+    // the same way as Essentials/Food/every other category below (direct request), rather
+    // than sitting apart in its own always-open card above the search box.
+    const tr = myTranslationsFold(code, book.label, book.locale, isCatOpen('mytranslations'), renderPhrases);
+    if (tr) {
+      tr.querySelector('summary').addEventListener('click', () => setCatOpen('mytranslations', !tr.open));
+      listEl.append(tr);
+    }
     const q = phraseQuery.trim().toLowerCase();
     // Talk T2: folded groups, ranked by trip phase + time of day (rankedPhraseCats). A live
     // search opens every matching fold (so results are actually visible); with no search,
@@ -647,16 +631,22 @@ export function phrasebookScreen(lang) {
   // here too — removed at the traveller's request; every phrase it rotated through is still
   // reachable via Essentials or its own category.)
 
-  // Offline audio pack: download every phrase's online pronunciation so 🔊 works with
-  // no signal — essential for Khmer/Lao, which have no device voice on most phones.
-  const audioCard = audioPackControl(code, book);
-  if (audioCard) wrap.append(audioCard);
+  // Offline audio: every downloadable language in one manager, not just the one Talk happens
+  // to be showing — download all at once, download a chosen few, see what is already saved,
+  // remove what is no longer wanted. Shared with Settings (js/audio-packs.js) so the two never
+  // build a different url list, or a different notion of "downloaded", for the same language.
+  wrap.append(audioPacksCard());
 
   if (book.politenessNote) wrap.append(h('div', { class: 'banner' }, book.politenessNote));
-  const voiceOk = hasVoiceFor(book.locale);
-  if (!voiceOk) {
-    wrap.append(h('div', { class: 'banner' },
-      `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or use the romanised pronunciation.`));
+  // The banner used to say, for any language without a device voice, "tap 🔊 to hear it spoken
+  // online". For Lao that was simply untrue — there is no online voice for Lao either, so the
+  // banner was sending travellers to a control that could never make a sound. It now reports
+  // the path that actually exists, and says plainly when none does.
+  if (!hasVoiceFor(book.locale)) {
+    const sup = audioSupport(book.locale);
+    wrap.append(h('div', { class: 'banner' }, sup.can
+      ? `No ${book.label} voice is installed on this device — tap 🔊 to hear it spoken online (needs internet), or download the audio pack above to use it offline.`
+      : `No ${book.label} voice on this device. ${sup.why}`));
   }
 
   // Last on the screen and closed by default: the phrasebook above gives a traveller
@@ -701,15 +691,10 @@ function guideLessonRow(item, locale) {
     class: 'speak', 'aria-label': `Speak: ${item.say}`, title: 'Hear it',
     disabled: able ? null : '',
   }, '🔊') : null;
-  if (speak) {
-    // Same handling as every phrase row above: say() resolves to false when neither the
-    // device voice nor the online one could pronounce it, and the button says so instead of
-    // appearing to do nothing.
-    speak.addEventListener('click', async () => {
-      const ok = await say(item.native || item.say, locale);
-      if (!ok) { speak.textContent = '🔇'; speak.title = 'Audio unavailable'; setTimeout(() => { speak.textContent = '🔊'; speak.title = 'Hear it'; }, 1500); }
-    });
-  }
+  // wireSpeak handles both outcomes: say() resolving to false (neither device nor online voice
+  // could pronounce it) flashes 🔇 instead of appearing to do nothing, and a successful start
+  // turns this same button into ⏹ Stop for as long as it is playing.
+  if (speak) wireSpeak(speak, item.native || item.say, locale);
   return h('div', { class: 'phrase lg-lesson' }, [
     h('div', { class: 'lg-lesson-txt' }, [
       h('div', { class: 'lg-say' }, item.say),
@@ -819,10 +804,7 @@ function customPhraseRow(code, entry, locale, repaint) {
   grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showLarge(); } });
   const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${entry.en}`, title: 'Copy the local text', onclick: () => copyText(entry.script, copyBtn) }, '⧉');
   const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${entry.en}`, disabled: able ? null : '' }, '🔊');
-  speakBtn.addEventListener('click', async () => {
-    const ok = await say(entry.script, locale);
-    if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
-  });
+  wireSpeak(speakBtn, entry.script, locale);
   const noteBtn = h('button', { class: 'speak', 'aria-label': `Note for ${entry.en}`, title: 'Add or edit a note' }, '📝');
   const rm = h('button', {
     class: 'speak hide', 'aria-label': `Remove ${entry.en}`, title: 'Remove from your phrases',
@@ -984,10 +966,7 @@ function phraseRow(p, locale, opts) {
   grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showBigPhrase(p, locale, { ...opts, pins: PHRASE_PINS }); } });
   const copyBtn = h('button', { class: 'speak', 'aria-label': `Copy ${p.en}`, title: 'Copy the local text', onclick: () => copyText(p.script, copyBtn) }, '⧉');
   const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${p.en}`, disabled: able ? null : '' }, '🔊');
-  speakBtn.addEventListener('click', async () => {
-    const ok = await say(p.script, locale);
-    if (!ok) { speakBtn.textContent = '🔇'; speakBtn.title = 'Audio unavailable'; setTimeout(() => { speakBtn.textContent = '🔊'; }, 1500); }
-  });
+  wireSpeak(speakBtn, p.script, locale);
   const ctrls = [copyBtn, speakBtn];
   if (key) {
     const pinned = isPhrasePinned(code, key);
@@ -1016,11 +995,15 @@ function phraseRow(p, locale, opts) {
 // Renders whether or not there is a connection, unlike the translate box above it. That is the
 // entire value: the phrase looked up on hotel wifi is the phrase needed in the market with no
 // signal, and until now it was only ever reachable online.
-function myTranslationsCard(code, label, locale, onChange) {
+// "Translated by you" — everything Say-it has translated for this language, whether or not it
+// was kept to the dictionary. A fold shaped exactly like every other category below it
+// (phrase-cat-group/-summary/-body) rather than its own standing card, per direct request —
+// closed by default, like the others, tracked the same way (isCatOpen/setCatOpen in the
+// caller) rather than collapsibleCard's own separate always-open default.
+function myTranslationsFold(code, label, locale, isOpen, onChange) {
   const recs = translationsList().filter((t) => t.scripts && t.scripts[code]).sort((a, b) => b.ts - a.ts);
   if (!recs.length) return null;   // nothing to show yet, and Talk is a screen worth keeping short
-  const card = h('div', { class: 'card' }, [
-    h('h2', {}, `🕘 My translations (${recs.length})`),
+  const body = h('div', { class: 'phrase-cat-body' }, [
     h('p', { class: 'tiny muted mytr-note' },
       `Kept on this device in all ${Object.keys(LANGUAGES).length} languages · showing ${langFlag(code)} ${label}`.replace('  ', ' ')),
   ]);
@@ -1034,18 +1017,22 @@ function myTranslationsCard(code, label, locale, onChange) {
     const big = () => showBigPhrase({ en: t.en, script }, locale, {});
     grow.addEventListener('click', big);
     grow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); big(); } });
-    const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${t.en}`, disabled: able ? null : '', onclick: () => say(script, locale) }, '🔊');
+    const speakBtn = h('button', { class: 'speak', 'aria-label': `Speak: ${t.en}`, disabled: able ? null : '' }, '🔊');
+    wireSpeak(speakBtn, script, locale);
     const keepBtn = inDictionary(code, t.en)
       ? h('button', { class: 'speak', disabled: '', title: 'Already in your dictionary', 'aria-label': `${t.en} is already in your dictionary` }, '✓')
       : h('button', { class: 'speak', title: `Save to ${dictionaryName()}`, 'aria-label': `Save ${t.en} to ${dictionaryName()}`, onclick: () => { saveTranslationToDictionary(t); onChange(); } }, '📖');
-    const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { removeTranslation(t.key); onChange(); } }, '✕');
-    card.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
+    const rm = h('button', { class: 'speak hide', title: 'Remove from My translations', 'aria-label': `Remove ${t.en} from My translations`, onclick: () => { confirmAction({ title: 'Remove translation?', body: `Remove “${t.en}” from My translations?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeTranslation(t.key); onChange(); } }); } }, '✕');
+    body.append(h('div', { class: 'phrase' }, [grow, h('div', { class: 'phrase-ctrls' }, [speakBtn, keepBtn, rm])]));
   }
-  card.append(h('p', { class: 'tiny muted mytr-foot' }, [
+  body.append(h('p', { class: 'tiny muted mytr-foot' }, [
     '📖 keeps a phrase for good · ',
     h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'Open your dictionary →'),
   ]));
-  return collapsibleCard(card, 'talkTranslationsOpen', true);
+  return h('details', { class: 'phrase-cat-group', open: isOpen ? '' : null }, [
+    h('summary', { class: 'phrase-cat-summary' }, `🕘 Translated by you (${recs.length})`),
+    body,
+  ]);
 }
 
 
@@ -1087,10 +1074,22 @@ function liveTranslateBox(code, label, locale, onChange) {
   // row. The default is whatever the app's interface is set to (a phone running in Korean
   // should not make its owner re-pick Korean here), and the choice is remembered separately
   // from the interface language so changing one never silently moves the other.
+  //
+  // The target language is removed from this list, and that is a bug fix rather than tidying.
+  // The default below is the app's INTERFACE language, so reading the app in Thai and opening
+  // the Thai phrasebook — or handing the phone to a Thai speaker, which is the case this
+  // screen exists for — selected Thai on both sides. The service rejects that outright, and
+  // the traveller was told to simplify their wording for a sentence that was never the
+  // problem. translate.js short-circuits it too; this stops it being selectable at all.
+  const sameAsTarget = (a) => { const base = (x) => String(x || '').toLowerCase().split(/[-_]/)[0]; return base(a) === base(code); };
+  const srcOptions = LANGS.filter((l) => !sameAsTarget(l.code));
   const remembered = store.profile.prefs.talkSrcLang;
-  const srcDefault = (remembered && LANG_BY_CODE[remembered]) ? remembered : uiLang();
+  const preferred = (remembered && LANG_BY_CODE[remembered]) ? remembered : uiLang();
+  // Falling back to English keeps a working pair when the traveller's own language IS the
+  // target; their remembered choice is untouched and returns on any other phrasebook.
+  const srcDefault = sameAsTarget(preferred) ? 'en' : preferred;
   const srcSel = selectEl(
-    LANGS.map((l) => [l.code, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`]),
+    srcOptions.map((l) => [l.code, `${l.flag} ${l.native}${l.native === l.name ? '' : ` · ${l.name}`}`]),
     srcDefault,
     // syncSrc is declared below; the handler only ever runs on a user interaction, long after
     // this whole function body has finished evaluating.
@@ -1101,7 +1100,12 @@ function liveTranslateBox(code, label, locale, onChange) {
   // Talk T3: its own class distinct from the phrase-filter '.search' input below it on this
   // same screen — the two were previously visually identical, which caused real confusion
   // during the UX interview (typing a test query into the wrong box).
-  const input = h('input', { class: 'search translate-input', type: 'text', placeholder: 'e.g. Where is the bus station?' });
+  // B3: a single-line <input> let a long phrase scroll out of view as it was typed, so
+  // reviewing or editing what you had already written meant scrolling blind — measured live
+  // at 375px, a 127-character sentence showed scrollWidth 934px against a 307px visible box.
+  // A wrapping <textarea> (the same `.ta` class every other multi-line field in the app uses)
+  // keeps the whole phrase on screen instead.
+  const input = h('textarea', { class: 'ta translate-input', rows: '3', placeholder: 'e.g. Where is the bus station?' });
   const out = h('div', { class: 'tr-out', style: 'margin-top: var(--sp-3)' });
   // The input's accessible name has to name the ACTUAL source language, not a hard-coded
   // "English" — a screen-reader user who picked Japanese was previously told they were typing
@@ -1117,25 +1121,45 @@ function liveTranslateBox(code, label, locale, onChange) {
   const doTranslate = async (alsoSave) => {
     const text = input.value.trim();
     if (!text) return;
-    out.innerHTML = ''; out.append(h('p', { class: 'muted' }, 'Translating…'));
+    // A stop control right next to the spinner it belongs to, rather than a floating app-wide
+    // pill. Long text is several requests with a retry behind each, so this is not theoretical:
+    // on a weak link "Translating…" can hold the screen for seconds with no way out. Cancelling
+    // is a decision the traveller already made — it reports nothing.
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const finish = startTask(() => { if (ctrl) ctrl.abort(); });
+    out.innerHTML = '';
+    out.append(h('p', { class: 'muted' }, [
+      'Translating… ',
+      h('button', { class: 'linklike', onclick: () => stopTask() }, '⏹ Stop'),
+    ]));
     try {
       const srcLang = transCode(srcSel.value);
-      const res = await translate(text, code, srcLang);
+      const res = await translate(text, code, srcLang, ctrl ? ctrl.signal : null);
       out.innerHTML = '';
       out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
       const able = canSay(locale);
-      const speakBtn = h('button', { class: 'btn', disabled: able ? null : '', onclick: () => say(res, locale) },
+      const speakBtn = h('button', { class: 'btn', disabled: able ? null : '' },
         able ? '🔊 Hear it' : '🔇 Voice needs internet');
       out.append(speakBtn);
       if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
-      else say(res, locale);   // best-effort auto-play; the button always works (direct tap)
+      else {
+        // Same toggle as every other 🔊 in this screen: this button doubles as Stop for as
+        // long as the auto-play below is speaking, right where the traveller is already
+        // looking, rather than a separate floating control.
+        const run = wireSpeak(speakBtn, res, locale, { idleLabel: '🔊 Hear it', failLabel: '🔇 Try again' });
+        run();   // best-effort auto-play; the button always works too (direct tap, or to stop it)
+      }
       // Remembered either way — a local write, nothing leaves the device and nothing reaches
       // the dictionary without the explicit tap.
       const rec = recordTranslation(text, srcLang, code, res);
-      // Fire-and-forget: translate it into every OTHER language too, so the phrase is already
-      // waiting in whichever country the traveller crosses into next. Not awaited — the
-      // translation they asked for is on screen already and must never wait on 12 more calls.
-      if (rec) propagateTranslation(rec, srcLang);
+      // Pre-translating into every OTHER language used to fire here unconditionally — one
+      // visible request plus up to 7 silent ones against the same free, keyless MyMemory
+      // endpoint on EVERY tap, saved or not. That 8x amplification could exhaust the shared
+      // per-IP daily quota well before a traveller expected it, and every later translate —
+      // including the one actually on screen — would then fail with "offline" symptoms despite
+      // a working connection. Now it only happens on an explicit save, via
+      // saveTranslationToDictionary()'s own backfill below (keep()), so a phrase you are just
+      // reading once costs one request, not eight.
 
       const status = h('p', { class: 'tiny muted mytr-foot' });
       const keep = () => {
@@ -1155,9 +1179,18 @@ function liveTranslateBox(code, label, locale, onChange) {
       }
       out.append(status);
       if (onChange) onChange();
-    } catch (err) { out.innerHTML = ''; out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, err.message)); }
+    } catch (err) {
+      out.innerHTML = '';
+      // A cancel is not a failure and needs no sentence explaining itself — the traveller
+      // stopped it on purpose and is looking at the box they will retype in.
+      if (!(err instanceof TranslateAborted) && err.name !== 'TranslateAborted') {
+        out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, err.message));
+      }
+    } finally { finish(); }
   };
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doTranslate(false); } });
+  // No submit-on-Enter here: this is now a multi-line field, so Enter has to insert a
+  // newline like it does in every other `.ta` textarea in the app (see promptAction's
+  // multiline branch in ui-widgets.js) — the visible Translate button is the one way to submit.
 
   // Two buttons, because they are two different intentions. Translate is the common one and
   // leads; keeping a phrase forever is the deliberate one and says so in full.
@@ -1197,20 +1230,52 @@ function liveTranslateBox(code, label, locale, onChange) {
         micBtn.classList.add('is-listening');
         micBtn.setAttribute('aria-pressed', 'true');
         micBtn.title = 'Listening — tap again to stop';
-        rec.onresult = (e) => { input.value = e.results[0][0].transcript; doTranslate(false); };
+        // Fills the field and stops there — it does NOT auto-translate. Speech recognition
+        // gets things wrong often enough (names, numbers, background noise) that the traveller
+        // needs a chance to read and fix the transcript before it is sent anywhere; the visible
+        // Translate button is still the one way to submit, same as typed text.
+        rec.onresult = (e) => { input.value = e.results[0][0].transcript; syncInputX(); input.focus(); };
         rec.onerror = resetMic;
         rec.onend = resetMic;
         rec.start();
       } catch { resetMic(); }
     });
   }
+  // B3: an explicit way to start a new phrase — a small ✕ inside the field itself (direct
+  // request), same corner every "clear this box" control sits in app-wide, rather than a
+  // fourth full-width button below Save. A short, low-commitment entry clears immediately —
+  // retyping a word or two costs nothing a confirm would meaningfully prevent — but per A2,
+  // clearing something substantial enough that retyping it is a real cost DOES confirm first,
+  // through the same shared confirmAction() helper every other destructive control on this
+  // screen uses. Shown only once there is something to clear.
+  const CLEAR_CONFIRM_CHARS = 40;   // roughly "a full sentence" — shorter phrases clear silently
+  const inputX = h('button', { class: 'ta-clear-x', title: 'Clear', 'aria-label': 'Clear phrase', type: 'button' }, '✕');
+  inputX.hidden = true;
+  const syncInputX = () => { inputX.hidden = !input.value; };
+  input.addEventListener('input', syncInputX);
+  inputX.onclick = async () => {
+    if (input.value.trim().length > CLEAR_CONFIRM_CHARS) {
+      const ok = await confirmAction({ title: 'Clear this phrase?', body: 'This clears what you have typed. It is not saved anywhere yet.', confirmLabel: 'Clear', danger: true });
+      if (!ok) return;
+    }
+    input.value = '';
+    out.innerHTML = '';
+    syncInputX();
+    input.focus();
+  };
+  const inputWrap = h('div', { class: 'ta-wrap' }, [input, inputX]);
   // One grid rather than a row plus a separate block: Translate and Speak share the top line
-  // as equal columns, the save button spans both below them, and every gap is the same token.
-  // The old layout used `row-between`, which pushed the two apart to the card edges with a
-  // hole between them, and then a differently-spaced wrapper for the third — three buttons at
-  // three widths with two different gaps.
+  // as equal columns, and the save button spans both below them, every gap the same token.
   const actions = h('div', { class: 'talk-actions' + (micBtn ? '' : ' one-up') },
     [btn, micBtn, saveBtn].filter(Boolean));
-  box.append(srcSel, input, actions, out);
+  box.append(srcSel, inputWrap, actions, out);
+  // Point-camera-and-translate (Slice G, item 11.2) only recognises the four host-country
+  // scripts Tesseract carries data for — offered here, not on every phrasebook language, and
+  // routed with this exact page's code so it OCRs the language actually on screen rather than
+  // whatever the traveller's active country happens to be.
+  if (['th', 'vi', 'km', 'lo'].includes(code)) {
+    box.append(h('button', { class: 'btn ghost block', style: 'margin-top: var(--sp-2)', onclick: () => go(`#signtranslate-${code}`) },
+      `📷 Point & translate a ${label} sign`));
+  }
   return box;
 }

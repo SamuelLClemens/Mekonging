@@ -52,8 +52,12 @@ function defaults() {
         // A legacy 'ask' is migrated to 'online' in migrate() below.
         netMode: 'online',      // 'online' | 'offline'
         // --- v6: remembered offline-map layer visibility (the map-screen toggles) ---
-        mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true },
+        // hospitals defaults OFF (unlike every other key here) — a dense new ~7,400-point
+        // layer should not suddenly appear for a traveller who never asked for it.
+        mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true, hospitals: false, atms: false, buses: false },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
+        // Size is not tracked per pack — see js/audio-packs.js's header for why a per-pack byte
+        // figure cannot be measured reliably from an opaque, no-cors TTS response.
         audioPacks: [],
         // Last known GPS fix { lat, lng, at } — cached so "distance from you" and the
         // near-me experience work across the whole app, offline, without re-locating.
@@ -90,6 +94,22 @@ function defaults() {
         // categories (free text); `note` is a short personal note. Both optional and
         // self-defaulting — a key only appears once the user tags or annotates that pin.
         idPinMeta: {},        // { 'dish:pad-thai': { tags: ['Want to try'], note: 'stall by the market' } }
+        // --- app-wide storage-eviction safety (Safari's 7-day whole-origin sweep: with no
+        // interaction on this origin for 7 days, WebKit clears localStorage, IndexedDB, Cache
+        // Storage and every service-worker cache together — the same rule the offline audio
+        // packs' D2 evidence documented, but it is not audio-pack-specific: it is every
+        // traveller's entire on-device trip, unless the app is on the Home Screen). Stamped
+        // once at boot (see the write right after `export const store = load()` below) rather
+        // than defaulted here, because a value computed in migrate() and never saved would
+        // recompute to "today" every session for a traveller who triggers no other save —
+        // exactly the low-interaction traveller most at risk. '' here just means "not yet
+        // stamped". Consumed by daysSinceFirstUse() below, settings.js's install card, and
+        // home.js's one-time nudge.
+        firstUseAt: '',
+        // One-shot, same "seen once, never reshown" shape as showSetupRecap above — the
+        // persistent reminder lives in Settings (always visible while at risk), so this only
+        // needs to interrupt Home a single time rather than every session.
+        storageSafetyNudgeSeen: false,
       },
       defaultLang: '',          // phrasebook language to open first ('' = auto, match the user's location)
       // Optional, user-supplied live-translate endpoint + key. Stored ONLY on this
@@ -98,6 +118,12 @@ function defaults() {
       // the page CSP connect-src (see Settings copy).
       translateEndpoint: '',
       translateKey: '',
+      // Optional address handed to the FREE translation service as its `de` parameter, which
+      // raises that service's anonymous daily allowance roughly tenfold. The allowance is
+      // counted per IP, so on shared accommodation wifi one traveller setting this protects
+      // the whole building from exhausting it together. On-device, never committed, and sent
+      // nowhere but that service.
+      translateEmail: '',
       // Feedback: optional destination for the "Email feedback" action (set by the
       // owner in Settings) + the user's own reply-to. Both on-device; never committed.
       feedbackTo: '',
@@ -445,6 +471,15 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 }
 
+// First-use stamp for the app-wide storage-eviction nudge (Safari's 7-day whole-origin
+// eviction sweep) — see the firstUseAt comment above, daysSinceFirstUse() below,
+// settings.js's install card and home.js's one-time nudge. Stamped and saved right here at
+// boot, once, rather than left to migrate(): migrate() runs on every load without
+// necessarily persisting, so a value computed there and never saved would recompute to
+// "today" every session for a traveller who triggers no other save — exactly the
+// low-interaction traveller this exists to warn.
+if (!store.profile.prefs.firstUseAt) { store.profile.prefs.firstUseAt = todayKey(); save(); }
+
 let _mirrorTimer = null;
 function mirrorStore() {
   if (typeof putMeta !== 'function') return;
@@ -492,6 +527,19 @@ export async function storageStatus() {
 export async function requestPersistence() {
   try { if (navigator.storage && navigator.storage.persist) return await navigator.storage.persist(); } catch { /* ignore */ }
   return false;
+}
+
+// Days since this traveller's first recorded use of the app (the firstUseAt stamp above) —
+// the app-wide storage-eviction nudge's trigger. A plain local calculation rather than a
+// reverse import of main.js's daysUntilISO: state.js is imported BY main.js, and importing
+// the other way would be circular. firstUseAt is always set by the time any screen can call
+// this (stamped synchronously at module load, above), so the '' guard is defensive only.
+export function daysSinceFirstUse() {
+  const first = store.profile.prefs.firstUseAt;
+  if (!first) return 0;
+  const a = new Date(first + 'T00:00:00');
+  const b = new Date(todayKey() + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
 }
 
 // Export the entire on-device store as a JSON string the user can save as a file.

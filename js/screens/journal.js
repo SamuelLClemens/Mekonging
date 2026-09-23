@@ -831,6 +831,30 @@ export function journeyScreen() {
   let selected = -1;
   let mapCtrl = null;
   let legMarkers = [];
+  let hereMarker = null;
+  // A distinct "you are here" pin, separate from the numbered stop markers and not folded
+  // into their fit() bounds — the app-wide location watch (js/main.js) already keeps this
+  // current by the time any screen can mount, so this map does not need its own permission
+  // prompt or GeolocateControl tap to show where the traveller is right now, alongside where
+  // they have been. Same white-disc marker idiom as the "my stay" home-pin (js/map.js), a
+  // different colour and glyph so the two are never confused for each other.
+  function drawHereMarker(map) {
+    const fix = getLastFix();
+    if (!fix) return;
+    const maplibregl = window.maplibregl;
+    if (!maplibregl) return;
+    if (hereMarker) { hereMarker.remove(); hereMarker = null; }
+    const el0 = document.createElement('div');
+    el0.textContent = '📍';
+    el0.style.cssText = 'font-size:16px;width:28px;height:28px;line-height:28px;text-align:center;background:#E3F0FF;border:2px solid #1A6FC0;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)';
+    // Same ordering drawLegMarkers uses: the Marker construction claims the element, so
+    // title/aria-label set beforehand on el0 do not reliably stick — set them on
+    // getElement() afterwards instead.
+    hereMarker = new maplibregl.Marker({ element: el0, anchor: 'bottom' }).setLngLat([fix.lng, fix.lat]).addTo(map);
+    const el = hereMarker.getElement();
+    el.title = 'You are here';
+    el.setAttribute('aria-label', 'Your current location');
+  }
   const select = (i) => {
     selected = i;
     if (mapCtrl) mapCtrl.setSelected(String(i));
@@ -898,6 +922,7 @@ export function journeyScreen() {
   })).then((c) => {
     mapCtrl = c;
     if (selected >= 0) c.setSelected(String(selected));
+    drawHereMarker(c.map);
     // Draw immediately with the distance/time guess (always available, no network or lazy
     // data needed), then upgrade to the route graph's actual recorded mode once it is
     // loaded — ensureRouteGraph's callback never fires on failure (offline, nothing cached

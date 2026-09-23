@@ -97,6 +97,22 @@ export function collapsibleCard(node, key, defaultOpen = true) {
   return det;
 }
 
+// A details/summary wrapper matching collapsibleCard's visual output (card+foldcard classes,
+// foldcard-sum summary) but — unlike collapsibleCard, which MOVES a card's children into the
+// new <details> once and discards the now-empty original node — keeps `bodyEl` itself as the
+// live child. Needed wherever the body re-renders its own content repeatedly (live GPS
+// updates, async data resolving) — collapsibleCard's one-shot child-extraction would silently
+// orphan every later re-render from the visible DOM. Originally a Places-only closure;
+// promoted here once the standalone map screen needed the identical behaviour.
+export function foldedCard(title, bodyEl, key, defaultOpen) {
+  const det = h('details', { class: 'card foldcard' });
+  const pref = key ? store.profile.prefs[key] : undefined;
+  if (pref === undefined ? defaultOpen : pref) det.setAttribute('open', '');
+  det.append(h('summary', { class: 'foldcard-sum' }, title), bodyEl);
+  if (key) det.addEventListener('toggle', () => { store.profile.prefs[key] = det.open; save(); });
+  return det;
+}
+
 // Shared modal behaviour for overlay dialogs: close on Escape, keep Tab focus inside the
 // dialog, and restore focus to whatever was focused before it opened. `rootEl` is the
 // backdrop appended to <body>; the element carrying role="dialog" (rootEl itself or a
@@ -265,6 +281,20 @@ export function promptAction(opts = {}) {
 export function currencySelect(current, onchange) {
   return selectEl(CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${currencySymbol(c) || c}`.trim()]),
     current, onchange || (() => {}), 'Currency');
+}
+
+// "Show prices in" — the SAME setting as Settings' home currency (store.profile.homeCurrency),
+// offered where prices are actually read, so choosing euros on the transport screen also
+// re-expresses budget totals and every other converted price, rather than being a second,
+// screen-local preference that disagrees with the first. Sets currencyManual for the reason
+// Settings does (a later language change must not move it). The local price is always kept
+// beside the conversion, because that is what gets paid.
+export function pricesInPicker(onChange) {
+  const p = store.profile;
+  const sel = selectEl(CURRENCY_CODES.map((c) => [c, `${currencyFlag(c)} ${currencySymbol(c) || c} · ${c}`.trim()]),
+    p.homeCurrency || 'USD', (v) => { p.homeCurrency = v; p.currencyManual = true; save(); if (onChange) onChange(v); },
+    'Show prices in');
+  return h('label', { class: 'prices-in' }, [h('span', {}, '💱 Show prices in'), sel]);
 }
 
 let _fieldSeq = 0;

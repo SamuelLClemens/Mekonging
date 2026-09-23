@@ -25,9 +25,6 @@
 //
 // NOT HERE, deliberately, and every one of these was measured rather than assumed — see
 // `scripts/check-lazy-data.py --why <route> <module>` for the call path in each case:
-//   • photos.js (52 KB) — homeRightNowCard's recognition thumbnails put it on the landing
-//     screen, where a gate would add a blocking round trip to the one route that must be
-//     instant, and a non-blocking load would shift the layout under the traveller.
 //   • history.js (50 KB) — homeScreen -> whereYouAreCard -> cityAboutCard -> cityHistory.
 //   • checklist.js (29 KB) — homeScreen -> homeStageBlock -> planningStageBlock ->
 //     tripCountdownCard -> checklistFor. (This used to name homeNowCard, which never read it:
@@ -36,6 +33,13 @@
 //     homeRightNowFold so Home can order its sections independently.)
 //   • diet.js (9 KB) — dish verdicts fan in across every food list.
 //   • medical.js (62 KB) — the emergency screen itself.
+//
+// NO LONGER EAGER, so no longer listed above: photos.js (69 KB). Its entry here claimed a
+// non-blocking load "would shift the layout under the traveller". It cannot: .rn-thumb is a
+// fixed 44x44 flex:0 0 auto box in both the <img> and .ph placeholder states, so the swap
+// changes pixels inside the box and never its size. It is now loaded off the launch path by
+// loadPhotos() in main.js, and rnThumb() upgrades its own node when the registry lands.
+// Worth noting the module had grown 52 KB -> 69 KB while that stale note kept it eager.
 //
 // NO LONGER EAGER, so no longer listed above: allergens.js (24 KB). Its entry here read
 // "sosScreen/hospitalScreen -> showBigPhrase -> togglePhrasePin -> propagatePinAcrossLanguages
@@ -79,6 +83,12 @@ export let SOUNDS = {};
 // LAZY-MODULE: schedules = SCHEDULES SCHEDULES_VERIFIED schedulesForCountry
 export let SCHEDULES = [];
 export let SCHEDULES_VERIFIED = '';
+// LAZY-MODULE: phrasebooks = LANGUAGES getLanguage
+// The eight phrasebooks (107.6 KB). They were static imports in js/data/regions.js, which
+// screens/home.js reaches, so every launch parsed all of them — including for a traveller who
+// never opens Talk. Eleven routes read them and the guard below knows which; see
+// js/data/phrasebooks.js.
+export let LANGUAGES = {};
 
 // The `bust` argument exists because a FAILED dynamic import is permanent: the spec records
 // the failure in the page's module map against that exact specifier, so re-importing the same
@@ -98,6 +108,7 @@ const LOADERS = {
   arrival: (b) => import('./data/arrival.js' + b),
   sounds: (b) => import('./data/sounds.js' + b),
   schedules: (b) => import('./data/schedules.js' + b),
+  phrasebooks: (b) => import('./data/phrasebooks.js' + b),
 };
 
 // Publish a landed module into the live bindings above. Only the value exports need this;
@@ -112,6 +123,7 @@ const PUBLISH = {
   arrival: (m) => { ARRIVAL = m.ARRIVAL; },
   sounds: (m) => { SOUNDS = m.SOUNDS; },
   schedules: (m) => { SCHEDULES = m.SCHEDULES; SCHEDULES_VERIFIED = m.SCHEDULES_VERIFIED; },
+  phrasebooks: (m) => { LANGUAGES = m.LANGUAGES; },
 };
 
 const _mods = Object.create(null);
@@ -156,3 +168,4 @@ export function getAccessibility(cc) { const m = _mods.accessibility; return m ?
 export function scamsFor(cc) { const m = _mods.scams; return m ? m.scamsFor(cc) : null; }
 export function getArrival(slug) { const m = _mods.arrival; return m ? m.getArrival(slug) : null; }
 export function schedulesForCountry(cc) { const m = _mods.schedules; return m ? m.schedulesForCountry(cc) : []; }
+export function getLanguage(code) { const m = _mods.phrasebooks; return m ? m.getLanguage(code) : null; }

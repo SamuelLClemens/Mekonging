@@ -7,7 +7,7 @@ import { h, fmtDistance, compass, bearing, mapsUrl, haversineKm } from './util.j
 import { store, getLastFix } from './state.js';
 import { spotKey, getCachedAir, getCachedWeather, nearestSpot, maybeRefreshWeather, maybeRefreshAir } from './weather.js';
 import { online, openModal } from './ui-widgets.js';
-import { PHOTOS } from './data/photos.js';
+import { isPhotosLoaded, loadPhotos, photoEntry } from './photo-registry.js';
 import { DRIVE_CURVE } from './data/drivetimes.js';
 import { getActiveCountry } from './app-state.js';
 import { HISTORY } from './data/history.js';
@@ -260,6 +260,10 @@ export function wxWindU() { return (store.profile && store.profile.wxWindUnit) |
 export function fmtTemp(c) { if (c == null) return 'N/A'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
 export function fmtWind(kmh) { if (kmh == null) return 'N/A'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
 export function fmtPrecip(mm) { if (mm == null) return 'N/A'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
+// Open-Meteo returns snowfall in cm. Region-wide this is almost always 0 — the only real
+// occurrences are the northern mountains (Sapa, Ha Giang, Phongsali) in a cold winter snap —
+// so every caller that shows it must gate on a non-zero amount rather than printing "0 cm".
+export function fmtSnow(cm) { if (cm == null) return 'N/A'; if (wxTempU() === 'F') return `${(cm / 2.54).toFixed(2)} in`; return `${cm % 1 === 0 ? cm : cm.toFixed(1)} cm`; }
 
 // ---- Extracted from main.js (task #205 step 1) ------------------------------
 // Genuinely cross-screen helpers that happened to be physically declared inside
@@ -469,9 +473,21 @@ export function uvTodayBlock(coords, country) {
 // a placeholder slot makes the gap explicit (photos are filled in a dedicated
 // pass). Images lazy-load so slow/offline connections degrade gracefully.
 export function photoBlock(item, alt) {
-  const reg = (item && item.id && PHOTOS[item.id]) || null;
+  const reg = item ? photoEntry(item.id) : null;
   const src = (item && item.photo) || (reg && reg.src);
   const credit = (item && item.photoAttribution) || (reg && reg.credit);
+  // The registry loads off the launch path, so an item whose photo lives only there renders
+  // its placeholder first. Fetch it and rebuild this figure in place when it lands.
+  if (!src && !isPhotosLoaded() && item && item.id) {
+    const slot = h('div', { class: 'id-photo placeholder' }, [
+      h('span', { class: 'id-photo-emoji' }, (item && item.emoji) || '📷'),
+    ]);
+    loadPhotos().then(() => {
+      const late = photoEntry(item.id);
+      if (late && late.src && slot.isConnected) slot.replaceWith(photoBlock(item, alt));
+    }, () => { /* no registry, keep the placeholder */ });
+    return slot;
+  }
   if (src) {
     return h('figure', { class: 'id-photo' }, [
       h('img', { src, alt: alt || '', loading: 'lazy', decoding: 'async' }),

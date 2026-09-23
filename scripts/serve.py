@@ -14,6 +14,21 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    # SimpleHTTPRequestHandler defaults to HTTP/1.0, which has no keep-alive: the browser
+    # opens, uses and closes a separate TCP connection for EVERY file. The app is plain ES
+    # modules by design, so a cold launch is 60+ requests, and measured against the 1.0
+    # default each small module spent about 360 ms queued waiting for a free connection
+    # while its actual download took 2-6 ms. Load time here was essentially all connection
+    # setup and had nothing to do with the app's own size.
+    #
+    # HTTP/1.1 keeps the connection open and pipelines the rest down it. This is safe with
+    # SimpleHTTPRequestHandler because it always sends an accurate Content-Length, which is
+    # what 1.1 needs to know where one response ends and the next begins.
+    #
+    # This only ever affected local development. GitHub Pages serves the deployed app over
+    # HTTP/2, which multiplexes every request onto one connection already.
+    protocol_version = "HTTP/1.1"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
 

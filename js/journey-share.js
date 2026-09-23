@@ -433,7 +433,7 @@ ${imgs.length ? `<div class="shots">${imgs.map((u) => `<img src="${u}" alt="" lo
     const log = store.trip.budgetLog.slice().sort((a, b) => (a.date || '') < (b.date || '') ? -1 : 1);
     const rows = log.map((b) => `<tr><td>${esc(b.date || '')}</td><td>${esc(String(parseFloat(b.amount) || 0))}</td><td>${esc(b.currency || '')}</td><td>${esc(b.note || '')}</td></tr>`).join('');
     parts.push(`<h2 class="sec-h">Spending</h2><section><div class="scroll"><table>
-<thead><tr><th>Date</th><th>Amount</th><th>Currency</th><th>On what</th></tr></thead>
+<thead><tr><th>Date</th><th>Amount</th><th>Currency</th><th>Details</th></tr></thead>
 <tbody>${rows}</tbody></table></div></section>`);
   }
 

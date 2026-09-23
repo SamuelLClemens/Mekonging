@@ -31,7 +31,8 @@ import {
 import { visitsEnabled, myVisits } from '../visits.js';
 import { trailEnabled, setTrailEnabled, clearTrail, trailStats } from '../trail.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
-import { LANGUAGES, INTERESTS } from '../data/regions.js';
+import { INTERESTS } from '../data/regions.js';
+import { LANGUAGES } from '../lazy-data.js';
 import { getFamily } from '../data/family.js';
 import { getAccessibility } from '../lazy-data.js';   // route-scoped: see js/lazy-data.js
 import { getAllBlobs, putBlob } from '../idb.js';
@@ -40,8 +41,9 @@ import { CURRENCY_CODES, currencyFlag, currencySymbol } from '../currency.js';
 import {
   go, mount, topbar, render, focusSpot, daysUntilISO, todayISO, applyTheme, dietPicker,
   PHASE_ORDER, PHASES, blobToDataURL, getDeferredInstallPrompt, clearDeferredInstallPrompt,
-  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent,
+  QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent, isStandalone,
 } from '../main.js';
+import { audioPacksCard } from '../audio-packs.js';
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
 // the stored choice everywhere else. Tapping a button is what actually saves the phase.
@@ -196,6 +198,11 @@ function offlineDataCard() {
   return card;
 }
 
+// ---- Offline phrase audio (item 2.4 / B4) -----------------------------------
+// Full pack management now lives in js/audio-packs.js (audioPacksCard) — shared with Talk's
+// end-of-screen offline-audio manager (js/screens/phrasebook.js) so the two never build a
+// different url list, or a different notion of "downloaded", for the same language.
+
 function phaseSelector(active) {
   const cur = active || store.profile.prefs.phase || '';
   return h('div', { class: 'phase-seg', role: 'group', 'aria-label': 'Your journey phase' },
@@ -252,10 +259,19 @@ export function settingsScreen() {
 
   // Install (Add to Home Screen) — keep the offline companion one tap away. Android/Chrome
   // expose a captured prompt; iOS Safari needs the Share sheet; hidden once already installed.
-  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-  if (!standalone) {
+  if (!isStandalone()) {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
     const ic = h('div', { class: 'card' }, [h('h2', {}, '📲 Install the app')]);
+    // WebKit is mandatory on every iOS browser (Safari, Chrome-iOS, Firefox-iOS all use it),
+    // so isIOS is the right test for Safari's 7-day whole-origin storage sweep, not a
+    // narrower "actually Safari" check. This is the one place that risk is spelled out
+    // plainly and permanently rather than only in home.js's one-time nudge — see WORK_ORDER.md
+    // D2, which documented the sweep for audio packs specifically; it is really an app-wide
+    // exposure and this card is the app-wide fix.
+    if (isIOS) {
+      ic.append(h('p', { class: 'nudge-line', style: 'margin-top: 0' },
+        '⚠️ Not on your Home Screen — Safari can clear your entire saved trip (dictionary, journal, budget, photos) after 7 days without opening the app.'));
+    }
     if (getDeferredInstallPrompt()) {
       ic.append(h('p', { class: 'muted', style: 'margin-top: 0' }, 'Keeps Mekonging offline and one tap away.'));
       ic.append(h('button', { class: 'btn', onclick: async () => {
@@ -292,12 +308,6 @@ export function settingsScreen() {
       class: 'btn ghost block', style: 'margin-top: var(--sp-3)',
       onclick: () => { store.profile.prefs.tripStartedHidden = false; save(); render(); },
     }, '🎉 Show the “Trip started” chip again'));
-  }
-  if (store.profile.prefs.nextStopNudgeHidden) {
-    phaseCard.append(h('button', {
-      class: 'btn ghost block', style: 'margin-top: var(--sp-3)',
-      onclick: () => { store.profile.prefs.nextStopNudgeHidden = false; save(); render(); },
-    }, '🧭 Show the “Planning your next stop” chip again'));
   }
   wrap.append(phaseCard);
 
@@ -462,6 +472,17 @@ export function settingsScreen() {
     ]),
     h('p', { class: 'muted' }, 'Optional — your own server, for volume or privacy.'),
   ]);
+  // The free service counts its daily allowance per IP ADDRESS, not per person, so every
+  // guest on one hotel or cafe wifi shares a single allowance and they run it down together
+  // — which is why translation can stop working for a whole building at once. Giving the
+  // service an address to identify the caller raises that allowance roughly tenfold, and it
+  // is the one lever a traveller has over the problem. Optional, theirs, never sent anywhere
+  // else, and stored only on this device.
+  tcard.append(field('Your email for the free service (optional)', h('input', {
+    type: 'email', placeholder: 'you@example.com', value: p.translateEmail || '',
+    oninput: (e) => { p.translateEmail = e.target.value.trim(); save(); },
+  })));
+  tcard.append(h('p', { class: 'tiny muted' }, 'Raises the free daily translation limit about tenfold. Sent only to the translation service with your own translations; on shared hotel or cafe wifi this is what stops the allowance running out for everyone at once.'));
   tcard.append(field('Translate endpoint URL', h('input', {
     type: 'url', placeholder: 'https://your-endpoint/translate', value: p.translateEndpoint,
     oninput: (e) => { p.translateEndpoint = e.target.value.trim(); save(); },
@@ -550,6 +571,7 @@ export function settingsScreen() {
   wrap.append(remCard);
 
   wrap.append(offlineDataCard());
+  wrap.append(audioPacksCard());
 
   // Your data — protected across updates, and yours to back up / move between devices.
   const dataCard = h('div', { class: 'card' }, [

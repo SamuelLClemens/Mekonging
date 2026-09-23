@@ -13,7 +13,7 @@ import { suggestPlans } from '../lazy-data.js';
 import { resolveItem, tripVisitSheet } from '../place-ui.js';
 import { sourcesNote } from '../render-utils.js';
 import { encodeShare, shareUrl } from '../social.js';
-import { store, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, removePlaceVisit, removeStop,
+import { store, save, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, removePlaceVisit, removeStop,
   toggleChecklistItem, unscheduledVisits, updatePlaceVisit, updateStop, visitsForStop } from '../state.js';
 import { confirmAction, promptAction, screenHint } from '../ui-widgets.js';
 import { h, money } from '../util.js';
@@ -24,6 +24,26 @@ import { checklistFor, countryChips, go, homeCurrency, mount, profileIsSet, rend
 let editStopId = null;   // trip stop currently open for inline editing (correct a mistake)
 
 let placePickerOpenFor = null;  // stop id currently showing its "+ Add a place" saved-places picker, or null
+
+// My Trip's sections start collapsed on first visit (Slice D, item 14, direct request) rather
+// than open like every other screen's default — but a section the traveller opens still stays
+// open for the rest of that session, so this seeds mount()'s own autoFoldSections prefs
+// (js/main.js sectionFoldPrefs, keyed `trip:<heading>`) with `false` ONCE per session, only for
+// a key nothing has touched yet, rather than building a second fold mechanism. Seeded once
+// (module-level flag, reset by a real reload) so re-visiting #trip later in the same session
+// never re-collapses a section the traveller just opened.
+let _tripFoldsSeeded = false;
+function seedTripFoldsClosed() {
+  if (_tripFoldsSeeded) return;
+  _tripFoldsSeeded = true;
+  const m = store.profile.prefs.sectionFolds || (store.profile.prefs.sectionFolds = {});
+  let changed = false;
+  for (const label of ['Itinerary', 'Budget log', 'Share this trip', 'Log an expense']) {
+    const key = `trip:${label}`;
+    if (!(key in m)) { m[key] = false; changed = true; }
+  }
+  if (changed) save();
+}
 
 // One "thing to see" on the itinerary — used for both the rows tagged to a stop and the
 // not-yet-scheduled ones, so a note written in either place behaves identically.
@@ -71,7 +91,7 @@ function tripVisitRow(visit, place, prefix = '', extraChip = null) {
     h('div', { class: 'chips' }, [
       extraChip,
       noteBtn,
-      h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { removePlaceVisit(visit.id); go('#trip'); } }, '✕'),
+      h('button', { class: 'chip', 'aria-label': `Remove ${place.name}`, onclick: () => { confirmAction({ title: `Remove ${place.name}?`, confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removePlaceVisit(visit.id); go('#trip'); } }); } }, '✕'),
     ]),
   ]));
   row.append(noteEl);
@@ -79,6 +99,7 @@ function tripVisitRow(visit, place, prefix = '', extraChip = null) {
 }
 
 export function tripScreen() {
+  seedTripFoldsClosed();
   const wrap = h('div', { class: 'screen' });
   const name = (store.profile.name || '').trim();
   // Plain title, no possessive. The topbar gives the title ~102px at 375px and clamps it to

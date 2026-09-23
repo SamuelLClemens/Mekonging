@@ -14,25 +14,9 @@
 
 import { canonicalPlaceId } from './place-merges.js';
 import { HISTORY } from './history.js';
-import { PHRASEBOOK_TH } from './phrasebook.th.js';
-import { PHRASEBOOK_VI } from './phrasebook.vi.js';
-import { PHRASEBOOK_KM } from './phrasebook.km.js';
-import { PHRASEBOOK_LO } from './phrasebook.lo.js';
-import { PHRASEBOOK_ZH } from './phrasebook.zh.js';
-import { PHRASEBOOK_MY } from './phrasebook.my.js';
-import { PHRASEBOOK_MS } from './phrasebook.ms.js';
-import { PHRASEBOOK_HMN } from './phrasebook.hmn.js';
-
-export const LANGUAGES = {
-  th: PHRASEBOOK_TH,
-  vi: PHRASEBOOK_VI,
-  km: PHRASEBOOK_KM,
-  lo: PHRASEBOOK_LO,
-  zh: PHRASEBOOK_ZH,
-  my: PHRASEBOOK_MY,
-  ms: PHRASEBOOK_MS,
-  hmn: PHRASEBOOK_HMN,
-};
+// The phrasebooks used to be imported here, which put all 107.6 KB of them on the launch
+// path via screens/home.js. They now live in js/data/phrasebooks.js and load on demand —
+// import { LANGUAGES, getLanguage } from '../lazy-data.js' instead of from here.
 
 export const COUNTRIES = [
   {
@@ -58,7 +42,6 @@ export const COUNTRIES = [
 ];
 
 export function getCountry(id) { return COUNTRIES.find((c) => c.id === id) || null; }
-export function getLanguage(code) { return LANGUAGES[code] || null; }
 
 // ---- Lazy per-country data loading ------------------------------------------
 // City history rides along here too. It used to be 99 KB of js/data/history.js parsed on

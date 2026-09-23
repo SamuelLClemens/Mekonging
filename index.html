@@ -6,7 +6,7 @@
        The app is fully self-hosted and offline-first. The optional live-translate
        feature (js/translate.js) calls a user-configured endpoint; enabling it
        requires adding that origin to connect-src below (documented in Settings). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com; font-src 'self'; media-src 'self' blob: https://translate.google.com https://static.inaturalist.org https://inaturalist-open-data.s3.amazonaws.com; worker-src 'self' blob:; connect-src 'self' https://server.arcgisonline.com https://open.er-api.com https://api.open-meteo.com https://marine-api.open-meteo.com https://air-quality-api.open-meteo.com https://api.mymemory.translated.net https://api.inaturalist.org; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com; font-src 'self'; media-src 'self' blob: https://translate.google.com https://static.inaturalist.org https://inaturalist-open-data.s3.amazonaws.com; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' data: https://server.arcgisonline.com https://open.er-api.com https://api.open-meteo.com https://marine-api.open-meteo.com https://air-quality-api.open-meteo.com https://translate.googleapis.com https://api.mymemory.translated.net https://api.inaturalist.org https://cdn.jsdelivr.net; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="referrer" content="no-referrer">
   <!-- interactive-widget=resizes-content: when the on-screen keyboard opens, the LAYOUT
        viewport shrinks (rather than only the visual viewport), so the fixed bottom nav
@@ -31,39 +31,30 @@
        speculative; lazily-imported country data and screens are deliberately absent.
        Regenerate with: python3 scripts/check-preloads.py --fix -->
   <link rel="modulepreload" href="js/main.js">
-  <link rel="modulepreload" href="js/data/photos.js">
   <link rel="modulepreload" href="js/state.js">
   <link rel="modulepreload" href="js/screens/home.js">
   <link rel="modulepreload" href="js/render-utils.js">
   <link rel="modulepreload" href="js/data/hospitals.curated.js">
   <link rel="modulepreload" href="js/data/checklist.js">
-  <link rel="modulepreload" href="js/weather.js">
   <link rel="modulepreload" href="js/i18n.js">
+  <link rel="modulepreload" href="js/weather.js">
   <link rel="modulepreload" href="js/ui-widgets.js">
   <link rel="modulepreload" href="js/data/emergency.js">
-  <link rel="modulepreload" href="js/data/phrasebook.km.js">
-  <link rel="modulepreload" href="js/personal.js">
-  <link rel="modulepreload" href="js/data/phrasebook.th.js">
-  <link rel="modulepreload" href="js/budget-ui.js">
-  <link rel="modulepreload" href="js/data/phrasebook.lo.js">
-  <link rel="modulepreload" href="js/nav-groups.js">
-  <link rel="modulepreload" href="js/data/phrasebook.my.js">
-  <link rel="modulepreload" href="js/data/geo.js">
-  <link rel="modulepreload" href="js/weather-ui.js">
   <link rel="modulepreload" href="js/offline-pack.js">
+  <link rel="modulepreload" href="js/personal.js">
+  <link rel="modulepreload" href="js/budget-ui.js">
+  <link rel="modulepreload" href="js/nav-groups.js">
+  <link rel="modulepreload" href="js/weather-ui.js">
   <link rel="modulepreload" href="js/place-ui.js">
   <link rel="modulepreload" href="js/data/regions.js">
   <link rel="modulepreload" href="js/util.js">
   <link rel="modulepreload" href="js/data/hospitals.js">
-  <link rel="modulepreload" href="js/data/phrasebook.vi.js">
   <link rel="modulepreload" href="js/data/history.js">
-  <link rel="modulepreload" href="js/data/phrasebook.zh.js">
   <link rel="modulepreload" href="js/social.js">
-  <link rel="modulepreload" href="js/data/place-months.js">
-  <link rel="modulepreload" href="js/data/phrasebook.ms.js">
-  <link rel="modulepreload" href="js/data/diet.js">
   <link rel="modulepreload" href="js/lazy-data.js">
-  <link rel="modulepreload" href="js/data/phrasebook.hmn.js">
+  <link rel="modulepreload" href="js/data/place-months.js">
+  <link rel="modulepreload" href="js/tts.js">
+  <link rel="modulepreload" href="js/data/diet.js">
   <link rel="modulepreload" href="js/trail.js">
   <link rel="modulepreload" href="js/data/essentials.js">
   <link rel="modulepreload" href="js/currency.js">
@@ -71,7 +62,6 @@
   <link rel="modulepreload" href="js/visits.js">
   <link rel="modulepreload" href="js/journey.js">
   <link rel="modulepreload" href="js/gamify.js">
-  <link rel="modulepreload" href="js/tts.js">
   <link rel="modulepreload" href="js/phrase-ui.js">
   <link rel="modulepreload" href="js/translate.js">
   <link rel="modulepreload" href="js/idb.js">
@@ -79,7 +69,9 @@
   <link rel="modulepreload" href="js/app-state.js">
   <link rel="modulepreload" href="js/data/drivetimes.js">
   <link rel="modulepreload" href="js/data/month-verdict.js">
+  <link rel="modulepreload" href="js/audio-control.js">
   <link rel="modulepreload" href="js/data/place-merges.js">
+  <link rel="modulepreload" href="js/photo-registry.js">
 </head>
 <body>
   <a class="skip-link" href="#app">Skip to content</a>

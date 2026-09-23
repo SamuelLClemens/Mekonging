@@ -20,7 +20,7 @@
 // reverse-import of this module for the full list.
 import {
   store, save, getPlaceData, getLastFix, setLastFix, getMyStay, setMyStay, clearMyStay,
-  getSavedAreas, addSavedArea, removeSavedArea, clearSavedAreas, addPlaceVisit, removePlaceVisit,
+  addPlaceVisit, removePlaceVisit,
   toggleFavorite, isFavorite, createCollection, togglePlaceInCollection, collectionsForItem,
   setPlaceField, deletePin, ensureMe, getJellyReports, addJellyReport, getPin, todayKey,
 } from '../state.js';
@@ -36,7 +36,7 @@ import {
   fmtTemp, fmtWind,
 } from '../render-utils.js';
 import { VERDICT_RANK } from '../data/month-verdict.js';
-import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey, screenHint } from '../ui-widgets.js';
+import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey, screenHint, foldedCard } from '../ui-widgets.js';
 import { INTERESTS, COLLECTION_PRESETS, getCountry, allPlaces, getPlace } from '../data/regions.js';
 import { dateLocale, t, retranslate } from '../i18n.js';
 // accessibility/borders/transit are route-scoped data, fetched by the gate in main.js before
@@ -58,6 +58,8 @@ import {
 // phraseSlug/scriptLang moved from main.js to phrasebook.js (task #211's final module-split
 // slice) — this is the one screen module that needed an import-line edit on that extraction.
 import { phraseSlug, scriptLang } from '../phrase-ui.js';
+import { buildOfflineAreasCard } from '../offline-areas-ui.js';
+import { buildWalkCard } from '../walk-ui.js';
 
 // Shared with the screens still resident in main.js; see js/place-ui.js. These moved out
 // so this module could leave the launch graph — it is imported on demand by the router now.
@@ -191,20 +193,9 @@ export function placesScreen(arg) {
   // map can offer the same things #map does, without leaving this screen. placesCtrl (below)
   // only resolves a moment after this runs (async import), so every action here checks it is
   // set before touching it — harmless no-ops (or a hidden button) until then.
-  // A details/summary wrapper matching collapsibleCard's visual output (card+foldcard classes,
-  // foldcard-sum summary) but — unlike collapsibleCard, which MOVES a card's children into the
-  // new <details> once and discards the now-empty original node — keeps `bodyEl` itself as the
-  // live child. Needed here because both cards below re-render their own content repeatedly
-  // (once placesCtrl resolves, on stay/area changes, live GPS updates); collapsibleCard's
-  // one-shot child-extraction would silently orphan every later re-render from the visible DOM.
-  function foldedCard(title, bodyEl, key, defaultOpen) {
-    const det = h('details', { class: 'card foldcard' });
-    const pref = key ? store.profile.prefs[key] : undefined;
-    if (pref === undefined ? defaultOpen : pref) det.setAttribute('open', '');
-    det.append(h('summary', { class: 'foldcard-sum' }, title), bodyEl);
-    if (key) det.addEventListener('toggle', () => { store.profile.prefs[key] = det.open; save(); });
-    return det;
-  }
+  // foldedCard: see js/ui-widgets.js (promoted there so the standalone map screen can reuse
+  // it verbatim — both cards below re-render their own content repeatedly, which is why this
+  // needs foldedCard's live-child behaviour rather than collapsibleCard's one-shot extraction).
   const stayBannerP = h('p', { style: 'margin: var(--sp-1) 0;font-weight:700' }, '');
   const stayCard = h('div', { class: 'card' });
   let stayFixP = null;
@@ -239,7 +230,7 @@ export function placesScreen(arg) {
           h('a', { class: 'btn ghost', href: `https://www.google.com/maps/dir/?api=1&destination=${stay.coords.lat},${stay.coords.lng}`, target: '_blank', rel: 'noopener' }, 'Open in Maps ↗'),
           h('button', { class: 'btn ghost', onclick: () => { if (placesCtrl) placesCtrl.goToStay(stay.coords); } }, 'Show on map'),
           h('button', { class: 'btn ghost', onclick: setStayHereP }, 'Move to here'),
-          h('button', { class: 'btn ghost', onclick: () => { clearMyStay(); if (placesCtrl) { placesCtrl.setMyStay(null); placesCtrl.setWayback(null, null); } renderStayCard(); } }, 'Clear'),
+          h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Clear your saved stay?', confirmLabel: 'Clear', danger: true }).then((ok) => { if (ok) { clearMyStay(); if (placesCtrl) { placesCtrl.setMyStay(null); placesCtrl.setWayback(null, null); } renderStayCard(); } }); } }, 'Clear'),
         ]),
       );
       updateStayBannerP();
@@ -253,136 +244,8 @@ export function placesScreen(arg) {
   renderStayCard();
   wrap.append(foldedCard('🏠 My accommodation', stayCard, 'placesStayOpen', false));
 
-  const areasStatusP = h('p', { class: 'muted', style: 'margin: var(--sp-1) 0;font-size:13px' }, '');
-  const storageLineP = h('p', { class: 'muted', style: 'margin: var(--sp-0h) 0 var(--sp-2);font-size:12px' }, '');
-  const areasCard = h('div', { class: 'card' });
-  const swAvailableP = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
-  // Reported gap: nothing here ever showed how much offline map data actually exists, or
-  // gave a way to clear it in one action (only one area at a time). navigator.storage.estimate()
-  // covers the whole origin (precached app shell + IndexedDB photos/audio too, not just map
-  // tiles), so the line is worded as total offline storage rather than implying tiles-only.
-  async function renderStorageLine() {
-    storageLineP.textContent = '';
-    const mapMod = await import('../map.js');
-    const est = await mapMod.storageEstimate();
-    if (!est) return; // navigator.storage.estimate unsupported — say nothing rather than guess
-    const used = est.usageMB < 1 ? est.usageMB.toFixed(1) : String(Math.round(est.usageMB));
-    storageLineP.textContent = `~${used} MB stored offline on this device (maps, photos, audio).`;
-  }
-  function estimateAreaP() {
-    if (!placesCtrl) { areasStatusP.textContent = 'The map is still loading — try again in a moment.'; return; }
-    const urls = placesCtrl.getDownloadTiles(1000);
-    if (!urls.length) { areasStatusP.textContent = 'Nothing to save at this view — zoom in to an area first.'; return; }
-    const viewInfo = placesCtrl.getViewInfo();
-    const mbNum = urls.length * 0.018;
-    const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
-    areasStatusP.textContent = '';
-    // Reported gap: no signal anywhere that connectivity affects this feature — a traveller
-    // offline right now would only find out by trying. Non-blocking (a view already fully
-    // cached from a previous save still completes fine with no connection), just upfront.
-    const offlineNote = online() ? '' : ' You appear to be offline right now — this will only work for tiles you already have saved.';
-    areasStatusP.append(
-      `This view is about ${urls.length} satellite tiles (~${mb} MB).${offlineNote} `,
-      h('button', { class: 'linklike', onclick: () => downloadAreaP(urls, viewInfo) }, 'Download now'),
-      ' · ',
-      h('button', { class: 'linklike', onclick: () => { areasStatusP.textContent = ''; } }, 'Cancel'),
-    );
-  }
-  async function downloadAreaP(urls, viewInfo) {
-    areasStatusP.textContent = `Saving ${urls.length} map tiles for offline…`;
-    const onMsg = (e) => {
-      const d = e.data || {};
-      if (d.type === 'PREFETCH_PROGRESS') { areasStatusP.textContent = `Saving map tiles… ${d.done}/${d.total}`; return; }
-      if (d.type !== 'PREFETCH_DONE') return;
-      navigator.serviceWorker.removeEventListener('message', onMsg);
-      if (d.quotaHit) { areasStatusP.textContent = `Storage is full — saved ${d.ok} tiles before stopping. Remove a saved area below, then try a smaller view.`; return; }
-      if (d.ok > 0 && viewInfo) {
-        const def = (placesCtrl && placesCtrl.nearestCityName && placesCtrl.nearestCityName()) || 'Saved area';
-        // Found live: some embedded/restricted browser contexts (confirmed here) don't support
-        // window.prompt() at all — it THROWS rather than just being uncallable or cancellable.
-        // Uncaught, that exception would skip addSavedArea() entirely: the tiles are genuinely
-        // cached (d.ok > 0) but the traveller never sees a saved area, and the status text stays
-        // stuck on "Saving…" forever with no error. Falls back to the same default name a
-        // cancelled prompt already uses, so the save still completes either way.
-        let name = def;
-        try { name = (prompt('Name this offline area:', def) || def).trim() || def; } catch { /* prompt unsupported here — keep def */ }
-        addSavedArea({ name, center: viewInfo.center, bounds: viewInfo.bounds, z: Math.floor(viewInfo.zoom), count: d.ok });
-        areasStatusP.textContent = '';
-      } else if (d.ok === 0) {
-        // Reported gap: this used to go silently blank on total failure — from the traveller's
-        // point of view, identical to the "saved fine" case above. Now it says plainly why
-        // nothing is available offline, and distinguishes "you're offline" from "you're online
-        // but the tile service itself didn't respond" instead of guessing which applies.
-        areasStatusP.textContent = online()
-          ? 'Nothing could be saved — the map service did not respond. Try again in a moment.'
-          : 'Nothing could be saved — you need a connection to download new tiles. Reconnect and try again.';
-      } else {
-        areasStatusP.textContent = '';
-      }
-      renderAreasCard();
-      renderStorageLine();
-    };
-    navigator.serviceWorker.addEventListener('message', onMsg);
-    let protect = [];
-    try { protect = getSavedAreas().flatMap((a) => (placesCtrl && placesCtrl.tileUrlsForArea) ? placesCtrl.tileUrlsForArea(a.bounds, a.z) : []); } catch { /* best-effort */ }
-    navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TILES', urls, protect });
-  }
-  function deleteAreaP(a) {
-    removeSavedArea(a.id); renderAreasCard(); renderStorageLine();
-    if (placesCtrl && swAvailableP && a.bounds && navigator.serviceWorker.controller) {
-      const urls = placesCtrl.tileUrlsForArea(a.bounds, a.z || 12, 1000);
-      const onMsg = (e) => { if ((e.data || {}).type === 'DELETE_DONE') { navigator.serviceWorker.removeEventListener('message', onMsg); renderAreasCard(); renderStorageLine(); } };
-      navigator.serviceWorker.addEventListener('message', onMsg);
-      navigator.serviceWorker.controller.postMessage({ type: 'DELETE_TILES', urls });
-    }
-  }
-  // Reported gap: clearing offline map data meant removing areas one at a time — no single
-  // "start over" action. Clears both sides that need to stay in sync: the actual cached tiles
-  // (js/map.js's clearTileCache(), the mk-tiles* Cache Storage entries) and the saved-area
-  // RECORDS (state.js's clearSavedAreas()) — clearing only one would leave either orphaned
-  // tiles with no listing, or listed areas pointing at tiles that no longer exist.
-  function clearAllAreasP() {
-    confirmAction({
-      title: 'Clear all offline map data?',
-      body: 'This removes every saved area and its downloaded tiles from this device. You can save areas again any time you have a connection.',
-      confirmLabel: 'Clear all', danger: true,
-    }).then(async (ok) => {
-      if (!ok) return;
-      const mapMod = await import('../map.js');
-      await mapMod.clearTileCache();
-      clearSavedAreas();
-      areasStatusP.textContent = '';
-      renderAreasCard();
-      renderStorageLine();
-    });
-  }
-  function renderAreasCard() {
-    areasCard.textContent = '';
-    const dlBtn = h('button', { class: 'btn ghost', onclick: estimateAreaP }, '⬇ Save this map view for offline');
-    if (!swAvailableP || !placesCtrl) dlBtn.style.display = 'none';
-    areasCard.append(dlBtn, areasStatusP);
-    const areas = getSavedAreas();
-    if (!areas.length) {
-      areasCard.append(h('p', { class: 'muted' }, 'Save the view above to use the satellite map with no signal. Each area you save is listed here and can be removed on its own.'));
-      areasCard.append(storageLineP);
-      return;
-    }
-    areas.forEach((a) => {
-      const mbNum = (a.count || 0) * 0.018;
-      const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
-      areasCard.append(h('div', { class: 'row-between price-item' }, [
-        h('div', {}, [h('strong', {}, a.name), h('div', { class: 'muted', style: 'font-size:12px' }, `${a.count || 0} tiles · ~${mb} MB · saved ${a.savedAt}`)]),
-        h('div', { class: 'cats' }, [
-          h('button', { class: 'chip', title: 'Show on map', 'aria-label': `Show ${a.name} on map`, onclick: () => { if (placesCtrl && a.center) placesCtrl.flyTo(a.center.lng, a.center.lat, a.z || 12); } }, '◎'),
-          h('button', { class: 'chip', 'aria-label': `Delete ${a.name}`, onclick: () => deleteAreaP(a) }, '✕'),
-        ]),
-      ]));
-    });
-    areasCard.append(storageLineP, h('button', { class: 'btn ghost btn-spaced', onclick: clearAllAreasP }, '🗑 Clear all offline map data'));
-  }
-  renderAreasCard();
-  renderStorageLine();
-  wrap.append(foldedCard('🗂️ Saved offline areas', areasCard, 'placesAreasOpen', false));
+  const areasUI = buildOfflineAreasCard(() => placesCtrl, { title: '🗂️ Saved offline areas', key: 'placesAreasOpen' });
+  wrap.append(areasUI.card);
 
   // ---- Map search: always visible, never buried ----------------------------------
   // Reported bug: the map used to only ever show wherever GPS/last-focused-city resolved
@@ -444,8 +307,55 @@ export function placesScreen(arg) {
   // Same store.profile.prefs.mapLayers object #map itself reads/writes, so the borders
   // choice is one shared setting rather than a second, independent Places-only toggle.
   const mapLayersPrefsP = store.profile.prefs.mapLayers || (store.profile.prefs.mapLayers = { borders: true });
-  const bordersCheckP = h('input', { type: 'checkbox', checked: mapLayersPrefsP.borders !== false ? '' : null,
-    onchange: (e) => { mapLayersPrefsP.borders = e.target.checked; save(); if (placesCtrl) placesCtrl.setBorders(e.target.checked); } });
+  // Map layers are press-toggle chips, not checkboxes: the same visual language as the weather
+  // widget's metric segments, but MULTI-select — every layer is independent, so any combination
+  // can be on at once. They also sit directly under the map rather than inside the collapsed
+  // tools fold below, because toggling a layer is the most frequent thing a traveller does with
+  // this map, and it should not cost a scroll plus opening a disclosure to reach.
+  //
+  // Borders defaults ON. Hospitals, ATMs and bus stops are opt-IN: each is a dense new layer
+  // (~7,400 / ~240 / ~13,600 points) that must not appear unannounced for existing travellers.
+  // "Lowest-fee ATMs" rather than "free" because only Vietnam's pins are actually fee-free —
+  // see js/map.js's popup for the honest per-pin distinction and scripts/build_atms.py for
+  // sourcing. Bangkok's bus stops carry real route numbers; the other three capitals are
+  // downtown-core-only and say so per-stop rather than leaving a silent gap.
+  const MAP_LAYERS_P = [
+    { key: 'borders', label: '🗺️ Borders', isOn: () => mapLayersPrefsP.borders !== false,
+      apply: (v) => { if (placesCtrl) placesCtrl.setBorders(v); } },
+    { key: 'hospitals', label: '🏥 Hospitals', isOn: () => mapLayersPrefsP.hospitals === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setHospitals(v); } },
+    { key: 'atms', label: '🏧 Lowest-fee ATMs', isOn: () => mapLayersPrefsP.atms === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setAtms(v); } },
+    { key: 'buses', label: '🚌 Bus stops', isOn: () => mapLayersPrefsP.buses === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setBus(v); } },
+    { key: 'trails', label: '🥾 Hiking trails', isOn: () => mapLayersPrefsP.trails === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setTrails(v); } },
+    { key: 'bike', label: '🚲 Bike paths', isOn: () => mapLayersPrefsP.bike === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setBike(v); } },
+    { key: 'scenic', label: '👁 Viewpoints & waterfalls', isOn: () => mapLayersPrefsP.scenic === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setScenic(v); } },
+  ];
+  const layerChipsP = MAP_LAYERS_P.map((layer) => {
+    const chip = h('button', {
+      type: 'button', class: 'chip mk-layer-toggle',
+      'aria-pressed': layer.isOn() ? 'true' : 'false',
+      onclick: () => {
+        const next = chip.getAttribute('aria-pressed') !== 'true';
+        chip.setAttribute('aria-pressed', next ? 'true' : 'false');
+        mapLayersPrefsP[layer.key] = next;
+        save();
+        layer.apply(next);
+      },
+    }, layer.label);
+    return chip;
+  });
+  // `mk-layer-toggles`, not `layer-chips`: this screen already uses that class for the category
+  // picker fold a few lines above, and reusing it leaked this row's tighter spacing onto it.
+  const layerChipsRowP = h('div', { class: 'chips mk-layer-toggles', role: 'group', 'aria-label': 'Map layers' }, layerChipsP);
+  // Directly ABOVE the map rather than below it. On a phone the map is 320px tall, so anything
+  // placed under it starts off-screen — which defeated the point of promoting these out of the
+  // collapsed tools fold in the first place.
+  mapWrap.before(layerChipsRowP);
 
   // Keep-screen-awake while navigating on foot (Screen Wake Lock API) — the one #map
   // feature task #196's own functional-parity check found genuinely missing here, ported
@@ -474,12 +384,17 @@ export function placesScreen(arg) {
   document.addEventListener('visibilitychange', onVisP);
   { const prev = getLiveCleanup(); setLiveCleanup(() => { try { if (prev) prev(); } catch { /* noop */ } wantWakeP = false; document.removeEventListener('visibilitychange', onVisP); if (wakeLockP) { try { wakeLockP.release(); } catch { /* noop */ } wakeLockP = null; } }); }
 
+  // Offline walking directions, the same card js/screens/map.js shows (js/walk-ui.js). It used
+  // to exist only on the standalone #map screen — the map a traveller almost never opens — so
+  // from Places, which is the map they actually use, the feature read as missing entirely.
+  const walkP = buildWalkCard(() => placesCtrl);
+  wrap.append(walkP.card);
+
+  // Only the two genuinely occasional tools stay behind the fold now that the layers are
+  // always visible above: measuring a distance and pinning the screen awake.
   const toolsCard = h('div', {}, [
     h('div', { style: 'display:flex;flex-wrap:wrap;align-items:center;gap: var(--sp-3)' }, [
       measureBtnP,
-      // min-height 24px: the label is the checkbox's tap target and measured 149x21 on a 375px
-      // screen, under the WCAG 2.5.8 minimum. See .exp-monthly-toggle in style.css for the twin.
-      h('label', { style: 'display:flex;align-items:center;gap: var(--sp-1h);min-height:24px;font-size:14px;cursor:pointer' }, [bordersCheckP, h('span', {}, '🗺️ Country borders')]),
       wakeBtnP,
     ]),
     measureOutP,
@@ -1061,6 +976,10 @@ export function placesScreen(arg) {
         const nb = nearestSpotGlobal(fix);
         if (nb && nb.spot.country !== getActiveCountry()) { setFocusSpot(nb.spot); render(); }
       },
+      // Only consumed while the walking card is actively waiting for a destination
+      // (handleMapClick returns false otherwise), so a normal tap on the map keeps its
+      // existing meaning.
+      onMapClick: (pt) => walkP.handleMapClick(pt),
       numbered: true,
       cluster: true,
       markerColor: (p) => bucketColor(p),
@@ -1076,6 +995,12 @@ export function placesScreen(arg) {
       // Reconcile the borders layer with whatever was last saved (it defaults to visible
       // at construction regardless of a stored "off" pref from an earlier #map session).
       c.setBorders(mapLayersPrefsP.borders !== false);
+      if (mapLayersPrefsP.hospitals === true) c.setHospitals(true);
+      if (mapLayersPrefsP.atms === true) c.setAtms(true);
+      if (mapLayersPrefsP.buses === true) c.setBus(true);
+      if (mapLayersPrefsP.trails === true) c.setTrails(true);
+      if (mapLayersPrefsP.bike === true) c.setBike(true);
+      if (mapLayersPrefsP.scenic === true) c.setScenic(true);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out
@@ -1090,7 +1015,7 @@ export function placesScreen(arg) {
       setTimeout(() => { try { c.map.flyTo({ center: [anchor.lng, anchor.lat], zoom: 12, duration: 500 }); } catch { /* noop */ } }, 350);
       // My-accommodation/saved-areas controls only work once the controller exists — show
       // them now (a no-op if the traveller already opened the cards and saw them hidden).
-      renderAreasCard();
+      areasUI.refresh();
       // A second, independent geolocate listener (map.js supports many) so the way-back
       // line and distance banner update live here too, exactly like the standalone map.
       c.onLocate((fix) => {
@@ -1709,7 +1634,7 @@ function localSecretsCard(p) {
         h('div', { class: 'tiny muted' }, [sec.by, sec.at].filter(Boolean).join(' · ')),
         h('div', { class: 'listing-actions' }, [
           shareButton('🔗 Share', `A tip for ${p.name}`, () => shareUrl('in', encodeShare('secret', { id: p.id, n: p.name, text: sec.text, by: sec.by || (ensureMe().name || '') }, ensureMe())), 'btn ghost'),
-          h('button', { class: 'btn ghost', 'aria-label': 'Remove this secret', onclick: () => { removePlaceSecret(p.id, i); drawSecrets(); } }, '🗑'),
+          h('button', { class: 'btn ghost', 'aria-label': 'Remove this secret', onclick: () => { confirmAction({ title: 'Remove this secret?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removePlaceSecret(p.id, i); drawSecrets(); } }); } }, '🗑'),
         ]),
       ]));
     });
@@ -1902,7 +1827,7 @@ function placePhotoThumbs(id) {
       setBlobThumb(img, k);
       thumbs.append(h('div', { class: 'photo-thumb' }, [
         img,
-        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { removePlacePhoto(id, k); renderThumbs(); } }, '✕'),
+        h('button', { class: 'photo-thumb-x', 'aria-label': 'Remove photo', onclick: () => { confirmAction({ title: 'Remove this photo?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removePlacePhoto(id, k); renderThumbs(); } }); } }, '✕'),
       ]));
     });
   };

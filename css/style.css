@@ -253,7 +253,18 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: var(--font); font-size: var(--fs-body); color: var(--ink);
   background: var(--bg); line-height: 1.5; -webkit-font-smoothing: antialiased;
+  /* Double-tapping a card or control used to zoom the WHOLE PAGE, leaving the layout scaled
+     and misaligned until the traveller pinched back out. `manipulation` removes the
+     double-tap-zoom gesture while leaving genuine pinch-zoom intact.
+     Note this is the only half of it that can actually be fixed: iOS Safari has ignored
+     `user-scalable=no` since iOS 10, so blocking pinch-zoom outright is not available — and
+     blocking it would break the page for anyone who needs to enlarge text. */
+  touch-action: manipulation;
 }
+/* Belt and braces against the other cause of a "zoomed out" phone layout: one over-wide child
+   makes the whole document scrollable sideways and the browser shrinks to fit. Measured clean
+   at 375px today (scrollWidth === clientWidth), and this keeps it that way. */
+html, body { max-width: 100%; overflow-x: hidden; }
 html[data-reduced-motion="on"] *, html[data-reduced-motion="on"] *::before {
   animation: none !important; transition: none !important;
 }
@@ -522,7 +533,10 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 
 /* Region/province maps: clickable coloured provinces (pure offline SVG). */
 .regions-map { width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
-.regions-svg { width: 100%; height: auto; display: block; max-height: 62vh; }
+/* 62vh made a tall country (Vietnam especially) fill almost the whole screen, pushing the
+   province list below the fold on every phone. 48vh keeps the shape readable while leaving
+   the list it exists to navigate visible at the same time. */
+.regions-svg { width: 100%; height: auto; display: block; max-height: 48vh; }
 .prov-group { cursor: pointer; outline: none; }
 .prov { stroke: var(--card); stroke-width: 0.8; transition: fill-opacity var(--dur) var(--ease); }
 .prov-group:hover .prov, .prov-group:focus-visible .prov { fill-opacity: 0.9 !important; }
@@ -662,6 +676,11 @@ html[data-theme="dark"] .card h3 { color: var(--teal); }
 .btn.ghost { background: none; color: var(--teal-deep); border: 2px solid var(--teal); box-shadow: none; }
 html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .btn.ghost:hover { background: rgba(22,163,154,0.1); }
+/* A play control (call recording, phrase speaker, Hear-it) toggled into its own Stop while
+   playing — see playCall() in js/main.js and wireSpeak() in js/screens/phrasebook.js. Distinct
+   from the ready-to-play look so the same button reads as a different action, not a state of
+   the sound. */
+.btn.ghost.is-playing { background: var(--warn); color: #fff; border-color: transparent; }
 .btn.block { display: flex; width: 100%; justify-content: center; }
 
 /* --- home hero: psychedelic 60s/70s SE-Asia sunset --- */
@@ -947,6 +966,24 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   background: transparent; color: var(--ink); opacity: 0.7; font-size: 15px; cursor: pointer; border-radius: var(--r-sm); }
 .just-arrived-chip .ja-x:hover { opacity: 1; }
 
+/* "Planning your next stop" nudge (home.js's nextStopNudgeChip): the reminder IS the button,
+   wearing the same orange pill as the chip row above it so it reads as one family. Both class
+   names sit on the single <button>, so these rules repeat the pill rather than relying on the
+   descendant selector above, which only matches a .ja-main nested inside a .just-arrived-chip. */
+.nsn-btn { width: 100%; display: flex; align-items: center; gap: 7px; min-width: 0;
+  cursor: pointer; text-align: left; font-family: inherit; font-weight: 700;
+  font-size: var(--fs-sm); color: var(--ink);
+  background: color-mix(in srgb, var(--orange) 12%, transparent); border: 1px solid var(--orange);
+  border-radius: var(--r-2, 12px); padding: 8px 10px; margin: 0 0 var(--sp-3);
+  min-height: 44px; transition: transform var(--dur-fast) var(--ease); }
+.nsn-btn:active { transform: scale(0.97); }
+
+/* Turn-by-turn list for offline walking directions (screens/map.js). Numbered because the
+   order is the instruction; distances sit inline so a glance answers "how far until the turn". */
+.walk-steps { margin: 0; padding-left: 1.3em; font-size: var(--fs-sm); line-height: 1.5; }
+.walk-steps li { margin: 0 0 var(--sp-1); }
+.nsn-btn .status-go { margin-left: auto; opacity: 0.75; }
+
 /* Merged Right-now card extras: the phase checklist nudge and the one-tap spend row. */
 .right-now .now-line { margin: 4px 0 2px; text-align: left; }
 .right-now .now-spend { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
@@ -996,6 +1033,11 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
 }
 .chip[aria-pressed="true"] { background: var(--teal-deep); border-color: transparent; color: #fff; }
+/* Map-layer toggles: independent presses, any combination on at once — unlike the weather
+   widget's metric segments, which are one-of-N. Tighter than a default .chips row because this
+   sits directly under the map and its whole point is costing almost no vertical space. */
+.mk-layer-toggles { gap: var(--sp-1h); margin: var(--sp-2) 0 var(--sp-1); }
+.mk-layer-toggle { min-height: 38px; padding: var(--sp-1h) var(--sp-3); font-size: 13px; }
 .chip .chip-ic { display: inline-flex; margin-right: 6px; }
 .chip .chip-ic svg { width: 16px; height: 16px; display: block; }
 
@@ -1049,6 +1091,10 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 }
 .speak:hover { filter: brightness(1.08); }
 .speak[disabled] { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+/* A speaker (or the Hear-it button) toggled into its own Stop control while playing — see
+   js/screens/phrasebook.js's wireSpeak. Distinct from the ready-to-play gradient so the same
+   button reads as a different action, not a state of the phrase. */
+.speak.is-playing, .btn.is-playing { background: var(--warn); }
 .phrase-ctrls { flex: none; display: flex; gap: var(--sp-1); align-items: center; }
 .phrase .grow.tappable { cursor: pointer; border-radius: var(--r-2); }
 .phrase .grow.tappable:hover { background: rgba(0,0,0,0.03); }
@@ -1387,6 +1433,17 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
 .pill-best { font-size: var(--fs-label); font-weight: 800; background: var(--grad-sun); color: #fff;
              border-radius: var(--r-pill); padding: 3px var(--sp-2); text-transform: uppercase; }
 .border-flag { font-size: var(--fs-sm); color: var(--magenta-deep); font-weight: 700; }
+.pill-tag { font-size: var(--fs-label); font-weight: 700; border: 1px solid var(--line);
+            border-radius: var(--r-pill); padding: 2px var(--sp-2); margin-right: var(--sp-1); white-space: nowrap; }
+.route-legs, .route-timetable ul, .route-kids ul { margin: var(--sp-1) 0 0; padding-left: var(--sp-4); font-size: var(--fs-sm); }
+.route-legs li, .route-timetable li, .route-kids li { margin-top: var(--sp-0h); }
+.route-timetable { margin-top: var(--sp-2); font-size: var(--fs-sm); }
+.route-ops { margin-top: var(--sp-2); font-size: var(--fs-sm); }
+.prices-in { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); font-size: var(--fs-sm); font-weight: 700; }
+.prices-in select { flex: 1; min-width: 0; }
+.route-ops summary { cursor: pointer; font-weight: 700; }
+.route-branches { margin: var(--sp-1) 0; padding-left: var(--sp-4); font-size: var(--fs-label); }
+.route-kids { margin-top: var(--sp-3); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--card); }
 /* --- journey planner --- */
 .plan-picker { display: flex; flex-direction: column; gap: var(--sp-2); }
 .plan-field { display: flex; flex-direction: column; gap: 4px; }
@@ -1809,10 +1866,21 @@ html[data-theme="dark"] .fx-result { color: var(--teal); }
 /* Amount and its currency on ONE line, the two lines stacked from → to with the swap control
    between them. See fxConverterControl in js/main.js for why this replaced the side-by-side
    columns. The currency select is sized to its flag+symbol content and the number takes the
-   rest, so the figure — the thing actually being read — gets the width. */
-.fx-line { display: flex; align-items: center; gap: var(--sp-2); }
-.fx-line input { flex: 1 1 auto; min-width: 0; }
-.fx-line select { flex: 0 0 auto; width: auto; }
+   rest, so the figure — the thing actually being read — gets the width.
+   min-width: 11ch is a floor, not a hint — VND/KHR/LAK amounts routinely run to 9 digits
+   (hundreds of millions), and a bare `min-width: 0` let flex-shrink squeeze the field down to
+   a few visible characters on narrow phones, scrolling the digits a traveller just typed out
+   of view. flex-wrap on the row means the select gives way (drops to its own line) before the
+   number ever does, on any screen narrower than the two can share. */
+.fx-line { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.fx-line input { flex: 1 1 auto; min-width: 11ch; }
+/* The flag + symbol select only ever holds a handful of characters ("🇦🇺 A$" is the longest
+   option) — the chevron every select inherits was still reserving 30px of padding for a 6px
+   glyph on top of that, though, which is more box than the content needs. Pulled in to 22px,
+   the same tightening .fx-line-single already uses, so the space goes back to the amount/
+   result fields beside it instead of sitting empty inside the currency picker (direct request:
+   "the flag and currency symbol should have enough space for all the options... but not more"). */
+.fx-line select { flex: 0 0 auto; width: auto; padding-right: 22px !important; background-position: right 8px center !important; }
 .fx-line input, .fx-line select { font-family: inherit; font-size: var(--fs-base); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); background: var(--card); color: var(--ink); }
 .fx-line .fx-out { font-weight: 800; color: var(--teal-deep); }
 html[data-theme="dark"] .fx-line .fx-out { color: var(--teal); }
@@ -1827,12 +1895,38 @@ html[data-theme="dark"] .fx-line .fx-out { color: var(--teal); }
 /* opts.oneLine (fxConverterControl): the whole calculator — amount, both currencies, swap,
    result — on one row, with the rate as the only second line. For Home's Budget fold, where
    the four-line stacked layout ran taller than the fold's other rows. Inputs are narrower
-   here than .fx-line's (smaller padding, a fixed amount width) because five controls share
-   one row instead of two per row; the figure still gets readonly-bold treatment so the
-   result reads as the answer, not another input. */
-.fx-line-single { display: flex; align-items: center; gap: var(--sp-1h); }
-.fx-line-single input[type="number"] { flex: 0 1 48px; width: 48px; min-width: 0; }
-.fx-line-single .fx-out { flex: 1 1 auto; min-width: 0; }
+   here than .fx-line's (smaller padding) because five controls share one row instead of two
+   per row; the figure still gets readonly-bold treatment so the result reads as the answer,
+   not another input.
+
+   The amount used to be pinned to 48px, and the row was five flex children with the two
+   selects locked at `flex: 0 0 auto`. Measured at 375px the fixed furniture (2 selects at
+   81px, the swap at 26px, four 6px gaps) ate 212px of a 343px row, leaving the amount 62px
+   and the result 69px — so 250000 clipped as you typed it and the answer rendered "8,308,6".
+   A readonly result that silently loses its leading digits is the worse half of that: there
+   is no caret to scroll it back into view, so the number on screen is simply wrong.
+
+   Three changes, in order of how much room each returns:
+   - The two figures now size themselves to their content in `ch` (fxConverterControl's
+     sizeFields), so they are never narrower than the number they hold. VND and LAK amounts
+     run to seven and eight digits; no fixed width survives that.
+   - Each number is grouped with its own currency in an .fx-pair, and the row may wrap. When
+     both pairs no longer fit it becomes two clean lines — each figure still beside its own
+     currency — instead of clipping. It stays one line whenever there is room.
+   - The chevron every select inherits was reserving 30px of padding for a 6px glyph. Pulled
+     in to 22px here, which hands 8px per select back to the figures.
+   Spin buttons are suppressed too: on a free-form amount they are useless, unhittable at
+   this size, and cost ~17px of the typing area in Chromium. */
+.fx-line-single { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-1h); }
+.fx-line-single .fx-pair { display: flex; align-items: center; gap: var(--sp-1h); flex: 0 1 auto; min-width: 0; }
+.fx-line-single .fx-pair input { flex: 0 1 auto; width: auto; min-width: 4ch; }
+.fx-line-single .fx-pair select { flex: 0 0 auto; padding-right: 22px !important; background-position: right 8px center !important; }
+.fx-line-single input, .fx-line input { font-variant-numeric: tabular-nums; }
+.fx-line-single input[type="number"]::-webkit-outer-spin-button,
+.fx-line-single input[type="number"]::-webkit-inner-spin-button,
+.fx-line input[type="number"]::-webkit-outer-spin-button,
+.fx-line input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.fx-line-single input[type="number"], .fx-line input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .fx-line-single select { flex: 0 0 auto; width: auto; }
 .fx-line-single input, .fx-line-single select { font-family: inherit; font-size: var(--fs-sm); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-1) var(--sp-1h); background: var(--card); color: var(--ink); }
 .fx-line-single .fx-out { font-weight: 800; color: var(--teal-deep); text-align: right; }
@@ -1989,7 +2083,6 @@ html[data-theme="dark"] a { color: var(--teal); }
 html[data-theme="dark"] .plan-chain,
 html[data-theme="dark"] .rlabel,
 html[data-theme="dark"] .src-link,
-html[data-theme="dark"] .lang-tick,
 html[data-theme="dark"] .info-tip[open] > summary,
 html[data-theme="dark"] .fy-hero-why,
 html[data-theme="dark"] .fy-pick-why,
@@ -2549,7 +2642,7 @@ html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
 
 /* Quick-pin star on the identify browse cards (food / produce / wildlife). The card
    becomes a flex row: a transparent main button + the star, so both stay real buttons. */
-.id-cardrow { gap: 4px; }
+.id-cardrow { gap: 4px; flex-wrap: wrap; }
 .id-cardmain { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--sp-3, 12px);
   text-align: left; background: none; border: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; }
 .id-cardmain:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: var(--r-2, 10px); }
@@ -2557,6 +2650,19 @@ html[data-theme="dark"] .id-saved-main { background: rgba(255,255,255,0.05); }
   font-size: 20px; line-height: 1; padding: 6px 4px; color: var(--muted, #8A8F98); }
 .id-star.on { color: var(--sun, #E0A100); }
 .id-star:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+/* Plays a species' call from the browse row, beside the star. Only rendered for the 50
+   species that have a recording, so it is never a dead control; sized to the star's own
+   rhythm so the pair reads as one set of controls rather than a button next to a glyph. */
+.id-play { flex: 0 0 auto; align-self: center; background: none; border: none; cursor: pointer;
+  font-size: 18px; line-height: 1; padding: 6px 5px; color: var(--teal-deep, #0A615B); }
+.id-play.is-playing { color: var(--warn, #C2570F); }
+.id-play[disabled] { opacity: .5; cursor: default; }
+.id-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+/* The recordist credit, or why a call would not play. Takes its own row under the controls
+   (hence flex-wrap on .id-cardrow) and collapses while empty, so a card that has never been
+   played is exactly as tall as one with no call at all. */
+.id-callstatus { flex: 0 0 100%; font-size: 12px; line-height: 1.4; margin-top: 4px; color: var(--muted, #8A8F98); }
+.id-callstatus:empty { display: none; }
 
 /* My identifier: per-row controls, tag chips, note, and the inline edit panel. */
 .id-viewtoggle { margin: 4px 0 10px; }
@@ -2611,7 +2717,13 @@ html[data-theme="dark"] .wx-seg[aria-pressed="true"] { background: var(--teal); 
 .wx-cal-fold > summary { cursor: pointer; margin: var(--sp-3) 0 var(--sp-2); font-weight: 700; }
 .wx-cal-fold > summary::marker { color: var(--muted); }
 .wx-ring-wrap { display: flex; justify-content: center; margin: 2px 0; }
-.wx-ring { width: min(80vw, 290px); height: auto; }
+/* A bit bigger everywhere there is room — the ring is a scalable SVG (its label padding is
+   part of the same viewBox, see wxHourlyRingSvg), so growing it never risks clipping a label
+   the way a fixed-size raster would. Measured against the card's own content width (343px
+   card - 2*16px padding = 311px at a 375px phone) so the ring still sits with a little air
+   inside the card at the narrowest common width, while smaller/older phones (down to ~320px)
+   end up bigger than the old min(80vw,290px) cap too, not just capped the same. */
+.wx-ring { width: min(85vw, 300px); height: auto; }
 /* Hour labels around the ring — bumped from 11px/muted (hard to read at a glance, especially
    at Home's old compact size) to 12px/bolder and full ink contrast instead of muted grey, plus
    a short tick connecting each label to its wedge and an accent-coloured "now" label — so it
@@ -2767,44 +2879,23 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
    still too wide is now ellipsised by the -webkit-line-clamp above, which is a legible
    failure rather than a confusing one. */
 .topbar h1 { overflow-wrap: normal; word-break: normal; hyphens: manual; }
-/* A column layout in which ONLY the language list scrolls. The generic .sheet scrolls its own
-   whole body, which on a short viewport pushed the heading and the filter box off the top and
-   the Close button off the bottom — leaving a list of thirty languages and no visible way to
-   search or dismiss it. Pinning the chrome and giving the list the leftover height fixes that
-   at every viewport height instead of at a chosen one. */
-.lang-sheet {
-  max-width: 520px; border-radius: var(--r-lg);
-  display: flex; flex-direction: column; max-height: 86vh; overflow: hidden;
+/* The language picker used to be a 30-row scrollable list, which needed this sheet pinned into
+   a flex column (heading/filter/Close held in place, only the list itself scrolling) just to
+   keep the filter box and Close button on screen alongside it. Replaced by a single <select>
+   (see languageSheet() in js/main.js) short enough that the generic .sheet's own scroll-the-
+   whole-body behaviour is plenty — only the width cap below is still needed. */
+.lang-sheet { max-width: 520px; }
+/* The language <select> itself (languageSheet(), js/main.js) shipped with no context class,
+   so it fell back to plain browser sizing — a narrow, short box floating in the middle of an
+   otherwise roomy dialog. Matched to the same treatment every other select in the app gets in
+   its own context (.translate-card select, .fx-line select…): full width, a real 44px tap
+   target, and the app's own border/background rather than the platform default. */
+.lang-sheet select {
+  display: block; width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3); min-height: 48px; margin-bottom: var(--sp-3);
 }
-/* min-height, not just flex-grow: the list is the point of this sheet, and without a floor the
-   explanatory note below it was winning the height contest and leaving only three of thirty
-   languages on screen. */
-.lang-list {
-  flex: 1 1 auto; min-height: min(38vh, 260px); overflow-y: auto; margin: var(--sp-3) 0;
-  border: 1px solid var(--line); border-radius: var(--r-md);
-}
-.lang-sheet > h3, .lang-sheet > p, .lang-sheet > input, .lang-sheet > .lang-mt,
-.lang-sheet > .confirm-actions { flex: none; }
-.lang-row {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%;
-  padding: 10px var(--sp-3); border: none; border-bottom: 1px solid var(--line);
-  background: none; color: var(--ink); cursor: pointer; text-align: start; font: inherit;
-}
-.lang-row:last-child { border-bottom: none; }
-.lang-row:hover { background: rgba(128, 128, 128, 0.1); }
-.lang-row.on { background: rgba(22, 163, 154, 0.14); }
-.lang-flag { font-size: 1.4rem; line-height: 1; flex: none; }
-.lang-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-/* The language's own name is the primary label — it is the only one a speaker who reads no
-   English can use to find their row, so it gets the weight and the size. */
-.lang-native { font-weight: 700; font-size: var(--fs-md); }
-.lang-en { font-size: 11px; color: var(--ink-soft); }
-.lang-tick { color: var(--teal-deep); font-weight: 800; flex: none; }
-.lang-section {
-  margin: 0; padding: var(--sp-2) var(--sp-3); background: rgba(128, 128, 128, 0.08);
-  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--ink-soft); position: sticky; top: 0;
-}
+.lang-sheet select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
 .lang-mt { display: flex; gap: var(--sp-3); align-items: flex-start; margin: 0 0 var(--sp-4); cursor: pointer; }
 .lang-mt input { margin-top: 3px; flex: none; }
 /* Talk's source-language picker. It shipped as a bare, unstyled <select>, which was easy to
@@ -2956,6 +3047,21 @@ select {
 .talk-actions.one-up { grid-template-columns: 1fr; }
 .talk-actions .btn { width: 100%; justify-content: center; text-align: center; }
 .talk-actions .talk-save { grid-column: 1 / -1; }
+
+/* B3: the phrase field's own small ✕, top-right corner (never bottom — .ta's resize handle
+   already lives there). Reserves room on the right of the text itself via padding, rather
+   than floating on top of it, so a long phrase never runs under the button. Hidden until
+   there is something to clear (see phrasebook.js's syncInputX). */
+.ta-wrap { position: relative; }
+.ta-wrap .ta { padding-right: calc(var(--sp-3) + 28px); }
+.ta-clear-x {
+  position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-soft);
+  font-size: 13px; line-height: 1; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.ta-clear-x:hover { color: var(--ink); border-color: var(--orange); }
+.ta-clear-x[hidden] { display: none; }
 
 /* Listening reads as a STATE of the same button, not a different button: the fill is
    untouched (all three actions are deliberately one colour) and the change is a ring that

@@ -1,18 +1,62 @@
-// Offline support: precache the app shell, then serve app CODE network-first (newest deploy
-// when online, last-cached copy when offline) and heavy/immutable assets cache-first. Bump
-// CACHE_VERSION per release. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON
-// basemap ARE precached so the offline map works from first launch with no connection.
+// Offline support: precache the app shell, then serve app CODE CACHE-FIRST out of SHELL_CACHE,
+// and heavy/immutable assets cache-first too. Navigations are stale-while-revalidate against
+// the cached shell. The map engine (lib/maplibre-gl.*) and the self-hosted GeoJSON basemap ARE
+// precached so the offline map works from first launch with no connection.
+//
+// ►► A FILE REACHES A RETURNING USER ONLY WHEN ITS HASH MOVES IN THE MANIFEST BELOW. ◄◄
+//
+// That sentence used to read "bumping CACHE_VERSION is the only way", and the mechanism has
+// changed underneath it — see THE SHELL CACHE OUTLIVES THE RELEASE further down — but the
+// hazard it was warning about has not: code is served cache-first, so anything the worker
+// believes it already has is never re-fetched and never revalidated. Get the bookkeeping wrong
+// and a fix sits on the host, reachable by URL, while every existing traveller is served the
+// previous copy with no error anywhere. That has happened here twice.
+//
+// The header ALSO used to claim code was served "network-first (newest deploy when online)",
+// which was simply false — read the sub-resource branch of the fetch handler below, which
+// returns the cached hit before it considers the network. Believing it is how a maintainer
+// talks themselves out of caring about any of this.
+//
+// Run both guards before every deploy — the first one runs the second — and confirm the live
+// worker afterwards:
+//   python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
+//   curl -s https://www.mekonging.com/sw.js | grep -E "CACHE_VERSION|'js/main.js'"
 //
 // TILE_CACHE holds the raster satellite-tile byte ranges from the external tile source so the
 // map works offline once an area has been downloaded/viewed. The Cache API refuses
 // to store 206 (Partial Content), so each range is stored as a 200 with the original
 // status + Content-Range preserved in custom headers, and rebuilt into a 206 on read.
 //
-// Three caches outlive a release — TILE_CACHE, TTS_CACHE and MEDIA_CACHE — because none of
-// them hold code. Only CACHE_VERSION is scoped to the build, and activate() empties the rest
-// of the world around those four.
+// THE SHELL CACHE OUTLIVES THE RELEASE, and that is a deliberate change from how this worked
+// before. The cache used to be NAMED after CACHE_VERSION, so activate() deleted it wholesale on
+// every release and each returning traveller re-downloaded all 205 files — 860 KB across 89
+// requests just to reach first paint. Measured over the last dozen releases, the median release
+// changes 6 shipped files. Everyone was paying for 205 to receive 6, roughly eight seconds of
+// splash screen on the 0.65 Mbps link this app is built for, once per user per release.
+//
+// So the cache is now named SHELL_CACHE and simply persists, and reconcile() below deletes only
+// the entries whose CONTENT changed, by comparing MANIFEST (generated into this file from the
+// files on disk) against the copy it stored on the previous release. A cache hit is therefore
+// still, by construction, this build's code — which is the invariant the cache-first fetch
+// handler depends on and must never lose.
+//
+// ►► THE MANIFEST IS NOW LOAD-BEARING. A stale one says "unchanged" about a file that changed,
+//    and that file is then served from cache forever with no error anywhere — the same silent
+//    failure a forgotten CACHE_VERSION bump used to cause. scripts/build-sw-manifest.py writes
+//    it and scripts/check-cache-version.py verifies it; never hand-edit the generated block.
+//
+// Four caches outlive a release: SHELL_CACHE, TILE_CACHE, TTS_CACHE and MEDIA_CACHE. activate()
+// empties the rest of the world around those four, which on the first launch after this change
+// includes every old mk-v* shell — one last full re-download, and then never again.
 
-const CACHE_VERSION = 'mk-v0.547.0';
+// The build id. No longer names a cache, but still the string a traveller reads in Settings and
+// quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
+// on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
+const CACHE_VERSION = 'mk-v0.590.0';
+const SHELL_CACHE = 'mk-shell';
+// Where reconcile() stores the manifest of the release currently on the device. Not a real file
+// and never served: nothing requests this path, and it is absent from PRECACHE.
+const MANIFEST_KEY = '__mk_manifest__';
 const TILE_CACHE = 'mk-tiles-v1';
 const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
@@ -88,16 +132,48 @@ const PRECACHE = [
   // after crossing a border, when the next country's file has never been touched.
   'js/data/drivetimes.js',
   'js/data/hospitals.js',
+  'js/data/atms.js',
+  'js/data/bus.js',
+  'js/data/bus.th.js',
+  'js/data/bus.vi.js',
+  'js/data/bus.kh.js',
+  'js/data/bus.la.js',
+  'js/data/bus.pq.js',
   'js/data/hospitals.th.js',
   'js/data/hospitals.vi.js',
   'js/data/hospitals.kh.js',
   'js/data/hospitals.la.js',
+  // Hiking trails, bike paths and the viewpoints/waterfalls they lead to (~1.1 MB for all
+  // four countries). Warmed on idle like everything else in this list, never at install.
+  // Precached rather than left to the network for the same reason the bus stops are: a trail
+  // is used precisely where there is no signal, and a traveller who turned the layer on at the
+  // guesthouse should still have it on the hill.
+  'js/data/outdoors.js',
+  'js/data/trails.th.js',
+  'js/data/trails.vi.js',
+  'js/data/trails.kh.js',
+  'js/data/trails.la.js',
+  'js/data/scenic.th.js',
+  'js/data/scenic.vi.js',
+  'js/data/scenic.kh.js',
+  'js/data/scenic.la.js',
   'js/render-utils.js',
+  'js/photo-registry.js',
   'js/lazy-data.js',
+  // These three are EAGERLY imported by main.js but were missing from this list, so offline
+  // they 504'd and module evaluation stopped — the app hung on "Loading your companion…" with
+  // no map, no screens, nothing. An offline-first travel app that cannot boot offline is the
+  // worst failure it has, and it was invisible because every online load works fine.
+  // scripts/check-offline-boot.py now fails the build if the eager graph and this list ever
+  // disagree again.
+  'js/offline-pack.js',
+  'js/data/place-months.js',
+  'js/data/month-verdict.js',
   'js/ui-widgets.js',
   'js/state.js',
   'js/social.js',
   'js/tts.js',
+  'js/audio-control.js',
   'js/phrase-ui.js',
   'js/translate.js',
   // Interface language. i18n.js and the dictionary MANIFEST are shell. The 29 per-language
@@ -230,6 +306,21 @@ const PRECACHE = [
   'js/data/transit.js',
   'js/data/schedules.js',
   'js/data/basemap.js',
+  // The standalone offline map screen and its shared offline-area download UI (also used by
+  // Places) — orientation and emergency-relevant layers, so this has to work with no signal.
+  'js/screens/map.js',
+  'js/offline-areas-ui.js',
+  // The ferry layer and the operator contacts its popups (and the route cards) read: phone
+  // numbers for a pier are most needed exactly where there is no signal.
+  'js/data/ferries.js',
+  'js/data/operators.js',
+  // Offline walking directions. The graph is the largest single file here (~900 KB), but this
+  // list is warmed on idle rather than at install (see the install handler), so it costs
+  // nothing at launch — and walking directions with no signal is the entire point of it.
+  'js/walk-route.js',
+  'js/walk-ui.js',
+  'js/data/walk-index.js',
+  'js/data/walk.bangkok.js',
   'lib/maplibre-gl.js',
   'lib/maplibre-gl.css',
   // The display face. The vietnamese subsets are listed even though a Latin-only screen
@@ -241,6 +332,291 @@ const PRECACHE = [
   'lib/fonts/bevietnampro-800-vietnamese.woff2',
 ];
 
+// Content hash per shipped file, written by scripts/build-sw-manifest.py from the files on
+// disk. reconcile() below is its only reader: it deletes a cached entry when this disagrees
+// with the manifest stored on the device, and keeps it otherwise. Wider than PRECACHE on
+// purpose — it also covers files the fetch handler caches on demand (lazily-loaded screens,
+// country data), which would otherwise be dropped on every release for want of a hash to
+// compare. img/ and audio/ are absent because they live in MEDIA_CACHE.
+//
+// DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
+// ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
+const MANIFEST = {
+  'css/style.css': 'ce632a85',
+  'icons/apple-touch-icon.png': '406984b1',
+  'icons/icon.svg': 'e45df198',
+  'index.html': 'aff8f935',
+  'js/app-state.js': 'b3e4c4c8',
+  'js/audio-control.js': '523b7fe4',
+  'js/audio-packs.js': 'e25deee5',
+  'js/budget-ui.js': '6244d5ac',
+  'js/currency.js': '34ce7a88',
+  'js/data/accessibility.js': '48f9da6c',
+  'js/data/allergens.js': 'df832414',
+  'js/data/arrival.js': '2d70ab12',
+  'js/data/atms.js': 'c35febfd',
+  'js/data/basemap.js': '9427d471',
+  'js/data/bestof.js': '911f4546',
+  'js/data/borders.js': '49d317f2',
+  'js/data/borders_lines.js': '061e51d8',
+  'js/data/bus.js': 'fd6f2755',
+  'js/data/bus.kh.js': '69d89d27',
+  'js/data/bus.la.js': '01ee37fa',
+  'js/data/bus.pq.js': 'ed53ab5d',
+  'js/data/bus.th.js': '980c275d',
+  'js/data/bus.vi.js': '5d5283cf',
+  'js/data/checklist.js': '156d5cdb',
+  'js/data/diet.js': '832527d8',
+  'js/data/drivetimes.js': 'b543e68d',
+  'js/data/emergency.js': '5bec3690',
+  'js/data/essentials.js': '090595cc',
+  'js/data/etiquette.js': '57015c39',
+  'js/data/events.kh.js': '0ed577a7',
+  'js/data/events.la.js': '97150590',
+  'js/data/events.th.js': '5d9a7ad5',
+  'js/data/events.vi.js': '293c3aa2',
+  'js/data/family.js': '4af22afc',
+  'js/data/ferries.js': '40f39990',
+  'js/data/food.kh.ext.js': 'a65ea542',
+  'js/data/food.kh.js': '721060ad',
+  'js/data/food.la.ext.js': 'ef96a320',
+  'js/data/food.la.js': '3e87032b',
+  'js/data/food.th.ext.js': 'ba3c2c31',
+  'js/data/food.th.js': 'c2e15c48',
+  'js/data/food.vi.ext.js': '2a883a69',
+  'js/data/food.vi.js': 'e73c2c1c',
+  'js/data/geo.js': '2d39fc13',
+  'js/data/guide.kh.js': '2cff2d54',
+  'js/data/guide.la.js': '0b492eea',
+  'js/data/guide.th.js': '1658f4b0',
+  'js/data/guide.vi.js': '7791edb6',
+  'js/data/history.cities.kh.js': '521df72f',
+  'js/data/history.cities.la.js': '7cfefca3',
+  'js/data/history.cities.th.js': 'b62c45b7',
+  'js/data/history.cities.vi.js': '39b7d44c',
+  'js/data/history.js': '0f9c6617',
+  'js/data/hospitals.curated.js': '77f3e29a',
+  'js/data/hospitals.js': '1c028b43',
+  'js/data/hospitals.kh.js': 'bc42457e',
+  'js/data/hospitals.la.js': 'dd68732d',
+  'js/data/hospitals.th.js': '0ea77fbe',
+  'js/data/hospitals.vi.js': '6bc2db75',
+  'js/data/info.kh.js': '9acea0c7',
+  'js/data/info.la.js': '36e52c2f',
+  'js/data/info.th.js': '2f7c00ff',
+  'js/data/info.vi.js': '6ef35b16',
+  'js/data/itineraries.js': '8692b355',
+  'js/data/language-guides.js': '0701a610',
+  'js/data/local.kh.js': '96629845',
+  'js/data/local.la.js': '83060622',
+  'js/data/local.th.js': 'c852008a',
+  'js/data/local.vi.js': 'c95653b3',
+  'js/data/medical.js': '5f520c4d',
+  'js/data/month-verdict.js': '7bf2c3cc',
+  'js/data/nature.js': '391fc20c',
+  'js/data/operators.js': 'd6495bb8',
+  'js/data/outdoors.js': 'eab1a010',
+  'js/data/photos.js': '82aa71fe',
+  'js/data/phrasebook.hmn.js': '0afaf78a',
+  'js/data/phrasebook.km.js': '1883f353',
+  'js/data/phrasebook.lo.js': 'af7d28ea',
+  'js/data/phrasebook.ms.js': '412e6aaa',
+  'js/data/phrasebook.my.js': '8dbe1763',
+  'js/data/phrasebook.th.js': '72a3712f',
+  'js/data/phrasebook.vi.js': 'f367d27f',
+  'js/data/phrasebook.zh.js': 'd755f9e8',
+  'js/data/phrasebooks.js': '240eef44',
+  'js/data/place-merges.js': 'f71875ad',
+  'js/data/place-months.js': 'ce39c590',
+  'js/data/places.kh.ext.js': 'ffc563cd',
+  'js/data/places.kh.js': '605dad3e',
+  'js/data/places.la.ext.js': '95f62cfa',
+  'js/data/places.la.js': '0eb59e15',
+  'js/data/places.th.ext.js': 'f82dd53a',
+  'js/data/places.th.js': '3d8b3c90',
+  'js/data/places.vi.ext.js': '12243874',
+  'js/data/places.vi.js': '0460f94f',
+  'js/data/pools.js': '71dabab2',
+  'js/data/prices.kh.js': '8d3bdbfa',
+  'js/data/prices.la.js': 'fd1f0638',
+  'js/data/prices.th.js': 'ac1b92d2',
+  'js/data/prices.vi.js': '81abd019',
+  'js/data/produce.js': '761626c9',
+  'js/data/regions.info.js': '0be15f1f',
+  'js/data/regions.js': '3a47456c',
+  'js/data/regions.kh.js': 'c1f8e181',
+  'js/data/regions.la.js': '67d7f4aa',
+  'js/data/regions.th.js': 'e297d7e1',
+  'js/data/regions.vi.js': '28be48aa',
+  'js/data/routes.kh.js': '8e18e8c4',
+  'js/data/routes.la.js': '3c9dd258',
+  'js/data/routes.th.js': '4c29866a',
+  'js/data/routes.vi.js': '09bbda24',
+  'js/data/scams.js': '69bfed4a',
+  'js/data/scenic.kh.js': '67589f36',
+  'js/data/scenic.la.js': '96ac2687',
+  'js/data/scenic.th.js': '66f960b2',
+  'js/data/scenic.vi.js': '701c4daa',
+  'js/data/schedules.js': 'd23755fd',
+  'js/data/sounds.js': 'd7d4b0d5',
+  'js/data/trails.kh.js': '416ca5ef',
+  'js/data/trails.la.js': 'e4ee5cd9',
+  'js/data/trails.th.js': '629ff4ff',
+  'js/data/trails.vi.js': '12eb523a',
+  'js/data/transit.js': '8b400be6',
+  'js/data/ui-strings.ar.js': '4ebfd51e',
+  'js/data/ui-strings.bn.js': 'f3e7fb26',
+  'js/data/ui-strings.cs.js': '90b0cea4',
+  'js/data/ui-strings.de.js': 'e3816c71',
+  'js/data/ui-strings.es.js': 'a5b0fbfa',
+  'js/data/ui-strings.fa.js': '2f9ec700',
+  'js/data/ui-strings.fr.js': '4fc49712',
+  'js/data/ui-strings.he.js': 'c6166602',
+  'js/data/ui-strings.hi.js': '3ec26c74',
+  'js/data/ui-strings.id.js': 'c508d4d4',
+  'js/data/ui-strings.it.js': '8945bf5d',
+  'js/data/ui-strings.ja.js': 'e2d526ee',
+  'js/data/ui-strings.js': '42ee903f',
+  'js/data/ui-strings.km.js': 'ab873b7f',
+  'js/data/ui-strings.ko.js': '9459b823',
+  'js/data/ui-strings.lo.js': '4ef37c5f',
+  'js/data/ui-strings.ms.js': '05642a57',
+  'js/data/ui-strings.nl.js': '347f17cb',
+  'js/data/ui-strings.pl.js': '58627fed',
+  'js/data/ui-strings.pt.js': '06cd3bbf',
+  'js/data/ui-strings.ru.js': '35e87042',
+  'js/data/ui-strings.sv.js': '6544bc1a',
+  'js/data/ui-strings.th.js': 'e450b754',
+  'js/data/ui-strings.tl.js': '5574d8e0',
+  'js/data/ui-strings.tr.js': 'e9d5fd89',
+  'js/data/ui-strings.uk.js': '31cdd579',
+  'js/data/ui-strings.ur.js': '0b47f569',
+  'js/data/ui-strings.vi.js': '123c29d9',
+  'js/data/ui-strings.zh-CN.js': 'eeaa5957',
+  'js/data/ui-strings.zh-TW.js': '7bcd1b09',
+  'js/data/visa.js': 'fb2914ac',
+  'js/data/walk-index.js': '20f36085',
+  'js/data/walk.bangkok.js': '675378c1',
+  'js/data/zones.js': '89ab528b',
+  'js/exporter.js': 'e301db80',
+  'js/gamify.js': '235c330e',
+  'js/i18n.js': 'ab6832b5',
+  'js/idb.js': 'c5e4e32a',
+  'js/journey-share.js': 'd020ccad',
+  'js/journey.js': '7a78202e',
+  'js/lazy-data.js': 'b606efdc',
+  'js/main.js': 'c490a986',
+  'js/map.js': '893a2aa0',
+  'js/nav-groups.js': '1bdef2e7',
+  'js/offline-areas-ui.js': 'e50c5c44',
+  'js/offline-pack.js': 'f3e74905',
+  'js/personal.js': '34ddb915',
+  'js/photo-registry.js': 'c1c4f7e2',
+  'js/phrase-ui.js': '7f34630a',
+  'js/place-ui.js': 'ae2aecff',
+  'js/reminders.js': 'f18165dd',
+  'js/render-utils.js': 'b61a823e',
+  'js/screens/arrival-info.js': 'a6846fa4',
+  'js/screens/bargain.js': '0e891fc2',
+  'js/screens/board.js': '32ddfbc9',
+  'js/screens/budget.js': 'ae9a5414',
+  'js/screens/calendar.js': '1e3e3fd4',
+  'js/screens/circle.js': '9497226c',
+  'js/screens/contributions.js': 'f86462b4',
+  'js/screens/country-info.js': 'ec713fe8',
+  'js/screens/etiquette.js': '7fc329c4',
+  'js/screens/explore.js': 'c609903d',
+  'js/screens/export.js': '1429f50c',
+  'js/screens/family.js': '97c566e5',
+  'js/screens/food.js': '4030bf02',
+  'js/screens/giveback.js': '6ed0573a',
+  'js/screens/help.js': 'ec261fba',
+  'js/screens/home.js': '3d581354',
+  'js/screens/journal.js': 'a2702b95',
+  'js/screens/map.js': '43c703b1',
+  'js/screens/medical.js': '4277ae91',
+  'js/screens/nearby.js': 'c25da527',
+  'js/screens/nextstop.js': '657c8d05',
+  'js/screens/phrasebook.js': '303eafc7',
+  'js/screens/places.js': '459f9a84',
+  'js/screens/produce.js': '31aeadd6',
+  'js/screens/schedules.js': 'e04d0ae5',
+  'js/screens/search.js': '0fbdad0d',
+  'js/screens/settings.js': 'e1a7385d',
+  'js/screens/share-journey.js': 'f3a2aeea',
+  'js/screens/signtranslate.js': '4494ce60',
+  'js/screens/streetfood.js': '0ca4e2ad',
+  'js/screens/today.js': 'af93bb70',
+  'js/screens/transport.js': 'e79a065a',
+  'js/screens/trip.js': '8c7b7e12',
+  'js/screens/vault.js': '4ad7cc26',
+  'js/screens/visitors.js': '6746db81',
+  'js/screens/weather.js': '8cd6ab74',
+  'js/screens/welcome.js': 'bff77779',
+  'js/screens/you.js': '05c7503c',
+  'js/social.js': 'bdf1920c',
+  'js/state.js': 'c0334938',
+  'js/trail.js': 'c04f9efc',
+  'js/translate.js': 'bb9a9517',
+  'js/tts.js': '1c441cc8',
+  'js/ui-widgets.js': '70274759',
+  'js/util.js': '33cd90f6',
+  'js/vault.js': 'e0d57d7f',
+  'js/visits.js': '523454b2',
+  'js/walk-route.js': '596e9417',
+  'js/walk-ui.js': '2d832965',
+  'js/weather-ui.js': '487d2570',
+  'js/weather.js': '195cfcd1',
+  'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
+  'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
+  'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',
+  'lib/fonts/bevietnampro-800-vietnamese.woff2': '26b241d1',
+  'lib/maplibre-gl.css': '576b085f',
+  'lib/maplibre-gl.js': 'be9633c4',
+  'manifest.webmanifest': '81e45220',
+  'package.json': '01105bfb',
+};
+// ---- END GENERATED MANIFEST ----
+
+// What this release changed, and nothing else.
+//
+// Runs in activate(), before the worker takes over. For every entry already in SHELL_CACHE it
+// compares the hash this build ships against the hash the PREVIOUS build stored, and deletes
+// only where they disagree (or where the file is no longer shipped at all). Everything else
+// survives the release and is served without a request, which is the whole point.
+//
+// A missing stored manifest means this device has never run a reconciling worker — a first
+// install, or an upgrade from the old release-scoped cache. Nothing already in there can be
+// shown to match this build, so it all goes. That is the one full re-download this design
+// costs, once per device, ever.
+async function reconcile() {
+  const cache = await caches.open(SHELL_CACHE);
+  // Paths are stored relative to the worker's own scope so the app still works when served
+  // from a subdirectory — the same reason isMedia() matches on a path segment.
+  const base = new URL('./', self.location).pathname;
+  const relative = (url) => {
+    const p = new URL(url).pathname;
+    return p.startsWith(base) ? p.slice(base.length) : p.replace(/^\//, '');
+  };
+  let previous = null;
+  try {
+    const stored = await cache.match(MANIFEST_KEY);
+    if (stored) previous = await stored.json();
+  } catch { previous = null; }
+  let dropped = 0, kept = 0;
+  for (const req of await cache.keys()) {
+    const path = relative(req.url);
+    if (path === MANIFEST_KEY) continue;
+    // A cache-busted retry (…?retry=2) is the same file under a different key; pathname
+    // already ignores the query, so both entries answer to the same hash.
+    if (previous && MANIFEST[path] && MANIFEST[path] === previous[path]) { kept += 1; continue; }
+    await cache.delete(req);
+    dropped += 1;
+  }
+  await cache.put(MANIFEST_KEY, new Response(JSON.stringify(MANIFEST), { headers: { 'Content-Type': 'application/json' } }));
+  return { kept, dropped };
+}
+
 self.addEventListener('install', (e) => {
   // Install now caches ONLY the navigation fallback, and nothing else.
   //
@@ -251,7 +627,7 @@ self.addEventListener('install', (e) => {
   // set, but only once the page reports it is idle, and it SKIPS anything the page already
   // pulled through the fetch handler, so nothing is ever downloaded twice.
   e.waitUntil((async () => {
-    const c = await caches.open(CACHE_VERSION);
+    const c = await caches.open(SHELL_CACHE);
     for (const u of CRITICAL) { await c.add(new Request(u, { cache: 'reload' })); }
     await self.skipWaiting();
   })());
@@ -267,7 +643,7 @@ async function warmCache() {
   if (warming) return;
   warming = true;
   try {
-    const c = await caches.open(CACHE_VERSION);
+    const c = await caches.open(SHELL_CACHE);
     const todo = [];
     for (const u of PRECACHE) {
       if (!(await c.match(u, { ignoreSearch: true }))) todo.push(u);
@@ -297,16 +673,18 @@ async function warmCache() {
 }
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys()
-      // Kept across version bumps: the tile cache (offline map packs), the TTS pack cache
-      // (offline phrase audio) and the media cache (identify photos and calls). Only the
-      // app-shell cache is release-scoped, because only code is.
-      .then((keys) => Promise.all(keys
-        .filter((k) => k !== CACHE_VERSION && k !== TILE_CACHE && k !== TTS_CACHE && k !== MEDIA_CACHE)
-        .map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
-  );
+  e.waitUntil((async () => {
+    // Kept: the shell cache (now persistent, reconciled entry by entry below), the tile cache
+    // (offline map packs), the TTS pack cache (offline phrase audio) and the media cache
+    // (identify photos and calls). Everything else goes — which on the first launch after this
+    // change means every release-scoped mk-v* shell left behind by the old design.
+    const keep = new Set([SHELL_CACHE, TILE_CACHE, TTS_CACHE, MEDIA_CACHE]);
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => !keep.has(k)).map((k) => caches.delete(k)));
+    // Before claiming any client, so no page can be served a file this release changed.
+    await reconcile();
+    await self.clients.claim();
+  })());
 });
 
 // Navigation timeout. The navigation no longer blocks the launch (see the isNav branch: the
@@ -361,10 +739,10 @@ self.addEventListener('fetch', (e) => {
   //   • NAVIGATION  → network-first, but RACED AGAINST A TIMEOUT, then the cached shell. Keeps
   //     a fresh deploy visible on the launch it lands, without letting a crawling connection
   //     hold a blank screen.
-  //   • SUB-RESOURCE (js/css/json) → CACHE-FIRST. The cache is scoped to CACHE_VERSION and
-  //     activate() drops every other cache, so a hit is by construction the code of THIS
-  //     build: there is nothing to revalidate against. A new release bumps CACHE_VERSION,
-  //     which empties the cache and refetches, and main.js shows the update toast.
+  //   • SUB-RESOURCE (js/css/json) → CACHE-FIRST. reconcile() has already deleted, at activate,
+  //     every entry whose hash moved in this release, so a hit is by construction the code of
+  //     THIS build: there is nothing to revalidate against. A miss falls through to the network
+  //     below and is stored, which is how a changed file arrives; main.js shows the update toast.
   // Heavy, rarely-changing assets (map engine, images, fonts) stay cache-first below.
   const p = url.pathname;
   const isNav = req.mode === 'navigate';
@@ -393,7 +771,7 @@ self.addEventListener('fetch', (e) => {
     // update check runs on load and main.js raises the "new version is ready" toast in the
     // same session. That is a better answer than making everyone wait to find out.
     e.respondWith((async () => {
-      const cache = await caches.open(CACHE_VERSION);
+      const cache = await caches.open(SHELL_CACHE);
       const cached = await cache.match('index.html');
       const fresh = withTimeout(fetch(req, { cache: 'no-cache' }), NAV_TIMEOUT_MS)
         .then((res) => {
@@ -414,7 +792,7 @@ self.addEventListener('fetch', (e) => {
 
   if (isSub && !heavy) {
     e.respondWith((async () => {
-      const cache = await caches.open(CACHE_VERSION);
+      const cache = await caches.open(SHELL_CACHE);
       const hit = await cache.match(req, { ignoreSearch: true });
       if (hit) return hit;
       try {
@@ -433,7 +811,7 @@ self.addEventListener('fetch', (e) => {
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       if (hit) return hit;
       return withTimeout(fetch(req), ASSET_TIMEOUT_MS).then((res) => {
-        if (res.ok) { const copy = res.clone(); caches.open(CACHE_VERSION).then((c) => c.put(req, copy)); }
+        if (res.ok) { const copy = res.clone(); caches.open(SHELL_CACHE).then((c) => c.put(req, copy)); }
         return res;
       }).catch(() => {
         if (req.mode === 'navigate') return caches.match('index.html');
@@ -623,11 +1001,16 @@ self.addEventListener('message', (e) => {
   const d = e.data || {};
   if (d.type === 'PREFETCH_TILES' && Array.isArray(d.urls)) {
     // `protect` = tile URLs of already-saved packs; the cap must never evict them.
-    e.waitUntil(prefetchTiles(d.urls.slice(0, 1200), e.source, Array.isArray(d.protect) ? d.protect : []));
+    // 2400, not 1200: map.js's tileUrlsForBounds now emits one URL per tile PER STYLE
+    // (satellite + street, the offline-imagery fix), so a places.js cap=1000 request can
+    // produce up to 2000 URLs — the old 1200 ceiling would silently truncate the street half.
+    e.waitUntil(prefetchTiles(d.urls.slice(0, 2400), e.source, Array.isArray(d.protect) ? d.protect : []));
   } else if (d.type === 'DELETE_TILES' && Array.isArray(d.urls)) {
-    e.waitUntil(deleteTiles(d.urls.slice(0, 1200), e.source));
+    e.waitUntil(deleteTiles(d.urls.slice(0, 2400), e.source));
   } else if (d.type === 'PREFETCH_TTS' && Array.isArray(d.urls)) {
     e.waitUntil(prefetchTTS(d.urls.slice(0, 2000), e.source, d.lang || ''));
+  } else if (d.type === 'DELETE_TTS' && Array.isArray(d.urls)) {
+    e.waitUntil(deleteTTS(d.urls.slice(0, 2000), e.source));
   } else if (d.type === 'warm-cache') {
     // The page has finished loading and gone idle, so filling the offline copy can no longer
     // steal bandwidth from what the traveller is actually looking at.
@@ -667,6 +1050,20 @@ async function prefetchTTS(urls, client, lang) {
   }
   await enforceTTSCap(cache);
   if (client) client.postMessage({ type: 'TTS_DONE', done, total: urls.length, ok, quotaHit, lang });
+}
+
+// Remove one language's saved clips from the shared TTS_CACHE (Settings' pack list, and the
+// phrasebook screen's own re-download card). The page recomputes the SAME url list the pack
+// was downloaded with (js/audio-packs.js packUrls()), so only that language's entries are
+// deleted — other languages' clips, and anything cached incidentally from ordinary tap-to-
+// speak use, are untouched.
+async function deleteTTS(urls, client) {
+  const cache = await caches.open(TTS_CACHE);
+  let removed = 0;
+  for (const url of urls) {
+    try { if (await cache.delete(url)) removed++; } catch { /* skip */ }
+  }
+  if (client) client.postMessage({ type: 'DELETE_TTS_DONE', removed, total: urls.length });
 }
 
 async function enforceTTSCap(cache) {

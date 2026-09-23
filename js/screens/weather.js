@@ -6,7 +6,7 @@
 // module-private here because only this screen uses it.
 import { store, save, getLastFix, setLastFix } from '../state.js';
 import { h, esc } from '../util.js';
-import { wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip, airBlock, uvLineNode } from '../render-utils.js';
+import { wxTempU, wxWindU, fmtTemp, fmtWind, fmtPrecip, fmtSnow, airBlock, uvLineNode } from '../render-utils.js';
 import { field, online } from '../ui-widgets.js';
 import { WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot, getCachedWeather, getCachedMany, maybeRefreshWeather, maybeRefreshMany } from '../weather.js';
 import { COUNTRIES, getCountry } from '../data/regions.js';
@@ -61,11 +61,25 @@ function daySegments(hourly, date) {
       label: seg.label,
       code: Math.max(...inSeg.map((h) => h.code || 0)),
       pp: Math.max(...inSeg.map((h) => (h.pp == null ? 0 : h.pp))),
+      precip: inSeg.reduce((a, h) => a + (h.precip || 0), 0),
+      snow: inSeg.reduce((a, h) => a + (h.snow || 0), 0),
       tmin: Math.min(...inSeg.map((h) => h.temp)),
       tmax: Math.max(...inSeg.map((h) => h.temp)),
       hum: hums.length ? Math.round(hums.reduce((a, b) => a + b, 0) / hums.length) : null,
     };
   }).filter(Boolean);
+}
+
+// Rain always reads as probability + amount together, in that order — a bare "70%" doesn't
+// say whether to expect a light shower or a downpour. Snow only ever renders when the
+// forecast genuinely has some (the far-northern mountains — Sapa, Ha Giang, Phongsali — in a
+// cold winter snap; everywhere else this app covers is always 0), so it is gated on a
+// non-zero amount rather than padding every row with "❄️0 cm".
+function rainLine(prob, mm, snowCm) {
+  const parts = [];
+  if (prob != null) parts.push(`💧${prob}%${mm > 0 ? ` (${fmtPrecip(mm)})` : ''}`);
+  if (snowCm > 0) parts.push(`❄️${fmtSnow(snowCm)}`);
+  return parts.length ? ` · ${parts.join(' · ')}` : '';
 }
 
 // ---- PLAN-AWARE WEATHER: multi-city forecasts + a trip calendar --------------
@@ -152,7 +166,8 @@ function planCityPanels() {
         return;
       }
       bodyBox.append(h('div', { class: 'muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' },
-        `${clabel} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}`));
+        `${clabel} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}`
+        + `${cur.precip > 0 ? ` · 💧${fmtPrecip(cur.precip)} now` : ''}${cur.snow > 0 ? ` · ❄️${fmtSnow(cur.snow)} now` : ''}`));
       (rec.daily || []).slice(0, 7).forEach((d) => {
         const de = wmo(d.code)[1];
         const dl = wmo(d.code)[0];
@@ -163,7 +178,7 @@ function planCityPanels() {
           h('span', { style: 'min-width:92px;font-weight:600' }, wxDayDate(d.date)),
           h('span', { style: 'font-size:18px' }, de),
           h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2)' },
-            `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
+            `${dl}${rainLine(d.rainProb, d.precip, d.snow)}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
           h('span', { style: 'font-weight:700;white-space:nowrap' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
         ]));
       });
@@ -236,7 +251,8 @@ export function weatherScreen(country) {
           ]),
         ]),
         h('div', { class: 'muted', style: 'margin-top: var(--sp-2)' },
-          `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`),
+          `${spot.city}${rec.daily && rec.daily[0] ? ' · ' + wxDayDate(rec.daily[0].date) : ''} · Feels ${fmtTemp(rec.current.apparent)} · Humidity ${rec.current.humidity}% · Wind ${fmtWind(rec.current.wind)}`
+          + `${rec.current.precip > 0 ? ` · 💧${fmtPrecip(rec.current.precip)} now` : ''}${rec.current.snow > 0 ? ` · ❄️${fmtSnow(rec.current.snow)} now` : ''}`),
       ]);
       rightNow.append(h('div', { class: 'wx-now-div' }), airBlock(spot));
       if (rec.daily && rec.daily[0]) {
@@ -256,14 +272,14 @@ export function weatherScreen(country) {
         const dayHums = segs.map((s) => s.hum).filter((v) => v != null);
         const dayHum = dayHums.length ? Math.round(dayHums.reduce((a, b) => a + b, 0) / dayHums.length) : null;
         detail.append(h('div', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-1h)' },
-          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : 'N/A'}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : 'N/A'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
+          `Feels ${fmtTemp(d.appMin)}–${fmtTemp(d.appMax)} · Rain ${d.precip != null ? fmtPrecip(d.precip) : 'N/A'}${d.snow > 0 ? ` · Snow ${fmtSnow(d.snow)}` : ''}${dayHum != null ? ` · Humidity ${dayHum}%` : ''} · UV ${d.uv != null ? Math.round(d.uv) : 'N/A'} · Wind to ${fmtWind(d.windMax)} · ☀ ${wxTime(d.sunrise)}–${wxTime(d.sunset)}`));
         if (segs.length) {
           segs.forEach((s) => {
             const [sl, se] = wmo(s.code);
             detail.append(h('div', { class: 'row-between', style: 'padding: var(--sp-1) 0;border-top:1px solid rgba(0,0,0,0.06)' }, [
               h('span', { style: 'min-width:78px;font-weight:600' }, s.label),
               h('span', { style: 'font-size:18px' }, se),
-              h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2);text-align:left' }, `${sl} · 💧${s.pp}%${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
+              h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2);text-align:left' }, `${sl}${rainLine(s.pp, s.precip, s.snow)}${s.hum != null ? ` · Humidity ${s.hum}%` : ''}`),
               h('span', {}, `${fmtTemp(s.tmin)}/${fmtTemp(s.tmax)}`),
             ]));
           });
@@ -277,7 +293,7 @@ export function weatherScreen(country) {
           h('div', { class: 'row-between' }, [
             h('span', { style: 'min-width:104px;font-weight:700' }, wxDayDate(d.date)),
             h('span', { style: 'font-size:20px' }, de),
-            h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2)' }, `${dl}${d.rainProb != null ? ` · 💧${d.rainProb}%` : ''}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
+            h('span', { class: 'muted grow', style: 'margin: 0 var(--sp-2)' }, `${dl}${rainLine(d.rainProb, d.precip, d.snow)}${dayHum != null ? ` · Hum ${dayHum}%` : ''}`),
             h('span', { style: 'font-weight:700' }, `${fmtTemp(d.tmin)} / ${fmtTemp(d.tmax)}`),
             h('span', { class: 'muted', style: 'margin-left: var(--sp-1h)' }, '⌄'),
           ]),

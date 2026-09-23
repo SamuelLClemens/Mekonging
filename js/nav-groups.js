@@ -69,12 +69,15 @@ export const NAV_GROUPS = [
     blurb: 'What is this dish, fruit or bird?',
     intro: 'Find out what something is — a dish, a fruit, a bird, a snake',
     items: [
-      { ic: '🍜', label: 'Identify food', hash: '#food-{cc}', blurb: 'Dishes and what is in them' },
-      { ic: '🍈', label: 'Market produce', hash: '#produce', blurb: 'Fruit, veg and herbs on the stall' },
-      { ic: '🧂', label: 'Market products', hash: '#pantry', blurb: 'The sauces, rices, pastes and spices everyone else recognises' },
-      { ic: '🌿', label: 'Identify nature', hash: '#nature', blurb: 'Birds, fish, plants and insects' },
-      { ic: '🔊', label: 'Sounds around you', hash: '#sounds', blurb: 'Match a call you can hear' },
-      { ic: '⚠️', label: 'Dangerous', hash: '#danger', blurb: 'What to avoid, and first aid if it bites' },
+      { section: 'Food & market', ic: '🍜', label: 'Identify food', hash: '#food-{cc}', blurb: 'Dishes and what is in them' },
+      { section: 'Food & market', ic: '🍈', label: 'Market produce', hash: '#produce', blurb: 'Fruit, veg and herbs on the stall' },
+      { section: 'Food & market', ic: '🧂', label: 'Market products', hash: '#pantry', blurb: 'The sauces, rices, pastes and spices everyone else recognises' },
+      // "Sounds around you" was a second row here, pointing at a screen that listed the 50
+      // species with a recording. The recordings now sit on the species rows themselves, so
+      // there is one door and a filter inside it rather than two doors onto one dataset.
+      // #sounds still resolves — it opens this screen with that filter on.
+      { section: 'Nature & safety', ic: '🌿', label: 'Identify nature', hash: '#nature', blurb: 'Birds, plants, insects — and their calls' },
+      { section: 'Nature & safety', ic: '⚠️', label: 'Dangerous', hash: '#danger', blurb: 'What to avoid, and first aid if it bites' },
       { ic: '🔍', label: 'My identifier', hash: '#identified', mine: true, own: 'identifier', blurb: 'Everything you have identified so far', live: 'identified' },
     ],
   },
@@ -117,6 +120,7 @@ export const NAV_GROUPS = [
       { ic: '📋', label: 'Transport schedules', hash: '#schedules-{cc}', blurb: 'Train, bus and boat times' },
       { ic: '🛂', label: 'Border crossings', hash: '#crossings', blurb: 'Where to cross, opening hours, visas' },
       { ic: '🧭', label: 'Journey planner', hash: '#route', blurb: 'Chain buses, trains and boats into one route' },
+      { ic: '🗺️', label: 'Full offline map', hash: '#map', blurb: 'Borders, hospitals and satellite view, all four countries' },
     ],
   },
   {

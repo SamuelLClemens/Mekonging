@@ -27,7 +27,7 @@
 // access row, the next-stop card) is written directly in this file instead, since it belongs
 // to Home alone.
 
-import { store, save } from '../state.js';
+import { store, save, daysSinceFirstUse } from '../state.js';
 import { h, money } from '../util.js';
 import { getCountry, loadCountry, isCountryLoaded, loadAllCountries } from '../data/regions.js';
 import { getActiveCountry } from '../app-state.js';
@@ -117,6 +117,13 @@ export function homeScreen() {
     if (_recap) wrap.append(_recap());
     else import('./welcome.js').then((m) => { _recap = m.setupRecapCard; render(); }).catch(() => {});
   }
+
+  // One-time warning that Safari can wipe this traveller's whole trip after 7 days unopened
+  // if the app is never added to the Home Screen — see storageSafetyNudge() below. The
+  // persistent reminder lives in Settings (settingsScreen, always visible while at risk);
+  // this is the single interruption that makes sure it gets seen at least once.
+  const ssn = storageSafetyNudge();
+  if (ssn) wrap.append(ssn);
 
   // The field-guide download announces itself while it runs (js/offline-pack.js). It is the
   // one thing in this app that uses the network without being asked, so it does not get to be
@@ -221,6 +228,13 @@ export function homeScreen() {
     wrap.append(homeBudgetFold(leadCC));
     wrap.append(homeRightNowFold(phase, leadCC));
 
+    // The offline map and its layers (hospitals, ATMs, saved areas) live on Places. This sits
+    // AFTER the "Right now" card as its own row rather than inside it: orientation with no
+    // signal is a different job from "what is good here now", and a button nested inside a
+    // collapsed fold is a button nobody finds.
+    wrap.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#places') },
+      '🗺️ Offline map & layers →'));
+
     // Next stop: real transport options between here and the next planned stop. Background-
     // loads all four countries' route data (journey.js's route graph memoises across all of
     // them on first build, so it must never run before that finishes) and quietly fills in or
@@ -270,14 +284,14 @@ export function homeScreen() {
   // CLOSED by default (direct request) — the point of this pass is that Home fits on a screen
   // or two, and the door grid is the tallest block on it. Nothing is removed: the section is
   // one tap from open, and it remembers the choice.
-  // EVERY section, in every phase — nothing skipped (direct request). It used to drop the
-  // Settings door always and the Identify door while on the ground, on the grounds that both
-  // were covered elsewhere on the screen; that made this section an almost-complete directory,
-  // which is exactly why a separate "All features, A–Z" button had to sit under it as the
-  // catch-all. With all nine doors here there is a path to every feature in the app from this
-  // one fold, in planning, traveling and post alike, so the A–Z button is gone from Home as
-  // well as from You. #everything is still reachable from search and by its own hash.
-  wrap.append(homeFold('🧰 What do you need?', groupDoors(),
+  // Identify is skipped here on the ground ONLY (direct request, reversing an earlier "every
+  // door, nothing skipped" pass): while travelling, Home already carries a dedicated one-tap
+  // "Identify what's around you" button above (identifyRow()), so the door would just be the
+  // same destination twice on one screen — and skipping it there also lands the grid on an
+  // even tile count, which was asked for separately. Planning and post never show that button
+  // (identifyRow() is on-the-ground-only, above), so the door stays in the grid for them —
+  // dropping it there too would leave Identify unreachable from Home in those two phases.
+  wrap.append(homeFold('🧰 What do you need?', groupDoors(onGround ? ['identify'] : []),
     'homeDoorsOpen', { defaultOpen: false }));
 
   // Give back — a calm, opt-in prompt to support the people of the region you are visiting.
@@ -322,34 +336,54 @@ function justArrivedChip(cc) {
   ]);
 }
 
-// "Planning your next stop" — same dismissible-chip shape as Just arrived, filling the gap
-// left when nextStop() (below) has nothing to report. H4's real "🚌 Getting to X" card
-// (nextStopCard, below) only ever appears once a next stop already exists; while travelling
-// with no dated stop queued for today onward, Home otherwise says nothing here at all — this
-// nudges the traveller to #nextstop (screens/nextstop.js) to plan and add one instead of
-// leaving that silent — the real tool W2 built, not the bare My Trip form. Self-clears the
-// moment a next stop exists again, same as any other "nothing to say yet" cell in this file;
-// X-ing it out (for travellers deliberately not planning that far ahead) sets
-// prefs.nextStopNudgeHidden — never gone for good, restored from Settings → Journey phase,
-// same recovery path as Just arrived.
+// "Planning your next stop" — filling the gap left when nextStop() (below) has nothing to
+// report. H4's real "🚌 Getting to X" card (nextStopCard, below) only ever appears once a
+// next stop already exists; while travelling with no dated stop queued for today onward, Home
+// otherwise says nothing here at all — this nudges the traveller to #nextstop
+// (screens/nextstop.js), the real, comprehensive planning tool (where you are, where next,
+// getting there, what's there, and committing to a date), to plan and add one instead of
+// leaving that silent.
+//
+// The reminder IS the button (direct request): one row, one tap, straight to #nextstop. It was
+// briefly a fold wrapping a separate "Plan it now" button, which made the traveller open a
+// disclosure to reach a single destination they had already been told about. It still
+// self-clears the moment a next stop exists, same as every other "nothing to say yet" cell here.
 function nextStopNudgeChip() {
-  if (store.profile.prefs.nextStopNudgeHidden || nextStop()) return null;
-  return h('div', { class: 'just-arrived-chip' }, [
-    h('button', { class: 'ja-main', onclick: () => go('#nextstop') }, [
-      h('span', { class: 'status-ic' }, '🧭'),
-      h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
-    ]),
-    h('button', {
-      class: 'ja-x', 'aria-label': 'Hide the planning-your-next-stop chip',
-      onclick: () => {
-        confirmAction({
-          title: 'Hide this chip?',
-          body: 'It disappears from Home. Bring it back any time from Settings → Journey phase.',
-          confirmLabel: 'Hide',
-        }).then((ok) => { if (ok) { store.profile.prefs.nextStopNudgeHidden = true; save(); render(); } });
-      },
-    }, '✕'),
+  if (nextStop()) return null;
+  return h('button', { class: 'just-arrived-chip ja-main nsn-btn', onclick: () => go('#nextstop') }, [
+    h('span', { class: 'status-ic' }, '🧭'),
+    h('span', { class: 'status-lbl' }, 'Planning your next stop…'),
+    h('span', { class: 'status-go' }, '→'),
   ]);
+}
+
+// After a few days of real (non-installed) use, Safari's 7-day whole-origin eviction sweep
+// (localStorage + IndexedDB + Cache Storage + every service-worker cache, cleared together —
+// see WORK_ORDER.md D2 and settings.js's install card) is close enough to be worth a real
+// interruption, not just the persistent Settings line. Gated the same way as that card:
+// WebKit is mandatory on every iOS browser, so isIOS stands in for "actually at risk", and
+// standalone (already installed) is exempt outright. 3 days is long enough to know this is a
+// real, returning traveller rather than someone who opened the app once — and short enough
+// to leave 4 days of runway before the real 7-day cliff. One-time: dismissing (either button)
+// sets prefs.storageSafetyNudgeSeen and it never reappears — the Settings card is the
+// standing reminder from here on, so re-nagging on Home would just be noise.
+const STORAGE_NUDGE_MIN_DAYS = 3;
+function storageSafetyNudge() {
+  if (store.profile.prefs.storageSafetyNudgeSeen) return null;
+  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (standalone) return null;
+  if (!/iphone|ipad|ipod/i.test(navigator.userAgent || '')) return null;
+  if (daysSinceFirstUse() < STORAGE_NUDGE_MIN_DAYS) return null;
+  const dismiss = () => { store.profile.prefs.storageSafetyNudgeSeen = true; save(); render(); };
+  const card = h('div', { class: 'card setup-recap' });
+  card.append(h('strong', {}, '⚠️ Keep your trip safe from Safari'));
+  card.append(h('p', { class: 'muted', style: 'margin: var(--sp-1) 0 var(--sp-2)' },
+    'Safari can clear an app’s saved data — your trip, dictionary, journal and photos — after 7 days unopened. Adding Mekonging to your Home Screen makes it exempt.'));
+  card.append(h('div', { class: 'row-between' }, [
+    h('button', { class: 'btn', onclick: () => { dismiss(); go('#settings'); } }, 'Add to Home Screen'),
+    h('button', { class: 'btn ghost', onclick: dismiss }, 'Got it'),
+  ]));
+  return card;
 }
 
 // H2/H3 merged — Quick access: one collapsible carrying the phase switcher plus every
