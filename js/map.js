@@ -637,9 +637,19 @@ export async function initVisitMap(containerEl, points) {
     fit(pts) {
       const list = (pts || []).filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
       if (!list.length) return;
-      const b = new maplibregl.LngLatBounds([list[0].lng, list[0].lat], [list[0].lng, list[0].lat]);
-      list.forEach((p) => b.extend([p.lng, p.lat]));
-      try { map.fitBounds(b, { padding: 48, maxZoom: 6, duration: 0 }); } catch { /* single point */ }
+      // One fitBounds call used to cover both a single pin and a tight one-city cluster, capped
+      // at maxZoom:6 — roughly country level — so either case stopped zoomed-out no matter how
+      // close together the points actually were. A lone point now flies to a real city-scale
+      // zoom directly (fitBounds on a zero-size box does not behave usefully); a cluster gets
+      // the same city-level cap the Places/journey map's own fit() already uses (~line 1690)
+      // instead of being stuck at country zoom. A wide, multi-country spread is unaffected —
+      // fitBounds still zooms OUT as far as the box needs; only the upper bound moved.
+      if (list.length === 1) { map.flyTo({ center: [list[0].lng, list[0].lat], zoom: 13, duration: 0 }); return; }
+      try {
+        const b = new maplibregl.LngLatBounds([list[0].lng, list[0].lat], [list[0].lng, list[0].lat]);
+        list.forEach((p) => b.extend([p.lng, p.lat]));
+        map.fitBounds(b, { padding: 48, maxZoom: 14, duration: 0 });
+      } catch { /* noop */ }
     },
     dispose() {
       if (ro) { try { ro.disconnect(); } catch { /* noop */ } }
