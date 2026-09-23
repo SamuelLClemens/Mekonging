@@ -284,10 +284,10 @@ async function refreshWeather(spot) {
   const key = spotKey(spot);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedWeather(key);
   const url = `${ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}`
-    + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,is_day'
-    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m,apparent_temperature,uv_index'
+    + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,snowfall,is_day'
+    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,snowfall,wind_speed_10m,relative_humidity_2m,apparent_temperature,uv_index'
     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,'
-    + 'precipitation_probability_max,precipitation_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
+    + 'precipitation_probability_max,precipitation_sum,snowfall_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
     + '&timezone=auto&forecast_days=16';
   try {
     const res = await fetchTimeout(url);
@@ -299,19 +299,20 @@ async function refreshWeather(spot) {
         current: {
           temp: d.current.temperature_2m, apparent: d.current.apparent_temperature, code: d.current.weather_code,
           humidity: d.current.relative_humidity_2m, wind: d.current.wind_speed_10m,
-          precip: d.current.precipitation, isDay: d.current.is_day,
+          precip: d.current.precipitation, snow: d.current.snowfall, isDay: d.current.is_day,
         },
         daily: d.daily.time.map((t, i) => ({
           date: t, code: d.daily.weather_code[i],
           tmax: d.daily.temperature_2m_max[i], tmin: d.daily.temperature_2m_min[i],
           appMax: d.daily.apparent_temperature_max[i], appMin: d.daily.apparent_temperature_min[i],
           rainProb: d.daily.precipitation_probability_max[i], precip: d.daily.precipitation_sum[i],
+          snow: d.daily.snowfall_sum[i],
           uv: d.daily.uv_index_max[i], windMax: d.daily.wind_speed_10m_max[i],
           sunrise: d.daily.sunrise[i], sunset: d.daily.sunset[i],
         })),
         hourly: H.time.map((t, i) => ({
           t, temp: H.temperature_2m[i], code: H.weather_code[i],
-          pp: H.precipitation_probability[i], precip: H.precipitation[i],
+          pp: H.precipitation_probability[i], precip: H.precipitation[i], snow: H.snowfall[i],
           wind: H.wind_speed_10m[i], hum: H.relative_humidity_2m[i], app: H.apparent_temperature[i],
           uv: H.uv_index ? H.uv_index[i] : null,
         })),

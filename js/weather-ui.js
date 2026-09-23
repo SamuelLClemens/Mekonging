@@ -11,7 +11,7 @@
 
 import { esc, h } from './util.js';
 import { wmo } from './weather.js';
-import { fmtTemp, fmtWind } from './render-utils.js';
+import { fmtTemp, fmtWind, fmtPrecip, fmtSnow } from './render-utils.js';
 import { fmtClock } from './main.js';
 
 export function wxDiffDays(a, b) { return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000); }
@@ -117,10 +117,29 @@ export function wxHourlyRingSvg(win, metric, city, selectedIdx) {
 
 export function wxHourDetailCard(x) {
   const [label, emo] = wmo(x.code);
-  const rows = Object.values(WX_METRICS).map((cfg) => h('div', { class: 'wx-detail-row' }, [
-    h('span', { class: 'wx-detail-lbl' }, cfg.label),
-    h('span', { class: 'wx-detail-val' }, cfg.fmt(cfg.hourly(x))),
-  ]));
+  const rows = [];
+  Object.entries(WX_METRICS).forEach(([key, cfg]) => {
+    rows.push(h('div', { class: 'wx-detail-row' }, [
+      h('span', { class: 'wx-detail-lbl' }, cfg.label),
+      h('span', { class: 'wx-detail-val' }, cfg.fmt(cfg.hourly(x))),
+    ]));
+    // The amount rides right after the rain PROBABILITY row — a percentage alone doesn't
+    // say how much is actually expected. Snow only ever appears when the forecast genuinely
+    // has some (the northern mountains in a cold winter snap; everywhere else is always 0),
+    // so it is gated on a non-zero amount rather than padding every hour with "Snow: 0 cm".
+    if (key === 'rain') {
+      rows.push(h('div', { class: 'wx-detail-row' }, [
+        h('span', { class: 'wx-detail-lbl' }, '🌧 Rainfall'),
+        h('span', { class: 'wx-detail-val' }, fmtPrecip(x.precip)),
+      ]));
+      if (x.snow > 0) {
+        rows.push(h('div', { class: 'wx-detail-row' }, [
+          h('span', { class: 'wx-detail-lbl' }, '❄️ Snowfall'),
+          h('span', { class: 'wx-detail-val' }, fmtSnow(x.snow)),
+        ]));
+      }
+    }
+  });
   return h('div', { class: 'wx-hour-detail' }, [
     h('div', { class: 'wx-detail-head' }, [h('strong', {}, fmtClock(new Date(x.t).getHours())), ` · ${emo} ${label}`]),
     ...rows,

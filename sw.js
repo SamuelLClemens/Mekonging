@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.584.0';
+const CACHE_VERSION = 'mk-v0.585.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -505,7 +505,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'c82bdc75',
+  'js/main.js': 'ae0b62a3',
   'js/map.js': 'facab57f',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -515,7 +515,7 @@ const MANIFEST = {
   'js/phrase-ui.js': '7f34630a',
   'js/place-ui.js': 'ae2aecff',
   'js/reminders.js': 'f18165dd',
-  'js/render-utils.js': '59674e4a',
+  'js/render-utils.js': 'b61a823e',
   'js/screens/arrival-info.js': 'a6846fa4',
   'js/screens/bargain.js': '0e891fc2',
   'js/screens/board.js': '32ddfbc9',
@@ -551,7 +551,7 @@ const MANIFEST = {
   'js/screens/trip.js': '8c7b7e12',
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '5d20e664',
-  'js/screens/weather.js': '206c7d4e',
+  'js/screens/weather.js': '8cd6ab74',
   'js/screens/welcome.js': 'bff77779',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',
@@ -565,8 +565,8 @@ const MANIFEST = {
   'js/visits.js': '523454b2',
   'js/walk-route.js': '596e9417',
   'js/walk-ui.js': '2d832965',
-  'js/weather-ui.js': 'e1a3c439',
-  'js/weather.js': '1e9343ab',
+  'js/weather-ui.js': '487d2570',
+  'js/weather.js': '195cfcd1',
   'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
   'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
   'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',
