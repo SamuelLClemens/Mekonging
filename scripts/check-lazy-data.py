@@ -45,6 +45,19 @@ SUPPRESS_EDGES = {
     ('whereNextSection', 'exploreScreen'),
 }
 
+# A function's body matched an owned identifier, but only inside a string or regex literal —
+# not as a real reference to that lazy-data module. strip() only removes quoted strings (for
+# brace counting); it does not touch regex literals, so text like /TWO DISTINCT LANGUAGES/i
+# reads as a use of the `LANGUAGES` export to the naive \b(\w+)\b scan below. Each entry needs
+# a reason, same as SUPPRESS_EDGES, because suppressing one wrongly hides a real silent-data bug.
+SUPPRESS_USES = {
+    # serviceError classifies the MyMemory/Google translate APIs' own literal error text (HTTP
+    # 403 "...TWO DISTINCT LANGUAGES..."), not the app's LANGUAGES data export. serviceError is
+    # reachable from every route via mount -> autoTranslateTree -> translate -> serviceError, so
+    # without this suppression every route falsely shows a 'phrasebooks' need.
+    ('serviceError', 'phrasebooks'),
+}
+
 EXTRA_EDGES = {
     # ID_TYPES stores `get: getProduce` and myIdentifierScreen invokes it as `spec.get(id)`.
     'myIdentifierScreen': ['getProduce', 'getDish'],
@@ -187,6 +200,7 @@ def main():
         calls[name] |= set(EXTRA_EDGES.get(name, [])) & set(fns)
         calls[name] -= {b for a, b in SUPPRESS_EDGES if a == name}
         uses[name] = {owner[i] for i in set(re.findall(r'\b(\w+)\b', body)) & set(owner)}
+        uses[name] -= {b for a, b in SUPPRESS_USES if a == name}
 
     # Anything referencing a lazy VALUE at module top level cannot be gated at all.
     top_hits = []
