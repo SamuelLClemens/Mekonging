@@ -301,9 +301,42 @@ function loadScreenMod(name) {
     const n = _screenTries[name] = (_screenTries[name] || 0) + 1;
     _screenPending[name] = SCREEN_LOADERS[name](n > 1 ? `?retry=${n}` : '')
       .then((m) => { _screenMods[name] = m; delete _screenPending[name]; return m; })
-      .catch((err) => { delete _screenPending[name]; _screenFailed[name] = true; throw err; });
+      .catch((err) => { delete _screenPending[name]; _screenFailed[name] = isLinkError(err) ? 'link' : true; throw err; });
   }
   return _screenPending[name];
+}
+
+// ---- a release landing under an open app ----------------------------------------
+// The service worker takes over an open app the moment a new release installs (skipWaiting +
+// clients.claim in sw.js), but the app deliberately does not reload itself (see
+// showUpdateToast). From then on the page still runs the PREVIOUS release's eager modules while
+// every lazy screen it has not opened yet arrives from the NEW release, and a new screen that
+// imports something the old shared modules never exported fails to link. mk-v0.593.0 did
+// exactly that: Weather and Places answered "This screen is not on your device yet" to anyone
+// whose app was open across the deploy, and Retry could never fix it, because the stale module
+// is already in memory and no fetch replaces it. Only a reload does.
+//
+// So once a new worker has taken control, a screen that still has to be fetched is opened by
+// reloading into it instead. That only happens on a navigation the traveller asked for, after
+// the screen they left has been torn down, never mid-input, which is the case that removed the
+// old automatic reload. A missing-export error with no worker involved (a host cache handing
+// out a stale module) takes the same path.
+let versionSkew = false;
+const SKEW_RELOAD_KEY = 'mk.skewReload';
+function isLinkError(err) {
+  return !!err && (err.name === 'SyntaxError'
+    || /does not provide an export|Importing binding name|import not found/i.test(String(err.message || '')));
+}
+// At most once a minute per tab, so a release with a genuinely broken module shows the
+// unavailable card rather than reloading forever.
+function reloadIntoNewVersion() {
+  try {
+    const last = Number(sessionStorage.getItem(SKEW_RELOAD_KEY)) || 0;
+    if (Date.now() - last < 60 * 1000) return false;
+    sessionStorage.setItem(SKEW_RELOAD_KEY, String(Date.now()));
+  } catch { return false; }   // no way to guard against a loop, so do not start one
+  location.reload();
+  return true;
 }
 
 // ---- lazy data modules -------------------------------------------------------
@@ -487,7 +520,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     // the ONLY user-facing update path: tapping Refresh reloads when the traveller chooses to,
     // never mid-input.
     if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => showUpdateToast());
+      navigator.serviceWorker.addEventListener('controllerchange', () => { versionSkew = true; showUpdateToast(); });
     }
 
     // The worker precaches best-effort: one unreachable file must never abort the whole
@@ -766,7 +799,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.593.0';
+export const APP_VERSION = 'mk-v0.595.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3008,7 +3041,9 @@ export function homeWeatherCard(want) {
   const rec = getCachedWeather(spotKey(spot));
   if (!rec || !Array.isArray(rec.hourly) || !rec.hourly.length) return null;
   const card = wxVizCard(rec, spot);
-  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#weather') }, 'Full forecast →'));
+  // Opens the city this card is showing. A bare go('#weather') opened whichever city the Weather
+  // screen last looked at, so after checking Phuket there once, Home's Bangkok card led to Phuket.
+  card.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => { seedWeatherKey(spotKey(spot)); go('#weather'); } }, 'Full forecast →'));
   return card;
 }
 
@@ -6846,6 +6881,21 @@ function screenLoadingScreen() {
 // screens are deliberately not lazy, so this can never stand between a traveller and
 // #sos or #hospital.
 function screenUnavailableScreen(names) {
+  // A link failure is not a download failure: the screen arrived, from a newer release than the
+  // shared code this page is still running, and a retry cannot fix that — a reload can. Normally
+  // the gate reloads by itself; this is what shows if that reload already happened under a minute
+  // ago, and it says what is true rather than "not on your device yet".
+  const updated = (names || []).some((n) => _screenFailed[n] === 'link');
+  if (updated) {
+    return h('div', { class: 'screen' }, [
+      topbar('Update ready', '#home'),
+      h('div', { class: 'card' }, [
+        h('h2', { style: 'margin: 0 0 var(--sp-1h)' }, 'The app was updated while it was open'),
+        h('p', { class: 'muted' }, 'Reload to finish updating. Nothing you saved is lost.'),
+        h('button', { class: 'btn block', onclick: () => location.reload() }, 'Reload'),
+      ]),
+    ]);
+  }
   return h('div', { class: 'screen' }, [
     topbar('Not downloaded yet', '#home'),
     h('div', { class: 'card' }, [
@@ -6951,9 +7001,14 @@ export function render() {
   const wantScreens = needScreens.filter((n) => !screenMod(n) && !_screenFailed[n]);
   const wantData = needData.filter((n) => !isDataLoaded(n) && !_dataFailed[n]);
   if (wantScreens.length || wantData.length) {
-    wantScreens.forEach((n) => { loadScreenMod(n).then(render, render); });
-    wantData.forEach((n) => { loadDataMod(n).then(render, render); });
     mount(screenLoadingScreen(), true);
+    // A newer release has taken over this open app, so fetching now would pair its screen with
+    // the older shared modules already in memory (see versionSkew). Reload into it instead.
+    if (versionSkew && reloadIntoNewVersion()) return;
+    wantScreens.forEach((n) => {
+      loadScreenMod(n).then(render, (err) => { if (!(isLinkError(err) && reloadIntoNewVersion())) render(); });
+    });
+    wantData.forEach((n) => { loadDataMod(n).then(render, render); });
     return;
   }
   // Asked for, attempted, and not available: say so plainly and offer a retry, rather than
@@ -7331,6 +7386,9 @@ function warmScreens() {
       if ('requestIdleCallback' in window) requestIdleCallback(step, { timeout: 3000 });
       else setTimeout(step, 250);
     };
+    // A newer release now serves every fetch; warming would pull its screens into this page's
+    // older shared modules (see versionSkew). The tap reloads into them instead.
+    if (versionSkew) return;
     if (!SCREEN_LOADERS[name] || screenMod(name) || _screenFailed[name]) { step(); return; }
     loadScreenMod(name)
       // Unrecord a background failure: this fetch was ours, not theirs, and it must not be
