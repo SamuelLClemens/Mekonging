@@ -13,11 +13,14 @@ for this app: a visa screen with no visa rules looks like a visa screen.
 So this rebuilds the fact from the source of truth. It parses the router's switch to find each
 route's entry function, walks the call graph across the eagerly-loaded modules and the
 route-scoped screen modules, and unions the lazy-data identifiers reachable from each route.
-That derived map must be a subset of the ROUTE_DATA declared in main.js.
+That derived map must be a subset of the ROUTE_DATA declared in main.js. code_only() blanks
+comments and the text of string, regex and template literals first, so a word inside a message
+never counts as a read.
 
 Indirect calls it cannot see (a function stored in an object and invoked as `spec.get(id)`)
 are declared in EXTRA_EDGES below, each with the reason.
 """
+import functools
 import os
 import re
 import sys
@@ -66,23 +69,141 @@ DECL = re.compile(r'^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(')
 ARROW = re.compile(r'^(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s*)?\(')
 
 
-def strip(src):
-    """Comment- and string-strip for brace counting. Line comments FIRST: a path like
-    js/screens/*.js inside prose would otherwise open a phantom block comment."""
-    src = re.sub(r'(?m)^[ \t]*//.*$', '', src)
-    # Replace a block comment with the SAME number of newlines: collapsing it would shift every
-    # line number after it, and the ranges below are what map a reference back to its function.
-    src = re.sub(r'/\*.*?\*/', lambda m: '\n' * m.group(0).count('\n'), src, flags=re.S)
-    # Quoted strings can hold unbalanced braces; template literals cannot (${ } is balanced).
-    src = re.sub(r"'(?:[^'\\\n]|\\.)*'", "''", src)
-    src = re.sub(r'"(?:[^"\\\n]|\\.)*"', '""', src)
-    return src
+# After one of these words a `/` opens a regex rather than dividing: `return /x/.test(s)`.
+REGEX_AFTER = {'return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw',
+               'case', 'do', 'else', 'yield', 'await'}
+CODE_STOP = re.compile(r'[/\'"`{}]')
+TEMPLATE_STOP = re.compile(r'[`\\]|\$\{')
+TAIL_WORD = re.compile(r'[\w$]+$')
+NOT_NEWLINE = re.compile(r'[^\n]')
+# A quoted string's body. Only an escaped newline (a line continuation) carries it onto the next
+# line; unterminated, it ends at the newline, as it does for the browser.
+STRING_BODY = {q: re.compile(r'(?:[^%s\\\n]|\\[\s\S])*' % q) for q in '\'"'}
 
 
+def code_only(src):
+    """src with every comment, and the text of every string, regex and template literal,
+    blanked to spaces, so that what is left is the code. It keeps the length and the newlines,
+    so line numbers still line up, and it keeps a template's ${ } holes, because they are code.
+
+    A tokenizer, because the regexes it replaces misread the source twice. They stripped block
+    comments before strings, so `accept: 'image/*'` opened a comment that ran on to the next
+    `*/`. The brace count then ended journalFormScreen, scrapAlbumSection and renderVault early,
+    and nothing checked the rest of each, 238 lines in all. And nothing stripped literals from
+    function bodies at all, so /TWO DISTINCT LANGUAGES/ in translate.js, a pattern that matches
+    a service's error message, read as the phrasebook export LANGUAGES. Since mount() reaches
+    translate() on every screen, all 76 routes appeared to read the phrasebooks.
+
+    Returns (code, ok). ok is False when the scan ends inside a literal or with unbalanced
+    brackets, which means it misread the file. The caller must fail on that rather than trust
+    it. A misread that blanks real code hides real reads, and hiding reads is the failure this
+    script exists to prevent."""
+    out, last, n = [], 0, len(src)
+
+    def blank(a, b):
+        nonlocal last
+        s = src[a:b]
+        out.append(src[last:a])
+        out.append(NOT_NEWLINE.sub(' ', s) if '\n' in s else ' ' * len(s))
+        last = a + len(s)
+
+    stack = []    # 'tpl' while inside template text, [depth] while inside a ${ } hole
+    prev = ''     # the last code token before a `/`, which decides regex or division
+    i = 0
+    while i < n:
+        if stack and stack[-1] == 'tpl':
+            m = TEMPLATE_STOP.search(src, i)
+            j = m.start() if m else n
+            blank(i, j)
+            i = j
+            if i >= n:
+                break
+            if src[i] == '\\':
+                blank(i, i + 2)
+                i += 2
+            elif src[i] == '`':
+                stack.pop()
+                prev = '`'
+                i += 1
+            else:
+                stack.append([0])
+                prev = '{'
+                i += 2
+            continue
+        m = CODE_STOP.search(src, i)
+        j = m.start() if m else n
+        seg = src[i:j].rstrip()
+        if seg:
+            w = TAIL_WORD.search(seg)
+            prev = w.group(0) if w else seg[-1]
+        i = j
+        if i >= n:
+            break
+        c = src[i]
+        if src.startswith('//', i):
+            j = src.find('\n', i)
+            j = n if j < 0 else j
+            blank(i, j)
+            i = j
+        elif src.startswith('/*', i):
+            j = src.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            blank(i, j)
+            i = j
+        elif c == '/':
+            regex = prev == '' or prev in REGEX_AFTER or not (
+                TAIL_WORD.fullmatch(prev) or prev in ')]\'"`/')
+            j, cls = i + 1, False
+            while regex and j < n and src[j] != '\n':
+                if src[j] == '\\':
+                    j += 2
+                    continue
+                if src[j] == '[':
+                    cls = True
+                elif src[j] == ']':
+                    cls = False
+                elif src[j] == '/' and not cls:
+                    break
+                j += 1
+            if regex and j < n and src[j] == '/':
+                blank(i + 1, j)
+                i = j + 1
+            else:
+                i += 1           # a division, or no closing slash on the line so it was one
+            prev = '/'           # either way, a `/` straight after this one divides
+        elif c in '\'"':
+            j = STRING_BODY[c].match(src, i + 1).end()
+            blank(i + 1, j)
+            prev = c
+            i = j + 1
+        elif c == '`':
+            stack.append('tpl')
+            i += 1
+        elif c == '{':
+            if stack:
+                stack[-1][0] += 1
+            prev = '{'
+            i += 1
+        else:                    # '}'
+            if stack and stack[-1][0] == 0:
+                stack.pop()      # the end of a ${ } hole: back into template text
+            else:
+                if stack:
+                    stack[-1][0] -= 1
+                prev = '}'
+            i += 1
+    out.append(src[last:])
+    code = ''.join(out)
+    ok = not stack and all(code.count(o) == code.count(c) for o, c in ('{}', '()', '[]'))
+    return code, ok
+
+
+@functools.lru_cache(maxsize=None)
 def functions(path):
-    """Top-level function ranges: name -> (first_line, last_line), 1-indexed inclusive."""
-    raw = open(path, encoding='utf-8').read().split('\n')
-    clean = strip('\n'.join(raw)).split('\n')
+    """Top-level function ranges, name -> (first_line, last_line), 1-indexed inclusive; the
+    file's code_only() lines; and whether it tokenized cleanly."""
+    code, ok = code_only(open(path, encoding='utf-8').read())
+    clean = code.split('\n')
     out, i, n = {}, 0, len(clean)
     while i < n:
         m = DECL.match(clean[i]) or ARROW.match(clean[i])
@@ -100,7 +221,7 @@ def functions(path):
             i = j + 1
             continue
         i += 1
-    return out, raw
+    return out, clean, ok
 
 
 def eager_files():
@@ -165,8 +286,14 @@ def main():
     files = [f for f in eager_files() if f not in lazy_src] + sorted(set(screen_files.values()))
     fns, refs, owner_file = {}, {}, {}
     overrun = []
+    misread = [f for f in files if not functions(f)[2]]
+    if misread:
+        print('FAIL  could not tokenize %s: the scan ended inside a literal or with unbalanced '
+              'brackets. Fix code_only() before trusting anything this script derives.'
+              % ', '.join(misread))
+        return 1
     for f in files:
-        got, raw = functions(f)
+        got, code, _ = functions(f)
         prev_end = 0
         for name, (a, b) in sorted(got.items(), key=lambda kv: kv[1][0]):
             if a <= prev_end:
@@ -175,9 +302,7 @@ def main():
             if name in fns:
                 continue                      # first definition wins; duplicates flagged below
             fns[name] = (f, a, b)
-            body = '\n'.join(raw[a - 1:b])
-            body = re.sub(r'(?m)^[ \t]*//.*$', '', body)
-            refs[name] = body
+            refs[name] = '\n'.join(code[a - 1:b])
             owner_file[name] = f
 
     # Call edges + data references per function.
@@ -191,21 +316,21 @@ def main():
     # Anything referencing a lazy VALUE at module top level cannot be gated at all.
     top_hits = []
     for f in files:
-        got, raw = functions(f)
+        got, code, _ = functions(f)
         inside = set()
         for a, b in got.values():
             inside |= set(range(a, b + 1))
         # An import statement may span many lines; its continuation lines name the very
         # identifiers being looked for, so skip the whole statement, not just its first line.
         in_import = False
-        for i, line in enumerate(raw, 1):
+        for i, line in enumerate(code, 1):
             if re.match(r'\s*(?:import|export)\s', line):
                 in_import = ';' not in line
                 continue
             if in_import:
                 in_import = ';' not in line
                 continue
-            if i in inside or re.match(r'\s*//', line):
+            if i in inside:
                 continue
             for ident in set(re.findall(r'\b(\w+)\b', line)) & set(owner):
                 if ident.isupper() or ident[0].isupper():
