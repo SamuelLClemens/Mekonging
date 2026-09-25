@@ -3074,6 +3074,10 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .talk-actions .is-listening { animation: none; }
 }
+/* Why the mic stopped (permission, no speech, no connection) — one quiet line under the
+   buttons, empty and hidden the rest of the time. */
+.talk-mic-note { margin: var(--sp-2) 0 0; }
+.talk-mic-note[hidden] { display: none; }
 
 /* The translation player (phrasebook.js translationPlayer): Play/Pause filling the line, a Stop
    beside it only while a phrase is under way, and the three speeds as equal segments on their

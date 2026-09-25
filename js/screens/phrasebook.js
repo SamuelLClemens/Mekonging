@@ -37,7 +37,7 @@ import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode,
 import { hasVoiceFor, canSay, audioSupport, phrasePlayer } from '../tts.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { translate, TranslateAborted } from '../translate.js';
-import { startTask, stopTask } from '../audio-control.js';
+import { startTask, stopTask, stopPlayback } from '../audio-control.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -1092,6 +1092,25 @@ function offlineTranslateBox(code, label) {
   return box;
 }
 
+// One transcript from a continuous recognition session's result list. Desktop engines send
+// each phrase as its own result ("where is the bus station", "and how much is it"), so those
+// are joined. Android Chrome instead re-sends the growing sentence as a NEW result each time
+// ("where", "where is", "where is the bus station"), so a result that repeats the previous one
+// word-for-word and carries on replaces it rather than being appended after it.
+function joinSpeechResults(results) {
+  const parts = [];
+  for (let i = 0; i < results.length; i++) {
+    const t = String((results[i] && results[i][0] && results[i][0].transcript) || '').trim();
+    if (!t) continue;
+    const last = parts.length ? parts[parts.length - 1].toLowerCase() : null;
+    const cur = t.toLowerCase();
+    if (last != null && (cur === last || cur.startsWith(last + ' '))) parts[parts.length - 1] = t;
+    else if (last != null && last.startsWith(cur + ' ')) continue;
+    else parts.push(t);
+  }
+  return parts.join(' ');
+}
+
 // Speak/type-in-English → local-language text + spoken audio. Works with no setup
 // (free online service); the offline phrasebook below covers the essentials.
 function liveTranslateBox(code, label, locale, onChange) {
@@ -1229,47 +1248,104 @@ function liveTranslateBox(code, label, locale, onChange) {
   // outlined Speak and an outlined Save, which read as one real button and two secondary
   // ones — but a traveller standing in a market wants whichever of the three fits the moment,
   // and none of them is a lesser action. `.btn` is the sun gradient, which is the inviting one.
-  const btn = h('button', { class: 'btn', onclick: () => doTranslate(false) }, 'Translate');
-  const saveBtn = h('button', { class: 'btn talk-save', onclick: () => doTranslate(true) }, `📖 Translate & save to ${dictionaryName()}`);
-  // Optional voice input via the Web Speech API (Chrome/Edge; hidden where absent).
+  // Both translate buttons finish any dictation first, so tapping Translate while the mic is
+  // still open means "I'm done — translate it" and uses every word heard, not a half-sentence.
+  const btn = h('button', { class: 'btn', onclick: async () => { await finishListening(); doTranslate(false); } }, 'Translate');
+  const saveBtn = h('button', { class: 'btn talk-save', onclick: async () => { await finishListening(); doTranslate(true); } }, `📖 Translate & save to ${dictionaryName()}`);
+  // Optional voice input via the Web Speech API (Chrome/Edge/Safari; hidden where absent).
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let micBtn = null;
+  // Resolves once the microphone is off and the field holds everything that was heard. A
+  // no-op when nothing is listening, which is why the buttons above can always await it.
+  let finishListening = () => Promise.resolve();
+  const micNote = h('p', { class: 'tiny muted talk-mic-note', role: 'status' });
+  micNote.hidden = true;
+  const showMicNote = (text) => { micNote.textContent = text || ''; micNote.hidden = !text; };
   if (SR) {
-    micBtn = h('button', { class: 'btn', title: 'Speak instead of typing', 'aria-pressed': 'false' }, '🎤 Speak');
-    // A toggle, not a one-way trip. This used to disable itself the moment it started
-    // listening, so a traveller who tapped it by accident, or changed their mind, or was
-    // standing somewhere too loud to be heard, had no way back — the button sat there saying
-    // "Listening…" until the engine timed out on its own. Tapping again now stops it.
+    micBtn = h('button', { class: 'btn', type: 'button', title: 'Speak instead of typing', 'aria-pressed': 'false' }, '🎤 Speak');
+    // The traveller decides when they have finished speaking, not the engine. This used to run
+    // in single-utterance mode and wait for the engine to decide: Chrome cut people off at the
+    // first pause, and Safari on iPhone often never decided at all, so the button sat on
+    // "Listening…" with nothing in the field and nothing to translate. Now it listens through
+    // pauses, shows the words in the field as they are recognised, and stops when the traveller
+    // taps Done (to check the text first) or Translate (to send it straight away).
+    //
+    // The text still never translates on its own: speech recognition mishears names, numbers
+    // and noisy streets often enough that the traveller must be able to read it first.
+    const SILENCE_MS = 15000;    // safety stop for a mic left open by mistake
+    const STOP_GRACE_MS = 1500;  // how long stop() may take to deliver its final words
+    const placeholder = input.getAttribute('placeholder');
+    const MIC_ERRORS = {
+      'not-allowed': '🎙 Microphone blocked — allow it for this site in your browser settings.',
+      'service-not-allowed': '🎙 Microphone blocked — allow it for this site in your browser settings.',
+      'audio-capture': '🎙 No microphone found on this device.',
+      'network': '🎙 Voice input needs a connection on this device.',
+      'no-speech': '🎙 No speech heard — tap Speak and try again.',
+      'language-not-supported': '🎙 This device cannot take voice input in that language.',
+    };
     let rec = null;
-    const resetMic = () => {
+    let silenceTimer = 0;
+    let graceTimer = 0;
+    let settle = null;
+    const setListening = (on) => {
+      micBtn.textContent = on ? '✓ Done' : '🎤 Speak';
+      micBtn.classList.toggle('is-listening', on);
+      micBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      micBtn.title = on ? 'Stop listening' : 'Speak instead of typing';
+      input.setAttribute('placeholder', on ? '🎙 Listening… speak now' : placeholder);
+    };
+    const done = () => {
+      clearTimeout(silenceTimer);
+      clearTimeout(graceTimer);
+      window.removeEventListener('hashchange', abandon);
       rec = null;
-      micBtn.textContent = '🎤 Speak';
-      micBtn.classList.remove('is-listening');
-      micBtn.setAttribute('aria-pressed', 'false');
-      micBtn.title = 'Speak instead of typing';
+      setListening(false);
+      if (settle) { const s = settle; settle = null; s(); }
+    };
+    // Leaving the screen must switch the microphone off, not leave it running behind the next one.
+    function abandon() { const r = rec; done(); if (r) { try { r.abort(); } catch { /* already ended */ } } }
+    const armSilence = () => { clearTimeout(silenceTimer); silenceTimer = setTimeout(() => finishListening(), SILENCE_MS); };
+    finishListening = () => {
+      if (!rec) return Promise.resolve();
+      const r = rec;
+      const p = new Promise((res) => { const prev = settle; settle = () => { if (prev) prev(); res(); }; });
+      if (!graceTimer) {
+        try { r.stop(); } catch { done(); return p; }
+        // Safari on iPhone can take its time delivering the last words after stop(), or never
+        // report the end at all. Whatever already reached the field is kept either way.
+        graceTimer = setTimeout(() => { if (rec === r) { done(); try { r.abort(); } catch { /* ended */ } } }, STOP_GRACE_MS);
+      }
+      return p;
+    };
+    const start = () => {
+      stopPlayback();   // a phrase still playing would be transcribed as if the traveller said it
+      showMicNote('');
+      const r = new SR();
+      // Speech recognition needs the full BCP-47 locale of whatever the traveller is
+      // actually speaking — taken from the language registry rather than the old
+      // Hebrew-or-English guess, which mis-transcribed every other language on the list.
+      r.lang = (LANG_BY_CODE[srcSel.value] || {}).speech || 'en-US';
+      r.continuous = true;
+      r.interimResults = true;
+      r.maxAlternatives = 1;
+      r.onresult = (e) => {
+        if (rec !== r) return;
+        const text = joinSpeechResults(e.results);
+        if (text) { input.value = text; syncInputX(); }
+        armSilence();
+      };
+      r.onerror = (e) => { if (rec === r && MIC_ERRORS[e.error]) showMicNote(MIC_ERRORS[e.error]); };
+      r.onend = () => { if (rec === r) done(); };
+      rec = r;
+      graceTimer = 0;
+      setListening(true);
+      armSilence();
+      window.addEventListener('hashchange', abandon);
+      r.start();
     };
     micBtn.addEventListener('click', () => {
-      if (rec) { try { rec.stop(); } catch { /* already stopped */ } resetMic(); return; }
-      try {
-        rec = new SR();
-        // Speech recognition needs the full BCP-47 locale of whatever the traveller is
-        // actually speaking — taken from the language registry rather than the old
-        // Hebrew-or-English guess, which mis-transcribed every other language on the list.
-        rec.lang = (LANG_BY_CODE[srcSel.value] || {}).speech || 'en-US';
-        rec.interimResults = false; rec.maxAlternatives = 1;
-        micBtn.textContent = '🎙 Listening…';
-        micBtn.classList.add('is-listening');
-        micBtn.setAttribute('aria-pressed', 'true');
-        micBtn.title = 'Listening — tap again to stop';
-        // Fills the field and stops there — it does NOT auto-translate. Speech recognition
-        // gets things wrong often enough (names, numbers, background noise) that the traveller
-        // needs a chance to read and fix the transcript before it is sent anywhere; the visible
-        // Translate button is still the one way to submit, same as typed text.
-        rec.onresult = (e) => { input.value = e.results[0][0].transcript; syncInputX(); input.focus(); };
-        rec.onerror = resetMic;
-        rec.onend = resetMic;
-        rec.start();
-      } catch { resetMic(); }
+      if (rec) { finishListening(); return; }
+      try { start(); } catch { abandon(); }
     });
   }
   // B3: an explicit way to start a new phrase — a small ✕ inside the field itself (direct
@@ -1299,7 +1375,7 @@ function liveTranslateBox(code, label, locale, onChange) {
   // as equal columns, and the save button spans both below them, every gap the same token.
   const actions = h('div', { class: 'talk-actions' + (micBtn ? '' : ' one-up') },
     [btn, micBtn, saveBtn].filter(Boolean));
-  box.append(srcSel, inputWrap, actions, out);
+  box.append(srcSel, inputWrap, actions, micNote, out);
   // Point-camera-and-translate (Slice G, item 11.2) only recognises the four host-country
   // scripts Tesseract carries data for — offered here, not on every phrasebook language, and
   // routed with this exact page's code so it OCRs the language actually on screen rather than
