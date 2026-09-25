@@ -257,13 +257,37 @@ export function swatch(color) { return h('span', { class: 'swatch', 'aria-hidden
 // metric, so toggling converts on display without any re-fetch.
 export function wxTempU() { return (store.profile && store.profile.wxTempUnit) || 'C'; }
 export function wxWindU() { return (store.profile && store.profile.wxWindUnit) || 'kmh'; }
+// Lengths (rain, snow, waves, tides, visibility) and pressure follow the temperature scale
+// until the traveller taps one of those units on the Weather screen — exactly how rain and snow
+// always behaved, so nobody who chose °F suddenly finds millimetres. Tapping sets its own pref.
+export function wxLenU() { const p = store.profile; return (p && p.wxLenUnit) || (wxTempU() === 'F' ? 'imp' : 'met'); }
+export function wxPresU() { const p = store.profile; return (p && p.wxPresUnit) || (wxTempU() === 'F' ? 'inHg' : 'hPa'); }
 export function fmtTemp(c) { if (c == null) return 'N/A'; const v = wxTempU() === 'F' ? c * 9 / 5 + 32 : c; return `${Math.round(v)}°${wxTempU()}`; }
 export function fmtWind(kmh) { if (kmh == null) return 'N/A'; const mph = wxWindU() === 'mph'; const v = mph ? kmh * 0.621371 : kmh; return `${Math.round(v)} ${mph ? 'mph' : 'km/h'}`; }
-export function fmtPrecip(mm) { if (mm == null) return 'N/A'; if (wxTempU() === 'F') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
+export function fmtPrecip(mm) { if (mm == null) return 'N/A'; if (wxLenU() === 'imp') return `${(mm / 25.4).toFixed(2)} in`; return `${mm % 1 === 0 ? mm : mm.toFixed(1)} mm`; }
 // Open-Meteo returns snowfall in cm. Region-wide this is almost always 0 — the only real
 // occurrences are the northern mountains (Sapa, Ha Giang, Phongsali) in a cold winter snap —
 // so every caller that shows it must gate on a non-zero amount rather than printing "0 cm".
-export function fmtSnow(cm) { if (cm == null) return 'N/A'; if (wxTempU() === 'F') return `${(cm / 2.54).toFixed(2)} in`; return `${cm % 1 === 0 ? cm : cm.toFixed(1)} cm`; }
+export function fmtSnow(cm) { if (cm == null) return 'N/A'; if (wxLenU() === 'imp') return `${(cm / 2.54).toFixed(2)} in`; return `${cm % 1 === 0 ? cm : cm.toFixed(1)} cm`; }
+// Wave, swell and tide heights, from metres. Tides go below zero (the datum is mean sea level).
+export function fmtHeight(m) { if (m == null) return 'N/A'; return wxLenU() === 'imp' ? `${(m * 3.28084).toFixed(1)} ft` : `${m.toFixed(1)} m`; }
+// Visibility, from metres (what Open-Meteo reports).
+export function fmtDist(m) {
+  if (m == null) return 'N/A';
+  const v = wxLenU() === 'imp' ? m / 1609.344 : m / 1000;
+  return `${v < 10 ? v.toFixed(1) : Math.round(v)} ${wxLenU() === 'imp' ? 'mi' : 'km'}`;
+}
+export function fmtPres(hpa) { if (hpa == null) return 'N/A'; return wxPresU() === 'inHg' ? `${(hpa * 0.02953).toFixed(2)} inHg` : `${Math.round(hpa)} hPa`; }
+// Wave-height descriptor for swimming: [label, severity class]. Shared by the beach card and
+// the Weather screen's sea card so both call the same water the same thing.
+export function waveDesc(m) {
+  if (m == null) return null;
+  if (m < 0.3) return ['glassy calm', 'on'];
+  if (m < 0.6) return ['calm', 'on'];
+  if (m < 1.25) return ['moderate — take care', 'off'];
+  if (m < 2.5) return ['rough — strong swimmers only', 'off'];
+  return ['very rough — stay out of the water', 'off'];
+}
 
 // ---- Extracted from main.js (task #205 step 1) ------------------------------
 // Genuinely cross-screen helpers that happened to be physically declared inside

@@ -1540,13 +1540,11 @@ html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color
    .od-emoji survives because plannedStopsOutlook still uses it for the condition glyph. */
 .od-emoji { font-size: 1.05rem; line-height: 1; text-align: center; }
 
-/* Weather section: in-section unit toggle label and per-city panels. The old trip-itinerary
-   calendar's CSS (.wx-cal-leg/-leghead/-day/-date/-emoji/-temp, plus a first `.wx-cal { border-
-   top... }` rule that collided with the unrelated forecast-calendar grid class of the same
-   name below) was removed along with planCalendarCard() — see the real `.wx-cal` grid rule
-   further down this file. */
-.wx-units { align-items: center; }
-.wx-units-label { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); margin-right: 4px; }
+/* Weather section: per-city panels. The old trip-itinerary calendar's CSS (.wx-cal-leg/-leghead/
+   -day/-date/-emoji/-temp, plus a first `.wx-cal { border-top... }` rule that collided with the
+   unrelated forecast-calendar grid class of the same name below) was removed along with
+   planCalendarCard() — see the real `.wx-cal` grid rule further down this file. The unit-chip
+   row (.wx-units) went when every printed unit became its own switch (.u-tap, below). */
 .wx-plan-h { font-size: var(--fs-lg); font-weight: 800; color: var(--ink); margin: 18px 2px 8px; }
 
 .wx-cities { display: flex; flex-direction: column; gap: var(--sp-2); }
@@ -2763,6 +2761,48 @@ html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
    instead of three stacked cards saying the same "this is now" in three different boxes. */
 .wx-now-div { height: 1px; background: var(--line, rgba(0,0,0,.12)); margin: 10px 0; }
 
+/* Label-over-value facts, two columns: "Right now" and each opened 7-day row. */
+.wx-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-2); }
+.wx-stat { display: flex; flex-direction: column; min-width: 0; }
+.wx-stat-lbl { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
+.wx-stat-val { font-weight: 700; overflow-wrap: anywhere; }
+.wx-day-stats { margin: var(--sp-1) 0 var(--sp-2); }
+.wx-sun-line, .wx-moon-line { margin: 0; }
+.wx-moon-line { margin-top: var(--sp-1); }
+
+/* Sea & tides: coastal cities only. Severity colours match the beach card's sea line. */
+.wx-sea-h { margin: 0 0 var(--sp-1h); }
+.wx-sea-line { font-weight: 700; margin: 0; }
+.wx-sea-line.on { color: var(--good); }
+.wx-sea-line.off { color: var(--warn); }
+.wx-sea-sub { margin: var(--sp-1) 0 0; }
+.wx-tide-now { font-weight: 700; margin: 0 0 var(--sp-1h); }
+/* One tide per row: two columns squeezed "Sat 03:45 AM" onto three lines at 375px. */
+.wx-tides { display: flex; flex-direction: column; gap: 4px; }
+.wx-tide { display: grid; grid-template-columns: 14px 3.2em 1fr auto; align-items: baseline; gap: 6px; font-size: var(--fs-sm); }
+.wx-tide-ic { font-size: 11px; }
+.wx-tide.low .wx-tide-ic { color: var(--ink-soft); }
+.wx-tide-lbl { font-weight: 700; }
+.wx-tide-t { white-space: nowrap; }
+.wx-tide-h { font-weight: 700; white-space: nowrap; text-align: right; }
+.wx-sea-days-h { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: var(--sp-1); }
+.wx-sea-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.wx-sea-day { display: flex; flex-direction: column; align-items: center; padding: 4px 0; border-radius: 8px; background: rgba(40, 120, 200, 0.10); font-size: 12px; min-width: 0; overflow-wrap: anywhere; text-align: center; }
+.wx-sea-day.off { background: rgba(214, 120, 40, 0.16); }
+.wx-sea-day-v { font-weight: 700; }
+.wx-sea-foot { margin: var(--sp-2) 0 0; }
+
+/* A printed unit that switches when tapped (°C/°F, km/h/mph, mm/in, m/ft, km/mi, hPa/inHg). The
+   dotted underline is the whole affordance: it costs no space, which was the point. */
+.u-tap { cursor: pointer; text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; border-radius: 3px; }
+.u-tap:hover { text-decoration-style: solid; }
+.u-tap:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+/* A unit tap re-renders the Weather screen and puts the traveller back at the same scroll
+   position. With the app-wide `content-visibility: auto` every off-screen card is a 90px
+   placeholder until painted, so the rebuilt page was far shorter than the one it replaced and the
+   restore landed somewhere else entirely. This screen is about ten cards; render them all. */
+.wx-screen .card { content-visibility: visible; }
+
 /* Hourly detail strip: next 24 hours, all metrics (temp/rain/wind) at once — the ring above
    shows one metric at a time by design, this is its detailed, scrollable companion. */
 .wx-hourly-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 2px 0 4px; }
@@ -3074,6 +3114,10 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .talk-actions .is-listening { animation: none; }
 }
+/* Why the mic stopped (permission, no speech, no connection) — one quiet line under the
+   buttons, empty and hidden the rest of the time. */
+.talk-mic-note { margin: var(--sp-2) 0 0; }
+.talk-mic-note[hidden] { display: none; }
 
 /* The translation player (phrasebook.js translationPlayer): Play/Pause filling the line, a Stop
    beside it only while a phrase is under way, and the three speeds as equal segments on their
