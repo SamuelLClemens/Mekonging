@@ -676,7 +676,7 @@ html[data-theme="dark"] .card h3 { color: var(--teal); }
 .btn.ghost { background: none; color: var(--teal-deep); border: 2px solid var(--teal); box-shadow: none; }
 html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .btn.ghost:hover { background: rgba(22,163,154,0.1); }
-/* A play control (call recording, phrase speaker, Hear-it) toggled into its own Stop while
+/* A play control (call recording, phrase speaker) toggled into its own Stop while
    playing — see playCall() in js/main.js and wireSpeak() in js/screens/phrasebook.js. Distinct
    from the ready-to-play look so the same button reads as a different action, not a state of
    the sound. */
@@ -1091,9 +1091,9 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
 }
 .speak:hover { filter: brightness(1.08); }
 .speak[disabled] { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
-/* A speaker (or the Hear-it button) toggled into its own Stop control while playing — see
-   js/screens/phrasebook.js's wireSpeak. Distinct from the ready-to-play gradient so the same
-   button reads as a different action, not a state of the phrase. */
+/* A speaker toggled into its own Stop control while playing, or the translation player's Play
+   toggled into Pause — see js/screens/phrasebook.js. Distinct from the ready-to-play gradient so
+   the same button reads as a different action, not a state of the phrase. */
 .speak.is-playing, .btn.is-playing { background: var(--warn); }
 .phrase-ctrls { flex: none; display: flex; gap: var(--sp-1); align-items: center; }
 .phrase .grow.tappable { cursor: pointer; border-radius: var(--r-2); }
@@ -3074,6 +3074,16 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .talk-actions .is-listening { animation: none; }
 }
+
+/* The translation player (phrasebook.js translationPlayer): Play/Pause filling the line, a Stop
+   beside it only while a phrase is under way, and the three speeds as equal segments on their
+   own line, so the speeds never shift as Stop comes and goes or the Play label changes. */
+.tr-player { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); }
+.tr-player .tr-play { flex: 1 1 auto; justify-content: center; }
+.tr-player .tr-stop { flex: none; width: 48px; padding: 0; justify-content: center; }
+.tr-player .tr-stop[hidden] { display: none; }
+.tr-speeds { display: flex; gap: var(--sp-2); flex: 1 1 100%; }
+.tr-speeds .chip { flex: 1 1 0; font-variant-numeric: tabular-nums; }
 
 /* Screen-level section folds created by autoFoldSections() (js/main.js). The card variant
    reuses .card's own box; the heading-run variant has no box of its own, so it just needs the
