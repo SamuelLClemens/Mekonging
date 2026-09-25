@@ -151,6 +151,104 @@ export async function say(text, locale, opts = {}) {
   try { await speakOnline(text, locale); return 'online'; } catch { return false; }
 }
 
+// speak() runs a device voice a touch slow (0.9) so a listener can follow. phrasePlayer's
+// speeds multiply that, so its 1× is exactly how a phrase has always sounded.
+const DEVICE_RATE = 0.9;
+
+// One phrase with play, pause, resume, stop and a live speed change — the Talk player. Takes
+// the same route as say(): the device voice when one is installed (works offline), otherwise
+// the online voice, which a downloaded audio pack also serves. onChange(state) reports
+// 'playing', 'paused', 'idle' (finished or stopped) or 'failed'.
+//
+// Online audio is an <audio> element, so pause and speed are native and exact. The device voice
+// is never paused natively: speechSynthesis.pause() is unreliable across browsers (see
+// readAloudBar in ui-widgets.js), and a Pause that keeps talking is worse than a resume that
+// repeats a word. So pausing cancels, and resuming speaks the rest from the start of the word it
+// stopped on — or from the beginning, on voices that report no word boundaries. An utterance's
+// rate is fixed once it starts, so a speed change mid-phrase restarts from the current word too.
+// Every speak() here runs synchronously inside the caller's tap handler, as iOS requires.
+export function phrasePlayer(text, locale, { rate = 1, onChange } = {}) {
+  let state = 'idle';
+  let how = null;     // 'device' | 'online', once started
+  let done = null;    // the audio-control registration, held while playing AND while paused
+  let audio = null;   // online: the <audio> element
+  let utter = null;   // device: the live utterance — events from any other one are stale
+  let at = 0;         // device: where the current word starts, which is where a resume picks up
+  const set = (s) => { state = s; if (onChange) onChange(s); };
+  const quiet = () => {
+    if (how === 'online') { try { audio.pause(); } catch { /* ignore */ } return; }
+    utter = null;   // first: some engines fire the cancelled utterance's error inside cancel()
+    try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+  };
+  const end = (s) => {
+    const d = done;
+    done = null; audio = null; utter = null; how = null; at = 0;
+    if (d) d();
+    set(s);
+  };
+  // audio-control calls this when another sound starts or everything is stopped. It has already
+  // let go of this registration, so end() must not hand it back.
+  const halt = () => { done = null; quiet(); end('idle'); };
+  const speakFrom = (i) => {
+    const voice = pickVoice(locale);
+    if (!voice) return false;
+    const u = new SpeechSynthesisUtterance(text.slice(i));
+    u.voice = voice;
+    u.lang = voice.lang || locale;
+    u.rate = Math.min(4, Math.max(0.5, DEVICE_RATE * rate));
+    u.onboundary = (e) => { if (utter === u && typeof e.charIndex === 'number') at = i + e.charIndex; };
+    u.onend = () => { if (utter === u) end('idle'); };
+    u.onerror = (e) => { if (utter === u) end(e.error === 'interrupted' || e.error === 'canceled' ? 'idle' : 'failed'); };
+    quiet();
+    at = i;
+    utter = u;
+    window.speechSynthesis.speak(u);
+    return true;
+  };
+  // A play() refused while still meant to be playing is a failure; one refused because Pause
+  // got there first (AbortError) is not.
+  const start = (a) => {
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { if (audio === a && state === 'playing') end('failed'); });
+  };
+  const resume = () => {
+    if (state !== 'paused') return;
+    if (how === 'online') { set('playing'); start(audio); return; }
+    if (!text.slice(at).trim()) { end('idle'); return; }
+    if (speakFrom(at)) set('playing'); else end('failed');
+  };
+  const play = () => {
+    if (state === 'playing') return;
+    if (state === 'paused') { resume(); return; }
+    const device = !!String(text || '').trim() && hasVoiceFor(locale);
+    const url = device ? '' : ttsUrl(text, locale);
+    if (!device && !url) { set('failed'); return; }
+    how = device ? 'device' : 'online';
+    done = startPlayback(halt);
+    if (device) {
+      if (speakFrom(0)) set('playing'); else end('failed');
+      return;
+    }
+    const a = new Audio(url);
+    // Both: load() resets playbackRate to defaultPlaybackRate, which would silently drop a
+    // speed set on a clip that is still loading.
+    a.defaultPlaybackRate = a.playbackRate = rate;
+    a.addEventListener('ended', () => { if (audio === a) end('idle'); });
+    a.addEventListener('error', () => { if (audio === a) end('failed'); });
+    audio = a;
+    set('playing');
+    start(a);
+  };
+  const pause = () => { if (state === 'playing') { quiet(); set('paused'); } };
+  const stop = () => { if (state === 'playing' || state === 'paused') { quiet(); end('idle'); } };
+  const setRate = (r) => {
+    rate = r;
+    if (how === 'online') { audio.defaultPlaybackRate = audio.playbackRate = r; return; }
+    if (how === 'device' && state === 'playing' && !speakFrom(at)) end('failed');
+  };
+  return { play, pause, stop, setRate, get state() { return state; } };
+}
+
 // Why audio is or is not available for this locale, so the interface can EXPLAIN rather than
 // present a control that does nothing. `how` is the path that would actually produce sound.
 //

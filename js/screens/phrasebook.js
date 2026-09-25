@@ -34,10 +34,10 @@ import { h, debounce } from '../util.js';
 // this file's 57 KB of language data into the launch graph. See that file's header.
 import { scriptLang, phraseSlug, phraseKey, copyText, showBigPhrase } from '../phrase-ui.js';
 import { field, selectEl, openModal, confirmAction, online, netMode, setNetMode, screenHint } from '../ui-widgets.js';
-import { hasVoiceFor, say, canSay, audioSupport } from '../tts.js';
+import { hasVoiceFor, canSay, audioSupport, phrasePlayer } from '../tts.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { translate, TranslateAborted } from '../translate.js';
-import { startTask, stopTask, stopPlayback, onPlaybackChange } from '../audio-control.js';
+import { startTask, stopTask } from '../audio-control.js';
 import { LANGS, LANG_BY_CODE, uiLang, transCode, langFlag } from '../i18n.js';
 import { LANGUAGES, getLanguage } from '../lazy-data.js';
 import { ALLERGENS } from '../data/allergens.js';
@@ -63,32 +63,65 @@ export { scriptLang, phraseSlug };
 // ---- PHRASEBOOK -------------------------------------------------------------
 let phraseQuery = '';
 
+// Talk's speaking speeds, used by every phrase this screen plays and chosen on the translation
+// player. 1× is the speed Talk has always spoken at (see phrasePlayer in js/tts.js).
+const TALK_RATES = [1, 1.25, 1.5];
+const talkRate = () => (TALK_RATES.includes(store.profile.prefs.talkRate) ? store.profile.prefs.talkRate : 1);
+
 // One 🔊 → ⏹ toggle shared by every phrase-speaker button on this screen (lesson rows, phrase
-// rows, My translations, and the Hear-it button after a live translation). The button that
-// started a phrase is the button that stops it — tapping it again calls stopPlayback() — rather
-// than routing through the app-wide floating stop pill, which put the control somewhere other
-// than the sound it silenced. Only one phrase plays at a time (js/audio-control.js), so only
-// one button is ever mid-toggle; the shared listener below reverts it the moment that changes,
-// whether the phrase finished, was superseded by another tap, or was stopped right here.
-let activeSpeakBtn = null;
-function idleSpeakBtn(btn) { btn.textContent = btn.dataset.idleLabel; btn.title = 'Hear it'; btn.classList.remove('is-playing'); }
-onPlaybackChange((active) => { if (!active && activeSpeakBtn) { idleSpeakBtn(activeSpeakBtn); activeSpeakBtn = null; } });
+// rows, My translations). The button that started a phrase is the button that stops it, rather
+// than an app-wide floating stop pill somewhere other than the sound it silenced. Only one
+// phrase plays at a time (js/audio-control.js); the player reports being superseded or stopped
+// elsewhere, so the button reverts whenever its phrase ends, however it ends.
 function wireSpeak(btn, text, locale, { idleLabel = btn.textContent, playingLabel = '⏹', failLabel = '🔇' } = {}) {
-  btn.dataset.idleLabel = idleLabel;
-  const run = async () => {
-    if (activeSpeakBtn === btn) { stopPlayback(); return; }
-    if (activeSpeakBtn) idleSpeakBtn(activeSpeakBtn);
-    activeSpeakBtn = btn;
-    btn.textContent = playingLabel; btn.title = 'Stop'; btn.classList.add('is-playing');
-    const ok = await say(text, locale);
-    if (!ok) {
-      if (activeSpeakBtn === btn) activeSpeakBtn = null;
-      btn.textContent = failLabel; btn.title = 'Audio unavailable'; btn.classList.remove('is-playing');
-      setTimeout(() => { if (activeSpeakBtn !== btn) idleSpeakBtn(btn); }, 1500);
-    }
+  let player = null;
+  const idle = () => { btn.textContent = idleLabel; btn.title = 'Hear it'; btn.classList.remove('is-playing'); };
+  const run = () => {
+    if (player && player.state === 'playing') { player.stop(); return; }
+    player = phrasePlayer(text, locale, {
+      rate: talkRate(),
+      onChange: (s) => {
+        if (s === 'playing') { btn.textContent = playingLabel; btn.title = 'Stop'; btn.classList.add('is-playing'); return; }
+        if (s !== 'failed') { idle(); return; }
+        btn.textContent = failLabel; btn.title = 'Audio unavailable'; btn.classList.remove('is-playing');
+        setTimeout(() => { if (player.state !== 'playing') idle(); }, 1500);
+      },
+    });
+    player.play();
   };
   btn.addEventListener('click', run);
   return run;
+}
+
+// Play / pause, stop and speed for a live translation — the one phrase on Talk long enough to
+// want stopping part-way and picking up again. Pause resumes where it left off, ⏹ goes back to
+// the start, and a speed change applies mid-phrase and is remembered for every speaker here.
+function translationPlayer(text, locale) {
+  const playBtn = h('button', { class: 'btn tr-play' }, '▶ Play');
+  const stopBtn = h('button', { class: 'btn ghost tr-stop', title: 'Stop', 'aria-label': 'Stop' }, '⏹');
+  stopBtn.hidden = true;
+  const player = phrasePlayer(text, locale, {
+    rate: talkRate(),
+    onChange: (s) => {
+      playBtn.textContent = { playing: '⏸ Pause', paused: '▶ Resume', failed: '🔇 Try again' }[s] || '▶ Play';
+      playBtn.classList.toggle('is-playing', s === 'playing');
+      stopBtn.hidden = s !== 'playing' && s !== 'paused';
+      if (s === 'failed') setTimeout(() => { if (player.state === 'failed') playBtn.textContent = '▶ Play'; }, 1500);
+    },
+  });
+  playBtn.addEventListener('click', () => { if (player.state === 'playing') player.pause(); else player.play(); });
+  stopBtn.addEventListener('click', () => player.stop());
+  const speeds = h('div', { class: 'tr-speeds', role: 'group', 'aria-label': 'Speaking speed' },
+    TALK_RATES.map((r) => h('button', { class: 'chip', 'data-rate': String(r), 'aria-pressed': String(r === talkRate()) }, `${r}×`)));
+  speeds.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-rate]');
+    if (!b) return;
+    store.profile.prefs.talkRate = Number(b.dataset.rate);
+    save();
+    speeds.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    player.setRate(talkRate());
+  });
+  return { el: h('div', { class: 'tr-player' }, [playBtn, stopBtn, speeds]), play: player.play };
 }
 
 // ---- personal phrasebook: derived keys + pin / hide -------------------------
@@ -691,9 +724,9 @@ function guideLessonRow(item, locale) {
     class: 'speak', 'aria-label': `Speak: ${item.say}`, title: 'Hear it',
     disabled: able ? null : '',
   }, '🔊') : null;
-  // wireSpeak handles both outcomes: say() resolving to false (neither device nor online voice
-  // could pronounce it) flashes 🔇 instead of appearing to do nothing, and a successful start
-  // turns this same button into ⏹ Stop for as long as it is playing.
+  // wireSpeak handles both outcomes: a failed start (neither device nor online voice could
+  // pronounce it) flashes 🔇 instead of appearing to do nothing, and a successful start turns
+  // this same button into ⏹ Stop for as long as it is playing.
   if (speak) wireSpeak(speak, item.native || item.say, locale);
   return h('div', { class: 'phrase lg-lesson' }, [
     h('div', { class: 'lg-lesson-txt' }, [
@@ -1137,17 +1170,15 @@ function liveTranslateBox(code, label, locale, onChange) {
       const res = await translate(text, code, srcLang, ctrl ? ctrl.signal : null);
       out.innerHTML = '';
       out.append(h('div', { class: 'native', lang: locale, style: 'font-size:23px;line-height:1.35' }, res));
-      const able = canSay(locale);
-      const speakBtn = h('button', { class: 'btn', disabled: able ? null : '' },
-        able ? '🔊 Hear it' : '🔇 Voice needs internet');
-      out.append(speakBtn);
-      if (!able) out.append(h('p', { class: 'muted', style: 'margin-bottom: 0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`));
-      else {
-        // Same toggle as every other 🔊 in this screen: this button doubles as Stop for as
-        // long as the auto-play below is speaking, right where the traveller is already
-        // looking, rather than a separate floating control.
-        const run = wireSpeak(speakBtn, res, locale, { idleLabel: '🔊 Hear it', failLabel: '🔇 Try again' });
-        run();   // best-effort auto-play; the button always works too (direct tap, or to stop it)
+      if (canSay(locale)) {
+        const player = translationPlayer(res, locale);
+        out.append(player.el);
+        player.play();   // best-effort: iOS can silently refuse speech started after an await; a tap still works
+      } else {
+        out.append(
+          h('button', { class: 'btn', disabled: '' }, '🔇 Voice needs internet'),
+          h('p', { class: 'muted', style: 'margin-bottom: 0' }, `No ${label} voice on this device and you are offline — the text above is correct to show.`),
+        );
       }
       // Remembered either way — a local write, nothing leaves the device and nothing reaches
       // the dictionary without the explicit tap.
