@@ -38,6 +38,7 @@ import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
 import { packState, onPackChange, deferPack } from '../offline-pack.js';
+import { seedWeatherKey } from '../weather-ui.js';
 // setupRecapCard moved to js/screens/welcome.js with the onboarding flow it belongs to
 // (screen split, mk-v0.539.0). Home is its only caller and shows it once ever, so it is
 // fetched on demand below rather than imported statically — a static import here would pull
@@ -645,7 +646,8 @@ function homeWeatherPending(spot) {
   // Consent given and a connection present: ensureHomeWeather() above is already fetching and
   // re-renders Home when it lands, so this is a genuinely transient state.
   card.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `Getting the latest forecast${where}…`));
-  card.append(h('button', { class: 'btn ghost block', onclick: () => go('#weather') }, 'Full forecast →'));
+  // Same city as the card, not whichever one the Weather screen last showed (see homeWeatherCard).
+  card.append(h('button', { class: 'btn ghost block', onclick: () => { if (spot) seedWeatherKey(spotKey(spot)); go('#weather'); } }, 'Full forecast →'));
   return card;
 }
 
