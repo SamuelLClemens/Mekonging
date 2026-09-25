@@ -9,9 +9,9 @@
 // The closure was computed, not guessed: the three helpers main.js imports pull in nine more
 // plus the WX_METRICS table, and stop — weatherScreen is not reachable from any of them.
 
-import { esc, h } from './util.js';
+import { esc, h, compass } from './util.js';
 import { wmo } from './weather.js';
-import { fmtTemp, fmtWind, fmtPrecip, fmtSnow } from './render-utils.js';
+import { fmtTemp, fmtWind, fmtPrecip, fmtSnow, fmtDist } from './render-utils.js';
 import { fmtClock } from './main.js';
 
 export function wxDiffDays(a, b) { return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000); }
@@ -32,6 +32,11 @@ export const WX_METRICS = {
 // and writes it here without moving the variable itself — the cause of a live
 // ReferenceError (wxMetric undefined) on every ring/calendar render since that release.
 let wxMetric = 'temp';
+// The Weather screen re-renders whole when a unit is tapped, and the traveller should land back
+// where they were: the hour they pinned on the ring and whether "Upcoming forecast" was open.
+// Only that screen opts in (opts.keepState), so Home's copy of this card keeps its own defaults.
+let wxPinned = null;      // { city, t } — the hour last pinned on the ring
+let wxCalOpen = false;
 
 export function wxUvColor(v) {
   if (v <= 2) return '#4CAF50';
@@ -57,11 +62,29 @@ export function wxArcWedge(cx, cy, rIn, rOut, a0, a1) {
   return `M${xo0.toFixed(1)},${yo0.toFixed(1)} A${rOut},${rOut} 0 ${large} 1 ${xo1.toFixed(1)},${yo1.toFixed(1)} L${xi1.toFixed(1)},${yi1.toFixed(1)} A${rIn},${rIn} 0 ${large} 0 ${xi0.toFixed(1)},${yi0.toFixed(1)} Z`;
 }
 
+// The city's current wall-clock time as 'YYYY-MM-DDTHH:MM' — the same shape as every forecast
+// timestamp, so the two compare as plain strings. Null for a record cached before the offset was
+// stored; callers then fall back to the phone's clock, which is right whenever the traveller is
+// actually there.
+export function cityNowIso(offsetSec) {
+  if (offsetSec == null || isNaN(offsetSec)) return null;
+  return new Date(Date.now() + offsetSec * 1000).toISOString().slice(0, 16);
+}
+
+// Starts at the city's current hour. Reading the forecast's local timestamps on the phone's own
+// clock started the ring hours early or late for anyone planning from another timezone.
 export function wxNext24h(rec) {
   const hrs = Array.isArray(rec.hourly) ? rec.hourly : [];
-  const now = new Date();
-  const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
-  let start = hrs.findIndex((x) => { const d = new Date(x.t); return !isNaN(d) && d >= nowFloor; });
+  const cityNow = cityNowIso(rec.utcOffset);
+  let start;
+  if (cityNow) {
+    const floor = `${cityNow.slice(0, 13)}:00`;
+    start = hrs.findIndex((x) => String(x.t) >= floor);
+  } else {
+    const now = new Date();
+    const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+    start = hrs.findIndex((x) => { const d = new Date(x.t); return !isNaN(d) && d >= nowFloor; });
+  }
   if (start < 0) start = 0;
   return hrs.slice(start, start + 24);
 }
@@ -118,28 +141,28 @@ export function wxHourlyRingSvg(win, metric, city, selectedIdx) {
 export function wxHourDetailCard(x) {
   const [label, emo] = wmo(x.code);
   const rows = [];
+  const row = (lbl, val) => h('div', { class: 'wx-detail-row' }, [
+    h('span', { class: 'wx-detail-lbl' }, lbl),
+    h('span', { class: 'wx-detail-val' }, val),
+  ]);
   Object.entries(WX_METRICS).forEach(([key, cfg]) => {
-    rows.push(h('div', { class: 'wx-detail-row' }, [
-      h('span', { class: 'wx-detail-lbl' }, cfg.label),
-      h('span', { class: 'wx-detail-val' }, cfg.fmt(cfg.hourly(x))),
-    ]));
+    // Wind reads with the direction it comes from — a boat crossing or a scooter ride cares
+    // which way, not just how hard.
+    const dir = key === 'wind' ? compass(x.wdir) : '';
+    rows.push(row(cfg.label, `${cfg.fmt(cfg.hourly(x))}${dir ? ` from ${dir}` : ''}`));
+    if (key === 'wind' && x.gust != null) rows.push(row('🌬 Gusts', fmtWind(x.gust)));
     // The amount rides right after the rain PROBABILITY row — a percentage alone doesn't
     // say how much is actually expected. Snow only ever appears when the forecast genuinely
     // has some (the northern mountains in a cold winter snap; everywhere else is always 0),
     // so it is gated on a non-zero amount rather than padding every hour with "Snow: 0 cm".
     if (key === 'rain') {
-      rows.push(h('div', { class: 'wx-detail-row' }, [
-        h('span', { class: 'wx-detail-lbl' }, '🌧 Rainfall'),
-        h('span', { class: 'wx-detail-val' }, fmtPrecip(x.precip)),
-      ]));
-      if (x.snow > 0) {
-        rows.push(h('div', { class: 'wx-detail-row' }, [
-          h('span', { class: 'wx-detail-lbl' }, '❄️ Snowfall'),
-          h('span', { class: 'wx-detail-val' }, fmtSnow(x.snow)),
-        ]));
-      }
+      rows.push(row('🌧 Rainfall', fmtPrecip(x.precip)));
+      if (x.snow > 0) rows.push(row('❄️ Snowfall', fmtSnow(x.snow)));
     }
   });
+  // Records cached before these fields existed simply leave the rows out.
+  if (x.cloud != null) rows.push(row('☁️ Cloud', `${Math.round(x.cloud)}%`));
+  if (x.vis != null) rows.push(row('👁 Visibility', fmtDist(x.vis)));
   return h('div', { class: 'wx-hour-detail' }, [
     h('div', { class: 'wx-detail-head' }, [h('strong', {}, fmtClock(new Date(x.t).getHours())), ` · ${emo} ${label}`]),
     ...rows,
@@ -180,7 +203,8 @@ export function wxMonthCalendarNode(rec, metric) {
   ]);
 }
 
-export function wxVizCard(rec, spot) {
+export function wxVizCard(rec, spot, opts) {
+  const keep = !!(opts && opts.keepState);
   const card = h('div', { class: 'card wx-viz' });
   const chipsRow = h('div', { class: 'chips wx-metric-row' });
   const ringSlot = h('div', {});
@@ -188,6 +212,10 @@ export function wxVizCard(rec, spot) {
   const calSlot = h('div', {});
   const win = wxNext24h(rec);
   let selectedIdx = null;
+  if (keep && wxPinned && wxPinned.city === spot.city) {
+    const i = win.findIndex((x) => x.t === wxPinned.t);
+    if (i >= 0) selectedIdx = i;
+  }
 
   // Ring + detail panel only — cheap, so a wedge tap never has to also rebuild the calendar.
   function paintRing() {
@@ -211,6 +239,7 @@ export function wxVizCard(rec, spot) {
     if (!path) return;
     const i = Number(path.dataset.i);
     selectedIdx = selectedIdx === i ? null : i;
+    if (keep) wxPinned = selectedIdx == null ? null : { city: spot.city, t: win[selectedIdx].t };
     paintRing();
   });
 
@@ -251,10 +280,11 @@ export function wxVizCard(rec, spot) {
   // the card opens on the next 24 hours (which is what "right now" means) and the traveller
   // chooses to look further. data-nofold keeps mount()'s automatic section folding from
   // wrapping this a second time; the <details> here already is the fold.
-  const calDet = h('details', { class: 'wx-cal-fold', 'data-nofold': '' }, [
+  const calDet = h('details', { class: 'wx-cal-fold', 'data-nofold': '', open: keep && wxCalOpen }, [
     h('summary', { class: 'wx-cal-h' }, 'Upcoming forecast'),
     calSlot,
   ]);
+  if (keep) calDet.addEventListener('toggle', () => { wxCalOpen = calDet.open; });
   card.append(calDet);
   paintMetric();
   return card;

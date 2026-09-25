@@ -33,7 +33,7 @@ import {
   placeBucket, FAMILY_META, catColor, catTag, tierColor, swatch, citySlug, PRICE_TIER_LABEL, inkOn,
   tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, marketOpenDays, personalScore, placeWhen,
   CATEGORY_FAMILIES, photoBlock, seaAgo, airBlock, uvTodayBlock, extUrl, sourcesNote,
-  fmtTemp, fmtWind,
+  fmtTemp, fmtWind, fmtHeight, waveDesc,
 } from '../render-utils.js';
 import { VERDICT_RANK } from '../data/month-verdict.js';
 import { collapsibleCard, openModal, readAloudBar, confirmAction, online, field, locationSelect, spotForKey, screenHint, foldedCard } from '../ui-widgets.js';
@@ -1193,15 +1193,6 @@ const LIFEGUARD_LABEL = {
   no: ['❌', 'No lifeguards — swim with extra care and never alone', 'off'],
   unknown: ['ℹ️', 'No patrol information — treat as unpatrolled', 'muted'],
 };
-// Wave-height descriptor for swimming: [label, severity class].
-function waveDesc(m) {
-  if (m == null) return null;
-  if (m < 0.3) return ['glassy calm', 'on'];
-  if (m < 0.6) return ['calm', 'on'];
-  if (m < 1.25) return ['moderate — take care', 'off'];
-  if (m < 2.5) return ['rough — strong swimmers only', 'off'];
-  return ['very rough — stay out of the water', 'off'];
-}
 // Live sea-state sub-block for a beach: significant wave height + water temperature from
 // the Open-Meteo Marine API, painted from cache immediately and refreshed when online.
 // Honest offline fallback so the beach card never blocks on the network.
@@ -1211,11 +1202,17 @@ function beachSeaBlock(coords) {
     box.innerHTML = '';
     if (rec && rec.waveHeight != null) {
       const wd = waveDesc(rec.waveHeight);
-      const bits = [`🌊 Sea now: waves ${rec.waveHeight.toFixed(1)} m`];
+      // Through the shared formatters, so the water reads in whatever units the traveller
+      // chose on the Weather screen instead of always metres and °C.
+      const bits = [`🌊 Sea now: waves ${fmtHeight(rec.waveHeight)}`];
       if (wd) bits.push(`(${wd[0]})`);
-      if (rec.seaTemp != null) bits.push(`· water ${Math.round(rec.seaTemp)}°C`);
+      if (rec.seaTemp != null) bits.push(`· water ${fmtTemp(rec.seaTemp)}`);
       box.append(h('p', { class: `beach-sea-line ${wd ? wd[1] : ''}` }, bits.join(' ')));
       box.append(h('p', { class: 'muted small' }, `Live sea state · updated ${seaAgo(rec.fetchedAt)}${online() ? '' : ' · offline'}`));
+    } else if (rec && rec.none) {
+      // The marine model has no water at this point (an inland lake, or a spot the model
+      // treats as land). Saying so is honest; "loads when you are online" was not.
+      box.append(h('p', { class: 'muted small' }, '🌊 No live sea data for this spot.'));
     } else {
       box.append(h('p', { class: 'muted small' }, loading ? '🌊 Checking sea conditions…' : '🌊 Live sea conditions load when you are online.'));
     }

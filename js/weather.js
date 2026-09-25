@@ -283,38 +283,57 @@ async function refreshMany(spots) {
 async function refreshWeather(spot) {
   const key = spotKey(spot);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedWeather(key);
+  // Wind direction and gusts, cloud, visibility, pressure and dew point ride along in the same
+  // request: they cost a few kilobytes and no extra round trip, and a traveller planning a boat
+  // day, a mountain road or a sunrise viewpoint needs them as much as the temperature.
   const url = `${ENDPOINT}?latitude=${spot.lat}&longitude=${spot.lng}`
-    + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,snowfall,is_day'
-    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,snowfall,wind_speed_10m,relative_humidity_2m,apparent_temperature,uv_index'
+    + '&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,snowfall,is_day,'
+    + 'wind_direction_10m,wind_gusts_10m,cloud_cover,pressure_msl,visibility,dew_point_2m'
+    + '&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,snowfall,wind_speed_10m,relative_humidity_2m,apparent_temperature,uv_index,'
+    + 'wind_direction_10m,wind_gusts_10m,cloud_cover,visibility'
     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,'
-    + 'precipitation_probability_max,precipitation_sum,snowfall_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset'
+    + 'precipitation_probability_max,precipitation_sum,snowfall_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset,'
+    + 'wind_gusts_10m_max,wind_direction_10m_dominant,daylight_duration'
     + '&timezone=auto&forecast_days=16';
   try {
     const res = await fetchTimeout(url);
     const d = await res.json();
     if (d && d.current && d.daily && d.hourly) {
       const H = d.hourly;
+      const D = d.daily;
+      const C = d.current;
+      // A column the response left out reads as null rather than throwing on [i].
+      const col = (o, k, i) => (o[k] ? o[k][i] : null);
       const rec = {
         city: spot.city, country: spot.country, fetchedAt: Date.now(),
+        // Every time below is the city's own wall clock (timezone=auto). The offset is what lets
+        // "now" be the city's now too, for a traveller whose phone is still on another timezone.
+        utcOffset: d.utc_offset_seconds,
         current: {
-          temp: d.current.temperature_2m, apparent: d.current.apparent_temperature, code: d.current.weather_code,
-          humidity: d.current.relative_humidity_2m, wind: d.current.wind_speed_10m,
-          precip: d.current.precipitation, snow: d.current.snowfall, isDay: d.current.is_day,
+          temp: C.temperature_2m, apparent: C.apparent_temperature, code: C.weather_code,
+          humidity: C.relative_humidity_2m, wind: C.wind_speed_10m,
+          precip: C.precipitation, snow: C.snowfall, isDay: C.is_day,
+          windDir: C.wind_direction_10m, gust: C.wind_gusts_10m, cloud: C.cloud_cover,
+          pressure: C.pressure_msl, vis: C.visibility, dew: C.dew_point_2m,
         },
-        daily: d.daily.time.map((t, i) => ({
-          date: t, code: d.daily.weather_code[i],
-          tmax: d.daily.temperature_2m_max[i], tmin: d.daily.temperature_2m_min[i],
-          appMax: d.daily.apparent_temperature_max[i], appMin: d.daily.apparent_temperature_min[i],
-          rainProb: d.daily.precipitation_probability_max[i], precip: d.daily.precipitation_sum[i],
-          snow: d.daily.snowfall_sum[i],
-          uv: d.daily.uv_index_max[i], windMax: d.daily.wind_speed_10m_max[i],
-          sunrise: d.daily.sunrise[i], sunset: d.daily.sunset[i],
+        daily: D.time.map((t, i) => ({
+          date: t, code: D.weather_code[i],
+          tmax: D.temperature_2m_max[i], tmin: D.temperature_2m_min[i],
+          appMax: D.apparent_temperature_max[i], appMin: D.apparent_temperature_min[i],
+          rainProb: D.precipitation_probability_max[i], precip: D.precipitation_sum[i],
+          snow: D.snowfall_sum[i],
+          uv: D.uv_index_max[i], windMax: D.wind_speed_10m_max[i],
+          sunrise: D.sunrise[i], sunset: D.sunset[i],
+          gustMax: col(D, 'wind_gusts_10m_max', i), windDir: col(D, 'wind_direction_10m_dominant', i),
+          daylight: col(D, 'daylight_duration', i),
         })),
         hourly: H.time.map((t, i) => ({
           t, temp: H.temperature_2m[i], code: H.weather_code[i],
           pp: H.precipitation_probability[i], precip: H.precipitation[i], snow: H.snowfall[i],
           wind: H.wind_speed_10m[i], hum: H.relative_humidity_2m[i], app: H.apparent_temperature[i],
-          uv: H.uv_index ? H.uv_index[i] : null,
+          uv: col(H, 'uv_index', i),
+          wdir: col(H, 'wind_direction_10m', i), gust: col(H, 'wind_gusts_10m', i),
+          cloud: col(H, 'cloud_cover', i), vis: col(H, 'visibility', i),
         })),
       };
       try { localStorage.setItem(PREFIX + key, JSON.stringify(rec)); } catch { /* storage full */ }
@@ -325,10 +344,18 @@ async function refreshWeather(spot) {
 }
 
 // --- Marine / swimming conditions -------------------------------------------
-// Live sea state for a specific beach via Open-Meteo's Marine API (free, no key).
-// Coordinate-specific (not the regional hub), cached per rounded lat/lng so it works
-// offline. Returns null when offline with no cache, or when the point has no marine
-// data (inland / lake). Never throws.
+// Sea state via Open-Meteo's Marine API (free, no key): waves, swell, water temperature and
+// the modelled sea level that tides are read from. Coordinate-specific (a beach, or a weather
+// city's own point), cached per rounded lat/lng so it works offline. Never throws.
+//
+// An inland point is a real answer, not a failure: the API returns the nearest grid cell with
+// every value null (measured for Bangkok, Chiang Mai, Phnom Penh and Vientiane, while Phuket,
+// Pattaya, Kampot and Da Nang all return data). That answer is cached as { none: true } so the
+// weather screen can leave the sea card out for an inland city without asking again on every
+// visit. Readers test `waveHeight != null`, which a none-record correctly fails.
+//
+// `cell` is the grid point the model actually used. It can sit well offshore (about 20 km for
+// Da Nang), so the screen says how far away it is rather than presenting it as the beach.
 function marineKey(coords) { return `${MARINE_PREFIX}${coords.lat.toFixed(2)},${coords.lng.toFixed(2)}`; }
 export function getCachedMarine(coords) {
   if (!coords || coords.lat == null || coords.lng == null) return null;
@@ -339,17 +366,42 @@ async function refreshMarine(coords) {
   const key = marineKey(coords);
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return getCachedMarine(coords);
   const url = `${MARINE_ENDPOINT}?latitude=${coords.lat}&longitude=${coords.lng}`
-    + '&current=wave_height,wave_period,sea_surface_temperature&timezone=auto';
+    + '&current=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,'
+    + 'sea_surface_temperature,sea_level_height_msl'
+    + '&hourly=wave_height,sea_level_height_msl'
+    + '&daily=wave_height_max,wave_direction_dominant,wave_period_max,swell_wave_height_max'
+    + '&timezone=auto&forecast_days=7';
   try {
     const res = await fetchTimeout(url);
     const d = await res.json();
     const c = d && d.current;
+    const col = (o, k, i) => (o && o[k] ? o[k][i] : null);
     if (c && c.wave_height != null) {
-      const rec = { fetchedAt: Date.now(), waveHeight: c.wave_height, wavePeriod: c.wave_period, seaTemp: c.sea_surface_temperature };
+      const H = d.hourly || {};
+      const D = d.daily || {};
+      const rec = {
+        fetchedAt: Date.now(), utcOffset: d.utc_offset_seconds,
+        waveHeight: c.wave_height, wavePeriod: c.wave_period, waveDir: c.wave_direction,
+        swellHeight: c.swell_wave_height, swellPeriod: c.swell_wave_period, swellDir: c.swell_wave_direction,
+        seaTemp: c.sea_surface_temperature, seaLevel: c.sea_level_height_msl,
+        cell: (d.latitude != null && d.longitude != null) ? { lat: d.latitude, lng: d.longitude } : null,
+        hourly: (H.time || []).map((t, i) => ({ t, wh: col(H, 'wave_height', i), sl: col(H, 'sea_level_height_msl', i) })),
+        daily: (D.time || []).map((date, i) => ({
+          date, whMax: col(D, 'wave_height_max', i), wdDom: col(D, 'wave_direction_dominant', i),
+          wpMax: col(D, 'wave_period_max', i), swMax: col(D, 'swell_wave_height_max', i),
+        })),
+      };
       try { localStorage.setItem(key, JSON.stringify(rec)); } catch { /* full */ }
       return rec;
     }
-  } catch { /* offline or no marine data — fall through to cache */ }
+    // A well-formed answer with no sea values is an inland point (see above). An error body
+    // has no `current`, so it falls through to the cache instead of being mistaken for one.
+    if (c && d.error == null) {
+      const rec = { fetchedAt: Date.now(), none: true };
+      try { localStorage.setItem(key, JSON.stringify(rec)); } catch { /* full */ }
+      return rec;
+    }
+  } catch { /* offline or blocked — fall through to cache */ }
   return getCachedMarine(coords);
 }
 
@@ -402,6 +454,7 @@ async function refreshAir(spot) {
 // conditions is as fresh as the source can be; marine and air quality are hourly.
 const WX_TTL_MS = 20 * 60 * 1000;
 const SEA_TTL_MS = 60 * 60 * 1000;
+const NO_SEA_TTL_MS = 24 * 60 * 60 * 1000;   // an inland answer; the coastline does not move
 const AIR_TTL_MS = 60 * 60 * 1000;
 const MANY_TTL_MS = 30 * 60 * 1000;
 const MIN_GAP_MS = 2 * 60 * 1000;    // never re-attempt the same key faster than this
@@ -450,7 +503,9 @@ export function maybeRefreshMarine(coords, force = false) {
   if (!coords || coords.lat == null || coords.lng == null) return Promise.resolve(null);
   const key = marineKey(coords);
   if (force) { delete _lastAttempt[key]; }
-  return guarded(key, force || ageOf(getCachedMarine(coords)) >= SEA_TTL_MS, () => refreshMarine(coords));
+  const cached = getCachedMarine(coords);
+  const ttl = (cached && cached.none) ? NO_SEA_TTL_MS : SEA_TTL_MS;
+  return guarded(key, force || ageOf(cached) >= ttl, () => refreshMarine(coords));
 }
 
 export function maybeRefreshAir(spot, force = false) {
