@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.595.0';
+const CACHE_VERSION = 'mk-v0.596.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -342,7 +342,7 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': 'c499d6cb',
+  'css/style.css': '23ad1121',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': 'aff8f935',
@@ -505,7 +505,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '2363149a',
+  'js/main.js': '23d25bbe',
   'js/map.js': '893a2aa0',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -551,7 +551,7 @@ const MANIFEST = {
   'js/screens/trip.js': '8c7b7e12',
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '6746db81',
-  'js/screens/weather.js': '9a352824',
+  'js/screens/weather.js': 'bdad35c3',
   'js/screens/welcome.js': 'bff77779',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',

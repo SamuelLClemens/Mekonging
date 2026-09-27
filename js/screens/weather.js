@@ -4,7 +4,7 @@
 // lives in js/weather-ui.js so that main.js's nearby-weather card and js/screens/places.js can
 // seed it via seedWeatherKey() without loading this screen; weatherSeededHash below stays
 // module-private here because only this screen uses it.
-import { store, save, getLastFix, setLastFix } from '../state.js';
+import { store, save, getLastFix, setLastFix, prefersReducedMotion } from '../state.js';
 import { h, esc, compass, haversineKm } from '../util.js';
 import {
   wxTempU, wxWindU, wxLenU, wxPresU, fmtTemp, fmtWind, fmtPrecip, fmtSnow, fmtHeight, fmtDist, fmtPres,
@@ -486,6 +486,104 @@ function planCityPanels() {
   return wrap;
 }
 
+// ---- FIND A CITY --------------------------------------------------------------------
+// The search box under "Look up another city". It was a native <datalist> that acted only on an
+// exact full name, and only once the value was committed: "chiang", "saigon" or "Ko Samui" found
+// nothing and said nothing. It now lists matches as you type, the way the app's own Search does,
+// and forgives the usual differences: accents (Huế), spacing (Dalat, Chiangmai), Ko or Koh, a
+// name in brackets (Xayaboury), and the other names below.
+const CITY_AKA = {
+  'vi:Ho Chi Minh City': ['Saigon', 'HCMC'],
+  'th:Bangkok': ['Krung Thep'],
+  'kh:Sihanoukville': ['Kampong Som'],
+  'vi:Ha Long': ['Halong Bay'],
+};
+function foldCity(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\bkoh\b/g, 'ko').trim();
+}
+let cityIndex = null;
+function findCities(q) {
+  const fq = foldCity(q);
+  if (!fq) return [];
+  const tq = fq.replace(/ /g, '');
+  if (!cityIndex) {
+    cityIndex = WEATHER_SPOTS.map((s, i) => {
+      const inBrackets = (s.city.match(/\(([^)]+)\)/) || [])[1];
+      const names = [s.city.replace(/\(.*?\)/g, ''), inBrackets, ...(CITY_AKA[spotKey(s)] || [])]
+        .filter(Boolean).map(foldCity);
+      return { s, i, names, tight: names.map((n) => n.replace(/ /g, '')), country: foldCity((getCountry(s.country) || {}).name) };
+    });
+  }
+  const hits = [];
+  for (const c of cityIndex) {
+    // Lower is better, and at each level the city's own name beats its other names, so
+    // "kratie" puts Kratie ahead of Sambor (Kratie) and Enter takes the one meant.
+    const own = c.tight[0], other = c.tight.slice(1);
+    let rank = -1;
+    if (own === tq) rank = 0;
+    else if (other.includes(tq)) rank = 1;
+    else if (own.startsWith(tq)) rank = 2;
+    else if (other.some((t) => t.startsWith(tq))) rank = 3;
+    else if (c.names.some((n) => n.split(' ').some((w) => w.startsWith(fq)))) rank = 4;
+    else if (tq.length >= 3 && c.tight.some((t) => t.includes(tq))) rank = 5;
+    else if (fq.length >= 3 && c.country.startsWith(fq)) rank = 6;
+    if (rank >= 0) hits.push({ rank, s: c.s, i: c.i });
+  }
+  // Ties go to the hubs, then to the list's own order, which names each country's main
+  // cities first (so "laos" leads with Vientiane, not alphabetically with Luang Prabang).
+  hits.sort((a, b) => a.rank - b.rank || (b.s.hub ? 1 : 0) - (a.s.hub ? 1 : 0) || a.i - b.i);
+  return hits.map((x) => x.s);
+}
+function cityFinder(onPick) {
+  const SHOW = 5;
+  const hitsBox = h('div', { class: 'wx-find-results' });
+  const note = h('p', { class: 'muted wx-find-note', role: 'status' });
+  const input = h('input', {
+    type: 'search', class: 'search', placeholder: 'e.g. Hoi An, Siem Reap, Pai', enterkeyhint: 'search',
+    autocomplete: 'off', autocorrect: 'off', spellcheck: 'false', oninput: () => list(),
+  });
+  const pick = (s) => { input.value = ''; list(); input.blur(); onPick(s); };
+  // Enter, or the Search key on a phone's keyboard, takes the top match.
+  const form = h('form', {
+    role: 'search', 'data-no-units': '',
+    onsubmit: (e) => { e.preventDefault(); const top = findCities(input.value)[0]; if (top) pick(top); },
+  }, [field('Search any city', input), hitsBox, note]);
+  const card = h('div', { class: 'card' }, form);
+  function list() {
+    hitsBox.textContent = '';
+    note.textContent = '';
+    const q = input.value.trim();
+    if (!q) return;
+    const hits = findCities(q);
+    hits.slice(0, SHOW).forEach((s) => {
+      const c = getCountry(s.country) || {};
+      hitsBox.append(h('button', { type: 'button', class: 'btn ghost block srch wx-find-hit', onclick: () => pick(s) }, [
+        h('span', { 'data-no-i18n': '' }, c.flag ? `${c.flag} ${s.city}` : s.city),
+        h('span', { class: 'muted wx-find-cc' }, c.name || s.country),
+      ]));
+    });
+    if (!hits.length) note.textContent = `No match for “${q}” among the ${WEATHER_SPOTS.length} cities in Thailand, Vietnam, Cambodia and Laos.`;
+    else if (hits.length > SHOW) note.textContent = `${hits.length - SHOW} more, keep typing`;
+    retranslate(form);
+    reveal();
+  }
+  // A phone's keyboard covers the bottom of the screen, and the matches appear under the box:
+  // scroll just far enough to show them, never so far that the box leaves the top.
+  function reveal() {
+    const vv = window.visualViewport;
+    const top = vv ? vv.offsetTop : 0;
+    let bottom = top + (vv ? vv.height : window.innerHeight);
+    const bar = document.querySelector('.tabbar');
+    const barTop = bar ? bar.getBoundingClientRect().top : Infinity;
+    if (barTop > top && barTop < bottom) bottom = barTop;
+    const last = note.textContent ? note : hitsBox;
+    const by = Math.min(last.getBoundingClientRect().bottom - bottom + 8, card.getBoundingClientRect().top - top - 8);
+    if (by > 0) window.scrollBy(0, by);
+  }
+  return card;
+}
+
 export function weatherScreen(country) {
   const wrap = h('div', { class: 'screen wx-screen' });
   // "Weather" alone matches every chip that links here (Home, the country-scoped chip) — the
@@ -657,9 +755,7 @@ export function weatherScreen(country) {
   // always was — a quiet in-place update of `body`, no scroll handling — since a same-city
   // refresh rarely changes the page's height enough to move the scroll position, and this
   // path already ran on every visit without complaint. switchSpot() (below) is the one
-  // that needs to guard scroll: it never calls the global render() (which would jump the
-  // page to the top via mount()'s window.scrollTo(0,0)), but it does deliberately swap in a
-  // whole new city's cards, so it restores the traveller's scroll position afterwards.
+  // that moves the page, because it swaps in a whole new city's cards.
   function loadAndPaint() {
     const cached = getCachedWeather(currentWeatherKey());
     paint(cached, !cached && online());
@@ -669,9 +765,17 @@ export function weatherScreen(country) {
       });
     }
   }
+  // Picking a city ends on that city's forecast. Both ways to pick one, the map and the
+  // search box, sit BELOW the forecast (mk-v0.356.0 moved "Look up another city" to the
+  // bottom), and this used to put the scroll position back where it was: the new city painted
+  // about 2,000px above, out of sight, and the screen looked as if the search had done
+  // nothing. The same city picked again still scrolls up, for the same reason.
   function switchSpot(key) {
-    if (!key || key === currentWeatherKey()) return;
-    const y = window.scrollY;
+    if (!key) return;
+    if (key !== currentWeatherKey()) changeSpot(key);
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }
+  function changeSpot(key) {
     seedWeatherKey(key);
     spot = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey()) || spot;
     // Switching (unlike the map's own country) can jump to a city in a different country —
@@ -684,7 +788,6 @@ export function weatherScreen(country) {
     // fresh by age and wrong by content. Staleness cannot see that; the caller can.
     if (countryChanged && online()) maybeRefreshMany(spotsForCountry(curCountry), true).then((r) => { if (r && spot.country === curCountry) renderMap(r.data); });
     loadAndPaint();
-    requestAnimationFrame(() => window.scrollTo(0, y));
   }
   loadAndPaint();
 
@@ -698,8 +801,11 @@ export function weatherScreen(country) {
     wrap.append(planCityPanels());
   }
 
-  // Look up another city — tap the map, or type/pick any city across all four countries.
+  // Look up another city — search every listed city across all four countries, or tap the
+  // map. The search comes first: it is the quicker way in, and on a phone its matches need
+  // room under the box, which the last element on the page does not have.
   wrap.append(h('h3', { class: 'wx-plan-h' }, 'Look up another city'));
+  wrap.append(cityFinder((s) => switchSpot(spotKey(s))));
 
   // Forecast map: the region with this country's cities plotted, each showing its
   // current temperature (one batched fetch), tappable to switch city.
@@ -735,22 +841,6 @@ export function weatherScreen(country) {
   }
   renderMap(getCachedMany() && getCachedMany().data);
   if (online()) maybeRefreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
-
-  // Free-text search across every city in all four countries — a native datalist (offline,
-  // no extra library) types ahead as the traveller types and jumps straight to that city's
-  // forecast on an exact match, exactly like tapping it on the map above.
-  const cityDatalistId = 'wx-city-list';
-  const citySearchInput = h('input', {
-    type: 'text', class: 'search', list: cityDatalistId, placeholder: '🔎 Search any city…',
-    onchange: (e) => {
-      const val = e.target.value.trim().toLowerCase();
-      const hit = WEATHER_SPOTS.find((s) => `${s.city}, ${(getCountry(s.country) || {}).name || s.country}`.toLowerCase() === val || s.city.toLowerCase() === val);
-      if (hit) switchSpot(spotKey(hit));
-    },
-  });
-  const cityDatalist = h('datalist', { id: cityDatalistId },
-    WEATHER_SPOTS.map((s) => h('option', { value: `${s.city}, ${(getCountry(s.country) || {}).name || s.country}` })));
-  wrap.append(h('div', { class: 'card' }, [field('Search any city', citySearchInput), cityDatalist]));
 
   mount(wrap, '#home');
   if (pendingScrollY != null) { const y = pendingScrollY; pendingScrollY = null; window.scrollTo(0, y); }

@@ -1547,6 +1547,12 @@ html[data-theme="dark"] .rn-filter-fold.is-on > summary .rn-filter-state { color
    row (.wx-units) went when every printed unit became its own switch (.u-tap, below). */
 .wx-plan-h { font-size: var(--fs-lg); font-weight: 800; color: var(--ink); margin: 18px 2px 8px; }
 
+/* "Search any city" matches under Look up another city (cityFinder in js/screens/weather.js). */
+.wx-find-hit { gap: var(--sp-2); }
+.wx-find-cc { margin-inline-start: auto; font-weight: 400; font-size: var(--fs-sm); }
+.wx-find-note { margin: var(--sp-1) 0 0; }
+.wx-find-note:empty { display: none; }
+
 .wx-cities { display: flex; flex-direction: column; gap: var(--sp-2); }
 .wx-city { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
   padding: var(--sp-3) var(--sp-4); box-shadow: var(--shadow-soft); }
