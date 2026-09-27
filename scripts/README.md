@@ -1,7 +1,7 @@
 # scripts/
 
-No build step, no CI, no `node` on the machine this is developed on. Everything here is
-either Python 3 (no dependencies, run it directly) or a browser module you import in the page.
+No build step and no `node` on the machine this is developed on. Everything here is either
+Python 3 (no dependencies, run it directly) or a browser module you import in the page.
 
 ## Before every commit
 
@@ -15,6 +15,14 @@ done
 python3 scripts/check-place-fields.py --assert
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
+
+The same twelve also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+`feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
+fails, prints the full output of each failure, and fails the check if any guard does. On a
+pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
+push it compares against the commit the branch pointed at before the push. CI is the backstop,
+not the first check: run the guards before you commit. The workflow keeps its own copy of the
+list above, so a new guard goes in both places.
 
 | guard | catches | why it exists |
 |---|---|---|

@@ -1,0 +1,96 @@
+# The guards from scripts/README.md ("Before every commit"), on every pull request into the
+# integration branch and every push to it. They are plain Python 3 with no dependencies, and each
+# exits non-zero on failure. Before this workflow, nothing ran them unless someone remembered to:
+# check-lazy-data failed on feat/scaffold-bangkok-slice from PR #40 onward and nobody noticed.
+#
+# Every guard runs even after one fails, so one run reports all of them. A passing guard folds to
+# one line in the log; a failing one prints its full output and adds an error annotation.
+#
+# Not here: scripts/route-sweep.js needs a live browser, and scripts/validate.mjs has not run
+# since PR #39 (it imports LANGUAGES from js/data/regions.js, which no longer exports it).
+#
+# The guard list is kept by hand. A guard added to scripts/README.md goes here too.
+
+name: guards
+
+on:
+  pull_request:
+    branches: [feat/scaffold-bangkok-slice]
+  push:
+    branches: [feat/scaffold-bangkok-slice]
+
+permissions:
+  contents: read
+
+jobs:
+  guards:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # check-cache-version diffs the tree against a base commit, so it needs history. With
+      # fetch-depth: 0 the checkout fetches every branch, origin/feat/scaffold-bangkok-slice included.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve the base for check-cache-version
+        id: base
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # A pull request is compared with the branch it merges into, as in scripts/README.md.
+          # On a push that branch IS the pushed commit, so the diff would always be empty;
+          # compare with the commit the branch pointed at before the push instead.
+          base=origin/feat/scaffold-bangkok-slice
+          if [ "$EVENT" = push ]; then base=$BEFORE; fi
+          # check-cache-version ignores git's exit status: a base missing from the clone reads
+          # as "no files changed" and passes. Stop here instead.
+          if ! sha=$(git rev-parse --verify --quiet "$base^{commit}"); then
+            echo "::error::$base is not in the clone, so check-cache-version would pass without checking anything"
+            exit 1
+          fi
+          echo "check-cache-version base: $base ($sha)"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Run the guards
+        shell: bash
+        env:
+          BASE: ${{ steps.base.outputs.base }}
+        run: |
+          python3 --version
+          failed=()
+          ran=0
+          printf '| guard | result |\n|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
+
+          guard() {
+            local name out
+            name=$(basename "$1" .py)
+            ran=$((ran + 1))
+            if out=$(python3 "$@" 2>&1); then
+              echo "::group::pass  $name"
+              printf '%s\n' "$out"
+              echo "::endgroup::"
+              echo "| \`$name\` | pass |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "FAIL  $name"
+              printf '%s\n' "$out"
+              echo "::error title=$name failed::python3 $* exited non-zero. Its output is in the log."
+              echo "| \`$name\` | **FAIL** |" >> "$GITHUB_STEP_SUMMARY"
+              failed+=("$name")
+            fi
+          }
+
+          for g in imports lazy-data preloads ui-strings month-arrays contrast spacing place-dupes undefined net-gates; do
+            guard scripts/check-$g.py
+          done
+          guard scripts/check-place-fields.py --assert
+          guard scripts/check-cache-version.py --base "$BASE"
+
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "${#failed[@]} of $ran guards failed: ${failed[*]}"
+            exit 1
+          fi
+          echo "All $ran guards passed."
