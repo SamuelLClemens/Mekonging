@@ -2805,6 +2805,17 @@ html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
 .mk-wx-strip-e { font-size: 15px; line-height: 1.2; }
 .mk-wx-strip-t { font-weight: 600; white-space: nowrap; }
 
+/* Forecast-source picker (weather-ui.js wxSourceSeg): the multi-model average plus each named
+   model. Same control as the ring's .wx-metric-seg above — a different axis (which source, not
+   which measurement) — shared by the Weather screen's 10-day card and this map popup, so
+   picking a source in either place looks and behaves identically. */
+.wx-source-seg { display: flex; width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--card); }
+/* Compact variant for the map popup, which is only 280px wide: a row instead of a column,
+   smaller type, so five segments still fit next to the strip below them. */
+.mk-wx-source-seg { margin-top: 6px; }
+.mk-wx-source-seg .wx-seg { flex-direction: row; min-height: 30px; padding: 3px 2px; font-size: 10px; }
+.mk-wx-source-seg .wx-seg-lbl { font-size: 10px; }
+
 /* A printed unit that switches when tapped (°C/°F, km/h/mph, mm/in, m/ft, km/mi, hPa/inHg). The
    dotted underline is the whole affordance: it costs no space, which was the point. */
 .u-tap { cursor: pointer; text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; border-radius: 3px; }

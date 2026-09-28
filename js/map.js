@@ -13,9 +13,10 @@ import { BASEMAP } from './data/basemap.js';
 import { BORDER_LINES } from './data/borders_lines.js';
 import { POOLS } from './data/pools.js';
 import {
-  allHubSpots, getCachedMany, maybeRefreshMany, maybeRefreshWeather, getCachedWeather, wmo, spotKey,
+  allHubSpots, getCachedMany, maybeRefreshMany, maybeRefreshWeather, getCachedWeather, wmo, spotKey, sourceDay,
 } from './weather.js';
 import { dateLocale } from './i18n.js';
+import { getWxSource, wxSourceSeg } from './weather-ui.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -1135,14 +1136,21 @@ export async function initMap(containerEl, opts = {}) {
   // a pin here costs one small request, not a forecast for all 46 hubs). Capped at 5 days: a
   // map popup has real width limits, and the full 10-day breakdown, averaged the same way, is
   // one tap into the Weather screen away for whichever city this is.
-  function weatherStripNode(rec) {
-    const days = ((rec && rec.daily) || []).slice(0, 5);
+  // `source` is 'average' or one of WX_MODELS (js/weather.js) — the same shared choice the
+  // Weather screen's own picker sets (getWxSource/setWxSource, js/weather-ui.js), read fresh on
+  // every repaint rather than passed down once, so switching it on the Weather screen and then
+  // opening a map pin shows that choice immediately.
+  function weatherStripNode(rec, source) {
+    const days = ((rec && rec.daily) || []).slice(0, 5).map((d) => sourceDay(d, source));
     if (!days.length) return null;
     return h('div', { class: 'mk-wx-strip' }, days.map((d) => {
       const [, emo] = wmo(d.code);
       let dow = d.date;
       try { dow = new Date(`${d.date}T00:00:00`).toLocaleDateString(dateLocale(), { weekday: 'short' }); } catch { /* keep raw date */ }
-      return h('div', { class: 'mk-wx-strip-day' }, [
+      return h('div', {
+        class: 'mk-wx-strip-day',
+        title: (source !== 'average' && d.fallback) ? 'No forecast from this model this far out — showing the average' : null,
+      }, [
         h('div', { class: 'mk-wx-strip-d' }, dow),
         h('div', { class: 'mk-wx-strip-e' }, emo),
         h('div', { class: 'mk-wx-strip-t' }, `${Math.round(d.tmax)}°/${Math.round(d.tmin)}°`),
@@ -1176,13 +1184,19 @@ export async function initMap(containerEl, opts = {}) {
         h('div', { class: 'muted', style: 'font-size:12px' }, `${Math.round(p.temp)}°C · ${p.label}`),
       ]);
       const stripSlot = h('div', {});
-      body.append(stripSlot);
+      // Lets the source picker repaint the already-fetched strip without re-fetching; the same
+      // pattern the Weather screen's own picker uses (lastRec there).
+      let lastWxRec = getCachedWeather(spotKey(spot));
       const paintStrip = (rec) => {
-        const node = weatherStripNode(rec);
+        lastWxRec = rec || lastWxRec;
+        const node = weatherStripNode(lastWxRec, getWxSource());
         stripSlot.innerHTML = '';
         if (node) stripSlot.append(node);
       };
-      paintStrip(getCachedWeather(spotKey(spot)));
+      const sourceSeg = wxSourceSeg(getWxSource(), () => paintStrip());
+      sourceSeg.classList.add('mk-wx-source-seg');
+      body.append(sourceSeg, stripSlot);
+      paintStrip(lastWxRec);
       const popup = new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
         .setLngLat(f.geometry.coordinates)
         .setDOMContent(body)

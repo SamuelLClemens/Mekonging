@@ -13,7 +13,7 @@ import {
 import { field, online, screenHint } from '../ui-widgets.js';
 import {
   WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
-  maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine, WX_MODELS, WX_MODEL_LABELS,
+  maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine, WX_MODELS, WX_MODEL_LABELS, sourceDay, sourceHour,
 } from '../weather.js';
 import { COUNTRIES, getCountry } from '../data/regions.js';
 import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
@@ -26,7 +26,7 @@ import { dateLocale, retranslate } from '../i18n.js';
 // Shared with the modules that stay in the launch graph; see js/weather-ui.js. These moved out so
 // this file could leave it — the router imports it on demand now.
 import {
-  seedWeatherKey, currentWeatherKey, wxVizCard, cityNowIso,
+  seedWeatherKey, currentWeatherKey, wxVizCard, cityNowIso, getWxSource, wxSourceSeg,
 } from '../weather-ui.js';
 // ---- WEATHER + FORECAST -----------------------------------------------------
 // weatherKey itself now lives in weather-ui.js (see the note there) — a module's `let` cannot
@@ -147,11 +147,15 @@ function toggleUnit(fam) {
 // repaint the list — does not snap them shut again.
 const wxOpenDays = new Set();
 
-// A day's temperature, rain chance, wind, etc. are each the average across up to four
-// independent forecast models (see WX_MODELS in js/weather.js); this is the one-line
-// disclosure so that averaging is a stated feature, not a silent implementation detail.
-function ensembleNote() {
-  return `Forecast averaged across up to ${WX_MODELS.length} independent models (${WX_MODELS.map((m) => WX_MODEL_LABELS[m]).join(', ')}) for stronger accuracy. Current conditions are Open-Meteo's own live reading.`;
+// A day's temperature, rain chance, wind, etc. default to the average across up to four
+// independent forecast models (see WX_MODELS in js/weather.js) — the traveller can instead pick
+// one model to trust via the source picker below (wxSourceSeg, js/weather-ui.js), so this note's
+// wording follows whatever is actually selected rather than always describing the average.
+function sourceNote(source) {
+  if (!source || source === 'average') {
+    return `Forecast averaged across up to ${WX_MODELS.length} independent models (${WX_MODELS.map((m) => WX_MODEL_LABELS[m]).join(', ')}) for stronger accuracy. Current conditions are Open-Meteo's own live reading.`;
+  }
+  return `Showing ${WX_MODEL_LABELS[source]} only, not the average. Current conditions above are still Open-Meteo's own live reading — it is never split by model.`;
 }
 
 // Label/value pairs as a two-column grid, which stays scannable where one dot-separated sentence
@@ -617,8 +621,12 @@ export function weatherScreen(country) {
   // calendar that used to occupy this spot is gone (see below).
   const body = h('div', {});
   wrap.append(body);
+  // The last record paint() was given, so the source picker (below) can force a repaint after
+  // switching models without re-reading from the cache or re-fetching.
+  let lastRec = null;
 
   function paint(rec, loading) {
+    lastRec = rec;
     body.innerHTML = '';
     if (!rec) {
       body.append(h('div', { class: 'card' }, [
@@ -626,11 +634,20 @@ export function weatherScreen(country) {
         h('p', { class: 'muted' }, 'Connect to the internet once and tap Refresh to download it. The forecast is then stored on your device for offline viewing.'),
       ]));
     } else {
+      // The traveller's chosen forecast source reshapes daily/hourly into that source's own
+      // numbers before anything below reads them — sourceDay/sourceHour (js/weather.js) fall
+      // back to the ensemble average, with `.fallback` set, for a day/hour a model has not
+      // reached yet (ICON/UKMO stop at 7 days; ECMWF/GFS reach 16). Current conditions are
+      // exempt on purpose: Open-Meteo does not split its live nowcast by model, so `rec.current`
+      // is read directly below, never through this view.
+      const source = getWxSource();
+      const viewDaily = rec.daily.map((d) => sourceDay(d, source));
+      const viewHourly = (rec.hourly || []).map((x) => sourceHour(x, source));
       // "Right now" — temp, air quality and UV used to be three separate stacked cards
       // saying the same thing ("this is the current situation") in three different boxes.
       // One card, thin dividers between the three lines, reads as one answer instead of three.
       const c = rec.current;
-      const today = rec.daily && rec.daily[0];
+      const today = viewDaily[0];
       const [clabel, cemoji] = wmo(c.code);
       const cdir = compass(c.windDir);
       const rightNow = h('div', { class: 'card wx-now' }, [
@@ -668,20 +685,22 @@ export function weatherScreen(country) {
       const seaSlot = h('div', {});
       body.append(seaSlot);
       fillSea(seaSlot);
-      if (rec.hourly && rec.hourly.length) body.append(wxVizCard(rec, spot, { keepState: true }));
-      const fc = h('div', { class: 'card' }, [
-        h('h3', {}, '10-day forecast'),
-        h('p', { class: 'muted small', style: 'margin: var(--sp-1h) 0 0' }, ensembleNote()),
-      ]);
+      if (viewHourly.length) body.append(wxVizCard({ ...rec, daily: viewDaily, hourly: viewHourly }, spot, { keepState: true }));
+      const fc = h('div', { class: 'card' }, [h('h3', {}, '10-day forecast')]);
+      fc.append(wxSourceSeg(source, () => paint(lastRec, false)));
+      fc.append(h('p', { class: 'muted small', style: 'margin: var(--sp-1h) 0 0' }, sourceNote(source)));
       // The day's highest waves ride along for a coastal city, from whatever sea state is cached.
       const sea = getCachedMarine({ lat: spot.lat, lng: spot.lng });
       const seaDay = new Map(((sea && sea.daily) || []).map((x) => [x.date, x]));
-      rec.daily.slice(0, 10).forEach((d) => {
+      viewDaily.slice(0, 10).forEach((d) => {
         const [dl, de] = wmo(d.code);
         const openKey = `${spotKey(spot)}|${d.date}`;
         const isOpen = wxOpenDays.has(openKey);
         const detail = h('div', { style: `display:${isOpen ? 'block' : 'none'};margin-top: var(--sp-1h)` });
-        const segs = daySegments(rec.hourly, d.date);
+        if (source !== 'average' && d.fallback) {
+          detail.append(h('p', { class: 'muted small' }, `${WX_MODEL_LABELS[source]} has no forecast this far out — showing the multi-model average for this day.`));
+        }
+        const segs = daySegments(viewHourly, d.date);
         const dayHums = segs.map((s) => s.hum).filter((v) => v != null);
         const dayHum = dayHums.length ? Math.round(dayHums.reduce((a, b) => a + b, 0) / dayHums.length) : null;
         const ddir = compass(d.windDir);
