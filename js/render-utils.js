@@ -13,6 +13,7 @@ import { getActiveCountry } from './app-state.js';
 import { HISTORY } from './data/history.js';
 import { PLACE_MONTHS } from './data/place-months.js';
 import { verdictFor } from './data/month-verdict.js';
+import { islandsLoaded, sameLand } from './data/islands.js';
 
 // "Near me" is a DRIVE-TIME ceiling, not a straight-line radius. A haversine distance badly
 // understates real travel on the region's winding roads — Pai to Chiang Mai is ~55 km as the
@@ -116,6 +117,26 @@ export function driveLabel(km, cc) {
     return `~${hm(estDriveMin(km, cc))} by road (est.)`;
   }
   return `${hm(fast)}–${hm(slow)} by road (est.)`;
+}
+
+// driveLabel() is honest on the mainland and dishonest the moment there is water in the way:
+// turning a straight-line distance into "~19 min walk" or "30 min–1h by road (est.)" for a
+// hospital on another island invents a road or footpath that does not exist. This is the one
+// check that decides whether driveLabel's estimate should be trusted at all — are the fix and
+// the target on the same landmass? — before handing back a time.
+//
+// `fix`/`target` are both `{lat, lng}` (target may carry `.cc` too, forwarded to driveLabel).
+// islandsLoaded()/sameLand() (js/data/islands.js) answer `null` — "not known yet" — until a
+// screen has kicked off loadIslands() in the background, and every caller here falls back to
+// the plain estimate on anything other than a confirmed `false`, so a screen that never loads
+// the island outlines just keeps today's behaviour rather than showing something wrong.
+export function careLabel(fix, target, km) {
+  if (km == null) return null;
+  if (fix && fix.lat != null && target && target.lat != null && islandsLoaded()) {
+    const same = sameLand(fix, { lat: target.lat, lng: target.lng });
+    if (same === false) return '🚤 across the water — no road link';
+  }
+  return driveLabel(km, target ? target.cc : null);
 }
 
 // Universal straight-line distance (km) between two {lat,lng} points. Re-exported from

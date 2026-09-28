@@ -40,6 +40,7 @@ import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
 import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
+import { loadIslands, islandsLoaded, sameLand } from './data/islands.js';
 import { scriptLang, showBigPhrase } from './phrase-ui.js';
 // Places step 4 (task #205): placesScreen itself, plus placeCard/travelerChips/saveSheet/
 // tripVisitSheet, which this file's own not-yet-extracted screens (signature sights strip,
@@ -202,6 +203,7 @@ const SCREEN_LOADERS = {
   family: (b) => import('./screens/family.js' + b),
   sharejourney: (b) => import('./screens/share-journey.js' + b),
   medical: (b) => import('./screens/medical.js' + b),
+  firstaid: (b) => import('./screens/firstaid.js' + b),
   vault: (b) => import('./screens/vault.js' + b),
   export: (b) => import('./screens/export.js' + b),
   giveback: (b) => import('./screens/giveback.js' + b),
@@ -246,6 +248,8 @@ const ROUTE_SCREENS = {
   country: ['family', 'explore'],
   sharejourney: ['sharejourney'], jr: ['sharejourney'],
   hospital: ['medical'],
+  // Own line — see check-lazy-data.py's single-key-per-line note above.
+  firstaid: ['firstaid'],
   vault: ['vault'],
   export: ['export'],
   donate: ['giveback'],
@@ -799,7 +803,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.596.0';
+export const APP_VERSION = 'mk-v0.597.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -6093,10 +6097,10 @@ const WORSHIP = [
 const FIRST_AID = [
   { t: '🐍 Snake bite', do: [
       'Move out of the snake’s reach; keep the person calm and as still as possible — panic and movement speed venom through the body.',
-      'Keep the bitten limb still and roughly at heart level; splint it if you can.',
+      'Immobilise the bitten limb with a splint or sling.',
       'Remove rings, watches and tight clothing before swelling starts.',
       'Note the snake’s colour, size and shape, or photograph it from a safe distance — it helps doctors choose the antivenom.',
-      'Get to a hospital immediately and call the emergency number. Hospitals across the region stock antivenom; reaching one fast is what saves lives.',
+      'Get to a hospital that can give antivenom as fast as possible, and call the emergency number on the way.',
     ], dont: [
       'Do not cut the wound or try to suck out the venom.',
       'Do not apply a tight tourniquet, ice, alcohol or an electric shock.',
@@ -6116,7 +6120,7 @@ const FIRST_AID = [
   { t: '🪼 Jellyfish & marine stings', do: [
       'Get out of the water. Douse the sting with vinegar for at least 30 seconds — many beaches keep a bottle for this.',
       'Lift off any tentacles with the edge of a card or a gloved hand.',
-      'For a stonefish, stingray or sea-urchin wound, soak the area in water as hot as can be comfortably tolerated.',
+      'For a stonefish or stingray wound, soak the area in water as hot as can be comfortably tolerated (around 45°C). A sea-urchin puncture is different: wash it with soap and water instead — do not use the hot-water method on that one.',
       'Treat any difficulty breathing, chest pain or collapse as life-threatening, start CPR if needed, and call for help — box jellyfish stings can kill within minutes.',
     ], dont: [
       'Do not rub the area or rinse with fresh water — it can fire more stinging cells.',
@@ -6125,7 +6129,7 @@ const FIRST_AID = [
   { t: '🐝 Severe allergic reaction (anaphylaxis)', do: [
       'Signs: swelling of the lips, tongue or throat, trouble breathing, widespread hives, or dizziness or collapse after a sting, food or medicine.',
       'If an adrenaline auto-injector (EpiPen) is available, use it at once into the outer thigh, then call emergency services.',
-      'Lay the person flat and raise their legs; if breathing is hard, let them sit up. A second dose may be needed after 5–15 minutes.',
+      'Lay the person flat and raise their legs; if breathing is hard, let them sit up. A second dose may be needed after about 5 minutes if there is no improvement.',
       'Get to a hospital even if they improve — symptoms can return hours later.',
     ], dont: [
       'Do not make them stand up or walk around.',
@@ -6473,9 +6477,17 @@ function sosScreen(cc) {
     hospSlot.replaceChildren();
     if (!list.length) return;
     hospSlot.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    // A "N km away" figure is straight-line, and on an island that can quietly mean "across
+    // open water, no road under it at all" — the same fact js/screens/medical.js's driveLabel
+    // fix exists for. This screen never showed a walk/drive time to begin with, so there is no
+    // wrong estimate to replace; a small badge is enough to stop the distance reading as "an
+    // easy trip" when it is actually a boat crossing.
+    const acrossWater = (x) => fix && fix.lat != null && x.lat != null && islandsLoaded()
+      && sameLand(fix, { lat: x.lat, lng: x.lng }) === false;
     list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
       h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, x.city || x.en || ''),
+      acrossWater(x) ? h('div', { class: 'tiny', style: 'margin: 0 0 var(--sp-1)' }, '🚤 Across the water — a boat or ferry, not a road, connects it.') : null,
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
       h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
     ])));
@@ -6483,12 +6495,35 @@ function sosScreen(cc) {
     retranslate(hospSlot);
   };
   paintSosHosp();
+  {
+    const at = location.hash;
+    if (!islandsLoaded()) loadIslands().then(() => { if (location.hash === at) paintSosHosp(); }).catch(() => { /* distances stand as before */ });
+  }
   if (!isHospitalsLoaded(getActiveCountry())) {
     const at = location.hash;
     loadHospitals(getActiveCountry()).then(() => { if (location.hash === at) paintSosHosp(); }).catch(() => { /* curated view stands */ });
   }
 
-  // (3) What to do while getting there — bites/stings first aid, then life-saving basics.
+  // (3) What to do while getting there — the full survival guide first, then the quick
+  // bites/stings cards below for the four things travellers ask about most.
+  const guide = h('div', { class: 'card sos-card' }, [h('div', { class: 'row-between' }, [
+    h('h2', {}, '📖 Survival guide'),
+    infoTip('CPR and choking for every age, allergic reactions, bleeding, heart attack and stroke, a full babies-and-children section, snakes and marine life, and how to actually get help here. Checked against named medical authorities — see its own sources.'),
+  ])]);
+  guide.append(h('button', { class: 'btn block', onclick: () => go('#firstaid') }, '📖 Open the full survival guide'));
+  {
+    // The same traveller-profile signal used everywhere else in the app (see the repeated
+    // "prefs.withBaby || prefs.kids || prefs.party === 'family'" checks elsewhere in this
+    // file) picks which quick button, if any, is worth a tap here — the guide itself hides
+    // nothing regardless, this only saves the traveller a step to what fits their trip.
+    const p = store.profile.prefs;
+    const quick = p.withBaby ? { id: 'baby', label: '👶 For your baby' }
+      : (p.kids || p.party === 'family') ? { id: 'kids', label: '👪 For your children' }
+      : (p.party === 'solo') ? { id: 'solo', label: '🧍 Solo emergency guide' }
+      : null;
+    if (quick) guide.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(`#firstaid-${quick.id}`) }, quick.label));
+  }
+
   const danger = h('div', { class: 'card allergy-card' }, [h('div', { class: 'row-between' }, [
     h('h2', {}, '🐍 Bites, stings & dangerous wildlife'),
     infoTip('What to do first — then get to a hospital. General first aid, not a substitute for a doctor.'),
@@ -6612,6 +6647,7 @@ function sosScreen(cc) {
   // Ordered append — the true order of operations in an emergency.
   wrap.append(nums);
   wrap.append(hosp);
+  wrap.append(guide);
   wrap.append(danger);
   wrap.append(life);
   wrap.append(sit);
@@ -6950,7 +6986,7 @@ export function render() {
   const NEEDS_COUNTRY_DATA = new Set([
     'country', 'region', 'nearby', 'places', 'place', 'prices', 'transport',
     'calendar', 'events', 'event', 'today', 'food', 'dish', 'board', 'streetfood',
-    'sos', 'hospital', 'foryou', 'info',
+    'sos', 'hospital', 'firstaid', 'foryou', 'info',
   ]);
   // Read across every country at once: universal search; the full multi-country map
   // (NOT the small embedded per-country Places map, which is caller-scoped via a
@@ -7093,6 +7129,7 @@ export function render() {
       case 'search': return screenMod('search').searchScreen();
       case 'sos': return sosScreen(arg);
       case 'hospital': return screenMod('medical').hospitalScreen(arg);
+      case 'firstaid': return screenMod('firstaid').firstaidScreen(arg);
       case 'scams': return screenMod('countryinfo').scamsScreen(arg);
       case 'danger': return dangerScreen();
       case 'worship': return worshipScreen(arg);

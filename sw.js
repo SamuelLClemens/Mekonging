@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.596.0';
+const CACHE_VERSION = 'mk-v0.597.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -122,6 +122,14 @@ const PRECACHE = [
   'js/data/emergency.js',
   'js/data/hospitals.curated.js',
   'js/data/medical.js',
+  // The full survival guide and the island-water-crossing awareness it and the hospital
+  // screen both depend on — same "must work with no signal" bar as everything else on this
+  // list, and for the same reason: the one screen a traveller opens when things have already
+  // gone wrong is the one that can least afford a network request that fails silently.
+  'js/screens/firstaid.js',
+  'js/data/firstaid.js',
+  'js/data/islands.js',
+  'js/data/island-care.js',
   'js/screens/visitors.js',
   'js/screens/share-journey.js',
   'js/journey-share.js',
@@ -143,6 +151,9 @@ const PRECACHE = [
   'js/data/hospitals.vi.js',
   'js/data/hospitals.kh.js',
   'js/data/hospitals.la.js',
+  // Island outlines for all four countries (~80 KB) — the water-crossing check behind both
+  // the hospital screen's distance labels and the SOS list's "across the water" badge.
+  'js/data/islands.geo.js',
   // Hiking trails, bike paths and the viewpoints/waterfalls they lead to (~1.1 MB for all
   // four countries). Warmed on idle like everything else in this list, never at install.
   // Precached rather than left to the network for the same reason the bus stops are: a trail
@@ -345,7 +356,7 @@ const MANIFEST = {
   'css/style.css': '23ad1121',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': 'aff8f935',
+  'index.html': '0f84416f',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'e25deee5',
@@ -377,6 +388,7 @@ const MANIFEST = {
   'js/data/events.vi.js': '293c3aa2',
   'js/data/family.js': '4af22afc',
   'js/data/ferries.js': '40f39990',
+  'js/data/firstaid.js': '3ea25375',
   'js/data/food.kh.ext.js': 'a65ea542',
   'js/data/food.kh.js': '721060ad',
   'js/data/food.la.ext.js': 'ef96a320',
@@ -395,16 +407,19 @@ const MANIFEST = {
   'js/data/history.cities.th.js': 'b62c45b7',
   'js/data/history.cities.vi.js': '39b7d44c',
   'js/data/history.js': '0f9c6617',
-  'js/data/hospitals.curated.js': '77f3e29a',
+  'js/data/hospitals.curated.js': 'cac03168',
   'js/data/hospitals.js': '1c028b43',
   'js/data/hospitals.kh.js': 'bc42457e',
   'js/data/hospitals.la.js': 'dd68732d',
-  'js/data/hospitals.th.js': '0ea77fbe',
+  'js/data/hospitals.th.js': 'be16af8e',
   'js/data/hospitals.vi.js': '6bc2db75',
   'js/data/info.kh.js': '9acea0c7',
   'js/data/info.la.js': '36e52c2f',
   'js/data/info.th.js': '2f7c00ff',
   'js/data/info.vi.js': '6ef35b16',
+  'js/data/island-care.js': '1535d890',
+  'js/data/islands.geo.js': '87d3c91c',
+  'js/data/islands.js': 'c48089b7',
   'js/data/itineraries.js': '8692b355',
   'js/data/language-guides.js': '0701a610',
   'js/data/local.kh.js': '96629845',
@@ -505,7 +520,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '23d25bbe',
+  'js/main.js': '5c93b759',
   'js/map.js': '893a2aa0',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -515,7 +530,7 @@ const MANIFEST = {
   'js/phrase-ui.js': '7f34630a',
   'js/place-ui.js': 'ae2aecff',
   'js/reminders.js': 'f18165dd',
-  'js/render-utils.js': '8f814c0d',
+  'js/render-utils.js': '3341eb9f',
   'js/screens/arrival-info.js': 'a6846fa4',
   'js/screens/bargain.js': '0e891fc2',
   'js/screens/board.js': '32ddfbc9',
@@ -528,13 +543,14 @@ const MANIFEST = {
   'js/screens/explore.js': 'c609903d',
   'js/screens/export.js': '1429f50c',
   'js/screens/family.js': '97c566e5',
+  'js/screens/firstaid.js': '1dc338e2',
   'js/screens/food.js': '4030bf02',
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': 'ec261fba',
   'js/screens/home.js': '972c4ad9',
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '43c703b1',
-  'js/screens/medical.js': '4277ae91',
+  'js/screens/medical.js': '9ccac141',
   'js/screens/nearby.js': 'c25da527',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': 'fd3a61d2',

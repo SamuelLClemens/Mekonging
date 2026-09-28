@@ -72,6 +72,30 @@
    "lng": 98.5012,
    "assigned": "TH",
    "actual": "MM"
+  },
+  {
+   "name": "Bangkok hospital",
+   "lat": 12.0997,
+   "lng": 102.2759,
+   "assigned": "TH",
+   "actual": "TH",
+   "reason": "Misplaced duplicate of Bangkok Hospital Trat / the Koh Chang facility area; not a real, independently-located facility at this point."
+  },
+  {
+   "name": "International Clinic",
+   "lat": 12.093,
+   "lng": 102.2777,
+   "assigned": "TH",
+   "actual": "TH",
+   "reason": "Same facility as the curated Koh Chang International Hospital entry in hospitals.curated.js (Bangkok Hospital group, White Sand Beach) — kept curated instead, with its tier, tags and note."
+  },
+  {
+   "name": "โรงพยาบาลเกาะกูด",
+   "lat": 11.5946,
+   "lng": 102.5641,
+   "assigned": "TH",
+   "actual": "TH",
+   "reason": "Wrong location for Koh Kood Hospital (near Ban Klong Chao) — research triangulation favours the OTHER OSM point for this hospital, \"Koh Kood Hospital\" at 11.6579/102.5399 (Ao Tapao/Hin Dam, Ban Hat Taphao), which matches two independent textual descriptions and is now also the curated entry."
   }
  ]
 }
