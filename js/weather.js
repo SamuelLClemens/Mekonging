@@ -9,6 +9,12 @@
 // best-available nowcast, which the API does not split by model at all (confirmed against
 // the live endpoint: `current=` comes back identical and unsuffixed whether `models=` is
 // omitted or names four), so there is nothing there to average.
+//
+// Every day/hour record also carries `bySource`, each model's own unaveraged numbers, for a
+// traveller who would rather trust one named forecast centre than the blend — sourceDay() and
+// sourceHour() below switch a record to read from it (or fall back to the average where that
+// model has no data yet). The Weather screen and the map's weather-pin popup both expose this
+// as a picker (wxSourceSeg, js/weather-ui.js) so it is a visible choice, not a hidden setting.
 
 import { haversineKm, fetchTimeout } from './util.js';
 
@@ -342,6 +348,66 @@ function firstAt(O, field, i) {
   for (const m of WX_MODELS) { const arr = O[`${field}_${m}`]; if (arr && arr[i] != null) return arr[i]; }
   return null;
 }
+// One model's own (unaveraged) value, for the traveller who would rather trust a single
+// forecast centre than the ensemble — see bySource below and sourceDay/sourceHour further down.
+function modelAt(O, field, i, model) {
+  const arr = O[`${field}_${model}`];
+  const v = arr ? arr[i] : null;
+  return v == null ? null : v;
+}
+// Every field a day/hour record carries, keyed by model id, for callers that want one named
+// source instead of the average — see sourceDay/sourceHour. Built alongside the ensemble in the
+// same pass rather than re-fetched, since the raw per-model columns are already in `O`. Sunrise
+// and daylight are deliberately left out: those come from firstAt, not ensembleAt, because every
+// model computes them within seconds of the others, so there is nothing to pick between.
+function bySourceDaily(D, i) {
+  const out = {};
+  WX_MODELS.forEach((m) => {
+    out[m] = {
+      code: modelAt(D, 'weather_code', i, m),
+      tmax: modelAt(D, 'temperature_2m_max', i, m), tmin: modelAt(D, 'temperature_2m_min', i, m),
+      appMax: modelAt(D, 'apparent_temperature_max', i, m), appMin: modelAt(D, 'apparent_temperature_min', i, m),
+      rainProb: modelAt(D, 'precipitation_probability_max', i, m), precip: modelAt(D, 'precipitation_sum', i, m),
+      snow: modelAt(D, 'snowfall_sum', i, m),
+      uv: modelAt(D, 'uv_index_max', i, m), windMax: modelAt(D, 'wind_speed_10m_max', i, m),
+      gustMax: modelAt(D, 'wind_gusts_10m_max', i, m), windDir: modelAt(D, 'wind_direction_10m_dominant', i, m),
+    };
+  });
+  return out;
+}
+function bySourceHourly(H, i) {
+  const out = {};
+  WX_MODELS.forEach((m) => {
+    out[m] = {
+      code: modelAt(H, 'weather_code', i, m), temp: modelAt(H, 'temperature_2m', i, m),
+      pp: modelAt(H, 'precipitation_probability', i, m), precip: modelAt(H, 'precipitation', i, m), snow: modelAt(H, 'snowfall', i, m),
+      wind: modelAt(H, 'wind_speed_10m', i, m), hum: modelAt(H, 'relative_humidity_2m', i, m), app: modelAt(H, 'apparent_temperature', i, m),
+      uv: modelAt(H, 'uv_index', i, m),
+      wdir: modelAt(H, 'wind_direction_10m', i, m), gust: modelAt(H, 'wind_gusts_10m', i, m),
+      cloud: modelAt(H, 'cloud_cover', i, m), vis: modelAt(H, 'visibility', i, m),
+    };
+  });
+  return out;
+}
+// A day/hour record filtered to one named model instead of the ensemble average — `source` is
+// 'average' (returns the record unchanged) or one of WX_MODELS. A model that has not reached
+// this far out yet (ICON/UKMO's 7-day free-tier limit, vs. ECMWF/GFS's 16) has no code for that
+// day/hour; rather than hand back a blank row, this falls back to the already-computed ensemble
+// fields with `.fallback` set, so a picked source never loses data, it just says whose number is
+// actually showing. Sunrise/sunset/daylight are left as-is regardless of source (see
+// bySourceDaily above).
+export function sourceDay(day, source) {
+  if (!day || !source || source === 'average') return day;
+  const m = day.bySource && day.bySource[source];
+  if (!m || m.code == null) return { ...day, source, fallback: true };
+  return { ...day, ...m, source, fallback: false };
+}
+export function sourceHour(hour, source) {
+  if (!hour || !source || source === 'average') return hour;
+  const m = hour.bySource && hour.bySource[source];
+  if (!m || m.code == null) return { ...hour, source, fallback: true };
+  return { ...hour, ...m, source, fallback: false };
+}
 
 // Fetch + cache. Returns the fresh record, or the cached one when offline/blocked.
 // Always fetched in metric (°C, km/h, mm); the UI converts for display so the unit
@@ -393,6 +459,7 @@ async function refreshWeather(spot) {
             sunrise: firstAt(D, 'sunrise', i), sunset: firstAt(D, 'sunset', i),
             gustMax: ensembleAt(D, 'wind_gusts_10m_max', i).v, windDir: ensembleAt(D, 'wind_direction_10m_dominant', i, 'circular').v,
             daylight: ensembleAt(D, 'daylight_duration', i).v,
+            bySource: bySourceDaily(D, i),
           };
         }),
         hourly: H.time.map((t, i) => {
@@ -404,6 +471,7 @@ async function refreshWeather(spot) {
             uv: ensembleAt(H, 'uv_index', i).v,
             wdir: ensembleAt(H, 'wind_direction_10m', i, 'circular').v, gust: ensembleAt(H, 'wind_gusts_10m', i).v,
             cloud: ensembleAt(H, 'cloud_cover', i).v, vis: ensembleAt(H, 'visibility', i).v,
+            bySource: bySourceHourly(H, i),
           };
         }),
       };

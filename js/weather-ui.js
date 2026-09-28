@@ -10,7 +10,7 @@
 // plus the WX_METRICS table, and stop — weatherScreen is not reachable from any of them.
 
 import { esc, h, compass } from './util.js';
-import { wmo } from './weather.js';
+import { wmo, WX_MODELS, WX_MODEL_LABELS } from './weather.js';
 import { fmtTemp, fmtWind, fmtPrecip, fmtSnow, fmtDist } from './render-utils.js';
 import { fmtClock } from './main.js';
 
@@ -37,6 +37,40 @@ let wxMetric = 'temp';
 // Only that screen opts in (opts.keepState), so Home's copy of this card keeps its own defaults.
 let wxPinned = null;      // { city, t } — the hour last pinned on the ring
 let wxCalOpen = false;
+
+// Which forecast source the traveller has chosen to trust: 'average' (the default, every model
+// blended — see js/weather.js) or one of WX_MODELS. Module-level for the same reason wxMetric
+// above is — a module's `let` cannot be assigned across an import, so getWxSource/setWxSource
+// are the only way in or out — and shared between the two places a forecast is shown: the
+// Weather screen's 10-day card and the real map's weather-pin popup (js/map.js). Picking a
+// source in either one carries over to the other.
+let wxSource = 'average';
+export function getWxSource() { return wxSource; }
+export function setWxSource(id) { wxSource = id; }
+
+const WX_SOURCE_SHORT = { average: 'Avg', ecmwf_ifs025: 'ECMWF', gfs_seamless: 'GFS', icon_seamless: 'ICON', ukmo_seamless: 'UKMO' };
+// One-of-N segmented control for picking a forecast source — same control as the ring's
+// .wx-metric-seg below (wx-seg/aria-pressed), a different axis (which source, not which
+// measurement). `onPick` is told the new id so each caller can repaint its own view of the
+// forecast; this function only owns the control itself, not what changes because of it.
+export function wxSourceSeg(current, onPick) {
+  const ids = ['average', ...WX_MODELS];
+  const segs = ids.map((id) => {
+    const full = id === 'average' ? 'the multi-model average' : WX_MODEL_LABELS[id];
+    const b = h('button', {
+      type: 'button', class: 'wx-seg', 'data-src': id,
+      'aria-pressed': id === current ? 'true' : 'false',
+      'aria-label': `Show ${full}`,
+      onclick: () => {
+        setWxSource(id);
+        segs.forEach((x) => x.setAttribute('aria-pressed', x.dataset.src === id ? 'true' : 'false'));
+        onPick(id);
+      },
+    }, h('span', { class: 'wx-seg-lbl' }, WX_SOURCE_SHORT[id]));
+    return b;
+  });
+  return h('div', { class: 'wx-source-seg', role: 'group', 'aria-label': 'Which forecast source to trust' }, segs);
+}
 
 export function wxUvColor(v) {
   if (v <= 2) return '#4CAF50';
