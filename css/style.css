@@ -2798,6 +2798,13 @@ html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
 .wx-sea-day-v { font-weight: 700; }
 .wx-sea-foot { margin: var(--sp-2) 0 0; }
 
+/* Compact 5-day strip inside the real map's weather-pin popup (js/map.js weatherStripNode). */
+.mk-wx-strip { display: flex; gap: 6px; margin-top: 6px; }
+.mk-wx-strip-day { display: flex; flex-direction: column; align-items: center; flex: 1 1 0; min-width: 0; font-size: 11px; text-align: center; }
+.mk-wx-strip-d { font-weight: 700; color: var(--ink-soft); }
+.mk-wx-strip-e { font-size: 15px; line-height: 1.2; }
+.mk-wx-strip-t { font-weight: 600; white-space: nowrap; }
+
 /* A printed unit that switches when tapped (°C/°F, km/h/mph, mm/in, m/ft, km/mi, hPa/inHg). The
    dotted underline is the whole affordance: it costs no space, which was the point. */
 .u-tap { cursor: pointer; text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; border-radius: 3px; }

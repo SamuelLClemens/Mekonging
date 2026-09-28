@@ -1,7 +1,14 @@
-// Weather + 7-day forecast via Open-Meteo (free, no API key, CORS-enabled).
+// Weather + 10-day forecast via Open-Meteo (free, no API key, CORS-enabled).
 // Offline-first: the last successful fetch per city is cached in localStorage with
 // a timestamp (shown as "last updated"); a refresh only happens when online. When
 // offline the cached reading is returned so the screen still works.
+//
+// The daily and hourly forecast are each averaged across several independent national
+// forecast models (see WX_MODELS below) rather than read from a single source — see the
+// comment above ensembleAt() for how and why. Current conditions are Open-Meteo's own
+// best-available nowcast, which the API does not split by model at all (confirmed against
+// the live endpoint: `current=` comes back identical and unsuffixed whether `models=` is
+// omitted or names four), so there is nothing there to average.
 
 import { haversineKm, fetchTimeout } from './util.js';
 
@@ -284,6 +291,58 @@ async function refreshMany(spots) {
   } catch { return getCachedMany(); }
 }
 
+// --- Multi-model ensemble averaging (daily + hourly forecast only — see the header note) ---
+// Four independently-run national/international forecast centres, not four flavours of the
+// same underlying model: ECMWF (Europe), NOAA's GFS (US), DWD's ICON (Germany), and the UK
+// Met Office. Requesting `models=` on a `daily=`/`hourly=` field makes Open-Meteo return one
+// column PER MODEL instead of one blended column — confirmed against the live endpoint,
+// e.g. `temperature_2m_max` becomes `temperature_2m_max_ecmwf_ifs025`,
+// `temperature_2m_max_gfs_seamless`, and so on — so averaging those columns ourselves is what
+// actually delivers "more than one source," rather than trusting whichever single model
+// Open-Meteo's own auto-selected "best_match" would have picked.
+//
+// Not every model reaches every day this app shows: ICON and UKMO's free tier stops at 7 days
+// while ECMWF and GFS reach 16 (measured directly — by day 8 only two of the four still have
+// values). A day/hour's average silently thins to however many models actually answered for
+// it rather than erroring, and that count rides along as `.models` so the screen can say so.
+export const WX_MODELS = ['ecmwf_ifs025', 'gfs_seamless', 'icon_seamless', 'ukmo_seamless'];
+export const WX_MODEL_LABELS = {
+  ecmwf_ifs025: 'ECMWF', gfs_seamless: 'NOAA GFS', icon_seamless: 'DWD ICON', ukmo_seamless: 'UK Met Office',
+};
+const WX_MODELS_PARAM = WX_MODELS.join(',');
+
+// One value from a model-suffixed hourly/daily block (`O`), reduced across whichever models
+// actually answered at index `i`. `kind` picks how: default is a plain mean (temperature,
+// rain, wind speed, ...); 'mode' is for a WMO weather code, a category rather than a
+// quantity — the plurality reading, ties going to the first model with that value (ECMWF,
+// first in WX_MODELS); 'circular' is for a compass bearing, where a naive mean of 350° and
+// 10° would wrongly come out as 180° instead of 0°.
+function ensembleAt(O, field, i, kind) {
+  const vals = [];
+  for (const m of WX_MODELS) { const arr = O[`${field}_${m}`]; const v = arr ? arr[i] : null; if (v != null) vals.push(v); }
+  if (!vals.length) return { v: null, n: 0 };
+  if (kind === 'mode') {
+    const counts = new Map();
+    vals.forEach((v) => counts.set(v, (counts.get(v) || 0) + 1));
+    let best = vals[0]; let bestN = 0;
+    for (const v of vals) { const n = counts.get(v); if (n > bestN) { bestN = n; best = v; } }
+    return { v: best, n: vals.length };
+  }
+  if (kind === 'circular') {
+    let sx = 0; let sy = 0;
+    vals.forEach((deg) => { const r = (deg * Math.PI) / 180; sx += Math.cos(r); sy += Math.sin(r); });
+    return { v: (Math.atan2(sy, sx) * 180 / Math.PI + 360) % 360, n: vals.length };
+  }
+  return { v: vals.reduce((a, b) => a + b, 0) / vals.length, n: vals.length };
+}
+// Sunrise/sunset off a model-suffixed block: an astronomical fact every model computes within
+// seconds of the others, so the first model to answer is taken rather than "averaging"
+// timestamps.
+function firstAt(O, field, i) {
+  for (const m of WX_MODELS) { const arr = O[`${field}_${m}`]; if (arr && arr[i] != null) return arr[i]; }
+  return null;
+}
+
 // Fetch + cache. Returns the fresh record, or the cached one when offline/blocked.
 // Always fetched in metric (°C, km/h, mm); the UI converts for display so the unit
 // toggle never needs a re-fetch. Hourly data lets the UI break each day into
@@ -302,7 +361,7 @@ async function refreshWeather(spot) {
     + '&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,'
     + 'precipitation_probability_max,precipitation_sum,snowfall_sum,uv_index_max,wind_speed_10m_max,sunrise,sunset,'
     + 'wind_gusts_10m_max,wind_direction_10m_dominant,daylight_duration'
-    + '&timezone=auto&forecast_days=16';
+    + `&timezone=auto&forecast_days=16&models=${WX_MODELS_PARAM}`;
   try {
     const res = await fetchTimeout(url);
     const d = await res.json();
@@ -310,8 +369,6 @@ async function refreshWeather(spot) {
       const H = d.hourly;
       const D = d.daily;
       const C = d.current;
-      // A column the response left out reads as null rather than throwing on [i].
-      const col = (o, k, i) => (o[k] ? o[k][i] : null);
       const rec = {
         city: spot.city, country: spot.country, fetchedAt: Date.now(),
         // Every time below is the city's own wall clock (timezone=auto). The offset is what lets
@@ -324,25 +381,31 @@ async function refreshWeather(spot) {
           windDir: C.wind_direction_10m, gust: C.wind_gusts_10m, cloud: C.cloud_cover,
           pressure: C.pressure_msl, vis: C.visibility, dew: C.dew_point_2m,
         },
-        daily: D.time.map((t, i) => ({
-          date: t, code: D.weather_code[i],
-          tmax: D.temperature_2m_max[i], tmin: D.temperature_2m_min[i],
-          appMax: D.apparent_temperature_max[i], appMin: D.apparent_temperature_min[i],
-          rainProb: D.precipitation_probability_max[i], precip: D.precipitation_sum[i],
-          snow: D.snowfall_sum[i],
-          uv: D.uv_index_max[i], windMax: D.wind_speed_10m_max[i],
-          sunrise: D.sunrise[i], sunset: D.sunset[i],
-          gustMax: col(D, 'wind_gusts_10m_max', i), windDir: col(D, 'wind_direction_10m_dominant', i),
-          daylight: col(D, 'daylight_duration', i),
-        })),
-        hourly: H.time.map((t, i) => ({
-          t, temp: H.temperature_2m[i], code: H.weather_code[i],
-          pp: H.precipitation_probability[i], precip: H.precipitation[i], snow: H.snowfall[i],
-          wind: H.wind_speed_10m[i], hum: H.relative_humidity_2m[i], app: H.apparent_temperature[i],
-          uv: col(H, 'uv_index', i),
-          wdir: col(H, 'wind_direction_10m', i), gust: col(H, 'wind_gusts_10m', i),
-          cloud: col(H, 'cloud_cover', i), vis: col(H, 'visibility', i),
-        })),
+        daily: D.time.map((t, i) => {
+          const code = ensembleAt(D, 'weather_code', i, 'mode');
+          return {
+            date: t, code: code.v, models: code.n,
+            tmax: ensembleAt(D, 'temperature_2m_max', i).v, tmin: ensembleAt(D, 'temperature_2m_min', i).v,
+            appMax: ensembleAt(D, 'apparent_temperature_max', i).v, appMin: ensembleAt(D, 'apparent_temperature_min', i).v,
+            rainProb: ensembleAt(D, 'precipitation_probability_max', i).v, precip: ensembleAt(D, 'precipitation_sum', i).v,
+            snow: ensembleAt(D, 'snowfall_sum', i).v,
+            uv: ensembleAt(D, 'uv_index_max', i).v, windMax: ensembleAt(D, 'wind_speed_10m_max', i).v,
+            sunrise: firstAt(D, 'sunrise', i), sunset: firstAt(D, 'sunset', i),
+            gustMax: ensembleAt(D, 'wind_gusts_10m_max', i).v, windDir: ensembleAt(D, 'wind_direction_10m_dominant', i, 'circular').v,
+            daylight: ensembleAt(D, 'daylight_duration', i).v,
+          };
+        }),
+        hourly: H.time.map((t, i) => {
+          const code = ensembleAt(H, 'weather_code', i, 'mode');
+          return {
+            t, temp: ensembleAt(H, 'temperature_2m', i).v, code: code.v, models: code.n,
+            pp: ensembleAt(H, 'precipitation_probability', i).v, precip: ensembleAt(H, 'precipitation', i).v, snow: ensembleAt(H, 'snowfall', i).v,
+            wind: ensembleAt(H, 'wind_speed_10m', i).v, hum: ensembleAt(H, 'relative_humidity_2m', i).v, app: ensembleAt(H, 'apparent_temperature', i).v,
+            uv: ensembleAt(H, 'uv_index', i).v,
+            wdir: ensembleAt(H, 'wind_direction_10m', i, 'circular').v, gust: ensembleAt(H, 'wind_gusts_10m', i).v,
+            cloud: ensembleAt(H, 'cloud_cover', i).v, vis: ensembleAt(H, 'visibility', i).v,
+          };
+        }),
       };
       try { localStorage.setItem(PREFIX + key, JSON.stringify(rec)); } catch { /* storage full */ }
       return rec;

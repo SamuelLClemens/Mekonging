@@ -12,7 +12,10 @@ import { allPlaces } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
 import { BORDER_LINES } from './data/borders_lines.js';
 import { POOLS } from './data/pools.js';
-import { allHubSpots, getCachedMany, maybeRefreshMany, wmo, spotKey } from './weather.js';
+import {
+  allHubSpots, getCachedMany, maybeRefreshMany, maybeRefreshWeather, getCachedWeather, wmo, spotKey,
+} from './weather.js';
+import { dateLocale } from './i18n.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -1104,10 +1107,13 @@ export async function initMap(containerEl, opts = {}) {
   // Weather layer: one dot per curated hub (WEATHER_SPOTS' `hub: true` entries — see
   // weather.js), coloured by current temperature. Reuses maybeRefreshMany, the same cheap
   // bulk fetch that already powers the Weather screen's own SVG dots (one request for every
-  // hub's current conditions, no per-city calls) — this layer adds no new API cost beyond
-  // what the app already makes, and refreshMany's cache now merges across countries (see
-  // weather.js) instead of overwriting, so a region-wide read and Weather's own per-country
-  // read stay in sync rather than clobbering each other.
+  // hub's current conditions, no per-city calls) — painting the dots themselves adds no new
+  // API cost beyond what the app already makes, and refreshMany's cache now merges across
+  // countries (see weather.js) instead of overwriting, so a region-wide read and Weather's own
+  // per-country read stay in sync rather than clobbering each other. Tapping a dot is a
+  // separate, small cost: its popup lazily fetches that ONE hub's full (ensemble-averaged)
+  // forecast for a 5-day strip, the same per-city call the Weather screen itself makes — see
+  // weatherStripNode below.
   function weatherFC() {
     const cached = getCachedMany();
     const data = (cached && cached.data) || {};
@@ -1119,10 +1125,29 @@ export async function initMap(containerEl, opts = {}) {
         return {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
-          properties: { city: s.city, temp: r.temp, label, emoji },
+          properties: { city: s.city, country: s.country, temp: r.temp, label, emoji },
         };
       });
     return { type: 'FeatureCollection', features: feats };
+  }
+  // A compact multi-day strip for the popup below — lazily fetched only for the hub actually
+  // tapped (maybeRefreshWeather is the same single-city call the Weather screen makes; tapping
+  // a pin here costs one small request, not a forecast for all 46 hubs). Capped at 5 days: a
+  // map popup has real width limits, and the full 10-day breakdown, averaged the same way, is
+  // one tap into the Weather screen away for whichever city this is.
+  function weatherStripNode(rec) {
+    const days = ((rec && rec.daily) || []).slice(0, 5);
+    if (!days.length) return null;
+    return h('div', { class: 'mk-wx-strip' }, days.map((d) => {
+      const [, emo] = wmo(d.code);
+      let dow = d.date;
+      try { dow = new Date(`${d.date}T00:00:00`).toLocaleDateString(dateLocale(), { weekday: 'short' }); } catch { /* keep raw date */ }
+      return h('div', { class: 'mk-wx-strip-day' }, [
+        h('div', { class: 'mk-wx-strip-d' }, dow),
+        h('div', { class: 'mk-wx-strip-e' }, emo),
+        h('div', { class: 'mk-wx-strip-t' }, `${Math.round(d.tmax)}°/${Math.round(d.tmin)}°`),
+      ]);
+    }));
   }
   function addWeatherLayers() {
     if (map.getSource('mk-weather')) return;
@@ -1145,14 +1170,26 @@ export async function initMap(containerEl, opts = {}) {
       const f = e.features && e.features[0];
       if (!f) return;
       const p = f.properties;
+      const spot = { city: p.city, country: p.country, lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] };
       const body = h('div', {}, [
         h('strong', {}, `${p.emoji} ${p.city}`),
         h('div', { class: 'muted', style: 'font-size:12px' }, `${Math.round(p.temp)}°C · ${p.label}`),
       ]);
-      new maplibregl.Popup({ closeButton: true, maxWidth: '220px' })
+      const stripSlot = h('div', {});
+      body.append(stripSlot);
+      const paintStrip = (rec) => {
+        const node = weatherStripNode(rec);
+        stripSlot.innerHTML = '';
+        if (node) stripSlot.append(node);
+      };
+      paintStrip(getCachedWeather(spotKey(spot)));
+      const popup = new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
         .setLngLat(f.geometry.coordinates)
         .setDOMContent(body)
         .addTo(map);
+      // Same cache the Weather screen reads/writes — a hub already opened there this session
+      // paints its strip instantly from cache; this only fetches when that cache is stale.
+      maybeRefreshWeather(spot).then((r) => { if (r && popup.isOpen()) paintStrip(r); });
     });
   }
   function setWeather(on) {
