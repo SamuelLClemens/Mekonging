@@ -334,6 +334,8 @@ export function placesScreen(arg) {
       apply: (v) => { if (placesCtrl) placesCtrl.setBike(v); } },
     { key: 'scenic', label: '👁 Viewpoints & waterfalls', isOn: () => mapLayersPrefsP.scenic === true,
       apply: (v) => { if (placesCtrl) placesCtrl.setScenic(v); } },
+    { key: 'weather', label: '🌦️ Weather', isOn: () => mapLayersPrefsP.weather === true,
+      apply: (v) => { if (placesCtrl) placesCtrl.setWeather(v); } },
   ];
   const layerChipsP = MAP_LAYERS_P.map((layer) => {
     const chip = h('button', {
@@ -1001,6 +1003,7 @@ export function placesScreen(arg) {
       if (mapLayersPrefsP.trails === true) c.setTrails(true);
       if (mapLayersPrefsP.bike === true) c.setBike(true);
       if (mapLayersPrefsP.scenic === true) c.setScenic(true);
+      if (mapLayersPrefsP.weather === true) c.setWeather(true);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out

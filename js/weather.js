@@ -233,6 +233,9 @@ export function spotKey(s) { return `${s.country}:${s.city}`; }
 export function spotsForCountry(country) { return WEATHER_SPOTS.filter((s) => s.country === country && s.hub); }
 export function allSpotsForCountry(country) { return WEATHER_SPOTS.filter((s) => s.country === country); }
 export function defaultSpot(country) { return spotsForCountry(country)[0] || WEATHER_SPOTS[0]; }
+// Every hub, across all four countries — the real map's weather layer draws one dot per
+// hub region-wide, unlike spotsForCountry() which scopes to a single country.
+export function allHubSpots() { return WEATHER_SPOTS.filter((s) => s.hub); }
 
 // Closest listed weather city to a place's coordinates, preferring cities in the
 // place's own country. Weather in this app is REGIONAL — the nearest hub, not a
@@ -268,7 +271,12 @@ async function refreshMany(spots) {
     const res = await fetchTimeout(url);
     const d = await res.json();
     const arr = Array.isArray(d) ? d : [d];
-    const data = {};
+    // Merge into whatever is already cached rather than replacing it outright — this cache is
+    // shared between per-country callers (Weather screen: ~11 hubs) and the region-wide map
+    // weather layer (all 46 hubs); overwriting would let whichever call ran last silently erase
+    // every other country's dots.
+    const prev = getCachedMany();
+    const data = (prev && prev.data) ? { ...prev.data } : {};
     spots.forEach((s, i) => { const c = arr[i] && arr[i].current; if (c) data[spotKey(s)] = { temp: c.temperature_2m, code: c.weather_code }; });
     const rec = { fetchedAt: Date.now(), data };
     try { localStorage.setItem(MANY_KEY, JSON.stringify(rec)); } catch { /* full */ }
