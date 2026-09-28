@@ -19,7 +19,7 @@ import { store, save, getLastFix } from '../state.js';
 import { getCountry } from '../data/regions.js';
 import { getLanguage } from '../lazy-data.js';
 import { haversineKm } from '../util.js';
-import { driveLabel, sourcesNote } from '../render-utils.js';
+import { driveLabel, careLabel, sourcesNote } from '../render-utils.js';
 import { infoTip, field } from '../ui-widgets.js';
 import { showBigPhrase } from '../phrase-ui.js';
 import { retranslate } from '../i18n.js';
@@ -32,6 +32,8 @@ import {
   MED_SOURCES,
 } from '../data/medical.js';
 import { HOSP_TAG } from '../data/emergency.js';
+import { loadIslands, islandsLoaded, islandAt, sameLand } from '../data/islands.js';
+import { islandCareFor, ISLAND_CARE_SOURCES } from '../data/island-care.js';
 import {
   loadHospitals, isHospitalsLoaded, nearestCare, nearestAnywhere, careCount, KIND_LABEL,
 } from '../data/hospitals.js';
@@ -64,7 +66,7 @@ function tierChip(tier) {
 // honest road estimate, which on a mountain or an island is a very different number.
 function hospitalCard(x, fix) {
   const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
-  const drive = km != null ? driveLabel(km, x.cc) : null;
+  const drive = km != null ? careLabel(fix, x, km) : null;
   return h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
     h('div', { class: 'row-between' }, [
       h('strong', {}, x.name),
@@ -76,6 +78,33 @@ function hospitalCard(x, fix) {
     h('div', { class: 'chips' }, [tierChip(x.tier), ...(x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
     routeLinks(x.lat, x.lng, x.name),
   ]);
+}
+
+// The evacuation route, boat times and known hazards for an island js/data/island-care.js has
+// actually researched — never shown for an island with no entry there, so this only ever
+// states what has been checked. Its own sources are cited inline rather than folded into the
+// screen's MED_SOURCES button, because the async island-outline load means this card can
+// appear well after that button was first built — repainting a source list nobody re-opens is
+// no substitute for citing the claim where it is made.
+function islandEvacCard(care) {
+  const card = h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
+    h('h3', { style: 'margin: 0 0 var(--sp-1h)' }, `🚤 Getting off ${care.name}`),
+  ]);
+  if (care.evac && care.evac.length) {
+    card.append(h('ul', { class: 'sos-aid' }, care.evac.map((e) => h('li', {}, [h('strong', {}, e.t), e.d ? ` — ${e.d}` : '']))));
+  }
+  if (care.boatTimes && care.boatTimes.length) {
+    card.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, [h('strong', {}, 'Boat times')]));
+    card.append(h('ul', { class: 'sos-aid' }, care.boatTimes.map((b) => h('li', {},
+      `${b.from} → ${b.to}: ~${b.mins[0]}–${b.mins[1]} min${b.note ? ` — ${b.note}` : ''}`))));
+  }
+  if (care.hazards && care.hazards.length) {
+    card.append(h('p', { class: 'tiny', style: 'margin: var(--sp-2) 0 var(--sp-0h)' }, [h('strong', {}, '⚠️ Know before you need it')]));
+    card.append(h('ul', { class: 'sos-aid' }, care.hazards.map((z) => h('li', {}, [h('strong', {}, z.t), ` — ${z.d}`]))));
+  }
+  if (care.note) card.append(h('p', { class: 'tiny muted', style: 'margin: var(--sp-2) 0 0' }, care.note));
+  card.append(sourcesNote(ISLAND_CARE_SOURCES.map((s) => ({ org: s.org, url: s.url })), 'September 2026'));
+  return card;
 }
 
 // The traveller's own emergency card: blood type, allergies, regular medication, insurer
@@ -259,9 +288,28 @@ export function hospitalScreen(cc) {
       : (hospitals[0] || null);
     const heroForeign = hero && hero.cc && hero.cc !== active ? getCountry(hero.cc) : null;
 
+    // Is the traveller standing on an island, and if so, is there a real hospital — curated
+    // or OpenStreetMap, either one — anywhere on that SAME landmass? This is the fix for the
+    // bug that started this file's island-awareness: without it, a hospital across open water
+    // was framed as a "30 min-1h by road" drive, and the island's own health centre — the
+    // actual first and only stop before a boat — was framed as "not for an emergency".
+    // `islandsLoaded()` gates both checks, so before the outline data has loaded this reads
+    // exactly as it always has — nothing here changes until the answer is actually known.
+    const onIsland = (fix && fix.lat != null && islandsLoaded()) ? islandAt(fix) : null;
+    const islandHasHospital = !onIsland || hospitals.some((x) => sameLand(fix, { lat: x.lat, lng: x.lng }) === true);
+    const care = onIsland ? islandCareFor(onIsland) : null;
+
     heroSlot.replaceChildren();
+    if (onIsland && !islandHasHospital) {
+      const name = (care && care.name) || onIsland.name;
+      heroSlot.append(h('div', { class: 'card allergy-card', style: 'margin: 0 0 var(--sp-3)' }, [
+        h('h3', { style: 'margin: 0 0 var(--sp-1h)' }, `🏝️ There is no hospital on ${name}`),
+        h('p', { class: 'tiny', style: 'margin: 0' }, (care && care.noHospitalNote)
+          || `No hospital is mapped on ${name}. Any hospital shown below is across the water — a boat or ferry connects it, not a road.`),
+      ]));
+    }
     if (hero && fix && fix.lat != null) {
-      const drive = hero.km != null ? driveLabel(hero.km, hero.cc) : null;
+      const drive = hero.km != null ? careLabel(fix, hero, hero.km) : null;
       heroSlot.append(h('div', { class: 'card sos-card', style: 'margin: 0 0 var(--sp-3)' }, [
         h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, heroForeign
           ? `Closest hospital to you right now — across the border in ${heroForeign.flag} ${heroForeign.name}`
@@ -294,7 +342,7 @@ export function hospitalScreen(cc) {
               h('span', { class: 'fair' }, kmLabel(known.km)),
             ]),
             h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-1)' },
-              [known.city, kc ? `${kc.flag} ${kc.name}` : null, driveLabel(known.km, known.cc)].filter(Boolean).join(' · ')),
+              [known.city, kc ? `${kc.flag} ${kc.name}` : null, careLabel(fix, known, known.km)].filter(Boolean).join(' · ')),
             h('div', { class: 'chips' }, [tierChip(known.tier), ...(known.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
             routeLinks(known.lat, known.lng, known.name),
           ]));
@@ -306,15 +354,40 @@ export function hospitalScreen(cc) {
       // not half as far — and a few kilometres of that road is fifteen minutes. Showing both
       // with the framing on which to pick beats silently hiding the nearer one.
       const clinic = anyCare.find((x) => x.kind !== 1);
+      // On an island with no hospital, the nearer facility is not a downgrade from the "real"
+      // answer — it IS the answer, until a boat is involved. Reframe it as the first stop
+      // rather than a lesser option, but only when it genuinely sits on the traveller's own
+      // island; a nearer clinic across yet another stretch of water still gets the ordinary
+      // "closer, but not for an emergency" framing below.
+      const clinicOnMyIsland = !!(onIsland && clinic && sameLand(fix, { lat: clinic.lat, lng: clinic.lng }) === true);
       if (clinic && hero.km != null && clinic.km != null && clinic.km < hero.km - 1) {
+        const headline = (clinicOnMyIsland && !islandHasHospital)
+          ? `The first stop on ${(care && care.name) || onIsland.name} — there is no hospital here, so this is where a serious case is stabilised before a boat`
+          : `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`;
         heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
-          h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`),
+          h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, headline),
           h('div', { class: 'row-between' }, [h('strong', {}, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
           clinic.en ? h('div', { class: 'tiny muted' }, clinic.en) : null,
-          h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, driveLabel(clinic.km, clinic.cc) || ''),
+          h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, careLabel(fix, clinic, clinic.km) || ''),
+          (clinicOnMyIsland && care && care.clinic && care.clinic.note) ? h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, care.clinic.note) : null,
           routeLinks(clinic.lat, clinic.lng, clinic.name),
         ]));
+      } else if (onIsland && !islandHasHospital && care && care.clinic) {
+        // The generic clinic-detection above missed the researched entry — it may be tagged a
+        // kind the OSM merge did not carry, or simply not be the single nearest non-hospital
+        // record. Show it directly rather than leaving "no hospital" with nothing to do about
+        // it: this is exactly the situation js/data/island-care.js exists to answer.
+        const ccKm = haversineKm(fix, { lat: care.clinic.lat, lng: care.clinic.lng });
+        heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
+          h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, `The first stop on ${care.name} — there is no hospital here`),
+          h('div', { class: 'row-between' }, [h('strong', {}, care.clinic.name), ccKm != null ? h('span', { class: 'fair' }, kmLabel(ccKm)) : null]),
+          care.clinic.local ? h('div', { class: 'tiny muted' }, care.clinic.local) : null,
+          ccKm != null ? h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, careLabel(fix, care.clinic, ccKm) || '') : null,
+          h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, care.clinic.note),
+          routeLinks(care.clinic.lat, care.clinic.lng, care.clinic.name),
+        ]));
       }
+      if (onIsland && !islandHasHospital && care) heroSlot.append(islandEvacCard(care));
     } else if (hero) {
       heroSlot.append(h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, 'Turn on location and this shows the hospital closest to you. Until then, the strongest options in the country:'));
     }
@@ -366,10 +439,14 @@ export function hospitalScreen(cc) {
   paintCare();
   // The active country first so the list fills as fast as possible, then the other three so
   // the cross-border headline above can be right. All four are precached, so after the first
-  // run this costs nothing and works with no signal.
+  // run this costs nothing and works with no signal. The island outlines load alongside them —
+  // small on their own (js/data/islands.js carries no data, only the lookup functions) but the
+  // geometry they pull in on demand is precached too, so this also costs nothing offline after
+  // the first run.
   {
     const at = location.hash;
     const repaint = () => { if (location.hash === at) paintCare(); };
+    if (!islandsLoaded()) loadIslands().then(repaint).catch(() => { /* distance labels stand as before */ });
     const others = ['th', 'vi', 'kh', 'la'].filter((cc) => cc !== active && !isHospitalsLoaded(cc));
     const first = isHospitalsLoaded(active) ? Promise.resolve() : loadHospitals(active).then(repaint);
     first.catch(() => { /* curated view stands */ })
