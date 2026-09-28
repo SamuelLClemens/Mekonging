@@ -13,7 +13,7 @@ import {
 import { field, online, screenHint } from '../ui-widgets.js';
 import {
   WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
-  maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine,
+  maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine, WX_MODELS, WX_MODEL_LABELS,
 } from '../weather.js';
 import { COUNTRIES, getCountry } from '../data/regions.js';
 import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
@@ -114,7 +114,7 @@ function tapUnits(root, onToggle) {
       else m.addedNodes.forEach(wrapUnits);
     });
   }).observe(root, { childList: true, characterData: true, subtree: true });
-  // Capture phase, so a unit inside something that is itself tappable — a 7-day row, a trip
+  // Capture phase, so a unit inside something that is itself tappable — a 10-day row, a trip
   // city's summary — switches the unit without also opening or closing that row.
   const act = (e) => {
     const t = e.target && e.target.closest ? e.target.closest('.u-tap') : null;
@@ -143,9 +143,16 @@ function toggleUnit(fam) {
   pendingScrollY = window.scrollY;
   render();
 }
-// The 7-day rows the traveller has opened, so a unit tap or a background refresh — both of which
+// The 10-day rows the traveller has opened, so a unit tap or a background refresh — both of which
 // repaint the list — does not snap them shut again.
 const wxOpenDays = new Set();
+
+// A day's temperature, rain chance, wind, etc. are each the average across up to four
+// independent forecast models (see WX_MODELS in js/weather.js); this is the one-line
+// disclosure so that averaging is a stated feature, not a silent implementation detail.
+function ensembleNote() {
+  return `Forecast averaged across up to ${WX_MODELS.length} independent models (${WX_MODELS.map((m) => WX_MODEL_LABELS[m]).join(', ')}) for stronger accuracy. Current conditions are Open-Meteo's own live reading.`;
+}
 
 // Label/value pairs as a two-column grid, which stays scannable where one dot-separated sentence
 // stopped being readable past four facts. A pair with no value is left out, so a forecast cached
@@ -460,7 +467,7 @@ function planCityPanels() {
       bodyBox.append(h('div', { class: 'muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' },
         `${clabel} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}${compass(cur.windDir) ? ` from ${compass(cur.windDir)}` : ''}`
         + `${cur.precip > 0 ? ` · 💧${fmtPrecip(cur.precip)} now` : ''}${cur.snow > 0 ? ` · ❄️${fmtSnow(cur.snow)} now` : ''}`));
-      (rec.daily || []).slice(0, 7).forEach((d) => {
+      (rec.daily || []).slice(0, 10).forEach((d) => {
         const de = wmo(d.code)[1];
         const dl = wmo(d.code)[0];
         const segs = daySegments(rec.hourly, d.date);
@@ -599,13 +606,13 @@ export function weatherScreen(country) {
 
   // Units switch where they are printed — tap °C, km/h, mm, m or hPa anywhere below (tapUnits,
   // above). How to use the screen lives behind the ⓘ, not in front of the forecast.
-  wrap.append(screenHint('Tap any unit, like °C, km/h, mm or m, to switch it. Tap a day in the 7-day forecast for its morning, afternoon, evening and night.', 'About this screen'));
+  wrap.append(screenHint('Tap any unit, like °C, km/h, mm or m, to switch it. Tap a day in the 10-day forecast for its morning, afternoon, evening and night.', 'About this screen'));
   tapUnits(wrap, toggleUnit);
 
   let curCountry = spot.country;
 
   // Current city detail leads the screen: Right now, then Next 24 hours + Upcoming
-  // forecast calendar (wxVizCard, in that order), then the 7-day list and Refresh.
+  // forecast calendar (wxVizCard, in that order), then the 10-day list and Refresh.
   // This is now the screen's own top "calendar" — the old day-by-day TRIP-itinerary
   // calendar that used to occupy this spot is gone (see below).
   const body = h('div', {});
@@ -662,11 +669,14 @@ export function weatherScreen(country) {
       body.append(seaSlot);
       fillSea(seaSlot);
       if (rec.hourly && rec.hourly.length) body.append(wxVizCard(rec, spot, { keepState: true }));
-      const fc = h('div', { class: 'card' }, [h('h3', {}, '7-day forecast')]);
+      const fc = h('div', { class: 'card' }, [
+        h('h3', {}, '10-day forecast'),
+        h('p', { class: 'muted small', style: 'margin: var(--sp-1h) 0 0' }, ensembleNote()),
+      ]);
       // The day's highest waves ride along for a coastal city, from whatever sea state is cached.
       const sea = getCachedMarine({ lat: spot.lat, lng: spot.lng });
       const seaDay = new Map(((sea && sea.daily) || []).map((x) => [x.date, x]));
-      rec.daily.slice(0, 7).forEach((d) => {
+      rec.daily.slice(0, 10).forEach((d) => {
         const [dl, de] = wmo(d.code);
         const openKey = `${spotKey(spot)}|${d.date}`;
         const isOpen = wxOpenDays.has(openKey);
