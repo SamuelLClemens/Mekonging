@@ -16,7 +16,7 @@ import { h } from '../util.js';
 import { screenHint, foldedCard, pricesInPicker } from '../ui-widgets.js';
 import { buildOfflineAreasCard } from '../offline-areas-ui.js';
 import { buildWalkCard } from '../walk-ui.js';
-import { mount, topbar } from '../main.js';
+import { mount, topbar, focusSpot } from '../main.js';
 
 export function mapScreen() {
   const wrap = h('div', { class: 'screen' });
@@ -58,6 +58,8 @@ export function mapScreen() {
       apply: (v) => { if (mapCtrl) mapCtrl.setBike(v); } },
     { key: 'scenic', label: '👁 Viewpoints & waterfalls', isOn: () => mapLayersPrefs.scenic === true,
       apply: (v) => { if (mapCtrl) mapCtrl.setScenic(v); } },
+    { key: 'weather', label: '🌦️ Weather', isOn: () => mapLayersPrefs.weather === true,
+      apply: (v) => { if (mapCtrl) mapCtrl.setWeather(v); } },
   ];
   const layerChips = MAP_LAYERS.map((layer) => {
     const chip = h('button', {
@@ -166,7 +168,14 @@ export function mapScreen() {
 
   mount(wrap, '#map');
 
+  // Open centred on where the traveller actually is (GPS fix → remembered focus city →
+  // country default — see focusSpot() in main.js), not the fixed whole-region view — the
+  // region-wide maxBounds this map already sets still lets them pinch/scroll out to see
+  // every country, this just decides where it starts.
+  const focus = focusSpot();
   import('../map.js').then((m) => m.initMap(canvas, {
+    center: { lng: focus.spot.lng, lat: focus.spot.lat },
+    zoom: 9.5,
     onLocate: (fix) => setLastFix(fix),
     // Only consumed while the walking card is actively waiting for a destination, so a normal
     // tap on the map keeps its existing meaning.
@@ -192,6 +201,7 @@ export function mapScreen() {
     if (mapLayersPrefs.trails === true) c.setTrails(true);
     if (mapLayersPrefs.bike === true) c.setBike(true);
     if (mapLayersPrefs.scenic === true) c.setScenic(true);
+    if (mapLayersPrefs.weather === true) c.setWeather(true);
     areasUI.refresh();
   }).catch(() => {
     canvas.replaceWith(h('p', { class: 'muted', style: 'padding: var(--sp-3) var(--sp-3)' }, 'The map could not start here.'));

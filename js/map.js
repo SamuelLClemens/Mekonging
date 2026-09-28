@@ -12,6 +12,7 @@ import { allPlaces } from './data/regions.js';
 import { BASEMAP } from './data/basemap.js';
 import { BORDER_LINES } from './data/borders_lines.js';
 import { POOLS } from './data/pools.js';
+import { allHubSpots, getCachedMany, maybeRefreshMany, wmo, spotKey } from './weather.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -135,6 +136,13 @@ const HOSPITAL_COUNTRIES = ['th', 'vi', 'kh', 'la'];
 // Colour distinguishes the one real "free" country from the three "lowest fee" countries —
 // green reads as an unambiguous win, the amber as "cheapest available, still a fee".
 const ATM_TIER_COLOR = ['match', ['get', 'tier'], 'free', '#34C759', 'low', '#FF9500', '#8E8E93'];
+
+// Weather layer: current temperature at each curated hub, as a blue-to-red gradient — the
+// standard weather-map convention, readable at a glance with no popup needed. Stops span
+// SE Asia's real range: highland cool (Sapa/Da Lat can sit near 10°C) through lowland heat
+// (Bangkok/Vientiane push past 38°C in the hot season).
+const WEATHER_TEMP_COLOR = ['interpolate', ['linear'], ['get', 'temp'],
+  10, '#0A84FF', 20, '#34C759', 28, '#FFD60A', 33, '#FF9500', 38, '#FF3B30'];
 
 function atmsFC(rows) {
   return {
@@ -1093,6 +1101,76 @@ export async function initMap(containerEl, opts = {}) {
     if (map.getSource('mk-atms')) return apply();
     return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
   }
+  // Weather layer: one dot per curated hub (WEATHER_SPOTS' `hub: true` entries — see
+  // weather.js), coloured by current temperature. Reuses maybeRefreshMany, the same cheap
+  // bulk fetch that already powers the Weather screen's own SVG dots (one request for every
+  // hub's current conditions, no per-city calls) — this layer adds no new API cost beyond
+  // what the app already makes, and refreshMany's cache now merges across countries (see
+  // weather.js) instead of overwriting, so a region-wide read and Weather's own per-country
+  // read stay in sync rather than clobbering each other.
+  function weatherFC() {
+    const cached = getCachedMany();
+    const data = (cached && cached.data) || {};
+    const feats = allHubSpots()
+      .filter((s) => data[spotKey(s)])
+      .map((s) => {
+        const r = data[spotKey(s)];
+        const [label, emoji] = wmo(r.code);
+        return {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+          properties: { city: s.city, temp: r.temp, label, emoji },
+        };
+      });
+    return { type: 'FeatureCollection', features: feats };
+  }
+  function addWeatherLayers() {
+    if (map.getSource('mk-weather')) return;
+    map.addSource('mk-weather', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({
+      id: 'mk-weather-points', type: 'circle', source: 'mk-weather',
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-color': WEATHER_TEMP_COLOR,
+        'circle-opacity': 0.9,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#FFFFFF',
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 7, 10, 14],
+      },
+    });
+    const setCursor = (c) => { map.getCanvas().style.cursor = c; };
+    map.on('mouseenter', 'mk-weather-points', () => setCursor('pointer'));
+    map.on('mouseleave', 'mk-weather-points', () => setCursor(''));
+    map.on('click', 'mk-weather-points', (e) => {
+      const f = e.features && e.features[0];
+      if (!f) return;
+      const p = f.properties;
+      const body = h('div', {}, [
+        h('strong', {}, `${p.emoji} ${p.city}`),
+        h('div', { class: 'muted', style: 'font-size:12px' }, `${Math.round(p.temp)}°C · ${p.label}`),
+      ]);
+      new maplibregl.Popup({ closeButton: true, maxWidth: '220px' })
+        .setLngLat(f.geometry.coordinates)
+        .setDOMContent(body)
+        .addTo(map);
+    });
+  }
+  function setWeather(on) {
+    // Same style.load race as every other layer here — see setHospitals's comment.
+    const apply = () => {
+      if (!on) {
+        if (map.getLayer('mk-weather-points')) map.setLayoutProperty('mk-weather-points', 'visibility', 'none');
+        return Promise.resolve();
+      }
+      return maybeRefreshMany(allHubSpots()).then(() => {
+        const src = map.getSource('mk-weather');
+        if (src) src.setData(weatherFC());
+        if (map.getLayer('mk-weather-points')) map.setLayoutProperty('mk-weather-points', 'visibility', 'visible');
+      });
+    };
+    if (map.getSource('mk-weather')) return apply();
+    return new Promise((resolve) => { map.once('style.load', () => resolve(apply())); });
+  }
   // The walking route line. Empty until setWalkRoute() receives a path from js/walk-route.js,
   // which computes it on-device from a pedestrian graph with no network at route time.
   function addWalkLayers() {
@@ -1661,7 +1739,7 @@ export async function initMap(containerEl, opts = {}) {
   // and any already-set accommodation marker exist even before — or without — basemap
   // tiles (which need the network on first load).
   map.on('style.load', () => {
-    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addBusLayers(); addWalkLayers();
+    addWayback(); addMeasureLayers(); addRouteLayers(); renderRoute(); addHospitalsLayers(); addAtmsLayers(); addWeatherLayers(); addBusLayers(); addWalkLayers();
     addTrailLayers(); addScenicLayers(); addFerryLayers();
     const stay = getMyStay();
     if (stay && stay.coords) placeStayMarker(stay.coords);
@@ -1871,6 +1949,8 @@ export async function initMap(containerEl, opts = {}) {
     // Toggle the hospitals layer; lazily loads+merges all four countries' data on first "on".
     setHospitals,
     setAtms,
+    // Current-conditions weather dots at every curated hub (see weatherFC/setWeather above).
+    setWeather,
     // Outdoor layers: hiking trails, bike paths, and viewpoints/waterfalls.
     setTrails,
     setBike,
