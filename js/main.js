@@ -2153,7 +2153,11 @@ function homeRightNowCard(ctx) {
       h('div', { class: 'rn-title' }, ctx.seeded ? `${meta.label} in ${cityName}` : (ctx.near ? `${meta.label} near ${cityName}` : `${meta.label}, ${ctx.dayName}`)),
       h('div', { class: 'rn-sub muted' }, [
         ctx.dayName,
-        ctx.wx ? h('button', { class: 'rn-wx-link', onclick: () => go('#weather'), 'aria-label': `Weather forecast for ${cityName}` },
+        ctx.wx ? h('button', {
+          class: 'rn-wx-link',
+          onclick: () => { if (ctx.near) seedWeatherKey(spotKey(ctx.near.spot)); go('#weather'); },
+          'aria-label': `Weather forecast for ${cityName}`,
+        },
           ` · ${fmtTemp(ctx.wx.temp)}${ctx.raining ? ', rain' : ''} →`) : null,
         ctx.wet ? ' · wet season' : '',
         ctx.seeded ? ` · showing ${cityName}` : (ctx.approx ? ' · where you’re looking' : ''),
@@ -2835,7 +2839,13 @@ export function plannedStopsOutlook() {
       detail = h('span', { class: `stopwx-season v-${v}` }, `${mark}${wet ? ' · wet' : ''}`);
     }
     rows.append(h('button', {
-      class: 'stopwx-row', onclick: () => { setFocusSpot(spot || defaultSpot(st.country)); go('#weather'); },
+      class: 'stopwx-row',
+      onclick: () => {
+        const target = spot || defaultSpot(st.country);
+        setFocusSpot(target);
+        seedWeatherKey(spotKey(target));
+        go('#weather');
+      },
     }, [
       h('span', { class: 'stopwx-name' }, [
         h('span', { class: 'stopwx-city' }, st.title || (getCountry(st.country) || {}).name || '—'),

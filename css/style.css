@@ -532,7 +532,7 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
 .foldcard[open] > summary::after { transform: rotate(180deg); }
 
 /* Region/province maps: clickable coloured provinces (pure offline SVG). */
-.regions-map { width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
+.regions-map { position: relative; width: 100%; border-radius: var(--r-lg); overflow: hidden; background: color-mix(in srgb, var(--teal) 12%, var(--card)); }
 /* 62vh made a tall country (Vietnam especially) fill almost the whole screen, pushing the
    province list below the fold on every phone. 48vh keeps the shape readable while leaving
    the list it exists to navigate visible at the same time. */
@@ -1862,6 +1862,21 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
   text-transform: uppercase; letter-spacing: 0.06em; background: var(--card);
 }
 
+/* Zoom +/- control for the offline SVG region/city maps (js/svg-pan-zoom.js). Positioned over
+   the map itself, not the caption strip below it. */
+.svg-zoom-ctrl {
+  position: absolute; top: var(--sp-2); right: var(--sp-2); z-index: 2;
+  display: flex; flex-direction: column; gap: 1px;
+  border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-soft);
+}
+.svg-zoom-btn {
+  width: 34px; height: 34px; border: none; background: var(--card); color: var(--ink);
+  font-size: 20px; font-weight: 700; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.svg-zoom-btn:active { background: var(--line); }
+.svg-zoom-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+
 .fx-result { font-weight: 800; font-size: var(--fs-h2); color: var(--teal-deep); margin-top: var(--sp-3); }
 html[data-theme="dark"] .fx-result { color: var(--teal); }
 /* Shared amount/currency <-> amount/currency control (fxConverterControl): two compact stacked
@@ -2262,6 +2277,12 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .dist-chip {
   display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
   color: #fff; background: var(--grape); border-radius: 999px; padding: 2px 10px;
+}
+/* Glance weather badge on a place card (placeWeatherBadge, js/place-ui.js) — the nearest
+   hub's last-cached current conditions, same pill shape as .dist-chip beside it. */
+.wx-chip {
+  display: inline-block; font-size: 0.76rem; font-weight: 700; line-height: 1.5;
+  color: #fff; background: #2C7DA0; border-radius: 999px; padding: 2px 10px;
 }
 /* Embedded results map on the Places screen: give the empty canvas a resting shape. */
 .places-map { box-shadow: var(--elev-1); background: var(--card); }

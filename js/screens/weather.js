@@ -12,11 +12,12 @@ import {
 } from '../render-utils.js';
 import { field, online, screenHint } from '../ui-widgets.js';
 import {
-  WEATHER_SPOTS, wmo, spotKey, spotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
+  WEATHER_SPOTS, wmo, spotKey, spotsForCountry, allSpotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
   maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine, WX_MODELS, WX_MODEL_LABELS, sourceDay, sourceHour,
 } from '../weather.js';
 import { COUNTRIES, getCountry } from '../data/regions.js';
 import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
+import { attachSvgPanZoom } from '../svg-pan-zoom.js';
 // Circular import back into main.js — same accepted pattern js/screens/home.js already uses
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
@@ -841,12 +842,11 @@ export function weatherScreen(country) {
   const mapBox = h('div', {});
   wrap.append(mapBox);
   function renderMap(many) {
-    // Hubs, plus the selected city when it is an anchor rather than a hub — otherwise
-    // choosing e.g. Koh Lanta from the search box left the map with no dot highlighted at
-    // all. Only the one selected anchor is added; drawing all 101 would bury the map.
-    const hubs = spotsForCountry(curCountry);
-    const sel = WEATHER_SPOTS.find((s) => spotKey(s) === currentWeatherKey());
-    const cities = (sel && sel.country === curCountry && !sel.hub) ? hubs.concat([sel]) : hubs;
+    // Every listed city for this country gets a dot now that the map can be panned/zoomed to
+    // find one — previously only "hub" cities (the ones batch-fetched for a live temperature)
+    // got a dot, so most of the app's ~100 non-hub city anchors had no way to be picked from
+    // the map at all and were reachable only through the search box below.
+    const cities = allSpotsForCountry(curCountry);
     const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
       ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1.5" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
     const dots = cities.map((s) => {
@@ -855,17 +855,24 @@ export function weatherScreen(country) {
       const sel = spotKey(s) === currentWeatherKey();
       const temp = w ? `${wxTempVal(w.temp)}°` : '';
       const emo = w ? wmo(w.code)[1] : '';
+      // Non-hub anchors have no batch-fetched temperature (only hubs are bulk-fetched), so they
+      // draw smaller and lighter — a real, tappable city, just one whose forecast is fetched
+      // fresh the moment it is picked rather than shown up front.
+      const r = sel ? 9 : (s.hub ? 6 : 4);
+      const fill = sel ? '#C0431A' : (s.hub ? '#2C7DA0' : '#6B8FA3');
+      const fs = (s.hub || sel) ? 21 : 15;
       return `<g class="wx-dot" data-key="${spotKey(s)}" style="cursor:pointer">
-          <text x="${x}" y="${y - 14}" text-anchor="middle" style="font-size:24px">${emo}</text>
-          <circle cx="${x}" cy="${y}" r="${sel ? 9 : 6}" fill="${sel ? '#C0431A' : '#2C7DA0'}" stroke="#FFFDF5" stroke-width="2.5"/>
-          <text x="${x}" y="${y + 26}" text-anchor="middle" style="font-size:21px;font-weight:800;fill:#2A2118;paint-order:stroke;stroke:rgba(255,253,245,0.9);stroke-width:5px">${esc(s.city)} ${temp}</text>
+          ${emo ? `<text x="${x}" y="${y - 14}" text-anchor="middle" style="font-size:24px">${emo}</text>` : ''}
+          <circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" stroke="#FFFDF5" stroke-width="2.5"/>
+          <text x="${x}" y="${y + fs + 5}" text-anchor="middle" style="font-size:${fs}px;font-weight:800;fill:#2A2118;paint-order:stroke;stroke:rgba(255,253,245,0.9);stroke-width:5px">${esc(s.city)} ${temp}</text>
         </g>`;
     }).join('');
     const svg = `<svg viewBox="${REGION_VIEWBOX}" class="region-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather map" xmlns="http://www.w3.org/2000/svg">${paths}${dots}</svg>`;
     mapBox.innerHTML = '';
     const box = h('div', { class: 'region-map', html: svg });
     box.querySelectorAll('.wx-dot').forEach((g) => g.addEventListener('click', () => switchSpot(g.getAttribute('data-key'))));
-    box.append(h('span', { class: 'region-cap' }, many ? 'Tap a city for its full forecast' : 'Connect once to load city temperatures'));
+    box.append(h('span', { class: 'region-cap' }, many ? 'Tap a city for its full forecast · pinch or scroll to zoom' : 'Connect once to load city temperatures'));
+    attachSvgPanZoom(box, box.querySelector('svg'));
     mapBox.append(box);
   }
   renderMap(getCachedMany() && getCachedMany().data);

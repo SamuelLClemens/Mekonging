@@ -58,7 +58,9 @@ export function mapScreen() {
       apply: (v) => { if (mapCtrl) mapCtrl.setBike(v); } },
     { key: 'scenic', label: '👁 Viewpoints & waterfalls', isOn: () => mapLayersPrefs.scenic === true,
       apply: (v) => { if (mapCtrl) mapCtrl.setScenic(v); } },
-    { key: 'weather', label: '🌦️ Weather', isOn: () => mapLayersPrefs.weather === true,
+    // Defaults ON, mirroring Places (js/screens/places.js) — same shared pref, so the two
+    // screens must agree on the default or the toggle would silently disagree between them.
+    { key: 'weather', label: '🌦️ Weather', isOn: () => mapLayersPrefs.weather !== false,
       apply: (v) => { if (mapCtrl) mapCtrl.setWeather(v); } },
   ];
   const layerChips = MAP_LAYERS.map((layer) => {
@@ -201,7 +203,7 @@ export function mapScreen() {
     if (mapLayersPrefs.trails === true) c.setTrails(true);
     if (mapLayersPrefs.bike === true) c.setBike(true);
     if (mapLayersPrefs.scenic === true) c.setScenic(true);
-    if (mapLayersPrefs.weather === true) c.setWeather(true);
+    c.setWeather(mapLayersPrefs.weather !== false);
     areasUI.refresh();
   }).catch(() => {
     canvas.replaceWith(h('p', { class: 'muted', style: 'padding: var(--sp-3) var(--sp-3)' }, 'The map could not start here.'));

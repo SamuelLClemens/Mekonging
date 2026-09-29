@@ -28,6 +28,7 @@ import { PLACE_MONTHS } from '../data/place-months.js';
 import { zonesFor, getZone } from '../lazy-data.js';
 import { foldable } from '../ui-widgets.js';
 import { REGION_PATHS, REGION_RIVER, REGION_LABELS, REGION_VIEWBOX } from '../data/geo.js';
+import { attachSvgPanZoom } from '../svg-pan-zoom.js';
 import { isRouteNode, planRoutes, routeNodes } from '../journey.js';
 import { addStop } from '../state.js';
 import { placeCard } from '../place-ui.js';
@@ -518,7 +519,8 @@ function regionPicker() {
     g.addEventListener('click', enter);
     g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); } });
   });
-  box.append(h('span', { class: 'region-cap' }, 'Tap a country to explore · the Mekong runs through all four'));
+  box.append(h('span', { class: 'region-cap' }, 'Tap a country to explore · pinch or scroll to zoom · the Mekong runs through all four'));
+  attachSvgPanZoom(box, box.querySelector('svg'));
   return box;
 }
 
@@ -821,5 +823,6 @@ function zonesMap(cc, opts = {}) {
     g.addEventListener('click', pick);
     g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
   });
+  attachSvgPanZoom(box, box.querySelector('svg'));
   return box;
 }
