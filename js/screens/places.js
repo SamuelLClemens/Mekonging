@@ -64,7 +64,7 @@ import { buildWalkCard } from '../walk-ui.js';
 // Shared with the screens still resident in main.js; see js/place-ui.js. These moved out
 // so this module could leave the launch graph — it is imported on demand by the router now.
 import {
-  SEV_LABEL, placeCard, travelerChips, saveSheet, tripVisitSheet, resolveItem, jellyInSeason, formatMonths, fmtReportDate, addPlaceSecret, beachChip, collRow, daysSinceISO, dowShort, formatMarketDays, getPlaceSecrets, jellyMonths, marketChip,
+  SEV_LABEL, placeCard, placeWeatherBadge, travelerChips, saveSheet, tripVisitSheet, resolveItem, jellyInSeason, formatMonths, fmtReportDate, addPlaceSecret, beachChip, collRow, daysSinceISO, dowShort, formatMarketDays, getPlaceSecrets, jellyMonths, marketChip,
 } from '../place-ui.js';
 // Closes the tail this guide does not (yet) curate: a live Google Maps search centred on
 // wherever Places is anchored right now, via the same mapsUrl() deep link every place-detail
@@ -334,7 +334,10 @@ export function placesScreen(arg) {
       apply: (v) => { if (placesCtrl) placesCtrl.setBike(v); } },
     { key: 'scenic', label: '👁 Viewpoints & waterfalls', isOn: () => mapLayersPrefsP.scenic === true,
       apply: (v) => { if (placesCtrl) placesCtrl.setScenic(v); } },
-    { key: 'weather', label: '🌦️ Weather', isOn: () => mapLayersPrefsP.weather === true,
+    // Defaults ON (unlike the other opt-in layers above) — the app-wide weather layer for
+    // Places, on by default like borders so the hub-city temperatures are visible without
+    // having to know the toggle exists.
+    { key: 'weather', label: '🌦️ Weather', isOn: () => mapLayersPrefsP.weather !== false,
       apply: (v) => { if (placesCtrl) placesCtrl.setWeather(v); } },
   ];
   const layerChipsP = MAP_LAYERS_P.map((layer) => {
@@ -1003,7 +1006,9 @@ export function placesScreen(arg) {
       if (mapLayersPrefsP.trails === true) c.setTrails(true);
       if (mapLayersPrefsP.bike === true) c.setBike(true);
       if (mapLayersPrefsP.scenic === true) c.setScenic(true);
-      if (mapLayersPrefsP.weather === true) c.setWeather(true);
+      // Reconciled like borders, not gated on === true like the other opt-in layers above:
+      // weather now defaults to visible, so an explicit "off" must be honoured too.
+      c.setWeather(mapLayersPrefsP.weather !== false);
       // The map is constructed inside a <details>, so its container can still be settling its
       // real (340px) height when the controller first resolves. Drawing markers then leaves
       // map.project() with a zero-size viewport and the pins never position. Resize to the laid-out
@@ -1073,6 +1078,7 @@ function placeQuickRow(p, num, compareCtl) {
   const dchip = distanceChip(p);
   const meta = h('div', { class: 'pqr-meta' }, [
     dchip || null,
+    placeWeatherBadge(p),
     p.rating ? h('span', { class: 'pqr-rating' }, `★ ${Number(p.rating).toFixed(1)}`) : null,
     priceStr ? h('span', { class: 'pqr-price' }, priceStr) : null,
     (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,

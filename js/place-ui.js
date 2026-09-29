@@ -23,9 +23,10 @@ import { openModal } from './ui-widgets.js';
 import { COLLECTION_PRESETS, getPlace } from './data/regions.js';
 import { daysUntilISO, go, placeFamily, placePhotoSrc, priceLine, stopDateLabel } from './main.js';
 import {
-  FAMILY_META, attrTag, bucketColor, catTag, distanceChip, isBeach, isMarket, marketOpenDays,
+  FAMILY_META, attrTag, bucketColor, catTag, distanceChip, fmtTemp, isBeach, isMarket, marketOpenDays,
   starsStr, tierBadge,
 } from './render-utils.js';
+import { getCachedMany, nearestSpot, spotKey, wmo } from './weather.js';
 import {
   addPlaceVisit, collectionsForItem, createCollection, getPin, getPlaceData, isFavorite,
   removePlaceVisit, save, setPlaceField, store, todayKey, toggleFavorite, togglePlaceInCollection,
@@ -39,12 +40,33 @@ export const MONTH_SHORT = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
 
 export const SEV_LABEL = { seen: 'Jellyfish seen', lots: 'Lots of jellyfish', stung: 'Someone was stung' };
 
+// Glance-only weather badge for a place card — the nearest hub's last-cached current
+// conditions, never a network fetch of its own (a list can hold dozens of cards; refreshing
+// the nearest hub's weather here per-card would multiply into far too many requests). Reads
+// the SAME batched cache (getCachedMany) the Places weather map layer's dots already use —
+// not getCachedWeather, which is only populated by opening that one city's own full forecast
+// — so the badge is warm as soon as that layer's one batch fetch resolves (it is on by
+// default, js/screens/places.js), and stays silent rather than blank otherwise. See
+// weatherNearbyCard, below, for the fuller per-place detail-page version, which is allowed
+// to fetch on its own.
+export function placeWeatherBadge(p) {
+  if (!p.coords || p.coords.lat == null || p.coords.lng == null) return null;
+  const spot = nearestSpot(p.coords, p.country);
+  if (!spot) return null;
+  const many = getCachedMany();
+  const w = many && many.data && many.data[spotKey(spot)];
+  if (!w) return null;
+  const [, emoji] = wmo(w.code);
+  return h('span', { class: 'wx-chip', title: `Near ${spot.city} · regional guide, not pinpoint` }, `${emoji} ${fmtTemp(w.temp)}`);
+}
+
 export function placeCard(p, num) {
   const cats = Array.isArray(p.categories) ? p.categories : [];
   const hasPrice = p.priceRange && p.priceRange.currency;
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
   const colls = collectionsForItem(p.id);
   const dchip = distanceChip(p);
+  const wxchip = placeWeatherBadge(p);
   const accent = bucketColor(p);
   const fam = placeFamily(p);
   const src = placePhotoSrc(p);
@@ -74,7 +96,7 @@ export function placeCard(p, num) {
         (() => { const bc = beachChip(p); return bc ? h('div', { style: 'margin: var(--sp-0h) 0' }, bc) : null; })(),
         p.blurb ? h('p', {}, p.blurb) : null,
         h('p', { class: 'muted' }, [p.city, priceStr].filter(Boolean).join(' · ')),
-        dchip ? h('div', { style: 'margin: var(--sp-0h) 0' }, dchip) : null,
+        (dchip || wxchip) ? h('div', { class: 'row-between', style: 'margin: var(--sp-0h) 0;flex-wrap:wrap;gap:var(--sp-1h)' }, [dchip, wxchip]) : null,
         p.rating ? h('div', { class: 'stars-static' }, `${starsStr(p.rating)} ${Number(p.rating).toFixed(1)}`) : null,
         colls.length ? h('div', { class: 'cats' }, colls.map((c) =>
           h('span', { class: 'cat-tag', style: 'background:var(--grape)' }, `${c.emoji} ${c.name}`))) : null,

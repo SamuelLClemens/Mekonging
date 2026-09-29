@@ -10,7 +10,7 @@ import { allSpecies } from '../data/nature.js';
 import { COUNTRIES, allPlaces } from '../data/regions.js';
 import { LANGUAGES } from '../lazy-data.js';
 import { itemLabel, navItems, resolveHash, visibleGroups } from '../nav-groups.js';
-import { FAMILY_META, placeBucket } from '../render-utils.js';
+import { FAMILY_META, placeBucket, PLACE_BUCKETS } from '../render-utils.js';
 import {
   getLastFix,
   save,
@@ -52,8 +52,12 @@ export function searchScreen() {
 
   // Category filter for places. Picking one also lets you browse the nearest places of
   // that kind with no query typed (a "nearest food / nearest stay" tool when GPS is on).
+  // Built from PLACE_BUCKETS — the same list placeBucket() sorts every place into — so a
+  // category can never go missing here again the way market/rental/other once did: tapping
+  // "Food" silently hid every market, and there was no chip at all for a rental/fuel place
+  // or anything falling into the catch-all "other" bucket.
   let cat = 'all';
-  const CATS = [['all', 'All'], ['food', '🍜 Food'], ['stay', '🛏 Stay'], ['culture', '🏛 Culture'], ['nature', '🌿 Nature'], ['nightlife', '🌃 Nightlife']];
+  const CATS = [['all', 'All'], ...PLACE_BUCKETS];
   const catRow = h('div', { class: 'chips', style: 'margin: var(--sp-1h) 0' }, CATS.map(([id, lbl]) =>
     h('button', { class: 'chip', 'aria-pressed': id === 'all' ? 'true' : 'false', dataset: { c: id },
       onclick: () => { cat = id; catRow.querySelectorAll('.chip').forEach((ch) => ch.setAttribute('aria-pressed', ch.dataset.c === id ? 'true' : 'false')); renderResults(); } }, lbl)));
@@ -62,11 +66,21 @@ export function searchScreen() {
   const out = h('div', {});
   wrap.append(out);
 
+  // Which sections the traveller has asked to see in full — keyed by the section's own title,
+  // so switching category or query (which changes the title) starts capped again. Previously
+  // anything past the 12th hit just said "…and N more — refine your search" with no way to
+  // actually see them, which was the whole reason a broad city search (e.g. a query matching
+  // Bangkok's many records) read as broken.
+  const expanded = new Set();
   function section(title, nodes) {
     if (!nodes.length) return;
     out.append(h('h2', { class: 'cat-title' }, `${title} (${nodes.length})`));
-    nodes.slice(0, 12).forEach((n) => out.append(n));
-    if (nodes.length > 12) out.append(h('p', { class: 'muted' }, `…and ${nodes.length - 12} more — refine your search`));
+    const shown = expanded.has(title) ? nodes.length : 12;
+    nodes.slice(0, shown).forEach((n) => out.append(n));
+    if (nodes.length > shown) {
+      out.append(h('button', { class: 'btn ghost block srch', onclick: () => { expanded.add(title); renderResults(); } },
+        `Show ${nodes.length - shown} more`));
+    }
   }
   const link = (label, hash, extra) => h('button', { class: 'btn ghost block srch', onclick: () => { rememberSearch(searchQuery); if (extra) extra(); go(hash); } }, label);
 
