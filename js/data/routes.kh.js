@@ -7,7 +7,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Siem Reap",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "VIP bus",
@@ -77,6 +77,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Only worth it if you value time over money; the bus is the standard tourist choice."
       }
+    ],
+    "sources": [
+      {
+        "org": "Move to Cambodia — Review: Giant Ibis buses, Phnom Penh to Siem Reap",
+        "url": "https://movetocambodia.com/transportation/review-giant-ibis-buses-phnom-penh-siem-reap/"
+      }
     ]
   },
   {
@@ -84,7 +90,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Battambang",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "VIP bus",
@@ -152,7 +158,13 @@ export const ROUTES_KH = [
         "comfort": "Slow but scenic and stable Royal Railway service; a relaxed novelty rather than a fast option.",
         "bookVia": "Royal Railway (royal-railway.com.kh) or at the station",
         "recommended": false,
-        "notes": "Confirm the Northern Line timetable locally, as departures are limited and subject to change."
+        "notes": "Confirm the Northern Line timetable locally, as departures are limited and subject to change. Cambodia Train Guide (2026) confirms the Northern Line's 06:40 Phnom Penh departure and 13:00 Battambang arrival (about 6h20), matching this duration band; it does not list current fares."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Train Guide — Timetable",
+        "url": "https://www.cambodiatrainguide.com/timetable/"
       }
     ]
   },
@@ -161,7 +173,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Sihanoukville",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "VIP bus (expressway)",
@@ -170,7 +182,7 @@ export const ROUTES_KH = [
           4
         ],
         "price": {
-          "low": 12,
+          "low": 10,
           "high": 25,
           "currency": "USD"
         },
@@ -178,7 +190,7 @@ export const ROUTES_KH = [
         "comfort": "Modern coaches running the Phnom Penh-Sihanoukville Expressway, cutting the trip to roughly three hours; the fastest and smoothest road option.",
         "bookVia": "Giant Ibis, Vireak Buntham or BookMeBus / 12Go",
         "recommended": true,
-        "notes": "Confirm the bus actually uses the expressway; older National Road 4 services take longer. Sihanoukville is heavily developed with casinos, so most travellers use it only as a ferry gateway to the islands."
+        "notes": "Confirm the bus actually uses the expressway; older National Road 4 services take longer. Sihanoukville is heavily developed with casinos, so most travellers use it only as a ferry gateway to the islands. VisitKohRong (2026) names Cambodia Post VIP and Bayon VIP at USD 8-10 as the newer, recommended expressway operators; lowered the low end slightly to match."
       },
       {
         "mode": "Standard bus",
@@ -229,7 +241,17 @@ export const ROUTES_KH = [
         "comfort": "Royal Railway service via Takeo, Kampot and Kep; scenic and stable but much slower than the expressway bus.",
         "bookVia": "Royal Railway or at the station",
         "recommended": false,
-        "notes": "Departures are limited; verify the current Southern Line timetable before relying on it."
+        "notes": "Departures are limited; verify the current Southern Line timetable before relying on it. Cambodia Train Guide (2026) confirms the Southern Line's 07:00 Phnom Penh departure and 12:40 Sihanoukville arrival (about 5h40), matching this duration band."
+      }
+    ],
+    "sources": [
+      {
+        "org": "VisitKohRong — Phnom Penh to Sihanoukville 2026 Travel Guide",
+        "url": "https://www.visitkohrong.com/phnom-penh-to-sihanoukville/"
+      },
+      {
+        "org": "Cambodia Train Guide — Timetable",
+        "url": "https://www.cambodiatrainguide.com/timetable/"
       }
     ]
   },
@@ -238,7 +260,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Kampot",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Minivan",
@@ -290,6 +312,12 @@ export const ROUTES_KH = [
         "bookVia": "redBus or CheckMyBus",
         "recommended": false,
         "notes": "Some services continue to Kep or Sihanoukville."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Move to Cambodia — How to get from Phnom Penh to Kampot (and vice-versa)",
+        "url": "https://movetocambodia.com/transportation/how-to-get-from-phnom-penh-to-kampot-and-vice-versa/"
       }
     ]
   },
@@ -444,7 +472,7 @@ export const ROUTES_KH = [
     "from": "Siem Reap",
     "to": "Battambang",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Bus",
@@ -487,7 +515,7 @@ export const ROUTES_KH = [
           8
         ],
         "price": {
-          "low": 25,
+          "low": 22,
           "high": 30,
           "currency": "USD"
         },
@@ -495,7 +523,13 @@ export const ROUTES_KH = [
         "comfort": "Memorable scenic journey through floating villages and waterways, but long, exposed and weather-dependent.",
         "bookVia": "Angkor Express Boat or guesthouse desks",
         "recommended": false,
-        "notes": "Service is typically suspended in the dry season (around March to June/July) when water levels drop. Confirm it is running before counting on it; foreigners pay more than locals."
+        "notes": "Service is typically suspended in the dry season (around March to June/July) when water levels drop. Confirm it is running before counting on it; foreigners pay more than locals. Cambodia Kingdom (2026) quotes USD 20-25 for this season (roughly July-March, peaking September-November); widened the low end slightly to match."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Kingdom — Siem Reap to Battambang 2026: Bus, Boat & Taxi Guide",
+        "url": "https://cambodiakingdom.com/getting-here/routes/siem-reap-to-battambang"
       }
     ]
   },
@@ -504,7 +538,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Kratie",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Bus",
@@ -539,6 +573,12 @@ export const ROUTES_KH = [
         "bookVia": "Bookaway or 12Go",
         "recommended": false,
         "notes": "Good if you intend to continue north the same day."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Trains — Travel from Phnom Penh to Kratie",
+        "url": "https://cambodiatrains.info/travel-from-phnom-penh-to-kratie/"
       }
     ]
   },
@@ -590,7 +630,7 @@ export const ROUTES_KH = [
     "from": "Sihanoukville",
     "to": "Koh Rong",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Speed ferry",
@@ -626,6 +666,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Crossings can be rough in poor weather; the speed ferry is safer and more reliable."
       }
+    ],
+    "sources": [
+      {
+        "org": "Backpackers Wanderlust — Sihanoukville to Koh Rong: How To Get To All Beaches",
+        "url": "https://www.backpackerswanderlust.com/sihanoukville-to-koh-rong/"
+      }
     ]
   },
   {
@@ -633,7 +679,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Koh Kong",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Bus",
@@ -642,7 +688,7 @@ export const ROUTES_KH = [
           6
         ],
         "price": {
-          "low": 12,
+          "low": 10,
           "high": 18,
           "currency": "USD"
         },
@@ -650,7 +696,7 @@ export const ROUTES_KH = [
         "comfort": "Air-con coaches via National Road 4 then the coastal highway; the comfortable mainstream option toward the Thai border region and Koh Kong's Cardamom ecotourism.",
         "bookVia": "Virak Buntham, VET Air Bus or BookMeBus / redBus",
         "recommended": true,
-        "notes": "Around 270 km. Many travellers used this en route to Thailand, but note the Cham Yeam-Hat Lek land border to Thailand is closed in 2026 (see cross-border routes)."
+        "notes": "Around 270 km. Many travellers used this en route to Thailand, but note the Cham Yeam-Hat Lek land border to Thailand is closed in 2026 (see cross-border routes). LuxCity (2026) lists fares from about USD 10 (Olongpich, 5 hours) to Virak Buntham's roughly 6h45 service; corrected the low end down slightly to match."
       },
       {
         "mode": "Minivan",
@@ -669,6 +715,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Useful for reaching Koh Kong town and onward to Koh Kong island or Tatai."
       }
+    ],
+    "sources": [
+      {
+        "org": "LuxCity — How to travel from Phnom Penh to Koh Kong by Bus",
+        "url": "https://luxcity.com/blog/bus-from-phnom-penh-to-koh-kong"
+      }
     ]
   },
   {
@@ -676,7 +728,7 @@ export const ROUTES_KH = [
     "from": "Siem Reap",
     "to": "Bangkok",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Poipet-Aranyaprathet (CLOSED in 2026)",
     "visa": {
@@ -721,6 +773,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Listed for reference only. This service does not run while the Poipet-Aranyaprathet border is closed; do not book overland Bangkok-Siem Reap travel in 2026 without confirming reopening through official advisories."
       }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Kingdom — Thailand-Cambodia Border Status 2026: Closed, Fly Instead",
+        "url": "https://cambodiakingdom.com/getting-here/thailand-cambodia-border"
+      }
     ]
   },
   {
@@ -728,7 +786,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Ho Chi Minh City",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Bavet-Moc Bai",
     "visa": {
@@ -773,6 +831,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Fine for budget travellers; choose a named operator and keep your passport and e-visa printout handy at the border."
       }
+    ],
+    "sources": [
+      {
+        "org": "Giant Ibis Transport — Phnom Penh to Ho Chi Minh route page",
+        "url": "https://giantibis.com/routes/phnom-penh-to-ho-chi-minh"
+      }
     ]
   },
   {
@@ -780,7 +844,7 @@ export const ROUTES_KH = [
     "from": "Phnom Penh",
     "to": "Bangkok",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Poipet-Aranyaprathet (CLOSED in 2026)",
     "visa": {
@@ -825,6 +889,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Reference only. The overland route does not run while the border is closed; the Poipet-Phnom Penh passenger rail link is also suspended. Confirm reopening through official advisories before any overland plan."
       }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Kingdom — Thailand-Cambodia Border Status 2026: Closed, Fly Instead",
+        "url": "https://cambodiakingdom.com/getting-here/thailand-cambodia-border"
+      }
     ]
   },
   {
@@ -832,7 +902,7 @@ export const ROUTES_KH = [
     "from": "Siem Reap",
     "to": "Pakse",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Trapeang Kriel-Nong Nok Khiene (Dom Kralor)",
     "visa": {
@@ -858,7 +928,7 @@ export const ROUTES_KH = [
         "comfort": "Long combined journey, usually with a vehicle change near Stung Treng; cramped and slow but the only single through option. Expect a lunch stop and the border formalities mid-route.",
         "bookVia": "Bookaway, 12Go or guesthouse desks in Siem Reap",
         "recommended": true,
-        "notes": "Roughly an 8-10 hour day; departs Siem Reap early and reaches Pakse in the evening. Add-on tickets continue to the 4000 Islands (Don Det/Don Khon) via Nong Nok Khiene and Nakasang."
+        "notes": "Roughly an 8-10 hour day; departs Siem Reap early and reaches Pakse in the evening. Add-on tickets continue to the 4000 Islands (Don Det/Don Khon) via Nong Nok Khiene and Nakasang. A 2026 rider review of Asia Van Transfer's premium minivan reports a faster ~6.5-hour run for USD 29 with USD 2 immigration service fees at each border; times vary significantly by operator."
       },
       {
         "mode": "Via Stung Treng (self-connect)",
@@ -877,6 +947,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Stung Treng-Pakse alone runs around USD 22 and 4-5 hours. Good if you want to overnight in Stung Treng or visit Kratie/Banlung en route."
       }
+    ],
+    "sources": [
+      {
+        "org": "The BeauTraveler — Review: Bus from Cambodia to Laos, Siem Reap to Pakse with Asia Van Transfer",
+        "url": "https://thebeautraveler.com/review-bus-from-cambodia-to-laos-siem-reap-to-pakse-asia-van-transfer/"
+      }
     ]
   },
   {
@@ -884,7 +960,7 @@ export const ROUTES_KH = [
     "from": "Stung Treng",
     "to": "4000 Islands (Si Phan Don)",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Trapeang Kriel-Nong Nok Khiene (Dom Kralor)",
     "visa": {
@@ -910,7 +986,7 @@ export const ROUTES_KH = [
         "comfort": "Short combined run: van from Stung Treng across the border to Nakasang, then a local ferry to Don Det or Don Khon. The simplest way onto the islands from northeast Cambodia.",
         "bookVia": "Guesthouse desks in Stung Treng, Bookaway or 12Go",
         "recommended": true,
-        "notes": "The Lao ferry segment from Nakasang to the islands is cheap (often quoted around LAK 60,000-150,000). Buy the combo so you are not haggling for a boat at the pier."
+        "notes": "The Lao ferry segment from Nakasang to the islands is cheap (often quoted around LAK 60,000-150,000). Buy the combo so you are not haggling for a boat at the pier. Bookaway (2026) lists named operators Airbus (USD 19-20, 1-2 hrs) and Lana Express (USD 15-16, 2.5-3 hrs) on the Stung Treng-Don Det leg, consistent with this combo-ticket price band."
       },
       {
         "mode": "Private taxi to border + onward",
@@ -929,6 +1005,12 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Best for small groups or those wanting to control timing; you still cross on foot and pick up Lao transport at Nong Nok Khiene."
       }
+    ],
+    "sources": [
+      {
+        "org": "Bookaway — Stung Treng to Don Det (Laos) route listing",
+        "url": "https://www.bookaway.com/routes/laos/stung-treng-to-don-det"
+      }
     ]
   },
   {
@@ -936,7 +1018,7 @@ export const ROUTES_KH = [
     "from": "Kampot",
     "to": "Ha Tien",
     "country": "kh",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Prek Chak-Xa Xia (Ha Tien)",
     "visa": {
@@ -980,6 +1062,12 @@ export const ROUTES_KH = [
         "bookVia": "Local taxi operators in Kampot or Kep",
         "recommended": false,
         "notes": "From Kep a moto runs around USD 7 and a tuk-tuk around USD 12 to the border. Good for those who want to control timing or have already crossed independently."
+      }
+    ],
+    "sources": [
+      {
+        "org": "My Vietnam Visa — How to Get a Visa for the Vietnam-Cambodia Border Crossing",
+        "url": "https://www.myvietnamvisa.com/how-to-get-a-visa-for-vietnam-cambodia-border-crossing.html"
       }
     ]
   }
