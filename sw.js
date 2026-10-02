@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.598.0';
+const CACHE_VERSION = 'mk-v0.600.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -120,6 +120,7 @@ const PRECACHE = [
   // opened with no signal.
   'js/screens/medical.js',
   'js/data/emergency.js',
+  'js/data/emergency-numbers.js',
   'js/data/hospitals.curated.js',
   'js/data/medical.js',
   // The full survival guide and the island-water-crossing awareness it and the hospital
@@ -356,7 +357,7 @@ const MANIFEST = {
   'css/style.css': '4f7866e4',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': '0f84416f',
+  'index.html': '2a31820e',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'e25deee5',
@@ -379,6 +380,7 @@ const MANIFEST = {
   'js/data/checklist.js': '156d5cdb',
   'js/data/diet.js': '832527d8',
   'js/data/drivetimes.js': 'b543e68d',
+  'js/data/emergency-numbers.js': '8de06321',
   'js/data/emergency.js': '5bec3690',
   'js/data/essentials.js': '090595cc',
   'js/data/etiquette.js': '57015c39',
@@ -407,16 +409,16 @@ const MANIFEST = {
   'js/data/history.cities.th.js': 'b62c45b7',
   'js/data/history.cities.vi.js': '39b7d44c',
   'js/data/history.js': '0f9c6617',
-  'js/data/hospitals.curated.js': 'cac03168',
-  'js/data/hospitals.js': '1c028b43',
+  'js/data/hospitals.curated.js': 'f8625a7c',
+  'js/data/hospitals.js': '089e878d',
   'js/data/hospitals.kh.js': 'bc42457e',
   'js/data/hospitals.la.js': 'dd68732d',
   'js/data/hospitals.th.js': 'be16af8e',
   'js/data/hospitals.vi.js': '6bc2db75',
-  'js/data/info.kh.js': '9acea0c7',
-  'js/data/info.la.js': '36e52c2f',
-  'js/data/info.th.js': '2f7c00ff',
-  'js/data/info.vi.js': '6ef35b16',
+  'js/data/info.kh.js': '2de3ade0',
+  'js/data/info.la.js': '6763639b',
+  'js/data/info.th.js': 'd9f490e3',
+  'js/data/info.vi.js': '7648a39b',
   'js/data/island-care.js': '1535d890',
   'js/data/islands.geo.js': '87d3c91c',
   'js/data/islands.js': 'c48089b7',
@@ -520,7 +522,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'e4397cff',
+  'js/main.js': '8170a236',
   'js/map.js': 'd44bbc25',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -543,14 +545,14 @@ const MANIFEST = {
   'js/screens/explore.js': '2c8fee25',
   'js/screens/export.js': '1429f50c',
   'js/screens/family.js': '97c566e5',
-  'js/screens/firstaid.js': '1dc338e2',
+  'js/screens/firstaid.js': '2e11af42',
   'js/screens/food.js': '4030bf02',
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': 'ec261fba',
   'js/screens/home.js': '972c4ad9',
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '6e706314',
-  'js/screens/medical.js': '9ccac141',
+  'js/screens/medical.js': '6fc3c717',
   'js/screens/nearby.js': 'c25da527',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': 'fd3a61d2',
@@ -583,7 +585,7 @@ const MANIFEST = {
   'js/walk-route.js': '596e9417',
   'js/walk-ui.js': '2d832965',
   'js/weather-ui.js': '713a3bc0',
-  'js/weather.js': '8c183680',
+  'js/weather.js': 'b3135360',
   'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
   'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
   'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',

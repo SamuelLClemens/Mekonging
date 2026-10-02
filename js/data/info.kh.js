@@ -1,11 +1,8 @@
+import { EMERGENCY_NUMBERS } from './emergency-numbers.js';
+
 export const INFO_KH = {
   country: "kh", name: "Cambodia", currency: "KHR", verified: "2026-06",
-  emergency: [
-    { label: "Police", number: "117" },
-    { label: "Fire", number: "118" },
-    { label: "Ambulance / Rescue", number: "119" },
-    { label: "Tourist Police (Phnom Penh)", number: "+855 12 942 484" }
-  ],
+  emergency: EMERGENCY_NUMBERS.kh,
   sections: [
     {
       id: "money",

@@ -206,6 +206,28 @@ export function nearestCare(fix, cc, opts = {}) {
   return limit ? withKm.slice(0, limit) : withKm;
 }
 
+// The emergency screen's short list: what a place can treat before how near it is. Checked
+// (curated) hospitals with a 24-hour emergency department lead — children's care first for a
+// family — among those within reach of the nearest checked one (twice its distance, or 10 km
+// more). OpenStreetMap rows say nothing about capability, so they never lead; the ones nearer
+// than the first pick come back apart, as `nearer`. Distance alone put a district health
+// centre and a maternity hospital first for a child with a fever in Hanoi.
+export function sosCare(fix, cc, { kids = false, limit = 3 } = {}) {
+  const all = nearestCare(fix, cc, { hospitalsOnly: true });
+  const checked = all.filter((x) => x.curated);
+  const located = !!(fix && fix.lat != null);
+  const reach = located && checked.length ? Math.max(2 * checked[0].km, checked[0].km + 10) : Infinity;
+  const has = (x, tag) => (x.tags || []).includes(tag);
+  const rank = (x) => (has(x, 'er') ? 0 : 2) + (kids && !has(x, 'peds') ? 1 : 0);
+  const picks = checked.filter((x) => !(x.km > reach)).map((x, i) => ({ x, i, r: rank(x) }))
+    .sort((a, b) => a.r - b.r || a.i - b.i).slice(0, limit).map((o) => o.x);
+  // An unmatched twin of a checked hospital (the names did not merge) is not an alternative.
+  const nearer = located && picks.length
+    ? all.filter((x) => !x.curated && x.km < picks[0].km && !checked.some((c) => haversineKm(x, c) < 0.3)).slice(0, 2)
+    : [];
+  return { picks, nearer };
+}
+
 // The single closest full hospital, whichever country's data is loaded — a traveller near a
 // border is often closer to care on the other side of it, and the Lao evacuation chain in
 // medical.js exists precisely because that is the right answer there.

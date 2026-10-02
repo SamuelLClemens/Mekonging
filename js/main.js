@@ -39,7 +39,9 @@ import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
-import { loadHospitals, isHospitalsLoaded, nearestCare } from './data/hospitals.js';
+import { EMERGENCY_NUMBERS } from './data/emergency-numbers.js';
+import { loadHospitals, isHospitalsLoaded, sosCare } from './data/hospitals.js';
+import { REGION_PATHS, REGION_PROJ } from './data/geo.js';
 import { loadIslands, islandsLoaded, sameLand } from './data/islands.js';
 import { scriptLang, showBigPhrase } from './phrase-ui.js';
 // Places step 4 (task #205): placesScreen itself, plus placeCard/travelerChips/saveSheet/
@@ -803,7 +805,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.598.0';
+export const APP_VERSION = 'mk-v0.600.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -3654,6 +3656,9 @@ const REGION_SET_LOADERS = {
 // In-flight/settled load promises, keyed by country id. Deleted on failure so a later retry
 // (e.g. the connection comes back) gets a fresh attempt rather than a stuck rejection.
 const _regionSetLoads = {};
+// Countries whose set failed to load this session. A failed import() stays failed in the module
+// map, so the router's border-band wait (render()) must not ask again — it would never settle.
+const _regionSetFailed = new Set();
 export function regionSetFor(cc) { return REGIONS_BY_CC[cc] || null; }
 export function isRegionSetLoaded(cc) { return !!REGIONS_BY_CC[cc]; }
 // Fetches and caches one country's province polygons. Safe to call repeatedly and from
@@ -3677,7 +3682,7 @@ export function loadRegionSet(cc) {
       _waiCache = { key: '', val: null };
       return set;
     })
-    .catch((err) => { delete _regionSetLoads[cc]; throw err; });
+    .catch((err) => { delete _regionSetLoads[cc]; _regionSetFailed.add(cc); throw err; });
   _regionSetLoads[cc] = p;
   return p;
 }
@@ -3685,7 +3690,8 @@ export function loadRegionSet(cc) {
 // better once it can name the traveller's province. Deliberately NOT part of the router's
 // NEEDS_REGION_DATA gate: gating the emergency screens on a download would trade a fact
 // that is merely useful for a delay that is actively harmful. Re-renders once, only if the
-// traveller is still on the route that asked.
+// traveller is still on the route that asked. (Within 10 km of a border the router does wait
+// for both sides' sets, because there they decide the COUNTRY — see countryOfFix.)
 export function ensureRegionSet(cc) {
   if (!cc || isRegionSetLoaded(cc)) return;
   const at = location.hash;
@@ -6243,9 +6249,8 @@ const SAFETY = {
   },
 };
 
-// Globally nearest listed city to a GPS fix, so the SOS screen can infer which country
-// the traveller is actually in (rather than the last one they browsed). Exported so
-// places.js's own embedded-map locate control can resolve+apply a fix the same way.
+// Globally nearest listed city to a GPS fix. Not a country test — see countryOfFix. Exported
+// so places.js's own embedded-map locate control can resolve+apply a fix the same way.
 export function nearestSpotGlobal(fix) {
   let best = null, bestD = Infinity;
   for (const s of WEATHER_SPOTS) {
@@ -6253,6 +6258,58 @@ export function nearestSpotGlobal(fix) {
     if (d < bestD) { bestD = d; best = s; }
   }
   return best ? { spot: best, km: bestD } : null;
+}
+
+// ---- WHICH COUNTRY A FIX IS IN (the emergency screens) ------------------------
+// The number a traveller dials depends on this, so geography decides it. The nearest weather
+// anchor used to, and was in another country for 13 % of the region — Don Det showed Cambodia.
+// The shipped outlines (js/data/geo.js) settle it except within BAND_KM of another country,
+// where they are simplified by more than a border town is wide (Nong Khai
+// and Poipet fall on the wrong side); there the ADM1 polygons decide, and render() loads both
+// sides' sets first. On a 0.1° grid (10,257 cells) the answer always lies inside that country's
+// ADM1 polygons — five cells sit where two countries' polygons overlap — and 7.5 % of the area
+// is in the band. One call costs about 0.1 ms in the band, 0.02 ms elsewhere.
+const BAND_KM = 10;
+const BAND_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7071, 0.7071], [0.7071, -0.7071], [-0.7071, 0.7071], [-0.7071, -0.7071]];
+let _outlineRings = null;
+function outlineCountry(lat, lng) {
+  if (!_outlineRings) {
+    _outlineRings = Object.entries(REGION_PATHS).map(([cc, d]) => [cc, d.split('Z')
+      .map((part) => (part.match(/-?[\d.]+,-?[\d.]+/g) || []).map((xy) => xy.split(',').map(Number)))
+      .filter((ring) => ring.length > 2)]);
+  }
+  const P = REGION_PROJ;
+  const x = P.pad + (lng - P.minlng) * P.kx * P.scale, y = P.pad + (P.maxlat - lat) * P.scale;
+  for (const [cc, rings] of _outlineRings) if (rings.some((ring) => pointInRing(x, y, ring))) return cc;
+  return null;
+}
+// Every country whose outline is within BAND_KM of the fix: one almost everywhere, two near a border.
+export function countriesNearFix(fix) {
+  if (!fix || fix.lat == null) return [];
+  const out = new Set();
+  const here = outlineCountry(fix.lat, fix.lng);
+  if (here) out.add(here);
+  const dLat = BAND_KM / 110.57, dLng = BAND_KM / (111.32 * Math.cos(fix.lat * Math.PI / 180));
+  for (const [a, b] of BAND_DIRS) {
+    const cc = outlineCountry(fix.lat + a * dLat, fix.lng + b * dLng);
+    if (cc) out.add(cc);
+  }
+  return [...out];
+}
+export function countryOfFix(fix) {
+  if (!fix || fix.lat == null) return null;
+  const band = countriesNearFix(fix);
+  if (band.length === 1) return band[0];
+  if (band.length > 1) {
+    const hit = band.find((cc) => {
+      const set = regionSetFor(cc);
+      return !!set && set.provinces.some((p) => pointInProvince(p, fix.lng, fix.lat));
+    });
+    const here = hit || outlineCountry(fix.lat, fix.lng);
+    if (here) return here;
+  }
+  const near = nearestSpotGlobal(fix);
+  return near ? near.spot.country : null;
 }
 
 // ---- WHERE AM I (place naming, distinct from weather-hub snapping) -----------
@@ -6429,16 +6486,24 @@ function sosScreen(cc) {
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Emergency', '#home'));
 
-  // Snap to where the traveller actually is: an explicit chip pick (cc) wins; otherwise
-  // infer the country from the last GPS fix. Falls back to the browsed country with no fix.
+  // Snap to where the traveller actually is: an explicit chip pick (cc) wins; otherwise the
+  // country the GPS fix is in (countryOfFix). Falls back to the browsed country with no fix.
   const fix = getLastFix();
-  const near = fix ? nearestSpotGlobal(fix) : null;
+  const fixCc = fix ? countryOfFix(fix) : null;
   if (cc) setActiveCountry(cc);
-  else if (near) setActiveCountry(near.spot.country);
+  else if (fixCc) setActiveCountry(fixCc);
 
   const c = getCountry(getActiveCountry());
   if (!c) { wrap.append(h('p', { class: 'empty' }, 'Pick a country first.')); mount(wrap, '#home'); return; }
-  if (!cc && near) { const wai = whereAmI(fix); wrap.append(h('p', { class: 'sos-loc' }, `📍 You appear to be near ${(wai && wai.name) || near.spot.city}. Showing ${c.name} — not right? Pick your country:`)); }
+  if (!cc && fixCc) {
+    // Name a locality only when it is in the country shown: near a border the nearest listed
+    // place can be across it, and "near Preah Rumkel — Laos" contradicts itself.
+    const wai = whereAmI(fix);
+    const where = wai && wai.country === c.id ? ` near ${wai.name}` : '';
+    const other = countriesNearFix(fix).filter((x) => x !== c.id).map((x) => getCountry(x).name);
+    const border = other.length ? ` — within ${BAND_KM} km of ${other.join(' and ')}` : '';
+    wrap.append(h('p', { class: 'sos-loc' }, `📍 Showing ${c.name},${where || ' from your location'}${border}. Wrong country? Pick yours:`));
+  }
   wrap.append(countryChips((id) => go(`#sos-${id}`)));
 
   // ORDER OF OPERATIONS. If something happens the traveller needs, in this order:
@@ -6455,7 +6520,7 @@ function sosScreen(cc) {
   // but the emergency numbers must be on screen the instant this screen opens, with no
   // possibility that a traveller collapsed them weeks ago and has to remember that now.
   const nums = h('div', { class: 'card sos-card', 'data-nofold': '' }, [h('h2', {}, `${c.flag} ${c.name} — call for help`)]);
-  const em = (c.info && c.info.emergency) || [];
+  const em = EMERGENCY_NUMBERS[c.id] || [];
   // `data-no-mt` exempts these from the optional machine-translation pass (js/i18n.js). The
   // label and the DIGITS share one text node ("Tourist Police: 1155"), so handing that string
   // to a translation service risks it rewriting, regrouping or dropping the number itself —
@@ -6471,22 +6536,24 @@ function sosScreen(cc) {
   // nearest options, and one button to everything else.
   const hosp = h('div', { class: 'card' }, [h('div', { class: 'row-between' }, [
     h('h2', {}, 'Get to a hospital'),
-    infoTip('Ordered by straight-line distance from your location. Open the full screen for the rest of the country, what to do where no hospital is listed, how people actually reach one here, and your medical card.'),
+    infoTip('Checked hospitals with a 24-hour emergency department come first (children’s care first for a family), then straight-line distance. Closer places from OpenStreetMap follow, unchecked. The full screen has the rest of the country, what to do where nothing is listed, how people reach a hospital here, and your medical card.'),
   ])]);
   hosp.append(h('button', { class: 'btn block', onclick: () => go(`#hospital-${getActiveCountry()}`) }, '🏥 Get to a hospital — full guide'));
   const hospPhrase = emCat && (emCat.phrases.find((p) => /hospital/i.test(p.en)) || emCat.phrases.find((p) => /doctor/i.test(p.en)));
   if (hospPhrase) hosp.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => showBigPhrase(hospPhrase, book.locale) }, '🪧 Show “I need a hospital” to a local (works offline)'));
-  // Three nearest, from the merged curated + OpenStreetMap layer, so this is the real nearest
-  // and not merely the nearest place somebody wrote about. Paints from curated data at once
-  // and re-paints when the full country layer lands — see js/data/hospitals.js.
+  // Three picks from the merged curated + OpenStreetMap layer, capability first (sosCare), then
+  // any unchecked place nearer than the first pick. Paints from curated data at once and
+  // re-paints when the full country layer lands — see js/data/hospitals.js.
   const hospSlot = h('div', {});
   hosp.append(hospSlot);
+  const kids = !!(store.profile.prefs.withBaby || store.profile.prefs.kids || store.profile.prefs.party === 'family');
   const paintSosHosp = () => {
     const cc = getActiveCountry();
-    const list = nearestCare(fix, cc, { hospitalsOnly: true, limit: 3 });
+    const { picks, nearer } = sosCare(fix, cc, { kids });
     hospSlot.replaceChildren();
-    if (!list.length) return;
-    hospSlot.append(h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, fix && fix.lat != null ? 'Nearest to you:' : `In ${c.name}:`));
+    if (!picks.length) return;
+    const label = (text) => h('p', { class: 'muted', style: 'margin: var(--sp-3) 0 var(--sp-1)' }, text);
+    hospSlot.append(label(fix && fix.lat != null ? 'Near you:' : `In ${c.name}:`));
     // A "N km away" figure is straight-line, and on an island that can quietly mean "across
     // open water, no road under it at all" — the same fact js/screens/medical.js's driveLabel
     // fix exists for. This screen never showed a walk/drive time to begin with, so there is no
@@ -6494,13 +6561,18 @@ function sosScreen(cc) {
     // easy trip" when it is actually a boat crossing.
     const acrossWater = (x) => fix && fix.lat != null && x.lat != null && islandsLoaded()
       && sameLand(fix, { lat: x.lat, lng: x.lng }) === false;
-    list.forEach((x) => hospSlot.append(h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
+    const row = (x) => h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
       h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
       h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, x.city || x.en || ''),
       acrossWater(x) ? h('div', { class: 'tiny', style: 'margin: 0 0 var(--sp-1)' }, '🚤 Across the water — a boat or ferry, not a road, connects it.') : null,
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
       h('a', { class: 'btn ghost block btn-spaced', href: mapsSearch(`${x.name} ${x.city || ''}`.trim()), target: '_blank', rel: 'noopener' }, 'Open in maps ↗'),
-    ])));
+    ]);
+    picks.forEach((x) => hospSlot.append(row(x)));
+    if (nearer.length) {
+      hospSlot.append(label('Closer, capability unknown:'));
+      nearer.forEach((x) => hospSlot.append(row(x)));
+    }
     hospSlot.append(h('button', { class: 'btn ghost block', onclick: () => go(`#hospital-${cc}`) }, `Every hospital in ${c.name} →`));
     retranslate(hospSlot);
   };
@@ -7016,7 +7088,18 @@ export function render() {
     const wantAll = NEEDS_ALL_COUNTRIES.has(head);
     const prefix = arg ? arg.split('-')[0] : null;
     const argCc = ALL_CC.includes(arg) ? arg : (ALL_CC.includes(prefix) ? prefix : null);
-    const neededCcs = wantAll ? ALL_CC : [argCc || getActiveCountry()];
+    // The emergency screens take their country from the fix (countryOfFix), so that is the one
+    // to load, not the browsed one. Within BAND_KM of a border the decision needs both sides'
+    // ADM1 sets — precached files, once per session — so wait for them here and paint once.
+    const fixFirst = (head === 'sos' || head === 'hospital') && !argCc ? getLastFix() : null;
+    const band = fixFirst ? countriesNearFix(fixFirst) : [];
+    const pendingBand = band.length > 1 ? band.filter((cc) => !isRegionSetLoaded(cc) && !_regionSetFailed.has(cc)) : [];
+    if (pendingBand.length) {
+      pendingBand.forEach((cc) => { loadRegionSet(cc).then(render, render); });
+      mount(countryLoadingScreen(pendingBand), true);
+      return;
+    }
+    const neededCcs = wantAll ? ALL_CC : [argCc || (fixFirst && countryOfFix(fixFirst)) || getActiveCountry()];
     const pendingCountry = neededCcs.filter((cc) => !isCountryLoaded(cc));
     const pendingRegion = NEEDS_REGION_DATA.has(head) ? neededCcs.filter((cc) => !isRegionSetLoaded(cc)) : [];
     if (pendingCountry.length || pendingRegion.length) {

@@ -14,6 +14,7 @@
 import { h } from '../util.js';
 import { store, save, getLastFix } from '../state.js';
 import { getCountry } from '../data/regions.js';
+import { EMERGENCY_NUMBERS } from '../data/emergency-numbers.js';
 import { infoTip, foldable, readAloudBar } from '../ui-widgets.js';
 import { sourcesNote } from '../render-utils.js';
 import { FIRSTAID_SECTIONS, FIRSTAID_TOPICS, FIRSTAID_SOURCES } from '../data/firstaid.js';
@@ -99,7 +100,7 @@ export function firstaidScreen(arg) {
     h('h2', {}, `📞 Call — ${c.name}`),
     infoTip('The national emergency number, free from any phone and usually working with no SIM. If you cannot describe where you are, read the coordinates below to the dispatcher.'),
   ])]);
-  const em = (c.info && c.info.emergency) || [];
+  const em = EMERGENCY_NUMBERS[c.id] || [];
   if (em.length) em.forEach((e) => call.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else call.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
   if (fix && fix.lat != null) {

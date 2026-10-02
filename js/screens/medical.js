@@ -32,13 +32,14 @@ import {
   MED_SOURCES,
 } from '../data/medical.js';
 import { HOSP_TAG } from '../data/emergency.js';
+import { EMERGENCY_NUMBERS } from '../data/emergency-numbers.js';
 import { loadIslands, islandsLoaded, islandAt, sameLand } from '../data/islands.js';
 import { islandCareFor, ISLAND_CARE_SOURCES } from '../data/island-care.js';
 import {
   loadHospitals, isHospitalsLoaded, nearestCare, nearestAnywhere, careCount, KIND_LABEL,
 } from '../data/hospitals.js';
 import {
-  go, mount, topbar, countryChips, mapsSearch, kmLabel, whereAmI, nearestSpotGlobal, ensureRegionSet,
+  go, mount, topbar, countryChips, mapsSearch, kmLabel, whereAmI, countryOfFix, ensureRegionSet,
 } from '../main.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 
@@ -150,11 +151,11 @@ function showMedCard() {
 // render below reads as one linear pass.
 function resolveWhere(cc) {
   const fix = getLastFix();
-  const near = fix ? nearestSpotGlobal(fix) : null;
+  const fixCc = fix ? countryOfFix(fix) : null;
   if (cc) setActiveCountry(cc);
-  else if (near) setActiveCountry(near.spot.country);
+  else if (fixCc) setActiveCountry(fixCc);
   const active = getActiveCountry();
-  return { fix, near, wai: fix ? whereAmI(fix) : null, c: getCountry(active), cc: active };
+  return { fix, wai: fix ? whereAmI(fix) : null, c: getCountry(active), cc: active };
 }
 
 export function hospitalScreen(cc) {
@@ -192,7 +193,7 @@ export function hospitalScreen(cc) {
     h('h2', {}, `1. Call — ${c.name}`),
     infoTip('Emergency numbers are free from any phone, need no credit, and on most networks work with no SIM card. If nobody answers in English, keep the line open and hand the phone to anyone nearby.'),
   ])]);
-  const em = (c.info && c.info.emergency) || [];
+  const em = EMERGENCY_NUMBERS[active] || [];
   if (em.length) em.forEach((e) => call.append(h('a', { class: 'btn block sos-num', 'data-no-mt': '', href: `tel:${String(e.number).replace(/\s/g, '')}` }, `${e.label}: ${e.number}`)));
   else call.append(h('p', { class: 'muted' }, 'Emergency numbers are being added for this country.'));
   wrap.append(call);

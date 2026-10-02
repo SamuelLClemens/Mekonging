@@ -173,7 +173,7 @@ export const WEATHER_SPOTS = [
   { country: 'kh', city: 'Koh Sdach', lat: 10.933, lng: 103.067 },
   { country: 'kh', city: 'Kratie', lat: 12.488, lng: 106.018 },
   { country: 'kh', city: 'Oudong', lat: 11.8239, lng: 104.7425 },
-  { country: 'kh', city: 'Preah Rumkel (Stung Treng)', lat: 13.97, lng: 105.94 },
+  { country: 'kh', city: 'Preah Rumkel (Stung Treng)', lat: 13.8906, lng: 105.9338 }, // Wikidata Q56321713
   { country: 'kh', city: 'Preah Vihear', lat: 13.7872, lng: 104.54 },
   { country: 'kh', city: 'Sambor (Kratie)', lat: 12.78, lng: 105.965 },
   { country: 'kh', city: 'Sen Monorom', lat: 12.4522, lng: 107.1892 },
@@ -186,10 +186,10 @@ export const WEATHER_SPOTS = [
   { country: 'la', city: 'Attapeu', lat: 15.11, lng: 107.16 },
   { country: 'la', city: 'Boualapha', lat: 17.3733, lng: 105.8372 },
   { country: 'la', city: 'Champasak', lat: 14.85, lng: 105.885 },
-  { country: 'la', city: 'Don Det', lat: 13.9226, lng: 105.9403 },
-  { country: 'la', city: 'Don Khon', lat: 13.912, lng: 105.972 },
+  { country: 'la', city: 'Don Det', lat: 13.9731, lng: 105.9228 }, // Wikipedia, Don Det
+  { country: 'la', city: 'Don Khon', lat: 13.9552, lng: 105.926 }, // Wikipedia, Don Khon
   { country: 'la', city: 'Houameuang (near Sam Neua)', lat: 20.145, lng: 103.63 },
-  { country: 'la', city: 'Huay Xai', lat: 20.33, lng: 100.7 },
+  { country: 'la', city: 'Huay Xai', lat: 20.2631, lng: 100.4336 }, // Wikipedia, Houayxay
   { country: 'la', city: 'Kiet Ngong', lat: 14.14, lng: 106.19 },
   { country: 'la', city: 'Luang Namtha', lat: 20.9491, lng: 101.4036 },
   { country: 'la', city: 'Muang Kham', lat: 19.5806, lng: 103.4972 },
