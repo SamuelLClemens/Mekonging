@@ -48,6 +48,18 @@ const AIR_PREFIX = 'mk.air.';
 // keys in js/data/places.*.js against this list.
 //
 // Adding places for a city NOT listed here means adding it here in the same commit.
+//
+//   satelliteOf  (F-05, main.js audit) A handful of hubs are small river-islands/day-trip
+//               islands physically nested inside a bigger metro's area — kept as their OWN
+//               hub deliberately (see the comment just below) so a traveller actually ON one
+//               of them is anchored and named correctly. The problem that creates: a geometric
+//               nearest-point search (nearestSpotGlobal, used for the Home headline) can also
+//               hand the satellite's name to someone who is really just in the parent city —
+//               Suvarnabhumi Airport reads 20 km from Bang Krachao vs 28 km from Bangkok, an
+//               8 km margin nobody would call "being on Bang Krachao." `satelliteOf` names the
+//               parent hub's `city` (same country) so main.js's satelliteDisplayCity() can
+//               prefer it for the DISPLAY LABEL ONLY when the satellite is not meaningfully
+//               closer — the weather/places anchor itself (this entry) is never touched.
 export const WEATHER_SPOTS = [
   // Thailand
   { country: 'th', city: 'Bangkok', lat: 13.7563, lng: 100.5018, hub: true },
@@ -70,10 +82,14 @@ export const WEATHER_SPOTS = [
   // ranked Hanoi venues as "Nearby" for exactly this reason. Koh Kret and Bang Krachao are
   // river islands inside greater Bangkok, so their weather is Bangkok's in practice; they
   // are listed anyway so the Places anchor and "You're around X" resolve to the right place.
-  { country: 'th', city: 'Koh Kret', lat: 13.9089, lng: 100.4796, hub: true },
-  { country: 'th', city: 'Bang Krachao', lat: 13.6954, lng: 100.5610, hub: true },
-  { country: 'th', city: 'Koh Si Chang', lat: 13.1525, lng: 100.8094, hub: true },
-  { country: 'th', city: 'Koh Larn', lat: 12.9175, lng: 100.7782, hub: true },
+  // `satelliteOf` on these four (see the header comment above) lets the DISPLAY label prefer
+  // the named parent hub unless the traveller is meaningfully closer to the satellite itself —
+  // Koh Samet stays bare: at ~73 km from Pattaya it is its own destination, not a day trip
+  // nested inside another city's metro area.
+  { country: 'th', city: 'Koh Kret', lat: 13.9089, lng: 100.4796, hub: true, satelliteOf: 'Bangkok' },
+  { country: 'th', city: 'Bang Krachao', lat: 13.6954, lng: 100.5610, hub: true, satelliteOf: 'Bangkok' },
+  { country: 'th', city: 'Koh Si Chang', lat: 13.1525, lng: 100.8094, hub: true, satelliteOf: 'Pattaya' },
+  { country: 'th', city: 'Koh Larn', lat: 12.9175, lng: 100.7782, hub: true, satelliteOf: 'Pattaya' },
   { country: 'th', city: 'Koh Samet', lat: 12.5667, lng: 101.4500, hub: true },
   // Vietnam
   { country: 'vi', city: 'Hanoi', lat: 21.0278, lng: 105.8342, hub: true },

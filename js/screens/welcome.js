@@ -8,7 +8,7 @@ import { h } from '../util.js';
 import { INTERESTS } from '../data/regions.js';
 import { uiLangMeta } from '../i18n.js';
 import { PRICE_TIER_LABEL } from '../render-utils.js';
-import { foldable, netMode } from '../ui-widgets.js';
+import { foldable, netMode, setNetMode } from '../ui-widgets.js';
 import {
   applyTheme,
   dietPicker,
@@ -169,8 +169,19 @@ export function setupRecapCard() {
   // no such question any more, so reporting the setting back as a personalisation would be
   // claiming credit for a default. What IS worth naming here is the thing the app is doing on
   // their behalf without being asked: putting the field guide on the device.
+  //
+  // F-20: the offline branch used to end on "Tap the signal icon at the top" — there has been
+  // no topbar signal icon since online/offline moved into Settings' "📥 Offline field guide"
+  // card (see topbar(), js/main.js, ~line 1061). A dead instruction pointing at a control that
+  // no longer exists is worse than no instruction, so this is now a real, direct action button
+  // instead — same onclick + label as every other "data is off" recovery in the app
+  // (js/screens/phrasebook.js offlineTranslateBox, js/screens/settings.js offline-pack card).
   rows.push(netMode() === 'offline'
-    ? ['✈️', 'Fully offline', 'You have turned data off. Tap the signal icon at the top to use a connection when you have one.']
+    ? ['✈️', 'Fully offline', 'You have turned data off.',
+       h('button', {
+         class: 'btn ghost tiny-btn', style: 'display: block; margin-top: var(--sp-1)',
+         onclick: () => { setNetMode('online'); render(); },
+       }, '📶 Turn data on')]
     : ['📥', 'Downloading for offline use', 'Photos of what can hurt you first, then the rest of the field guide — so identifying works with no signal.']);
   const partyLbl = { solo: 'Solo', couple: 'Couple', family: 'Family', group: 'Group' }[p.party];
   if (partyLbl || p.withBaby || p.soloFemale) {
@@ -184,9 +195,17 @@ export function setupRecapCard() {
 
   const dismiss = () => { p.showSetupRecap = false; save(); render(); };
   const card = h('div', { class: 'card setup-recap' });
-  card.append(h('strong', {}, '✨ Here is what I set up for you'));
-  card.append(h('ul', { class: 'recap-list' }, rows.map(([ic, t, d]) =>
-    h('li', {}, [h('span', { class: 'recap-ic' }, ic), h('span', {}, [h('b', {}, t), h('span', { class: 'muted' }, ' — ' + d)])]))));
+  // F-02: this card used to stand open with its full bulleted list every time — on a genuinely
+  // fresh first launch (before any GPS fix, with Quick access and the two always-on chips still
+  // above it) that measured 317px, 39% of a 375×812 first screen, with "Right now" pushed to
+  // y≈1530 — both well past the audit's ≤15%/visible-above-the-fold targets. The heading itself
+  // IS the disclosure now (closed by default): it still proves the few taps did something real,
+  // and the itemised list is one tap away rather than standing open on every first viewport.
+  const det = h('details', { class: 'recap-detail' });
+  det.append(h('summary', {}, '✨ Here is what I set up for you'));
+  det.append(h('ul', { class: 'recap-list' }, rows.map(([ic, t, d, action]) =>
+    h('li', {}, [h('span', { class: 'recap-ic' }, ic), h('span', {}, [h('b', {}, t), h('span', { class: 'muted' }, ' — ' + d), action || null])]))));
+  card.append(det);
   card.append(h('div', { class: 'row-between', style: 'margin-top: var(--sp-2)' }, [
     h('button', { class: 'btn', onclick: () => { p.showSetupRecap = false; save(); go('#settings'); } }, 'Add more in Settings'),
     h('button', { class: 'btn ghost', onclick: dismiss }, 'Got it'),
