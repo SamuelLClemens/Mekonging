@@ -198,7 +198,7 @@ export const PLACES_LA_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Pak Ou Caves Luang Prabang", coords: { lat: 20.0500, lng: 102.2167 },
     bookHint: "Arrange a shared or private boat at the Luang Prabang riverfront; pay cave entry on arrival.", verified: "2026-06",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com/laos/around-luang-prabang/pak-ou-caves" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Luang Prabang (official DMO) — Pak Ou Cave (Tham Ting)", url: "https://tourismluangprabang.org/things-to-do/nature/pak-ou-cave-tham-ting/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-wat-phou", name: "Wat Phou (Vat Phou)", city: "Champasak", country: "la",
@@ -4876,7 +4876,7 @@ export const PLACES_LA_EXT = [
     rating: 3.0, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Savan Resorts Savannakhet", coords: { lat: 16.6125, lng: 104.7756 },
     bookHint: "Book via the resort's website or Booking.com/Agoda.", verified: "2026-08",
-    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com/Hotel_Review-g811038-d1492807-Reviews-Savan_Resorts-Savannakhet_Savannakhet_Province.html" }],
+    sources: [{ org: "Savan Resorts (official)", url: "https://www.savanresorts.com/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/Hotel_Review-g811038-d1492807-Reviews-Savan_Resorts-Savannakhet_Savannakhet_Province.html" }],
   },
   {
     id: "la-ext-savannakhet-leena-guesthouse", name: "Leena Guesthouse", city: "Savannakhet", country: "la",

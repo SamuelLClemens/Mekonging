@@ -9,7 +9,7 @@ Twelve guards. Each one exists because the failure it catches actually shipped. 
 them; each prints one line and exits non-zero on failure.
 
 ```bash
-for g in imports lazy-data preloads ui-strings month-arrays contrast spacing place-dupes undefined net-gates; do
+for g in imports lazy-data preloads ui-strings month-arrays contrast spacing place-dupes undefined net-gates sources; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -27,6 +27,7 @@ python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 | `check-month-arrays` | a month claimed by an array but not by the record's own prose | the two are written by different hands and drift |
 | `check-place-fields` | inconsistent figures, broken afterDark contract | |
 | `check-place-dupes` | duplicate ids, new name collisions | a merged place silently deletes travellers' saved data |
+| `check-sources` | homepage-only place citations and unsourced routes getting WORSE | the 2026-10-02 content-truth audit found 5 of 10 spot-checked places contradicted their own cited source; this ratchets the two structural gaps behind that (a citation that is just a homepage, a route with no source at all) so they can shrink but never silently grow |
 | `check-contrast` | text below its WCAG AA threshold on any of the seven skins | `--good` was unreadable on all four dark skins for months |
 | `check-spacing` | more inline spacing declarations than a file's ceiling | a ratchet: 651 inline margins, none using the `--sp-*` scale |
 | `check-cache-version` | `APP_VERSION`/`CACHE_VERSION` not moved when a shipped asset changed | the service worker is cache-first, so a stale version means nobody gets the fix |
