@@ -1,11 +1,8 @@
+import { EMERGENCY_NUMBERS } from './emergency-numbers.js';
+
 export const INFO_LA = {
   country: "la", name: "Laos", currency: "LAK", verified: "2026-06",
-  emergency: [
-    { label: "Police", number: "1191" },
-    { label: "Ambulance", number: "1195" },
-    { label: "Fire", number: "1190" },
-    { label: "Tourist Police (Vientiane)", number: "021 251 128" }
-  ],
+  emergency: EMERGENCY_NUMBERS.la,
   sections: [
     {
       id: "money",

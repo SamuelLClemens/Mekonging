@@ -1,12 +1,10 @@
 // Thailand essentials (slice). Practical, sourced, and framed as guidance. Visa and
 // safety rules change — always verify with official sources before you travel.
+import { EMERGENCY_NUMBERS } from './emergency-numbers.js';
+
 export const INFO_TH = {
   country: 'th', name: 'Thailand', currency: 'THB', verified: '2026-06',
-  emergency: [
-    { label: 'Tourist Police (English)', number: '1155' },
-    { label: 'Police', number: '191' },
-    { label: 'Ambulance / medical', number: '1669' },
-  ],
+  emergency: EMERGENCY_NUMBERS.th,
   sections: [
     { id: 'money', title: 'Money & ATMs', body: [
       'Currency is the Thai baht (THB). Cash is king for street food, markets and tuk-tuks.',

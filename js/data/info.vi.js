@@ -1,11 +1,8 @@
+import { EMERGENCY_NUMBERS } from './emergency-numbers.js';
+
 export const INFO_VI = {
   country: "vi", name: "Vietnam", currency: "VND", verified: "2026-06",
-  emergency: [
-    { label: "Police", number: "113" },
-    { label: "Fire", number: "114" },
-    { label: "Ambulance / Medical", number: "115" },
-    { label: "Search & Rescue / Disasters", number: "112" }
-  ],
+  emergency: EMERGENCY_NUMBERS.vi,
   sections: [
     {
       id: "money",

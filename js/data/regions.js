@@ -130,6 +130,11 @@ const COUNTRY_LOADERS = { th: loadTH, vi: loadVI, kh: loadKH, la: loadLA };
 // retry (e.g. the connection comes back) gets a fresh attempt rather than a
 // permanently-rejected cache entry.
 const _countryLoads = {};
+// Countries whose load failed this session. A failed import() stays failed in the module map,
+// so a retry cannot succeed; the emergency routes read this to render without the data
+// rather than spin on "Loading…" (js/main.js render()).
+const _countryFailed = new Set();
+export function countryLoadFailed(cc) { return _countryFailed.has(cc); }
 
 export function isCountryLoaded(cc) {
   const c = getCountry(cc);
@@ -147,7 +152,7 @@ export function loadCountry(cc) {
   if (!loader) return Promise.resolve(c);
   const p = loader(c)
     .then(() => { c._loaded = true; return c; })
-    .catch((err) => { delete _countryLoads[cc]; throw err; });
+    .catch((err) => { delete _countryLoads[cc]; _countryFailed.add(cc); throw err; });
   _countryLoads[cc] = p;
   return p;
 }
