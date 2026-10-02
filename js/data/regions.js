@@ -56,16 +56,24 @@ export function getCountry(id) { return COUNTRIES.find((c) => c.id === id) || nu
 // Cache Storage offline exactly as it would from the network online — the only way
 // this fails offline is if the file was never precached in the first place, same as
 // any other asset in this app.
-async function loadTH(c) {
+// Each loader takes `bust` — '' on the first attempt, '?retry=N' on every attempt after a
+// failure (see loadCountry below). A FAILED dynamic import() is permanent: the spec records
+// the rejection against that exact specifier in the page's module map, so importing
+// './places.kh.js' again after it has failed once resolves the cached rejection instantly
+// rather than genuinely refetching. A different query string is a different module-map
+// entry, so the retry actually re-requests. The service worker matches its cache with
+// ignoreSearch (sw.js), so the busted URL still hits the offline copy once cached. Mirrors
+// js/main.js's SCREEN_LOADERS/loadScreenMod bust-token pattern exactly.
+async function loadTH(c, bust = '') {
   const [
     { PLACES_TH }, { PLACES_TH_EXT }, { PRICES_TH }, { ROUTES_TH }, { INFO_TH },
     { GUIDE_TH }, { EVENTS_TH }, { FOOD_TH }, { FOOD_TH_EXT }, { LOCAL_TH },
     { HISTORY_CITIES_TH },
   ] = await Promise.all([
-    import('./places.th.js'), import('./places.th.ext.js'), import('./prices.th.js'),
-    import('./routes.th.js'), import('./info.th.js'), import('./guide.th.js'),
-    import('./events.th.js'), import('./food.th.js'), import('./food.th.ext.js'), import('./local.th.js'),
-    import('./history.cities.th.js'),
+    import('./places.th.js' + bust), import('./places.th.ext.js' + bust), import('./prices.th.js' + bust),
+    import('./routes.th.js' + bust), import('./info.th.js' + bust), import('./guide.th.js' + bust),
+    import('./events.th.js' + bust), import('./food.th.js' + bust), import('./food.th.ext.js' + bust), import('./local.th.js' + bust),
+    import('./history.cities.th.js' + bust),
   ]);
   c.places = [...PLACES_TH, ...PLACES_TH_EXT];
   c.prices = PRICES_TH; c.routes = ROUTES_TH; c.info = INFO_TH; c.guide = GUIDE_TH;
@@ -73,16 +81,16 @@ async function loadTH(c) {
   c._localBoards = LOCAL_TH;
   Object.assign(HISTORY.cities, HISTORY_CITIES_TH);
 }
-async function loadVI(c) {
+async function loadVI(c, bust = '') {
   const [
     { PLACES_VI }, { PLACES_VI_EXT }, { PRICES_VI }, { ROUTES_VI }, { INFO_VI },
     { GUIDE_VI }, { EVENTS_VI }, { FOOD_VI }, { FOOD_VI_EXT }, { LOCAL_VI },
     { HISTORY_CITIES_VI },
   ] = await Promise.all([
-    import('./places.vi.js'), import('./places.vi.ext.js'), import('./prices.vi.js'),
-    import('./routes.vi.js'), import('./info.vi.js'), import('./guide.vi.js'),
-    import('./events.vi.js'), import('./food.vi.js'), import('./food.vi.ext.js'), import('./local.vi.js'),
-    import('./history.cities.vi.js'),
+    import('./places.vi.js' + bust), import('./places.vi.ext.js' + bust), import('./prices.vi.js' + bust),
+    import('./routes.vi.js' + bust), import('./info.vi.js' + bust), import('./guide.vi.js' + bust),
+    import('./events.vi.js' + bust), import('./food.vi.js' + bust), import('./food.vi.ext.js' + bust), import('./local.vi.js' + bust),
+    import('./history.cities.vi.js' + bust),
   ]);
   c.places = [...PLACES_VI, ...PLACES_VI_EXT];
   c.prices = PRICES_VI; c.routes = ROUTES_VI; c.info = INFO_VI; c.guide = GUIDE_VI;
@@ -90,16 +98,16 @@ async function loadVI(c) {
   c._localBoards = LOCAL_VI;
   Object.assign(HISTORY.cities, HISTORY_CITIES_VI);
 }
-async function loadKH(c) {
+async function loadKH(c, bust = '') {
   const [
     { PLACES_KH }, { PLACES_KH_EXT }, { PRICES_KH }, { ROUTES_KH }, { INFO_KH },
     { GUIDE_KH }, { EVENTS_KH }, { FOOD_KH }, { FOOD_KH_EXT }, { LOCAL_KH },
     { HISTORY_CITIES_KH },
   ] = await Promise.all([
-    import('./places.kh.js'), import('./places.kh.ext.js'), import('./prices.kh.js'),
-    import('./routes.kh.js'), import('./info.kh.js'), import('./guide.kh.js'),
-    import('./events.kh.js'), import('./food.kh.js'), import('./food.kh.ext.js'), import('./local.kh.js'),
-    import('./history.cities.kh.js'),
+    import('./places.kh.js' + bust), import('./places.kh.ext.js' + bust), import('./prices.kh.js' + bust),
+    import('./routes.kh.js' + bust), import('./info.kh.js' + bust), import('./guide.kh.js' + bust),
+    import('./events.kh.js' + bust), import('./food.kh.js' + bust), import('./food.kh.ext.js' + bust), import('./local.kh.js' + bust),
+    import('./history.cities.kh.js' + bust),
   ]);
   c.places = [...PLACES_KH, ...PLACES_KH_EXT];
   c.prices = PRICES_KH; c.routes = ROUTES_KH; c.info = INFO_KH; c.guide = GUIDE_KH;
@@ -107,16 +115,16 @@ async function loadKH(c) {
   c._localBoards = LOCAL_KH;
   Object.assign(HISTORY.cities, HISTORY_CITIES_KH);
 }
-async function loadLA(c) {
+async function loadLA(c, bust = '') {
   const [
     { PLACES_LA }, { PLACES_LA_EXT }, { PRICES_LA }, { ROUTES_LA }, { INFO_LA },
     { GUIDE_LA }, { EVENTS_LA }, { FOOD_LA }, { FOOD_LA_EXT }, { LOCAL_LA },
     { HISTORY_CITIES_LA },
   ] = await Promise.all([
-    import('./places.la.js'), import('./places.la.ext.js'), import('./prices.la.js'),
-    import('./routes.la.js'), import('./info.la.js'), import('./guide.la.js'),
-    import('./events.la.js'), import('./food.la.js'), import('./food.la.ext.js'), import('./local.la.js'),
-    import('./history.cities.la.js'),
+    import('./places.la.js' + bust), import('./places.la.ext.js' + bust), import('./prices.la.js' + bust),
+    import('./routes.la.js' + bust), import('./info.la.js' + bust), import('./guide.la.js' + bust),
+    import('./events.la.js' + bust), import('./food.la.js' + bust), import('./food.la.ext.js' + bust), import('./local.la.js' + bust),
+    import('./history.cities.la.js' + bust),
   ]);
   c.places = [...PLACES_LA, ...PLACES_LA_EXT];
   c.prices = PRICES_LA; c.routes = ROUTES_LA; c.info = INFO_LA; c.guide = GUIDE_LA;
@@ -131,15 +139,27 @@ const COUNTRY_LOADERS = { th: loadTH, vi: loadVI, kh: loadKH, la: loadLA };
 // permanently-rejected cache entry.
 const _countryLoads = {};
 // Countries whose load failed this session. A failed import() stays failed in the module map,
-// so a retry cannot succeed; the emergency routes read this to render without the data
-// rather than spin on "Loading…" (js/main.js render()).
+// so a bare retry of the same specifier cannot succeed; the emergency routes read this to
+// render without the data rather than spin on "Loading…", and every OTHER route reads it
+// (js/main.js render()) to stop re-requesting forever and show a retry card instead — see
+// countryUnavailableScreen there. _countryTries/clearCountryFailure below are what give a
+// genuine retry (a fresh URL) a real chance to succeed instead of replaying the same failure.
 const _countryFailed = new Set();
 export function countryLoadFailed(cc) { return _countryFailed.has(cc); }
+// Lets a Retry button (or the 'online' event) give this country another real attempt: clears
+// the permanent-failure flag so the router's gate treats it as pending again, and loadCountry
+// below picks a fresh bust token so the import() genuinely re-requests rather than replaying
+// the browser's cached rejection for the old specifier.
+export function clearCountryFailure(cc) { _countryFailed.delete(cc); }
 
 export function isCountryLoaded(cc) {
   const c = getCountry(cc);
   return !!(c && c._loaded);
 }
+
+// How many times loadCountry has been asked to fetch each country, successful or not — the
+// bust-token counter, same idiom as js/main.js's _screenTries.
+const _countryTries = {};
 
 // Fetches and wires in one country's data. Safe to call repeatedly and from several
 // screens at once — concurrent calls for the same country share one in-flight load.
@@ -150,8 +170,9 @@ export function loadCountry(cc) {
   if (_countryLoads[cc]) return _countryLoads[cc];
   const loader = COUNTRY_LOADERS[cc];
   if (!loader) return Promise.resolve(c);
-  const p = loader(c)
-    .then(() => { c._loaded = true; return c; })
+  const n = _countryTries[cc] = (_countryTries[cc] || 0) + 1;
+  const p = loader(c, n > 1 ? `?retry=${n}` : '')
+    .then(() => { c._loaded = true; _countryFailed.delete(cc); return c; })
     .catch((err) => { delete _countryLoads[cc]; _countryFailed.add(cc); throw err; });
   _countryLoads[cc] = p;
   return p;
