@@ -116,7 +116,7 @@ import {
   boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
-  loadCountry, isCountryLoaded, loadAllCountries,
+  loadCountry, isCountryLoaded, loadAllCountries, countryLoadFailed,
 } from './data/regions.js';
 // nature.js (~108 KB of species data) is NOT statically imported here — see the lazy
 // loadNature() below (added right after the import block), which mirrors regions.js's
@@ -7100,7 +7100,10 @@ export function render() {
       return;
     }
     const neededCcs = wantAll ? ALL_CC : [argCc || (fixFirst && countryOfFix(fixFirst)) || getActiveCountry()];
-    const pendingCountry = neededCcs.filter((cc) => !isCountryLoaded(cc));
+    // Their numbers and checked hospitals are eager, so the emergency screens render even when
+    // the country's data cannot load: before this, one missing file held SOS on "Loading…".
+    const emergency = head === 'sos' || head === 'hospital';
+    const pendingCountry = neededCcs.filter((cc) => !isCountryLoaded(cc) && !(emergency && countryLoadFailed(cc)));
     const pendingRegion = NEEDS_REGION_DATA.has(head) ? neededCcs.filter((cc) => !isRegionSetLoaded(cc)) : [];
     if (pendingCountry.length || pendingRegion.length) {
       pendingCountry.forEach((cc) => { loadCountry(cc).then(render, render); });
