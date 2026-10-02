@@ -7,7 +7,7 @@ export const ROUTES_TH = [
     "from": "Bangkok",
     "to": "Chiang Mai",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Sleeper train",
@@ -16,15 +16,15 @@ export const ROUTES_TH = [
           14
         ],
         "price": {
-          "low": 600,
-          "high": 1500,
+          "low": 750,
+          "high": 2450,
           "currency": "THB"
         },
         "freq": "Several daily, best departures early evening",
         "comfort": "Modern Special Express No. 9/13 carriages with air-conditioned second-class berths and private first-class cabins; the most relaxed overnight option.",
         "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
         "recommended": true,
-        "notes": "Book several weeks ahead as sleeper berths sell out; advance booking is now capped at 90 days. Lower berths cost more but are roomier."
+        "notes": "Book several weeks ahead as sleeper berths sell out; advance booking is now capped at 90 days. Lower berths cost more but are roomier. Backpackers Wanderlust (2026) lists 2nd class sleeper at 768-1,291 THB and 1st class at 1,446-1,903 THB depending on station vs online booking; widened the band to cover 1st class, which the previous range omitted."
       },
       {
         "mode": "VIP / overnight bus",
@@ -59,6 +59,12 @@ export const ROUTES_TH = [
         "bookVia": "Thai AirAsia, Thai Vietjet, Thai Lion Air, Nok Air",
         "recommended": false,
         "notes": "Book early for sub-1000 THB fares. DMK (Don Muang) hosts most budget carriers; factor baggage fees."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Backpackers Wanderlust — Sleeper Train Bangkok to Chiang Mai: BEST Tips 2026",
+        "url": "https://www.backpackerswanderlust.com/bangkok-to-chiang-mai-overnight-sleeper-train/"
       }
     ]
   },
@@ -110,7 +116,7 @@ export const ROUTES_TH = [
     "from": "Bangkok",
     "to": "Ayutthaya",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Train",
@@ -145,6 +151,12 @@ export const ROUTES_TH = [
         "bookVia": "Mo Chit van counters or 12Go",
         "recommended": false,
         "notes": "Vans depart when full. Good for a day trip if the train timetable does not suit."
+      }
+    ],
+    "sources": [
+      {
+        "org": "ThailandTrain.org — Bangkok to Ayutthaya Train: Times, Fares & Stations",
+        "url": "https://thailandtrain.org/guide/bangkok-ayutthaya-train"
       }
     ]
   },
@@ -642,7 +654,7 @@ export const ROUTES_TH = [
     "from": "Chiang Mai",
     "to": "Pai",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Minivan",
@@ -652,14 +664,14 @@ export const ROUTES_TH = [
         ],
         "price": {
           "low": 150,
-          "high": 260,
+          "high": 360,
           "currency": "THB"
         },
         "freq": "Roughly hourly from Arcade Bus Station, around 06:30 to 17:30",
         "comfort": "Air-conditioned shared vans on Route 1095 with its famous 762 curves; quick but the winding road causes motion sickness for many.",
         "bookVia": "Aya Service or 12Go",
         "recommended": true,
-        "notes": "Aya Service is the dominant operator and books out in high season. Sit at the front and bring motion-sickness tablets for the bends."
+        "notes": "Aya Service is the dominant operator and books out in high season. Sit at the front and bring motion-sickness tablets for the bends. DestinationThailand.io (2026) quotes 150-250 THB at the counter rising to 260-360 THB booked online with hotel pickup; widened the high end to cover the pickup price."
       },
       {
         "mode": "Private car / transfer",
@@ -677,6 +689,12 @@ export const ROUTES_TH = [
         "bookVia": "Local agencies or 12Go private transfer",
         "recommended": false,
         "notes": "Worth it for groups or anyone prone to car sickness. Price is per vehicle, so split among passengers."
+      }
+    ],
+    "sources": [
+      {
+        "org": "DestinationThailand.io — Chiang Mai to Pai 2026: Minivan, Car or Scooter, Costed",
+        "url": "https://destinationthailand.io/chiang-mai-to-pai/"
       }
     ]
   },
@@ -771,7 +789,7 @@ export const ROUTES_TH = [
     "from": "Krabi",
     "to": "Koh Lanta",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Minivan",
@@ -806,6 +824,12 @@ export const ROUTES_TH = [
         "bookVia": "Krabi pier operators, aonangtravel, or ferryscanner",
         "recommended": false,
         "notes": "Runs only in the dry high season; off-season you must take the minivan. Departures are limited so plan around them."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Smarten Plus — Krabi to Koh Lanta: ferry, van or private transfer",
+        "url": "https://www.smartenplus.co.th/blog/krabi-to-koh-lanta-the-best-ways-to-travel-by-ferry-van-or-private-transfer"
       }
     ]
   },
@@ -874,7 +898,7 @@ export const ROUTES_TH = [
     "from": "Bangkok",
     "to": "Siem Reap",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Aranyaprathet (Thailand) / Poipet (Cambodia)",
     "visa": {
@@ -920,6 +944,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Suspended during the 2026 border closure. When reopened, Giant Ibis assists with paperwork at Poipet for a small fee; book direct, not via touts."
       }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Kingdom — Thailand-Cambodia Border Status 2026: Closed, Fly Instead",
+        "url": "https://cambodiakingdom.com/getting-here/thailand-cambodia-border"
+      }
     ]
   },
   {
@@ -927,7 +957,7 @@ export const ROUTES_TH = [
     "from": "Bangkok",
     "to": "Phnom Penh",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Aranyaprathet (Thailand) / Poipet (Cambodia)",
     "visa": {
@@ -973,6 +1003,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Suspended during the 2026 closure. Even normally this is a 12+ hour journey, so most travellers fly; book direct with the operator."
       }
+    ],
+    "sources": [
+      {
+        "org": "Cambodia Kingdom — Thailand-Cambodia Border Status 2026: Closed, Fly Instead",
+        "url": "https://cambodiakingdom.com/getting-here/thailand-cambodia-border"
+      }
     ]
   },
   {
@@ -980,11 +1016,11 @@ export const ROUTES_TH = [
     "from": "Bangkok",
     "to": "Vientiane",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Nong Khai (Thailand) / Thanaleng via the First Thai-Lao Friendship Bridge",
     "visa": {
-      "note": "Laos offers a 30-day visa on arrival at the Friendship Bridge (about USD 35 or 1,500 THB, bring a passport photo) or a pre-arranged e-visa via laoevisa.gov.la. Bridge crossing point operates roughly 06:00-22:00."
+      "note": "Laos offers a 30-day visa on arrival at the Friendship Bridge — seat61.com (2026) quotes USD 40 cash (USD, baht or kip accepted, notes must be clean and undamaged) plus a passport photo; some other guides cite a lower ~USD 35, so bring at least USD 40 to be safe — or use a pre-arranged e-visa via laoevisa.gov.la. Bridge crossing point operates roughly 06:00-22:00."
     },
     "scamWarnings": [
       "At the bridge, decline 'express' or 'stamp service' touts who add fees to the fixed visa-on-arrival cost; pay only at the official Lao counter.",
@@ -1023,7 +1059,7 @@ export const ROUTES_TH = [
         "comfort": "Direct international coaches from Mo Chit handle the bridge formalities; reclining VIP seats with air-conditioning.",
         "bookVia": "Cross-border operators at Mo Chit or 12Go",
         "recommended": false,
-        "notes": "Alternatively bus to Udon Thani/Nong Khai then the 20-minute shuttle bus across the bridge to Vientiane."
+        "notes": "Alternatively bus to Udon Thani/Nong Khai then the 20-minute shuttle bus across the bridge to Vientiane. seat61.com puts the Nong Khai-side shuttle fare around 30 baht."
       },
       {
         "mode": "Flight",
@@ -1042,6 +1078,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "International fares run higher than domestic equivalents; you still complete Lao immigration on arrival at the airport."
       }
+    ],
+    "sources": [
+      {
+        "org": "The Man in Seat 61 — Laos: Bangkok to Vientiane, Luang Prabang & Kunming by train",
+        "url": "https://www.seat61.com/Laos.htm"
+      }
     ]
   },
   {
@@ -1049,7 +1091,7 @@ export const ROUTES_TH = [
     "from": "Chiang Khong",
     "to": "Luang Prabang",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Chiang Khong (Thailand) / Huay Xai (Laos) via the Fourth Thai-Lao Friendship Bridge",
     "visa": {
@@ -1067,7 +1109,7 @@ export const ROUTES_TH = [
           18
         ],
         "price": {
-          "low": 30,
+          "low": 23,
           "high": 45,
           "currency": "USD"
         },
@@ -1075,7 +1117,7 @@ export const ROUTES_TH = [
         "comfort": "Two relaxed days down the Mekong with an overnight stop in Pakbeng; wooden long-boats with simple bench/airline-style seating, the classic scenic route.",
         "bookVia": "Official Huay Xai slow-boat pier ticket office",
         "recommended": true,
-        "notes": "Price excludes meals and the Pakbeng guesthouse (dorms from about USD 10). Bring snacks, water and a cushion for comfort."
+        "notes": "Price excludes meals and the Pakbeng guesthouse (dorms from about USD 10). Bring snacks, water and a cushion for comfort. Backpackers Wanderlust (2026) quotes about USD 23 / 500,000 LAK bought directly at the pier, rising toward the high end of this range if booked through an agent or guesthouse."
       },
       {
         "mode": "Speedboat",
@@ -1111,6 +1153,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "An all-weather alternative to the boat; the mountain road is very winding, so bring motion-sickness remedies."
       }
+    ],
+    "sources": [
+      {
+        "org": "Backpackers Wanderlust — Slow Boat Laos Guide (2026): Public vs Premium + Costs",
+        "url": "https://www.backpackerswanderlust.com/slow-boat-laos/"
+      }
     ]
   },
   {
@@ -1118,7 +1166,7 @@ export const ROUTES_TH = [
     "from": "Ubon Ratchathani",
     "to": "Pakse",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Chong Mek (Thailand) / Vang Tao (Laos)",
     "visa": {
@@ -1163,6 +1211,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Flexible and cheap but you arrange the Lao-side leg yourself; agree fares before boarding to avoid overcharging."
       }
+    ],
+    "sources": [
+      {
+        "org": "Discover Laos — Essentials for Southern Laos",
+        "url": "https://discoverlaos.today/post/essentials-for-southern-laos"
+      }
     ]
   },
   {
@@ -1170,7 +1224,7 @@ export const ROUTES_TH = [
     "from": "Hat Yai",
     "to": "Kuala Lumpur",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Padang Besar (Thailand/Malaysia rail border) or Sadao-Bukit Kayu Hitam (road border)",
     "visa": {
@@ -1188,15 +1242,15 @@ export const ROUTES_TH = [
           12
         ],
         "price": {
-          "low": 50,
-          "high": 130,
+          "low": 20,
+          "high": 60,
           "currency": "USD"
         },
         "freq": "Daily; KTM also runs seasonal direct KL-Hat Yai charters",
         "comfort": "Cross at Padang Besar (clear both immigrations in the station), then ride KTM's modern air-conditioned ETS electric trains south to KL Sentral; smooth and scenic.",
         "bookVia": "KTMB (ktmb.com.my) for the Malaysian leg; State Railway of Thailand for the Hat Yai-Padang Besar hop",
         "recommended": true,
-        "notes": "KTM launched a seasonal direct KL Sentral-Hat Yai overnight service (around 11 hours, from about RM95). Otherwise change at Padang Besar onto a frequent ETS."
+        "notes": "KTM launched a seasonal direct KL Sentral-Hat Yai overnight service (around 11 hours, from about RM95). Otherwise change at Padang Besar onto a frequent ETS: train36.com and thailandtrains.com (2026) price the combined trip at about 50 THB for the Hat Yai-Padang Besar shuttle plus 76 MYR (ETS Gold) to 102 MYR (ETS Platinum) on to KL Sentral, roughly USD 20-25 all in; corrected down from an earlier overstated estimate."
       },
       {
         "mode": "Cross-border bus",
@@ -1215,6 +1269,16 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Door-to-door to KL without a train transfer, but the road border can be slow at peak times. Have your MDAC ready."
       }
+    ],
+    "sources": [
+      {
+        "org": "Thailand Trains — Hat Yai to Kuala Lumpur train times and tickets",
+        "url": "https://www.thailandtrains.com/train-times-tickets-hat-yai-to-kuala-lumpur/"
+      },
+      {
+        "org": "Train36.com — Train from Hat Yai to Kuala Lumpur (fares and schedule)",
+        "url": "https://www.train36.com/train-from-hat-yai-to-kuala-lumpur.html"
+      }
     ]
   },
   {
@@ -1222,7 +1286,7 @@ export const ROUTES_TH = [
     "from": "Hat Yai",
     "to": "Penang",
     "country": "th",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Sadao-Bukit Kayu Hitam (road) or Padang Besar (rail)",
     "visa": {
@@ -1266,6 +1330,12 @@ export const ROUTES_TH = [
         "bookVia": "State Railway of Thailand and KTMB, then the Penang ferry",
         "recommended": false,
         "notes": "Scenic and relaxed but slower than the direct van due to changes at Padang Besar and Butterworth."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Travel Penang Malaysia — Hat Yai to Penang: minivan / bus, train, flight",
+        "url": "https://www.travel-penang-malaysia.com/hat-yai-to-penang.html"
       }
     ]
   },

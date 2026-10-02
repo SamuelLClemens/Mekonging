@@ -7,7 +7,7 @@ export const ROUTES_VI = [
     "from": "Hanoi",
     "to": "Sapa",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Sleeper bus",
@@ -17,14 +17,14 @@ export const ROUTES_VI = [
         ],
         "price": {
           "low": 280000,
-          "high": 450000,
+          "high": 550000,
           "currency": "VND"
         },
         "freq": "Several daily, day and overnight",
         "comfort": "Reclining berth or VIP single cabin via the Noi Bai-Lao Cai expressway with one rest stop; drops directly in Sapa town.",
         "bookVia": "Sapa Express, Inter Bus Lines or 12Go",
         "recommended": true,
-        "notes": "Now the most common option for foreign travellers; far quicker than the train as it goes straight to Sapa rather than Lao Cai. Limousine vans (9-11 seats) sit at the upper end of the range."
+        "notes": "Now the most common option for foreign travellers; far quicker than the train as it goes straight to Sapa rather than Lao Cai. Limousine vans (9-11 seats) sit at the upper end of the range. Cat Ba Express (2026) quotes sleeper fares starting around USD 20 (about 500,000 VND) for the roughly 6-hour expressway run; raised the high end slightly to match."
       },
       {
         "mode": "Sleeper train + shuttle",
@@ -60,6 +60,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Good daytime choice if you prefer to sit rather than lie down and want door-to-door service."
       }
+    ],
+    "sources": [
+      {
+        "org": "Cat Ba Express — Sleeper Bus to Sapa",
+        "url": "https://catbaexpress.com/sleeper-bus-to-sapa.html"
+      }
     ]
   },
   {
@@ -67,7 +73,7 @@ export const ROUTES_VI = [
     "from": "Hanoi",
     "to": "Ha Long Bay",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Limousine van",
@@ -77,14 +83,14 @@ export const ROUTES_VI = [
         ],
         "price": {
           "low": 250000,
-          "high": 500000,
+          "high": 700000,
           "currency": "VND"
         },
         "freq": "Multiple morning and midday departures",
         "comfort": "7-12 seat van with Old Quarter hotel pickup, timed to reach the bay before noon cruise boarding.",
         "bookVia": "Klook, GetYourGuide or your cruise operator",
         "recommended": true,
-        "notes": "The expressway has cut the journey to under three hours. Morning pickups around 08:00 align with cruise check-in; most travellers book the transfer bundled with the cruise."
+        "notes": "The expressway has cut the journey to under three hours. Morning pickups around 08:00 align with cruise check-in; most travellers book the transfer bundled with the cruise. VisitHalongBay.com (2026) prices a premium leather-seat limousine van at 1,200,000-1,400,000 VND round trip (roughly 600,000-700,000 VND each way); raised the high end to cover this tier alongside cheaper standard vans."
       },
       {
         "mode": "Shuttle/coach bus",
@@ -93,15 +99,21 @@ export const ROUTES_VI = [
           4.5
         ],
         "price": {
-          "low": 120000,
-          "high": 300000,
+          "low": 150000,
+          "high": 600000,
           "currency": "VND"
         },
         "freq": "Roughly hourly, around 05:00-19:00",
         "comfort": "Standard seated coach; cheapest option but stops more and is less direct.",
         "bookVia": "12Go or at My Dinh / Luong Yen bus areas",
         "recommended": false,
-        "notes": "Public coaches drop at Bai Chay bus station, from which you may need a taxi to the marina or your hotel."
+        "notes": "Public coaches drop at Bai Chay bus station, from which you may need a taxi to the marina or your hotel. VisitHalongBay.com (2026) quotes a branded tourist shuttle at 400,000-600,000 VND; raised the price band up from a stale lower estimate, though very basic local buses can still be cheaper."
+      }
+    ],
+    "sources": [
+      {
+        "org": "VisitHalongBay.com — Hanoi to Halong Bay: How to Travel 2026",
+        "url": "https://www.visithalongbay.com/transportation/how-travel-between-hanoi-and-halong-bay.html"
       }
     ]
   },
@@ -110,7 +122,7 @@ export const ROUTES_VI = [
     "from": "Hanoi",
     "to": "Ninh Binh",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Limousine van",
@@ -119,15 +131,15 @@ export const ROUTES_VI = [
           2.5
         ],
         "price": {
-          "low": 180000,
-          "high": 350000,
+          "low": 220000,
+          "high": 375000,
           "currency": "VND"
         },
         "freq": "Frequent throughout the day",
         "comfort": "9-seat van with Old Quarter pickup and drop near Tam Coc, Trang An or Hoa Lu; saves navigating to a bus station.",
         "bookVia": "Baolau or 12Go",
         "recommended": true,
-        "notes": "Best balance of speed, comfort and price for a day trip or short stay; vans can drop you at the specific scenic site rather than the town centre."
+        "notes": "Best balance of speed, comfort and price for a day trip or short stay; vans can drop you at the specific scenic site rather than the town centre. Oxalis Adventure (2026) quotes USD 10-15 (about 250,000-375,000 VND); raised the low end to match."
       },
       {
         "mode": "Train",
@@ -136,15 +148,15 @@ export const ROUTES_VI = [
           2.5
         ],
         "price": {
-          "low": 70000,
-          "high": 160000,
+          "low": 150000,
+          "high": 250000,
           "currency": "VND"
         },
         "freq": "Around 5-8 daily",
         "comfort": "Soft-seat carriages on the north-south line; cheap and scenic but Ninh Binh station is a short ride from the sights.",
         "bookVia": "Vietnam Railways or Baolau",
         "recommended": false,
-        "notes": "Good value and reliable timings; add a short Grab or taxi hop from the station to Tam Coc or Trang An."
+        "notes": "Good value and reliable timings; add a short Grab or taxi hop from the station to Tam Coc or Trang An. Oxalis Adventure (2026) quotes USD 6-10 (about 150,000-250,000 VND); raised this band up from a stale lower estimate."
       },
       {
         "mode": "Seated/sleeper bus",
@@ -162,6 +174,12 @@ export const ROUTES_VI = [
         "bookVia": "12Go or Bookaway",
         "recommended": false,
         "notes": "Many south-bound sleepers will set you down at Ninh Binh en route; confirm the bus actually stops in town rather than on the highway."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Oxalis Adventure — 5 Transport Options for Traveling from Hanoi to Ninh Binh",
+        "url": "https://oxalisadventure.com/hanoi-to-ninh-binh-best-transport-options/"
       }
     ]
   },
@@ -295,7 +313,7 @@ export const ROUTES_VI = [
     "from": "Hanoi",
     "to": "Hue",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Sleeper train",
@@ -312,7 +330,7 @@ export const ROUTES_VI = [
         "comfort": "Air-conditioned 4-berth soft sleeper or 6-berth hard sleeper; evening departure arrives around lunchtime.",
         "bookVia": "Vietnam Railways, Baolau or Vexere",
         "recommended": true,
-        "notes": "The classic overnight run down the Reunification Express; soft sleeper is the comfort sweet spot and saves a hotel night."
+        "notes": "The classic overnight run down the Reunification Express; soft sleeper is the comfort sweet spot and saves a hotel night. The Man in Seat 61 (2026) lists the soft-sleeper lower berth at about 1,218,000 VND, within this range."
       },
       {
         "mode": "Flight",
@@ -347,6 +365,12 @@ export const ROUTES_VI = [
         "bookVia": "12Go or Bookaway",
         "recommended": false,
         "notes": "Budget choice; stick to reputable operators (FUTA, The Sinh Tourist) for the overnight leg."
+      }
+    ],
+    "sources": [
+      {
+        "org": "The Man in Seat 61 — Train travel in Vietnam",
+        "url": "https://www.seat61.com/Vietnam.htm"
       }
     ]
   },
@@ -458,7 +482,7 @@ export const ROUTES_VI = [
     "from": "Hue",
     "to": "Da Nang",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Train (Hai Van Pass)",
@@ -468,14 +492,14 @@ export const ROUTES_VI = [
         ],
         "price": {
           "low": 100000,
-          "high": 460000,
+          "high": 525000,
           "currency": "VND"
         },
         "freq": "Several daily incl. heritage tourist trains",
         "comfort": "The standout scenic ride over the Hai Van Pass; heritage HD trains add a Lang Co photo stop and onboard entertainment.",
         "bookVia": "Vietnam Railways or a heritage-train operator",
         "recommended": true,
-        "notes": "The single best way to see the coastline; ordinary SE trains are cheap, while the dedicated heritage tourist trains cost more but are a highlight in themselves."
+        "notes": "The single best way to see the coastline; ordinary SE trains are cheap, while the dedicated heritage tourist trains cost more but are a highlight in themselves. Vietnam-Railway.com (2026) lists soft seat at USD 14-16, hard berth USD 16-18 and soft berth USD 18-21 (roughly 350,000-525,000 VND); raised the high end to cover the soft-berth/heritage fare."
       },
       {
         "mode": "Private car (Hai Van route)",
@@ -511,6 +535,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Cheapest direct option; most buses use the Hai Van tunnel rather than the pass, so you miss the view."
       }
+    ],
+    "sources": [
+      {
+        "org": "Vietnam-Railway.com — Train from Hue to Da Nang: tickets and schedule",
+        "url": "https://vietnam-railway.com/train/route/train-from-hue-to-danang"
+      }
     ]
   },
   {
@@ -518,7 +548,7 @@ export const ROUTES_VI = [
     "from": "Da Nang",
     "to": "Hoi An",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Grab / private car",
@@ -570,6 +600,12 @@ export const ROUTES_VI = [
         "bookVia": "Pay the conductor on board",
         "recommended": false,
         "notes": "The budget route; insist on the correct local fare as overcharging foreigners is common."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wander-Lush — 5 Ways to Travel From Da Nang to Hoi An",
+        "url": "https://wander-lush.org/da-nang-to-hoi-an-vietnam/"
       }
     ]
   },
@@ -896,7 +932,7 @@ export const ROUTES_VI = [
     "from": "Ho Chi Minh City",
     "to": "Phu Quoc",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Flight",
@@ -931,6 +967,12 @@ export const ROUTES_VI = [
         "bookVia": "Bus via FUTA/12Go; ferry via Superdong or Phu Quoc Express",
         "recommended": false,
         "notes": "The Ha Tien crossing is shorter on the water; only worth the time for budget travellers or those nervous about flying."
+      }
+    ],
+    "sources": [
+      {
+        "org": "North Vietnam Travel — Ho Chi Minh City to Phu Quoc: transport options",
+        "url": "https://north-vietnam.com/how-to-get-from-ho-chi-minh-city-to-phu-quoc/"
       }
     ]
   },
@@ -1042,7 +1084,7 @@ export const ROUTES_VI = [
     "from": "Ho Chi Minh City",
     "to": "Phnom Penh",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Moc Bai (Vietnam) - Bavet (Cambodia)",
     "visa": {
@@ -1087,6 +1129,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Fine for budget travellers; service quality at the border varies, so keep your own passport and watch for unofficial 'fees'."
       }
+    ],
+    "sources": [
+      {
+        "org": "Giant Ibis Transport — Phnom Penh to Ho Chi Minh route page",
+        "url": "https://giantibis.com/routes/phnom-penh-to-ho-chi-minh"
+      }
     ]
   },
   {
@@ -1094,7 +1142,7 @@ export const ROUTES_VI = [
     "from": "Ho Chi Minh City",
     "to": "Siem Reap",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Moc Bai (Vietnam) - Bavet (Cambodia)",
     "visa": {
@@ -1139,6 +1187,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "A comfort upgrade over the full overland run, or fly the whole way from HCMC via Phnom Penh; useful if you value time over cost."
       }
+    ],
+    "sources": [
+      {
+        "org": "Giant Ibis Transport — Ho Chi Minh City to Siem Reap route page",
+        "url": "https://giantibis.com/routes/ho-chi-minh-to-siem-reap"
+      }
     ]
   },
   {
@@ -1146,7 +1200,7 @@ export const ROUTES_VI = [
     "from": "Hanoi",
     "to": "Vientiane",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Cau Treo (Vietnam) - Nam Phao (Laos)",
     "visa": {
@@ -1191,6 +1245,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Listed for contrast: most travellers short on time fly, as the 24-hour bus is an endurance experience rather than a time-saver."
       }
+    ],
+    "sources": [
+      {
+        "org": "Laoviet Bus — Sleeper Bus from Hanoi to Vientiane (operator site)",
+        "url": "https://laovietbus.com/en/vientiane"
+      }
     ]
   },
   {
@@ -1198,7 +1258,7 @@ export const ROUTES_VI = [
     "from": "Hue / Dong Ha",
     "to": "Savannakhet",
     "country": "vi",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Lao Bao (Vietnam) - Dansavanh (Laos)",
     "visa": {
@@ -1242,6 +1302,12 @@ export const ROUTES_VI = [
         "bookVia": "Pay locally at Dong Ha bus station and the Dansavanh side",
         "recommended": false,
         "notes": "Cheaper and more flexible for independent travellers; note onward Lao transport thins out by midday, so cross early. Lao-side fares are paid in kip (LAK)."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Mai and Chris Travel — Hue to Savannakhet Border Guide via Lao Bao Border",
+        "url": "https://maiandchristravel.com/how-to-get-from-hue-to-laos-lao-bao-border/"
       }
     ]
   }

@@ -7,7 +7,7 @@ export const ROUTES_LA = [
     "from": "Vientiane",
     "to": "Vang Vieng",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "High-speed train (Laos-China Railway)",
@@ -16,15 +16,15 @@ export const ROUTES_LA = [
           1.2
         ],
         "price": {
-          "low": 90000,
-          "high": 160000,
+          "low": 150000,
+          "high": 260000,
           "currency": "LAK"
         },
         "freq": "several daily",
         "comfort": "Modern air-conditioned EMU, assigned seats, very smooth ride; the standout option on this corridor.",
         "bookVia": "Official LCR Ticket app, or agents/12Go; counter at Vientiane Center in town",
         "recommended": true,
-        "notes": "Vientiane (Khamsavath) station sits roughly 30-45 min outside the centre and Vang Vieng station about 10-15 min from town, so budget tuk-tuk time at both ends. Seats open 7 days ahead and sell fast in dry season."
+        "notes": "Vientiane (Khamsavath) station sits roughly 30-45 min outside the centre and Vang Vieng station about 10-15 min from town, so budget tuk-tuk time at both ends. Seats open 7 days ahead and sell fast in dry season. LaosTrain.com (2026) quotes second class at about USD 12 / CNY 85 (roughly 250,000 LAK) for the 55-minute run; raised from an earlier, stale lower estimate."
       },
       {
         "mode": "Minivan (expressway)",
@@ -60,6 +60,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Fine for budget travellers, but the time penalty over the minivan or train is hard to justify on such a short hop."
       }
+    ],
+    "sources": [
+      {
+        "org": "LaosTrain.com — Laos Railway 2026: Book Train Tickets & View Schedules",
+        "url": "https://laostrain.com/guide/laos-railway-tickets-schedule"
+      }
     ]
   },
   {
@@ -67,7 +73,7 @@ export const ROUTES_LA = [
     "from": "Vang Vieng",
     "to": "Luang Prabang",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "High-speed train (Laos-China Railway)",
@@ -76,15 +82,15 @@ export const ROUTES_LA = [
           1.2
         ],
         "price": {
-          "low": 117000,
-          "high": 200000,
+          "low": 130000,
+          "high": 220000,
           "currency": "LAK"
         },
         "freq": "several daily",
         "comfort": "Glides through tunnels under the mountains in around an hour; vastly more comfortable than the winding road.",
         "bookVia": "Official LCR Ticket app, agents, or 12Go",
         "recommended": true,
-        "notes": "The road version of this leg is one of the most nausea-inducing in Laos, so the train is a major upgrade. Book early; second class sells out in peak months."
+        "notes": "The road version of this leg is one of the most nausea-inducing in Laos, so the train is a major upgrade. Book early; second class sells out in peak months. LaosTrain.com (2026) quotes second class at about USD 10 / CNY 72 (roughly 210,000 LAK) for the 50-minute run."
       },
       {
         "mode": "Minivan",
@@ -120,6 +126,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "For only a few dollars more than a VIP bus the train is faster and far more comfortable, so most travellers now skip the bus."
       }
+    ],
+    "sources": [
+      {
+        "org": "LaosTrain.com — Laos Railway 2026: Book Train Tickets & View Schedules",
+        "url": "https://laostrain.com/guide/laos-railway-tickets-schedule"
+      }
     ]
   },
   {
@@ -127,7 +139,7 @@ export const ROUTES_LA = [
     "from": "Vientiane",
     "to": "Luang Prabang",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "High-speed train (Laos-China Railway)",
@@ -144,7 +156,7 @@ export const ROUTES_LA = [
         "comfort": "Cuts the old 10-hour road slog to under two hours in a clean, quiet EMU; second class is ample, first class adds legroom.",
         "bookVia": "Official LCR Ticket app, agents, 12Go; ticket counters in both city centres",
         "recommended": true,
-        "notes": "Easily the best way to link the two cities. The flagship LCR corridor. Both stations are well outside their respective centres, so add transfer time. Reserve days ahead in dry season."
+        "notes": "Easily the best way to link the two cities. The flagship LCR corridor. Both stations are well outside their respective centres, so add transfer time. Reserve days ahead in dry season. Kampatour.com (2026) confirms second class at 360,000 LAK, within this range."
       },
       {
         "mode": "VIP sleeper / express bus",
@@ -196,6 +208,16 @@ export const ROUTES_LA = [
         "bookVia": "Lao Airlines, Lao Skyway, online travel agents",
         "recommended": false,
         "notes": "Useful if continuing internationally, but for the city pair the train usually wins on cost, convenience and scenery."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Kampatour — Everything You Need to Know About Laos Train: Price & Tickets",
+        "url": "https://kampatour.com/laos-train"
+      },
+      {
+        "org": "LaosTrain.com — Laos Railway 2026: Book Train Tickets & View Schedules",
+        "url": "https://laostrain.com/guide/laos-railway-tickets-schedule"
       }
     ]
   },
@@ -264,7 +286,7 @@ export const ROUTES_LA = [
     "from": "Luang Prabang",
     "to": "Luang Namtha",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Train (LCR) to Nateuy + minivan transfer",
@@ -273,15 +295,15 @@ export const ROUTES_LA = [
           3
         ],
         "price": {
-          "low": 130000,
-          "high": 350000,
+          "low": 200000,
+          "high": 450000,
           "currency": "LAK"
         },
         "freq": "daily",
         "comfort": "Fast 1h15-1h45 rail leg to Nateuy (Boten Junction), then a roughly 1-hour van or taxi onward to town.",
         "bookVia": "LCR Ticket app for the train; minivans/taxis wait at Nateuy on arrival",
         "recommended": true,
-        "notes": "There is NO station in Luang Namtha town itself; the railway stops at Nateuy, about 30 km away. Vans meet trains; taxis ran around 100,000 LAK and may need negotiating. The combined trip beats the all-day bus."
+        "notes": "There is NO station in Luang Namtha town itself; the railway stops at Nateuy, about 30 km away. Vans meet trains; taxis ran around 100,000 LAK and may need negotiating. The combined trip beats the all-day bus. LaosTrain.com (2026) quotes the train leg alone at about USD 15 / CNY 110 (roughly 325,000 LAK); raised the price band to include the onward transfer, up from an earlier, stale lower estimate."
       },
       {
         "mode": "Direct bus / minivan",
@@ -299,6 +321,16 @@ export const ROUTES_LA = [
         "bookVia": "Northern bus station, 12Go, Bookaway (Chit Prasong)",
         "recommended": false,
         "notes": "The cheapest local night/morning bus runs from about 90,000 LAK but takes the full day; the train-plus-transfer combination is far quicker for similar money."
+      }
+    ],
+    "sources": [
+      {
+        "org": "LaosTrain.com — Laos Railway 2026: Book Train Tickets & View Schedules",
+        "url": "https://laostrain.com/guide/laos-railway-tickets-schedule"
+      },
+      {
+        "org": "Bookaway — Luang Prabang to Nateuy train route listing",
+        "url": "https://www.bookaway.com/routes/laos/luang-prabang-to-nateuy"
       }
     ]
   },
@@ -487,7 +519,7 @@ export const ROUTES_LA = [
     "from": "Vientiane",
     "to": "Pakse",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "VIP sleeper bus",
@@ -496,15 +528,15 @@ export const ROUTES_LA = [
           13
         ],
         "price": {
-          "low": 180000,
-          "high": 320000,
+          "low": 480000,
+          "high": 650000,
           "currency": "LAK"
         },
         "freq": "daily (overnight)",
         "comfort": "Overnight flatbed/bunk sleepers; the most comfortable land option, with water and snacks on some services.",
         "bookVia": "12Go, Bookaway, Southern Bus Station",
         "recommended": true,
-        "notes": "About 670 km. Sleeper fares roughly USD 23-31. Departs evening, arrives in Pakse around dawn, saving a hotel night. No passenger rail reaches Pakse yet."
+        "notes": "About 670 km. Sleeper fares roughly USD 23-31. Departs evening, arrives in Pakse around dawn, saving a hotel night. No passenger rail reaches Pakse yet. Corrected the LAK price band up to match this USD figure at current rates; North Vietnam Travel (2026) gives USD 17-33 for the bus/minivan class generally."
       },
       {
         "mode": "Day bus / minivan",
@@ -513,15 +545,15 @@ export const ROUTES_LA = [
           13
         ],
         "price": {
-          "low": 150000,
-          "high": 300000,
+          "low": 360000,
+          "high": 690000,
           "currency": "LAK"
         },
         "freq": "daily",
         "comfort": "Daytime run down Route 13; long but lets you watch the Mekong valley pass by.",
         "bookVia": "12Go, Bookaway",
         "recommended": false,
-        "notes": "From about USD 17-33 depending on vehicle and class."
+        "notes": "From about USD 17-33 depending on vehicle and class (North Vietnam Travel, 2026); corrected the LAK price band up to match, as the previous figures were stale relative to this USD estimate."
       },
       {
         "mode": "Flight",
@@ -538,7 +570,13 @@ export const ROUTES_LA = [
         "comfort": "Lao Airlines jet/turboprop; roughly 1h15 in the air, the only way to avoid the all-night journey.",
         "bookVia": "Lao Airlines, online travel agents",
         "recommended": false,
-        "notes": "Worth it if you value time over money; fares start around USD 105 one way."
+        "notes": "Worth it if you value time over money; fares start around USD 105 one way. North Vietnam Travel (2026) independently confirms USD 75-150 and about 1h15 flight time."
+      }
+    ],
+    "sources": [
+      {
+        "org": "North Vietnam Travel — How to go: Vientiane to Pakse",
+        "url": "https://north-vietnam.com/how-to-get-from-vientiane-to-pakse-laos/"
       }
     ]
   },
@@ -633,7 +671,7 @@ export const ROUTES_LA = [
     "from": "Pakse",
     "to": "4000 Islands (Si Phan Don)",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Minivan + ferry to Don Det/Don Khon",
@@ -642,7 +680,7 @@ export const ROUTES_LA = [
           4
         ],
         "price": {
-          "low": 180000,
+          "low": 170000,
           "high": 380000,
           "currency": "LAK"
         },
@@ -650,7 +688,7 @@ export const ROUTES_LA = [
         "comfort": "Van to Nakasang pier then a short longtail crossing; the standard, hassle-free tourist combo.",
         "bookVia": "12Go, Bookaway, Pakse agents (Green Paradise, RG Adventure, Nakasang Paradise, Sanga, Sarah Transport)",
         "recommended": true,
-        "notes": "Combined van-plus-ferry around 232,000 LAK; van tickets alone roughly USD 9-18. Boats to Don Det run all day; expect to pay about USD 1.5-3 per person, more for solo or late crossings."
+        "notes": "Combined van-plus-ferry around 170,000-232,000 LAK (Southeast Asia Backpacker, 2026, quotes about 170,000 LAK / USD 8); van tickets alone roughly USD 9-18. Boats to Don Det run all day; expect to pay about USD 1.5-3 per person, more for solo or late crossings."
       },
       {
         "mode": "Local bus + ferry",
@@ -669,6 +707,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Bus to Nakasang from around USD 5. Buy the boat ticket at the small riverside office in Nakasang to avoid being overcharged."
       }
+    ],
+    "sources": [
+      {
+        "org": "Southeast Asia Backpacker — 4000 Islands, Laos: The Only Travel Guide You'll Ever Need",
+        "url": "https://southeastasiabackpacker.com/destinations/laos-2/four-thousand-islands/"
+      }
     ]
   },
   {
@@ -676,7 +720,7 @@ export const ROUTES_LA = [
     "from": "Huay Xai",
     "to": "Luang Prabang",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "options": [
       {
         "mode": "Mekong slow boat (2 days via Pak Beng)",
@@ -729,6 +773,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Cuts the trip to one day but with a real safety risk; most travellers avoid it in favour of the slow boat."
       }
+    ],
+    "sources": [
+      {
+        "org": "Backpackers Wanderlust — Slow Boat Laos Guide (2026): Public vs Premium + Costs",
+        "url": "https://www.backpackerswanderlust.com/slow-boat-laos/"
+      }
     ]
   },
   {
@@ -736,7 +786,7 @@ export const ROUTES_LA = [
     "from": "Vientiane",
     "to": "Bangkok",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Thai-Lao Friendship Bridge 1 (Thanaleng/Vientiane - Nong Khai)",
     "visa": {
@@ -794,6 +844,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Convenient single ticket but you still disembark for immigration on both sides of the bridge."
       }
+    ],
+    "sources": [
+      {
+        "org": "The Man in Seat 61 — Laos: Bangkok to Vientiane, Luang Prabang & Kunming by train",
+        "url": "https://www.seat61.com/Laos.htm"
+      }
     ]
   },
   {
@@ -801,7 +857,7 @@ export const ROUTES_LA = [
     "from": "Huay Xai",
     "to": "Chiang Khong",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Fourth Thai-Lao Friendship Bridge (Huay Xai - Chiang Khong)",
     "visa": {
@@ -820,14 +876,14 @@ export const ROUTES_LA = [
         ],
         "price": {
           "low": 20,
-          "high": 25,
+          "high": 40,
           "currency": "THB"
         },
         "freq": "frequent throughout the day",
         "comfort": "Compulsory short shuttle bus between the two immigration posts; you cannot walk across the bridge.",
         "bookVia": "Pay at the bridge bus counter on either side",
         "recommended": true,
-        "notes": "Bridge fare about 20-25 THB. Whole crossing takes around an hour. There is an ATM on the Lao side but rates are poor; change money in Huay Xai or Chiang Khong town instead."
+        "notes": "Bridge fare about 20 THB standard, rising to 25-40 THB at night, on weekends or outside normal hours (TravelFeed, 2026). Whole crossing takes around an hour. There is an ATM on the Lao side but rates are poor; change money in Huay Xai or Chiang Khong town instead."
       },
       {
         "mode": "Tuk-tuk/taxi + bridge shuttle (to/from town)",
@@ -846,6 +902,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "The bridge sits several km from both town centres, so factor a tuk-tuk at each end. Slow-boat travellers usually go straight from Chiang Khong to the Huay Xai pier."
       }
+    ],
+    "sources": [
+      {
+        "org": "TravelFeed — How to Cross the Thailand-Laos Border (Friendship Bridge IV) in 2026",
+        "url": "https://travelfeed.com/@geekontheroad/how-to-cross-the-thailand-laos-border-friendship-bridge-iv-in-2026"
+      }
     ]
   },
   {
@@ -853,7 +915,7 @@ export const ROUTES_LA = [
     "from": "Pakse",
     "to": "Ubon Ratchathani",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Vang Tao (Laos) - Chong Mek (Thailand)",
     "visa": {
@@ -915,6 +977,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Saves changing in Ubon but is a very long ride; many travellers prefer to break the journey or fly onward from Ubon."
       }
+    ],
+    "sources": [
+      {
+        "org": "Discover Laos — Essentials for Southern Laos",
+        "url": "https://discoverlaos.today/post/essentials-for-southern-laos"
+      }
     ]
   },
   {
@@ -922,7 +990,7 @@ export const ROUTES_LA = [
     "from": "Savannakhet",
     "to": "Hue",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Dansavanh (Laos) - Lao Bao (Vietnam)",
     "visa": {
@@ -967,6 +1035,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "More flexible but slower and more hassle than the through bus; useful if direct departures do not align with your schedule."
       }
+    ],
+    "sources": [
+      {
+        "org": "Mai and Chris Travel — Hue to Savannakhet Border Guide via Lao Bao Border",
+        "url": "https://maiandchristravel.com/how-to-get-from-hue-to-laos-lao-bao-border/"
+      }
     ]
   },
   {
@@ -974,7 +1048,7 @@ export const ROUTES_LA = [
     "from": "Vientiane",
     "to": "Hanoi",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Nam Phao (Laos) - Cau Treo (Vietnam)",
     "visa": {
@@ -1019,6 +1093,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Strongly worth considering given the bus takes the best part of a full day. You still need your Vietnam eVisa sorted in advance."
       }
+    ],
+    "sources": [
+      {
+        "org": "Laoviet Bus — Sleeper buses from Vientiane, Laos to Hanoi, Vietnam (operator site)",
+        "url": "https://laovietbus.com/en/lao/vientiane-hanoi"
+      }
     ]
   },
   {
@@ -1026,7 +1106,7 @@ export const ROUTES_LA = [
     "from": "Vientiane",
     "to": "Kunming",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Boten (Laos) - Mohan (China)",
     "visa": {
@@ -1052,7 +1132,7 @@ export const ROUTES_LA = [
         "comfort": "Single daily through service Vientiane-Kunming on modern EMU stock; 2nd class is comfortable, 1st class adds space. Border checks handled at Boten/Mohan.",
         "bookVia": "China Railway 12306 app/site and the Lao LCR Ticket app; agents such as Brother Tours",
         "recommended": true,
-        "notes": "Fares quoted in CNY: about 542 CNY (2nd class) and 864 CNY (1st class) for the full international run. Departs Vientiane around 10:30, into Kunming early evening. The headline cross-border rail link from Laos to China."
+        "notes": "Fares quoted in CNY: about 542 CNY (2nd class) and 864 CNY (1st class) for the full international run (TravelChinaGuide, 2026, lists the same Kunming-Vientiane service, which it labels D87/D88, at a close 552/881 CNY with a roughly 9.5-10 hour total including border formalities). Departs Vientiane around 10:30, into Kunming early evening. The headline cross-border rail link from Laos to China."
       },
       {
         "mode": "Domestic LCR to Boten + onward China connection",
@@ -1071,6 +1151,12 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Only sensible if the through D887 is sold out. You still need the China visa in hand before reaching Boten."
       }
+    ],
+    "sources": [
+      {
+        "org": "TravelChinaGuide — China-Laos Railway, Kunming-Vientiane Train D87/D88 & D86/D84",
+        "url": "https://www.travelchinaguide.com/china-trains/laos/"
+      }
     ]
   },
   {
@@ -1078,7 +1164,7 @@ export const ROUTES_LA = [
     "from": "4000 Islands (Don Det)",
     "to": "Stung Treng",
     "country": "la",
-    "verified": "2026-06",
+    "verified": "2026-10",
     "crossBorder": true,
     "border": "Nong Nok Khiene (Laos) - Trapeang Kriel (Cambodia)",
     "visa": {
@@ -1122,6 +1208,12 @@ export const ROUTES_LA = [
         "bookVia": "Nakasang transport stand; Cambodian taxis at Trapeang Kriel",
         "recommended": false,
         "notes": "Cheaper in theory but the remote border has little onward transport, so most travellers take the through-ticket to avoid being stranded."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Bookaway — Stung Treng to Don Det (Laos) route listing",
+        "url": "https://www.bookaway.com/routes/laos/stung-treng-to-don-det"
       }
     ]
   }
