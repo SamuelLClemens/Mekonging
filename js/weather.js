@@ -496,7 +496,12 @@ export function maybeRefreshMany(spots, force = false) {
   if (!spots || !spots.length) return Promise.resolve(null);
   const key = `many:${spots[0].country || ''}:${spots.length}`;
   if (force) { delete _lastAttempt[key]; }
-  return guarded(key, force || ageOf(getCachedMany()) >= MANY_TTL_MS, () => refreshMany(spots));
+  // Only one batch is cached, the last country's, so a batch without these cities is as good as
+  // none however fresh it is: Weather for Thailand opened straight after Vietnam used to show
+  // the map with no temperatures until that batch aged out.
+  const cached = getCachedMany();
+  const covers = !!(cached && cached.data) && spots.every((s) => cached.data[spotKey(s)]);
+  return guarded(key, force || !covers || ageOf(cached) >= MANY_TTL_MS, () => refreshMany(spots));
 }
 
 export function maybeRefreshMarine(coords, force = false) {
