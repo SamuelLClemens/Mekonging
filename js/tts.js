@@ -105,6 +105,10 @@ const TTS_LANG = { 'th-TH': 'th', 'vi-VN': 'vi', 'km-KH': 'km', 'he-IL': 'iw', '
 
 // The exact online-TTS URL for a phrase. Exported so the offline "audio pack"
 // prefetch (service worker) and live playback build the IDENTICAL cache key.
+// Every request for it must go out with NO Referer: the endpoint answers one with 404 text/html,
+// which an opaque fetch cannot see. The page gets that from index.html's no-referrer meta; the
+// service worker asks for it explicitly (sw.js prefetchTTS). No variant of this URL sends CORS
+// headers (40 host/client combinations checked 2026-10-03), so it can never be read as bytes.
 export function ttsUrl(text, locale) {
   const t = (text || '').trim().slice(0, 200);
   if (!t || !locale) return '';

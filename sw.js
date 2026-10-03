@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.609.0';
+const CACHE_VERSION = 'mk-v0.610.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -62,7 +62,11 @@ const TILE_HOSTS = ['server.arcgisonline.com'];
 const TILE_CACHE_MAX = 3000;   // cap stored satellite tiles; evict oldest when exceeded
 // Offline phrase-audio packs: online-TTS clips (translate.google.com) the user chooses
 // to download per language, so Khmer/Lao (no device voice) still speak with no signal.
-const TTS_CACHE = 'mk-tts-v1';
+// v2 because everything prefetchTTS stored in v1 was Google's 404 page, not audio (see
+// prefetchTTS). activate() deletes v1 as an unknown cache, and nothing else can tell the bad
+// entries apart: they are opaque, and prefetchTTS skips a URL it already holds, so a
+// re-download alone would have kept every one. js/state.js v15 drops the matching records.
+const TTS_CACHE = 'mk-tts-v2';
 const TTS_HOST = 'translate.google.com';
 const TTS_CACHE_MAX = 4000;
 
@@ -357,10 +361,10 @@ const MANIFEST = {
   'css/style.css': '7de77ef7',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': '2a31820e',
+  'index.html': '5fbd1ea0',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
-  'js/audio-packs.js': '3751ea3e',
+  'js/audio-packs.js': 'fe614c2e',
   'js/budget-ui.js': '6244d5ac',
   'js/currency.js': 'cccd3d60',
   'js/data/accessibility.js': '48f9da6c',
@@ -522,13 +526,13 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '389f9b21',
+  'js/main.js': 'e175d161',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'f18178d4',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': '01b8e952',
   'js/offline-pack.js': 'a804a82e',
-  'js/offline-ready.js': 'b4fe0ccb',
+  'js/offline-ready.js': 'c93785dc',
   'js/personal.js': '34ddb915',
   'js/photo-registry.js': 'c1c4f7e2',
   'js/phrase-ui.js': '7f34630a',
@@ -575,11 +579,11 @@ const MANIFEST = {
   'js/screens/welcome.js': '6f39cb03',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',
-  'js/state.js': 'c0334938',
+  'js/state.js': '15cf06d7',
   'js/svg-pan-zoom.js': '6c2048a4',
   'js/trail.js': 'c04f9efc',
   'js/translate.js': 'bb9a9517',
-  'js/tts.js': 'e75536f2',
+  'js/tts.js': '43323496',
   'js/ui-widgets.js': 'c7346cf1',
   'js/util.js': '4a6082bc',
   'js/vault.js': 'e0d57d7f',
@@ -878,6 +882,10 @@ async function rebuildRanged(stored) {
 // Phrase-audio: serve a downloaded clip cache-first; otherwise fetch (opaque) and, when
 // online, cache a copy so the next play works offline too. Never throws — a failed fetch
 // while offline+uncached surfaces as an <audio> error the caller already handles.
+// fetch(req) keeps the page request's own referrer policy (index.html: no-referrer), which is
+// why this path always stored real audio while prefetchTTS stored 404s. Each copy kept here
+// is opaque too, so on Chromium every new phrase played costs quota like a pack clip does:
+// measured 2026-10-03, five new Khmer phrases played once each took usage up 30.2 MB.
 async function handleTTS(req) {
   const cache = await caches.open(TTS_CACHE);
   const hit = await cache.match(req, { ignoreVary: true });
@@ -1056,7 +1064,18 @@ self.addEventListener('message', (e) => {
 });
 
 // Download an audio pack: fetch each TTS clip no-cors and store the opaque response.
-// Runs inside the service worker, so the page's meta-CSP connect-src does not apply.
+// Runs inside the service worker, so the page's meta-CSP connect-src does not apply — and
+// neither does its <meta name="referrer" content="no-referrer">. The worker has its own
+// referrer policy (the browser default, since sw.js is served with no Referrer-Policy header),
+// so a plain fetch(url) sends `Referer: <origin>/`, and translate_tts answers ANY Referer with
+// 404 text/html. Opaque, so the status is unreadable here and `res.type === 'opaque'` passed
+// it as a clip: measured 2026-10-03, every clip a pack download stored failed to play
+// (MEDIA_ERR_SRC_NOT_SUPPORTED) and the same phrase played by the page worked. Because
+// handleTTS answers cache-first, a downloaded pack also silenced those phrases ONLINE.
+//
+// No CORS-readable form of this voice exists (40 host/client combinations checked with curl,
+// the likeliest three again in Chromium: none sends Access-Control-Allow-Origin), so it stays opaque and
+// Chromium pads each one to ~7 MB in quota accounting. See js/audio-packs.js QUOTA_CLIP_BYTES.
 async function prefetchTTS(urls, client, lang) {
   const cache = await caches.open(TTS_CACHE);
   let done = 0, ok = 0, quotaHit = false;
@@ -1064,7 +1083,7 @@ async function prefetchTTS(urls, client, lang) {
     try {
       if (await cache.match(url, { ignoreVary: true })) { ok++; }
       else {
-        const res = await withTimeout(fetch(url, { mode: 'no-cors' }), MEDIA_TIMEOUT_MS);
+        const res = await withTimeout(fetch(url, { mode: 'no-cors', credentials: 'omit', referrerPolicy: 'no-referrer' }), MEDIA_TIMEOUT_MS);
         if (res && (res.ok || res.type === 'opaque')) { await cache.put(url, res.clone()); ok++; }
       }
     } catch (err) {

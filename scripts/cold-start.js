@@ -19,7 +19,7 @@
 //
 // WHAT `cold: true` DOES. Unregisters the service worker and deletes every app-shell cache,
 // then reloads — the state of a first-ever visit. It deliberately does NOT delete mk-media-v1,
-// mk-tiles-v1 or mk-tts-v1: those are the traveller's downloaded photos, maps and audio, they
+// mk-tiles-v1 or mk-tts-v2: those are the traveller's downloaded photos, maps and audio, they
 // are not part of the launch path, and wiping 95 MB to time a launch would be rude on a real
 // phone. Pass `{ cold: true, wipeMedia: true }` if you really want the true first-run state.
 //
@@ -95,7 +95,7 @@
       // Stash the request so the measurement runs after the reload rather than before it.
       sessionStorage.setItem('mk-cold-probe', '1');
       for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
-      const keep = opts.wipeMedia ? [] : ['mk-media-v1', 'mk-tiles-v1', 'mk-tts-v1'];
+      const keep = opts.wipeMedia ? [] : ['mk-media-v1', 'mk-tiles-v1', 'mk-tts-v2'];
       for (const k of await caches.keys()) if (!keep.includes(k)) await caches.delete(k);
       console.log('[cold-start] worker unregistered, app caches cleared%s. Reloading…',
         opts.wipeMedia ? ' (media too)' : ' (downloaded photos/maps/audio kept)');

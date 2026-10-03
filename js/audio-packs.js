@@ -21,8 +21,10 @@
 //
 // SIZE. Every clip is fetched `mode: 'no-cors'`, so the response is opaque and its size is
 // invisible to JS. A pack's size before download is its clip count times CLIP_BYTES, a measured
-// average, and is always shown as approximate ("≈"). See estimateUsage() for why it is never
-// read back from storage.
+// average, and is always shown as approximate ("≈"). It cannot be fetched any other way: no
+// form of Google's TTS URL sends Access-Control-Allow-Origin (checked 2026-10-03, see sw.js
+// prefetchTTS). What a pack costs against the browser's storage allowance is a separate and
+// much larger number on Chromium — see QUOTA_CLIP_BYTES.
 
 import { h } from './util.js';
 import { LANGUAGES, getLanguage } from './lazy-data.js';
@@ -34,9 +36,39 @@ import { confirmAction, infoTip } from './ui-widgets.js';
 
 function swReady() { return ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller; }
 
-// Average clip from the online voice. Measured 2026-10-03 on 12 random phrases per language:
-// Thai 13.9 KB, Vietnamese 10.8 KB, Khmer 15.2 KB.
-export const CLIP_BYTES = 13300;
+// Average clip from the online voice. Measured 2026-10-03 with curl over every clip of all three
+// packs (300): Thai 102 clips 1.79 MB, Vietnamese 102 clips 1.44 MB, Khmer 96 clips 1.66 MB, a
+// mean of 17,082 B. An earlier 13,300 came from 12 random phrases per language and missed the
+// long allergy sentences, the biggest clips in every pack (up to 67 KB).
+export const CLIP_BYTES = 17100;
+
+// What one stored clip costs against the browser's storage allowance on Chromium. Chromium pads
+// every opaque response in Cache Storage to a random size of several MB, so that a page cannot
+// learn a cross-origin response's length from its own quota use. Measured 2026-10-03 on an empty
+// origin: 10 clips cost 6.8 MB each, against 13,438 B each for ten ordinary 13,300-byte
+// responses, and one 96-clip Khmer pack took usage from 20.7 to 692.8 MB (7.0 MB a clip, all 96
+// playable; an earlier run on 404 pages instead of audio cost the same). The bytes on disk are
+// the real ~17 KB; the allowance is what runs out, with QuotaExceededError, and a fuller origin
+// is the likelier one to be evicted under storage pressure. Safari and Firefox were not
+// measured, so padsOpaque() names only Chromium and nobody else is shown a figure.
+export const QUOTA_CLIP_BYTES = 7 * 1048576;
+export function padsOpaque() {
+  try {
+    const ua = navigator.userAgentData;
+    return !!(ua && Array.isArray(ua.brands) && ua.brands.some((b) => /Chromium/.test(b.brand)));
+  } catch { return false; }
+}
+
+const size = (b) => (b >= 1073741824 ? `${(b / 1073741824).toFixed(1)} GB`
+  : b >= 1048576 ? `${(b / 1048576).toFixed(b >= 104857600 ? 0 : 1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+
+// The one line the download cards show on Chromium: what a language costs against the
+// allowance, and the allowance itself when the browser reports it. '' everywhere else.
+export function quotaNote(clips, quota) {
+  if (!clips || !padsOpaque()) return '';
+  const of = quota ? ` of the ${size(quota)} it lets this app store` : ' of this app’s storage';
+  return `This browser counts each language as ≈ ${size(clips * QUOTA_CLIP_BYTES)}${of}.`;
+}
 
 // Every clip URL one language's built-in phrasebook + allergy phrases + the traveller's OWN
 // saved translations ("my dictionary") resolve to — the personal-dictionary phrases are custom
@@ -60,28 +92,26 @@ export function downloadableLanguages() {
     .filter((l) => l.urls.length > 0);
 }
 
-// The whole origin's on-device storage usage, right now — the only real number the platform
-// will hand over for content cached as opaque responses. null where the API is unavailable
-// (older Safari, private browsing in some browsers).
+// The whole origin's usage and allowance, right now: { usage, quota }, either one null where the
+// browser does not say (older Safari, some private modes), or null when there is no API at all.
 //
-// NOT per-pack. An earlier version of this file tried to measure one pack's cost as the
-// estimate() delta across its own download, and it was wrong by two orders of magnitude the
-// first time it was tested live (a 97-clip Khmer pack "measured" at 699 MB) — because usage is
-// for the WHOLE origin, and this app's other caches (satellite tiles, the field guide's own
-// background photo prefetch) can grow at the same time for reasons that have nothing to do
-// with the pack being downloaded. There is no reliable way to isolate one pack's bytes from an
-// opaque, no-cors response, so this module does not try: a pack's size is its clip count,
-// never a byte figure attributed to it specifically.
-export async function estimateUsage() {
+// NOT per-pack. An earlier version of this file read one pack's size as the estimate() delta
+// across its download, saw 699 MB for 97 Khmer clips, and blamed other caches growing at the
+// same time. They were not: on an empty origin the same pack still took 691 MB. That is the
+// opaque padding above, which is real quota use and not disk use — so the delta answers "how
+// much allowance did this cost" (on Chromium), never "how many bytes is this pack".
+export async function estimateStorage() {
   try {
     if (!navigator.storage || !navigator.storage.estimate) return null;
-    const { usage } = await navigator.storage.estimate();
-    return typeof usage === 'number' ? usage : null;
+    const { usage, quota } = await navigator.storage.estimate();
+    return { usage: typeof usage === 'number' ? usage : null, quota: typeof quota === 'number' ? quota : null };
   } catch { return null; }
 }
 
 // Download one language's pack. Resolves { ok, total, quotaHit } once the service worker
-// reports done; `onProgress(done, total)` fires as clips land.
+// reports done; `onProgress(done, total)` fires as clips land. A pack the allowance cut short is
+// not recorded as saved, and the clips it did store are removed again: kept, they would hold
+// most of a language's quota cost with no ✓ beside them and no Remove button to free it.
 export function downloadPack(code, onProgress) {
   const urls = packUrls(code);
   if (!urls.length || !swReady()) return Promise.resolve({ ok: 0, total: 0, quotaHit: false });
@@ -92,8 +122,15 @@ export function downloadPack(code, onProgress) {
       if (d.type === 'TTS_PROGRESS') { if (onProgress) onProgress(d.done, d.total); return; }
       if (d.type !== 'TTS_DONE') return;
       navigator.serviceWorker.removeEventListener('message', onMsg);
+      if (d.quotaHit) {
+        // A re-download of a saved pack only adds what is new (sw.js skips clips it holds), so
+        // its record and its clips stay; only a first download is undone.
+        if (hasAudioPack(code)) { resolve({ ok: d.ok, total: d.total, quotaHit: true }); return; }
+        removePack(code).then(() => resolve({ ok: 0, total: d.total, quotaHit: true }));
+        return;
+      }
       if (d.ok) { addAudioPack(code); setSavedPacks(getAudioPacks()); }
-      resolve({ ok: d.ok, total: d.total, quotaHit: d.quotaHit });
+      resolve({ ok: d.ok, total: d.total, quotaHit: false });
     };
     navigator.serviceWorker.addEventListener('message', onMsg);
     navigator.serviceWorker.controller.postMessage({ type: 'PREFETCH_TTS', urls, lang: code });
@@ -114,6 +151,7 @@ export async function downloadPacks(codes, onProgress, force = false) {
     results[code] = await downloadPack(code, (done, total) => {
       if (onProgress) onProgress(code, i, codes.length, done, total);
     });
+    if (results[code].quotaHit) break;   // the next language would hit the same wall
   }
   return results;
 }
@@ -186,15 +224,22 @@ export function audioPacksCard() {
   const totalLine = h('p', { class: 'tiny muted pack-count' }, '');
   const downloaded = h('ul', { class: 'pack-tiers' });
   const choices = h('div', { class: 'qc-choices' });
+  const quotaLine = h('p', { class: 'tiny muted' }, '');
   const btns = h('div', { class: 'pack-btns' });
   const nudgeHost = h('div', {});
-  card.append(status, downloaded, choices, btns, nudgeHost, totalLine);
+  card.append(status, downloaded, choices, quotaLine, btns, nudgeHost, totalLine);
 
   const all = downloadableLanguages();   // [{ code, book, urls }] — Thai/Vietnamese/Khmer today
   let selected = new Set();
   let busy = false;
+  let quota = null;   // the browser's allowance for this origin, once estimateStorage() answers
 
-  const mb = (bytes) => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+  // Its own painter: the allowance arrives after paint(), and a full repaint then would wipe a
+  // "Storage is full" status that had just been written.
+  const paintQuota = (remaining = all.filter((l) => !hasAudioPack(l.code))) => {
+    quotaLine.textContent = remaining.length
+      ? quotaNote(Math.round(remaining.reduce((n, l) => n + l.urls.length, 0) / remaining.length), quota) : '';
+  };
 
   const paintButtons = (remaining) => {
     btns.innerHTML = '';
@@ -241,8 +286,9 @@ export function audioPacksCard() {
       // full paint() here would rebuild every checkbox mid-tap and cost the traveller their
       // other selections' focus for nothing; the button row is the only thing a toggle changes.
       box.addEventListener('change', () => { if (box.checked) selected.add(l.code); else selected.delete(l.code); paintButtons(remaining); });
-      choices.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${l.book.label} (${l.urls.length} clips, ≈ ${mb(l.urls.length * CLIP_BYTES)})`)]));
+      choices.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${l.book.label} (${l.urls.length} clips, ≈ ${size(l.urls.length * CLIP_BYTES)})`)]));
     });
+    paintQuota(remaining);
 
     paintButtons(remaining);
 
@@ -263,16 +309,28 @@ export function audioPacksCard() {
       busy = false;
       selected = new Set();
       const failed = Object.values(results).some((r) => !r.skipped && !r.ok);
+      const full = Object.keys(results).find((c) => results[c].quotaHit);
       const nudge = installNudge();
       if (nudge) nudgeHost.append(nudge);
       paint();
-      if (failed) status.textContent = 'Could not download one or more languages — check your connection and try again.';
+      showStorage();
+      if (full) {
+        const label = (all.find((l) => l.code === full) || {}).book?.label || full;
+        status.textContent = `Storage is full, so ${label} was not saved. Remove a language or a saved map area, then try again.`;
+      } else if (failed) status.textContent = 'Could not download one or more languages — check your connection and try again.';
     });
   };
 
-  paint();
-  estimateUsage().then((bytes) => {
-    if (bytes != null) totalLine.textContent = `This app is using about ${mb(bytes)} of storage on this device (everything downloaded, not only audio).`;
+  const showStorage = () => estimateStorage().then((est) => {
+    if (!est || est.usage == null) return;
+    quota = est.quota;
+    totalLine.textContent = quota
+      ? `This app is using ${size(est.usage)} of the ${size(quota)} this browser allows it (everything downloaded, not only audio).`
+      : `This app is using about ${size(est.usage)} of storage on this device (everything downloaded, not only audio).`;
+    paintQuota();
   });
+
+  paint();
+  showStorage();
   return card;
 }
