@@ -538,7 +538,7 @@ const MANIFEST = {
   'js/phrase-ui.js': '7f34630a',
   'js/place-ui.js': '8937b287',
   'js/reminders.js': 'f18165dd',
-  'js/render-utils.js': 'aaab41af',
+  'js/render-utils.js': '154dc807',
   'js/screens/arrival-info.js': 'a6846fa4',
   'js/screens/bargain.js': '0e891fc2',
   'js/screens/board.js': '32ddfbc9',
