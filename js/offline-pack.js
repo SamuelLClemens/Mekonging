@@ -26,13 +26,11 @@
 //   * PLACES (25 MB) is the scenery. Last, and unmetered only.
 //
 // An unknown connection type (Safari exposes no Network Information API, so this is every
-// iPhone) counts as unmetered and downloads everything. That is the deliberate choice: the
-// alternative — treating unknown as metered — would mean iPhone travellers, most of this app's
-// users, silently never get the pack, which is the outcome the whole file exists to prevent.
-// It is made safe by being visible and interruptible instead of guarded: `packStatusLine()`
-// reports it on Home while it runs, with one tap to stop and wait for Wi-Fi. The OS-level
-// "Data Saver" flag (`saveData`) IS honoured as a metered signal, because that one is the
-// traveller having already answered this question for every app on the phone.
+// iPhone) cannot tell Wi-Fi from a roaming SIM. So after the safety tier, Home asks ONCE, with
+// the size: download the rest now, or wait for Wi-Fi (audit decision D1). The answer is kept.
+// Treating unknown as metered instead would mean iPhone travellers silently never get the pack.
+// The OS-level "Data Saver" flag (`saveData`) IS honoured as a metered signal, because that one
+// is the traveller having already answered this question for every app on the phone.
 //
 // Then it keeps itself current: every regained connection, every return to the foreground, and
 // every launch re-checks and resumes exactly where it stopped. Nothing is re-downloaded — the
@@ -63,11 +61,11 @@ export function connectionKind() {
   return 'unknown';
 }
 
-// Unmetered = safe for the bulk tiers. See the header on why 'unknown' is included.
-function unmetered() {
-  const k = connectionKind();
-  return k === 'wifi' || k === 'unknown';
-}
+// Bytes per tier, from the files themselves. Regenerate after adding or removing a photo or call:
+// python3 scripts/build-pack-sizes.py --write (scripts/check-cache-version.py verifies it).
+// ---- BEGIN GENERATED PACK SIZES — scripts/build-pack-sizes.py ----
+export const PACK_BYTES = { safety: 9539390, guide: 66349357, places: 25714089 };
+// ---- END GENERATED PACK SIZES ----
 
 // ---- the manifest ----------------------------------------------------------
 // Built from the two registries the screens themselves render from (js/data/photos.js and
@@ -114,10 +112,11 @@ export async function packManifest() {
   });
   const calls = Object.keys(sounds).map((id) => sounds[id] && sounds[id].src).filter(Boolean);
 
+  // scripts/build-pack-sizes.py sizes these tiers with the same rules; change both together.
   const m = {
-    safety,                                   // ~56 files, 9 MB — any connection
-    guide: nature.concat(food, produce, calls), // ~371 files, 61 MB — unmetered
-    places,                                   // ~140 files, 25 MB — unmetered, last
+    safety,                                   // 56 files, 9 MB — any connection
+    guide: nature.concat(food, produce, calls), // 381 files, 63 MB — Wi-Fi, or after asking
+    places,                                   // 140 files, 25 MB — the same, last
   };
   m.all = m.safety.concat(m.guide, m.places);
   // Only memoise a COMPLETE manifest. Either dynamic import above can fail on a launch with no
@@ -146,6 +145,19 @@ function emit() { listeners.forEach((fn) => { try { fn(packState()); } catch { /
 // re-counting 567 cache entries.
 let live = { running: false, tier: '', done: 0, total: 0, bytes: 0 };
 let stopped = false;
+let forced = false;        // the traveller asked for the rest in this session, on any connection
+let stored = {};           // per tier { have, total }, from the worker's last count
+
+// What is still to download, in bytes. A tier the worker counted as partly stored is scaled
+// by the share it still misses.
+export function packBytesLeft(tiers = ['safety', 'guide', 'places']) {
+  const pk = packPrefs();
+  return tiers.reduce((sum, t) => {
+    if (pk.tiers[t]) return sum;
+    const s = stored[t];
+    return sum + Math.round(PACK_BYTES[t] * (s && s.total ? 1 - s.have / s.total : 1));
+  }, 0);
+}
 
 function packPrefs() {
   const p = store.profile.prefs;
@@ -155,10 +167,15 @@ function packPrefs() {
 
 export function packState() {
   const pk = packPrefs();
+  const kind = connectionKind();
+  const bulkLeft = packBytesLeft(['guide', 'places']);
   return {
     running: live.running, tier: live.tier, done: live.done, total: live.total,
     bytes: live.bytes, storedBytes: pk.bytes || 0, tiers: pk.tiers || {},
-    deferred: !!pk.deferred, quotaHit: !!pk.quotaHit, kind: connectionKind(),
+    deferred: !!pk.deferred, quotaHit: !!pk.quotaHit, kind, bulkLeft, left: packBytesLeft(),
+    // D1: the one question, once the safety tier is in. Answered by resumePack or deferPack.
+    ask: !live.running && !forced && !pk.deferred && !pk.quotaHit && pk.asked !== 'yes'
+      && kind === 'unknown' && netMode() !== 'offline' && !!pk.tiers.safety && bulkLeft > 0,
   };
 }
 
@@ -166,6 +183,7 @@ if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
   navigator.serviceWorker.addEventListener('message', (e) => {
     const d = e.data || {};
     if (d.type === 'MEDIA_PROGRESS') {
+      if (stopped) return;                     // a stopped run reports its last file; ignore it
       live = { running: true, tier: d.tier, done: d.done, total: d.total, bytes: d.bytes };
       emit();
     } else if (d.type === 'MEDIA_DONE') {
@@ -189,6 +207,7 @@ if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
       // is kept only if the cache still has every file in it.
       const pk = packPrefs();
       pk.bytes = d.bytes || 0;
+      stored = d.stored || {};
       let lost = 0;
       Object.keys(d.stored || {}).forEach((t) => {
         const s = d.stored[t];
@@ -212,8 +231,12 @@ async function nextTier() {
   const m = await packManifest();
   const need = (t) => !pk.tiers[t] && m[t] && m[t].length;
   if (need('safety')) return 'safety';
-  if (pk.deferred || !unmetered()) return null;                 // the rest waits for Wi-Fi
-  if (connectionKind() === 'slow') return null;
+  if (!forced) {
+    if (pk.deferred) return null;                               // "Not now" / "Wait for Wi-Fi"
+    const k = connectionKind();
+    if (k === 'metered' || k === 'slow') return null;           // the rest waits for Wi-Fi
+    if (k === 'unknown' && pk.asked !== 'yes') return null;     // D1: ask first (packState().ask)
+  }
   if (need('guide')) return 'guide';
   if (need('places')) return 'places';
   return null;
@@ -250,23 +273,32 @@ export async function refreshPackStatus() {
   w.postMessage({ type: 'MEDIA_STATUS', tiers: { safety: m.safety, guide: m.guide, places: m.places } });
 }
 
-// "Not now" on the Home status line. Keeps the safety tier — that one is 9 MB and the reason
-// the feature exists — and holds the bulk until a Wi-Fi connection appears.
+// The worker keeps fetching a tier it has started unless it is told to stop.
+function stopWorker() { const w = worker(); if (w) w.postMessage({ type: 'STOP_MEDIA' }); }
+
+// "Not now" and "Wait for Wi-Fi" on the Home status line. Keeps the safety tier — that one is
+// 9 MB and the reason the feature exists — and holds the rest until the traveller taps
+// Download: nothing here sees Wi-Fi arrive on an iPhone.
 export function deferPack() {
   const pk = packPrefs();
   pk.deferred = true;
   save();
   stopped = true;
+  forced = false;
+  stopWorker();
   live = { running: false, tier: '', done: 0, total: 0, bytes: 0 };
   emit();
 }
 
+// An explicit "download it": answers D1 for good and, for this session, lifts the wait for Wi-Fi.
 export function resumePack() {
   const pk = packPrefs();
   pk.deferred = false;
   pk.quotaHit = false;
+  pk.asked = 'yes';
   save();
   stopped = false;
+  forced = true;
   next();
   emit();
 }
@@ -283,7 +315,10 @@ export function clearPack() {
   // comes back on request, or on the next Wi-Fi connection, which is what the confirmation says.
   pk.deferred = true;
   stopped = true;
+  forced = false;
+  stored = {};                                   // the counts described the cache being cleared
   save();
+  stopWorker();
   if (w) w.postMessage({ type: 'CLEAR_MEDIA' });
   emit();
 }

@@ -89,6 +89,12 @@ def main():
     ).returncode
     if manifest_rc != 0:
         problems.append('sw.js MANIFEST is stale — see the file list above.')
+    # Same reasoning for the field guide's stated download sizes (js/offline-pack.js PACK_BYTES).
+    sizes_rc = subprocess.run(
+        [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build-pack-sizes.py')],
+    ).returncode
+    if sizes_rc != 0:
+        problems.append('js/offline-pack.js PACK_BYTES is stale — run scripts/build-pack-sizes.py --write.')
 
     if problems:
         print('\nFAIL')

@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.604.0';
+const CACHE_VERSION = 'mk-v0.609.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -354,15 +354,15 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': 'ca84873c',
+  'css/style.css': '7de77ef7',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': '2a31820e',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
-  'js/audio-packs.js': 'e25deee5',
+  'js/audio-packs.js': '3751ea3e',
   'js/budget-ui.js': '6244d5ac',
-  'js/currency.js': '34ce7a88',
+  'js/currency.js': 'cccd3d60',
   'js/data/accessibility.js': '48f9da6c',
   'js/data/allergens.js': 'df832414',
   'js/data/arrival.js': '2d70ab12',
@@ -409,7 +409,7 @@ const MANIFEST = {
   'js/data/history.cities.th.js': 'b62c45b7',
   'js/data/history.cities.vi.js': '39b7d44c',
   'js/data/history.js': '0f9c6617',
-  'js/data/hospitals.curated.js': 'f8625a7c',
+  'js/data/hospitals.curated.js': '0bbd6bd1',
   'js/data/hospitals.js': '089e878d',
   'js/data/hospitals.kh.js': 'bc42457e',
   'js/data/hospitals.la.js': 'dd68732d',
@@ -517,22 +517,24 @@ const MANIFEST = {
   'js/data/zones.js': '89ab528b',
   'js/exporter.js': 'e301db80',
   'js/gamify.js': '235c330e',
-  'js/i18n.js': 'c4ce764e',
+  'js/i18n.js': '81404ab3',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '381d33fe',
-  'js/map.js': 'd44bbc25',
+  'js/main.js': '389f9b21',
+  'js/map-tiles.js': '3f500cc5',
+  'js/map.js': 'f18178d4',
   'js/nav-groups.js': '1bdef2e7',
-  'js/offline-areas-ui.js': 'e50c5c44',
-  'js/offline-pack.js': 'f3e74905',
+  'js/offline-areas-ui.js': '01b8e952',
+  'js/offline-pack.js': 'a804a82e',
+  'js/offline-ready.js': 'b4fe0ccb',
   'js/personal.js': '34ddb915',
   'js/photo-registry.js': 'c1c4f7e2',
   'js/phrase-ui.js': '7f34630a',
-  'js/place-ui.js': 'bdac146c',
+  'js/place-ui.js': '8937b287',
   'js/reminders.js': 'f18165dd',
-  'js/render-utils.js': '3341eb9f',
+  'js/render-utils.js': 'ca184f19',
   'js/screens/arrival-info.js': 'a6846fa4',
   'js/screens/bargain.js': '0e891fc2',
   'js/screens/board.js': '32ddfbc9',
@@ -549,27 +551,27 @@ const MANIFEST = {
   'js/screens/food.js': '4030bf02',
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': 'ec261fba',
-  'js/screens/home.js': '766ea586',
+  'js/screens/home.js': '83670ab5',
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '6e706314',
-  'js/screens/medical.js': '6fc3c717',
-  'js/screens/nearby.js': 'c25da527',
+  'js/screens/medical.js': '62c2ce75',
+  'js/screens/nearby.js': '1e81b2f7',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': 'fd3a61d2',
-  'js/screens/places.js': '83aa42e9',
+  'js/screens/places.js': 'c63da911',
   'js/screens/produce.js': '31aeadd6',
   'js/screens/schedules.js': 'e04d0ae5',
   'js/screens/search.js': '9dd5a15b',
-  'js/screens/settings.js': 'e1a7385d',
+  'js/screens/settings.js': 'e21852ca',
   'js/screens/share-journey.js': 'f3a2aeea',
   'js/screens/signtranslate.js': '4494ce60',
   'js/screens/streetfood.js': '0ca4e2ad',
-  'js/screens/today.js': 'af93bb70',
+  'js/screens/today.js': '67d1e3e4',
   'js/screens/transport.js': 'e79a065a',
-  'js/screens/trip.js': '8c7b7e12',
+  'js/screens/trip.js': 'ae7c9c82',
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '6746db81',
-  'js/screens/weather.js': '3fdcf34f',
+  'js/screens/weather.js': 'e46829b4',
   'js/screens/welcome.js': '6f39cb03',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',
@@ -578,14 +580,14 @@ const MANIFEST = {
   'js/trail.js': 'c04f9efc',
   'js/translate.js': 'bb9a9517',
   'js/tts.js': 'e75536f2',
-  'js/ui-widgets.js': '70274759',
-  'js/util.js': '33cd90f6',
+  'js/ui-widgets.js': 'c7346cf1',
+  'js/util.js': '4a6082bc',
   'js/vault.js': 'e0d57d7f',
   'js/visits.js': '523454b2',
   'js/walk-route.js': '596e9417',
   'js/walk-ui.js': '2d832965',
   'js/weather-ui.js': '713a3bc0',
-  'js/weather.js': '84d3c125',
+  'js/weather.js': 'f46a3ee2',
   'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
   'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
   'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',
@@ -921,13 +923,16 @@ async function handleMedia(req) {
 // every subsequent write fails too, and hammering a full disk 400 more times is pure cost. The
 // page is told, so it can say so instead of showing a progress bar that never finishes.
 let mediaBusy = false;
+let mediaStop = false;     // STOP_MEDIA: the traveller tapped "Not now" or "Wait for Wi-Fi"
 async function prefetchMedia(urls, client, tier) {
   if (mediaBusy) { if (client) client.postMessage({ type: 'MEDIA_BUSY', tier }); return; }
   mediaBusy = true;
+  mediaStop = false;
   const cache = await caches.open(MEDIA_CACHE);
   let done = 0, ok = 0, had = 0, bytes = 0, quotaHit = false, failed = 0;
   try {
     for (const url of urls) {
+      if (mediaStop) break;
       try {
         if (await cache.match(url, { ignoreSearch: true })) { had++; ok++; }
         else {
@@ -1045,6 +1050,8 @@ self.addEventListener('message', (e) => {
     e.waitUntil(pruneMedia(d.urls, e.source));
   } else if (d.type === 'CLEAR_MEDIA') {
     e.waitUntil(clearMedia(e.source));
+  } else if (d.type === 'STOP_MEDIA') {
+    mediaStop = true;
   }
 });
 

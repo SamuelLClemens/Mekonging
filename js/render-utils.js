@@ -97,6 +97,37 @@ export function driveRange(km, cc) {
 }
 export function withinNear(km, cc) { const m = estDriveMin(km, cc); return m != null && m <= NEAR_MAX_MIN; }
 export function withinDayTrip(km, cc) { const m = estDriveMin(km, cc); return m != null && m > NEAR_MAX_MIN && m <= DAYTRIP_MAX_MIN; }
+
+// ---- D4: one near-me ranking, shared by Home's "Right now", Places' "Nearby", Today's pool
+// and Nearby's "Closest to you" (F-26) --------------------------------------------------
+//
+// withinNear/withinDayTrip above decide which SECTION a place falls into; they say nothing
+// about order WITHIN a section, which is where F-25 actually lived — Places sorted "Nearby"
+// by season/personal score alone, so a 3.9 km five-star hotel outranked a 1.5 km temple sitting
+// in the very same tier. nearBand subdivides "near" into the two plain-km rings a traveller
+// already reasons in (an easy walk, a short ride) plus whatever is left of the drive-time
+// ceiling, so distance always wins before quality gets a say.
+export function nearBand(km) {
+  if (km == null) return 3;
+  if (km <= 2) return 0;
+  if (km <= 10) return 1;
+  return 2;
+}
+// Comparator: ascending = better rank. `a`/`b` are { km, closed, fit } — `closed` is this
+// instant's open/closed read (openStateNow), `fit` is 0 for a fine pick and 1 (or higher) for
+// one the screen has flagged as a poor fit for who is travelling (placeFitReason and
+// siblings) — bigger sinks, exactly like every other list on the site. Ties (same band, same
+// open state, same fit flag) keep whatever order the caller handed in — JS sort is stable, so
+// a screen's own quality ordering (rating, season fit, "best for you") still breaks the tie.
+export function rankNearMe(a, b) {
+  const bandDiff = nearBand(a.km) - nearBand(b.km);
+  if (bandDiff) return bandDiff;
+  const ca = a.closed ? 1 : 0, cb = b.closed ? 1 : 0;
+  if (ca !== cb) return ca - cb;
+  const fa = a.fit || 0, fb = b.fit || 0;
+  if (fa !== fb) return fa - fb;
+  return (a.km || 0) - (b.km || 0);
+}
 // Human label: a walk time under ~2.5 km, otherwise a ROUGH road estimate. The estimate is
 // derived from straight-line distance, so it is deliberately framed as approximate ("by road
 // (est.)") with coarse granularity and a "+" on longer trips — a switchback mountain route can

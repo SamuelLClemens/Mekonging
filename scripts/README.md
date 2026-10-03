@@ -70,5 +70,8 @@ hidden page computes no layout at all and every width check silently inverts.
 ## Generators
 
 `build_*.py` and `match-osm-access.py` regenerate data files from source data.
+`build-sw-manifest.py` and `build-pack-sizes.py` regenerate the generated blocks in `sw.js` and
+`js/offline-pack.js` (the field guide's size per tier) with `--write`; `check-cache-version.py`
+runs both in verify mode.
 `derive-place-fit.py` and `verify-hospital-countries.py` are one-off derivations kept for
 the next refresh. `serve.py` is the static server used for every local check.

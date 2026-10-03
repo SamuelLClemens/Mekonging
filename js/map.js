@@ -17,6 +17,7 @@ import {
 } from './weather.js';
 import { dateLocale } from './i18n.js';
 import { getWxSource, wxSourceSeg } from './weather-ui.js';
+import { SATELLITE_TILES, STREET_TILES, tileUrlsForBounds, tileUrlsForArea } from './map-tiles.js';
 
 // The Mekong main stem as lat/lng (same trace as the landing-map river).
 const MEKONG_LL = [
@@ -33,14 +34,12 @@ const MEKONG_FC = { type: 'FeatureCollection', features: [{ type: 'Feature', pro
 // runtime-cached by the service worker so viewed areas persist offline. It sits
 // OVER the self-hosted vector basemap, which remains the always-offline fallback
 // (uncached tiles simply fail to paint and the vector layers show through). This
-// reuses the same source/attribution as the Nomadic Almanac map.
-const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+// reuses the same source/attribution as the Nomadic Almanac map. Tile URLs: js/map-tiles.js.
 const SATELLITE_ATTR = 'Imagery © Esri — Source: Esri, Maxar, Earthstar Geographics, USGS, NOAA';
 // Street basemap: Esri World Street Map raster (roads + place labels). Same host as the
 // satellite imagery, so it needs no new CSP entry and no API key. Shown when the user picks
 // "Map" instead of "Satellite"; like satellite it is cached to mk-tiles for offline reuse and
 // falls back to the self-hosted geometry basemap when a tile cannot load.
-const STREET_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
 const STREET_ATTR = 'Streets © Esri — HERE, Garmin, USGS, © OpenStreetMap contributors';
 
 // How far each Esri basemap is actually surveyed in this region — NOT how far MapLibre will
@@ -67,41 +66,6 @@ const STREET_MAXZOOM = 17;
 // One level past the better of the two. Without it MapLibre's default of 22 lets a pinch turn
 // the map into a 16x magnification of a tile that has no more detail in it.
 const MAP_MAXZOOM = 19;
-
-// Build the list of tile URLs covering `bounds` from the current zoom down a few levels
-// (capped) so the service worker can pre-cache the area for offline use.
-//
-// Bug fix: this used to hard-code SATELLITE_TILES only, so a traveller who downloaded an
-// area while viewing in street mode had zero usable offline raster imagery for that view once
-// offline — silently, since the vector basemap still shows through as a fallback and nothing
-// says imagery is missing. Now emits one URL per requested style for every tile coordinate.
-// `cap` bounds tile COORDINATES, not raw URLs, so a saved area's geographic footprint does not
-// silently shrink when a second style is added — the honest trade-off is ~2x storage per area,
-// not a smaller area.
-function tileUrlsForBounds(bounds, z0, extraZoom = 2, cap = 600, styles = [SATELLITE_TILES, STREET_TILES]) {
-  const lon2tile = (lon, z) => Math.floor((lon + 180) / 360 * 2 ** z);
-  const lat2tile = (lat, z) => {
-    const r = lat * Math.PI / 180;
-    return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z);
-  };
-  const clampTile = (t, z) => Math.max(0, Math.min(2 ** z - 1, t));
-  const urls = [];
-  let coordCount = 0;
-  const zStart = Math.max(1, Math.floor(z0));
-  const zEnd = Math.min(zStart + extraZoom, 17);
-  for (let z = zStart; z <= zEnd; z++) {
-    const x0 = clampTile(lon2tile(bounds.getWest(), z), z), x1 = clampTile(lon2tile(bounds.getEast(), z), z);
-    const y0 = clampTile(lat2tile(bounds.getNorth(), z), z), y1 = clampTile(lat2tile(bounds.getSouth(), z), z);
-    for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) {
-      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
-        for (const tpl of styles) urls.push(tpl.replace('{z}', z).replace('{x}', x).replace('{y}', y));
-        coordCount++;
-        if (coordCount >= cap) return urls;
-      }
-    }
-  }
-  return urls;
-}
 
 // ---- HOSPITALS MAP LAYER -----------------------------------------------------
 // The full OpenStreetMap-derived hospital/clinic/surgery dataset (js/data/hospitals.js,
@@ -2037,8 +2001,7 @@ export async function initMap(containerEl, opts = {}) {
     },
     // Recompute a saved area's tile URLs (same params as the original save) so the
     // service worker can delete exactly that pack.
-    tileUrlsForArea: (bounds, z, cap = 1000) =>
-      tileUrlsForBounds({ getWest: () => bounds.w, getEast: () => bounds.e, getNorth: () => bounds.n, getSouth: () => bounds.s }, z, 2, cap),
+    tileUrlsForArea,
     // Nearest known city to the current centre (for a default saved-area name), or null.
     nearestCityName: () => { const c = map.getCenter(); return nearestCity({ lng: c.lng, lat: c.lat }); },
     // Measure tool: toggle on with a callback (km, pointCount); off clears the line.

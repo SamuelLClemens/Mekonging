@@ -76,7 +76,7 @@ import * as personal from './personal.js';
 import * as gamify from './gamify.js';
 // Server-free reminders (per-entry lead time + daily journal nudge; in-app + best-effort notifications).
 import * as reminders from './reminders.js';
-import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase, fetchTimeout } from './util.js';
+import { h, esc, money, range, mapsUrl, mapsDirUrl, debounce, geolocate, bearing, compass, fmtDistance, titleCase, fetchTimeout, regionNow, roundEstimate } from './util.js';
 import {
   haversineKm, distanceChip, driveLabel, estDriveMin, withinNear, withinDayTrip, DAYTRIP_MAX_MIN,
   attrClass, attrTag, starsStr, isMarket, placeBucket,
@@ -110,7 +110,7 @@ import { translate, isConfigured as translateConfigured } from './translate.js';
 import { routeNodes, planRoutes, isRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
-import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany } from './weather.js';
+import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany, recNowIso, setForecastKeep } from './weather.js';
 import {
   COUNTRIES, INTERESTS, COLLECTION_PRESETS,
   getCountry, allPlaces, getPlace,
@@ -816,7 +816,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.604.0';
+export const APP_VERSION = 'mk-v0.609.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1629,16 +1629,39 @@ function partOfDay(hour) {
   return 'night';
 }
 
+// Shared parse behind isOpenNow and hoursStatusLabel, so the two never disagree about what a
+// free-form hours string means: a 24h clock open/close pair, or null when it cannot be read.
+function parseHoursEdges(hours) {
+  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(hours);
+  if (!m) return null;
+  const open = parseInt(m[1], 10), close = parseInt(m[3], 10);
+  if (isNaN(open) || isNaN(close) || open === close) return null;
+  return { open, openMin: m[2] ? parseInt(m[2], 10) : 0, close, closeMin: m[4] ? parseInt(m[4], 10) : 0 };
+}
+
 // Best-effort "open now" from a free-form hours string. Returns true/false, or null when it
 // cannot be parsed (so an unparseable place is neither rewarded nor punished).
 function isOpenNow(hours, hour) {
   if (!hours) return null;
   if (/24\s*h|24\/7|round the clock/i.test(hours)) return true;
-  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(hours);
-  if (!m) return null;
-  const open = parseInt(m[1], 10), close = parseInt(m[3], 10);
-  if (isNaN(open) || isNaN(close) || open === close) return null;
-  return close < open ? (hour >= open || hour < close) : (hour >= open && hour < close);
+  const r = parseHoursEdges(hours);
+  if (!r) return null;
+  return r.close < r.open ? (hour >= r.open || hour < r.close) : (hour >= r.open && hour < r.close);
+}
+
+// "🟢 Open now · closes 22:00" / "🔒 Closed · opens 08:00" — the line F-07 found missing on
+// every "Right now" pick (0 of 5 rows showed any open/closed state, even though scoreForNow
+// already excludes known-closed places from the ranking). Reuses isOpenNow's own parsing, so
+// a row only ever gets a label here when isOpenNow would also have an opinion; returns null
+// for absent/unparseable hours so a row with no reliable data shows nothing rather than a guess.
+export function hoursStatusLabel(hours, hour = regionNow().hour) {
+  if (!hours) return null;
+  if (/24\s*h|24\/7|round the clock/i.test(hours)) return '🟢 Open now · open 24 hours';
+  const r = parseHoursEdges(hours);
+  if (!r) return null;
+  const open = r.close < r.open ? (hour >= r.open || hour < r.close) : (hour >= r.open && hour < r.close);
+  const fmt = (h, m) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return open ? `🟢 Open now · closes ${fmt(r.close, r.closeMin)}` : `🔒 Closed · opens ${fmt(r.open, r.openMin)}`;
 }
 
 export function contextNow() {
@@ -1663,14 +1686,16 @@ export function contextNow() {
     if (ds) { near = { spot: ds, km: 0, displayCity: ds.city }; fix = { lat: ds.lat, lng: ds.lng }; approx = true; seeded = true; }
   }
   const now = new Date();
-  const hour = now.getHours();
-  const dow = now.getDay();
+  // The destination's clock, not the phone's (audit F-27; see regionNow in js/util.js).
+  const rn = regionNow(now.getTime());
+  const hour = rn.hour;
+  const dow = rn.dow;
   const part = partOfDay(hour);
   const country = near ? near.spot.country : getActiveCountry();
   let wx = null, raining = false;
   if (near) { const rec = getCachedWeather(spotKey(near.spot)); if (rec && rec.current) { wx = rec.current; raining = isWet(wx.code); } }
-  const wet = (WET_MONTHS[country] || []).includes(now.getMonth());
-  const dayName = now.toLocaleDateString(dateLocale(), { weekday: 'long' });
+  const wet = (WET_MONTHS[country] || []).includes(rn.month);
+  const dayName = rn.at.toLocaleDateString(dateLocale(), { weekday: 'long', timeZone: 'UTC' });
   return { fix, near, approx, seeded, hasGps: !!gps, now, hour, dow, dayName, isWeekend: dow === 0 || dow === 6, part, country, wx, raining, wet };
 }
 
@@ -1687,74 +1712,117 @@ export function fmtClock(hr) {
 // Returns null when there is no usable forecast (offline with no cache) so callers fall back to
 // the time-of-day tip rather than inventing weather. `mode` is 'rainNow' | 'rainSoon' | 'hot' |
 // 'clear'; `hot` flags a heat day so the caller can offer a cool-off shortcut.
+//
+// "Now" is the city's own clock, the one its forecast hours are written in (audit F-27), and the
+// advice fits the hour: at 21:45 this said "do an indoor morning, then head out" (audit F-06).
+// Heat is a daytime plan only, so after five the cool-off shortcut no longer points at pools
+// that are closing.
 function forecastOutlook(rec) {
   if (!rec || !rec.current) return null;
   const cur = rec.current;
   const hours = Array.isArray(rec.hourly) ? rec.hourly : [];
-  const now = new Date();
-  const nowFloor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
-  let i = hours.findIndex((hn) => { const d = new Date(hn.t); return !isNaN(d) && d >= nowFloor; });
+  const nowIso = recNowIso(rec);
+  const part = partOfDay(Number(nowIso.slice(11, 13)));
+  const late = part === 'night' || part === 'lateNight';
+  const daytime = !late && part !== 'evening';
+  let i = hours.findIndex((hn) => String(hn.t) >= `${nowIso.slice(0, 13)}:00`);
   if (i < 0) i = 0;
   const ahead = hours.slice(i, i + 10);   // roughly the next ten hours
   const wetHour = (hn) => isWet(hn.code) || (hn.pp != null && hn.pp >= 55);
+  const clockAt = (hn) => fmtClock(Number(String(hn.t).slice(11, 13)));
   const today = rec.daily && rec.daily[0];
   const tmax = today && today.tmax != null ? today.tmax : (cur.temp != null ? cur.temp : null);
-  const hot = tmax != null && tmax >= 33;
+  const hot = daytime && tmax != null && tmax >= 33;
   const rainNow = isWet(cur.code) || (cur.precip != null && cur.precip > 0.1) || (ahead[0] ? wetHour(ahead[0]) : false);
   if (rainNow) {
     const dryIdx = ahead.findIndex((hn, k) => k > 0 && !wetHour(hn));
     if (dryIdx > 0) {
-      const hr = new Date(ahead[dryIdx].t).getHours();
-      return { mode: 'rainNow', hot, line: `Raining now, easing around ${fmtClock(hr)} — do an indoor morning, then head out.` };
+      const plan = late ? 'a good night to stay in.'
+        : part === 'evening' ? 'an indoor dinner, then head out.'
+          : (part === 'midday' || part === 'afternoon') ? 'a museum or a café until then.'
+            : 'do an indoor morning, then head out.';
+      return { mode: 'rainNow', hot, line: `Raining now, easing around ${clockAt(ahead[dryIdx])} — ${plan}` };
     }
-    return { mode: 'rainNow', hot, line: 'Rain around for a while — lean into indoor picks: markets, museums, a long lunch.' };
+    return { mode: 'rainNow', hot, line: late ? 'Rain through the night — a good night to stay in.'
+      : part === 'evening' ? 'Rain all evening — an indoor dinner or a covered market.'
+        : 'Rain around for a while — lean into indoor picks: markets, museums, a long lunch.' };
   }
   const rainIdx = ahead.findIndex((hn, k) => k > 0 && wetHour(hn));
   if (rainIdx > 0) {
-    const hr = new Date(ahead[rainIdx].t).getHours();
-    return { mode: 'rainSoon', hot, line: `Dry now, but rain likely from around ${fmtClock(hr)} — get outdoor sights in first.` };
+    const at = clockAt(ahead[rainIdx]);
+    return { mode: 'rainSoon', hot, line: late ? `Dry for now; rain likely from around ${at}.`
+      : part === 'evening' ? `Dry now, but rain likely from around ${at} — eat early and stay close.`
+        : `Dry now, but rain likely from around ${at} — get outdoor sights in first.` };
   }
   if (hot) return { mode: 'hot', hot: true, line: `Hot today (${fmtTemp(tmax)}) — do sights early, then cool off at a pool, waterfall or spring.` };
-  return { mode: 'clear', hot: false, line: 'A clear stretch ahead — great for viewpoints, nature and being outside.' };
+  return { mode: 'clear', hot: false, line: daytime ? 'A clear stretch ahead — great for viewpoints, nature and being outside.'
+    : part === 'evening' ? 'A dry evening ahead — good for a sunset, a night market or a rooftop.' : 'A dry night ahead.' };
 }
 
 // Home is offline-first and does not otherwise fetch weather. When the traveller has allowed
 // online use, pull the focus city's forecast once (skipped when a fresh copy is already cached,
 // and de-duplicated so repeated renders never stack fetches), then re-render Home so the outlook
 // and the "right now" forecast line fill in. Never fetches when offline or without consent.
-// The same, for every city the traveller has planned a stop in — so the planning screen's
-// per-stop outlook shows a real forecast wherever one exists rather than falling back to the
-// month's normals for want of a fetch. Without this, only the focus city was ever cached: a
-// stop eight days away, comfortably inside the forecast window, still read "shoulder season".
-// maybeRefreshMany carries the same staleness, retry-gap and de-duplication rules as the
-// single-spot path, and one batched request covers all the stops.
-export function ensurePlannedStopsWeather() {
-  if (!online()) return;
-  const spots = [];
+//
+// prefetchForecasts() does the same for where the traveller is GOING (audit F-21). A forecast is
+// only there offline if it was saved while a connection existed, and syncLive() runs exactly when
+// one does, so each sync also keeps: the planned stops (the one they are at, then the next by
+// date, then the undated in trip order) and the three anchors nearest the last fix, the town they
+// are in and the likeliest next ones. js/weather.js spares these when it trims its cache. Without
+// the stops, a stop eight days away read "shoulder season"; without the anchors, a traveller on
+// Don Det with no signal had no forecast at all.
+export const PREFETCH_TTL_MS = 3 * 60 * 60 * 1000;
+const PREFETCH_STOPS = 4;
+const PREFETCH_NEAR = 3;
+const PREFETCH_NEAR_MAX_KM = 150;   // further than this from every anchor is outside the region
+// Also the stops the "Before you lose signal" card (js/offline-ready.js) prepares. `located` is
+// false when the title names no known city: the forecast then falls back to the country's first
+// city, which is no place to centre a map.
+export function upcomingStops() {
+  const stops = store.trip.stops || [];
+  const dated = stops.filter((st) => st.date).sort((a, b) => a.date.localeCompare(b.date));
+  let next = dated.findIndex((st) => st.date >= todayISO());
+  if (next < 0) next = dated.length;
+  return [...dated.slice(Math.max(0, next - 1)), ...stops.filter((st) => !st.date)].slice(0, PREFETCH_STOPS)
+    .map((st) => {
+      const own = spotForCity(st.country, st.title);
+      return { stop: st, spot: own || (getCountry(st.country) ? defaultSpot(st.country) : null), located: !!own };
+    });
+}
+function forecastKeepSpots() {
+  const out = [];
   const seen = new Set();
-  (store.trip.stops || []).forEach((st) => {
-    if (!st.date) return;
-    const s = spotForCity(st.country, st.title) || (getCountry(st.country) ? defaultSpot(st.country) : null);
-    if (!s) return;
-    const k = spotKey(s);
-    if (seen.has(k)) return;
-    seen.add(k);
-    spots.push(s);
-  });
+  const add = (s) => { if (s && !seen.has(spotKey(s))) { seen.add(spotKey(s)); out.push(s); } };
+  upcomingStops().forEach((x) => add(x.spot));
+  const fix = getLastFix();
+  if (fix) {
+    WEATHER_SPOTS.map((s) => ({ s, km: haversineKm(fix, { lat: s.lat, lng: s.lng }) }))
+      .filter((x) => x.km != null && x.km <= PREFETCH_NEAR_MAX_KM)
+      .sort((a, b) => a.km - b.km).slice(0, PREFETCH_NEAR).forEach((x) => add(x.s));
+  }
+  return out;
+}
+setForecastKeep(() => {
+  const keys = forecastKeepSpots().map(spotKey);
+  try { keys.push(spotKey(focusSpot().spot)); } catch { /* nothing focused yet */ }
+  return keys;
+});
+export function prefetchForecasts() {
+  if (!online()) return;
+  const spots = forecastKeepSpots();
   // maybeRefreshWeather PER SPOT, deliberately, and not maybeRefreshMany: the batched call
   // fetches only CURRENT conditions (temperature and a weather code) into one shared cache
   // key, while the per-stop outlook reads `.daily` from each spot's own cache. Batching here
   // looked cheaper and fetched nothing this screen could use — every stop stayed on its
   // seasonal fallback with the requests going out regardless.
   //
-  // Four is the cap: this runs on every Home render in the planning phase, one request each,
-  // and the stops are in date order — so it is the four soonest that get a real forecast,
-  // which is also the only range a forecast reaches. maybeRefreshWeather's own staleness
-  // window and in-flight de-duplication mean repeated renders do not stack fetches.
+  // Three hours is fresh enough for a forecast saved to be read later, and keeps a roaming SIM
+  // to at most seven ~18 KB requests per three hours; the focus city keeps its 20 minutes.
+  // maybeRefreshWeather's in-flight de-duplication means repeated calls do not stack fetches.
   if (!spots.length) return;
   let repainted = false;
-  spots.slice(0, 4).forEach((s) => {
-    maybeRefreshWeather(s).then((r) => {
+  spots.forEach((s) => {
+    maybeRefreshWeather(s, false, PREFETCH_TTL_MS).then((r) => {
       const hash = location.hash || '';
       if (!r || repainted || !(hash === '' || hash === '#' || hash === '#home')) return;
       repainted = true;         // one repaint for the batch, not one per stop
@@ -2072,7 +2140,7 @@ export function profileFitCard(p) {
 
 // Best-effort open/closed at the current local hour (null when hours are unknown/unparseable,
 // so we never wrongly call an unknown place "closed").
-export function openStateNow(p) { return isOpenNow(p.hours, new Date().getHours()); }
+export function openStateNow(p) { return isOpenNow(p.hours, regionNow().hour); }
 
 // Whether a place is a POOR fit for who the traveller is travelling as, with a short reason.
 // Only flags what the data actually supports (kid-suitability, mobility) — it never invents a
@@ -2176,7 +2244,9 @@ function whyNow(p, ctx) {
   if (evening && (cats.includes('food') || cats.includes('market'))) return 'Street-food time';
   if (morning && cats.includes('market')) return 'Morning market';
   if (morning && cats.includes('culture') && !cats.includes('food')) return 'Cool-hours temple';
-  if (isOpenNow(p.hours, ctx.hour) === true) return 'Open now';
+  // No generic "Open now" fallback here any more (F-07): hoursStatusLabel() now renders its
+  // own, more useful "Open now · closes HH:MM" tag on every pick in drawPicks() below, so this
+  // would otherwise duplicate the same fact in two tags with no closing time on this one.
   return null;
 }
 
@@ -2370,6 +2440,10 @@ function homeRightNowCard(ctx) {
         const cats = p.categories || [];
         const er = effectiveRating(p.id, p.rating || 0);
         const dl = driveLabel(km);
+        // F-07: an explicit open/closes-at line, wherever `hours` actually parses — closed
+        // picks are already excluded from this ranking by scoreForNow, but a traveller still
+        // could not tell an open pick from an unknown one until this line existed.
+        const hoursLbl = hoursStatusLabel(p.hours, ctx.hour);
         // Category + budget-tier tags use the same catTag()/tierBadge() components as every
         // other list on the site (nearby, best-of, day-suggest) — one colour vocabulary
         // everywhere a category or price tier appears, not a Home-only look.
@@ -2390,6 +2464,7 @@ function homeRightNowCard(ctx) {
                 ...cats.slice(0, 2).map((c) => catTag(c)),
                 (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
                 (() => { const fit = placeFitReason(p, store.profile.prefs); return fit ? attrTag('⚠️ ' + fit) : null; })(),
+                hoursLbl ? attrTag(hoursLbl) : null,
                 reason ? attrTag(reason) : null,
               ]),
               h('div', { class: 'rn-meta muted' }, `${dl ? `${fmtDistance(km)} · ${dl}` : fmtDistance(km)} · ${p.city}`),
@@ -2484,7 +2559,7 @@ export function cityAboutCard(cc, slug) {
 // info a traveller needs to BE in or GET to this place — directions, weather, language, help.
 export function cityEssentials(cc, cityName, slug) {
   const c = getCountry(cc);
-  const meta = PART_META[partOfDay(new Date().getHours())];
+  const meta = PART_META[partOfDay(regionNow().hour)];
   const card = h('div', { class: 'card' }, [
     h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `🕒 Right now: ${meta.tip}`),
   ]);
@@ -2890,7 +2965,7 @@ export function plannedStopsOutlook() {
       detail = h('span', { class: 'stopwx-fc' }, [
         h('span', { class: 'od-emoji' }, wmo(hit.code)[1]),
         h('span', {}, `${lo}–${fmtTemp(hit.tmax)}`),
-        hit.rainProb != null ? h('span', { class: 'muted' }, ` ☔${hit.rainProb}%`) : null,
+        hit.rainProb != null ? h('span', { class: 'muted' }, ` ☔${Math.round(hit.rainProb)}%`) : null,
       ]);
     } else if (month) {
       // Beyond the forecast: the month's own verdict for that city, from history.js's
@@ -4421,8 +4496,9 @@ export function priceLine(low, high, currency) {
   if (!local) return '';
   const home = homeCurrency();
   if (!currency || currency === home) return local;
-  const lo = low != null ? convert(Number(low), currency, home) : null;
-  const hi = high != null ? convert(Number(high), currency, home) : null;
+  // Rounded to the precision an estimate has (roundEstimate, audit F-04): "≈ €17,75–24,84" → "≈ €18–25".
+  const lo = low != null ? roundEstimate(convert(Number(low), currency, home)) : null;
+  const hi = high != null ? roundEstimate(convert(Number(high), currency, home)) : null;
   if ((lo == null || !isFinite(lo)) && (hi == null || !isFinite(hi))) return local;
   // The unit once, on the end it belongs to — the same rule range() follows for the local
   // price, and this half was not following it: Chatuchak read "(≈ $0–$24.30)", repeating the
@@ -4442,7 +4518,7 @@ export function approxHome(amount, currency) {
   if (!currency || currency === home) return '';
   const v = convert(Number(amount), currency, home);
   if (v == null || !isFinite(v)) return '';
-  return `≈ ${money(v, home)}`;
+  return `≈ ${money(roundEstimate(v), home)}`;
 }
 
 export function countryChips(onPick, selected = getActiveCountry()) {
@@ -5181,20 +5257,22 @@ export function todoDoable(p) {
   return c.some((x) => TODO_DOABLE.includes(x));
 }
 function todoHasCat(p, list) { return (p.categories || []).some((c) => list.includes(c)); }
+// Things to do reads the same parts of the day as Home's "Right now" (partOfDay). It had its own
+// buckets, so at 21:30 Home said night while this list said evening and still boosted sunset
+// viewpoints. Before 5am is night, never "morning": 2am picks are bars, not temples.
+const TODO_DAYPART = { lateNight: 'night', earlyMorning: 'morning', morning: 'morning', midday: 'midday', afternoon: 'afternoon', evening: 'evening', night: 'night' };
 export function todoContext(rec, spot) {
-  const now = new Date();
-  const hr = now.getHours();
-  // hr < 5 must read as 'night', not fall through to the general "hr < 11 → morning" bucket —
-  // 1am/2am is deep night (bars/nightlife are the fit, TODO_NIGHT), not the cool sightseeing
-  // "morning" that 6am-10am actually means. Getting this wrong used to boost temples/museums/
-  // nature (TODO_CLOSED_AT_NIGHT would have applied instead) as "morning" picks at 2am while
-  // ranking genuinely-open bars below them — the opposite of what "right now" should suggest.
-  const daypart = hr < 5 ? 'night' : hr < 11 ? 'morning' : hr < 15 ? 'midday' : hr < 18 ? 'afternoon' : hr < 22 ? 'evening' : 'night';
-  const dow = now.getDay();
+  // The destination's clock, not the phone's: a phone on home time read 21:45 in Bangkok as
+  // "Afternoon" here (audit F-27).
+  const rn = regionNow();
+  const hr = rn.hour;
+  const daypart = TODO_DAYPART[partOfDay(hr)];
+  const dow = rn.dow;
   const today = rec && rec.daily && rec.daily[0];
   let weather = 'clear';
   if (today) { if (isWet(today.code) || (today.rainProb || 0) >= 60) weather = 'wet'; else if (today.tmax != null && today.tmax >= 34) weather = 'hot'; }
-  const uv = today && today.uv != null ? today.uv : null;
+  // Today's peak UV is advice for the daylight hours; at 21:45 "UV 8 Very high" was stale (F-27).
+  const uv = (today && today.uv != null && daypart !== 'evening' && daypart !== 'night') ? today.uv : null;
   const air = getCachedAir(spotKey(spot));
   const aqi = air && air.aqi != null ? air.aqi : null;
   return { hr, daypart, dow, weekend: dow === 0 || dow === 6, weather, uv, aqi };
@@ -5281,9 +5359,11 @@ export function rnThumb(p) {
 export function todoCard(x, maxReasons) {
   const { p, er, dist, reasons, cats } = x;
   const rc = [];
-  // Status/fit first (colour-coded): closed-now and "may not suit you" lead the chip row so
-  // they are not lost behind the "why now" reasons; both are set by the list that renders us.
+  // Status/fit first (colour-coded): closed-now, the open/closes-at line and "may not suit
+  // you" lead the chip row so they are not lost behind the "why now" reasons; all are set by
+  // the list that renders us.
   if (x._closed) rc.push(attrTag('🔒 Closed now'));
+  if (x._hoursLbl) rc.push(attrTag(x._hoursLbl));
   if (x._fit) rc.push(attrTag('⚠️ ' + x._fit));
   (reasons || []).slice(0, maxReasons || 2).forEach((r) => rc.push(attrTag(r)));
   const fam = placeFamily(p);
@@ -7559,12 +7639,12 @@ function syncWeather(force = false) {
 // One call for every live source, so a trigger can never be wired to one and forgotten for
 // the other — which is how the rates ended up with four triggers and the forecast with none.
 //
-// The planned stops are refreshed here too, not only on a Home render in the planning phase.
-// The point of caching a forecast for a city you have not reached yet is that it is there when
-// you get there with no signal, and the moment worth spending a request on is the one where a
-// connection appears — which is exactly what calls this. Its own cap (four soonest stops) and
-// staleness window make it cheap to call on every trigger.
-function syncLive(force = false) { syncRates(force); syncWeather(force); ensurePlannedStopsWeather(); }
+// The planned stops and the anchors around the traveller are refreshed here too, not only on a
+// Home render in the planning phase. The point of caching a forecast for a city you have not
+// reached yet is that it is there when you get there with no signal, and the moment worth
+// spending a request on is the one where a connection appears — which is exactly what calls
+// this. Its own caps and three-hour window make it cheap to call on every trigger.
+function syncLive(force = false) { syncRates(force); syncWeather(force); prefetchForecasts(); }
 
 // Exported so the two places that turn data ON can fetch immediately rather than waiting for
 // the next poll — enabling data and then seeing "approximate" rates for half an hour reads

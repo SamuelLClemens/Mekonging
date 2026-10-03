@@ -37,7 +37,7 @@ import { planRoutes, isRouteNode } from '../journey.js';
 import { confirmAction, netMode, setNetMode, online, collapsibleCard } from '../ui-widgets.js';
 import { budgetTarget, tripSpanDays } from '../budget-ui.js';
 import { dateLocale } from '../i18n.js';
-import { packState, onPackChange, deferPack } from '../offline-pack.js';
+import { packState, onPackChange, deferPack, resumePack, PACK_BYTES } from '../offline-pack.js';
 import { seedWeatherKey } from '../weather-ui.js';
 // setupRecapCard moved to js/screens/welcome.js with the onboarding flow it belongs to
 // (screen split, mk-v0.539.0). Home is its only caller and shows it once ever, so it is
@@ -48,7 +48,7 @@ let _recap = null;
 import {
   go, mount, topbar, contextNow, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
-  ensureHomeWeather, ensurePlannedStopsWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
+  ensureHomeWeather, prefetchForecasts, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
   identifyRow, homeFold,
@@ -190,7 +190,7 @@ export function homeScreen() {
   // Planning also needs the forecast for each PLANNED stop, not just the focus city, or the
   // per-stop outlook below falls back to seasonal normals for dates that are well inside the
   // forecast window. One batched request; no-ops offline or without consent.
-  if (phase === 'planning') ensurePlannedStopsWeather();
+  if (phase === 'planning') prefetchForecasts();
 
   // The by-category budget donut used to render here too — dropped as a duplicated CARD (Home
   // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
@@ -462,7 +462,7 @@ function quickAccessRow(phase, stored, ctx) {
       if (spot) {
         const rec = getCachedWeather(spotKey(spot));
         const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;
-        if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${today.rainProb}%`;
+        if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${Math.round(today.rainProb)}%`;
       }
       wxSub = `${temp}${rainNote}`;
     }
@@ -580,22 +580,20 @@ function whereYouAreCard(cc, cityName) {
 // This NEVER fetches: a traveller who has deliberately switched data off gets the switch
 // offered back, not flipped for them (see ui-widgets.js online()).
 // ---- the field-guide download, while it is happening ------------------------
-// The app downloads roughly 95 MB of photos and animal calls on its own, without asking (see
-// js/offline-pack.js for why that is the right default and why it is staged). Doing that
-// silently would not be acceptable: on an unrecognised connection — which on iOS is every
-// connection, since Safari ships no Network Information API — the app cannot tell Wi-Fi from
+// The app downloads the field guide's 97 MB of photos and animal calls on its own (see
+// js/offline-pack.js for why, and why it is staged). On an unrecognised connection — on iOS
+// every connection, since Safari ships no Network Information API — it cannot tell Wi-Fi from
 // a metered foreign SIM, and data in this region is sold by the megabyte.
 //
-// So this line is the safeguard, and it is deliberately not a permission dialog. Nobody
-// standing in an airport wants to arbitrate a storage decision before they have seen the app,
-// and a prompt would be dismissed unread by exactly the travellers who most need the photos.
-// It states what is happening, in bytes, and carries one tap to stop and wait for Wi-Fi.
+// So this line is the safeguard, and it is deliberately not a modal dialog. It states what is
+// happening and how big it is, carries one tap to stop, and on an unrecognised connection asks
+// once, with the size, before the 88 MB beyond the dangerous-species photos (audit D1).
 //
 // It disappears the moment the pack is complete. A permanent status line for a finished
 // background task is clutter, and there is a full account in Settings for anyone who wants it.
 function packStatusLine() {
   const s = packState();
-  if (!s.running && !s.deferred && !s.quotaHit) return null;
+  if (!s.running && !s.deferred && !s.quotaHit && !s.ask) return null;
   const mb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(0)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
   const line = h('div', { class: 'card pack-line' });
@@ -605,21 +603,25 @@ function packStatusLine() {
 
   const paint = () => {
     const st = packState();
-    if (!st.running && !st.deferred && !st.quotaHit) { line.remove(); return; }
+    if (!st.running && !st.deferred && !st.quotaHit && !st.ask) { line.remove(); return; }
     act.innerHTML = '';
     if (st.quotaHit) {
       txt.textContent = `📥 This device is out of space, so not all the field-guide photos could be saved. ${mb(st.storedBytes)} is here and works offline.`;
       act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => go('#settings') }, 'Manage'));
+    } else if (st.ask) {
+      txt.textContent = `📥 Dangerous-species photos saved. The rest of the field guide is ${mb(st.bulkLeft)}: download it now, or wait for Wi-Fi?`;
+      act.append(h('button', { class: 'btn tiny-btn', onclick: () => { resumePack(); paint(); } }, 'Download'),
+        h('button', { class: 'btn ghost tiny-btn', onclick: () => { deferPack(); paint(); } }, 'Wait for Wi-Fi'));
     } else if (st.deferred) {
-      txt.textContent = `📥 The rest of the field guide is waiting for Wi-Fi. The dangerous-species photos are already on this device.`;
-      act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => go('#settings') }, 'Manage'));
+      txt.textContent = `📥 The rest of the field guide (${mb(st.bulkLeft)}) is waiting. Download it on Wi-Fi.`;
+      act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => { resumePack(); paint(); } }, 'Download'));
     } else {
       // Only the safety tier is named. It is the one tier worth a traveller knowing about in
       // the moment — 9 MB of photographs of what can hurt them — and the other two are
       // scenery and dinner by comparison.
       const what = st.tier === 'safety' ? 'photos of dangerous species' : 'the field guide';
       const pct = st.total ? Math.round((st.done / st.total) * 100) : 0;
-      txt.textContent = `📥 Saving ${what} for offline use — ${pct}%${st.bytes ? ` · ${mb(st.bytes)}` : ''}`;
+      txt.textContent = `📥 Saving ${what} for offline use — ${pct}% of ${mb(PACK_BYTES[st.tier] || 0)}`;
       act.append(h('button', { class: 'btn ghost tiny-btn', onclick: () => { deferPack(); paint(); } }, 'Not now'));
     }
   };

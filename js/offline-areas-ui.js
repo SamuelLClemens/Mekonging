@@ -6,6 +6,7 @@
 import { h } from './util.js';
 import { getSavedAreas, addSavedArea, removeSavedArea, clearSavedAreas } from './state.js';
 import { online, confirmAction, foldedCard } from './ui-widgets.js';
+import { TILE_BYTES } from './map-tiles.js';
 
 // `getCtrl()` returns the caller's current map.js controller, or null before it resolves —
 // both consumers share that same "controller resolves asynchronously after this card already
@@ -36,7 +37,7 @@ export function buildOfflineAreasCard(getCtrl, opts = {}) {
     const urls = ctrl.getDownloadTiles(1000);
     if (!urls.length) { areasStatusP.textContent = 'Nothing to save at this view — zoom in to an area first.'; return; }
     const viewInfo = ctrl.getViewInfo();
-    const mbNum = urls.length * 0.018;
+    const mbNum = urls.length * TILE_BYTES / 1048576;
     const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
     areasStatusP.textContent = '';
     // Reported gap: no signal anywhere that connectivity affects this feature — a traveller
@@ -135,7 +136,7 @@ export function buildOfflineAreasCard(getCtrl, opts = {}) {
       return;
     }
     areas.forEach((a) => {
-      const mbNum = (a.count || 0) * 0.018;
+      const mbNum = (a.count || 0) * TILE_BYTES / 1048576;
       const mb = mbNum < 10 ? mbNum.toFixed(1) : String(Math.round(mbNum));
       areasCard.append(h('div', { class: 'row-between price-item' }, [
         h('div', {}, [h('strong', {}, a.name), h('div', { class: 'muted', style: 'font-size:12px' }, `${a.count || 0} tiles · ~${mb} MB · saved ${a.savedAt}`)]),

@@ -18,6 +18,7 @@ import { store, save, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, rem
 import { confirmAction, promptAction, screenHint } from '../ui-widgets.js';
 import { h, money } from '../util.js';
 import { dateLocale } from '../i18n.js';
+import { offlineReadyCard } from '../offline-ready.js';
 import { checklistFor, countryChips, go, homeCurrency, mount, profileIsSet, render, shareButton, stopDateLabel,
   ownTitle, todayISO, addDaysISO, tripStartISO, topbar } from '../main.js';
 
@@ -188,6 +189,7 @@ export function tripScreen() {
     itin.append(h('div', { class: 'chips' }, saved.slice(0, 12).map((p) => h('button', { class: 'chip', onclick: () => { addStop({ title: p.name, country: p.country }); go('#trip'); } }, p.name))));
   }
   wrap.append(itin);
+  wrap.append(offlineReadyCard());
 
   // share this trip with a travel companion (backendless — link carries the stops)
   if (store.trip.stops.length) {
