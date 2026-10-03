@@ -65,12 +65,17 @@ function tierChip(tier) {
 // One hospital, rendered with the two facts that decide whether to go there: how far it is
 // and what it can actually do. Distance is straight-line — driveLabel() converts it to an
 // honest road estimate, which on a mountain or an island is a very different number.
+//
+// `data-no-mt` on the name: a hospital name is a proper noun, not prose, and the optional
+// machine-translation pass (js/i18n.js) cannot tell the difference — the audit caught it
+// turning "Bumrungrad International Hospital" into "Internationales Krankenhaus Bumrungrad".
+// Same reasoning covers every other hospital/clinic name rendered further down this screen.
 function hospitalCard(x, fix) {
   const km = (fix && fix.lat != null) ? haversineKm(fix, { lat: x.lat, lng: x.lng }) : null;
   const drive = km != null ? careLabel(fix, x, km) : null;
   return h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
     h('div', { class: 'row-between' }, [
-      h('strong', {}, x.name),
+      h('strong', { 'data-no-mt': '' }, x.name),
       km != null ? h('span', { class: 'fair' }, kmLabel(km)) : null,
     ]),
     h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' },
@@ -316,7 +321,7 @@ export function hospitalScreen(cc) {
           ? `Closest hospital to you right now — across the border in ${heroForeign.flag} ${heroForeign.name}`
           : 'Closest hospital to you right now'),
         h('div', { class: 'row-between' }, [
-          h('strong', { style: 'font-size:1.1rem' }, hero.name),
+          h('strong', { style: 'font-size:1.1rem', 'data-no-mt': '' }, hero.name),
           h('span', { class: 'fair' }, kmLabel(hero.km)),
         ]),
         hero.en ? h('div', { class: 'tiny muted' }, hero.en) : null,
@@ -339,7 +344,7 @@ export function hospitalScreen(cc) {
           heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
             h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, 'Further, but a known quantity — for anything serious, go here instead'),
             h('div', { class: 'row-between' }, [
-              h('strong', {}, known.name),
+              h('strong', { 'data-no-mt': '' }, known.name),
               h('span', { class: 'fair' }, kmLabel(known.km)),
             ]),
             h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-1)' },
@@ -367,7 +372,7 @@ export function hospitalScreen(cc) {
           : `Closer, but a ${(KIND_LABEL[clinic.kind] || 'clinic').toLowerCase()} — right for something minor, not for an emergency`;
         heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
           h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, headline),
-          h('div', { class: 'row-between' }, [h('strong', {}, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
+          h('div', { class: 'row-between' }, [h('strong', { 'data-no-mt': '' }, clinic.name), h('span', { class: 'fair' }, kmLabel(clinic.km))]),
           clinic.en ? h('div', { class: 'tiny muted' }, clinic.en) : null,
           h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, careLabel(fix, clinic, clinic.km) || ''),
           (clinicOnMyIsland && care && care.clinic && care.clinic.note) ? h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, care.clinic.note) : null,
@@ -381,7 +386,7 @@ export function hospitalScreen(cc) {
         const ccKm = haversineKm(fix, { lat: care.clinic.lat, lng: care.clinic.lng });
         heroSlot.append(h('div', { class: 'card', style: 'margin: 0 0 var(--sp-3)' }, [
           h('p', { class: 'tiny muted', style: 'margin: 0 0 var(--sp-0h)' }, `The first stop on ${care.name} — there is no hospital here`),
-          h('div', { class: 'row-between' }, [h('strong', {}, care.clinic.name), ccKm != null ? h('span', { class: 'fair' }, kmLabel(ccKm)) : null]),
+          h('div', { class: 'row-between' }, [h('strong', { 'data-no-mt': '' }, care.clinic.name), ccKm != null ? h('span', { class: 'fair' }, kmLabel(ccKm)) : null]),
           care.clinic.local ? h('div', { class: 'tiny muted' }, care.clinic.local) : null,
           ccKm != null ? h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 0' }, careLabel(fix, care.clinic, ccKm) || '') : null,
           h('p', { class: 'tiny', style: 'margin: var(--sp-1h) 0 0' }, care.clinic.note),

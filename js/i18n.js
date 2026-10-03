@@ -292,6 +292,16 @@ function inForeignScript(el) {
   return false;
 }
 
+// True when `el` sits inside a `data-no-mt` opt-out (or a foreign-script run, which is already
+// exempt for a different reason). Module-level so both the live collection pass
+// (collectUntranslated) and the cached-repaint pass (autoTranslateTree's cachedWalk) apply the
+// SAME opt-out — a string already banked in an earlier, less careful pass must not keep
+// repainting over an element that has since been marked data-no-mt. See js/i18n.js's own
+// module comment and the hospital-name / city-name fixes this guards.
+function blocked(el) {
+  return !el || inForeignScript(el) || (el.closest && el.closest('[data-no-mt]'));
+}
+
 // Swap a text node's content while preserving the whitespace either side of it, so inline
 // runs like `[' · ', span, ' · ']` keep their spacing after translation.
 function swapText(node, translated) {
@@ -465,8 +475,6 @@ function collectUntranslated(root, d, cache) {
     if (!pending.has(s)) pending.set(s, []);
     pending.get(s).push(site);
   };
-  const blocked = (el) => !el || inForeignScript(el) || (el.closest && el.closest('[data-no-mt]'));
-
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(n) {
       const p = n.parentElement;
@@ -551,7 +559,7 @@ export async function autoTranslateTree(root) {
     const walker = document.createTreeWalker(r, NodeFilter.SHOW_TEXT, {
       acceptNode(n) {
         const p = n.parentElement;
-        if (!p || SKIP_TAGS.has(p.tagName) || inForeignScript(p)) return NodeFilter.FILTER_REJECT;
+        if (!p || SKIP_TAGS.has(p.tagName) || blocked(p)) return NodeFilter.FILTER_REJECT;
         return n.nodeValue && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
       },
     });
@@ -562,6 +570,7 @@ export async function autoTranslateTree(root) {
     }
     for (const [n, txt] of hits) { swapText(n, txt); painted += 1; }
     for (const el of r.querySelectorAll('[placeholder],[aria-label],[title],[alt]')) {
+      if (blocked(el)) continue;
       for (const a of ATTRS) {
         const v = el.getAttribute(a);
         if (v && !d[v.trim()] && cache[v.trim()]) { el.setAttribute(a, cache[v.trim()]); painted += 1; }

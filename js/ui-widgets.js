@@ -320,13 +320,18 @@ export function spotForKey(key) { return WEATHER_SPOTS.find((s) => spotKey(s) ==
 // A single location dropdown (cities grouped by country) that defaults to the given
 // spotKey — used everywhere a traveller picks "where they are" instead of a wall of
 // chips. Pass the resolved focus/weather key so it always opens on the current location.
+//
+// `data-no-mt` on each option: a city name is a proper noun, not prose, and the optional
+// machine-translation pass (js/i18n.js) cannot tell the difference — the audit caught "Pai"
+// coming back as the German for "plasminogen activator inhibitors" (a PAI acronym collision)
+// and "Mae Hong Son" coming back as "Hong Kong".
 export function locationSelect(currentKey, onChange) {
   const sel = h('select', { class: 'loc-select', 'aria-label': 'Choose your location', onchange: (e) => onChange(e.target.value) });
   COUNTRIES.forEach((c) => {
     const spots = spotsForCountry(c.id);
     if (!spots.length) return;
     sel.append(h('optgroup', { label: `${c.flag} ${c.name}` },
-      spots.map((s) => h('option', { value: spotKey(s), selected: spotKey(s) === currentKey ? '' : null }, s.city))));
+      spots.map((s) => h('option', { value: spotKey(s), selected: spotKey(s) === currentKey ? '' : null, 'data-no-mt': '' }, s.city))));
   });
   return sel;
 }

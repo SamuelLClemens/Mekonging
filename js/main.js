@@ -6622,8 +6622,11 @@ function sosScreen(cc) {
     // easy trip" when it is actually a boat crossing.
     const acrossWater = (x) => fix && fix.lat != null && x.lat != null && islandsLoaded()
       && sameLand(fix, { lat: x.lat, lng: x.lng }) === false;
+    // `data-no-mt` on the name: a hospital name is a proper noun, not prose, and the optional
+    // machine-translation pass (js/i18n.js) cannot tell the difference — the audit caught it
+    // turning "Bumrungrad International Hospital" into "Internationales Krankenhaus Bumrungrad".
     const row = (x) => h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
-      h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
+      h('div', { class: 'row-between' }, [h('strong', { 'data-no-mt': '' }, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
       h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, x.city || x.en || ''),
       acrossWater(x) ? h('div', { class: 'tiny', style: 'margin: 0 0 var(--sp-1)' }, '🚤 Across the water — a boat or ferry, not a road, connects it.') : null,
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
