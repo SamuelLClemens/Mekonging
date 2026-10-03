@@ -17,7 +17,7 @@
 // It is safe because nothing here runs at import time: every export is a function declaration
 // or a literal table, so no binding is read before main.js has finished evaluating.
 
-import { h } from './util.js';
+import { h, regionNow } from './util.js';
 import { t, dateLocale } from './i18n.js';
 import { openModal } from './ui-widgets.js';
 import { COLLECTION_PRESETS, getPlace } from './data/regions.js';
@@ -288,7 +288,7 @@ export function marketChip(p) {
   if (!isMarket(p)) return null;
   const d = marketOpenDays(p);
   if (!d) return h('span', { class: 'mkt-chip daily' }, `🛍️ ${p.marketType || 'Market'} · daily`);
-  const on = d.includes(new Date().getDay());
+  const on = d.includes(regionNow().dow);   // the market's weekday, not the phone's (audit F-27)
   return h('span', { class: `mkt-chip ${on ? 'on' : 'off'}`, title: `Runs ${formatMarketDays(p)}` },
     on ? '🛍️ On today' : `🛍️ ${formatMarketDays(p)}`);
 }

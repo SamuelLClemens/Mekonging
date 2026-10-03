@@ -120,6 +120,32 @@ export function range(low, high, currency) {
     : `${lo}–${hi.slice(sym.length)}`;
 }
 
+// A converted price written to the precision it actually has (audit F-04). It is a rate times
+// a range somebody remembered, so "≈ €32,83–63,89" claimed four significant figures it never
+// had. Whole units from 10 up; two significant figures below that, so ฿40 still reads
+// "≈ $1.10" rather than collapsing to "$1".
+export function roundEstimate(n) {
+  if (n == null || !Number.isFinite(n) || n === 0) return n;
+  if (Math.abs(n) >= 10) return Math.round(n);
+  const scale = Math.pow(10, 1 - Math.floor(Math.log10(Math.abs(n))));
+  return Math.round(n * scale) / scale;
+}
+
+// The destination's clock. Every "now" decision (open now, the part of the day, market day,
+// the rain line) is about the place being visited, and all four countries keep UTC+7 all year
+// with no daylight saving. The phone's clock is wrong for exactly the traveller who has not
+// switched time zone yet: a phone on Israel time read 21:45 in Bangkok as "Afternoon" (audit
+// F-27). Plain offset arithmetic gives the same answer as Intl's Asia/Bangkok without needing
+// the time-zone database, and `iso` has the 'YYYY-MM-DDTHH:MM' shape of every forecast
+// timestamp, so the two compare as strings. `at` is the instant shifted to UTC+7: read it with
+// the getUTC* methods, or format it with timeZone: 'UTC'.
+export const REGION_UTC_OFFSET_SEC = 7 * 3600;
+export function regionNow(ms = Date.now()) {
+  const at = new Date(ms + REGION_UTC_OFFSET_SEC * 1000);
+  const iso = at.toISOString();
+  return { hour: at.getUTCHours(), dow: at.getUTCDay(), month: at.getUTCMonth(), date: iso.slice(0, 10), iso: iso.slice(0, 16), at };
+}
+
 // Coordinates are only trusted for a map link if they sit inside the mainland-SE-Asia
 // region these guides cover (with a margin) and are not the (0,0) null island. This stops
 // a stray/miskeyed coordinate from sending the traveller to the wrong place; such a link

@@ -2791,6 +2791,8 @@ html[data-theme="dark"] .wx-cal-cell { background: rgba(255,255,255,0.06); }
 /* "Right now" card: current conditions + air quality + UV, one card with thin dividers
    instead of three stacked cards saying the same "this is now" in three different boxes. */
 .wx-now-div { height: 1px; background: var(--line, rgba(0,0,0,.12)); margin: 10px 0; }
+/* A saved forecast read later: how old "now" is (audit F-21). */
+.wx-age { margin: var(--sp-1) 0 0; color: var(--ink-soft); font-size: var(--fs-sm); }
 
 /* Label-over-value facts, two columns: "Right now" and each opened 7-day row. */
 .wx-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-2); }

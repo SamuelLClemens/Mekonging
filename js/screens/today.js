@@ -26,6 +26,7 @@ import {
   festivalsInWindow,
   focusSpot,
   go,
+  hoursStatusLabel,
   moodLine,
   mount,
   openStateNow,
@@ -87,7 +88,7 @@ export function daySuggestScreen(country) {
     if (today) {
       const emo = wmo(today.code)[1];
       cond.push(`${emo} ${fmtTemp(today.tmin)}–${fmtTemp(today.tmax)}`);
-      if (today.rainProb != null) cond.push(`☔ ${today.rainProb}%`);
+      if (today.rainProb != null) cond.push(`☔ ${Math.round(today.rainProb)}%`);
     }
     cond.push(`🕑 ${DAYPART_LBL[ctx.daypart]}`);
     if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) cond.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
@@ -185,6 +186,11 @@ export function daySuggestScreen(country) {
       pool.forEach((x) => { x._fit = placeFitReason(x.p, prefs); x._closed = nowPlan && openStateNow(x.p) === false; });
       const closedNow = nowPlan ? pool.filter((x) => x._closed).length : 0;
       if (nowPlan) pool = pool.filter((x) => !x._closed);
+      // F-07/F-26: every surviving "now" pick already passed the closed-now filter above, so
+      // this is always "open" or "hours unknown" — tell the traveller which, and when it
+      // shuts, instead of leaving the point unstated. Only for the live "now" plan: a
+      // hypothetical evening/tomorrow pick has no "closes at" that means anything yet.
+      if (nowPlan) pool.forEach((x) => { x._hoursLbl = hoursStatusLabel(x.p.hours, ctx.hr); });
       // Good fits lead; poor fits sink (but stay, tagged) — then score.
       const fitKey = (x) => (x._fit ? 1 : 0);
       pool.sort((a, b) => fitKey(a) - fitKey(b) || b.s - a.s);

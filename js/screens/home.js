@@ -48,7 +48,7 @@ let _recap = null;
 import {
   go, mount, topbar, contextNow, render,
   inferPhase, focusSpot, phaseSwitchRow, homeStageBlock, homeWeatherCard, plannedStopsOutlook,
-  ensureHomeWeather, ensurePlannedStopsWeather, nextPlanItem, evShort, tripSpendHome, groupDoors,
+  ensureHomeWeather, prefetchForecasts, nextPlanItem, evShort, tripSpendHome, groupDoors,
   cityAboutCard, todayISO, addDaysISO, tripStartISO, daysUntilISO,
   gamifyLevelBadge, locationSheet, ratesOnConsent,
   identifyRow, homeFold,
@@ -190,7 +190,7 @@ export function homeScreen() {
   // Planning also needs the forecast for each PLANNED stop, not just the focus city, or the
   // per-stop outlook below falls back to seasonal normals for dates that are well inside the
   // forecast window. One batched request; no-ops offline or without consent.
-  if (phase === 'planning') ensurePlannedStopsWeather();
+  if (phase === 'planning') prefetchForecasts();
 
   // The by-category budget donut used to render here too — dropped as a duplicated CARD (Home
   // chip consolidation): budget now shows exactly once on Home, as the Quick access row's
@@ -462,7 +462,7 @@ function quickAccessRow(phase, stored, ctx) {
       if (spot) {
         const rec = getCachedWeather(spotKey(spot));
         const today = rec && Array.isArray(rec.daily) ? rec.daily[0] : null;
-        if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${today.rainProb}%`;
+        if (today && today.rainProb != null && today.rainProb >= 40) rainNote = ` · ☔ ${Math.round(today.rainProb)}%`;
       }
       wxSub = `${temp}${rainNote}`;
     }

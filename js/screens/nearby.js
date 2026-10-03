@@ -9,13 +9,13 @@ import { h, geolocate, haversineKm, bearing, compass, fmtDistance } from '../uti
 import { store, getLastFix, setLastFix } from '../state.js';
 import { getActiveCountry, setActiveCountry } from '../app-state.js';
 import { getCountry, allPlaces } from '../data/regions.js';
-import { attrTag, driveLabel, withinNear, withinDayTrip } from '../render-utils.js';
+import { attrTag, driveLabel, withinNear, withinDayTrip, rankNearMe } from '../render-utils.js';
 import { dietEatCard } from './food.js';
 import { retranslate } from '../i18n.js';
 import {
   go, mount, topbar, whereAmI, nearestSpotGlobal, setFocusSpot, locationSheet, catEmoji, chipIcon,
   nearCat, nearbySafetyStrip, arrivalEssentials, placeFitReason, rnThumb, openStateNow,
-  isSpotDone, toggleSpotDone, hideSpot, unhideSpot, clearSuggestionMarks, showUndoToast,
+  hoursStatusLabel, isSpotDone, toggleSpotDone, hideSpot, unhideSpot, clearSuggestionMarks, showUndoToast,
 } from '../main.js';
 
 export function nearbyScreen() {
@@ -120,10 +120,14 @@ export function nearbyScreen() {
       const hid = new Set(store.profile.prefs.hiddenSpots || []);
       const prefs = store.profile.prefs;
       const catOk = (p) => cat === 'all' || nearCat(p) === cat;
-      // Good fits that are open lead; poor fits (kids/mobility) and places closed right now
-      // sink to the bottom — kept and tagged, never hidden — then order by distance.
-      const fitKey = ({ p }) => (placeFitReason(p, prefs) ? 2 : 0) + (openStateNow(p) === false ? 1 : 0);
-      const bySort = (a, b) => fitKey(a) - fitKey(b) || a.km - b.km;
+      // D4 shared ranking (render-utils.js rankNearMe): distance band first, then open-now,
+      // then fit (poor fits for who's travelling sink, kept and tagged, never hidden) — same
+      // order Places and Today now use. Used to be a flat fitKey that weighted a poor fit
+      // above being closed right now, with no distance band at all; see F-26.
+      const bySort = (a, b) => rankNearMe(
+        { km: a.km, closed: openStateNow(a.p) === false, fit: placeFitReason(a.p, prefs) ? 1 : 0 },
+        { km: b.km, closed: openStateNow(b.p) === false, fit: placeFitReason(b.p, prefs) ? 1 : 0 },
+      );
       // "Near me" = within about an hour's DRIVE (road-time, not straight-line). Comprehensive
       // within that reach (up to 40) rather than padded with far picks, so every row is truly
       // reachable. A separate, collapsed tier holds real "further afield" next-destinations.
@@ -132,10 +136,13 @@ export function nearbyScreen() {
 
       function renderRow(container, p, km) {
         const done = isSpotDone(p.id);
-        const closed = openStateNow(p) === false;
         const fit = placeFitReason(p, prefs);
         const tags = [];
-        if (closed) tags.push(attrTag('🔒 Closed now'));
+        // F-07/F-26: the same explicit open/closes-at line as Home's "Right now", wherever
+        // `hours` parses — this used to only ever say "Closed now", never when a place was
+        // open and when it would shut.
+        const hoursLbl = hoursStatusLabel(p.hours);
+        if (hoursLbl) tags.push(attrTag(hoursLbl));
         if (fit) tags.push(attrTag('⚠️ ' + fit));
         container.append(h('div', { class: 'rn-item near-item' + (done ? ' is-done' : '') }, [
           h('button', { class: 'rn-open near-open', onclick: () => go(`#place-${p.id}`) }, [
