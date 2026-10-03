@@ -5,7 +5,7 @@
 
 import { h, fmtDistance, compass, bearing, mapsUrl, haversineKm } from './util.js';
 import { store, getLastFix } from './state.js';
-import { spotKey, getCachedAir, getCachedWeather, nearestSpot, maybeRefreshWeather, maybeRefreshAir } from './weather.js';
+import { spotKey, getCachedAir, getCachedWeather, nearestSpot, maybeRefreshWeather, maybeRefreshAir, WEATHER_SPOTS } from './weather.js';
 import { online, openModal } from './ui-widgets.js';
 import { isPhotosLoaded, loadPhotos, photoEntry } from './photo-registry.js';
 import { DRIVE_CURVE } from './data/drivetimes.js';
@@ -353,12 +353,19 @@ export function citySlug(name) {
   return String(name || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-// Which loaded country actually has a place tagged with this city — so a new trip stop (or a
-// chained mini-itinerary leg, js/screens/explore.js) is filed under the place's own country
-// rather than whichever one the traveller was last browsing. Moved here (was explore.js-only)
-// so js/screens/trip.js can call it without reverse-importing a screen module.
+// Which country a typed city name actually belongs to — so a new trip stop (or a chained
+// mini-itinerary leg, js/screens/explore.js) is filed under the place's own country rather
+// than whichever one the traveller was last browsing. Checks the eager, app-wide
+// WEATHER_SPOTS anchor list first (covers every hub city with zero loading, so even a
+// traveller's very first stop resolves correctly before any country's place data has loaded
+// — "Siem Reap" while Laos is active, the audit's own repro), then a loaded country's place
+// records for a finer-grained name the anchor list does not carry.
+// Moved here (was explore.js-only) so js/screens/trip.js can call it without reverse-importing
+// a screen module.
 export function countryForCityName(name) {
   const slug = citySlug(name);
+  const spot = WEATHER_SPOTS.find((s) => citySlug(s.city) === slug);
+  if (spot) return spot.country;
   for (const x of COUNTRIES) {
     if (isCountryLoaded(x.id) && allPlaces({ country: x.id }).some((p) => citySlug(p.city || '') === slug)) return x.id;
   }
