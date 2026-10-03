@@ -815,7 +815,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.607.0';
+export const APP_VERSION = 'mk-v0.608.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1766,20 +1766,29 @@ function forecastOutlook(rec) {
 // are in and the likeliest next ones. js/weather.js spares these when it trims its cache. Without
 // the stops, a stop eight days away read "shoulder season"; without the anchors, a traveller on
 // Don Det with no signal had no forecast at all.
-const PREFETCH_TTL_MS = 3 * 60 * 60 * 1000;
+export const PREFETCH_TTL_MS = 3 * 60 * 60 * 1000;
 const PREFETCH_STOPS = 4;
 const PREFETCH_NEAR = 3;
 const PREFETCH_NEAR_MAX_KM = 150;   // further than this from every anchor is outside the region
-function forecastKeepSpots() {
-  const out = [];
-  const seen = new Set();
-  const add = (s) => { if (s && !seen.has(spotKey(s))) { seen.add(spotKey(s)); out.push(s); } };
+// Also the stops the "Before you lose signal" card (js/offline-ready.js) prepares. `located` is
+// false when the title names no known city: the forecast then falls back to the country's first
+// city, which is no place to centre a map.
+export function upcomingStops() {
   const stops = store.trip.stops || [];
   const dated = stops.filter((st) => st.date).sort((a, b) => a.date.localeCompare(b.date));
   let next = dated.findIndex((st) => st.date >= todayISO());
   if (next < 0) next = dated.length;
-  [...dated.slice(Math.max(0, next - 1)), ...stops.filter((st) => !st.date)].slice(0, PREFETCH_STOPS)
-    .forEach((st) => add(spotForCity(st.country, st.title) || (getCountry(st.country) ? defaultSpot(st.country) : null)));
+  return [...dated.slice(Math.max(0, next - 1)), ...stops.filter((st) => !st.date)].slice(0, PREFETCH_STOPS)
+    .map((st) => {
+      const own = spotForCity(st.country, st.title);
+      return { stop: st, spot: own || (getCountry(st.country) ? defaultSpot(st.country) : null), located: !!own };
+    });
+}
+function forecastKeepSpots() {
+  const out = [];
+  const seen = new Set();
+  const add = (s) => { if (s && !seen.has(spotKey(s))) { seen.add(spotKey(s)); out.push(s); } };
+  upcomingStops().forEach((x) => add(x.spot));
   const fix = getLastFix();
   if (fix) {
     WEATHER_SPOTS.map((s) => ({ s, km: haversineKm(fix, { lat: s.lat, lng: s.lng }) }))

@@ -2593,9 +2593,9 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
    Quiet by construction: this is a background task announcing itself, not something asking to
    be dealt with, so it gets a normal card and no accent, no alarm colour and no progress bar
    racing across the screen. The percentage in the text is the progress indicator. */
-.pack-line { display: flex; align-items: center; gap: var(--sp-3); }
+.pack-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 .pack-line-txt { margin: 0; flex: 1 1 auto; min-width: 0; color: var(--ink-soft); font-size: var(--fs-sm); }
-.pack-line-act { flex: none; }
+.pack-line-act { flex: none; display: flex; gap: var(--sp-2); }
 /* A secondary control inside a status line, not a call to action — small enough to stay
    subordinate to the sentence beside it, still a 34px target. */
 .tiny-btn { min-height: 34px; padding: var(--sp-1) var(--sp-3); font-size: var(--fs-sm); }
@@ -2607,6 +2607,7 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
 .pack-tier { display: flex; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--ink-soft); }
 .pack-tier.is-done { color: var(--ink); }
 .pt-ic { flex: none; width: 16px; text-align: center; font-weight: 700; }
+.pt-size { margin-left: auto; padding-left: var(--sp-2); white-space: nowrap; color: var(--ink-soft); }
 .pack-tier.is-done .pt-ic { color: var(--good); }
 .pack-btns { display: flex; flex-direction: column; gap: var(--sp-2); }
 

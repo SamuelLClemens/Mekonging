@@ -19,13 +19,10 @@
 // there is no bitrate/quality parameter on that URL at all. So there is one quality, not a
 // picker; downloadPack() does not take one.
 //
-// SIZE IS MEASURED, NOT ESTIMATED. Every clip is fetched `mode: 'no-cors'`, so the response is
-// opaque — its body size is invisible to JS by design (that is what "opaque" means), so summing
-// per-clip bytes is not possible even in principle. navigator.storage.estimate() is the one
-// number the platform will give us, so a pack's size is measured as the estimate() delta across
-// the download (see downloadPack) and kept in prefs.audioPackBytes; a pack whose delta could not
-// be measured (API unavailable) records null and callers must say "size not available", never
-// print a guess as though it were a measurement.
+// SIZE. Every clip is fetched `mode: 'no-cors'`, so the response is opaque and its size is
+// invisible to JS. A pack's size before download is its clip count times CLIP_BYTES, a measured
+// average, and is always shown as approximate ("≈"). See estimateUsage() for why it is never
+// read back from storage.
 
 import { h } from './util.js';
 import { LANGUAGES, getLanguage } from './lazy-data.js';
@@ -36,6 +33,10 @@ import { isStandalone, getDeferredInstallPrompt, clearDeferredInstallPrompt, ren
 import { confirmAction, infoTip } from './ui-widgets.js';
 
 function swReady() { return ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller; }
+
+// Average clip from the online voice. Measured 2026-10-03 on 12 random phrases per language:
+// Thai 13.9 KB, Vietnamese 10.8 KB, Khmer 15.2 KB.
+export const CLIP_BYTES = 13300;
 
 // Every clip URL one language's built-in phrasebook + allergy phrases + the traveller's OWN
 // saved translations ("my dictionary") resolve to — the personal-dictionary phrases are custom
@@ -240,7 +241,7 @@ export function audioPacksCard() {
       // full paint() here would rebuild every checkbox mid-tap and cost the traveller their
       // other selections' focus for nothing; the button row is the only thing a toggle changes.
       box.addEventListener('change', () => { if (box.checked) selected.add(l.code); else selected.delete(l.code); paintButtons(remaining); });
-      choices.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${l.book.label} (${l.urls.length} clips)`)]));
+      choices.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${l.book.label} (${l.urls.length} clips, ≈ ${mb(l.urls.length * CLIP_BYTES)})`)]));
     });
 
     paintButtons(remaining);
