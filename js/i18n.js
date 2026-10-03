@@ -292,6 +292,16 @@ function inForeignScript(el) {
   return false;
 }
 
+// True when `el` sits inside a `data-no-mt` opt-out (or a foreign-script run, which is already
+// exempt for a different reason). Module-level so both the live collection pass
+// (collectUntranslated) and the cached-repaint pass (autoTranslateTree's cachedWalk) apply the
+// SAME opt-out — a string already banked in an earlier, less careful pass must not keep
+// repainting over an element that has since been marked data-no-mt. See js/i18n.js's own
+// module comment and the hospital-name / city-name fixes this guards.
+function blocked(el) {
+  return !el || inForeignScript(el) || (el.closest && el.closest('[data-no-mt]'));
+}
+
 // Swap a text node's content while preserving the whitespace either side of it, so inline
 // runs like `[' · ', span, ' · ']` keep their spacing after translation.
 function swapText(node, translated) {
@@ -376,6 +386,47 @@ const MT_CAP = 40;             // strings translated per render — a hard ceili
 const MT_KEY = 'mk_mt_v1_';    // one localStorage bucket per language
 const MT_MAX_ENTRIES = 4000;   // per language, so the cache cannot grow without bound
 
+// ---- one-time larger batch right after a fresh language choice --------------
+// MT_CAP above is a real, permanent constraint — it protects every ordinary render from
+// hammering the translation service — but it also means a screen that never re-renders itself
+// only ever gets MT_CAP strings translated, ever, however long the traveller stays on it.
+// AUDIT_REPORT F-18 measured this live: SOS stayed 93% English a full 25+ seconds after
+// choosing German online, because nothing re-ran autoTranslateTree on it in that window, and
+// 40-per-render would take roughly five separate visits to clear its backlog.
+//
+// The fix is not to raise MT_CAP — that would reopen the very service load it exists to
+// bound — but to open a short, budget-limited window at the one moment that actually
+// justifies spending more: the moment a language is CHOSEN. Whatever screen the traveller
+// opens next (SOS, the hospital list, first aid, onboarding, Home — this deliberately does
+// not know or care which) is translated against a much larger cap, spending down a fixed
+// total budget until it runs out or the window closes, then it is gone and MT_CAP governs
+// again like any other day.
+const SAFETY_BATCH_CAP = 300;                   // total strings the window may spend, across
+                                                 // however many screens are opened while it is live
+const SAFETY_BATCH_WINDOW_MS = 10 * 60 * 1000;  // 10 minutes — covers onboarding plus a first
+                                                 // safety-path check, short enough to never look
+                                                 // like a permanently raised MT_CAP
+let safetyBatchBudget = 0;
+let safetyBatchUntil = 0;
+
+// Call once, exactly when a language is actually picked (js/main.js languageSheet()'s `pick`
+// handler) — never from an ordinary render. Same guards autoTranslateTree itself applies, so
+// this is always safe to call speculatively (English, MT off, or offline: a no-op).
+export function primeSafetyPathBatch() {
+  if (!mtEnabled() || uiLang() === FALLBACK) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  safetyBatchBudget = SAFETY_BATCH_CAP;
+  safetyBatchUntil = Date.now() + SAFETY_BATCH_WINDOW_MS;
+}
+
+// The cap THIS autoTranslateTree call should use: boosted while the one-time budget is still
+// live, MT_CAP otherwise. Floored at MT_CAP so a nearly-spent budget never translates fewer
+// than an ordinary render would.
+function effectiveMtCap() {
+  if (safetyBatchBudget > 0 && Date.now() < safetyBatchUntil) return Math.max(MT_CAP, safetyBatchBudget);
+  return MT_CAP;
+}
+
 export function mtEnabled() {
   return !!(store.profile && store.profile.prefs && store.profile.prefs.uiAutoTranslate);
 }
@@ -424,8 +475,6 @@ function collectUntranslated(root, d, cache) {
     if (!pending.has(s)) pending.set(s, []);
     pending.get(s).push(site);
   };
-  const blocked = (el) => !el || inForeignScript(el) || (el.closest && el.closest('[data-no-mt]'));
-
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(n) {
       const p = n.parentElement;
@@ -452,6 +501,28 @@ function applyMt(sites, text) {
   }
 }
 
+// Hand-verified fixes for specific (language, English sentence) pairs where the live MT
+// service is known to get a SAFETY-PATH string wrong badly enough to mislead a traveller —
+// not a general translation-quality project (that is explicitly out of scope: see the module
+// comment above `autoTranslateTree`), just the cases this project has actually audited.
+//
+// AUDIT_REPORT F-19: the location-permission paragraph (js/main.js locationFixCard(), both the
+// granted and not-yet-granted wording — the same sentence is reused for Home's hint and
+// #nearby's "location is off" state) came back from MT as "nächstgelegener Standort" for
+// "the closest help" — "nearest location", not help — inside a sentence MT rendered in the
+// formal Sie register while every hand-authored string in js/data/ui-strings.de.js is du
+// throughout. This cannot be fixed by adding a dictionary key instead (check-ui-strings.py
+// enforces identical key parity across all 29 language files, and this slice touches only
+// German), so it is corrected here, once, in the traveller's own register.
+const MT_CORRECTIONS = {
+  de: {
+    'Location is on, so the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.':
+      'Der Standort ist an, darum zeigt dir die App zuerst, was dort gut ist, wo du gerade bist — Entfernungen, was in der Nähe ist, die nächste Hilfe und das Wetter für deinen genauen Standort. Das bleibt auf deinem Gerät und funktioniert offline; GPS nutzt die Sensoren deines Handys, nicht mobile Daten.',
+    'Allow it and the app leads with what is good right where you are — distances, near-me, the closest help, and weather for your actual spot. It stays on your device and works offline; GPS uses your phone’s sensors, not data.':
+      'Erlaube es, und die App zeigt dir zuerst, was dort gut ist, wo du gerade bist — Entfernungen, was in der Nähe ist, die nächste Hilfe und das Wetter für deinen genauen Standort. Das bleibt auf deinem Gerät und funktioniert offline; GPS nutzt die Sensoren deines Handys, nicht mobile Daten.',
+  },
+};
+
 // Fill in what the bundled dictionary missed. Resolves to the number of strings translated.
 // Never throws: a translation service that is rate-limited, blocked, or offline must leave
 // the traveller with an English page, not a broken one.
@@ -464,6 +535,23 @@ export async function autoTranslateTree(root) {
 
   const pending = collectUntranslated(root, d, cache);
 
+  // Apply any hand-verified correction straight away — for free, ahead of the network — and
+  // bank it exactly like an ordinary MT result so it is cached, survives offline, and (via the
+  // cache-miss check already in collectUntranslated above) is never sent to the live service.
+  let corrected = 0;
+  const fixes = MT_CORRECTIONS[lang];
+  if (fixes) {
+    for (const [en, sites] of [...pending.entries()]) {
+      const fix = fixes[en];
+      if (fix === undefined) continue;
+      cache[en] = fix;
+      applyMt(sites, fix);
+      pending.delete(en);
+      corrected += 1;
+    }
+    if (corrected) mtSave(lang, cache);
+  }
+
   // Anything already banked from an earlier visit paints immediately, with no network at all —
   // which is what makes this usable on a Lao SIM with no signal.
   let painted = 0;
@@ -471,7 +559,7 @@ export async function autoTranslateTree(root) {
     const walker = document.createTreeWalker(r, NodeFilter.SHOW_TEXT, {
       acceptNode(n) {
         const p = n.parentElement;
-        if (!p || SKIP_TAGS.has(p.tagName) || inForeignScript(p)) return NodeFilter.FILTER_REJECT;
+        if (!p || SKIP_TAGS.has(p.tagName) || blocked(p)) return NodeFilter.FILTER_REJECT;
         return n.nodeValue && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
       },
     });
@@ -482,6 +570,7 @@ export async function autoTranslateTree(root) {
     }
     for (const [n, txt] of hits) { swapText(n, txt); painted += 1; }
     for (const el of r.querySelectorAll('[placeholder],[aria-label],[title],[alt]')) {
+      if (blocked(el)) continue;
       for (const a of ATTRS) {
         const v = el.getAttribute(a);
         if (v && !d[v.trim()] && cache[v.trim()]) { el.setAttribute(a, cache[v.trim()]); painted += 1; }
@@ -490,18 +579,22 @@ export async function autoTranslateTree(root) {
   };
   cachedWalk(root);
 
-  if (!pending.size) return painted;
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return painted;
+  if (!pending.size) return painted + corrected;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return painted + corrected;
 
   // Dynamic import so a user who never turns this on never pays for the module.
   let translate;
   try { ({ translate } = await import('./translate.js')); }
-  catch { return painted; }
+  catch { return painted + corrected; }
 
-  const jobs = [...pending.entries()].slice(0, MT_CAP);
+  const cap = effectiveMtCap();
+  const boosted = cap > MT_CAP;
+  const jobs = [...pending.entries()].slice(0, cap);
   let wrote = 0, failures = 0;
   // Three at a time: enough to feel responsive, gentle enough not to trip the free tier's
-  // rate limiter (which would poison the whole page rather than one string).
+  // rate limiter (which would poison the whole page rather than one string). Boosted or not,
+  // this is the only concurrency the service ever sees — the safety-path batch is a bigger
+  // cap, never a faster one.
   const queue = jobs.slice();
   const workers = Array.from({ length: 3 }, async () => {
     while (queue.length) {
@@ -519,7 +612,10 @@ export async function autoTranslateTree(root) {
   });
   await Promise.all(workers);
   if (wrote) mtSave(lang, cache);
-  return painted + wrote;
+  // Spend the one-time budget by what was actually translated, not what was offered — a
+  // render with little pending work should not burn the budget it never needed.
+  if (boosted) safetyBatchBudget = Math.max(0, safetyBatchBudget - wrote);
+  return painted + corrected + wrote;
 }
 
 // mount() translates the whole screen exactly once, right after it is built (see the comment

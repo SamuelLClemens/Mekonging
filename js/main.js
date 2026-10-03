@@ -33,6 +33,7 @@ import {
 import {
   LANGS, uiLang, uiLangMeta, setUiLang, applyDocLang, translateTree, autoTranslateTree, retranslate,
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
+  primeSafetyPathBatch,
 } from './i18n.js';
 import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems, itemLabel } from './nav-groups.js';
@@ -815,7 +816,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.608.0';
+export const APP_VERSION = 'mk-v0.609.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1129,6 +1130,10 @@ export function languageSheet() {
   const pick = (code) => {
     if (code !== 'en' && !mtEnabled()) setMtEnabled(true);
     setUiLang(code);
+    // F-18: choosing a language is the one moment that justifies translating more than the
+    // steady-state per-render cap — see js/i18n.js primeSafetyPathBatch(). A no-op for
+    // English, offline, or with MT off, so this is always safe to call here.
+    if (code !== 'en') primeSafetyPathBatch();
     if (close) close();
     // Fetch the chosen language's dictionary before repainting. Dictionaries are per-language
     // files now, so without this the screen would render once in English and then flip.
@@ -6697,8 +6702,11 @@ function sosScreen(cc) {
     // easy trip" when it is actually a boat crossing.
     const acrossWater = (x) => fix && fix.lat != null && x.lat != null && islandsLoaded()
       && sameLand(fix, { lat: x.lat, lng: x.lng }) === false;
+    // `data-no-mt` on the name: a hospital name is a proper noun, not prose, and the optional
+    // machine-translation pass (js/i18n.js) cannot tell the difference — the audit caught it
+    // turning "Bumrungrad International Hospital" into "Internationales Krankenhaus Bumrungrad".
     const row = (x) => h('div', { class: 'card sos-hosp', style: 'margin: var(--sp-1h) 0' }, [
-      h('div', { class: 'row-between' }, [h('strong', {}, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
+      h('div', { class: 'row-between' }, [h('strong', { 'data-no-mt': '' }, x.name), x.km != null ? h('span', { class: 'fair' }, kmLabel(x.km)) : null]),
       h('div', { class: 'muted tiny', style: 'margin: var(--sp-0h) 0 var(--sp-1)' }, x.city || x.en || ''),
       acrossWater(x) ? h('div', { class: 'tiny', style: 'margin: 0 0 var(--sp-1)' }, '🚤 Across the water — a boat or ferry, not a road, connects it.') : null,
       x.curated ? h('div', { class: 'chips' }, (x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))) : null,
