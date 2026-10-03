@@ -6,7 +6,7 @@
 import { h } from './util.js';
 import { getSavedAreas, addSavedArea, removeSavedArea, hasAudioPack } from './state.js';
 import { packState, onPackChange, refreshPackStatus, resumePack } from './offline-pack.js';
-import { packUrls, downloadPacks, CLIP_BYTES } from './audio-packs.js';
+import { packUrls, downloadPacks, CLIP_BYTES, quotaNote, estimateStorage } from './audio-packs.js';
 import { tileUrlsForArea, TILE_BYTES } from './map-tiles.js';
 import { getCachedWeather, maybeRefreshWeather, spotKey } from './weather.js';
 import { loadData } from './lazy-data.js';
@@ -52,7 +52,7 @@ async function checklist() {
     if (!book) return;
     const n = packUrls(code).length;
     if (!n) items.push({ kind: 'note', label: `${book.label} audio: no offline voice exists yet` });
-    else items.push({ kind: 'audio', code, name: book.label, label: `${book.label} phrase audio`, bytes: n * CLIP_BYTES, done: hasAudioPack(code) });
+    else items.push({ kind: 'audio', code, name: book.label, label: `${book.label} phrase audio`, clips: n, bytes: n * CLIP_BYTES, done: hasAudioPack(code) });
   });
   pl.forEach((p) => {
     if (!p.located) { items.push({ kind: 'note', label: `${p.name}: no map position — save it from Places` }); return; }
@@ -137,6 +137,7 @@ export function offlineReadyCard() {
     status, list, btns,
   ]);
   let items = [];
+  let quota = null;
   const paint = () => {
     const s = packState();
     list.innerHTML = '';
@@ -159,7 +160,11 @@ export function offlineReadyCard() {
     else if (!todo.length) status.textContent = items.some((it) => it.busy) ? 'The field guide is still downloading.' : 'Everything on this list is on this phone.';
     else if (!online()) status.textContent = 'Offline. This is what is on this phone; connect to get the rest.';
     else {
-      status.textContent = '';
+      // The sizes above are download sizes. On Chromium the audio also costs far more of the
+      // storage allowance than it weighs (js/audio-packs.js QUOTA_CLIP_BYTES), so say so here,
+      // before the one button that would spend it.
+      const audio = todo.filter((it) => it.kind === 'audio');
+      status.textContent = audio.length ? quotaNote(Math.round(audio.reduce((n, it) => n + it.clips, 0) / audio.length), quota) : '';
       const total = todo.reduce((n, it) => n + it.bytes, 0);
       btns.append(h('button', { class: 'btn block', onclick: () => getEverything(todo) }, `⤓ Get everything (≈ ${fmt(total)})`));
     }
@@ -172,5 +177,6 @@ export function offlineReadyCard() {
   runSubs.add(onChange);
   refresh();
   refreshPackStatus().catch(() => {});
+  estimateStorage().then((est) => { if (est && est.quota) { quota = est.quota; paint(); } });
   return card;
 }

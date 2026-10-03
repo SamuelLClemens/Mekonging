@@ -6,7 +6,7 @@ import { putMeta, getMeta } from './idb.js';
 import { MERGED_PLACE_IDS, canonicalPlaceId } from './data/place-merges.js';
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 14;
+const CURRENT_VERSION = 15;
 
 function defaults() {
   return {
@@ -56,8 +56,8 @@ function defaults() {
         // layer should not suddenly appear for a traveller who never asked for it.
         mapLayers: { go: true, eat: true, localeat: true, market: true, stay: true, pools: true, crossing: true, satellite: true, borders: true, hospitals: false, atms: false, buses: false },
         // Phrasebook languages whose online-TTS audio has been downloaded for offline use.
-        // Size is not tracked per pack — see js/audio-packs.js's header for why a per-pack byte
-        // figure cannot be measured reliably from an opaque, no-cors TTS response.
+        // Size is not tracked per pack: the clips are opaque, so JS cannot read their bytes
+        // (js/audio-packs.js CLIP_BYTES is a curl measurement instead).
         audioPacks: [],
         // Last known GPS fix { lat, lng, at } — cached so "distance from you" and the
         // near-me experience work across the whole app, offline, without re-locating.
@@ -278,6 +278,11 @@ function migrate(data) {
   // migration reads the stored value rather than resetting the field: 'ask' means the question
   // was never answered, and 'offline' means it was.
   if (dv < 14 && out.profile.prefs.netMode === 'ask') out.profile.prefs.netMode = 'online';
+  // v14 -> v15: every audio pack downloaded before mk-v0.609.0 holds Google's 404 page, not
+  // audio (sw.js prefetchTTS sent a Referer, which translate_tts refuses). sw.js now deletes
+  // that cache; this drops the records that pointed at it, so the cards offer the download
+  // again instead of showing ✓ beside clips that never played.
+  if (dv < 15 && Array.isArray(out.profile.prefs.audioPacks)) out.profile.prefs.audioPacks = [];
   return out;
 }
 
