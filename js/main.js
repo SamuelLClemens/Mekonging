@@ -116,7 +116,7 @@ import {
   boardsForCountry, getBoard,
   getEvents, allEvents, getEvent,
   getFood, allFood, getDish, FOOD_CATEGORIES, FOOD_ALLERGENS,
-  loadCountry, isCountryLoaded, loadAllCountries, countryLoadFailed,
+  loadCountry, isCountryLoaded, loadAllCountries, countryLoadFailed, clearCountryFailure,
 } from './data/regions.js';
 // nature.js (~108 KB of species data) is NOT statically imported here — see the lazy
 // loadNature() below (added right after the import block), which mirrors regions.js's
@@ -450,8 +450,18 @@ if (typeof window !== 'undefined') {
     let any = false;
     for (const k of Object.keys(_screenFailed)) { delete _screenFailed[k]; any = true; }
     for (const k of Object.keys(_dataFailed)) { delete _dataFailed[k]; any = true; }
-    const head = (location.hash || '#home').slice(1).split('-')[0];
-    if (any && ((ROUTE_SCREENS[head] || []).length || (ROUTE_DATA[head] || []).length)) render();
+    // Same reasoning for the two lazy-country axes (content + ADM1 region sets): a failure
+    // recorded while offline should get a real second chance the moment the connection comes
+    // back, not stay permanent for the rest of the session.
+    for (const cc of ['th', 'vi', 'kh', 'la']) {
+      if (countryLoadFailed(cc)) { clearCountryFailure(cc); any = true; }
+      if (_regionSetFailed.has(cc)) { _regionSetFailed.delete(cc); any = true; }
+    }
+    // Country/region failures can matter to routes that carry no ROUTE_SCREENS/ROUTE_DATA
+    // entry of their own (NEEDS_COUNTRY_DATA/NEEDS_ALL_COUNTRIES/NEEDS_REGION_DATA are
+    // render()-local), so just re-render whenever anything was actually cleared, same as the
+    // original ROUTE_SCREENS/ROUTE_DATA check did for the screen/data axes.
+    if (any) render();
   });
 }
 
@@ -805,7 +815,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.602.0';
+export const APP_VERSION = 'mk-v0.603.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7078,6 +7088,35 @@ function screenUnavailableScreen(names) {
   ]);
 }
 
+// Shown when a route's needed COUNTRY DATA (not the screen module itself — see
+// screenUnavailableScreen above) permanently failed to load: offline before the service
+// worker had places.kh.js et al. cached, or a dropped connection mid-fetch. Same card family
+// and reasoning as screenUnavailableScreen, adapted for js/data/regions.js's loadCountry()/
+// countryLoadFailed() bookkeeping instead of loadScreenMod()'s. Only ever shown for a
+// NON-emergency route — #sos/#hospital render anyway with the data absent (see render()'s
+// `emergency` branch, unchanged from S1).
+function countryUnavailableScreen(ccs) {
+  const names = (ccs || []).map((id) => { const c = getCountry(id); return c ? `${c.flag} ${c.name}` : id; }).join(', ');
+  return h('div', { class: 'screen' }, [
+    topbar('Not downloaded yet', '#home'),
+    h('div', { class: 'card' }, [
+      h('h2', { style: 'margin: 0 0 var(--sp-1h)' }, `${names} data is not on your device yet`),
+      h('p', { class: 'muted' }, online()
+        ? 'It could not be fetched just now. Tap retry.'
+        : 'It needs a connection the first time you open it. Emergency numbers, phrases and the hospital finder all work offline.'),
+      h('button', {
+        class: 'btn block',
+        onclick: () => {
+          // clearCountryFailure lets loadCountry() pick a fresh bust token (see
+          // js/data/regions.js) instead of re-requesting the same already-failed specifier.
+          (ccs || []).forEach((cc) => clearCountryFailure(cc));
+          render();
+        },
+      }, 'Retry'),
+    ]),
+  ]);
+}
+
 // ---- router -----------------------------------------------------------------
 export function render() {
   applyTheme();
@@ -7149,13 +7188,44 @@ export function render() {
     // Their numbers and checked hospitals are eager, so the emergency screens render even when
     // the country's data cannot load: before this, one missing file held SOS on "Loading…".
     const emergency = head === 'sos' || head === 'hospital';
-    const pendingCountry = neededCcs.filter((cc) => !isCountryLoaded(cc) && !(emergency && countryLoadFailed(cc)));
-    const pendingRegion = NEEDS_REGION_DATA.has(head) ? neededCcs.filter((cc) => !isRegionSetLoaded(cc)) : [];
+    // A failed loadCountry() is PERMANENT this session (see js/data/regions.js — a bare retry
+    // of the same import() specifier resolves the browser's cached rejection instantly). So a
+    // permanently-failed country is excluded from `pendingCountry` for every route, not just
+    // the emergency ones — the old `!(emergency && countryLoadFailed(cc))` shape left every
+    // OTHER route re-calling loadCountry() and re-mounting countryLoadingScreen() on every
+    // single render forever once a country's data could not be fetched (F-30 — measured
+    // 13,896 DOM mutations/6s on #sos before S1 fixed that route specifically; the same
+    // mechanism still reproduced on, say, #places-kh). `failedCountry` below is what each
+    // route family does instead of looping: emergency renders anyway (unchanged from S1);
+    // everyone else gets a countryUnavailableScreen with a real Retry.
+    const pendingCountry = neededCcs.filter((cc) => !isCountryLoaded(cc) && !countryLoadFailed(cc));
+    const failedCountry = neededCcs.filter((cc) => !isCountryLoaded(cc) && countryLoadFailed(cc));
+    // Same permanent-failure exclusion for the ADM1 region-set axis (loadRegionSet), so the
+    // 'country'/'region' routes cannot spin forever on a failed regions.<cc>.js either. No
+    // separate unavailable card for this axis: every reader of regionSetFor() (regionsMap,
+    // zonesMap, zoneAssignment, findProvince, whereAmI) already treats a null set as
+    // "not loaded yet" and degrades gracefully — the comment above this block already
+    // describes the region/province drill-down as falling back to the country hub.
+    const pendingRegion = NEEDS_REGION_DATA.has(head) ? neededCcs.filter((cc) => !isRegionSetLoaded(cc) && !_regionSetFailed.has(cc)) : [];
     if (pendingCountry.length || pendingRegion.length) {
       pendingCountry.forEach((cc) => { loadCountry(cc).then(render, render); });
       pendingRegion.forEach((cc) => { loadRegionSet(cc).then(render, render); });
       mount(countryLoadingScreen(neededCcs), true);
       return;
+    }
+    // Every needed country has now either loaded or permanently failed. The emergency routes
+    // proceed either way (S1, unchanged). Everyone else: if this is a single-country route (or
+    // a wantAll route where EVERY country failed, leaving nothing to show), there is no data to
+    // render — show the retry card instead of calling a screen that reads empty defaults. A
+    // wantAll route with at least one country that DID load falls through and renders with
+    // whatever is available (e.g. universal search/map/saved missing only the one country),
+    // rather than blocking the whole route forever on the one that failed.
+    if (failedCountry.length && !emergency) {
+      const nothingLoaded = wantAll ? !neededCcs.some((cc) => isCountryLoaded(cc)) : true;
+      if (nothingLoaded) {
+        mount(countryUnavailableScreen(failedCountry), true);
+        return;
+      }
     }
   }
 
