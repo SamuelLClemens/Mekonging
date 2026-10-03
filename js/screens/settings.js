@@ -44,6 +44,7 @@ import {
   QUICK_CHIPS, QUICK_CHIPS_DEFAULT, quickChipKeys, ratesOnConsent, isStandalone,
 } from '../main.js';
 import { audioPacksCard } from '../audio-packs.js';
+import { offlineReadyCard } from '../offline-ready.js';
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
 // the stored choice everywhere else. Tapping a button is what actually saves the phase.
@@ -164,9 +165,9 @@ function offlineDataCard() {
     if (netMode() === 'offline') {
       btns.append(h('button', { class: 'btn block', onclick: () => { setNetMode('online'); resumePack(); render(); } },
         '📶 Turn data on and finish the download'));
-    } else if (s.deferred || s.quotaHit) {
+    } else if (s.deferred || s.quotaHit || s.ask) {
       btns.append(h('button', { class: 'btn block', onclick: () => { resumePack(); paint(); } },
-        '📥 Download the rest now'));
+        `📥 Download the rest now (${mb(s.bulkLeft)})`));
     } else if (s.running) {
       btns.append(h('button', { class: 'btn ghost block', onclick: () => { deferPack(); paint(); } },
         '⏸ Not now — wait for Wi-Fi'));
@@ -194,7 +195,9 @@ function offlineDataCard() {
   refreshPackStatus().catch(() => {});
   // The card is rebuilt on every Settings render, so the subscription has to be released with
   // it — otherwise each visit leaves another closure repainting a card that is off the DOM.
-  const off = onPackChange(() => { if (card.isConnected) paint(); else off(); });
+  // `line`, not `card`: mount() folds the card into a <details> and detaches the card element,
+  // so testing the card dropped this subscription on the first progress event.
+  const off = onPackChange(() => { if (line.isConnected) paint(); else off(); });
   return card;
 }
 
@@ -286,6 +289,8 @@ export function settingsScreen() {
     }
     wrap.append(ic);
   }
+
+  wrap.append(offlineReadyCard());
 
   // Journey phase — always switchable here, so Home never has to drag the traveller
   // back to the picker once they have chosen a stage.
