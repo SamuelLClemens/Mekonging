@@ -815,7 +815,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.603.0';
+export const APP_VERSION = 'mk-v0.604.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1624,16 +1624,39 @@ function partOfDay(hour) {
   return 'night';
 }
 
+// Shared parse behind isOpenNow and hoursStatusLabel, so the two never disagree about what a
+// free-form hours string means: a 24h clock open/close pair, or null when it cannot be read.
+function parseHoursEdges(hours) {
+  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(hours);
+  if (!m) return null;
+  const open = parseInt(m[1], 10), close = parseInt(m[3], 10);
+  if (isNaN(open) || isNaN(close) || open === close) return null;
+  return { open, openMin: m[2] ? parseInt(m[2], 10) : 0, close, closeMin: m[4] ? parseInt(m[4], 10) : 0 };
+}
+
 // Best-effort "open now" from a free-form hours string. Returns true/false, or null when it
 // cannot be parsed (so an unparseable place is neither rewarded nor punished).
 function isOpenNow(hours, hour) {
   if (!hours) return null;
   if (/24\s*h|24\/7|round the clock/i.test(hours)) return true;
-  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(hours);
-  if (!m) return null;
-  const open = parseInt(m[1], 10), close = parseInt(m[3], 10);
-  if (isNaN(open) || isNaN(close) || open === close) return null;
-  return close < open ? (hour >= open || hour < close) : (hour >= open && hour < close);
+  const r = parseHoursEdges(hours);
+  if (!r) return null;
+  return r.close < r.open ? (hour >= r.open || hour < r.close) : (hour >= r.open && hour < r.close);
+}
+
+// "🟢 Open now · closes 22:00" / "🔒 Closed · opens 08:00" — the line F-07 found missing on
+// every "Right now" pick (0 of 5 rows showed any open/closed state, even though scoreForNow
+// already excludes known-closed places from the ranking). Reuses isOpenNow's own parsing, so
+// a row only ever gets a label here when isOpenNow would also have an opinion; returns null
+// for absent/unparseable hours so a row with no reliable data shows nothing rather than a guess.
+export function hoursStatusLabel(hours, hour = new Date().getHours()) {
+  if (!hours) return null;
+  if (/24\s*h|24\/7|round the clock/i.test(hours)) return '🟢 Open now · open 24 hours';
+  const r = parseHoursEdges(hours);
+  if (!r) return null;
+  const open = r.close < r.open ? (hour >= r.open || hour < r.close) : (hour >= r.open && hour < r.close);
+  const fmt = (h, m) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return open ? `🟢 Open now · closes ${fmt(r.close, r.closeMin)}` : `🔒 Closed · opens ${fmt(r.open, r.openMin)}`;
 }
 
 export function contextNow() {
@@ -2171,7 +2194,9 @@ function whyNow(p, ctx) {
   if (evening && (cats.includes('food') || cats.includes('market'))) return 'Street-food time';
   if (morning && cats.includes('market')) return 'Morning market';
   if (morning && cats.includes('culture') && !cats.includes('food')) return 'Cool-hours temple';
-  if (isOpenNow(p.hours, ctx.hour) === true) return 'Open now';
+  // No generic "Open now" fallback here any more (F-07): hoursStatusLabel() now renders its
+  // own, more useful "Open now · closes HH:MM" tag on every pick in drawPicks() below, so this
+  // would otherwise duplicate the same fact in two tags with no closing time on this one.
   return null;
 }
 
@@ -2365,6 +2390,10 @@ function homeRightNowCard(ctx) {
         const cats = p.categories || [];
         const er = effectiveRating(p.id, p.rating || 0);
         const dl = driveLabel(km);
+        // F-07: an explicit open/closes-at line, wherever `hours` actually parses — closed
+        // picks are already excluded from this ranking by scoreForNow, but a traveller still
+        // could not tell an open pick from an unknown one until this line existed.
+        const hoursLbl = hoursStatusLabel(p.hours, ctx.hour);
         // Category + budget-tier tags use the same catTag()/tierBadge() components as every
         // other list on the site (nearby, best-of, day-suggest) — one colour vocabulary
         // everywhere a category or price tier appears, not a Home-only look.
@@ -2385,6 +2414,7 @@ function homeRightNowCard(ctx) {
                 ...cats.slice(0, 2).map((c) => catTag(c)),
                 (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
                 (() => { const fit = placeFitReason(p, store.profile.prefs); return fit ? attrTag('⚠️ ' + fit) : null; })(),
+                hoursLbl ? attrTag(hoursLbl) : null,
                 reason ? attrTag(reason) : null,
               ]),
               h('div', { class: 'rn-meta muted' }, `${dl ? `${fmtDistance(km)} · ${dl}` : fmtDistance(km)} · ${p.city}`),
@@ -5276,9 +5306,11 @@ export function rnThumb(p) {
 export function todoCard(x, maxReasons) {
   const { p, er, dist, reasons, cats } = x;
   const rc = [];
-  // Status/fit first (colour-coded): closed-now and "may not suit you" lead the chip row so
-  // they are not lost behind the "why now" reasons; both are set by the list that renders us.
+  // Status/fit first (colour-coded): closed-now, the open/closes-at line and "may not suit
+  // you" lead the chip row so they are not lost behind the "why now" reasons; all are set by
+  // the list that renders us.
   if (x._closed) rc.push(attrTag('🔒 Closed now'));
+  if (x._hoursLbl) rc.push(attrTag(x._hoursLbl));
   if (x._fit) rc.push(attrTag('⚠️ ' + x._fit));
   (reasons || []).slice(0, maxReasons || 2).forEach((r) => rc.push(attrTag(r)));
   const fam = placeFamily(p);

@@ -29,7 +29,7 @@ import {
   h, geolocate, bearing, compass, fmtDistance, titleCase, mapsUrl, mapsDirUrl, money,
 } from '../util.js';
 import {
-  haversineKm, distanceChip, withinNear, withinDayTrip, attrTag, starsStr, isMarket, isBeach,
+  haversineKm, distanceChip, withinNear, withinDayTrip, rankNearMe, attrTag, starsStr, isMarket, isBeach,
   placeBucket, FAMILY_META, catColor, catTag, tierColor, swatch, citySlug, PRICE_TIER_LABEL, inkOn,
   tierBadge, PLACE_BUCKETS, BUCKET_COLOR, bucketColor, marketOpenDays, personalScore, placeWhen,
   CATEGORY_FAMILIES, photoBlock, seaAgo, airBlock, uvTodayBlock, extUrl, sourcesNote,
@@ -53,7 +53,7 @@ import {
   travellingAsLine, countryChips, cityAboutCard, cityEssentials, placeFamily, placePhotoSrc,
   priceLine, approxHome, stopDateLabel, shareButton, profileFitCard, exportOnePlaceReviewHtml,
   setBlobThumb, mapsSearch, kmLabel, daysUntilISO, chipIcon, refreshLocation,
-  nearestSpotGlobal,
+  nearestSpotGlobal, openStateNow, hoursStatusLabel, placeFitReason,
 } from '../main.js';
 // phraseSlug/scriptLang moved from main.js to phrasebook.js (task #211's final module-split
 // slice) — this is the one screen module that needed an import-line edit on that extraction.
@@ -933,6 +933,20 @@ export function placesScreen(arg) {
       PLACE_TIERS.forEach(([key, label, openByDefault]) => {
         const arr = currentResults.filter((p) => tierOf(p) === key);
         if (!arr.length) return;
+        // F-25/F-26: within "Nearby" specifically, distance band and open-now now outrank the
+        // month/personal "best for you" order computeResults() already sorted `arr` into — a
+        // stable sort, so places that tie on band+open+fit keep that original order as the
+        // final tiebreak. This used to be season-sorted with no distance signal at all inside
+        // the tier, so a 3.9 km five-star hotel could (and did) lead a 1.5 km temple. "Worth a
+        // day trip"/"Further afield" are left on the pre-existing order: once a traveller is
+        // weighing a half-day trip, which one is BEST matters at least as much as which is
+        // nearest.
+        if (key === 'near') {
+          arr.sort((a, b) => rankNearMe(
+            { km: a.coords ? haversineKm(anchor, a.coords) : null, closed: openStateNow(a) === false, fit: placeFitReason(a, store.profile.prefs) ? 1 : 0 },
+            { km: b.coords ? haversineKm(anchor, b.coords) : null, closed: openStateNow(b) === false, fit: placeFitReason(b, store.profile.prefs) ? 1 : 0 },
+          ));
+        }
         const body = h('div', { class: 'place-cat-body' });
         arr.slice(0, CAP).forEach((p) => body.append(placeQuickRow(p, numFor(p.id), compareCtl)));
         const more = expander(arr.slice(CAP), `Show all ${arr.length} · ${label.replace(/^\S+\s/, '')}`);
@@ -1076,6 +1090,9 @@ function placeQuickRow(p, num, compareCtl) {
   const priceStr = hasPrice ? (priceLine(p.priceRange.low, p.priceRange.high, p.priceRange.currency) || 'Free') : '';
   const accent = bucketColor(p);
   const dchip = distanceChip(p);
+  // F-07/F-26: the same open/closes-at line Home and Nearby now show, wherever `hours` parses —
+  // this list previously carried no open/closed signal at all.
+  const hoursLbl = hoursStatusLabel(p.hours);
   const meta = h('div', { class: 'pqr-meta' }, [
     dchip || null,
     placeWeatherBadge(p),
@@ -1083,6 +1100,7 @@ function placeQuickRow(p, num, compareCtl) {
     priceStr ? h('span', { class: 'pqr-price' }, priceStr) : null,
     (p.budgetTier && !p.isPin) ? tierBadge(p.budgetTier) : null,
     cats.length ? catTag(cats[0]) : null,
+    hoursLbl ? attrTag(hoursLbl) : null,
   ]);
   // Compare tick — optional: only Places' own grouped/near/closest rows pass a controller,
   // so every other caller of this row (Explore's serendipity cards, etc.) is unaffected.

@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.603.0';
+const CACHE_VERSION = 'mk-v0.604.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -522,7 +522,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'bc4f07c4',
+  'js/main.js': '166b06b3',
   'js/map.js': 'd44bbc25',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -532,7 +532,7 @@ const MANIFEST = {
   'js/phrase-ui.js': '7f34630a',
   'js/place-ui.js': 'bdac146c',
   'js/reminders.js': 'f18165dd',
-  'js/render-utils.js': '3341eb9f',
+  'js/render-utils.js': 'ca184f19',
   'js/screens/arrival-info.js': 'a6846fa4',
   'js/screens/bargain.js': '0e891fc2',
   'js/screens/board.js': '32ddfbc9',
@@ -553,10 +553,10 @@ const MANIFEST = {
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '6e706314',
   'js/screens/medical.js': '6fc3c717',
-  'js/screens/nearby.js': 'c25da527',
+  'js/screens/nearby.js': '1e81b2f7',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': 'fd3a61d2',
-  'js/screens/places.js': '83aa42e9',
+  'js/screens/places.js': '84218b7b',
   'js/screens/produce.js': '31aeadd6',
   'js/screens/schedules.js': 'e04d0ae5',
   'js/screens/search.js': '9dd5a15b',
@@ -564,7 +564,7 @@ const MANIFEST = {
   'js/screens/share-journey.js': 'f3a2aeea',
   'js/screens/signtranslate.js': '4494ce60',
   'js/screens/streetfood.js': '0ca4e2ad',
-  'js/screens/today.js': 'af93bb70',
+  'js/screens/today.js': '24deae7f',
   'js/screens/transport.js': 'e79a065a',
   'js/screens/trip.js': '8c7b7e12',
   'js/screens/vault.js': '4ad7cc26',
