@@ -726,9 +726,11 @@ function weatherIsStale(spot, ttl = WX_TTL_MS) {
 // older copy than one the traveller is looking at now.
 export function maybeRefreshWeather(spot, force = false, ttl = WX_TTL_MS) {
   if (!spot) return Promise.resolve(null);
-  const key = spotKey(spot);
+  const key = `wx:${spotKey(spot)}`;
+  // The gap is recorded under the guarded key; clearing the bare spot key let a tapped Refresh
+  // do nothing for two minutes after the screen's own attempt.
   if (force) { delete _lastAttempt[key]; }
-  return guarded(`wx:${key}`, force || weatherIsStale(spot, ttl), () => refreshWeather(spot));
+  return guarded(key, force || weatherIsStale(spot, ttl), () => refreshWeather(spot));
 }
 
 export function maybeRefreshMany(spots, force = false) {

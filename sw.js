@@ -585,7 +585,7 @@ const MANIFEST = {
   'js/walk-route.js': '596e9417',
   'js/walk-ui.js': '2d832965',
   'js/weather-ui.js': '713a3bc0',
-  'js/weather.js': '053dee77',
+  'js/weather.js': 'f46a3ee2',
   'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
   'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
   'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',
