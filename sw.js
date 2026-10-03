@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.609.0';
+const CACHE_VERSION = 'mk-v0.610.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -521,12 +521,12 @@ const MANIFEST = {
   'js/data/zones.js': '89ab528b',
   'js/exporter.js': 'e301db80',
   'js/gamify.js': '235c330e',
-  'js/i18n.js': 'ab6832b5',
+  'js/i18n.js': '81404ab3',
   'js/idb.js': 'c5e4e32a',
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '95322106',
+  'js/main.js': 'e175d161',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'f18178d4',
   'js/nav-groups.js': '1bdef2e7',
@@ -558,7 +558,7 @@ const MANIFEST = {
   'js/screens/home.js': '83670ab5',
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '6e706314',
-  'js/screens/medical.js': '23b11868',
+  'js/screens/medical.js': '62c2ce75',
   'js/screens/nearby.js': '1e81b2f7',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': 'fd3a61d2',
@@ -576,7 +576,7 @@ const MANIFEST = {
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '6746db81',
   'js/screens/weather.js': 'e46829b4',
-  'js/screens/welcome.js': '9e83ae9b',
+  'js/screens/welcome.js': '6f39cb03',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',
   'js/state.js': '15cf06d7',
@@ -584,7 +584,7 @@ const MANIFEST = {
   'js/trail.js': 'c04f9efc',
   'js/translate.js': 'bb9a9517',
   'js/tts.js': '43323496',
-  'js/ui-widgets.js': '70274759',
+  'js/ui-widgets.js': 'c7346cf1',
   'js/util.js': '4a6082bc',
   'js/vault.js': 'e0d57d7f',
   'js/visits.js': '523454b2',
