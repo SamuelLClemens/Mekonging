@@ -958,7 +958,7 @@ export const ROUTES_KH = [
   {
     "id": "kh-stungtreng-fourthousandislands",
     "from": "Stung Treng",
-    "to": "4000 Islands (Si Phan Don)",
+    "to": "4000 Islands (Don Det)",
     "country": "kh",
     "verified": "2026-10",
     "crossBorder": true,

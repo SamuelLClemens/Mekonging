@@ -281,12 +281,22 @@ export function audioPacksCard() {
 
     choices.innerHTML = '';
     remaining.forEach((l) => {
-      const box = h('input', { type: 'checkbox', checked: selected.has(l.code) ? '' : null, 'aria-label': l.book.label });
-      // Repaints only the button row (not the whole card, and not this checkbox list) — a
-      // full paint() here would rebuild every checkbox mid-tap and cost the traveller their
-      // other selections' focus for nothing; the button row is the only thing a toggle changes.
-      box.addEventListener('change', () => { if (box.checked) selected.add(l.code); else selected.delete(l.code); paintButtons(remaining); });
-      choices.append(h('label', { class: 'qc-choice' }, [box, h('span', {}, `${l.book.label} (${l.urls.length} clips, ≈ ${size(l.urls.length * CLIP_BYTES)})`)]));
+      // S8/F-24: this was a raw <input type=checkbox>, 13x13 on screen — the app's own chip
+      // toggle (same .chip the rest of the app uses for a multi-select, min-height 44px) replaces
+      // it instead of just enlarging the box, so the whole label is the tap target.
+      const chip = h('button', {
+        class: 'chip', 'aria-pressed': selected.has(l.code) ? 'true' : 'false',
+        onclick: () => {
+          const on = chip.getAttribute('aria-pressed') === 'true';
+          chip.setAttribute('aria-pressed', on ? 'false' : 'true');
+          if (on) selected.delete(l.code); else selected.add(l.code);
+          // Repaints only the button row (not the whole card, and not this chip list) — a full
+          // paint() here would rebuild every chip mid-tap and cost the traveller their other
+          // selections' focus for nothing; the button row is the only thing a toggle changes.
+          paintButtons(remaining);
+        },
+      }, `${l.book.label} (${l.urls.length} clips, ≈ ${size(l.urls.length * CLIP_BYTES)})`);
+      choices.append(chip);
     });
     paintQuota(remaining);
 

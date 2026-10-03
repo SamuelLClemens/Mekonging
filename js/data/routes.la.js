@@ -669,7 +669,7 @@ export const ROUTES_LA = [
   {
     "id": "la-pakse-4000islands",
     "from": "Pakse",
-    "to": "4000 Islands (Si Phan Don)",
+    "to": "4000 Islands (Don Det)",
     "country": "la",
     "verified": "2026-10",
     "options": [

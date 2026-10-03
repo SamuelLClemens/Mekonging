@@ -107,7 +107,7 @@ import {
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { startPlayback, stopPlayback } from './audio-control.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
-import { routeNodes, planRoutes, isRouteNode } from './journey.js';
+import { routeNodes, planRoutes, isRouteNode, nearestRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany, recNowIso, setForecastKeep } from './weather.js';
@@ -816,7 +816,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.610.0';
+export const APP_VERSION = 'mk-v0.611.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -4694,7 +4694,11 @@ function planRouteScreen() {
 
   const nodes = routeNodes();
   const opts = [['', 'Choose…'], ...nodes.map((n) => [n, n])];
-  if (!planFrom) { const cap = CAPITAL[getActiveCountry()]; if (cap && nodes.includes(cap)) planFrom = cap; }
+  if (!planFrom) {
+    const near = nearestRouteNode(getLastFix());
+    if (near) planFrom = near;
+    else { const cap = CAPITAL[getActiveCountry()]; if (cap && nodes.includes(cap)) planFrom = cap; }
+  }
 
   const results = h('div', { class: 'plan-results' });
   const fromSel = selectEl(opts, planFrom, (v) => { planFrom = v; renderResults(); });

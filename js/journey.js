@@ -8,6 +8,8 @@
 // no new data.
 
 import { COUNTRIES } from './data/regions.js';
+import { WEATHER_SPOTS } from './weather.js';
+import { haversineKm } from './util.js';
 
 function norm(s) { return (s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
 
@@ -41,6 +43,37 @@ function graph() {
 export function routeNodes() {
   graph();
   return [..._display.values()].sort((x, y) => x.localeCompare(y));
+}
+
+// Route-node coordinates, resolved from the app-wide weather anchor list so this needs no
+// data of its own: an exact city-name match first (covers the large majority — "Bangkok",
+// "Vientiane", "Chiang Mai", …), then a weather spot whose city name is one of the node's own
+// parenthesised/slash-separated tokens (e.g. "4000 Islands (Don Det)" -> "Don Det", "Hue /
+// Dong Ha" -> "Hue") for the handful of nodes written with a disambiguating alias.
+let _nodeCoords = null;
+function nodeCoordsMap() {
+  if (_nodeCoords) return _nodeCoords;
+  _nodeCoords = new Map();
+  const byCity = new Map(WEATHER_SPOTS.map((s) => [norm(s.city), s]));
+  for (const name of routeNodes()) {
+    const tokens = [name, ...name.split(/[()/]/)].map(norm).filter(Boolean);
+    const spot = tokens.map((t) => byCity.get(t)).find(Boolean);
+    if (spot) _nodeCoords.set(name, spot);
+  }
+  return _nodeCoords;
+}
+
+// The route-graph node closest to a GPS fix (or null with no fix, or if nothing resolves to
+// a coordinate) — used to default the planner's "From" field to where the traveller actually
+// is instead of leaving both selects on "Choose…".
+export function nearestRouteNode(fix) {
+  if (!fix) return null;
+  let best = null, bestKm = Infinity;
+  for (const [name, spot] of nodeCoordsMap()) {
+    const km = haversineKm(fix, spot);
+    if (km < bestKm) { bestKm = km; best = name; }
+  }
+  return best;
 }
 
 // The recommended option for a DIRECT edge between two names, if the graph has one — a

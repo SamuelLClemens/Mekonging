@@ -12,6 +12,7 @@ import { DRIVE_CURVE } from './data/drivetimes.js';
 import { getActiveCountry } from './app-state.js';
 import { HISTORY } from './data/history.js';
 import { PLACE_MONTHS } from './data/place-months.js';
+import { COUNTRIES, isCountryLoaded, allPlaces } from './data/regions.js';
 import { verdictFor } from './data/month-verdict.js';
 import { islandsLoaded, sameLand } from './data/islands.js';
 
@@ -350,6 +351,18 @@ export function waveDesc(m) {
 // "Chiang Mai" -> "chiang-mai" for city-scoped Places routes (#places-<cc>-<slug>).
 export function citySlug(name) {
   return String(name || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Which loaded country actually has a place tagged with this city — so a new trip stop (or a
+// chained mini-itinerary leg, js/screens/explore.js) is filed under the place's own country
+// rather than whichever one the traveller was last browsing. Moved here (was explore.js-only)
+// so js/screens/trip.js can call it without reverse-importing a screen module.
+export function countryForCityName(name) {
+  const slug = citySlug(name);
+  for (const x of COUNTRIES) {
+    if (isCountryLoaded(x.id) && allPlaces({ country: x.id }).some((p) => citySlug(p.city || '') === slug)) return x.id;
+  }
+  return '';
 }
 
 // Display labels for a place's price tier — deliberately never the word "budget" anywhere in

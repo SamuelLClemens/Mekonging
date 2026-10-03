@@ -1060,7 +1060,7 @@ function myTranslationsFold(code, label, locale, isOpen, onChange) {
   }
   body.append(h('p', { class: 'tiny muted mytr-foot' }, [
     '📖 keeps a phrase for good · ',
-    h('button', { class: 'linklike', onclick: () => go('#dictionary') }, 'Open your dictionary →'),
+    h('button', { class: 'linklike linklike-tap44', onclick: () => go('#dictionary') }, 'Open your dictionary →'),
   ]));
   return h('details', { class: 'phrase-cat-group', open: isOpen ? '' : null }, [
     h('summary', { class: 'phrase-cat-summary' }, `🕘 Translated by you (${recs.length})`),
