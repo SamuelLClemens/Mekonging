@@ -26,7 +26,7 @@ import {
 } from '../state.js';
 import { getActiveCountry, setActiveCountry, setLiveCleanup, getLiveCleanup } from '../app-state.js';
 import {
-  h, geolocate, bearing, compass, fmtDistance, titleCase, mapsUrl, mapsDirUrl, money,
+  h, geolocate, bearing, compass, fmtDistance, titleCase, mapsUrl, mapsDirUrl, money, regionNow,
 } from '../util.js';
 import {
   haversineKm, distanceChip, withinNear, withinDayTrip, rankNearMe, attrTag, starsStr, isMarket, isBeach,
@@ -1200,8 +1200,9 @@ function marketInfoCard(p) {
   card.append(h('p', {}, [h('strong', {}, 'Runs: '), h('span', {}, formatMarketDays(p) + (p.hours ? ` · ${p.hours}` : ''))]));
   const d = marketOpenDays(p);
   if (!d) { card.append(h('p', { class: 'mkt-status on' }, '✅ Open daily')); return card; }
-  const on = d.includes(new Date().getDay());
-  const nxt = nextMarketDay(p, new Date().getDay());
+  const dow = regionNow().dow;   // the market's weekday, not the phone's (audit F-27)
+  const on = d.includes(dow);
+  const nxt = nextMarketDay(p, dow);
   card.append(h('p', { class: `mkt-status ${on ? 'on' : 'off'}` },
     on ? '✅ On today' : `⏳ Not on today${nxt ? ` — next on ${titleCase(nxt)}` : ''}`));
   return card;

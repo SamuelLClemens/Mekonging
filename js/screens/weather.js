@@ -381,7 +381,7 @@ function daySegments(hourly, date) {
 // non-zero amount rather than padding every row with "❄️0 cm".
 function rainLine(prob, mm, snowCm) {
   const parts = [];
-  if (prob != null) parts.push(`💧${prob}%${mm > 0 ? ` (${fmtPrecip(mm)})` : ''}`);
+  if (prob != null) parts.push(`💧${Math.round(prob)}%${mm > 0 ? ` (${fmtPrecip(mm)})` : ''}`);
   if (snowCm > 0) parts.push(`❄️${fmtSnow(snowCm)}`);
   return parts.length ? ` · ${parts.join(' · ')}` : '';
 }
@@ -470,7 +470,7 @@ function planCityPanels() {
         return;
       }
       bodyBox.append(h('div', { class: 'muted', style: 'margin: var(--sp-2) 0 var(--sp-1)' },
-        `${clabel} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}${compass(cur.windDir) ? ` from ${compass(cur.windDir)}` : ''}`
+        `${clabel}${cur.fromForecast ? ' (forecast)' : ''} · Feels ${fmtTemp(cur.apparent)} · Humidity ${cur.humidity}% · Wind ${fmtWind(cur.wind)}${compass(cur.windDir) ? ` from ${compass(cur.windDir)}` : ''}`
         + `${cur.precip > 0 ? ` · 💧${fmtPrecip(cur.precip)} now` : ''}${cur.snow > 0 ? ` · ❄️${fmtSnow(cur.snow)} now` : ''}`));
       (rec.daily || []).slice(0, 10).forEach((d) => {
         const de = wmo(d.code)[1];
@@ -896,10 +896,13 @@ export function weatherScreen(country) {
           h('span', { style: 'font-size:44px;line-height:1' }, cemoji),
           h('div', { style: 'text-align:right' }, [
             h('div', { style: 'font-size:34px;font-weight:800' }, fmtTemp(c.temp)),
-            h('div', { class: 'muted' }, clabel),
+            h('div', { class: 'muted' }, c.fromForecast ? `${clabel} · forecast` : clabel),
           ]),
         ]),
         h('div', { class: 'muted', style: 'margin-top: var(--sp-2)' }, `${spot.city}${today ? ' · ' + wxDayDate(today.date) : ''}`),
+        // A saved forecast read later (offline at the next stop, audit F-21): "now" above is the
+        // forecast for this hour (asOfNow in js/weather.js), so say how old that forecast is.
+        c.fromForecast ? h('p', { class: 'wx-age' }, `📦 Forecast from ${wxAgo(rec.fetchedAt)}${online() ? '' : ' · offline'}`) : null,
         statGrid([
           ['Feels like', fmtTemp(c.apparent)],
           ['Humidity', c.humidity != null ? `${c.humidity}%` : null],
@@ -907,7 +910,7 @@ export function weatherScreen(country) {
           ['Dew point', c.dew != null ? fmtTemp(c.dew) : null],
           ['Wind', `${fmtWind(c.wind)}${cdir ? ` from ${cdir}` : ''}`],
           ['Gusts', c.gust != null ? fmtWind(c.gust) : null],
-          ['Rain today', today && today.rainProb != null ? `${today.rainProb}%${today.precip > 0 ? ` · ${fmtPrecip(today.precip)}` : ''}` : null],
+          ['Rain today', today && today.rainProb != null ? `${Math.round(today.rainProb)}%${today.precip > 0 ? ` · ${fmtPrecip(today.precip)}` : ''}` : null],
           ['Cloud cover', c.cloud != null ? `${c.cloud}%` : null],
           ['Visibility', c.vis != null ? fmtDist(c.vis) : null],
           ['Pressure', c.pressure != null ? fmtPres(c.pressure) : null],

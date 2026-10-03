@@ -53,7 +53,7 @@ export function currencyFlag(code) { return CURRENCY_FLAGS[code] || ''; }
 // callers naturally bring here alongside currencyFlag().
 // Imported and then re-exported rather than `export … from`: check-undefined.py reads a
 // bare re-export as a USE of those names in this file and reports three ReferenceErrors.
-import { currencySymbol, currencySymbolAfter, money, range } from './util.js';
+import { currencySymbol, currencySymbolAfter, money, range, roundEstimate } from './util.js';
 export { currencySymbol, currencySymbolAfter, money };
 
 // A figure with its flag as well as its symbol, for the controls that name the currency and
@@ -147,8 +147,8 @@ export function annotatePrices(text, home) {
   if (!text || !home) return text;
   return String(text).replace(PRICE_IN_TEXT, (m, a, b, cur, at, whole) => {
     if (cur === home) return m;
-    const lo = convert(Number(a.replace(/,/g, '')), cur, home);
-    const hi = b != null ? convert(Number(b.replace(/,/g, '')), cur, home) : null;
+    const lo = roundEstimate(convert(Number(a.replace(/,/g, '')), cur, home));
+    const hi = b != null ? roundEstimate(convert(Number(b.replace(/,/g, '')), cur, home)) : null;
     if (lo == null || !isFinite(lo)) return m;
     const approx = (hi != null && isFinite(hi)) ? range(lo, hi, home) : money(lo, home);
     // Already inside brackets — "(450 THB)" — so add to them rather than nesting a second pair.

@@ -16,7 +16,7 @@
 // model has no data yet). The Weather screen and the map's weather-pin popup both expose this
 // as a picker (wxSourceSeg, js/weather-ui.js) so it is a visible choice, not a hidden setting.
 
-import { haversineKm, fetchTimeout } from './util.js';
+import { haversineKm, fetchTimeout, REGION_UTC_OFFSET_SEC } from './util.js';
 
 const PREFIX = 'mk.wx.';
 const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
@@ -283,7 +283,45 @@ export function nearestSpot(coords, country) {
 }
 
 export function getCachedWeather(key) {
-  try { const c = JSON.parse(localStorage.getItem(PREFIX + key)); return c || null; } catch { return null; }
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem(PREFIX + key)); } catch { return null; }
+  return c ? asOfNow(c) : null;
+}
+
+// The city's own wall clock as 'YYYY-MM-DDTHH:MM', the shape of every forecast timestamp
+// (timezone=auto), so the two compare as strings. A record saved before utcOffset was stored
+// uses the region's UTC+7, which is every city here.
+export function recNowIso(rec) {
+  const off = (rec && rec.utcOffset != null && !isNaN(rec.utcOffset)) ? rec.utcOffset : REGION_UTC_OFFSET_SEC;
+  return new Date(Date.now() + off * 1000).toISOString().slice(0, 16);
+}
+
+// A saved forecast still starts on the day it was fetched. Read days later, offline at the next
+// stop (which is the point of saving it, audit F-21), its first day was two days ago and its
+// "current" conditions two days stale, while every reader takes daily[0] for today. So readers
+// get it from the city's today: past days and their hours dropped, and once the saved conditions
+// are over NOW_STALE_MS old, "current" is the forecast for this hour, flagged `fromForecast` so a
+// screen can say so. A forecast with no days left is no forecast.
+const NOW_STALE_MS = 60 * 60 * 1000;
+function asOfNow(rec) {
+  if (!Array.isArray(rec.daily) || !rec.daily.length) return rec;
+  const nowIso = recNowIso(rec);
+  const today = nowIso.slice(0, 10);
+  const stale = ageOf(rec) >= NOW_STALE_MS;
+  if (!stale && rec.daily[0].date >= today) return rec;
+  const daily = rec.daily.filter((d) => d.date >= today);
+  if (!daily.length) return null;
+  const hourly = (rec.hourly || []).filter((x) => String(x.t).slice(0, 10) >= today);
+  let current = rec.current;
+  const x = stale ? hourly.find((hr) => String(hr.t) >= `${nowIso.slice(0, 13)}:00`) : null;
+  if (x) {
+    const whole = (v) => (v == null ? null : Math.round(v));
+    current = {
+      temp: x.temp, apparent: x.app, code: x.code, humidity: whole(x.hum), wind: x.wind, precip: x.precip, snow: x.snow,
+      windDir: x.wdir, gust: x.gust, cloud: whole(x.cloud), vis: x.vis, fromForecast: true, forHour: x.t,
+    };
+  }
+  return { ...rec, daily, hourly, current };
 }
 
 // Current conditions for MANY spots in one call — Open-Meteo accepts comma-separated
@@ -339,6 +377,11 @@ const WX_MODELS_PARAM = WX_MODELS.join(',');
 // quantity — the plurality reading, ties going to the first model with that value (ECMWF,
 // first in WX_MODELS); 'circular' is for a compass bearing, where a naive mean of 350° and
 // 10° would wrongly come out as 180° instead of 0°.
+// Rounded where the average is stored, not only where it is printed: four models' mean rain
+// chance reached the screen as "83.25 %" and Home's tile as "☔ 76.5 %" (audit F-04), and no
+// probability here is known to better than a whole percent. Other quantities keep two decimals,
+// which no reading needs more of; the 72.33333333333333 tails also cost storage.
+const WHOLE_FIELDS = new Set(['precipitation_probability', 'precipitation_probability_max', 'relative_humidity_2m', 'cloud_cover', 'wind_direction_10m', 'wind_direction_10m_dominant']);
 function ensembleAt(O, field, i, kind) {
   const vals = [];
   for (const m of WX_MODELS) { const arr = O[`${field}_${m}`]; const v = arr ? arr[i] : null; if (v != null) vals.push(v); }
@@ -353,9 +396,10 @@ function ensembleAt(O, field, i, kind) {
   if (kind === 'circular') {
     let sx = 0; let sy = 0;
     vals.forEach((deg) => { const r = (deg * Math.PI) / 180; sx += Math.cos(r); sy += Math.sin(r); });
-    return { v: (Math.atan2(sy, sx) * 180 / Math.PI + 360) % 360, n: vals.length };
+    return { v: Math.round((Math.atan2(sy, sx) * 180 / Math.PI + 360) % 360) % 360, n: vals.length };
   }
-  return { v: vals.reduce((a, b) => a + b, 0) / vals.length, n: vals.length };
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return { v: WHOLE_FIELDS.has(field) ? Math.round(mean) : Math.round(mean * 100) / 100, n: vals.length };
 }
 // Sunrise/sunset off a model-suffixed block: an astronomical fact every model computes within
 // seconds of the others, so the first model to answer is taken rather than "averaging"
@@ -379,6 +423,7 @@ function modelAt(O, field, i, model) {
 function bySourceDaily(D, i) {
   const out = {};
   WX_MODELS.forEach((m) => {
+    if (modelAt(D, 'weather_code', i, m) == null) return;   // not this far out; see sourceDay
     out[m] = {
       code: modelAt(D, 'weather_code', i, m),
       tmax: modelAt(D, 'temperature_2m_max', i, m), tmin: modelAt(D, 'temperature_2m_min', i, m),
@@ -394,6 +439,9 @@ function bySourceDaily(D, i) {
 function bySourceHourly(H, i) {
   const out = {};
   WX_MODELS.forEach((m) => {
+    // ICON and UKMO stop at 7 days: 9 days of all-null entries per model were a quarter of a
+    // saved forecast. A missing model already reads as "fall back to the average" below.
+    if (modelAt(H, 'weather_code', i, m) == null) return;
     out[m] = {
       code: modelAt(H, 'weather_code', i, m), temp: modelAt(H, 'temperature_2m', i, m),
       pp: modelAt(H, 'precipitation_probability', i, m), precip: modelAt(H, 'precipitation', i, m), snow: modelAt(H, 'snowfall', i, m),
@@ -491,11 +539,45 @@ async function refreshWeather(spot) {
           };
         }),
       };
-      try { localStorage.setItem(PREFIX + key, JSON.stringify(rec)); } catch { /* storage full */ }
+      storeForecast(key, rec);
       return rec;
     }
   } catch { /* offline or blocked — fall through to cache */ }
   return getCachedWeather(key);
+}
+
+// --- Keeping the saved forecasts bounded --------------------------------------
+// A saved forecast is about 256,000 characters (16 days of hours from four models), and
+// localStorage holds roughly five million for the whole app, the traveller's own saved data
+// included. Every city ever opened used to stay for good, so a dozen of them filled it and the
+// next write of anything failed silently. Now the newest WX_KEEP stay, and the cities main.js is
+// keeping for offline use (setForecastKeep) outrank the rest whatever their age.
+const WX_KEEP = 8;
+let keepKeys = () => [];
+export function setForecastKeep(fn) { if (typeof fn === 'function') keepKeys = fn; }
+function pruneForecasts(limit, justWritten) {
+  let keep;
+  try { keep = new Set(keepKeys() || []); } catch { keep = new Set(); }
+  keep.add(justWritten);
+  const recs = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith(PREFIX) || k.indexOf(':', PREFIX.length) < 0) continue;   // not mk.wx.many
+    const m = /"fetchedAt":(\d+)/.exec((localStorage.getItem(k) || '').slice(0, 300));
+    recs.push({ k, kept: keep.has(k.slice(PREFIX.length)) ? 1 : 0, at: m ? Number(m[1]) : 0 });
+  }
+  recs.sort((a, b) => (b.kept - a.kept) || (b.at - a.at));
+  recs.slice(limit).forEach((r) => { try { localStorage.removeItem(r.k); } catch { /* ignore */ } });
+}
+function storeForecast(key, rec) {
+  const json = JSON.stringify(rec);
+  try {
+    localStorage.setItem(PREFIX + key, json);
+  } catch {
+    // Full: make room among the saved forecasts, then one more try.
+    try { pruneForecasts(WX_KEEP - 3, key); localStorage.setItem(PREFIX + key, json); } catch { return; }
+  }
+  try { pruneForecasts(WX_KEEP, key); } catch { /* best effort */ }
 }
 
 // --- Marine / swimming conditions -------------------------------------------
@@ -640,11 +722,13 @@ function weatherIsStale(spot, ttl = WX_TTL_MS) {
 
 // Resolves to the fresh record when it fetched, or null when it decided not to. A null is
 // not a failure: it means "what you already have is current enough".
-export function maybeRefreshWeather(spot, force = false) {
+// `ttl` lets a caller that is saving a forecast for later (main.js prefetchForecasts) accept an
+// older copy than one the traveller is looking at now.
+export function maybeRefreshWeather(spot, force = false, ttl = WX_TTL_MS) {
   if (!spot) return Promise.resolve(null);
   const key = spotKey(spot);
   if (force) { delete _lastAttempt[key]; }
-  return guarded(`wx:${key}`, force || weatherIsStale(spot), () => refreshWeather(spot));
+  return guarded(`wx:${key}`, force || weatherIsStale(spot, ttl), () => refreshWeather(spot));
 }
 
 export function maybeRefreshMany(spots, force = false) {

@@ -88,7 +88,7 @@ export function daySuggestScreen(country) {
     if (today) {
       const emo = wmo(today.code)[1];
       cond.push(`${emo} ${fmtTemp(today.tmin)}–${fmtTemp(today.tmax)}`);
-      if (today.rainProb != null) cond.push(`☔ ${today.rainProb}%`);
+      if (today.rainProb != null) cond.push(`☔ ${Math.round(today.rainProb)}%`);
     }
     cond.push(`🕑 ${DAYPART_LBL[ctx.daypart]}`);
     if (ctx.uv != null) { const ub = uvBand(ctx.uv); if (ub) cond.push(`UV ${Math.round(ctx.uv)} ${ub[0]}`); }
