@@ -815,7 +815,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.602.0';
+export const APP_VERSION = 'mk-v0.603.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1639,19 +1639,23 @@ function isOpenNow(hours, hour) {
 export function contextNow() {
   const gps = getLastFix();
   let near = gps ? nearestSpotGlobal(gps) : null;
+  // F-05: only a REAL gps-proximity pick can mislabel (see satelliteDisplayCity above) — the two
+  // fallbacks below deliberately choose a specific spot, not a geometric nearest search, so they
+  // need no override. near.spot (the weather/places anchor) is never touched here either way.
+  if (near) near = { ...near, displayCity: satelliteDisplayCity(gps, near) };
   let fix = gps, approx = false, seeded = false;
   if (!near) {
     // No GPS: fall back to the city the traveller is focused on (last scoped or planned),
     // so "right now" reflects where they are actually looking — never a blank capital default.
     const fs = focusCitySpot();
-    if (fs) { near = { spot: fs, km: 0 }; fix = { lat: fs.lat, lng: fs.lng }; approx = true; }
+    if (fs) { near = { spot: fs, km: 0, displayCity: fs.city }; fix = { lat: fs.lat, lng: fs.lng }; approx = true; }
   }
   if (!near) {
     // Fresh profile — no GPS and nothing focused yet: seed the country's default city so the
     // home "right now" strip shows real picks immediately (honestly labelled "showing <city>")
     // instead of only a permission prompt. Turning on location upgrades it to where they are.
     const ds = defaultSpot(getActiveCountry() || 'th');
-    if (ds) { near = { spot: ds, km: 0 }; fix = { lat: ds.lat, lng: ds.lng }; approx = true; seeded = true; }
+    if (ds) { near = { spot: ds, km: 0, displayCity: ds.city }; fix = { lat: ds.lat, lng: ds.lng }; approx = true; seeded = true; }
   }
   const now = new Date();
   const hour = now.getHours();
@@ -1784,6 +1788,33 @@ export function setFocusSpot(spot) {
   if (spot.country) setActiveCountry(spot.country);
   save();
 }
+// F-05 — DISPLAY LABEL ONLY, never the anchor. A `satelliteOf` entry (a small river-island/
+// day-trip island kept as its own weather hub for a real reason — see the comment above it in
+// weather.js) must not steal the HEADLINE from its parent metro just because a geometric
+// nearest-point search happens to find it a few km closer. Suvarnabhumi Airport (in Bangkok)
+// sits 20.4 km from Bang Krachao's pin vs 27.8 km from Bangkok's — a 7.4 km margin nobody would
+// call "being on Bang Krachao." nearestSpotGlobal()'s pick (near.spot — what gets fetched, cached
+// and looked up for weather/routes) is untouched by this: these satellites exist specifically so
+// THAT keeps resolving correctly. Only the CITY NAME shown to the traveller swaps to the parent,
+// and only when the satellite is not MEANINGFULLY closer (more than SATELLITE_MARGIN_KM) than
+// its parent.
+//
+// The threshold has to clear two measured cases, not just the airport one above: a traveller
+// actually standing on Bang Krachao (its own pin — 0 km from the island, 9.3 km from Bangkok's)
+// must still read "Bang Krachao". So SATELLITE_MARGIN_KM sits strictly between the airport's
+// 7.4 km (must NOT clear it — Bangkok wins) and the island's own 9.3 km (must clear it — the
+// island wins); 10 km was tried first and silently broke the island case (9.3 < 10), caught only
+// by actually simulating both fixes — see the S3 handoff report. 8 km clears both with margin.
+const SATELLITE_MARGIN_KM = 8;
+function satelliteDisplayCity(fix, near) {
+  if (!near || !near.spot) return null;
+  const satOf = near.spot.satelliteOf;
+  if (!satOf || !fix) return near.spot.city;
+  const parent = WEATHER_SPOTS.find((s) => s.country === near.spot.country && s.city === satOf);
+  if (!parent) return near.spot.city;
+  const dParent = haversineKm(fix, { lat: parent.lat, lng: parent.lng });
+  return (dParent - near.km > SATELLITE_MARGIN_KM) ? near.spot.city : parent.city;
+}
 export function focusSpot(explicitCountry) {
   const gps = getLastFix();
   const near = gps ? nearestSpotGlobal(gps) : null;
@@ -1795,13 +1826,17 @@ export function focusSpot(explicitCountry) {
     // first, so once a traveller had ever browsed, say, Chiang Mai, a later live GPS fix in
     // Pai was silently ignored — the map kept showing Chiang Mai). Else the focused/located
     // city within it, else the capital.
-    if (near && near.spot && near.spot.country === explicitCountry) return { spot: near.spot, source: 'gps', km: near.km };
-    if (focus && focus.country === explicitCountry) return { spot: focus, source: 'focus' };
-    return { spot: defaultSpot(explicitCountry), source: 'default' };
+    if (near && near.spot && near.spot.country === explicitCountry) {
+      return { spot: near.spot, source: 'gps', km: near.km, displayCity: satelliteDisplayCity(gps, near) };
+    }
+    if (focus && focus.country === explicitCountry) return { spot: focus, source: 'focus', displayCity: focus.city };
+    const ds = defaultSpot(explicitCountry);
+    return { spot: ds, source: 'default', displayCity: ds.city };
   }
-  if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km };
-  if (focus) return { spot: focus, source: 'focus' };
-  return { spot: defaultSpot(getActiveCountry() || 'th'), source: 'default' };
+  if (near && near.spot) return { spot: near.spot, source: 'gps', km: near.km, displayCity: satelliteDisplayCity(gps, near) };
+  if (focus) return { spot: focus, source: 'focus', displayCity: focus.city };
+  const ds = defaultSpot(getActiveCountry() || 'th');
+  return { spot: ds, source: 'default', displayCity: ds.city };
 }
 // The one place every explicit "use my location" control should call — NOT raw
 // geolocate()+setLastFix() — so a fresh fix always updates activeCountry/the remembered
@@ -2156,7 +2191,7 @@ function homeRightNowCard(ctx) {
   // the traveller what the weather is about to do — not just this minute — and plans accordingly.
   const wxRec = ctx.near ? getCachedWeather(spotKey(ctx.near.spot)) : null;
   const outlook = forecastOutlook(wxRec);
-  const cityName = ctx.near ? ctx.near.spot.city : ((getCountry(ctx.country) || {}).name || 'you');
+  const cityName = ctx.near ? ctx.near.displayCity : ((getCountry(ctx.country) || {}).name || 'you');
   // The temperature is a live link into the local forecast (nearest/focused city),
   // so "check the weather here" is one tap from the home hero instead of buried in a grid.
   card.append(h('div', { class: 'rn-head' }, [
@@ -2794,6 +2829,17 @@ function planningStageBlock(cc) {
   // apart. What is not redundant — and is what a planner actually wants — is the weather for
   // the places they are going, which is now what that fold shows in this phase. See
   // plannedStopsOutlook() and js/screens/home.js.
+
+  // D5 (audit decision): a traveller still in the 'planning' phase by their own chosen setting
+  // can already be physically present in one of the four countries — an early arrival, or a
+  // long trip planned loosely as it goes. countryOfFix() is the authoritative border test (the
+  // same one SOS/medical use), not the nearest-hub snap, so this never fires from someone merely
+  // near a border on the wrong side. When it does, the trip-countdown/checklist content above is
+  // about the WHOLE trip; this is about today, and both can be true at once — so it is purely
+  // additive, reusing the exact "Right now" fold travelling shows rather than duplicating its
+  // near-me logic, and folded like every other Home section so it costs one line when collapsed.
+  const fix = getLastFix();
+  if (fix && countryOfFix(fix)) wrap.append(homeRightNowFold('planning', cc));
   return wrap;
 }
 

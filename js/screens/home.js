@@ -91,9 +91,13 @@ export function homeScreen() {
   // backHash — Home is a root tab) brings the 🆘 emergency button, Saved and Settings icons for
   // free: Home was previously the only screen without 🆘, since the hero displaced the top bar.
   const dateLabel = new Date().toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
-  wrap.append(topbar(`${focus.spot.city || 'Your trip'} · ${dateLabel}`, null));
+  // F-05: focus.displayCity (main.js focusSpot()), not focus.spot.city — a GPS fix nearest to a
+  // satellite anchor (a small river-island/day-trip island kept as its own weather hub, e.g.
+  // Bang Krachao) no longer steals the headline from its parent metro unless it is meaningfully
+  // closer. focus.spot itself — the actual weather/places anchor — is untouched by this.
+  wrap.append(topbar(`${focus.displayCity || 'Your trip'} · ${dateLabel}`, null));
 
-  // The headline above names focus.spot.city with full confidence regardless of WHY it was
+  // The headline above names focus.displayCity with full confidence regardless of WHY it was
   // picked — a live GPS fix, a city merely browsed or set days ago, or (with neither) the
   // country's bare default. Only the first of those is actually where the traveller is right
   // now. While on the ground, flag the other two and offer a one-tap fix (locationSheet(), same
@@ -104,8 +108,8 @@ export function homeScreen() {
   if (onGround && focus.source !== 'gps') {
     wrap.append(h('button', { class: 'btn ghost block location-stale-hint', onclick: () => locationSheet() },
       focus.source === 'focus'
-        ? `📍 Showing ${focus.spot.city} from earlier — moved on? Tap to update`
-        : `📍 Showing ${focus.spot.city} as a starting point — tap to set your real location`));
+        ? `📍 Showing ${focus.displayCity} from earlier — moved on? Tap to update`
+        : `📍 Showing ${focus.displayCity} as a starting point — tap to set your real location`));
   }
 
   // NAV-1: one-shot "here is what I set up for you" recap, right after finishing the
@@ -254,7 +258,7 @@ export function homeScreen() {
     if (ident) wrap.append(ident);
 
     // "Where you are": real, sourced city history and context, collapsed by default.
-    const about = whereYouAreCard(leadCC, ctx.near ? ctx.near.spot.city : focus.spot.city);
+    const about = whereYouAreCard(leadCC, ctx.near ? ctx.near.displayCity : focus.displayCity);
     if (about) wrap.append(about);
   }
 

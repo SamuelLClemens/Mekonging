@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.602.0';
+const CACHE_VERSION = 'mk-v0.603.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -354,7 +354,7 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': '4f7866e4',
+  'css/style.css': 'ca84873c',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': '2a31820e',
@@ -522,7 +522,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'cffc0324',
+  'js/main.js': 'bc4f07c4',
   'js/map.js': 'd44bbc25',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -549,7 +549,7 @@ const MANIFEST = {
   'js/screens/food.js': '4030bf02',
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': 'ec261fba',
-  'js/screens/home.js': '972c4ad9',
+  'js/screens/home.js': '766ea586',
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '6e706314',
   'js/screens/medical.js': '6fc3c717',
@@ -570,7 +570,7 @@ const MANIFEST = {
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '6746db81',
   'js/screens/weather.js': '3fdcf34f',
-  'js/screens/welcome.js': 'bff77779',
+  'js/screens/welcome.js': '9e83ae9b',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',
   'js/state.js': 'c0334938',
@@ -585,7 +585,7 @@ const MANIFEST = {
   'js/walk-route.js': '596e9417',
   'js/walk-ui.js': '2d832965',
   'js/weather-ui.js': '713a3bc0',
-  'js/weather.js': 'b3135360',
+  'js/weather.js': '84d3c125',
   'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
   'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
   'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',

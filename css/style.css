@@ -2644,7 +2644,11 @@ table.rent-price th { background: var(--bg); font-weight: 800; }
    rather than changing colour, which would read as a warning about something to fix. */
 .topbar-net.is-nosignal { opacity: 0.6; }
 .setup-recap { border: 1px solid var(--sun, #E0A21A); background: var(--sun-soft, rgba(240,180,40,.12)); margin-bottom: 10px; }
-.setup-recap > strong { display: block; font-size: 16px; margin-bottom: 6px; }
+/* F-02: the recap's heading IS its own disclosure now (setupRecapCard(), js/screens/welcome.js)
+   — closed by default so the itemised list no longer stands open on every first viewport. Same
+   weight as the old bare <strong> it replaces; the chevron itself comes from the generic
+   `details > summary::after` rule above, flex-aligned to the right by `display: flex` here. */
+.recap-detail > summary { display: flex; align-items: center; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
 .recap-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .recap-list li { display: flex; gap: 9px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
 .recap-list .recap-ic { flex: 0 0 auto; font-size: 17px; line-height: 1.3; }
@@ -2993,6 +2997,17 @@ html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.
   border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md);
   padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-2); min-height: 44px;
 }
+
+/* F-08: the location <select> (locationSelect(), js/ui-widgets.js — onboarding's "Choose your
+   location" GPS fallback, and locationFixCard()'s manual pick everywhere else) shipped with no
+   context class styling, same as the language/translate selects above once did: a ~147×17px
+   native box, well under the 44px WCAG tap-target minimum. Identical treatment. */
+.loc-select {
+  display: block; width: 100%; font-family: inherit; font-size: var(--fs-body); color: var(--ink);
+  border: 1px solid var(--line); background: var(--card); border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-2); min-height: 44px;
+}
+.loc-select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
 .translate-card select:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
 
 /* --- right-to-left ---------------------------------------------------------------------- */
