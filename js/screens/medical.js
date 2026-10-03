@@ -48,13 +48,21 @@ import { getActiveCountry, setActiveCountry } from '../app-state.js';
 // map app is installed — including an offline one such as OsmAnd or Organic Maps, which is
 // the only link on this screen that resolves with no data; OpenStreetMap is the neutral
 // fallback for a device with neither.
-function routeLinks(lat, lng, label) {
+function routeLinks(lat, lng, label, phone) {
   const q = encodeURIComponent(label || '');
+  // The call chip leads — of everything on this row, dialling is the one action that still
+  // works when the traveller cannot read a map or does not trust their own driving. Digits
+  // share a text node with the label, so `data-no-mt` keeps a translation pass from touching
+  // them, same as the national emergency numbers above.
+  const call = phone
+    ? h('a', { class: 'chip', 'data-no-mt': '', href: `tel:${String(phone).replace(/[^+\d]/g, '')}` }, `📞 Call ${phone}`)
+    : null;
   return h('div', { class: 'chips', style: 'margin-top: var(--sp-1h)' }, [
+    call,
     h('a', { class: 'chip', href: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, target: '_blank', rel: 'noopener' }, 'Directions ↗'),
     h('a', { class: 'chip', href: `geo:${lat},${lng}?q=${lat},${lng}(${q})` }, 'Open in map app'),
     h('a', { class: 'chip', href: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`, target: '_blank', rel: 'noopener' }, 'OpenStreetMap ↗'),
-  ]);
+  ].filter(Boolean));
 }
 
 function tierChip(tier) {
@@ -77,7 +85,7 @@ function hospitalCard(x, fix) {
       [x.city, x.prov && x.prov !== x.city ? x.prov : null, drive].filter(Boolean).join(' · ')),
     x.note ? h('div', { class: 'tiny', style: 'margin: 0 0 var(--sp-1)' }, x.note) : null,
     h('div', { class: 'chips' }, [tierChip(x.tier), ...(x.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
-    routeLinks(x.lat, x.lng, x.name),
+    routeLinks(x.lat, x.lng, x.name, x.phone),
   ]);
 }
 
@@ -325,7 +333,7 @@ export function hospitalScreen(cc) {
         hero.curated
           ? h('div', { class: 'chips' }, [tierChip(hero.tier), ...(hero.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean))
           : h('div', { class: 'tiny muted' }, hero.er ? 'Mapped with a 24-hour emergency department.' : 'From OpenStreetMap — name and location only. Telephone ahead if you can.'),
-        routeLinks(hero.lat, hero.lng, hero.name),
+        routeLinks(hero.lat, hero.lng, hero.name, hero.phone),
       ]));
       // When the closest thing is an OpenStreetMap entry of unknown capability — and in rural
       // Thailand and Laos it usually is, because sub-district health centres are tagged as
@@ -345,7 +353,7 @@ export function hospitalScreen(cc) {
             h('div', { class: 'tiny muted', style: 'margin: var(--sp-0h) 0 var(--sp-1)' },
               [known.city, kc ? `${kc.flag} ${kc.name}` : null, careLabel(fix, known, known.km)].filter(Boolean).join(' · ')),
             h('div', { class: 'chips' }, [tierChip(known.tier), ...(known.tags || []).map((t) => h('span', { class: 'cat-tag' }, HOSP_TAG[t] || t))].filter(Boolean)),
-            routeLinks(known.lat, known.lng, known.name),
+            routeLinks(known.lat, known.lng, known.name, known.phone),
           ]));
         }
       }

@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.603.0';
+const CACHE_VERSION = 'mk-v0.604.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -409,7 +409,7 @@ const MANIFEST = {
   'js/data/history.cities.th.js': 'b62c45b7',
   'js/data/history.cities.vi.js': '39b7d44c',
   'js/data/history.js': '0f9c6617',
-  'js/data/hospitals.curated.js': 'f8625a7c',
+  'js/data/hospitals.curated.js': '0bbd6bd1',
   'js/data/hospitals.js': '089e878d',
   'js/data/hospitals.kh.js': 'bc42457e',
   'js/data/hospitals.la.js': 'dd68732d',
@@ -522,7 +522,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '7a78202e',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'bc4f07c4',
+  'js/main.js': '68d01154',
   'js/map.js': 'd44bbc25',
   'js/nav-groups.js': '1bdef2e7',
   'js/offline-areas-ui.js': 'e50c5c44',
@@ -552,7 +552,7 @@ const MANIFEST = {
   'js/screens/home.js': '766ea586',
   'js/screens/journal.js': 'a2702b95',
   'js/screens/map.js': '6e706314',
-  'js/screens/medical.js': '6fc3c717',
+  'js/screens/medical.js': '23b11868',
   'js/screens/nearby.js': 'c25da527',
   'js/screens/nextstop.js': '657c8d05',
   'js/screens/phrasebook.js': 'fd3a61d2',
