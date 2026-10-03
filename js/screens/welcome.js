@@ -55,7 +55,16 @@ export function welcomeScreen() {
   // control rather than a second, onboarding-only implementation.
   const lang = uiLangMeta();
   wrap.append(h('section', { class: 'hero welcome-hero' }, [
-    h('div', { class: 'logo-wrap', html: logoSVG() }),
+    // F-19: the brand wordmark is an SVG <text> inside logoSVG(), which sits inside the tree
+    // mount() hands to translateTree()/autoTranslateTree() (js/i18n.js) on every render. It is
+    // not a dictionary key, so the bundled pass never touches it — but the optional
+    // machine-translation pass has no way to know "Mekonging" is a name rather than prose, and
+    // the audit caught it coming back mangled ("Mekong"). `data-no-mt` is the same opt-out
+    // every verified fact in this app already uses (SOS numbers, hospital tel: links); `translate="no"`
+    // is the standard HTML hint for the same intent, kept for a browser's own page-translate
+    // feature. logoSVG() is only ever called from here (grep confirms), so one wrapper is the
+    // whole fix.
+    h('div', { class: 'logo-wrap', 'data-no-mt': '', translate: 'no', html: logoSVG() }),
     h('p', { style: 'margin: 0' }, 'A few quick taps and Home fits you — or skip and explore. Everything stays on your device.'),
     h('button', {
       class: 'chip', 'data-no-i18n': '', style: 'margin-top: var(--sp-3)',
