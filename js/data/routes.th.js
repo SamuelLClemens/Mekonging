@@ -590,6 +590,68 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-udonthani-vientiane",
+    "from": "Udon Thani",
+    "to": "Vientiane",
+    "country": "th",
+    "verified": "2026-10",
+    "crossBorder": true,
+    "border": "Thai-Lao Friendship Bridge 1 (Nong Khai, Thailand - Thanaleng/Vientiane, Laos)",
+    "visa": {
+      "note": "Laos visa on arrival or a pre-arranged Lao eVisa both work at this crossing for most nationalities — but only if you cross by road (bus, van or car). The eVisa does not work for the shuttle TRAIN across the bridge: several independent reports agree the train-side immigration desk cannot process it, so train travellers need a visa on arrival instead. Thailand entry is visa-exempt for most Western nationalities for a short stay."
+    },
+    "options": [
+      {
+        "mode": "Direct minivan / shared taxi",
+        "durationHrs": [
+          1.5,
+          2.5
+        ],
+        "price": {
+          "low": 161,
+          "high": 700,
+          "currency": "THB"
+        },
+        "freq": "39 departures a day across all operators",
+        "comfort": "Handles the Friendship Bridge formalities for you; you still disembark in person to clear immigration on both sides. One of the busiest, best-served border crossings in the region.",
+        "bookVia": "12Go or a Udon Thani/Vientiane bus and travel agency",
+        "recommended": true,
+        "notes": "12Go (2026) lists fares from 161 THB with 39 departures daily; a door-to-door private transfer runs up toward 700 THB (≈ USD 20). Laos Travel Hub (2026) times the private car/minivan crossing at about 90 minutes and the shared local bus at 2-2.5 hours, both via the bridge. Operators on 12Go: Adisorn Thai Laos Transfer, Easyride Services, Glassflower, Naluang, RG Adventure."
+      },
+      {
+        "mode": "Shuttle train via Nong Khai",
+        "durationHrs": [
+          2,
+          3
+        ],
+        "price": {
+          "low": 220,
+          "high": 320,
+          "currency": "THB"
+        },
+        "freq": "2 local trains a day, each way",
+        "comfort": "A Thai train or the Udon Thani airport minivan to Nong Khai (56 km, about 200 THB, 1 hour), then the short shuttle train across the bridge to Thanaleng — the cheapest crossing, but see the eVisa note above.",
+        "bookVia": "State Railway of Thailand for the Thai leg; the cross-bridge shuttle (around 20 THB) is paid locally",
+        "recommended": false,
+        "notes": "Fits onto the existing Bangkok-Udon Thani sleeper, which already continues travellers to Nong Khai. The 20 THB shuttle-train fare itself is the same one documented on the Vientiane-Bangkok route; this option's price range adds the Udon Thani-Nong Khai transfer on top for someone starting in Udon Thani city rather than already at Nong Khai."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Udon Thani to Vientiane",
+        "url": "https://12go.asia/en/travel/udon-thani/vientiane"
+      },
+      {
+        "org": "Laos Travel Hub — How to Travel from Vientiane to Udon Thani or Nong Khai",
+        "url": "https://laostravelhub.com/events-activities/how-to-travel-from-vientiane-to-udon-thani-or-nong-khai/"
+      },
+      {
+        "org": "Department of Immigration, Lao PDR — Friendship Bridge 1 checkpoint",
+        "url": "https://immigration.gov.la/en/checkpoints/detail/friendship-bridge-1"
+      }
+    ]
+  },
+  {
     "id": "th-bangkok-ubonratchathani",
     "from": "Bangkok",
     "to": "Ubon Ratchathani",
