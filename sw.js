@@ -471,7 +471,7 @@ const MANIFEST = {
   'js/data/regions.vi.js': '28be48aa',
   'js/data/routes.kh.js': '49b8d0fd',
   'js/data/routes.la.js': '5adf874e',
-  'js/data/routes.th.js': 'c331212b',
+  'js/data/routes.th.js': '69a24282',
   'js/data/routes.vi.js': 'aa1aedc1',
   'js/data/scams.js': '69bfed4a',
   'js/data/scenic.kh.js': '67589f36',
