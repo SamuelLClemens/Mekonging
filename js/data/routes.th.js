@@ -3844,6 +3844,38 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-suratthani-khaosok",
+    "from": "Surat Thani",
+    "to": "Khao Sok",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Shared minivan",
+        "durationHrs": [
+          1.75,
+          2.5
+        ],
+        "price": {
+          "low": 250,
+          "high": 300,
+          "currency": "THB"
+        },
+        "freq": "3 express departures daily (06:40, 09:40, 14:00), plus more frequent shared vans",
+        "comfort": "Door-to-door shared minivans picking up from the airport, train station or town; terminate at the Khao Sok Minivan Station, a short walk or tuk-tuk from most park-area guesthouses.",
+        "bookVia": "Hotel reception, 12Go, or Phantip Travel and other Surat Thani agencies",
+        "recommended": true,
+        "notes": "Thailand Travel Routes (2026): 250-300 THB per person, 1h45m-2h30m depending on the exact Surat Thani pickup point (airport, train station or town). Duration varies with how many other stops the shared van makes along the way."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Thailand Travel Routes — Bus times from Surat Thani to Khao Sok",
+        "url": "https://thailandtravelroutes.com/bus-times-from-surat-thani-to-khao-sok/"
+      }
+    ]
+  },
+  {
     "id": "th-kohsamui-kohphangan",
     "from": "Koh Samui",
     "to": "Koh Phangan",
