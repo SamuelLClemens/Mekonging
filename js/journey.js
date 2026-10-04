@@ -80,8 +80,22 @@ function aliasMap() {
       if (t && t !== key && !_alias.has(t)) _alias.set(t, key);
     }
   }
+  // A handful of place records carry a city name that has no textual overlap with the route
+  // node they actually travel through, so the token-split above can never find it. "Si Phan
+  // Don" (the Lao name for the whole 4000 Islands archipelago) tags Don Khon's falls, Don
+  // Khong's guesthouses and several river-restaurant/tour records, but the route graph
+  // canonicalised on "Don Det" (the gateway island travellers actually book transport
+  // to/from) — so every one of those place cards silently had no "Get here" chip. Keep this
+  // list short and manual; prefer renaming the route node itself (as "Don Det" was) when the
+  // alias IS a decoration of the same name.
+  for (const [raw, target] of Object.entries(MANUAL_ALIAS)) {
+    const t = norm(raw), key = norm(target);
+    if (graph().has(key) && !_alias.has(t)) _alias.set(t, key);
+  }
   return _alias;
 }
+
+const MANUAL_ALIAS = { 'Si Phan Don': 'Don Det' };
 
 // Resolve any spelling of a node — its own graph key, or one of its aliases above — to the
 // graph's own normalised key. '' if nothing matches.
