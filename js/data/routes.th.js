@@ -1407,6 +1407,80 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-bangkok-hatyai",
+    "from": "Bangkok",
+    "to": "Hat Yai",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Sleeper train (Special Express)",
+        "durationHrs": [
+          14,
+          16
+        ],
+        "price": {
+          "low": 338,
+          "high": 1794,
+          "currency": "THB"
+        },
+        "freq": "3 Special Express/Rapid departures nightly (trains 37/45, 31) from Krung Thep Aphiwat (Bang Sue Grand Station)",
+        "comfort": "Modern air-conditioned sleeper carriages on the Special Express services; covers the 945 km south in one overnight run.",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": true,
+        "notes": "Train36.com (2026) lists fares from 338 THB (train SP37) up to 1,794 THB for a 1st class sleeping berth; train SP45 runs 903 THB and SP31 runs 1,103 THB for the same overnight trip. Depart 16:10-16:50, arrive 06:35-07:05. Advance booking opens 90 days out."
+      },
+      {
+        "mode": "Rapid train (budget)",
+        "durationHrs": [
+          15,
+          18
+        ],
+        "price": {
+          "low": 258,
+          "high": 500,
+          "currency": "THB"
+        },
+        "freq": "2 daily (trains 169, 171)",
+        "comfort": "Older non-express rolling stock with a 3rd class seat option; slower and less comfortable than the Special Express sleepers but the cheapest fixed-schedule option.",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": false,
+        "notes": "Train36.com (2026): 258-259 THB for a 3rd class seat on trains RP169/RP171 (depart 15:10 or 17:30, arrive 05:50 or 09:18 the next day); 2nd class sleeper berths cost more on the same trains."
+      },
+      {
+        "mode": "VIP / Express bus",
+        "durationHrs": [
+          12.5,
+          14
+        ],
+        "price": {
+          "low": 698,
+          "high": 1150,
+          "currency": "THB"
+        },
+        "freq": "Several daily from Sai Tai Mai (Bangkok Southern Bus Terminal)",
+        "comfort": "VIP32/VIP24 coaches (3 seats per row) are the most comfortable; standard Express/P1 coaches are cheaper with 4 seats per row.",
+        "bookVia": "12Go, busonlineticket.co.th, or directly at Sai Tai Mai",
+        "recommended": false,
+        "notes": "Named operators on this route: Piya Rungrueng Tour, Siam Dernrod and the state operator Transport Co. Ltd (999/บขส), fares clustering around 698-821 THB for standard/VIP32 and up to about 1,150 THB for the premium VIP24 service. Faster point-to-point than the train but an overnight highway drive."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Train36.com — Sleeper Train from Bangkok to Hat Yai (times and prices)",
+        "url": "https://www.train36.com/train-from-bangkok-to-hat-yai.html"
+      },
+      {
+        "org": "Thailand Travel Routes — Bus times from Bangkok to Hat Yai",
+        "url": "https://thailandtravelroutes.com/bus-times-from-bangkok-to-hat-yai/"
+      },
+      {
+        "org": "busonlineticket.co.th — Bangkok to Hat Yai bus tickets and operators",
+        "url": "https://www.busonlineticket.co.th/booking/bangkok-to-hat-yai-bus-tickets"
+      }
+    ]
+  },
+  {
     "id": "th-hatyai-kualalumpur",
     "from": "Hat Yai",
     "to": "Kuala Lumpur",
