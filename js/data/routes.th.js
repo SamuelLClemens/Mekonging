@@ -867,6 +867,74 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-pai-soppong",
+    "from": "Pai",
+    "to": "Soppong",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Private minibus",
+        "durationHrs": [
+          0.75,
+          1.25
+        ],
+        "price": {
+          "low": 100,
+          "high": 150,
+          "currency": "THB"
+        },
+        "freq": "Every 1-2 hours from the small station next to Pai's walking street",
+        "comfort": "The same Pai-Mae Hong Son minivan line (Aya Service, Pai Friendly Tour, Prem Pracha), getting off partway at Soppong - the gateway to Tham Lod cave.",
+        "bookVia": "Pai bus/minivan station counter",
+        "recommended": true,
+        "notes": "Wikivoyage (2026): private minibuses cost 100 THB (some operators ask 150 THB); a cheaper public bus/van from the same stop runs about 60 THB. About an hour either way."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Pangmapha (Soppong)",
+        "url": "https://en.wikivoyage.org/wiki/Pangmapha"
+      }
+    ]
+  },
+  {
+    "id": "th-soppong-maehongson",
+    "from": "Soppong",
+    "to": "Mae Hong Son",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Shared minivan",
+        "durationHrs": [
+          1.5,
+          2
+        ],
+        "price": {
+          "low": 150,
+          "high": 150,
+          "currency": "THB"
+        },
+        "freq": "Roughly every 4 hours",
+        "comfort": "Continues Route 1095 the rest of the way into Mae Hong Son - the same minivan line Pai travellers ride, Soppong is roughly the midpoint.",
+        "bookVia": "Boarded at Soppong, or Aya Service / Pai Friendly Tour / Prem Pracha direct",
+        "recommended": true,
+        "notes": "Rome2Rio (2026): shared minivan about 150 THB, 2 hours. A private taxi transfer (Aya Service/Aya Tour, ayaservice.com) covers the same 65 km in about 1h05 for 800-1,000 THB, useful off the minivan's roughly 4-hourly schedule."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Pangmapha (Soppong)",
+        "url": "https://en.wikivoyage.org/wiki/Pangmapha"
+      },
+      {
+        "org": "Rome2Rio — Soppong to Mae Hong Son",
+        "url": "https://www.rome2rio.com/s/Soppong/Mae-Hong-Son"
+      }
+    ]
+  },
+  {
     "id": "th-maehongson-maesariang",
     "from": "Mae Hong Son",
     "to": "Mae Sariang",
