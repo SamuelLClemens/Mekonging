@@ -534,6 +534,38 @@ export const ROUTES_KH = [
     ]
   },
   {
+    "id": "kh-phnompenh-kampongcham",
+    "from": "Phnom Penh",
+    "to": "Kampong Cham",
+    "country": "kh",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Bus / minivan",
+        "durationHrs": [
+          2,
+          3
+        ],
+        "price": {
+          "low": 5,
+          "high": 10,
+          "currency": "USD"
+        },
+        "freq": "About 15 departures daily, roughly 07:30-21:30",
+        "comfort": "Sealed highway the whole way (National Road 7), one of the most frequently served domestic routes in the country.",
+        "bookVia": "Mekong Express, Ekareach Express, Kampong Cham Express or Giant Ibis, direct or via Camboticket/Bookaway/Bookmebus",
+        "recommended": true,
+        "notes": "LuxCity (2026): fares from about USD 5, roughly 3 hours; named operators include Mekong Express (08:15, 13:00, 16:35), Ekareach Express (7 departures from 07:30 to 18:00) and Giant Ibis (08:00, 14:45). Kampong Cham's own long bridge over the Mekong makes it a common stop en route further north/east."
+      }
+    ],
+    "sources": [
+      {
+        "org": "LuxCity — Bus from Phnom Penh to Kampong Cham: The guide from A-Z",
+        "url": "https://luxcity.com/blog/bus-from-phnom-penh-to-kampong-cham"
+      }
+    ]
+  },
+  {
     "id": "kh-phnompenh-kratie",
     "from": "Phnom Penh",
     "to": "Kratie",
@@ -775,6 +807,38 @@ export const ROUTES_KH = [
       {
         "org": "Backpackers Wanderlust — Sihanoukville to Koh Rong: How To Get To All Beaches",
         "url": "https://www.backpackerswanderlust.com/sihanoukville-to-koh-rong/"
+      }
+    ]
+  },
+  {
+    "id": "kh-sihanoukville-kohrongsanloem",
+    "from": "Sihanoukville",
+    "to": "Koh Rong Sanloem",
+    "country": "kh",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Speed ferry",
+        "durationHrs": [
+          0.5,
+          1
+        ],
+        "price": {
+          "low": 13,
+          "high": 20,
+          "currency": "USD"
+        },
+        "freq": "Several daily, roughly 08:00-15:00",
+        "comfort": "Fast enclosed catamarans/speedboats, the same operators and pier used for the Koh Rong crossing, just a different drop point; open-return tickets are usually only a little more than one-way.",
+        "bookVia": "Island Speed Ferry, Buva Sea Cambodia, Speed Ferry Cambodia or GTVC Speedboat, direct or via 12Go",
+        "recommended": true,
+        "notes": "Ferryhopper (2026) lists fares from about EUR 14 (roughly USD 15) one-way from Sihanoukville's Soon Noeng Pier, 30-60 minutes depending on the boat. Specify Koh Rong Sanloem rather than plain Koh Rong when booking - the two islands share operators and nearby piers but are different stops. Fares and the number of daily sailings drop outside the Nov-Apr dry season."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Ferryhopper — Koh Rong Sanloem ferries",
+        "url": "https://www.ferryhopper.com/en/ferries/cambodia/koh-rong-sanloem"
       }
     ]
   },
