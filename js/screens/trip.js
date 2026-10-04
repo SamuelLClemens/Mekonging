@@ -11,7 +11,7 @@ import { convert } from '../currency.js';
 import { getCountry } from '../data/regions.js';
 import { suggestPlans } from '../lazy-data.js';
 import { resolveItem, tripVisitSheet } from '../place-ui.js';
-import { sourcesNote } from '../render-utils.js';
+import { countryForCityName, sourcesNote } from '../render-utils.js';
 import { encodeShare, shareUrl } from '../social.js';
 import { store, save, addPlaceVisit, addStop, ensureMe, isChecked, moveStop, removePlaceVisit, removeStop,
   toggleChecklistItem, unscheduledVisits, updatePlaceVisit, updateStop, visitsForStop } from '../state.js';
@@ -182,7 +182,16 @@ export function tripScreen() {
       h('label', { class: 'trip-date-lbl' }, ['Leave (optional)', stopEnd]),
     ]),
     h('p', { class: 'muted', style: 'font-size:12px;margin: var(--sp-1h) 0 0' }, 'Set arrive and leave to cover several days in one stop — e.g. ten days in Chiang Mai, without adding each day.'),
-    h('button', { class: 'btn', style: 'margin-top: var(--sp-2)', onclick: () => { if (stopName.value.trim()) { addStop({ title: stopName.value.trim(), country: getActiveCountry(), date: stopDate.value, endDate: stopEnd.value }); go('#trip'); } } }, 'Add stop')]));
+    h('button', { class: 'btn', style: 'margin-top: var(--sp-2)', onclick: () => {
+      const title = stopName.value.trim();
+      if (!title) return;
+      // The place's OWN country first (F-22) — typing "Siem Reap" while Laos is the active
+      // (last-browsed) country must still file the stop under Cambodia. Only an unrecognised
+      // name falls back to the active country.
+      const country = countryForCityName(title) || getActiveCountry();
+      addStop({ title, country, date: stopDate.value, endDate: stopEnd.value });
+      go('#trip');
+    } }, 'Add stop')]));
   // quick add from saved (`saved` is hoisted above the stops loop — see comment there)
   if (saved.length) {
     itin.append(h('p', { class: 'muted', style: 'margin-top: var(--sp-3)' }, 'Quick-add from saved:'));

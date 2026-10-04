@@ -1255,7 +1255,7 @@ export const ROUTES_VI = [
   },
   {
     "id": "vi-hue-savannakhet",
-    "from": "Hue / Dong Ha",
+    "from": "Hue",
     "to": "Savannakhet",
     "country": "vi",
     "verified": "2026-10",

@@ -22,7 +22,7 @@ import {
   getCountry, allPlaces, COUNTRIES, isCountryLoaded, loadCountry, } from '../data/regions.js';
 import { getLanguage } from '../lazy-data.js';
 import { screenHint, infoTip, collapsibleCard, selectEl } from '../ui-widgets.js';
-import { citySlug } from '../render-utils.js';
+import { citySlug, countryForCityName } from '../render-utils.js';
 import { verdictFor, VERDICT_RANK } from '../data/month-verdict.js';
 import { PLACE_MONTHS } from '../data/place-months.js';
 import { zonesFor, getZone } from '../lazy-data.js';
@@ -77,15 +77,9 @@ function computeWhereNext(fromCity, exclude) {
   return scored.slice(0, 5);
 }
 
-// Which loaded country actually has a place tagged with this city — needed to hand addStop()
-// the right country when a chained mini-itinerary crosses a border.
-function countryForCityName(name) {
-  const slug = citySlug(name);
-  for (const x of COUNTRIES) {
-    if (isCountryLoaded(x.id) && allPlaces({ country: x.id }).some((p) => citySlug(p.city || '') === slug)) return x.id;
-  }
-  return '';
-}
+// countryForCityName moved to js/render-utils.js (mk-v0.611.0) so js/screens/trip.js's
+// free-text "Add stop" can share it too, instead of filing every typed stop under whichever
+// country the traveller was last browsing (F-22).
 
 // Read-only accessor for whichever screen wants to know "what has the traveller picked in
 // the Where-next builder for this city" without reaching into its private chain array — used

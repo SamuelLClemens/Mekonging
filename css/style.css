@@ -477,8 +477,15 @@ details.no-caret > summary::after { content: none; padding-left: 0; }
    so it costs no standing space until the traveller taps it. */
 .info-tip { display: inline-block; vertical-align: middle; margin-left: var(--sp-2); }
 .info-tip > summary {
-  cursor: pointer; list-style: none; display: inline-flex; align-items: center; justify-content: center;
+  position: relative; cursor: pointer; list-style: none; display: inline-flex; align-items: center; justify-content: center;
   width: 20px; height: 20px; border-radius: 50%; color: var(--ink-soft); font-size: 0.85rem; user-select: none;
+}
+/* S8/F-24: measured 20x20 on SOS and Talk, under the 24px minimum. Same fix as the topbar
+   icons above (search "44x44 and centred") — an invisible ::before extends the TAPPABLE area
+   only, so the visible ⓘ stays exactly as small as the rest of this disclosure is built to be. */
+.info-tip > summary::before {
+  content: ''; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
 }
 .info-tip > summary::-webkit-details-marker { display: none; }
 .info-tip > summary:hover { color: var(--ink); }
@@ -1257,6 +1264,16 @@ html[data-theme="dark"] .bp-roman { color: var(--teal); }
 
 /* Map city markers: a count bubble at region zoom, a small place-name label zoomed in */
 .linklike { background: none; border: none; padding: 0; color: var(--teal-deep); font: inherit; text-decoration: underline; cursor: pointer; }
+/* S8/F-24: "Open your dictionary →" (js/screens/phrasebook.js) measured 152x21, under the 24px
+   minimum. Scoped to this one inline text link rather than every .linklike (most already sit
+   inside a row with its own padding) — same invisible-::before fix as the topbar icons and
+   .info-tip above (search "44x44 and centred"): the tappable area grows, the underlined text
+   does not. */
+.linklike-tap44 { position: relative; display: inline-block; }
+.linklike-tap44::before {
+  content: ''; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
 html[data-theme="dark"] .linklike { color: var(--teal); }
 .mk-city { font-family: var(--font-ui, system-ui, sans-serif); font-weight: 700; white-space: nowrap; user-select: none; line-height: 1; }
 .mk-city.bubble { color: #fff; background: var(--teal-deep); padding: 4px 9px; border-radius: 999px;
