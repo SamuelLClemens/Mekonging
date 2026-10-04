@@ -669,7 +669,7 @@ export const ROUTES_LA = [
   {
     "id": "la-pakse-4000islands",
     "from": "Pakse",
-    "to": "4000 Islands (Don Det)",
+    "to": "Don Det",
     "country": "la",
     "verified": "2026-10",
     "options": [
@@ -1161,7 +1161,7 @@ export const ROUTES_LA = [
   },
   {
     "id": "la-4000islands-stungtreng",
-    "from": "4000 Islands (Don Det)",
+    "from": "Don Det",
     "to": "Stung Treng",
     "country": "la",
     "verified": "2026-10",
@@ -1214,6 +1214,227 @@ export const ROUTES_LA = [
       {
         "org": "Bookaway — Stung Treng to Don Det (Laos) route listing",
         "url": "https://www.bookaway.com/routes/laos/stung-treng-to-don-det"
+      }
+    ]
+  },
+  {
+    "id": "la-huayxai-luangnamtha",
+    "from": "Huay Xai",
+    "to": "Luang Namtha",
+    "country": "la",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Minivan/bus (Route 3)",
+        "durationHrs": [
+          3,
+          4.5
+        ],
+        "price": {
+          "low": 24,
+          "high": 31,
+          "currency": "USD"
+        },
+        "freq": "4 daily (morning and evening departures)",
+        "comfort": "Paved AH3 highway through the Nam Ha hills; minivans are quicker and more cramped, the public bus slower with more stops.",
+        "bookVia": "Yortdoy Travel, K Buddy, travel agents in Huay Xai, 12Go",
+        "recommended": true,
+        "notes": "The overland alternative to the two-day Mekong slow boat down to Luang Prabang - useful for reaching the Nam Ha trekking hub or continuing to the China border at Boten without detouring south first."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Laos Life — Huay Xai to Luang Namtha",
+        "url": "https://www.laoslife.info/travel-from-huay-xai-to-luang-namtha/"
+      },
+      {
+        "org": "12Go — Huay Xai to Luang Namtha route listing",
+        "url": "https://12go.asia/en/travel/huay-xai/luang-namtha"
+      }
+    ]
+  },
+  {
+    "id": "la-nongkhiaw-luangnamtha",
+    "from": "Nong Khiaw",
+    "to": "Luang Namtha",
+    "country": "la",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Bus via Oudomxay (Muang Xay) transfer",
+        "durationHrs": [
+          6,
+          8
+        ],
+        "price": {
+          "low": 200000,
+          "high": 230000,
+          "currency": "LAK"
+        },
+        "freq": "daily (one morning departure each side)",
+        "comfort": "Bus from Nong Khiaw to the Oudomxay New Bus Terminal, then a second bus on to Luang Namtha; no need to arrange your own onward transport, but expect a wait between connections.",
+        "bookVia": "Nong Khiaw bus station; onward ticket at Oudomxay's New Bus Terminal",
+        "recommended": true,
+        "notes": "Nong Khiaw's own departure is at 11:00 (150,000 kip to Oudomxay, up to 3h); Oudomxay to Luang Namtha departs 08:30/11:30/15:00 (80,000 kip, up to 4h) - Wikivoyage's Nong Khiaw page separately lists a single 200,000-kip through-fare, so ask at the station whether one is sold that day before buying the two legs separately."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Oudomxai",
+        "url": "https://en.wikivoyage.org/wiki/Oudomxai"
+      },
+      {
+        "org": "Wikivoyage — Nong Khiaw",
+        "url": "https://en.wikivoyage.org/wiki/Nong_Khiaw"
+      }
+    ]
+  },
+  {
+    "id": "la-pakse-champasak",
+    "from": "Pakse",
+    "to": "Champasak",
+    "country": "la",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Songthaew",
+        "durationHrs": [
+          1.5,
+          2.25
+        ],
+        "price": {
+          "low": 20000,
+          "high": 25000,
+          "currency": "LAK"
+        },
+        "freq": "roughly hourly, mornings",
+        "comfort": "Shared pickup-truck taxi from Pakse's southern (Km 8) bus station; simple bench seating, can be slow with stops.",
+        "bookVia": "Pakse southern bus station, or songthaews queuing at Dao Heuang Market",
+        "recommended": true,
+        "notes": "Champasak town is the gateway to the Vat Phou UNESCO temple ruins, a short tuk-tuk or bicycle ride further on. A separate songthaew toward Ban Thong (near the Vat Phou river crossing) takes about 2h15 and drops closer to the temple itself but further from town."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Champasak",
+        "url": "https://en.wikivoyage.org/wiki/Champasak"
+      }
+    ]
+  },
+  {
+    "id": "la-pakse-paksong",
+    "from": "Pakse",
+    "to": "Paksong",
+    "country": "la",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Bus (Southern/Km 8 bus station)",
+        "durationHrs": [
+          1.25,
+          1.75
+        ],
+        "price": {
+          "low": 15000,
+          "high": 20000,
+          "currency": "LAK"
+        },
+        "freq": "frequent, hourly until mid-afternoon",
+        "comfort": "Along Route 23 up onto the Bolaven Plateau; coffee country gets noticeably cooler than Pakse.",
+        "bookVia": "Pakse southern bus station (Km 8)",
+        "recommended": true,
+        "notes": "The standard first stop for the Bolaven Plateau loop - coffee farms, and the Tad Fane and Tad Yuang waterfalls, are a short tuk-tuk ride from town."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Pakse",
+        "url": "https://en.wikivoyage.org/wiki/Pakse"
+      }
+    ]
+  },
+  {
+    "id": "la-pakse-tadlo",
+    "from": "Pakse",
+    "to": "Tad Lo",
+    "country": "la",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Direct tourist minivan",
+        "durationHrs": [
+          2.5,
+          3.5
+        ],
+        "price": {
+          "low": 20,
+          "high": 25,
+          "currency": "USD"
+        },
+        "freq": "daily",
+        "comfort": "Door-to-door minivan (Green Paradise Travel); the easiest option if you would rather not manage a public-bus transfer.",
+        "bookVia": "Bookaway, 12Go, Pakse travel agents",
+        "recommended": true,
+        "notes": "Covers the same 67 km as the public bus in less time end to end, since it skips the village drop-off and walk-in."
+      },
+      {
+        "mode": "Public bus toward Salavan",
+        "durationHrs": [
+          3,
+          4
+        ],
+        "price": {
+          "low": 25000,
+          "high": 30000,
+          "currency": "LAK"
+        },
+        "freq": "6 departures a day, 07:30-16:00",
+        "comfort": "Any Salavan-bound bus from the Southern (Km 8) bus station passes the Tad Lo junction; ask to be let off, then it is about 1.5 km on foot or a short tuk-tuk to the village.",
+        "bookVia": "Pakse southern bus station",
+        "recommended": false,
+        "notes": "Far cheaper but means waiting at the junction for a passing tuk-tuk, or pre-arranging a pickup through a Tad Lo guesthouse."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Travelfish — How to get to Tad Lo",
+        "url": "https://www.travelfish.org/transport/laos/southern_laos/salavan/tad_lo/all"
+      },
+      {
+        "org": "Bookaway — Pakse to Tad Lo route listing",
+        "url": "https://www.bookaway.com/routes/laos/pakse-to-tad-lo"
+      }
+    ]
+  },
+  {
+    "id": "la-dondet-donkhon",
+    "from": "Don Det",
+    "to": "Don Khon",
+    "country": "la",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Walk or bicycle across the old French railway bridge",
+        "durationHrs": [
+          0.25,
+          0.75
+        ],
+        "price": {
+          "low": 0,
+          "high": 0,
+          "currency": "LAK"
+        },
+        "freq": "anytime (no schedule)",
+        "comfort": "A 158-metre concrete bridge built around 1910 for the old narrow-gauge railway; flat and easy, the only link between the two islands besides a boat.",
+        "bookVia": "On foot, or rent a bicycle from any Don Det guesthouse",
+        "recommended": true,
+        "notes": "Free to cross as of February 2024 per Wikivoyage; older accounts describe a small bicycle toll, so carry a little cash in case it has returned. Don Khon's own Li Phi waterfalls are about a 25-minute walk or 10-minute ride beyond the bridge."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Don Khon",
+        "url": "https://en.wikivoyage.org/wiki/Don_Khon"
       }
     ]
   }
