@@ -3895,5 +3895,143 @@ export const ROUTES_TH = [
         "url": "https://www.seatrandiscovery.com/"
       }
     ]
+  },
+  {
+    "id": "th-bangkok-kohsamet",
+    "from": "Bangkok",
+    "to": "Koh Samet",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Ekkamai bus + slow boat (via Ban Phe)",
+        "durationHrs": [
+          4,
+          5
+        ],
+        "price": {
+          "low": 225,
+          "high": 245,
+          "currency": "THB"
+        },
+        "freq": "bus half-hourly 05:00-19:00; boats 07:00-18:00",
+        "comfort": "Air-conditioned public bus from Ekkamai station to Ban Phe pier, then a wooden slow boat on to the island; cheapest way in but the least flexible if you arrive outside boat hours.",
+        "bookVia": "Ekkamai bus station counter; boat tickets at Ban Phe pier",
+        "recommended": true,
+        "notes": "Bus is 175 THB, 3.5h; the slow boat from Ban Phe is 50-70 THB, about 40 minutes. Ekkamai is directly opposite the BTS Ekkamai station."
+      },
+      {
+        "mode": "Ekkamai bus + speedboat (via Ban Phe)",
+        "durationHrs": [
+          3.75,
+          4.5
+        ],
+        "price": {
+          "low": 325,
+          "high": 475,
+          "currency": "THB"
+        },
+        "freq": "bus half-hourly 05:00-19:00; speedboats roughly hourly 08:00-16:00",
+        "comfort": "Same bus, but a speedboat for the water crossing instead of the slow boat - a few minutes instead of forty, and can drop closer to some beaches.",
+        "bookVia": "Ekkamai bus station counter; speedboat operators (White Shark and others) at Ban Phe pier",
+        "recommended": false,
+        "notes": "Speedboats run 150-300 THB depending on operator and exact beach drop-off. Private door-to-door minivan+boat combo tickets from Khao San-area agents also exist, from about 500 THB for the van alone, plus the boat."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Koh Samet Ferries — Transport to Ban Phe pier",
+        "url": "https://kohsametferries.com/transport-to-ban-phe/"
+      },
+      {
+        "org": "Bookaway — Ban Phe to Koh Samet route listing",
+        "url": "https://www.bookaway.com/routes/thailand/ban-phe-to-koh-samet"
+      }
+    ]
+  },
+  {
+    "id": "th-pattaya-kohsichang",
+    "from": "Pattaya",
+    "to": "Koh Si Chang",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Songthaew + boat (via Si Racha)",
+        "durationHrs": [
+          1.25,
+          1.75
+        ],
+        "price": {
+          "low": 80,
+          "high": 110,
+          "currency": "THB"
+        },
+        "freq": "songthaews frequent; boats roughly hourly 08:00-18:00 (more on weekends)",
+        "comfort": "White songthaew from Naklua to Si Racha Old Town, then a wooden passenger boat from Koh Loi pier; simple but needs a short walk or tuk-tuk between the songthaew drop-off and the pier.",
+        "bookVia": "Naklua songthaew stand; boat tickets at Koh Loi pier, Si Racha",
+        "recommended": true,
+        "notes": "Songthaew is about 30 THB; the boat is 50 THB and about 40-45 minutes. The Sukhumvit Line 998 train or a taxi (both roughly 20-30 minutes) are faster alternatives into Si Racha if the songthaew is inconvenient."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Thailandee — Boats from Si Racha to Koh Sichang",
+        "url": "https://www.thailandee.com/en/transportation-thailand/boat/boats-from-si-racha-to-koh-sichang"
+      },
+      {
+        "org": "Pattaya Pages — How to get to Si Racha from Pattaya by public transport",
+        "url": "https://pattaya-pages.com/how-to-get-to-si-racha-from-pattaya-by-public-transport/"
+      }
+    ]
+  },
+  {
+    "id": "th-pattaya-kohlarn",
+    "from": "Pattaya",
+    "to": "Koh Larn",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Public ferry (Bali Hai Pier)",
+        "durationHrs": [
+          0.7,
+          0.8
+        ],
+        "price": {
+          "low": 30,
+          "high": 30,
+          "currency": "THB"
+        },
+        "freq": "7 weekday departures 07:00-18:30; more on weekends",
+        "comfort": "Plain passenger ferry to Na Ban pier; cheap and frequent enough to plan around, but the schedule is fixed, not on-demand.",
+        "bookVia": "Ticket booth at Bali Hai Pier (cash only, no online booking)",
+        "recommended": true,
+        "notes": "Last public ferry back is around 18:00; after that only the speedboat runs. Weather can cancel individual sailings May-October - check the Koh Larn Municipality page the morning of."
+      },
+      {
+        "mode": "Speedboat (Bali Hai Pier)",
+        "durationHrs": [
+          0.25,
+          0.33
+        ],
+        "price": {
+          "low": 250,
+          "high": 400,
+          "currency": "THB"
+        },
+        "freq": "every 15-30 min, 08:00-17:00",
+        "comfort": "Shared speedboat, much faster than the ferry; can also run after the last public ferry of the day.",
+        "bookVia": "Speedboat operators at Bali Hai Pier",
+        "recommended": false,
+        "notes": "Groups of 8 or more typically get a better per-person rate."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Pattaya Knowledge — Koh Larn Ferry Schedule 2026",
+        "url": "https://pattayaknowledge.com/koh-larn-ferry-schedule"
+      }
+    ]
   }
 ];
