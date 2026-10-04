@@ -583,6 +583,78 @@ export const ROUTES_KH = [
     ]
   },
   {
+    "id": "kh-phnompenh-stungtreng",
+    "from": "Phnom Penh",
+    "to": "Stung Treng",
+    "country": "kh",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Bus",
+        "durationHrs": [
+          6.75,
+          9
+        ],
+        "price": {
+          "low": 14,
+          "high": 20,
+          "currency": "USD"
+        },
+        "freq": "4 daily, morning to evening",
+        "comfort": "The direct long-haul run up National Road 7 — the same daily Phnom Penh-to-Laos service Wikivoyage says passes through Stung Treng in the afternoon.",
+        "bookVia": "12Go, BookMeBus or the bus station in Phnom Penh",
+        "recommended": true,
+        "notes": "12Go (2026) lists fares from THB 470 (about USD 14) with 4 daily departures over 338 km. Operators: Airbus, Angkor Guide Adventure, Virak Buntham Express. Breaking the trip at Kratie (5-6.5 hours, see the Phnom Penh-Kratie route above) then the Kratie-Stung Treng leg is the more flexible alternative."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Phnom Penh to Stung Treng",
+        "url": "https://12go.asia/en/travel/phnom-penh/stung-treng"
+      },
+      {
+        "org": "Wikivoyage — Stung Treng",
+        "url": "https://en.wikivoyage.org/wiki/Stung_Treng"
+      }
+    ]
+  },
+  {
+    "id": "kh-kratie-stungtreng",
+    "from": "Kratie",
+    "to": "Stung Treng",
+    "country": "kh",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Bus",
+        "durationHrs": [
+          1.75,
+          2.5
+        ],
+        "price": {
+          "low": 6,
+          "high": 8,
+          "currency": "USD"
+        },
+        "freq": "3 daily, morning to early afternoon",
+        "comfort": "Sealed National Road 7 the whole way — the stepping stone most travellers use between Kratie and the Laos border or Ratanakiri.",
+        "bookVia": "12Go or guesthouse desks in either town",
+        "recommended": true,
+        "notes": "12Go (2026) lists fares from THB 202 (about USD 6) with 3 daily departures over 96 km, matching the \"about USD 6\" already quoted on the Kratie-Banlung route below. Wikivoyage's older estimate of 4-5 hours predates the road upgrade it itself describes (\"Chinese money has made the roads a joy\"); 12Go's current fastest time is under 2 hours. Operator: Airbus."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Kratie to Stung Treng",
+        "url": "https://12go.asia/en/travel/kratie/stung-treng"
+      },
+      {
+        "org": "Wikivoyage — Stung Treng",
+        "url": "https://en.wikivoyage.org/wiki/Stung_Treng"
+      }
+    ]
+  },
+  {
     "id": "kh-kratie-banlung",
     "from": "Kratie",
     "to": "Banlung",

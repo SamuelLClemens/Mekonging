@@ -590,6 +590,68 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-udonthani-vientiane",
+    "from": "Udon Thani",
+    "to": "Vientiane",
+    "country": "th",
+    "verified": "2026-10",
+    "crossBorder": true,
+    "border": "Thai-Lao Friendship Bridge 1 (Nong Khai, Thailand - Thanaleng/Vientiane, Laos)",
+    "visa": {
+      "note": "Laos visa on arrival or a pre-arranged Lao eVisa both work at this crossing for most nationalities — but only if you cross by road (bus, van or car). The eVisa does not work for the shuttle TRAIN across the bridge: several independent reports agree the train-side immigration desk cannot process it, so train travellers need a visa on arrival instead. Thailand entry is visa-exempt for most Western nationalities for a short stay."
+    },
+    "options": [
+      {
+        "mode": "Direct minivan / shared taxi",
+        "durationHrs": [
+          1.5,
+          2.5
+        ],
+        "price": {
+          "low": 161,
+          "high": 700,
+          "currency": "THB"
+        },
+        "freq": "39 departures a day across all operators",
+        "comfort": "Handles the Friendship Bridge formalities for you; you still disembark in person to clear immigration on both sides. One of the busiest, best-served border crossings in the region.",
+        "bookVia": "12Go or a Udon Thani/Vientiane bus and travel agency",
+        "recommended": true,
+        "notes": "12Go (2026) lists fares from 161 THB with 39 departures daily; a door-to-door private transfer runs up toward 700 THB (≈ USD 20). Laos Travel Hub (2026) times the private car/minivan crossing at about 90 minutes and the shared local bus at 2-2.5 hours, both via the bridge. Operators on 12Go: Adisorn Thai Laos Transfer, Easyride Services, Glassflower, Naluang, RG Adventure."
+      },
+      {
+        "mode": "Shuttle train via Nong Khai",
+        "durationHrs": [
+          2,
+          3
+        ],
+        "price": {
+          "low": 220,
+          "high": 320,
+          "currency": "THB"
+        },
+        "freq": "2 local trains a day, each way",
+        "comfort": "A Thai train or the Udon Thani airport minivan to Nong Khai (56 km, about 200 THB, 1 hour), then the short shuttle train across the bridge to Thanaleng — the cheapest crossing, but see the eVisa note above.",
+        "bookVia": "State Railway of Thailand for the Thai leg; the cross-bridge shuttle (around 20 THB) is paid locally",
+        "recommended": false,
+        "notes": "Fits onto the existing Bangkok-Udon Thani sleeper, which already continues travellers to Nong Khai. The 20 THB shuttle-train fare itself is the same one documented on the Vientiane-Bangkok route; this option's price range adds the Udon Thani-Nong Khai transfer on top for someone starting in Udon Thani city rather than already at Nong Khai."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Udon Thani to Vientiane",
+        "url": "https://12go.asia/en/travel/udon-thani/vientiane"
+      },
+      {
+        "org": "Laos Travel Hub — How to Travel from Vientiane to Udon Thani or Nong Khai",
+        "url": "https://laostravelhub.com/events-activities/how-to-travel-from-vientiane-to-udon-thani-or-nong-khai/"
+      },
+      {
+        "org": "Department of Immigration, Lao PDR — Friendship Bridge 1 checkpoint",
+        "url": "https://immigration.gov.la/en/checkpoints/detail/friendship-bridge-1"
+      }
+    ]
+  },
+  {
     "id": "th-bangkok-ubonratchathani",
     "from": "Bangkok",
     "to": "Ubon Ratchathani",
@@ -695,6 +757,131 @@ export const ROUTES_TH = [
       {
         "org": "DestinationThailand.io — Chiang Mai to Pai 2026: Minivan, Car or Scooter, Costed",
         "url": "https://destinationthailand.io/chiang-mai-to-pai/"
+      }
+    ]
+  },
+  {
+    "id": "th-pai-maehongson",
+    "from": "Pai",
+    "to": "Mae Hong Son",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Minivan",
+        "durationHrs": [
+          2.5,
+          3.5
+        ],
+        "price": {
+          "low": 150,
+          "high": 780,
+          "currency": "THB"
+        },
+        "freq": "Several daily from Pai Bus Station",
+        "comfort": "Continues Route 1095 past Pai towards Mae Hong Son — shorter than the Chiang Mai–Pai leg and less sharply curved, but still a mountain road.",
+        "bookVia": "Pai Bus Station counter (cash only) or 12Go",
+        "recommended": true,
+        "notes": "Wikivoyage (2026) quotes 150 THB paid in cash at the Pai Bus Station counter, about 3 hours — the ticket is not sold by card or QR code there. 12Go's aggregated online listings for the same minivan start around 780 THB, the same counter-vs-platform gap already seen on the Chiang Mai–Pai leg. Operators named on 12Go: Aya Service, Pai Friendly Tour, Prem Pracha."
+      },
+      {
+        "mode": "Private car / transfer",
+        "durationHrs": [
+          2,
+          2.5
+        ],
+        "price": {
+          "low": 1725,
+          "high": 3300,
+          "currency": "THB"
+        },
+        "freq": "On demand",
+        "comfort": "Faster and gentler on the bends than the shared minivan; worth it for groups or anyone prone to car sickness.",
+        "bookVia": "12Go private transfer or a Pai travel agency",
+        "recommended": false,
+        "notes": "12Go (2026) lists taxi transfers from 1,725 THB. Price is per vehicle, so split among passengers."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Mae Hong Son",
+        "url": "https://en.wikivoyage.org/wiki/Mae_Hong_Son"
+      },
+      {
+        "org": "12Go — Pai to Mae Hong Son",
+        "url": "https://12go.asia/en/travel/pai/mae-hong-son"
+      }
+    ]
+  },
+  {
+    "id": "th-maehongson-maesariang",
+    "from": "Mae Hong Son",
+    "to": "Mae Sariang",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Bus",
+        "durationHrs": [
+          3.5,
+          4.5
+        ],
+        "price": {
+          "low": 150,
+          "high": 150,
+          "currency": "THB"
+        },
+        "freq": "Daily on Route 108",
+        "comfort": "The same southern road Mae Sariang travellers continue on to or from Chiang Mai — sealed and less curvy than the Pai road, but still a mountain route through Khun Yuam.",
+        "bookVia": "Mae Hong Son or Mae Sariang bus station counter",
+        "recommended": true,
+        "notes": "Wikivoyage (2026): \"Public buses also run from Mae Hong Son to Mae Sariang on Rte 108 (4 hr, 150 baht).\" This is a segment of the through Chiang Mai–Hot–Mae Sariang–Khun Yuam–Mae Hong Son line Prempracha Company's own route page (2026) names as its southern corridor, not a ticket sold on its own — 12Go lists zero direct trips for this specific city pair, so board the Chiang Mai-bound bus and pay the shorter fare at the counter. A 2015 Tourism Authority of Thailand transport sheet put the full Chiang Mai–Mae Sariang–Mae Hong Son run at about 8 hours, consistent with this leg's 4 hours added to the Mae Sariang–Chiang Mai leg's own 3.5."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Mae Sariang",
+        "url": "https://en.wikivoyage.org/wiki/Mae_Sariang"
+      },
+      {
+        "org": "Prempracha Transport — Chiang Mai–Mae Hong Son route",
+        "url": "https://premprachatransports.com/en/routes/chiang-mai-mae-hong-son/"
+      }
+    ]
+  },
+  {
+    "id": "th-maesariang-chiangmai",
+    "from": "Mae Sariang",
+    "to": "Chiang Mai",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Minivan",
+        "durationHrs": [
+          3,
+          3.5
+        ],
+        "price": {
+          "low": 200,
+          "high": 380,
+          "currency": "THB"
+        },
+        "freq": "Several daily — Wikivoyage lists 5 Chiang Mai departures at 09:00, 10:00, 12:00, 14:00 and 17:00; the same vans run the return leg",
+        "comfort": "Sealed Route 108 through Hot, flatter and less winding than Route 1095 via Pai.",
+        "bookVia": "Prempracha's own site, the bus station counter (cash), or 12Go",
+        "recommended": true,
+        "notes": "Wikivoyage (2026) quotes 200 THB for the Prempracha Company minivan, about 3.5 hours; tickets can only be reserved up to 3 days ahead, and online bookings are still paid in cash at the station an hour before departure. 12Go's aggregated listings for the same corridor start around 380 THB with a 171 km road distance and 25 departures a day across all operators, the usual counter-vs-platform gap."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Wikivoyage — Mae Sariang",
+        "url": "https://en.wikivoyage.org/wiki/Mae_Sariang"
+      },
+      {
+        "org": "12Go — Chiang Mai to Mae Sariang",
+        "url": "https://12go.asia/en/travel/chiang-mai/mae-sariang"
       }
     ]
   },
