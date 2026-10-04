@@ -71,7 +71,7 @@ export const ROUTES_VI = [
   {
     "id": "vi-hanoi-halong",
     "from": "Hanoi",
-    "to": "Ha Long Bay",
+    "to": "Ha Long",
     "country": "vi",
     "verified": "2026-10",
     "options": [
