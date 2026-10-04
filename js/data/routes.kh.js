@@ -698,6 +698,38 @@ export const ROUTES_KH = [
     ]
   },
   {
+    "id": "kh-phnompenh-senmonorom",
+    "from": "Phnom Penh",
+    "to": "Sen Monorom",
+    "country": "kh",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Express minivan",
+        "durationHrs": [
+          5,
+          6
+        ],
+        "price": {
+          "low": 11,
+          "high": 15,
+          "currency": "USD"
+        },
+        "freq": "2 daily (around 7:00 and 13:00)",
+        "comfort": "9-15 seat minivans with advance seat reservations; the Mondulkiri highway is paved the whole way.",
+        "bookVia": "TCT Mondulkiri Express, Kim Seng Express, or Virak Buntham (12Go or direct)",
+        "recommended": true,
+        "notes": "movetocambodia.com (2026): three named operators run this corridor — TCT Mondulkiri Express (168E Street 169), Kim Seng Express (1 Street 336, behind Sokimex) and Virak Buntham Mondulkiri Express (Street 199, Olympic Market) — all around $11-15 plus a service charge, 5-6 hours. Later morning departures (8-9am) exist only in peak season; book the 7am or 1pm services to be sure of a seat. Virak Buntham's night-bus safety reputation does not apply to this daytime route."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Move to Cambodia — Phnom Penh to Mondulkiri",
+        "url": "https://movetocambodia.com/mondulkiri/phnom-penh-to-mondulkiri/"
+      }
+    ]
+  },
+  {
     "id": "kh-sihanoukville-kohrong",
     "from": "Sihanoukville",
     "to": "Koh Rong",

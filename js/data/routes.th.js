@@ -590,6 +590,59 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-bangkok-nongkhai",
+    "from": "Bangkok",
+    "to": "Nong Khai",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Sleeper train (Special Express 25)",
+        "durationHrs": [
+          10.5,
+          11
+        ],
+        "price": {
+          "low": 1028,
+          "high": 1587,
+          "currency": "THB"
+        },
+        "freq": "1 nightly departure from Krung Thep Aphiwat (Bang Sue Grand Station)",
+        "comfort": "Air-conditioned sleeper carriages, the classic overnight route to the Thai-Lao border; this is the historic terminus station the Friendship Bridge crossing is named after, one stop past Udon Thani.",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": true,
+        "notes": "busonlineticket.co.th (2026): Train 25 departs 20:00, arrives 06:45 (about 10h45m); 1,028 THB for a 2nd class AC sleeper berth, 1,587 THB for 1st class. Daytime Express trains 75/77 cover the same run in about 9h25m-9h35m for 283 THB (3rd class fan) to 528 THB (2nd class AC seat), no sleeper."
+      },
+      {
+        "mode": "VIP bus (Nakhonchai Air)",
+        "durationHrs": [
+          9,
+          9.5
+        ],
+        "price": {
+          "low": 651,
+          "high": 851,
+          "currency": "THB"
+        },
+        "freq": "3 daily (Gold Class 10:15 & 20:30, First Class 19:50)",
+        "comfort": "Gold Class: 2+2 seating, air-con, onboard toilet, meal included. First Class: 2+1 layout, extra legroom, personal TV, power outlets.",
+        "bookVia": "Nakhonchai Air (nakhonchaiair.com) or 12Go, from the Nakhonchai Air Bus Station or Mo Chit (Northern Terminal, 15 min later)",
+        "recommended": false,
+        "notes": "siamtickets.com (2026): Gold Class 651 THB (9h15m), First Class 851 THB (9h35m) — faster point-to-point than the train and drops directly in Nong Khai town rather than requiring a local transfer."
+      }
+    ],
+    "sources": [
+      {
+        "org": "busonlineticket.co.th — Bangkok to Nong Khai train tickets",
+        "url": "https://www.busonlineticket.co.th/booking/bangkok-to-nong-khai-train-tickets"
+      },
+      {
+        "org": "siamtickets.com — Nakhonchai Air Bangkok to Nong Khai",
+        "url": "https://siamtickets.com/nakhonchai-air-bangkok-to-nong-khai/"
+      }
+    ]
+  },
+  {
     "id": "th-udonthani-vientiane",
     "from": "Udon Thani",
     "to": "Vientiane",
