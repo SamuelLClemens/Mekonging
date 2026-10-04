@@ -161,6 +161,59 @@ export const ROUTES_TH = [
     ]
   },
   {
+    "id": "th-bangkok-phitsanulok",
+    "from": "Bangkok",
+    "to": "Phitsanulok",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Express/Special Express train",
+        "durationHrs": [
+          4.3,
+          5
+        ],
+        "price": {
+          "low": 471,
+          "high": 1450,
+          "currency": "THB"
+        },
+        "freq": "Several daily from Krung Thep Aphiwat (Bang Sue Grand Station); Train 7 (07:30) is the fastest",
+        "comfort": "Phitsanulok is a major junction on the Bangkok-Chiang Mai northern line, so this is the same service northbound travellers already ride partway; air-conditioned seats and sleepers available.",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": true,
+        "notes": "Thailandtrains.com (2026): Train 7 departs 07:30, arrives about 4h18m later, the fastest of 7 daily services. busonlineticket.co.th (2026) prices 2nd class AC seat at 471 THB, 2nd class AC sleeper at 987 THB, 1st class AC sleeper at 1,450 THB; a Rapid/fan-class seat runs as low as about 200-300 THB but takes closer to 6-6.5 hours."
+      },
+      {
+        "mode": "Fan/Rapid train (budget)",
+        "durationHrs": [
+          6,
+          6.5
+        ],
+        "price": {
+          "low": 206,
+          "high": 299,
+          "currency": "THB"
+        },
+        "freq": "Several daily, including early-morning departures",
+        "comfort": "Older non-express rolling stock, 2nd/3rd class fan-cooled seats only; the slowest but cheapest fixed-schedule option.",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": false,
+        "notes": "busonlineticket.co.th (2026): 2nd class fan seat 292-299 THB, 3rd class fan seat 206-209 THB, 6-6.5 hours."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Thailandtrains.com — Bangkok to Phitsanulok",
+        "url": "https://www.thailandtrains.com/trains-from-bangkok-to-phitsanulok/"
+      },
+      {
+        "org": "busonlineticket.co.th — Bangkok to Phitsanulok train tickets",
+        "url": "https://www.busonlineticket.co.th/booking/bangkok-to-phitsanulok-train-tickets"
+      }
+    ]
+  },
+  {
     "id": "th-bangkok-sukhothai",
     "from": "Bangkok",
     "to": "Sukhothai",
@@ -526,6 +579,112 @@ export const ROUTES_TH = [
         "bookVia": "Thai AirAsia, Thai Lion Air, Nok Air",
         "recommended": false,
         "notes": "Flying into Surat Thani then ferrying out is often cheaper than the premium Koh Samui (USM) airport served by Bangkok Airways."
+      }
+    ]
+  },
+  {
+    "id": "th-bangkok-nakhonratchasima",
+    "from": "Bangkok",
+    "to": "Nakhon Ratchasima",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "Train",
+        "durationHrs": [
+          4,
+          4.75
+        ],
+        "price": {
+          "low": 154,
+          "high": 1350,
+          "currency": "THB"
+        },
+        "freq": "About 5 direct trains daily from Krung Thep Aphiwat (Bang Sue Grand Station)",
+        "comfort": "Thailand's gateway to Isaan; Special Express trains (SP21, SP23) carry sleeper berths for the overnight services, Rapid/Express trains (EX71, RP135/139/141) are seats-only.",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": true,
+        "notes": "busonlineticket.co.th (2026) lists fares from about 154 THB; north-vietnam.com (2026) names six direct services (EX71 10:35-14:27, SP21 06:10-10:01, RP135 07:10-12:12, RP139/RP141/SP23 overnight) with 2nd/3rd class seats up to 1st/2nd class sleeper berths, roughly 4-4.75 hours."
+      },
+      {
+        "mode": "Bus",
+        "durationHrs": [
+          3,
+          4
+        ],
+        "price": {
+          "low": 203,
+          "high": 650,
+          "currency": "THB"
+        },
+        "freq": "Very frequent, roughly every 15-30 minutes, 04:00-22:00",
+        "comfort": "One of the busiest domestic corridors in the country; VIP and Express classes from the same operators serving the rest of Isaan.",
+        "bookVia": "Nakhonchai Air, Cherdchai Tour or Budsarakham Tour, from Mo Chit (Northern Terminal) or the Nakhonchai Air Bus Station",
+        "recommended": false,
+        "notes": "north-vietnam.com (2026): fares from about 203-650 THB (USD 6-20) depending on operator and class, 3-4 hours door to door - often faster than the train for this short a hop."
+      }
+    ],
+    "sources": [
+      {
+        "org": "busonlineticket.co.th — Bangkok to Nakhon Ratchasima train tickets",
+        "url": "https://www.busonlineticket.co.th/booking/bangkok-to-nakhon-ratchasima-train-tickets"
+      },
+      {
+        "org": "North Vietnam Travel — Bangkok to Nakhon Ratchasima transport guide",
+        "url": "https://north-vietnam.com/bangkok-to-nakhon-ratchasima/"
+      }
+    ]
+  },
+  {
+    "id": "th-bangkok-khonkaen",
+    "from": "Bangkok",
+    "to": "Khon Kaen",
+    "country": "th",
+    "verified": "2026-10",
+    "options": [
+      {
+        "mode": "VIP bus (Nakhonchai Air)",
+        "durationHrs": [
+          6.75,
+          7
+        ],
+        "price": {
+          "low": 494,
+          "high": 494,
+          "currency": "THB"
+        },
+        "freq": "98 daily departures from the Nakhonchai Air Bus Station",
+        "comfort": "By far the dominant operator on this corridor; frequent enough to treat as turn-up-and-go.",
+        "bookVia": "Nakhonchai Air (nakhonchaiair.com) or 12Go",
+        "recommended": true,
+        "notes": "busonlineticket.co.th (2026): Nakhonchai Air 494 THB, about 7 hours, 98 trips a day. Seven other named operators also serve the route from 400-605 THB (Cherdchai Tour, Air Muang Loei, Phu Kradueng Tour, Jirattakarn Khemarat, Chan Tour, Transport Co. Ltd/999, Sun Bus) with 1-10 daily departures each."
+      },
+      {
+        "mode": "Train",
+        "durationHrs": [
+          7.5,
+          9
+        ],
+        "price": {
+          "low": 257,
+          "high": 1428,
+          "currency": "THB"
+        },
+        "freq": "3 direct trains daily",
+        "comfort": "Slower than the bus on this corridor; sleeper berths make sense only for the overnight service (train 26).",
+        "bookVia": "State Railway of Thailand (dticket.railway.co.th) or 12Go",
+        "recommended": false,
+        "notes": "busonlineticket.co.th (2026): trains 76 (09:12) and 78 (20:19) run 2nd class AC seat 429 THB or 3rd class fan seat 257 THB; the overnight train 26 (21:38) carries 1st class AC sleeper at 1,428 THB or 2nd class at 939 THB. About 450 km, 7.5-9 hours depending on service."
+      }
+    ],
+    "sources": [
+      {
+        "org": "busonlineticket.co.th — Bangkok to Khon Kaen bus tickets",
+        "url": "https://www.busonlineticket.co.th/booking/bangkok-to-khon-kaen-bus-tickets"
+      },
+      {
+        "org": "busonlineticket.co.th — Khon Kaen to Bangkok train tickets",
+        "url": "https://www.busonlineticket.co.th/booking/khon-kaen-to-bangkok-train-tickets"
       }
     ]
   },
