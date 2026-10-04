@@ -107,7 +107,7 @@ import {
 import { speak, stop as stopSpeak, hasVoiceFor, say, canSay, ttsUrl, setSavedPacks } from './tts.js';
 import { startPlayback, stopPlayback } from './audio-control.js';
 import { translate, isConfigured as translateConfigured } from './translate.js';
-import { routeNodes, planRoutes, isRouteNode, nearestRouteNode } from './journey.js';
+import { routeNodes, planRoutes, isRouteNode, nearestRouteNode, canonicalRouteNode } from './journey.js';
 import { HISTORY } from './data/history.js';
 import { getRates, refreshRates, maybeRefreshRates, convert, currencyFlag, currencySymbol } from './currency.js';
 import { WEATHER_SPOTS, wmo, isWet, spotKey, spotsForCountry, defaultSpot, nearestSpot, getCachedWeather, getCachedMany, getCachedMarine, getCachedAir, maybeRefreshWeather, maybeRefreshMany, recNowIso, setForecastKeep } from './weather.js';
@@ -816,7 +816,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.616.0';
+export const APP_VERSION = 'mk-v0.617.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -2564,7 +2564,7 @@ export function cityEssentials(cc, cityName, slug) {
     h('p', { class: 'muted', style: 'margin: 0 0 var(--sp-2)' }, `🕒 Right now: ${meta.tip}`),
   ]);
   card.append(h('div', { class: 'chips' }, [
-    isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = cityName; go('#route'); } }, [chipIcon('route'), 'Get here']) : null,
+    isRouteNode(cityName) ? h('button', { class: 'chip', onclick: () => { planTo = canonicalRouteNode(cityName); go('#route'); } }, [chipIcon('route'), 'Get here']) : null,
     getBoard(cc, slug) ? h('button', { class: 'chip', onclick: () => go(`#board-${cc}-${slug}`) }, [chipIcon('board'), 'Local finds']) : null,
     h('button', { class: 'chip', onclick: () => go(`#weather-${cc}`) }, [chipIcon('cloud'), 'Weather']),
     (c && c.lang) ? h('button', { class: 'chip', onclick: () => go(`#phrasebook-${c.lang}`) }, [chipIcon('chat'), 'Phrasebook']) : null,

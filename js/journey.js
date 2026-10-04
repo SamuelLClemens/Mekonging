@@ -63,6 +63,33 @@ function nodeCoordsMap() {
   return _nodeCoords;
 }
 
+// A caller rarely has the graph's own decorated spelling in hand — a place record's `city`
+// field is written as the traveller-facing name (e.g. "Don Det"), while a route's `from`/`to`
+// can carry a longer disambiguating form for the picker (e.g. the now-renamed "4000 Islands
+// (Don Det)"). Maps each node's own parenthesised/slash-separated tokens to its normalised
+// key, same split nodeCoordsMap() already uses for GPS matching, so a lookup by either
+// spelling finds the right node. Exact match always wins first (see resolve()) so an alias
+// token can never shadow a real node of that name.
+let _alias = null;
+function aliasMap() {
+  if (_alias) return _alias;
+  _alias = new Map();
+  for (const key of graph().keys()) {
+    for (const raw of _display.get(key).split(/[()/]/)) {
+      const t = norm(raw);
+      if (t && t !== key && !_alias.has(t)) _alias.set(t, key);
+    }
+  }
+  return _alias;
+}
+
+// Resolve any spelling of a node — its own graph key, or one of its aliases above — to the
+// graph's own normalised key. '' if nothing matches.
+function resolve(name) {
+  const n = norm(name);
+  return graph().has(n) ? n : (aliasMap().get(n) || '');
+}
+
 // The route-graph node closest to a GPS fix (or null with no fix, or if nothing resolves to
 // a coordinate) — used to default the planner's "From" field to where the traveller actually
 // is instead of leaving both selects on "Choose…".
@@ -86,14 +113,24 @@ export function nearestRouteNode(fix) {
 // edge (the map still falls back to a distance/time guess).
 export function directLeg(fromName, toName) {
   const G = graph();
-  const edges = G.get(norm(fromName));
+  const a = resolve(fromName);
+  const edges = G.get(a);
   if (!edges) return null;
-  const b = norm(toName);
+  const b = resolve(toName);
   const hit = edges.find((e) => e.to === b);
   return hit ? chosenOption(hit.edge) : null;
 }
 
-export function isRouteNode(name) { return graph().has(norm(name)); }
+export function isRouteNode(name) { return !!resolve(name); }
+
+// The node's own canonical display spelling for anything that resolves to it (its exact name
+// or one of its aliases) — '' if it is not a route node at all. Needed wherever a resolved
+// name is then stored for an exact-match comparison, e.g. preselecting the planner's <select>
+// (whose options are routeNodes()'s own spellings) from a place's "Get here" chip.
+export function canonicalRouteNode(name) {
+  const key = resolve(name);
+  return key ? _display.get(key) : '';
+}
 
 function chosenOption(edge) { return edge.options.find((o) => o.recommended) || edge.options[0]; }
 function bestHours(edge) {
@@ -185,8 +222,8 @@ function summarize(legs) {
 // changes, a "Fewest changes" alternative. Empty array if unreachable.
 export function planRoutes(fromName, toName) {
   const G = graph();
-  const a = norm(fromName), b = norm(toName);
-  if (!G.has(a) || !G.has(b) || a === b) return [];
+  const a = resolve(fromName), b = resolve(toName);
+  if (!a || !b || a === b) return [];
   const dj = dijkstra(a, b);
   const bf = bfsHops(a, b);
   const plans = [];
