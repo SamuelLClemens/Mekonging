@@ -445,9 +445,41 @@ function loadLibs() {
   return libsPromise;
 }
 
+// The geometry layers' colours (sea, land, coast, graticule, the river). In light themes they are the cream
+// land on teal water the map has always had. In a dark theme that cream is a glaring tan, so the colours come
+// from the theme's own tokens: the sea is --sea where it is a plain colour (the four regional themes) and
+// a darker step of the page otherwise, the land is the card, and the lines are mixed from the ink.
+function mixHex(a, b, t) {
+  const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [x, y] = [p(a), p(b)];
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function lumOf(h) {
+  const c = [1, 3, 5].map((i) => { const v = parseInt(h.slice(i, i + 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function ratioOf(a, b) { const [x, y] = [lumOf(a), lumOf(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); }
+function geoColors() {
+  const light = { sea: '#9FD3CE', land: '#EFE2C6', outline: '#C9A86A', grid: '#7FBDB7', river: '#2C7DA0' };
+  if (document.documentElement.getAttribute('data-theme') !== 'dark') return light;
+  try {
+    const cs = getComputedStyle(document.documentElement);
+    const hex = (n) => { const v = cs.getPropertyValue(n).trim(); return /^#[0-9a-f]{6}$/i.test(v) ? v : null; };
+    const bg = hex('--bg') || hex('--cream') || '#141017';
+    const card = hex('--card') || bg;
+    const ink = hex('--ink') || '#F3EEE6';
+    let sea = hex('--sea') || mixHex(bg, '#000000', 0.3);
+    // Water and land must read as two things: --sea was tuned for the country colours, and two themes put it
+    // within a hair of the card. Below 1.25:1 the sea is darkened toward black until it clears it.
+    for (let t = 0.3; ratioOf(sea, card) < 1.25 && t < 0.9; t += 0.15) sea = mixHex(bg, '#000000', t);
+    return { sea, land: card, outline: mixHex(card, ink, 0.35), grid: mixHex(sea, ink, 0.2), river: mixHex('#2C7DA0', '#FFFFFF', 0.45) };
+  } catch { return light; }
+}
+
 // Self-hosted geometry style: sea background, the four country fills with a coastline
 // outline, and the Mekong. No glyphs/sprites/text layers, so nothing is fetched.
 function basemapStyle() {
+  const gc = geoColors();
   return {
     version: 8,
     sources: {
@@ -458,9 +490,9 @@ function basemapStyle() {
       borderlines: { type: 'geojson', data: BORDER_LINES },
     },
     layers: [
-      { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
-      { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
-      { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': '#C9A86A', 'line-width': 1.2 } },
+      { id: 'sea', type: 'background', paint: { 'background-color': gc.sea } },
+      { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': gc.land } },
+      { id: 'land-outline', source: 'land', type: 'line', paint: { 'line-color': gc.outline, 'line-width': 1.2 } },
       // Street raster sits above the geometry but below satellite: when satellite is hidden ("Map"
       // view) the streets show through; when satellite is on it covers the streets. Toggled by the
       // controller's setSatellite (street visible === satellite hidden).
@@ -469,7 +501,7 @@ function basemapStyle() {
       { id: 'borders', source: 'borderlines', type: 'line', layout: { visibility: 'visible' },
         paint: { 'line-color': '#FF3B30', 'line-width': 2, 'line-dasharray': [2, 1.5], 'line-opacity': 0.95 } },
       { id: 'mekong-line', source: 'mekong', type: 'line', layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#2C7DA0', 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.2, 8, 3, 12, 6] } },
+        paint: { 'line-color': gc.river, 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.2, 8, 3, 12, 6] } },
     ],
   };
 }
@@ -537,6 +569,7 @@ export async function initVisitMap(containerEl, points) {
   await loadLibs();
   const maplibregl = window.maplibregl;
   if (!maplibregl) throw new Error('map library unavailable');
+  const gc = geoColors();
   const map = new maplibregl.Map({
     container: containerEl,
     style: {
@@ -548,9 +581,9 @@ export async function initVisitMap(containerEl, points) {
         visits: { type: 'geojson', data: pointsFC(points) },
       },
       layers: [
-        { id: 'sea', type: 'background', paint: { 'background-color': '#9FD3CE' } },
-        { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': '#EFE2C6' } },
-        { id: 'grid', source: 'grid', type: 'line', paint: { 'line-color': '#7FBDB7', 'line-width': 0.6 } },
+        { id: 'sea', type: 'background', paint: { 'background-color': gc.sea } },
+        { id: 'land', source: 'land', type: 'fill', paint: { 'fill-color': gc.land } },
+        { id: 'grid', source: 'grid', type: 'line', paint: { 'line-color': gc.grid, 'line-width': 0.6 } },
         { id: 'street', source: 'street', type: 'raster', paint: { 'raster-opacity': 0.95 } },
         // Radius grows with the visit count but is capped, so one very busy cell cannot
         // swallow a continent. sqrt keeps a 100-visit dot from being 100x a 1-visit dot.

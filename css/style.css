@@ -3459,6 +3459,17 @@ html[data-theme="dark"] .layer-pick.is-on > summary .layer-pick-state { color: v
    guard was right to say so. */
 .zone-facts > .zone-when, .zone-facts > .zone-exc { margin: 0 0 var(--sp-2); }
 
+/* ---- Form fields in a dark theme ----
+   An <input>, <textarea> or <select> that no component rule styles used to keep the browser's white field,
+   which glared on every dark theme (the Your space name box was one). color-scheme tells the browser the page
+   is dark (native fields, pickers and scrollbars follow); the :where() rules give an otherwise-unstyled field
+   the card colour, ink and a line border at ZERO specificity, so every component rule above still wins. */
+html[data-theme="dark"] { color-scheme: dark; }
+:where(html[data-theme="dark"]) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"], [type="color"], [type="image"]), textarea, select) {
+  color: var(--ink); background-color: var(--card); border: 1px solid var(--line);
+}
+:where(html[data-theme="dark"]) ::placeholder { color: var(--ink-soft); opacity: 1; }
+
 /* ==== BEGIN GENERATED THEMES (tools/style-tiles/port-themes.py; do not edit by hand) ==== */
 /* The four themes of the retro redesign (VISUAL_DIRECTION_PROMPT.md section 3): Mekong Retro, River, Four
    Flags and Temples & Markets. Every value comes from tools/style-tiles/round2.json. Token blocks first
