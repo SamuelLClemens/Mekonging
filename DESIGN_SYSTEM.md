@@ -84,3 +84,38 @@ Phase 2 of `VISUAL_DIRECTION_PROMPT.md` changes no theme's look except one: Clas
 - **Proof of no visual change.** Computed colours, borders, shadows and gradients of every element were
   compared between `origin/feat/scaffold-bangkok-slice` and this branch on 8 themes by 8 screens. The six
   named skins differ nowhere; Classic differs on 29 primary-button elements, all the intended change.
+
+## Phase 3: the four themes, the pinned logo and first paint (2026-10-05, `mk-v0.625.0`)
+
+Phase 3 lands the four palettes. The default is still Classic until Phase 4 flips it, so a traveller sees
+the new themes only by choosing one in Settings; two things change for everyone and are named below.
+
+- **Where the values live.** `tools/style-tiles/round2.json` is the only source. `tools/style-tiles/port-themes.py`
+  writes the block between the two `GENERATED THEMES` markers at the end of `css/style.css`: per theme, a light and
+  a dark `:root[data-skin="<id>"][data-theme="<mode>"]` token block (specificity 0,3,0, so nothing leaks across
+  modes) and the chrome rules the owner approved on the Phase 1 gallery. `retro` is the `retro-map` tuning.
+  `port-themes.py --check` runs in CI and fails if the block is stale. Re-run the script after any change to
+  `round2.json` or `preview.py`.
+- **Retro only.** The four-stripe band (one stripe per country, `--stripe-1` to `--stripe-4`) sits behind the sun
+  on Welcome, under the tab-root headers and Home's header, on section dividers, on empty states and as the tab
+  bar's top edge. River, Four Flags and Temples & Markets use hairlines and no stripes.
+- **Navigation.** The sun orange marks the active tab and fills every primary action; a country's own pages carry
+  its colour under the header; red is danger only. A pressed chip and the phase switch are ink (selected is a state).
+- **The pinned logo.** `logoSVG()` carries literal colours identical to the `index.html` splash (`#F2A93B`,
+  `#E8632A`, `#D6336C`, `#16A39A`). This moves one thing everywhere, Classic included: the wordmark's middle stop
+  was Classic's `--sun-deep` (`#E07A1F`) and is now the splash's `#E8632A`.
+- **Settings.** A "Regional" group holds the four themes. "Day / night (Classic only)" is now "Light / dark",
+  enabled for Classic and the four regional themes and disabled for the six fixed-mode skins.
+- **First paint.** `js/theme-boot.js` (a classic script in `<head>`, allowed by the CSP, precached) stamps
+  `data-skin` and `data-theme` from `mk.store` before the first frame, with the same rules as `applyTheme()`
+  (tested on nine stored-profile and device combinations). `index.html` has two `theme-color` metas scoped by
+  `prefers-color-scheme` (`#F3EBDA`, `#131A2E`); `applyTheme()` sets both to the resolved surface. The manifest's
+  `theme_color` is `#F3EBDA`. Until a theme is stamped, the splash follows the device (cream by day, navy by night).
+- **Guards.** `check-skins.py` and `check-contrast.py` have no pending ids; the contrast guard now reads all 16
+  surfaces and checks the new labels (ink fill with a surface label, the danger fill, white on `--teal-deep`).
+  `--teal-deep` is each theme's secondary, deepened where needed so white reads at 4.5:1 or better (measured
+  4.60 to 13.62:1). `check-contrast` replaced its Phase 2 "pressed chip on teal-deep" pair, which no longer applies
+  to the new themes.
+- **Not changed, noted for later.** The places map's basemap colours are literal in `js/map.js`, so a dark theme
+  still shows its tan land; text inputs keep the browser's white field on dark themes; Talk's translate card stacks
+  three primary buttons.

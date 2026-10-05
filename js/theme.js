@@ -4,8 +4,9 @@
 //
 // 'auto' means the traveller's light / dark setting decides (Settings, then the device, then the
 // clock). The six legacy skins keep the one mode they were drawn for. `retro`, `river`, `flags`
-// and `temples` are the four themes of the retro redesign (VISUAL_DIRECTION_PROMPT.md section 3);
-// their palettes arrive in Phase 3, so until then a stored one resolves to Classic's colours.
+// and `temples` are the four themes of the retro redesign (VISUAL_DIRECTION_PROMPT.md section 3); their
+// palettes are the generated block at the end of css/style.css (tools/style-tiles/port-themes.py).
+// js/theme-boot.js repeats this table for first paint, and scripts/check-skins.py keeps the two in step.
 //
 // DEFAULT_SKIN is what a profile with no skin, or an unknown one, renders as. Phase 4 flips it.
 export const DEFAULT_SKIN = 'classic';

@@ -87,6 +87,7 @@ jobs:
             guard scripts/check-$g.py
           done
           guard scripts/check-place-fields.py --assert
+          guard tools/style-tiles/port-themes.py --check
           guard scripts/check-cache-version.py --base "$BASE"
 
           if [ ${#failed[@]} -gt 0 ]; then

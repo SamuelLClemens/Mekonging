@@ -24,7 +24,7 @@ import os
 import re
 import sys
 
-PENDING = {'retro', 'river', 'flags', 'temples'}
+PENDING = set()
 MODES = {'light', 'dark', 'auto'}
 
 

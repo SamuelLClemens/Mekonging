@@ -24,6 +24,7 @@
 // uses for activeCountry.
 import { store, save, resetAll, exportData, importData, storageStatus, requestPersistence } from '../state.js';
 import { h } from '../util.js';
+import { DEFAULT_SKIN, SKIN_MODE, resolveSkin } from '../theme.js';
 import { field, selectEl, infoTip, confirmAction, netMode, setNetMode } from '../ui-widgets.js';
 import {
   packState, packManifest, onPackChange, refreshPackStatus, deferPack, resumePack, clearPack,
@@ -400,14 +401,23 @@ export function settingsScreen() {
       } }, `${it.emoji} ${it.label}`)));
   card.append(field('Interests', intChips));
 
-  // Theme picker grouped Day / Night. Two dark themes (Night Market, Psych Night) and
-  // three day themes; Classic follows the day/night (or fixed) light-dark setting below.
-  const curSkin = p.skin || 'classic';
+  // Theme picker. The four regional themes follow the Light / dark setting below, as does Classic;
+  // the six named skins were each drawn for one mode (js/theme.js), so that setting is disabled for them.
+  const curSkin = resolveSkin(p.skin || DEFAULT_SKIN);
   const opt = (v, l) => h('option', { value: v, selected: v === curSkin ? '' : null }, l);
+  const modeSel = selectEl([['auto', 'Auto — match your device, else light by day'], ['light', 'Always light'], ['dark', 'Always dark']], p.theme || 'auto',
+    (v) => { p.theme = v; save(); applyTheme(); }, 'Light or dark');
+  modeSel.disabled = SKIN_MODE[curSkin] !== 'auto';
   card.append(field('Theme', h('select', {
-    onchange: (e) => { p.skin = e.target.value; save(); applyTheme(); },
+    onchange: (e) => {
+      p.skin = e.target.value; save(); applyTheme();
+      modeSel.disabled = SKIN_MODE[resolveSkin(p.skin)] !== 'auto';
+    },
   }, [
-    opt('classic', 'Classic sunset (day / night)'),
+    opt('classic', 'Classic sunset'),
+    h('optgroup', { label: 'Regional' }, [
+      opt('retro', 'Mekong Retro'), opt('river', 'River'), opt('flags', 'Four Flags'), opt('temples', 'Temples & Markets'),
+    ]),
     h('optgroup', { label: '☀︎ Day' }, [
       opt('silk', 'Silk Route'), opt('tropical', 'Tropical Pop'), opt('psych', 'Cambodian Psych ’60s–’70s'),
     ]),
@@ -416,8 +426,7 @@ export function settingsScreen() {
     ]),
   ])));
 
-  card.append(field('Day / night (Classic only)', selectEl([['auto', 'Auto — match your device, else light by day'], ['light', 'Always light'], ['dark', 'Always dark']], p.theme || 'auto',
-    (v) => { p.theme = v; save(); applyTheme(); })));
+  card.append(field('Light / dark', modeSel));
 
   card.append(field('Reduce motion', selectEl([['auto', 'Auto (system)'], ['on', 'On'], ['off', 'Off']], p.reducedMotion,
     (v) => { p.reducedMotion = v; save(); applyTheme(); })));
