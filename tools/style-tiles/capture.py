@@ -11,14 +11,23 @@ a phone. The Browser pane computes no layout while hidden and cannot write files
         --routes home,phrasebook,me,places,explore,everything,place-th-bkk-wat-pho,settings
 
 A surface is `classic-light`, `classic-dark` or a named skin (night, silk, tropical, psych,
-psychnight, expedition). Each surface is seeded through the app's live store, which keeps the
+psychnight, expedition).
+
+`--preview a.css,b.css` renders candidate themes that are not in the app yet (VISUAL_DIRECTION_PROMPT.md
+Phase 1). Each stylesheet comes from preview.py; it is injected at document start with
+Page.addScriptToEvaluateOnNewDocument as `<style id="mk-preview">`, kept last in <head>, and the
+script stamps `html[data-preview]` plus the wayfinding hooks the stylesheet reads: `html[data-tab]`
+(the active tab), `html[data-country]` (from the route or the country context line), `html[data-route]`
+(the hash head) and `data-cc` on country chips, cards and context lines (from their flags). Every shot
+then asserts that the logo's computed stop colours are the pinned sun, and that every element painted
+in a country colour also names its country, so colour is never the only cue. Each surface is seeded through the app's live store, which keeps the
 capture deterministic: Classic's `auto` theme otherwise follows prefers-color-scheme and then the
 local clock, and a first-run `#home` redirects to Welcome. Screenshots go to the session
 scratchpad, never into the repository.
 
 `launch()` and `CDP` are importable for other in-browser checks, such as a computed-style digest.
 """
-import argparse, base64, json, os, shutil, socket, struct, subprocess, tempfile, time, urllib.request
+import argparse, base64, json, os, re, shutil, socket, struct, subprocess, tempfile, time, urllib.request
 
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 SKIN_MODE = {"night": "dark", "psychnight": "dark", "expedition": "dark",
@@ -168,6 +177,75 @@ SEED = """(async () => {
 })()"""
 
 
+PREVIEW_SCRIPT = r"""(() => {
+  const ID = %s, CSS = %s;
+  const FLAGS = { '\u{1F1F9}\u{1F1ED}': 'th', '\u{1F1FB}\u{1F1F3}': 'vi', '\u{1F1F0}\u{1F1ED}': 'kh', '\u{1F1F1}\u{1F1E6}': 'la' };
+  const TABS = ['home', 'talk', 'me', 'places', 'explore'];   // the order of TABS in js/main.js
+  function ensure() {
+    const root = document.documentElement;
+    if (!root) return;
+    if (root.getAttribute('data-preview') !== ID) root.setAttribute('data-preview', ID);
+    let st = document.getElementById('mk-preview');
+    if (!st) { st = document.createElement('style'); st.id = 'mk-preview'; st.textContent = CSS; }
+    const parent = document.head || root;
+    if (st.parentNode !== parent || parent.lastElementChild !== st) parent.appendChild(st);
+  }
+  function sync() {
+    ensure();
+    const root = document.documentElement;
+    const head = (location.hash || '#home').replace(/^#/, '');
+    root.setAttribute('data-route', head.split('-')[0] || 'home');
+    const cur = document.querySelector('.tabbar button[aria-current="page"]');
+    if (cur) root.setAttribute('data-tab', TABS[[...cur.parentNode.children].indexOf(cur)] || '');
+    else root.removeAttribute('data-tab');
+    for (const el of document.querySelectorAll('.country-chip, .explore-card, .country-context')) {
+      if (el.hasAttribute('data-cc')) continue;
+      const t = el.textContent || '';
+      for (const f in FLAGS) if (t.includes(f)) { el.setAttribute('data-cc', FLAGS[f]); break; }
+    }
+    let cc = (head.match(/(?:^|-)(th|vi|kh|la)(?:-|$)/) || [])[1];
+    if (!cc) { const ctx = document.querySelector('.country-context[data-cc]'); if (ctx) cc = ctx.getAttribute('data-cc'); }
+    if (cc) root.setAttribute('data-country', cc); else root.removeAttribute('data-country');
+  }
+  const mo = new MutationObserver(() => { mo.disconnect(); try { sync(); } finally { watch(); } });
+  function watch() { mo.observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current'] }); }
+  ensure(); watch();
+  addEventListener('hashchange', sync);
+  document.addEventListener('DOMContentLoaded', sync);
+})()"""
+
+# Per shot, with a preview: the pinned logo, and a country name beside every country colour.
+PREVIEW_CHECK = """(() => {
+  const want = ['rgb(242, 169, 59)', 'rgb(232, 99, 42)', 'rgb(214, 51, 108)'];
+  const logo = document.querySelector('svg.logo');
+  let logoOk = null;
+  if (logo) {
+    const stops = [...logo.querySelectorAll('stop')].map(s => getComputedStyle(s).stopColor);
+    const rays = getComputedStyle(logo.querySelector('g[stroke-width] line') || logo).stroke;
+    const river = getComputedStyle(logo.querySelector('path')).stroke;
+    logoOk = JSON.stringify(stops) === JSON.stringify(want) && rays === want[0] && river === 'rgb(22, 163, 154)';
+  }
+  const NAMES = { th: 'Thailand', vi: 'Vietnam', kh: 'Cambodia', la: 'Laos' };
+  const coloured = [...document.querySelectorAll('[data-cc], .ctry-group[data-country]')];
+  const unnamed = coloured.filter(el => {
+    const cc = el.getAttribute('data-cc') || el.getAttribute('data-country');
+    const text = (el.textContent || '') + ' ' + (el.getAttribute('aria-label') || '');
+    return !text.includes(NAMES[cc]);
+  }).map(el => el.className.baseVal !== undefined ? el.className.baseVal : el.className);
+  const root = document.documentElement;
+  return { preview: root.getAttribute('data-preview'), styled: !!document.getElementById('mk-preview'),
+           tab: root.getAttribute('data-tab'), country: root.getAttribute('data-country'), route: root.getAttribute('data-route'),
+           logo: logoOk, countryMarks: coloured.length, unnamed };
+})()"""
+
+
+def preview_id(css):
+    m = re.match(r"/\* mk-preview id=([\w-]+)", css)
+    if not m:
+        raise SystemExit("a --preview stylesheet must start with the /* mk-preview id=... */ line that preview.py writes")
+    return m.group(1)
+
+
 def surface_spec(surface):
     """-> (skin, theme to seed or None, expected data-theme, expected data-skin)."""
     if surface in ("classic-light", "classic-dark"):
@@ -185,9 +263,16 @@ def main():
     ap.add_argument("--routes", required=True, help="comma-separated hash routes, without '#'")
     ap.add_argument("--surfaces", default="classic-light,classic-dark")
     ap.add_argument("--settle", type=int, default=2500, help="ms to wait after content appears")
+    ap.add_argument("--route-settle", default="places=9000",
+                    help="per-route overrides, e.g. places=9000 (the satellite map paints late)")
     ap.add_argument("--port", type=int, default=9333)
     ap.add_argument("--webp", action="store_true", help="also write a WebP copy of each shot")
+    ap.add_argument("--preview", default="", help="comma-separated stylesheets from preview.py; Classic surfaces only")
     args = ap.parse_args()
+    previews = [p for p in args.preview.split(",") if p] or [None]
+    route_settle = {k: int(v) for k, v in (x.split("=") for x in args.route_settle.split(",") if x)}
+    if previews != [None] and any(not s.startswith("classic-") for s in args.surfaces.split(",")):
+        raise SystemExit("--preview themes ride Classic's light and dark modes: use --surfaces classic-light,classic-dark")
     os.makedirs(args.out, exist_ok=True)
     profile = tempfile.mkdtemp(prefix="mk-capture-")   # a fresh profile: no stale service worker or store
     proc, ws_url = launch(args.port, profile)
@@ -197,7 +282,13 @@ def main():
         c.call("Page.enable")
         c.call("Emulation.setDeviceMetricsOverride", width=375, height=812, deviceScaleFactor=2, mobile=True)
         c.call("Emulation.setTouchEmulationEnabled", enabled=True, maxTouchPoints=5)
-        for surface in args.surfaces.split(","):
+        for preview in previews:
+          css = open(preview, encoding="utf-8").read() if preview else None
+          pid = preview_id(css) if css else None
+          label = os.path.splitext(os.path.basename(preview))[0] if preview else None
+          script = (c.call("Page.addScriptToEvaluateOnNewDocument", source=PREVIEW_SCRIPT % (json.dumps(pid), json.dumps(css)))
+                    ["identifier"] if css else None)
+          for surface in args.surfaces.split(","):
             skin, theme, want_theme, want_skin = surface_spec(surface)
             c.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": want_theme}])
             # Settings sits outside the first-run gate, and the seed writes the same store module
@@ -205,19 +296,25 @@ def main():
             c.call("Page.navigate", url=f"{args.base}/?seed={surface}#settings")
             c.js(READY % 800)
             seeded = c.js(SEED % (json.dumps(skin), "true" if theme else "false", json.dumps(theme)))
-            print("seeded", surface, seeded, flush=True)
+            print("seeded", label or "", surface, seeded, flush=True)
             for i, route in enumerate(args.routes.split(",")):
-                c.call("Page.navigate", url=f"{args.base}/?b={surface}{i}#{route}")
-                info = c.js(READY % args.settle)
-                stem = os.path.join(args.out, f"{route}--{surface}")
+                c.call("Page.navigate", url=f"{args.base}/?b={label or ''}{surface}{i}#{route}")
+                info = c.js(READY % route_settle.get(route.split("-")[0], args.settle))
+                stem = os.path.join(args.out, f"{route}--{label}--{surface}" if label else f"{route}--{surface}")
+                ok = info.get("theme") == want_theme and info.get("skin") == want_skin and info.get("chars", 0) >= 80
+                if css:
+                    pv = c.js(PREVIEW_CHECK)
+                    info.update(pv=pv, preview=label)
+                    ok = ok and pv["preview"] == pid and pv["styled"] and pv["logo"] is not False and not pv["unnamed"]
                 open(stem + ".png", "wb").write(base64.b64decode(c.call("Page.captureScreenshot", format="png")["data"]))
                 if args.webp:
                     shot = c.call("Page.captureScreenshot", format="webp", quality=72)["data"]
                     open(stem + ".webp", "wb").write(base64.b64decode(shot))
-                info.update(route=route, surface=surface,
-                            ok=info.get("theme") == want_theme and info.get("skin") == want_skin and info.get("chars", 0) >= 80)
+                info.update(route=route, surface=surface, ok=ok)
                 report.append(info)
                 print(json.dumps(info, ensure_ascii=False), flush=True)
+          if script:
+            c.call("Page.removeScriptToEvaluateOnNewDocument", identifier=script)
     finally:
         proc.terminate()
         try:
@@ -226,7 +323,7 @@ def main():
             proc.kill()
         shutil.rmtree(profile, ignore_errors=True)
     json.dump(report, open(os.path.join(args.out, "report.json"), "w"), indent=1, ensure_ascii=False)
-    bad = [f"{r['route']}/{r['surface']}" for r in report if not r["ok"]]
+    bad = [f"{r['route']}/{r.get('preview') or ''}/{r['surface']}" for r in report if not r["ok"]]
     print("CAPTURE", "FAIL" if bad else "PASS", f"{len(report)} shots", "bad:", bad)
     raise SystemExit(1 if bad else 0)
 
