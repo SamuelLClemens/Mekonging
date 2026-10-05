@@ -5,7 +5,7 @@
 // seed it via seedWeatherKey() without loading this screen; weatherSeededHash below stays
 // module-private here because only this screen uses it.
 import { store, save, getLastFix, setLastFix, prefersReducedMotion } from '../state.js';
-import { h, esc, compass, haversineKm } from '../util.js';
+import { h, compass, haversineKm } from '../util.js';
 import {
   wxTempU, wxWindU, wxLenU, wxPresU, fmtTemp, fmtWind, fmtPrecip, fmtSnow, fmtHeight, fmtDist, fmtPres,
   waveDesc, airBlock, uvLineNode,
@@ -15,9 +15,7 @@ import {
   WEATHER_SPOTS, wmo, spotKey, spotsForCountry, allSpotsForCountry, defaultSpot, getCachedWeather, getCachedMany, getCachedMarine,
   maybeRefreshWeather, maybeRefreshMany, maybeRefreshMarine, WX_MODELS, WX_MODEL_LABELS, sourceDay, sourceHour,
 } from '../weather.js';
-import { COUNTRIES, getCountry } from '../data/regions.js';
-import { REGION_PATHS, REGION_VIEWBOX, REGION_PROJ } from '../data/geo.js';
-import { attachSvgPanZoom } from '../svg-pan-zoom.js';
+import { getCountry } from '../data/regions.js';
 // Circular import back into main.js — same accepted pattern js/screens/home.js already uses
 // (see home.js's own header comment): every one of these is only read inside a function body,
 // never at module-evaluation time, so the cycle is safe.
@@ -32,6 +30,7 @@ import {
 // ---- WEATHER + FORECAST -----------------------------------------------------
 // weatherKey itself now lives in weather-ui.js (see the note there) — a module's `let` cannot
 // be assigned across an import, which is what broke seedWeatherKey.
+let mapDispose = null;          // the showing screen's map; a re-render replaces it
 let weatherSeededHash = null;   // route we last seeded weatherKey for (so city clicks stick)
 function wxAgo(ts) {
   if (!ts) return 'never';
@@ -45,8 +44,6 @@ function wxAgo(ts) {
 function wxDay(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'short' }); } catch { return d; } }
 function wxDayDate(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' }); } catch { return d; } }
 function wxTime(iso) { try { return new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' }); } catch { return iso ? iso.slice(11, 16) : 'N/A'; } }
-// Project lng/lat onto the same map as the landing-page country outlines.
-function projLL(lng, lat) { const P = REGION_PROJ; return [P.pad + (lng - P.minlng) * P.kx * P.scale, P.pad + (P.maxlat - lat) * P.scale]; }
 function wxTempVal(c) { return wxTempU() === 'F' ? Math.round(c * 9 / 5 + 32) : Math.round(c); }
 
 // ---- TAP A UNIT TO SWITCH IT --------------------------------------------------
@@ -596,245 +593,6 @@ function cityFinder(onPick) {
   return card;
 }
 
-// ---- THE FORECAST MAP -------------------------------------------------------------------------
-// "Look up another city" ends with a map of the current country's hub cities, each with its
-// weather, and a tap on one opens its forecast. It used to draw the whole four-country region
-// into a box the stylesheet caps at 40vh, which on a 375px phone is 0.31px per map unit: labels
-// written at 21 units came out 6.6px tall and neighbouring cities printed over one another (five
-// pairs on Vietnam alone). Each city's group was also drawn over the one before it, so tapping
-// the middle of "Hanoi" opened Ninh Binh and tapping "Da Nang" opened Hoi An.
-//
-// Now the map is laid out in screen pixels for the box it is actually drawn in, and laid out
-// again whenever that box changes size:
-//   - the frame is the current country, outline and cities, grown to the box's own shape;
-//   - every label is a chip of fixed on-screen size, beside its dot where there is room and out
-//     on a leader line where there is not, never over another chip, dot or line. A label with
-//     nowhere to go is left off rather than printed over a neighbour; its dot stays tappable
-//     and the search box above still finds the city by name;
-//   - a tap is resolved by geometry, not by whichever element is drawn on top: inside a chip
-//     opens that chip's city, anywhere else the nearest dot within a fingertip.
-const MAP_FONT_PX = 11;
-const MAP_PAD_X = 4, MAP_PAD_Y = 3;     // chip padding around the text
-const MAP_DOT_PX = 4.5, MAP_SEL_DOT_PX = 6.5;   // as drawn
-const MAP_MINOR_DOT_PX = 3.5;            // a city with no label: smaller and lighter
-const MAP_MINOR_ROOM_PX = 4.5;
-const MAP_DOT_ROOM_PX = 5.5;             // kept clear round every dot, selected or not
-const MAP_REACH_PX = 24;                // a tap this close to a dot opens it
-const MAP_ROW_GAP = 1;                  // between the rows of a shared label
-let mapObserver = null;                 // the showing screen's ResizeObserver; a re-render replaces it
-
-// Each country's outline extent in map units. The region paths are plain absolute M/L/Z
-// polygons, so every pair of numbers in one is a vertex.
-const outlineBoxes = new Map();
-function outlineBox(cc) {
-  if (!outlineBoxes.has(cc)) {
-    const n = (REGION_PATHS[cc] || '').match(/-?\d+(?:\.\d+)?/g) || [];
-    let b = null;
-    for (let i = 0; i + 1 < n.length; i += 2) {
-      const x = +n[i], y = +n[i + 1];
-      b = b ? { x0: Math.min(b.x0, x), y0: Math.min(b.y0, y), x1: Math.max(b.x1, x), y1: Math.max(b.y1, y) }
-        : { x0: x, y0: y, x1: x, y1: y };
-    }
-    outlineBoxes.set(cc, b);
-  }
-  return outlineBoxes.get(cc);
-}
-
-// The country and its cities plus a margin, in map units.
-function countryFrame(cc, pts) {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  const take = (x, y) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); };
-  const b = outlineBox(cc);
-  if (b) { take(b.x0, b.y0); take(b.x1, b.y1); }
-  pts.forEach(([x, y]) => take(x, y));
-  if (!(x1 > x0 && y1 > y0)) {
-    const v = REGION_VIEWBOX.split(' ').map(Number);
-    x0 = v[0]; y0 = v[1]; x1 = v[0] + v[2]; y1 = v[1] + v[3];
-  }
-  const pad = Math.max(x1 - x0, y1 - y0) * 0.05;
-  return { x0: x0 - pad, y0: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad };
-}
-// A tall country gets a taller map. The stylesheet's clamp(230px, 40vh, 380px) suits Cambodia,
-// but it left Thailand's twenty cities 0.36px per map unit; now a map is as tall as its country
-// needs, up to 60% of the screen and 560px, and never shorter than the stylesheet's height.
-function mapHeight(W, fr) {
-  const vh = window.innerHeight || 800;
-  const base = Math.min(380, Math.max(230, vh * 0.4));
-  return Math.round(Math.max(base, Math.min(560, vh * 0.6, (W * fr.h) / fr.w)));
-}
-// The frame grown on its short side to the box's own shape, so the whole box is map: the map-
-// unit corner it starts from, and px per map unit.
-function fitFrame(fr, W, H) {
-  if (fr.w / fr.h < W / H) { const w = (fr.h * W) / H; return { x0: fr.x0 - (w - fr.w) / 2, y0: fr.y0, k: W / w }; }
-  return { x0: fr.x0, y0: fr.y0 - ((fr.w * H) / W - fr.h) / 2, k: W / fr.w };
-}
-
-// Chip widths come from a canvas in the font the SVG text inherits, so placement never waits on
-// layout and works for a box that is not on screen yet.
-let mapCtx;
-function mapTextWidth(text, family) {
-  if (mapCtx === undefined) { try { mapCtx = document.createElement('canvas').getContext('2d'); } catch { mapCtx = null; } }
-  if (!mapCtx) return [...text].length * MAP_FONT_PX * 0.62;
-  mapCtx.font = `800 ${MAP_FONT_PX}px ${family || 'system-ui, sans-serif'}`;
-  return mapCtx.measureText(text).width;
-}
-
-// Before the map is in the document there is no box to measure, so predict the width the
-// stylesheet will give it: #app's 720px less the screen's 16px gutters and the map's 1px border.
-// The first paint is then right on a phone, and the ResizeObserver corrects any other case as
-// soon as the real box exists. The height is always this code's own; see mapHeight.
-function predictMapWidth() {
-  return Math.max(200, Math.min(document.documentElement.clientWidth || window.innerWidth || 375, 720) - 34);
-}
-
-// Where a label may go beside its dot: right, left, below, above, then the diagonals.
-function besideSpots(u) {
-  const { x, y, r, cw, ch } = u;
-  const g = r + 3;
-  const q = g * Math.SQRT1_2;
-  return [
-    { x0: x + g, y0: y - ch / 2, cost: 0 },
-    { x0: x - g - cw, y0: y - ch / 2, cost: 1 },
-    { x0: x - cw / 2, y0: y + g, cost: 2 },
-    { x0: x - cw / 2, y0: y - g - ch, cost: 2 },
-    { x0: x + q, y0: y - q - ch, cost: 3 },
-    { x0: x + q, y0: y + q, cost: 3 },
-    { x0: x - q - cw, y0: y - q - ch, cost: 4 },
-    { x0: x - q - cw, y0: y + q, cost: 4 },
-  ];
-}
-// Further out, on a leader: every 15 degrees at six distances, the label pulled back inside the
-// box where it would cross an edge, and the leader run to the label's nearest point.
-function leaderSpots(u, W, H) {
-  const { x, y, r, cw, ch } = u;
-  const out = [], seen = new Set();
-  for (const dist of [16, 26, 38, 52, 68, 88]) {
-    for (let i = 0; i < 24; i++) {
-      const a = (i * Math.PI) / 12, c = Math.cos(a), s = Math.sin(a);
-      const px = x + c * dist, py = y + s * dist;
-      const side = Math.abs(c) > 0.38;
-      const x0 = Math.max(2, Math.min(W - 2 - cw, side ? (c > 0 ? px : px - cw) : px - cw / 2));
-      const y0 = Math.max(2, Math.min(H - 2 - ch, side ? py - ch / 2 : (s > 0 ? py : py - ch)));
-      const id = `${Math.round(x0)},${Math.round(y0)}`;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      const nx = Math.max(x0, Math.min(x, x0 + cw)), ny = Math.max(y0, Math.min(y, y0 + ch));
-      const len = Math.hypot(nx - x, ny - y);
-      if (len < r + 8) continue;   // that close, it is a label beside the dot, covered above
-      out.push({
-        x0, y0, lead: [x + ((nx - x) / len) * r, y + ((ny - y) / len) * r, nx, ny],
-        cost: 10 + len + (8 * Math.abs(ny - y)) / len,
-      });
-    }
-  }
-  return out;
-}
-const boxesMeet = (a, b, m) => a.x0 < b.x1 + m && b.x0 < a.x1 + m && a.y0 < b.y1 + m && b.y0 < a.y1 + m;
-function dotInBox(d, b, m) {
-  const nx = Math.max(b.x0, Math.min(d.x, b.x1)), ny = Math.max(b.y0, Math.min(d.y, b.y1));
-  return Math.hypot(d.x - nx, d.y - ny) < d.r + m;
-}
-// Does segment [x1, y1, x2, y2] enter box b? Liang-Barsky clipping.
-function segInBox([x1, y1, x2, y2], b) {
-  const dx = x2 - x1, dy = y2 - y1;
-  let t0 = 0, t1 = 1;
-  for (const [p, q] of [[-dx, x1 - b.x0], [dx, b.x1 - x1], [-dy, y1 - b.y0], [dy, b.y1 - y1]]) {
-    if (p === 0) { if (q < 0) return false; continue; }
-    const t = q / p;
-    if (p < 0) { if (t > t1) return false; if (t > t0) t0 = t; } else { if (t < t0) return false; if (t < t1) t1 = t; }
-  }
-  return true;
-}
-function segNearDot([x1, y1, x2, y2], d, m) {
-  const dx = x2 - x1, dy = y2 - y1, len = dx * dx + dy * dy;
-  const t = len ? Math.max(0, Math.min(1, ((d.x - x1) * dx + (d.y - y1) * dy) / len)) : 0;
-  return Math.hypot(d.x - (x1 + t * dx), d.y - (y1 + t * dy)) < d.r + m;
-}
-function segsCross(a, b) {
-  const side = (p, q, x, y) => Math.sign((q[0] - p[0]) * (y - p[1]) - (q[1] - p[1]) * (x - p[0]));
-  const [a1, a2, b1, b2] = [[a[0], a[1]], [a[2], a[3]], [b[0], b[1]], [b[2], b[3]]];
-  return side(a1, a2, b1[0], b1[1]) !== side(a1, a2, b2[0], b2[1])
-    && side(b1, b2, a1[0], a1[1]) !== side(b1, b2, a2[0], a2[1]);
-}
-// Cities whose dots overlap share one label: a column of chips, one row per city and north
-// first, on a single leader. Separate labels for dots 3px apart can only be drawn out on
-// leaders that fan across each other, and on Thailand those fenced in the labels placed after
-// them (Bangkok and its two river islands, Pattaya and Koh Larn).
-function labelUnits(items) {
-  const units = [], taken = new Set();
-  for (const d of items) {
-    if (taken.has(d)) continue;
-    const members = [d];
-    taken.add(d);
-    for (let i = 0; i < members.length; i++) {
-      for (const o of items) {
-        if (!taken.has(o) && Math.hypot(o.x - members[i].x, o.y - members[i].y) < 2 * MAP_DOT_PX) { taken.add(o); members.push(o); }
-      }
-    }
-    members.sort((a, b) => a.y - b.y);
-    const x = members.reduce((s, m) => s + m.x, 0) / members.length;
-    const y = members.reduce((s, m) => s + m.y, 0) / members.length;
-    units.push({
-      members, x, y,
-      r: Math.max(...members.map((m) => Math.hypot(m.x - x, m.y - y) + m.r)),
-      cw: Math.max(...members.map((m) => m.cw)),
-      ch: members.reduce((s, m) => s + m.ch, 0) + (members.length - 1) * MAP_ROW_GAP,
-    });
-  }
-  return units;
-}
-// Where a label may go given only the box and the dots, which never move: inside the box, clear
-// of every dot, and a leader clear of every other dot except one it has no way not to start
-// inside. Cheapest first.
-function openSpots(u, dots, W, H) {
-  const out = [];
-  for (const s of [...besideSpots(u), ...leaderSpots(u, W, H)]) {
-    const b = { x0: s.x0, y0: s.y0, x1: s.x0 + u.cw, y1: s.y0 + u.ch };
-    if (b.x0 < 2 || b.y0 < 2 || b.x1 > W - 2 || b.y1 > H - 2) continue;
-    if (dots.some((o) => dotInBox(o, b, 3))) continue;
-    if (s.lead) {
-      const [lx, ly] = s.lead;
-      if (dots.some((o) => !u.members.includes(o) && Math.hypot(o.x - lx, o.y - ly) > o.r && segNearDot(s.lead, o, 1.5))) continue;
-    }
-    out.push({ b, lead: s.lead || null, cost: s.cost });
-  }
-  return out.sort((a, c) => a.cost - c.cost);
-}
-// Would a label at box b on leader `lead` collide with label v, already down?
-function clashes(b, lead, v) {
-  return boxesMeet(v.box, b, 2) || (v.lead && segInBox(v.lead, b))
-    || (lead && (segInBox(lead, v.box) || (v.lead && segsCross(v.lead, lead))));
-}
-// Greedy, in the order given: each label takes its cheapest open spot that collides with no
-// label already down. Then a repair for each one left without room: if a single label is in the
-// way of one of its spots and has somewhere else to go, that label moves. Sets u.box (null when
-// there is no room) and u.lead (null beside the dot); returns how many are left without room.
-function placeLabels(units, dots, W, H) {
-  const open = new Map(units.map((u) => [u, openSpots(u, dots, W, H)]));
-  const placed = [];
-  const put = (u, s) => { u.box = s ? s.b : null; u.lead = s ? s.lead : null; };
-  for (const u of units) {
-    const s = open.get(u).find((t) => !placed.some((v) => clashes(t.b, t.lead, v)));
-    put(u, s);
-    if (s) placed.push(u);
-  }
-  for (const u of units) {
-    if (u.box) continue;
-    for (const s of open.get(u)) {
-      const inWay = placed.filter((v) => clashes(s.b, s.lead, v));
-      if (inWay.length !== 1) continue;
-      const v = inWay[0];
-      const mine = { box: s.b, lead: s.lead };
-      const alt = open.get(v).find((t) => !clashes(t.b, t.lead, mine) && !placed.some((w) => w !== v && clashes(t.b, t.lead, w)));
-      if (!alt) continue;
-      put(v, alt);
-      put(u, s);
-      placed.push(u);
-      break;
-    }
-  }
-  return units.filter((u) => !u.box).length;
-}
 
 export function weatherScreen(country) {
   const wrap = h('div', { class: 'screen wx-screen' });
@@ -1080,142 +838,52 @@ export function weatherScreen(country) {
   wrap.append(h('h3', { class: 'wx-plan-h' }, 'Look up another city'));
   wrap.append(cityFinder((s) => switchSpot(spotKey(s))));
 
-  // Forecast map: this country's cities, each showing its current weather (one batched fetch),
-  // tappable to switch city. Laid out for the box it is drawn in; see THE FORECAST MAP above.
-  const mapBox = h('div', {
-    class: 'region-map',
-    html: '<svg class="region-svg" role="group" aria-label="Weather map" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>',
-  });
-  const mapSvg = mapBox.firstElementChild;
+  // Forecast map: this country's cities on the real street map, each hub a chip with its current
+  // weather (one batched fetch), tappable to switch city. See initWeatherMap in js/map.js.
+  const mapBox = h('div', { class: 'region-map wx-map' });
+  const mapCanvas = h('div', { class: 'wx-map-canvas', role: 'group', 'aria-label': 'Weather map' });
   const mapCap = h('span', { class: 'region-cap' });
-  mapBox.append(mapCap);
+  mapBox.append(mapCanvas, mapCap);
   wrap.append(mapBox);
-  // Fixed-size labels grow with the zoom, so it stops at 3x: far enough to separate dots a few
-  // pixels apart, short of chips large enough to cover the cities around them.
-  const mapZoom = attachSvgPanZoom(mapBox, mapSvg, { maxScale: 3 });
-  let mapMany = null, mapWidth = 0, mapLayout = null, zoomCountry = null;
+  let mapCtl = null, mapMany = null, mapFor = null;
   function renderMap(many) { mapMany = many || null; drawMap(); }
   function drawMap() {
-    const W = mapWidth || predictMapWidth();
-    // Every listed city gets a dot, so any of them can be tapped; only the hubs, plus the
-    // selected city when it is an anchor rather than a hub, get a label. Labels are placed clear
-    // of every dot, so a label never hides a city that has none.
+    if (!mapCtl) return;
+    // Every listed city gets a dot so any can be tapped; hubs, and the selected city when it is an
+    // anchor rather than a hub, get a chip. Hubs lead, so they win the room where chips collide.
     const selKey = currentWeatherKey();
     const hubs = spotsForCountry(curCountry);
     const sel = WEATHER_SPOTS.find((s) => spotKey(s) === selKey);
     const labelled = (sel && sel.country === curCountry && !sel.hub) ? hubs.concat([sel]) : hubs;
     const labelKeys = new Set(labelled.map(spotKey));
     const cities = labelled.concat(allSpotsForCountry(curCountry).filter((s) => !labelKeys.has(spotKey(s))));
-    if (zoomCountry !== curCountry) { zoomCountry = curCountry; mapZoom.reset(); }
-    const pts = cities.map((s) => projLL(s.lng, s.lat));
-    const fr = countryFrame(curCountry, pts);
-    const H = mapHeight(W, fr);
-    const f = fitFrame(fr, W, H);
-    let fam = '';
-    try { fam = getComputedStyle(mapSvg.isConnected ? mapSvg : document.body).fontFamily; } catch { /* no view yet */ }
-    const items = cities.map((s, i) => {
+    const items = cities.map((s) => {
       const key = spotKey(s);
-      const minor = !labelKeys.has(key);
       const wx = mapMany && mapMany[key];
-      const temp = wx && wx.temp != null ? `${wxTempVal(wx.temp)}°` : '';
-      const text = [wx ? wmo(wx.code)[1] : '', s.city, temp].filter(Boolean).join(' ');
       return {
-        key, s, wx, temp, text, minor, on: key === selKey,
-        x: (pts[i][0] - f.x0) * f.k, y: (pts[i][1] - f.y0) * f.k, r: minor ? MAP_MINOR_ROOM_PX : MAP_DOT_ROOM_PX,
-        cw: minor ? 0 : Math.ceil(mapTextWidth(text, fam)) + 2 * MAP_PAD_X,
-        ch: Math.round(MAP_FONT_PX * 1.25) + 2 * MAP_PAD_Y,
+        key, lng: s.lng, lat: s.lat, hub: labelKeys.has(key), name: s.city,
+        icon: wx ? wmo(wx.code)[1] : '', temp: wx && wx.temp != null ? `${wxTempVal(wx.temp)}°` : '',
       };
     });
-    // Placed in the list's own order, which leads each country with its main cities and ends
-    // Thailand's with the day-trip islands, and the same whichever city is selected, so picking
-    // one never moves a label. Labels left without room get one more pass placed first, kept
-    // only if it seats more of them; a selected city still without one then goes first alone.
-    let units = labelUnits(items.filter((d) => !d.minor));
-    const left = placeLabels(units, items, W, H);
-    if (left) {
-      const retry = [...units.filter((u) => !u.box), ...units.filter((u) => u.box)];
-      if (placeLabels(retry, items, W, H) < left) units = retry; else placeLabels(units, items, W, H);
-      const mine = units.find((u) => !u.box && u.members.some((m) => m.on));
-      if (mine) { units = [mine, ...units.filter((u) => u !== mine)]; placeLabels(units, items, W, H); }
-    }
-    units.forEach((u) => {
-      let y = u.box ? u.box.y0 : 0;
-      u.members.forEach((m, j) => {
-        m.chip = u.box ? { x0: u.box.x0, y0: y, x1: u.box.x1, y1: y + m.ch } : null;
-        m.lead = j === 0 ? u.lead : null;
-        y += m.ch + MAP_ROW_GAP;
-      });
-    });
-    const n1 = (v) => Math.round(v * 10) / 10;
-    const paths = COUNTRIES.map((c) => REGION_PATHS[c.id]
-      ? `<path d="${REGION_PATHS[c.id]}" fill="${c.id === curCountry ? '#F1E3C6' : '#E9DCC2'}" stroke="#D8C39A" stroke-width="1" vector-effect="non-scaling-stroke" opacity="${c.id === curCountry ? 1 : 0.45}"/>` : '').join('');
-    // Least important first and the selected city last, so where dots overlap the one that
-    // matters is on top. Nothing else can overlap: labels and leaders were placed clear of all.
-    const order = items.slice().reverse().sort((a, b) => a.on - b.on);
-    const groups = order.map((d) => {
-      const c = d.chip;
-      const name = esc(d.wx ? `${d.s.city}, ${d.temp ? d.temp + ', ' : ''}${wmo(d.wx.code)[0]}` : d.s.city);
-      const btn = ` role="button" tabindex="0" aria-label="${name}"${d.on ? ' aria-current="true"' : ''}`;
-      const dotR = d.on ? MAP_SEL_DOT_PX : (d.minor ? MAP_MINOR_DOT_PX : MAP_DOT_PX);
-      const dotFill = d.on ? '#C0431A' : (d.minor ? '#6B8FA3' : '#2C7DA0');
-      return `<g class="wx-dot" data-key="${esc(d.key)}"${c ? '' : btn}>`
-        + (d.lead ? `<line x1="${n1(d.lead[0])}" y1="${n1(d.lead[1])}" x2="${n1(d.lead[2])}" y2="${n1(d.lead[3])}" stroke="#2A2118" stroke-opacity="0.55" stroke-width="1"/>` : '')
-        + `<circle cx="${n1(d.x)}" cy="${n1(d.y)}" r="${dotR}" fill="${dotFill}" stroke="#FFFDF5" stroke-width="1.5"/>`
-        + (c ? `<g class="wx-chip"${btn}><rect x="${n1(c.x0)}" y="${n1(c.y0)}" width="${n1(c.x1 - c.x0)}" height="${d.ch}" rx="5" fill="${d.on ? '#C0431A' : '#FFFDF5'}" fill-opacity="${d.on ? 1 : 0.94}" stroke="${d.on ? '#FFFDF5' : '#2A2118'}" stroke-opacity="${d.on ? 1 : 0.22}"/>`
-          + `<text x="${n1((c.x0 + c.x1) / 2)}" y="${n1(c.y0 + d.ch / 2)}" text-anchor="middle" dominant-baseline="central" data-no-i18n="" style="font-size:${MAP_FONT_PX}px;font-weight:800;direction:ltr;fill:${d.on ? '#FFFFFF' : '#2A2118'}">${esc(d.text)}</text></g>` : '')
-        + '</g>';
-    }).join('');
-    mapSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    mapSvg.style.height = `${H}px`;
-    mapSvg.innerHTML = `<g transform="matrix(${f.k} 0 0 ${f.k} ${-f.x0 * f.k} ${-f.y0 * f.k})">${paths}</g>${groups}`;
+    const fit = mapFor !== curCountry;
+    mapFor = curCountry;
+    mapCtl.setItems(items, selKey, fit);
     // The batch held is for the last country fetched, so say "connect" only when this country's
     // cities have no temperatures and there is no connection to fetch them over.
-    mapCap.textContent = (items.some((d) => d.wx) || online()) ? 'Tap a city for its full forecast · pinch or scroll to zoom' : 'Connect once to load city temperatures';
-    mapLayout = { W, H, items };
+    mapCap.textContent = (items.some((d) => d.temp) || online()) ? 'Tap a city for its full forecast · two fingers or the + / − buttons to zoom' : 'Connect once to load city temperatures';
   }
-  // Inside a chip opens that chip's city; anywhere else, the nearest dot within a fingertip —
-  // the only way to tell apart dots drawn a few pixels apart, like Bangkok and its islands.
-  // getBoundingClientRect includes the zoom's CSS transform, so this holds at any zoom.
-  function mapKeyAt(cx, cy) {
-    const r = mapSvg.getBoundingClientRect();
-    if (!mapLayout || !r.width || !r.height) return null;
-    const { W, H, items } = mapLayout;
-    const s = Math.min(r.width / W, r.height / H);
-    const x = (cx - r.left - (r.width - W * s) / 2) / s, y = (cy - r.top - (r.height - H * s) / 2) / s;
-    const hit = items.find((d) => d.chip && x >= d.chip.x0 - 1 && x <= d.chip.x1 + 1 && y >= d.chip.y0 - 1 && y <= d.chip.y1 + 1);
-    if (hit) return hit.key;
-    let best = null, bd = MAP_REACH_PX / s;
-    items.forEach((d) => { const dd = Math.hypot(d.x - x, d.y - y); if (dd <= bd) { bd = dd; best = d; } });
-    return best ? best.key : null;
-  }
-  mapSvg.addEventListener('click', (e) => {
-    const g = e.target.closest ? e.target.closest('.wx-dot') : null;
-    const key = mapKeyAt(e.clientX, e.clientY) || (g && g.getAttribute('data-key'));
-    if (key) switchSpot(key);
+  if (mapDispose) { mapDispose(); mapDispose = null; }
+  import('../map.js').then((m) => {
+    if (!mapCanvas.isConnected || typeof m.initWeatherMap !== 'function') throw new Error('weather map unavailable');
+    return m.initWeatherMap(mapCanvas, { onPick: (key) => switchSpot(key) });
+  }).then((ctl) => {
+    if (!mapCanvas.isConnected) { ctl.dispose(); return; }
+    mapCtl = ctl;
+    mapDispose = () => ctl.dispose();
+    drawMap();
+  }).catch(() => {
+    mapCanvas.append(h('p', { class: 'muted', style: 'padding: var(--sp-4);text-align:center' }, 'The map could not load. Search for a city above instead.'));
   });
-  mapSvg.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const g = e.target.closest ? e.target.closest('.wx-dot') : null;
-    if (!g) return;
-    e.preventDefault();
-    switchSpot(g.getAttribute('data-key'));
-  });
-  if (mapObserver) mapObserver.disconnect();
-  mapObserver = null;
-  if (typeof ResizeObserver === 'function') {
-    const ro = new ResizeObserver((entries) => {
-      if (!mapSvg.isConnected) { ro.disconnect(); return; }
-      // Only the width is the layout's to follow: drawMap sets the height itself. Zero while it
-      // is not laid out (a hidden tab, say); the next real size lays it out. A CSS transform
-      // (the zoom) does not change this size, so zooming never triggers a re-layout.
-      const { width } = entries[entries.length - 1].contentRect;
-      if (width < 1) return;
-      mapWidth = width;
-      if (!mapLayout || Math.abs(width - mapLayout.W) > 0.5) drawMap();
-    });
-    ro.observe(mapSvg);
-    mapObserver = ro;
-  }
   renderMap(getCachedMany() && getCachedMany().data);
   if (online()) maybeRefreshMany(spotsForCountry(curCountry)).then((r) => { if (r && (location.hash || '').startsWith('#weather')) renderMap(r.data); });
 

@@ -360,7 +360,7 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': '3c502cc9',
+  'css/style.css': '8ecff0fa',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
   'index.html': '838458ca',
@@ -530,7 +530,7 @@ const MANIFEST = {
   'js/lazy-data.js': 'b606efdc',
   'js/main.js': '3083e762',
   'js/map-tiles.js': '3f500cc5',
-  'js/map.js': '58879cb3',
+  'js/map.js': 'bde3fe4c',
   'js/nav-groups.js': 'b5403a92',
   'js/offline-areas-ui.js': '01b8e952',
   'js/offline-pack.js': 'a804a82e',
@@ -558,7 +558,7 @@ const MANIFEST = {
   'js/screens/giveback.js': '6ed0573a',
   'js/screens/help.js': 'ec261fba',
   'js/screens/home.js': '83670ab5',
-  'js/screens/journal.js': 'a2702b95',
+  'js/screens/journal.js': '645b40e1',
   'js/screens/map.js': '6e706314',
   'js/screens/medical.js': '62c2ce75',
   'js/screens/nearby.js': '1e81b2f7',
@@ -577,7 +577,7 @@ const MANIFEST = {
   'js/screens/trip.js': '600962b1',
   'js/screens/vault.js': '4ad7cc26',
   'js/screens/visitors.js': '6746db81',
-  'js/screens/weather.js': 'e46829b4',
+  'js/screens/weather.js': 'beec2c08',
   'js/screens/welcome.js': '6f39cb03',
   'js/screens/you.js': '05c7503c',
   'js/social.js': 'bdf1920c',

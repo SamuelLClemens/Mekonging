@@ -701,11 +701,23 @@ function heuristicMode(km, days) {
 // "suggested" itinerary through a third city even when a direct leg exists), then the
 // distance/time guess. `graphReady` is false until ensureRouteGraph's callback has actually
 // fired; journeyScreen computes this twice for exactly that reason; see there.
+// A stop with no trail.js record of its own (written from a journal entry, a planned stop or a saved
+// place) has nowhere to keep a correction, so it lives here, keyed by where the leg arrives.
+const legKey = (s) => `${s.lat.toFixed(3)},${s.lng.toFixed(3)}`;
+function setLegMode(dest, picked) {
+  if (dest._trailIds && dest._trailIds.length) updateTrailStops(dest._trailIds, { arriveMode: picked });
+  const pr = store.profile.prefs;
+  pr.legModes = pr.legModes || {};
+  if (picked) pr.legModes[legKey(dest)] = picked; else delete pr.legModes[legKey(dest)];
+  save();
+}
 function journeyLegs(stops, graphReady) {
   const legs = [];
   for (let i = 0; i < stops.length - 1; i++) {
     const a = stops[i], b = stops[i + 1];
     const midLat = (a.lat + b.lat) / 2, midLng = (a.lng + b.lng) / 2;
+    const ov = (store.profile.prefs.legModes || {})[legKey(b)];
+    if (ov && MODE_GLYPHS[ov]) { legs.push({ i, midLat, midLng, mode: ov }); continue; }
     if (b.arriveMode && MODE_GLYPHS[b.arriveMode]) { legs.push({ i, midLat, midLng, mode: b.arriveMode }); continue; }
     let mode = null;
     if (graphReady && a.label && b.label && isRouteNode(a.label) && isRouteNode(b.label)) {
@@ -824,6 +836,8 @@ export function journeyScreen() {
     document.body.classList.remove('jr-map-is-full');
   });
   holder.append(canvas, h('div', { class: 'jr-map-tools' }, full), zoomHint);
+  // toggles are built after drawLegMarkers (below) and inserted here
+  const togSlot = h('div', {}); holder.insertBefore(togSlot, zoomHint);
   const panel = h('div', { class: 'jr-panel' });
   // Foldable like every other section on the app, open by default because it is the screen.
   wrap.append(homeFold('🗺 Your map', holder, 'journeyMapOpen'), panel);
@@ -874,7 +888,7 @@ export function journeyScreen() {
     if (!maplibregl) return;
     legs.forEach((leg) => {
       const dest = stops[leg.i + 1];
-      const editable = dest._trailIds && dest._trailIds.length > 0;
+      const editable = true;
       const el0 = document.createElement('div');
       el0.className = 'mk-leg-glyph';
       el0.textContent = MODE_GLYPHS[leg.mode] || MODE_GLYPHS.bus;
@@ -892,16 +906,52 @@ export function journeyScreen() {
           ev.stopPropagation();
           pickModeSheet().then((picked) => {
             if (picked === null) return;
-            updateTrailStops(dest._trailIds, { arriveMode: picked });
+            setLegMode(dest, picked);
             render();
           });
         };
         el.addEventListener('click', open);
         el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(ev); } });
       }
+      if (!show().icons) el.style.display = 'none';
       legMarkers.push(m);
     });
+    if (mapCtrl) {
+      mapCtrl.setRouteLegs(legs.map((l) => ({ from: stops[l.i], to: stops[l.i + 1], mode: l.mode })));
+      mapCtrl.setRouteVisible(show().route);
+      mapCtrl.setBorders(show().borders);
+    }
+    drawLegList(legs);
   }
+  // What to draw, remembered: the route line, the country borders, the transport icons.
+  const show = () => ({ route: true, borders: true, icons: true, ...(store.profile.prefs.journeyShow || {}) });
+  function setShow(k, on) {
+    store.profile.prefs.journeyShow = { ...show(), [k]: on };
+    save();
+    if (k === 'route' && mapCtrl) mapCtrl.setRouteVisible(on);
+    if (k === 'borders' && mapCtrl) mapCtrl.setBorders(on);
+    if (k === 'icons') legMarkers.forEach((m) => { m.getElement().style.display = on ? '' : 'none'; });
+  }
+  const legsCard = h('div', { class: 'card', style: 'margin-top: var(--sp-3)' });
+  function drawLegList(legs) {
+    legsCard.replaceChildren(h('h2', {}, '🧭 How you travelled'));
+    if (!legs.length) { legsCard.style.display = 'none'; return; }
+    legsCard.style.display = '';
+    legsCard.append(h('p', { class: 'muted tiny', style: 'margin: 0 0 var(--sp-1h)' }, 'Guessed from the distance and the days between stops. Tap one to change it.'));
+    legs.forEach((leg) => {
+      const a = stops[leg.i], dest = stops[leg.i + 1];
+      legsCard.append(h('button', { class: 'btn ghost block btn-spaced', style: 'text-align:left',
+        'aria-label': `${a.label || 'Stop'} to ${dest.label || 'next stop'}: ${MODE_LABELS[leg.mode]}. Change how you travelled.`,
+        onclick: () => pickModeSheet().then((picked) => { if (picked === null) return; setLegMode(dest, picked); render(); }) },
+      `${MODE_GLYPHS[leg.mode]}  ${a.label || 'Stop ' + (leg.i + 1)} → ${dest.label || 'Stop ' + (leg.i + 2)} · ${MODE_LABELS[leg.mode]}`));
+    });
+  }
+  const toggles = h('div', { class: 'jr-map-toggles' }, [['route', '━ Route'], ['icons', '✈️ Transport'], ['borders', '┈ Borders']].map(([k, lbl]) => {
+    const b = h('button', { type: 'button', class: 'status-chip jr-tog', 'aria-pressed': String(show()[k]) }, lbl);
+    b.addEventListener('click', () => { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); setShow(k, on); });
+    return b;
+  }));
+  togSlot.append(toggles);
 
   const mapPlaces = stops.map((s, i) => ({
     id: String(i), _num: i + 1,
@@ -1041,6 +1091,7 @@ export function journeyScreen() {
     }
   });
   wrap.append(collapsibleCard(list, 'journeyStopsOpen'));
+  wrap.append(collapsibleCard(legsCard, 'journeyLegsOpen'));
 
   // For a place visited without the app open — the gap the automatic pins cannot close on
   // their own. Location comes from the same curated city list a trip stop matches against
