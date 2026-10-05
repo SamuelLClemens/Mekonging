@@ -1,0 +1,520 @@
+{
+ "_about": "Phase 1 candidates (2026-10-05) for the retro default and the three modern regional themes, plus today's Classic measured for comparison. Measured by measure.py, rendered by preview.py into the --preview CSS that capture.py injects, so every value here is the value on screen. See VISUAL_DIRECTION_PROMPT.md.",
+ "_stripeOrder": "Top to bottom, in every band: th, vi, kh, la (west to east along the river's countries, the order of the app's country lists).",
+ "retro-poster": {
+  "name": "Retro, poster stripes",
+  "family": "retro",
+  "tuning": "poster",
+  "about": "Cream poster paper by day, the navy night poster by night. Stripes tuned from the poster's own teal, mustard and rust.",
+  "sources": [
+   {
+    "what": "stripe teal, mustard, rust; navy ground",
+    "value": "#296570 #CD8032 #AF4A44 #12172A",
+    "from": "the owner's poster reference (sampled locally; the image is personal reference and is never committed or published)"
+   },
+   {
+    "what": "the poster's orange stripe",
+    "value": "#D36942",
+    "from": "dropped: it sits dE00 5.3 from the sun orange, so it would read as the action colour; sage takes the fourth stripe"
+   },
+   {
+    "what": "sun orange, logo stops",
+    "value": "#F2A93B #E8632A #D6336C #16A39A",
+    "from": "index.html splash and icons/icon.svg"
+   }
+  ],
+  "light": {
+   "bg": "#F3EBDA",
+   "surface": "#FBF7EE",
+   "surface2": "#EDE3CF",
+   "line": "#DDD1B9",
+   "borderStrong": "#6E7488",
+   "text": "#17203A",
+   "text2": "#4A5470",
+   "title": "#17203A",
+   "accent": "#A8420E",
+   "accentFill": "#E8632A",
+   "onAccent": "#17203A",
+   "accentSoft": "#F8DFCF",
+   "sun": "#E05C24",
+   "secondary": "#0E6461",
+   "star": "#8F6400",
+   "danger": "#B0103A",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#92452B",
+    "vi": "#006E79",
+    "kh": "#AC7C19",
+    "la": "#6C8C5D"
+   },
+   "tabs": {
+    "home": "#A8420E",
+    "talk": "#0E6461",
+    "me": "#7D3F6E",
+    "places": "#3B763B",
+    "explore": "#8A5A00"
+   },
+   "sea": "#E2ECEC"
+  },
+  "dark": {
+   "bg": "#131A2E",
+   "surface": "#1C2541",
+   "surface2": "#243050",
+   "line": "#34405E",
+   "borderStrong": "#8A93AE",
+   "text": "#F3E8D2",
+   "text2": "#B8B3A8",
+   "title": "#F3E8D2",
+   "accent": "#FF8A4C",
+   "accentFill": "#E8632A",
+   "onAccent": "#131A2E",
+   "accentSoft": "#4D343B",
+   "sun": "#E8632A",
+   "secondary": "#4FC1BD",
+   "star": "#F2B544",
+   "danger": "#FF6B81",
+   "onDanger": "#1F0705",
+   "country": {
+    "th": "#D89683",
+    "vi": "#40A8AF",
+    "kh": "#F5C26F",
+    "la": "#95A430"
+   },
+   "tabs": {
+    "home": "#FF8A4C",
+    "talk": "#4FC1BD",
+    "me": "#D58BC4",
+    "places": "#7FCB6A",
+    "explore": "#F2C14E"
+   },
+   "sea": "#27515D"
+  }
+ },
+ "retro-map": {
+  "name": "Retro, map stripes",
+  "family": "retro",
+  "tuning": "map",
+  "about": "The same grounds and inks. Stripes tuned from today's map colours (REGION_COLORS), retro-saturated.",
+  "sources": [
+   {
+    "what": "terracotta, plum, marigold, sage",
+    "value": "#C25E3A #9C5780 #E0A526 #6E9A52",
+    "from": "js/main.js REGION_COLORS (line 4052)"
+   },
+   {
+    "what": "why Thailand moved",
+    "value": "#C25E3A",
+    "from": "today's terracotta sits dE00 6.3 from the sun orange; deepened to brick"
+   }
+  ],
+  "light": {
+   "bg": "#F3EBDA",
+   "surface": "#FBF7EE",
+   "surface2": "#EDE3CF",
+   "line": "#DDD1B9",
+   "borderStrong": "#6E7488",
+   "text": "#17203A",
+   "text2": "#4A5470",
+   "title": "#17203A",
+   "accent": "#A8420E",
+   "accentFill": "#E8632A",
+   "onAccent": "#17203A",
+   "accentSoft": "#F8DFCF",
+   "sun": "#E05C24",
+   "secondary": "#0E6461",
+   "star": "#8F6400",
+   "danger": "#B0103A",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#994627",
+    "vi": "#904B7E",
+    "kh": "#AF7C0C",
+    "la": "#5C8F5E"
+   },
+   "tabs": {
+    "home": "#A8420E",
+    "talk": "#0E6461",
+    "me": "#7D3F6E",
+    "places": "#3B763B",
+    "explore": "#8A5A00"
+   },
+   "sea": "#E4EEEE"
+  },
+  "dark": {
+   "bg": "#131A2E",
+   "surface": "#1C2541",
+   "surface2": "#243050",
+   "line": "#34405E",
+   "borderStrong": "#8A93AE",
+   "text": "#F3E8D2",
+   "text2": "#B8B3A8",
+   "title": "#F3E8D2",
+   "accent": "#FF8A4C",
+   "accentFill": "#E8632A",
+   "onAccent": "#131A2E",
+   "accentSoft": "#4D343B",
+   "sun": "#E8632A",
+   "secondary": "#4FC1BD",
+   "star": "#F2B544",
+   "danger": "#FF6B81",
+   "onDanger": "#1F0705",
+   "country": {
+    "th": "#EBA086",
+    "vi": "#C77BB2",
+    "kh": "#FACE6C",
+    "la": "#67AD32"
+   },
+   "tabs": {
+    "home": "#FF8A4C",
+    "talk": "#4FC1BD",
+    "me": "#D58BC4",
+    "places": "#7FCB6A",
+    "explore": "#F2C14E"
+   },
+   "sea": "#244A57"
+  }
+ },
+ "river": {
+  "name": "River",
+  "family": "modern",
+  "about": "Mekong mist by day, jungle night by night. Every hue sampled from the app's own river photos.",
+  "sources": [
+   {
+    "what": "ground (mist)",
+    "value": "#A5C1D3",
+    "from": "img/places/vi-ext-cai-rang.jpg, sky, median-cut palette"
+   },
+   {
+    "what": "ink and night ground (jungle)",
+    "value": "#42572C",
+    "from": "img/places/kh-siemreap-tonle-sap-floating.jpg, foliage box (0.75,0.45)-(0.98,0.75), median"
+   },
+   {
+    "what": "secondary (silt)",
+    "value": "#8E7E5E",
+    "from": "img/places/la-ext-don-khon.jpg, water box (0.30,0.80)-(0.95,0.98), median"
+   },
+   {
+    "what": "star (falls gold)",
+    "value": "#B19026",
+    "from": "img/places/la-ext-khone-phapheng.jpg, max-coverage palette"
+   },
+   {
+    "what": "Thailand",
+    "value": "#BB3E40",
+    "from": "img/places/th-ext-amphawa-floating-market.jpg, max-coverage palette"
+   },
+   {
+    "what": "Vietnam",
+    "value": "#822B6F",
+    "from": "img/places/vi-ext-cai-rang.jpg, max-coverage palette"
+   },
+   {
+    "what": "Cambodia",
+    "value": "#567CA1",
+    "from": "img/places/kh-ext-tonlesap-villages.jpg, max-coverage palette"
+   },
+   {
+    "what": "Laos",
+    "value": "#7A7940",
+    "from": "img/places/la-ext-don-khon.jpg, palms box (0.02,0.15)-(0.25,0.45), median"
+   }
+  ],
+  "light": {
+   "bg": "#F1F5F8",
+   "surface": "#FBFDFD",
+   "surface2": "#E4ECF2",
+   "line": "#CEDDE7",
+   "borderStrong": "#646E58",
+   "text": "#1D2613",
+   "text2": "#4F5845",
+   "title": "#1D2613",
+   "accent": "#C34409",
+   "accentFill": "#E8632A",
+   "onAccent": "#1D2613",
+   "accentSoft": "#F8E4DB",
+   "sun": "#E66229",
+   "secondary": "#7C6C4D",
+   "star": "#A8881D",
+   "danger": "#B0103A",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#A4616A",
+    "vi": "#82296F",
+    "kh": "#537BA3",
+    "la": "#79793A"
+   },
+   "sea": "#C7D9E4"
+  },
+  "dark": {
+   "bg": "#171B10",
+   "surface": "#202519",
+   "surface2": "#2A3022",
+   "line": "#3B4233",
+   "borderStrong": "#878E7D",
+   "text": "#F6F9FB",
+   "text2": "#C0D4E0",
+   "title": "#F6F9FB",
+   "accent": "#FF8A4C",
+   "accentFill": "#E8632A",
+   "onAccent": "#171B10",
+   "accentSoft": "#50341D",
+   "sun": "#E8632A",
+   "secondary": "#C9B98F",
+   "star": "#E2C24E",
+   "danger": "#FF6B81",
+   "onDanger": "#1F0705",
+   "country": {
+    "th": "#C24245",
+    "vi": "#A65283",
+    "kh": "#5482AE",
+    "la": "#9D9B69"
+   },
+   "sea": "#20251C"
+  }
+ },
+ "flags": {
+  "name": "Four Flags",
+  "family": "modern",
+  "about": "Flag white and graphite. Each country takes its flag's central colour; the action stays the sun orange, so no flag red is ever a button.",
+  "sources": [
+   {
+    "what": "Thailand blue, red, white",
+    "value": "#2D2A4A #A51931 #F4F5F8",
+    "from": "Office of the Prime Minister announcement, 30 September 2017 (CIELAB under D65; hex derived by NSTDA), as tabulated at https://en.wikipedia.org/wiki/Flag_of_Thailand; Pantone 200C and 2766C in the ASEAN sheet https://asean.org/wp-content/uploads/2020/10/flagspec_Flag-of-the-Kingdom-of-Thailand.pdf"
+   },
+   {
+    "what": "Vietnam red, gold",
+    "value": "PMS 186, PMS 116 (#FFCD00)",
+    "from": "Constitution: a bright gold star on a fresh red ground; Pantones from the London 2012 flags manual as recorded at https://www.fotw.info/flags/vn.html"
+   },
+   {
+    "what": "Cambodia blue, red",
+    "value": "CMYK 100-58-0-57, 0-100-100-0; PMS 293, 032 (#EF3340)",
+    "from": "Ministry of Foreign Affairs CMYK and the London 2012 Pantones, both recorded at https://www.fotw.info/flags/kh.html"
+   },
+   {
+    "what": "Laos blue, red",
+    "value": "PMS 293 (#003DA5), PMS 032",
+    "from": "Constitution (dark blue with red edges and a white moon), ASEAN sheet https://asean.org/wp-content/uploads/2020/10/flagspec_Lao-PDR-Flag-Specs.pdf (no colour codes); Pantones from London 2012 at https://www.fotw.info/flags/la.html"
+   },
+   {
+    "what": "danger",
+    "value": "#A51931",
+    "from": "the Thai flag red (official); Thailand's own country colour is its blue"
+   }
+  ],
+  "light": {
+   "bg": "#F4F5F8",
+   "surface": "#FFFFFF",
+   "surface2": "#E8EAF1",
+   "line": "#D9DCE6",
+   "borderStrong": "#6B6E85",
+   "text": "#1B1C2E",
+   "text2": "#4C4E66",
+   "title": "#1B1C2E",
+   "accent": "#C34409",
+   "accentFill": "#E8632A",
+   "onAccent": "#1B1C2E",
+   "accentSoft": "#FBE6DD",
+   "sun": "#E8632A",
+   "secondary": "#2D2A4A",
+   "star": "#9A7400",
+   "danger": "#A51931",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#2D294F",
+    "vi": "#A58907",
+    "kh": "#CF585F",
+    "la": "#043DA4"
+   },
+   "sea": "#F2F5FA"
+  },
+  "dark": {
+   "bg": "#131418",
+   "surface": "#1C1D23",
+   "surface2": "#25272F",
+   "line": "#353844",
+   "borderStrong": "#858DAA",
+   "text": "#F4F5F8",
+   "text2": "#B9BDCC",
+   "title": "#F4F5F8",
+   "accent": "#FF8A4C",
+   "accentFill": "#E8632A",
+   "onAccent": "#131418",
+   "accentSoft": "#4D2E25",
+   "sun": "#E8632A",
+   "secondary": "#9FA6E0",
+   "star": "#FFCD00",
+   "danger": "#FF8A9A",
+   "onDanger": "#1F0705",
+   "country": {
+    "th": "#72638E",
+    "vi": "#FFCD05",
+    "kh": "#F03344",
+    "la": "#3D62D2"
+   },
+   "sea": "#0E1E3A"
+  }
+ },
+ "temples": {
+  "name": "Temples & Markets",
+  "family": "modern",
+  "about": "Ivory, lacquer and gold. Each country's colour comes from a temple or market photo in that country.",
+  "sources": [
+   {
+    "what": "ground (cream gold)",
+    "value": "#F5DD9E",
+    "from": "img/places/th-ext-wat-chalong.jpg, max-coverage palette"
+   },
+   {
+    "what": "ink and night ground (lacquer)",
+    "value": "#2C1F1E",
+    "from": "img/places/vi-hanoi-temple-of-literature.jpg, pillar box (0.00,0.10)-(0.12,0.60), median"
+   },
+   {
+    "what": "secondary and star (gold)",
+    "value": "#B88821",
+    "from": "img/places/th-bkk-wat-pho.jpg, median-cut palette (largest share)"
+   },
+   {
+    "what": "Thailand",
+    "value": "#96522B",
+    "from": "img/places/th-ext-wat-chalong.jpg, max-coverage palette"
+   },
+   {
+    "what": "Vietnam",
+    "value": "#874764",
+    "from": "img/places/vi-hanoi-temple-of-literature.jpg, max-coverage palette"
+   },
+   {
+    "what": "Cambodia",
+    "value": "#DAA250",
+    "from": "img/places/kh-phnompenh-royal-palace.jpg, max-coverage palette"
+   },
+   {
+    "what": "Laos",
+    "value": "#3A7631",
+    "from": "img/places/la-lpb-night-market.jpg, max-coverage palette (textiles)"
+   }
+  ],
+  "light": {
+   "bg": "#FDF8EC",
+   "surface": "#FEFDFA",
+   "surface2": "#FBF3DC",
+   "line": "#EADBBC",
+   "borderStrong": "#856563",
+   "text": "#2F1D1C",
+   "text2": "#6E5351",
+   "title": "#2F1D1C",
+   "accent": "#C5460B",
+   "accentFill": "#E8632A",
+   "onAccent": "#2F1D1C",
+   "accentSoft": "#FAE4D9",
+   "sun": "#E8632A",
+   "secondary": "#946A00",
+   "star": "#B5851E",
+   "danger": "#B0103A",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#A34812",
+    "vi": "#864864",
+    "kh": "#B88432",
+    "la": "#3F794A"
+   },
+   "sea": "#F2F8F9"
+  },
+  "dark": {
+   "bg": "#201514",
+   "surface": "#2C1E1D",
+   "surface2": "#382827",
+   "line": "#4C3938",
+   "borderStrong": "#9E8684",
+   "text": "#F6EEDC",
+   "text2": "#C9B9AA",
+   "title": "#F6EEDC",
+   "accent": "#FF8A4C",
+   "accentFill": "#E8632A",
+   "onAccent": "#201514",
+   "accentSoft": "#592F20",
+   "sun": "#E8632A",
+   "secondary": "#DCB64D",
+   "star": "#DCB64D",
+   "danger": "#FF6B81",
+   "onDanger": "#1F0705",
+   "country": {
+    "th": "#A35D23",
+    "vi": "#905E7C",
+    "kh": "#DAA250",
+    "la": "#498859"
+   },
+   "sea": "#282020"
+  }
+ },
+ "classic": {
+  "name": "Classic sunset (today)",
+  "family": "classic",
+  "reference": true,
+  "about": "Today's default, measured as shipped for comparison (css/style.css :root and html[data-theme=dark]).",
+  "light": {
+   "bg": "#F7EAD0",
+   "surface": "#FFF6E2",
+   "surface2": "#F7EAD0",
+   "line": "#E7CFA6",
+   "borderStrong": "#E7CFA6",
+   "text": "#3A2415",
+   "text2": "#7A5A3C",
+   "title": "#B04A00",
+   "accent": "#B04A00",
+   "accentFill": [
+    "#E07A1F",
+    "#E8632A",
+    "#D6336C"
+   ],
+   "onAccent": "#FFFFFF",
+   "accentSoft": "#F7EAD0",
+   "sun": "#E8632A",
+   "secondary": "#0A615B",
+   "star": "#8F6800",
+   "danger": "#A8380F",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#C25E3A",
+    "vi": "#9C5780",
+    "kh": "#E0A526",
+    "la": "#6E9A52"
+   },
+   "sea": "#A3D6D0"
+  },
+  "dark": {
+   "bg": "#201038",
+   "surface": "#2C1A4A",
+   "surface2": "#201038",
+   "line": "#4A2F6E",
+   "borderStrong": "#4A2F6E",
+   "text": "#F7E4C4",
+   "text2": "#C9A9D9",
+   "title": "#FF7A40",
+   "accent": "#FF7A40",
+   "accentFill": [
+    "#E07A1F",
+    "#E8632A",
+    "#D6336C"
+   ],
+   "onAccent": "#FFFFFF",
+   "accentSoft": "#201038",
+   "sun": "#E8632A",
+   "secondary": "#2FD0C4",
+   "star": "#E0A100",
+   "danger": "#FF6B4A",
+   "onDanger": "#FFFFFF",
+   "country": {
+    "th": "#C25E3A",
+    "vi": "#9C5780",
+    "kh": "#E0A526",
+    "la": "#6E9A52"
+   },
+   "sea": "#A3D6D0"
+  }
+ }
+}

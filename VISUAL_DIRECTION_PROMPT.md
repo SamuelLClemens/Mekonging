@@ -1,319 +1,294 @@
 # Mekonging visual direction prompt
 
-Status: written 2026-10-04, after round 1 of GATE 1, against `mk-v0.623.0` on
-`feat/scaffold-bangkok-slice`. Companion to `REDESIGN_PROMPT.md`. It replaces that prompt's section 5.2
-(three candidate directions) and settles the one GATE 1 question still open: the visual direction.
-Everything else in `REDESIGN_PROMPT.md` stands, except where the owner approves an amendment at this
-prompt's gate.
+Status: rewritten 2026-10-05 for the approved plan "a retro default theme and three modern regional
+themes" (Phase 1 of 4), against `mk-v0.623.0` on `feat/scaffold-bangkok-slice`. It replaces the round-2
+expert-panel prompt that PR #90 merged: the owner settled the direction in conversation instead. It is a
+companion to `REDESIGN_PROMPT.md`, whose section 4 non-negotiables still apply in full. `DESIGN_SYSTEM.md`
+holds the gate record.
 
 ---
 
 ## 0. How to use this prompt
 
-- Run it in one fresh session with the strongest model. The expert panel is a working method inside that
-  session. Do not start a Workflow or fan out to sub-agents (`REDESIGN_PROMPT.md` section 4, Cost).
-- Read `REDESIGN_PROMPT.md` sections 0 to 7 first; its section 4 non-negotiables apply here in full. Then
-  read this prompt in full.
-- Every phase writes its output to the session scratchpad. Before starting a phase, check whether its
-  output already exists and is complete, and resume rather than regenerate.
-- Stop at the gate (section 6). Ask with AskUserQuestion, recommended option first, and wait. Never pass
-  it on an assumption.
-- Starting fresh: run `REDESIGN_PROMPT.md` section 6 (Phase 0), then phases 1 to 5 below, then the gate.
-  Nothing in the repository changes until the owner answers the gate; then `DESIGN_SYSTEM.md` records
-  the answer.
+- One phase per session, one pull request per phase, merged in order, one open at a time. Each PR gets
+  its own worktree off `origin/feat/scaffold-bangkok-slice`.
+- Phase 1 needs design judgement and runs on Opus. Phases 2 to 4 are mechanical and run on Sonnet. No
+  Workflow and no sub-agent fan-out: `js/main.js` punishes both (`REDESIGN_PROMPT.md` section 4, Cost).
+- Every number in this file was measured. Re-measure before citing one in a later phase.
+- Ask each gate with AskUserQuestion, recommended option first, and wait. Never pass a gate on an
+  assumption.
 
 ---
 
-## 1. Round 1, and what the owner said
+## 1. How we got here
 
-- Round 1 style tiles (private artifact): https://claude.ai/artifact/8QWD6aT81hp6xbpumqH2vx. It shows
-  the three directions of `REDESIGN_PROMPT.md` section 5.2 (A "Golden Hour, refined", B "River and
-  Rice", C "Night Market") at 375px in light and dark, with the real Wat Pho entry, a component kit and
-  today's screens for comparison. Its source is a working kit (role tokens, type scale, buttons, chips,
-  card, list row, input, topbar, tab bar, listing). Read it with the Artifact tool's `read` action rather
-  than rebuilding it.
-- The owner chose none of the three. Asked what missed, the owner picked two reasons, and only these:
-  1. **Not distinctly Mekong.** They could belong to any travel app; the region's places, crafts and
-     culture do not come through.
-  2. **Lost today's spirit.** They drop the psychedelic warmth, the sunburst and the playful personality
-     the app has now.
-
-  The owner did not pick "too alike" or "too plain". Neither reason asks for a louder design. Both ask
-  for identity.
-- My reading of why round 1 missed. Section 5.2 defined the directions by mood words and hex values,
-  and nothing in them exists on the Mekong. Round 1 held type, shape and motif constant, so colour alone
-  had to carry identity. And the restraint rules (one accent, at most three gradients, no upper case)
-  removed the sunburst and the sunset gradient, which is where today's spirit lives. Direction A also
-  sat close to a look that is common in generated design: warm cream paper with a terracotta accent.
-- What round 1 got right, and this round keeps:
-  - Every role pair measured: WCAG ratios, plus CIEDE2000 between the accent and the danger colour. A's
-    first danger red (#B42318) sat only ΔE00 9.1 from its saffron accent, close enough to mistake a
-    destructive control for a primary one. A crimson (#B0103A light, #FF6B81 dark) raised that to 20.0
-    and 26.3.
-  - White or near-white cards separate from an off-white page at only 1.06 to 1.11:1 in every palette
-    (today: 1.11:1). The hairline and the shadow carry the separation.
-  - The guidebook anatomy of the place listing: verdict, facts, "Watch out", "How you will know you are
-    there", sources.
-- GATE 1 answers already given. Record them, and do not ask them again.
-  - **Skins.** Keep all six named skins as palette-only variants of the new roles, and retire any that
-    cannot reach AA.
-  - **Icons.** One line-icon family for all chrome; emoji only inside content.
-- The scope is wider this round. The full visual language may change (palette, typeface, shapes,
-  density, motif and photo treatment). The five tabs, `js/nav-groups.js` and each screen's information
-  architecture stay fixed.
+- **GATE 1, round 1 (2026-10-04).** Three style-tile directions (A "Golden Hour, refined", B "River and
+  Rice", C "Night Market"; tokens in `tools/style-tiles/round1.json`). The owner chose none: they were
+  "not distinctly Mekong" and "lost today's spirit". Two questions were answered and stand: keep all six
+  named skins, and one line-icon family for chrome with emoji only in content.
+- **Round 2 (PR #90).** An eight-seat expert-panel prompt. It was never run: on 2026-10-05 the owner gave
+  the direction directly, with a style reference.
+- **The reference.** The "NASA Vintage Colors Emblem" poster (arthook, Redbubble): a deep navy ground,
+  cream text, a sweeping 1970s stripe arc (teal, mustard, orange, rust), a thin gold frame and sparkles.
+  The owner wants that retro colour and artistry on a site that looks and works like a modern one. The
+  image is personal reference. It is never committed, published or embedded; only colours sampled from
+  it are recorded here.
 
 ---
 
-## 2. The brief
+## 2. The brief (owner, 2026-10-05)
 
-> Mekonging should look as if it could only be about the Mekong, and still feel like itself: warm,
-> playful and a little psychedelic. Its working screens stay calm enough to read in bright sun and use
-> with one thumb.
+> Keep every existing option. Make the default, the theme new users open the app to, stunning and
+> helpful for navigation. Leave the sun logo exactly as it is. Anchor the colours in the region. Keep
+> the screens easy to look at for hours.
 
-### 2.1 Today's spirit, from the source
+Decisions:
 
-The stylesheet's header (`css/style.css`, lines 1 to 4) names it: "1970s Cambodian psychedelic. Warm
-sunset palette (golden ochre, burnt orange, hot magenta, turquoise, grape), sunburst motifs, groovy
-uppercase headings, soft rounded shapes." Its carriers in code:
-
-- `--grad-sun` and `--sunburst` (a CSS `repeating-conic-gradient`) in `:root`, and each skin's own
-  version of both;
-- the Mekonging wordmark and the Welcome hero (the sunburst hero is already a protected brand moment,
-  `REDESIGN_PROMPT.md` Slice 10);
-- the illustrated four-country map: `regionPicker()` in `js/screens/explore.js`, filled from
-  `REGION_COLORS` in `js/main.js` (Thailand #C25E3A, Vietnam #9C5780, Cambodia #E0A526, Laos #6E9A52);
-- two named skins that are the era itself: "Cambodian Psych ’60s–’70s" (`psych`) and "Psych Night"
-  (`psychnight`).
-
-### 2.2 Distinctly Mekong, from real material
-
-Start every direction from something that exists on the river, not from generic "tropical" or "Asian"
-cues. The app already holds a licensed, self-hosted photo library of the region: `img/places` (140
-photographs of temples, markets, rivers and towns in all four countries), `img/food`, `img/nature` and
-`img/produce`, with credits in `js/data/photos.js`. Sample colours from those photographs with a script
-(Pillow is installed) and cite the photograph each colour came from. A palette that cannot name its
-photographs is not distinctly Mekong. Outside sources (museum collections, archives, published design
-histories) are welcome when the session opens and checks them; ask the owner for links rather than
-searching blind.
-
-### 2.3 Where personality lives: a hypothesis to test
-
-Personality concentrates on a short, named list of brand surfaces: the wordmark, Welcome, each tab
-root's header, section dividers, empty states, loading, the illustrated map and the country hubs.
-Functional surfaces stay calm: lists, forms, the place facts, the map's controls and Talk's translate
-card. A direction may propose a different split if it shows a better one.
-
-### 2.4 Guardrails (the visual-culture seat holds the veto)
-
-- Buddha images, monks and other sacred objects are never ornament or pattern. Many people in Thailand
-  and across the region consider decorative use of a Buddha image disrespectful. A place's own
-  photograph in its listing is content, and the rule does not apply to it.
-- National and royal symbols (flags, royal emblems, the Angkor Wat silhouette on Cambodia's flag) appear
-  only where they carry meaning, never as decoration.
-- No faux-Asian Latin lettering (brush-stroke or "chop suey" display faces), and no Latin face that
-  imitates Thai, Lao or Khmer letterforms.
-- No pan-Asian pastiche. Credit each motif to its country and source, and use it where it belongs.
-  Nothing from elsewhere in Asia stands in for the Mekong. Vietnam's Sino-Vietnamese heritage (Hội An's
-  assembly halls, Hán-Nôm calligraphy) counts when the direction credits it as Vietnamese.
-- Borrow structure and colour from ethnic-minority textiles (Hmong, Tai Dam, Akha and others), never a
-  whole pattern, and credit the source.
-- Celebrate the Golden Age of Cambodian popular music (the 1960s and early 1970s) with care. The Khmer
-  Rouge killed many of its artists, and the app never references that era.
-- None of the looks that are common in generated design: warm cream paper with a serif display face and
-  a terracotta accent; near-black with a single acid-green or vermilion accent; a purple-to-blue
-  gradient hero; Inter or Space Grotesk as the safe face; emoji as section markers; everything centred;
-  one large radius on everything; an accent bar down the side of a rounded card.
+- **Retro default only.** The default theme is the retro one. Its stripe colours are the four countries,
+  so it absorbs the "map colours" anchor. River, Four Flags and Temples & Markets are three plain,
+  modern themes. All four stay selectable, and every existing option stays too.
+- **Stripe bands are the only retro element.** A four-stripe band, one stripe per country, sweeps behind
+  the sun on Welcome. It also appears as a thin rule under the tab-root headers, on section dividers, on
+  empty states and as the tab bar's top edge. No emblem rings, no grain, no new display face: Be Vietnam
+  Pro stays.
+- **Follow the phone.** Cream poster paper by day and the navy night poster on dark-mode phones and at
+  night. Both modes get equal care.
+- **Calm base, vivid moments.** The cream and navy grounds stay quiet, the stripes are vivid, and every
+  working control stays plain and modern.
+- **Navigation (recommended; the Phase 1 gate confirms or overrules).** The four country colours do the
+  wayfinding: the country context line, the country pages, the illustrated map and the country chips.
+  The active tab is marked by the one sun orange, which is also the only primary-action colour. Red only
+  means danger. A per-tab colour variant is previewed beside it, because five tab colours plus four
+  country colours make nine hues.
+- **Keep today's Classic.** It stays selectable as "Classic sunset", changed only by an AA fix to its
+  primary button (Phase 2).
 
 ---
 
-## 3. The panel
+## 3. The themes
 
-One session works as eight named seats. Each seat writes in its own section of every phase's output,
-signs its scores, and records dissent instead of converging politely.
+Every value lives in `tools/style-tiles/round2.json`, with the source of every sampled colour. The
+gallery of real screens is linked from the gate record in `DESIGN_SYSTEM.md`.
 
-| Seat | Mandate | Veto |
-|---|---|---|
-| Creative director (chair) | Synthesis. Holds each direction to one system that works on every surface, cuts to finalists and recommends one | None |
-| Keeper of today's spirit | Speaks as the app's original art director. Inventories what makes today's look Mekonging and defends it | None |
-| Mekong visual-culture specialist | Thai, Lao, Khmer and Vietnamese material and graphic culture; sources and credits every reference | Cliché, sacred misuse or pastiche (section 2.4) |
-| Typographer | Latin display and text faces beside Thai, Lao, Khmer and Vietnamese; measures every candidate face | A face that fails the measurement rule (section 4.1) |
-| Colour and accessibility specialist | Role tokens in light and dark, the eight surfaces, sunlight, colour-vision deficiency | Any measured AA failure |
-| Travel UX researcher | The traveller in bright sun, on one bar of signal, with one thumb and a second language | A direction that makes a functional screen busier |
-| Guidebook editor | Verdict first, facts scannable, every word earning its place | None |
-| Front-end engineer | Vanilla CSS, no build step, offline first, a 0.65 Mbps link | A runtime library, a CDN, or a stylesheet that grows |
+### 3.1 The retro default
 
-Rules for the panel:
+- **Grounds and inks.** Day: cream paper `#F3EBDA`, cards `#FBF7EE`, navy ink `#17203A` (13.6:1 on the
+  page). Night: poster navy `#131A2E`, cards `#1C2541`, cream ink `#F3E8D2` (14.2:1).
+- **The sun orange.** The logo's own `#E8632A` fills every primary button, with a navy label (4.79:1 by
+  day, 5.14:1 at night). As a graphic on cream it reaches only 2.83:1, so the day-mode marker (the active
+  tab's bar) is the same hue a step deeper, `#E05C24` (3.06:1). As text it is `#A8420E` by day and
+  `#FF8A4C` at night.
+- **Selected is a state, not an action.** Pressed chips and the phase switch are ink (navy by day, cream
+  at night), so orange keeps meaning "tap here" and "you are here".
+- **Two stripe tunings** (top to bottom: Thailand, Vietnam, Cambodia, Laos):
 
-1. Divergence is assigned. Each authoring seat starts from a different primary source area (Phase 3),
-   so the directions cannot converge on one palette.
-2. Evidence over adjectives. A claim about colour, contrast, width, bytes or legibility carries a
-   measured number, or it is struck out.
-3. Every direction names the one aesthetic risk it takes.
-4. Dissent goes into the critique under the seat's name, even when the chair overrules it.
+  | Tuning | Day | Night |
+  |---|---|---|
+  | Poster | rust `#92452B`, teal `#006E79`, mustard `#AC7C19`, sage `#6C8C5D` | `#D89683`, `#40A8AF`, `#F5C26F`, `#95A430` |
+  | Map | brick `#994627`, plum `#904B7E`, gold `#AF7C0C`, green `#5C8F5E` | `#EBA086`, `#C77BB2`, `#FACE6C`, `#67AD32` |
 
----
+  The floors (section 4) bent both. The poster's orange stripe is the sun's own colour, so sage takes the
+  fourth stripe; the warm stripes of the two tunings converge on the same rust and gold, so the real
+  choice is Vietnam (teal or plum) and Laos (sage or green). Section 7 has the numbers.
+- **Two navigation variants.** "Country" (recommended): the sun orange marks the active tab, the header
+  rule is the four stripes, and a country's own pages carry its colour under the header. "Tabs": each
+  tab has its own text-safe colour for the title, the active label and the header rule.
 
-## 4. What is fixed and what is open
+### 3.2 The three modern themes
 
-### 4.1 Fixed
+Plain and modern: no stripes, hairline rules, and the theme's own secondary colour on section marks.
+The action colour is the sun orange in every theme, so a flag red or a temple red is never a button.
 
-- `REDESIGN_PROMPT.md` section 4 in full: delivery, WCAG 2.2 AA, 44×44px hit areas, 29 interface
-  languages with four right-to-left, Thai, Lao and Khmer in system fonts with line-height room,
-  self-hosted fonts and icons, no runtime libraries, CSS-only motion, and a stylesheet that shrinks.
-- `REDESIGN_PROMPT.md` section 5.1, principles 1, 2 and 5 to 8, and section 2's "not overwhelming" list.
-- The five tabs, `js/nav-groups.js` and each screen's information architecture.
-- The two answered GATE 1 questions (skins and icons).
-- Measurement floors for every finalist, in light and dark: text at least 4.5:1 on every surface it can
-  sit on, and body text at least 7:1 on its main surface, for sunlight; boundaries, icons and focus rings
-  at least 3:1; accent against danger at least ΔE00 15.
-- The measurement rule for a display face: bytes (a variable family can invert a per-weight estimate),
-  width at the real computed style, and the rise of stacked Vietnamese marks measured numerically;
-  SIL OFL or an equivalent licence; Latin and Vietnamese subsets, self-hosted, about 70 KB at most
-  (today's Be Vietnam Pro is 67.7 KB for two weights).
+- **River.** Mekong mist by day and jungle night by night. Ground from the sky in
+  `img/places/vi-ext-cai-rang.jpg`, ink and night ground from the foliage in
+  `img/places/kh-siemreap-tonle-sap-floating.jpg`, secondary from the silt in
+  `img/places/la-ext-don-khon.jpg`. Each country's colour comes from a river photo in that country:
+  Amphawa (Thailand), Cai Rang (Vietnam), the Tonle Sap villages (Cambodia), Don Khon (Laos).
+- **Four Flags.** Flag white `#F4F5F8` and, at night, neutral graphite. Each country takes its flag's
+  central colour: Thailand the Thai blue `#2D2A4A` (Office of the Prime Minister, 30 September 2017,
+  CIELAB under D65; Pantone 2766C on the ASEAN sheet), Vietnam the star's gold (Pantone 116), Cambodia
+  the red band (Pantone 032; the Ministry of Foreign Affairs gives CMYK 0-100-100-0), Laos the blue band
+  (Pantone 293). Where a floor requires it the value moves and the file says so: by day the gold deepens
+  to `#A58907` and the red moves to `#CF585F`; at night the two blues lift. Danger by day is the Thai flag
+  red `#A51931`, because Thailand's own colour is its blue. The flags themselves never appear as
+  decoration (section 5).
+- **Temples & Markets.** Ivory, lacquer and gold. Ground from Wat Chalong's cream gold, ink from the
+  Temple of Literature's lacquer, secondary from Wat Pho's gold. Each country's colour comes from a
+  temple or market in that country: Wat Chalong (Thailand), the Temple of Literature (Vietnam), the
+  Royal Palace in Phnom Penh (Cambodia), the Luang Prabang night-market textiles (Laos).
 
-### 4.2 Open: amendments a direction may propose
+### 3.3 What stays
 
-The gate lists each amendment with its cost, and the owner approves or rejects each one.
-
-- Section 5.1, principles 3 ("one of each") and 4 ("colour carries meaning"), as they apply to brand
-  surfaces: a two-tier palette, with restrained functional roles plus an expressive brand palette used
-  only on the brand surfaces of section 2.3.
-- Section 5.3: the display face, its weights, and whether a Latin-only display case (upper case on brand
-  moments, as today) survives. It may never be the only signal of hierarchy, and it never applies to
-  Thai, Lao, Khmer, Arabic, Hebrew, Persian or Urdu strings.
-- Section 5.5's limit of three gradients, and section 10's targets of 4 radii, 3 shadows and 3
-  gradients: a different budget for brand surfaces, as tokens, with a ceiling that Slice 1d's ratchet
-  guard can enforce.
-- Section 5.8's ban on looping animation: one signature brand motion (for example, a slow turn of the
-  Welcome sunburst), CSS-only, paused off screen and off under Reduce motion.
-
----
-
-## 5. Phases
-
-### Phase 1. Today's spirit (the keeper leads)
-
-Look before reading. Capture Home and Welcome on all eight surfaces (Classic light, Classic dark and the
-six named skins; seed `store.profile.skin` as well as `theme`), and read the carriers in section 2.1.
-`tools/style-tiles/capture.py` does both captures in one run.
-
-Output, `spirit.md`: eight to twelve traits that make today's look Mekonging, each with where it lives
-(a file and line, or a screenshot), a verdict (keep, evolve or retire) and one sentence of reasoning.
-The keeper writes it; every other seat may annotate it.
-
-### Phase 2. Reference board (the visual-culture specialist leads)
-
-Output, `references.md` and `samples.json`: for each of the four countries and for the river itself,
-three to six sources, the app's own photographs first. For each source: what it contributes (colour,
-pattern, letterform, material or composition), the colours sampled from it with the photograph's path,
-and any guardrail from section 2.4 that applies.
-
-### Phase 3. Six directions
-
-Each authoring seat develops one direction from its own primary source area.
-
-| Seat | Primary source area |
-|---|---|
-| Keeper of today's spirit | The Golden Age of Cambodian popular music: record sleeves, film posters and title lettering. This is the identity the app already quotes, evolved rather than refined away |
-| Mekong visual-culture specialist | Woven textiles: Lao sinh and pha biang, Khmer hol and pidan, Tai Dam and Hmong indigo, for pattern, colour and edge |
-| Typographer | Street lettering: hand-painted shop signs, market price boards, boat and bus livery and temple signage, with Thai, Lao, Khmer and Vietnamese scripts beside Latin |
-| Travel UX researcher | The river and the road by day: silt-brown water, laterite earth, rice green, monsoon sky, long-tail boat paint and enamel route signs |
-| Guidebook editor | The map and the field guide: printed cartography and field guides, with the app's own illustrated map and its four country colours as a categorical system |
-| Creative director | Night on the river: the lanterns of Hội An, the night markets of Luang Prabang and Vientiane, and temple gold at dusk. Real places only; round 1's generic neon (direction C) is the counter-example |
-
-Each direction is a written specification in `directions.json` and `directions.md`:
-
-- a name, a one-sentence thesis, and the photographs or sources it draws on;
-- the spirit traits it keeps (by number from `spirit.md`) and any it retires;
-- functional role tokens in light and dark, using round 1's set (bg, surface, surface2, line,
-  borderStrong, text, text2, accent, onAccent, accentSoft, secondary, star, danger, onDanger), measured
-  with `tools/style-tiles/measure.py`;
-- its expressive brand palette and the brand surfaces it may appear on;
-- typography: the display face (Be Vietnam Pro, or a measured alternative) and the type scale;
-- shape and density: radii, spacing rhythm and card treatment;
-- the motif system (for example the sunburst, a woven band or a lantern glow), CSS-only, with an
-  estimate in bytes;
-- photo treatment and icon stroke (line icons are decided; weight and caps may vary);
-- the one aesthetic risk it takes, and the section 4.2 amendments it needs.
-
-Run a diversity check. Any two directions must differ in at least three of these six: accent hue family,
-display face, shape language, motif system, density and photo treatment. Record the matrix, and the
-chair merges any pair that fails it.
-
-### Phase 4. Critique, and a cut to three
-
-Every seat scores every direction from 1 to 5 on each criterion, with one sentence of evidence per
-score. Vetoes are binary and cite their rule.
-
-| Criterion | Weight |
-|---|---|
-| Distinctly Mekong: could it belong to any other app? | ×2 |
-| Today's spirit kept (the traits in `spirit.md`) | ×2 |
-| Calm where it counts: no functional screen gets busier, and the first viewport still shows the tool | ×2 |
-| Glanceable in sunlight, with AA measured across the eight surfaces | ×1 |
-| 29 languages, right-to-left, and Thai, Lao and Khmer behaviour | ×1 |
-| Feasible and light: CSS-only, measured bytes, a stylesheet that shrinks | ×1 |
-| Ownable: none of the generated looks listed in section 2.4 | ×1 |
-
-The chair cuts to three finalists (hybrids are allowed if they credit both sources), records dissent and
-recommends one. Output: `critique.md`.
-
-### Phase 5. Style tiles, round 2
-
-Build one standalone page in the scratchpad and publish it as a new private artifact that links to
-round 1. For each finalist, at 375px in light and dark, show:
-
-- the brand surfaces: the wordmark, the first Welcome step, Home's header, a section divider, an empty
-  state, and the illustrated map in the direction's treatment;
-- the functional set from round 1: the palette with measured ratios, the type scale, buttons, chips, a
-  card, a list row, a section header, an input, the topbar, the tab bar and the real Wat Pho listing;
-- a spirit check: the `spirit.md` traits ticked against what the frame shows;
-- today's screens, for comparison.
-
-Build notes from round 1:
-
-- The Artifact page contract blocks external hosts, so inline fonts and images as `data:` URIs.
-- Preview the page inside an equivalent publish skeleton. Under mobile emulation, a local file without a
-  viewport meta lays out at 980px, and an author `display:` rule overrides the browser's `[hidden]`
-  rule.
-- Size grid tracks with `minmax(0, 1fr)`. A single-column grid otherwise grows to its widest item's
-  min-content width. That pushed round 1's kit past its frame until I fixed it.
-- Look once, fix once, then publish.
+- **Classic sunset**, today's default, unchanged except the Phase 2 button fix.
+- **The six named skins** (Night Market, Silk Route, Tropical Pop, Cambodian Psych, Psych Night, Luxury
+  Expedition) keep their fixed modes.
+- **The logo** is pinned: `--sun:#F2A93B; --sun-deep:#E8632A; --magenta:#D6336C; --teal:#16A39A` on
+  `.logo`, identical to `icons/icon.svg` and the `index.html` splash, in every theme.
 
 ---
 
-## 6. The gate: GATE 1, round 2
+## 4. Floors
 
-Ask with AskUserQuestion, recommended option first:
+`tools/style-tiles/measure.py` checks every one; it exits 1 below a floor. Floors apply to both modes of
+every candidate. Classic is measured as shipped, for comparison only.
 
-1. **Direction.** The three finalists, each with a preview of its key tokens, its display face and the
-   spirit traits it keeps. "Other" lets the owner ask for a hybrid.
-2. **Amendments.** A multiple choice of the section 4.2 amendments that the finalists need, each with
-   its cost.
-
-If the owner chooses none of the finalists, ask what missed, as round 1 did, record the answer, and stop;
-round 3 belongs to a later session.
-
-Record the answers in `DESIGN_SYSTEM.md` (the gate record) and in memory, open one pull request for that
-record, and stop. `REDESIGN_PROMPT.md` then resumes at Slice 1b, with the chosen direction's tokens in
-place of section 5.2.
-
----
-
-## 7. Cost
-
-- One session with the strongest model, because this is design judgement. No Workflow and no
-  sub-agents.
-- Measure rather than guess: ratios, ΔE00, bytes and widths.
-- Reuse round 1. The artifact's source holds the component kit, and `tools/style-tiles/` holds the
-  capture and measurement scripts.
-- Phase 2 opens and checks every source it cites. It does not search blind.
+- **Text.** At least 4.5:1 on every surface it can sit on, including the page (`--bg`), and body text at
+  least 7:1 on its main surface for sunlight. The screen title is checked on the page.
+- **Primary label.** The label against every stop of the primary fill, at least 4.5:1.
+- **Graphics.** Boundaries, icons, focus rings, the sun-orange marker and the rating star at least 3:1.
+- **Country colours.** At least 3:1 as graphics against the page, the card and the illustrated map's
+  sea; at least ΔE00 12 between each pair; at least ΔE00 15 from danger and from the sun orange (both its
+  fill and its marker).
+- **Colour vision.** The same pairwise ΔE00 through protanopia, deuteranopia and tritanopia (Machado
+  2009, full severity). A warning below 12 rather than a failure, because a country's name always
+  travels with its colour; every candidate reaches 12 for protanopia and deuteranopia.
+- **Accent against danger.** At least ΔE00 15 (round 1 measured 9.1 for a pair that read alike).
+- **Names.** `capture.py` checks, on every shot, that each element painted in a country colour also
+  names its country.
 
 ---
 
-## 8. Starting message
+## 5. Guardrails
 
-Paste this into a fresh session opened on the Mekonging repository:
+- Buddha images, monks and other sacred objects are never ornament or pattern. A place's own photograph
+  in its listing is content, and the rule does not apply to it.
+- National and royal symbols (flags, royal emblems, the Angkor Wat silhouette) appear only where they
+  carry meaning, never as decoration. Four Flags borrows the flags' colours, never their designs.
+- No faux-Asian Latin lettering, and no Latin face that imitates Thai, Lao or Khmer letterforms.
+- No pan-Asian pastiche. Credit each colour to its country and source.
+- Cream paper reads as a generic look when it comes with a serif face and a terracotta accent. The retro
+  default stays faithful to the poster instead: navy ink, the stripe band, Be Vietnam Pro.
 
-> Read `REDESIGN_PROMPT.md` sections 0–7, then `VISUAL_DIRECTION_PROMPT.md` in full. Run Phase 0, then
-> phases 1 to 5, and stop at GATE 1 round 2.
+---
+
+## 6. Phases
+
+### Phase 1. Candidates and the default decision (docs and tools only)
+
+1. Rewrite this prompt and record the decisions in `DESIGN_SYSTEM.md`.
+2. `capture.py --preview <css>`: inject the candidate stylesheet at document start, keep the wayfinding
+   hooks current, pin and assert the logo.
+3. `measure.py`: the floors of section 4.
+4. Design the palettes (section 3) with `round2.json` as the single source; `preview.py` renders it.
+5. Capture welcome, home, places, explore, place-th-bkk-wat-pho, phrasebook and me in light and dark: the
+   retro default in four variants (two tunings by two navigation variants), the three modern themes, and
+   today's Classic. Publish one private gallery with the measured ratios.
+6. The gate (section 8). If the owner says the default is not right yet, iterate here before any app
+   code changes.
+
+### Phase 2. Machinery and guards, with no visual change
+
+- A new import-free `js/theme.js`: `DEFAULT_SKIN` (still `'classic'`) and `SKIN_MODE` (the six legacy
+  skins keep fixed modes; `classic` and the four new ids are `'auto'`). `applyTheme()` always stamps
+  `data-skin`, maps an unknown id to `DEFAULT_SKIN`, and drops its `'classic'` special cases.
+- Wayfinding hooks: the tabs gain ids; a new `applyTab()`, called in `render()` after `applyTheme()`,
+  sets `html[data-tab]` from `activeTabForHash()` and `html[data-country]` from the country in context;
+  country chips, cards and the context line carry `data-cc`. The preview stamps `html[data-route]` (the
+  hash head) to find country pages; a screen class would do the same job.
+- Country colours become tokens (`--country-th`, `--country-vi`, `--country-kh`, `--country-la`) at
+  today's values. `REGION_COLORS`, the explore map and the cards read them. The chrome leaks use neutral
+  or role tokens instead: `js/nav-groups.js` (its group accents), `accentFor()` in `js/main.js` (Journal
+  is Thailand's `#C25E3A`, Exchange is Vietnam's `#9C5780`), `js/screens/calendar.js` and
+  `js/budget-ui.js`.
+- The chrome selectors that still carry literal colours, routed through tokens at today's values (the
+  preview overrides each one):
+  - the topbar back button, and the hero glow (`.hero::before`, `.hero`'s radial and conic layers);
+  - the shadows (`--shadow`, `--shadow-soft`, `--elev-*`);
+  - the white labels on `.btn`, `.chip[aria-pressed]`, `.country-chip[aria-pressed]`,
+    `.phase-btn[aria-pressed]`, `.pill-best` and `.update-toast-btn`, and the chip glows;
+  - `.tile .ic`;
+  - the tab bar's rule (`border-image`) and its active pip, and the same rule on `.sheet` and
+    `.compare-tray`;
+  - `.region-map`'s sea and the map's strokes and labels (`.ctry`, `.mekong`, `.mekong-name`,
+    `.ctry-name`).
+- A token-driven stripe-band component (CSS gradients only) that renders nothing until a theme sets
+  `--stripe-*`. `tools/style-tiles/preview.py` is its prototype: the straight band, the Welcome arc with
+  the sun's window, and the empty-state arc.
+- Guards: `check-contrast.py` builds `<id>-light` and `<id>-dark` surfaces in cascade order, resolves
+  `var()`, checks text on `--bg`, labels on every fill stop and the country colours, asserts its surface
+  count and counts the rules it skips; a new `scripts/check-skins.py` checks that the ids agree across
+  `theme.js`, the CSS blocks, Settings and the boot script; both are registered in `scripts/README.md`
+  and `.github/workflows/guards.yml`; `capture.py` reads `theme.js`.
+- Classic's `.btn`: a two-stop `#F2A93B`→`#E8632A` gradient with `--badge-ink` (8.55 and 5.08:1). This is
+  the only intended visual change, and the PR names it.
+
+### Phase 3. The four themes, the pinned logo and first paint
+
+- Each theme gets `:root[data-skin="<id>"][data-theme="light"]` and `[data-theme="dark"]` blocks holding
+  every token, plus `--country-*` and, for the retro default, `--stripe-*`, at specificity 0,3,0 so they
+  cannot leak across modes. Port the values from `round2.json`; do not retype them.
+- Brand surfaces: the retro default places the band on Welcome (behind the sun), the tab-root headers,
+  section dividers, empty states and the tab bar's top edge. The modern themes use no stripes.
+- `logoSVG()` uses literal colours identical to `icons/icon.svg` and the splash.
+- Settings: a "Regional" group holds the new themes; "Day / night (Classic only)" becomes "Light /
+  dark", enabled for Classic and the new themes and disabled for the six fixed skins.
+- First paint: an external `js/theme-boot.js` (allowed by the CSP) sets `data-skin` and `data-theme`
+  from `mk.store` before first paint; two `media`-scoped `theme-color` metas replace the one in
+  `index.html`, and `applyTheme()` updates both; the manifest's `theme_color` becomes the default's light
+  `--bg`; the splash `--bg` follows `prefers-color-scheme`.
+- Add both new files to `PRECACHE` in `sw.js`, run `check-preloads.py --fix`, bump `APP_VERSION` and
+  `CACHE_VERSION` together, and run `python3 scripts/build-sw-manifest.py --write`.
+
+### Phase 4. Flip the default
+
+- `DEFAULT_SKIN` becomes the retro theme. `CURRENT_VERSION` in `js/state.js` goes from 15 to 16 with the
+  migration the gate chose; it keeps the stored light/dark mode and shows the one-time Undo toast if
+  migrating. Classic stays selectable. Older builds render an unknown id as Classic, so a rollback is
+  safe.
+
+---
+
+## 7. Phase 1 findings (measured 2026-10-05)
+
+- **The poster's orange cannot name a country.** Sampled as `#D36942`, it sits ΔE00 5.3 from the sun
+  orange's marker, against a floor of 15. Its mustard (`#CD8032`) reaches 2.63:1 on cream and its rust
+  (`#AF4A44`) sits ΔE00 10.1 from the danger crimson. Through deuteranopia the mustard and the orange
+  collapse to ΔE00 4.2.
+- **Today's map already blurs Thailand with the action colour.** The terracotta `#C25E3A` sits ΔE00 6.3
+  from `#DD571E` and 8.3 from `#E8632A`. On Classic's own card the marigold reaches 1.84:1 and the sage
+  2.75:1; through deuteranopia Thailand and Laos collapse to ΔE00 5.4.
+- **An olive avocado fails colour vision.** As the poster's fourth stripe it drops the protanopia and
+  deuteranopia separations to 4 to 9, so Laos takes the bluer sage `#6C8C5D`.
+- **The map's sea had to be measured too.** The first sea tints left 14 country colours under 3:1 against
+  the water. Each sea is now the strongest tint of the theme's water that keeps every country at 3:1 or
+  more.
+- **Classic as shipped fails 19 checks.** Among them: the white primary label on the `#E07A1F` stop at
+  3.01:1, accent against danger at ΔE00 7.1 (day) and 6.6 (night), chip boundaries at 1.27:1, the white
+  label on the night danger fill at 2.82:1, and the map itself: against today's sea the marigold reaches
+  1.37:1, the sage 2.04:1 and the terracotta 2.64:1.
+- **Not changed by Phase 1, noted for later.** The places map's basemap colours are literal in
+  `js/map.js`, so a dark theme still shows its tan land; Talk's translate card stacks three primary
+  buttons; the "Kids OK" tag's amber `#d97706` sits near the sun orange.
+
+---
+
+## 8. The gate (Phase 1)
+
+Ask with AskUserQuestion, recommended option first, against the gallery:
+
+1. Is this retro default the one, and which stripe tuning (poster or map)?
+2. Which navigation variant (country colours with one sun orange, or a colour per tab)?
+3. The theme names (the retro default's name, and "River", "Four Flags", "Temples & Markets",
+   "Classic sunset").
+4. Existing users whose store says `classic`: move to the new default with a one-time Undo toast, or
+   stay on Classic?
+
+Record the answers in `DESIGN_SYSTEM.md`, push, and stop.
+
+---
+
+## 9. Tools
+
+All in `tools/style-tiles/`: Python 3, standard library plus the system Google Chrome (Pillow only to
+sample photos). Outputs go to the session scratchpad, never into the repository. See its `README.md`.
+
+---
+
+## 10. Starting messages
+
+Each phase starts in a fresh session, on the model named in section 0:
+
+- Phase 2: "Read VISUAL_DIRECTION_PROMPT.md and the gate record in DESIGN_SYSTEM.md, then execute Phase 2
+  and stop when its pull request is open."
+- Phase 3: the same message with "Phase 3"; the owner reviews its screenshots before it merges.
+- Phase 4: the same message with "Phase 4".

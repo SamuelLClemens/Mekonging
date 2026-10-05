@@ -573,5 +573,5 @@ Paste this into a fresh session opened on the Mekonging repository:
 > Read `REDESIGN_PROMPT.md` in full (sections 0–7, then Slice 1). Run Phase 0, then execute Slice 1a
 > and stop at GATE 1.
 
-If `DESIGN_SYSTEM.md` records no direction yet, use the starting message in
-`VISUAL_DIRECTION_PROMPT.md` section 8 instead.
+If `DESIGN_SYSTEM.md` records no direction yet, use the starting messages in
+`VISUAL_DIRECTION_PROMPT.md` section 10 instead.
