@@ -119,3 +119,18 @@ the new themes only by choosing one in Settings; two things change for everyone 
 - **Not changed, noted for later.** The places map's basemap colours are literal in `js/map.js`, so a dark theme
   still shows its tan land; text inputs keep the browser's white field on dark themes; Talk's translate card stacks
   three primary buttons.
+
+## Phase 4: the default flips to Mekong Retro (2026-10-05, `mk-v0.626.0`)
+
+- `DEFAULT_SKIN` is `retro` (`js/theme.js`), and so is the default profile's `skin` in `js/state.js`. A profile with no
+  skin, or an unknown one, renders as Mekong Retro. Classic sunset stays selectable in Settings. An older build does not
+  know a newer id and renders it as its own default, so a rollback is safe.
+- **Store version 16.** `migrate()` moves a profile whose stored skin is `classic` and whose version is under 16 to `retro`
+  (Classic was the default, so that stored value cannot tell "never chose" from "chose"; the gate answer was to move them).
+  It keeps the stored light / dark choice and leaves every other skin alone, and a profile that picks Classic again at
+  version 16 or later is left on it.
+- **The Undo toast.** The migration sets `prefs.skinMovedFrom`; `render()` shows "New look: Mekong Retro." once with an Undo
+  that restores Classic, and clears the flag first so it cannot return.
+- **First paint.** `js/theme-boot.js` paints a version-15 Classic profile as the default, so it never flashes Classic once.
+- **Tested** in headless Chrome on a fresh install, v15 Classic with auto and with forced dark, v16 Classic, and v15 Silk
+  Route: the skin, the toast, Undo, the stored value and a reload after Undo all behave as above.

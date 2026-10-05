@@ -8,8 +8,10 @@
 // palettes are the generated block at the end of css/style.css (tools/style-tiles/port-themes.py).
 // js/theme-boot.js repeats this table for first paint, and scripts/check-skins.py keeps the two in step.
 //
-// DEFAULT_SKIN is what a profile with no skin, or an unknown one, renders as. Phase 4 flips it.
-export const DEFAULT_SKIN = 'classic';
+// DEFAULT_SKIN is what a profile with no skin, or an unknown one, renders as: Mekong Retro since Phase 4
+// of the retro redesign. Classic sunset stays selectable (and an older build, which does not know a newer
+// id, renders it as its own default, so a rollback is safe).
+export const DEFAULT_SKIN = 'retro';
 
 export const SKIN_MODE = {
   classic: 'auto', retro: 'auto', river: 'auto', flags: 'auto', temples: 'auto',

@@ -813,7 +813,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.625.0';
+export const APP_VERSION = 'mk-v0.626.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7228,10 +7228,22 @@ function countryUnavailableScreen(ccs) {
   ]);
 }
 
+// One time, after js/state.js moved a Classic profile to the new default (store v16): say so, and offer the way
+// back. The flag is cleared first, so the toast cannot return even if the traveller ignores it.
+function maybeAnnounceThemeMove() {
+  const p = store.profile;
+  const from = p.prefs && p.prefs.skinMovedFrom;
+  if (!from) return;
+  delete p.prefs.skinMovedFrom;
+  save();
+  showUndoToast('New look: Mekong Retro.', () => { p.skin = from; save(); applyTheme(); });
+}
+
 // ---- router -----------------------------------------------------------------
 export function render() {
   applyTheme();
   applyTab();
+  maybeAnnounceThemeMove();
   applyDocLang();   // keep <html lang>/<html dir> in step with the chosen interface language
   // Tear down any live map before rendering the next screen (frees the WebGL context
   // and stops the GPS watcher — prevents the map dying after repeated visits). See
