@@ -163,7 +163,7 @@ export function exploreScreen(argCc) {
       const lang = getLanguage(x.lang);
       const tags = ((countryHistory(x.id) || {}).knownFor || []).slice(0, 3);
       grid.append(h('button', {
-        class: 'explore-card', style: `--ec:${REGION_COLORS[x.id] || 'var(--teal)'}`,
+        class: 'explore-card', 'data-cc': x.id, style: `--ec:${REGION_COLORS[x.id] || 'var(--teal)'}`,
         onclick: () => { setActiveCountry(x.id); go(`#country-${x.id}`); },
         'aria-label': `Explore ${x.name}`,
       }, [
@@ -486,7 +486,7 @@ function regionPicker() {
   const shapes = COUNTRIES.map((c) => {
     if (!REGION_PATHS[c.id]) return '';
     return `<g class="ctry-group" data-country="${c.id}" role="button" tabindex="0" aria-label="${esc(c.name)}">
-         <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" fill="${REGION_COLORS[c.id]}"/>
+         <path class="ctry" fill-rule="evenodd" d="${REGION_PATHS[c.id]}" style="fill:${REGION_COLORS[c.id]}"/>
        </g>`;
   }).join('');
   const river = REGION_RIVER ? `<g class="mekong-group" aria-hidden="true">

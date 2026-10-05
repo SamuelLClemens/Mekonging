@@ -83,7 +83,7 @@ jobs:
             fi
           }
 
-          for g in imports lazy-data preloads ui-strings month-arrays contrast spacing place-dupes undefined net-gates sources; do
+          for g in imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
             guard scripts/check-$g.py
           done
           guard scripts/check-place-fields.py --assert

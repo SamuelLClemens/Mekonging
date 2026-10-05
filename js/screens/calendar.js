@@ -56,11 +56,11 @@ function calDateLabel(d) {
 let calView = null;      // { y, m } month being viewed
 let calSelDate = null;   // 'YYYY-MM-DD' selected day
 const CAL_LAYERS = [
-  { key: 'holidays', label: 'Holidays & festivals', color: '#E0A526' },
+  { key: 'holidays', label: 'Holidays & festivals', color: 'var(--role-holiday)' },
   { key: 'religious', label: 'Religious', color: '#8A5CC0' },
   { key: 'other', label: 'Other countries', color: '#2C7DA0' },
   { key: 'journal', label: 'Journal & photos', color: '#2E8B57' },
-  { key: 'mine', label: 'My plans', color: '#C25E3A' },
+  { key: 'mine', label: 'My plans', color: 'var(--role-mine)' },
 ];
 function calLayerState() {
   return { holidays: true, religious: true, other: false, journal: true, mine: true, ...(store.profile.prefs.calLayers || {}) };
@@ -140,12 +140,12 @@ function calendarScreen() {
     let show, color;
     if (other) { show = L.other; color = '#2C7DA0'; }
     else if (rel) { show = L.religious; color = '#8A5CC0'; }
-    else { show = L.holidays; color = '#E0A526'; }
+    else { show = L.holidays; color = 'var(--role-holiday)'; }
     if (!show) return;
     calEachDate(e.start, e.end, (ds) => push(ds, { color, kind: 'event', ref: e, cc }));
   }));
   if (L.journal) (store.journal.entries || []).forEach((j) => { if (j.date) push(j.date, { color: '#2E8B57', kind: 'journal', ref: j }); });
-  if (L.mine) (store.calendar.items || []).forEach((it) => { if (it.date) push(it.date, { color: '#C25E3A', kind: 'item', ref: it }); });
+  if (L.mine) (store.calendar.items || []).forEach((it) => { if (it.date) push(it.date, { color: 'var(--role-mine)', kind: 'item', ref: it }); });
   // Private health dots (grid only — details/logging live in the private day card below).
   if (pUnlocked) {
     const y = calView.y, m = calView.m, dim = new Date(y, m + 1, 0).getDate();

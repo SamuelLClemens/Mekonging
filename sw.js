@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.623.0';
+const CACHE_VERSION = 'mk-v0.624.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -102,6 +102,7 @@ const PRECACHE = [
   'js/main.js',
   'js/app-state.js',
   'js/nav-groups.js',
+  'js/theme.js',
   'js/trail.js',
   'js/screens/home.js',
   'js/screens/weather.js',
@@ -358,14 +359,14 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': '5c368ef5',
+  'css/style.css': 'b861e4eb',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': '5fbd1ea0',
+  'index.html': '15916f43',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
-  'js/budget-ui.js': '6244d5ac',
+  'js/budget-ui.js': '6568b5a4',
   'js/currency.js': 'cccd3d60',
   'js/data/accessibility.js': '48f9da6c',
   'js/data/allergens.js': 'df832414',
@@ -526,10 +527,10 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '38a7d9ad',
+  'js/main.js': 'c5495595',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'f18178d4',
-  'js/nav-groups.js': '1bdef2e7',
+  'js/nav-groups.js': 'b5403a92',
   'js/offline-areas-ui.js': '01b8e952',
   'js/offline-pack.js': 'a804a82e',
   'js/offline-ready.js': 'c93785dc',
@@ -542,13 +543,13 @@ const MANIFEST = {
   'js/screens/arrival-info.js': 'a6846fa4',
   'js/screens/bargain.js': '0e891fc2',
   'js/screens/board.js': '32ddfbc9',
-  'js/screens/budget.js': 'ae9a5414',
-  'js/screens/calendar.js': '1e3e3fd4',
+  'js/screens/budget.js': '025fe904',
+  'js/screens/calendar.js': 'dd413d63',
   'js/screens/circle.js': '9497226c',
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': 'ec713fe8',
   'js/screens/etiquette.js': '7fc329c4',
-  'js/screens/explore.js': '6b4fa967',
+  'js/screens/explore.js': 'c508c39b',
   'js/screens/export.js': '1429f50c',
   'js/screens/family.js': '97c566e5',
   'js/screens/firstaid.js': '2e11af42',
@@ -581,6 +582,7 @@ const MANIFEST = {
   'js/social.js': 'bdf1920c',
   'js/state.js': '15cf06d7',
   'js/svg-pan-zoom.js': '6c2048a4',
+  'js/theme.js': 'f8d95a9f',
   'js/trail.js': 'c04f9efc',
   'js/translate.js': 'bb9a9517',
   'js/tts.js': '43323496',

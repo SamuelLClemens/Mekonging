@@ -76,7 +76,7 @@ function donutSVG(segs, centerTop, centerSub) {
   let acc = 0;
   const ring = total > 0 ? segs.filter((s) => s.value > 0).map((s) => {
     const pct = s.value / total * 100;
-    const el = `<circle cx="21" cy="21" r="15.91549" fill="none" stroke="${s.color}" stroke-width="5.5" stroke-dasharray="${pct.toFixed(2)} ${(100 - pct).toFixed(2)}" stroke-dashoffset="${(25 - acc).toFixed(2)}"/>`;
+    const el = `<circle cx="21" cy="21" r="15.91549" fill="none" style="stroke:${s.color}" stroke-width="5.5" stroke-dasharray="${pct.toFixed(2)} ${(100 - pct).toFixed(2)}" stroke-dashoffset="${(25 - acc).toFixed(2)}"/>`;
     acc += pct; return el;
   }).join('') : '<circle cx="21" cy="21" r="15.91549" fill="none" stroke="var(--line)" stroke-width="5.5"/>';
   return `<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Spending by category">${ring}<text x="21" y="20.3" class="donut-top" text-anchor="middle">${esc(String(centerTop || ''))}</text><text x="21" y="25.6" class="donut-sub" text-anchor="middle">${esc(String(centerSub || ''))}</text></svg>`;
