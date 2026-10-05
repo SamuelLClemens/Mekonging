@@ -83,9 +83,12 @@ export function transportScreen(countryId) {
     wrap.append(h('p', { class: 'empty' }, `Intercity routes for ${country ? country.name : 'this country'} are not listed yet — use “Plan a whole journey” above, or open any place to see its nearest transport connections.`));
     mount(wrap, '#home'); return;
   }
-  const routeCard = (r) => {
+  // `reverse` marks a card that is listed the other way round from the city the traveller is leaving:
+  // the options below are written for the stored direction, so say so rather than flip the title.
+  const routeCard = (r, reverse) => {
     const card = h('div', { class: 'card' }, [
       h('h2', {}, `${r.from} → ${r.to}`),
+      reverse ? h('p', { class: 'muted tiny' }, `Listed as ${r.from} → ${r.to}; the same route runs the other way.`) : null,
       r.crossBorder ? h('p', { class: 'border-flag' }, `Border crossing: ${r.border}`) : null,
       r.visa ? h('p', { class: 'muted' }, `Visa: ${r.visa.note}`) : null,
       r.summary ? h('p', { class: 'muted' }, tx(r.summary)) : null,
@@ -131,7 +134,14 @@ export function transportScreen(countryId) {
   // rest of the country network collapses behind one tap instead of a long scroll.
   const fs = focusSpot(getActiveCountry());
   const focusCity = (fs.source === 'gps' || fs.source === 'focus') ? fs.spot.city : '';
-  const here = focusCity ? routes.filter((r) => citySlug(r.from) === citySlug(focusCity)) : [];
+  const focusKey = focusCity ? citySlug(focusCity) : '';
+  const out = focusKey ? routes.filter((r) => citySlug(r.from) === focusKey) : [];
+  // A route is stored once, in one direction (js/journey.js reverses it for the planner), so a city that is
+  // only ever a destination (Koh Samet, Sapa, Koh Larn) would list nothing as "Leaving". Those routes are
+  // included too, unless the opposite direction is already stored and listed above.
+  const back = focusKey ? routes.filter((r) => citySlug(r.to) === focusKey && citySlug(r.from) !== focusKey
+    && !out.some((o) => citySlug(o.to) === citySlug(r.from))) : [];
+  const here = [...out, ...back];
   const rest = routes.filter((r) => !here.includes(r));
   const collapse = (list, label) => {
     const det = h('details', { class: 'filters-collapse' }, [h('summary', {}, label)]);
@@ -141,7 +151,7 @@ export function transportScreen(countryId) {
 
   if (here.length) {
     wrap.append(h('h3', { class: 'cat-title' }, `Leaving ${focusCity} · ${here.length}`));
-    here.forEach((r) => wrap.append(routeCard(r)));
+    here.forEach((r) => wrap.append(routeCard(r, back.includes(r))));
     if (rest.length) collapse(rest, `More routes across ${country.name} · ${rest.length}`);
   } else {
     // No known city context: show the first few (hub routes lead the data), collapse the tail.
