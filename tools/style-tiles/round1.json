@@ -1,0 +1,39 @@
+{
+  "_about": "GATE 1 round 1 (2026-10-04): the three directions of REDESIGN_PROMPT.md section 5.2 as rendered at https://claude.ai/artifact/8QWD6aT81hp6xbpumqH2vx. A's values follow the prompt except danger, which moved from #B42318 / #FF6B5E to crimson to separate it from the accent (dE00 9.1 -> 20.0 light, 17.0 -> 26.3 dark). B and C were specified only in part, so the remaining roles were completed and measured for the tiles. The owner chose none of the three.",
+  "A": {
+    "name": "Golden Hour, refined",
+    "secondaryName": "River",
+    "light": {"bg": "#FBF8F3", "surface": "#FFFFFF", "surface2": "#F3EEE6", "line": "#E5DCCF",
+              "borderStrong": "#8C7F72", "text": "#221A14", "text2": "#5E5248",
+              "accent": "#C2410C", "onAccent": "#FFFFFF", "accentSoft": "#FBE9DE",
+              "secondary": "#0F766E", "star": "#8F6400", "danger": "#B0103A", "onDanger": "#FFFFFF"},
+    "dark": {"bg": "#17121F", "surface": "#211A2C", "surface2": "#2A2238", "line": "#3A3049",
+             "borderStrong": "#8A7FA0", "text": "#F5EFE6", "text2": "#C2B8AC",
+             "accent": "#FF8A3D", "onAccent": "#1A1208", "accentSoft": "#4A2E2C",
+             "secondary": "#3CC6B5", "star": "#F2B544", "danger": "#FF6B81", "onDanger": "#1F0705"}
+  },
+  "B": {
+    "name": "River and Rice",
+    "secondaryName": "Saffron",
+    "light": {"bg": "#F5F7F4", "surface": "#FFFFFF", "surface2": "#EBF0EB", "line": "#D8E1DA",
+              "borderStrong": "#6B7F76", "text": "#15231E", "text2": "#4A5C54",
+              "accent": "#0E6B5C", "onAccent": "#FFFFFF", "accentSoft": "#DDEEE9",
+              "secondary": "#B45309", "star": "#B45309", "danger": "#B42318", "onDanger": "#FFFFFF"},
+    "dark": {"bg": "#0E1513", "surface": "#16201C", "surface2": "#1E2A25", "line": "#2C3A34",
+             "borderStrong": "#7D928A", "text": "#EAF1ED", "text2": "#AEBFB7",
+             "accent": "#3DD9B8", "onAccent": "#04201A", "accentSoft": "#1D4138",
+             "secondary": "#F2A65A", "star": "#F2A65A", "danger": "#FF6B5E", "onDanger": "#1F0705"}
+  },
+  "C": {
+    "name": "Night Market",
+    "secondaryName": "Lantern gold",
+    "light": {"bg": "#FAF8FC", "surface": "#FFFFFF", "surface2": "#F2EEF7", "line": "#E3DDEC",
+              "borderStrong": "#857B9B", "text": "#1B1626", "text2": "#574E68",
+              "accent": "#C2185B", "onAccent": "#FFFFFF", "accentSoft": "#FBE5EE",
+              "secondary": "#8C5E00", "star": "#8C5E00", "danger": "#B8360F", "onDanger": "#FFFFFF"},
+    "dark": {"bg": "#12101C", "surface": "#1D1A2B", "surface2": "#272339", "line": "#39334F",
+             "borderStrong": "#8D84AB", "text": "#F6F2FB", "text2": "#C3BAD6",
+             "accent": "#FF5C8A", "onAccent": "#1F0611", "accentSoft": "#4A273E",
+             "secondary": "#F7C14B", "star": "#F7C14B", "danger": "#FF6B4A", "onDanger": "#1F0705"}
+  }
+}

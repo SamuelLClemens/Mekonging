@@ -17,6 +17,9 @@ placement and the layout of the main screens.
 - Every step that produces an output (baseline screenshots, style tiles, audit tables) is resumable:
   check whether the output already exists and is complete before regenerating it.
 - Starting fresh: run Phase 0 (section 6), then Slice 1a, then stop at GATE 1.
+- GATE 1 round 1 ran on 2026-10-04 (`DESIGN_SYSTEM.md`). The owner answered the skin strategy and the
+  icon policy and chose no direction. Until `DESIGN_SYSTEM.md` records a direction, run
+  `VISUAL_DIRECTION_PROMPT.md` before Slice 1b.
 
 ---
 
@@ -233,6 +236,10 @@ your slice touches.
 
 ### 5.2 Three candidate directions (GATE 1 chooses)
 
+Round 1 rendered these three, and the owner chose none of them (`DESIGN_SYSTEM.md`).
+`VISUAL_DIRECTION_PROMPT.md` replaces this section for the direction choice; the values below remain as
+the round-1 record.
+
 The values below are starting candidates. I computed their contrast on 2026-10-04, each ratio against
 the surface colour. Re-measure after any change.
 
@@ -364,7 +371,8 @@ in `DESIGN_SYSTEM.md`.
 - **GATE 1** (end of Slice 1a): the direction (A, B or C); the skin strategy (recommended: keep all six
   named skins as palette-only variants of the new roles and retire any that cannot reach AA;
   alternatives: Classic plus two favourites, or Classic only); the icon policy (recommended: line icons
-  for all chrome, emoji only in content).
+  for all chrome, emoji only in content). Round 1 (2026-10-04) answered the skin strategy and the icon
+  policy; the direction moved to `VISUAL_DIRECTION_PROMPT.md`.
 - **GATE 2** (start of Slice 4): the topbar inventory (recommended: Back, title, Search and Emergency;
   Language moves to Settings, while Settings and Saved stay reachable from You; this answers the open
   question recorded in memory note mekong-topbar-title-column); large titles that collapse on scroll
@@ -564,3 +572,6 @@ Paste this into a fresh session opened on the Mekonging repository:
 
 > Read `REDESIGN_PROMPT.md` in full (sections 0–7, then Slice 1). Run Phase 0, then execute Slice 1a
 > and stop at GATE 1.
+
+If `DESIGN_SYSTEM.md` records no direction yet, use the starting message in
+`VISUAL_DIRECTION_PROMPT.md` section 8 instead.
