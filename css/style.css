@@ -1962,6 +1962,19 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
   text-transform: uppercase; letter-spacing: 0.06em; background: var(--card);
 }
 
+/* --- Weather screen forecast map (real MapLibre map, js/map.js initWeatherMap) --- */
+.wx-map-canvas { width: 100%; height: clamp(300px, 55vh, 520px); background: var(--sea); }
+.wx-mchip {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer;
+  padding: 3px 8px; min-height: 24px; border-radius: 999px; font: 800 12px/1.2 system-ui, sans-serif;
+  color: var(--ink); background: var(--card); border: 1px solid rgba(0,0,0,0.28);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.wx-mchip.on { background: #C0431A; color: #fff; border-color: #fff; z-index: 2; }
+.wx-mchip[data-mode="short"] .wx-mchip-name { display: none; }
+.wx-mchip-wx:empty { display: none; }
+.wx-mchip:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+
 /* Zoom +/- control for the offline SVG region/city maps (js/svg-pan-zoom.js). Positioned over
    the map itself, not the caption strip below it. */
 .svg-zoom-ctrl {
@@ -3300,6 +3313,9 @@ select {
 /* Journey map, full screen. A CSS class rather than the Fullscreen API: iOS Safari does not
    implement requestFullscreen for anything but a <video>, and a phone is exactly where a
    traveller needs the whole screen to read a map. The map's ResizeObserver handles the canvas. */
+.jr-map-toggles { display: flex; flex-wrap: wrap; gap: var(--sp-1h); margin-top: var(--sp-2); }
+.jr-tog { min-height: 36px; padding: 0 12px; font-weight: 700; opacity: 0.6; }
+.jr-tog[aria-pressed="true"] { opacity: 1; background: var(--orange); color: #fff; border-color: var(--orange); }
 .jr-map-tools { display: flex; justify-content: flex-end; margin-top: var(--sp-2); }
 .jr-map-live.is-full {
   position: fixed; inset: 0; z-index: 60;

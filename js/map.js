@@ -667,6 +667,184 @@ export async function initVisitMap(containerEl, points) {
   };
 }
 
+// ---- WEATHER FORECAST MAP ---------------------------------------------------
+// The map at the end of the Weather screen: the current country's cities on the real street
+// basemap, each hub a chip with its weather ("⛅ Bangkok 31°"), the rest small dots. It replaces
+// a hand-drawn SVG whose zoom was a CSS scale capped at 3x with labels that scaled with it.
+// Pinch, scroll, double-tap and the +/- buttons are MapLibre's own; two fingers pan on touch and
+// ctrl+scroll zooms on desktop (cooperativeGestures) so the map never traps the page's scroll.
+//
+// Chips are HTML markers, not GL text layers (the style carries no glyphs). Each move re-runs a
+// greedy screen-space pass: the selected city first, then hubs in the caller's order; a chip that
+// would cover one already down shrinks to weather-and-temperature only, then to its dot alone.
+// Widths come from a canvas, not layout, so the pass is right before the map is on screen.
+//   items: [{ key, lng, lat, hub, name, icon, temp }]  — in priority order
+//   opts.onPick(key)   a chip or dot was tapped
+export async function initWeatherMap(containerEl, opts = {}) {
+  await loadLibs();
+  const maplibregl = window.maplibregl;
+  if (!maplibregl) throw new Error('map library unavailable');
+  const style = basemapStyle();
+  // Plain street map: satellite and the dashed border line are for the Places map, not a forecast.
+  style.layers.forEach((l) => {
+    if (l.id === 'satellite' || l.id === 'borders') l.layout = { ...(l.layout || {}), visibility: 'none' };
+    if (l.id === 'street') l.layout = { ...(l.layout || {}), visibility: 'visible' };
+  });
+  style.sources.dots = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } };
+  const light = document.documentElement.getAttribute('data-theme') !== 'dark';
+  style.layers.push(
+    { id: 'wx-dot', source: 'dots', type: 'circle', paint: {
+      'circle-radius': ['case', ['==', ['get', 'on'], 1], 8, ['==', ['get', 'hub'], 1], 6, 4.5],
+      'circle-color': ['case', ['==', ['get', 'on'], 1], '#C0431A', ['==', ['get', 'hub'], 1], '#2C7DA0', '#6B8FA3'],
+      'circle-stroke-color': light ? '#FFFDF5' : '#1A1A1A', 'circle-stroke-width': 2 } },
+  );
+  const map = new maplibregl.Map({
+    container: containerEl, style,
+    center: [104.5, 13.5], zoom: 4.5,
+    maxBounds: REGION_BOUNDS, maxZoom: STREET_MAXZOOM, minZoom: 3,
+    cooperativeGestures: true, attributionControl: { compact: true },
+    dragRotate: false, touchPitch: false,
+  });
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left'); } catch { /* older build */ }
+
+  let items = [], selKey = null, ready = false, ctx, autoFit = null;
+  const markers = new Map();   // key -> { el, mk, full, short }
+  const textW = (t) => {
+    if (ctx === undefined) { try { ctx = document.createElement('canvas').getContext('2d'); } catch { ctx = null; } }
+    if (!ctx) return [...t].length * 7.4;
+    ctx.font = '800 12px system-ui, sans-serif';
+    return ctx.measureText(t).width;
+  };
+  const fc = () => ({
+    type: 'FeatureCollection',
+    features: items.map((d) => ({ type: 'Feature', properties: { key: d.key, hub: d.hub ? 1 : 0, on: d.key === selKey ? 1 : 0 }, geometry: { type: 'Point', coordinates: [d.lng, d.lat] } })),
+  });
+  function layout() {
+    if (!ready) return;
+    const w = containerEl.clientWidth || 340, hgt = containerEl.clientHeight || 320;
+    const placed = [];
+    const meets = (b) => placed.some((p) => b.x0 < p.x1 + 3 && p.x0 < b.x1 + 3 && b.y0 < p.y1 + 3 && p.y0 < b.y1 + 3);
+    const order = items.filter((d) => d.key === selKey).concat(items.filter((d) => d.key !== selKey && d.hub));
+    const shown = new Set();
+    order.forEach((d) => {
+      const m = markers.get(d.key);
+      if (!m) return;
+      const p = map.project([d.lng, d.lat]);
+      if (p.x < -40 || p.y < -20 || p.x > w + 40 || p.y > hgt + 20) return;
+      // The chip sits above its dot (anchor bottom), 12px clear of it.
+      for (const mode of ['full', 'short']) {
+        const cw = m[mode + 'W'], ch = 24;
+        const b = { x0: p.x - cw / 2, y0: p.y - 12 - ch, x1: p.x + cw / 2, y1: p.y - 12 };
+        if (d.key !== selKey && (meets(b) || b.x0 < 0 || b.x1 > w)) continue;
+        placed.push(b);
+        m.el.dataset.mode = mode;
+        shown.add(d.key);
+        return;
+      }
+    });
+    markers.forEach((m, key) => { m.el.style.display = shown.has(key) ? '' : 'none'; });
+    // A dot under a shown chip is redundant; keep it anyway (it marks the exact spot).
+  }
+  function build() {
+    markers.forEach((m) => m.mk.remove());
+    markers.clear();
+    items.filter((d) => d.hub || d.key === selKey).forEach((d) => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'wx-mchip';
+      el.setAttribute('aria-label', `${d.name}${d.temp ? ', ' + d.temp : ''}`);
+      if (d.key === selKey) { el.classList.add('on'); el.setAttribute('aria-current', 'true'); }
+      const icon = d.icon ? `${d.icon} ` : '';
+      const name = document.createElement('span'); name.className = 'wx-mchip-name'; name.textContent = d.name;
+      const wxs = document.createElement('span'); wxs.className = 'wx-mchip-wx'; wxs.textContent = `${icon}${d.temp || ''}`.trim();
+      el.append(name, wxs);
+      el.addEventListener('click', (e) => { e.stopPropagation(); if (opts.onPick) opts.onPick(d.key); });
+      const mk = new maplibregl.Marker({ element: el, anchor: 'bottom', offset: [0, -12] }).setLngLat([d.lng, d.lat]).addTo(map);
+      markers.set(d.key, {
+        el, mk,
+        fullW: Math.ceil(textW(d.name) + textW(wxs.textContent)) + 26,
+        shortW: Math.ceil(textW(wxs.textContent || d.name)) + 18,
+      });
+    });
+    layout();
+  }
+  map.on('moveend', layout);
+  map.on('zoom', layout);
+  map.on('resize', layout);
+  // A dot with no chip is still a city: a tap within a fingertip of one opens it.
+  map.on('click', (e) => {
+    const pad = 14;
+    const hits = map.queryRenderedFeatures([[e.point.x - pad, e.point.y - pad], [e.point.x + pad, e.point.y + pad]], { layers: ['wx-dot'] });
+    if (!hits.length) return;
+    let best = null, bd = Infinity;
+    hits.forEach((f) => {
+      const q = map.project(f.geometry.coordinates);
+      const dd = Math.hypot(q.x - e.point.x, q.y - e.point.y);
+      if (dd < bd) { bd = dd; best = f; }
+    });
+    if (best && opts.onPick) opts.onPick(best.properties.key);
+  });
+  map.on('mousemove', (e) => {
+    const near = map.queryRenderedFeatures([[e.point.x - 8, e.point.y - 8], [e.point.x + 8, e.point.y + 8]], { layers: ['wx-dot'] });
+    map.getCanvas().style.cursor = near.length ? 'pointer' : '';
+  });
+  let ro = null;
+  if (typeof ResizeObserver !== 'undefined') {
+    let last = '';
+    ro = new ResizeObserver(() => {
+      const k = `${containerEl.clientWidth}x${containerEl.clientHeight}`;
+      if (k === last || !containerEl.clientWidth) return;
+      last = k;
+      try { map.resize(); } catch { /* map already removed */ }
+      if (autoFit) fitTo(autoFit, false);   // the box settled after the first frame: frame again
+    });
+    ro.observe(containerEl);
+  }
+  map.on('dragstart', () => { autoFit = null; });
+  map.on('zoomstart', (e) => { if (e.originalEvent) autoFit = null; });
+  map.once('load', () => {
+    ready = true;
+    try { map.resize(); } catch { /* noop */ }
+    // Collapse the attribution to its ⓘ, as the other maps do.
+    try { containerEl.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact-show').forEach((el) => el.classList.remove('maplibregl-compact-show')); } catch { /* noop */ }
+    const src = map.getSource('dots');
+    if (src) src.setData(fc());
+    build();
+  });
+  const fitTo = (list, animate) => {
+    const pts = list.filter((d) => Number.isFinite(d.lng) && Number.isFinite(d.lat));
+    if (!pts.length) return;
+    const b = new maplibregl.LngLatBounds([pts[0].lng, pts[0].lat], [pts[0].lng, pts[0].lat]);
+    pts.forEach((d) => b.extend([d.lng, d.lat]));
+    try { map.fitBounds(b, { padding: { top: 44, bottom: 24, left: 40, right: 48 }, maxZoom: 9, duration: animate ? 600 : 0 }); } catch { /* noop */ }
+  };
+  return {
+    map,
+    // Replace the cities. fit:true frames them (a new country); otherwise the view stays put, so a
+    // temperature arriving or a city being picked never moves the map under the traveller.
+    setItems(next, sel, fit) {
+      items = next || [];
+      selKey = sel || null;
+      if (fit) {
+        autoFit = items.filter((d) => d.hub).length ? items.filter((d) => d.hub) : items;
+        fitTo(autoFit, false);
+      }
+      if (!ready) return;
+      const src = map.getSource('dots');
+      if (src) src.setData(fc());
+      build();
+    },
+    dispose() {
+      if (ro) { try { ro.disconnect(); } catch { /* noop */ } }
+      markers.forEach((m) => m.mk.remove());
+      try { map.remove(); } catch { /* already gone */ }
+    },
+  };
+}
+
 // Initialise the map into containerEl for a caller-supplied list of places — used by
 // Places' living map and the place-detail/street-food mini-maps: numbered/clustered
 // pins, rating-or-category colouring, an optional built-in Map/Satellite toggle.
@@ -887,17 +1065,48 @@ export async function initMap(containerEl, opts = {}) {
   // Journey route: an ordered dashed line connecting opts.route (an array of {lat,lng}, in
   // visit order) — the journey map's dotted line between stops. No-op for every other caller,
   // which never passes opts.route.
+  // The route reads as TRAVEL, not as a border: a thick solid line with a white casing, one colour
+  // per mode of transport, where the country borders are a thin dotted purple line (restyled below
+  // when a route is present). The two used to be dashed red and dashed red-orange, and on
+  // satellite imagery they were the same line. Flights are drawn long-dashed, the one dashed route.
+  const ROUTE_COLORS = { flight: '#7B2CBF', train: '#0B7A75', bus: '#E8632A', boat: '#1565C0', walk: '#2E7D32', bike: '#8D6E00', moto: '#C2185B' };
+  let routeLegs = null, routeOn = true;
   function addRouteLayers() {
     if (map.getSource('mk-route')) return;
     map.addSource('mk-route', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    map.addLayer({ id: 'mk-route-line', type: 'line', source: 'mk-route',
+    const w = ['interpolate', ['linear'], ['zoom'], 4, 3, 8, 4.5, 12, 7];
+    const colour = ['match', ['get', 'mode'], ...Object.entries(ROUTE_COLORS).flat(), '#E8632A'];
+    map.addLayer({ id: 'mk-route-casing', type: 'line', source: 'mk-route',
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#C0431A', 'line-dasharray': [2.6, 1.8], 'line-opacity': 0.9,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.5, 8, 2.5, 12, 4] } });
+      paint: { 'line-color': '#FFFFFF', 'line-opacity': 0.95, 'line-width': ['+', w, 3] } });
+    map.addLayer({ id: 'mk-route-line', type: 'line', source: 'mk-route', filter: ['!=', ['get', 'mode'], 'flight'],
+      layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': colour, 'line-width': w } });
+    map.addLayer({ id: 'mk-route-air', type: 'line', source: 'mk-route', filter: ['==', ['get', 'mode'], 'flight'],
+      layout: { 'line-cap': 'butt', 'line-join': 'round' }, paint: { 'line-color': ROUTE_COLORS.flight, 'line-width': w, 'line-dasharray': [4, 2.5] } });
+    if (opts.route) {
+      // Borders: thin, dotted, purple-grey — present for orientation, never mistaken for a journey.
+      try {
+        map.setPaintProperty('borders', 'line-color', '#6A1B9A');
+        map.setPaintProperty('borders', 'line-width', 1.2);
+        map.setPaintProperty('borders', 'line-dasharray', [0.4, 2.2]);
+        map.setPaintProperty('borders', 'line-opacity', 0.9);
+      } catch { /* noop */ }
+      applyRouteVisibility();
+    }
+  }
+  function applyRouteVisibility() {
+    ['mk-route-casing', 'mk-route-line', 'mk-route-air'].forEach((id) => {
+      try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', routeOn ? 'visible' : 'none'); } catch { /* noop */ }
+    });
   }
   function renderRoute() {
     const src = map.getSource('mk-route');
     if (!src) return;
+    if (routeLegs) {
+      src.setData({ type: 'FeatureCollection', features: routeLegs.map((l) => ({ type: 'Feature', properties: { mode: l.mode || 'bus' },
+        geometry: { type: 'LineString', coordinates: [[l.from.lng, l.from.lat], [l.to.lng, l.to.lat]] } })) });
+      return;
+    }
     const pts = (opts.route || []).filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
     src.setData(pts.length > 1
       ? { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {},
@@ -1993,6 +2202,9 @@ export async function initMap(containerEl, opts = {}) {
     locate: triggerLocate,   // alias — embed mode's original name for the same action
     // ---- Shared, mode-independent methods (see the SHARED block above) -----------
     flyTo: (lng, lat, z = 11) => map.flyTo({ center: [lng, lat], zoom: z }),
+    // Journey route, one leg per pair of stops: [{ from:{lat,lng}, to:{lat,lng}, mode }].
+    setRouteLegs: (legs) => { routeLegs = legs; renderRoute(); },
+    setRouteVisible: (on) => { routeOn = !!on; applyRouteVisibility(); },
     setBorders: (on) => { if (map.getLayer('borders')) map.setLayoutProperty('borders', 'visibility', on ? 'visible' : 'none'); },
     // Toggle the hospitals layer; lazily loads+merges all four countries' data on first "on".
     setHospitals,
