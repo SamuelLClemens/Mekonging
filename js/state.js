@@ -6,7 +6,7 @@ import { putMeta, getMeta } from './idb.js';
 import { MERGED_PLACE_IDS, canonicalPlaceId } from './data/place-merges.js';
 
 const KEY = 'mk.store';
-const CURRENT_VERSION = 15;
+const CURRENT_VERSION = 16;
 
 function defaults() {
   return {
@@ -129,7 +129,7 @@ function defaults() {
       feedbackTo: '',
       contactEmail: '',
       theme: 'auto',            // 'auto' | 'light' | 'dark' — auto = light by day, dark at night (Classic skin)
-      skin: 'classic',          // 'classic' | 'night' | 'silk' | 'tropical' | 'psych' — visual theme
+      skin: 'retro',            // 'retro' (default) | 'classic' | 'river' | 'flags' | 'temples' | six named skins — see js/theme.js
       reducedMotion: 'auto',    // 'auto' | 'on' | 'off'
       textScale: 'm',           // 's' | 'm' | 'l' — accessibility text size
       seenWelcome: false,
@@ -283,6 +283,14 @@ function migrate(data) {
   // that cache; this drops the records that pointed at it, so the cards offer the download
   // again instead of showing ✓ beside clips that never played.
   if (dv < 15 && Array.isArray(out.profile.prefs.audioPacks)) out.profile.prefs.audioPacks = [];
+  // v15 -> v16: the default theme is Mekong Retro (the retro redesign, Phase 4). Classic was the
+  // default, so a stored 'classic' is indistinguishable from "never chose"; those profiles move to
+  // the new default. skinMovedFrom asks render() for a one-time Undo toast that puts Classic back. The
+  // stored light / dark choice (profile.theme) is untouched, and every other skin is left alone.
+  if (dv < 16 && out.profile.skin === 'classic') {
+    out.profile.skin = 'retro';
+    out.profile.prefs.skinMovedFrom = 'classic';
+  }
   return out;
 }
 
