@@ -5,7 +5,7 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Fourteen guards. Each one exists because the failure it catches actually shipped. Run all of
+Fifteen guards. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
@@ -13,10 +13,11 @@ for g in imports lazy-data preloads ui-strings month-arrays contrast skins spaci
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
+python3 tools/style-tiles/port-themes.py --check
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
 
-The same fourteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+The same fifteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
 `feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
 fails, prints the full output of each failure, and fails the check if any guard does. On a
 pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
@@ -38,6 +39,7 @@ list above, so a new guard goes in both places.
 | `check-sources` | homepage-only place citations and unsourced routes getting WORSE | the 2026-10-02 content-truth audit found 5 of 10 spot-checked places contradicted their own cited source; this ratchets the two structural gaps behind that (a citation that is just a homepage, a route with no source at all) so they can shrink but never silently grow |
 | `check-contrast` | text below its WCAG AA threshold on any of the seven skins | `--good` was unreadable on all four dark skins for months |
 | `check-skins` | a theme id that `js/theme.js`, the CSS blocks, the Settings picker, the first-paint script or the default profile disagree about | an unknown skin falls back to the default without any page failing, so a renamed or half-added theme would ship silently. Added with the retro redesign's theme table |
+| `port-themes.py --check` (in `tools/style-tiles/`) | the generated theme block at the end of `css/style.css` differing from what `round2.json` produces | the four regional themes' values are ported by a script, never typed; a hand edit to the block, or to `round2.json` without re-running the script, would ship a palette no one measured |
 | `check-spacing` | more inline spacing declarations than a file's ceiling | a ratchet: 651 inline margins, none using the `--sp-*` scale |
 | `check-cache-version` | `APP_VERSION`/`CACHE_VERSION` not moved when a shipped asset changed | the service worker is cache-first, so a stale version means nobody gets the fix |
 

@@ -52,7 +52,7 @@ LEGACY = {'classic', 'night', 'silk', 'tropical', 'psych', 'psychnight', 'expedi
 
 # Skins whose id is in theme.js but whose palette has not landed yet (Phase 3 empties this set
 # and the assertion on the surface count then covers them). Mirrors PENDING in check-skins.py.
-PENDING = {'retro', 'river', 'flags', 'temples'}
+PENDING = set()
 
 # (label token, fill token, what it is). The label must clear 4.5:1 against EVERY hex stop of the fill.
 LABELS = [
@@ -63,7 +63,11 @@ LABELS = [
 # the #E07A1F stop of --grad-sun is 3.01:1; the Phase 3 palettes carry their own --on-fill).
 LABELS_NEW_ONLY = [
     ('on-fill', 'grad-sun', 'chips, phase switch, pills, update toast'),
-    ('on-fill', 'teal-deep', 'pressed chip (.chip[aria-pressed])'),
+    # The generated themes (tools/style-tiles/port-themes.py) paint a pressed chip and the phase switch in
+    # ink with a surface-coloured label, a danger button in the danger colour, and white on a teal-deep fill.
+    ('th-surface', 'ink', 'pressed chip / phase switch (ink fill)'),
+    ('th-on-danger', 'th-danger', 'danger button (.btn.danger)'),
+    ('#FFFFFF', 'teal-deep', 'white-labelled fills (.cat-tag, .attr-tag.at-info, .pill-best)'),
 ]
 COUNTRIES = ['th', 'vi', 'kh', 'la']
 
@@ -84,7 +88,9 @@ LABEL_EXCEPTIONS = {
 NOT_TEXT = {'cream', 'card', 'line', 'bg', 'shadow', 'shadow-soft', 'badge-ink',
             'key-dot-ring', 'elev-1', 'elev-2', 'tile-accent', 'cat', 'sunburst',
             # labels that sit ON a fill, not on the card: checked against their fill in LABELS
-            'on-fill', 'btn-ink', 'back-ink', 'map-label'}
+            'on-fill', 'btn-ink', 'back-ink', 'map-label',
+            # the generated themes' labels, each checked against its fill in LABELS_NEW_ONLY
+            'th-on-accent', 'th-on-danger', 'th-surface', 'th-accent-soft'}
 
 # (selector, token) pairs whose shortfall has been looked at and accepted, with the reason.
 EXCEPTIONS = {
@@ -327,7 +333,7 @@ def main():
         skin = name.rsplit('-', 1)[0]
         pairs = LABELS + ([] if skin in LEGACY else LABELS_NEW_ONLY)
         for label, fill, what in pairs:
-            fg = toks.get(label)
+            fg = label if label.startswith('#') else toks.get(label)
             for stop in hex_stops(toks.get(fill)):
                 ratio = contrast(fg, stop) if fg else None
                 if ratio is None:

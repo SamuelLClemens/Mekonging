@@ -9,6 +9,7 @@ in the session scratchpad, never in the repository.
 | `capture.py` | Screenshots any route on any of the eight surfaces (Classic light and dark, six named skins) through headless Chrome, at 375×812 and 2×. With `--preview`, renders candidate themes that are not in the app yet |
 | `measure.py` | Measures a palette file against the floors of `VISUAL_DIRECTION_PROMPT.md` section 4: WCAG contrast for every role pair, the label on every stop of the primary fill, country colours as graphics, CIEDE2000 between the colours that must not be confused, and the same separations through three kinds of colour-vision deficiency. Exit status 1 below a floor |
 | `preview.py` | Renders one theme of a palette file into the stylesheet `capture.py --preview` injects: role tokens mapped onto the app's tokens, the literal chrome overrides, the pinned logo, the wayfinding hooks, and (retro family) the four-stripe band |
+| `port-themes.py` | Phase 3: writes the four themes' token blocks and chrome rules from `round2.json` into the generated block at the end of `css/style.css` (`retro` is the `retro-map` tuning). `--check` fails when the block is stale; it runs in CI. Re-run it after any change to `round2.json` or `preview.py` |
 | `round2.json` | Phase 1 candidates: the retro default in two stripe tunings, River, Four Flags, Temples & Markets, and today's Classic as shipped. Every sampled colour cites its photograph or flag specification |
 | `round1.json` | The three round-1 directions (A, B, C) exactly as the round-1 tiles rendered them; the owner chose none |
 

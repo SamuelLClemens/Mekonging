@@ -783,8 +783,9 @@ export function applyTheme() {
   try {
     const cs = getComputedStyle(root);
     const surface = (cs.getPropertyValue('--bg') || cs.getPropertyValue('--cream') || '').trim();
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta && surface) meta.setAttribute('content', surface);
+    // index.html carries two media-scoped metas (light, dark). A traveller's own light / dark choice can
+    // differ from the device's, so both take the resolved colour rather than each its own media query.
+    if (surface) document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => meta.setAttribute('content', surface));
   } catch { /* getComputedStyle unavailable */ }
 }
 // Tell the TTS layer which languages have a downloaded audio pack, so canSay()
@@ -812,7 +813,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.624.0';
+export const APP_VERSION = 'mk-v0.625.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -1603,13 +1604,15 @@ export function mount(node, showTabbar) {
 }
 
 // ---- HOME (open with a country-picker map) ----------------------------------
+// Literal colours, identical to icons/icon.svg's sun and the index.html splash: the logo is the same on every
+// theme (VISUAL_DIRECTION_PROMPT.md section 3.3), so it must not read the theme's tokens.
 export function logoSVG() {
   return `<svg class="logo" viewBox="0 0 360 122" role="img" aria-label="Mekonging" xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="mkgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="0.5" style="stop-color:var(--sun-deep)"/><stop offset="1" style="stop-color:var(--magenta)"/></linearGradient></defs>
+    <defs><linearGradient id="mkgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="0.5" stop-color="#E8632A"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>
     <g transform="translate(150 6)"><circle cx="30" cy="30" r="18" fill="url(#mkgh)"/>
-      <g style="stroke:var(--sun)" stroke-width="3" stroke-linecap="round"><line x1="30" y1="2" x2="30" y2="9"/><line x1="30" y1="51" x2="30" y2="58"/><line x1="2" y1="30" x2="9" y2="30"/><line x1="51" y1="30" x2="58" y2="30"/><line x1="10" y1="10" x2="15" y2="15"/><line x1="45" y1="45" x2="50" y2="50"/><line x1="50" y1="10" x2="45" y2="15"/><line x1="15" y1="45" x2="10" y2="50"/></g></g>
+      <g stroke="#F2A93B" stroke-width="3" stroke-linecap="round"><line x1="30" y1="2" x2="30" y2="9"/><line x1="30" y1="51" x2="30" y2="58"/><line x1="2" y1="30" x2="9" y2="30"/><line x1="51" y1="30" x2="58" y2="30"/><line x1="10" y1="10" x2="15" y2="15"/><line x1="45" y1="45" x2="50" y2="50"/><line x1="50" y1="10" x2="45" y2="15"/><line x1="15" y1="45" x2="10" y2="50"/></g></g>
     <text x="180" y="94" text-anchor="middle" font-family="'Avenir Next','Trebuchet MS',system-ui,sans-serif" font-weight="800" font-size="40" fill="url(#mkgh)" letter-spacing="0.5">Mekonging</text>
-    <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" style="stroke:var(--teal)" stroke-width="4" stroke-linecap="round"/></svg>`;
+    <path d="M40 110 q40 -12 80 0 t80 0 t80 0 t40 0" fill="none" stroke="#16A39A" stroke-width="4" stroke-linecap="round"/></svg>`;
 }
 // ---- CONTEXT-AWARE "RIGHT NOW" ---------------------------------------------
 // The home screen leads with what fits the user's place and moment: we read the last GPS
