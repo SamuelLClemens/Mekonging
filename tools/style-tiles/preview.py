@@ -12,10 +12,10 @@ Phase 2), pins the logo, and for the retro family draws the four-stripe band. Ev
 `--nav country` marks the active tab with the sun orange and lets the four country colours do the
 wayfinding. `--nav tabs` gives each tab its own colour as well, so the gate can compare the two.
 
-It depends on three attributes that capture.py's injected script keeps current: `html[data-tab]` (the
-active tab), `html[data-country]` (the country in context) and `html[data-route]` (the hash head); plus
-`data-cc` on country chips, country cards and the country context line, read from their flags.
-Phase 2 puts the same hooks into the app itself.
+It depends on three attributes that the app itself sets on <html> (applyTab() in js/main.js, Phase 2):
+`data-tab` (the active tab: home, talk, you, places, explore), `data-country` (the country in context)
+and `data-route` (the hash head); plus `data-cc` on country chips, country cards and the country
+context line.
 """
 import argparse, json, os, sys
 
@@ -23,9 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import measure as m  # noqa: E402
 
 COUNTRIES = ["th", "vi", "kh", "la"]          # stripe order, top to bottom and outside in
-TABS = ["home", "talk", "me", "places", "explore"]
+TABS = ["home", "talk", "you", "places", "explore"]      # the ids of TABS in js/main.js
 LOGO_PIN = "--sun:#F2A93B;--sun-deep:#E8632A;--magenta:#D6336C;--teal:#16A39A"   # index.html splash, icons/icon.svg
-TODAY_MAP = {"th": "C25E3A", "vi": "9C5780", "kh": "E0A526", "la": "6E9A52"}       # REGION_COLORS, inline on the cards
 
 
 def rgba(h, a):
@@ -154,9 +153,8 @@ def render(spec, theme, nav):
 {P} .country-context {{ display: flex; align-items: center; gap: var(--sp-2); color: var(--ink); }}
 {P} .country-context::before {{ content: ''; flex: none; width: 4px; height: 1.15em; border-radius: 2px; background: var(--pv-cc, var(--line)); }}
 """)
-    for cc, hexv in TODAY_MAP.items():
-        css.append(f'{P} .explore-card[style*="{hexv}" i] {{ --ec: var(--country-{cc}) !important; }}\n')
-        css.append(f'{P} .ctry-group[data-country="{cc}"] .ctry {{ fill: var(--country-{cc}); }}\n')
+    # The cards and the map read --country-* themselves since Phase 2 (REGION_COLORS is var(--country-*)),
+    # so redefining the four tokens above is all it takes; no selector has to chase an inline hex.
     css.append(f"""{P} .region-map {{ background: var(--pv-sea); }}
 {P} .ctry {{ stroke: var(--pv-surface); }}
 {P} .mekong {{ stroke: var(--pv-river); }}

@@ -51,3 +51,36 @@ Answered by the owner on 2026-10-05, each with the recommended option.
 | Navigation | The four country colours do the wayfinding. The one sun orange marks the active tab and is the only primary-action colour, and red only means danger. The colour-per-tab variant is rejected. |
 | Theme names | "Mekong Retro" for the default. "River", "Four Flags", "Temples & Markets" and "Classic sunset" as proposed. |
 | Existing users on `classic` | Move them to Mekong Retro with a one-time Undo toast that restores Classic, keeping their stored light/dark setting (Phase 4, store version 16). |
+
+## Phase 2: machinery and guards (2026-10-05, `mk-v0.624.0`)
+
+Phase 2 of `VISUAL_DIRECTION_PROMPT.md` changes no theme's look except one: Classic's primary button.
+
+- **Theme table.** `js/theme.js` is import-free and holds `DEFAULT_SKIN` (still `classic`) and `SKIN_MODE`. The
+  ids of the four new themes are `retro` (Mekong Retro), `river`, `flags` (Four Flags) and `temples`
+  (Temples & Markets); all four are `auto`, as is `classic`. `applyTheme()` stamps `data-skin` for every skin,
+  Classic included, and maps an unknown id to `DEFAULT_SKIN`. Until Phase 3 lands their palettes, the four are
+  listed as pending in both `check-skins.py` and `check-contrast.py`, are not in Settings, and would render
+  Classic's colours if stored.
+- **Wayfinding hooks.** The tabs have ids (`tab-home`, `tab-talk`, `tab-you`, `tab-places`, `tab-explore`).
+  `applyTab()` runs in `render()` after `applyTheme()` and sets `html[data-tab]` (`home`, `talk`, `you`,
+  `places`, `explore`), `html[data-country]` and `html[data-route]`. A route that names a country
+  (`#visa-vi`) wins over the traveller's destination, so `data-country` always agrees with the context line.
+  Country chips, Explore cards and the context line carry `data-cc`. Nothing styles any of it yet.
+- **Tokens.** The four `--country-*` colours, `--role-*` hues for the places that used to borrow a country's
+  value (Journal, Exchange, the calendar's holiday and own-plan layers, the budget's Stay), `--on-fill`,
+  `--btn-*`, `--back-*`, `--hero-*`, `--rule-brand`, `--pip-brand`, `--sea` and the map strokes, the glows,
+  `--shadow-tint`, `--shadow-up` and `--scrim`, all at today's values. `REGION_COLORS` is
+  `var(--country-*)`, applied as an inline style.
+- **Stripe band.** `--stripes`, `--stripes-crown` and `--stripes-ring` plus `.stripe-band`, `.stripe-crown` and
+  `.stripe-sweep` paint nothing until a theme sets `--stripe-1` to `--stripe-4` (and `--stripe-gap`).
+- **Classic's button.** `#F2A93B` to `#E8632A` with the badge ink: 8.55:1 and 5.08:1, against 3.01:1 for white
+  on the old `#E07A1F` stop. Other fills (chips, phase switch, pills, update toast) keep white labels.
+- **Guards.** `check-contrast.py` now reads `js/theme.js`, builds `<id>-light` and `<id>-dark` surfaces in
+  cascade order with `var()` resolved, asserts its surface count, checks text on the card and (new themes
+  only) on the page, labels on every fill stop, and the country colours (new themes only), and reports the
+  rules it skips. `LABEL_EXCEPTIONS` records ten shortfalls of the primary button's white label on five of the
+  six named skins (never given a dark ink; fixing them changes their look). `check-skins.py` is new and in CI.
+- **Proof of no visual change.** Computed colours, borders, shadows and gradients of every element were
+  compared between `origin/feat/scaffold-bangkok-slice` and this branch on 8 themes by 8 screens. The six
+  named skins differ nowhere; Classic differs on 29 primary-button elements, all the intended change.

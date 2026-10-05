@@ -30,8 +30,18 @@ scratchpad, never into the repository.
 import argparse, base64, json, os, re, shutil, socket, struct, subprocess, tempfile, time, urllib.request
 
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-SKIN_MODE = {"night": "dark", "psychnight": "dark", "expedition": "dark",
-             "silk": "light", "tropical": "light", "psych": "light"}   # mirrors applyTheme() in js/main.js
+
+
+def read_skin_modes():
+    """id -> 'light' | 'dark' | 'auto', parsed from js/theme.js, the table applyTheme() itself reads."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "js", "theme.js")
+    m = re.search(r"export const SKIN_MODE = \{([^}]*)\}", open(path, encoding="utf-8").read())
+    if not m:
+        raise SystemExit("could not find SKIN_MODE in js/theme.js")
+    return dict(re.findall(r"(\w+):\s*'(\w+)'", m.group(1)))
+
+
+SKIN_MODE = read_skin_modes()
 
 
 class WS:
@@ -180,7 +190,6 @@ SEED = """(async () => {
 PREVIEW_SCRIPT = r"""(() => {
   const ID = %s, CSS = %s;
   const FLAGS = { '\u{1F1F9}\u{1F1ED}': 'th', '\u{1F1FB}\u{1F1F3}': 'vi', '\u{1F1F0}\u{1F1ED}': 'kh', '\u{1F1F1}\u{1F1E6}': 'la' };
-  const TABS = ['home', 'talk', 'me', 'places', 'explore'];   // the order of TABS in js/main.js
   function ensure() {
     const root = document.documentElement;
     if (!root) return;
@@ -193,19 +202,13 @@ PREVIEW_SCRIPT = r"""(() => {
   function sync() {
     ensure();
     const root = document.documentElement;
-    const head = (location.hash || '#home').replace(/^#/, '');
-    root.setAttribute('data-route', head.split('-')[0] || 'home');
-    const cur = document.querySelector('.tabbar button[aria-current="page"]');
-    if (cur) root.setAttribute('data-tab', TABS[[...cur.parentNode.children].indexOf(cur)] || '');
-    else root.removeAttribute('data-tab');
+    // The app stamps html[data-tab], [data-country], [data-route] and data-cc itself (applyTab() in
+    // js/main.js); this only fills data-cc on a build that predates it, from the flag in the text.
     for (const el of document.querySelectorAll('.country-chip, .explore-card, .country-context')) {
       if (el.hasAttribute('data-cc')) continue;
       const t = el.textContent || '';
       for (const f in FLAGS) if (t.includes(f)) { el.setAttribute('data-cc', FLAGS[f]); break; }
     }
-    let cc = (head.match(/(?:^|-)(th|vi|kh|la)(?:-|$)/) || [])[1];
-    if (!cc) { const ctx = document.querySelector('.country-context[data-cc]'); if (ctx) cc = ctx.getAttribute('data-cc'); }
-    if (cc) root.setAttribute('data-country', cc); else root.removeAttribute('data-country');
   }
   const mo = new MutationObserver(() => { mo.disconnect(); try { sync(); } finally { watch(); } });
   function watch() { mo.observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current'] }); }
@@ -247,13 +250,16 @@ def preview_id(css):
 
 
 def surface_spec(surface):
-    """-> (skin, theme to seed or None, expected data-theme, expected data-skin)."""
-    if surface in ("classic-light", "classic-dark"):
-        mode = surface.split("-")[1]
-        return "classic", mode, mode, None
-    if surface not in SKIN_MODE:
-        raise SystemExit(f"unknown surface {surface!r}: use classic-light, classic-dark or one of {sorted(SKIN_MODE)}")
-    return surface, None, SKIN_MODE[surface], surface
+    """-> (skin, theme to seed or None, expected data-theme, expected data-skin). A surface is
+    `<id>-light` / `<id>-dark` for a skin whose mode is 'auto' (classic and the retro themes), or the
+    bare id of a fixed-mode skin. applyTheme() stamps data-skin on every skin, Classic included."""
+    if surface in SKIN_MODE and SKIN_MODE[surface] in ("light", "dark"):
+        return surface, None, SKIN_MODE[surface], surface
+    skin, _, mode = surface.rpartition("-")
+    if SKIN_MODE.get(skin) == "auto" and mode in ("light", "dark"):
+        return skin, mode, mode, skin
+    names = sorted(s if m != "auto" else f"{s}-light|dark" for s, m in SKIN_MODE.items())
+    raise SystemExit(f"unknown surface {surface!r}: use one of {names}")
 
 
 def main():

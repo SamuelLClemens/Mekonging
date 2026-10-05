@@ -35,6 +35,7 @@ import {
   detectPreferredLang, mtEnabled, setMtEnabled, dateLocale, ensureUiStrings, uiStringsReady,
   primeSafetyPathBatch,
 } from './i18n.js';
+import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
 import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems, itemLabel } from './nav-groups.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
@@ -768,17 +769,12 @@ function classicMode() {
 
 export function applyTheme() {
   const root = document.documentElement;
-  // Named visual themes ("skins") each define their own palette; Night Market rides the
-  // dark token set, the others the light one. Classic follows the day/night (or fixed) choice.
-  const skin = store.profile.skin || 'classic';
-  const SKIN_MODE = { night: 'dark', psychnight: 'dark', expedition: 'dark', silk: 'light', tropical: 'light', psych: 'light' };
-  if (skin !== 'classic' && SKIN_MODE[skin]) {
-    root.setAttribute('data-skin', skin);
-    root.setAttribute('data-theme', SKIN_MODE[skin]);
-  } else {
-    root.removeAttribute('data-skin');
-    root.setAttribute('data-theme', classicMode());
-  }
+  // Named visual themes ("skins") each define their own palette; the legacy skins carry one
+  // fixed mode (js/theme.js), Classic and the retro-redesign themes follow the day/night (or
+  // fixed) choice. data-skin is always stamped, so a selector can address the default too.
+  const skin = resolveSkin(store.profile.skin || DEFAULT_SKIN);
+  root.setAttribute('data-skin', skin);
+  root.setAttribute('data-theme', modeFor(skin, classicMode()));
   root.setAttribute('data-reduced-motion', prefersReducedMotion() ? 'on' : 'off');
   root.setAttribute('data-text', store.profile.textScale || 'm');
   // Keep the browser/OS chrome (address bar, iOS status bar) in step with the active
@@ -816,7 +812,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.623.0';
+export const APP_VERSION = 'mk-v0.624.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -908,10 +904,10 @@ const SECTION_ACCENT = {
   currency: '#4C9A6A', expenses: '#E0A100', bargain: '#C77D2E',
   // plan & memories
   plans: '#2FA0A0', foryou: '#E08A2E', trip: '#2FA0A0', checklist: '#6E8F3F',
-  calendar: '#3E7CB1', journal: '#C25E3A', scrapbook: '#B0567F', contributions: '#C9902B',
+  calendar: '#3E7CB1', journal: 'var(--role-journal)', scrapbook: '#B0567F', contributions: '#C9902B',
   saved: '#D98A3D', collection: '#D98A3D', identified: '#C08A2A',
   // exchange / social / admin / safety
-  exchange: '#9C5780', swap: '#9C5780', market: '#9C5780', board: '#C9902B',
+  exchange: 'var(--role-exchange)', swap: 'var(--role-exchange)', market: 'var(--role-exchange)', board: '#C9902B',
   circle: '#4C79C0', vault: '#4C6B8A', donate: '#D64545', help: '#5B8CA0',
   settings: '#7A7F87', me: '#E0663A', sos: '#D64545', danger: '#D64545',
 };
@@ -940,11 +936,11 @@ export function sectionTile(x) {
 // Order is home, talk, you, places, explore — You sits in the centre slot, the easiest
 // thumb reach on a phone. See UX_OVERHAUL_PROMPT.md §5 W5a.
 const TABS = [
-  { hash: '#home', label: 'Home', svg: ICON.home },
-  { hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
-  { hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel(); Settings lives inside this hub
-  { hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
-  { hash: '#explore', label: 'Explore', svg: ICON.compass },
+  { id: 'home', hash: '#home', label: 'Home', svg: ICON.home },
+  { id: 'talk', hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
+  { id: 'you', hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel(); Settings lives inside this hub
+  { id: 'places', hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
+  { id: 'explore', hash: '#explore', label: 'Explore', svg: ICON.compass },
 ];
 
 export function go(hash) {
@@ -1014,7 +1010,7 @@ function goBack(fallback) {
 export function countryContextLine(cc) {
   const c = getCountry(cc);
   if (!c) return null;
-  return h('p', { class: 'country-context' }, `${c.flag} ${c.name}`);
+  return h('p', { class: 'country-context', 'data-cc': c.id }, `${c.flag} ${c.name}`);
 }
 
 // The traveller's own name, once they have given one on the You screen. Everything that
@@ -1344,10 +1340,28 @@ function activeTabForHash() {
 
 // The active tab is derived from the current route (not a per-screen arg), so every screen —
 // including deep detail pages — highlights the correct tab instead of defaulting to Home.
+// Wayfinding hooks for the theme layer, stamped on <html> by render() after applyTheme():
+//   data-tab      the active tab's id (home | talk | you | places | explore)
+//   data-country  the country in context (th | vi | kh | la), the same one the context line names
+//   data-route    the hash head ('home', 'place', 'hub'), so CSS can single out a screen
+// They carry no colour themselves; a theme reads them. Nothing styles them in Phase 2.
+export function applyTab() {
+  const root = document.documentElement;
+  const tab = TABS.find((t) => t.hash === activeTabForHash());
+  root.setAttribute('data-tab', tab ? tab.id : 'home');
+  // A route that names a country (#visa-vi, #place-th-bkk-wat-pho, #country-kh) is about THAT
+  // country whatever the traveller's current destination is, and it is the one its context line
+  // names; every other route is about the destination.
+  const [head, ...rest] = (location.hash || '#home').replace(/^#/, '').split('-');
+  const named = rest.find((seg) => COUNTRIES.some((c) => c.id === seg));
+  root.setAttribute('data-country', named || getActiveCountry() || '');
+  root.setAttribute('data-route', head || 'home');
+}
 function tabbar() {
   const active = activeTabForHash();
   return h('nav', { class: 'tabbar' }, TABS.map((t) =>
     h('button', {
+      id: `tab-${t.id}`,
       'aria-current': active === t.hash ? 'page' : null,
       onclick: () => go(t.hash),
     }, [h('span', { class: 'ic', html: t.svg }), h('span', { title: t.hash === '#me' ? meTabLabel() : null }, t.hash === '#me' ? meTabLabel() : t.label)])));
@@ -4049,7 +4063,9 @@ export function townsInZone(cc, zoneId) {
 // network — this always works. (The pannable street map with GPS lives on #map.)
 // Retro-modern palette: terracotta, plum, marigold, sage — distinct from the teal sea
 // and from each other; white labels read on all four.
-export const REGION_COLORS = { th: '#C25E3A', vi: '#9C5780', kh: '#E0A526', la: '#6E9A52' };
+// They are the --country-* tokens (css/style.css), so a theme can re-colour the map; the values
+// there are today's terracotta, plum, marigold and sage.
+export const REGION_COLORS = { th: 'var(--country-th)', vi: 'var(--country-vi)', kh: 'var(--country-kh)', la: 'var(--country-la)' };
 
 
 // Per-country hub reached after picking a country.
@@ -4524,7 +4540,7 @@ export function approxHome(amount, currency) {
 export function countryChips(onPick, selected = getActiveCountry()) {
   return h('div', { class: 'country-row' }, COUNTRIES.map((c) =>
     h('button', {
-      class: 'country-chip', 'aria-pressed': c.id === selected ? 'true' : 'false',
+      class: 'country-chip', 'data-cc': c.id, 'aria-pressed': c.id === selected ? 'true' : 'false',
       onclick: () => onPick(c.id),
     }, [h('span', { class: 'flag' }, c.flag), h('span', {}, c.name)])));
 }
@@ -7212,6 +7228,7 @@ function countryUnavailableScreen(ccs) {
 // ---- router -----------------------------------------------------------------
 export function render() {
   applyTheme();
+  applyTab();
   applyDocLang();   // keep <html lang>/<html dir> in step with the chosen interface language
   // Tear down any live map before rendering the next screen (frees the WebGL context
   // and stops the GPS watcher — prevents the map dying after repeated visits). See
@@ -7506,13 +7523,13 @@ window.addEventListener('hashchange', () => {
 // Auto day/night flips as the user navigates (applyTheme runs each render); this keeps a
 // left-open app in step with dawn/dusk too. Only re-applies while on the auto Classic theme.
 setInterval(() => {
-  if ((store.profile.skin || 'classic') === 'classic' && (store.profile.theme || 'auto') === 'auto') applyTheme();
+  if (SKIN_MODE[resolveSkin(store.profile.skin || DEFAULT_SKIN)] === 'auto' && (store.profile.theme || 'auto') === 'auto') applyTheme();
 }, 10 * 60 * 1000);
 // React immediately when the traveller flips their device between light and dark while on
 // the auto Classic theme, so the app tracks the OS setting without waiting for a navigation.
 try {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if ((store.profile.skin || 'classic') === 'classic' && (store.profile.theme || 'auto') === 'auto') applyTheme();
+    if (SKIN_MODE[resolveSkin(store.profile.skin || DEFAULT_SKIN)] === 'auto' && (store.profile.theme || 'auto') === 'auto') applyTheme();
   });
 } catch { /* older browsers: the interval + per-render applyTheme still cover it */ }
 // Re-render when device voices finish loading so speak buttons enable on the phrasebook.

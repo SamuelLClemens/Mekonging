@@ -160,7 +160,7 @@ export const NAV_GROUPS = [
   },
   {
     id: 'mine',
-    accent: '#C25E3A',
+    accent: 'var(--role-journal)',
     ic: '📔',
     title: 'My stuff',
     blurb: 'Your journal, photos and saves',

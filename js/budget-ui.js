@@ -19,7 +19,7 @@ import {
 
 export const EXP_CATS = [
   { id: 'food', label: 'Food', emoji: '🍜', color: '#E0A100' },
-  { id: 'stay', label: 'Stay', emoji: '🛏', color: '#9C5780' },
+  { id: 'stay', label: 'Stay', emoji: '🛏', color: 'var(--role-stay)' },
   { id: 'transit', label: 'Transit', emoji: '🚌', color: '#3E7CB1' },
   { id: 'gear', label: 'Gear', emoji: '🎒', color: '#5E9A52' },
   { id: 'other', label: 'Other', emoji: '•', color: '#8A8A8A' },
@@ -298,7 +298,7 @@ export function budgetLogRow(b) {
   const approx = approxHome(b.amount, b.currency);
   const cat = expCatLookup(expCatOf(b));
   return h('div', { class: 'exp-row' }, [
-    h('span', { class: 'exp-row-cat', style: `background:${cat.color}22;color:${cat.color}`, title: cat.label }, cat.emoji),
+    h('span', { class: 'exp-row-cat', style: `background:color-mix(in srgb, ${cat.color} 13%, transparent);color:${cat.color}`, title: cat.label }, cat.emoji),
     h('div', { class: 'exp-row-mid' }, [
       h('div', { class: 'exp-row-note' }, b.note || cat.label),
       h('div', { class: 'exp-row-date muted' }, fmtLogDateFor(b)),

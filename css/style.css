@@ -118,9 +118,61 @@
   --fs-body: 1rem; --fs-base: 1rem; --fs-sm: 0.875rem; --fs-xs: 0.78rem; --fs-label: 0.7rem;
 
   /* softer, layered shadows for a modern feel */
-  --shadow: 0 12px 32px -8px rgba(120, 50, 20, 0.16), 0 2px 6px rgba(120, 50, 20, 0.06);
-  --shadow-soft: 0 4px 14px -4px rgba(120, 50, 20, 0.12);
+  --shadow-tint: 120, 50, 20;   /* r, g, b of the warm shadow; a theme re-tints every shadow by changing this */
+  --shadow: 0 12px 32px -8px rgba(var(--shadow-tint), 0.16), 0 2px 6px rgba(var(--shadow-tint), 0.06);
+  --shadow-soft: 0 4px 14px -4px rgba(var(--shadow-tint), 0.12);
+  --shadow-up: 0 -2px 14px rgba(58, 36, 21, 0.14);   /* the tab bar and compare tray, lifted off the page */
+  --scrim: rgba(58, 36, 21, 0.5);                     /* behind a sheet or dialog */
   --dur: 220ms; --ease: cubic-bezier(0.34, 0.02, 0.2, 1);
+
+  /* ---- Chrome tokens (Phase 2 of the retro redesign; VISUAL_DIRECTION_PROMPT.md section 6) ----
+     Every value below is what the selector used to hard-code, so nothing moves. A theme changes
+     the look by redefining these, never by overriding a selector.
+
+     Country colours. The map, the Explore cards and (later) the wayfinding read these four; no
+     chrome element outside the country screens may use them (they are not roles). */
+  --country-th: #C25E3A; --country-vi: #9C5780; --country-kh: #E0A526; --country-la: #6E9A52;
+  /* The label on a brand fill (--grad-sun, --teal-deep, a tile badge). */
+  --on-fill: #fff;
+  /* Role hues that used to borrow a country's value, so a re-coloured country would have dragged
+     them along: the Journal and Cash-swap/Exchange doors, the calendar's holiday and own-plan
+     layers, the budget's Stay category. Same values as today, now independent of --country-*. */
+  --role-journal: #C25E3A; --role-exchange: #9C5780; --role-holiday: #E0A526;
+  --role-mine: #C25E3A; --role-stay: #9C5780;
+  /* The primary button. Classic overrides all three (below); every other skin keeps the
+     gradient and the white label it has always had. */
+  --btn-bg: var(--grad-sun); --btn-ink: #fff; --btn-ink-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  /* The Back pill in the topbar. */
+  --back-bg: var(--teal-deep); --back-ink: #fff;
+  /* The home hero: the sky wash, and the sun that rises behind the wordmark. */
+  --hero-wash:
+    radial-gradient(125% 100% at 50% -12%, rgba(242,169,59,0.55) 0%, rgba(232,99,42,0.34) 34%, rgba(214,51,108,0.20) 58%, rgba(106,76,147,0.10) 100%),
+    repeating-conic-gradient(from 0deg at 50% -2%, rgba(232,99,42,0.16) 0deg 7deg, rgba(242,169,59,0) 7deg 14deg);
+  --hero-sun: radial-gradient(circle, #FFEFC2 0%, #F2A93B 42%, rgba(232,99,42,0) 70%);
+  /* Glows on a pressed chip, and the ring round a tile icon. */
+  --glow-chip: 0 3px 10px -3px rgba(22,163,154,0.5);
+  --glow-country: 0 3px 12px -3px rgba(214,51,108,0.5);
+  --tile-ring: inset 0 0 0 1px rgba(232,99,42,0.18);
+  /* The brand rule: the tab bar's top edge, the sheet's and the compare tray's, and the tab
+     pip. A flat gradient today; the retro theme makes it the four-stripe band (--stripe-*). */
+  --rule-brand: var(--grad-sun);
+  --pip-brand: var(--grad-sun);
+  /* The illustrated map: sea, coast strokes, the river and the labels laid over the countries. */
+  --sea: radial-gradient(125% 95% at 50% 36%, #C7E9E4 0%, #7FC3BD 100%);
+  --map-stroke: #FFFDF5; --map-halo: rgba(255,253,245,0.92);
+  --river: #2C7DA0; --river-ink: #1B5C7A;
+  --map-label: #fff; --map-label-halo: rgba(0,0,0,0.4);
+
+  /* ---- Stripe band (VISUAL_DIRECTION_PROMPT.md section 3.1) ----
+     Nothing paints until a theme sets --stripe-1 to --stripe-4 (top to bottom: Thailand, Vietnam,
+     Cambodia, Laos) on :root / the skin block, because each token below holds var(--stripe-N) and
+     is therefore invalid, and so "none", without them. The classes further down use them; a
+     theme attaches the classes (or the tokens) to its own surfaces. The straight band: */
+  --stripes: linear-gradient(to bottom, var(--stripe-1) 0 25%, var(--stripe-2) 25% 50%, var(--stripe-3) 50% 75%, var(--stripe-4) 75% 100%);
+  /* The empty-state crown: four 5px rings round a point on the bottom edge. */
+  --stripes-crown: radial-gradient(circle at 50% 100%, transparent 0 12px, var(--stripe-4) 12px 17px, var(--stripe-3) 17px 22px, var(--stripe-2) 22px 27px, var(--stripe-1) 27px 32px, transparent 32px);
+  /* The Welcome sweep: four 8px rings of a 640px circle, centred 644px above the sun. */
+  --stripes-ring: radial-gradient(circle at 50% 50%, transparent 0 624px, var(--stripe-1) 624px 632px, var(--stripe-2) 632px 640px, var(--stripe-3) 640px 648px, var(--stripe-4) 648px 656px, transparent 656px);
 
   --bg: var(--cream);
   --tabbar-h: 66px;
@@ -150,12 +202,25 @@ html[data-theme="dark"] {
       rgba(255,122,64,0.16) 0deg 9deg, rgba(47,208,196,0.10) 9deg 18deg);
   --shadow: 0 8px 24px rgba(0,0,0,0.5);
   --shadow-soft: 0 3px 10px rgba(0,0,0,0.4);
+  --shadow-up: 0 -2px 16px rgba(0, 0, 0, 0.5);
+  /* --teal is deliberately bright on dark themes, which makes a white label on the Back pill
+     1.92:1. The label takes the page colour instead (9.17:1), correct for every skin because
+     --cream is whatever that skin's page colour is. */
+  --back-bg: var(--teal); --back-ink: var(--cream);
 }
 
 /* ---- Named visual themes (skins) — chosen in Settings -----------------------
    Each redefines the palette leaves; components stay token-driven so they reskin
    for free. Placed after the dark block so night (which rides data-theme=dark)
    wins on shared tokens. */
+:root[data-skin="classic"] {
+  /* The one intended visual change of Phase 2: the primary button. White on the #E07A1F stop of
+     the old gradient was 3.01:1, under AA for a 16px bold label. A two-stop gradient between the
+     logo's own sun and sun-deep, with the dark badge ink, reads 8.55:1 on #F2A93B and 5.08:1 on
+     #E8632A, in both modes. Other fills (chips, phase switch, pills) keep their white labels. */
+  --btn-bg: linear-gradient(135deg, #F2A93B 0%, #E8632A 100%);
+  --btn-ink: var(--badge-ink); --btn-ink-shadow: none;
+}
 :root[data-skin="night"] {
   --cream: #141017; --bg: #141017; --card: #1E1822; --line: #332A3C;
   --ink: #F3EEE6; --ink-soft: #A79C8C;
@@ -387,7 +452,7 @@ p { margin: 0 0 var(--sp-4); }
    3.12:1, under AA for this 14px bold label. The deep teal takes the same white label to
    7.6:1 and matches the ghost button and card headings that already use it. */
 .topbar .back {
-  border: none; background: var(--teal-deep); color: #fff; cursor: pointer;
+  border: none; background: var(--back-bg); color: var(--back-ink); cursor: pointer;
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
 .topbar .back:hover { filter: brightness(1.08); }
@@ -395,8 +460,8 @@ p { margin: 0 0 var(--sp-4); }
    label on this filled pill 1.92:1 — the Back button is on nearly every screen, so this is
    the most-seen contrast failure in the app. Painting the label in the page background
    colour instead keeps the same bright pill and reaches 9.17:1, and stays correct for every
-   skin because --cream is whatever that skin's page colour is. */
-html[data-theme="dark"] .topbar .back { background: var(--teal); color: var(--cream); }
+   skin because --cream is whatever that skin's page colour is. (--back-bg / --back-ink, set in
+   the dark block at the top of this file.) */
 /* W8 mobile pass: these buttons measure ~30x30 (topbar-ic) and ~34x37 (topbar-sos) on
    screen — both under the 44x44 minimum touch target, and there is no room to grow that
    visually without re-squeezing the h1 title column the 2-line clamp above just fixed
@@ -676,9 +741,11 @@ html[data-theme="dark"] .card h3 { color: var(--teal); }
   display: inline-flex; align-items: center; gap: var(--sp-2); cursor: pointer;
   border: none; border-radius: var(--r-pill); padding: var(--sp-3) var(--sp-4);
   font-size: var(--fs-body); font-weight: 700; font-family: inherit;
-  background: var(--grad-sun); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); box-shadow: var(--shadow-soft);
+  background: var(--btn-bg); color: var(--btn-ink); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); box-shadow: var(--shadow-soft);
   transition: filter var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
+/* The label's shadow belongs to the filled button only; the ghost keeps the one it always inherited. */
+.btn:not(.ghost) { text-shadow: var(--btn-ink-shadow); }
 .btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .btn.ghost { background: none; color: var(--teal-deep); border: 2px solid var(--teal); box-shadow: none; }
 html[data-theme="dark"] .btn.ghost { color: var(--teal); }
@@ -697,16 +764,13 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
   margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) var(--sp-5);
   border-radius: 0 0 34px 34px; box-shadow: var(--shadow-soft);
   transition: padding var(--dur) var(--ease), border-radius var(--dur) var(--ease);
-  background:
-    radial-gradient(125% 100% at 50% -12%, rgba(242,169,59,0.55) 0%, rgba(232,99,42,0.34) 34%, rgba(214,51,108,0.20) 58%, rgba(106,76,147,0.10) 100%),
-    repeating-conic-gradient(from 0deg at 50% -2%, rgba(232,99,42,0.16) 0deg 7deg, rgba(242,169,59,0) 7deg 14deg),
-    var(--card);
+  background: var(--hero-wash), var(--card);
 }
 /* warm glowing sun rising behind the wordmark */
 .hero::before {
   content: ''; position: absolute; z-index: -1; top: -86px; left: 50%; transform: translateX(-50%);
   width: 220px; height: 220px; border-radius: 50%;
-  background: radial-gradient(circle, #FFEFC2 0%, #F2A93B 42%, rgba(232,99,42,0) 70%); opacity: 0.85;
+  background: var(--hero-sun); opacity: 0.85;
 }
 .hero .logo { width: min(74vw, 320px); }
 .hero h1 { font-family: var(--font-display); font-size: var(--fs-display); margin: 0 0 var(--sp-1);
@@ -733,7 +797,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .phase-btn .phase-emoji { font-size: 1.4rem; line-height: 1; flex: none; }
 .phase-btn .phase-lbl { line-height: 1.15; }
 .phase-btn:active { transform: scale(0.97); }
-.phase-btn[aria-pressed="true"] { border-color: transparent; background: var(--grad-sun); color: #fff; box-shadow: var(--shadow-soft); }
+.phase-btn[aria-pressed="true"] { border-color: transparent; background: var(--grad-sun); color: var(--on-fill); box-shadow: var(--shadow-soft); }
 .phase-tagline { text-align: center; margin: 0 0 var(--sp-2); font-size: var(--fs-sm); }
 .phase-current { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-1); }
 .phase-current-lbl { font-weight: 800; font-size: var(--fs-sm); }
@@ -839,7 +903,7 @@ html[data-theme="dark"] .btn.ghost { color: var(--teal); }
 .btn { min-height: 48px; letter-spacing: 0.01em; }
 /* Modern tile icon: a solid brand-gradient chip with a white glyph (pairs with the
    existing hover accent-bar + icon ring defined later in this file). */
-.tile .ic { width: 52px; height: 52px; background: var(--tile-accent, var(--grad-sun)); color: #fff; }
+.tile .ic { width: 52px; height: 52px; background: var(--tile-accent, var(--grad-sun)); color: var(--on-fill); }
 .tile .ic svg { width: 26px; height: 26px; }
 .tile .tile-badge { z-index: 1; }
 
@@ -1021,7 +1085,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   border: 1px solid var(--line); background: var(--card); color: var(--ink); min-height: 44px;
   border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 700;
 }
-.country-chip[aria-pressed="true"] { background: var(--grad-sun); color: #fff; border-color: transparent; }
+.country-chip[aria-pressed="true"] { background: var(--grad-sun); color: var(--on-fill); border-color: transparent; }
 .country-chip .flag { font-size: 1.1rem; }
 
 /* --- chips / filters --- */
@@ -1039,7 +1103,7 @@ html[data-theme="dark"] .hero-badge { background: rgba(255,255,255,0.08); }
   font-size: var(--fs-sm); font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
 }
-.chip[aria-pressed="true"] { background: var(--teal-deep); border-color: transparent; color: #fff; }
+.chip[aria-pressed="true"] { background: var(--teal-deep); border-color: transparent; color: var(--on-fill); }
 /* Map-layer toggles: independent presses, any combination on at once — unlike the weather
    widget's metric segments, which are one-of-N. Tighter than a default .chips row because this
    sits directly under the map and its whole point is costing almost no vertical space. */
@@ -1102,6 +1166,7 @@ html[data-theme="dark"] .phrase .native { color: var(--pink); }
    toggled into Pause — see js/screens/phrasebook.js. Distinct from the ready-to-play gradient so
    the same button reads as a different action, not a state of the phrase. */
 .speak.is-playing, .btn.is-playing { background: var(--warn); }
+.btn.is-playing { color: var(--on-fill); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }   /* --btn-ink may be dark; the danger fill needs white */
 .phrase-ctrls { flex: none; display: flex; gap: var(--sp-1); align-items: center; }
 .phrase .grow.tappable { cursor: pointer; border-radius: var(--r-2); }
 .phrase .grow.tappable:hover { background: rgba(0,0,0,0.03); }
@@ -1447,7 +1512,7 @@ html[data-theme="dark"] .price-item .fair { color: var(--teal); }
              margin-top: var(--sp-2); background: var(--card); }
 .route-opt.best { border-color: var(--orange); background: linear-gradient(135deg, rgba(242,169,59,0.18), rgba(232,99,42,0.10)); }
 .route-opt .mode { font-weight: 800; }
-.pill-best { font-size: var(--fs-label); font-weight: 800; background: var(--grad-sun); color: #fff;
+.pill-best { font-size: var(--fs-label); font-weight: 800; background: var(--grad-sun); color: var(--on-fill);
              border-radius: var(--r-pill); padding: 3px var(--sp-2); text-transform: uppercase; }
 .border-flag { font-size: var(--fs-sm); color: var(--magenta-deep); font-weight: 700; }
 .pill-tag { font-size: var(--fs-label); font-weight: 700; border: 1px solid var(--line);
@@ -1791,12 +1856,11 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
   height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
   display: flex; max-width: 720px; margin: 0 auto;
   background: var(--card); border-top: 3px solid transparent;
-  border-image: var(--grad-sun) 1; padding-bottom: env(safe-area-inset-bottom);
+  border-image: var(--rule-brand) 1; padding-bottom: env(safe-area-inset-bottom);
   /* A shadow lifts the bar above the page so it always reads as a pinned layer, and
      `contain: layout` isolates it from page reflow so it never rides up on scroll. */
-  box-shadow: 0 -2px 14px rgba(58, 36, 21, 0.14); contain: layout;
+  box-shadow: var(--shadow-up); contain: layout;
 }
-html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 .tabbar button {
   flex: 1; min-width: 0; border: none; background: none; cursor: pointer; font-family: inherit;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -1811,15 +1875,30 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 .tabbar button .ic svg { width: 25px; height: 25px; display: block; }
 .tabbar button[aria-current="page"] { color: var(--orange); }
 
+/* --- stripe band: the component (tokens at the top of this file; paints nothing until a theme sets --stripe-*) --- */
+.stripe-band { display: block; height: 6px; background: var(--stripes, none); }
+.stripe-crown { width: 64px; height: 32px; margin: 0 auto var(--sp-3); background: var(--stripes-crown, none); }
+/* The Welcome sweep. Put it inside a position:relative; isolation:isolate wrapper that sets --sun-y
+   (the sun's centre from the wrapper's top; the logo puts it at a tenth of its width). The disc of
+   --stripe-gap round the sun keeps the sun's rays off the stripes; a theme sets --stripe-gap to the
+   surface behind the logo. */
+.stripe-sweep {
+  position: absolute; z-index: -1; left: 50%; width: 1312px; height: 1312px; pointer-events: none;
+  top: calc(var(--sun-y, 32px) - 1300px); transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 50% 1300px, var(--stripe-gap, transparent) 0 calc(var(--sun-y, 32px) * 0.98), transparent calc(var(--sun-y, 32px) * 0.98 + 0.5px)),
+    var(--stripes-ring, none);
+}
+
 /* --- save sheet (modal) --- */
 .sheet-backdrop {
-  position: fixed; inset: 0; z-index: 50; background: rgba(58,36,21,0.5);
+  position: fixed; inset: 0; z-index: 50; background: var(--scrim);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .sheet {
   width: 100%; max-width: 720px; max-height: 82vh; overflow-y: auto;
   background: var(--card); border-radius: var(--r-lg) var(--r-lg) 0 0;
-  border-top: 4px solid transparent; border-image: var(--grad-sun) 1;
+  border-top: 4px solid transparent; border-image: var(--rule-brand) 1;
   padding: var(--sp-5) var(--sp-4) var(--sp-6); box-shadow: var(--shadow);
 }
 .sheet h3 { font-family: var(--font-display); margin: 0 0 var(--sp-3); color: var(--orange); text-transform: uppercase; letter-spacing: 0.03em; }
@@ -1828,7 +1907,7 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 .sheet-backdrop.center { align-items: center; padding: var(--sp-4); }
 .confirm-card { max-width: 440px; border-radius: var(--r-lg); }
 .confirm-actions { display: flex; gap: var(--sp-3); justify-content: flex-end; flex-wrap: wrap; }
-.btn.danger { background: var(--warn); border-color: var(--warn); color: #fff; }
+.btn.danger { background: var(--warn); border-color: var(--warn); color: var(--on-fill); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
 .coll-row {
   display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0;
   border-bottom: 1px dashed var(--line); cursor: pointer; font-weight: 600;
@@ -1842,14 +1921,14 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
   box-shadow: var(--shadow-soft);
   /* Sea fills the card; the SVG is transparent and the countries float on it, so the
      letterboxing from the tall map blends seamlessly. */
-  background: radial-gradient(125% 95% at 50% 36%, #C7E9E4 0%, #7FC3BD 100%);
+  background: var(--sea);
 }
 /* Capped, responsive height keeps the map compact on a phone instead of dominating
    the screen; the map scales to fit and centres. */
 .region-svg { display: block; width: 100%; height: clamp(230px, 40vh, 380px); }
 .ctry-group { cursor: pointer; }
 .ctry {
-  stroke: #FFFDF5; stroke-width: 2.5; stroke-linejoin: round;
+  stroke: var(--map-stroke); stroke-width: 2.5; stroke-linejoin: round;
   transform-box: fill-box; transform-origin: center;
   transition: filter var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
@@ -1863,14 +1942,14 @@ html[data-theme="dark"] .tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 .ctry-label { pointer-events: none; }
 /* the Mekong River, drawn over the country fills and under the labels */
 .mekong-group { pointer-events: none; }
-.mekong-casing { fill: none; stroke: #FFFDF5; stroke-width: 8.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; }
-.mekong { fill: none; stroke: #2C7DA0; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.mekong-casing { fill: none; stroke: var(--map-stroke); stroke-width: 8.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; }
+.mekong { fill: none; stroke: var(--river); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
 .mekong-name { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: 3px;
-  fill: #1B5C7A; paint-order: stroke; stroke: rgba(255,253,245,0.92); stroke-width: 4px; stroke-linejoin: round; }
+  fill: var(--river-ink); paint-order: stroke; stroke: var(--map-halo); stroke-width: 4px; stroke-linejoin: round; }
 .ctry-flag { font-size: 52px; }
 .ctry-name {
-  font-family: inherit; font-weight: 800; font-size: 34px; fill: #fff;
-  paint-order: stroke; stroke: rgba(0,0,0,0.4); stroke-width: 5px; stroke-linejoin: round;
+  font-family: inherit; font-weight: 800; font-size: 34px; fill: var(--map-label);
+  paint-order: stroke; stroke: var(--map-label-halo); stroke-width: 5px; stroke-linejoin: round;
   letter-spacing: 0.02em;
 }
 .region-cap {
@@ -1993,7 +2072,7 @@ html[data-theme="dark"] .fx-line-single .fx-out { color: var(--teal); }
 .map-search:focus { outline: none; border-color: var(--orange); }
 .map-search-results:not(:empty) { margin-top: var(--sp-1); max-height: 230px; overflow-y: auto;
   border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); padding: 6px; }
-.btn.toggle-on { background: var(--teal); color: #fff; border-color: var(--teal); }
+.btn.toggle-on { background: var(--teal); color: var(--on-fill); border-color: var(--teal); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
 
 /* map key (legend): pins + every line, grouped and swatched */
 /* Leading ▸/▾ replaced by the shared trailing chevron (see `details > summary`). */
@@ -2174,9 +2253,9 @@ html[data-theme="dark"] summary:focus-visible, html[data-theme="dark"] [tabindex
 
 :root {
   /* Elevation tiers with a warm tint (matches the paper palette). */
-  --elev-1: 0 1px 2px rgba(120,50,20,0.05), 0 3px 10px -4px rgba(120,50,20,0.12);
-  --elev-2: 0 2px 5px rgba(120,50,20,0.07), 0 14px 34px -10px rgba(120,50,20,0.20);
-  --elev-3: 0 4px 10px rgba(120,50,20,0.09), 0 26px 56px -14px rgba(120,50,20,0.26);
+  --elev-1: 0 1px 2px rgba(var(--shadow-tint),0.05), 0 3px 10px -4px rgba(var(--shadow-tint),0.12);
+  --elev-2: 0 2px 5px rgba(var(--shadow-tint),0.07), 0 14px 34px -10px rgba(var(--shadow-tint),0.20);
+  --elev-3: 0 4px 10px rgba(var(--shadow-tint),0.09), 0 26px 56px -14px rgba(var(--shadow-tint),0.26);
   /* Glass edge: a hairline top highlight that reads as a lit bevel. */
   --edge-hi: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0));
   --card-wash: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 46%);
@@ -2216,7 +2295,7 @@ h2, h3, .cat-title, .topbar h1, .home-section { text-wrap: balance; }
 .tile:hover { box-shadow: var(--elev-2); }
 .tile:hover::after { opacity: 1; }
 .tile:active { transform: translateY(-1px) scale(0.995); }
-.tile .ic { box-shadow: inset 0 0 0 1px rgba(232,99,42,0.18); transition: transform var(--dur) var(--ease); }
+.tile .ic { box-shadow: var(--tile-ring); transition: transform var(--dur) var(--ease); }
 .tile:hover .ic { transform: scale(1.06) rotate(-3deg); }
 
 /* --- Section headers: a short gradient accent bar ------------------------- */
@@ -2234,8 +2313,8 @@ h2, h3, .cat-title, .topbar h1, .home-section { text-wrap: balance; }
 .btn:active { transform: translateY(0) scale(0.98); filter: brightness(0.98); }
 
 /* --- Chips: active state gets a soft glow -------------------------------- */
-.chip[aria-pressed="true"], .country-chip[aria-pressed="true"] { box-shadow: 0 3px 10px -3px rgba(22,163,154,0.5); }
-.country-chip[aria-pressed="true"] { box-shadow: 0 3px 12px -3px rgba(214,51,108,0.5); }
+.chip[aria-pressed="true"], .country-chip[aria-pressed="true"] { box-shadow: var(--glow-chip); }
+.country-chip[aria-pressed="true"] { box-shadow: var(--glow-country); }
 .chip, .country-chip { transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease); }
 .chip:active, .country-chip:active { transform: scale(0.95); }
 
@@ -2245,7 +2324,7 @@ h2, h3, .cat-title, .topbar h1, .home-section { text-wrap: balance; }
 .tabbar button[aria-current="page"] .ic { transform: translateY(-2px); }
 .tabbar button[aria-current="page"]::before {
   content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 26px; height: 3px; border-radius: 0 0 999px 999px; background: var(--grad-sun);
+  width: 26px; height: 3px; border-radius: 0 0 999px 999px; background: var(--pip-brand);
 }
 
 /* --- Bubbles / boards: gentle depth --------------------------------------- */
@@ -2528,7 +2607,7 @@ html[data-reduced-motion="on"] .spinner { animation: none; }
 }
 .snack-toast .grow { flex: 1; min-width: 0; }
 .update-toast-btn { min-height: 40px; padding: 0 16px; border: none; border-radius: var(--r-pill);
-  background: var(--grad-sun); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  background: var(--grad-sun); color: var(--on-fill); font: inherit; font-weight: 700; cursor: pointer; }
 .update-toast-x { min-height: 40px; min-width: 40px; border: none; background: none; color: var(--ink-soft);
   font-size: 1rem; cursor: pointer; }
 
@@ -2917,10 +2996,9 @@ html[data-theme="dark"] .place-qrow { background: rgba(255,255,255,0.045); box-s
 .compare-tray {
   position: fixed; left: 0; right: 0; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
   z-index: 11; max-width: 720px; margin: 0 auto;
-  background: var(--card); border-top: 3px solid transparent; border-image: var(--grad-sun) 1;
-  padding: var(--sp-3) var(--sp-4); box-shadow: 0 -2px 14px rgba(58, 36, 21, 0.14);
+  background: var(--card); border-top: 3px solid transparent; border-image: var(--rule-brand) 1;
+  padding: var(--sp-3) var(--sp-4); box-shadow: var(--shadow-up);
 }
-html[data-theme="dark"] .compare-tray { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
 .compare-table { display: flex; flex-direction: column; gap: 0; overflow-x: auto; }
 .compare-row { display: grid; grid-template-columns: 84px repeat(auto-fit, minmax(0, 1fr)); gap: 8px;
   padding: 8px 0; border-bottom: 1px solid var(--line); align-items: center; }
