@@ -43,9 +43,11 @@ It shows 112 screens (welcome, home, places, explore, the Wat Pho listing, Talk 
 night) for the four retro variants, the three modern themes and today's Classic, with the ratios that
 `tools/style-tiles/measure.py` measured from `tools/style-tiles/round2.json`.
 
+Answered by the owner on 2026-10-05, each with the recommended option.
+
 | Question | Answer |
 |---|---|
-| The default and its stripe tuning | Pending |
-| Navigation | Pending |
-| Theme names | Pending |
-| Existing users on `classic` | Pending |
+| The default and its stripe tuning | The retro theme, with the map stripes: Thailand brick, Vietnam plum, Cambodia gold, Laos green (`retro-map` in `round2.json`). The poster tuning (`retro-poster`) stays in the file as the measured alternative. |
+| Navigation | The four country colours do the wayfinding. The one sun orange marks the active tab and is the only primary-action colour, and red only means danger. The colour-per-tab variant is rejected. |
+| Theme names | "Mekong Retro" for the default. "River", "Four Flags", "Temples & Markets" and "Classic sunset" as proposed. |
+| Existing users on `classic` | Move them to Mekong Retro with a one-time Undo toast that restores Classic, keeping their stored light/dark setting (Phase 4, store version 16). |

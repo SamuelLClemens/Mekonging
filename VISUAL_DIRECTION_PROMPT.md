@@ -273,7 +273,8 @@ Ask with AskUserQuestion, recommended option first, against the gallery:
 4. Existing users whose store says `classic`: move to the new default with a one-time Undo toast, or
    stay on Classic?
 
-Record the answers in `DESIGN_SYSTEM.md`, push, and stop.
+Record the answers in `DESIGN_SYSTEM.md`, push, and stop. Answered on 2026-10-05: `DESIGN_SYSTEM.md` holds
+the record, and Phases 2 to 4 follow it without asking again.
 
 ---
 
