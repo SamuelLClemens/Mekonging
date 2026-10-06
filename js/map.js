@@ -684,11 +684,13 @@ export async function initWeatherMap(containerEl, opts = {}) {
   await loadLibs();
   const maplibregl = window.maplibregl;
   if (!maplibregl) throw new Error('map library unavailable');
+  // The same basemap, controls and Map/Satellite choice as the Places map (initMap): satellite by
+  // default, borders on, and the traveller's pick is shared with it through opts.satellite/onStyleChange.
   const style = basemapStyle();
-  // Plain street map: satellite and the dashed border line are for the Places map, not a forecast.
+  const satOn0 = opts.satellite !== false;
   style.layers.forEach((l) => {
-    if (l.id === 'satellite' || l.id === 'borders') l.layout = { ...(l.layout || {}), visibility: 'none' };
-    if (l.id === 'street') l.layout = { ...(l.layout || {}), visibility: 'visible' };
+    if (l.id === 'satellite') l.layout = { ...(l.layout || {}), visibility: satOn0 ? 'visible' : 'none' };
+    if (l.id === 'street') l.layout = { ...(l.layout || {}), visibility: satOn0 ? 'none' : 'visible' };
   });
   style.sources.dots = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } };
   const light = document.documentElement.getAttribute('data-theme') !== 'dark';
@@ -703,12 +705,33 @@ export async function initWeatherMap(containerEl, opts = {}) {
     center: [104.5, 13.5], zoom: 4.5,
     maxBounds: REGION_BOUNDS, maxZoom: STREET_MAXZOOM, minZoom: 3,
     cooperativeGestures: true, attributionControl: { compact: true },
-    dragRotate: false, touchPitch: false,
   });
-  map.touchZoomRotate.disableRotation();
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-  map.addControl(new maplibregl.FullscreenControl(), 'top-right');
-  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left'); } catch { /* older build */ }
+  map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
+  map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserLocation: true, showUserHeading: true }), 'top-right');
+  try { map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left'); } catch { /* older build */ }
+  const setSat = (on) => {
+    try {
+      map.setLayoutProperty('satellite', 'visibility', on ? 'visible' : 'none');
+      map.setLayoutProperty('street', 'visibility', on ? 'none' : 'visible');
+    } catch { /* style not ready */ }
+    if (opts.onStyleChange) { try { opts.onStyleChange(on); } catch { /* noop */ } }
+  };
+  map.addControl({
+    onAdd() {
+      const d = document.createElement('div');
+      d.className = 'maplibregl-ctrl maplibregl-ctrl-group mk-style-toggle';
+      const mk = (label, sat, title) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = label; b.title = title; b.setAttribute('aria-label', title);
+        b.setAttribute('aria-pressed', String(sat === satOn0));
+        b.addEventListener('click', () => { setSat(sat); d.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); });
+        return b;
+      };
+      d.append(mk('🗺', false, 'Map view'), mk('🛰', true, 'Satellite view'));
+      this._c = d; return d;
+    },
+    onRemove() { if (this._c && this._c.parentNode) this._c.parentNode.removeChild(this._c); },
+  }, 'top-left');
 
   let items = [], selKey = null, ready = false, ctx, autoFit = null;
   const markers = new Map();   // key -> { el, mk, full, short }
@@ -805,14 +828,16 @@ export async function initWeatherMap(containerEl, opts = {}) {
   }
   map.on('dragstart', () => { autoFit = null; });
   map.on('zoomstart', (e) => { if (e.originalEvent) autoFit = null; });
+  // Markers need no loaded style, and 'load' waits on a painted frame (never in a hidden tab), so the
+  // chips are built at once; the dots source is filled the moment the style is parsed.
+  ready = true;
+  const fillDots = () => { const src = map.getSource('dots'); if (src) src.setData(fc()); };
+  map.on('style.load', fillDots);
   map.once('load', () => {
-    ready = true;
     try { map.resize(); } catch { /* noop */ }
     // Collapse the attribution to its ⓘ, as the other maps do.
     try { containerEl.querySelectorAll('.maplibregl-ctrl-attrib.maplibregl-compact-show').forEach((el) => el.classList.remove('maplibregl-compact-show')); } catch { /* noop */ }
-    const src = map.getSource('dots');
-    if (src) src.setData(fc());
-    build();
+    fillDots();
   });
   const fitTo = (list, animate) => {
     const pts = list.filter((d) => Number.isFinite(d.lng) && Number.isFinite(d.lat));
@@ -832,9 +857,7 @@ export async function initWeatherMap(containerEl, opts = {}) {
         autoFit = items.filter((d) => d.hub).length ? items.filter((d) => d.hub) : items;
         fitTo(autoFit, false);
       }
-      if (!ready) return;
-      const src = map.getSource('dots');
-      if (src) src.setData(fc());
+      fillDots();
       build();
     },
     dispose() {
@@ -1066,16 +1089,16 @@ export async function initMap(containerEl, opts = {}) {
   // visit order) — the journey map's dotted line between stops. No-op for every other caller,
   // which never passes opts.route.
   // The route reads as TRAVEL, not as a border: a thick solid line with a white casing, one colour
-  // per mode of transport, where the country borders are a thin dotted purple line (restyled below
+  // per mode of transport, where the country borders are a thin dotted red line (restyled below
   // when a route is present). The two used to be dashed red and dashed red-orange, and on
   // satellite imagery they were the same line. Flights are drawn long-dashed, the one dashed route.
-  const ROUTE_COLORS = { flight: '#7B2CBF', train: '#0B7A75', bus: '#E8632A', boat: '#1565C0', walk: '#2E7D32', bike: '#8D6E00', moto: '#C2185B' };
+  const ROUTE_COLORS = { flight: '#7B2CBF', train: '#2E9E3F', bus: '#1E5BD8', boat: '#00ACC1', walk: '#FFB300', bike: '#9E9D24', moto: '#6D4C41' };
   let routeLegs = null, routeOn = true;
   function addRouteLayers() {
     if (map.getSource('mk-route')) return;
     map.addSource('mk-route', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     const w = ['interpolate', ['linear'], ['zoom'], 4, 3, 8, 4.5, 12, 7];
-    const colour = ['match', ['get', 'mode'], ...Object.entries(ROUTE_COLORS).flat(), '#E8632A'];
+    const colour = ['match', ['get', 'mode'], ...Object.entries(ROUTE_COLORS).flat(), '#1E5BD8'];
     map.addLayer({ id: 'mk-route-casing', type: 'line', source: 'mk-route',
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': '#FFFFFF', 'line-opacity': 0.95, 'line-width': ['+', w, 3] } });
@@ -1084,9 +1107,10 @@ export async function initMap(containerEl, opts = {}) {
     map.addLayer({ id: 'mk-route-air', type: 'line', source: 'mk-route', filter: ['==', ['get', 'mode'], 'flight'],
       layout: { 'line-cap': 'butt', 'line-join': 'round' }, paint: { 'line-color': ROUTE_COLORS.flight, 'line-width': w, 'line-dasharray': [4, 2.5] } });
     if (opts.route) {
-      // Borders: thin, dotted, purple-grey — present for orientation, never mistaken for a journey.
+      // Borders: thin, dotted red — the one colour no mode of transport uses — so they are never
+      // mistaken for a journey.
       try {
-        map.setPaintProperty('borders', 'line-color', '#6A1B9A');
+        map.setPaintProperty('borders', 'line-color', '#FF3B30');
         map.setPaintProperty('borders', 'line-width', 1.2);
         map.setPaintProperty('borders', 'line-dasharray', [0.4, 2.2]);
         map.setPaintProperty('borders', 'line-opacity', 0.9);
