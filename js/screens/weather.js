@@ -875,7 +875,11 @@ export function weatherScreen(country) {
   if (mapDispose) { mapDispose(); mapDispose = null; }
   import('../map.js').then((m) => {
     if (!mapCanvas.isConnected || typeof m.initWeatherMap !== 'function') throw new Error('weather map unavailable');
-    return m.initWeatherMap(mapCanvas, { onPick: (key) => switchSpot(key) });
+    return m.initWeatherMap(mapCanvas, {
+      onPick: (key) => switchSpot(key),
+      satellite: store.profile.prefs.placesMapSat !== false,   // the Places map's own choice
+      onStyleChange: (on) => { store.profile.prefs.placesMapSat = on; save(); },
+    });
   }).then((ctl) => {
     if (!mapCanvas.isConnected) { ctl.dispose(); return; }
     mapCtl = ctl;
