@@ -7,7 +7,7 @@
 // it to every other language; run `python3 scripts/check-ui-strings.py` after editing.
 
 export const STRINGS = {
-    'Home': 'হোম', 'Talk': 'কথা বলুন', 'Places': 'স্থান', 'Explore': 'অন্বেষণ', 'YOU': 'আমি',
+    'Home': 'হোম', 'Talk': 'কথা বলুন', 'Places': 'স্থান', 'Explore': 'অন্বেষণ', 'Market': 'বাজার', 'YOU': 'আমি',
     'Your space': 'আপনার জায়গা', '‹ Back': '‹ ফিরে', 'Settings': 'সেটিংস',
     'Saved & collections': 'সংরক্ষিত', 'Emergency help': 'জরুরি সহায়তা', 'Emergency': 'জরুরি',
     'Online': 'অনলাইন', 'Offline': 'অফলাইন', 'Skip to content': 'বিষয়বস্তুতে যান',

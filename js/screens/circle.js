@@ -23,7 +23,7 @@ import { SEV_LABEL, addPlaceSecret, fmtReportDate } from '../place-ui.js';
 // listing. They belong to the board screen (js/screens/exchange.js) and are imported from
 // there rather than duplicated here.
 import { go, mount, topbar, shareButton } from '../main.js';
-import { bbCat, bbHeadline, bbSubline, swapCalcNodes } from './exchange.js';
+import { bbCat, bbHeadline, bbSubline, swapCalcNodes, marketRoute } from './exchange.js';
 
 // No account, no server: a user's traveller card and (later) messages travel
 // only inside links they choose to share. Imported contact fields are UNTRUSTED
@@ -61,7 +61,7 @@ export function circleScreen() {
   wrap.append(h('div', { class: 'card' }, [
     h('h2', {}, 'Traveller board'),
     h('p', { class: 'muted' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit. On-device; a listing travels only inside a link you share.'),
-    h('button', { class: 'btn ghost block', onclick: () => go('#exchange') }, `🧭 Open the board${nListings ? ` (${nListings})` : ''}`),
+    h('button', { class: 'btn ghost block', onclick: () => go('#market') }, `🧭 Open the board${nListings ? ` (${nListings})` : ''}`),
   ]));
 
   // --- your card: read-only summary once saved, editable form on request ---
@@ -288,7 +288,7 @@ export function importShareScreen(arg) {
     if (d.note) box.append(h('p', { style: 'margin-top: var(--sp-1h)' }, d.note));
     if (d.contact) box.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
     box.append(h('button', { class: 'btn block btn-spaced', onclick: (e) => { addListing({ cat, mine: false, from: s.from, data: d }); e.currentTarget.textContent = '✓ Saved to your board'; } }, '＋ Save to my board'));
-    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go('#exchange-' + cat) }, 'Open the traveller board'));
+    box.append(h('button', { class: 'btn ghost block btn-spaced', onclick: () => go(marketRoute(cat)) }, 'Open the traveller board'));
   }
   wrap.append(box);
 

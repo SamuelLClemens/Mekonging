@@ -88,7 +88,7 @@ export function nearbyScreen() {
     body.append(h('div', { class: 'chips', style: 'margin: var(--sp-3) 0' }, [
       h('button', { class: 'chip', onclick: () => go(`#places-${country}`) }, [chipIcon('map'), 'See on the map']),
       h('button', { class: 'chip', onclick: () => go('#places') }, [chipIcon('pin'), 'Set my stay']),
-      h('button', { class: 'chip', onclick: () => go('#exchange') }, '🤝 Traveller board'),
+      h('button', { class: 'chip', onclick: () => go('#market') }, '🤝 Traveller board'),
       h('button', { class: 'chip', onclick: () => go('#sos') }, [chipIcon('alert'), 'Emergency']),
     ]));
     body.append(nearbySafetyStrip(country, f));

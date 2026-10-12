@@ -7,7 +7,7 @@
 // it to every other language; run `python3 scripts/check-ui-strings.py` after editing.
 
 export const STRINGS = {
-    'Home': 'ໜ້າຫຼັກ', 'Talk': 'ເວົ້າ', 'Places': 'ສະຖານທີ່', 'Explore': 'ສຳຫຼວດ',
+    'Home': 'ໜ້າຫຼັກ', 'Talk': 'ເວົ້າ', 'Places': 'ສະຖານທີ່', 'Explore': 'ສຳຫຼວດ', 'Market': 'ຕະຫຼາດ',
     'YOU': 'ທ່ານ', 'Your space': 'ພື້ນທີ່ຂອງທ່ານ', '‹ Back': '‹ ກັບຄືນ', 'Settings': 'ຕັ້ງຄ່າ',
     'Saved & collections': 'ບັນທຶກໄວ້', 'Emergency help': 'ຄວາມຊ່ວຍເຫຼືອສຸກເສີນ',
     'Emergency': 'ສຸກເສີນ', 'Online': 'ອອນລາຍ', 'Offline': 'ອອບລາຍ',

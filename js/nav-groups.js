@@ -57,8 +57,6 @@ export const NAV_GROUPS = [
       { ic: '💰', label: 'Budget', hash: '#expenses', mine: true, own: 'budget', blurb: 'Log what you spend against a target', live: 'budget' },
       { ic: '🏷️', label: 'Fair prices', hash: '#prices-{cc}', blurb: 'What locals pay, so you are not overcharged' },
       { ic: '🤝', label: 'Bargain helper', hash: '#bargain', blurb: 'What to offer, and how to say it', hidePost: true },
-      { ic: '💵', label: 'Cash swap', hash: '#swap', blurb: 'Swap currency with travellers going the other way', hidePost: true },
-      { ic: '🎒', label: 'Gear market', hash: '#market', blurb: 'Buy and sell kit on the road', hidePost: true },
     ],
   },
   {
@@ -185,7 +183,6 @@ export const NAV_GROUPS = [
     intro: 'Other travellers, and the people who live here',
     items: [
       { ic: '👥', label: 'Travel circle', hash: '#circle', blurb: 'Share plans and places with people you trust', live: 'circle' },
-      { ic: '🤝', label: 'Traveller board', hash: '#exchange', blurb: 'Lifts, gear, cash and company', hidePost: true },
       { ic: '📌', label: 'Local noticeboard', hash: '#board-{cc}', blurb: 'Markets, classes and family supplies', hidePost: true },
       { ic: '📥', label: 'Shared with you', hash: '#inbox', blurb: 'Places and plans people sent you', live: 'inbox' },
       { ic: '❤️', label: 'Give back', hash: '#donate', blurb: 'Local causes worth supporting' },
@@ -208,9 +205,10 @@ export const NAV_GROUPS = [
   },
 ];
 
-// The five bottom tabs (Home, Talk, You, Places, Explore) and Emergency — pinned in the
+// The six bottom tabs (Home, Talk, You, Places, Explore, Market) and Emergency — pinned in the
 // topbar on every screen — are deliberately absent above: they are already one tap away from
-// everywhere, so listing them in a group would spend a slot to say nothing. Detail screens
+// everywhere, so listing them in a group would spend a slot to say nothing. Market is the one
+// home of the traveller board: cash swap, rides, rooms and items (#market, docs/EXCHANGE.md §11). Detail screens
 // reached FROM a feature rather than browsed TO (one place, one dish, one species, a message
 // thread, a saved collection) are absent for the same reason.
 
