@@ -2288,6 +2288,7 @@ export const PLACES_KH_EXT = [
     whyItFits: "For a relaxed paddle and a seafood-and-sunset stroll along the promenade; most swimmers take a boat to Rabbit Island for clearer water.",
     priceRange: { currency: "KHR", low: 0, high: 0 },
     hours: "Open beach; no gate or fixed hours, busiest with local visitors at weekends and on public holidays.",
+    tips: ["Buy crab at the Crab Market and have a stall cook it with Kampot pepper.", "Boats to Rabbit Island (Koh Tonsay) leave from Kep's pier in the morning.", "Come at sunset, when the promenade fills with local families."],
     verified: "2026-07",
     sources: [{ org: "Bookaway - A traveller's guide to Kep Beach", url: "https://www.bookaway.com/blog/beaches-cambodia-kep/" }, { org: "Seripheap - The Crab Market of Kep", url: "https://www.tour-cambodia.com/guide-cambodia/attraction/crab-market" }, { org: "Tourism Cambodia - Kep Beach", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/what-to-see/40_kep-beach.htm" }],
     recognition: "A short crescent of pale imported sand backed by casuarina trees and food vendors, with the White Lady (Sela Cham Pou) statue on the rocks nearby.",

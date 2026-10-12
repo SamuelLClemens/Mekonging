@@ -1,8 +1,9 @@
 // Content validator. Importing the modules also parses them, so any syntax error
 // fails the run. Then it checks required fields, verified stamps (YYYY-MM), and
-// that every price is a low<=high range. Exits non-zero on any failure.
+// that every price is a low<=high range (a route option may give only a "from" low).
+// Exits non-zero on any failure.
 //
-// Run: node scripts/validate.mjs   (or: npm run validate)
+// Run: node scripts/validate.mjs   (or: npm run validate). CI runs it in guards.yml.
 
 import { COUNTRIES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES, loadAllCountries } from '../js/data/regions.js';
 import { LANGUAGES } from '../js/data/phrasebooks.js';
@@ -233,7 +234,12 @@ for (const c of COUNTRIES) {
       if (r.crossBorder) ok(r.border && r.visa, `routes ${c.id}/${r.id}: cross-border missing border/visa`);
       for (const o of r.options || []) {
         ok(o.mode, `routes ${c.id}/${r.id}: option missing mode`);
-        ok(o.price && o.price.low <= o.price.high, `routes ${c.id}/${r.id}: option price low>high`);
+        // An explicit high: null is honest data, not an inversion: with a number low it is a
+        // "from" fare (a flight's lowest listed price), with low: null too it is quoted on
+        // request. range() prints one figure or nothing. Inventing a high to pass would be worse.
+        ok(o.price && (o.price.high === null
+          ? (o.price.low === null || typeof o.price.low === 'number')
+          : o.price.low <= o.price.high), `routes ${c.id}/${r.id}: option price low>high`);
       }
     }
   }

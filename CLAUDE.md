@@ -5,7 +5,8 @@ framework. Live at www.mekonging.com. Remote: github.com/SamuelLClemens/Mekongin
 relevant section of the docs below, not the whole repo.
 
 ## Environment
-- No `node` and no bundler. Guards are dependency-free Python 3. `npm run validate` needs Node, so it runs in CI-like environments only, and it is not in CI yet (see scripts/README.md).
+- No `node` and no bundler. Guards are dependency-free Python 3. `scripts/validate.mjs` needs Node and runs in CI; run it
+  locally with `jsc -m scripts/validate-jsc.mjs` (see scripts/README.md).
 - Parse-check a JS file with macOS `jsc -m <file>` (it links the whole import graph; `jsc` is not on PATH, it is
   `/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc`). A `ReferenceError` about
   `navigator` means it parsed fine. `check-js-syntax` parses every tracked file; still load the app.
@@ -46,6 +47,7 @@ done
 python3 scripts/check-place-fields.py --assert
 python3 tools/style-tiles/port-themes.py --check
 python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
+/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc -m scripts/validate-jsc.mjs | tail -1
 ```
 - `scripts/README.md` explains each guard and the failure that put it there. A new guard goes in the README AND
   `.github/workflows/guards.yml`.
