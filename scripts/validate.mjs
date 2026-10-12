@@ -4,7 +4,8 @@
 //
 // Run: node scripts/validate.mjs   (or: npm run validate)
 
-import { COUNTRIES, LANGUAGES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES } from '../js/data/regions.js';
+import { COUNTRIES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES, loadAllCountries } from '../js/data/regions.js';
+import { LANGUAGES } from '../js/data/phrasebooks.js';
 import { PRODUCE, PRODUCE_CATEGORIES } from '../js/data/produce.js';
 import { NATURE, NATURE_GROUPS } from '../js/data/nature.js';
 import { POOLS } from '../js/data/pools.js';
@@ -15,6 +16,10 @@ import {
   PHRASE_RX, PHRASE_KEYS, ALCOHOL_TERMS,
   dietAvoidAllergens, dishMeatHits, dishHasAlcohol, dishDietReasons, dishDietVerdict,
 } from '../js/data/diet.js';
+
+// Places, dishes and prices are lazy per country (js/data/regions.js). Without this the place
+// and dish checks below run over empty lists and pass without checking anything.
+await loadAllCountries();
 
 let checks = 0;
 const errors = [];
