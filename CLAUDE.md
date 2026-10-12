@@ -72,6 +72,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - Money goes through `money()` in `js/util.js` only (Intl has no symbol for THB, KHR or LAK).
 - Every "now" decision uses `regionNow()` (UTC+7), not the phone clock. Saved forecasts are capped (keep-set).
 - Any sound registers with `js/audio-control.js` so one thing plays at a time.
+- MapLibre: a `['zoom']` curve must be the top-level paint expression. `['+', curve, 3]` is rejected with a console
+  error and the layer is never added (route casing, PR #100); give each width its own `interpolate`.
 - A new city needs an anchor in `WEATHER_SPOTS` (js/weather.js, with `hub` where it is a hub), or places rank under the wrong
   "Nearby" city. Anchors are cities that have place records.
 - A gated feature (`online()`, consent, country data) must still render something when the gate is shut.
