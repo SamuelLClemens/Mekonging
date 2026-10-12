@@ -69,7 +69,8 @@ for (const p of allPlaces()) {
   ok(p.mapQuery || p.coords, `place ${p.id}: missing mapQuery/coords`);
   // Optional traveller-fit fields — validated only when present, so existing places pass.
   if (p.kidFriendly != null) ok(typeof p.kidFriendly === 'boolean', `place ${p.id}: kidFriendly must be boolean`);
-  if (p.isLocal != null) ok(p.isLocal === true, `place ${p.id}: isLocal, if present, must be true`);
+  // false is honest data (an international hotel, not locally owned); owner ruling 2026-10-12.
+  if (p.isLocal != null) ok(typeof p.isLocal === 'boolean', `place ${p.id}: isLocal, if present, must be true or false`);
   if (p.stayType != null) ok(['tent', 'hostel', 'guesthouse', 'homestay', 'hotel', 'resort', 'apartment'].includes(p.stayType), `place ${p.id}: bad stayType (${p.stayType})`);
   if (p.stayDuration != null) ok(['short', 'long', 'both'].includes(p.stayDuration), `place ${p.id}: bad stayDuration (${p.stayDuration})`);
   if (p.activities != null) ok(Array.isArray(p.activities), `place ${p.id}: activities must be an array`);

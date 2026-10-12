@@ -55,9 +55,9 @@ broke at PR #39 when `LANGUAGES` moved to `js/data/phrasebooks.js`, and once rep
 only the eager data: places and dishes are lazy, so it passed over empty lists. It now calls
 `loadAllCountries()` first (17,927 checks instead of 2,609).
 
-On 2026-10-12 it reports 62 errors: 35 places missing `blurb`/`whyItFits`, 16 `isLocal` values
-other than `true`, 10 prices with low above high (8 places, 2 routes) and one dish category `veg`.
-Each needs a decision on whether the data or the rule is wrong. It joins CI once it passes.
+On 2026-10-12 it reports 46 errors: 35 places missing `blurb`/`whyItFits` (owner: write them), 10
+prices with low above high (8 places, 2 routes) and one dish category `veg`. The last two are data
+bugs. `isLocal: false` is allowed (owner, 2026-10-12). It joins CI once it passes.
 
 ## Sweeping every screen
 

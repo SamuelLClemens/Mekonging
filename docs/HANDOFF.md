@@ -13,14 +13,14 @@
 
 ## Not done / known issues
 - PR #101 is waiting for the owner to merge it.
-- `scripts/validate.mjs` reports 62 data findings, so it is not in CI. The list is in scripts/README.md under "Content validator".
+- `scripts/validate.mjs` reports 46 data findings, so it is not in CI: 35 places with no blurb, 10 prices with low above high, and one `veg` dish category. The list is in scripts/README.md under "Content validator".
 - On the journey map at 375 px, the map credits panel opens expanded and covers about a quarter of the map. `initMap` does not collapse it, unlike `initWeatherMap`. This predates PR #100.
 - About 600 of roughly 1,900 place citations are homepage-only (tripadvisor.com 247, vietnam.travel 90, tourismthailand.org 89, Cambodian tourism sites 75, tourismlaos.org 46). `check-sources` stops the number growing but does not reduce it.
 - `js/main.js` is 7,784 lines; the ceiling is ~1,500.
 - The main checkout is still on the merged `fix/weather-map-and-journey-routes` (94243ba, now superseded by 5d80e00 in PR #100). Delete it once no session is using that checkout.
 
 ## Open decisions (need the user)
-1. Validator findings: for each kind, is the data wrong or the rule? Recommended: treat the 10 low-above-high prices and the `veg` dish category as data bugs and fix them. Ask the owner whether `isLocal: false` (16 places) and stays without `blurb`/`whyItFits` (35) are allowed, then relax or keep each rule.
+- None. Decided 2026-10-12: `isLocal: false` is allowed (the rule is relaxed in PR #101), and the 35 missing blurbs will be written in a content slice. The 10 low-above-high prices and the `veg` category are data bugs to fix.
 
 ## Next session prompt
 > Read CLAUDE.md and docs/HANDOFF.md. Slice: rendered-screen audit at 375 px. Load every route in js/nav-groups.js in headless Chrome (reuse `launch`/`CDP` from tools/style-tiles/capture.py; Mekong Retro light and dark; seed the store as capture.py does) and record, per route: horizontal overflow, controls under 44 × 44 px, console errors, text contrast failures, and controls covered by overlays (the journey map's credits panel is a known case). Write a ranked findings table with measured values to docs/AUDIT_375.md, with screenshots in the scratchpad only.
