@@ -50,7 +50,7 @@ pg_cron (every minute) ──pg_net──► Edge Function market-push ──►
   | `js/market-api.js` | Plain `fetch` for auth and PostgREST, session refresh, error-code mapping, fixture mode |
   | `js/market-realtime.js` | A small Phoenix-protocol WebSocket client, with a polling fallback |
   | `js/market-push.js` | Web Push opt-in, subscribe and unsubscribe |
-  | `js/screens/board.js` | The link-based board, moved out of `main.js` in M1; the offline fallback |
+  | `js/screens/exchange.js` | The link-based board, moved out of `main.js` in M1; the offline fallback. Named for its route, because `board.js` is the Local noticeboard |
   | `js/screens/market.js`, `market-post.js`, `market-inbox.js`, `market-account.js` | Market screens, each under ~1,500 lines |
   | `js/data/market-cities.js` | City list, generated (a new file, per the lazy-data rule) |
   | `supabase/migrations/*.sql`, `supabase/tests/*.sql`, `supabase/functions/market-push/` | Server side, versioned in the repo |
@@ -632,7 +632,7 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 
 ### M1: Move the board out of `main.js`
 - **Scope.**
-  - Move `BB_CATS`, `bbCat`, `bbSubKinds`, `HOUSE_KIND`, `bbHeadline`, `bbSubline`, `bbSafety`, `swapCalcNodes`, `guessCityName`, `pasteLinkBox`, `BB_STALE_DAYS`, `listingIsStale`, `listingCard`, `buildBBForm` and `bulletinScreen` into `js/screens/board.js`.
+  - Move `BB_CATS`, `bbCat`, `bbSubKinds`, `HOUSE_KIND`, `bbHeadline`, `bbSubline`, `bbSafety`, `swapCalcNodes`, `guessCityName`, `pasteLinkBox`, `BB_STALE_DAYS`, `listingIsStale`, `listingCard`, `buildBBForm` and `bulletinScreen` into `js/screens/exchange.js` (`board.js` is already the Local noticeboard).
   - `circle.js` and the currency screen import from it. No behaviour changes.
 - **Done when:**
   - A computed-style digest of `#exchange`, `#exchange-swap`, `#exchange-kids` and an `#in-` board link is identical before and after at 375 px.

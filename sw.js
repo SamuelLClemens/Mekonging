@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.632.0';
+const CACHE_VERSION = 'mk-v0.633.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -528,7 +528,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '84f68e5a',
+  'js/main.js': '9c58391b',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
   'js/nav-groups.js': 'b5403a92',
@@ -546,10 +546,11 @@ const MANIFEST = {
   'js/screens/board.js': '32ddfbc9',
   'js/screens/budget.js': '025fe904',
   'js/screens/calendar.js': 'dd413d63',
-  'js/screens/circle.js': '9497226c',
+  'js/screens/circle.js': '13ab770e',
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': 'ec713fe8',
   'js/screens/etiquette.js': '7fc329c4',
+  'js/screens/exchange.js': '1b315b3e',
   'js/screens/explore.js': 'c508c39b',
   'js/screens/export.js': '1429f50c',
   'js/screens/family.js': '97c566e5',
