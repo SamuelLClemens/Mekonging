@@ -3,7 +3,8 @@
 ## How the slices run
 - One slice per fresh session. Start it from `CLAUDE.md`, `docs/HANDOFF.md`, this file and the files the slice names.
 - Every slice that changes a shipped file bumps `APP_VERSION` and `CACHE_VERSION`. Those slices therefore stack: each starts from the merged tip of `feat/scaffold-bangkok-slice`, and two releasing slices never run at the same time.
-- M0, the exchange planning session, changes documents only. It can run alongside the data slices.
+- M0, the exchange planning session, changed documents only and is done: see `docs/EXCHANGE.md`.
+- Exchange slices M1–M10 (`docs/EXCHANGE.md` §17) change shipped files, so they stack with the data slices like any other releasing slice.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
 Method: jsc over `loadAllCountries()`, plus `check-place-fields.py` and `check-sources.py`.
@@ -129,12 +130,19 @@ Sources: supabase.com/pricing, supabase.com/docs/guides/auth/auth-smtp, resend.c
 - **Resend Free:** 100 emails a day, 3,000 a month, 3 domains. This caps new sign-ins at 100 a day; existing sessions persist.
 - **Firebase Spark:** rejected, because email-link sign-in is limited to 5 emails a day without billing.
 
-### Owner actions before M1 (not needed for M0)
+### Owner actions before M3 (M1 and M2 need none)
 1. Create the Supabase project and the Resend account, both on free plans. Keep every key out of the repo and out of chat.
 2. Verify mekonging.com in Resend by adding its DNS records in Cloudflare.
 3. Ask Omer Hanegbi or Omri Siri about cash swap, private motorbike sales, and liability for meetups and shared rooms. They also review the terms of use and the privacy policy.
+4. The full list, slice by slice, is in `docs/EXCHANGE.md` §15. The questions for legal are in §14.
 
-### M0 — Exchange planning session (documents only)
+### Owner rulings, 2026-10-12 (M0 session)
+- Reading the shared board requires sign-in.
+- Listing cards are anonymous. A display name appears only inside a conversation.
+- The exchange becomes a sixth bottom tab, "Market".
+- The whole exchange is 18+.
+
+### M0 — Exchange planning session (documents only) — done 2026-10-12, `docs/EXCHANGE.md`
 Write `docs/EXCHANGE.md` with:
 - Tables and row-level security policies.
 - The sign-in flow.
