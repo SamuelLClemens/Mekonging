@@ -1,7 +1,7 @@
 # Handoff — 2026-10-12 (slice M2, the Market tab)
 
 ## Shipped
-- Slice M2 of the traveller exchange: branch `feat/m2-market-tab`, [PR #111](https://github.com/SamuelLClemens/Mekonging/pull/111), `mk-v0.635.0`. It is not merged yet.
+- Slice M2 of the traveller exchange: branch `feat/m2-market-tab`, [PR #111](https://github.com/SamuelLClemens/Mekonging/pull/111), `mk-v0.635.0`. Merged as 8393397 and live; the post-merge `guards` and Pages deploy succeeded.
   - A sixth bottom tab, "Market" (`#market`), after Explore, with a market-stall icon in the same style as the other tab icons. `TAB_FOR_HEAD` maps `market`, `exchange` and `swap` to it.
   - `js/market-routes.js` (new, eager, pure): the legacy routes redirect in place. `render()` rewrites the hash before it reads it, so the address bar, the Back stack and the active tab all see the Market route.
   - The on-phone board is now `marketScreen` in `js/screens/exchange.js`, titled "Market". Kind chips: All, Items, Rooms, Rides, Cash. Items keeps the three old post forms (kids, gear, other) behind a second chip row. Every saved listing and shared `#in-` link works as before.
@@ -9,6 +9,7 @@
   - "Market" is translated in all 29 UI string tables.
   - `.tabbar button` lost its 2 px side padding, so German "Entdecken" and Dutch "Verkennen" still fit six slots.
   - `docs/EXCHANGE.md` §17 M1 is corrected (only `circle.js` imports from `exchange.js`), and its M2 scope notes that Meetups have no chip until M4.
+- After M2: three weak Vietnam place photos replaced, branch `data/vi-photo-swaps`, `mk-v0.636.0`. Museum of Cham Sculpture (archival black-and-white, now a current gallery view, CC0), Hỏa Lò Prison (archival aerial, now the Maison Centrale gate, CC BY 2.0) and Sun World Hạ Long (lens flare and no cable car, now the Queen Cable Car, CC BY-SA 4.0). New files are named `-v2` because the media cache keys photos by URL across releases. The swaps are recorded under `replaced` in `scripts/place-photo-articles.json`.
 - Merged before this: slice D3 for Vietnam as [PR #110](https://github.com/SamuelLClemens/Mekonging/pull/110) (`mk-v0.634.0`), M1 as PR #108 (`mk-v0.633.0`) and D3 for Thailand as PR #109 (`mk-v0.632.0`).
 
 ## Verified
@@ -38,6 +39,7 @@ Headless Chrome over CDP at 375 x 812, Mekong Retro, fresh profile on `127.0.0.1
 - `jsc -m scripts/validate-jsc.mjs`: 18,000 of 18,000 checks, EXIT 0. `jsc -m` parses every edited JS file. `js/main.js` grew by 6 lines (7,552 to 7,558).
 
 ## Not done / known issues
+- The top ~3 px of the tab bar (at 746 px of 812) show the content scrolled beneath it under the retro stripe, e.g. Home's weather segment control. Measured identical before and after M2, so it predates it.
 - New in this slice:
   - Meetups have no chip: there is no on-phone Meetups category. The chip and `#market-meetups` arrive with M4; until then `#market-meetups` shows the All view.
   - The tab badge for unseen notifications (`docs/EXCHANGE.md` §11) waits for M5.
