@@ -276,8 +276,13 @@ def commons_file(filename):
             for ii in p.get('imageinfo') or []:
                 meta = ii.get('extmetadata') or {}
 
+                # Hidden spans go before the tags: Commons' {{Unknown|author}} renders
+                # 'Unknown author<span style="display: none;">Unknown author</span>', which
+                # otherwise strips to a doubled name.
                 def m(key):
-                    v = html.unescape(re.sub(r'<[^>]+>', '', (meta.get(key) or {}).get('value', '')))
+                    v = (meta.get(key) or {}).get('value', '')
+                    v = re.sub(r'<(\w+)[^>]*display:\s*none[^>]*>.*?</\1>', '', v, flags=re.S)
+                    v = html.unescape(re.sub(r'<[^>]+>', '', v))
                     return re.sub(r'\s+', ' ', v).strip()
 
                 lic = m('LicenseShortName')
