@@ -108,3 +108,11 @@ hidden page computes no layout at all and every width check silently inverts.
 runs both in verify mode.
 `derive-place-fit.py` and `verify-hospital-countries.py` are one-off derivations kept for
 the next refresh. `serve.py` is the static server used for every local check.
+
+`fetch-identify-photos.py` fills the identify guide's photos. `fetch-place-photos.py` fills place
+photos from each place's own Wikipedia article (plan slice D3), one country per session:
+`--suggest` lists candidate articles with their distance from the place, a person records the
+right ones in `place-photo-articles.json`, `--fetch` stages the lead images (openly licensed,
+about 800 px and 60 KB), `--sheet` makes contact sheets so every image is looked at, and
+`--install` writes the accepted ones to `img/places/` and `js/data/photos.js`. Then run
+`build-pack-sizes.py --write`. `--report` gives a country's coverage.
