@@ -439,7 +439,7 @@ const MANIFEST = {
   'js/data/nature.js': '391fc20c',
   'js/data/operators.js': 'd6495bb8',
   'js/data/outdoors.js': 'eab1a010',
-  'js/data/photos.js': 'a74aaa2b',
+  'js/data/photos.js': '0a47b3f2',
   'js/data/phrasebook.hmn.js': '0afaf78a',
   'js/data/phrasebook.km.js': '1883f353',
   'js/data/phrasebook.lo.js': 'af7d28ea',

@@ -592,7 +592,7 @@ export const PHOTOS = {
   "vi-ext-phong-nha-cave-boat": { src: "img/places/vi-ext-phong-nha-cave-boat.jpg", credit: "Genghiskhan, CC BY-SA 3.0, via Wikimedia Commons" },
   "vi-ext-bui-vien-walking-street": { src: "img/places/vi-ext-bui-vien-walking-street.jpg", credit: "Christophe95, CC BY-SA 4.0, via Wikimedia Commons" },
   "vi-ext-dragon-bridge-fire-water-show": { src: "img/places/vi-ext-dragon-bridge-fire-water-show.jpg", credit: "Bùi Thụy Đào Nguyên, CC BY-SA 3.0, via Wikimedia Commons" },
-  "vi-ext-cham-museum": { src: "img/places/vi-ext-cham-museum.jpg", credit: "Unknown authorUnknown author, Public domain, via Wikimedia Commons" },
+  "vi-ext-cham-museum": { src: "img/places/vi-ext-cham-museum.jpg", credit: "Unknown author, Public domain, via Wikimedia Commons" },
   "vi-ext-kim-bong-carpentry": { src: "img/places/vi-ext-kim-bong-carpentry.jpg", credit: "Dragfyre, CC BY-SA 3.0, via Wikimedia Commons" },
   "vi-ext-cat-ba-national-park": { src: "img/places/vi-ext-cat-ba-national-park.jpg", credit: "Schwede66, CC BY-SA 3.0, via Wikimedia Commons" },
   "vi-ext-bai-tu-long-bay": { src: "img/places/vi-ext-bai-tu-long-bay.jpg", credit: "AnhTuan Le, Public domain, via Wikimedia Commons" },
