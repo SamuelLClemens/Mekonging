@@ -79,6 +79,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
   error and the layer is never added (route casing, PR #100); give each width its own `interpolate`.
 - A new city needs an anchor in `WEATHER_SPOTS` (js/weather.js, with `hub` where it is a hub), or places rank under the wrong
   "Nearby" city. Anchors are cities that have place records.
+- A "missing city" can be a mislabelled `city` field: check a single-record city's coordinates against its source,
+  and search for the place's other names (Banteay Prey Nokor = Wat Nokor Bachey) before adding an anchor (D2).
 - A gated feature (`online()`, consent, country data) must still render something when the gate is shut.
 - Sourcing: cite every entry compactly with a real URL. Better to leave a gap open than publish a number traced to an
   aggregator's unsourced synthesis. Pai is deferred until the owner says.

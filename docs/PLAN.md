@@ -47,6 +47,7 @@ Other gaps:
 - Done when `validate.mjs` reports 0 errors in CI and the 39 places show their text at 375 px.
 
 ### D2 — City gaps
+- **Status:** done in PR #106 (`mk-v0.631.0`): 18 anchors and 24 history entries. Duy Phu was a name mismatch, and Ponhea Krek was a mislabelled duplicate of Wat Nokor Bachey, merged via `place-merges.js`.
 - **Weather spots for 19 cities.** A city with places but no spot gets another city's places ranked as Nearby. Spots go in `WEATHER_SPOTS`, `js/weather.js`:
   - Thailand: Kamphaeng Phet, Nakhon Pathom, Nakhon Si Thammarat, Lampang, Phitsanulok, Songkhla.
   - Vietnam: Tay Ninh, Cai Be, Vinh Long, Ben Tre, Dien Bien Phu, Moc Chau, Ca Mau.
