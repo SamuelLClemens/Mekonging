@@ -1,5 +1,5 @@
 {
- "_about": "Reviewed by a person, read by scripts/fetch-place-photos.py. <country>: place id -> the English Wikipedia article that is that place's own (a redirect counts only when the target's lead image shows that exact place). no_article: places with no English Wikipedia article of their own (stay clusters, practical cards, rentals, fuel, street-food runs, and sights en.wikipedia does not cover), so they keep no photo rather than a nearby subject's. rejected: the place has an article but its lead image cannot be used (none, a map, another subject, or looked at and refused), with the reason, so a rerun never restores it.",
+ "_about": "Reviewed by a person, read by scripts/fetch-place-photos.py. <country>: place id -> the English Wikipedia article that is that place's own (a redirect counts only when the target's lead image shows that exact place). no_article: places with no English Wikipedia article of their own (stay clusters, practical cards, rentals, fuel, street-food runs, and sights en.wikipedia does not cover), so they keep no photo rather than a nearby subject's. rejected: the place has an article but its lead image cannot be used (none, a map, another subject, or looked at and refused), with the reason, so a rerun never restores it. replaced: places whose article lead image was installed and later swapped for a better Commons file of the same place, with the file and the reason. A swapped photo gets a new file name (-v2) so the media cache, which keys photos by URL and keeps them across releases, drops the old one.",
  "th": {
   "th-ext-kamphaeng-phet-historical-park": "Kamphaeng Phet Historical Park",
   "th-ext-similan-islands": "Similan Islands",
@@ -537,6 +537,23 @@
   "vi-ext-an-binh-island": {
    "article": "An Bình Island",
    "reason": "article has no openly licensed lead image"
+  }
+ },
+ "replaced": {
+  "vi-ext-cham-museum": {
+   "article": "Museum of Cham Sculpture",
+   "file": "Interior view - Museum of Cham Sculpture - Danang, Vietnam - DSC01931.JPG",
+   "reason": "lead image is an archival black-and-white photograph; replaced by a current interior view of the galleries"
+  },
+  "vi-ext-hoa-lo-prison-museum": {
+   "article": "Hỏa Lò Prison",
+   "file": "Hoa Lo Prison Museum, Hanoi (2) (24624166618).jpg",
+   "reason": "lead image is an archival black-and-white aerial view; replaced by the present-day Maison Centrale gate"
+  },
+  "vi-ext-sun-world-ha-long-cable-car": {
+   "article": "Dragon Park Ha Long",
+   "file": "Newone - Quang Ninh Queen cable car.jpg",
+   "reason": "lead image (Dragon Park Ha Long) is backlit by heavy lens flare and does not show the cable car; replaced by the Queen Cable Car at its station"
   }
  }
 }
