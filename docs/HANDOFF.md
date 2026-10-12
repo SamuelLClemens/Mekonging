@@ -1,7 +1,7 @@
 # Handoff — 2026-10-12 (slice M0)
 
 ## Shipped
-- Slice M0, the exchange design: `docs/EXCHANGE.md`. Branch `docs/exchange-m0`, [PR #104](https://github.com/SamuelLClemens/Mekonging/pull/104), commit b560500. Documents only, so there is no version bump. The document covers:
+- Slice M0, the exchange design: `docs/EXCHANGE.md`. Branch `docs/exchange-m0`, [PR #104](https://github.com/SamuelLClemens/Mekonging/pull/104), merged as 25db055. Documents only, so there is no version bump. The document covers:
   - tables and RLS; sign-in; matching; alerts;
   - moderation and the word list; rate limits and retention;
   - the Market tab, routes and the move of on-device listings;
@@ -14,6 +14,8 @@
 - Listing cards are anonymous. A display name appears only inside a conversation.
 - The exchange becomes a sixth bottom tab, "Market".
 - The whole exchange is 18+.
+- The Supabase publishable key is committed in `js/market-config.js`. `check-secrets` allows it in that file only.
+- M3 tightens the CSP before sign-in tokens exist: tesseract is self-hosted or pinned, and unpkg.com and cdn.jsdelivr.net leave `script-src`.
 
 ## Verified
 - Every item in the M0 brief maps to a section of `docs/EXCHANGE.md` (§3–§13). The document ends with M1–M10, and each slice has a "Done when" with proof at 375 px.
@@ -31,15 +33,10 @@
 - `js/main.js` is 7,784 lines; the ceiling is ~1,500. M1 moves about 230 lines of board code out.
 
 ## Open decisions (need the user)
-1. Commit the Supabase publishable key in `js/market-config.js`? Recommended: yes.
-   - It is a public identifier by design; RLS, not secrecy, protects the data.
-   - The new `check-secrets` guard would allow it in that one file only.
-   - The alternative is injecting it at deploy time. That needs a Pages build workflow, and the key still ships to every browser.
-2. Tighten the CSP in M3 by self-hosting or pinning tesseract, so `script-src` drops unpkg.com and cdn.jsdelivr.net before sign-in tokens exist on the origin? Recommended: yes.
-3. Before M3, the owner actions in `docs/EXCHANGE.md` §15:
+1. Before M3, the owner actions in `docs/EXCHANGE.md` §15:
    - create Supabase, Resend and Turnstile;
    - set the DNS and the Auth settings.
-4. Take the questions in `docs/EXCHANGE.md` §14 to Omer Hanegbi or Omri Siri. Cash swap (M10) and launch (M9) wait on them.
+2. Take the questions in `docs/EXCHANGE.md` §14 to Omer Hanegbi or Omri Siri. Cash swap (M10) and launch (M9) wait on them.
 
 ## Next session prompts
 D2 has a worktree at `.claude/worktrees/d2-city-gaps`. It may already be running in another session; check before starting it. Its prompt is unchanged:
