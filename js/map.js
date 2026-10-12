@@ -1098,10 +1098,13 @@ export async function initMap(containerEl, opts = {}) {
     if (map.getSource('mk-route')) return;
     map.addSource('mk-route', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     const w = ['interpolate', ['linear'], ['zoom'], 4, 3, 8, 4.5, 12, 7];
+    // The casing is the line plus 3 px. MapLibre rejects a zoom curve nested inside ['+', ...],
+    // so it gets its own top-level curve with the same stops.
+    const wCasing = ['interpolate', ['linear'], ['zoom'], 4, 6, 8, 7.5, 12, 10];
     const colour = ['match', ['get', 'mode'], ...Object.entries(ROUTE_COLORS).flat(), '#1E5BD8'];
     map.addLayer({ id: 'mk-route-casing', type: 'line', source: 'mk-route',
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#FFFFFF', 'line-opacity': 0.95, 'line-width': ['+', w, 3] } });
+      paint: { 'line-color': '#FFFFFF', 'line-opacity': 0.95, 'line-width': wCasing } });
     map.addLayer({ id: 'mk-route-line', type: 'line', source: 'mk-route', filter: ['!=', ['get', 'mode'], 'flight'],
       layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': colour, 'line-width': w } });
     map.addLayer({ id: 'mk-route-air', type: 'line', source: 'mk-route', filter: ['==', ['get', 'mode'], 'flight'],
