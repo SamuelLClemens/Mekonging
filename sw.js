@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.631.0';
+const CACHE_VERSION = 'mk-v0.632.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -439,7 +439,7 @@ const MANIFEST = {
   'js/data/nature.js': '391fc20c',
   'js/data/operators.js': 'd6495bb8',
   'js/data/outdoors.js': 'eab1a010',
-  'js/data/photos.js': '82aa71fe',
+  'js/data/photos.js': '74c72bb0',
   'js/data/phrasebook.hmn.js': '0afaf78a',
   'js/data/phrasebook.km.js': '1883f353',
   'js/data/phrasebook.lo.js': 'af7d28ea',
@@ -528,12 +528,12 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': '0bd1eb8f',
+  'js/main.js': '84f68e5a',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
   'js/nav-groups.js': 'b5403a92',
   'js/offline-areas-ui.js': '01b8e952',
-  'js/offline-pack.js': 'a804a82e',
+  'js/offline-pack.js': 'a1ac778b',
   'js/offline-ready.js': 'c93785dc',
   'js/personal.js': '34ddb915',
   'js/photo-registry.js': 'c1c4f7e2',
