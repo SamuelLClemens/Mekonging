@@ -109,9 +109,11 @@ def main():
         # September 2026: all six dropped by exactly one when th-ext-chatuchak-weekend-market
         # was merged into th-bkk-chatuchak — the deleted record carried every one of these
         # fields, which is why they moved together.
-        expect = [('883', total, 'total'), ('480', counts['kidFriendly'], 'kidFriendly'),
+        # October 2026 (D2): total and scamWarnings dropped by one when kh-ext-banteay-prey-nokor
+        # was merged into kh-ext-wat-nokor-bachey; its scamWarnings was an empty list.
+        expect = [('882', total, 'total'), ('480', counts['kidFriendly'], 'kidFriendly'),
                   ('208', counts['afterDark'], 'afterDark'), ('233', counts['stepFree'], 'stepFree'),
-                  ('766', counts['scamWarnings'], 'scamWarnings'),
+                  ('765', counts['scamWarnings'], 'scamWarnings'),
                   ('374', counts['scam_nonempty'], 'scam_nonempty')]
         for quoted, actual, _label in expect:
             if int(quoted) != actual:

@@ -125,9 +125,10 @@ export const WEATHER_SPOTS = [
   { country: 'la', city: 'Phonsavan', lat: 19.4500, lng: 103.2000, hub: true },
 
   // ---- CITY ANCHORS (not weather hubs) — see the header above ----------------
-  // Thailand — 27 cities, 60 records
+  // Thailand — 33 cities, 68 records
   { country: 'th', city: 'Amphawa', lat: 13.4256, lng: 99.9553 },
   { country: 'th', city: 'Buriram', lat: 14.532, lng: 102.941 },
+  { country: 'th', city: 'Kamphaeng Phet', lat: 16.467, lng: 99.5 },
   { country: 'th', city: 'Khao Lak', lat: 8.65, lng: 97.64 },
   { country: 'th', city: 'Khao Sok', lat: 8.913, lng: 98.533 },
   { country: 'th', city: 'Khao Yai', lat: 14.4419, lng: 101.3717 },
@@ -137,29 +138,38 @@ export const WEATHER_SPOTS = [
   { country: 'th', city: 'Koh Lanta', lat: 7.532, lng: 99.087 },
   { country: 'th', city: 'Koh Phangan', lat: 9.758, lng: 99.982 },
   { country: 'th', city: 'Koh Tao', lat: 10.0975, lng: 99.8355 },
+  { country: 'th', city: 'Lampang', lat: 18.2172, lng: 99.3889 },
   { country: 'th', city: 'Loei', lat: 16.872, lng: 101.719 },
   { country: 'th', city: 'Lopburi', lat: 14.8018, lng: 100.6117 },
   { country: 'th', city: 'Mae Chaem', lat: 18.5, lng: 98.363 },
+  { country: 'th', city: 'Nakhon Pathom', lat: 13.8197, lng: 100.0603 },
   { country: 'th', city: 'Nakhon Ratchasima', lat: 15.2214, lng: 102.4947 },
+  { country: 'th', city: 'Nakhon Si Thammarat', lat: 8.4114, lng: 99.9667 },
   { country: 'th', city: 'Nan', lat: 18.78, lng: 100.77 },
   { country: 'th', city: 'Nong Khai', lat: 17.878, lng: 102.742 },
   { country: 'th', city: 'Phang Nga Bay', lat: 8.1167, lng: 98.5833 },
   { country: 'th', city: 'Phetchaburi', lat: 12.9, lng: 99.6167 },
+  { country: 'th', city: 'Phitsanulok', lat: 16.8236, lng: 100.2625 },
   { country: 'th', city: 'Ratchaburi', lat: 13.521, lng: 99.957 },
   { country: 'th', city: 'Samut Songkhram', lat: 13.408, lng: 99.999 },
   { country: 'th', city: 'Satun', lat: 6.488, lng: 99.302 },
+  { country: 'th', city: 'Songkhla', lat: 7.2061, lng: 100.5967 },
   { country: 'th', city: 'Soppong', lat: 19.517, lng: 98.283 },
   { country: 'th', city: 'Surat Thani', lat: 8.9167, lng: 98.5333 },
   { country: 'th', city: 'Trang', lat: 7.3, lng: 99.265 },
   { country: 'th', city: 'Trat', lat: 11.82, lng: 102.47 },
   { country: 'th', city: 'Ubon Ratchathani', lat: 15.7956, lng: 105.395 },
-  // Vietnam — 17 cities, 40 records
+  // Vietnam — 25 cities, 66 records
   { country: 'vi', city: 'An Giang', lat: 10.5817, lng: 105.0231 },
   { country: 'vi', city: 'Ba Ria-Vung Tau', lat: 8.69, lng: 106.61 },
+  { country: 'vi', city: 'Ben Tre', lat: 10.167, lng: 106.5 },
   { country: 'vi', city: 'Buon Ma Thuot', lat: 12.67, lng: 108.05 },
+  { country: 'vi', city: 'Ca Mau', lat: 8.6231, lng: 104.71 },
+  { country: 'vi', city: 'Cai Be', lat: 10.333, lng: 106.033 },
   { country: 'vi', city: 'Cao Bang', lat: 22.853, lng: 106.723 },
   { country: 'vi', city: 'Cat Ba', lat: 20.722, lng: 107.062 },
   { country: 'vi', city: 'Con Dao', lat: 8.69, lng: 106.61 },
+  { country: 'vi', city: 'Dien Bien Phu', lat: 21.3829, lng: 103.0179 },
   { country: 'vi', city: 'Duy Phu', lat: 15.7642, lng: 108.1244 },
   { country: 'vi', city: 'Ha Giang', lat: 23.2386, lng: 105.3553 },
   { country: 'vi', city: 'Hoa Binh', lat: 20.66, lng: 105.1 },
@@ -167,15 +177,20 @@ export const WEATHER_SPOTS = [
   { country: 'vi', city: 'Lang Co', lat: 16.23, lng: 108.08 },
   { country: 'vi', city: 'Lao Cai', lat: 22.535, lng: 104.296 },
   { country: 'vi', city: 'Mai Chau', lat: 20.6597, lng: 105.09 },
+  { country: 'vi', city: 'Moc Chau', lat: 20.9221, lng: 104.7521 },
   { country: 'vi', city: 'Phan Thiet', lat: 10.933, lng: 108.287 },
   { country: 'vi', city: 'Phong Nha', lat: 17.5989, lng: 106.2811 },
   { country: 'vi', city: 'Quy Nhon', lat: 13.66, lng: 109.27 },
+  { country: 'vi', city: 'Tay Ninh', lat: 11.367, lng: 106.167 },
   { country: 'vi', city: 'Thanh Hoa', lat: 20.48, lng: 105.16 },
+  { country: 'vi', city: 'Vinh Long', lat: 10.2938, lng: 105.9821 },
   { country: 'vi', city: 'Vung Tau', lat: 10.3357, lng: 107.0876 },
-  // Cambodia — 25 cities, 73 records
+  // Cambodia — 29 cities, 77 records
   { country: 'kh', city: 'Angkor Borei', lat: 10.9755, lng: 104.9905 },
   { country: 'kh', city: 'Anlong Veng', lat: 14.241, lng: 104.087 },
+  { country: 'kh', city: 'Ba Phnom', lat: 11.233, lng: 105.367 },
   { country: 'kh', city: 'Banlung', lat: 13.7398, lng: 106.9878 },
+  { country: 'kh', city: 'Banteay Chhmar', lat: 14.0711, lng: 103.0997 },
   { country: 'kh', city: 'Botum Sakor', lat: 11.1155, lng: 103.2497 },
   { country: 'kh', city: 'Cardamom Mountains', lat: 11.3197, lng: 103.3542 },
   { country: 'kh', city: 'Kampong Cham', lat: 11.992, lng: 105.464 },
@@ -189,8 +204,10 @@ export const WEATHER_SPOTS = [
   { country: 'kh', city: 'Koh Sdach', lat: 10.933, lng: 103.067 },
   { country: 'kh', city: 'Kratie', lat: 12.488, lng: 106.018 },
   { country: 'kh', city: 'Oudong', lat: 11.8239, lng: 104.7425 },
+  { country: 'kh', city: 'Pailin', lat: 12.8544, lng: 102.6064 },
   { country: 'kh', city: 'Preah Rumkel (Stung Treng)', lat: 13.8906, lng: 105.9338 }, // Wikidata Q56321713
   { country: 'kh', city: 'Preah Vihear', lat: 13.7872, lng: 104.54 },
+  { country: 'kh', city: 'Pursat', lat: 12.5733, lng: 104.2084 },
   { country: 'kh', city: 'Sambor (Kratie)', lat: 12.78, lng: 105.965 },
   { country: 'kh', city: 'Sen Monorom', lat: 12.4522, lng: 107.1892 },
   { country: 'kh', city: 'Skun', lat: 12.059, lng: 105.0757 },
@@ -198,7 +215,7 @@ export const WEATHER_SPOTS = [
   { country: 'kh', city: 'Takeo', lat: 11.32, lng: 104.79 },
   { country: 'kh', city: 'Tonle Bati', lat: 11.336, lng: 104.851 },
   { country: 'kh', city: 'Voen Sai (Ratanakiri)', lat: 13.97, lng: 106.865 },
-  // Laos — 32 cities, 72 records
+  // Laos — 33 cities, 73 records
   { country: 'la', city: 'Attapeu', lat: 15.11, lng: 107.16 },
   { country: 'la', city: 'Boualapha', lat: 17.3733, lng: 105.8372 },
   { country: 'la', city: 'Champasak', lat: 14.85, lng: 105.885 },
@@ -231,6 +248,7 @@ export const WEATHER_SPOTS = [
   { country: 'la', city: 'Thaphabat', lat: 18.33, lng: 103.13 },
   { country: 'la', city: 'Vieng Xai', lat: 20.4167, lng: 104.2167 },
   { country: 'la', city: 'Viengthong (Muang Hiam)', lat: 20.32, lng: 103.63 },
+  { country: 'la', city: 'Xaysetha', lat: 14.8144, lng: 106.9344 },
 ];
 
 // WMO weather interpretation codes → [label, emoji].
@@ -256,7 +274,7 @@ export function isWet(code) {
 export function spotKey(s) { return `${s.country}:${s.city}`; }
 // HUBS ONLY, deliberately. Every caller of this is a bulk or browse operation — the forecast
 // map's dots, refreshMany's batched fetch, the manual location picker, nearestSpot() — and
-// each one would degrade if it saw all 147 entries: 100+ overlapping labels on the map, a
+// each one would degrade if it saw all 165 entries: 100+ overlapping labels on the map, a
 // hundred-odd coordinates per weather fetch, an unusable select. Anchors are found by NAME
 // via spotForCity(), never enumerated. Use allSpotsForCountry() if you genuinely need both.
 export function spotsForCountry(country) { return WEATHER_SPOTS.filter((s) => s.country === country && s.hub); }
