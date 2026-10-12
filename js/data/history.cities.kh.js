@@ -435,5 +435,61 @@ export const HISTORY_CITIES_KH = {
       ],
       "bestTime": "November to April, the dry season.",
       "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "kh-banteay-chhmar": {
+      "name": "Banteay Chhmar",
+      "blurb": "Banteay Chhmar, in Banteay Meanchey province near the Thai border and the Dangrek Mountains, is an Angkorian-era centre built under Jayavarman VII in the late 12th and early 13th centuries, possibly as a military stronghold. Its temple shares the Bayon's style, giant face-towers included, and its galleries carry long bas-reliefs of battles and royal processions; the site is on Cambodia's UNESCO tentative list. Largely unrestored and far less visited than Angkor, it has a community-run tourism programme with village homestays.",
+      "knownFor": [
+        "Bayon-style face towers",
+        "Jayavarman VII temple",
+        "bas-relief galleries",
+        "unrestored ruins",
+        "community homestays"
+      ],
+      "bestTime": "November to February for cooler, drier conditions, as in Battambang.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "kh-pursat": {
+      "name": "Pursat",
+      "blurb": "Pursat province lies between the Tonle Sap lake and the northern Cardamom Mountains, and its capital, Pursat town, sits on the Pursat River along National Highway 5. The town is linked to the legend of Khleang Moeung, a 16th-century figure revered as a guardian spirit (neak ta). Few travellers stop here, but those who do head for Kompong Luong, a floating village on the Tonle Sap whose houses, shops and church rise and fall with the lake.",
+      "knownFor": [
+        "Kompong Luong floating village",
+        "Tonle Sap",
+        "Pursat River",
+        "gateway to the Cardamom Mountains",
+        "Khleang Moeung legend"
+      ],
+      "bestTime": "November to February for cooler, drier weather.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "kh-pailin": {
+      "name": "Pailin",
+      "blurb": "Pailin, at the northern edge of the Cardamom Mountains near the Thai border, was once part of the Khmer Empire, was taken by the Burmese in 1558 and was later ruled by Siam until 1907. Its ruby and sapphire mines helped fund the Khmer Rouge, who held the area long after 1979; after the Ieng Sary faction surrendered in 1996, Pailin was carved out of Battambang as its own province. With the accessible gem deposits largely worked out, it is now a low-key town around the hilltop Wat Phnom Yat, the old gem market and forested hills with waterfalls.",
+      "knownFor": [
+        "Wat Phnom Yat",
+        "gem market",
+        "former Khmer Rouge stronghold",
+        "Cardamom foothills",
+        "waterfalls"
+      ],
+      "bestTime": "November to February for cooler, drier conditions, as in nearby Battambang.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "kh-ba-phnom": {
+      "name": "Ba Phnom",
+      "blurb": "Ba Phnom is a district of Prey Veng province in south-eastern Cambodia, near National Highway 1 between Phnom Penh and the Vietnamese border. Its low hills are associated with Nokor Phnom, an old regional capital, and some scholars have linked the area with the early kingdom of Funan, though little survives above ground beyond scattered temple stonework such as Prasat Chan. Today the hills shelter a working pagoda and pond that draw local pilgrims and festival crowds rather than foreign tourists.",
+      "knownFor": [
+        "Ba Phnom hills",
+        "Prasat Chan ruins",
+        "pilgrimage pagoda",
+        "local festivals",
+        "stop on National Highway 1"
+      ],
+      "bestTime": "November to February, the cool dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
     }
 };

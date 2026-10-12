@@ -18,6 +18,10 @@ export const MERGED_PLACE_IDS = {
   // th-bkk-chatuchak survived (photos.js maps a photo to it, and it carries the Google
   // externalRatings); its richer fields came across from the deleted entry.
   'th-ext-chatuchak-weekend-market': 'th-bkk-chatuchak',
+  // 2026-10-12 — Banteay Prey Nokor is Wat Nokor Bachey, 2 km from Kampong Cham city (Wikipedia).
+  // It was filed under Ponhea Krek, Tbong Khmum, by conflation with a different citadel 48 km
+  // east, at the same coordinates as kh-ext-wat-nokor-bachey, which survived as the richer record.
+  'kh-ext-banteay-prey-nokor': 'kh-ext-wat-nokor-bachey',
 };
 
 // Follow the chain, so a record merged twice still resolves. Bounded so a table with an

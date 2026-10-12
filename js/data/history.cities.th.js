@@ -615,5 +615,158 @@ export const HISTORY_CITIES_TH = {
       ],
       "bestTime": "November to April, when seas are calmest and ferries to the outer islands run full schedules; sailings to Koh Mak and Koh Kood thin out considerably from May to October.",
       "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "th-kamphaeng-phet": {
+      "name": "Kamphaeng Phet",
+      "blurb": "Kamphaeng Phet, on the Ping River in lower northern Thailand, was a fortified frontier town of the Sukhothai kingdom between the 13th and 15th centuries; its name means \"diamond wall\", after the ramparts that still enclose the old town. Its historical park is one of three sites, with Sukhothai and Si Satchanalai, inscribed together as a UNESCO World Heritage Site in 1991. Visitors find laterite temple ruins split between the walled old-town grounds and the forested Arunyik zone, with far fewer people than at Sukhothai.",
+      "knownFor": [
+        "Kamphaeng Phet Historical Park",
+        "Sukhothai-era laterite ruins",
+        "Arunyik forest temples",
+        "old-town ramparts",
+        "Ping River"
+      ],
+      "bestTime": "November to February, the cool, dry season, as at nearby Sukhothai.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-koh-samet": {
+      "name": "Koh Samet",
+      "blurb": "Koh Samet is a small island off the Rayong coast, about 220 km southeast of Bangkok, named after the cajeput (samet) trees on its forested hills. Most of it lies within Khao Laem Ya-Mu Ko Samet National Park, so visitors pay a park fee on arrival. It is the nearest classic white-sand beach island to the capital, reached by a short ferry from Ban Phe, with a chain of beaches running south from Hat Sai Kaew.",
+      "knownFor": [
+        "white-sand beaches",
+        "Hat Sai Kaew",
+        "national park island",
+        "ferry from Ban Phe",
+        "weekend escape from Bangkok"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-koh-kret": {
+      "name": "Koh Kret",
+      "blurb": "Koh Kret is an island in the Chao Phraya River in Nonthaburi, just north of Bangkok, created in 1722 when a canal was cut across a bend in the river. It was later settled by Mon people, whose descendants still make the unglazed terracotta pottery the island is known for. There are no cars: a lane loops the island past kilns, Mon temples and riverside houses, and weekends bring a busy food and craft market.",
+      "knownFor": [
+        "Mon pottery",
+        "Wat Poramaiyikawat's leaning chedi",
+        "car-free island lanes",
+        "weekend food market",
+        "Chao Phraya river ferries"
+      ],
+      "bestTime": "November to February, during the cool, dry season, as in Bangkok.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-bang-krachao": {
+      "name": "Bang Krachao",
+      "blurb": "Bang Krachao is a 16-square-kilometre loop of land almost encircled by a bend of the Chao Phraya, in Samut Prakan just south of central Bangkok. Traditionally farmed for orchards and nipa palm, it has been kept largely free of high-rise development and is known as Bangkok's green lung. Visitors cross by longtail from Khlong Toei, rent a bicycle and follow raised concrete paths through the greenery to parks, temples and the weekend Bang Nam Pheung market.",
+      "knownFor": [
+        "Bangkok's green lung",
+        "cycling on raised paths",
+        "Bang Nam Pheung Floating Market",
+        "orchards and nipa palm",
+        "longtail crossing from Khlong Toei"
+      ],
+      "bestTime": "November to February, during the cool, dry season, as in Bangkok.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-koh-si-chang": {
+      "name": "Koh Si Chang",
+      "blurb": "Koh Si Chang is a hilly island 12 km off Si Racha in Chonburi province, long used as an anchorage for ships bound for Bangkok. King Chulalongkorn built a summer palace here around 1890, abandoned after French forces briefly occupied the island in 1893, and its teak Vimanmek Mansion was later moved to Bangkok. Today it is a working island with a resident town, a Chinese cliff temple, viewpoints and one good swimming beach, and it stays quiet midweek.",
+      "knownFor": [
+        "Phra Chudadhut Palace ruins",
+        "Chinese cliff temple",
+        "island viewpoints",
+        "working fishing island",
+        "ferry from Si Racha"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-koh-larn": {
+      "name": "Koh Larn",
+      "blurb": "Koh Larn, officially Ko Lan, lies about 7.5 km off Pattaya and is the island most visitors reach on a day trip from the resort. A ridge road links several separate bays: Tawaen is the busiest, with every water sport on offer, while Samae, Nual and Thian are progressively quieter. Frequent ferries from Pattaya's Bali Hai pier make it an easy escape from the city's crowds.",
+      "knownFor": [
+        "Tawaen Beach",
+        "quieter Samae and Thian bays",
+        "clear water",
+        "day trips from Pattaya",
+        "ridge-road viewpoints"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-nakhon-pathom": {
+      "name": "Nakhon Pathom",
+      "blurb": "Nakhon Pathom, 57 km west of Bangkok, is among the oldest towns in Thailand: it was a major centre of the Mon Dvaravati culture from around the 6th century, and its name means \"first city\". Its landmark, Phra Pathommachedi, is the tallest stupa in Thailand at about 120 m, built over a Dvaravati-era stupa and re-encased under Kings Mongkut and Chulalongkorn in the 19th century. Visitors also find Sanam Chandra Palace, built for King Vajiravudh, whose grounds now host a campus of Silpakorn University.",
+      "knownFor": [
+        "Phra Pathommachedi",
+        "Dvaravati-era history",
+        "Sanam Chandra Palace",
+        "day trip from Bangkok"
+      ],
+      "bestTime": "November to February, Thailand's cool, dry season.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-nakhon-si-thammarat": {
+      "name": "Nakhon Si Thammarat",
+      "blurb": "Nakhon Si Thammarat, on the east coast of the southern peninsula about 610 km from Bangkok, was the administrative centre of the south for most of its history; its name comes from the Sanskrit for \"city of the glorious Dharma king\". Its spiritual heart, Wat Phra Mahathat Woramahawihan, has been a centre of worship since at least the 13th century and became Thailand's newest UNESCO World Heritage Site in July 2026. The long, narrow city is also known for nang talung shadow puppetry and nielloware.",
+      "knownFor": [
+        "Wat Phra Mahathat Woramahawihan",
+        "UNESCO World Heritage",
+        "nang talung shadow puppets",
+        "nielloware",
+        "southern Thai food"
+      ],
+      "bestTime": "February to September; on this Gulf coast the heaviest rain, with a risk of flooding, falls from October to December.",
+      "bestM": [2, 3, 4, 5, 6, 7, 8, 9], "avoidM": [10, 11, 12]
+    },
+
+    "th-lampang": {
+      "name": "Lampang",
+      "blurb": "Lampang, about 100 km southeast of Chiang Mai, is the third-largest city in northern Thailand; it traces its roots to the Hariphunchai era under the old name Khelang Nakhon and later became a town of the Lanna kingdom. In the late 19th and early 20th centuries it prospered from the teak trade, which left Burmese-style temples and wooden merchant houses along the Wang River. It is known for the horse-drawn carriages that still carry visitors around town, and for Wat Phra That Lampang Luang, one of the best-preserved Lanna temples, south-west of the city.",
+      "knownFor": [
+        "Wat Phra That Lampang Luang",
+        "horse-drawn carriages",
+        "Burmese-style teak-era temples",
+        "Wang River old town",
+        "rooster-pattern ceramic bowls"
+      ],
+      "bestTime": "November to February; as in Chiang Mai, avoid the March-April burning season for haze.",
+      "bestM": [11, 12, 1, 2], "avoidM": [3, 4]
+    },
+
+    "th-phitsanulok": {
+      "name": "Phitsanulok",
+      "blurb": "Phitsanulok, on the Nan River in lower northern Thailand, grew from an older settlement called Song Khwae, \"two rivers\". It was a second capital under the late Sukhothai kingdom and again under Ayutthaya, when King Borommatrailokanat lived here to hold the frontier against Lanna, and it is the birthplace of King Naresuan. Visitors come above all for Wat Phra Si Rattana Mahathat and its revered Phra Buddha Chinnarat image, and use the city as a rail and road base for Sukhothai, about an hour west.",
+      "knownFor": [
+        "Phra Buddha Chinnarat",
+        "Wat Phra Si Rattana Mahathat",
+        "King Naresuan's birthplace",
+        "Nan River",
+        "gateway to Sukhothai"
+      ],
+      "bestTime": "November to February, the cool, dry season, as at nearby Sukhothai.",
+      "bestM": [11, 12, 1, 2], "avoidM": []
+    },
+
+    "th-songkhla": {
+      "name": "Songkhla",
+      "blurb": "Songkhla sits where Songkhla Lake opens to the Gulf of Thailand, near the Malaysian border; known in Malay as Singgora, it has been a trading port and fishing harbour for centuries. Smaller than neighbouring Hat Yai but the provincial capital, it keeps an old town of Sino-Portuguese shophouses and a national museum housed in a 19th-century mansion. Visitors come for the quiet old-town streets, Samila Beach and its mermaid statue, and seafood.",
+      "knownFor": [
+        "Songkhla Old Town",
+        "Sino-Portuguese shophouses",
+        "Songkhla National Museum",
+        "Samila Beach mermaid",
+        "seafood"
+      ],
+      "bestTime": "February to September; on this Gulf coast the heaviest rain, with a risk of flooding, falls from October to December.",
+      "bestM": [2, 3, 4, 5, 6, 7, 8, 9], "avoidM": [10, 11, 12]
     }
 };

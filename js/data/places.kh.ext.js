@@ -3265,8 +3265,10 @@ export const PLACES_KH_EXT = [
   // method). Svay Rieng, the other Cambodia gap this round, is deliberately left uncovered:
   // the one specific-sounding site offered for it by a low-quality aggregator ("Prasat Prey
   // Nokor") turned out, on checking against Tourism Cambodia's own listings and Wikipedia, to
-  // actually be Banteay Prey Nokor in Tbong Khmum (below) — everything else genuinely offered
-  // for Svay Rieng was a generic market/river description with no specific citable site.
+  // actually be Banteay Prey Nokor, which is Wat Nokor Bachey in Kampong Cham (its separate
+  // record, first filed under Ponhea Krek, Tbong Khmum, was merged into kh-ext-wat-nokor-bachey;
+  // see js/data/place-merges.js) — everything else genuinely offered for Svay Rieng was a generic
+  // market/river description with no specific citable site.
   {
     id: "kh-ext-ba-phnom", name: "Ba Phnom", city: "Ba Phnom", country: "kh",
     recognition: "A cluster of four low hills rising out of the flat Prey Veng countryside south of the provincial town, with a pagoda and pond set in the valley between them and the scattered ruins of an ancient temple, Prasat Chan, nearby.",
@@ -3280,20 +3282,5 @@ export const PLACES_KH_EXT = [
     mapQuery: "Ba Phnom Prey Veng Cambodia", coords: { lat: 11.233, lng: 105.367 },
     verified: "2026-09",
     sources: [{ org: "Tourism Cambodia — Ba Phnom Resort", url: "https://www.tourismcambodia.com/travelguides/provinces/prey-veng/what-to-see/93_ba-phnom-resort.htm" }, { org: "Vivutravel — Ba Phnom", url: "https://www.vivutravel.com/cambodia-travel-destinations/prey-veng-travel-guide/attractions-in-prey-veng/ba-phnom" }],
-  },
-  // ---- TBONG KHMUM PROVINCE — first entry for this province, same method.
-  {
-    id: "kh-ext-banteay-prey-nokor", name: "Banteay Prey Nokor", city: "Ponhea Krek", country: "kh",
-    recognition: "A large, overgrown Angkorian temple enclosure near Ponhea Krek in Tbong Khmum province, its wide laterite outer wall (roughly 420 x 370 m) and smaller inner sandstone sanctuary set well off the main Angkor tourist circuit.",
-    categories: ["culture", "temple", "history"], budgetTier: "low",
-    blurb: "One of the largest Angkorian temple enclosures outside the main Angkor park — sources differ on exactly when it was built, with some crediting Suryavarman II (mid-12th century, builder of Angkor Wat) and others pointing to later work under Jayavarman VII, so treat the precise dating as unsettled rather than picking one source's claim as fact. What is consistent across sources is the scale: a 15-hectare site with three gated entrances on each of its four sides, facing east like the great Angkorian state temples.",
-    whyItFits: "For travellers with a genuine interest in Angkorian architecture who want a large, real, unrestored site with almost no other visitors — this is a serious detour for temple enthusiasts, not a casual stop.",
-    priceRange: { low: 0, typical: 0, high: 0, currency: "USD", note: "No admission fee found in any source consulted." },
-    hours: "Daylight hours; no fixed gate times were found in any source consulted",
-    tips: ["This is remote and unrestored - wear sturdy shoes and expect overgrown ground, not cleared paths.", "Hire a local guide if possible; there is little on-site signage to explain what you are looking at.", "Combine with other Tbong Khmum or Kampong Cham sights if making the trip - this is far enough from Siem Reap that it does not work as an add-on to an Angkor itinerary."],
-    scamWarnings: [],
-    mapQuery: "Banteay Prey Nokor Ponhea Krek Cambodia", coords: { lat: 12.0014, lng: 105.4485 },
-    verified: "2026-09",
-    sources: [{ org: "Wikipedia — Banteay Prey Nokor", url: "https://en.wikipedia.org/wiki/Banteay_Prey_Nokor" }, { org: "Hello Angkor — Banteay Prei Nokor (Tbong Khmum)", url: "https://helloangkor.com/attractions/banteay-prei-nokor/" }],
   },
 ];

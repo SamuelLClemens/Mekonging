@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.630.0';
+const CACHE_VERSION = 'mk-v0.631.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -410,10 +410,10 @@ const MANIFEST = {
   'js/data/guide.la.js': '0b492eea',
   'js/data/guide.th.js': '1658f4b0',
   'js/data/guide.vi.js': '7791edb6',
-  'js/data/history.cities.kh.js': '521df72f',
-  'js/data/history.cities.la.js': '7cfefca3',
-  'js/data/history.cities.th.js': 'b62c45b7',
-  'js/data/history.cities.vi.js': '39b7d44c',
+  'js/data/history.cities.kh.js': 'da378a20',
+  'js/data/history.cities.la.js': '79db723c',
+  'js/data/history.cities.th.js': '148b2c5d',
+  'js/data/history.cities.vi.js': '836303ff',
   'js/data/history.js': '0f9c6617',
   'js/data/hospitals.curated.js': '0bbd6bd1',
   'js/data/hospitals.js': '089e878d',
@@ -449,9 +449,9 @@ const MANIFEST = {
   'js/data/phrasebook.vi.js': 'f367d27f',
   'js/data/phrasebook.zh.js': 'd755f9e8',
   'js/data/phrasebooks.js': '240eef44',
-  'js/data/place-merges.js': 'f71875ad',
+  'js/data/place-merges.js': '8b772d2e',
   'js/data/place-months.js': 'ce39c590',
-  'js/data/places.kh.ext.js': '6841f2c9',
+  'js/data/places.kh.ext.js': '687f4cf6',
   'js/data/places.kh.js': 'ca9fda56',
   'js/data/places.la.ext.js': '28ca1ff9',
   'js/data/places.la.js': '96546856',
@@ -528,7 +528,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'fcf635a4',
+  'js/main.js': '0bd1eb8f',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
   'js/nav-groups.js': 'b5403a92',
@@ -595,7 +595,7 @@ const MANIFEST = {
   'js/walk-route.js': '596e9417',
   'js/walk-ui.js': '2d832965',
   'js/weather-ui.js': '713a3bc0',
-  'js/weather.js': 'f46a3ee2',
+  'js/weather.js': '0053a33f',
   'lib/fonts/bevietnampro-700-latin.woff2': 'a193dd87',
   'lib/fonts/bevietnampro-700-vietnamese.woff2': '4f58af2d',
   'lib/fonts/bevietnampro-800-latin.woff2': '7c5d0871',

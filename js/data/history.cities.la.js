@@ -562,5 +562,18 @@ export const HISTORY_CITIES_LA = {
         "riverside market",
         "bus and border connections"
       ]
+    },
+
+    "la-xaysetha": {
+      "name": "Xaysetha",
+      "blurb": "Xaysetha, also spelled Saysetha, is a river town a few kilometres east of Attapeu town in far southern Laos and the seat of Xaysetha district. Its pagoda and stupa are among the oldest religious structures recorded in Attapeu province, dated by regional sources to the 16th century, well before Attapeu grew into the provincial capital. Most travellers pass through on the road to the Phou Keua-Bo Y crossing into Vietnam, and the stupa makes a short stop.",
+      "knownFor": [
+        "Xaysetha Stupa",
+        "16th-century pagoda",
+        "road to the Vietnam border",
+        "Attapeu countryside"
+      ],
+      "bestTime": "November to April, the dry season, when roads across Attapeu province are easiest to travel.",
+      "bestM": [11, 12, 1, 2, 3, 4], "avoidM": []
     }
 };

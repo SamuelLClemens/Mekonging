@@ -427,5 +427,117 @@ export const HISTORY_CITIES_VI = {
       ],
       "bestTime": "December to April, the dry season; expect heat and humidity year-round, as in nearby Ho Chi Minh City.",
       "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-ly-son": {
+      "name": "Ly Son",
+      "blurb": "Ly Son, formerly known as Cu Lao Re, is a small group of volcanic islands about 30 km off the Quang Ngai coast in central Vietnam. Its farmers grow garlic and onions in a layer of white coral sand carried up from the shore, and Ly Son garlic is known across the country. Visitors take in the whole island from the crater rim at Thoi Loi, visit a pagoda set in a sea cave, and should expect very little English.",
+      "knownFor": [
+        "Ly Son garlic",
+        "Thoi Loi crater",
+        "Cave Pagoda (Chua Hang)",
+        "volcanic coastline",
+        "few foreign visitors"
+      ],
+      "bestTime": "February to May, the dry season; avoid the October-November storm season, when rough seas can cancel the ferries.",
+      "bestM": [2, 3, 4, 5], "avoidM": [10, 11]
+    },
+
+    "vi-tay-ninh": {
+      "name": "Tay Ninh",
+      "blurb": "Tay Ninh, about 90 km northwest of Ho Chi Minh City near the Cambodian border, is the birthplace of Caodaism, a Vietnamese syncretic religion officially founded here in 1926. Its Holy See, a vividly decorated temple, holds daily ceremonies that visitors can watch from the gallery. The other draw is Nui Ba Den, the Black Lady Mountain, the tallest peak in southern Vietnam, topped by pagodas and cave shrines and now reached by cable car.",
+      "knownFor": [
+        "Cao Dai Holy See",
+        "Caodaism",
+        "Nui Ba Den (Black Lady Mountain)",
+        "mountain cable car",
+        "day trip from Ho Chi Minh City"
+      ],
+      "bestTime": "December to April, the dry season, as in Ho Chi Minh City; expect heat and humidity year-round.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-cai-be": {
+      "name": "Cai Be",
+      "blurb": "Cai Be is a river town on the Tien River, a branch of the Mekong, and one of the closest Delta stops to Ho Chi Minh City. Its floating market, where boats hang samples of their produce from tall poles, is smaller and quieter than Can Tho's, and the town is the classic first stop on Delta day tours. Visitors take boats through narrow palm-lined canals to orchards and family workshops making coconut candy.",
+      "knownFor": [
+        "Cai Be Floating Market",
+        "coconut candy workshops",
+        "palm-lined canals",
+        "Mekong fruit orchards",
+        "day trip from Ho Chi Minh City"
+      ],
+      "bestTime": "December to April, the dry season; floating markets are best at dawn.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-vinh-long": {
+      "name": "Vinh Long",
+      "blurb": "Vinh Long is a Mekong Delta river town on the Co Chien River, a branch of the Mekong, and a long-standing market centre between Ho Chi Minh City and Can Tho. Opposite the town lies An Binh Island, about 60 square kilometres of canals and fruit orchards, where family-run garden homestays let visitors stay the night instead of rushing through on a day trip. Expect rural lanes by bicycle, short ferry crossings and orchards of longan, rambutan and pomelo.",
+      "knownFor": [
+        "An Binh Island",
+        "orchard homestays",
+        "Co Chien River",
+        "Mekong fruit",
+        "cycling rural lanes"
+      ],
+      "bestTime": "December to April, the dry season, as in nearby Can Tho.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-ben-tre": {
+      "name": "Ben Tre",
+      "blurb": "Ben Tre is the Mekong Delta's coconut country, set on river islands between branches of the Mekong; the former Ben Tre province was merged into Vinh Long province in 2025. Coconut palms line its canals, and the area is famous nationwide for its coconuts and coconut candy. Visitors usually come on a half-day boat trip, switching from motorboat to hand-rowed sampan in narrow nipa-palm canals and stopping at family workshops.",
+      "knownFor": [
+        "coconut candy",
+        "coconut palms",
+        "sampan canal trips",
+        "nipa-palm canals",
+        "Mekong river islands"
+      ],
+      "bestTime": "December to April, the dry season; expect heat and humidity year-round, as in nearby Ho Chi Minh City.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-dien-bien-phu": {
+      "name": "Dien Bien Phu",
+      "blurb": "Dien Bien Phu lies in the broad Muong Thanh valley in Vietnam's far northwest, near the Lao border, in country long home to Tai communities. Between 13 March and 7 May 1954, Viet Minh forces besieged and defeated the French garrison here, in the battle that ended the First Indochina War and French colonial rule in Vietnam. Visitors tour the Victory Museum, A1 Hill with its mine crater, and the command bunker of the French commander, de Castries.",
+      "knownFor": [
+        "1954 battle",
+        "Dien Bien Phu Victory Museum",
+        "A1 Hill",
+        "de Castries' bunker",
+        "Muong Thanh valley"
+      ],
+      "bestTime": "October to April, cooler and drier, the same window as Mai Chau and Hanoi.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-moc-chau": {
+      "name": "Moc Chau",
+      "blurb": "Moc Chau is a highland plateau in Son La, roughly 1,000 m above sea level and a long day's drive west of Hanoi. Cooler than the lowlands, it was developed for tea and dairy farming in the second half of the 20th century, and its milk and tea are sold nationwide. Visitors come for tea hills such as the heart-shaped Doi Che Trai Tim, plum blossom in the cool season and the villages of Thai and Hmong communities.",
+      "knownFor": [
+        "tea hills",
+        "heart-shaped tea hill",
+        "Moc Chau milk",
+        "plum blossom season",
+        "Thai and Hmong villages"
+      ],
+      "bestTime": "October to April, cooler and drier, the same window as nearby Mai Chau; plum blossom peaks December to February.",
+      "bestM": [10, 11, 12, 1, 2, 3, 4], "avoidM": []
+    },
+
+    "vi-ca-mau": {
+      "name": "Ca Mau",
+      "blurb": "Ca Mau is Vietnam's southernmost province, a low, mangrove-fringed peninsula at the tip of the Mekong Delta between the East Sea and the Gulf of Thailand. Its cape, Mui Ca Mau, is the southern end of the Vietnamese mainland and lies inside a national park protecting the country's largest expanse of mangrove forest, part of a UNESCO biosphere reserve since 2009. Visitors make the long trip for the land's-end marker, boat rides through mangroves and canals, and seafood.",
+      "knownFor": [
+        "Ca Mau Cape",
+        "mangrove forests",
+        "southernmost point of mainland Vietnam",
+        "canal boat trips",
+        "seafood"
+      ],
+      "bestTime": "December to April, the dry season, as across the Mekong Delta.",
+      "bestM": [12, 1, 2, 3, 4], "avoidM": []
     }
 };
