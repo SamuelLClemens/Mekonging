@@ -84,6 +84,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - A gated feature (`online()`, consent, country data) must still render something when the gate is shut.
 - Sourcing: cite every entry compactly with a real URL. Better to leave a gap open than publish a number traced to an
   aggregator's unsourced synthesis. Pai is deferred until the owner says.
+- Place photos come only from the place's own Wikipedia article, via `scripts/fetch-place-photos.py` and the reviewed
+  `scripts/place-photo-articles.json`. Never keyword-search an image; a place with no article of its own keeps no photo.
 - Honest labels: the ATM layer says "free" only for Vietnam/VPBank and "lowest fee" elsewhere. The first-aid guide prints
   no phone numbers; hotlines are described in prose.
 - A topbar title gets about 102 px at 375 px wide; never prefix it with a flag or emoji.

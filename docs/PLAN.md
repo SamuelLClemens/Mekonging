@@ -65,6 +65,9 @@ Other gaps:
 - Write the results to `docs/AUDIT_375.md`.
 
 ### D3 — Place photos (one session per country: th 247, vi 202, kh 131, la 163)
+- **Status, Thailand:** PR #109 (`mk-v0.632.0`): 47 photos, so Thailand has 93 of 293. Of the 247 gaps, 186 have no article of their own and 14 have an unusable lead image. Every decision is in `scripts/place-photo-articles.json`.
+- **Expect about 1 in 5:** most gaps are stay clusters, practical cards and food runs with no article. The ~45 MB estimate below assumed every gap filled; Thailand added 3.0 MB.
+- **Run order:** `fetch-place-photos.py --country <cc>` with `--report`, `--suggest`, a review of the suggestions, `--fetch`, `--sheet`, then `--install` (see `scripts/README.md`).
 - **Licences:** openly licensed only (public domain, CC0, CC BY, CC BY-SA, GFDL). Record the credit verbatim.
 - **Source:** the Wikipedia lead image of the place's own article, not a keyword search, because keyword search picks the wrong subject. Look at every image before keeping it.
 - **Tooling:** `scripts/fetch-identify-photos.py` covers the identify guide, not places. Extend it or add a sibling script, and commit it.
