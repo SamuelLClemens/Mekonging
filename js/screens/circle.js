@@ -8,9 +8,8 @@
 //
 // Extracted from main.js as a lazy, route-scoped screen module (#circle, #contact, #in,
 // #inbox, #thread, #msg). shareButton did NOT come with it: it is a shared widget with three
-// callers elsewhere in main.js, so it stays there and is imported back. Nor did the bulletin
-// board helpers bbCat/bbHeadline/bbSubline — the board screen still uses them, and the circle
-// screens render a preview of a shared listing with the same dictionary.
+// callers elsewhere in main.js, so it stays there and is imported back. The bulletin-board
+// helpers bbCat/bbHeadline/bbSubline come from js/screens/exchange.js, the board's own module.
 import { h } from '../util.js';
 import { store, getPin, ensureMe, setMe, getContacts, getContact, addContact, removeContact,
   getInbox, addInboxItem, deleteInboxItem, markInboxRead, getThread, addMessage, markThreadRead,
@@ -21,9 +20,10 @@ import { getPlace, getBoard, getCountry } from '../data/regions.js';
 import { encodeCard, parseCard, parseShare, encodeMessage, parseMessage, shareUrl } from '../social.js';
 import { SEV_LABEL, addPlaceSecret, fmtReportDate } from '../place-ui.js';
 // bbCat/bbHeadline/bbSubline/swapCalcNodes render a preview of a shared bulletin-board
-// listing. They belong to the board screen, which still uses them, so they stay in main.js
-// and are imported back rather than duplicated here.
-import { go, mount, topbar, shareButton, bbCat, bbHeadline, bbSubline, swapCalcNodes } from '../main.js';
+// listing. They belong to the board screen (js/screens/exchange.js) and are imported from
+// there rather than duplicated here.
+import { go, mount, topbar, shareButton } from '../main.js';
+import { bbCat, bbHeadline, bbSubline, swapCalcNodes } from './exchange.js';
 
 // No account, no server: a user's traveller card and (later) messages travel
 // only inside links they choose to share. Imported contact fields are UNTRUSTED
