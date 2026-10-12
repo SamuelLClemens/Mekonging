@@ -5,9 +5,10 @@ framework. Live at www.mekonging.com. Remote: github.com/SamuelLClemens/Mekongin
 relevant section of the docs below, not the whole repo.
 
 ## Environment
-- No `node` and no bundler. Guards are dependency-free Python 3. `npm run validate` does not work (broken since PR #39).
-- Parse-check a JS file with macOS `jsc -m <file>` (it links the whole import graph). A `ReferenceError` about
-  `navigator` means it parsed fine. No guard parses JavaScript; also load the app.
+- No `node` and no bundler. Guards are dependency-free Python 3. `npm run validate` needs Node, so it runs in CI-like environments only, and it is not in CI yet (see scripts/README.md).
+- Parse-check a JS file with macOS `jsc -m <file>` (it links the whole import graph; `jsc` is not on PATH, it is
+  `/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc`). A `ReferenceError` about
+  `navigator` means it parsed fine. `check-js-syntax` parses every tracked file; still load the app.
 - Preview: `preview_start {name:'mekong'}` runs `python3 scripts/serve.py 8742` (no-cache). Every worktree has its own
   `.claude/launch.json`; check the entry exists before relying on it.
 - The in-app browser pane is always `document.hidden`: timers are clamped, `javascript_tool` times out at 30 s, maps
@@ -39,7 +40,7 @@ relevant section of the docs below, not the whole repo.
 
 ## Guards (run before every commit; CI runs the same list)
 ```bash
-for g in imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -71,6 +72,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - Money goes through `money()` in `js/util.js` only (Intl has no symbol for THB, KHR or LAK).
 - Every "now" decision uses `regionNow()` (UTC+7), not the phone clock. Saved forecasts are capped (keep-set).
 - Any sound registers with `js/audio-control.js` so one thing plays at a time.
+- MapLibre: a `['zoom']` curve must be the top-level paint expression. `['+', curve, 3]` is rejected with a console
+  error and the layer is never added (route casing, PR #100); give each width its own `interpolate`.
 - A new city needs an anchor in `WEATHER_SPOTS` (js/weather.js, with `hub` where it is a hub), or places rank under the wrong
   "Nearby" city. Anchors are cities that have place records.
 - A gated feature (`online()`, consent, country data) must still render something when the gate is shut.

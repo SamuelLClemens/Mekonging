@@ -4,7 +4,8 @@
 //
 // Run: node scripts/validate.mjs   (or: npm run validate)
 
-import { COUNTRIES, LANGUAGES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES } from '../js/data/regions.js';
+import { COUNTRIES, allPlaces, allFood, FOOD_ALLERGENS, FOOD_CATEGORIES, loadAllCountries } from '../js/data/regions.js';
+import { LANGUAGES } from '../js/data/phrasebooks.js';
 import { PRODUCE, PRODUCE_CATEGORIES } from '../js/data/produce.js';
 import { NATURE, NATURE_GROUPS } from '../js/data/nature.js';
 import { POOLS } from '../js/data/pools.js';
@@ -15,6 +16,10 @@ import {
   PHRASE_RX, PHRASE_KEYS, ALCOHOL_TERMS,
   dietAvoidAllergens, dishMeatHits, dishHasAlcohol, dishDietReasons, dishDietVerdict,
 } from '../js/data/diet.js';
+
+// Places, dishes and prices are lazy per country (js/data/regions.js). Without this the place
+// and dish checks below run over empty lists and pass without checking anything.
+await loadAllCountries();
 
 let checks = 0;
 const errors = [];
@@ -64,7 +69,8 @@ for (const p of allPlaces()) {
   ok(p.mapQuery || p.coords, `place ${p.id}: missing mapQuery/coords`);
   // Optional traveller-fit fields — validated only when present, so existing places pass.
   if (p.kidFriendly != null) ok(typeof p.kidFriendly === 'boolean', `place ${p.id}: kidFriendly must be boolean`);
-  if (p.isLocal != null) ok(p.isLocal === true, `place ${p.id}: isLocal, if present, must be true`);
+  // false is honest data (an international hotel, not locally owned); owner ruling 2026-10-12.
+  if (p.isLocal != null) ok(typeof p.isLocal === 'boolean', `place ${p.id}: isLocal, if present, must be true or false`);
   if (p.stayType != null) ok(['tent', 'hostel', 'guesthouse', 'homestay', 'hotel', 'resort', 'apartment'].includes(p.stayType), `place ${p.id}: bad stayType (${p.stayType})`);
   if (p.stayDuration != null) ok(['short', 'long', 'both'].includes(p.stayDuration), `place ${p.id}: bad stayDuration (${p.stayDuration})`);
   if (p.activities != null) ok(Array.isArray(p.activities), `place ${p.id}: activities must be an array`);

@@ -5,11 +5,11 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Fifteen guards. Each one exists because the failure it catches actually shipped. Run all of
+Sixteen guards. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
-for g in imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -17,7 +17,7 @@ python3 tools/style-tiles/port-themes.py --check
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
 
-The same fifteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+The same sixteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
 `feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
 fails, prints the full output of each failure, and fails the check if any guard does. On a
 pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
@@ -36,6 +36,7 @@ list above, so a new guard goes in both places.
 | `check-month-arrays` | a month claimed by an array but not by the record's own prose | the two are written by different hands and drift |
 | `check-place-fields` | inconsistent figures, broken afterDark contract | |
 | `check-place-dupes` | duplicate ids, new name collisions | a merged place silently deletes travellers' saved data |
+| `check-js-syntax` | a JavaScript file that does not parse | every other guard reads JavaScript with regular expressions, so a stray token passed them all and the module never loaded. Uses `node --check` in CI and the macOS JavaScriptCore shell locally; it self-tests the parser on a broken module and script first, so it cannot pass without checking |
 | `check-sources` | homepage-only place citations and unsourced routes getting WORSE | the 2026-10-02 content-truth audit found 5 of 10 spot-checked places contradicted their own cited source; this ratchets the two structural gaps behind that (a citation that is just a homepage, a route with no source at all) so they can shrink but never silently grow |
 | `check-contrast` | text below its WCAG AA threshold on any of the seven skins | `--good` was unreadable on all four dark skins for months |
 | `check-skins` | a theme id that `js/theme.js`, the CSS blocks, the Settings picker, the first-paint script or the default profile disagree about | an unknown skin falls back to the default without any page failing, so a renamed or half-added theme would ship silently. Added with the retro redesign's theme table |
@@ -45,6 +46,18 @@ list above, so a new guard goes in both places.
 
 `check-spacing.py --update` lowers a file's ceiling after you have removed declarations.
 `check-place-fields.py` and `check-lazy-data.py` both take `--report` for the derived data.
+
+## Content validator (not in CI yet)
+
+`scripts/validate.mjs` (`npm run validate`, needs Node) checks required fields, `verified` stamps,
+low-to-high price ranges and the diet rules across every country's places, dishes and prices. It
+broke at PR #39 when `LANGUAGES` moved to `js/data/phrasebooks.js`, and once repaired it still read
+only the eager data: places and dishes are lazy, so it passed over empty lists. It now calls
+`loadAllCountries()` first (17,927 checks instead of 2,609).
+
+On 2026-10-12 it reports 46 errors: 35 places missing `blurb`/`whyItFits` (owner: write them), 10
+prices with low above high (8 places, 2 routes) and one dish category `veg`. The last two are data
+bugs. `isLocal: false` is allowed (owner, 2026-10-12). It joins CI once it passes.
 
 ## Sweeping every screen
 

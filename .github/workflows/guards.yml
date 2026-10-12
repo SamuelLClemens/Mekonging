@@ -6,8 +6,10 @@
 # Every guard runs even after one fails, so one run reports all of them. A passing guard folds to
 # one line in the log; a failing one prints its full output and adds an error annotation.
 #
-# Not here: scripts/route-sweep.js needs a live browser, and scripts/validate.mjs has not run
-# since PR #39 (it imports LANGUAGES from js/data/regions.js, which no longer exports it).
+# Not here: scripts/route-sweep.js needs a live browser, and scripts/validate.mjs still reports
+# data findings that need a decision first (scripts/README.md, "Content validator").
+#
+# check-js-syntax uses the runner's preinstalled Node (`node --check`); it fails if none is found.
 #
 # The guard list is kept by hand. A guard added to scripts/README.md goes here too.
 
@@ -83,7 +85,7 @@ jobs:
             fi
           }
 
-          for g in imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
+          for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
             guard scripts/check-$g.py
           done
           guard scripts/check-place-fields.py --assert
