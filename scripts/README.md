@@ -5,7 +5,7 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Sixteen guards. Each one exists because the failure it catches actually shipped. Run all of
+Sixteen guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
@@ -47,7 +47,7 @@ list above, so a new guard goes in both places.
 `check-spacing.py --update` lowers a file's ceiling after you have removed declarations.
 `check-place-fields.py` and `check-lazy-data.py` both take `--report` for the derived data.
 
-## Content validator (not in CI yet)
+## Content validator (in CI)
 
 `scripts/validate.mjs` (`npm run validate`, needs Node) checks required fields, `verified` stamps,
 low-to-high price ranges and the diet rules across every country's places, dishes and prices. It
@@ -55,9 +55,18 @@ broke at PR #39 when `LANGUAGES` moved to `js/data/phrasebooks.js`, and once rep
 only the eager data: places and dishes are lazy, so it passed over empty lists. It now calls
 `loadAllCountries()` first (17,927 checks instead of 2,609).
 
-On 2026-10-12 it reports 46 errors: 35 places missing `blurb`/`whyItFits` (owner: write them), 10
-prices with low above high (8 places, 2 routes) and one dish category `veg`. The last two are data
-bugs. `isLocal: false` is allowed (owner, 2026-10-12). It joins CI once it passes.
+It joined CI in slice D1 (2026-10-12) once its 46 errors were fixed: 35 Thai stay cards got
+`whyItFits`, 8 Lao places got the `low`/`high` their own notes state, and the dish category `veg`
+became `street`. The 2 route errors were the validator's: a flight priced "from US$68" has
+`high: null`, which `range()` prints as one figure. A route option may now give an explicit
+`high: null`, with a number `low` (a "from" fare) or `low: null` (quoted on request). Undefined
+fields and real inversions still fail. `isLocal: false` is allowed (owner, 2026-10-12).
+
+There is no Node on the development machine. Run it locally under JavaScriptCore before pushing:
+
+```bash
+/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc -m scripts/validate-jsc.mjs | tail -2
+```
 
 ## Sweeping every screen
 

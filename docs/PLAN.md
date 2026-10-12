@@ -35,6 +35,7 @@ Other gaps:
 ## Data slices (owner order, 2026-10-12)
 
 ### D1 — Place text and the validator in CI
+- **Status:** done in PR #103 (`mk-v0.630.0`). The 8 place "inversions" were missing `low`/`high`, and the 2 route ones were "from" fares with `high: null`; see `scripts/README.md`.
 - The 35 records with no `whyItFits` are Thai stay-area cards, such as `th-chiang-mai-old-city-hostels` and `th-bangkok-khaosan-hostels`. Each one also lacks `tips` and `mapQuery`.
 - Four beaches lack only `tips`: `th-ext-chaweng-beach`, `vi-ext-mui-ne-beach`, `vi-ext-vung-tau-back-beach` and `kh-ext-kep-beach`.
 - Fix the other 11 validator findings:

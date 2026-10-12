@@ -2932,6 +2932,8 @@ export const PLACES_LA_EXT = [
     "blurb": "Nong Fa ('Blue Lake') is a remote highland lake whose vivid blue water and reputed great depth have made it a minor legend; American pilots operating near the Ho Chi Minh Trail are said to have called it 'Dollar Lake' for its round shape. Locals traditionally avoid bathing here, tied to a guardian-spirit belief. Reaching it is a genuine expedition deep into a protected forest, not a casual day trip.",
     "whyItFits": "A bucket-list reward for hardy overlanders and 4WD/adventure-motorbike travellers who want the wildest corner of the deep south-east.",
     "priceRange": {
+      "low": 0,
+      "high": 0,
       "currency": "LAK",
       "note": "No fixed entry fee, but expect significant cost for a 4WD or dirt-bike and a local guide/permit arrangement; budget for a full-day charter from Attapeu town. Cash only."
     },
@@ -3153,6 +3155,8 @@ export const PLACES_LA_EXT = [
     "blurb": "Attapeu, officially Muang Samakhixay, is a relaxed and rarely visited town in Laos's far south-east, ringed by mountains where several rivers meet. The main draws are the atmosphere and the dawn market, where traders from several ethnic groups buy and sell. It works best as a friendly base for the surrounding rivers, temples and the long approach toward Nong Fa.",
     "whyItFits": "A genuinely off-the-map provincial town for slow travellers who want everyday Lao life rather than sights ticked off a list.",
     "priceRange": {
+      "low": 0,
+      "high": 0,
       "currency": "LAK",
       "note": "Wandering the riverfront and market is free; you only pay for food, drinks and any boat hire. Cash only."
     },
@@ -3200,6 +3204,8 @@ export const PLACES_LA_EXT = [
     "blurb": "Salavan is a low-key provincial town that most travellers only pass through, useful as a base for Tad Lo, the Xe Set and surrounding ethnic-minority villages. The lively morning market is the main draw, alongside easygoing riverside walks and access to Bolaven coffee country. It rewards travellers who value atmosphere and local life over headline attractions.",
     "whyItFits": "A practical, authentic highland base for reaching Tad Lo, Tad Soung and Bolaven villages without any tourist gloss.",
     "priceRange": {
+      "low": 0,
+      "high": 0,
       "currency": "LAK",
       "note": "Markets and town walks are free; pay only for food, transport and lodging. Cash only."
     },
@@ -3412,6 +3418,7 @@ export const PLACES_LA_EXT = [
     "priceRange": {
       "low": 10000,
       "typical": 20000,
+      "high": 20000,
       "currency": "LAK",
       "note": "Small site donation/fee ~10,000-20,000 LAK; boat charter across the Mekong is extra and negotiable."
     },
@@ -3518,6 +3525,7 @@ export const PLACES_LA_EXT = [
     "priceRange": {
       "low": 150000,
       "typical": 400000,
+      "high": 500000,
       "currency": "LAK",
       "note": "Guided treks typically ~150,000-500,000+ LAK depending on length and group size; a guide and permit are required."
     },
@@ -3680,6 +3688,7 @@ export const PLACES_LA_EXT = [
     "priceRange": {
       "low": 60000,
       "typical": 100000,
+      "high": 100000,
       "currency": "LAK",
       "note": "Shared boat ~60,000-100,000 LAK per person depending on group size; agree the price before boarding."
     },
@@ -3736,6 +3745,7 @@ export const PLACES_LA_EXT = [
     "priceRange": {
       "low": 10000,
       "typical": 30000,
+      "high": 30000,
       "currency": "LAK",
       "note": "Boat to Don Kho ~10,000-30,000 LAK return; textiles are priced individually and buying supports the weavers."
     },
@@ -3784,6 +3794,8 @@ export const PLACES_LA_EXT = [
     "blurb": "A hilltop temple with a big modern golden Buddha overlooking Pakse and the confluence of the Mekong and Xe Don. Free to visit and popular for sunset. Reach it by a stair climb or drive to the top.",
     "whyItFits": "For travellers wanting a free, easy sunset viewpoint and a living local temple close to Pakse.",
     "priceRange": {
+      "low": 0,
+      "high": 0,
       "currency": "LAK",
       "note": "Free to enter; donations welcome. Budget a small tuk-tuk fare from central Pakse."
     },

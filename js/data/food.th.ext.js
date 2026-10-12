@@ -147,7 +147,7 @@ export const FOOD_TH_EXT = [
     "spice": "mild", "price": { "low": 60, "high": 150, "currency": "THB" },
     "whereToFind": "Charcoal grills outside markets and along roadsides, strongest in the northeast; usually sold by the half or whole bird.",
     "sources": ["Wikipedia", "Hot Thai Kitchen", "TasteAtlas"] },
-  { "id": "th-pad-pak-bung", "name": "Pad Pak Bung Fai Daeng (Morning Glory)", "localName": "ผัดผักบุ้งไฟแดง", "roman": "phat phak bung fai daeng", "category": "veg",
+  { "id": "th-pad-pak-bung", "name": "Pad Pak Bung Fai Daeng (Morning Glory)", "localName": "ผัดผักบุ้งไฟแดง", "roman": "phat phak bung fai daeng", "category": "street",
     "description": "Water spinach thrown into a wok hot enough to catch fire, with garlic, chilli, yellow bean sauce and oyster sauce. Thirty seconds start to finish, so the stems stay crunchy and the leaves collapse. The name means 'red fire' and refers to the flame, not the heat.",
     "ingredients": ["water spinach", "garlic", "birds-eye chilli", "yellow bean sauce", "oyster sauce", "soy sauce"],
     "allergens": ["soy", "shellfish", "gluten"], "veg": "Vegetarian on request but NOT by default — oyster sauce is standard. Ask 'mai sai nam man hoy' (no oyster sauce) and 'jay' for a fully meat-free version.",
