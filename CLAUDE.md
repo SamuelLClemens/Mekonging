@@ -10,6 +10,7 @@ relevant section of the docs below, not the whole repo.
 - Parse-check a JS file with macOS `jsc -m <file>` (it links the whole import graph; `jsc` is not on PATH, it is
   `/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc`). A `ReferenceError` about
   `navigator` means it parsed fine. `check-js-syntax` parses every tracked file; still load the app.
+  It parses a file as a module only if it has a static `import`/`export`; a top-level-await-only file needs `export {};`.
 - Preview: `preview_start {name:'mekong'}` runs `python3 scripts/serve.py 8742` (no-cache). Every worktree has its own
   `.claude/launch.json`; check the entry exists before relying on it.
 - The in-app browser pane is always `document.hidden`: timers are clamped, `javascript_tool` times out at 30 s, maps
