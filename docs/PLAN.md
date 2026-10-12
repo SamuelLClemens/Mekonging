@@ -5,7 +5,8 @@
 - Every slice that changes a shipped file bumps `APP_VERSION` and `CACHE_VERSION`. Those slices therefore stack: each starts from the merged tip of `feat/scaffold-bangkok-slice`, and two releasing slices never run at the same time.
 - M0, the exchange planning session, changed documents only and is done: see `docs/EXCHANGE.md`.
 - Exchange slices M1–M10 (`docs/EXCHANGE.md` §17) change shipped files, so they stack with the data slices like any other releasing slice.
-- M1 (the board moved to `js/screens/exchange.js`) is PR #108, `mk-v0.633.0`, 2026-10-12. M2 is next on the exchange side.
+- M1 (the board moved to `js/screens/exchange.js`) is PR #108, `mk-v0.633.0`, 2026-10-12.
+- M2 (the Market tab) is PR #111, `mk-v0.635.0`, 2026-10-12; it is open until merged. M3 is next on the exchange side, after the owner actions in `docs/EXCHANGE.md` §15.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
 Method: jsc over `loadAllCountries()`, plus `check-place-fields.py` and `check-sources.py`.

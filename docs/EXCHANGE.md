@@ -633,7 +633,7 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 ### M1: Move the board out of `main.js`
 - **Scope.**
   - Move `BB_CATS`, `bbCat`, `bbSubKinds`, `HOUSE_KIND`, `bbHeadline`, `bbSubline`, `bbSafety`, `swapCalcNodes`, `guessCityName`, `pasteLinkBox`, `BB_STALE_DAYS`, `listingIsStale`, `listingCard`, `buildBBForm` and `bulletinScreen` into `js/screens/exchange.js` (`board.js` is already the Local noticeboard).
-  - `circle.js` and the currency screen import from it. No behaviour changes.
+  - Only `circle.js` imports from `js/screens/exchange.js`. The currency screen links to `#exchange-swap` (`#market-cash` after M2). No behaviour changes.
 - **Done when:**
   - A computed-style digest of `#exchange`, `#exchange-swap`, `#exchange-kids` and an `#in-` board link is identical before and after at 375 px.
   - `js/main.js` is at least 200 lines shorter.
@@ -643,7 +643,7 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 - **Scope.**
   - Add the sixth tab, its icon, `TAB_FOR_HEAD` entries and the legacy redirects.
   - Remove the three `nav-groups.js` entries and repoint the currency button.
-  - `#market` shows the on-phone board under the title "Market", with chips for the new kinds.
+  - `#market` shows the on-phone board under the title "Market", with chips for the new kinds. Meetups have no on-phone category, so M2 shows Items, Rooms, Rides and Cash; the Meetups chip arrives with M4.
 - **Done when:**
   - At 375 px the bar shows six tabs and the measured width of the "Market" label fits its slot.
   - The Market tab is highlighted on `#market`, `#exchange-gear` and `#swap`.
