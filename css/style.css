@@ -1869,7 +1869,9 @@ html[data-theme="dark"] .review-orig .rlabel { color: var(--teal); }
   flex: 1; min-width: 0; border: none; background: none; cursor: pointer; font-family: inherit;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   color: var(--ink-soft); font-size: var(--fs-label); font-weight: 700;
-  padding: 0 2px;
+  /* No side padding: six 62.5px slots leave German "Entdecken" and Dutch "Verkennen" (60 px) 1 px
+     short of a slot with 2px each side, which ellipsised them the day Market became the sixth tab. */
+  padding: 0;
 }
 /* Six tabs share the bar, so labels must never wrap or overflow their slot. */
 .tabbar button > span:last-child {

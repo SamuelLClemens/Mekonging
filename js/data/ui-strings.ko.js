@@ -7,7 +7,7 @@
 // it to every other language; run `python3 scripts/check-ui-strings.py` after editing.
 
 export const STRINGS = {
-    'Home': '홈', 'Talk': '대화', 'Places': '장소', 'Explore': '탐색', 'YOU': '나',
+    'Home': '홈', 'Talk': '대화', 'Places': '장소', 'Explore': '탐색', 'Market': '마켓', 'YOU': '나',
     'Your space': '내 공간', '‹ Back': '‹ 뒤로', 'Settings': '설정', 'Saved & collections': '저장함',
     'Emergency help': '긴급 도움', 'Emergency': '긴급', 'Online': '온라인', 'Offline': '오프라인',
     'Skip to content': '본문으로 이동', 'Language': '언어', 'Choose your language': '언어를 선택하세요',

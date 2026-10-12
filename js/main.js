@@ -37,6 +37,7 @@ import {
 import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
 import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems, itemLabel } from './nav-groups.js';
+import { marketRedirect } from './market-routes.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
@@ -258,9 +259,7 @@ const ROUTE_SCREENS = {
   export: ['export'],
   donate: ['giveback'],
   circle: ['circle'], add: ['circle'], in: ['circle'],
-  exchange: ['exchange'],
-  swap: ['exchange'],
-  market: ['exchange'],
+  market: ['exchange'],   // #exchange and #swap redirect to it (js/market-routes.js)
   inbox: ['circle'], thread: ['circle'], msg: ['circle'],
   produce: ['produce'], pantry: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
   etiquette: ['etiquette'],
@@ -816,7 +815,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.634.0';
+export const APP_VERSION = 'mk-v0.635.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -875,6 +874,7 @@ const ICON_PATH = {
   heart: '<path d="M12 20s-6.5-4.3-9-8.2C1.1 8.5 2.8 5 6.2 5c2 0 3.3 1.1 3.8 2.2C10.5 6.1 11.8 5 13.8 5c3.4 0 5.1 3.5 3.2 6.8C18.5 15.7 12 20 12 20z"/>',
   temple: '<path d="M12 3 4 7v2h16V7z"/><path d="M6 9v8M10 9v8M14 9v8M18 9v8"/><path d="M3 17h18v3H3z"/>',
   me: '<circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
+  market: '<path d="M2 9l3-5h14l3 5"/><path d="M2 9a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/><path d="M4 12v8M20 12v8M4 16h16"/>',
 };
 export const ICON = Object.fromEntries(Object.entries(ICON_PATH).map(([k, v]) => [k, svgIcon(v)]));
 // A leading line-icon for an action chip; inherits the chip's text colour (incl. the
@@ -937,14 +937,16 @@ export function sectionTile(x) {
   ]);
 }
 
-// Order is home, talk, you, places, explore — You sits in the centre slot, the easiest
-// thumb reach on a phone. See UX_OVERHAUL_PROMPT.md §5 W5a.
+// Order is home, talk, you, places, explore, market — You sits in the centre slot of the first
+// five, the easiest thumb reach on a phone (UX_OVERHAUL_PROMPT.md §5 W5a); Market was added after
+// Explore so the five keep their order (docs/EXCHANGE.md §11).
 const TABS = [
   { id: 'home', hash: '#home', label: 'Home', svg: ICON.home },
   { id: 'talk', hash: '#phrasebook', label: 'Talk', svg: ICON.chat },
   { id: 'you', hash: '#me', label: null, svg: ICON.me }, // label is computed live — see meTabLabel(); Settings lives inside this hub
   { id: 'places', hash: '#places', label: 'Places', svg: ICON.map }, // Places + Map, merged into one section
   { id: 'explore', hash: '#explore', label: 'Explore', svg: ICON.compass },
+  { id: 'market', hash: '#market', label: 'Market', svg: ICON.market }, // the traveller board; #exchange and #swap redirect here
 ];
 
 export function go(hash) {
@@ -1324,7 +1326,9 @@ const TAB_FOR_HEAD = {
   saved: '#me', collection: '#me',
   journal: '#me', scrapbook: '#me', contributions: '#me', journey: '#me', calendar: '#me',
   trip: '#me', expenses: '#me', bargain: '#me', currency: '#me', foryou: '#me', vault: '#me',
-  exchange: '#me', swap: '#me', market: '#me',
+  // Market = the traveller board and its kinds (cash, rides, rooms, items). #exchange and #swap
+  // redirect to #market-... before this is read, so they are mapped only as a belt and braces.
+  market: '#market', exchange: '#market', swap: '#market',
   // #nextstop (S3, task #190) never got a TAB_FOR_HEAD entry, so it fell through to the
   // #home default — caught while re-triaging this same table for S5. It belongs here, not
   // Home or Explore: like trip/journey/calendar, it commits directly to store.trip.stops,
@@ -1345,7 +1349,7 @@ function activeTabForHash() {
 // The active tab is derived from the current route (not a per-screen arg), so every screen —
 // including deep detail pages — highlights the correct tab instead of defaulting to Home.
 // Wayfinding hooks for the theme layer, stamped on <html> by render() after applyTheme():
-//   data-tab      the active tab's id (home | talk | you | places | explore)
+//   data-tab      the active tab's id (home | talk | you | places | explore | market)
 //   data-country  the country in context (th | vi | kh | la), the same one the context line names
 //   data-route    the hash head ('home', 'place', 'hub'), so CSS can single out a screen
 // They carry no colour themselves; a theme reads them. Nothing styles them in Phase 2.
@@ -4262,7 +4266,7 @@ function currencyScreen() {
   });
   wrap.append(quick);
 
-  wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#exchange-swap') }, '🤝 Swap cash with a traveller (no fees)'));
+  wrap.append(h('button', { class: 'btn ghost block', onclick: () => go('#market-cash') }, '🤝 Swap cash with a traveller (no fees)'));
   wrap.append(h('button', { class: 'btn block', onclick: async () => { await refreshRates(); go('#currency'); } }, 'Refresh rates (needs internet)'));
   wrap.append(h('p', { class: 'disclaimer' }, 'Indicative mid-market values for guidance; money changers and cards apply their own spread.'));
   mount(wrap, '#home');
@@ -7009,6 +7013,10 @@ function maybeAnnounceThemeMove() {
 
 // ---- router -----------------------------------------------------------------
 export function render() {
+  // A route from before the Market tab (#exchange, #swap, #market-gear) is rewritten in place, so
+  // everything below, and the Back stack, sees the Market route. See js/market-routes.js.
+  const moved = marketRedirect(location.hash);
+  if (moved) { history.replaceState(null, '', moved); lastHash = moved; saveNavState(); }
   applyTheme();
   applyTab();
   maybeAnnounceThemeMove();
@@ -7175,9 +7183,7 @@ export function render() {
       case 'region': return screenMod('explore').regionScreen(arg);
       case 'nearby': return screenMod('nearby').nearbyScreen();
       case 'currency': return currencyScreen();
-      case 'exchange': return screenMod('exchange').bulletinScreen(arg);
-      case 'swap': return screenMod('exchange').bulletinScreen('swap');
-      case 'market': return screenMod('exchange').bulletinScreen('gear');
+      case 'market': return screenMod('exchange').marketScreen(arg);   // arg is a kind from js/screens/exchange.js
       case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
       case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
       case 'signtranslate': return screenMod('signtranslate').signTranslateScreen(arg);

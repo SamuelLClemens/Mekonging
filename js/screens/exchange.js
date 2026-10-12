@@ -1,14 +1,15 @@
-// The Traveller Board — the backendless, link-based bulletin board (#exchange, #swap, #market).
-// A listing lives on THIS device and reaches anyone else only inside a link its poster shares
-// (js/social.js). Extracted from main.js as a lazy, route-scoped screen module (Exchange slice M1,
-// docs/EXCHANGE.md §17) with no behaviour change. It stays as the offline fallback once the shared
-// Market lands.
+// The Market tab's on-phone board — the backendless, link-based bulletin board (#market and its
+// kinds: #market-items, -rooms, -rides, -cash). A listing lives on THIS device and reaches anyone
+// else only inside a link its poster shares (js/social.js). Extracted from main.js as a lazy,
+// route-scoped screen module (Exchange slice M1) and put under the Market tab in slice M2
+// (docs/EXCHANGE.md §11, §17). It stays as the offline fallback once the shared Market lands.
 //
 // EVERYTHING DECODED FROM A LINK IS UNTRUSTED and is rendered as text only (h() text children).
 //
 // bbCat/bbHeadline/bbSubline/swapCalcNodes are exported for js/screens/circle.js, which renders a
-// preview of a shared listing with the same dictionary. The file is named for its route: the
-// `board` screen key already belongs to the Local noticeboard (js/screens/board.js).
+// preview of a shared listing with the same dictionary, and marketRoute() for its "open the board"
+// link. The file is named for its first route: the `board` screen key already belongs to the Local
+// noticeboard (js/screens/board.js).
 import { h, money } from '../util.js';
 import { getLastFix, ensureMe, addListing, removeListing, getListings } from '../state.js';
 import { field, confirmAction, currencySelect } from '../ui-widgets.js';
@@ -36,6 +37,23 @@ const BB_CATS = [
   { id: 'other', emoji: '📦', label: 'Other', color: '#6b7280', blurb: 'Free giveaways, wanted, or anything else.' },
 ];
 export function bbCat(id) { return BB_CATS.find((c) => c.id === id) || { id: 'other', emoji: '📦', label: 'Listing', color: '#6b7280', blurb: '' }; }
+// The Market sorts the board by KIND (docs/EXCHANGE.md §11). On the phone a kind is a group of the
+// board's own categories, so every saved listing, shared link and post form works as before:
+// Items holds the three item categories, the rest map one to one. Meetups have no on-phone
+// category yet (they arrive with the shared market, M4), so they have no chip.
+const MARKET_KINDS = [
+  { id: 'items', emoji: '🎒', label: 'Items', color: '#0891b2', cats: ['kids', 'gear', 'other'] },
+  { id: 'rooms', emoji: '🏠', label: 'Rooms', color: '#4f46e5', cats: ['house'] },
+  { id: 'rides', emoji: '🚗', label: 'Rides', color: '#2563eb', cats: ['ride'] },
+  { id: 'cash', emoji: '💱', label: 'Cash', color: '#16a34a', cats: ['swap'] },
+];
+const marketKind = (id) => MARKET_KINDS.find((k) => k.id === id) || null;
+// The Market route that lists a board category. An unknown category (one decoded from a link)
+// lands on the Market home rather than being written into a hash.
+export function marketRoute(cat) {
+  const k = MARKET_KINDS.find((x) => x.cats.includes(cat));
+  return k ? `#market-${k.id}` : '#market';
+}
 // Sub-kind options per category (value + labelled option), for the item picker.
 function bbSubKinds(cat) {
   if (cat === 'kids') return [['carseat', '🚼 Car seat'], ['stroller', '🍼 Stroller / pram'], ['carrier', '👶 Baby carrier'], ['toys', '🧸 Toys'], ['clothing', '🧥 Kids clothing'], ['other', '📦 Other kids item']];
@@ -136,7 +154,7 @@ function listingCard(it) {
   if (d.contact) card.append(h('p', { class: 'small' }, `Reach: ${d.contact}`));
   card.append(h('div', { class: 'listing-actions' }, [
     shareButton('🔗 Share this', meta.label, () => shareUrl('in', encodeShare('bb', Object.assign({ cat }, d), ensureMe(), '')), 'btn ghost'),
-    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Remove this listing?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeListing(it.id); go('#exchange-' + cat); } }); } }, '🗑 Remove'),
+    h('button', { class: 'btn ghost', onclick: () => { confirmAction({ title: 'Remove this listing?', confirmLabel: 'Remove', danger: true }).then((ok) => { if (ok) { removeListing(it.id); go(marketRoute(cat)); } }); } }, '🗑 Remove'),
   ]));
   return card;
 }
@@ -201,49 +219,60 @@ function buildBBForm(cat) {
     if (valid && !valid()) { if (firstEl) firstEl.focus(); return; }
     const data = Object.assign(collect(), { city: cityIn.value.trim(), note: noteIn.value.trim(), contact: contactIn.value.trim() });
     addListing({ cat, mine: true, data });
-    go('#exchange-' + cat);
+    go(marketRoute(cat));
   } }, '＋ Post to the board'));
   card.append(h('p', { class: 'tiny muted' }, `Stays on your device until you share its link. ${bbSafety(cat)}`));
   return card;
 }
 
-// The Traveller Board: a backendless bulletin board with category tabs. Cash swap,
-// ride share, stay/room share, kids & baby gear, bikes & gear, and a general bucket.
-export function bulletinScreen(arg) {
-  let cat = BB_CATS.some((c) => c.id === arg) ? arg : 'all';
+// The Market: the on-phone board, sorted by kind. A backendless bulletin board: cash swap, ride
+// share, stay/room share, kids & baby gear, bikes & gear, and a general bucket. `arg` is a kind
+// id from the route (#market-rides); anything else, #market included, shows every listing.
+export function marketScreen(arg) {
+  let kind = marketKind(arg) ? arg : 'all';
+  let itemCat = 'gear';   // which Items category the post form is for
   const wrap = h('div', { class: 'screen' });
-  wrap.append(topbar('Traveller board', '#home'));
+  wrap.append(topbar('Market'));
   wrap.append(h('p', { class: 'lead' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit — post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
   const rates = getRates();
   if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));
 
   // Invite a fellow traveller so the board actually has two sides. Shares the app link to
-  // the board itself — no server, no account; they open it and can post their own listings.
-  wrap.append(shareButton('📣 Invite a traveller to this board', 'Mekonging Traveller Board', () => `${location.origin}${location.pathname}#exchange`, 'btn ghost block'));
+  // the Market itself — no server, no account; they open it and can post their own listings.
+  wrap.append(shareButton('📣 Invite a traveller to this board', 'Mekonging Market', () => `${location.origin}${location.pathname}#market`, 'btn ghost block'));
 
   const chips = h('div', { class: 'chips bb-chips' });
   const formWrap = h('div', {});
   const listWrap = h('div', {});
   wrap.append(chips, formWrap, pasteLinkBox('Paste a board link a traveller sent'), listWrap);
 
+  const chip = (id, label, color, pressed, onpick) => h('button', { class: 'chip bb-chip', dataset: { c: id }, style: color ? `--chip:${color}` : '', 'aria-pressed': pressed ? 'true' : 'false', onclick: onpick }, label);
+
   function repaint() {
+    const def = marketKind(kind);
     chips.innerHTML = '';
-    const mk = (id, label, color) => h('button', { class: 'chip bb-chip', dataset: { c: id }, style: color ? `--chip:${color}` : '', 'aria-pressed': cat === id ? 'true' : 'false', onclick: () => { cat = id; repaint(); } }, label);
-    chips.append(mk('all', '📋 All'));
-    BB_CATS.forEach((c) => chips.append(mk(c.id, `${c.emoji} ${c.label}`, c.color)));
+    chips.append(chip('all', '📋 All', '', kind === 'all', () => { kind = 'all'; repaint(); }));
+    MARKET_KINDS.forEach((k) => chips.append(chip(k.id, `${k.emoji} ${k.label}`, k.color, kind === k.id, () => { kind = k.id; repaint(); })));
 
     formWrap.innerHTML = '';
-    if (cat === 'all') {
+    if (!def) {
       formWrap.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-2)' }, 'Pick a category above to post, or browse everything below.'));
     } else {
+      const cat = def.cats.length > 1 ? itemCat : def.cats[0];
+      if (def.cats.length > 1) {
+        // Items covers three of the board's categories, each with its own post form.
+        const sub = h('div', { class: 'chips bb-chips' });
+        def.cats.forEach((c) => { const m = bbCat(c); sub.append(chip(c, `${m.emoji} ${m.label}`, m.color, itemCat === c, () => { itemCat = c; repaint(); })); });
+        formWrap.append(sub);
+      }
       formWrap.append(h('p', { class: 'muted small', style: 'margin: var(--sp-0h) var(--sp-0h) var(--sp-1h)' }, bbCat(cat).blurb));
       formWrap.append(buildBBForm(cat));
     }
 
     listWrap.innerHTML = '';
     const all = getListings();
-    const items = cat === 'all' ? all : all.filter((x) => x.cat === cat);
-    listWrap.append(h('h2', { class: 'home-section' }, `${cat === 'all' ? 'On your board' : bbCat(cat).label} · ${items.length}`));
+    const items = def ? all.filter((x) => def.cats.includes(x.cat)) : all;
+    listWrap.append(h('h2', { class: 'home-section' }, `${def ? def.label : 'On your board'} · ${items.length}`));
     if (!items.length) listWrap.append(h('p', { class: 'empty' }, 'Nothing here yet. Pick a category to post, or open a link a traveller sends you.'));
     // Let the traveller sweep away their own long-past posts in one tap (backendless tidy).
     const old = items.filter((x) => x.mine && x.ts && (Date.now() - x.ts) > 14 * 86400000);
@@ -254,5 +283,5 @@ export function bulletinScreen(arg) {
     items.forEach((it) => listWrap.append(listingCard(it)));
   }
   repaint();
-  mount(wrap, '#home');
+  mount(wrap, '#market');
 }
