@@ -141,6 +141,8 @@ Sources: supabase.com/pricing, supabase.com/docs/guides/auth/auth-smtp, resend.c
 - Listing cards are anonymous. A display name appears only inside a conversation.
 - The exchange becomes a sixth bottom tab, "Market".
 - The whole exchange is 18+.
+- The Supabase publishable key is committed in `js/market-config.js` (`docs/EXCHANGE.md` §16).
+- M3 tightens the CSP before sign-in tokens exist (`docs/EXCHANGE.md` §16).
 
 ### M0 — Exchange planning session (documents only) — done 2026-10-12, `docs/EXCHANGE.md`
 Write `docs/EXCHANGE.md` with:

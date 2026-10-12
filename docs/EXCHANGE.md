@@ -62,7 +62,7 @@ pg_cron (every minute) ──pg_net──► Edge Function market-push ──►
   | Value | Secret? | Where it lives | Who sets it |
   |---|---|---|---|
   | Project URL | No | `js/market-config.js` | Owner supplies; committed |
-  | Publishable key (`sb_publishable_…`) | No. It is public by design; row-level security protects the data | `js/market-config.js` | Committed (see open decision 1) |
+  | Publishable key (`sb_publishable_…`) | No. It is public by design; row-level security protects the data | `js/market-config.js` | Committed (owner ruling, §16) |
   | Secret key (service role) | Yes | Inside Supabase only; injected into Edge Functions by Supabase | Never leaves Supabase |
   | Resend API key | Yes | Supabase Auth SMTP settings | Owner, in the dashboard |
   | VAPID public key | No | `js/market-config.js` | Committed |
@@ -572,7 +572,7 @@ The old `contact` field is dropped. `note` becomes `body` only if it passes the 
 | **Harassment** | Unwanted or sexual messages; slurs; mass messaging; a fresh account after a block; abusive names; false reports against a victim | Block and report in every thread; text check on messages and names; message limits; review after 3 reporters; report weight only from distinct accounts over 24 hours old; the owner can restore | Evading a block with a new email stays possible, limited by Turnstile, the email quota and new-account limits. Banning by email hash is a question for legal |
 | **Banned goods** (drugs, weapons, wildlife, documents) | Listing them, or coding them in slang | Fixed kinds and categories; block lists in five languages; report reason "drugs"; owner removal; no photos in v1 | New slang; the owner extends the list |
 | **Minors** | Someone under 18 joins meetups or room shares | 18+ confirmation at sign-up; report reason "under 18" sends the account to review | Self-attestation only |
-| **Account takeover, token theft** | A stolen code; script injected into the page | Email-only sign-in; codes expire in 15 minutes; tokens in their own key, never in backups; refresh-token rotation (Supabase default); text-only rendering of remote data; CSP; sign-out clears the device | `localStorage` is readable by any script on the origin. `script-src` still allows unpkg.com and cdn.jsdelivr.net (tesseract); open decision 3 |
+| **Account takeover, token theft** | A stolen code; script injected into the page | Email-only sign-in; codes expire in 15 minutes; tokens in their own key, never in backups; refresh-token rotation (Supabase default); text-only rendering of remote data; CSP; sign-out clears the device | `localStorage` is readable by any script on the origin. Until M3, `script-src` still allows unpkg.com and cdn.jsdelivr.net (tesseract); M3 removes them before tokens exist (§16) |
 | **Email bombing, quota exhaustion** | Requesting codes for a victim's address, or spending the 100 a day | Turnstile; 1 a minute per address; 30 an hour for the project | 100 a day is a low ceiling: a busy day stops new sign-ins, though existing sessions continue |
 | **Scraping** | A signed-in account pages through a city | Sign-in; 50 rows per request; no owner ids; coarse data only | Someone with an account can still read a city's open listings |
 | **Key leakage** | A secret committed or pasted | Only public values in the repo; `check-secrets` guard; GitHub push protection (owner); secrets entered in dashboards by the owner only | Human error in a dashboard |
@@ -609,13 +609,19 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 | M9 | Get legal sign-off on the terms and privacy policy; then set `market_open = true` |
 | M10 | Get legal's written answer on cash swap; then set `cash_open = true` |
 
-## 16. Open decisions (need the owner)
-1. **The publishable key in git.**
-   - The organisation rule bars access keys from commits. A publishable key, however, is a public identifier by design, and RLS, not secrecy, protects the data.
-   - **(a) Recommended:** commit it in `js/market-config.js`, with the guard allowing that prefix in that file only.
-   - **(b)** Inject it at deploy time. That needs a Pages build workflow, and the key is still published on the site.
-2. **The cash-swap amount cap**, and whether cash swap ships at all. This waits on legal.
-3. **Tighten the CSP before tokens exist on the origin.** Recommended in M3: self-host tesseract, or pin its exact URL, so `script-src` can drop unpkg.com and cdn.jsdelivr.net.
+## 16. Decisions
+**Ruled by the owner, 2026-10-12:**
+1. **The publishable key is committed** in `js/market-config.js`.
+   - It is a public identifier by design; RLS, not secrecy, protects the data.
+   - `check-secrets` allows the `sb_publishable_` prefix in that file only.
+   - Deploy-time injection was rejected: it needs a Pages build workflow, and the key would still ship to every browser.
+2. **M3 tightens the CSP before any sign-in token exists on the origin.**
+   - M3 self-hosts tesseract under `lib/`, or pins its exact URL.
+   - `script-src` then drops unpkg.com and cdn.jsdelivr.net.
+   - M3 also checks whether `worker-src` and `connect-src` still need cdn.jsdelivr.net.
+
+**Still open:**
+1. **The cash-swap amount cap**, and whether cash swap ships at all. This waits on legal (§14).
 
 ## 17. Slices
 **How every slice runs:**
@@ -649,7 +655,7 @@ Every key and password stays in a dashboard or a password manager. None goes in 
   - Owner actions for M3 come first.
   - Migration 001: `profiles`, `cities` (seeded), the `private` schema and helpers, `market_join` and `market_delete_account`, and display-name filter terms.
   - The `check-secrets` guard, `js/market-config.js` and `js/market-api.js` (with fixture mode).
-  - Sign-in and account screens, CSP changes, Turnstile, and open decision 3.
+  - Sign-in and account screens, CSP changes, Turnstile, and the CSP tightening in §16 (tesseract self-hosted or pinned; unpkg.com and cdn.jsdelivr.net out of `script-src`).
 - **Done when:**
   - The RLS test prints only PASS, and the Security Advisor shows no errors.
   - At 375 px the signed-out, code-entry, signed-in and offline states render.
