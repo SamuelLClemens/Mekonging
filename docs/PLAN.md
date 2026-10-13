@@ -69,6 +69,7 @@ Other gaps:
 ### D3 — Place photos (one session per country: th 247, vi 202, kh 131, la 163)
 - **Status, Thailand:** PR #109 (`mk-v0.632.0`): 47 photos, so Thailand has 93 of 293. Of the 247 gaps, 186 have no article of their own and 14 have an unusable lead image. Every decision is in `scripts/place-photo-articles.json`.
 - **Status, Vietnam:** PR #110 (`mk-v0.634.0`): 37 photos, so Vietnam has 76 of 241. Of the 202 gaps, 159 have no article of their own and 6 have an unusable lead image. Every decision is in `scripts/place-photo-articles.json`.
+- **Status, Cambodia:** PR #113 (`mk-v0.637.0`): 21 photos, so Cambodia has 54 of 163. The report counted 130 gaps, not 131. Of the 130, 101 have no article of their own and 8 have an unusable or unrepresentative lead image (five with no lead image, one site map, two that do not show the place). Every decision is in `scripts/place-photo-articles.json`.
 - **Expect about 1 in 5:** most gaps are stay clusters, practical cards and food runs with no article. The ~45 MB estimate below assumed every gap filled; Thailand added 3.0 MB and Vietnam 2.3 MB.
 - **Run order:** `fetch-place-photos.py --country <cc>` with `--report`, `--suggest`, a review of the suggestions, `--fetch`, `--sheet`, then `--install` (see `scripts/README.md`).
 - **Licences:** openly licensed only (public domain, CC0, CC BY, CC BY-SA, GFDL). Record the credit verbatim.

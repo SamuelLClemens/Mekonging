@@ -64,7 +64,7 @@ export function connectionKind() {
 // Bytes per tier, from the files themselves. Regenerate after adding or removing a photo or call:
 // python3 scripts/build-pack-sizes.py --write (scripts/check-cache-version.py verifies it).
 // ---- BEGIN GENERATED PACK SIZES — scripts/build-pack-sizes.py ----
-export const PACK_BYTES = { safety: 9539390, guide: 66349357, places: 31282680 };
+export const PACK_BYTES = { safety: 9539390, guide: 66349357, places: 32768293 };
 // ---- END GENERATED PACK SIZES ----
 
 // ---- the manifest ----------------------------------------------------------
