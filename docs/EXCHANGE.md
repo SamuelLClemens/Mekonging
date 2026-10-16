@@ -591,7 +591,7 @@ These questions go to Omer Hanegbi or Omri Siri. This document gives no legal an
    - account deletion;
    - Thailand's PDPA and the data-protection rules of Vietnam, Cambodia and Laos, given storage in Singapore. [M9, launch]
 6. Keeping a hashed email of banned users to stop them signing up again. [after launch]
-7. Whether a self-confirmed 18+ check is enough. [M3]
+7. Whether a self-confirmed 18+ check is enough. [M3] Cleared by legal; reported by the owner on 2026-10-16.
 
 ## 15. Owner actions by slice
 Every key and password stays in a dashboard or a password manager. None goes in the repo or in chat.
@@ -619,6 +619,11 @@ Every key and password stays in a dashboard or a password manager. None goes in 
    - M3 self-hosts tesseract under `lib/`, or pins its exact URL.
    - `script-src` then drops unpkg.com and cdn.jsdelivr.net.
    - M3 also checks whether `worker-src` and `connect-src` still need cdn.jsdelivr.net.
+
+**Ruled by the owner, 2026-10-16:**
+1. **The sign-in email sender is on the root domain:** `Mekonging <signin@mekonging.com>`, as §5 says. Resend verifies `mekonging.com`; a subdomain was the alternative and is not used.
+2. **An iPhone is available** for the M3 sign-in test (home-screen app by code, Safari by link).
+3. **A second person is available as a tester** from M4, for the owner-and-tester checks in M4, M5 and M6.
 
 **Still open:**
 1. **The cash-swap amount cap**, and whether cash swap ships at all. This waits on legal (§14).

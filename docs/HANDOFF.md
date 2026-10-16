@@ -1,7 +1,13 @@
 # Handoff — 2026-10-13 (slice D3, Cambodia)
 
+## Update, 2026-10-16 (documents only)
+- Origin is still at `mk-v0.637.0` and no PR is open. No `js/market-config.js` exists yet.
+- Exchange M3 owner actions: none done as of this date. The owner has the step-by-step walkthrough and will send three public values: the Supabase project URL, the publishable key and the Turnstile site key.
+- Legal cleared question 7 of `docs/EXCHANGE.md` §14 (a self-confirmed 18+ check). The owner reported it; record it in the M3 PR.
+- Owner rulings, recorded in `docs/EXCHANGE.md` §16: the sign-in sender is on the root domain; an iPhone is available for the M3 test; a second person is available as a tester from M4.
+
 ## Shipped
-- Slice D3 for Cambodia: branch `data/d3-photos-kh`, [PR #113](https://github.com/SamuelLClemens/Mekonging/pull/113), `mk-v0.637.0`, commit 32dc9d6. Open: its `guards` check was pending when this was written. Merge it once the check passes.
+- Slice D3 for Cambodia: branch `data/d3-photos-kh`, [PR #113](https://github.com/SamuelLClemens/Mekonging/pull/113), `mk-v0.637.0`, commit 32dc9d6. Merged on 2026-10-13 as a756a52.
   - 21 place photos from each place's own English Wikipedia article. Cambodia has 54 of 163 places with a photo (was 33).
   - The files total 1.6 MB, 61 to 100 KB each. The licences are CC BY and CC BY-SA, with the credit text verbatim.
   - Every decision is in `scripts/place-photo-articles.json`: 23 articles accepted, 8 rejected (listed under `rejected`) and 101 places under `no_article.kh`.
@@ -41,13 +47,13 @@ Headless Chrome over CDP at 375 x 812, Mekong Retro light, fresh profile on `127
   - Pai stays deferred.
 
 ## Open decisions (need the user)
-1. Merge PR #113 once its `guards` check passes. Recommended: yes.
+1. Settled: PR #113 merged on 2026-10-13.
 2. Translation review of "Market", by a native speaker if one is available. Least sure: Korean "마켓" (alternative "장터"), Polish "Targ" (alternative "Rynek"), Turkish "Pazar" (also means Sunday), Filipino "Palengke" (a wet market; alternative "Pamilihan"), Chinese "市场" and "市場" (alternative "市集"), Japanese "マーケット" (alternative "市場").
 3. Is a Meetups-free Market acceptable until M4? Recommended: yes.
 4. Exchange M3 needs the owner actions below before its session. The legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
 
 ## Next session prompts
-Start only after PR #113 has merged. The next releasing slice stacks on `mk-v0.637.0`.
+PR #113 has merged. The next releasing slice stacks on `mk-v0.637.0`.
 
 D3, Laos (recommended next: no owner action needed):
 > Read CLAUDE.md, docs/HANDOFF.md and the D3 section of docs/PLAN.md. Run /slice for slice D3: place photos, Laos (`--country la`, about 163 gaps).
