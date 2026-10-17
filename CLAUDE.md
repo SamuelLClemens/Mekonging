@@ -15,6 +15,8 @@ relevant section of the docs below, not the whole repo.
   `.claude/launch.json`; check the entry exists before relying on it.
 - The in-app browser pane is always `document.hidden`: timers are clamped, `javascript_tool` times out at 30 s, maps
   never paint and layout reads 0. Measure layout and take screenshots with headless Chrome over CDP, not the pane.
+- `fetch-place-photos.py` (`--suggest`, `--fetch`) exits 0 even when curl cannot resolve Wikipedia. Grep its log for
+  `Could not resolve host` and rerun before reviewing (Laos: 68 of 163 lookups failed on the first pass).
 - `gh` is installed and authenticated. `curl`/Python TLS to some hosts fails here (OSRM, Overpass): use curl with a
   descriptive User-Agent.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
