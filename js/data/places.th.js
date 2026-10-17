@@ -142,6 +142,7 @@ export const PLACES_TH = [
   {
     id: 'th-bkk-jay-fai', name: 'Jay Fai', city: 'Bangkok', country: 'th',
     rating: 3.9, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
+    localName: "ร้านเจ๊ไฝ",
     categories: ['food'], budgetTier: 'high',
     kidFriendly: false, isLocal: true, activities: ['street-food'],
     blurb: 'A Michelin-starred street kitchen famous for crab omelettes, cooked over charcoal by a goggle-wearing legend.',
@@ -162,6 +163,7 @@ export const PLACES_TH = [
     access: { stepFree: "yes", note: "Flat paved loop paths throughout (roughly 2.5km main circuit), MRT at the gate, and wheelchair/mobility-scooter rental on site. A Universal-Design 'Green Bridge' elevated walkway (ramps and lifts, slip-resistant surface) connects to Benjakitti Park. Genuinely step-free terrain in the park itself." },
     afterDark: { openAfterDark: true, note: "Own listed hours run to 21:00, well past typical Bangkok dusk; it is a popular evening jogging/exercise spot with security patrols during opening hours, and the roads bordering it (Silom, Ratchadamri, Wireless, Sathorn) stay well-lit and busy into the night — though visitors are advised to keep to well-lit areas rather than isolated spots after dark." },
     rating: 4.5, reviewSources: ['Tripadvisor', 'Google Maps consensus'],
+    localName: "สวนลุมพินี",
     categories: ['nature'], budgetTier: 'low',
     kidFriendly: true, activities: ['walk', 'boating', 'wildlife'],
     blurb: 'A green lung in the heart of the city — lakes, paddle boats, monitor lizards and morning tai chi.',

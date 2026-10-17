@@ -1,0 +1,286 @@
+{
+ "_about": "Reviewed by a person, read by scripts/fetch-local-names.py. <country>: place id -> {name, source}. The name is the source spelling in the local script (NFC, no edge zero-width spaces) and the source is the local-language Wikipedia page or the Wikidata item it came from. Accepted when the article is the place itself or the main venue named in the place card's title. rejected: place id -> why a candidate was refused, so a rerun never offers it again: a surrounding district, province, town or island, an activity, a dish, a different spelling in Wikipedia and Wikidata, or no article of its own.",
+ "th": {
+  "th-ext-mhs-doi-kong-mu": {
+   "name": "วัดพระธาตุดอยกองมู",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B8%98%E0%B8%B2%E0%B8%95%E0%B8%B8%E0%B8%94%E0%B8%AD%E0%B8%A2%E0%B8%81%E0%B8%AD%E0%B8%87%E0%B8%A1%E0%B8%B9"
+  },
+  "th-ext-tham-lod-cave": {
+   "name": "ถ้ำลอด",
+   "source": "https://www.wikidata.org/wiki/Q7709773"
+  },
+  "th-ext-pang-ung-reservoir": {
+   "name": "ปางอุ๋ง",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%9B%E0%B8%B2%E0%B8%87%E0%B8%AD%E0%B8%B8%E0%B9%8B%E0%B8%87"
+  },
+  "th-bkk-jay-fai": {
+   "name": "ร้านเจ๊ไฝ",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%A3%E0%B9%89%E0%B8%B2%E0%B8%99%E0%B9%80%E0%B8%88%E0%B9%8A%E0%B9%84%E0%B8%9D"
+  },
+  "th-ext-similan-islands": {
+   "name": "อุทยานแห่งชาติหมู่เกาะสิมิลัน",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%B8%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%AB%E0%B9%88%E0%B8%87%E0%B8%8A%E0%B8%B2%E0%B8%95%E0%B8%B4%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%AA%E0%B8%B4%E0%B8%A1%E0%B8%B4%E0%B8%A5%E0%B8%B1%E0%B8%99"
+  },
+  "th-bkk-lumpini": {
+   "name": "สวนลุมพินี",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%AA%E0%B8%A7%E0%B8%99%E0%B8%A5%E0%B8%B8%E0%B8%A1%E0%B8%9E%E0%B8%B4%E0%B8%99%E0%B8%B5"
+  },
+  "th-ext-bottle-beach": {
+   "name": "หาดขวด",
+   "source": "https://www.wikidata.org/wiki/Q5636460"
+  },
+  "th-ext-koh-kradan": {
+   "name": "เกาะกระดาน",
+   "source": "https://th.wikipedia.org/wiki/%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B8%94%E0%B8%B2%E0%B8%99"
+  },
+  "th-ext-koh-mak": {
+   "name": "เกาะหมาก",
+   "source": "https://th.wikipedia.org/wiki/%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%AB%E0%B8%A1%E0%B8%B2%E0%B8%81"
+  },
+  "th-ext-mu-ko-lanta-np": {
+   "name": "อุทยานแห่งชาติหมู่เกาะลันตา",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%B8%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%AB%E0%B9%88%E0%B8%87%E0%B8%8A%E0%B8%B2%E0%B8%95%E0%B8%B4%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B9%80%E0%B8%81%E0%B8%B2%E0%B8%B0%E0%B8%A5%E0%B8%B1%E0%B8%99%E0%B8%95%E0%B8%B2"
+  },
+  "th-ext-phu-pha-man": {
+   "name": "อุทยานแห่งชาติภูผาม่าน",
+   "source": "https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%B8%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B8%99%E0%B9%81%E0%B8%AB%E0%B9%88%E0%B8%87%E0%B8%8A%E0%B8%B2%E0%B8%95%E0%B8%B4%E0%B8%A0%E0%B8%B9%E0%B8%9C%E0%B8%B2%E0%B8%A1%E0%B9%88%E0%B8%B2%E0%B8%99"
+  }
+ },
+ "vi": {
+  "vi-ext-bai-tu-long-bay": {
+   "name": "Vịnh Bái Tử Long",
+   "source": "https://vi.wikipedia.org/wiki/V%E1%BB%8Bnh_B%C3%A1i_T%E1%BB%AD_Long"
+  },
+  "vi-ext-cam-thanh-coconut": {
+   "name": "Rừng dừa Bảy Mẫu",
+   "source": "https://vi.wikipedia.org/wiki/R%E1%BB%ABng_d%E1%BB%ABa_B%E1%BA%A3y_M%E1%BA%ABu"
+  },
+  "vi-ext-cantho-cairang-floating-breakfast": {
+   "name": "Chợ nổi Cái Răng",
+   "source": "https://vi.wikipedia.org/wiki/Ch%E1%BB%A3_n%E1%BB%95i_C%C3%A1i_R%C4%83ng"
+  },
+  "vi-ext-cantho-museum": {
+   "name": "Bảo tàng Cần Thơ",
+   "source": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_C%E1%BA%A7n_Th%C6%A1"
+  },
+  "vi-ext-cat-ba-national-park": {
+   "name": "Vườn quốc gia Cát Bà",
+   "source": "https://vi.wikipedia.org/wiki/V%C6%B0%E1%BB%9Dn_qu%E1%BB%91c_gia_C%C3%A1t_B%C3%A0"
+  },
+  "vi-ext-cham-museum": {
+   "name": "Bảo tàng Điêu khắc Chăm Đà Nẵng",
+   "source": "https://vi.wikipedia.org/wiki/B%E1%BA%A3o_t%C3%A0ng_%C4%90i%C3%AAu_kh%E1%BA%AFc_Ch%C4%83m_%C4%90%C3%A0_N%E1%BA%B5ng"
+  },
+  "vi-ext-hai-van-pass": {
+   "name": "Đèo Hải Vân",
+   "source": "https://vi.wikipedia.org/wiki/%C4%90%C3%A8o_H%E1%BA%A3i_V%C3%A2n"
+  },
+  "vi-ext-ho-chi-minh-mausoleum-complex": {
+   "name": "Lăng Chủ tịch Hồ Chí Minh",
+   "source": "https://vi.wikipedia.org/wiki/L%C4%83ng_Ch%E1%BB%A7_t%E1%BB%8Bch_H%E1%BB%93_Ch%C3%AD_Minh"
+  },
+  "vi-ext-hoa-lo-prison-museum": {
+   "name": "Nhà tù Hỏa Lò",
+   "source": "https://vi.wikipedia.org/wiki/Nh%C3%A0_t%C3%B9_H%E1%BB%8Fa_L%C3%B2"
+  },
+  "vi-ext-kim-bong-carpentry": {
+   "name": "Làng mộc Kim Bồng",
+   "source": "https://www.wikidata.org/wiki/Q12061003"
+  },
+  "vi-ext-thanh-ha-pottery": {
+   "name": "Làng Thanh Hà",
+   "source": "https://vi.wikipedia.org/wiki/L%C3%A0ng_Thanh_H%C3%A0"
+  },
+  "vi-ext-titop-island": {
+   "name": "Đảo Ti Tốp",
+   "source": "https://vi.wikipedia.org/wiki/%C4%90%E1%BA%A3o_Ti_T%E1%BB%91p"
+  },
+  "vi-ext-con-dao": {
+   "name": "Côn Đảo",
+   "source": "https://vi.wikipedia.org/wiki/C%C3%B4n_%C4%90%E1%BA%A3o"
+  },
+  "vi-ext-cuc-phuong": {
+   "name": "Vườn quốc gia Cúc Phương",
+   "source": "https://vi.wikipedia.org/wiki/V%C6%B0%E1%BB%9Dn_qu%E1%BB%91c_gia_C%C3%BAc_Ph%C6%B0%C6%A1ng"
+  },
+  "vi-ext-mai-chau": {
+   "name": "Mai Châu",
+   "source": "https://www.wikidata.org/wiki/Q10789924"
+  },
+  "vi-ext-mui-ne-beach": {
+   "name": "Mũi Né",
+   "source": "https://vi.wikipedia.org/wiki/M%C5%A9i_N%C3%A9"
+  },
+  "vi-ext-phong-nha-ke-bang": {
+   "name": "Vườn quốc gia Phong Nha – Kẻ Bàng",
+   "source": "https://vi.wikipedia.org/wiki/V%C6%B0%E1%BB%9Dn_qu%E1%BB%91c_gia_Phong_Nha_%E2%80%93_K%E1%BA%BB_B%C3%A0ng"
+  },
+  "vi-ext-pu-luong": {
+   "name": "Khu bảo tồn thiên nhiên Pù Luông",
+   "source": "https://vi.wikipedia.org/wiki/Khu_b%E1%BA%A3o_t%E1%BB%93n_thi%C3%AAn_nhi%C3%AAn_P%C3%B9_Lu%C3%B4ng"
+  },
+  "vi-ext-tra-su": {
+   "name": "Rừng tràm Trà Sư",
+   "source": "https://vi.wikipedia.org/wiki/R%E1%BB%ABng_tr%C3%A0m_Tr%C3%A0_S%C6%B0"
+  }
+ },
+ "kh": {
+  "kh-ext-banteay-kdei": {
+   "name": "ប្រាសាទបន្ទាយក្តី",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%94%E1%9F%92%E1%9E%9A%E1%9E%B6%E1%9E%9F%E1%9E%B6%E1%9E%91%E1%9E%94%E1%9E%93%E1%9F%92%E1%9E%91%E1%9E%B6%E1%9E%99%E1%9E%80%E1%9F%92%E1%9E%8F%E1%9E%B8"
+  },
+  "kh-ext-neak-pean": {
+   "name": "ប្រាសាទនាគព័ន្ធ",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%94%E1%9F%92%E1%9E%9A%E1%9E%B6%E1%9E%9F%E1%9E%B6%E1%9E%91%E1%9E%93%E1%9E%B6%E1%9E%82%E1%9E%96%E1%9F%90%E1%9E%93%E1%9F%92%E1%9E%92"
+  },
+  "kh-ext-phnom-bakheng": {
+   "name": "ប្រាសាទភ្នំបាខែង",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%94%E1%9F%92%E1%9E%9A%E1%9E%B6%E1%9E%9F%E1%9E%B6%E1%9E%91%E1%9E%97%E1%9F%92%E1%9E%93%E1%9F%86%E1%9E%94%E1%9E%B6%E1%9E%81%E1%9F%82%E1%9E%84"
+  },
+  "kh-ext-pre-rup": {
+   "name": "ប្រាសាទប្រែរូប",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%94%E1%9F%92%E1%9E%9A%E1%9E%B6%E1%9E%9F%E1%9E%B6%E1%9E%91%E1%9E%94%E1%9F%92%E1%9E%9A%E1%9F%82%E1%9E%9A%E1%9E%BC%E1%9E%94"
+  },
+  "kh-ext-preah-khan-angkor": {
+   "name": "ប្រាសាទព្រះខ័ន",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%94%E1%9F%92%E1%9E%9A%E1%9E%B6%E1%9E%9F%E1%9E%B6%E1%9E%91%E1%9E%96%E1%9F%92%E1%9E%9A%E1%9F%87%E1%9E%81%E1%9F%90%E1%9E%93"
+  },
+  "kh-ext-koh-ta-kiev": {
+   "name": "កោះតាកៀវ",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%80%E1%9F%84%E1%9F%87%E1%9E%8F%E1%9E%B6%E1%9E%80%E1%9F%80%E1%9E%9C"
+  },
+  "kh-ext-kompong-luong-floating-village": {
+   "name": "កំពង់លួង",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%80%E1%9F%86%E1%9E%96%E1%9E%84%E1%9F%8B%E1%9E%9B%E1%9E%BD%E1%9E%84"
+  },
+  "kh-ext-pailin-town": {
+   "name": "ក្រុងប៉ៃលិន",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%80%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%84%E1%9E%94%E1%9F%89%E1%9F%83%E1%9E%9B%E1%9E%B7%E1%9E%93%E2%80%8B"
+  },
+  "kh-ext-phnom-penh-central-market-food": {
+   "name": "ផ្សារធំថ្មី",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%95%E1%9F%92%E1%9E%9F%E1%9E%B6%E1%9E%9A%E1%9E%92%E1%9F%86%E1%9E%90%E1%9F%92%E1%9E%98%E1%9E%B8"
+  },
+  "kh-ext-phnom-penh-raffles-le-royal": {
+   "name": "សណ្ឋាគារ ឡឺរ៉ូយ៉ាល់",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%9F%E1%9E%8E%E1%9F%92%E1%9E%8B%E1%9E%B6%E1%9E%82%E1%9E%B6%E1%9E%9A_%E1%9E%A1%E1%9E%BA%E1%9E%9A%E1%9F%89%E1%9E%BC%E1%9E%99%E1%9F%89%E1%9E%B6%E1%9E%9B%E1%9F%8B"
+  },
+  "kh-ext-bamboo-train": {
+   "name": "ណូរី",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%8E%E1%9E%BC%E1%9E%9A%E1%9E%B8"
+  },
+  "kh-ext-bokor-national-park": {
+   "name": "ឧទ្យានជាតិមុនីវង្យបូកគោ",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%A7%E1%9E%91%E1%9F%92%E1%9E%99%E1%9E%B6%E1%9E%93%E1%9E%87%E1%9E%B6%E1%9E%8F%E1%9E%B7%E1%9E%98%E1%9E%BB%E1%9E%93%E1%9E%B8%E1%9E%9C%E1%9E%84%E1%9F%92%E1%9E%99%E1%9E%94%E1%9E%BC%E1%9E%80%E1%9E%82%E1%9F%84"
+  },
+  "kh-ext-kep-national-park": {
+   "name": "ឧទ្យានជាតិកែប",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%A7%E1%9E%91%E1%9F%92%E1%9E%99%E1%9E%B6%E1%9E%93%E1%9E%87%E1%9E%B6%E1%9E%8F%E1%9E%B7%E1%9E%80%E1%9F%82%E1%9E%94"
+  },
+  "kh-ext-koh-tonsay": {
+   "name": "កោះទន្សាយ",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%80%E1%9F%84%E1%9F%87%E1%9E%91%E1%9E%93%E1%9F%92%E1%9E%9F%E1%9E%B6%E1%9E%99"
+  },
+  "kh-ext-virachey": {
+   "name": "ឧទ្យានជាតិវីរៈជ័យ",
+   "source": "https://km.wikipedia.org/wiki/%E1%9E%A7%E1%9E%91%E1%9F%92%E1%9E%99%E1%9E%B6%E1%9E%93%E1%9E%87%E1%9E%B6%E1%9E%8F%E1%9E%B7%E1%9E%9C%E1%9E%B8%E1%9E%9A%E1%9F%88%E1%9E%87%E1%9F%90%E1%9E%99"
+  }
+ },
+ "la": {
+  "la-ext-that-sikhottabong": {
+   "name": "ພະທາດສີໂຄດຕະບອງ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%9E%E0%BA%B0%E0%BA%97%E0%BA%B2%E0%BA%94%E0%BA%AA%E0%BA%B5%E0%BB%82%E0%BA%84%E0%BA%94%E0%BA%95%E0%BA%B0%E0%BA%9A%E0%BA%AD%E0%BA%87"
+  },
+  "la-ext-nong-fa-lake": {
+   "name": "ໜອງຟ້າ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BB%9C%E0%BA%AD%E0%BA%87%E0%BA%9F%E0%BB%89%E0%BA%B2"
+  },
+  "la-ext-wat-si-muang": {
+   "name": "ວັດສີເມືອງ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%A7%E0%BA%B1%E0%BA%94%E0%BA%AA%E0%BA%B5%E0%BB%80%E0%BA%A1%E0%BA%B7%E0%BA%AD%E0%BA%87"
+  },
+  "la-ext-haw-pha-kaeo": {
+   "name": "ຫໍພະແກ້ວ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%AB%E0%BB%8D%E0%BA%9E%E0%BA%B0%E0%BB%81%E0%BA%81%E0%BB%89%E0%BA%A7"
+  },
+  "la-ext-wat-ong-teu": {
+   "name": "ວັດອົງຕື້ມະຫາວິຫານ",
+   "source": "https://www.wikidata.org/wiki/Q7972946"
+  },
+  "la-ext-wat-mai-suwannaphumaham": {
+   "name": "ວັດໃໝ່ສຸວັນນະພູມາ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%A7%E0%BA%B1%E0%BA%94%E0%BB%83%E0%BB%9D%E0%BB%88%E0%BA%AA%E0%BA%B8%E0%BA%A7%E0%BA%B1%E0%BA%99%E0%BA%99%E0%BA%B0%E0%BA%9E%E0%BA%B9%E0%BA%A1%E0%BA%B2"
+  },
+  "la-ext-xe-pian-npa": {
+   "name": "ປ່າສະຫງວນແຫ່ງຊາດເຊປຽນ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%9B%E0%BB%88%E0%BA%B2%E0%BA%AA%E0%BA%B0%E0%BA%AB%E0%BA%87%E0%BA%A7%E0%BA%99%E0%BB%81%E0%BA%AB%E0%BB%88%E0%BA%87%E0%BA%8A%E0%BA%B2%E0%BA%94%E0%BB%80%E0%BA%8A%E0%BA%9B%E0%BA%BD%E0%BA%99"
+  },
+  "la-ext-dong-hua-sao-npa": {
+   "name": "ປ່າສະຫງວນແຫ່ງຊາດດົງຫົວສາວ",
+   "source": "https://www.wikidata.org/wiki/Q19892351"
+  },
+  "la-ext-bokeo-gibbon": {
+   "name": "ປ່າສະຫງວນທຳມະຊາດບໍ່ແກ້ວ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%9B%E0%BB%88%E0%BA%B2%E0%BA%AA%E0%BA%B0%E0%BA%AB%E0%BA%87%E0%BA%A7%E0%BA%99%E0%BA%97%E0%BA%B3%E0%BA%A1%E0%BA%B0%E0%BA%8A%E0%BA%B2%E0%BA%94%E0%BA%9A%E0%BB%8D%E0%BB%88%E0%BB%81%E0%BA%81%E0%BB%89%E0%BA%A7"
+  },
+  "la-ext-namha-trek": {
+   "name": "ປ່າສະຫງວນແຫ່ງຊາດນ້ຳຫ້າ",
+   "source": "https://www.wikidata.org/wiki/Q19893556"
+  },
+  "la-ext-nam-ha-ecotrek": {
+   "name": "ປ່າສະຫງວນແຫ່ງຊາດນ້ຳຫ້າ",
+   "source": "https://www.wikidata.org/wiki/Q19893556"
+  },
+  "la-ext-don-khong-island": {
+   "name": "ດອນໂຂງ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%94%E0%BA%AD%E0%BA%99%E0%BB%82%E0%BA%82%E0%BA%87"
+  },
+  "la-ext-kong-lor": {
+   "name": "ຖ້ຳກອງລໍ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%96%E0%BB%89%E0%BA%B3%E0%BA%81%E0%BA%AD%E0%BA%87%E0%BA%A5%E0%BB%8D"
+  },
+  "la-ext-khone-phapheng": {
+   "name": "ນ້ຳຕົກຕາດຄອນພະເພັງ",
+   "source": "https://lo.wikipedia.org/wiki/%E0%BA%99%E0%BB%89%E0%BA%B3%E0%BA%95%E0%BA%BB%E0%BA%81%E0%BA%95%E0%BA%B2%E0%BA%94%E0%BA%84%E0%BA%AD%E0%BA%99%E0%BA%9E%E0%BA%B0%E0%BB%80%E0%BA%9E%E0%BA%B1%E0%BA%87"
+  }
+ },
+ "rejected": {
+  "th-ext-tham-pla-fish-cave": "the article is the national park; the card is a cave inside it",
+  "th-ext-pha-sua-waterfall": "the article is the national park; the card is a waterfall inside it",
+  "th-ext-mae-sariang-riverside-guesthouses": "the article is the district; the card is a set of guesthouses",
+  "th-ext-ayutthaya-cash-health-safety": "practical card; the cited article is a hospital",
+  "th-bkk-rooftop": "the candidate is a hotel; the card is two rooftop bars",
+  "th-ext-freedom-beach": "no article of its own; the only hit is a film",
+  "th-ext-maya-bay": "the article is the island Ko Phi Phi Le, which contains the bay",
+  "th-ext-phuket-old-town": "the article is the province; the old-town article has no Thai title or label",
+  "th-ext-railay-climbing": "an activity; the article is the beach",
+  "th-ext-sangkhlaburi": "two places, the town and the Mon Bridge; no one article is the card",
+  "th-ext-koh-tao-diving": "an activity; the article is the island",
+  "vi-ext-nho-que-tu-san": "a boat trip over a river and a canyon; the article is the river only",
+  "vi-ext-cat-ba-town-guesthouses": "the article is the island; the card is a set of guesthouses in the town",
+  "vi-ext-cat-co-beaches": "the article is the island; the card is its beaches",
+  "vi-ext-hospital-cave-cat-ba": "the article is the island; the card is a cave on it",
+  "vi-ext-hanoi-onward-travel": "practical card; the cited article is a railway station",
+  "vi-ext-hcmc-transport": "practical card; the cited article is a metro line",
+  "vi-ext-hue-practical": "practical card; the cited article is a hospital",
+  "vi-hcmc-rooftop-bar-saigon": "the card is rooftop bars; the cited article is a tower with a Latin title",
+  "vi-ext-bai-sao": "no article of its own; the only hit is a pirate",
+  "vi-ext-doc-let": "no article of its own",
+  "vi-ext-lang-co-beach": "the article is the commune Chân Mây – Lăng Cô",
+  "vi-ext-muong-hoa-valley": "the article is the town of Sa Pa",
+  "vi-ext-pongour": "the article is the district",
+  "vi-ext-vung-tau-back-beach": "the article is the ward or the city of Vũng Tàu",
+  "vi-hanoi-bun-cha-huong-lien": "the article is the dish, not the restaurant",
+  "kh-ext-banteay-chhmar": "the Khmer article is the commune, not the temple",
+  "kh-ext-koh-rong-samloem": "Wikipedia and Wikidata spell it differently",
+  "kh-ext-sea-forest-viewpoint": "the article is the town of Sen Monorom",
+  "kh-siemreap-cuisine-wat-damnak": "the card is a restaurant; the article is the pagoda",
+  "kh-siemreap-tonle-sap-floating": "the article is the commune and its Khmer title carries a disambiguator",
+  "la-ext-nakai-nam-theun-reservoir": "the article is the dam, not the reservoir or the plateau",
+  "la-ext-paksan-riverfront": "the article is the province",
+  "la-ext-thakhek-french-quarter": "the article is the town",
+  "la-ext-plain-of-jars-1": "the article covers every site, and Wikipedia and Wikidata spell the Lao name differently",
+  "la-ext-vieng-xai-caves": "the Lao article is the district, not the caves",
+  "la-lpb-night-market": "the article is the city"
+ }
+}

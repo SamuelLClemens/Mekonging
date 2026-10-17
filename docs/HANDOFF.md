@@ -1,31 +1,29 @@
-# Handoff — 2026-10-17 (slice D3, Laos)
+# Handoff — 2026-10-17 (slice D4, local names)
 
 ## Shipped
-- Slice D3 for Laos: branch `data/d3-photos-la`, [PR #115](https://github.com/SamuelLClemens/Mekonging/pull/115), `mk-v0.638.0`, commit 3b1845c. Open: its `guards` check passed on 3b1845c, and the docs commit that follows re-runs it.
-  - 17 place photos from each place's own English Wikipedia article. Laos has 39 of 185 places with a photo (was 22).
-  - The files total 1.1 MB, 50 to 67 KB each. The licences are CC0, public domain, CC BY and CC BY-SA, with the credit text verbatim.
-  - Every decision is in `scripts/place-photo-articles.json`: 17 accepted, 10 rejected (seven articles with no lead image, three images looked at and refused) and 136 places under `no_article.la`.
-- D3 is closed. All four countries are reviewed: 262 of 882 places have a photo (29.7%). Each of the 620 gaps is filed under `no_article` (582: th 186, vi 159, kh 101, la 136) or `rejected` (38: th 14, vi 6, kh 8, la 10).
-- Docs PR #114 (`11153d4`, merged as 691c167): legal cleared question 7 of `docs/EXCHANGE.md` §14 (the self-confirmed 18+ check, reported by the owner on 2026-10-16), and §16 records the owner rulings (sign-in sender on the root domain, an iPhone for the M3 test, a second person as tester from M4).
-- Branch housekeeping, 2026-10-17 (no commit): every merged branch and worktree was deleted, 181 local and 101 on GitHub. Only `feat/scaffold-bangkok-slice` remains locally. On GitHub, `fix/transport-leaving-reverse` stays: its one extra commit is an empty merge of PR #96 that git does not count as merged.
+- Slice D4: branch `data/d4-local-names`, [PR #116](https://github.com/SamuelLClemens/Mekonging/pull/116), `mk-v0.639.0`, commit e003010. Open: its `guards` check was running on e003010, and the docs commit that follows re-runs it.
+  - 59 `localName` values, so 370 of 882 places have one (was 311): th 129 to 140, vi 97 to 116, kh 56 to 71, la 29 to 43.
+  - Each name is the local-language Wikipedia title, or the Wikidata label where there is no local page, of the place's reviewed English article. It is in native script only, with no romanisation. The source URL of every name is in `scripts/local-names.json`, with 37 refused candidates and the reason for each.
+  - New tool `scripts/fetch-local-names.py` (`--report`, `--suggest`, `--install`), documented in `scripts/README.md`. `--suggest` exits 1 when a lookup fails; `--install` copies each record's own key style.
+- D3 is closed and merged: PR #115 (`mk-v0.638.0`, merged as 7080ac5). 262 of 882 places have a photo.
+- Docs PR #114 (merged as 691c167): legal cleared question 7 of `docs/EXCHANGE.md` §14, and §16 records the owner rulings (sign-in sender on the root domain, an iPhone for the M3 test, a second person as tester from M4).
 
 ## Verified
 Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from the worktree. The page theme was seeded light.
-- All 17 `#place-<id>` routes show the photo with its credit. Each image decoded (natural width 606 to 800 px), rendered 309 px wide, and the page width equals the 375 px viewport, so there is no horizontal overflow. There were 0 page errors.
-- Ten cards were checked by eye: Pha That Luang, That Dam, Tham Jang, Amantaka, Muang Sing market, Wat Xieng Thong, Mount Phou Si, Nong Fa Lake, Lao National Museum and Wat Mai.
-- Rendered heights at 309 px wide: Pha That Luang 151 px (a 2.1:1 panorama, the thinnest), That Dam 412 px (the tallest, a portrait), Tham Jang 281 px; the rest are 175 to 232 px.
-- Contact sheets of all 20 staged images were viewed. Three were refused: the Bokeo gibbon (a close-up on a plain background, not the reserve or the tour), the Nam Ha cave (the card is a trek and jungle camp) and Chom Ong (250 x 203 px, too small for a 309 px card). The 17 accepted were re-staged and installed.
-- `fetch-place-photos.py --country la --report` after install: 185 places, 39 with a photo, 146 without; of those, 136 have no article of their own, 10 had their image rejected and 0 are unreviewed.
-- A hand check of about 70 guessed Wikipedia titles found one more article (Nong Fa Lake). Most guesses, such as Tad Lo, Wat Visoun, That Ing Hang and the Gibbon Experience, are missing from English Wikipedia.
-- Guards: js-syntax (240 files), imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, place-fields, port-themes and cache-version (manifest matches 246 files; pack sizes match; places pack 32.3 MB) all pass. `jsc -m scripts/validate-jsc.mjs`: 18,038 of 18,038 checks, EXIT 0. `jsc -m` on `js/main.js` and `sw.js` reports only the expected `navigator` and `self` ReferenceErrors, so both parsed.
+- All 59 `#place-<id>` routes show the name exactly as stored, under "Find it". The `lang` attribute is `th`, `vi`, `km` or `lo` by country, the name box is 309 px wide and 28 to 55 px high (the tallest is a Vietnamese name wrapping to two lines), the page has no horizontal overflow and there were 0 page errors.
+- Ten cards were checked by eye: Lumphini Park, Similan Islands, Hải Vân Pass, Phong Nha, Cát Bà, Pre Rup, Le Royal, Bokor, Kong Lor and Wat Ong Teu. All four scripts render with real glyphs and no boxes.
+- `fetch-local-names.py --report` after install: th 140 of 293, vi 116 of 241, kh 71 of 163, la 43 of 185. `check-place-fields.py` reports `localName` 370 of 882. The suggestion passes had 0 failed lookups.
+- The Wikipedia and Wikidata lane was measured before building: of 571 gaps, 68 had an English article reviewed in D3 and 71 more were never reviewed (they had a photo before D3). A person decided each candidate.
+- Guards: js-syntax (240 files), imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, place-fields, port-themes and cache-version (manifest matches 246 files; pack sizes match; places pack 32.3 MB) all pass. `jsc -m scripts/validate-jsc.mjs`: 18,097 of 18,097 checks, EXIT 0 (59 more than before, one per name). `jsc -m` on `js/main.js` and `sw.js` reports only the expected `navigator` and `self` ReferenceErrors, so both parsed.
 
 ## Not done / known issues
 - New in this slice:
-  - The first `--suggest` pass exited 0 but 68 of 163 lookups had failed on DNS (`Could not resolve host`). A rerun was clean. The gotcha is now in `CLAUDE.md`. The script should exit non-zero on a failed lookup; that fix is not done.
-  - Coordinate gaps to check in D5: the That Sikhottabong article is 10.5 km from the card's coordinates, and the Nong Fa Lake article is 28.4 km from the card's.
-  - The Muang Sing market photo is the town article's own lead image (CC BY-SA 4.0). It shows the market itself, with vendors' faces. Say so if you want a photo without a face.
-  - The Mount Phou Si photo is the hill seen across the Mekong on an overcast day, not a view from the summit.
-  - Amantaka is a hotel, shown on a card tagged nightlife and culture.
+  - 512 places still have no `localName` (th 153, vi 125, kh 92, la 142). Most are stay clusters, food runs, rentals and practical cards, which have no single native-script name.
+  - No OpenStreetMap lane. The main Overpass endpoint times out from this machine, a mirror returned HTTP 500 on 10 of 12 queries, and Nominatim found a native-script name for 1 of 12 sight-like places. The gotcha is in `CLAUDE.md`.
+  - The new names are native script only. About three quarters of the older values read "native · romanisation", so cards now mix the two formats. The owner chose native only.
+  - Six cards carry the name of the venue where an activity happens: the Gibbon Experience (`la-ext-bokeo-gibbon`), two Nam Ha trek cards, the Cái Răng breakfast boats, the Central Market food stalls and the Cam Thanh coconut village. The Ho Chi Minh Mausoleum Complex card carries the mausoleum's name.
+  - The Phong Nha – Kẻ Bàng name uses Wikipedia's en dash; Wikidata writes a hyphen.
+  - `fetch-place-photos.py` still exits 0 when lookups fail (the new tool does not). That fix is not done.
 - Carried from the exchange slices and earlier:
   - The top ~3 px of the tab bar show the content scrolled beneath it under the retro stripe. It predates M2.
   - Meetups have no chip until M4. The tab badge for unseen notifications waits for M5.
@@ -36,9 +34,9 @@ Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from
 - Carried from D3 and earlier:
   - Two Vietnamese photos are archival black-and-white images (Museum of Cham Sculpture, Hỏa Lò Prison). The Museum of Cham Sculpture credit reads "Unknown authorUnknown author" (`fetch-place-photos.py` joins two author elements without a space).
   - Eight Vietnamese cards are an activity at a landmark and carry the landmark's own lead image.
-  - The Cambodian Skuon photo shows a smiling vendor holding a bowl of fried spiders. The Tonle Bati photo shows the lake, but the card is "Ta Prohm Temple & Tonle Bati Lake". The article for "Phare Circus" exists but was not fetched; the card is the Battambang school's circus.
+  - The Cambodian Skuon photo shows a smiling vendor, and the Lao Muang Sing market photo shows vendors' faces. The Tonle Bati photo shows the lake, but the card is "Ta Prohm Temple & Tonle Bati Lake". The article for "Phare Circus" exists but was not fetched; the card is the Battambang school's circus.
   - Tall portrait photos render tall, because `.id-photo img` has no height cap (Phanom Rung is 548 px at 375 px wide).
-  - Coordinate gaps to check in D5: Mae Surin Waterfall, Huai Nam Dang viewpoint, Pang Ung.
+  - Coordinate gaps to check in D5: Mae Surin Waterfall, Huai Nam Dang viewpoint, Pang Ung, and the articles for That Sikhottabong (10.5 km from the card) and Nong Fa Lake (28.4 km).
   - Free places print "฿0 (≈ $0)" instead of "Free".
   - On the journey map at 375 px, the credits panel covers about a quarter of the map.
   - Wat Nokor Bachey's blurb gives the wrong date (D5).
@@ -47,22 +45,23 @@ Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from
   - Pai stays deferred.
 
 ## Open decisions (need the user)
-1. Merge PR #115 once the `guards` check on the docs commit passes. Recommended: yes.
-2. Close D3? The Wikipedia lead-image route has no unreviewed places left: 582 of the 620 gaps have no article of their own. More photos would need another source, such as Commons photos found by coordinates, which risks the wrong subject and needs a look at every image. Recommended: close D3 and move to D4.
-3. Translation review of "Market", by a native speaker if one is available. Least sure: Korean "마켓" (alternative "장터"), Polish "Targ" (alternative "Rynek"), Turkish "Pazar" (also means Sunday), Filipino "Palengke" (a wet market; alternative "Pamilihan"), Chinese "市场" and "市場" (alternative "市集"), Japanese "マーケット" (alternative "市場").
-4. Is a Meetups-free Market acceptable until M4? Recommended: yes.
-5. Exchange M3 waits on the owner. As of 2026-10-17 none of the actions below is done, and legal item 7 is cleared. The other legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
+1. Merge PR #116 once the `guards` check on the docs commit passes. Recommended: yes.
+2. Close D4? The 512 remaining places need a source this machine cannot reach reliably. A retry from a GitHub Actions run (where Overpass may answer) would be a new, uncertain slice. Recommended: close D4 and move to D5.
+3. Leave the older "native · romanisation" values as they are? Recommended: yes.
+4. Translation review of "Market", by a native speaker if one is available. Least sure: Korean "마켓" (alternative "장터"), Polish "Targ" (alternative "Rynek"), Turkish "Pazar" (also means Sunday), Filipino "Palengke" (a wet market; alternative "Pamilihan"), Chinese "市场" and "市場" (alternative "市集"), Japanese "マーケット" (alternative "市場").
+5. Is a Meetups-free Market acceptable until M4? Recommended: yes.
+6. Exchange M3 waits on the owner. As of 2026-10-17 none of the actions below is done, and legal item 7 is cleared. The other legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
 
 ## Next session prompts
-Start only after PR #115 has merged. The next releasing slice stacks on `mk-v0.638.0`.
+Start only after PR #116 has merged. The next releasing slice stacks on `mk-v0.639.0`.
 
-D4, local-script names (the next slice in the owner's order; no owner action needed):
-> Read CLAUDE.md, docs/HANDOFF.md and the D4 section of docs/PLAN.md. Run /slice for slice D4: local-script names (about 572 gaps: th 164, vi 144, kh 108, la 156; the `check-place-fields.py` report gives exact counts).
-> First find where `localName` is stored, validated and rendered, and follow the review-file pattern of `scripts/fetch-place-photos.py`. Take each name from the matching local-language Wikipedia title or the OpenStreetMap `name` tag, in native script, and leave the field unset when neither source has the place. After every network pass, grep the log for `Could not resolve host`.
-> Done when: each country's `localName` coverage is reported with its new count, 10 sample cards are checked by eye at 375 px in headless Chrome (Thai, Khmer, Lao and Vietnamese scripts all render, none as boxes), and all guards and `jsc -m scripts/validate-jsc.mjs` pass.
-> Out of scope: photos, citations, the "Free" price display, UI translations.
+D5, citations (the next slice in the owner's order; no owner action needed):
+> Read CLAUDE.md, docs/HANDOFF.md and the D5 section of docs/PLAN.md. Run /slice for slice D5: citations. Measure first with `python3 scripts/check-sources.py` and the `check-place-fields.py` report, then propose a split by country (as D3 did) if one session is too much.
+> Replace the homepage-only place citations (247 at the last count) with the specific page, and add `sources` to the 37 unsourced routes. Lower the baselines in `check-sources.py` to lock in the gain. Fix the coordinate gaps listed in HANDOFF and the Wat Nokor Bachey date while in those records.
+> Done when: the new counts are reported against the baselines, 10 sample cards show their citations at 375 px in headless Chrome, and all guards and `jsc -m scripts/validate-jsc.mjs` pass.
+> Out of scope: photos, local names, the "Free" price display.
 
-Q1, the 375 px audit (documents only, so it does not stack and can run alongside D4):
+Q1, the 375 px audit (documents only, so it does not stack and can run alongside D5):
 > Read CLAUDE.md, docs/HANDOFF.md and the Q1 section of docs/PLAN.md. Run /slice for slice Q1: load every route in `js/nav-groups.js` in headless Chrome at 375 px, in Mekong Retro light and dark, and record horizontal overflow, controls under 44 x 44 px, console errors, contrast failures and controls covered by overlays in `docs/AUDIT_375.md`.
 > Out of scope: fixing what it finds.
 

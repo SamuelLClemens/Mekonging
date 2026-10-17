@@ -19,6 +19,8 @@ relevant section of the docs below, not the whole repo.
   `Could not resolve host` and rerun before reviewing (Laos: 68 of 163 lookups failed on the first pass).
 - `gh` is installed and authenticated. `curl`/Python TLS to some hosts fails here (OSRM, Overpass): use curl with a
   descriptive User-Agent.
+- Overpass is unreliable from this machine: overpass-api.de times out and a mirror returned HTTP 500 on 10 of 12 queries.
+  Nominatim name search found a native-script name for 1 of 12 places. Test an OSM lane on a dozen places before planning one.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
 
 ## Branches and delivery
@@ -63,6 +65,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - `js/data/` holds the datasets (places per country, routes, firstaid, emergency numbers, islands). Data for a route is
   lazy: a screen that reads it must be listed in `NEEDS_COUNTRY_DATA` in main.js or it shows a false empty state on a
   deep link. `check-lazy-data` enforces it.
+- Place records mix JS keys (`name:`) and JSON-style quoted keys (`"name":`; all 97 of those are in the `.ext.js` files).
+  A regex or an edit written for one style silently misses the other; `scripts/fetch-local-names.py` handles both.
 - `js/nav-groups.js` is the single manifest for feature navigation; every feature has one label and one home.
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
