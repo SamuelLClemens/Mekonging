@@ -117,6 +117,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-mu-ko-lanta-np", name: "Mu Ko Lanta National Park (Cape & Lighthouse Trail)", city: "Koh Lanta", country: "th",
     access: { stepFree: "no", note: "The cape/lighthouse nature trail is a steep, eroded ~1.7km loop; the first ~400m is very steep with ropes and tree roots and further sections have stairs, so the headland and lighthouse are reached only by steps and steep unpaved paths, not wheelable." },
+    localName: "อุทยานแห่งชาติหมู่เกาะลันตา",
     categories: ["park", "nature", "viewpoint", "beach", "hike"], budgetTier: "mid",
     blurb: "Koh Lanta's southern tip: a white lighthouse, a quiet beach, resident monitor lizards and macaques, and a forest nature trail with a viewpoint over Cape Tanote — a noted bird-watching route.",
     whyItFits: "For nature lovers wanting the island's calmest, most scenic corner. Combine a swim, a short loop hike and a picnic well away from the resort strip.",
@@ -165,6 +166,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-phu-pha-man", name: "Phu Pha Man National Park (Tat Yai Waterfall & caves)", city: "Khon Kaen", country: "th",
     access: { stepFree: "no", note: "Reaching the 80m Tat Yai Waterfall means descending steep stairs with rails, then ladders and a rope down cliffs to lower levels; terrain is steep and slippery, unusable for a wheelchair." },
+    localName: "อุทยานแห่งชาติภูผาม่าน",
     categories: ["park", "waterfall", "nature", "hike"], budgetTier: "mid",
     blurb: "A rarely-touristed Isan park of steep limestone cliffs, caves and waterfalls about 100 km west of Khon Kaen, including the 80 m Tat Yai falls and a famous evening exodus of bats from Khang Khao Cave.",
     whyItFits: "For independent travellers wanting genuine off-the-beaten-track nature in the northeast — dramatic scenery with almost no foreign crowds. Best in the green season for full waterfalls.",
@@ -324,6 +326,7 @@ export const PLACES_TH_EXT = [
   {
     id: "th-ext-similan-islands", name: "Similan Islands National Park", city: "Khao Lak", country: "th",
     access: { stepFree: "no", note: "Access is a 1.5-2h speedboat only, boarding via wet piers and beaches; on-island paths are soft sand and rough boardwalk. Multiple operators explicitly state the tours are not wheelchair accessible (and exclude PWDs and several medical conditions)." },
+    localName: "อุทยานแห่งชาติหมู่เกาะสิมิลัน",
     categories: ["nature", "beach", "park"], budgetTier: "high",
     blurb: "An Andaman archipelago of granite boulders, powder-white sand and clear water ranked among the world's top dive and snorkel destinations, reached by speedboat from Khao Lak or Phuket.",
     whyItFits: "For divers and snorkellers chasing the clearest water in the region. Note the park closes annually to let the reefs recover.",
@@ -368,6 +371,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-koh-mak", name: "Koh Mak", city: "Trat", country: "th",
+    localName: "เกาะหมาก",
     categories: ["beach", "nature"], budgetTier: "mid",
     blurb: "A small, palm-and-rubber-plantation island in the far-eastern Trat archipelago, deliberately developed low-key by its landowning families: no high-rises, quiet white-sand bays, clear water and a designated low-carbon tourism ethos.",
     whyItFits: "For travellers wanting a peaceful, eco-minded island with bicycle-friendly lanes and snorkelling, away from the party scene of the bigger islands.",
@@ -397,6 +401,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-koh-kradan", name: "Koh Kradan", city: "Trang", country: "th",
+    localName: "เกาะกระดาน",
     categories: ["beach", "nature"], budgetTier: "mid",
     lifeguard: "no", swim: "Shallow, calm and clear water; no patrol and few facilities.", jellyfish: "Box jellyfish are present in the region though rarely reported; more likely after heavy rain.",
     blurb: "A slender, low-development island in the Trang archipelago with powder-white sand, shallow turquoise water and a snorkelable reef just offshore, repeatedly rated among the worlds best beaches.",
@@ -427,6 +432,7 @@ export const PLACES_TH_EXT = [
   },
   {
     id: "th-ext-bottle-beach", name: "Bottle Beach (Haad Khuat)", city: "Koh Phangan", country: "th",
+    localName: "หาดขวด",
     categories: ["beach", "nature"], budgetTier: "low",
     lifeguard: "no", swim: "Remote north-Phangan bay with no patrol; generally gentle water, but you are far from help.", jellyfishMonths: [7,8,9,10], jellyfish: "Potentially fatal box jellyfish (Chironex) are documented around Koh Phangan and Koh Samui; recorded stings peak in the July-October wet season and after rain. Douse a sting with vinegar and get medical help fast.",
     blurb: "A remote north-coast bay on Koh Phangan, backed by jungle hills and reached only by boat taxi or a rugged trail, offering a peaceful contrast to the islands full-moon party scene.",
@@ -2784,6 +2790,7 @@ export const PLACES_TH_EXT = [
     "country": "th",
     "kidFriendly": true,
     "recognition": "Twin white Shan-style chedis on a hilltop directly west of town, floodlit at night and reached by a steep switchback road; the terrace gives the widest view over Mae Hong Son and its airstrip.",
+    "localName": "วัดพระธาตุดอยกองมู",
     "categories": [
       "temple",
       "viewpoint"
@@ -2828,6 +2835,7 @@ export const PLACES_TH_EXT = [
     "country": "th",
     "kidFriendly": true,
     "recognition": "A vast river cave near Soppong where a local guide leads you in by gas lantern and you cross the underground Nam Lang stream on a bamboo raft; at dusk clouds of swifts pour in as bats stream out of the mouth.",
+    "localName": "ถ้ำลอด",
     "categories": [
       "cave",
       "nature",
@@ -2916,6 +2924,7 @@ export const PLACES_TH_EXT = [
     "country": "th",
     "kidFriendly": true,
     "recognition": "A small pine-fringed reservoir near the Myanmar border where dawn mist rises off still water and rows of planted pines reflect - the reason it is nicknamed the 'Switzerland of Thailand'.",
+    "localName": "ปางอุ๋ง",
     "categories": [
       "nature",
       "viewpoint",

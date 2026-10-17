@@ -73,6 +73,7 @@ export const PLACES_LA_EXT = [
       { site: "Tripadvisor", score: 4.5, scale: 5, count: 352, url: "https://www.tripadvisor.com/Attraction_Review-g10138992-d2306807-Reviews-Kong_Lor_Cave-Phoun_Hin_Boun_Khammouane_Province.html", asOf: "2026-07" },
     ],
     recognition: 'A cave mouth at the end of Ban Kong Lor village where longtail boats enter a 7.5 km river tunnel bored by the Nam Hin Bun through a limestone mountain.',
+    localName: "ຖ້ຳກອງລໍ",
     categories: ["nature", "park"], budgetTier: "mid",
     blurb: "A 7.5 km river cave on the Thakhek Loop where a longtail boat motors you through a vast pitch-black limestone tunnel carved by the Nam Hin Bun, emerging into daylight at the far end. The cathedral-scale chambers and underground river are among Southeast Asia's most extraordinary cave experiences.",
     whyItFits: "The natural highlight of the Thakhek Loop and worth the detour for anyone in central Laos, even without a motorbike. Set within the Phou Hin Boun protected area.",
@@ -150,6 +151,7 @@ export const PLACES_LA_EXT = [
       { site: "Tripadvisor", score: 4.3, scale: 5, count: 256, url: "https://www.tripadvisor.com/Attraction_Review-g1015968-d7653889-Reviews-Khone_Phapheng_Falls-Don_Khong_Champasak_Province.html", asOf: "2026-07" },
     ],
     recognition: 'Near the Cambodian border, a broad thundering wall of Mekong rapids and cascades viewed from riverside platforms in a fenced park reached from Ban Nakasang.',
+    localName: "ນ້ຳຕົກຕາດຄອນພະເພັງ",
     categories: ["waterfall", "nature", "viewpoint"], budgetTier: "low",
     blurb: "The most powerful waterfall on the Mekong and, by volume, the largest in Southeast Asia: a vast set of rapids and cascades crashing across the river near the Cambodian border. Viewing platforms and a riverside park let you feel the sheer force up close.",
     whyItFits: "For anyone in the 4000 Islands who wants raw natural spectacle. It is a short trip from Nakasang or the islands and pairs naturally with a Don Khon cycling day.",
@@ -254,6 +256,7 @@ export const PLACES_LA_EXT = [
   {
     id: "la-ext-bokeo-gibbon", name: "The Gibbon Experience (Bokeo Nature Reserve)", city: "Huay Xai", country: "la",
     access: { stepFree: "no", note: "The multi-day activity is a steep, muddy jungle trek on earth-cut steps plus zipline platforms reached only on foot; the operator advises good fitness, making it unfeasible for wheelchair users." },
+    localName: "ປ່າສະຫງວນທຳມະຊາດບໍ່ແກ້ວ",
     categories: ["nature", "hike", "park"], budgetTier: "high",
     blurb: "A multi-day conservation adventure in the Bokeo Nature Reserve where you trek through forest, zip-line between giant trees and sleep in the world's highest tree-houses, listening for the dawn calls of wild black-crested gibbons.",
     whyItFits: "For active travellers wanting a once-in-a-trip jungle experience that directly funds gibbon and forest protection. Two- and three-day options exist.",
@@ -283,6 +286,7 @@ export const PLACES_LA_EXT = [
 {
     id: "la-ext-nam-ha-ecotrek", name: "Nam Ha Protected Area Eco-Trek", city: "Luang Namtha", country: "la",
     access: { stepFree: "no", note: "A 10-15km guided jungle trek with steep climbs, muddy riverbanks and rocky ridges on unbuilt forest paths; there is no made-up trail, so it is not navigable by wheelchair." },
+    localName: "ປ່າສະຫງວນແຫ່ງຊາດນ້ຳຫ້າ",
     categories: ["nature", "hike", "park"], budgetTier: "mid",
     blurb: "A pioneering community-based trekking programme in the Nam Ha protected area of the far north, where licensed local guides lead one to three day hikes through forest to Akha, Khmu and Lanten villages, with overnights in community lodges.",
     whyItFits: "For travellers who want responsible jungle trekking and genuine hill-village encounters, with fees shared among the host communities.",
@@ -460,6 +464,7 @@ export const PLACES_LA_EXT = [
   },
   {
     id: "la-ext-namha-trek", name: "Nam Ha NPA trek & jungle camp (Luang Namtha)", city: "Luang Namtha", country: "la",
+    localName: "ປ່າສະຫງວນແຫ່ງຊາດນ້ຳຫ້າ",
     categories: ["stay", "camping", "nature"], budgetTier: "mid",
     kidFriendly: true, stayType: "tent", stayDuration: "short",
     activities: ["trekking", "jungle", "camping", "kayaking", "wildlife", "village-visit"],
@@ -1009,6 +1014,7 @@ export const PLACES_LA_EXT = [
     city: "Si Phan Don",
     country: "la",
     recognition: "A broad flat Mekong island with two main villages (Muang Khong and Muang Saen), a riverfront lined with older shophouses and a modern bridge linking it to the mainland.",
+    localName: "ດອນໂຂງ",
     categories: ["nature", "stay", "culture"],
     budgetTier: "low",
     blurb: "The largest island in the 4000 Islands and the most laid-back, with sleepy riverside villages, old French-era buildings and quiet lanes ideal for cycling between rice paddies and temples. It offers a calmer, more local alternative to backpacker-heavy Don Det and Don Khon.",
@@ -2289,6 +2295,7 @@ export const PLACES_LA_EXT = [
     "city": "Thakhek",
     "country": "la",
     "recognition": "A gleaming white-and-gold lotus-bud stupa standing alone on the Mekong bank about 6 km south of Thakhek, its four-sided base ringed by a walled temple compound.",
+    "localName": "ພະທາດສີໂຄດຕະບອງ",
     "categories": [
       "temple",
       "culture",
@@ -2922,6 +2929,7 @@ export const PLACES_LA_EXT = [
     "city": "Attapeu",
     "country": "la",
     "recognition": "A near-circular, startlingly sky-blue crater lake ringed by forest high in the Dong Ampham conservation area of far north-east Attapeu, close to the Vietnamese border.",
+    "localName": "ໜອງຟ້າ",
     "categories": [
       "lake",
       "nature",
@@ -3513,6 +3521,7 @@ export const PLACES_LA_EXT = [
     "city": "Kiet Ngong",
     "country": "la",
     "recognition": "A vast lowland forest-and-wetland reserve southeast of Pakse, entered via Kiet Ngong or Ban Phapho, with guided walking trails, dry dipterocarp forest and dawn birdsong.",
+    "localName": "ປ່າສະຫງວນແຫ່ງຊາດເຊປຽນ",
     "categories": [
       "nature",
       "wildlife",
@@ -3569,6 +3578,7 @@ export const PLACES_LA_EXT = [
     "city": "Pakse",
     "country": "la",
     "recognition": "Waterfall-cut forest on the Bolaven Plateau's southwest escarpment, experienced on Green Discovery's multi-day circuit of canopy ziplines, a via ferrata by a falls, and forest treehouses.",
+    "localName": "ປ່າສະຫງວນແຫ່ງຊາດດົງຫົວສາວ",
     "categories": [
       "nature",
       "adventure",
@@ -3891,6 +3901,7 @@ export const PLACES_LA_EXT = [
     "city": "Vientiane",
     "country": "la",
     "recognition": "A busy, living temple at the east end of Setthathirath Road, marked by a gilded seated Buddha out front and a constant stream of locals bringing marigolds, incense and offerings to the city's guardian pillar inside.",
+    "localName": "ວັດສີເມືອງ",
     "categories": [
       "temple",
       "culture",
@@ -3945,6 +3956,7 @@ export const PLACES_LA_EXT = [
     "city": "Vientiane",
     "country": "la",
     "recognition": "A single ornate former royal temple raised on a terraced stone platform in a walled garden, its outer gallery lined with bronze Buddha images, standing directly across Setthathirath Road from Wat Sisaket.",
+    "localName": "ຫໍພະແກ້ວ",
     "categories": [
       "temple",
       "museum",
@@ -4044,6 +4056,7 @@ export const PLACES_LA_EXT = [
     "city": "Vientiane",
     "country": "la",
     "recognition": "A large working monastery on Setthathirath Road, named for the heavy bronze 'weighty Buddha' inside its hall, and home to one of the country's main Buddhist teaching centres with young monks often studying in the grounds.",
+    "localName": "ວັດອົງຕື້ມະຫາວິຫານ",
     "categories": [
       "temple",
       "culture",
@@ -4151,6 +4164,7 @@ export const PLACES_LA_EXT = [
     "city": "Luang Prabang",
     "country": "la",
     "recognition": "A five-tiered red-and-gold roofed temple on Sisavangvong Road right beside the Royal Palace Museum, its front veranda covered in gilded relief panels depicting the Ramayana and village life.",
+    "localName": "ວັດໃໝ່ສຸວັນນະພູມາ",
     "categories": [
       "temple",
       "culture",

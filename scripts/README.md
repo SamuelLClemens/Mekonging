@@ -116,3 +116,12 @@ right ones in `place-photo-articles.json`, `--fetch` stages the lead images (ope
 about 800 px and 60 KB), `--sheet` makes contact sheets so every image is looked at, and
 `--install` writes the accepted ones to `img/places/` and `js/data/photos.js`. Then run
 `build-pack-sizes.py --write`. `--report` gives a country's coverage.
+
+`fetch-local-names.py` fills a place's `localName` (plan slice D4). It starts from the English
+article already reviewed for the place (`place-photo-articles.json`, or a page the record cites,
+or the top search hits for places never reviewed), asks Wikipedia for that article's title in the
+country's own language and Wikidata for its label, and a person records the right ones in
+`local-names.json` with their source. `--suggest` exits 1 if any lookup failed, because a failed
+lookup looks like "no local name". `--install` inserts each accepted name before the record's
+`categories` line, in the record's own key style (the place files mix JS keys and quoted keys).
+Then bump the version and run `build-pack-sizes.py --write` and `build-sw-manifest.py --write`.

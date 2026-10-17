@@ -90,6 +90,7 @@ export const PLACES_VI_EXT = [
     externalRatings: [
       { site: "Tripadvisor", score: 4.1, scale: 5, count: 218, url: "https://www.tripadvisor.com/Attraction_Review-g303945-d8779716-Reviews-Cuc_Phuong_National_Park-Ninh_Binh_Ninh_Binh_Province.html", asOf: "2026-07" },
     ],
+    localName: "Vườn quốc gia Cúc Phương",
     categories: ["park", "nature", "hike"], budgetTier: "low",
     blurb: "Vietnam's oldest national park (established 1962), a 22,000-hectare swathe of ancient limestone rainforest with a thousand-year-old tree, prehistoric caves and respected primate and turtle rescue centres.",
     whyItFits: "For wildlife-minded travellers who want a quiet, genuinely wild counterpoint to Ninh Binh's boat-tour circuit. Stay overnight to catch the dawn forest and the firefly season in late spring.",
@@ -170,6 +171,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-tra-su", name: "Tra Su Cajuput Forest", city: "An Giang", country: "vi",
     access: { stepFree: "partial", note: "Entrance and road access are flat, but the signature sampan leg needs a step-down transfer into a small low rowing boat, the elevated bamboo-plank walkway is uneven, and the observation watchtower is reached only by stairs." },
+    localName: "Rừng tràm Trà Sư",
     categories: ["nature", "park"], budgetTier: "low",
     blurb: "A flooded melaleuca (cajuput) forest in An Giang where rowing boats glide along emerald, duckweed-carpeted canals beneath a dense green canopy — a haven for storks, egrets and other waterbirds.",
     whyItFits: "For nature lovers and photographers wanting the Mekong Delta's most otherworldly, low-key landscape. The flooded-forest season (roughly September-November) is the most striking.",
@@ -219,6 +221,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-phong-nha-ke-bang", name: "Phong Nha-Ke Bang National Park", city: "Phong Nha", country: "vi",
     access: { stepFree: "partial", note: "Spread-out park: only the Phong Nha Cave boat is semi-feasible, and only if you can transfer into a low longtail; Paradise Cave, Tien Son (330+ steps) and the jungle/karst trails all involve unavoidable stairs and rough terrain." },
+    localName: "Vườn quốc gia Phong Nha – Kẻ Bàng",
     categories: ["nature", "park", "hike"], budgetTier: "mid",
     blurb: "A UNESCO karst park honeycombed with some of the planet's largest caves, from the boat-accessed Phong Nha Cave to the vast Paradise and Dark caves and, for funded expeditions, the record-breaking Son Doong.",
     whyItFits: "For caving and outdoors travellers; ranges from easy boat-cave visits to multi-day adventure treks, all from the laid-back village of Phong Nha.",
@@ -303,6 +306,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-pu-luong", name: "Pu Luong Nature Reserve", city: "Thanh Hoa", country: "vi",
+    localName: "Khu bảo tồn thiên nhiên Pù Luông",
     categories: ["nature", "hike", "viewpoint"], budgetTier: "low",
     blurb: "A serene reserve of cascading rice terraces, bamboo water-wheels, stilt-house hamlets and limestone ridges, where Thai and Muong communities run homestays and eco-lodges. A quieter, greener alternative to the northern hill towns.",
     whyItFits: "For travellers wanting authentic village homestays, gentle treks between hamlets and terraced-valley views without Sapa crowds.",
@@ -318,6 +322,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-mai-chau", name: "Mai Chau Valley", city: "Mai Chau", country: "vi",
     access: { stepFree: "partial", note: "Flat valley floor and some paved village lanes (Lac, Pom Coong) are rollable, but paths are largely narrow dirt tracks and the traditional stilt-house homestays sit 2-3m off the ground, reached by steps or ladders." },
+    localName: "Mai Châu",
     categories: ["culture", "nature"], budgetTier: "low",
     blurb: "A broad green valley of paddy fields ringed by hills, home to White Thai communities whose traditional stilt houses double as welcoming homestays. Evenings bring home-cooked food, rice wine and folk dancing.",
     whyItFits: "For travellers wanting an easy, friendly introduction to ethnic-minority village life and cycling among rice fields, within a half-day of Hanoi.",
@@ -366,6 +371,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-con-dao", name: "Con Dao Islands", city: "Ba Ria-Vung Tau", country: "vi",
     access: { stepFree: "partial", note: "Con Son town is flat, small and grid-laid so rolling around town and reaching the centrally located prison complex is feasible, but historic cell blocks have raised thresholds and the best beaches require crossing soft sand or jungle paths." },
+    localName: "Côn Đảo",
     categories: ["beach", "nature", "culture"], budgetTier: "high",
     blurb: "A remote, forested archipelago of empty beaches, coral reefs and nesting sea turtles, layered with a sombre history of colonial-era prisons. Reached by short flight or ferry.",
     whyItFits: "For travellers wanting pristine, near-deserted beaches and diving combined with poignant history.",
@@ -1072,6 +1078,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-cantho-cairang-floating-breakfast", name: "Cai Rang Floating Market Breakfast Boats", city: "Can Tho", country: "vi",
+    localName: "Chợ nổi Cái Răng",
     categories: ["food", "market"], budgetTier: "low",
     isLocal: true,
     kidFriendly: true,
@@ -2313,6 +2320,7 @@ export const PLACES_VI_EXT = [
     "city": "Da Nang",
     "country": "vi",
     "recognition": "A mustard-yellow French-colonial pavilion at the western foot of Dragon Bridge by the Han River, its open galleries and garden crowded with sandstone Hindu-Buddhist carvings.",
+    "localName": "Bảo tàng Điêu khắc Chăm Đà Nẵng",
     "categories": [
       "museum",
       "culture",
@@ -2370,6 +2378,7 @@ export const PLACES_VI_EXT = [
     "city": "Da Nang",
     "country": "vi",
     "recognition": "A 21km ribbon of hairpins climbing a cloud-wreathed mountain spur between Da Nang and Lang Co, topped at ~500m by the weathered stone gate of Hai Van Quan and old concrete bunkers.",
+    "localName": "Đèo Hải Vân",
     "categories": [
       "viewpoint",
       "nature",
@@ -2638,6 +2647,7 @@ export const PLACES_VI_EXT = [
     "city": "Hoi An",
     "country": "vi",
     "recognition": "A maze of water-coconut (nipa) palms on Hoi An's eastern edge where round bamboo basket boats spin tourists through the channels; look for the row of boat-launch jetties off the Cua Dai road.",
+    "localName": "Rừng dừa Bảy Mẫu",
     "categories": [
       "nature",
       "activity",
@@ -2692,6 +2702,7 @@ export const PLACES_VI_EXT = [
     "city": "Hoi An",
     "country": "vi",
     "recognition": "A 500-year-old riverside potters' hamlet west of Hoi An where you can spin a foot-powered wheel; the quirky Thanh Ha Terracotta Park with its miniature world monuments sits right beside it.",
+    "localName": "Làng Thanh Hà",
     "categories": [
       "village",
       "craft",
@@ -2797,6 +2808,7 @@ export const PLACES_VI_EXT = [
     "city": "Hoi An",
     "country": "vi",
     "recognition": "A woodworking hamlet on Cam Kim island across the Thu Bon from Hoi An's Old Town, reached by a short boat or the newer bridge, where craftsmen carve furniture, doors and wooden boats.",
+    "localName": "Làng mộc Kim Bồng",
     "categories": [
       "village",
       "craft",
@@ -3063,6 +3075,7 @@ export const PLACES_VI_EXT = [
     "city": "Cat Ba",
     "country": "vi",
     "recognition": "A forested limestone massif in the middle of Cat Ba Island; the trailhead sits by the park headquarters at Trung Trang, and the Kim Giao-Ngu Lam path ends at a rusty steel watchtower on a jungle peak with a 360-degree view over the karsts.",
+    "localName": "Vườn quốc gia Cát Bà",
     "categories": [
       "nature",
       "viewpoint",
@@ -3434,6 +3447,7 @@ export const PLACES_VI_EXT = [
     "city": "Ha Long",
     "country": "vi",
     "recognition": "A pyramid-shaped islet in Ha Long Bay with a small arc of beach at its base and a long staircase climbing to a hilltop platform that frames the bay's classic postcard panorama.",
+    "localName": "Đảo Ti Tốp",
     "categories": [
       "viewpoint",
       "beach",
@@ -3484,6 +3498,7 @@ export const PLACES_VI_EXT = [
     "city": "Ha Long",
     "country": "vi",
     "recognition": "The quieter northeastern continuation of Ha Long Bay: the same towering karsts and emerald water, but far fewer boats - cruises pass working fishing villages and empty lagoons rather than crowds.",
+    "localName": "Vịnh Bái Tử Long",
     "categories": [
       "nature",
       "viewpoint"
@@ -3845,6 +3860,7 @@ export const PLACES_VI_EXT = [
     id: "vi-ext-mui-ne-beach",
     name: "Mui Ne Beach",
     city: "Phan Thiet", country: "vi",
+    localName: "Mũi Né",
     categories: ["beach", "nature"], budgetTier: "mid",
     coords: { lat: 10.933, lng: 108.287 },
     blurb: "A long palm-fringed bay near Phan Thiet that is one of Asia's best-known kitesurfing and windsurfing spots, with famous red-and-white sand dunes nearby.",
@@ -4172,6 +4188,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-ho-chi-minh-mausoleum-complex", name: "Ho Chi Minh Mausoleum Complex", city: "Hanoi", country: "vi",
     access: { stepFree: 'yes', note: "Ramps at the entrance and exit, paved paths throughout the complex, accessible toilets, and wheelchairs available to borrow near the entrance. Staff will assist on request. Sources: getyourguide.com accessibility listing, oxalisadventure.com (checked August 2026)." },
+    localName: "Lăng Chủ tịch Hồ Chí Minh",
     categories: ["culture", "landmark"], budgetTier: "low", kidFriendly: false,
     blurb: "Vietnam's most solemn national monument, where Ho Chi Minh's embalmed body lies in state, bundled with the stilt-house residence he lived in, the Presidential Palace grounds and the One Pillar Pagoda.",
     whyItFits: "A major landmark for anyone interested in modern Vietnamese history — but the strict rules and morning-only hours need planning ahead.",
@@ -4186,6 +4203,7 @@ export const PLACES_VI_EXT = [
   },
   {
     id: "vi-ext-hoa-lo-prison-museum", name: "Hoa Lo Prison Museum", city: "Hanoi", country: "vi",
+    localName: "Nhà tù Hỏa Lò",
     categories: ["culture", "landmark"], budgetTier: "low", kidFriendly: false,
     blurb: "A former French colonial and Vietnam War-era prison, nicknamed the \"Hanoi Hilton\" by the American POWs once held here, now a museum covering both eras.",
     whyItFits: "A major, if heavy, historic sight for travellers interested in Vietnam's colonial and war history — better suited to older children and adults.",
@@ -4536,6 +4554,7 @@ export const PLACES_VI_EXT = [
   {
     id: "vi-ext-cantho-museum", name: "Can Tho Museum", city: "Can Tho", country: "vi",
     afterDark: { openAfterDark: true, note: "Open 18:30-21:00 on Saturdays and Sundays specifically (an evening session in place of the weekday afternoon slot) - genuinely after dark, sourced from the museum's own posted hours rather than inferred." },
+    localName: "Bảo tàng Cần Thơ",
     categories: ["culture"], budgetTier: "low",
     blurb: "Can Tho's city museum, covering Mekong Delta history, culture and the region's ethnic Vietnamese, Khmer and Chinese communities. Unusually, it swaps its weekday afternoon session for an evening one on weekends.",
     whyItFits: "For a free, indoor, air-conditioned orientation to the Mekong Delta's history, or as a weekend-evening option most other Can Tho sights don't offer.",
