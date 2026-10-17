@@ -82,6 +82,7 @@ Other gaps:
 - Done when a country's coverage is reported with its new count and 10 sample cards are checked by eye at 375 px.
 
 ### D4 — Local-script names (th 164, vi 144, kh 108, la 156)
+- **Status (2026-10-17):** PR #116 (`mk-v0.639.0`): 59 names from Wikipedia and Wikidata, so 370 of 882 places have a `localName` (was 311). 512 remain (th 153, vi 125, kh 92, la 142). Each name and its source is in `scripts/local-names.json`, with 37 refused candidates and their reasons. No OpenStreetMap lane: Overpass is unreachable or failing from the build machine and Nominatim found a name for 1 of 12 places (see `docs/HANDOFF.md`).
 - Take each name from the matching local-language Wikipedia title or the OpenStreetMap `name` tag, in native script.
 - Leave the field unset when neither source has the place.
 
