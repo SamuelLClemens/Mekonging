@@ -86,10 +86,18 @@ Other gaps:
 - Take each name from the matching local-language Wikipedia title or the OpenStreetMap `name` tag, in native script.
 - Leave the field unset when neither source has the place.
 
-### D5 — Citations
-- Replace the 247 homepage-only place citations with the specific page.
-- Add `sources` to the 37 unsourced routes.
-- Lower the baselines in `check-sources.py` to lock in the gain.
+### D5 — Citations (one session per country: places th 64, vi 78, kh 59, la 46; routes th 13, vi 14, kh 4, la 6)
+- **Status, Thailand:** PR #117 (`mk-v0.640.0`). 63 places cite a page about the place, and Nan Walking Street is filed `open`. All 13 routes cite their 12Go route page. Homepage-only records are 184 (was 247) and unsourced routes 24 (was 37); the baselines match. The coordinates of Mae Surin Waterfall, Huai Nam Dang viewpoint and both Pang Ung cards are fixed. Every decision is in `scripts/place-citations.json`.
+- **Run order:** `fetch-place-citations.py --country <cc>` with `--report --list`, then `--suggest`. Open each page and record the decision. Then run `--install`, lower the baselines and bump the version (see `scripts/README.md`).
+- **Sources (owner, 2026-10-18):**
+  - Prefer the cited organisation's own page about the place (a swap). Else use the place's own Wikipedia article. Else, for stay and food clusters, use a tourism-board page or a Wikivoyage section.
+  - Leftover bare homepages stay in the list.
+  - Routes cite operator pages first. Use a booking platform's route page (12Go, Baolau) only where no operator page is reachable.
+- **Hosts:** TAT, the MICHELIN Guide and 12Go block curl, so read them in the in-app browser. Nok Air's route pages return a Cloudflare error, and Sombat Tour's schedule pages render no timetable.
+- **Also in the country slices:**
+  - The 12 records whose source has no URL (listed in `docs/HANDOFF.md`).
+  - The Wat Nokor Bachey date (kh).
+  - The That Sikhottabong and Nong Fa Lake coordinates (la).
 
 ### D6 — Access, kids, after dark
 - Use genuine sources only. The `afterDark` contract in `js/data/places.th.js` says to omit a field rather than infer it.

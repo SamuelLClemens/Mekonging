@@ -21,7 +21,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Bua Tong Sticky Waterfall Mae Taeng Chiang Mai", coords: { lat: 19.2531, lng: 99.0742 },
     bookHint: "No booking; drive, scooter or join a half-day tour from Chiang Mai.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Bua Tong Waterfall", url: "https://en.wikipedia.org/wiki/Bua_Tong_Waterfall" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-pha-dok-seaw", name: "Pha Dok Siao Waterfall & Nature Trail", city: "Chiang Mai", country: "th",
@@ -98,7 +98,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Railay Viewpoint and Lagoon Krabi", coords: { lat: 8.0061, lng: 98.8389 },
     bookHint: "No booking; take a longtail boat to Railay East/West, then follow the marked trail behind Railay East.", verified: "2026-06",
-    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Rai Leh (See)", url: "https://en.wikivoyage.org/wiki/Rai_Leh#See" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-khlong-chak", name: "Khlong Chak Waterfall & Cave", city: "Koh Lanta", country: "th",
@@ -112,7 +112,7 @@ export const PLACES_TH_EXT = [
     rating: 4.1, reviewSources: ["Tripadvisor", "Google Maps consensus", "AllTrails"],
     mapQuery: "Khlong Chak Waterfall Koh Lanta", coords: { lat: 7.5042, lng: 99.0875 },
     bookHint: "No booking; scooter to the trailhead near Khlong Chak, then walk in (guide arranged locally).", verified: "2026-06",
-    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Thai National Parks — Mu Ko Lanta National Park", url: "https://www.thainationalparks.com/mu-ko-lanta-national-park" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-mu-ko-lanta-np", name: "Mu Ko Lanta National Park (Cape & Lighthouse Trail)", city: "Koh Lanta", country: "th",
@@ -161,7 +161,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Sala Keoku Sculpture Park Nong Khai", coords: { lat: 17.8761, lng: 102.7825 },
     bookHint: "No booking; pay at the gate. Tuk-tuk or scooter from central Nong Khai.", verified: "2026-06",
-    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Sala Keoku", url: "https://en.wikipedia.org/wiki/Sala_Keoku" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-phu-pha-man", name: "Phu Pha Man National Park (Tat Yai Waterfall & caves)", city: "Khon Kaen", country: "th",
@@ -216,7 +216,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Doi Inthanon National Park", coords: { lat: 18.5885, lng: 98.4867 },
     bookHint: "No advance booking; pay at the park gate. Day tours are sold across Chiang Mai.", verified: "2026-06",
-    sources: [{ org: "DNP Thailand", url: "https://portal.dnp.go.th" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Doi Inthanon National Park", url: "https://en.wikipedia.org/wiki/Doi_Inthanon_National_Park" }, { org: "DNP Thailand", url: "https://portal.dnp.go.th" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-doi-suthep", name: "Wat Phra That Doi Suthep", city: "Chiang Mai", country: "th",
@@ -260,7 +260,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Wat Rong Khun White Temple Chiang Rai", coords: { lat: 19.8243, lng: 99.7633 },
     bookHint: "No booking; buy tickets at the gate. Many Chiang Rai day tours include it.", verified: "2026-08",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Wat Rong Khun", url: "https://en.wikipedia.org/wiki/Wat_Rong_Khun" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-sukhothai-historical-park", name: "Sukhothai Historical Park", city: "Sukhothai", country: "th",
@@ -337,7 +337,7 @@ export const PLACES_TH_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "PADI dive operators"],
     mapQuery: "Similan Islands National Park", coords: { lat: 8.6500, lng: 97.6400 },
     bookHint: "Book a speedboat day trip or liveaboard through a Khao Lak/Phuket operator; park fee usually included.", verified: "2026-06",
-    sources: [{ org: "DNP Thailand", url: "https://portal.dnp.go.th" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Clear, calm water excellent for snorkelling on dry-season (roughly October–May) boat trips; the park closes in the monsoon. No patrol — stay with your boat.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones.", recognition: "A cluster of granite-boulder islands in clear open sea, famous for the balancing 'Sail Rock' and powder-white bays reached only by dive and speedboat day-trips."
+    sources: [{ org: "Wikipedia — Similan Islands", url: "https://en.wikipedia.org/wiki/Similan_Islands" }, { org: "DNP Thailand", url: "https://portal.dnp.go.th" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Clear, calm water excellent for snorkelling on dry-season (roughly October–May) boat trips; the park closes in the monsoon. No patrol — stay with your boat.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones.", recognition: "A cluster of granite-boulder islands in clear open sea, famous for the balancing 'Sail Rock' and powder-white bays reached only by dive and speedboat day-trips."
   },
 {
     id: "th-ext-sangkhlaburi", name: "Sangkhlaburi & the Mon Bridge", city: "Kanchanaburi", country: "th",
@@ -352,7 +352,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Mon Bridge Sangkhlaburi Kanchanaburi", coords: { lat: 15.1550, lng: 98.4500 },
     bookHint: "No booking; drive, take a bus from Kanchanaburi, or join a tour. Stay overnight in town.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Uttamanusorn Bridge", url: "https://en.wikipedia.org/wiki/Uttamanusorn_Bridge" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-ban-rak-thai", name: "Ban Rak Thai (Mae Aw)", city: "Mae Hong Son", country: "th", kidFriendly: true,
@@ -397,7 +397,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Maya Bay Koh Phi Phi Leh", coords: { lat: 7.677, lng: 98.766 },
     bookHint: "Join an approved boat tour from Phi Phi or Krabi; park fee paid on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Swimming is not permitted in Maya Bay itself, to protect the recovering reef and its blacktip reef sharks; you view the bay from the shore or your boat.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones.", recognition: "A small cove almost enclosed by towering limestone cliffs, made famous by the film 'The Beach'; visitors arrive by boat at a rear pier and walk through a cliff gap to the sand."
+    sources: [{ org: "Wikipedia — Ko Phi Phi Le", url: "https://en.wikipedia.org/wiki/Ko_Phi_Phi_Le" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Swimming is not permitted in Maya Bay itself, to protect the recovering reef and its blacktip reef sharks; you view the bay from the shore or your boat.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones.", recognition: "A small cove almost enclosed by towering limestone cliffs, made famous by the film 'The Beach'; visitors arrive by boat at a rear pier and walk through a cliff gap to the sand."
   },
   {
     id: "th-ext-koh-kradan", name: "Koh Kradan", city: "Trang", country: "th",
@@ -413,7 +413,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Kradan Trang Thailand", coords: { lat: 7.3, lng: 99.265 },
     bookHint: "Take a longtail or speedboat from Pak Meng/Kuantungku (Trang); reserve a bungalow ahead.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A slim, undeveloped island off Trang with a long east-facing white beach looking across to Koh Mook; a snorkelling reef lies just offshore and facilities are minimal."
+    sources: [{ org: "Wikipedia — Ko Kradan", url: "https://en.wikipedia.org/wiki/Ko_Kradan" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A slim, undeveloped island off Trang with a long east-facing white beach looking across to Koh Mook; a snorkelling reef lies just offshore and facilities are minimal."
   },
   {
     id: "th-ext-freedom-beach", name: "Freedom Beach", city: "Phuket", country: "th",
@@ -428,7 +428,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Freedom Beach Phuket", coords: { lat: 7.815, lng: 98.295 },
     bookHint: "Hire a longtail from Patong; some access by a steep trail.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A secluded white-sand cove south of Patong, hemmed by forested headlands and reached by longtail boat or a steep track; no road runs down to it."
+    sources: [{ org: "Wikivoyage — Patong (Beaches)", url: "https://en.wikivoyage.org/wiki/Patong#Beaches" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A secluded white-sand cove south of Patong, hemmed by forested headlands and reached by longtail boat or a steep track; no road runs down to it."
   },
   {
     id: "th-ext-bottle-beach", name: "Bottle Beach (Haad Khuat)", city: "Koh Phangan", country: "th",
@@ -444,7 +444,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Bottle Beach Haad Khuat Koh Phangan", coords: { lat: 9.78, lng: 100.03 },
     bookHint: "Boat taxi from Chaloklum; book a bungalow on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A remote north-Phangan bay backed by steep jungle hills, reached only by boat taxi from Chaloklum or a rough trail; a handful of simple bungalows line the sand."
+    sources: [{ org: "Wikipedia — Hat Khuat", url: "https://en.wikipedia.org/wiki/Hat_Khuat" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A remote north-Phangan bay backed by steep jungle hills, reached only by boat taxi from Chaloklum or a rough trail; a handful of simple bungalows line the sand."
   },
   {
     id: "th-ext-nai-harn", name: "Nai Harn Beach", city: "Phuket", country: "th",
@@ -459,7 +459,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Nai Harn Beach Phuket", coords: { lat: 7.774, lng: 98.305 },
     bookHint: "No booking; reach it by car, scooter or taxi.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A rounded, sheltered bay at Phuket's southern tip, backed by a lake and a monastery, with a grassy park behind the sand and green headlands on either side."
+    sources: [{ org: "Wikivoyage — Rawai (See)", url: "https://en.wikivoyage.org/wiki/Rawai#See" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A rounded, sheltered bay at Phuket's southern tip, backed by a lake and a monastery, with a grassy park behind the sand and green headlands on either side."
   },
 {
     id: "th-ext-damnoen-saduak", name: "Damnoen Saduak Floating Market", city: "Ratchaburi", country: "th",
@@ -478,7 +478,7 @@ export const PLACES_TH_EXT = [
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Damnoen Saduak Floating Market Ratchaburi", coords: { lat: 13.521, lng: 99.957 },
     bookHint: "No booking to walk; arrange a boat at the pier or via a Bangkok day tour.", verified: "2026-08",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Damnoen Saduak Floating Market", url: "https://en.wikipedia.org/wiki/Damnoen_Saduak_Floating_Market" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-maeklong-railway-market", name: "Maeklong Railway Market", city: "Samut Songkhram", country: "th",
@@ -496,7 +496,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Maeklong Railway Market Samut Songkhram", coords: { lat: 13.408, lng: 99.999 },
     bookHint: "No booking; reach it by train, minivan or a Bangkok day tour.", verified: "2026-06",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Maeklong railway station", url: "https://en.wikipedia.org/wiki/Maeklong_railway_station" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
 
   // --- Phase 5 content batch 1: where to stay for every budget + get outdoors ---
@@ -515,7 +515,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Lam Takhong Campsite Khao Yai National Park", coords: { lat: 14.4419, lng: 101.3717 },
     bookHint: "No advance booking for tents; drive in or join a tour, and pay entry + camping at the gate and campsite office.", verified: "2026-07",
-    sources: [{ org: "Department of National Parks (DNP)", url: "https://portal.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Thai National Parks — Khao Yai National Park", url: "https://www.thainationalparks.com/khao-yai-national-park" }, { org: "Department of National Parks (DNP)", url: "https://portal.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-doiinthanon-camping", name: "Doi Inthanon National Park camping", city: "Chiang Mai", country: "th",
@@ -534,7 +534,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Doi Inthanon National Park headquarters campsite", coords: { lat: 18.5464, lng: 98.4869 },
     bookHint: "Tents are rented at the HQ campsite on arrival; pay entry at the gate.", verified: "2026-07",
-    sources: [{ org: "Department of National Parks (DNP)", url: "https://portal.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Thai National Parks — Doi Inthanon National Park", url: "https://www.thainationalparks.com/doi-inthanon-national-park" }, { org: "Department of National Parks (DNP)", url: "https://portal.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-erawan-camping", name: "Erawan National Park camping", city: "Kanchanaburi", country: "th",
@@ -552,7 +552,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Erawan National Park campsite Kanchanaburi", coords: { lat: 14.3711, lng: 99.1442 },
     bookHint: "Tents rented at the park; pay entry at the gate. Combine with the Death Railway and the Bridge over the River Kwai.", verified: "2026-07",
-    sources: [{ org: "Department of National Parks (DNP)", url: "https://portal.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Thai National Parks — Erawan National Park", url: "https://www.thainationalparks.com/erawan-national-park" }, { org: "Department of National Parks (DNP)", url: "https://portal.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-nimman-longstay", name: "Nimmanhaemin long-stay (serviced apartments & condos)", city: "Chiang Mai", country: "th",
@@ -569,7 +569,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Google Maps consensus", "Nomad community reports"],
     mapQuery: "Nimmanhaemin Road Chiang Mai serviced apartment", coords: { lat: 18.7967, lng: 98.9672 },
     bookHint: "Compare monthly listings; long-stay platforms and local agents beat nightly OTAs.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Chiang Mai (Sleep)", url: "https://en.wikivoyage.org/wiki/Chiang_Mai#Sleep" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-maekampong-homestay", name: "Mae Kampong village homestay", city: "Chiang Mai", country: "th",
@@ -587,7 +587,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Tourism Authority of Thailand"],
     mapQuery: "Mae Kampong village homestay Chiang Mai", coords: { lat: 18.8619, lng: 99.3547 },
     bookHint: "Arrange via the village community-based-tourism homestay; day tours also run from Chiang Mai.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Mae Kampong", url: "https://en.wikipedia.org/wiki/Mae_Kampong" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-cm-cooking-class", name: "Chiang Mai Thai cooking class", city: "Chiang Mai", country: "th",
@@ -603,7 +603,7 @@ export const PLACES_TH_EXT = [
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Thai cooking class Chiang Mai old city", coords: { lat: 18.7883, lng: 98.9853 },
     bookHint: "Book a day or two ahead online or through your guesthouse; morning slots fill fastest.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Chiang Mai (Thai cooking)", url: "https://en.wikivoyage.org/wiki/Chiang_Mai#Thai_cooking" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-railay-climbing", name: "Railay rock climbing", city: "Krabi", country: "th",
@@ -619,7 +619,7 @@ export const PLACES_TH_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Railay Beach rock climbing Krabi", coords: { lat: 8.0119, lng: 98.8378 },
     bookHint: "Book with a Railay climbing school on the day or ahead; longtails run from Ao Nang and Krabi.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Rai Leh (Climbing)", url: "https://en.wikivoyage.org/wiki/Rai_Leh#Climbing" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-krabi-resort", name: "Krabi (Ao Nang & Railay) beach resort", city: "Krabi", country: "th",
@@ -636,7 +636,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Ao Nang Krabi beach resort", coords: { lat: 8.0325, lng: 98.8228 },
     bookHint: "Compare Booking/Agoda for the same resort; book the Railay longtail transfer and island trips ahead.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Ao Nang and Railay have calm, sheltered swimming in the November–April dry season; the southwest monsoon (May–October) brings swell and murkier water. No formal patrol — mind long-tail boat traffic near shore.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones.", recognition: "Ao Nang's beach road is a busy strip of restaurants and longtail piers facing limestone islands; nearby Railay is a cliff-ringed peninsula reachable only by boat."
+    sources: [{ org: "Wikivoyage — Ao Nang (Sleep)", url: "https://en.wikivoyage.org/wiki/Ao_Nang#Sleep" }, { org: "Wikivoyage — Rai Leh (Sleep)", url: "https://en.wikivoyage.org/wiki/Rai_Leh#Sleep" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Ao Nang and Railay have calm, sheltered swimming in the November–April dry season; the southwest monsoon (May–October) brings swell and murkier water. No formal patrol — mind long-tail boat traffic near shore.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones.", recognition: "Ao Nang's beach road is a busy strip of restaurants and longtail piers facing limestone islands; nearby Railay is a cliff-ringed peninsula reachable only by boat."
   },
   {
     id: "th-ext-koh-tao-diving", name: "Koh Tao Scuba Diving Day Trip", city: "Koh Tao", country: "th",
@@ -700,7 +700,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Khao Soi Lam Duan Fah Ham Chiang Mai", coords: { lat: 18.804, lng: 99.008 },
     bookHint: "No booking — walk in and share tables at busy times", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "MICHELIN Guide — Khao Soi Lamduan Faham (Plate, 2021)", url: "https://guide.michelin.com/th/en/article/dining-in/these-michelin-plate-restaurants-are-ready-to-whip-up-delicious-delivery-or-takeaway-orders-for-you" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-chiang-mai-chiang-mai-gate-market", name: "Chiang Mai Gate night food stalls (Pratu Chiang Mai)", city: "Chiang Mai", country: "th",
@@ -716,7 +716,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chiang Mai Gate Market night food stalls", coords: { lat: 18.781, lng: 98.986 },
     bookHint: "No booking — grab a plastic stool as they free up", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Chiang Mai (Markets)", url: "https://en.wikivoyage.org/wiki/Chiang_Mai#Markets" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-chiang-rai-night-bazaar-food-court", name: "Chiang Rai Night Bazaar food court", city: "Chiang Rai", country: "th",
@@ -733,7 +733,7 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chiang Rai Night Bazaar food court", coords: { lat: 19.907, lng: 99.831 },
     bookHint: "No booking — shared open-air tables, first come first served", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Chiang Rai (Eat)", url: "https://en.wikivoyage.org/wiki/Chiang_Rai#Eat" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-pai-walking-street", name: "Pai Walking Street night food run", city: "Pai", country: "th",
@@ -784,7 +784,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Thalang Road Phuket Old Town noodle shops", coords: { lat: 7.885, lng: 98.387 },
     bookHint: "No booking - walk-up shophouses; arrive before the lunch rush (11:30) for a table at the famous names.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "MICHELIN Guide — Street food in Phuket (Go La, Mee Ton Poe)", url: "https://guide.michelin.com/th/en/article/dining-out/17-best-places-for-street-food-in-phuket" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-phuket-lard-yai-walking-street", name: "Lard Yai Sunday Walking Street (Thalang Road)", city: "Phuket", country: "th",
@@ -802,7 +802,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Lard Yai Sunday Walking Street Thalang Road Phuket", coords: { lat: 7.886, lng: 98.386 },
     bookHint: "No booking - Sunday evenings only; plan the rest of your Phuket Town day around it.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Phuket Town (Food markets)", url: "https://en.wikivoyage.org/wiki/Phuket_Town#Food_markets" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-krabi-chao-fah-night-market", name: "Chao Fah Pier Night Market", city: "Krabi", country: "th",
@@ -836,7 +836,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "dim sum breakfast Trang town clock tower", coords: { lat: 7.559, lng: 99.611 },
     bookHint: "No booking - go early (before 08:30) as the famous shophouses run out and close by late morning.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Trang (Eat)", url: "https://en.wikivoyage.org/wiki/Trang#Eat" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-kanchanaburi-jj-night-market", name: "JJ Night Market (Kanchanaburi Station Market)", city: "Kanchanaburi", country: "th",
@@ -1358,6 +1358,7 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking - order at the counter, share tables at busy times, pay cash; arrive early to be safe.",
     verified: "2026-07",
     sources: [
+      { org: "MICHELIN Guide — Khao Soi Mae Sai", url: "https://guide.michelin.com/us/en/chiang-mai-region/chiang-mai/restaurant/khao-soi-mae-sai" },
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1471,6 +1472,7 @@ export const PLACES_TH_EXT = [
     bookHint: "Book directly through the hotel's own website or by email - The Atlanta famously stays off third-party booking sites - and reserve well ahead for the December-February high season.",
     verified: "2026-07",
     sources: [
+      { org: "Wikipedia — The Atlanta Hotel (Bangkok)", url: "https://en.wikipedia.org/wiki/The_Atlanta_Hotel_(Bangkok)" },
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1525,6 +1527,7 @@ export const PLACES_TH_EXT = [
     bookHint: "Check the guesthouse's own website for the current booking policy; the cheapest rooms often go to walk-ins, so arrive before midday in the November-February high season.",
     verified: "2026-07",
     sources: [
+      { org: "Wikivoyage — Nong Khai (Sleep)", url: "https://en.wikivoyage.org/wiki/Nong_Khai#Sleep" },
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1564,6 +1567,7 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking — walk up, point, and order; cash only at most stalls",
     verified: "2026-07",
     sources: [
+      { org: "Wikivoyage — Ko Tao (Eat)", url: "https://en.wikivoyage.org/wiki/Ko_Tao#Eat" },
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1604,6 +1608,7 @@ export const PLACES_TH_EXT = [
     bookHint: "No booking needed for small groups; larger groups can reserve by phone in high season (Dec-Feb)",
     verified: "2026-07",
     sources: [
+      { org: "Wikivoyage — Ko Chang (Eat)", url: "https://en.wikivoyage.org/wiki/Ko_Chang#Eat" },
       { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1630,7 +1635,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 14.532, lng: 102.941 },
     bookHint: "No booking needed; pay at the gate.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Fine Arts Department", url: "https://www.finearts.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Phanom Rung Historical Park", url: "https://en.wikipedia.org/wiki/Phanom_Rung_Historical_Park" }, { org: "Thailand Fine Arts Department", url: "https://www.finearts.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-phimai-historical-park",
@@ -1676,7 +1681,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 15.7956, lng: 105.395 },
     bookHint: "Arrange boats on-site at the riverbank; no advance booking needed.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Sam Phan Bok", url: "https://en.wikipedia.org/wiki/Sam_Phan_Bok" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-ban-chiang-archaeological-site",
@@ -1721,7 +1726,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 16.872, lng: 101.719 },
     bookHint: "Reserve accommodation via Thailand's DNP national-park booking system in advance.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Phu Kradueng National Park", url: "https://en.wikipedia.org/wiki/Phu_Kradueng_National_Park" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-jim-thompson-house",
@@ -1744,7 +1749,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 13.7492, lng: 100.5285 },
     bookHint: "Walk-in tours all day; groups can book ahead online.",
     verified: "2026-07",
-    sources: [{ org: "Jim Thompson House Museum", url: "https://www.jimthompsonhouse.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Jim Thompson House", url: "https://en.wikipedia.org/wiki/Jim_Thompson_House" }, { org: "Jim Thompson House Museum", url: "https://www.jimthompsonhouse.com" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-the-golden-mount-wat-saket",
@@ -1767,7 +1772,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 13.7539, lng: 100.5069 },
     bookHint: "No booking; pay the small fee at the summit.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Wat Saket", url: "https://en.wikipedia.org/wiki/Wat_Saket" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-asiatique-the-riverfront",
@@ -1790,7 +1795,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 13.7045, lng: 100.5095 },
     bookHint: "No entry booking; cabaret/show tickets can be booked online.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Asiatique", url: "https://en.wikipedia.org/wiki/Asiatique" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-wat-benchamabophit-the-marble-temple",
@@ -1814,7 +1819,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 13.7666, lng: 100.5145 },
     bookHint: "No booking; pay at the entrance.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Wat Benchamabophit", url: "https://en.wikipedia.org/wiki/Wat_Benchamabophit" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-bridge-over-the-river-kwai-death-railway",
@@ -1836,7 +1841,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 14.0413, lng: 99.5036 },
     bookHint: "Turn up at Kanchanaburi or Thonburi station for the train; no reservation usually needed.",
     verified: "2026-07",
-    sources: [{ org: "Commonwealth War Graves Commission", url: "https://www.cwgc.org" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Burma Railway", url: "https://en.wikipedia.org/wiki/Burma_Railway" }, { org: "Commonwealth War Graves Commission", url: "https://www.cwgc.org" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-phra-prang-sam-yot-lopburi-monkeys",
@@ -1859,7 +1864,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 14.8018, lng: 100.6117 },
     bookHint: "No booking; pay at the gate.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Fine Arts Department", url: "https://www.finearts.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Phra Prang Sam Yot", url: "https://en.wikipedia.org/wiki/Phra_Prang_Sam_Yot" }, { org: "Thailand Fine Arts Department", url: "https://www.finearts.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-kaeng-krachan-national-park",
@@ -1905,7 +1910,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 8.9167, lng: 98.5333 },
     bookHint: "Book raft-house and lake tours in advance via lodges or DNP; day tours arrangeable locally.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Khao Sok National Park", url: "https://en.wikipedia.org/wiki/Khao_Sok_National_Park" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-ang-thong-marine-national-park",
@@ -1928,7 +1933,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 9.6167, lng: 99.6667 },
     bookHint: "Book a day tour from Ko Samui or Ko Pha Ngan; independent access is difficult.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }], lifeguard: "no", swim: "Swimming and snorkelling are on national-park boat trips; the water is clear and generally calm, but there is no patrol — stay with your group.", jellyfishMonths: [7, 8, 9, 10], jellyfish: "Potentially fatal box jellyfish (Chironex) occur in Gulf of Thailand waters, with recorded stings peaking in the July–October wet season and after heavy rain. If stung, douse the area with vinegar and get medical help urgently."
+    sources: [{ org: "Wikipedia — Mu Ko Ang Thong National Park", url: "https://en.wikipedia.org/wiki/Mu_Ko_Ang_Thong_National_Park" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }], lifeguard: "no", swim: "Swimming and snorkelling are on national-park boat trips; the water is clear and generally calm, but there is no patrol — stay with your group.", jellyfishMonths: [7, 8, 9, 10], jellyfish: "Potentially fatal box jellyfish (Chironex) occur in Gulf of Thailand waters, with recorded stings peaking in the July–October wet season and after heavy rain. If stung, douse the area with vinegar and get medical help urgently."
   },
   {
     id: "th-ext-koh-lipe",
@@ -1951,7 +1956,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 6.488, lng: 99.302 },
     bookHint: "Book speedboat + accommodation ahead in high season; boats leave from Pak Bara (Satun).",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }],
+    sources: [{ org: "Wikipedia — Ko Lipe", url: "https://en.wikipedia.org/wiki/Ko_Lipe" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }],
   },
   {
     id: "th-ext-koh-yao-noi",
@@ -1973,7 +1978,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 8.1167, lng: 98.5833 },
     bookHint: "No booking for public longtails from Bang Rong pier; reserve resorts ahead.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }], lifeguard: "no", swim: "Quiet, shallow east-facing beaches with a big tidal range — at low tide the sea retreats a long way; generally calm, and unpatrolled.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
+    sources: [{ org: "Wikivoyage — Ko Yao (Ko Yao Noi)", url: "https://en.wikivoyage.org/wiki/Ko_Yao#Ko_Yao_Noi" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }], lifeguard: "no", swim: "Quiet, shallow east-facing beaches with a big tidal range — at low tide the sea retreats a long way; generally calm, and unpatrolled.", jellyfish: "Box jellyfish are present on the Andaman coast but are rarer here than in the Gulf — the deeper, clearer water suits them less. Most sightings follow heavy rain or strong currents, so avoid swimming after heavy rain, at night, or outside marked safety zones."
   },
   {
     id: "th-ext-koh-samet",
@@ -1996,7 +2001,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 12.5667, lng: 101.45 },
     bookHint: "Ferries from Ban Phe leave when reasonably full; book accommodation ahead on weekends.",
     verified: "2026-07",
-    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Ko Samet", url: "https://en.wikipedia.org/wiki/Ko_Samet" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-chiang-dao-cave-tham-chiang-dao",
@@ -2020,7 +2025,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 19.3925, lng: 98.927 },
     bookHint: "No booking; pay entry and arrange a lantern guide at the cave entrance.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Wat Tham Chiang Dao", url: "https://en.wikipedia.org/wiki/Wat_Tham_Chiang_Dao" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-rca-royal-city-avenue",
@@ -2956,8 +2961,8 @@ export const PLACES_TH_EXT = [
     ],
     "mapQuery": "Pang Ung Pang Tong Reservoir Mae Hong Son",
     "coords": {
-      "lat": 19.3011,
-      "lng": 97.8783
+      "lat": 19.4982,
+      "lng": 97.9095
     },
     "bookHint": "On-site camping in season; otherwise day trip by scooter/charter from Mae Hong Son.",
     "verified": "2026-07",
@@ -3424,7 +3429,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Promthep Cape Phuket", coords: { lat: 7.75914, lng: 98.30366 },
     bookHint: "No booking; ride or drive down to the Rawai/Nai Harn end for sunset.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Rawai (See)", url: "https://en.wikivoyage.org/wiki/Rawai#See" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-karon-viewpoint", name: "Karon Viewpoint (Three Beaches Viewpoint)", city: "Phuket", country: "th",
@@ -3439,7 +3444,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Karon Viewpoint Kata Phuket", coords: { lat: 7.79732, lng: 98.30215 },
     bookHint: "No booking; a quick roadside stop on the Kata-Nai Harn road.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Authority of Thailand — Karon Viewpoint", url: "https://www.tourismthailand.org/Trip-Planner/Suggestion-Detail/recommended-route-for-one-day-3" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "th-ext-patong-bangla", name: "Patong Beach & Bangla Road", city: "Phuket", country: "th",
@@ -3471,7 +3476,7 @@ export const PLACES_TH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Old Phuket Town Thalang Road", coords: { lat: 7.8843, lng: 98.3876 },
     bookHint: "No booking; wander on foot, ideally a cooler weekday morning.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Phuket Old Town", url: "https://en.wikipedia.org/wiki/Phuket_Old_Town" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
 
   {
@@ -3539,7 +3544,7 @@ export const PLACES_TH_EXT = [
     tips: ["Ride the mountain up to Doi Suthep only if you are confident; the switchbacks and fast traffic are not beginner territory.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 18.788, lng: 98.993 }, mapQuery: "scooter rental Chiang Mai",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }, { org: "Cat Motors — Motorbike & Scooter Rental Chiang Mai", url: "https://catmotors.net/" }],
+    sources: [{ org: "Wikivoyage — Chiang Mai (By motorbike)", url: "https://en.wikivoyage.org/wiki/Chiang_Mai#By_motorbike" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }, { org: "Cat Motors — Motorbike & Scooter Rental Chiang Mai", url: "https://catmotors.net/" }],
   },
   {
     id: "th-ext-rental-pai", name: "Motorbike rental, Pai", city: "Pai", country: "th",
@@ -3563,7 +3568,7 @@ export const PLACES_TH_EXT = [
     tips: ["Phuket's hills and monsoon rain are unforgiving and police checkpoints are frequent - carry the correct licence and take the coast roads slowly.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 7.779, lng: 98.325 }, mapQuery: "scooter rental Phuket",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }, { org: "RentaBikePhuket", url: "https://rentabikephuket.com/" }],
+    sources: [{ org: "Wikivoyage — Phuket (Motorbike rental)", url: "https://en.wikivoyage.org/wiki/Phuket#Motorbike_rental" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }, { org: "RentaBikePhuket", url: "https://rentabikephuket.com/" }],
   },
   {
     id: "th-ext-chaweng-beach", sources: [{ org: "Wikivoyage — Ko Samui", url: "https://en.wikivoyage.org/wiki/Ko_Samui" }, { org: "Samui Island Explorer — Entry to Chaweng Beach", url: "https://www.samuiislandexplorer.com/entry-to-chaweng-beach-koh-samui/" }],
@@ -3632,7 +3637,7 @@ export const PLACES_TH_EXT = [
     coords: { lat: 9.512, lng: 100.0136 },
     mapQuery: "scooter rental Koh Samui",
     verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }, { org: "Rossena Rental — Koh Samui", url: "https://rossena-rental.com/" }]
+    sources: [{ org: "Wikivoyage — Ko Samui (By motorbike)", url: "https://en.wikivoyage.org/wiki/Ko_Samui#By_motorbike" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "BikesBooking", url: "https://www.bikesbooking.com/" }, { org: "Rossena Rental — Koh Samui", url: "https://rossena-rental.com/" }]
   },
 
   // ==========================================================================
@@ -3766,7 +3771,7 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mork Fa Waterfall Mae Taeng", coords: { lat: 19.155, lng: 98.780 },
     bookHint: "Pay the park fee at the gate.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Thai National Parks — Doi Suthep-Pui National Park", url: "https://www.thainationalparks.com/doi-suthep-pui-national-park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-pong-duet-hot-springs", name: "Pong Dueat Hot Springs & Geysers", city: "Chiang Mai", country: "th",
@@ -3784,7 +3789,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Pong Dueat Hot Springs Huai Nam Dang", coords: { lat: 19.280, lng: 98.630 },
     bookHint: "Pay the park fee at the gate; bath rooms paid on site.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Huai Nam Dang National Park", url: "https://en.wikipedia.org/wiki/Huai_Nam_Dang_National_Park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-huai-nam-dang-viewpoint", name: "Huai Nam Dang (Doi Kiu Lom) sunrise viewpoint", city: "Chiang Mai", country: "th",
@@ -3799,9 +3804,9 @@ export const PLACES_TH_EXT = [
     tips: ["Arrive before dawn for the mist.", "It is very cold Nov–Jan at altitude — bring warm layers.", "Book park cabins ahead in the cool-season peak, or camp."],
     scamWarnings: [],
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
-    mapQuery: "Huai Nam Dang Doi Kiu Lom viewpoint", coords: { lat: 19.300, lng: 98.620 },
+    mapQuery: "Huai Nam Dang Doi Kiu Lom viewpoint", coords: { lat: 19.314, lng: 98.6042 },
     bookHint: "Pay the park fee at the gate; camping and cabins via the DNP.", verified: "2026-07",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Huai Nam Dang National Park", url: "https://en.wikipedia.org/wiki/Huai_Nam_Dang_National_Park" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-mhs-tai-yai-food", name: "Mae Hong Son Tai Yai (Shan) food specialities", city: "Mae Hong Son", country: "th",
@@ -3840,7 +3845,7 @@ export const PLACES_TH_EXT = [
     tips: ["The park is remote and the access track is rough — ask about current conditions and consider a guide or sturdy vehicle.", "Most powerful Jun–Nov.", "The same park takes in the Doi Mae U Kho sunflower highlands."],
     scamWarnings: [],
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
-    mapQuery: "Mae Surin Waterfall Namtok Mae Surin National Park", coords: { lat: 19.141, lng: 98.033 },
+    mapQuery: "Mae Surin Waterfall Namtok Mae Surin National Park", coords: { lat: 18.9393, lng: 98.0691 },
     bookHint: "No booking; pay the park fee at the office and check access before setting out.", verified: "2026-07",
     sources: [{ org: "Wikipedia — Namtok Mae Surin National Park", url: "https://en.wikipedia.org/wiki/Namtok_Mae_Surin_National_Park" }, { org: "Travelfish — Mae Surin Waterfall", url: "https://www.travelfish.org/sight_profile/thailand/northern_thailand/mae_hong_son/khun_yuam/3362" }],
   },
@@ -4166,7 +4171,7 @@ export const PLACES_TH_EXT = [
     tips: ["Bring serious warm layers Dec–Feb — dawn can approach 0°C.", "Book homestays ahead on cool-season weekends.", "Songthaews run from Mae Hong Son's Talad Sai Yood market (~80–90 THB).", "Combine an overnight here with Ban Rak Thai nearby."],
     scamWarnings: [],
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
-    mapQuery: "Pang Ung Ban Ruam Thai homestay", coords: { lat: 19.4903, lng: 98.0472 },
+    mapQuery: "Pang Ung Ban Ruam Thai homestay", coords: { lat: 19.4989, lng: 97.9055 },
     bookHint: "Homestays are walk-in or by phone; camping gear rents on site.", verified: "2026-07",
     sources: [{ org: "My Chiang Mai Tour — Pang Ung", url: "https://mychiangmaitour.com/pang_ung/" }, { org: "Cat Motors — Pang Ung guide", url: "https://catmotors.net/travel/pang-oung/" }],
   },
@@ -5688,7 +5693,7 @@ export const PLACES_TH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat Poramaiyikawat Koh Kret", coords: { lat: 13.9128, lng: 100.4901 },
     bookHint: "Walk in.", verified: "2026-08",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Wat Paramaiyikawat", url: "https://en.wikipedia.org/wiki/Wat_Paramaiyikawat" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-bang-krachao", name: "Bang Krachao green lung", city: "Bang Krachao", country: "th",
@@ -5723,7 +5728,7 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Bang Nam Pheung Floating Market Phra Pradaeng", coords: { lat: 13.6801, lng: 100.5743 },
     bookHint: "Walk in; weekends only.", verified: "2026-08",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikivoyage — Samut Prakan (Eat)", url: "https://en.wikivoyage.org/wiki/Samut_Prakan#Eat" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   {
     id: "th-ext-koh-si-chang", name: "Koh Si Chang", city: "Koh Si Chang", country: "th",
@@ -5815,7 +5820,7 @@ export const PLACES_TH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Wat Traimit Golden Buddha Bangkok", coords: { lat: 13.7380, lng: 100.5137 },
     bookHint: "No booking; pay at the desk inside.", verified: "2026-09",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "OpenStreetMap (Wat Traimit node)", url: "https://www.openstreetmap.org/#map=18/13.7380/100.5137" }],
+    sources: [{ org: "Wikipedia — Wat Traimit", url: "https://en.wikipedia.org/wiki/Wat_Traimit" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "OpenStreetMap (Wat Traimit node)", url: "https://www.openstreetmap.org/#map=18/13.7380/100.5137" }],
   },
   {
     id: "th-ext-koh-phi-phi-don", name: "Koh Phi Phi Don", city: "Krabi", country: "th",
@@ -5834,7 +5839,7 @@ export const PLACES_TH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Koh Phi Phi Don Tonsai", coords: { lat: 7.7522, lng: 98.7766 },
     bookHint: "Book the ferry a day ahead in high season; accommodation well ahead over Christmas and New Year.", verified: "2026-09",
-    sources: [{ org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "OpenStreetMap (เกาะพีพีดอน)", url: "https://www.openstreetmap.org/#map=13/7.7522/98.7766" }],
+    sources: [{ org: "Wikipedia — Ko Phi Phi Don", url: "https://en.wikipedia.org/wiki/Ko_Phi_Phi_Don" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "OpenStreetMap (เกาะพีพีดอน)", url: "https://www.openstreetmap.org/#map=13/7.7522/98.7766" }],
   },
   {
     id: "th-ext-koh-kood", name: "Koh Kood (Ko Kut)", city: "Trat", country: "th",
@@ -5872,7 +5877,7 @@ export const PLACES_TH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mu Ko Surin National Park", coords: { lat: 9.4002, lng: 97.8658 },
     bookHint: "Book park accommodation through DNP well ahead; day trips leave from Khuraburi pier.", verified: "2026-09",
-    sources: [{ org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
+    sources: [{ org: "Wikipedia — Surin Islands", url: "https://en.wikipedia.org/wiki/Surin_Islands" }, { org: "Thailand Department of National Parks (DNP)", url: "https://nps.dnp.go.th" }, { org: "Tourism Authority of Thailand", url: "https://www.tourismthailand.org" }],
   },
   // ---- NAKHON PATHOM PROVINCE — first entry for this province, found by the point-in-polygon
   // coverage sweep this session (see the Kamphaeng Phet entry above for the method).

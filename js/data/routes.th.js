@@ -109,6 +109,12 @@ export const ROUTES_TH = [
         "recommended": true,
         "notes": "Given there is no train and the bus is a full overnight haul, flying is the most efficient choice; advance fares can match a VIP bus seat."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Chiang Rai",
+        "url": "https://12go.asia/en/travel/bangkok/chiang-rai"
+      }
     ]
   },
   {
@@ -271,6 +277,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Sukhothai airport is privately operated by Bangkok Airways, so fares run higher than typical domestic routes."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Sukhothai",
+        "url": "https://12go.asia/en/travel/bangkok/sukhothai"
+      }
     ]
   },
   {
@@ -330,6 +342,12 @@ export const ROUTES_TH = [
         "bookVia": "Sai Tai Mai or Mo Chit van counters",
         "recommended": false,
         "notes": "Vans drop near the bus terminal; confirm whether the town centre or guesthouse area is included."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Kanchanaburi",
+        "url": "https://12go.asia/en/travel/bangkok/kanchanaburi"
       }
     ]
   },
@@ -391,6 +409,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Departs Krung Thep Aphiwat Central Terminal. Choose for the experience rather than speed."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Hua Hin",
+        "url": "https://12go.asia/en/travel/bangkok/hua-hin"
+      }
     ]
   },
   {
@@ -433,6 +457,12 @@ export const ROUTES_TH = [
         "bookVia": "Mo Chit or Ekkamai van counters, or 12Go",
         "recommended": false,
         "notes": "Confirm drop-off point (Central Pattaya vs Jomtien) before booking."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Pattaya",
+        "url": "https://12go.asia/en/travel/bangkok/pattaya"
       }
     ]
   },
@@ -477,6 +507,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Overnight buses depart late afternoon/evening. Pick a VIP single seat for sleeping; budget choice for those avoiding flights."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Phuket",
+        "url": "https://12go.asia/en/travel/bangkok/phuket"
+      }
     ]
   },
   {
@@ -519,6 +555,12 @@ export const ROUTES_TH = [
         "bookVia": "Lignite Tour, Krabi-bound operators, or 12Go",
         "recommended": false,
         "notes": "Journey runs 11-14 hours depending on traffic and stops. Suited to budget travellers avoiding flights."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Krabi",
+        "url": "https://12go.asia/en/travel/bangkok/krabi"
       }
     ]
   },
@@ -579,6 +621,12 @@ export const ROUTES_TH = [
         "bookVia": "Thai AirAsia, Thai Lion Air, Nok Air",
         "recommended": false,
         "notes": "Flying into Surat Thani then ferrying out is often cheaper than the premium Koh Samui (USM) airport served by Bangkok Airways."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Surat Thani",
+        "url": "https://12go.asia/en/travel/bangkok/surat-thani"
       }
     ]
   },
@@ -745,6 +793,12 @@ export const ROUTES_TH = [
         "bookVia": "Thai AirAsia, Thai Vietjet, Thai Lion Air, Nok Air",
         "recommended": false,
         "notes": "From Udon Thani airport, frequent shuttles and buses reach Nong Khai and the Friendship Bridge."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Udon Thani",
+        "url": "https://12go.asia/en/travel/bangkok/udon-thani"
       }
     ]
   },
@@ -920,6 +974,12 @@ export const ROUTES_TH = [
         "bookVia": "Thai AirAsia, Thai Vietjet, Thai Lion Air, Nok Air",
         "recommended": false,
         "notes": "Useful if continuing to southern Laos; arrange onward transport to the Chong Mek border from Ubon."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Bangkok to Ubon Ratchathani",
+        "url": "https://12go.asia/en/travel/bangkok/ubon-ratchathani"
       }
     ]
   },
@@ -1206,6 +1266,12 @@ export const ROUTES_TH = [
         "recommended": false,
         "notes": "Comparable price to the bus but tighter seating; the bus is usually the more comfortable pick."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Chiang Mai to Chiang Rai",
+        "url": "https://12go.asia/en/travel/chiang-mai/chiang-rai"
+      }
     ]
   },
   {
@@ -1248,6 +1314,12 @@ export const ROUTES_TH = [
         "bookVia": "Local agencies or 12Go",
         "recommended": false,
         "notes": "Good if you want door-to-door service, but legroom is limited on the long run."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Chiang Mai to Sukhothai",
+        "url": "https://12go.asia/en/travel/chiang-mai/sukhothai"
       }
     ]
   },
@@ -1357,6 +1429,12 @@ export const ROUTES_TH = [
         "bookVia": "Phuket pier operators or 12Go",
         "recommended": false,
         "notes": "Runs mainly in the dry season and costs more than the bus; choose for the islands and scenery, not for budget."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Phuket to Krabi",
+        "url": "https://12go.asia/en/travel/phuket/krabi"
       }
     ]
   },

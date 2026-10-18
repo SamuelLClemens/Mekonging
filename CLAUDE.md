@@ -21,6 +21,10 @@ relevant section of the docs below, not the whole repo.
   descriptive User-Agent.
 - Overpass is unreliable from this machine: overpass-api.de times out and a mirror returned HTTP 500 on 10 of 12 queries.
   Nominatim name search found a native-script name for 1 of 12 places. Test an OSM lane on a dozen places before planning one.
+- tourismthailand.org (403), guide.michelin.com and 12go.asia (202 bot check) block curl but load in the in-app browser;
+  read them there with `javascript_tool` on `document.body.innerText`.
+- `sources` arrays come in five formats (one line, per entry, per key, trailing commas, single quotes): edit them with
+  `scripts/fetch-place-citations.py --install`, which keeps each one's format, not with a regex.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
 
 ## Branches and delivery
