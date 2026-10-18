@@ -1,50 +1,50 @@
-# Handoff — 2026-10-18 (slice D5, citations: Thailand)
+# Handoff — 2026-10-18 (slice D5, citations: Vietnam)
 
 ## Shipped
-- D5 Thailand: branch `data/d5-citations`, [PR #117](https://github.com/SamuelLClemens/Mekonging/pull/117), `mk-v0.640.0`, commit c8d2049. Open: its `guards` check was pending when this handoff was written. The docs commit that follows re-runs it.
-  - 63 of the 64 Thai homepage-only places now cite a page about the place, so homepage-only records fall from 247 to 184:
-    - 32 cite Wikipedia;
-    - 21 cite a Wikivoyage section;
-    - 5 cite Thai National Parks pages;
-    - 3 cite the MICHELIN Guide;
-    - 1 swaps the TAT homepage for TAT's own Karon Viewpoint entry.
-  - Every decision and what the page supports is in `scripts/place-citations.json`. Nan Walking Street is filed `open` there.
-  - All 13 unsourced Thai routes cite their 12Go route page, so unsourced routes fall from 37 to 24. `check-sources.py` baselines are now 184 and 24.
-  - Coordinates fixed:
-    - Mae Surin Waterfall: was the park centroid, 24.7 km off.
-    - Huai Nam Dang viewpoint: 2.3 km off.
-    - Pang Ung Reservoir: 22 km off.
-    - Pang Ung homestays: 14.5 km off.
-  - New tool `scripts/fetch-place-citations.py` (`--report --list`, `--suggest`, `--install`), documented in `scripts/README.md`.
-- The owner's sourcing rules for D5 (2026-10-18):
-  - Prefer the cited organisation's own page about the place; else the place's Wikipedia article; else a tourism-board page or a Wikivoyage section for stay and food clusters.
-  - Leftover bare homepages stay in the list.
-  - Routes cite operator pages first, and a booking platform's route page (12Go, Baolau) only where no operator page is reachable.
+- D5 Vietnam: branch `data/d5-vietnam`, [PR #118](https://github.com/SamuelLClemens/Mekonging/pull/118), `mk-v0.641.0`, commit 81b8cab. Its `guards` check was still pending when this handoff was written.
+  - 71 of the 78 Vietnamese homepage-only places now cite a page about the place, so homepage-only records fall from 184 to 113:
+    - 50 swap the vietnam.travel homepage for the board's own page about the place. They were found through its sitemap (13,314 URLs, 1,032 in English); 303 pages were read.
+    - 5 swap to the cited organisation's own page: UNESCO for My Son and for the Khai Dinh tomb (Complex of Hué Monuments), Sun World Ba Na Hills, La Siesta Ma May and Sapa O'Chau.
+    - 10 add a Wikipedia article. 6 were reviewed in D3; 2 are Vietnamese articles (the Kenh Ga hot spring, the Sa Pa ancient rock field).
+    - 6 add a Wikivoyage section for stay and food clusters.
+    - 7 are filed `open` in `scripts/place-citations.json`: Cannon Fort (Cat Ba), the Con Son evening stalls, the Da Lat night-market banh trang nuong stalls, the Hue herbal bath, Cho Rong market, Cau May and the Giang Ta Chai waterfall.
+  - The 5 Vietnamese records whose sources had no URL now cite real pages (Bui Vien, An Thuong, the Dragon Bridge show, the An Hoi lantern boats, the Tran Phu bars). Where the named organisation had no page about the place, the entry was replaced with a page that does (see Open decisions 3).
+  - All 14 unsourced Vietnamese routes have `sources`, so unsourced routes fall from 24 to 10:
+    - 6 routes with a train option cite the passenger operator's Train routes page (Railway Transport JSC, the Vietnam Railways company; dsvn.vn has no route pages) plus the 12Go route page for the other modes.
+    - Hanoi to Ha Giang cites Cat Ba Express's route page.
+    - 7 bus and flight routes cite 12Go. FUTA refuses automated browsers, Hai Van runs neither Mai Chau nor Hue to Hoi An, and no other named operator had a reachable route page.
+  - `check-sources.py` baselines are now 113 and 10.
 
 ## Verified
-Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from the worktree (`mekong-d5`, port 8746).
-- 10 cards: Bua Tong, Similan Islands, Railay climbing, Khao Yai camping, Khao Soi Mae Sai, Karon Viewpoint, Lard Yai, Mae Kampong, Huai Nam Dang viewpoint and the Phuket Hokkien cluster. On each, the Sources sheet lists the new page first, linked to the recorded URL. The sheet is 343 px wide, with 0 px horizontal overflow, no clipped item and 0 page errors. Two were checked by eye from screenshots.
-- On `#transport`, the Bangkok to Chiang Rai card's sheet shows "12Go — Bangkok to Chiang Rai".
-- All 60 new Wikipedia, Wikivoyage and Thai National Parks URLs return HTTP 200. The 3 Michelin pages and the TAT page block curl, so they were read in the in-app browser. So were the 13 12Go pages, each confirming the route and its modes.
-- The coordinates come from OSM nodes, Wikipedia and geotagged Commons photos:
-  - Mae Surin: OSM waterfall node, and a Commons photo 150 m from it.
-  - Huai Nam Dang: four Commons photos of the Doi Kiew Lom viewpoint.
-  - Pang Ung: Wikipedia and OSM agree within 50 m.
-- `--install` was tested on all 882 arrays. An add plus a swap parses back on 870, a no-op is byte-identical, and the other 12 are refused (they have no URL). A second install changes nothing.
-- Guards: js-syntax (240 files), imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, place-fields, port-themes and cache-version all pass. Cache-version's changed-file list is the 2 data files, `main.js` and `sw.js`. `jsc -m scripts/validate-jsc.mjs`: 18,097 of 18,097 checks, EXIT 0.
+Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from the worktree (`mekong-d5vi`, port 8747). The app reports `mk-v0.641.0`.
+- 10 cards: Ban Gioc, My Son, Golden Bridge, Banh Mi 25, the Lunch Lady, the Sa Pa rock field, Ta Van Giay village, La Siesta Ma May, the Phong Nha homestays and the Dragon Bridge show.
+  - On each, the Sources sheet lists the new page first, linked to the recorded URL.
+  - The sheet is 343 px wide, with 0 px horizontal overflow, no clipped item and 0 page errors. Two were checked by eye from screenshots.
+- On `#transport-vi`, the Hanoi to Da Nang, Hanoi to Ha Giang and HCMC to Can Tho cards show their new sources the same way.
+- 64 of the 67 new place URLs return HTTP 200. UNESCO (2) and Travelfish (1) block curl; they were read in the in-app browser, and each names its place. The 13 12Go pages were read there too; each title names the route and the card's modes.
+- `--install` rewrote 71 arrays, and a second run changed nothing.
+- Guards: js-syntax (240 files), imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, place-fields, port-themes and cache-version all pass.
+  - Cache-version's changed-file list is the 2 data files, `main.js` and `sw.js`.
+  - `jsc -m scripts/validate-jsc.mjs`: 18,097 of 18,097 checks, EXIT 0.
 
 ## Not done / known issues
 - New in this slice:
-  - D5 has three countries left. Homepage-only: vi 78, kh 59, la 46. Unsourced routes: vi 14, kh 4, la 6. `--report` gives each record's lane.
-  - 12 place records name a source with no URL at all, for example `{ org: "Lonely Planet Bangkok" }`. The guard does not count them, and `--install` refuses them:
+  - D5 has two countries left. Homepage-only: kh 59, la 46. Unsourced routes: kh 4, la 6. `--report --list` gives each record's lane.
+  - 7 place records still name a source with no URL. The guard does not count them, and `--install` refuses them:
     - th: rca-royal-city-avenue, nimmanhaemin-road-bar-scene.
-    - vi: bui-vien-walking-street, an-thuong-western-street-area, dragon-bridge-fire-water-show, an-hoi-night-s-ng-ho-i-lantern-boats, tran-phu-beachfront-bars.
     - kh: kampot-riverfront-bars, kep-crab-market-evening-seafront.
     - la: nam-song-riverside-bars, utopia-bar-the-late-bowling-alley-scene, bor-pen-nyang-riverfront-bar-strip.
-    - All ids carry the `<cc>-ext-` prefix.
-  - 12Go headline fares are live and date-dependent (Bangkok to Phuket showed "from THB 10,235" on 2026-10-18). They back operators, modes and durations better than the fixed fares on the cards. No fares were changed.
-  - Wikivoyage citations for food and stay clusters cite the town's section. They name the place or the street but do not support the card's prices.
-  - English Wikipedia's Huai Nam Dang National Park infobox places the park about 55 km from the viewpoint. The error is in the article, not in our data.
+    - All ids carry the `<cc>-ext-` prefix. Vietnam's were edited by hand: give each entry a URL, or replace it with a page that names the place.
+  - On 12Go, the `dalat` slug serves an empty "Travel Options" placeholder; the real slug is `da-lat`. Check a page's title before citing it.
+  - Banh It Cham Towers: the card says 11th to 12th centuries, and Wikivoyage says 10th to 11th. vietnam.travel gives no date. The card is unchanged.
+  - La Siesta's cited `www.lasiestahotels.com` homepage now returns Cloudflare 526. The bare domain works and is now cited.
+  - Pages cited for stay and food clusters name the place or street but do not support the card's prices.
+  - Airline route pages were not tried for the flight options; 12Go lists the flights.
+  - The preview entry `mekong-d5vi` was added to `/Users/zim/Claude Code/.claude/launch.json`, the parent folder's shared launch file. It is uncommitted there, like the other entries.
+- Carried from D5 Thailand:
+  - Nan Walking Street stays `open`.
+  - 12Go headline fares are live and date-dependent. They back operators, modes and durations better than fixed fares; no fares were changed.
+  - English Wikipedia's Huai Nam Dang infobox places the park about 55 km from the viewpoint (an error in the article).
   - Pong Dueat hot springs' coordinates (19.28, 98.63) are rounded and were not checked.
 - Carried from D4:
   - 512 places have no `localName` (th 153, vi 125, kh 92, la 142). There is no OpenStreetMap lane: Overpass fails from this machine.
@@ -68,27 +68,26 @@ Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from
   - Pai stays deferred.
 
 ## Open decisions (need the user)
-1. Merge PR #117 once its `guards` check passes. Recommended: yes.
-2. Leave Nan Walking Street homepage-only until a checkable page exists? Recommended: yes.
-3. Keep 12Go route pages as the route fallback for Vietnam, Cambodia and Laos? Vietnam Railways (dsvn.vn) is the operator to try first for trains. Recommended: yes.
-4. Leave the older "native · romanisation" `localName` values as they are? Recommended: yes.
-5. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
-6. Is a Meetups-free Market acceptable until M4? Recommended: yes.
-7. Exchange M3 waits on the owner actions below. The legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
+1. Merge PR #118 once its `guards` check passes. Recommended: yes.
+2. Accept a Vietnamese-language Wikipedia article as the citation where the place has no English article (Kenh Ga hot spring, Sa Pa ancient rock field)? Recommended: yes. Cambodia and Laos would use Khmer and Lao articles the same way.
+3. Where a URL-less source's organisation has no page about the place, accept replacing that entry with another checkable page instead of leaving it URL-less? This affected Lonely Planet for Bui Vien and An Thuong, Travelfish for An Thuong, and Danang Tourism for the Dragon Bridge. Recommended: yes.
+4. Leave the 7 Vietnamese `open` records homepage-only until a checkable page exists? Recommended: yes.
+5. Leave the older "native · romanisation" `localName` values as they are? Recommended: yes.
+6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
+7. Is a Meetups-free Market acceptable until M4? Recommended: yes.
+8. Exchange M3 waits on the owner actions below. The legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
 
 ## Next session prompts
-Start only after PR #117 has merged. The next releasing slice stacks on `mk-v0.640.0`.
+Start only after PR #118 has merged. The next releasing slice stacks on `mk-v0.641.0`.
 
-D5 Vietnam (the next slice; no owner action needed):
-> Read CLAUDE.md, docs/HANDOFF.md and the D5 section of docs/PLAN.md. Run /slice for slice D5 Vietnam: citations.
-> Run `python3 scripts/fetch-place-citations.py --country vi --report --list`, then `--suggest`. Review each page, record the decisions in `scripts/place-citations.json`, and run `--install`. Follow the owner's sourcing rules in HANDOFF. Check vietnam.travel's sitemap for a same-organisation swap.
-> Add `sources` to the 14 unsourced Vietnamese routes: operator first (Vietnam Railways), then the 12Go or Baolau route page. Give the 5 Vietnamese URL-less records a URL. Lower both baselines in `check-sources.py`.
+D5 Cambodia (the next slice; no owner action needed):
+> Read CLAUDE.md, docs/HANDOFF.md and the D5 section of docs/PLAN.md. Run /slice for slice D5 Cambodia: citations.
+> Run `python3 scripts/fetch-place-citations.py --country kh --report --list`, then `--suggest`. Review each page, record the decisions in `scripts/place-citations.json`, and run `--install`. Follow the owner's sourcing rules in docs/PLAN.md D5. Check each cited organisation's own site (its sitemap first) for a same-organisation page before Wikipedia.
+> Add `sources` to the 4 unsourced Cambodian routes: operator first (Giant Ibis route pages are already cited elsewhere), then the 12Go or Baolau route page. Give the 2 Cambodian URL-less records a URL. Check the Wat Nokor Bachey blurb date. Lower both baselines in `check-sources.py` (start: 113 homepage-only, 10 unsourced routes).
 > Done when: the new counts are reported against the baselines, 10 sample cards show their citations at 375 px in headless Chrome, and all guards and `jsc -m scripts/validate-jsc.mjs` pass.
 > Out of scope: photos, local names, the "Free" price display.
 
-D5 Cambodia and Laos follow in the same shape:
-- Cambodia adds the Wat Nokor Bachey blurb date.
-- Laos adds the That Sikhottabong (10.5 km) and Nong Fa Lake (28.4 km) coordinate checks.
+D5 Laos follows in the same shape, and adds the That Sikhottabong (10.5 km) and Nong Fa Lake (28.4 km) coordinate checks.
 
 Q1, the 375 px audit (documents only, so it can run alongside D5):
 > Read CLAUDE.md, docs/HANDOFF.md and the Q1 section of docs/PLAN.md. Run /slice for slice Q1: load every route in `js/nav-groups.js` in headless Chrome at 375 px, in Mekong Retro light and dark, and record horizontal overflow, controls under 44 x 44 px, console errors, contrast failures and controls covered by overlays in `docs/AUDIT_375.md`.
