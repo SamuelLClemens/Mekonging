@@ -53,8 +53,11 @@ ROUTE_FILES = sorted(glob.glob('js/data/routes.*.js'))
 # homepage-only verdict, and none of which touch routes.*.js at all). Bump these ONLY when you
 # have actually reduced the count below it; lowering the number without doing the work defeats
 # the ratchet.
-BASELINE_HOMEPAGE_ONLY_PLACES = 247
-BASELINE_UNSOURCED_ROUTES = 87
+# D5 Thailand (2026-10-18, mk-v0.640.0): 63 Thai places got a page about the place
+# (scripts/place-citations.json) and 13 Thai routes got sources, so 247 -> 184 and 87 -> 24.
+# The route figure had drifted to 37 before D5 (S10's work), so the old 87 had gone slack.
+BASELINE_HOMEPAGE_ONLY_PLACES = 184
+BASELINE_UNSOURCED_ROUTES = 24
 
 ID_RE = re.compile(r'^\s*"?id"?:\s*["\']([^"\']+)["\']')
 # Anchored like check-place-fields.py's key_re: "sources" also appears as a SUBSTRING of

@@ -125,3 +125,13 @@ country's own language and Wikidata for its label, and a person records the righ
 lookup looks like "no local name". `--install` inserts each accepted name before the record's
 `categories` line, in the record's own key style (the place files mix JS keys and quoted keys).
 Then bump the version and run `build-pack-sizes.py --write` and `build-sw-manifest.py --write`.
+
+`fetch-place-citations.py` gives a homepage-only place record a page about the place (plan slice
+D5), one country per session. `--report --list` shows each record's lane; `--suggest` proposes the
+article reviewed in D3 (or search hits with their distance from the card) and the Wikivoyage page
+for the card's city, and exits 1 if a lookup failed. A person opens each page, keeps it only if it
+names the place, and records it in `place-citations.json` (`add`, or `swap` for the same
+organisation's own page) or files the record under `open` with the reason. `--install` edits each
+`sources` array in place, keeping its format (the files use one-line, per-entry and per-key arrays),
+and fails if a decided record is still homepage-only. Then lower the baselines in `check-sources.py`
+and bump the version. TAT, Michelin and 12Go block curl; open their pages in the in-app browser.

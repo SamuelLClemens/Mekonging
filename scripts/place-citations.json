@@ -1,0 +1,579 @@
+{
+ "_about": "Reviewed by a person, read by scripts/fetch-place-citations.py (plan slice D5). <country>: place id -> pages that are about that place, added before its old sources ('add') or replacing one of its URLs ('swap'), with what the page supports ('basis'). Each page was opened and checked to name the place. open: homepage-only records with no acceptable page, with the reason.",
+ "th": {
+  "th-ext-ang-thong-marine-national-park": {
+   "add": [
+    {
+     "org": "Wikipedia — Mu Ko Ang Thong National Park",
+     "url": "https://en.wikipedia.org/wiki/Mu_Ko_Ang_Thong_National_Park"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-asiatique-the-riverfront": {
+   "add": [
+    {
+     "org": "Wikipedia — Asiatique",
+     "url": "https://en.wikipedia.org/wiki/Asiatique"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-bangkok-atlanta-hotel": {
+   "add": [
+    {
+     "org": "Wikipedia — The Atlanta Hotel (Bangkok)",
+     "url": "https://en.wikipedia.org/wiki/The_Atlanta_Hotel_(Bangkok)"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-bridge-over-the-river-kwai-death-railway": {
+   "add": [
+    {
+     "org": "Wikipedia — Burma Railway",
+     "url": "https://en.wikipedia.org/wiki/Burma_Railway"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-huai-nam-dang-viewpoint": {
+   "add": [
+    {
+     "org": "Wikipedia — Huai Nam Dang National Park",
+     "url": "https://en.wikipedia.org/wiki/Huai_Nam_Dang_National_Park"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-jim-thompson-house": {
+   "add": [
+    {
+     "org": "Wikipedia — Jim Thompson House",
+     "url": "https://en.wikipedia.org/wiki/Jim_Thompson_House"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-khao-sok-national-park": {
+   "add": [
+    {
+     "org": "Wikipedia — Khao Sok National Park",
+     "url": "https://en.wikipedia.org/wiki/Khao_Sok_National_Park"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-koh-kret-wat-poramaiyikawat": {
+   "add": [
+    {
+     "org": "Wikipedia — Wat Paramaiyikawat",
+     "url": "https://en.wikipedia.org/wiki/Wat_Paramaiyikawat"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-koh-phi-phi-don": {
+   "add": [
+    {
+     "org": "Wikipedia — Ko Phi Phi Don",
+     "url": "https://en.wikipedia.org/wiki/Ko_Phi_Phi_Don"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-mu-ko-surin": {
+   "add": [
+    {
+     "org": "Wikipedia — Surin Islands",
+     "url": "https://en.wikipedia.org/wiki/Surin_Islands"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-phanom-rung-historical-park": {
+   "add": [
+    {
+     "org": "Wikipedia — Phanom Rung Historical Park",
+     "url": "https://en.wikipedia.org/wiki/Phanom_Rung_Historical_Park"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-phu-kradueng-national-park": {
+   "add": [
+    {
+     "org": "Wikipedia — Phu Kradueng National Park",
+     "url": "https://en.wikipedia.org/wiki/Phu_Kradueng_National_Park"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-similan-islands": {
+   "add": [
+    {
+     "org": "Wikipedia — Similan Islands",
+     "url": "https://en.wikipedia.org/wiki/Similan_Islands"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-the-golden-mount-wat-saket": {
+   "add": [
+    {
+     "org": "Wikipedia — Wat Saket",
+     "url": "https://en.wikipedia.org/wiki/Wat_Saket"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-wat-benchamabophit-the-marble-temple": {
+   "add": [
+    {
+     "org": "Wikipedia — Wat Benchamabophit",
+     "url": "https://en.wikipedia.org/wiki/Wat_Benchamabophit"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-wat-traimit-golden-buddha": {
+   "add": [
+    {
+     "org": "Wikipedia — Wat Traimit",
+     "url": "https://en.wikipedia.org/wiki/Wat_Traimit"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "th-ext-bottle-beach": {
+   "add": [
+    {
+     "org": "Wikipedia — Hat Khuat",
+     "url": "https://en.wikipedia.org/wiki/Hat_Khuat"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-bua-tong": {
+   "add": [
+    {
+     "org": "Wikipedia — Bua Tong Waterfall",
+     "url": "https://en.wikipedia.org/wiki/Bua_Tong_Waterfall"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-chiang-dao-cave-tham-chiang-dao": {
+   "add": [
+    {
+     "org": "Wikipedia — Wat Tham Chiang Dao",
+     "url": "https://en.wikipedia.org/wiki/Wat_Tham_Chiang_Dao"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-damnoen-saduak": {
+   "add": [
+    {
+     "org": "Wikipedia — Damnoen Saduak Floating Market",
+     "url": "https://en.wikipedia.org/wiki/Damnoen_Saduak_Floating_Market"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-doi-inthanon": {
+   "add": [
+    {
+     "org": "Wikipedia — Doi Inthanon National Park",
+     "url": "https://en.wikipedia.org/wiki/Doi_Inthanon_National_Park"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-koh-kradan": {
+   "add": [
+    {
+     "org": "Wikipedia — Ko Kradan",
+     "url": "https://en.wikipedia.org/wiki/Ko_Kradan"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-koh-lipe": {
+   "add": [
+    {
+     "org": "Wikipedia — Ko Lipe",
+     "url": "https://en.wikipedia.org/wiki/Ko_Lipe"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-koh-samet": {
+   "add": [
+    {
+     "org": "Wikipedia — Ko Samet",
+     "url": "https://en.wikipedia.org/wiki/Ko_Samet"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-phra-prang-sam-yot-lopburi-monkeys": {
+   "add": [
+    {
+     "org": "Wikipedia — Phra Prang Sam Yot",
+     "url": "https://en.wikipedia.org/wiki/Phra_Prang_Sam_Yot"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-phuket-old-town": {
+   "add": [
+    {
+     "org": "Wikipedia — Phuket Old Town",
+     "url": "https://en.wikipedia.org/wiki/Phuket_Old_Town"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-sala-keoku": {
+   "add": [
+    {
+     "org": "Wikipedia — Sala Keoku",
+     "url": "https://en.wikipedia.org/wiki/Sala_Keoku"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-white-temple": {
+   "add": [
+    {
+     "org": "Wikipedia — Wat Rong Khun",
+     "url": "https://en.wikipedia.org/wiki/Wat_Rong_Khun"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-sam-phan-bok": {
+   "add": [
+    {
+     "org": "Wikipedia — Sam Phan Bok",
+     "url": "https://en.wikipedia.org/wiki/Sam_Phan_Bok"
+    }
+   ],
+   "basis": "the place's own article (title, description and distance checked)"
+  },
+  "th-ext-maeklong-railway-market": {
+   "add": [
+    {
+     "org": "Wikipedia — Maeklong railway station",
+     "url": "https://en.wikipedia.org/wiki/Maeklong_railway_station"
+    }
+   ],
+   "basis": "the station article's lead describes the market on the tracks"
+  },
+  "th-ext-maya-bay": {
+   "add": [
+    {
+     "org": "Wikipedia — Ko Phi Phi Le",
+     "url": "https://en.wikipedia.org/wiki/Ko_Phi_Phi_Le"
+    }
+   ],
+   "basis": "the island article covers Maya Bay (18 mentions, incl. tourism and closures)"
+  },
+  "th-ext-sangkhlaburi": {
+   "add": [
+    {
+     "org": "Wikipedia — Uttamanusorn Bridge",
+     "url": "https://en.wikipedia.org/wiki/Uttamanusorn_Bridge"
+    }
+   ],
+   "basis": "the Mon Bridge's own article"
+  },
+  "th-ext-maekampong-homestay": {
+   "add": [
+    {
+     "org": "Wikipedia — Mae Kampong",
+     "url": "https://en.wikipedia.org/wiki/Mae_Kampong"
+    }
+   ],
+   "basis": "the village article: a home-stay village, 50 km east of Chiang Mai"
+  },
+  "th-ext-pong-duet-hot-springs": {
+   "add": [
+    {
+     "org": "Wikipedia — Huai Nam Dang National Park",
+     "url": "https://en.wikipedia.org/wiki/Huai_Nam_Dang_National_Park"
+    }
+   ],
+   "basis": "the park article lists Pong Dueat hot springs under Attractions"
+  },
+  "th-ext-freedom-beach": {
+   "add": [
+    {
+     "org": "Wikivoyage — Patong (Beaches)",
+     "url": "https://en.wikivoyage.org/wiki/Patong#Beaches"
+    }
+   ],
+   "basis": "lists Freedom Beach"
+  },
+  "th-ext-nai-harn": {
+   "add": [
+    {
+     "org": "Wikivoyage — Rawai (See)",
+     "url": "https://en.wikivoyage.org/wiki/Rawai#See"
+    }
+   ],
+   "basis": "covers Nai Harn beach"
+  },
+  "th-ext-promthep-cape": {
+   "add": [
+    {
+     "org": "Wikivoyage — Rawai (See)",
+     "url": "https://en.wikivoyage.org/wiki/Rawai#See"
+    }
+   ],
+   "basis": "covers Phromthep Cape"
+  },
+  "th-ext-railay-climbing": {
+   "add": [
+    {
+     "org": "Wikivoyage — Rai Leh (Climbing)",
+     "url": "https://en.wikivoyage.org/wiki/Rai_Leh#Climbing"
+    }
+   ],
+   "basis": "the climbing section of the Railay page"
+  },
+  "th-ext-railay-viewpoint-lagoon": {
+   "add": [
+    {
+     "org": "Wikivoyage — Rai Leh (See)",
+     "url": "https://en.wikivoyage.org/wiki/Rai_Leh#See"
+    }
+   ],
+   "basis": "describes the viewpoint and Princess Lagoon trail"
+  },
+  "th-ext-krabi-resort": {
+   "add": [
+    {
+     "org": "Wikivoyage — Ao Nang (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Ao_Nang#Sleep"
+    },
+    {
+     "org": "Wikivoyage — Rai Leh (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Rai_Leh#Sleep"
+    }
+   ],
+   "basis": "resort listings for both beaches the card names"
+  },
+  "th-ext-bang-nam-pheung-market": {
+   "add": [
+    {
+     "org": "Wikivoyage — Samut Prakan (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Samut_Prakan#Eat"
+    }
+   ],
+   "basis": "lists Bang Namphueng Floating Market, Phra Pradaeng"
+  },
+  "th-ext-chiang-mai-chiang-mai-gate-market": {
+   "add": [
+    {
+     "org": "Wikivoyage — Chiang Mai (Markets)",
+     "url": "https://en.wikivoyage.org/wiki/Chiang_Mai#Markets"
+    }
+   ],
+   "basis": "covers the Chiang Mai Gate market"
+  },
+  "th-ext-cm-cooking-class": {
+   "add": [
+    {
+     "org": "Wikivoyage — Chiang Mai (Thai cooking)",
+     "url": "https://en.wikivoyage.org/wiki/Chiang_Mai#Thai_cooking"
+    }
+   ],
+   "basis": "the cooking-school section"
+  },
+  "th-ext-nimman-longstay": {
+   "add": [
+    {
+     "org": "Wikivoyage — Chiang Mai (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Chiang_Mai#Sleep"
+    }
+   ],
+   "basis": "Nimmanhaemin stays with daily, weekly and monthly rates"
+  },
+  "th-ext-rental-chiang-mai": {
+   "add": [
+    {
+     "org": "Wikivoyage — Chiang Mai (By motorbike)",
+     "url": "https://en.wikivoyage.org/wiki/Chiang_Mai#By_motorbike"
+    }
+   ],
+   "basis": "motorbike and bicycle rental"
+  },
+  "th-ext-chiang-rai-night-bazaar-food-court": {
+   "add": [
+    {
+     "org": "Wikivoyage — Chiang Rai (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Chiang_Rai#Eat"
+    }
+   ],
+   "basis": "the Night Bazaar food court"
+  },
+  "th-ext-koh-chang-bang-bao-pier-seafood-row": {
+   "add": [
+    {
+     "org": "Wikivoyage — Ko Chang (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Ko_Chang#Eat"
+    }
+   ],
+   "basis": "Bang Bao seafood restaurants"
+  },
+  "th-ext-koh-tao-mae-haad-market-eats": {
+   "add": [
+    {
+     "org": "Wikivoyage — Ko Tao (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Ko_Tao#Eat"
+    }
+   ],
+   "basis": "Mae Haad eating"
+  },
+  "th-ext-koh-yao-noi": {
+   "add": [
+    {
+     "org": "Wikivoyage — Ko Yao (Ko Yao Noi)",
+     "url": "https://en.wikivoyage.org/wiki/Ko_Yao#Ko_Yao_Noi"
+    }
+   ],
+   "basis": "the Ko Yao Noi section"
+  },
+  "th-ext-nong-khai-mut-mee-garden": {
+   "add": [
+    {
+     "org": "Wikivoyage — Nong Khai (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Nong_Khai#Sleep"
+    }
+   ],
+   "basis": "lists Mut Mee Garden Guesthouse"
+  },
+  "th-ext-phuket-lard-yai-walking-street": {
+   "add": [
+    {
+     "org": "Wikivoyage — Phuket Town (Food markets)",
+     "url": "https://en.wikivoyage.org/wiki/Phuket_Town#Food_markets"
+    }
+   ],
+   "basis": "the Sunday market on Thalang Road"
+  },
+  "th-ext-rental-koh-samui": {
+   "add": [
+    {
+     "org": "Wikivoyage — Ko Samui (By motorbike)",
+     "url": "https://en.wikivoyage.org/wiki/Ko_Samui#By_motorbike"
+    }
+   ],
+   "basis": "scooter rental"
+  },
+  "th-ext-rental-phuket": {
+   "add": [
+    {
+     "org": "Wikivoyage — Phuket (Motorbike rental)",
+     "url": "https://en.wikivoyage.org/wiki/Phuket#Motorbike_rental"
+    }
+   ],
+   "basis": "motorbike rental"
+  },
+  "th-ext-trang-dim-sum-breakfast": {
+   "add": [
+    {
+     "org": "Wikivoyage — Trang (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Trang#Eat"
+    }
+   ],
+   "basis": "Trang's dim sum breakfast"
+  },
+  "th-ext-khlong-chak": {
+   "add": [
+    {
+     "org": "Thai National Parks — Mu Ko Lanta National Park",
+     "url": "https://www.thainationalparks.com/mu-ko-lanta-national-park"
+    }
+   ],
+   "basis": "the park page covers Khlong Chak waterfall"
+  },
+  "th-ext-doiinthanon-camping": {
+   "add": [
+    {
+     "org": "Thai National Parks — Doi Inthanon National Park",
+     "url": "https://www.thainationalparks.com/doi-inthanon-national-park"
+    }
+   ],
+   "basis": "the park page covers its campsites"
+  },
+  "th-ext-erawan-camping": {
+   "add": [
+    {
+     "org": "Thai National Parks — Erawan National Park",
+     "url": "https://www.thainationalparks.com/erawan-national-park"
+    }
+   ],
+   "basis": "the park page covers camping"
+  },
+  "th-ext-khaoyai-camping": {
+   "add": [
+    {
+     "org": "Thai National Parks — Khao Yai National Park",
+     "url": "https://www.thainationalparks.com/khao-yai-national-park"
+    }
+   ],
+   "basis": "the park page covers its campsites"
+  },
+  "th-ext-mork-fa-waterfall": {
+   "add": [
+    {
+     "org": "Thai National Parks — Doi Suthep-Pui National Park",
+     "url": "https://www.thainationalparks.com/doi-suthep-pui-national-park"
+    }
+   ],
+   "basis": "the park page covers Mork Fa waterfall"
+  },
+  "th-ext-chiangmai-khao-soi-mae-sai": {
+   "add": [
+    {
+     "org": "MICHELIN Guide — Khao Soi Mae Sai",
+     "url": "https://guide.michelin.com/us/en/chiang-mai-region/chiang-mai/restaurant/khao-soi-mae-sai"
+    }
+   ],
+   "basis": "the shop's own listing: 29/1 Ratchaphruek Road, closed Sunday"
+  },
+  "th-ext-chiang-mai-faham-khao-soi": {
+   "add": [
+    {
+     "org": "MICHELIN Guide — Khao Soi Lamduan Faham (Plate, 2021)",
+     "url": "https://guide.michelin.com/th/en/article/dining-in/these-michelin-plate-restaurants-are-ready-to-whip-up-delicious-delivery-or-takeaway-orders-for-you"
+    }
+   ],
+   "basis": "lists Khao Soi Lamduan Faham (Charoenrat), one of the cluster's shops"
+  },
+  "th-ext-phuket-old-town-hokkien-noodles": {
+   "add": [
+    {
+     "org": "MICHELIN Guide — Street food in Phuket (Go La, Mee Ton Poe)",
+     "url": "https://guide.michelin.com/th/en/article/dining-out/17-best-places-for-street-food-in-phuket"
+    }
+   ],
+   "basis": "Hokkien noodle shops in Phuket Town"
+  },
+  "th-ext-karon-viewpoint": {
+   "swap": {
+    "https://www.tourismthailand.org": {
+     "org": "Tourism Authority of Thailand — Karon Viewpoint",
+     "url": "https://www.tourismthailand.org/Trip-Planner/Suggestion-Detail/recommended-route-for-one-day-3"
+    }
+   },
+   "basis": "TAT's own entry: beside Highway 4030, three bays Kata Noi, Kata and Karon"
+  }
+ },
+ "open": {
+  "th-ext-nan-walking-street": "No checkable page (2026-10-18): TAT's only page for Kad Khuang Muang Nan is a 2023 one-off food fair at another site, and blogs disagree on the days (Saturday only vs Friday to Sunday)."
+ }
+}
