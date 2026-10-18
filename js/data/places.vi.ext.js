@@ -20,7 +20,7 @@ export const PLACES_VI_EXT = [
     rating: 4.8, reviewSources: ["Lonely Planet", "Google Maps consensus", "Tripadvisor"],
     mapQuery: "Ma Pi Leng Pass Ha Giang", coords: { lat: 23.2447, lng: 105.3286 },
     bookHint: "No booking; self-ride, hire an easy-rider, or join a multi-day loop tour from Ha Giang city.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }],
+    sources: [{ org: "Vietnam Tourism — Tuyen Quang (Ma Pi Leng Pass)", url: "https://vietnam.travel/places-to-go/northern-midlands-mountains/ha-giang" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }],
   },
   {
     id: "vi-ext-nho-que-tu-san", name: "Nho Que River & Tu San Canyon Boat Trip", city: "Ha Giang", country: "vi",
@@ -102,7 +102,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Lonely Planet", "Google Maps consensus", "Tripadvisor"],
     mapQuery: "Cuc Phuong National Park", coords: { lat: 20.3522, lng: 105.5944 },
     bookHint: "Pay at the park gate; book trekking guides or in-park lodging ahead through the park office.", verified: "2026-06",
-    sources: [{ org: "Cuc Phuong National Park", url: "https://cucphuongtourism.com.vn" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }],
+    sources: [{ org: "Cuc Phuong National Park", url: "https://cucphuongtourism.com.vn" }, { org: "Vietnam Tourism — Ninh Binh (Cuc Phuong)", url: "https://vietnam.travel/things-to-do/ninh-binh-an-oasis-nature-lovers" }],
   },
   {
     id: "vi-ext-paradise-cave", name: "Paradise Cave (Thien Duong)", city: "Phong Nha", country: "vi",
@@ -250,7 +250,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Golden Bridge Ba Na Hills Da Nang", coords: { lat: 15.9959, lng: 107.9966 },
     bookHint: "Buy the Sun World Ba Na Hills ticket online or at the base station.", verified: "2026-06",
-    sources: [{ org: "Sun World Ba Na Hills", url: "https://banahills.sunworld.vn" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Sun World Ba Na Hills", url: "https://sunworld.vn/en/banahills" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-imperial-city-hue", name: "Imperial City (Hue Citadel)", city: "Hue", country: "vi",
@@ -285,7 +285,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Lang Co Beach Vietnam", coords: { lat: 16.2300, lng: 108.0800 },
     bookHint: "No booking for the public beach; trains and buses on the Hue-Da Nang line stop at Lang Co.", verified: "2026-06",
-    sources: [{ org: "Vietnam Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "A long, gently shelving central-coast bay; calm in summer but with rip currents and rougher water in the September–December rainy season. Treat as unpatrolled.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "A long, thin sandspit between a turquoise lagoon and the sea just south of the Hai Van Pass, with the railway and highway running along its length."
+    sources: [{ org: "Vietnam Tourism — Vietnam's 9 best beaches (Lang Co Bay)", url: "https://vietnam.travel/things-to-do/vietnam%E2%80%99s-9-best-beaches-laid-back-family-getaway" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "A long, gently shelving central-coast bay; calm in summer but with rip currents and rougher water in the September–December rainy season. Treat as unpatrolled.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "A long, thin sandspit between a turquoise lagoon and the sea just south of the Hai Van Pass, with the railway and highway running along its length."
   },
 {
     id: "vi-ext-ban-gioc", name: "Ban Gioc Waterfall", city: "Cao Bang", country: "vi",
@@ -302,7 +302,7 @@ export const PLACES_VI_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ban Gioc Waterfall Cao Bang Vietnam", coords: { lat: 22.8530, lng: 106.7230 },
     bookHint: "No booking; drive, ride or join a Cao Bang tour. Pay entry and raft fees on site.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Ban Gioc Waterfall", url: "https://vietnam.travel/things-to-do/ban-gioc-waterfall-majestic-beauty-northern-border" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-pu-luong", name: "Pu Luong Nature Reserve", city: "Thanh Hoa", country: "vi",
@@ -317,7 +317,7 @@ export const PLACES_VI_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Pu Luong Nature Reserve Vietnam", coords: { lat: 20.4800, lng: 105.1600 },
     bookHint: "Book a homestay or eco-lodge ahead; arrange guides locally or through your lodge.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Pu Luong, Thanh Hoa", url: "https://vietnam.travel/things-to-do/pu-luong-thanh-hoa-hidden-paradise" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-mai-chau", name: "Mai Chau Valley", city: "Mai Chau", country: "vi",
@@ -333,7 +333,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Mai Chau Valley Hoa Binh Vietnam", coords: { lat: 20.6600, lng: 105.1000 },
     bookHint: "Book a stilt-house homestay in Lac or Pom Coong; buses run from Hanoi My Dinh.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Mai Chau", url: "https://vietnam.travel/places-to-go/northern-midlands-mountains/mai-chau" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
 {
     id: "vi-ext-my-khe", name: "My Khe Beach", city: "Da Nang", country: "vi",
@@ -350,7 +350,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "My Khe Beach Da Nang", coords: { lat: 16.06, lng: 108.247 },
     bookHint: "No booking; walk, ride or taxi from central Da Nang.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Must-visit places in Da Nang", url: "https://vietnam.travel/things-to-do/must-visit-places-in-da-nang" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-bai-sao", name: "Bai Sao (Star Beach)", city: "Phu Quoc", country: "vi",
@@ -366,7 +366,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Bai Sao Beach Phu Quoc", coords: { lat: 10.05, lng: 104.03 },
     bookHint: "No booking; reach it by scooter or taxi from Duong Dong.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A curving bay of soft white sand and clear, calm water on Phu Quoc's south-east coast, backed by casuarinas and a few seafood restaurants with beach swings."
+    sources: [{ org: "Vietnam Tourism — Island hopping in Phu Quoc (Sao Beach)", url: "https://vietnam.travel/things-to-do/island-hopping-in-phu-quoc" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A curving bay of soft white sand and clear, calm water on Phu Quoc's south-east coast, backed by casuarinas and a few seafood restaurants with beach swings."
   },
   {
     id: "vi-ext-con-dao", name: "Con Dao Islands", city: "Ba Ria-Vung Tau", country: "vi",
@@ -382,7 +382,7 @@ export const PLACES_VI_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Con Dao Islands Vietnam", coords: { lat: 8.69, lng: 106.61 },
     bookHint: "Fly or ferry in; book accommodation and park activities in advance.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Remote, clean and often near-empty beaches with clear, calm water; some exposed shores have strong currents and there is no patrol, so swim near your beach and ask locally.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "A cluster of remote, forested islands with quiet crescent beaches, a small French-colonial town and historic prisons; the main island's coast road is near-empty."
+    sources: [{ org: "Vietnam Tourism — Con Dao", url: "https://vietnam.travel/places-to-go/southeastern-vietnam/con-dao" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Remote, clean and often near-empty beaches with clear, calm water; some exposed shores have strong currents and there is no patrol, so swim near your beach and ask locally.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "A cluster of remote, forested islands with quiet crescent beaches, a small French-colonial town and historic prisons; the main island's coast road is near-empty."
   },
   {
     id: "vi-ext-ky-co", name: "Ky Co Beach", city: "Quy Nhon", country: "vi",
@@ -397,7 +397,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Ky Co Beach Quy Nhon Vietnam", coords: { lat: 13.66, lng: 109.27 },
     bookHint: "Join a Quy Nhon tour or hire a boat/car; pay the access fee on site.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "A sheltered turquoise cove reached by boat or a steep track; shallow and usually calm, but remote with no patrol.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "A tiny turquoise cove enclosed by golden rock cliffs near Quy Nhon, reached by speedboat or a steep track; the shallow, glass-clear water is dotted with fish pens."
+    sources: [{ org: "Vietnam Tourism — Binh Dinh (Ky Co)", url: "https://vietnam.travel/things-to-do/binh-dinh-where-surf-meets-soul" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "A sheltered turquoise cove reached by boat or a steep track; shallow and usually calm, but remote with no patrol.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "A tiny turquoise cove enclosed by golden rock cliffs near Quy Nhon, reached by speedboat or a steep track; the shallow, glass-clear water is dotted with fish pens."
   },
   {
     id: "vi-ext-doc-let", name: "Doc Let Beach", city: "Nha Trang", country: "vi",
@@ -412,7 +412,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Doc Let Beach Nha Trang Vietnam", coords: { lat: 12.47, lng: 109.2 },
     bookHint: "No booking; reach it by taxi or scooter from Nha Trang.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A very long, flat, powder-white beach north of Nha Trang with shallow, calm water, backed by casuarina trees and scattered resorts; salt fields lie inland."
+    sources: [{ org: "Vietnam Tourism — Nha Trang's best beaches (Doc Let)", url: "https://vietnam.travel/things-to-do/nha-trang-best-beaches-sustainable-vacation" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A very long, flat, powder-white beach north of Nha Trang with shallow, calm water, backed by casuarina trees and scattered resorts; salt fields lie inland."
   },
 {
     id: "vi-ext-dong-xuan-market", name: "Dong Xuan Market", city: "Hanoi", country: "vi",
@@ -428,7 +428,7 @@ export const PLACES_VI_EXT = [
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Dong Xuan Market Hanoi", coords: { lat: 21.038, lng: 105.849 },
     bookHint: "No booking; walk from the Old Quarter.", verified: "2026-06",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Shopping in Ha Noi (Dong Xuan Market)", url: "https://vietnam.travel/things-to-do/shopping-hanoi-markets-and-malls" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-bac-ha-market", name: "Bac Ha Sunday Market", city: "Lao Cai", country: "vi",
@@ -479,7 +479,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Mai Chau stilt house homestay Lac village", coords: { lat: 20.6597, lng: 105.09 },
     bookHint: "Book a homestay in Lac or Pom Coong online, or via a Hanoi tour operator.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Mai Chau", url: "https://vietnam.travel/places-to-go/northern-midlands-mountains/mai-chau" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   // ---- Mai Chau parity fill: the two entries above covered the valley and the homestay
   // concept generally; everything below names the specific villages, sights, market days,
@@ -763,7 +763,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Hostelworld", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Hanoi Old Quarter hostel Hoan Kiem", coords: { lat: 21.0336, lng: 105.8503 },
     bookHint: "Compare dorms on Hostelworld or Booking; walk-ins are fine outside peak season.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Hanoi (Old Quarter North of Hoan Kiem Lake)", url: "https://en.wikivoyage.org/wiki/Hanoi#Old_Quarter_North_of_Hoan_Kiem_Lake" }, { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-danang-longstay", name: "Da Nang long-stay (beachside apartments)", city: "Da Nang", country: "vi",
@@ -780,7 +780,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Google Maps consensus", "Nomad community reports"],
     mapQuery: "Da Nang An Thuong serviced apartment beach", coords: { lat: 16.0545, lng: 108.2442 },
     bookHint: "Compare monthly listings; local agents and long-stay platforms beat nightly OTAs.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }],
+    sources: [{ org: "Vietnam Tourism — Why Da Nang is Vietnam's most livable city", url: "https://vietnam.travel/things-to-do/4-reasons-da-nang-is-vietnam-most-livable-city" }],
   },
   {
     id: "vi-ext-halong-cruise", name: "Ha Long / Lan Ha Bay overnight cruise", city: "Ha Long", country: "vi",
@@ -797,7 +797,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Ha Long Bay overnight cruise pier", coords: { lat: 20.9101, lng: 107.1839 },
     bookHint: "Book a named boat online or through a reputable Hanoi agent a few days ahead.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Overnight cruises in Ha Long Bay", url: "https://vietnam.travel/things-to-do/overnight-cruises-ha-long-bay-luxury-summer-experience" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-phongnha-caves", name: "Phong Nha cave adventures", city: "Phong Nha", country: "vi",
@@ -814,7 +814,7 @@ export const PLACES_VI_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Phong Nha Ke Bang National Park caves", coords: { lat: 17.5876, lng: 106.2833 },
     bookHint: "Book multi-day caves with a licensed operator (e.g. Oxalis) well ahead; show caves on arrival.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — A complete guide to Phong Nha", url: "https://vietnam.travel/things-to-do/complete-guide-phong-nha" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hoian-cooking", name: "Hoi An cooking class & market tour", city: "Hoi An", country: "vi",
@@ -831,7 +831,7 @@ export const PLACES_VI_EXT = [
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Hoi An cooking class market tour", coords: { lat: 15.8801, lng: 108.338 },
     bookHint: "Book a day ahead online or through your hotel; morning classes catch the market at its best.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — 10 essential things to do in Hoi An", url: "https://vietnam.travel/things-to-do/top-things-to-do-hoi-an" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-dalat-camping", name: "Da Lat highlands camping & Ta Nang trek", city: "Da Lat", country: "vi",
@@ -848,7 +848,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Da Lat Tuyen Lam Lake camping glamping", coords: { lat: 11.8894, lng: 108.4265 },
     bookHint: "Book glamping or a guided Ta Nang trek through a Da Lat operator a few days ahead.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — My Da Lat with Liem", url: "https://vietnam.travel/things-to-do/my-da-lat-liem" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-phuquoc-resort", name: "Phu Quoc beach resort", city: "Phu Quoc", country: "vi",
@@ -865,7 +865,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Phu Quoc Long Beach resort", coords: { lat: 10.1899, lng: 103.9598 },
     bookHint: "Compare Booking/Agoda/Trip.com for the same resort; book beach-week dates and transfers ahead.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Phu Quoc's west-coast resort beaches (Long Beach) have calm, warm water and famous sunsets; the dry season is roughly November–April. Treat as unpatrolled unless your resort posts flags.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "Phu Quoc's west-coast Long Beach: a long strip of resorts and beach bars facing the sunset, busiest around Duong Dong and the night market."
+    sources: [{ org: "Wikivoyage — Phu Quoc (Sleep)", url: "https://en.wikivoyage.org/wiki/Phu_Quoc#Sleep" }, { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Phu Quoc's west-coast resort beaches (Long Beach) have calm, warm water and famous sunsets; the dry season is roughly November–April. Treat as unpatrolled unless your resort posts flags.", jellyfish: "Jellyfish are reported seasonally around the southern islands; ask locally before swimming and carry vinegar for stings.", recognition: "Phu Quoc's west-coast Long Beach: a long strip of resorts and beach bars facing the sunset, busiest around Duong Dong and the night market."
   },
   {
     id: "vi-ext-tamcoc-guesthouse", name: "Tam Coc / Ninh Binh guesthouse", city: "Ninh Binh", country: "vi",
@@ -882,7 +882,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Booking.com", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Tam Coc Ninh Binh guesthouse homestay", coords: { lat: 20.2183, lng: 105.9353 },
     bookHint: "Book directly or via Booking a day or two ahead; family rooms and pool guesthouses go first in summer.", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — 10 must-do activities in Ninh Binh", url: "https://vietnam.travel/things-to-do/10-must-do-activities-ninh-binh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-con-dao-diving", name: "Con Dao Island Scuba Diving and Snorkelling", city: "Con Dao", country: "vi",
@@ -898,7 +898,7 @@ export const PLACES_VI_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Con Dao National Park, Vietnam", coords: { lat: 8.69, lng: 106.61 },
     bookHint: "Reserve directly with a licensed Con Dao dive centre; day boats and permits sell out in peak season", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/" }],
+    sources: [{ org: "Vietnam Tourism — Beach break guide to Con Dao", url: "https://vietnam.travel/things-to-do/your-beach-break-guide-con-dao" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/" }],
   },
   {
     id: "vi-ext-hue-herbal-sauna", name: "Hue Royal Herbal Bath and Sauna Wellness Session", city: "Hue", country: "vi",
@@ -930,7 +930,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Buon Ma Thuot, Dak Lak, Vietnam", coords: { lat: 12.67, lng: 108.05 },
     bookHint: "Arrange a farm and roastery tour through a Buon Ma Thuot operator or your accommodation", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/" }],
+    sources: [{ org: "Vietnam Tourism — Discovering Dak Lak province", url: "https://vietnam.travel/things-to-do/7-reasons-explore-dak-lak" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com/" }],
   },
   {
     id: "vi-ext-hanoi-old-quarter-street-food", name: "Old Quarter street-food circuit (Dong Xuan alley to Ta Hien)", city: "Hanoi", country: "vi",
@@ -1026,7 +1026,7 @@ export const PLACES_VI_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Hoi An Central Market street food", coords: { lat: 15.88, lng: 108.33 },
     bookHint: "No booking - walk up and queue; mornings are calmest", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Explore the food of Hoi An", url: "https://vietnam.travel/things-to-do/explore-food-hoi-an" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hue-bunbo-breakfast-shops", name: "Hue Bun Bo Breakfast Shops", city: "Hue", country: "vi",
@@ -1042,7 +1042,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "bun bo Hue Ly Thuong Kiet Hue", coords: { lat: 16.46, lng: 107.59 },
     bookHint: "No booking - arrive early, share tables at busy shops", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Hue's best to eat (Bun Bo Hue)", url: "https://vietnam.travel/things-to-do/hue-best-to-eat-palace-street" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hcmc-vinhkhanh-seafood-street", name: "Vinh Khanh Seafood Street (District 4)", city: "Ho Chi Minh City", country: "vi",
@@ -1058,7 +1058,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Vinh Khanh seafood street District 4 Ho Chi Minh City", coords: { lat: 10.76, lng: 106.7 },
     bookHint: "No booking - stroll the strip and pick a busy pavement table", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — The perfect weekend in HCMC", url: "https://vietnam.travel/things-to-do/ho-chi-minh-city-itinerary" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-dalat-nightmarket-banhtrangnuong", name: "Da Lat Night Market Banh Trang Nuong Stalls", city: "Da Lat", country: "vi",
@@ -1091,7 +1091,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Cai Rang Floating Market Can Tho", coords: { lat: 10, lng: 105.76 },
     bookHint: "Arrange a boat the evening before at Ninh Kieu pier or via your homestay; food itself needs no booking", verified: "2026-07",
-    sources: [{ org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Can Tho (Cai Rang Floating Market)", url: "https://vietnam.travel/things-to-do/can-tho-glimpse-river-and-garden" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hoian-banhmiphuong",
@@ -1129,7 +1129,7 @@ export const PLACES_VI_EXT = [
     bookHint: "No bookings — walk up, join the queue, pay cash at the counter.",
     verified: "2026-07",
     sources: [
-      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Vietnam Tourism — Explore the food of Hoi An", url: "https://vietnam.travel/things-to-do/explore-food-hoi-an" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
   },
@@ -1169,7 +1169,7 @@ export const PLACES_VI_EXT = [
     bookHint: "No bookings — it is a takeaway counter; queue, pay, and eat nearby.",
     verified: "2026-07",
     sources: [
-      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Vietnam Tourism — Explore delicious dishes in HCMC", url: "https://vietnam.travel/things-to-do/explore-delicious-dishes-ho-chi-minh-city" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
   },
@@ -1252,6 +1252,7 @@ export const PLACES_VI_EXT = [
     bookHint: "No bookings — order at the cart and grab a seat in the cafe opposite.",
     verified: "2026-07",
     sources: [
+      { org: "Wikivoyage — Hanoi (Eat, around the Beer Street)", url: "https://en.wikivoyage.org/wiki/Hanoi#Around_the_Beer_Street_2" },
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1290,6 +1291,7 @@ export const PLACES_VI_EXT = [
     bookHint: "No reservations - walk up, take a stool, and eat what the day's pot serves; cash only.",
     verified: "2026-07",
     sources: [
+      { org: "Wikipedia — Nguyễn Thị Thanh (chef)", url: "https://en.wikipedia.org/wiki/Nguy%E1%BB%85n_Th%E1%BB%8B_Thanh_(chef)" },
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1326,7 +1328,7 @@ export const PLACES_VI_EXT = [
     bookHint: "No booking - counter service; order at the front, pay cash, takeaway or grab one of the simple tables.",
     verified: "2026-07",
     sources: [
-      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Vietnam Tourism — Explore the food of Hoi An", url: "https://vietnam.travel/things-to-do/explore-food-hoi-an" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
   },
@@ -1366,7 +1368,7 @@ export const PLACES_VI_EXT = [
     bookHint: "No reservations - queue briefly at peak hours, order and pay at the counter first, cash preferred.",
     verified: "2026-07",
     sources: [
-      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Vietnam Tourism — The perfect weekend in Ha Noi (Pho Thin)", url: "https://vietnam.travel/things-to-do/perfect-weekend-ha-noi" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
   },
@@ -1431,7 +1433,7 @@ export const PLACES_VI_EXT = [
     bookHint: "Book directly via Sofitel/Accor two to three months ahead for autumn and Tet-adjacent dates, and specify Historical Wing at booking if the older rooms matter to you.",
     verified: "2026-08",
     sources: [
-      { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
+      { org: "Vietnam Tourism — Ha Noi's luxury hotels (Metropole)", url: "https://vietnam.travel/things-to-do/comfort-meet-culture-hanoi-luxury-hotels" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
       { org: "Sofitel Legend Metropole Hanoi (official)", url: "https://www.sofitel-legend-metropole-hanoi.com/" },
     ],
@@ -1478,6 +1480,7 @@ export const PLACES_VI_EXT = [
     bookHint: "Reserve on the hotel's official site or a major booking platform several weeks ahead, especially around Tet and the December-March dry season.",
     verified: "2026-07",
     sources: [
+      { org: "Wikipedia — Hotel Continental Saigon", url: "https://en.wikipedia.org/wiki/Hotel_Continental_Saigon" },
       { org: "Vietnam National Authority of Tourism", url: "https://vietnam.travel" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -1543,7 +1546,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 16.4531, lng: 107.545 },
     bookHint: "No booking; arrive by dragon-boat, taxi or bicycle along the river road.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Thiên Mụ Temple", url: "https://en.wikipedia.org/wiki/Thi%C3%AAn_M%E1%BB%A5_Temple" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-khai-dinh-tomb",
@@ -1568,7 +1571,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 16.399, lng: 107.592 },
     bookHint: "Buy tickets at the gate; reach it by taxi, motorbike or a tombs day tour from Hue.",
     verified: "2026-07",
-    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "UNESCO World Heritage Centre — Complex of Hué Monuments", url: "https://whc.unesco.org/en/list/678" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-po-nagar-cham-towers",
@@ -1593,7 +1596,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2653, lng: 109.1953 },
     bookHint: "No booking; buy tickets at the gate. Short taxi or walk from central Nha Trang.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Vietnam's Champa kingdom (Po Nagar)", url: "https://vietnam.travel/things-to-do/vietnams-cham-legacy" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-thap-ba-hot-springs",
@@ -1616,7 +1619,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2758, lng: 109.1786 },
     bookHint: "Buy tickets at the gate or online; packages bookable through Nha Trang hotels and tours.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Best mud bath in Nha Trang (Thap Ba)", url: "https://vietnam.travel/things-to-do/best-mud-bath-nha-trang" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-crazy-house-dalat",
@@ -1639,7 +1642,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 11.9375, lng: 108.43 },
     bookHint: "Buy day tickets at the gate; book overnight rooms in advance through the guesthouse.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Hằng Nga Guesthouse", url: "https://en.wikipedia.org/wiki/H%E1%BA%B1ng_Nga_Guesthouse" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-linh-phuoc-pagoda",
@@ -1664,7 +1667,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 11.9497, lng: 108.4906 },
     bookHint: "No booking; take the Da Lat-Trai Mat vintage train or a short taxi ride.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Linh Phước Temple", url: "https://en.wikipedia.org/wiki/Linh_Ph%C6%B0%E1%BB%9Bc_Temple" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-bai-dinh-pagoda",
@@ -1688,7 +1691,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 20.2758, lng: 105.8622 },
     bookHint: "No booking for the grounds; pay for the buggy and tower on site. Reach it by car or a Ninh Binh tour.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Bái Đính Pagoda", url: "https://en.wikipedia.org/wiki/B%C3%A1i_%C4%90%C3%ADnh_Pagoda" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-christ-of-vung-tau",
@@ -1713,7 +1716,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 10.3357, lng: 107.0876 },
     bookHint: "No booking; walk up from the base. Vung Tau is a ferry or road trip from Ho Chi Minh City.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Vung Tau (Christ the King statue)", url: "https://vietnam.travel/things-to-do/vung-tau-sightseeing-wonderland" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-banh-it-cham-towers",
@@ -1738,7 +1741,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 13.8656, lng: 109.1128 },
     bookHint: "No booking; buy tickets at the gate. Reach it by taxi or motorbike from Quy Nhon.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Binh Dinh (Banh It Tower)", url: "https://vietnam.travel/things-to-do/binh-dinh-where-surf-meets-soul" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-my-son-sanctuary",
@@ -1762,7 +1765,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 15.7642, lng: 108.1244 },
     bookHint: "Buy tickets at the entrance; reach it by tour, private car or motorbike from Hoi An.",
     verified: "2026-07",
-    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "UNESCO World Heritage Centre — My Son Sanctuary", url: "https://whc.unesco.org/en/list/949" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-dray-nur-waterfall",
@@ -1785,7 +1788,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.5497, lng: 107.9764 },
     bookHint: "No booking; pay entry at the gate. Reach it by car or motorbike from Buon Ma Thuot.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Discovering Dak Lak province", url: "https://vietnam.travel/things-to-do/7-reasons-explore-dak-lak" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-phong-nha-cave-boat",
@@ -1809,7 +1812,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 17.5989, lng: 106.2811 },
     bookHint: "Buy tickets and hire the boat at the Son Trach boat station on arrival.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — A complete guide to Phong Nha", url: "https://vietnam.travel/things-to-do/complete-guide-phong-nha" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-cannon-fort-cat-ba",
@@ -1856,7 +1859,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 20.2094, lng: 105.9639 },
     bookHint: "Buy combined entry and boat tickets at the gate; reach it by taxi or motorbike from Ninh Binh.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Ninh Binh (Thung Nham Bird Garden)", url: "https://vietnam.travel/things-to-do/ninh-binh-an-oasis-nature-lovers" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hue-old-city-guesthouses",
@@ -1881,7 +1884,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 16.4655, lng: 107.5915 },
     bookHint: "Book directly or via Booking a day or two ahead; walk-ins are fine outside festival dates.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Hue (Sleep)", url: "https://en.wikivoyage.org/wiki/Hue#Sleep" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hue-dong-ba-market-food",
@@ -1907,7 +1910,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 16.4728, lng: 107.5828 },
     bookHint: "No booking; walk in and pick a busy stall. Cash only.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Đông Ba Market", url: "https://en.wikipedia.org/wiki/%C4%90%C3%B4ng_Ba_Market" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-nhatrang-tran-phu-hotels",
@@ -1932,7 +1935,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2388, lng: 109.1967 },
     bookHint: "Compare Booking, Agoda and Trip.com for the same hotel; book summer and Tet dates well ahead.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Nha Trang's long city beach has gentle water in the dry season (roughly January–August) and rougher surf with rip currents in the October–December rainy months; flagged swim zones operate in season — obey the flags.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "The high-rise hotel wall along Tran Phu boulevard fronting Nha Trang's long crescent city beach, lined with palms and a landscaped seafront park."
+    sources: [{ org: "Vietnam Tourism — 7 reasons to visit Nha Trang", url: "https://vietnam.travel/things-to-do/7-reasons-visit-nha-trang" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "unknown", swim: "Nha Trang's long city beach has gentle water in the dry season (roughly January–August) and rougher surf with rip currents in the October–December rainy months; flagged swim zones operate in season — obey the flags.", jellyfishMonths: [6, 7, 8, 9], jellyfish: "Jellyfish — including painful 'fire' jellyfish and occasional box jellyfish — are most common on Vietnam's central coast from June to September. Carry vinegar, ask locals about recent sightings, and rinse any sting with vinegar rather than fresh water.", recognition: "The high-rise hotel wall along Tran Phu boulevard fronting Nha Trang's long crescent city beach, lined with palms and a landscaped seafront park."
   },
   {
     id: "vi-ext-nhatrang-night-market-food",
@@ -1955,7 +1958,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2452, lng: 109.1936 },
     bookHint: "No booking; wander the stalls and pick a busy one. Carry small notes.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Must-eat dishes in Nha Trang", url: "https://vietnam.travel/things-to-do/must-eat-specialty-dishes-in-nha-trang" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-dalat-centre-guesthouses",
@@ -1980,7 +1983,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 11.944, lng: 108.437 },
     bookHint: "Book directly or via Booking; weekends and Tet fill fast with domestic visitors, so reserve ahead.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Da Lat (Sleep)", url: "https://en.wikivoyage.org/wiki/Da_Lat#Sleep" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-cantho-ninh-kieu-hotels",
@@ -2005,7 +2008,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 10.033, lng: 105.7887 },
     bookHint: "Book directly or via Booking a day or two ahead; ask about the sunrise floating-market boat.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Can Tho (where to stay)", url: "https://vietnam.travel/things-to-do/can-tho-glimpse-river-and-garden" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-cantho-ninh-kieu-night-food",
@@ -2028,7 +2031,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 10.0345, lng: 105.7896 },
     bookHint: "No booking; walk the riverfront and food lanes and pick a busy stall. Carry small notes.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — Can Tho (Ninh Kieu Wharf, night market)", url: "https://vietnam.travel/things-to-do/can-tho-glimpse-river-and-garden" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-ninhbinh-tamcoc-homestays",
@@ -2053,7 +2056,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 20.2205, lng: 105.931 },
     bookHint: "Book directly or via Booking a day or two ahead; family rooms go first in summer and autumn.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — 10 must-do activities in Ninh Binh", url: "https://vietnam.travel/things-to-do/10-must-do-activities-ninh-binh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hagiang-city-guesthouses",
@@ -2078,7 +2081,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 22.8233, lng: 104.9784 },
     bookHint: "Book a bed on Hostelworld or Booking a day or two ahead in peak season; arrange the bike or easy-rider on arrival.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — The Ha Giang Loop", url: "https://vietnam.travel/things-to-do/ha-giang-loop" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-hagiang-dongvan-homestays",
@@ -2103,7 +2106,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 23.2789, lng: 105.3625 },
     bookHint: "Book ahead in peak season or let your easy-rider or loop guide arrange the overnight stops.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — The Ha Giang Loop", url: "https://vietnam.travel/things-to-do/ha-giang-loop" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-phongnha-son-trach-homestays",
@@ -2128,7 +2131,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 17.6008, lng: 106.282 },
     bookHint: "Book directly or via Booking a day or two ahead; pools and family rooms fill in the summer peak.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — A complete guide to Phong Nha", url: "https://vietnam.travel/things-to-do/complete-guide-phong-nha" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-phongnha-village-eats",
@@ -2151,7 +2154,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 17.5995, lng: 106.2833 },
     bookHint: "No booking; walk the main street and pick a busy place. Cash is easiest.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — A complete guide to Phong Nha", url: "https://vietnam.travel/things-to-do/complete-guide-phong-nha" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-ninhbinh-city-hotels",
@@ -2176,7 +2179,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 20.2506, lng: 105.9745 },
     bookHint: "Book directly or via Booking; walk-ins are usually fine outside peak weekends.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Ninh Binh (Sleep in town)", url: "https://en.wikivoyage.org/wiki/Ninh_Binh#In_town_2" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-dalat-farmstays-tuyen-lam",
@@ -2201,7 +2204,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 11.8963, lng: 108.4342 },
     bookHint: "Book directly or via Booking a few days ahead; cabins fill on weekends and over Tet.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Vietnam Tourism — 8 ways to appreciate Da Lat", url: "https://vietnam.travel/things-to-do/8-things-to-do-in-dalat" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "vi-ext-bui-vien-walking-street",
@@ -2223,7 +2226,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 10.7674, lng: 106.6924 },
     bookHint: "Pure walk-in; wander and pick a spot.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet Vietnam" }, { org: "Vietnam Tourism" }],
+    sources: [{ org: "Wikipedia — Bùi Viện Street", url: "https://en.wikipedia.org/wiki/B%C3%B9i_Vi%E1%BB%87n_Street" }, { org: "Vietnam Tourism — Ho Chi Minh City cuisine (Bui Vien)", url: "https://vietnam.travel/things-to-do/ho-chi-minh-city-cuisine-street-eats-fine-dining" }],
   },
   {
     id: "vi-ext-an-thuong-western-street-area",
@@ -2245,7 +2248,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 16.0453, lng: 108.2448 },
     bookHint: "Walk-in; no booking required.",
     verified: "2026-07",
-    sources: [{ org: "Travelfish" }, { org: "Lonely Planet Vietnam" }],
+    sources: [{ org: "Vietnam Tourism — Why Da Nang is Vietnam's most livable city", url: "https://vietnam.travel/things-to-do/4-reasons-da-nang-is-vietnam-most-livable-city" }, { org: "Wikivoyage — Da Nang (Beach district My An)", url: "https://en.wikivoyage.org/wiki/Da_Nang#Beach_district_My_An" }],
   },
   {
     id: "vi-ext-dragon-bridge-fire-water-show",
@@ -2268,7 +2271,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 16.0614, lng: 108.227 },
     bookHint: "Free walk-up; no ticket. Boat cruises book on the riverside or via hotels.",
     verified: "2026-07",
-    sources: [{ org: "Vietnam Tourism" }, { org: "Danang Tourism" }],
+    sources: [{ org: "Vietnam Tourism — Da Nang: eat, play, relax", url: "https://vietnam.travel/things-to-do/da-nang-eat-play-relax-your-ultimate-coastal-escape" }, { org: "Wikipedia — Dragon Bridge (Da Nang)", url: "https://en.wikipedia.org/wiki/Dragon_Bridge_(Da_Nang)" }],
   },
   {
     id: "vi-ext-an-hoi-night-s-ng-ho-i-lantern-boats",
@@ -2290,7 +2293,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 15.877, lng: 108.3255 },
     bookHint: "Walk-in; boats and lanterns are hired on the spot at the riverbank.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet Vietnam" }, { org: "Vietnam Tourism" }],
+    sources: [{ org: "Lonely Planet — A guide to Hoi An", url: "https://www.lonelyplanet.com/articles/a-guide-to-hoi-an-vietnam" }, { org: "Vietnam Tourism — Exploring the ancient town of Hoi An", url: "https://vietnam.travel/things-to-do/the-best-ways-to-explore-the-ancient-town-of-hoi-an" }],
   },
   {
     id: "vi-ext-tran-phu-beachfront-bars",
@@ -2312,7 +2315,7 @@ export const PLACES_VI_EXT = [
     coords: { lat: 12.2388, lng: 109.1967 },
     bookHint: "Walk-in; beach-club day beds can be reserved through your hotel in peak season.",
     verified: "2026-07",
-    sources: [{ org: "Travelfish" }, { org: "Lonely Planet Vietnam" }],
+    sources: [{ org: "Travelfish — Where to eat in Nha Trang (Nightlife)", url: "https://www.travelfish.org/eatandmeet/vietnam/south_central_vietnam/khanh_hoa/nha_trang/eat" }, { org: "Lonely Planet — A second-timer's guide to Nha Trang", url: "https://www.lonelyplanet.com/articles/return-visitor-guide-to-nha-trang-vietnam" }],
   },
   {
     "id": "vi-ext-cham-museum",
@@ -4231,7 +4234,7 @@ export const PLACES_VI_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Booking.com consensus"],
     mapQuery: "La Siesta Classic Ma May Hanoi", coords: { lat: 21.0332, lng: 105.8497 },
     bookHint: "Book online a few days ahead.", verified: "2026-08",
-    sources: [{ org: "La Siesta Hotels & Spa — official", url: "https://www.lasiestahotels.com/" }],
+    sources: [{ org: "La Siesta Classic Ma May — official", url: "https://lasiestahotels.com/mamay/" }],
   },
 
   // --- Task #142 run 4: Hanoi's practical orientation triad, matching the
@@ -4901,7 +4904,7 @@ export const PLACES_VI_EXT = [
     rating: 4.0, reviewSources: ["Google Maps consensus"],
     mapQuery: "Kenh Ga floating village Gia Vien Ninh Binh", coords: { lat: 20.3294, lng: 105.8144 },
     bookHint: "Arrange the boat at the landing, or through a guesthouse if you want a fixed price.", verified: "2026-08",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }],
+    sources: [{ org: "Wikipedia (Vietnamese) — Suối nước nóng Kênh Gà", url: "https://vi.wikipedia.org/wiki/Su%E1%BB%91i_n%C6%B0%E1%BB%9Bc_n%C3%B3ng_K%C3%AAnh_G%C3%A0" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }],
   },
   {
     id: "vi-ext-ninhbinh-cho-rong", name: "Cho Rong market, Ninh Binh city", city: "Ninh Binh", country: "vi",
@@ -4936,7 +4939,7 @@ export const PLACES_VI_EXT = [
     rating: 4.0, reviewSources: ["Google Maps consensus"],
     mapQuery: "Ga Ninh Binh railway station", coords: { lat: 20.2420, lng: 105.9746 },
     bookHint: "Tickets at the booking hall or through Vietnam Railways online; book ahead in peak season.", verified: "2026-08",
-    sources: [{ org: "Vietnam Railways", url: "https://dsvn.vn" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }],
+    sources: [{ org: "Wikipedia — Ninh Bình station", url: "https://en.wikipedia.org/wiki/Ninh_B%C3%ACnh_station" }, { org: "Vietnam Railways", url: "https://dsvn.vn" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }],
   },
   // --- Tả Van (Muong Hoa valley, ~10 km south-east of Sapa town) -------------------------
   // Kept under city "Sapa" rather than split into its own city: travellers book "Sapa" and
@@ -5054,7 +5057,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Google Maps consensus", "Vietnam National Administration of Tourism"],
     mapQuery: "Bai da co Sa Pa carved boulder Muong Hoa", coords: { lat: 22.3041, lng: 103.8986 },
     bookHint: "No booking. Walk from Ta Van, or add it to a valley trek with a local guide.", verified: "2026-09",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "OpenStreetMap (carved boulder node)", url: "https://www.openstreetmap.org/#map=17/22.3041/103.8986" }],
+    sources: [{ org: "Wikipedia (Vietnamese) — Bãi đá cổ Sa Pa", url: "https://vi.wikipedia.org/wiki/B%C3%A3i_%C4%91%C3%A1_c%E1%BB%95_Sa_Pa" }, { org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "OpenStreetMap (carved boulder node)", url: "https://www.openstreetmap.org/#map=17/22.3041/103.8986" }],
   },
   {
     id: "vi-ext-tavan-cau-may", name: "Cau May (the Cloud Bridge) over the Muong Hoa", city: "Sapa", country: "vi",
@@ -5111,7 +5114,7 @@ export const PLACES_VI_EXT = [
     rating: 4.3, reviewSources: ["Google Maps consensus", "Sapa O'Chau"],
     mapQuery: "Ta Van Giay village Sapa", coords: { lat: 22.3039, lng: 103.8902 },
     bookHint: "No booking; walk in from a Ta Van homestay or on the valley trek from Lao Chai.", verified: "2026-09",
-    sources: [{ org: "Sapa O'Chau (Hmong-founded social enterprise)", url: "https://sapaochau.org/" }, { org: "OpenStreetMap (Tả Van village node)", url: "https://www.openstreetmap.org/#map=16/22.3027/103.8886" }],
+    sources: [{ org: "Sapa O'Chau — Muong Hoa trek", url: "https://sapaochau.org/index.php/sapa-trekking-and-homestay/sapa-trek-and-tour/trekking-tours/muong-hoa-trek-3-day/" }, { org: "OpenStreetMap (Tả Van village node)", url: "https://www.openstreetmap.org/#map=16/22.3027/103.8886" }],
   },
   {
     id: "vi-ext-laochai-tavan-walk", name: "The Lao Chai - Ta Van valley walk", city: "Sapa", country: "vi",
@@ -5187,7 +5190,7 @@ export const PLACES_VI_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chua Linh Ung Bai But Son Tra Da Nang", coords: { lat: 16.1002, lng: 108.2784 },
     bookHint: "No booking. Taxi, Grab or a rented scooter from the beach strip.", verified: "2026-09",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "OpenStreetMap (pagoda node)", url: "https://www.openstreetmap.org/#map=16/16.1002/108.2784" }],
+    sources: [{ org: "Vietnam Tourism — Must-visit places in Da Nang", url: "https://vietnam.travel/things-to-do/must-visit-places-in-da-nang" }, { org: "OpenStreetMap (pagoda node)", url: "https://www.openstreetmap.org/#map=16/16.1002/108.2784" }],
   },
   {
     id: "vi-ext-hoian-japanese-bridge", name: "The Japanese Covered Bridge (Chua Cau)", city: "Hoi An", country: "vi",
@@ -5206,7 +5209,7 @@ export const PLACES_VI_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chua Cau Japanese Covered Bridge Hoi An", coords: { lat: 15.8772, lng: 108.3260 },
     bookHint: "Buy the old-town ticket at an official booth on the way in.", verified: "2026-09",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "OpenStreetMap (Chùa Cầu way)", url: "https://www.openstreetmap.org/#map=18/15.8772/108.3260" }],
+    sources: [{ org: "Vietnam Tourism — Hoi An's top 5 spots (Japanese Covered Bridge)", url: "https://vietnam.travel/things-to-do/hoi-ans-top-5-most-instagrammable-spots" }, { org: "OpenStreetMap (Chùa Cầu way)", url: "https://www.openstreetmap.org/#map=18/15.8772/108.3260" }],
   },
   {
     id: "vi-ext-cu-lao-cham", name: "Cu Lao Cham (Cham Islands)", city: "Hoi An", country: "vi",
@@ -5244,7 +5247,7 @@ export const PLACES_VI_EXT = [
     rating: 4.4, reviewSources: ["Google Maps consensus"],
     mapQuery: "Dao Ly Son Quang Ngai", coords: { lat: 15.3809, lng: 109.1175 },
     bookHint: "Buy ferry tickets at Sa Ky port on the morning; book a guesthouse by phone or on arrival.", verified: "2026-09",
-    sources: [{ org: "Vietnam National Administration of Tourism", url: "https://vietnam.travel" }, { org: "OpenStreetMap (Đảo Lý Sơn)", url: "https://www.openstreetmap.org/#map=13/15.3809/109.1175" }],
+    sources: [{ org: "Vietnam Tourism — Ly Son Island", url: "https://vietnam.travel/things-to-do/visit-ly-son-island-for-pristine-beaches-and-more" }, { org: "OpenStreetMap (Đảo Lý Sơn)", url: "https://www.openstreetmap.org/#map=13/15.3809/109.1175" }],
   },
   // ---- TAY NINH PROVINCE — first entry for this province; found by re-running the Laos
   // province-coverage method (point-in-polygon against regions.vi.js, not city-name

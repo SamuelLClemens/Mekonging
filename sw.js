@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.640.0';
+const CACHE_VERSION = 'mk-v0.641.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -457,7 +457,7 @@ const MANIFEST = {
   'js/data/places.la.js': '96546856',
   'js/data/places.th.ext.js': '6a500355',
   'js/data/places.th.js': 'cc319303',
-  'js/data/places.vi.ext.js': '8992dad8',
+  'js/data/places.vi.ext.js': 'a2dc6154',
   'js/data/places.vi.js': 'b54fa694',
   'js/data/pools.js': '71dabab2',
   'js/data/prices.kh.js': '8d3bdbfa',
@@ -474,7 +474,7 @@ const MANIFEST = {
   'js/data/routes.kh.js': 'a373226e',
   'js/data/routes.la.js': 'f26f6f1c',
   'js/data/routes.th.js': '9586afab',
-  'js/data/routes.vi.js': 'aa1aedc1',
+  'js/data/routes.vi.js': 'ab59fde0',
   'js/data/scams.js': '69bfed4a',
   'js/data/scenic.kh.js': '67589f36',
   'js/data/scenic.la.js': '96ac2687',
@@ -528,7 +528,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'c580feed',
+  'js/main.js': 'd9e590cd',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
   'js/market-routes.js': '2b771207',

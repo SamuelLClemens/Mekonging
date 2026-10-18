@@ -220,6 +220,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Worth it for a group splitting the cost, or if arriving with luggage for a multi-stop northern loop."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Hanoi to Mai Chau",
+        "url": "https://12go.asia/en/travel/hanoi/mai-chau"
+      }
     ]
   },
   {
@@ -263,6 +269,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Better for daytime travel and those who dislike lie-flat berths; some private-cabin sleeper vans also run this route."
       }
+    ],
+    "sources": [
+      {
+        "org": "Cat Ba Express — Hanoi to Ha Giang bus",
+        "url": "https://catbaexpress.com/hanoi-to-ha-giang-bus.html"
+      }
     ]
   },
   {
@@ -305,6 +317,16 @@ export const ROUTES_VI = [
         "bookVia": "Vietnam Railways or Baolau, plus a Dong Hoi-Phong Nha shuttle",
         "recommended": true,
         "notes": "The most comfortable overnight option: sleep to Dong Hoi, then a roughly 45-minute transfer to Phong Nha. Tourist sleeper carriages cost more but are notably nicer."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Railway Transport JSC (Vietnam Railways) — Train routes",
+        "url": "https://cophanvantaiduongsat.vn/cac-tuyen-tau/?lang=en"
+      },
+      {
+        "org": "12Go — Hanoi to Phong Nha",
+        "url": "https://12go.asia/en/travel/hanoi/phong-nha"
       }
     ]
   },
@@ -432,6 +454,16 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Only worth it for tight budgets; the flight or train are far better uses of time on this distance."
       }
+    ],
+    "sources": [
+      {
+        "org": "Railway Transport JSC (Vietnam Railways) — Train routes",
+        "url": "https://cophanvantaiduongsat.vn/cac-tuyen-tau/?lang=en"
+      },
+      {
+        "org": "12Go — Hanoi to Da Nang",
+        "url": "https://12go.asia/en/travel/hanoi/da-nang"
+      }
     ]
   },
   {
@@ -474,6 +506,16 @@ export const ROUTES_VI = [
         "bookVia": "Vietnam Railways or Baolau",
         "recommended": false,
         "notes": "The full end-to-end run is a bucket-list experience but takes well over a day; most travellers ride it in stages (e.g. Hanoi-Hue, Da Nang-Nha Trang) rather than non-stop."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Railway Transport JSC (Vietnam Railways) — Train routes",
+        "url": "https://cophanvantaiduongsat.vn/cac-tuyen-tau/?lang=en"
+      },
+      {
+        "org": "12Go — Hanoi to Ho Chi Minh City",
+        "url": "https://12go.asia/en/travel/hanoi/ho-chi-minh-city"
       }
     ]
   },
@@ -650,6 +692,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Reliable shared option; most run via the tunnel for speed rather than the pass."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Hue to Hoi An",
+        "url": "https://12go.asia/en/travel/hue/hoi-an"
+      }
     ]
   },
   {
@@ -710,6 +758,16 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Best for those short on time; factor the airport transfer, which erodes the time saving over the night train."
       }
+    ],
+    "sources": [
+      {
+        "org": "Railway Transport JSC (Vietnam Railways) — Train routes",
+        "url": "https://cophanvantaiduongsat.vn/cac-tuyen-tau/?lang=en"
+      },
+      {
+        "org": "12Go — Da Nang to Nha Trang",
+        "url": "https://12go.asia/en/travel/da-nang/nha-trang"
+      }
     ]
   },
   {
@@ -752,6 +810,12 @@ export const ROUTES_VI = [
         "bookVia": "FUTA/Phuong Trang or redBus",
         "recommended": false,
         "notes": "Plentiful and reliable; only marginally cheaper than a limousine van for a slightly slower ride."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Nha Trang to Da Lat",
+        "url": "https://12go.asia/en/travel/nha-trang/da-lat"
       }
     ]
   },
@@ -796,6 +860,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Worth it for groups or those wanting to stop at viewpoints; the per-vehicle price covers up to several passengers."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Da Lat to Mui Ne",
+        "url": "https://12go.asia/en/travel/da-lat/mui-ne"
+      }
     ]
   },
   {
@@ -838,6 +908,16 @@ export const ROUTES_VI = [
         "bookVia": "Vietnam Railways or Baolau",
         "recommended": false,
         "notes": "Pleasant ride but you must first get from Mui Ne to Phan Thiet station, adding about 30 minutes each way."
+      }
+    ],
+    "sources": [
+      {
+        "org": "Railway Transport JSC (Vietnam Railways) — Train routes",
+        "url": "https://cophanvantaiduongsat.vn/cac-tuyen-tau/?lang=en"
+      },
+      {
+        "org": "12Go — Mui Ne to Ho Chi Minh City",
+        "url": "https://12go.asia/en/travel/mui-ne/ho-chi-minh-city"
       }
     ]
   },
@@ -882,6 +962,12 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Only a small time saving once airport transfers and check-in are counted; useful mainly when fares are low."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Ho Chi Minh City to Da Lat",
+        "url": "https://12go.asia/en/travel/ho-chi-minh-city/da-lat"
+      }
     ]
   },
   {
@@ -924,6 +1010,12 @@ export const ROUTES_VI = [
         "bookVia": "12Go or hotel-arranged transfer",
         "recommended": false,
         "notes": "Cost-effective split among 3-4 people and convenient if you want to combine the transfer with delta sightseeing."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Ho Chi Minh City to Can Tho",
+        "url": "https://12go.asia/en/travel/ho-chi-minh-city/can-tho"
       }
     ]
   },
@@ -1034,6 +1126,16 @@ export const ROUTES_VI = [
         "recommended": false,
         "notes": "Time saving is modest once you account for airport transfers at both ends versus the overnight train."
       }
+    ],
+    "sources": [
+      {
+        "org": "Railway Transport JSC (Vietnam Railways) — Train routes",
+        "url": "https://cophanvantaiduongsat.vn/cac-tuyen-tau/?lang=en"
+      },
+      {
+        "org": "12Go — Ho Chi Minh City to Nha Trang",
+        "url": "https://12go.asia/en/travel/ho-chi-minh-city/nha-trang"
+      }
     ]
   },
   {
@@ -1076,6 +1178,12 @@ export const ROUTES_VI = [
         "bookVia": "12Go or Bookaway",
         "recommended": false,
         "notes": "Only worth it for budget travellers; the winding final climb to Da Lat makes for a bumpy night."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Da Nang to Da Lat",
+        "url": "https://12go.asia/en/travel/da-nang/da-lat"
       }
     ]
   },
