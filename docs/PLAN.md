@@ -8,14 +8,16 @@
 - M1 (the board moved to `js/screens/exchange.js`) is PR #108, `mk-v0.633.0`, 2026-10-12.
 - M1 (PR #108) and M2 (the Market tab, PR #111, `mk-v0.635.0`) are merged. M3 is next on the exchange side. Its owner actions (`docs/EXCHANGE.md` §15, the M3 rows up to sending the public values) were done on 2026-10-19.
 
-### Release order (owner, 2026-10-19 status review)
-- **D5 Laos** merged as PR #122 (`mk-v0.643.0`).
-- **M3 is split in two.** M3a (the §16 CSP tightening, tesseract self-hosted under `lib/tesseract/`, the `check-secrets` guard) is PR #124, `mk-v0.644.0`, 2026-10-19.
-- **Next releasing slice:** M3b, accounts and sign-in (closed beta): migration 001, the RLS test, `market-config.js` and `market-api.js`, the sign-in screens, the §2 CSP additions and the owner checks. It stacks on M3a. Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), is approved and can run alongside it.
-- **Approved, not yet placed in the order:** one small releasing data slice, "D5 tidy" (recommended right after M3b):
-  - Relabel the 50 entries in 6 data files that cite tourismcambodia.com or tourismcambodia.org as "Ministry of Tourism" (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`). They become "Tourism Cambodia". tourism.gov.kh is the ministry.
-  - Check Long Beach (Sok San) and Long Set Beach (4K Beach) against coordinates. Merge them if they are one beach (a merge needs a `place-merges.js` line in the same commit) before the 4K card gets a citation.
-- The order after that is open. Q3 to Q7, the Bangkok districts and M4 onward are all releasing slices, so they run one at a time.
+### Release order (owner, 2026-10-19; updated after M3b)
+- Merged on 2026-10-19: D5 Laos (PR #122, `mk-v0.643.0`), M3a (PR #124, `mk-v0.644.0`) and **M3b, accounts and sign-in** (PR #125, `mk-v0.645.0`). M3b's owner checks (migration 001, the RLS test, the Security Advisor, the iPhone sign-ins) are tracked in `docs/HANDOFF.md`.
+- **Owner ruling after M3b: Market first, one slice per session** (`docs/EXCHANGE.md` §16, 2026-10-19). Releasing slices stack, one at a time, each from the merged tip:
+  1. **M4a**: listings and search, server side.
+  2. **M4b**: the marketplace redesign (search, filters, picture-led cards with category artwork, listing pages, post forms).
+  3. **M4c**: listing photos.
+  4. **D5 tidy** (approved): relabel the 50 "Ministry of Tourism" entries on tourismcambodia.com and .org (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`) as "Tourism Cambodia", with tourism.gov.kh as the ministry. Check Long Beach (Sok San) against Long Set Beach (4K Beach) and merge them if they are one beach (with a `place-merges.js` line). Open decision 13 (the Tourism Laos relabel) is recommended to ride along.
+  5. **Bangkok B1 to B8** (below), then **city depth C1 onward** (below).
+  6. M5 onward on the exchange side. The owner may move M5 (messages) ahead of the Bangkok slices; a marketplace without messages cannot complete a hand-off.
+- Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), can run alongside any of these. Q3 to Q8 stack like any releasing slice.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
 Method: jsc over `loadAllCountries()`, plus `check-place-fields.py` and `check-sources.py`.
@@ -146,6 +148,12 @@ Runs after D5 Cambodia and D5 Laos and before D6. Releasing slices stack, so one
 - Run `check-place-dupes` first: Bangkok already has 40 records, and a name collision silently deletes travellers' saved data.
 - A slice that adds photos also runs `build-pack-sizes.py --write`. The offline pack grows with every district, so report the pack size before and after.
 - Done when: Bangkok records for the district are counted by category before and after; every new record passes `check-place-fields.py --assert`; 10 sample cards show correctly at 375 px in headless Chrome over CDP; all guards and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open into `feat/scaffold-bangkok-slice`.
+
+## City depth (owner request, 2026-10-19)
+"Make the site rich and informative, with a lot for travellers": after Bangkok's first phase, the B recipe (above) is applied to the next hubs, one city per session, each releasing on its own.
+- **Proposed order** (by record count and traveller volume; open decision 16): C1 Chiang Mai (33 records), C2 Hanoi (22), C3 Ho Chi Minh City (11), C4 Siem Reap (23), C5 Phnom Penh (16), C6 Luang Prabang (23), C7 Da Nang and Hoi An (18 and 17), C8 Vientiane (21), then Phuket and Krabi, then a gap sweep.
+- **Same rules as Bangkok:** every category in the Bangkok scope, the practical ones included (health, errands, daily shopping, visa and living); complete at creation; page-level sources; photos only from the place's own Wikipedia article; no dispensaries; adult nightlife as factual area entries only.
+- **Files:** `js/data/places.<cc>.<city>.js` per city, with one loader line in `js/data/regions.js`; ids `<cc>-<city>-<slug>`. A city with existing records keeps them where they are; `check-place-dupes` runs first.
 
 ## Traveller exchange (marketplace and meetups)
 Today's board (`#exchange`, `#swap`, `#market`, `#circle`) has no backend. A post stays on the phone until its link is shared, so two strangers cannot find each other.
