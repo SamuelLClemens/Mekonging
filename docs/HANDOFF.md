@@ -122,18 +122,21 @@ Headless Chrome over CDP, a fresh profile per theme, 127.0.0.1:8753 served from 
   - Pai stays deferred.
 
 ## Open decisions (need the user)
-Closed on 2026-10-19: 9, 11 and 12 (earlier that day), and 15. The owner's "Market first, one slice per session" ruling places D5 tidy after M4c and before Bangkok B1. The numbers below keep their old values.
+Closed on 2026-10-19: 9, 11 and 12 (earlier that day), and after M3b, 15 to 18:
+- 15: D5 tidy runs after M5.
+- 16: the city-depth order is the proposed one.
+- 17: M5 runs right after M4c.
+- 18: visitors may browse without an account, which supersedes the 2026-10-12 sign-in-to-read ruling (`docs/EXCHANGE.md` §16, ruling 5).
+
+The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
 8. Legal, for Omer Hanegbi or Omri Siri: the questions in `docs/EXCHANGE.md` §14, now including item 8 (photos uploaded by travellers), and the dispensary question in `docs/PLAN.md`, Bangkok build-out. The terms and privacy policy gate M9 (opening to everyone); cash swap gates M10.
 10. Topbar icon spacing: the title column has 102 px, so a 44 px pitch costs title width. Recommended: leave the topbar until Q3 to Q5 are done, then test a wider pitch against the nine longest titles.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos"? This is data text only, and it bumps the version. Recommended: yes, inside D5 tidy.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins, and both were wrong. Recommended: yes, one country per session, starting with Laos's remote sites, flagging any record more than 2 km from its OSM object.
-16. City depth order (`docs/PLAN.md`): recommended C1 Chiang Mai, C2 Hanoi, C3 Ho Chi Minh City, C4 Siem Reap, C5 Phnom Penh, C6 Luang Prabang, C7 Da Nang and Hoi An, C8 Vientiane.
-17. Where M5 (messages) goes. A marketplace that cannot message cannot complete a hand-off. Recommended: M5 right after M4c, before D5 tidy and the Bangkok slices.
-18. Browsing without signing in. Facebook Marketplace, eBay and Amazon let visitors browse, but the owner ruled on 2026-10-12 that reading the market requires sign-in. Recommended: keep sign-in for the closed beta, and decide again at M9 with legal's privacy answer.
 
 ## Next session prompts
-Order (owner, 2026-10-19): **M4a, M4b, M4c**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward. Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
+Order (owner, 2026-10-19): **M4a, M4b, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
 
 **Before M4a:** the M3b owner checks above. If they are not all ticked when M4a starts, do them first, with the owner, in the M3b style:
 - one small step per message;
@@ -158,6 +161,7 @@ Order (owner, 2026-10-19): **M4a, M4b, M4c**, then D5 tidy, then Bangkok B1 to B
 >    - AFTER triggers: report weight and auto-hide at 3 (distinct reporters whose accounts are at least 24 hours old, plus system flags); a flag term files a `filter` report;
 >    - `market_my_listings()`, `private.today()`, and report snapshots set by trigger;
 >    - column grants that make `owner` unselectable, and RLS exactly as the §4 table says.
+>    - **Visitors browse without an account** (owner ruling 2026-10-19, §16 ruling 5, superseding sign-in-to-read). `anon` gets EXECUTE on the search RPC and a single-listing RPC only. Both return open, visible listings without `owner`. `anon` gets no table grant and cannot post, report, block or read a profile.
 > 2. Search, as one RPC over open, unexpired, visible and unblocked listings:
 >    - free text over title and body: a generated `tsvector` (`simple` config, over normalised text) with a GIN index. Add `pg_trgm` for typo tolerance only if `pg_available_extensions` lists it, and install it into `extensions`, never `public`;
 >    - filters: kind, category, city, date overlap, price range, free only;
@@ -169,7 +173,8 @@ Order (owner, 2026-10-19): **M4a, M4b, M4c**, then D5 tidy, then Bangkok B1 to B
 >    - every seeded block term, plus a phone number, an email, a URL and a bare domain, rejected in a listing;
 >    - each rate limit at its edge, including a new account's lower limits;
 >    - auto-hide at exactly 3 eligible reports;
->    - search never showing hidden, ended or blocked listings and never returning `owner`, in every row shape.
+>    - search never showing hidden, ended or blocked listings and never returning `owner`, in every row shape, for `anon` and for a signed-in user;
+>    - `anon` denied every table and every write.
 > 4. Client: a new module for the listing calls. Do not add exports to `js/market-api.js`, because an open app may hold the old copy (CLAUDE.md lazy-module rule). Add fixture data rich enough to design against in M4b: at least 40 listings across the four kinds and a dozen cities, mixed prices including free, long titles, and one hidden and one ended listing that must never show.
 > 5. The native-speaker check of the Thai, Vietnamese, Khmer and Lao terms (M4 done-when), and the owner's word on the two name false positives from M3b ("kush" and "gun").
 > **Pitfalls.**
@@ -198,7 +203,7 @@ Order (owner, 2026-10-19): **M4a, M4b, M4c**, then D5 tidy, then Bangkok B1 to B
 >    - a two-column, picture-led card grid: the price through `money()`, "Free" instead of "฿0", a two-line title, the city and date window, the kind colour;
 >    - skeleton cards while loading;
 >    - the link-based board folded under "On this phone" (§11).
->    - Signed out, show an inviting preview built from artwork only, because reading listings requires sign-in.
+>    - Visitors browse without signing in (owner ruling 2026-10-19). Sign-in appears on actions (Post, Message, Report, Block, My listings), as a sheet that returns the traveller to what they were doing.
 > 2. Search:
 >    - debounced live results, and a filters sheet (kind, category, city, dates, price range, free only);
 >    - sorting, a result count, and active-filter chips that clear in one tap;
@@ -238,7 +243,7 @@ Order (owner, 2026-10-19): **M4a, M4b, M4c**, then D5 tidy, then Bangkok B1 to B
 > **Scope.**
 > 1. Migration 003 (renumber the later slices' migrations in §17):
 >    - a private bucket;
->    - `storage.objects` rules: upload only under `<uid>/<listing id>/` by the listing's owner while it is open; read only by members who can see the listing; delete by the owner;
+>    - `storage.objects` rules: upload only under `<uid>/<listing id>/` by the listing's owner while it is open; read by anyone who can see the listing, visitors included (owner ruling 2026-10-19); delete by the owner;
 >    - at most 3 photos per listing, purged with the listing;
 >    - a reported listing's photos hidden with it.
 > 2. Client:
@@ -258,7 +263,21 @@ Order (owner, 2026-10-19): **M4a, M4b, M4c**, then D5 tidy, then Bangkok B1 to B
 > - The owner uploads from the iPhone, and a tester sees the photo.
 > - Every guard passes, and the PR is open. Then run /handoff.
 
-### D5 tidy (after M4c)
+### M5: messages, block and live alerts (right after M4c)
+> Read CLAUDE.md, docs/HANDOFF.md, and docs/EXCHANGE.md §2 (Realtime), §3 (threads, messages, blocks, notifications), §4, §8 (messages), §9, §13 and §17 (M5). Run /slice for slice M5.
+> **Start.** `git fetch`; `gh pr list --state all`. M4c must be merged. Worktree on `feat/m5-messages`.
+> **Scope.**
+> - The next migration: `threads`, `messages`, `blocks` and `notifications` (added to the `supabase_realtime` publication), `market_start_thread`, `market_block_owner`, and the message triggers. Messages reject URLs and allow phone numbers, with the safety line.
+> - `js/market-realtime.js`: a small Phoenix WebSocket client with a polling fallback. Add `wss://xnruspjauhmcrqxmjmxg.supabase.co` to `connect-src`, which M3b deliberately left out.
+> - The inbox, conversation and blocked-people screens in M4b's design language, "Message" switched on in the listing page, and the tab badge (§11).
+> **Pitfalls.** The same as M4a (draft PR until the owner's SQL passes; no local Postgres; the escape quirk), and the double render at start-up for live screens.
+> **Done when:**
+> - The RLS tests show a non-participant reads nothing and a blocked pair cannot message.
+> - A tester's message reaches the owner's open app in under 5 seconds without a reload, with the tab badge showing 1 at 375 px.
+> - After a block, neither side can send, and the conversation shows as closed.
+> - Every guard passes, and the PR is ready. Then run /handoff.
+
+### D5 tidy (after M5)
 > Read CLAUDE.md, docs/HANDOFF.md and the Release order and D5 sections of docs/PLAN.md. Run /slice for slice D5 tidy.
 > - Relabel the 50 entries in 6 data files that cite tourismcambodia.com or tourismcambodia.org as "Ministry of Tourism" to "Tourism Cambodia". Change no URL; treat tourism.gov.kh as the ministry.
 > - If the owner agrees (open decision 13), relabel the 46 "Lao National Tourism Administration" entries and the 4 "Ministry of Information, Culture and Tourism" entries on tourismlaos.org to "Tourism Laos".

@@ -14,9 +14,9 @@
   1. **M4a**: listings and search, server side.
   2. **M4b**: the marketplace redesign (search, filters, picture-led cards with category artwork, listing pages, post forms).
   3. **M4c**: listing photos.
-  4. **D5 tidy** (approved): relabel the 50 "Ministry of Tourism" entries on tourismcambodia.com and .org (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`) as "Tourism Cambodia", with tourism.gov.kh as the ministry. Check Long Beach (Sok San) against Long Set Beach (4K Beach) and merge them if they are one beach (with a `place-merges.js` line). Open decision 13 (the Tourism Laos relabel) is recommended to ride along.
-  5. **Bangkok B1 to B8** (below), then **city depth C1 onward** (below).
-  6. M5 onward on the exchange side. The owner may move M5 (messages) ahead of the Bangkok slices; a marketplace without messages cannot complete a hand-off.
+  4. **M5**: messages, block and live alerts, right after M4c (owner, 2026-10-19): a marketplace that cannot message cannot complete a hand-off. M6 onward follow later.
+  5. **D5 tidy** (approved): relabel the 50 "Ministry of Tourism" entries on tourismcambodia.com and .org (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`) as "Tourism Cambodia", with tourism.gov.kh as the ministry. Check Long Beach (Sok San) against Long Set Beach (4K Beach) and merge them if they are one beach (with a `place-merges.js` line). Open decision 13 (the Tourism Laos relabel) is recommended to ride along.
+  6. **Bangkok B1 to B8** (below), then **city depth C1 onward** (below, order confirmed by the owner).
 - Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), can run alongside any of these. Q3 to Q8 stack like any releasing slice.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
@@ -151,7 +151,7 @@ Runs after D5 Cambodia and D5 Laos and before D6. Releasing slices stack, so one
 
 ## City depth (owner request, 2026-10-19)
 "Make the site rich and informative, with a lot for travellers": after Bangkok's first phase, the B recipe (above) is applied to the next hubs, one city per session, each releasing on its own.
-- **Proposed order** (by record count and traveller volume; open decision 16): C1 Chiang Mai (33 records), C2 Hanoi (22), C3 Ho Chi Minh City (11), C4 Siem Reap (23), C5 Phnom Penh (16), C6 Luang Prabang (23), C7 Da Nang and Hoi An (18 and 17), C8 Vientiane (21), then Phuket and Krabi, then a gap sweep.
+- **Order** (confirmed by the owner, 2026-10-19): C1 Chiang Mai (33 records), C2 Hanoi (22), C3 Ho Chi Minh City (11), C4 Siem Reap (23), C5 Phnom Penh (16), C6 Luang Prabang (23), C7 Da Nang and Hoi An (18 and 17), C8 Vientiane (21), then Phuket and Krabi, then a gap sweep.
 - **Same rules as Bangkok:** every category in the Bangkok scope, the practical ones included (health, errands, daily shopping, visa and living); complete at creation; page-level sources; photos only from the place's own Wikipedia article; no dispensaries; adult nightlife as factual area entries only.
 - **Files:** `js/data/places.<cc>.<city>.js` per city, with one loader line in `js/data/regions.js`; ids `<cc>-<city>-<slug>`. A city with existing records keeps them where they are; `check-place-dupes` runs first.
 
@@ -208,7 +208,7 @@ Sources: supabase.com/pricing, supabase.com/docs/guides/auth/auth-smtp, resend.c
 4. The full list, slice by slice, is in `docs/EXCHANGE.md` §15. The questions for legal are in §14.
 
 ### Owner rulings, 2026-10-12 (M0 session)
-- Reading the shared board requires sign-in.
+- Reading the shared board requires sign-in. *Superseded on 2026-10-19: visitors may browse without an account (`docs/EXCHANGE.md` §16).*
 - Listing cards are anonymous. A display name appears only inside a conversation.
 - The exchange becomes a sixth bottom tab, "Market".
 - The whole exchange is 18+.
