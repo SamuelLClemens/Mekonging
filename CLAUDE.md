@@ -30,6 +30,8 @@ relevant section of the docs below, not the whole repo.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
 - No Postgres here (the owner declined a local install, 2026-10-19): Supabase SQL is reviewed by reading and run by the owner
   in the SQL editor. A PR whose code needs that SQL opens as a draft until the owner's run passes (PR #125 merged first).
+- `pbcopy`/`pbpaste` in Claude's shell run without a UTF-8 locale and turn non-ASCII into Mac Roman mojibake (migration 001's Thai
+  terms arrived garbled, fixed by 001b): always `LANG=en_US.UTF-8 pbcopy`, and write SQL for the owner in ASCII (`U&'...'`, `chr()`).
 
 ## Branches and delivery
 - There is no `main`. `feat/scaffold-bangkok-slice` is the integration and production branch (auto-deploys).
