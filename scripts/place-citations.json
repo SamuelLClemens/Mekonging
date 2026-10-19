@@ -573,7 +573,655 @@
    "basis": "TAT's own entry: beside Highway 4030, three bays Kata Noi, Kata and Karon"
   }
  },
+ "vi": {
+  "vi-ext-bai-dinh-pagoda": {
+   "add": [
+    {
+     "org": "Wikipedia — Bái Đính Pagoda",
+     "url": "https://en.wikipedia.org/wiki/B%C3%A1i_%C4%90%C3%ADnh_Pagoda"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "vi-ext-bai-sao": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Island hopping in Phu Quoc (Sao Beach)",
+     "url": "https://vietnam.travel/things-to-do/island-hopping-in-phu-quoc"
+    }
+   },
+   "basis": "chapter 1 is Sao Beach: white sand, water sports, beach restaurants"
+  },
+  "vi-ext-ban-gioc": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Ban Gioc Waterfall",
+     "url": "https://vietnam.travel/things-to-do/ban-gioc-waterfall-majestic-beauty-northern-border"
+    }
+   },
+   "basis": "the board's own page: the multi-tier falls on the Quay Son River, Tay and Nung villages"
+  },
+  "vi-ext-banh-it-cham-towers": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Binh Dinh (Banh It Tower)",
+     "url": "https://vietnam.travel/things-to-do/binh-dinh-where-surf-meets-soul"
+    }
+   },
+   "basis": "a cluster of four towers, 20 km from Quy Nhon"
+  },
+  "vi-ext-buon-ma-thuot-coffee": {
+   "swap": {
+    "https://vietnam.travel/": {
+     "org": "Vietnam Tourism — Discovering Dak Lak province",
+     "url": "https://vietnam.travel/things-to-do/7-reasons-explore-dak-lak"
+    }
+   },
+   "basis": "coffee plantations and Buon Ma Thuot's cafes; names no single farm"
+  },
+  "vi-ext-cantho-cairang-floating-breakfast": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Can Tho (Cai Rang Floating Market)",
+     "url": "https://vietnam.travel/things-to-do/can-tho-glimpse-river-and-garden"
+    }
+   },
+   "basis": "the Cai Rang section: trading from 04:30 to 08:00, boat tours"
+  },
+  "vi-ext-cantho-ninh-kieu-hotels": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Can Tho (where to stay)",
+     "url": "https://vietnam.travel/things-to-do/can-tho-glimpse-river-and-garden"
+    }
+   },
+   "basis": "stay in the centre, near Ninh Kieu Wharf; hotels, homestays and resorts"
+  },
+  "vi-ext-cantho-ninh-kieu-night-food": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Can Tho (Ninh Kieu Wharf, night market)",
+     "url": "https://vietnam.travel/things-to-do/can-tho-glimpse-river-and-garden"
+    }
+   },
+   "basis": "Ninh Kieu Wharf and the Can Tho Night Market's street food"
+  },
+  "vi-ext-christ-of-vung-tau": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Vung Tau (Christ the King statue)",
+     "url": "https://vietnam.travel/things-to-do/vung-tau-sightseeing-wonderland"
+    }
+   },
+   "basis": "the 32 m statue on Nho Mountain"
+  },
+  "vi-ext-con-dao": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Con Dao",
+     "url": "https://vietnam.travel/places-to-go/southeastern-vietnam/con-dao"
+    }
+   },
+   "basis": "the board's destination page: beaches, national park, flights from HCMC and Can Tho"
+  },
+  "vi-ext-con-dao-diving": {
+   "swap": {
+    "https://vietnam.travel/": {
+     "org": "Vietnam Tourism — Beach break guide to Con Dao",
+     "url": "https://vietnam.travel/things-to-do/your-beach-break-guide-con-dao"
+    }
+   },
+   "basis": "diving and snorkelling boat trips to Hon Tai, Bay Canh and Cau islands"
+  },
+  "vi-ext-crazy-house-dalat": {
+   "add": [
+    {
+     "org": "Wikipedia — Hằng Nga Guesthouse",
+     "url": "https://en.wikipedia.org/wiki/H%E1%BA%B1ng_Nga_Guesthouse"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "vi-ext-cuc-phuong": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Ninh Binh (Cuc Phuong)",
+     "url": "https://vietnam.travel/things-to-do/ninh-binh-an-oasis-nature-lovers"
+    }
+   },
+   "basis": "chapter 7: hiking in Cuc Phuong, Vietnam's first national park"
+  },
+  "vi-ext-dalat-camping": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — My Da Lat with Liem",
+     "url": "https://vietnam.travel/things-to-do/my-da-lat-liem"
+    }
+   },
+   "basis": "camping and paddle boarding at Tuyen Lam Lake, 7 km out; does not cover the Ta Nang trek"
+  },
+  "vi-ext-dalat-centre-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Da Lat (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Da_Lat#Sleep"
+    }
+   ],
+   "basis": "budget guesthouses on Phan Dinh Phung"
+  },
+  "vi-ext-dalat-farmstays-tuyen-lam": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — 8 ways to appreciate Da Lat",
+     "url": "https://vietnam.travel/things-to-do/8-things-to-do-in-dalat"
+    }
+   },
+   "basis": "Tuyen Lam Lake (350 ha, ringed by pines) and pine-view BnBs outside the centre; names no farmstay"
+  },
+  "vi-ext-danang-longstay": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Why Da Nang is Vietnam's most livable city",
+     "url": "https://vietnam.travel/things-to-do/4-reasons-da-nang-is-vietnam-most-livable-city"
+    }
+   },
+   "basis": "living in Da Nang: planned centre, My Khe beach, light traffic, the An Thuong expat district"
+  },
+  "vi-ext-doc-let": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Nha Trang's best beaches (Doc Let)",
+     "url": "https://vietnam.travel/things-to-do/nha-trang-best-beaches-sustainable-vacation"
+    }
+   },
+   "basis": "chapter 4: 40 km north, 2.5 km of white sand on Van Phong Bay"
+  },
+  "vi-ext-dong-xuan-market": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Shopping in Ha Noi (Dong Xuan Market)",
+     "url": "https://vietnam.travel/things-to-do/shopping-hanoi-markets-and-malls"
+    }
+   },
+   "basis": "the Old Quarter wholesale market and its alleys"
+  },
+  "vi-ext-dray-nur-waterfall": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Discovering Dak Lak province",
+     "url": "https://vietnam.travel/things-to-do/7-reasons-explore-dak-lak"
+    }
+   },
+   "basis": "names Dray Nur and Dray Sap as the province's best-known falls"
+  },
+  "vi-ext-golden-bridge": {
+   "swap": {
+    "https://banahills.sunworld.vn": {
+     "org": "Sun World Ba Na Hills",
+     "url": "https://sunworld.vn/en/banahills"
+    }
+   },
+   "basis": "the park's own page; names the Golden Bridge and the cable car"
+  },
+  "vi-ext-hagiang-city-guesthouses": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — The Ha Giang Loop",
+     "url": "https://vietnam.travel/things-to-do/ha-giang-loop"
+    }
+   },
+   "basis": "hotels, motels and homestays, mostly in Dong Van, Meo Vac and Ha Giang City"
+  },
+  "vi-ext-hagiang-dongvan-homestays": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — The Ha Giang Loop",
+     "url": "https://vietnam.travel/things-to-do/ha-giang-loop"
+    }
+   },
+   "basis": "hotels, motels and homestays, mostly in Dong Van, Meo Vac and Ha Giang City"
+  },
+  "vi-ext-halong-cruise": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Overnight cruises in Ha Long Bay",
+     "url": "https://vietnam.travel/things-to-do/overnight-cruises-ha-long-bay-luxury-summer-experience"
+    }
+   },
+   "basis": "overnight cruises; premium operators route through Lan Ha Bay"
+  },
+  "vi-ext-hanoi-banhmi25": {
+   "add": [
+    {
+     "org": "Wikivoyage — Hanoi (Eat, around the Beer Street)",
+     "url": "https://en.wikivoyage.org/wiki/Hanoi#Around_the_Beer_Street_2"
+    }
+   ],
+   "basis": "lists Banh Mi 25"
+  },
+  "vi-ext-hanoi-hostels": {
+   "add": [
+    {
+     "org": "Wikivoyage — Hanoi (Old Quarter North of Hoan Kiem Lake)",
+     "url": "https://en.wikivoyage.org/wiki/Hanoi#Old_Quarter_North_of_Hoan_Kiem_Lake"
+    }
+   ],
+   "basis": "Ta Hien backpacker street and the hostels around it"
+  },
+  "vi-ext-hanoi-pho-thin-lo-duc": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — The perfect weekend in Ha Noi (Pho Thin)",
+     "url": "https://vietnam.travel/things-to-do/perfect-weekend-ha-noi"
+    }
+   },
+   "basis": "Pho Thin, run by Nguyen Trong Thin for more than 40 years"
+  },
+  "vi-ext-hanoi-sofitel-legend-metropole": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Ha Noi's luxury hotels (Metropole)",
+     "url": "https://vietnam.travel/things-to-do/comfort-meet-culture-hanoi-luxury-hotels"
+    }
+   },
+   "basis": "the Metropole: a landmark since 1901, 364 rooms"
+  },
+  "vi-ext-hcmc-lunch-lady": {
+   "add": [
+    {
+     "org": "Wikipedia — Nguyễn Thị Thanh (chef)",
+     "url": "https://en.wikipedia.org/wiki/Nguy%E1%BB%85n_Th%E1%BB%8B_Thanh_(chef)"
+    }
+   ],
+   "basis": "her own article: founded the Lunch Lady stall in 1995, died 19 May 2025"
+  },
+  "vi-ext-hcmc-vinhkhanh-seafood-street": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — The perfect weekend in HCMC",
+     "url": "https://vietnam.travel/things-to-do/ho-chi-minh-city-itinerary"
+    }
+   },
+   "basis": "names Oc Oanh, 534 Vinh Khanh, District 4, for shellfish"
+  },
+  "vi-ext-ho-chi-minh-hotel-continental": {
+   "add": [
+    {
+     "org": "Wikipedia — Hotel Continental Saigon",
+     "url": "https://en.wikipedia.org/wiki/Hotel_Continental_Saigon"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "vi-ext-hochiminhcity-banhmihuynhhoa": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Explore delicious dishes in HCMC",
+     "url": "https://vietnam.travel/things-to-do/explore-delicious-dishes-ho-chi-minh-city"
+    }
+   },
+   "basis": "names Huynh Hoa among the city's long-running banh mi bakeries"
+  },
+  "vi-ext-hoian-banhmi-caolau-cluster": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Explore the food of Hoi An",
+     "url": "https://vietnam.travel/things-to-do/explore-food-hoi-an"
+    }
+   },
+   "basis": "cao lau and banh mi shops with addresses (Cao Lau Ba Be, Banh Mi Phuong, Madam Khanh)"
+  },
+  "vi-ext-hoian-banhmiphuong": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Explore the food of Hoi An",
+     "url": "https://vietnam.travel/things-to-do/explore-food-hoi-an"
+    }
+   },
+   "basis": "Banh Mi Phuong, 2B Phan Chu Trinh"
+  },
+  "vi-ext-hoian-cooking": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — 10 essential things to do in Hoi An",
+     "url": "https://vietnam.travel/things-to-do/top-things-to-do-hoi-an"
+    }
+   },
+   "basis": "chapter 9: cooking classes, from the market to the pan"
+  },
+  "vi-ext-hoian-japanese-bridge": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Hoi An's top 5 spots (Japanese Covered Bridge)",
+     "url": "https://vietnam.travel/things-to-do/hoi-ans-top-5-most-instagrammable-spots"
+    }
+   },
+   "basis": "chapter 1: built in the 16th century between the Chinese and Japanese quarters"
+  },
+  "vi-ext-hoian-madam-khanh": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Explore the food of Hoi An",
+     "url": "https://vietnam.travel/things-to-do/explore-food-hoi-an"
+    }
+   },
+   "basis": "Madam Khanh - The Banh Mi Queen, 115 Tran Cao Van"
+  },
+  "vi-ext-hue-bunbo-breakfast-shops": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Hue's best to eat (Bun Bo Hue)",
+     "url": "https://vietnam.travel/things-to-do/hue-best-to-eat-palace-street"
+    }
+   },
+   "basis": "chapter 1, bun bo Hue; names no shop"
+  },
+  "vi-ext-hue-dong-ba-market-food": {
+   "add": [
+    {
+     "org": "Wikipedia — Đông Ba Market",
+     "url": "https://en.wikipedia.org/wiki/%C4%90%C3%B4ng_Ba_Market"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "vi-ext-hue-old-city-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Hue (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Hue#Sleep"
+    }
+   ],
+   "basis": "the largest hotel cluster: Pham Ngu Lao with Le Loi, Hung Vuong and Chu Van An"
+  },
+  "vi-ext-kenh-ga-village": {
+   "add": [
+    {
+     "org": "Wikipedia (Vietnamese) — Suối nước nóng Kênh Gà",
+     "url": "https://vi.wikipedia.org/wiki/Su%E1%BB%91i_n%C6%B0%E1%BB%9Bc_n%C3%B3ng_K%C3%AAnh_G%C3%A0"
+    }
+   ],
+   "basis": "Vietnamese article: the 53 °C spring at the Kenh Ga floating village on the Hoang Long, 150 m from the card"
+  },
+  "vi-ext-khai-dinh-tomb": {
+   "swap": {
+    "https://whc.unesco.org": {
+     "org": "UNESCO World Heritage Centre — Complex of Hué Monuments",
+     "url": "https://whc.unesco.org/en/list/678"
+    }
+   },
+   "basis": "names the Khai Dinh tomb within the property"
+  },
+  "vi-ext-ky-co": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Binh Dinh (Ky Co)",
+     "url": "https://vietnam.travel/things-to-do/binh-dinh-where-surf-meets-soul"
+    }
+   },
+   "basis": "Ky Co beach: white sand, swimming, snorkelling"
+  },
+  "vi-ext-la-siesta-classic-ma-may": {
+   "swap": {
+    "https://www.lasiestahotels.com/": {
+     "org": "La Siesta Classic Ma May — official",
+     "url": "https://lasiestahotels.com/mamay/"
+    }
+   },
+   "basis": "the hotel's own page, 94 Ma May St; the www homepage now returns a Cloudflare 526 error"
+  },
+  "vi-ext-lang-co-beach": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Vietnam's 9 best beaches (Lang Co Bay)",
+     "url": "https://vietnam.travel/things-to-do/vietnam%E2%80%99s-9-best-beaches-laid-back-family-getaway"
+    }
+   },
+   "basis": "Lang Co Bay at the foot of Hai Van Pass, shallow lagoon water"
+  },
+  "vi-ext-linh-phuoc-pagoda": {
+   "add": [
+    {
+     "org": "Wikipedia — Linh Phước Temple",
+     "url": "https://en.wikipedia.org/wiki/Linh_Ph%C6%B0%E1%BB%9Bc_Temple"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "vi-ext-linh-ung-son-tra": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Must-visit places in Da Nang",
+     "url": "https://vietnam.travel/things-to-do/must-visit-places-in-da-nang"
+    }
+   },
+   "basis": "the 67 m Lady Buddha at Linh Ung Pagoda on Son Tra, 10 km north-east"
+  },
+  "vi-ext-ly-son-island": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Ly Son Island",
+     "url": "https://vietnam.travel/things-to-do/visit-ly-son-island-for-pristine-beaches-and-more"
+    }
+   },
+   "basis": "speedboat from Sa Ky port (30-60 min); Big Island, Small Island and Mu Cu islet"
+  },
+  "vi-ext-ma-pi-leng": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Tuyen Quang (Ma Pi Leng Pass)",
+     "url": "https://vietnam.travel/places-to-go/northern-midlands-mountains/ha-giang"
+    }
+   },
+   "basis": "the destination page: drive Ma Pi Leng above the Nho Que River"
+  },
+  "vi-ext-mai-chau": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Mai Chau",
+     "url": "https://vietnam.travel/places-to-go/northern-midlands-mountains/mai-chau"
+    }
+   },
+   "basis": "the destination page: three hours from Ha Noi via Hoa Binh"
+  },
+  "vi-ext-maichau-homestay": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Mai Chau",
+     "url": "https://vietnam.travel/places-to-go/northern-midlands-mountains/mai-chau"
+    }
+   },
+   "basis": "homestays in White Thai stilt houses in Lac and Pom Coong"
+  },
+  "vi-ext-my-khe": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Must-visit places in Da Nang",
+     "url": "https://vietnam.travel/things-to-do/must-visit-places-in-da-nang"
+    }
+   },
+   "basis": "My Khe, the most popular of Da Nang's beaches"
+  },
+  "vi-ext-my-son-sanctuary": {
+   "swap": {
+    "https://whc.unesco.org": {
+     "org": "UNESCO World Heritage Centre — My Son Sanctuary",
+     "url": "https://whc.unesco.org/en/list/949"
+    }
+   },
+   "basis": "the inscription page: Cham tower-temples, 4th to 13th centuries"
+  },
+  "vi-ext-nhatrang-night-market-food": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Must-eat dishes in Nha Trang",
+     "url": "https://vietnam.travel/things-to-do/must-eat-specialty-dishes-in-nha-trang"
+    }
+   },
+   "basis": "the card's dishes (nem nuong, banh can, grilled beef); does not name the night market"
+  },
+  "vi-ext-nhatrang-tran-phu-hotels": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — 7 reasons to visit Nha Trang",
+     "url": "https://vietnam.travel/things-to-do/7-reasons-visit-nha-trang"
+    }
+   },
+   "basis": "Tran Phu, the 7 km main beach, and the hotels along the strip"
+  },
+  "vi-ext-ninhbinh-city-hotels": {
+   "add": [
+    {
+     "org": "Wikivoyage — Ninh Binh (Sleep in town)",
+     "url": "https://en.wikivoyage.org/wiki/Ninh_Binh#In_town_2"
+    }
+   ],
+   "basis": "cheap hotels outside the train station and by the bus station"
+  },
+  "vi-ext-ninhbinh-station": {
+   "add": [
+    {
+     "org": "Wikipedia — Ninh Bình station",
+     "url": "https://en.wikipedia.org/wiki/Ninh_B%C3%ACnh_station"
+    }
+   ],
+   "basis": "the station's own article; its coordinates are within 50 m of the card"
+  },
+  "vi-ext-ninhbinh-tamcoc-homestays": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — 10 must-do activities in Ninh Binh",
+     "url": "https://vietnam.travel/things-to-do/10-must-do-activities-ninh-binh"
+    }
+   },
+   "basis": "chapter 6: homestays in Trang An and Tam Coc"
+  },
+  "vi-ext-phong-nha-cave-boat": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — A complete guide to Phong Nha",
+     "url": "https://vietnam.travel/things-to-do/complete-guide-phong-nha"
+    }
+   },
+   "basis": "chapter 7: Phong Nha Cave is entered by river, a half-day tour"
+  },
+  "vi-ext-phongnha-caves": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — A complete guide to Phong Nha",
+     "url": "https://vietnam.travel/things-to-do/complete-guide-phong-nha"
+    }
+   },
+   "basis": "the caves from Son Doong to Paradise Cave, and who runs the tours"
+  },
+  "vi-ext-phongnha-son-trach-homestays": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — A complete guide to Phong Nha",
+     "url": "https://vietnam.travel/things-to-do/complete-guide-phong-nha"
+    }
+   },
+   "basis": "where to stay: homestays and farmstays in the rice fields, hostels in town"
+  },
+  "vi-ext-phongnha-village-eats": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — A complete guide to Phong Nha",
+     "url": "https://vietnam.travel/things-to-do/complete-guide-phong-nha"
+    }
+   },
+   "basis": "chapter 12: family-run restaurants in Phong Nha town"
+  },
+  "vi-ext-phuquoc-resort": {
+   "add": [
+    {
+     "org": "Wikivoyage — Phu Quoc (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Phu_Quoc#Sleep"
+    }
+   ],
+   "basis": "stays along Long Beach and at Ong Lang (Mango Bay Resort)"
+  },
+  "vi-ext-po-nagar-cham-towers": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Vietnam's Champa kingdom (Po Nagar)",
+     "url": "https://vietnam.travel/things-to-do/vietnams-cham-legacy"
+    }
+   },
+   "basis": "the Po Nagar towers on Mount Cu Lao, 7th to 12th centuries"
+  },
+  "vi-ext-pu-luong": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Pu Luong, Thanh Hoa",
+     "url": "https://vietnam.travel/things-to-do/pu-luong-thanh-hoa-hidden-paradise"
+    }
+   },
+   "basis": "about 160 km south-west of Ha Noi; rice terraces, waterwheels, getting there"
+  },
+  "vi-ext-tamcoc-guesthouse": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — 10 must-do activities in Ninh Binh",
+     "url": "https://vietnam.travel/things-to-do/10-must-do-activities-ninh-binh"
+    }
+   },
+   "basis": "chapter 6: homestays in Trang An and Tam Coc"
+  },
+  "vi-ext-tavan-giay-village": {
+   "swap": {
+    "https://sapaochau.org/": {
+     "org": "Sapa O'Chau — Muong Hoa trek",
+     "url": "https://sapaochau.org/index.php/sapa-trekking-and-homestay/sapa-trek-and-tour/trekking-tours/muong-hoa-trek-3-day/"
+    }
+   },
+   "basis": "visits the Giay people of Ta Van, who settled by the river"
+  },
+  "vi-ext-tavan-rock-field": {
+   "add": [
+    {
+     "org": "Wikipedia (Vietnamese) — Bãi đá cổ Sa Pa",
+     "url": "https://vi.wikipedia.org/wiki/B%C3%A3i_%C4%91%C3%A1_c%E1%BB%95_Sa_Pa"
+    }
+   ],
+   "basis": "Vietnamese article: about 200 carved boulders in the Muong Hoa valley, Ta Van; a national relic since 1994; 500 m from the card"
+  },
+  "vi-ext-thap-ba-hot-springs": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Best mud bath in Nha Trang (Thap Ba)",
+     "url": "https://vietnam.travel/things-to-do/best-mud-bath-nha-trang"
+    }
+   },
+   "basis": "chapter 1: Thap Ba, the oldest mud bath, 6 km out of town"
+  },
+  "vi-ext-thien-mu-pagoda": {
+   "add": [
+    {
+     "org": "Wikipedia — Thiên Mụ Temple",
+     "url": "https://en.wikipedia.org/wiki/Thi%C3%AAn_M%E1%BB%A5_Temple"
+    }
+   ],
+   "basis": "the place's own article, reviewed in D3"
+  },
+  "vi-ext-thung-nham-bird-park": {
+   "swap": {
+    "https://vietnam.travel": {
+     "org": "Vietnam Tourism — Ninh Binh (Thung Nham Bird Garden)",
+     "url": "https://vietnam.travel/things-to-do/ninh-binh-an-oasis-nature-lovers"
+    }
+   },
+   "basis": "chapter 6: Thung Nham Bird Garden"
+  }
+ },
  "open": {
-  "th-ext-nan-walking-street": "No checkable page (2026-10-18): TAT's only page for Kad Khuang Muang Nan is a 2023 one-off food fair at another site, and blogs disagree on the days (Saturday only vs Friday to Sunday)."
+  "th-ext-nan-walking-street": "No checkable page (2026-10-18): TAT's only page for Kad Khuang Muang Nan is a 2023 one-off food fair at another site, and blogs disagree on the days (Saturday only vs Friday to Sunday).",
+  "vi-ext-cannon-fort-cat-ba": "No checkable page (2026-10-18): no Wikipedia article; Wikivoyage Cat Ba and the 303 vietnam.travel pages read for D5 do not name the fort.",
+  "vi-ext-con-dao-con-son-market-evening-stalls": "No checkable page (2026-10-18): Wikivoyage Con Dao names only the early-morning fruit and vegetable market in Con Son town, and vietnam.travel names no evening stalls.",
+  "vi-ext-dalat-nightmarket-banhtrangnuong": "No checkable page (2026-10-18): vietnam.travel's Da Lat pages and Wikivoyage Da Lat do not name the night market; English Wikipedia's banh trang nuong article says only that the dish is popular in Da Lat.",
+  "vi-ext-hue-herbal-sauna": "No checkable page (2026-10-18): vietnam.travel's herbal-bath pages are about the Red Dao baths in Sa Pa and Hoang Su Phi; nothing names a Hue royal herbal bath.",
+  "vi-ext-ninhbinh-cho-rong": "No checkable page (2026-10-18): Wikivoyage Ninh Binh mentions \"the main market across the bridge\" without naming it; vietnam.travel does not name it.",
+  "vi-ext-tavan-cau-may": "No checkable page (2026-10-18): Vietnamese Wikipedia has only a red link for Cầu Mây (Sa Pa); Sapa O'Chau's treks mention a hanging bridge but not this one by name.",
+  "vi-ext-tavan-giang-ta-chai-waterfall": "No checkable page (2026-10-18): Sapa O'Chau's treks name the walk from Ta Van through bamboo to Giang Ta Chai but not the waterfall; no Wikipedia or Wikivoyage entry."
  }
 }
