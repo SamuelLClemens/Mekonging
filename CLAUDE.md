@@ -115,6 +115,9 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
   MutationObserver hit after each navigation before reading the DOM.
 - Route-graph work: test in a brand-new tab loaded directly at `#route` (the graph memoizes on first call).
 - Headless Chrome pages turn `document.hidden` when macOS display sleep starts mid-run, and a hidden pass undercounts controls (`#settings` read 11 against 111). Keep the display awake and assert `document.hidden === false` for every route (Q1, `docs/AUDIT_375.md`).
+- Camera screens run end to end in headless Chrome: `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream
+  --use-file-for-fake-video-capture=<x>.mjpeg` plays a single JPEG as the camera. Attach to workers too
+  (`Target.setAutoAttach`, flatten): a blob worker's requests and CSP errors never reach the page session (M3a).
 - `html` and `body` set `overflow-x: hidden`, so `scrollWidth - clientWidth` is always 0. Measure overflow from box edges, not from scroll width. `route-sweep.js` reports false zero-size controls on `content-visibility` cards until they are scrolled into view.
 
 ## Docs map (most are history; read only what the task names)
