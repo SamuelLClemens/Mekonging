@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.644.0';
+const CACHE_VERSION = 'mk-v0.645.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -360,10 +360,10 @@ const PRECACHE = [
 // DO NOT HAND-EDIT. `python3 scripts/build-sw-manifest.py --write`.
 // ---- BEGIN GENERATED MANIFEST — scripts/build-sw-manifest.py ----
 const MANIFEST = {
-  'css/style.css': '8a4ceee4',
+  'css/style.css': '0fbe9b4f',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': 'c63e08de',
+  'index.html': '44aeab52',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
@@ -434,6 +434,7 @@ const MANIFEST = {
   'js/data/local.la.js': '83060622',
   'js/data/local.th.js': 'c852008a',
   'js/data/local.vi.js': 'c95653b3',
+  'js/data/market-cities.js': 'a15d1f54',
   'js/data/medical.js': '5f520c4d',
   'js/data/month-verdict.js': '7bf2c3cc',
   'js/data/nature.js': '391fc20c',
@@ -528,9 +529,13 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'c3b721e9',
+  'js/main.js': '0774ef00',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
+  'js/market-api.js': '0f0d76c5',
+  'js/market-config.js': 'd342b560',
+  'js/market-fixture.js': '795f9126',
+  'js/market-link.js': '0d4268b0',
   'js/market-routes.js': '2b771207',
   'js/nav-groups.js': '5c8ca9e9',
   'js/offline-areas-ui.js': '01b8e952',
@@ -551,7 +556,7 @@ const MANIFEST = {
   'js/screens/contributions.js': 'f86462b4',
   'js/screens/country-info.js': 'ec713fe8',
   'js/screens/etiquette.js': '7fc329c4',
-  'js/screens/exchange.js': '7b9f2ae7',
+  'js/screens/exchange.js': '54344215',
   'js/screens/explore.js': 'c508c39b',
   'js/screens/export.js': '1429f50c',
   'js/screens/family.js': '97c566e5',
@@ -562,6 +567,7 @@ const MANIFEST = {
   'js/screens/home.js': '83670ab5',
   'js/screens/journal.js': '645b40e1',
   'js/screens/map.js': '6e706314',
+  'js/screens/market-account.js': 'd1244ba0',
   'js/screens/medical.js': '62c2ce75',
   'js/screens/nearby.js': 'e226bfea',
   'js/screens/nextstop.js': '657c8d05',
@@ -570,7 +576,7 @@ const MANIFEST = {
   'js/screens/produce.js': '31aeadd6',
   'js/screens/schedules.js': 'e04d0ae5',
   'js/screens/search.js': '9dd5a15b',
-  'js/screens/settings.js': 'c858daf5',
+  'js/screens/settings.js': '80b24e2b',
   'js/screens/share-journey.js': 'f3a2aeea',
   'js/screens/signtranslate.js': '8a8449ba',
   'js/screens/streetfood.js': '0ca4e2ad',

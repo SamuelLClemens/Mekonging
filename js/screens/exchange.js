@@ -19,6 +19,7 @@ import { getActiveCountry } from '../app-state.js';
 import { getRates, convert } from '../currency.js';
 import { shareUrl, encodeShare } from '../social.js';
 import { go, mount, topbar, shareButton, homeCurrency, whereAmI } from '../main.js';
+import { marketStatusLine } from './market-account.js';
 
 // ---- TRAVELLER BOARD (backendless bulletin board) ---------------------------
 // One peer board that fits the app's no-server, no-PII model: swap leftover cash,
@@ -233,6 +234,7 @@ export function marketScreen(arg) {
   let itemCat = 'gear';   // which Items category the post form is for
   const wrap = h('div', { class: 'screen' });
   wrap.append(topbar('Market'));
+  wrap.append(marketStatusLine());   // the shared market's one state line (docs/EXCHANGE.md §11)
   wrap.append(h('p', { class: 'lead' }, 'Swap cash, split a ride, pass on a room, hand off a car seat, a bike or camping kit — post it, share the link, meet in person. No account, no server; nothing leaves your phone on its own.'));
   const rates = getRates();
   if (!rates.live) wrap.append(h('p', { class: 'tiny muted' }, 'Cash-swap values use offline baseline rates. Open Currency with internet once to refresh them.'));

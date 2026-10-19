@@ -9,7 +9,7 @@
        No CDN may run script here (M3a): tesseract is self-hosted under lib/tesseract/, and
        worker-src keeps blob: because MapLibre and tesseract start their workers from blob URLs,
        which inherit this policy. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com; font-src 'self'; media-src 'self' blob: https://translate.google.com https://static.inaturalist.org https://inaturalist-open-data.s3.amazonaws.com; worker-src 'self' blob:; connect-src 'self' data: https://server.arcgisonline.com https://open.er-api.com https://api.open-meteo.com https://marine-api.open-meteo.com https://air-quality-api.open-meteo.com https://translate.googleapis.com https://api.mymemory.translated.net https://api.inaturalist.org; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com; font-src 'self'; media-src 'self' blob: https://translate.google.com https://static.inaturalist.org https://inaturalist-open-data.s3.amazonaws.com; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com; connect-src 'self' data: https://server.arcgisonline.com https://open.er-api.com https://api.open-meteo.com https://marine-api.open-meteo.com https://air-quality-api.open-meteo.com https://translate.googleapis.com https://api.mymemory.translated.net https://api.inaturalist.org https://xnruspjauhmcrqxmjmxg.supabase.co; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <!-- Load-bearing for phrase audio, not only privacy: Google's translate_tts answers any request
        carrying a Referer with 404 (js/tts.js ttsUrl). The service worker does not inherit this. -->
   <meta name="referrer" content="no-referrer">
@@ -82,6 +82,7 @@
   <link rel="modulepreload" href="js/data/month-verdict.js">
   <link rel="modulepreload" href="js/theme.js">
   <link rel="modulepreload" href="js/market-routes.js">
+  <link rel="modulepreload" href="js/market-link.js">
   <link rel="modulepreload" href="js/data/emergency-numbers.js">
   <link rel="modulepreload" href="js/photo-registry.js">
 </head>

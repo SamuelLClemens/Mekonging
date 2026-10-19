@@ -12,6 +12,8 @@ import { NATURE, NATURE_GROUPS } from '../js/data/nature.js';
 import { POOLS } from '../js/data/pools.js';
 import { ITINERARIES } from '../js/data/itineraries.js';
 import { PHOTOS } from '../js/data/photos.js';
+import { MARKET_CITIES } from '../js/data/market-cities.js';
+import { fixtureAllowed, signInPlace } from '../js/market-api.js';
 import {
   DIET_OPTIONS, DIET_EVALUABLE_BELIEFS, VERDICT_INERT_DIET, PHRASE_PENDING_ALLERGENS,
   PHRASE_RX, PHRASE_KEYS, ALCOHOL_TERMS,
@@ -305,6 +307,31 @@ ok(dishDietReasons({ ingredients: ['lard'] }, undefined, ['halal']).includes('la
 // inert flags never colour a dish when set alone.
 for (const id of VERDICT_INERT_DIET)
   ok(_dishes.every((d) => dishDietVerdict(d, undefined, [id]) === ''), `inert diet flag "${id}" coloured a dish`);
+
+// --- Market accounts (docs/EXCHANGE.md §5, slice M3b) ---------------------------
+// Fixture mode answers every call from canned data. It must be impossible anywhere but a local
+// development host, whatever the address says.
+for (const host of ['www.mekonging.com', 'mekonging.com', 'samuellclemens.github.io', 'localhost.mekonging.com',
+  '127.0.0.1.nip.io', 'mylocalhost', '127.0.0.2', 'app', ''])
+  ok(!fixtureAllowed(host, '?market=fixture'), `market: fixture mode must be refused on "${host}"`);
+for (const host of ['127.0.0.1', 'localhost']) {
+  ok(fixtureAllowed(host, '?market=fixture'), `market: fixture mode must work on ${host}`);
+  ok(fixtureAllowed(host, '?x=1&market=fixture&tester=1'), `market: fixture flag among others on ${host}`);
+  for (const q of ['', '?market=fixtures', '?xmarket=fixture', '?market=live'])
+    ok(!fixtureAllowed(host, q), `market: "${q}" must not turn fixture mode on at ${host}`);
+}
+ok(signInPlace('mekong:', 'app') === 'wrapper', 'market: the iOS wrapper scheme must be the gated "wrapper" place');
+ok(signInPlace('https:', 'www.mekonging.com') === 'web', 'market: www.mekonging.com must be the sign-in place');
+ok(signInPlace('https:', 'mekonging.com') === 'other', 'market: only the www host can sign in');
+ok(signInPlace('http:', '127.0.0.1') === 'local', 'market: 127.0.0.1 is a local place');
+// The generated city list (scripts/build-market-cities.py) seeds public.cities too.
+const _cityIds = new Set();
+for (const c of MARKET_CITIES) {
+  ok(/^(th|vi|kh|la)-[a-z0-9]+(-[a-z0-9]+)*$/.test(c.id) && c.id.slice(0, 2) === c.country && c.name,
+    `market city "${c.id}": id, country or name malformed`);
+  ok(!_cityIds.has(c.id), `market city "${c.id}": duplicate id`);
+  _cityIds.add(c.id);
+}
 
 // --- report ------------------------------------------------------------------
 if (warnings.length) {

@@ -2431,6 +2431,31 @@ html[data-reduced-motion="on"] .hero::before { animation: none !important; }
 .bb-chips { margin: 8px 0 4px; }
 /* Active category chip adopts its category colour, so the board reads at a glance. */
 .bb-chip[aria-pressed="true"] { background: var(--chip, var(--teal-deep)); border-color: var(--chip, var(--teal-deep)); color: #fff; }
+/* Market accounts (js/screens/market-account.js, slice M3b). Every control is at least 48 px tall,
+   clear of the 44 px tap floor with room to spare; a checkbox row is a <label>, so the whole row
+   is the checkbox's tap target. Spacing comes from gap, not margins on each child. */
+.mka-body, .mka-card, .mka-form { display: flex; flex-direction: column; gap: var(--sp-3); }
+.mka-card > *, .mka-form > *, .mka-form .field { margin: 0; }
+.mka-form .field input { min-height: 48px; margin-top: var(--sp-1); }
+.mka-card .btn { min-height: 48px; }
+.mka-tick { display: flex; align-items: center; gap: var(--sp-3); min-height: 48px; cursor: pointer; }
+.mka-tick input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--teal-deep); }
+.mka-terms > summary { display: flex; align-items: center; min-height: 48px; cursor: pointer; font-weight: 700; }
+.mka-terms ul { margin: 0 0 var(--sp-2); padding-left: var(--sp-5); }
+.mka-captcha { min-height: 65px; }
+.mka-err { color: var(--warn); font-weight: 700; }
+.mka-err:empty { display: none; }
+.mka-busy { color: var(--ink-soft); }
+.mka-who { display: flex; align-items: center; gap: var(--sp-3); }
+.mka-who > div { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+.mka-avatar { font-size: 2.2rem; line-height: 1; }
+.mka-name { font-weight: 700; font-size: var(--fs-h3); }
+.mka-who p { margin: 0; }
+.mka-card p { overflow-wrap: anywhere; }
+.mka-state { font-weight: 700; }
+.mka-line { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin: 0 0 var(--sp-3); }
+.mka-line p { margin: 0; font-weight: 700; }
+.mka-line .btn { flex: 0 0 auto; min-height: 48px; }
 .listing-card { border-left: 4px solid var(--cat, var(--teal-deep)); }
 .listing-stale { color: var(--warn); font-weight: 600; }
 .listing-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
