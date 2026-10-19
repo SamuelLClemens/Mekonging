@@ -83,16 +83,14 @@ Headless Chrome over CDP at 375 x 812 (device scale 2, mobile), fresh profile on
   - Pai stays deferred.
 
 ## Open decisions (need the user)
-Closed on 2026-10-19 by the owner (recorded in `docs/PLAN.md`, Bangkok build-out, Owner rulings): 1 (PR #118 is merged), and 2, 3, 4, 5 and 7 accepted. The numbers below keep their old values.
+Closed on 2026-10-19 by the owner (recorded in `docs/PLAN.md`, Bangkok build-out, Owner rulings): 1 (PR #118 is merged), and 2, 3, 4, 5 and 7 accepted. Closed later the same day in a status review (recorded in `docs/PLAN.md`, Release order): 9 (commit the audit driver, Q2), 11 (relabel the 50 "Ministry of Tourism" entries as "Tourism Cambodia") and 12 (the Long Beach coordinates check) accepted, and M3 follows D5 Laos. The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
-8. Exchange M3 waits on the owner actions below. The legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
-9. Commit the audit driver under `tools/audit-375/` before any Q1 fix slice (Q2)? Recommended: yes. It was left out of PR #119 to keep it documents-only.
+8. Legal, for Omer Hanegbi or Omri Siri: the questions in `docs/EXCHANGE.md` §14 (the terms and privacy policy gate M9, and cash swap gates M10) and the dispensary question in `docs/PLAN.md`, Bangkok build-out. The M3 owner actions are done (see the M3 prompt below).
 10. Topbar icon spacing: the title column has 102 px, so a 44 px pitch costs title width. Recommended: leave the topbar until Q3 to Q5 are done, then test a wider pitch against the nine longest titles.
-11. Relabel the 50 leftover "Ministry of Tourism" entries on tourismcambodia.org and .com as "Tourism Cambodia" (data text only; it bumps the version)? The .org site calls itself an independent guide and the .com site is a travel agency. Recommended: yes, in a small data slice, and treat tourism.gov.kh as the ministry.
-12. Check Long Beach (Sok San) and Long Set Beach (4K Beach) against coordinates and merge them if they are one beach (a merge needs a `place-merges.js` line)? Recommended: yes, as part of a coordinates check, before the 4K card gets a citation.
+13. Where "D5 tidy" (items 11 and 12) sits in the order after M3. Recommended: right after M3, because it is small.
 
 ## Next session prompts
-Start only after PR #121 has merged. The next releasing slice stacks on `mk-v0.642.0`.
+PR #121 is merged (64d67a4). The next releasing slice stacks on `mk-v0.642.0`. Order (owner, 2026-10-19): D5 Laos and Q2 now, in parallel; M3 after D5 Laos merges; then "D5 tidy" (recommended).
 
 D5 Laos (the next data slice; no owner action needed):
 > Read CLAUDE.md, docs/HANDOFF.md and the D5 section of docs/PLAN.md. Run /slice for slice D5 Laos: citations.
@@ -117,7 +115,7 @@ Q2, commit the audit driver (tools only, no version bump, so it can run alongsid
 
 Q3 to Q8 follow in the shape set out under Proposed fix slices in `docs/AUDIT_375.md`. Q3 to Q7 change shipped files, so they are stacked, one at a time.
 
-Exchange M3 (owner actions first). Every key and password stays in a dashboard or a password manager, never in the repo or in chat:
+Exchange M3 (after D5 Laos has merged). Steps 1 to 5 below were done by the owner on 2026-10-19. The public values for `js/market-config.js` (project URL, publishable key, Turnstile site key) are in `m3-owner-setup-values.md`, in the same shared notes folder as the Q2 driver. Not verified from here: the Supabase MFA (owner-reported) and a real sign-in email (none sent yet). Every key and password stays in a dashboard or a password manager, never in the repo or in chat:
 1. Create the Supabase project (Free, Singapore) and turn on MFA for the Supabase account.
 2. Create the Resend account. Verify mekonging.com with Resend's DNS records in Cloudflare. Enter the Resend SMTP details in Supabase Auth.
 3. Create a Turnstile widget for www.mekonging.com in Cloudflare. Enter its secret in Supabase's captcha settings.
@@ -129,3 +127,10 @@ Exchange M3 (owner actions first). Every key and password stays in a dashboard o
 > Scope: migration 001 (`profiles`, `cities` seeded, the `private` schema and helpers, `market_join`, `market_delete_account`, display-name filter terms); the `check-secrets` guard, `js/market-config.js` and `js/market-api.js` (with fixture mode); sign-in and account screens under `#market-signin` and `#market-me`; the CSP changes, Turnstile, and the CSP tightening in §16.
 > Done when: the RLS test prints only PASS and the Security Advisor shows no errors; at 375 px the signed-out, code-entry, signed-in and offline states render; the owner signs in on an iPhone home-screen app by code and in Safari by link, then deletes a test account; `check-secrets` fails on a planted fake secret key and passes on the tree, including `docs/EXCHANGE.md`.
 > Out of scope: listings, messages, alerts, moderation tooling, cash swap.
+
+D5 tidy, Cambodia source labels and the Long Beach check (approved 2026-10-19; a small releasing data slice, recommended right after M3):
+> Read CLAUDE.md, docs/HANDOFF.md and the Release order and D5 sections of docs/PLAN.md. Run /slice for slice D5 tidy.
+> Relabel the 50 entries in 6 data files that cite tourismcambodia.com or tourismcambodia.org as "Ministry of Tourism" to "Tourism Cambodia". Change no URL. Treat tourism.gov.kh as the ministry.
+> Compare the coordinates of Long Beach (Sok San) and Long Set Beach (4K Beach) with Wikivoyage's Koh Rong section and the island's map. If they are one beach, merge the records with a `js/data/place-merges.js` line in the same commit, and give the merged card a citation.
+> Done when: no "Ministry of Tourism" label remains on either host; the beach decision is recorded with its evidence; the affected cards show correctly at 375 px in headless Chrome; all guards and `jsc -m scripts/validate-jsc.mjs` pass.
+> Out of scope: other citations, photos, Bangkok.

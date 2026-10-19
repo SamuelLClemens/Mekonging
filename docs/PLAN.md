@@ -6,7 +6,15 @@
 - M0, the exchange planning session, changed documents only and is done: see `docs/EXCHANGE.md`.
 - Exchange slices M1–M10 (`docs/EXCHANGE.md` §17) change shipped files, so they stack with the data slices like any other releasing slice.
 - M1 (the board moved to `js/screens/exchange.js`) is PR #108, `mk-v0.633.0`, 2026-10-12.
-- M1 (PR #108) and M2 (the Market tab, PR #111, `mk-v0.635.0`) are merged. M3 is next on the exchange side, after the owner actions in `docs/EXCHANGE.md` §15.
+- M1 (PR #108) and M2 (the Market tab, PR #111, `mk-v0.635.0`) are merged. M3 is next on the exchange side. Its owner actions (`docs/EXCHANGE.md` §15, the M3 rows up to sending the public values) were done on 2026-10-19.
+
+### Release order (owner, 2026-10-19 status review)
+- **Now, in parallel:** D5 Laos (releasing) and Q2, the audit driver under `tools/audit-375/` (tools only, no version bump). Q2 is approved.
+- **Next releasing slice after D5 Laos merges:** M3, accounts and sign-in (closed beta).
+- **Approved, not yet placed in the order:** one small releasing data slice, "D5 tidy" (recommended right after M3):
+  - Relabel the 50 entries in 6 data files that cite tourismcambodia.com or tourismcambodia.org as "Ministry of Tourism" (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`). They become "Tourism Cambodia". tourism.gov.kh is the ministry.
+  - Check Long Beach (Sok San) and Long Set Beach (4K Beach) against coordinates. Merge them if they are one beach (a merge needs a `place-merges.js` line in the same commit) before the 4K card gets a citation.
+- The order after that is open. Q3 to Q7, the Bangkok districts and M4 onward are all releasing slices, so they run one at a time.
 
 ## Data inventory (measured 2026-10-12 at fc4c9dc)
 Method: jsc over `loadAllCountries()`, plus `check-place-fields.py` and `check-sources.py`.
