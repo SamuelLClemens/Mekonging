@@ -1,4 +1,4 @@
-# Handoff — 2026-10-18 (slice D5, citations: Vietnam)
+# Handoff — 2026-10-19 (slice D5, citations: Vietnam; slice Q1, 375 px audit)
 
 ## Shipped
 - D5 Vietnam: branch `data/d5-vietnam`, [PR #118](https://github.com/SamuelLClemens/Mekonging/pull/118), `mk-v0.641.0`, commit 81b8cab. Its `guards` check was still pending when this handoff was written.
@@ -14,6 +14,12 @@
     - Hanoi to Ha Giang cites Cat Ba Express's route page.
     - 7 bus and flight routes cite 12Go. FUTA refuses automated browsers, Hai Van runs neither Mai Chau nor Hue to Hoi An, and no other named operator had a reachable route page.
   - `check-sources.py` baselines are now 113 and 10.
+- Q1, the 375 px audit (documents only, no version bump): branch `docs/q1-audit-375`, [PR #119](https://github.com/SamuelLClemens/Mekonging/pull/119). `docs/AUDIT_375.md` covers 77 routes (the 72 from `routeSweepRoutes()`, plus `#market` and its four chips) in Mekong Retro light and dark, 154 cold loads at 375 x 812 on build `mk-v0.640.0`.
+  - Layout: 0 routes overflow in either theme; 0 failed requests; 0 console errors except one intermittent exception on `#map` (`setWeather`, `js/map.js:1450`, runs after the map is removed).
+  - Tap size: 66 of 77 routes carry body controls under 44 px (1,315 controls, 199 under 24 px). The topbar icons have a 30 to 36 px wide hit area. Disclosure `summary` rows are the most widespread (301 controls on 62 routes).
+  - Contrast: 27 routes in light, 6 in dark. Worst: today's selected calendar day in dark, 1.21:1 (confirmed in a screenshot). Placeholders are 4.31:1 on 22 routes.
+  - Credits panel: open as loaded; 16.6% of the 343 x 300 px journey map (285 x 60 px plate), over the pin for stop 1; 10.5% of the Places and offline maps, over two pins on Places.
+  - The last section of the document proposes Q2 (commit the audit driver) to Q8.
 
 ## Verified
 Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from the worktree (`mekong-d5vi`, port 8747). The app reports `mk-v0.641.0`.
@@ -27,8 +33,20 @@ Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from
   - Cache-version's changed-file list is the 2 data files, `main.js` and `sw.js`.
   - `jsc -m scripts/validate-jsc.mjs`: 18,097 of 18,097 checks, EXIT 0.
 
+Q1 (PR #119): headless Chrome 155 over CDP at 375 x 812 (device scale 2, mobile), fresh profile per theme, served from the worktree on `127.0.0.1:8761`.
+- `document.hidden` is false on every recorded route. The first pass ran while macOS display sleep had hidden the pages; 51 routes per theme were measured again visible, and 33 of them differed (`#settings` 11 controls against 111). Only visible numbers are in the document.
+- Each detector was shown to fire on a planted defect: a 520 px box (reported as 145 px past the edge), 2.7:1 text, a 20 px button, a fixed overlay over controls, a planted 404, `console.error`, exception and CSP block.
+- Two findings were checked by eye from screenshots: the dark calendar's selected day and the journey credits panel. Three false positives were found and fixed in the driver (wrapped inline links, off-map pins, SVG country shapes); a transient hit on `#everything` did not reproduce in two re-measures or a direct probe.
+- `check-cache-version.py --base origin/feat/scaffold-bangkok-slice` passes. No shipped file changed.
+- The legacy Market hashes (`#swap`, `#exchange*`, `#market-gear`) all land on the right chip.
+
 ## Not done / known issues
-- New in this slice:
+- New in Q1 (all in `docs/AUDIT_375.md`, nothing fixed):
+  - The audit driver is not in the repo. It is in the shared notes folder (see the Q2 prompt) and proposed as slice Q2.
+  - Empty states only, `th` only for `{cc}` routes, no detail screens or sheets. The base moved to PR #118 after the audit and was not re-measured.
+  - `scripts/route-sweep.js` flags 170 zero-size controls on `#weather-th`; they are `content-visibility` artefacts. Its `EXTRA` list has no `#market`.
+  - The `#map` `getSource` exception was seen in 1 of 3 light loads and 0 of 3 dark loads.
+- New in the D5 Vietnam slice:
   - D5 has two countries left. Homepage-only: kh 59, la 46. Unsourced routes: kh 4, la 6. `--report --list` gives each record's lane.
   - 7 place records still name a source with no URL. The guard does not count them, and `--install` refuses them:
     - th: rca-royal-city-avenue, nimmanhaemin-road-bar-scene.
@@ -62,7 +80,7 @@ Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from
   - Some Cambodian and Lao photos are flagged: the Skuon vendor, the Muang Sing market faces, Tonle Bati showing the lake, and Phare Circus not fetched.
   - Tall portrait photos are uncapped (Phanom Rung is 548 px at 375 px wide).
   - Free places print "฿0 (≈ $0)" instead of "Free".
-  - The journey map's credits panel covers about a quarter of the map at 375 px.
+  - The journey map's credits panel: measured in Q1 at 16.6% of the map, not a quarter (see above).
   - `js/main.js` is 7,558 lines; the ceiling is ~1,500.
   - The main checkout is at 5dc10b4, behind origin. Start every session in a worktree from `origin/feat/scaffold-bangkok-slice`.
   - Pai stays deferred.
@@ -76,6 +94,8 @@ Headless Chrome over CDP at 375 x 812, fresh profile on `127.0.0.1`, served from
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
 7. Is a Meetups-free Market acceptable until M4? Recommended: yes.
 8. Exchange M3 waits on the owner actions below. The legal questions in `docs/EXCHANGE.md` §14 go to Omer Hanegbi or Omri Siri.
+9. Commit the audit driver under `tools/audit-375/` before any Q1 fix slice (Q2)? Recommended: yes. It was left out of PR #119 to keep it documents-only.
+10. Topbar icon spacing: the title column has 102 px, so a 44 px pitch costs title width. Recommended: leave the topbar until Q3 to Q5 are done, then test a wider pitch against the nine longest titles.
 
 ## Next session prompts
 Start only after PR #118 has merged. The next releasing slice stacks on `mk-v0.641.0`.
@@ -89,9 +109,14 @@ D5 Cambodia (the next slice; no owner action needed):
 
 D5 Laos follows in the same shape, and adds the That Sikhottabong (10.5 km) and Nong Fa Lake (28.4 km) coordinate checks.
 
-Q1, the 375 px audit (documents only, so it can run alongside D5):
-> Read CLAUDE.md, docs/HANDOFF.md and the Q1 section of docs/PLAN.md. Run /slice for slice Q1: load every route in `js/nav-groups.js` in headless Chrome at 375 px, in Mekong Retro light and dark, and record horizontal overflow, controls under 44 x 44 px, console errors, contrast failures and controls covered by overlays in `docs/AUDIT_375.md`.
-> Out of scope: fixing what it finds.
+Q2, commit the audit driver (tools only, no version bump, so it can run alongside D5):
+> Read CLAUDE.md, docs/HANDOFF.md and docs/AUDIT_375.md (Method and limits; Proposed fix slices). Run /slice for slice Q2: add the driver under `tools/audit-375/`.
+> The files are in `/Users/zim/Library/Application Support/Claude/side-session-notes/local_45164220-ea74-40e6-851e-808583e5b9f4/q1-audit-driver/`: `audit375.py`, `audit375-page.js`, `report375.py`, `listroutes.py`, `redirects.py`, `shot.py`. If that folder is gone, rebuild them from the Method section.
+> Make one command print the headline table and the per-route tables for both themes. It must refuse a load where `document.hidden` is true, and keep the display awake (`caffeinate -d`).
+> Done when: a clean worktree reproduces the headline numbers in `docs/AUDIT_375.md` (66 routes with controls under 44 px, 0 overflow) and the script is documented in `scripts/README.md` or `tools/audit-375/README.md`.
+> Out of scope: fixing what the audit finds.
+
+Q3 to Q8 follow in the shape set out under Proposed fix slices in `docs/AUDIT_375.md`. Q3 to Q7 change shipped files, so they are stacked, one at a time.
 
 Exchange M3 (owner actions first). Every key and password stays in a dashboard or a password manager, never in the repo or in chat:
 1. Create the Supabase project (Free, Singapore) and turn on MFA for the Supabase account.
