@@ -5,11 +5,11 @@ Python 3 (no dependencies, run it directly) or a browser module you import in th
 
 ## Before every commit
 
-Sixteen guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
+Seventeen guards, plus the content validator below. Each one exists because the failure it catches actually shipped. Run all of
 them; each prints one line and exits non-zero on failure.
 
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert
@@ -17,7 +17,7 @@ python3 tools/style-tiles/port-themes.py --check
 python3 scripts/check-cache-version.py --base feat/scaffold-bangkok-slice
 ```
 
-The same sixteen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
+The same seventeen also run in CI, from `.github/workflows/guards.yml`, on every pull request into
 `feat/scaffold-bangkok-slice` and on every push to it. CI runs every guard even after one
 fails, prints the full output of each failure, and fails the check if any guard does. On a
 pull request `check-cache-version` compares against `origin/feat/scaffold-bangkok-slice`; on a
@@ -43,6 +43,7 @@ list above, so a new guard goes in both places.
 | `port-themes.py --check` (in `tools/style-tiles/`) | the generated theme block at the end of `css/style.css` differing from what `round2.json` produces | the four regional themes' values are ported by a script, never typed; a hand edit to the block, or to `round2.json` without re-running the script, would ship a palette no one measured |
 | `check-spacing` | more inline spacing declarations than a file's ceiling | a ratchet: 651 inline margins, none using the `--sp-*` scale |
 | `check-cache-version` | `APP_VERSION`/`CACHE_VERSION` not moved when a shipped asset changed | the service worker is cache-first, so a stale version means nobody gets the fix |
+| `check-secrets` | a whole secret key in any file git would commit: a Supabase secret key, a service-role JWT, a Resend key, a PEM private key, a literal assigned to a `SERVICE_ROLE`, `VAPID_PRIVATE` or `TURNSTILE_SECRET` name, or a publishable key outside `js/market-config.js` | the site deploys from this repository, so a committed secret is published (docs/EXCHANGE.md §2, added in M3a before any sign-in code). It matches whole keys, not prefixes, so the design docs pass; it prints file, line and kind but never the value; and it self-tests on planted fakes first, so it cannot pass without checking. If it fires, rotate the key before removing it |
 
 `check-spacing.py --update` lowers a file's ceiling after you have removed declarations.
 `check-place-fields.py` and `check-lazy-data.py` both take `--report` for the derived data.

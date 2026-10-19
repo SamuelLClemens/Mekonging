@@ -52,7 +52,7 @@ relevant section of the docs below, not the whole repo.
 
 ## Guards (run before every commit; CI runs the same list)
 ```bash
-for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources; do
+for g in js-syntax imports lazy-data preloads ui-strings month-arrays contrast skins spacing place-dupes undefined net-gates sources secrets; do
   printf '%-14s ' "$g"; python3 scripts/check-$g.py | tail -1
 done
 python3 scripts/check-place-fields.py --assert

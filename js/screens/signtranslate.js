@@ -24,19 +24,19 @@ import { mount, topbar } from '../main.js';
 
 const TESS_LANG = { th: 'tha', vi: 'vie', km: 'khm', lo: 'lao' };
 
-// Tesseract.js and each language's traineddata are fetched from a CDN on first use only. This
-// screen is already online-required for the translation step, so that is not a new constraint,
-// and nothing else in the app depends on this load succeeding — the site-wide rule against a
-// CDN dependency (CLAUDE.md) names exactly this kind of exception: a feature whose own failure
-// path is self-contained (an error message here, nothing else in the app affected).
-const TESSERACT_CDN = 'https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';
+// Tesseract.js 5.1.1 is self-hosted under lib/tesseract/ (M3a, docs/EXCHANGE.md §16): the
+// loader, its worker, both LSTM cores and the four languages' traineddata. Recognition makes no
+// third-party request, so the CSP's script-src, worker-src and connect-src name no CDN. Each
+// file still loads on first use only; lib/tesseract/README.md records versions and sources.
+const TESS_BASE = new URL('../../lib/tesseract/', import.meta.url).href;
+const TESS_PATHS = { workerPath: `${TESS_BASE}worker.min.js`, corePath: `${TESS_BASE}core`, langPath: `${TESS_BASE}lang` };
 let _tesseractLoad = null;
 function loadTesseract() {
   if (window.Tesseract) return Promise.resolve(window.Tesseract);
   if (_tesseractLoad) return _tesseractLoad;
   _tesseractLoad = new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = TESSERACT_CDN;
+    s.src = `${TESS_BASE}tesseract.min.js`;
     s.onload = () => (window.Tesseract ? resolve(window.Tesseract) : reject(new Error('Text recognition did not load — check your connection.')));
     s.onerror = () => reject(new Error('Could not load text recognition — check your connection.'));
     document.head.append(s);
@@ -102,7 +102,7 @@ export function signTranslateScreen(lang) {
     textArea.value = '';
     try {
       const Tesseract = await loadTesseract();
-      const { data } = await Tesseract.recognize(canvas, tessLang);
+      const { data } = await Tesseract.recognize(canvas, tessLang, TESS_PATHS);
       textArea.value = (data.text || '').trim();
       status.textContent = textArea.value
         ? 'Check the text below against the sign and fix anything wrong, then translate.'
