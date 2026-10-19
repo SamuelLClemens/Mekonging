@@ -236,7 +236,7 @@ export const PLACES_LA_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Discover Laos"],
     mapQuery: "Tad Yuang Waterfall Paksong Bolaven", coords: { lat: 15.1900, lng: 106.1300 },
     bookHint: "No booking; ride or drive in on the Bolaven loop and pay at the gate.", verified: "2026-06",
-    sources: [{ org: "Discover Laos Today", url: "https://discoverlaos.today" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Laos — Waterfalls (Tad Yuang Falls)", url: "https://www.tourismlaos.org/waterfalls/" }, { org: "Discover Laos Today — Tad Yuang Waterfall (Nguang Waterfall)", url: "https://discoverlaos.today/paksong-bolaven-plateau/thing-to-do/tad-nguang-nguag-waterfall" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-vieng-xai-caves", name: "Vieng Xai Caves", city: "Vieng Xai", country: "la",
@@ -267,7 +267,7 @@ export const PLACES_LA_EXT = [
     rating: 4.7, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Gibbon Experience Huay Xai Bokeo Laos", coords: { lat: 20.3300, lng: 100.7000 },
     bookHint: "Reserve online in advance via the official Gibbon Experience; check in at the Huay Xai office.", verified: "2026-06",
-    sources: [{ org: "The Gibbon Experience (official)", url: "https://www.gibbonexperience.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Bokeo Nature Reserve (Nam Kan National Protected Area)", url: "https://en.wikipedia.org/wiki/Bokeo_Nature_Reserve" }, { org: "The Gibbon Experience — Classic tour", url: "https://www.gibbonexperience.org/classic-tour/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-muang-ngoy", name: "Muang Ngoi Neua", city: "Nong Khiaw", country: "la",
@@ -311,7 +311,7 @@ export const PLACES_LA_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Discover Laos"],
     mapQuery: "Tad Katamtok Waterfall Bolaven Plateau Laos", coords: { lat: 15.0700, lng: 106.3000 },
     bookHint: "No booking; reach it by motorbike or hire car on the Bolaven loop.", verified: "2026-06",
-    sources: [{ org: "Discover Laos Today", url: "https://discoverlaos.today" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Discover Laos Today — Tad Katamtok Waterfall", url: "https://discoverlaos.today/sekong/thing-to-do/tad-katamtok-waterfall" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-dong-natad", name: "Dong Natad Community Forest", city: "Savannakhet", country: "la",
@@ -343,7 +343,7 @@ export const PLACES_LA_EXT = [
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Talat Sao Morning Market Vientiane", coords: { lat: 17.965, lng: 102.614 },
     bookHint: "No booking; central and walkable.", verified: "2026-06",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Talat Sao", url: "https://en.wikipedia.org/wiki/Talat_Sao" }, { org: "Tourism Laos — Vientiane Capital (Talat Sao)", url: "https://www.tourismlaos.org/central-provinces/vientiane-capital/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-phosy-market", name: "Phosy Market (Talat Phosy)", city: "Luang Prabang", country: "la",
@@ -377,7 +377,7 @@ export const PLACES_LA_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Nong Khiaw homestay Nam Ou river", coords: { lat: 20.5667, lng: 102.6167 },
     bookHint: "Book a village homestay + trek on arrival, or a day or two ahead online.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Nong Khiaw (See)", url: "https://en.wikivoyage.org/wiki/Nong_Khiaw#See" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-luangprabang-hostels", name: "Luang Prabang hostels", city: "Luang Prabang", country: "la",
@@ -393,7 +393,7 @@ export const PLACES_LA_EXT = [
     rating: 4.4, reviewSources: ["Hostelworld", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Luang Prabang hostel old town", coords: { lat: 19.8845, lng: 102.1348 },
     bookHint: "Compare dorms on Hostelworld or Booking; walk-ins are easy outside Pi Mai.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Luang Prabang (Sleep)", url: "https://en.wikivoyage.org/wiki/Luang_Prabang#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-dondet-bungalows", name: "Si Phan Don (4000 Islands) river bungalows", city: "Don Det", country: "la",
@@ -410,7 +410,7 @@ export const PLACES_LA_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Don Det 4000 Islands bungalow Laos", coords: { lat: 13.9226, lng: 105.9403 },
     bookHint: "Many bungalows are walk-in; boats leave from Nakasang pier. Book ahead only in peak season.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Don Det (Sleep)", url: "https://en.wikivoyage.org/wiki/Don_Det#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-vientiane-longstay", name: "Vientiane long-stay (serviced apartments)", city: "Vientiane", country: "la",
@@ -427,7 +427,7 @@ export const PLACES_LA_EXT = [
     rating: 4.2, reviewSources: ["Google Maps consensus", "Expat community reports"],
     mapQuery: "Vientiane serviced apartment riverside", coords: { lat: 17.9757, lng: 102.6331 },
     bookHint: "Compare monthly listings with local agents; nightly OTAs are poor value for long stays.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }],
+    sources: [{ org: "Wikivoyage — Vientiane (Sleep)", url: "https://en.wikivoyage.org/wiki/Vientiane#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }],
   },
   {
     id: "la-ext-vangvieng-outdoors", name: "Vang Vieng outdoor adventures", city: "Vang Vieng", country: "la",
@@ -443,7 +443,7 @@ export const PLACES_LA_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Vang Vieng blue lagoon Nam Song", coords: { lat: 18.9237, lng: 102.447 },
     bookHint: "Book activities in town on the day; balloons and zip-lines a day ahead in peak season.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Vang Vieng", url: "https://en.wikipedia.org/wiki/Vang_Vieng" }, { org: "Wikivoyage — Vang Vieng (Do)", url: "https://en.wikivoyage.org/wiki/Vang_Vieng#Do" }, { org: "Tourism Laos — Vientiane Province (Vang Vieng)", url: "https://www.tourismlaos.org/central-provinces/vientiane-province/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-mekong-slowboat", name: "Mekong slow boat to Luang Prabang", city: "Huay Xai", country: "la",
@@ -460,7 +460,7 @@ export const PLACES_LA_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Huay Xai slow boat pier to Luang Prabang", coords: { lat: 20.276, lng: 100.4128 },
     bookHint: "Buy at the Huay Xai boat pier or via a guesthouse; combine with the Thai border crossing at Chiang Khong.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Huay Xai (Go next)", url: "https://en.wikivoyage.org/wiki/Huay_Xai#Go_next" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-namha-trek", name: "Nam Ha NPA trek & jungle camp (Luang Namtha)", city: "Luang Namtha", country: "la",
@@ -478,7 +478,7 @@ export const PLACES_LA_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Nam Ha NPA trekking Luang Namtha", coords: { lat: 20.9490, lng: 101.4025 },
     bookHint: "Book at a licensed Luang Namtha trekking office; join a group to lower the per-person cost.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Nam Ha National Protected Area", url: "https://en.wikipedia.org/wiki/Nam_Ha_National_Protected_Area" }, { org: "Tourism Laos — Luang Namtha Province (Nam Ha National Protected Area)", url: "https://www.tourismlaos.org/northern-provinces/luang-namtha-province/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-luangprabang-resort", name: "Luang Prabang riverside resort", city: "Luang Prabang", country: "la",
@@ -495,7 +495,7 @@ export const PLACES_LA_EXT = [
     rating: 4.7, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Luang Prabang riverside boutique resort", coords: { lat: 19.8867, lng: 102.1350 },
     bookHint: "Compare Booking/Agoda for the same villa resort; book river-view rooms and transfers ahead in peak season.", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Luang Prabang (Sleep)", url: "https://en.wikivoyage.org/wiki/Luang_Prabang#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-vientiane-herbal-sauna", name: "Traditional Lao Herbal Sauna at Wat Sok Pa Luang", city: "Vientiane", country: "la",
@@ -530,7 +530,7 @@ export const PLACES_LA_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Bolaven Plateau coffee farm, Pakse, Champasak, Laos", coords: { lat: 15.12, lng: 105.8 },
     bookHint: "Book through a Pakse guesthouse or tour agency the day before; private car options available", verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Laos — Champasak Province (Bolaven coffee)", url: "https://www.tourismlaos.org/southern-provinces/champasak-province/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-vientiane-khao-piak-sen-shops", name: "Vientiane khao piak sen noodle shops", city: "Vientiane", country: "la",
@@ -562,7 +562,7 @@ export const PLACES_LA_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Ban Anou night market Vientiane", coords: { lat: 17.97, lng: 102.61 },
     bookHint: "No booking; takeaway stalls, come with an appetite and small notes", verified: "2026-07",
-    sources: [{ org: "Tourism Laos (Ministry of Information, Culture and Tourism)", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Vientiane (Eat)", url: "https://en.wikivoyage.org/wiki/Vientiane#Eat" }, { org: "Tourism Laos (Ministry of Information, Culture and Tourism)", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-luang-prabang-belmond-phou-vao",
@@ -674,11 +674,15 @@ export const PLACES_LA_EXT = [
     verified: "2026-08",
     sources: [
       {
-        org: "Lao National Tourism, Ministry of Information, Culture and Tourism",
-        url: "https://www.tourismlaos.org",
+        org: "Wikipedia — Settha Palace Hotel",
+        url: "https://en.wikipedia.org/wiki/Settha_Palace_Hotel",
+      },
+      {
+        org: "Tourism Laos — Vientiane Capital (Settha Palace Hotel)",
+        url: "https://www.tourismlaos.org/central-provinces/vientiane-capital/",
       },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
-      { org: "Settha Palace Hotel (official)", url: "https://www.setthapalace.com/" },
+      { org: "Settha Palace Hotel — The hotel", url: "https://www.setthapalace.com/the-hotel/" },
     ],
   },
   {
@@ -744,7 +748,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 19.8955, lng: 102.1409 },
     bookHint: "No booking; pay at the gate and enter on foot.",
     verified: "2026-08",
-    sources: [{ org: "UNESCO World Heritage", url: "https://whc.unesco.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Wat Xieng Thong", url: "https://en.wikipedia.org/wiki/Wat_Xieng_Thong" }, { org: "Tourism Laos — Wat Xiengthong", url: "https://www.tourismlaos.org/2816-2/" }, { org: "UNESCO World Heritage — Town of Luang Prabang", url: "https://whc.unesco.org/en/list/479/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-mount-phousi",
@@ -768,7 +772,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 19.8895, lng: 102.1375 },
     bookHint: "No booking; pay the small fee near the summit.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Mount Phou Si", url: "https://en.wikipedia.org/wiki/Mount_Phou_Si" }, { org: "Tourism Laos — Luang Prabang Province (Phousi Mountain)", url: "https://www.tourismlaos.org/northern-provinces/louangphabang-province/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-royal-palace-museum-lpb",
@@ -793,7 +797,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 19.8886, lng: 102.1356 },
     bookHint: "No booking; buy a ticket at the gate and observe the dress and locker rules.",
     verified: "2026-08",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Royal Palace, Luang Prabang (Haw Kham)", url: "https://en.wikipedia.org/wiki/Royal_Palace,_Luang_Prabang" }, { org: "Tourism Laos — Luang Prabang Province (Royal Palace Museum)", url: "https://www.tourismlaos.org/northern-provinces/louangphabang-province/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-patuxai",
@@ -817,7 +821,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.9691, lng: 102.6169 },
     bookHint: "No booking; pay the small climb fee inside the arch.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Patuxai", url: "https://en.wikipedia.org/wiki/Patuxai" }, { org: "Tourism Laos — Vientiane Capital (Patuxay, Victory Monument)", url: "https://www.tourismlaos.org/central-provinces/vientiane-capital/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-wat-sisaket",
@@ -842,7 +846,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.9642, lng: 102.6098 },
     bookHint: "No booking; pay at the entrance.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Wat Si Saket", url: "https://en.wikipedia.org/wiki/Wat_Si_Saket" }, { org: "Tourism Laos — Vientiane Capital (Sisaket Temple)", url: "https://www.tourismlaos.org/central-provinces/vientiane-capital/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-coffee-bolaven-tad-champee",
@@ -864,7 +868,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 15.192, lng: 106.128 },
     bookHint: "No booking; ride in on the loop and pay at the gate.",
     verified: "2026-07",
-    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Bolaven Plateau (Waterfalls)", url: "https://en.wikivoyage.org/wiki/Bolaven_Plateau#Waterfalls" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-savannakhet-dinosaur-museum",
@@ -886,7 +890,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 16.5636, lng: 104.7503 },
     bookHint: "No booking; pay at the door during opening hours.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia (Lao) — ຫໍພິພິດທະພັນໄດໂນເສົາ", url: "https://lo.wikipedia.org/wiki/%E0%BA%AB%E0%BB%8D%E0%BA%9E%E0%BA%B4%E0%BA%9E%E0%BA%B4%E0%BA%94%E0%BA%97%E0%BA%B0%E0%BA%9E%E0%BA%B1%E0%BA%99%E0%BB%84%E0%BA%94%E0%BB%82%E0%BA%99%E0%BB%80%E0%BA%AA%E0%BA%BB%E0%BA%B2" }, { org: "Wikivoyage — Savannakhet (See)", url: "https://en.wikivoyage.org/wiki/Savannakhet#See" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-that-ing-hang",
@@ -910,7 +914,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 16.6333, lng: 104.8333 },
     bookHint: "No booking; arrange a return tuk-tuk from Savannakhet town.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia (Lao) — ພຣະທາດ ອິງຮັງ", url: "https://lo.wikipedia.org/wiki/%E0%BA%9E%E0%BA%A3%E0%BA%B0%E0%BA%97%E0%BA%B2%E0%BA%94_%E0%BA%AD%E0%BA%B4%E0%BA%87%E0%BA%AE%E0%BA%B1%E0%BA%87" }, { org: "Wikivoyage — Savannakhet (See)", url: "https://en.wikivoyage.org/wiki/Savannakhet#See" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-tham-chang-cave",
@@ -934,7 +938,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 18.9153, lng: 102.4436 },
     bookHint: "No booking; pay at the bridge and cave entrance.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Tham Jang", url: "https://en.wikipedia.org/wiki/Tham_Jang" }, { org: "Tourism Laos — Vientiane Province (Tham Chang Cave)", url: "https://www.tourismlaos.org/central-provinces/vientiane-province/" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-blue-lagoon-1",
@@ -958,7 +962,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 18.9231, lng: 102.3789 },
     bookHint: "No booking; ride out by scooter and pay at the gate.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Tham Phu Kham", url: "https://en.wikipedia.org/wiki/Tham_Phu_Kham" }, { org: "Wikivoyage — Vang Vieng (See)", url: "https://en.wikivoyage.org/wiki/Vang_Vieng#See" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-buddha-cave-thakhek",
@@ -982,7 +986,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.42, lng: 104.95 },
     bookHint: "No booking; pay the small fee at the base of the staircase.",
     verified: "2026-07",
-    sources: [{ org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Laos — Caves (Tham Pa Fa, Khammouane)", url: "https://www.tourismlaos.org/caves/" }, { org: "Wikivoyage — Thakhek (The Thakhek Loop)", url: "https://en.wikivoyage.org/wiki/Thakhek#The_Thakhek_Loop" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-plain-of-jars-2",
@@ -1006,7 +1010,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 19.3833, lng: 103.1667 },
     bookHint: "Pay at the site booth; arrange a multi-site tour or driver in Phonsavan.",
     verified: "2026-07",
-    sources: [{ org: "Wikivoyage — Plain of Jars", url: "https://en.wikivoyage.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Laos — Xieng Khouang Province (Jar Site 2)", url: "https://www.tourismlaos.org/northern-provinces/xiangkhouang-province/" }, { org: "Wikipedia — Plain of Jars", url: "https://en.wikipedia.org/wiki/Plain_of_Jars" }, { org: "Wikivoyage — Plain of Jars (See)", url: "https://en.wikivoyage.org/wiki/Plain_of_Jars#See" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-don-khong-island",
@@ -1029,7 +1033,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 14.1167, lng: 105.85 },
     bookHint: "Reach it by road bridge or boat; choose a guesthouse in Muang Khong on arrival.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Khong Island", url: "https://en.wikipedia.org/wiki/Khong_Island" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-wat-phou-champasak-town",
@@ -1051,7 +1055,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 14.8933, lng: 105.8722 },
     bookHint: "No booking needed off-peak; reachable by bus, boat or tuk-tuk from Pakse.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Champasak (town)", url: "https://en.wikipedia.org/wiki/Champasak_(town)" }, { org: "Lonely Planet", url: "https://www.lonelyplanet.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-taec-lpb",
@@ -1074,7 +1078,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 19.8869, lng: 102.1361 },
     bookHint: "No booking; pay entry at the door during opening hours.",
     verified: "2026-07",
-    sources: [{ org: "Traditional Arts and Ethnology Centre", url: "https://www.taeclaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Laos — Luang Prabang Province (TAEC)", url: "https://www.tourismlaos.org/northern-provinces/louangphabang-province/" }, { org: "Traditional Arts and Ethnology Centre — Visitor information", url: "https://www.taeclaos.org/visitors-information/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-that-dam-vientiane",
@@ -1098,7 +1102,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.9672, lng: 102.6083 },
     bookHint: "No booking; it stands on a public roundabout.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — That Dam", url: "https://en.wikipedia.org/wiki/That_Dam" }, { org: "Tourism Laos — Vientiane Capital (That Dam, Black Stupa)", url: "https://www.tourismlaos.org/central-provinces/vientiane-capital/" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-vangvieng-riverside-guesthouses",
@@ -1123,7 +1127,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 18.9235, lng: 102.4455 },
     bookHint: "Compare riverbank guesthouses on Booking or Agoda; walk-ins are easy outside the April and cool-season peaks.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Travelfish", url: "https://www.travelfish.org" }],
+    sources: [{ org: "Wikivoyage — Vang Vieng (Sleep)", url: "https://en.wikivoyage.org/wiki/Vang_Vieng#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Travelfish", url: "https://www.travelfish.org" }],
   },
   {
     id: "la-ext-vangvieng-riverside-food",
@@ -1172,7 +1176,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 15.1198, lng: 105.7987 },
     bookHint: "Compare central guesthouses on Booking or Agoda; walk-ins are straightforward outside peak season.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Travelfish", url: "https://www.travelfish.org" }],
+    sources: [{ org: "Wikivoyage — Pakse (Sleep)", url: "https://en.wikivoyage.org/wiki/Pakse#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Travelfish", url: "https://www.travelfish.org" }],
   },
   {
     id: "la-ext-pakse-daoheuang-food",
@@ -1197,7 +1201,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 15.1058, lng: 105.8067 },
     bookHint: "No booking; go for lunch with small notes and an empty stomach.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Pakse (See)", url: "https://en.wikivoyage.org/wiki/Pakse#See" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-pakse-ban-tong-night-market",
@@ -1269,7 +1273,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 15.1789, lng: 106.2148 },
     bookHint: "No booking; arrive early with small notes for breakfast on the loop.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Paksong (Eat)", url: "https://en.wikivoyage.org/wiki/Paksong#Eat" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-thakhek-square-guesthouses",
@@ -1294,7 +1298,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.4045, lng: 104.8046 },
     bookHint: "Compare town-centre guesthouses on Booking or Agoda; walk-ins are easy outside peak season.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Travelfish", url: "https://www.travelfish.org" }],
+    sources: [{ org: "Wikivoyage — Thakhek (Sleep)", url: "https://en.wikivoyage.org/wiki/Thakhek#Sleep" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Travelfish", url: "https://www.travelfish.org" }],
   },
   {
     id: "la-ext-thakhek-night-market-food",
@@ -1317,7 +1321,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.4038, lng: 104.8032 },
     bookHint: "No booking; walk from the square to the riverside in the early evening with small notes.",
     verified: "2026-07",
-    sources: [{ org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Thakhek (Eat)", url: "https://en.wikivoyage.org/wiki/Thakhek#Eat" }, { org: "Lao National Tourism Administration", url: "https://www.tourismlaos.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "la-ext-nongkhiaw-bridge-food",
@@ -1362,7 +1366,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 18.9235, lng: 102.448 },
     bookHint: "Walk-in; no booking needed.",
     verified: "2026-07",
-    sources: [{ org: "Travelfish" }, { org: "Lonely Planet Laos" }],
+    sources: [{ org: "Travelfish — Food and drink in Vang Vieng (Kangaroo Sunset, Gary's, Sakura)", url: "https://www.travelfish.org/eatandmeet/laos/vientiane_and_surrounds/vientiane/vang_vieng/eat" }, { org: "Wikivoyage — Vang Vieng (Drink)", url: "https://en.wikivoyage.org/wiki/Vang_Vieng#Drink" }],
   },
   {
     id: "la-ext-utopia-bar-the-late-bowling-alley-scene",
@@ -1384,7 +1388,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 19.8842, lng: 102.1378 },
     bookHint: "Walk-in; no booking. Just show up at Utopia and follow the crowd afterwards.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet Laos" }, { org: "Travelfish" }],
+    sources: [{ org: "Travelfish — Food and drink in Luang Prabang (Utopia, bowling alley)", url: "https://www.travelfish.org/eatandmeet/laos/northern_laos/luang_prabang/luang_prabang/eat" }, { org: "Wikivoyage — Luang Prabang (Drink)", url: "https://en.wikivoyage.org/wiki/Luang_Prabang#Drink" }],
   },
   {
     id: "la-ext-bor-pen-nyang-riverfront-bar-strip",
@@ -1406,7 +1410,7 @@ export const PLACES_LA_EXT = [
     coords: { lat: 17.962, lng: 102.6065 },
     bookHint: "Walk-in; no booking needed.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet Laos" }, { org: "Travelfish" }],
+    sources: [{ org: "Travelfish — Bor Pen Nyang, Vientiane", url: "https://www.travelfish.org/eatandmeet_profile/laos/vientiane_and_surrounds/vientiane/vientiane/931" }, { org: "Wikivoyage — Vientiane (Drink)", url: "https://en.wikivoyage.org/wiki/Vientiane#Drink" }],
   },
   {
     id: "la-ext-phou-fa-viewpoint-phongsali",
@@ -2328,8 +2332,8 @@ export const PLACES_LA_EXT = [
     ],
     "mapQuery": "That Sikhottabong Thakhek Laos",
     "coords": {
-      "lat": 17.3547,
-      "lng": 104.7905
+      "lat": 17.3502,
+      "lng": 104.8071
     },
     "bookHint": "No booking; just arrive.",
     "verified": "2026-06",
@@ -2341,6 +2345,10 @@ export const PLACES_LA_EXT = [
       {
         "org": "Tripadvisor",
         "url": "https://www.tripadvisor.com/Attraction_Review-g7741494-d12161422-Reviews-That_Sikhottabong-Thakhek_Khammouane_Province.html"
+      },
+      {
+        "org": "OpenStreetMap — Ban Sikhottabong (map position)",
+        "url": "https://www.openstreetmap.org/node/2791090723"
       }
     ]
   },
@@ -2963,8 +2971,8 @@ export const PLACES_LA_EXT = [
     ],
     "mapQuery": "Nong Fa Lake Attapeu Laos",
     "coords": {
-      "lat": 15.11,
-      "lng": 107.16
+      "lat": 15.1061,
+      "lng": 107.4235
     },
     "bookHint": "No online booking; arrange transport, guide and any permit through operators or the tourism office in Attapeu town.",
     "verified": "2026-06",
@@ -2976,6 +2984,14 @@ export const PLACES_LA_EXT = [
       {
         "org": "Tourism Laos (Attapeu Province)",
         "url": "https://www.tourismlaos.org/southern-provinces/attapeu-province/"
+      },
+      {
+        "org": "Wikipedia — Nong Fa Lake (map position)",
+        "url": "https://en.wikipedia.org/wiki/Nong_Fa_Lake"
+      },
+      {
+        "org": "OpenStreetMap — Nong Fa (map position)",
+        "url": "https://www.openstreetmap.org/way/276269655"
       }
     ]
   },
@@ -4611,7 +4627,7 @@ export const PLACES_LA_EXT = [
     tips: ["The buggies are fun but the dirt tracks get treacherous in the rains - go slowly and never ride the river roads after dark.", "Wear the helmet - it is the law across the region and it saves lives; insist on one that fits and fasten it.", "Photograph the bike from every side before you ride off and point out existing scratches to the shop, so you are not billed for old damage.", "Check the brakes, tyres, lights and horn before leaving, and refuse any bike that feels wrong.", "Do not leave your passport as a deposit - offer a cash deposit or a photocopy instead; passport-for-deposit disputes are a common, costly scam.", "Carry the licence your travel insurance requires - most policies pay out only if you hold the correct category, often an International Driving Permit; ride within your experience."],
     coords: { lat: 18.9237, lng: 102.447 }, mapQuery: "scooter rental Vang Vieng",
     verified: "2026-07",
-    sources: [{ org: "Tourism Laos", url: "https://www.tourismlaos.org/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
+    sources: [{ org: "Wikivoyage — Vang Vieng (Get around)", url: "https://en.wikivoyage.org/wiki/Vang_Vieng#Get_around" }, { org: "Tourism Laos", url: "https://www.tourismlaos.org/" }, { org: "Travelfish", url: "https://www.travelfish.org/" }],
   },
   {
     id: "la-ext-rental-pakse", name: "Motorbike rental, Pakse (Bolaven loop)", city: "Pakse", country: "la",

@@ -279,6 +279,16 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Worth splitting among a group. The former passenger boat down the Nam Ou no longer runs as a scheduled service."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Luang Prabang to Nong Khiaw",
+        "url": "https://12go.asia/en/travel/luang-prabang/nong-khiaw"
+      },
+      {
+        "org": "Wikivoyage — Nong Khiaw (Get in)",
+        "url": "https://en.wikivoyage.org/wiki/Nong_Khiaw#Get_in"
+      }
     ]
   },
   {
@@ -392,6 +402,16 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Check current frequency before relying on it; flights to Xieng Khouang are intermittent."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Vientiane to Phonsavan",
+        "url": "https://12go.asia/en/travel/vientiane/phonsavan"
+      },
+      {
+        "org": "Wikivoyage — Phonsavan (Get in)",
+        "url": "https://en.wikivoyage.org/wiki/Phonsavan#Get_in"
+      }
     ]
   },
   {
@@ -452,6 +472,16 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "From about 287,500 LAK on booking sites. Good if you want central drop-off near the riverfront."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Vientiane to Thakhek",
+        "url": "https://12go.asia/en/travel/vientiane/thakhek"
+      },
+      {
+        "org": "Wikivoyage — Thakhek (Get in)",
+        "url": "https://en.wikivoyage.org/wiki/Thakhek#Get_in"
+      }
     ]
   },
   {
@@ -511,6 +541,16 @@ export const ROUTES_LA = [
         "bookVia": "Lao Airlines, online travel agents",
         "recommended": false,
         "notes": "Frequencies vary seasonally; confirm before depending on it."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Vientiane to Savannakhet",
+        "url": "https://12go.asia/en/travel/vientiane/savannakhet"
+      },
+      {
+        "org": "Wikivoyage — Savannakhet (Get in)",
+        "url": "https://en.wikivoyage.org/wiki/Savannakhet#Get_in"
       }
     ]
   },
@@ -621,6 +661,16 @@ export const ROUTES_LA = [
         "recommended": false,
         "notes": "Note Savannakhet town sits slightly off Route 13, so some services drop on the highway and require an onward transfer."
       }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Pakse to Savannakhet",
+        "url": "https://12go.asia/en/travel/pakse/savannakhet"
+      },
+      {
+        "org": "Wikivoyage — Pakse (Get in)",
+        "url": "https://en.wikivoyage.org/wiki/Pakse#Get_in"
+      }
     ]
   },
   {
@@ -663,6 +713,16 @@ export const ROUTES_LA = [
         "bookVia": "12Go, Bookaway, guesthouses",
         "recommended": false,
         "notes": "Useful for reaching the Thakhek loop without backtracking through Vientiane."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Pakse to Thakhek",
+        "url": "https://12go.asia/en/travel/pakse/thakhek"
+      },
+      {
+        "org": "Wikivoyage — Pakse (Get in)",
+        "url": "https://en.wikivoyage.org/wiki/Pakse#Get_in"
       }
     ]
   },

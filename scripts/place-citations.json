@@ -1725,6 +1725,470 @@
    "basis": "the market alleyway: a few stalls do rice with pork, chicken or egg for US$1 to 1.5"
   }
  },
+ "la": {
+  "la-ext-blue-lagoon-1": {
+   "add": [
+    {
+     "org": "Wikipedia — Tham Phu Kham",
+     "url": "https://en.wikipedia.org/wiki/Tham_Phu_Kham"
+    },
+    {
+     "org": "Wikivoyage — Vang Vieng (See)",
+     "url": "https://en.wikivoyage.org/wiki/Vang_Vieng#See"
+    }
+   ],
+   "basis": "Wikipedia: Tham Phu Kham, a cave north-west of Vang Vieng whose name means Blue Lagoon, with a reclining bronze Buddha in the main cave. Wikivoyage: Tham Poukham (Blue Lagoon), a spring-fed lagoon 7 km west of town, 08:00 to 18:00"
+  },
+  "la-ext-bokeo-gibbon": {
+   "swap": {
+    "https://www.gibbonexperience.org": {
+     "org": "The Gibbon Experience — Classic tour",
+     "url": "https://www.gibbonexperience.org/classic-tour/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Bokeo Nature Reserve (Nam Kan National Protected Area)",
+     "url": "https://en.wikipedia.org/wiki/Bokeo_Nature_Reserve"
+    }
+   ],
+   "basis": "the operator's Classic tour page: three days and two nights in treehouses inside Nam Kan National Park, with trekking and ziplining and the best chance of hearing gibbons. Wikipedia: the reserve that holds the project"
+  },
+  "la-ext-buddha-cave-thakhek": {
+   "add": [
+    {
+     "org": "Tourism Laos — Caves (Tham Pa Fa, Khammouane)",
+     "url": "https://www.tourismlaos.org/caves/"
+    },
+    {
+     "org": "Wikivoyage — Thakhek (The Thakhek Loop)",
+     "url": "https://en.wikivoyage.org/wiki/Thakhek#The_Thakhek_Loop"
+    }
+   ],
+   "basis": "Tourism Laos: Tham Pa Fa near Na Khang Xang village, Thakhek District, where a villager found 229 Buddha statues in April 2004; a small entrance fee. Wikivoyage: Tham Nong Pafa, often called the Buddha Cave, reached by an elevated walkway and concrete steps"
+  },
+  "la-ext-coffee-bolaven-tad-champee": {
+   "add": [
+    {
+     "org": "Wikivoyage — Bolaven Plateau (Waterfalls)",
+     "url": "https://en.wikivoyage.org/wiki/Bolaven_Plateau#Waterfalls"
+    }
+   ],
+   "basis": "Tad Champee, 38 km from Pakse, with a bridge downstream and signs for safe swimming (the page gives a 30,000 kip entry; the card says 10,000 to 20,000)"
+  },
+  "la-ext-don-khong-island": {
+   "add": [
+    {
+     "org": "Wikipedia — Khong Island",
+     "url": "https://en.wikipedia.org/wiki/Khong_Island"
+    }
+   ],
+   "basis": "the island's own article: Khong Island (Don Khong), the largest island and the administrative seat of the Si Phan Don archipelago, 18 km long"
+  },
+  "la-ext-dondet-bungalows": {
+   "add": [
+    {
+     "org": "Wikivoyage — Don Det (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Don_Det#Sleep"
+    }
+   ],
+   "basis": "dozens of Don Det guesthouses from 50,000 kip with basic bungalows, a porch and a hammock; the sunset side suits the party crowd and the south the quieter stays"
+  },
+  "la-ext-katamtok": {
+   "swap": {
+    "https://discoverlaos.today": {
+     "org": "Discover Laos Today — Tad Katamtok Waterfall",
+     "url": "https://discoverlaos.today/sekong/thing-to-do/tad-katamtok-waterfall"
+    }
+   },
+   "basis": "one of the most spectacular and least-visited falls on the Bolaven loop, plunging into a deep jungle valley and largely undeveloped. The page puts it in Sekong Province, about 47 km east of Paksong (the card says Paksong)"
+  },
+  "la-ext-luangprabang-hostels": {
+   "add": [
+    {
+     "org": "Wikivoyage — Luang Prabang (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Luang_Prabang#Sleep"
+    }
+   ],
+   "basis": "Budget list: dorm beds, family-run guesthouses and a backpackers guesthouse ten minutes from the night market"
+  },
+  "la-ext-luangprabang-resort": {
+   "add": [
+    {
+     "org": "Wikivoyage — Luang Prabang (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Luang_Prabang#Sleep"
+    }
+   ],
+   "basis": "Splurge list: Amantaka in the former French hospital, the Apsara in a restored colonial building over the Khan River, and Lotus Villa, a Lao-colonial villa in the UNESCO precinct"
+  },
+  "la-ext-mekong-slowboat": {
+   "add": [
+    {
+     "org": "Wikivoyage — Huay Xai (Go next)",
+     "url": "https://en.wikivoyage.org/wiki/Huay_Xai#Go_next"
+    }
+   ],
+   "basis": "the two-day slow boat to Luang Prabang stops at Pak Beng for the night, one departure a day around 09:00 to 10:00 (the page gives 200,000 kip to Pak Beng and 400,000 to Luang Prabang, Dec 2024)"
+  },
+  "la-ext-mount-phousi": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Luang Prabang Province (Phousi Mountain)",
+     "url": "https://www.tourismlaos.org/northern-provinces/louangphabang-province/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Mount Phou Si",
+     "url": "https://en.wikipedia.org/wiki/Mount_Phou_Si"
+    }
+   ],
+   "basis": "Tourism Laos: 328 zigzag steps up Luang Prabang's holy mountain to the 20 m Wat Chomsi stupa and a 360 degree view. Wikipedia: the hill's own article, 100 m high, between the Mekong and the Nam Khan"
+  },
+  "la-ext-namha-trek": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Luang Namtha Province (Nam Ha National Protected Area)",
+     "url": "https://www.tourismlaos.org/northern-provinces/luang-namtha-province/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Nam Ha National Protected Area",
+     "url": "https://en.wikipedia.org/wiki/Nam_Ha_National_Protected_Area"
+    }
+   ],
+   "basis": "Tourism Laos: day and overnight treks and kayaking in Nam Ha NPA, with stays in jungle camps, an eco-lodge or village homestays, booked in Luang Namtha town; the Nalan trail to a Khmu village. Wikipedia: the protected area, an ecotourism destination"
+  },
+  "la-ext-nongkhiaw-homestay": {
+   "add": [
+    {
+     "org": "Wikivoyage — Nong Khiaw (See)",
+     "url": "https://en.wikivoyage.org/wiki/Nong_Khiaw#See"
+    }
+   ],
+   "basis": "tour offices and guesthouses in Nong Khiaw offer one to three day treks and homestays; the page does not name a village host"
+  },
+  "la-ext-pakse-bolaven-coffee-tour": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Champasak Province (Bolaven coffee)",
+     "url": "https://www.tourismlaos.org/southern-provinces/champasak-province/"
+    }
+   },
+   "basis": "Champasak Province: Pakse is an hour from Lao coffee country, with coffee tours and cafes, and a plantation visit ends in tastings (Tad Fane entry)"
+  },
+  "la-ext-pakse-daoheuang-food": {
+   "add": [
+    {
+     "org": "Wikivoyage — Pakse (See)",
+     "url": "https://en.wikivoyage.org/wiki/Pakse#See"
+    }
+   ],
+   "basis": "Dao Heuang Market, Road 38, with many food stalls; Talat Dao Heuang (the New Market) is listed about 2 km south-east of town"
+  },
+  "la-ext-pakse-town-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Pakse (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Pakse#Sleep"
+    }
+   ],
+   "basis": "Pakse's Sleep section lists the town's hotels and guesthouses, among them the Arawan Riverside Hotel on the Mekong"
+  },
+  "la-ext-paksong-market-food": {
+   "add": [
+    {
+     "org": "Wikivoyage — Paksong (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Paksong#Eat"
+    }
+   ],
+   "basis": "Paksong's market has noodle and barbecue eateries, sandwiches, blended fruit drinks and baguettes; its Coffee note adds that good coffee is sold at the market"
+  },
+  "la-ext-patuxai": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Vientiane Capital (Patuxay, Victory Monument)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-capital/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Patuxai",
+     "url": "https://en.wikipedia.org/wiki/Patuxai"
+    }
+   ],
+   "basis": "Tourism Laos: the Patuxay memorial monument on Lanexang Avenue, built in 1957 (Wikipedia gives 1957 to 1968), with a climb to a panoramic view. Wikipedia: the monument's own article"
+  },
+  "la-ext-plain-of-jars-2": {
+   "swap": {
+    "https://en.wikivoyage.org": {
+     "org": "Wikivoyage — Plain of Jars (See)",
+     "url": "https://en.wikivoyage.org/wiki/Plain_of_Jars#See"
+    }
+   },
+   "add": [
+    {
+     "org": "Tourism Laos — Xieng Khouang Province (Jar Site 2)",
+     "url": "https://www.tourismlaos.org/northern-provinces/xiangkhouang-province/"
+    },
+    {
+     "org": "Wikipedia — Plain of Jars",
+     "url": "https://en.wikipedia.org/wiki/Plain_of_Jars"
+    }
+   ],
+   "basis": "Tourism Laos: Jar Site 2, or Ban Na Kho, in Phaxay district with 93 jars on two hills (the page gives 20 km and, elsewhere, 25 km from Phonsavan). Wikipedia: sites 1, 2 and 3 are open to visitors. Wikivoyage: Site 2 entry 30,000 kip"
+  },
+  "la-ext-rental-vang-vieng": {
+   "add": [
+    {
+     "org": "Wikivoyage — Vang Vieng (Get around)",
+     "url": "https://en.wikivoyage.org/wiki/Vang_Vieng#Get_around"
+    }
+   ],
+   "basis": "bicycles for 60,000 kip a day, electric scooters and motorbikes for 170,000 to 200,000 kip a day, and a warning to check the bike and the contract; the page does not name buggies"
+  },
+  "la-ext-royal-palace-museum-lpb": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Luang Prabang Province (Royal Palace Museum)",
+     "url": "https://www.tourismlaos.org/northern-provinces/louangphabang-province/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Royal Palace, Luang Prabang (Haw Kham)",
+     "url": "https://en.wikipedia.org/wiki/Royal_Palace,_Luang_Prabang"
+    }
+   ],
+   "basis": "Tourism Laos: the Royal Palace Museum, first built in 1904 in the French colonial era, with the Prabang Buddha image. Wikipedia: the palace (Haw Kham), built in 1904 and converted to the national museum"
+  },
+  "la-ext-savannakhet-dinosaur-museum": {
+   "add": [
+    {
+     "org": "Wikipedia (Lao) — ຫໍພິພິດທະພັນໄດໂນເສົາ",
+     "url": "https://lo.wikipedia.org/wiki/%E0%BA%AB%E0%BB%8D%E0%BA%9E%E0%BA%B4%E0%BA%9E%E0%BA%B4%E0%BA%94%E0%BA%97%E0%BA%B0%E0%BA%9E%E0%BA%B1%E0%BA%99%E0%BB%84%E0%BA%94%E0%BB%82%E0%BA%99%E0%BB%80%E0%BA%AA%E0%BA%BB%E0%BA%B2"
+    },
+    {
+     "org": "Wikivoyage — Savannakhet (See)",
+     "url": "https://en.wikivoyage.org/wiki/Savannakhet#See"
+    }
+   ],
+   "basis": "Lao article: the dinosaur museum about 500 m from Wat Xaisomboun (no English article exists); it gives hours of 8:00-12:00 and 13:00-14:00, where the card says 13:00 to 16:00. Wikivoyage: daily 08:00-11:30 and 13:30-16:30, bones from Xonbouly District"
+  },
+  "la-ext-tad-yuang": {
+   "swap": {
+    "https://discoverlaos.today": {
+     "org": "Discover Laos Today — Tad Yuang Waterfall (Nguang Waterfall)",
+     "url": "https://discoverlaos.today/paksong-bolaven-plateau/thing-to-do/tad-nguang-nguag-waterfall"
+    }
+   },
+   "add": [
+    {
+     "org": "Tourism Laos — Waterfalls (Tad Yuang Falls)",
+     "url": "https://www.tourismlaos.org/waterfalls/"
+    }
+   ],
+   "basis": "Discover Laos Today: Tad Yuang, also called Nguang, near Paksong with viewing points and a picnic area. Tourism Laos: twin torrents falling about 40 m into jungle, swimming at the bottom allowed"
+  },
+  "la-ext-taec-lpb": {
+   "swap": {
+    "https://www.taeclaos.org": {
+     "org": "Traditional Arts and Ethnology Centre — Visitor information",
+     "url": "https://www.taeclaos.org/visitors-information/"
+    }
+   },
+   "add": [
+    {
+     "org": "Tourism Laos — Luang Prabang Province (TAEC)",
+     "url": "https://www.tourismlaos.org/northern-provinces/louangphabang-province/"
+    }
+   ],
+   "basis": "the museum's own visitor page: a small museum of Lao ethnic cultures with a fair-trade shop and boutique, about an hour's visit, beside Dara Market. Tourism Laos: open daily except Monday, 09:00 to 18:00"
+  },
+  "la-ext-talat-sao": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Vientiane Capital (Talat Sao)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-capital/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Talat Sao",
+     "url": "https://en.wikipedia.org/wiki/Talat_Sao"
+    }
+   ],
+   "basis": "Wikipedia: the market's own article, a two-storey morning market at Lan Xang Road, open 07:00 to about 16:00. Tourism Laos: Talat Sao for textiles, silks and decorative pieces"
+  },
+  "la-ext-thakhek-night-market-food": {
+   "add": [
+    {
+     "org": "Wikivoyage — Thakhek (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Thakhek#Eat"
+    }
+   ],
+   "basis": "night food stalls at the far end of the main road sell pancakes and pork buns by lamplight, with baguette stands near the new fountain square; the page names no grills or noodle soups"
+  },
+  "la-ext-thakhek-square-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Thakhek (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Thakhek#Sleep"
+    }
+   ],
+   "basis": "Thakhek's Sleep list: city-centre hotels and guesthouses near the Mekong, such as the Inthira on Anou Road; the square itself is named in the Eat section"
+  },
+  "la-ext-tham-chang-cave": {
+   "add": [
+    {
+     "org": "Wikipedia — Tham Jang",
+     "url": "https://en.wikipedia.org/wiki/Tham_Jang"
+    },
+    {
+     "org": "Tourism Laos — Vientiane Province (Tham Chang Cave)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-province/"
+    }
+   ],
+   "basis": "Wikipedia: Tham Jang, south-west of Vang Vieng, reached by a bridge over the Nam Song and a long flight of steps, with a spring about 50 m inside. Tourism Laos: Tham Chang (or Jung), Vang Vieng's most important cave"
+  },
+  "la-ext-that-dam-vientiane": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Vientiane Capital (That Dam, Black Stupa)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-capital/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — That Dam",
+     "url": "https://en.wikipedia.org/wiki/That_Dam"
+    }
+   ],
+   "basis": "Tourism Laos: the Black Stupa in a roundabout near Talat Sao, about 500 years old, once gilded, with the gold stripped by Siamese invaders. Wikipedia: the stupa between Chantha Khoumane and Bartholoni roads, said to hold a seven-headed naga"
+  },
+  "la-ext-that-ing-hang": {
+   "add": [
+    {
+     "org": "Wikipedia (Lao) — ພຣະທາດ ອິງຮັງ",
+     "url": "https://lo.wikipedia.org/wiki/%E0%BA%9E%E0%BA%A3%E0%BA%B0%E0%BA%97%E0%BA%B2%E0%BA%94_%E0%BA%AD%E0%BA%B4%E0%BA%87%E0%BA%AE%E0%BA%B1%E0%BA%87"
+    },
+    {
+     "org": "Wikivoyage — Savannakhet (See)",
+     "url": "https://en.wikivoyage.org/wiki/Savannakhet#See"
+    }
+   ],
+   "basis": "Lao article: a sacred stupa about 12 km from town, built in the 16th century (no English article exists). Wikivoyage: 13 km north-east of Savannakhet, 16th century, with the Boun Pha festival each December"
+  },
+  "la-ext-vangvieng-outdoors": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Vientiane Province (Vang Vieng)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-province/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Vang Vieng",
+     "url": "https://en.wikipedia.org/wiki/Vang_Vieng"
+    },
+    {
+     "org": "Wikivoyage — Vang Vieng (Do)",
+     "url": "https://en.wikivoyage.org/wiki/Vang_Vieng#Do"
+    }
+   ],
+   "basis": "Tourism Laos: Vang Vieng's limestone caves and watersports such as kayaking and tubing. Wikipedia: adventure sports and karst scenery, inner tubing and kayaking on the Nam Song. Wikivoyage: kayaking, tubing and cave visits (the intro adds ziplines and hot-air balloons)"
+  },
+  "la-ext-vangvieng-riverside-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Vang Vieng (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Vang_Vieng#Sleep"
+    }
+   ],
+   "basis": "Vang Vieng's Sleep list includes river-view bungalows (Champa Lao Bungalow on the island) and the Elephant Crossing Hotel, whose rooms face the river"
+  },
+  "la-ext-vientiane-ban-anou-night-market": {
+   "add": [
+    {
+     "org": "Wikivoyage — Vientiane (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Vientiane#Eat"
+    }
+   ],
+   "basis": "Ban Anou Night Market: some of the best cheap meals in the city although only about a block long, setting up at sundown with street snacks"
+  },
+  "la-ext-vientiane-longstay": {
+   "add": [
+    {
+     "org": "Wikivoyage — Vientiane (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Vientiane#Sleep"
+    }
+   ],
+   "basis": "Mid-range list names Somerset Vientiane, 116 studio, one and two bedroom apartments; the page names no condo market"
+  },
+  "la-ext-vientiane-settha-palace": {
+   "swap": {
+    "https://www.setthapalace.com/": {
+     "org": "Settha Palace Hotel — The hotel",
+     "url": "https://www.setthapalace.com/the-hotel/"
+    },
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Vientiane Capital (Settha Palace Hotel)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-capital/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Settha Palace Hotel",
+     "url": "https://en.wikipedia.org/wiki/Settha_Palace_Hotel"
+    }
+   ],
+   "basis": "the hotel's own page: built circa 1932 and restored. Wikipedia: a renovated French colonial building from 1932, reopened in 1999. Tourism Laos: a boutique hotel since 1932"
+  },
+  "la-ext-wat-phou-champasak-town": {
+   "add": [
+    {
+     "org": "Wikipedia — Champasak (town)",
+     "url": "https://en.wikipedia.org/wiki/Champasak_(town)"
+    }
+   ],
+   "basis": "the town's own article: a small town on the west bank of the Mekong about 40 km south of Pakse (its coordinates, 14.84 N 105.75 E, are about 14 km from the card's)"
+  },
+  "la-ext-wat-sisaket": {
+   "swap": {
+    "https://www.tourismlaos.org": {
+     "org": "Tourism Laos — Vientiane Capital (Sisaket Temple)",
+     "url": "https://www.tourismlaos.org/central-provinces/vientiane-capital/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Wat Si Saket",
+     "url": "https://en.wikipedia.org/wiki/Wat_Si_Saket"
+    }
+   ],
+   "basis": "Tourism Laos: built in 1818 by King Anouvong in the centre of the old city, the only ancient temple left intact after 1828. Wikipedia: the temple on Lan Xang Road, with a cloister wall of more than 2,000 Buddha images and a museum"
+  },
+  "la-ext-wat-xieng-thong": {
+   "swap": {
+    "https://whc.unesco.org": {
+     "org": "UNESCO World Heritage — Town of Luang Prabang",
+     "url": "https://whc.unesco.org/en/list/479/"
+    }
+   },
+   "add": [
+    {
+     "org": "Wikipedia — Wat Xieng Thong",
+     "url": "https://en.wikipedia.org/wiki/Wat_Xieng_Thong"
+    },
+    {
+     "org": "Tourism Laos — Wat Xiengthong",
+     "url": "https://www.tourismlaos.org/2816-2/"
+    }
+   ],
+   "basis": "UNESCO: Wat Xieng Thong, from the 16th century, the most complex ensemble of the town pagodas. Tourism Laos: built 1559 to 1560 by King Say Setthathirath, open daily 08:00 to 17:00. Wikipedia: the temple on the northern tip of the peninsula"
+  }
+ },
  "open": {
   "th-ext-nan-walking-street": "No checkable page (2026-10-18): TAT's only page for Kad Khuang Muang Nan is a 2023 one-off food fair at another site, and blogs disagree on the days (Saturday only vs Friday to Sunday).",
   "vi-ext-cannon-fort-cat-ba": "No checkable page (2026-10-18): no Wikipedia article; Wikivoyage Cat Ba and the 303 vietnam.travel pages read for D5 do not name the fort.",
@@ -1738,6 +2202,14 @@
   "kh-ext-koh-trong-homestays": "No checkable page (2026-10-19): Tourism Cambodia's Kratie stay list names Koh Trong Island only as a hotel address and its homestay page names no Kratie homestays; Wikivoyage Kratie does not name the island.",
   "kh-ext-koh-rong-long-set-beach": "No checkable page (2026-10-19): Wikivoyage Koh Rong has a Long Set Beach section, but it is the 7 km west-coast strand ending at Sok San (the other Koh Rong beach card) and puts the beach on the sunset side where this card says east; no page names 4K Beach. The two cards may be one beach.",
   "kh-ext-siem-reap-road60-night-market": "No checkable page (2026-10-19): Wikivoyage Siem Reap and Tourism Cambodia's Siem Reap pages do not name a Road 60 night market (Road 60 appears only in a hotel address).",
-  "kh-ext-battambang-riverside-stalls": "No checkable page (2026-10-19): Wikivoyage Battambang and Tourism Cambodia's Battambang eat page name no riverside evening stalls (Wikivoyage warns that streets go dark after 19:00)."
+  "kh-ext-battambang-riverside-stalls": "No checkable page (2026-10-19): Wikivoyage Battambang and Tourism Cambodia's Battambang eat page name no riverside evening stalls (Wikivoyage warns that streets go dark after 19:00).",
+  "la-ext-nongkhiaw-bridge-food": "No checkable page (2026-10-19): Wikivoyage Nong Khiaw (Eat) lists restaurants beside the bridge but no evening food-stall strip, and its Muang Ngoi Neua page adds none; the stalls have no article of their own.",
+  "la-ext-pakse-ban-tong-night-market": "No checkable page (2026-10-19): Wikivoyage Pakse names no riverside night market (its Eat section lists restaurants and Dao Heuang Market), and the Tourism Laos Champasak Province page names none.",
+  "la-ext-paksong-plateau-lodges": "No checkable page (2026-10-19): Wikivoyage Paksong (Sleep) lists three guesthouses and a hotel in town, and Wikivoyage Bolaven Plateau lists no lodge or homestay, so no page names farm homestays among the coffee plots.",
+  "la-ext-phosy-market": "No checkable page (2026-10-19): Wikivoyage Luang Prabang describes a Morning Market on the inner road by the National Museum and a Night Market, and does not name Phosy Market; there is no article of its own.",
+  "la-ext-si-phan-don-don-det-sunset-strip-kitchens": "No checkable page (2026-10-19): Wikivoyage Don Det (Eat) names individual restaurants, but no sunset-side Lao kitchens on stilts; there is no article of its own.",
+  "la-ext-vangvieng-riverside-food": "No checkable page (2026-10-19): Wikivoyage Vang Vieng (Eat) mentions pancake and sandwich stalls and a food court, not a riverside charcoal-grill night market; there is no article of its own.",
+  "la-ext-vientiane-herbal-sauna": "No checkable page (2026-10-19): Wikivoyage Vientiane names no herbal sauna (its one Sok Paluang Road line is about a swimming pool), the Tourism Laos Vientiane Capital page has none, and the pages that describe it are commercial travel sites.",
+  "la-ext-vientiane-khao-piak-sen-shops": "No checkable page (2026-10-19): English Wikipedia's Khao piak sen article describes the dish and names no Vientiane shop, and Wikivoyage Vientiane lists noodle shops 'all over town' without naming khao piak sen."
  }
 }
