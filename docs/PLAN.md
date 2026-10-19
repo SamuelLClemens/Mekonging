@@ -90,15 +90,16 @@ Other gaps:
 ### D5 — Citations (one session per country: places th 64, vi 78, kh 59, la 46; routes th 13, vi 14, kh 4, la 6)
 - **Status, Thailand:** PR #117 (`mk-v0.640.0`). 63 places cite a page about the place, and Nan Walking Street is filed `open`. All 13 routes cite their 12Go route page. Homepage-only records are 184 (was 247) and unsourced routes 24 (was 37); the baselines match. The coordinates of Mae Surin Waterfall, Huai Nam Dang viewpoint and both Pang Ung cards are fixed. Every decision is in `scripts/place-citations.json`.
 - **Status, Vietnam:** PR #118 (`mk-v0.641.0`). 71 places cite a page about the place: 50 vietnam.travel pages, 5 of the cited organisation's own pages, 10 Wikipedia articles (2 Vietnamese) and 6 Wikivoyage sections. 7 are filed `open`. The 5 URL-less records now cite real pages. 6 train routes cite Vietnam Railways' Train routes page (plus 12Go), Hanoi to Ha Giang cites Cat Ba Express, and 7 bus and flight routes cite 12Go. Homepage-only records are 113 and unsourced routes 10; the baselines match.
+- **Status, Cambodia:** PR #121 (`mk-v0.642.0`). 54 places cite a page about the place: 29 Tourism Cambodia pages, the National Museum's own visitor page, 9 Wikipedia articles and 15 Wikivoyage sections (Kampi dolphins also has a Tourism Cambodia page). 5 are filed `open`. The 2 URL-less records now cite real pages, 4 routes have sources (Giant Ibis for Phnom Penh to Kep, 12Go and Wikivoyage for the other three), and the Wat Nokor Bachey blurb was corrected from the 11th century to the last years of Jayavarman VII's reign (about 1200). Homepage-only records are 59 and unsourced routes 6; the baselines match. Laos is the last D5 country.
 - **Run order:** `fetch-place-citations.py --country <cc>` with `--report --list`, then `--suggest`. Open each page and record the decision. Then run `--install`, lower the baselines and bump the version (see `scripts/README.md`).
 - **Sources (owner, 2026-10-18):**
   - Prefer the cited organisation's own page about the place (a swap). Else use the place's own Wikipedia article. Else, for stay and food clusters, use a tourism-board page or a Wikivoyage section.
   - Leftover bare homepages stay in the list.
   - Routes cite operator pages first. Use a booking platform's route page (12Go, Baolau) only where no operator page is reachable.
-- **Hosts:** TAT, the MICHELIN Guide, 12Go, UNESCO and Travelfish block curl, so read them in the in-app browser. FUTA refuses automated browsers. Nok Air's route pages return a Cloudflare error, and Sombat Tour's schedule pages render no timetable.
+- **Hosts:** TAT, the MICHELIN Guide, 12Go, UNESCO and Travelfish block curl, so read them in the in-app browser. FUTA refuses automated browsers. Nok Air's route pages return a Cloudflare error, and Sombat Tour's schedule pages render no timetable. visitcambodia.com and angkorenterprise.gov.kh answer Cloudflare 403 to curl and to the in-app browser. tourismcambodia.com has no sitemap: crawl `/travelguides/provinces/<province>/what-to-see.htm` (and `where-to-stay`, `where-to-eat`), which link one page per attraction.
 - **Also in the country slices:**
-  - The 7 records whose source has no URL (th 2, kh 2, la 3; listed in `docs/HANDOFF.md`). Vietnam's 5 are done.
-  - The Wat Nokor Bachey date (kh).
+  - The 7 records whose source has no URL (th 2, kh 2, la 3; listed in `docs/HANDOFF.md`). Vietnam's 5 and Cambodia's 2 are done.
+  - The Wat Nokor Bachey date (kh): done, corrected in D5 Cambodia.
   - The That Sikhottabong and Nong Fa Lake coordinates (la).
 
 ### D6 — Access, kids, after dark
