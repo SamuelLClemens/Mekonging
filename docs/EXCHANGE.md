@@ -3,7 +3,7 @@
 This document turns the owner's decisions in `docs/PLAN.md` ("Traveller exchange") into a design that can be built in slices. It covers documents only: no code, no accounts and no keys were touched to write it. Slices M1 to M10 are in §17.
 
 **Owner rulings in this session (2026-10-12):**
-- Reading the shared board requires sign-in.
+- Reading the shared board requires sign-in. *Superseded on 2026-10-19: visitors may browse open listings without an account (§16); posting, messaging and reporting still need sign-in.*
 - Listing cards are anonymous. A display name appears only inside a conversation.
 - The exchange becomes a new tab in the bottom bar, "Market".
 - The whole exchange is 18+, confirmed by the traveller at sign-up.
@@ -88,7 +88,11 @@ pg_cron (every minute) ──pg_net──► Edge Function market-push ──►
   - When `online()` is false, Market shows the on-phone board under one line: "The shared market needs internet."
   - Listings fetched from the server are held in memory only. Nothing another traveller wrote is written to storage on the phone.
 - **Region.** Supabase project in Singapore (`ap-southeast-1`), the closest region to the four countries.
-- **No photos in v1.** Images would bring storage cost and a moderation burden (nudity, abuse imagery, identity documents) that one owner cannot carry.
+- **Photos (owner ruling 2026-10-19, replacing "no photos in v1").** Every listing card shows artwork for its kind and category (self-hosted SVG, M4b). Travellers may also add up to 3 photos per listing (M4c), with these safeguards:
+  - each photo is resized and re-encoded on the phone, which strips its metadata (location included), before upload;
+  - photos sit in a private Supabase Storage bucket and are served only while their listing is visible, to anyone who can see it (visitors included, §16 ruling 5);
+  - a report hides a photo with its listing, and the owner removes photos from the review queue (M7).
+  - The cost and the burden are still real: storage and egress come out of the Free tier, and there is no automated image scanning on it. The legal question is §14, item 8.
 
 ## 3. Data model
 Every table below sits in the `public` schema. RLS is on for each of them (§4).
@@ -203,7 +207,7 @@ Every table below sits in the `public` schema. RLS is on for each of them (§4).
 
 ## 4. Row-level security
 **Ground rules**
-- RLS is on for every public table. The `anon` role has no grant on any of them, because reading requires sign-in (owner ruling).
+- RLS is on for every public table. Until M4a the `anon` role has no grant on any of them. From M4a (owner ruling 2026-10-19, §16), `anon` may read open, visible listings, and their photos from M4c, through the search and listing RPCs only. It is never granted a table, never sees `owner`, and cannot post, message, report or read profiles.
 - Policies read the caller once per statement with `(select auth.uid())`, Supabase's documented pattern.
 - Helper functions live in `private`. They are `security definer`, `stable`, and set `search_path = ''`.
 - **Other people's user ids stay on the server.** SELECT on `listings.owner` is never granted. A client therefore cannot read, filter or sort by it, so two listings by the same person cannot be linked. Policy expressions still use the column.
@@ -476,7 +480,7 @@ Nightly `pg_cron` jobs run at 03:00 UTC+7.
 | Account (profile, auth user) | Deletion request (immediate), or 12 months without sign-in | Deleted. Rows cascade; reports against the user keep only their snapshot |
 | Session on the phone | Sign-out | `mk-market-auth` cleared |
 
-- **Never stored:** coordinates, exact addresses, phone numbers in listings, photos and identity documents.
+- **Never stored:** coordinates, exact addresses, phone numbers in listings and identity documents. Listing photos are stored from M4c (§2), resized and stripped of metadata, and are purged with their listing.
 - **Supabase's own logs** keep request metadata, including IP addresses, for the platform's log window. The privacy policy has to say so.
 - **Legal review.** These periods go to legal with the privacy policy (§14).
 
@@ -568,13 +572,13 @@ The old `contact` field is dropped. `note` becomes `body` only if it passes the 
 |---|---|---|---|
 | **Spam** | Bulk or repeated posts; advertising | Sign-in with Turnstile; Resend's 100 a day caps new accounts; 5 posts a day and 10 open; repeat titles rejected; no URLs or contact details in listings; text check; auto-hide at 3 reports | A patient spammer with many addresses still gets 2 posts a day per new account; the owner removes them from the queue |
 | **Scams** | A deposit for a room that does not exist; a passport left as motorbike deposit; counterfeit notes or robbery at a cash swap; phishing links; moving to WhatsApp and then asking for payment | No contact details in listings; no URLs in messages; payment terms flagged into the queue; the safety line for each kind on forms and listing pages; cash swap off until legal clears it, then capped; report reason "scam"; no payments through the app | The app cannot prevent fraud in person; the copy says so plainly |
-| **Stalking** | Following one traveller across cities; learning when a solo traveller is alone in a town; contact after a block; lock-screen leaks; scraping | Owner ids unreadable, so posts by one person cannot be linked; anonymous cards; city and date window only, and the server never receives coordinates; profiles visible only to conversation partners; immediate, silent, two-way block; 10 new threads a day (3 for new accounts); push with no payload; sign-in required to read; 50 rows per request | Free text can still identify someone, and anyone can reply to a meetup. Meetup copy: meet in public, tell someone, the app never shares your location |
+| **Stalking** | Following one traveller across cities; learning when a solo traveller is alone in a town; contact after a block; lock-screen leaks; scraping | Owner ids unreadable, so posts by one person cannot be linked; anonymous cards; city and date window only, and the server never receives coordinates; profiles visible only to conversation partners; immediate, silent, two-way block; 10 new threads a day (3 for new accounts); push with no payload; 50 rows per request (sign-in to read was dropped on 2026-10-19 so visitors can browse) | Free text can still identify someone, and anyone can reply to a meetup. Meetup copy: meet in public, tell someone, the app never shares your location |
 | **Harassment** | Unwanted or sexual messages; slurs; mass messaging; a fresh account after a block; abusive names; false reports against a victim | Block and report in every thread; text check on messages and names; message limits; review after 3 reporters; report weight only from distinct accounts over 24 hours old; the owner can restore | Evading a block with a new email stays possible, limited by Turnstile, the email quota and new-account limits. Banning by email hash is a question for legal |
 | **Banned goods** (drugs, weapons, wildlife, documents) | Listing them, or coding them in slang | Fixed kinds and categories; block lists in five languages; report reason "drugs"; owner removal; no photos in v1 | New slang; the owner extends the list |
 | **Minors** | Someone under 18 joins meetups or room shares | 18+ confirmation at sign-up; report reason "under 18" sends the account to review | Self-attestation only |
 | **Account takeover, token theft** | A stolen code; script injected into the page | Email-only sign-in; codes expire in 15 minutes; tokens in their own key, never in backups; refresh-token rotation (Supabase default); text-only rendering of remote data; CSP; sign-out clears the device | `localStorage` is readable by any script on the origin. Until M3, `script-src` still allows unpkg.com and cdn.jsdelivr.net (tesseract); M3 removes them before tokens exist (§16) |
 | **Email bombing, quota exhaustion** | Requesting codes for a victim's address, or spending the 100 a day | Turnstile; 1 a minute per address; 30 an hour for the project | 100 a day is a low ceiling: a busy day stops new sign-ins, though existing sessions continue |
-| **Scraping** | A signed-in account pages through a city | Sign-in; 50 rows per request; no owner ids; coarse data only | Someone with an account can still read a city's open listings |
+| **Scraping** | Anyone, signed in or not since 2026-10-19, pages through a city | 50 rows per request; no owner ids; coarse data only; listings expire with their window | Anyone can read a city's open listings, and photos from M4c. PostgREST has no per-IP rate limit on the Free tier: watch egress, and add a limit if scraping shows up |
 | **Key leakage** | A secret committed or pasted | Only public values in the repo; `check-secrets` guard; GitHub push protection (owner); secrets entered in dashboards by the owner only | Human error in a dashboard |
 | **Admin compromise** | The owner's Supabase or email account is taken over | Admin rights come from `private.admins` only; MFA on the Supabase account and the owner's email; every action logged in `sanctions` | Depends on the owner's own account security |
 | **Data breach** | The database is exposed | Data minimised (no coordinates, no phone numbers, no photos); short retention; email held only in `auth.users` | Display names, cities, dates and message text |
@@ -592,6 +596,10 @@ These questions go to Omer Hanegbi or Omri Siri. This document gives no legal an
    - Thailand's PDPA and the data-protection rules of Vietnam, Cambodia and Laos, given storage in Singapore. [M9, launch]
 6. Keeping a hashed email of banned users to stop them signing up again. [after launch]
 7. Whether a self-confirmed 18+ check is enough. [M3] Cleared by legal; reported by the owner on 2026-10-16.
+8. Photos uploaded by travellers (added 2026-10-19, when the owner allowed them). [M9, before the market opens to everyone]
+   - What a host must do on notice of an illegal or abusive image, and how fast, in each of the four countries and in Singapore, where the files are stored.
+   - Whether faces, licence plates and other people in a photo are personal data under Thailand's PDPA and the other three countries' rules, and what the privacy policy must say.
+   - Who holds the copyright in an uploaded photo, and what licence the terms must take to show it.
 
 ## 15. Owner actions by slice
 Every key and password stays in a dashboard or a password manager. None goes in the repo or in chat.
@@ -624,6 +632,16 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 1. **The sign-in email sender is on the root domain:** `Mekonging <signin@mekonging.com>`, as §5 says. Resend verifies `mekonging.com`; a subdomain was the alternative and is not used.
 2. **An iPhone is available** for the M3 sign-in test (home-screen app by code, Safari by link).
 3. **A second person is available as a tester** from M4, for the owner-and-tester checks in M4, M5 and M6.
+
+**Ruled by the owner, 2026-10-19 (after M3b):**
+1. **Photos:** category artwork on every card, and up to 3 traveller photos per listing (§2). The photo question joins the legal list (§14, item 8). It gates opening the market to everyone (M9), not the build.
+2. **Links: app links only.** A listing page links to the app's own pages (the city's guide, nearby places, safety tips, Message). Travellers still cannot put outside links or contact details in listings (§8).
+3. **Design: the Market is redesigned to work like a modern marketplace** (Facebook Marketplace, eBay, Amazon): a search bar, filters and sorting, a picture-led card grid, rich listing pages, and a playful, polished look. This is built with the listings, not before them, so M4 is split in three (M4a, M4b, M4c).
+4. **Order: Market first, one slice per session.** M4a, M4b, M4c and M5 (messages) come next, then "D5 tidy", then the Bangkok districts and the city-depth slices in the proposed order (`docs/PLAN.md`).
+5. **Visitors may browse without an account**, like Facebook Marketplace, eBay and Amazon. This supersedes the 2026-10-12 ruling that reading requires sign-in.
+   - `anon` reads open, visible listings (and from M4c their photos) through the search and listing RPCs only. It never reads a table directly, never sees `owner`, and never sees a profile.
+   - Posting, messaging, reporting, blocking and the account still need sign-in. The sign-in gate moves from the Market's door to its actions.
+   - The cost: scraping and stalking lose one control (§13). The privacy policy (§14, item 5) must say that listings are public.
 
 **Still open:**
 1. **The cash-swap amount cap**, and whether cash swap ships at all. This waits on legal (§14).
@@ -667,16 +685,23 @@ Every key and password stays in a dashboard or a password manager. None goes in 
   - The owner signs in on an iPhone home-screen app by code and in Safari by link, then deletes a test account.
   - `check-secrets` fails on a planted fake secret key and passes on the tree, including this document.
 
-### M4: Listings (items, meetups, rooms, rides)
+### M4: Listings, search and the marketplace redesign (split in three, owner ruling 2026-10-19)
+The original M4 done-when still holds across the three: the RLS tests show a stranger cannot read `owner`, cannot see ended or hidden listings, and cannot change another person's listing; a SQL test shows each seeded block term, and a phone number in a listing, rejected; the screens render at 375 px for all four kinds; the owner and a tester see each other's listings; and the PR records a native speaker's check of the Thai, Vietnamese, Khmer and Lao terms.
+
+#### M4a: Listings and search, server side
 - **Scope.**
-  - Migration 002: `listings` and `reports`, with the text check, contact-detail rules, rate limits, auto-hide and `market_my_listings`.
-  - Screens: browse with city and dates, a post form for each kind, the listing page, My listings, and Report.
-- **Done when:**
-  - The RLS tests show a stranger cannot read `owner`, cannot see ended or hidden listings, and cannot change another person's listing.
-  - A SQL test shows each seeded block term, and a phone number in a listing, rejected.
-  - At 375 px, browse, post, the listing page and My listings render for all four kinds.
-  - The owner and a tester see each other's listings.
-  - The PR records a native speaker's check of the Thai, Vietnamese, Khmer and Lao terms.
+  - Migration 002: `listings` and `reports`, the text check on titles and bodies, the contact-detail and link rules (§8, and the 2026-10-19 ruling: no outside links), the rate limits (§9, including name changes), auto-hide, `market_my_listings`, report snapshots, and `private.today()`.
+  - Search: one RPC over open, visible listings, with free text plus kind, category, city, dates, price range and "free only", sorted by newest, soonest or price, 50 rows a page, never returning `owner`.
+  - The client calls in a new module, with fixture data rich enough to design against (M4b).
+- **Done when:** the M4 RLS and SQL tests above print only PASS; search tests show hidden, ended and blocked listings never appear and `owner` is never returned, for visitors (`anon`) and for signed-in users alike; `anon` holds no table grant and cannot post, report or read a profile; the Security Advisor shows no errors.
+
+#### M4b: The marketplace screens
+- **Scope.** The Market home with a search bar, kind tabs, category tiles and a picture-led card grid with category artwork; results with filters and sorting; the listing page (app links only, Report and Block, Message waiting for M5); a post form per kind with a live preview; My listings; and empty, loading and gated states. The on-phone board folds into "On this phone" (§11).
+- **Done when:** every screen renders at 375 px in light and dark, on the default skin and one dark skin, with no overflow, no console errors, no CSP violations and no controls under 44 px; a before and after screenshot of `#market` is in the PR; the owner and a tester see each other's listings.
+
+#### M4c: Listing photos
+- **Scope.** A private Storage bucket and its rules, tied to listing visibility (visitors may view the photos of a visible listing); up to 3 photos per listing, resized and re-encoded on the phone (which strips metadata) before upload; the gallery on the listing page and the photo on the card; reports hide photos with their listing; photos purged with the listing.
+- **Done when:** a SQL test shows a stranger cannot upload into another person's folder or read the photos of a hidden or ended listing; a test photo carrying GPS metadata arrives on the server with none; the gallery renders at 375 px in light and dark; the owner uploads from the iPhone and the tester sees the photo.
 
 ### M5: Messages, block and live alerts
 - **Scope.**

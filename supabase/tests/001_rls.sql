@@ -1,4 +1,7 @@
--- RLS test for migration 001 (docs/EXCHANGE.md §4, "Proof"; the M3b done-when).
+-- RLS test for migration 001 (docs/EXCHANGE.md section 4, "Proof"; the M3b done-when).
+--
+-- Pure ASCII on purpose: non-ASCII sample text is written as U&'...' escapes, so the file
+-- survives any clipboard (migration 001 did not; see 001b_fix_text_encoding.sql).
 --
 -- Paste the whole file into the Supabase SQL editor and press Run. It prints one PASS or FAIL
 -- line per check, and a summary line last.
@@ -34,7 +37,9 @@ begin
   begin
     select s.value #>> '{}' into terms from private.settings s where s.key = 'terms_version';
 
-    -- ==== catalogue: the ground rules of §4, read from the system tables ====
+    -- ==== catalogue: the ground rules of section 4, read from the system tables ====
+    -- Event-trigger functions are left out: they cannot be called through the API, and Supabase
+    -- owns one in public (rls_auto_enable, its automatic-RLS option chosen at project creation).
     select count(*) into n
     from pg_class c join pg_namespace s on s.oid = c.relnamespace
     where s.nspname in ('public', 'private') and c.relkind in ('r', 'p') and not c.relrowsecurity;
@@ -53,6 +58,7 @@ begin
     from pg_proc p join pg_namespace s on s.oid = p.pronamespace
     where s.nspname in ('public', 'private')
       and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+      and p.prorettype <> 'event_trigger'::regtype
       and (has_function_privilege('anon', p.oid, 'execute')
            or p.proacl is null
            or exists (select 1 from aclexplode(p.proacl) a where a.grantee = 0 and a.privilege_type = 'EXECUTE'));
@@ -63,6 +69,7 @@ begin
     from pg_proc p join pg_namespace s on s.oid = p.pronamespace
     where s.nspname in ('public', 'private')
       and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+      and p.prorettype <> 'event_trigger'::regtype
       and has_function_privilege('authenticated', p.oid, 'execute');
     lines := lines || case when t = 'private.is_admin, private.is_member, public.market_delete_account, public.market_join, public.market_me'
                            then 'PASS catalogue: authenticated executes exactly the five granted functions'
@@ -72,6 +79,7 @@ begin
     from pg_proc p join pg_namespace s on s.oid = p.pronamespace
     where s.nspname in ('public', 'private')
       and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+      and p.prorettype <> 'event_trigger'::regtype
       and not coalesce(p.proconfig @> array['search_path=""'], false);
     lines := lines || case when n = 0 then 'PASS catalogue: every function pins search_path to empty'
                            else format('FAIL catalogue: %s functions without search_path=""', n) end;
@@ -177,10 +185,10 @@ begin
     -- Filtered names: a display-name term, case and look-alikes, a zero-width space, a stretched
     -- word, Vietnamese with and without capitals, Thai inside a longer word, and a block term
     -- inside a longer English name.
-    names  := array['admin', 'ADM1N', 'ad' || chr(8203) || 'min', 'Weeeed Guy', 'Cần Sa', 'CẦN SA',
-                    'ร้านกัญชาดี', 'Official Mekonging', 'Happy Ending Tours'];
+    names  := array['admin', 'ADM1N', 'ad' || chr(8203) || 'min', 'Weeeed Guy', U&'C\1EA7n Sa', U&'C\1EA6N SA',
+                    U&'\0E23\0E49\0E32\0E19\0E01\0E31\0E0D\0E0A\0E32\0E14\0E35', 'Official Mekonging', 'Happy Ending Tours'];
     labels := array['admin', 'ADM1N (case, look-alike)', 'ad+zero-width+min', 'Weeeed Guy (stretched)',
-                    'Cần Sa (Vietnamese)', 'CẦN SA (Vietnamese capitals)', 'Thai term inside a word',
+                    'can sa (Vietnamese, with diacritics)', 'CAN SA (Vietnamese capitals, with diacritics)', 'Thai term inside a word',
                     'Official Mekonging', 'Happy Ending Tours'];
     for i in 1 .. array_length(names, 1) loop
       begin
@@ -192,7 +200,7 @@ begin
       end;
     end loop;
     -- Whole words only: "Gunnar" holds "gun" and "Iceland" holds "ice", and neither is a word here.
-    j := public.market_join('  Gunnar from Iceland ', '🧭', terms, true);
+    j := public.market_join('  Gunnar from Iceland ', U&'\+01F9ED', terms, true);
     lines := lines || case when j->'profile'->>'display_name' = 'Gunnar from Iceland' and j->'profile'->>'terms_version' = terms
                            then 'PASS join: an ordinary name joins, trimmed, with the terms version recorded'
                            else 'FAIL join: an ordinary name returned ' || j::text end;
@@ -213,7 +221,7 @@ begin
     -- The other three join as themselves. "Ice" is a flag term: a flag does not block a name.
     perform set_config('request.jwt.claims', json_build_object('sub', poster, 'role', 'authenticated')::text, true);
     perform set_config('role', 'authenticated', true);
-    perform public.market_join('Poster', '🎒', terms, true);
+    perform public.market_join('Poster', U&'\+01F392', terms, true);
     perform set_config('request.jwt.claims', json_build_object('sub', asker, 'role', 'authenticated')::text, true);
     j := public.market_join('Ice', null, terms, true);
     lines := lines || case when j->'profile'->>'display_name' = 'Ice' then 'PASS join: a flag term ("Ice") does not block a name'
@@ -265,7 +273,7 @@ begin
     -- ==== the column-restricted UPDATE, as the poster on their own row ====
     perform set_config('request.jwt.claims', json_build_object('sub', poster, 'role', 'authenticated')::text, true);
     perform set_config('role', 'authenticated', true);
-    update public.profiles set display_name = 'Poster Two', avatar = '🛺' where id = poster;
+    update public.profiles set display_name = 'Poster Two', avatar = U&'\+01F6FA' where id = poster;
     get diagnostics n = row_count;
     lines := lines || case when n = 1 then 'PASS update: a user changes their own name and avatar'
                            else format('FAIL update: own name and avatar changed %s rows', n) end;

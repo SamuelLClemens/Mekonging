@@ -28,6 +28,10 @@ relevant section of the docs below, not the whole repo.
 - `sources` arrays come in five formats (one line, per entry, per key, trailing commas, single quotes): edit them with
   `scripts/fetch-place-citations.py --install`, which keeps each one's format, not with a regex.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
+- No Postgres here (the owner declined a local install, 2026-10-19): Supabase SQL is reviewed by reading and run by the owner
+  in the SQL editor. A PR whose code needs that SQL opens as a draft until the owner's run passes (PR #125 merged first).
+- `pbcopy`/`pbpaste` in Claude's shell run without a UTF-8 locale and turn non-ASCII into Mac Roman mojibake (migration 001's Thai
+  terms arrived garbled, fixed by 001b): always `LANG=en_US.UTF-8 pbcopy`, and write SQL for the owner in ASCII (`U&'...'`, `chr()`).
 
 ## Branches and delivery
 - There is no `main`. `feat/scaffold-bangkok-slice` is the integration and production branch (auto-deploys).
@@ -94,6 +98,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - A "missing city" can be a mislabelled `city` field: check a single-record city's coordinates against its source,
   and search for the place's other names (Banteay Prey Nokor = Wat Nokor Bachey) before adding an anchor (D2).
 - A gated feature (`online()`, consent, country data) must still render something when the gate is shut.
+- The router can render a route twice while the app starts: async screen work checks `isConnected` after each await and
+  shares one in-flight request (the Market's sign-in link, `js/screens/market-account.js`).
 - Sourcing: cite every entry compactly with a real URL. Better to leave a gap open than publish a number traced to an
   aggregator's unsourced synthesis. Pai is deferred until the owner says.
 - Place photos come only from the place's own Wikipedia article, via `scripts/fetch-place-photos.py` and the reviewed
@@ -118,6 +124,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - Camera screens run end to end in headless Chrome: `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream
   --use-file-for-fake-video-capture=<x>.mjpeg` plays a single JPEG as the camera. Attach to workers too
   (`Target.setAutoAttach`, flatten): a blob worker's requests and CSP errors never reach the page session (M3a).
+- Market screens: `?market=fixture` on 127.0.0.1 answers from `js/market-fixture.js`; Turnstile (test key locally) sits in a
+  closed shadow root, so read its token from `input[name=cf-turnstile-response]`.
 - `html` and `body` set `overflow-x: hidden`, so `scrollWidth - clientWidth` is always 0. Measure overflow from box edges, not from scroll width. `route-sweep.js` reports false zero-size controls on `content-visibility` cards until they are scrolled into view.
 
 ## Docs map (most are history; read only what the task names)
