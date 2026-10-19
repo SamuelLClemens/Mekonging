@@ -362,6 +362,16 @@ export const ROUTES_KH = [
         "recommended": false,
         "notes": "Kep is small and quiet, known for its crab market and seafood; many travellers pair it with Kampot."
       }
+    ],
+    "sources": [
+      {
+        "org": "Giant Ibis — Phnom Penh to Kep",
+        "url": "https://giantibis.com/routes/phnom-penh-to-kep"
+      },
+      {
+        "org": "12Go — Phnom Penh to Kep",
+        "url": "https://12go.asia/en/travel/phnom-penh/kep"
+      }
     ]
   },
   {
@@ -404,6 +414,16 @@ export const ROUTES_KH = [
         "bookVia": "Hail locally or via your guesthouse",
         "recommended": false,
         "notes": "Price is for the whole vehicle and is negotiable; agree the fare before departing."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Kampot to Kep",
+        "url": "https://12go.asia/en/travel/kampot/kep"
+      },
+      {
+        "org": "Wikivoyage — Kampot (Go next)",
+        "url": "https://en.wikivoyage.org/wiki/Kampot#Go_next"
       }
     ]
   },
@@ -464,6 +484,16 @@ export const ROUTES_KH = [
         "bookVia": "Guesthouse or local taxi operators",
         "recommended": false,
         "notes": "Worth splitting among a group; agree the price in advance."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Kampot to Sihanoukville",
+        "url": "https://12go.asia/en/travel/kampot/sihanoukville"
+      },
+      {
+        "org": "Wikivoyage — Kampot (Go next)",
+        "url": "https://en.wikivoyage.org/wiki/Kampot#Go_next"
       }
     ]
   },
@@ -726,6 +756,16 @@ export const ROUTES_KH = [
         "bookVia": "BookMeBus or local operators",
         "recommended": false,
         "notes": "Direct big-bus service is irregular; confirm whether a transfer is needed."
+      }
+    ],
+    "sources": [
+      {
+        "org": "12Go — Kratie to Banlung",
+        "url": "https://12go.asia/en/travel/kratie/banlung"
+      },
+      {
+        "org": "Wikivoyage — Banlung (By bus)",
+        "url": "https://en.wikivoyage.org/wiki/Banlung#By_bus"
       }
     ]
   },

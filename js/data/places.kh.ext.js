@@ -27,7 +27,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Phnom Sampov Battambang Cambodia", coords: { lat: 13.0470, lng: 103.0900 },
     bookHint: "No booking; hire a tuk-tuk for a late-afternoon round trip from Battambang.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Sampeou Mountain (Battambang)", url: "https://www.tourismcambodia.com/travelguides/provinces/battambang/what-to-see/29_sampeou-mountain.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-bamboo-train", name: "Bamboo Train (Norry)", city: "Battambang", country: "kh",
@@ -46,7 +46,7 @@ export const PLACES_KH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus", "Travelfish"],
     mapQuery: "Bamboo Train Battambang Cambodia", coords: { lat: 13.0640, lng: 103.2480 },
     bookHint: "No advance booking; pay at the boarding platform or arrange via a tuk-tuk tour.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Norry", url: "https://en.wikipedia.org/wiki/Norry" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-bokor-national-park", name: "Preah Monivong (Bokor) National Park", city: "Kampot", country: "kh",
@@ -62,7 +62,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Bokor National Park Kampot Cambodia", coords: { lat: 10.6300, lng: 104.0200 },
     bookHint: "No booking required; rent a scooter, hire a car or join a half-day tour from Kampot.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Preah Monivong National Park", url: "https://en.wikipedia.org/wiki/Preah_Monivong_National_Park" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-teuk-chhou-rapids", name: "Teuk Chhou Rapids", city: "Kampot", country: "kh",
@@ -76,7 +76,7 @@ export const PLACES_KH_EXT = [
     rating: 4.0, reviewSources: ["Tripadvisor", "Google Maps consensus", "Tourism Cambodia"],
     mapQuery: "Teuk Chhou Rapids Kampot Cambodia", coords: { lat: 10.6420, lng: 104.1330 },
     bookHint: "No booking; reach it by scooter, tuk-tuk or car from Kampot town.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Teuk Chhu (Kampot)", url: "https://www.tourismcambodia.com/travelguides/provinces/kampot/what-to-see/43_teuk-chhu-resort.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kampot-pepper-farm", name: "Kampot Pepper Plantation Tour", city: "Kampot", country: "kh",
@@ -94,7 +94,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Kampot pepper farm Cambodia", coords: { lat: 10.6390, lng: 104.2390 },
     bookHint: "Book through your guesthouse or arrive directly; tuk-tuk drivers know the main farms.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Kampot (See)", url: "https://en.wikivoyage.org/wiki/Kampot#See" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kep-national-park", name: "Kep National Park (Sunset Rock Trail)", city: "Kep", country: "kh",
@@ -110,7 +110,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "AllTrails"],
     mapQuery: "Kep National Park Cambodia", coords: { lat: 10.4880, lng: 104.3110 },
     bookHint: "No booking; walk in from town or take a short tuk-tuk to the trailhead.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Kep National Park", url: "https://en.wikipedia.org/wiki/Kep_National_Park" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-tonsay", name: "Koh Tonsay (Rabbit Island)", city: "Kep", country: "kh",
@@ -125,7 +125,7 @@ export const PLACES_KH_EXT = [
     rating: 4.1, reviewSources: ["Tripadvisor", "Google Maps consensus", "Southeast Asia Backpacker"],
     mapQuery: "Koh Tonsay Rabbit Island Kep Cambodia", coords: { lat: 10.4470, lng: 104.3580 },
     bookHint: "Buy the return boat ticket at the official Kep pier booth; bungalows are usually booked on arrival.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Rustic Rabbit Island with shallow, calm, gently shelving bays; basic facilities and no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "A small island of rustic bamboo bungalows and hammock huts along a shallow, gently curving bay; longtail boats beach right on the sand."
+    sources: [{ org: "Tourism Cambodia — Koh Ton Say, Rabbit Island (Kep)", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/what-to-see/227_koh-ton-say-resort.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Rustic Rabbit Island with shallow, calm, gently shelving bays; basic facilities and no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "A small island of rustic bamboo bungalows and hammock huts along a shallow, gently curving bay; longtail boats beach right on the sand."
   },
   {
     id: "kh-ext-lazy-beach", name: "Lazy Beach", city: "Koh Rong Sanloem", country: "kh",
@@ -170,7 +170,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Travelfish"],
     mapQuery: "Bou Sra Waterfall Mondulkiri Cambodia", coords: { lat: 12.5800, lng: 107.4600 },
     bookHint: "No advance booking; pay entry at the eco-park gate. Arrange transport or a tour in Sen Monorom.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Bou Sra Waterfall (Mondulkiri)", url: "https://www.tourismcambodia.com/travelguides/provinces/mondulkiri/what-to-see/192_bou-sra-waterfall.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-sea-forest-viewpoint", name: "Sea Forest Viewpoint (Sen Monorom)", city: "Sen Monorom", country: "kh",
@@ -184,7 +184,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Volomundi"],
     mapQuery: "Sea Forest Viewpoint Sen Monorom Mondulkiri Cambodia", coords: { lat: 12.4360, lng: 107.1880 },
     bookHint: "No booking; ride or drive a few minutes out of Sen Monorom for sunset.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Senmonorom (See)", url: "https://en.wikivoyage.org/wiki/Senmonorom#See" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-yeak-laom", name: "Yeak Laom Volcanic Crater Lake", city: "Banlung", country: "kh",
@@ -201,7 +201,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Yeak Laom Volcanic Lake Banlung Ratanakiri Cambodia", coords: { lat: 13.7330, lng: 107.0420 },
     bookHint: "No booking; pay the community entry fee at the gate. Reach it by tuk-tuk or scooter from Banlung.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Beung Yeak Loam (Rattanakiri)", url: "https://www.tourismcambodia.com/travelguides/provinces/rattanakiri/what-to-see/216_beung-yeak-loam.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-cha-ong", name: "Cha Ong Waterfall", city: "Banlung", country: "kh",
@@ -217,7 +217,7 @@ export const PLACES_KH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus", "Backpack Adventures"],
     mapQuery: "Cha Ong Waterfall Banlung Ratanakiri Cambodia", coords: { lat: 13.7600, lng: 106.9560 },
     bookHint: "No booking; pay the small on-site fee. Reach it by tuk-tuk or scooter from Banlung.", verified: "2026-06",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Cha Ong Waterfall (Rattanakiri)", url: "https://www.tourismcambodia.com/travelguides/provinces/rattanakiri/what-to-see/222_cha-ong-waterfall.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
 {
     id: "kh-ext-ta-prohm", name: "Ta Prohm", city: "Siem Reap", country: "kh",
@@ -293,7 +293,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus", "WWF Cambodia"],
     mapQuery: "Kampi Dolphin Pool Kratie Cambodia", coords: { lat: 12.5500, lng: 106.0300 },
     bookHint: "Pay the boat fee at the Kampi pier; reach it by tuk-tuk from Kratie.", verified: "2026-06",
-    sources: [{ org: "WWF Cambodia", url: "https://cambodia.panda.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Kampi Resort (Kratie)", url: "https://www.tourismcambodia.com/travelguides/provinces/kratie/what-to-see/194_kampi-resort.htm" }, { org: "Wikivoyage — Kratie (Do)", url: "https://en.wikivoyage.org/wiki/Kratie#Do" }, { org: "WWF Cambodia", url: "https://cambodia.panda.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-rong-samloem", name: "Koh Rong Samloem (Saracen Bay)", city: "Sihanoukville", country: "kh",
@@ -353,7 +353,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Virachey National Park Ratanakiri Cambodia", coords: { lat: 14.0000, lng: 107.0000 },
     bookHint: "Book guided treks through the Virachey park office in Banlung; independent entry is not permitted.", verified: "2026-06",
-    sources: [{ org: "Cambodia Ministry of Environment", url: "https://www.moe.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Virachey National Park", url: "https://en.wikipedia.org/wiki/Virachey_National_Park" }, { org: "Cambodia Ministry of Environment", url: "https://www.moe.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-mondulkiri-elephants", name: "Mondulkiri Ethical Elephant Forest", city: "Sen Monorom", country: "kh",
@@ -382,7 +382,7 @@ export const PLACES_KH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Otres Beach Sihanoukville Cambodia", coords: { lat: 10.59, lng: 103.51 },
     bookHint: "No booking; tuk-tuk from central Sihanoukville.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A long, flat, laid-back strip south of the main town, backed by low bars and bungalows rather than high-rises, with the sand ending at the Otres River lagoon."
+    sources: [{ org: "Tourism Cambodia — Otres Beach (Sihanoukville)", url: "https://www.tourismcambodia.com/travelguides/provinces/sihanouk-ville/what-to-see/420_otres-beach.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A long, flat, laid-back strip south of the main town, backed by low bars and bungalows rather than high-rises, with the sand ending at the Otres River lagoon."
   },
   {
     id: "kh-ext-koh-rong-long-beach", name: "Long Beach (Sok San), Koh Rong", city: "Sihanoukville", country: "kh",
@@ -397,7 +397,7 @@ export const PLACES_KH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Long Beach Sok San Koh Rong Cambodia", coords: { lat: 10.66, lng: 103.24 },
     bookHint: "Book a ferry from Sihanoukville and a bungalow in advance.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A 7km sweep of near-empty white sand on Koh Rong's west side, backed by jungle, reached by boat taxi or a sweaty cross-island trail from Koh Touch."
+    sources: [{ org: "Wikivoyage — Koh Rong (Long Set Beach)", url: "https://en.wikivoyage.org/wiki/Koh_Rong#Long_Set_Beach" }, { org: "Wikipedia — Koh Rong", url: "https://en.wikipedia.org/wiki/Koh_Rong" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], recognition: "A 7km sweep of near-empty white sand on Koh Rong's west side, backed by jungle, reached by boat taxi or a sweaty cross-island trail from Koh Touch."
   },
   {
     id: "kh-ext-koh-ta-kiev", name: "Koh Ta Kiev", city: "Sihanoukville", country: "kh",
@@ -412,7 +412,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Koh Ta Kiev Cambodia", coords: { lat: 10.55, lng: 103.59 },
     bookHint: "Arrange a boat and a bungalow through an island eco-camp before you go.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "An undeveloped island with clear, calm water and rustic camps; no patrol and limited help, so swim with care.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "A wild, undeveloped island of rustic beach camps and hammocks with no roads or reliable power; boats land on a shallow, driftwood-strewn bay."
+    sources: [{ org: "Wikipedia — Koh Ta Kiev", url: "https://en.wikipedia.org/wiki/Koh_Ta_Kiev" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "An undeveloped island with clear, calm water and rustic camps; no patrol and limited help, so swim with care.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "A wild, undeveloped island of rustic beach camps and hammocks with no roads or reliable power; boats land on a shallow, driftwood-strewn bay."
   },
 {
     id: "kh-ext-central-market-pp", name: "Central Market (Phsar Thmei)", city: "Phnom Penh", country: "kh",
@@ -430,7 +430,7 @@ export const PLACES_KH_EXT = [
     rating: 4.2, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Central Market Phsar Thmei Phnom Penh", coords: { lat: 11.569, lng: 104.921 },
     bookHint: "No booking; central and walkable.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Central Market, Phsar Thmei (Phnom Penh)", url: "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/what-to-see/25_central-market-phsar-thmei.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-russian-market", name: "Russian Market (Phsar Toul Tom Poung)", city: "Phnom Penh", country: "kh",
@@ -452,7 +452,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus", "Lonely Planet"],
     mapQuery: "Russian Market Toul Tom Poung Phnom Penh", coords: { lat: 11.546, lng: 104.917 },
     bookHint: "No booking; tuk-tuk from central Phnom Penh.", verified: "2026-06",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to shop, Phnom Penh (Russian Market)", url: "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/shopping.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
 
   // --- Phase 5 content batch 3: where to stay + signature experiences (Cambodia) ---
@@ -470,7 +470,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Hostelworld", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Siem Reap hostel Pub Street", coords: { lat: 13.3546, lng: 103.8555 },
     bookHint: "Compare dorms on Hostelworld or Booking; walk-ins are easy outside peak season.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to stay, Siem Reap", url: "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/where-to-stay.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-chiphat-homestay", name: "Chi Phat community homestay (Cardamoms)", city: "Koh Kong", country: "kh",
@@ -487,7 +487,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chi Phat community ecotourism Cardamom Mountains", coords: { lat: 11.32, lng: 103.3 },
     bookHint: "Book via the Chi Phat CBT project; reach it by bus to Andoung Tuek then boat/moto.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Chi Phat (Sleep)", url: "https://en.wikivoyage.org/wiki/Chi_Phat#Sleep" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kohrong-bungalows", name: "Koh Rong Sanloem beach bungalows", city: "Koh Rong Sanloem", country: "kh",
@@ -504,7 +504,7 @@ export const PLACES_KH_EXT = [
     rating: 4.4, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Koh Rong Sanloem Saracen Bay bungalows", coords: { lat: 10.6086, lng: 103.3006 },
     bookHint: "Book the bungalow + ferry combo online; ferries leave from Sihanoukville.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Koh Rong Sanloem's Saracen Bay is a calm, shallow, postcard-perfect bay — beautiful and family-friendly, but with no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "Wooden bungalows lined along the calm, shallow, white-sand Saracen Bay on Koh Rong Sanloem, facing a turquoise lagoon with a small boat pier."
+    sources: [{ org: "Tourism Cambodia — Koh Rong Sanloem, Saracen Bay (Sihanoukville)", url: "https://www.tourismcambodia.com/travelguides/provinces/sihanouk-ville/what-to-see/440_koh-rong-sanloem-seracen-bay.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "Koh Rong Sanloem's Saracen Bay is a calm, shallow, postcard-perfect bay — beautiful and family-friendly, but with no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "Wooden bungalows lined along the calm, shallow, white-sand Saracen Bay on Koh Rong Sanloem, facing a turquoise lagoon with a small boat pier."
   },
   {
     id: "kh-ext-phnompenh-longstay", name: "Phnom Penh long-stay (BKK1 serviced apartments)", city: "Phnom Penh", country: "kh",
@@ -521,7 +521,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Google Maps consensus", "Nomad community reports"],
     mapQuery: "BKK1 Phnom Penh serviced apartment", coords: { lat: 11.5498, lng: 104.9226 },
     bookHint: "Compare monthly listings; local agents and long-stay platforms beat nightly OTAs.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }],
+    sources: [{ org: "Tourism Cambodia — Where to stay, Phnom Penh", url: "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/where-to-stay.htm" }],
   },
   {
     id: "kh-ext-angkor-tour", name: "Angkor temples tour (sunrise & cycle)", city: "Siem Reap", country: "kh",
@@ -538,7 +538,7 @@ export const PLACES_KH_EXT = [
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Angkor Wat Siem Reap", coords: { lat: 13.4125, lng: 103.867 },
     bookHint: "Buy the pass from Angkor Enterprise; arrange a guide/tuk-tuk through your hostel or a tour.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Angkor Wat and the Angkor Archaeological Park", url: "https://www.tourismcambodia.com/attractions/angkor.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-tonlesap-villages", name: "Tonlé Sap floating villages", city: "Siem Reap", country: "kh",
@@ -555,7 +555,7 @@ export const PLACES_KH_EXT = [
     rating: 4.3, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Kampong Phluk floating village Tonle Sap", coords: { lat: 13.1919, lng: 103.9797 },
     bookHint: "Book a half-day tour from Siem Reap, or hire a tuk-tuk + boat at the village.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Kompong Khleang (Siem Reap)", url: "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/what-to-see/407_kompong-khleang.htm" }, { org: "Tourism Cambodia — Kompong Pluk (Siem Reap)", url: "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/what-to-see/406_kompong-pluk.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-siemreap-cooking", name: "Siem Reap Khmer cooking class", city: "Siem Reap", country: "kh",
@@ -572,7 +572,7 @@ export const PLACES_KH_EXT = [
     rating: 4.8, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Khmer cooking class Siem Reap", coords: { lat: 13.3546, lng: 103.8555 },
     bookHint: "Book a day ahead online or via your hostel; classes are small and fill up.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Cooking classes in Cambodia", url: "https://www.tourismcambodia.com/activities/cooking-classes.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-cardamom-camping", name: "Cardamom Mountains eco-camp (Chi Phat)", city: "Cardamom Mountains", country: "kh",
@@ -589,7 +589,7 @@ export const PLACES_KH_EXT = [
     rating: 4.6, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Chi Phat Cardamom Mountains ecotourism", coords: { lat: 11.3197, lng: 103.3542 },
     bookHint: "Book the community trek or tented camp online ahead; arrange the Andoung Tuek boat transfer with them.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Chi Phat (Koh Kong)", url: "https://www.tourismcambodia.com/travelguides/provinces/koh-kong/what-to-see/412_chi-phat.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-siemreap-resort", name: "Siem Reap resort (pool & spa, near Angkor)", city: "Siem Reap", country: "kh",
@@ -606,7 +606,7 @@ export const PLACES_KH_EXT = [
     rating: 4.6, reviewSources: ["Booking.com", "Agoda", "Tripadvisor", "Google Maps consensus"],
     mapQuery: "Siem Reap resort pool Angkor", coords: { lat: 13.3567, lng: 103.8501 },
     bookHint: "Compare Booking/Agoda for the same resort; confirm the free airport pickup and temple shuttle.", verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to stay, Siem Reap", url: "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/where-to-stay.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-rong-diving", name: "Koh Rong Scuba Diving & Snorkelling Trip", city: "Koh Rong", country: "kh",
@@ -674,7 +674,7 @@ export const PLACES_KH_EXT = [
     rating: 4.5, reviewSources: ["Tripadvisor", "Google Maps consensus"],
     mapQuery: "Kep Crab Market", coords: { lat: 10.48, lng: 104.29 },
     bookHint: "No booking; pick a shack with a busy local crowd and choose your crab from the basket", verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.org" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to eat and drink, Kep", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-eat.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-battambang-riverside-stalls", name: "Battambang riverside evening food stalls", city: "Battambang", country: "kh",
@@ -858,6 +858,7 @@ export const PLACES_KH_EXT = [
     bookHint: "No booking — walk up; kitchens are tiny, so expect a wait when a ferry has just landed",
     verified: "2026-07",
     sources: [
+      { org: "Wikivoyage — Koh Rung Sanloem (Eat)", url: "https://en.wikivoyage.org/wiki/Koh_Rung_Sanloem#Eat" },
       { org: "Cambodia Ministry of Tourism", url: "https://www.mot.gov.kh" },
       { org: "Tripadvisor", url: "https://www.tripadvisor.com" },
     ],
@@ -883,7 +884,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.956, lng: 103.178 },
     bookHint: "No booking; pay the small entry at the base and hire a tuk-tuk for the round trip from Battambang.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Phnom Banan (Battambang)", url: "https://www.tourismcambodia.com/travelguides/provinces/battambang/what-to-see/28_phnom-banan.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-battambang-circus",
@@ -905,7 +906,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 13.098, lng: 103.178 },
     bookHint: "Book tickets at the Phare Ponleu Selpak campus box office or through your guesthouse in Battambang.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Phare Ponleu Selpak", url: "https://en.wikipedia.org/wiki/Phare_Ponleu_Selpak" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-phnom-chhngok",
@@ -927,7 +928,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.647, lng: 104.247 },
     bookHint: "No booking; pay the small fee on arrival and reach it by scooter, tuk-tuk or car from Kampot.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Phnom Chhnork", url: "https://en.wikipedia.org/wiki/Phnom_Chhnork" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kampot-salt-fields",
@@ -948,7 +949,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.606, lng: 104.22 },
     bookHint: "No booking; stop by scooter, tuk-tuk or car on the Kampot-Kep road.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Kampot (See)", url: "https://en.wikivoyage.org/wiki/Kampot#See" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-rong-long-set-beach",
@@ -1016,7 +1017,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 13.4744, lng: 104.235 },
     bookHint: "Pay the separate site entry at the gate; arrange a car and driver from Siem Reap, often combined with Koh Ker.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Beng Mealea (Siem Reap)", url: "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/what-to-see/404_beng-mealea.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kbal-spean",
@@ -1039,7 +1040,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 13.75, lng: 104.03 },
     bookHint: "Use your Angkor Pass; arrange a tuk-tuk or car from Siem Reap, often combined with Banteay Srei.",
     verified: "2026-07",
-    sources: [{ org: "Angkor Enterprise", url: "https://www.angkorenterprise.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikipedia — Kbal Spean", url: "https://en.wikipedia.org/wiki/Kbal_Spean" }, { org: "Angkor Enterprise", url: "https://www.angkorenterprise.gov.kh" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-phnom-penh-national-museum",
@@ -1062,7 +1063,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 11.565, lng: 104.928 },
     bookHint: "Buy tickets at the museum entrance; no advance booking required.",
     verified: "2026-07",
-    sources: [{ org: "National Museum of Cambodia (official)", url: "https://www.cambodiamuseum.info" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "National Museum of Cambodia — Information for visitors", url: "https://www.cambodiamuseum.info/en_information_visitors.html" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-choeung-ek",
@@ -1087,7 +1088,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 11.484, lng: 104.902 },
     bookHint: "Buy tickets at the entrance; reach it by tuk-tuk or car from central Phnom Penh, about 30-40 minutes.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Choeung Ek Killing Field (Phnom Penh)", url: "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/what-to-see/5_cheung-ek-killing-field.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kratie-riverfront",
@@ -1108,7 +1109,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.488, lng: 106.018 },
     bookHint: "No booking; buses and minivans from Phnom Penh stop in town, then explore on foot or by bicycle.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Kratie province travel guide", url: "https://www.tourismcambodia.com/travelguides/provinces/kratie.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-trong",
@@ -1151,7 +1152,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 13.728, lng: 106.953 },
     bookHint: "No booking; pay the small on-site fee and reach it by tuk-tuk or scooter from Banlung.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Ka Tieng Waterfall (Rattanakiri)", url: "https://www.tourismcambodia.com/travelguides/provinces/rattanakiri/what-to-see/219_ka-tieng-waterfall.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kompong-cham-bamboo-bridge",
@@ -1174,7 +1175,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 11.98, lng: 105.468 },
     bookHint: "No booking; walk or ride across from the Kampong Cham riverfront when the dry-season bridge is up.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Kampong Cham (See)", url: "https://en.wikivoyage.org/wiki/Kampong_Cham#See" }, { org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-independence-monument-pp",
@@ -1197,7 +1198,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 11.556, lng: 104.928 },
     bookHint: "No booking; central and best seen on an evening walk.",
     verified: "2026-07",
-    sources: [{ org: "Tourism Cambodia (Ministry of Tourism)", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Independence Monument (Phnom Penh)", url: "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/what-to-see/21_independence-monument.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-battambang-guesthouses-street-2-5",
@@ -1221,7 +1222,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 13.0957, lng: 103.2022 },
     bookHint: "Compare small guesthouses on Booking or Agoda; walk-ins are easy outside major holidays.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Battambang (Sleep)", url: "https://en.wikivoyage.org/wiki/Battambang#Sleep" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-battambang-riverside-boutique",
@@ -1245,7 +1246,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 13.101, lng: 103.2035 },
     bookHint: "Compare the same property on Booking and Agoda; confirm whether the pool and breakfast are included.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Battambang (Sleep)", url: "https://en.wikivoyage.org/wiki/Battambang#Sleep" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kampot-riverside-bungalows",
@@ -1269,7 +1270,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.611, lng: 104.172 },
     bookHint: "Book riverside bungalows on Booking or Agoda; arrange a tuk-tuk transfer from town or the bus drop.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Kampot (Riverside)", url: "https://en.wikivoyage.org/wiki/Kampot#Riverside" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kampot-old-town-guesthouses",
@@ -1293,7 +1294,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.606, lng: 104.1815 },
     bookHint: "Compare hostels on Hostelworld and guesthouses on Booking; walk-ins are usually fine off-peak.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Kampot (Sleep)", url: "https://en.wikivoyage.org/wiki/Kampot#Sleep" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kampot-night-market-stalls",
@@ -1316,7 +1317,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.6055, lng: 104.18 },
     bookHint: "No booking; walk up and graze cart to cart along the market.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Kampot (Buy)", url: "https://en.wikivoyage.org/wiki/Kampot#Buy" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kep-guesthouses-bungalows",
@@ -1341,7 +1342,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.4855, lng: 104.301 },
     bookHint: "Compare bungalows on Booking and Agoda; confirm the distance to the crab market and beach before booking.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to stay, Kep", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-stay.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kep-waterfront-food-stalls",
@@ -1364,7 +1365,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.4825, lng: 104.3155 },
     bookHint: "No booking; walk the seafront and pick a busy cart.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to eat and drink, Kep", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-eat.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kratie-riverfront-guesthouses",
@@ -1388,7 +1389,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.487, lng: 106.0175 },
     bookHint: "Compare guesthouses on Booking; walk-ins are usually easy in this small town.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to stay, Kratie", url: "https://www.tourismcambodia.com/travelguides/provinces/kratie/where-to-stay.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-trong-homestays",
@@ -1437,7 +1438,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.4885, lng: 106.0185 },
     bookHint: "No booking; graze cart to cart along the riverfront promenade.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to eat and drink, Kratie", url: "https://www.tourismcambodia.com/travelguides/provinces/kratie/where-to-eat.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-sen-monorom-bungalows",
@@ -1462,7 +1463,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.452, lng: 107.1885 },
     bookHint: "Compare bungalows on Booking; walk-ins are workable except in peak dry-season weekends.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Tourism Cambodia — Where to stay, Mondulkiri", url: "https://www.tourismcambodia.com/travelguides/provinces/mondulkiri/where-to-stay.htm" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-sen-monorom-market-food-stalls",
@@ -1485,7 +1486,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 12.457, lng: 107.19 },
     bookHint: "No booking; walk up to the market and evening stalls and order from the busiest grill.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Senmonorom (Eat)", url: "https://en.wikivoyage.org/wiki/Senmonorom#Eat" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-koh-rong-koh-touch-guesthouses",
@@ -1510,7 +1511,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.612, lng: 103.2765 },
     bookHint: "Compare hostels on Hostelworld and bungalows on Booking; book the ferry from Sihanoukville separately.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "The main village beach at Koh Touch is lively and shallow; watch for boat traffic near the pier, and note there is no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "The busy main arrival village on Koh Rong: a cluster of budget guesthouses and bars packed along a short pier-side beach where the ferries dock."
+    sources: [{ org: "Wikivoyage — Koh Rong (Koh Tuich)", url: "https://en.wikivoyage.org/wiki/Koh_Rong#Koh_Tuich" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }], lifeguard: "no", swim: "The main village beach at Koh Touch is lively and shallow; watch for boat traffic near the pier, and note there is no patrol.", jellyfishMonths: [5, 6, 7, 8, 9, 10], jellyfish: "Box jellyfish occur along Cambodia's coast and islands and can be dangerous — a serious sting has been documented near Koh Rong. Risk is highest in the May–October wet season and after rain; a rash/lycra suit greatly reduces the risk, and any sting should be doused with vinegar with urgent medical help.", recognition: "The busy main arrival village on Koh Rong: a cluster of budget guesthouses and bars packed along a short pier-side beach where the ferries dock."
   },
   {
     id: "kh-ext-koh-rong-koh-touch-food-stalls",
@@ -1533,7 +1534,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.6125, lng: 103.277 },
     bookHint: "No booking; walk up and order from a busy village kitchen or evening BBQ stall.",
     verified: "2026-07",
-    sources: [{ org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
+    sources: [{ org: "Wikivoyage — Koh Rong (Eat)", url: "https://en.wikivoyage.org/wiki/Koh_Rong#Eat" }, { org: "Ministry of Tourism Cambodia", url: "https://www.tourismcambodia.com" }, { org: "Tripadvisor", url: "https://www.tripadvisor.com" }],
   },
   {
     id: "kh-ext-kampot-riverfront-bars",
@@ -1555,7 +1556,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.6104, lng: 104.181 },
     bookHint: "Walk-in; sunset boat cruises book on the riverfront or via guesthouses.",
     verified: "2026-07",
-    sources: [{ org: "Travelfish" }, { org: "Lonely Planet Cambodia" }],
+    sources: [{ org: "Tourism Cambodia — Where to eat and drink, Kampot", url: "https://www.tourismcambodia.com/travelguides/provinces/kampot/where-to-eat.htm" }, { org: "Wikivoyage — Kampot (Drink)", url: "https://en.wikivoyage.org/wiki/Kampot#Drink" }],
   },
   {
     id: "kh-ext-kep-crab-market-evening-seafront",
@@ -1577,7 +1578,7 @@ export const PLACES_KH_EXT = [
     coords: { lat: 10.4876, lng: 104.2887 },
     bookHint: "Walk-in; no booking. Pick a busy shack for the freshest turnover.",
     verified: "2026-07",
-    sources: [{ org: "Lonely Planet Cambodia" }, { org: "Travelfish" }],
+    sources: [{ org: "Tourism Cambodia — Where to eat and drink, Kep", url: "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-eat.htm" }, { org: "Wikivoyage — Kep (Eat)", url: "https://en.wikivoyage.org/wiki/Kep#Eat" }],
   },
   {
     id: "kh-ext-sambor-prei-kuk",
@@ -1610,7 +1611,7 @@ export const PLACES_KH_EXT = [
     localName: "វត្តនគរបាជ័យ (Wat Nokor Bachey)",
     categories: ["temple", "culture"],
     budgetTier: "low",
-    blurb: "An 11th-century Mahayana Buddhist temple of dark sandstone and laterite, unusual because a bright modern Theravada pagoda has been built inside the old ruins so ancient galleries and a living wat share one compound. It sits just outside Kampong Cham town.",
+    blurb: "A Mahayana Buddhist temple of dark sandstone and laterite from the last years of Jayavarman VII's reign (around 1200), unusual because a bright modern Theravada pagoda has been built inside the old ruins so ancient galleries and a living wat share one compound. It sits just outside Kampong Cham town.",
     whyItFits: "For travellers breaking the Phnom Penh–Kratie/Mondulkiri run who want a genuine, low-key temple without crowds; located about 2 km northwest of central Kampong Cham just off National Road 7.",
     priceRange: { low: 2, typical: 2, high: 3, currency: "USD", note: "Around USD 2 entry to the historic compound; donations to the working pagoda are welcome. Fees change." },
     hours: "Daily approx. 06:00–18:00 (active temple; respect prayer times).",
@@ -1621,7 +1622,7 @@ export const PLACES_KH_EXT = [
     mapQuery: "Wat Nokor Bachey, Kampong Cham, Cambodia",
     coords: { lat: 11.9999, lng: 105.439 },
     verified: "2026-07",
-    sources: [{ org: "Michelin Travel Guide", url: "https://travelguide.michelin.com/asia/cambodia/kampong-cham/kampong-cham/wat-nokor-bachey" }, { org: "Travelfish", url: "https://www.travelfish.org/sight_profile/cambodia/northeastern_cambodia/kompong_cham/kompong_cham/383" }],
+    sources: [{ org: "Wikipedia — Banteay Prey Nokor (Wat Nokor Bachey)", url: "https://en.wikipedia.org/wiki/Banteay_Prey_Nokor" }, { org: "Michelin Travel Guide", url: "https://travelguide.michelin.com/asia/cambodia/kampong-cham/kampong-cham/wat-nokor-bachey" }, { org: "Travelfish", url: "https://www.travelfish.org/sight_profile/cambodia/northeastern_cambodia/kompong_cham/kompong_cham/383" }],
   },
   {
     id: "kh-ext-skun-spider-market",

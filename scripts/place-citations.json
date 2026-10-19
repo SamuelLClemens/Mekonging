@@ -1214,6 +1214,517 @@
    "basis": "chapter 6: Thung Nham Bird Garden"
   }
  },
+ "kh": {
+  "kh-ext-angkor-tour": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Angkor Wat and the Angkor Archaeological Park",
+     "url": "https://www.tourismcambodia.com/attractions/angkor.htm"
+    }
+   },
+   "basis": "travel guide to the Angkor monuments: Angkor Wat, Bayon and Ta Prohm among them"
+  },
+  "kh-ext-beng-mealea": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Beng Mealea (Siem Reap)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/what-to-see/404_beng-mealea.htm"
+    }
+   },
+   "basis": "12th-century Hindu temple of the Angkor Wat style, 40 km east of Angkor Wat"
+  },
+  "kh-ext-bou-sra": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Bou Sra Waterfall (Mondulkiri)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/mondulkiri/what-to-see/192_bou-sra-waterfall.htm"
+    }
+   },
+   "basis": "Pich Chenda district, 43 km northeast of Sen Monorom, in three stages"
+  },
+  "kh-ext-cardamom-camping": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Chi Phat (Koh Kong)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/koh-kong/what-to-see/412_chi-phat.htm"
+    }
+   },
+   "basis": "Chi Phat in the heart of the Cardamom Mountains rainforest, with forest trails and village people; the page does not mention camps"
+  },
+  "kh-ext-central-market-pp": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Central Market, Phsar Thmei (Phnom Penh)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/what-to-see/25_central-market-phsar-thmei.htm"
+    }
+   },
+   "basis": "Art Deco market built 1935 to 37, four wings of jewellery, watches and stalls"
+  },
+  "kh-ext-cha-ong": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Cha Ong Waterfall (Rattanakiri)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/rattanakiri/what-to-see/222_cha-ong-waterfall.htm"
+    }
+   },
+   "basis": "2 km west of Banlung, drops 25 m; a path leads down to a cave behind the fall"
+  },
+  "kh-ext-choeung-ek": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Choeung Ek Killing Field (Phnom Penh)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/what-to-see/5_cheung-ek-killing-field.htm"
+    }
+   },
+   "basis": "the site where detainees from S-21 were executed, with the memorial of skulls"
+  },
+  "kh-ext-independence-monument-pp": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Independence Monument (Phnom Penh)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/what-to-see/21_independence-monument.htm"
+    }
+   },
+   "basis": "Angkorian-style tower built in 1958 for independence from France"
+  },
+  "kh-ext-ka-tieng": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Ka Tieng Waterfall (Rattanakiri)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/rattanakiri/what-to-see/219_ka-tieng-waterfall.htm"
+    }
+   },
+   "basis": "names Ka Tieng; it is a visitor account of three Rattanakiri waterfalls and gives no figures"
+  },
+  "kh-ext-kep-crab-market": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Where to eat and drink, Kep",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-eat.htm"
+    }
+   },
+   "basis": "section on the Crab Market: small restaurants along the shore, best at sunset"
+  },
+  "kh-ext-kep-guesthouses-bungalows": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Where to stay, Kep",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-stay.htm"
+    }
+   },
+   "basis": "lists Kep guesthouses, bungalows and resorts, among them one on the Kep National Park slope"
+  },
+  "kh-ext-kep-waterfront-food-stalls": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Where to eat and drink, Kep",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kep/where-to-eat.htm"
+    }
+   },
+   "basis": "seafood picnics on the waterfront: platforms along the road opposite Kep Beach"
+  },
+  "kh-ext-koh-tonsay": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Koh Ton Say, Rabbit Island (Kep)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kep/what-to-see/227_koh-ton-say-resort.htm"
+    }
+   },
+   "basis": "island 4.5 km from Kep town with two white-sand beaches"
+  },
+  "kh-ext-kohrong-bungalows": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Koh Rong Sanloem, Saracen Bay (Sihanoukville)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/sihanouk-ville/what-to-see/440_koh-rong-sanloem-seracen-bay.htm"
+    }
+   },
+   "basis": "Saracen Bay and M Pai Bay stays: hostels, hotels and beach accommodation"
+  },
+  "kh-ext-kratie-riverfront": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Kratie province travel guide",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kratie.htm"
+    }
+   },
+   "basis": "sleepy, picturesque Kratie town with French-style houses, a river road for strolling and sunsets over the Mekong"
+  },
+  "kh-ext-kratie-riverfront-food-stalls": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Where to eat and drink, Kratie",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kratie/where-to-eat.htm"
+    }
+   },
+   "basis": "cheap food on the riverfront in the evening, when small stalls set up; also the town market stalls"
+  },
+  "kh-ext-kratie-riverfront-guesthouses": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Where to stay, Kratie",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kratie/where-to-stay.htm"
+    }
+   },
+   "basis": "lists Kratie guesthouses and hotels, among them one on the riverfront"
+  },
+  "kh-ext-otres-beach": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Otres Beach (Sihanoukville)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/sihanouk-ville/what-to-see/420_otres-beach.htm"
+    }
+   },
+   "basis": "3 km crescent south of Ochheuteal Beach, beach-shack bars, restaurants and bungalows"
+  },
+  "kh-ext-phnom-sampov": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Sampeou Mountain (Battambang)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/battambang/what-to-see/29_sampeou-mountain.htm"
+    }
+   },
+   "basis": "the same hill under the spelling Sampeou: 12 km from Battambang, a pagoda and three caves, some used by the Khmer Rouge as killing caves; the page does not mention the bats"
+  },
+  "kh-ext-phnompenh-longstay": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Where to stay, Phnom Penh",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/where-to-stay.htm"
+    }
+   },
+   "basis": "lists BKK1 (Boeung Keng Kang 1) hotels and serviced apartments"
+  },
+  "kh-ext-russian-market": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Where to shop, Phnom Penh (Russian Market)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/phnom-penh/shopping.htm"
+    }
+   },
+   "basis": "Phsar Toul Tom Poung (Russian Market): a labyrinth of stalls with clothes, handicrafts, souvenirs and silver jewellery"
+  },
+  "kh-ext-sen-monorom-bungalows": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Where to stay, Mondulkiri",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/mondulkiri/where-to-stay.htm"
+    }
+   },
+   "basis": "lists bungalows and guesthouses in Sen Monorom village"
+  },
+  "kh-ext-siemreap-cooking": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Cooking classes in Cambodia",
+     "url": "https://www.tourismcambodia.com/activities/cooking-classes.htm"
+    }
+   },
+   "basis": "lists Siem Reap cooking classes at Asian Square Restaurant, Angkor Century Hotel and Raffles Grand Hotel d'Angkor"
+  },
+  "kh-ext-siemreap-hostels": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Where to stay, Siem Reap",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/where-to-stay.htm"
+    }
+   },
+   "basis": "lists Siem Reap hostels, among them places near Pub Street and the Night Market"
+  },
+  "kh-ext-siemreap-resort": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Where to stay, Siem Reap",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/where-to-stay.htm"
+    }
+   },
+   "basis": "lists Siem Reap resorts, among them Anantara Angkor Resort and Angkor Countryside Boutique Resort"
+  },
+  "kh-ext-teuk-chhou-rapids": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Teuk Chhu (Kampot)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kampot/what-to-see/43_teuk-chhu-resort.htm"
+    }
+   },
+   "basis": "Teuk Chhu spelling: a stream 8 km north of Kampot that flows over large rocks all year and is used for swimming"
+  },
+  "kh-ext-tonlesap-villages": {
+   "swap": {
+    "https://www.tourismcambodia.org": {
+     "org": "Tourism Cambodia — Kompong Pluk (Siem Reap)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/what-to-see/406_kompong-pluk.htm"
+    }
+   },
+   "add": [
+    {
+     "org": "Tourism Cambodia — Kompong Khleang (Siem Reap)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/siem-reap/what-to-see/407_kompong-khleang.htm"
+    }
+   ],
+   "basis": "Kompong Pluk (stilted village 20 km southeast of Siem Reap) and Kompong Khleang (forest of stilted houses 55 km east), the two villages the card names"
+  },
+  "kh-ext-wat-banan": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Phnom Banan (Battambang)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/battambang/what-to-see/28_phnom-banan.htm"
+    }
+   },
+   "basis": "Wat Banan under the name Phnom Banan: Angkor-era hilltop temple 25 km from Battambang, built in the 11th century and finished by Jayavarman VII"
+  },
+  "kh-ext-yeak-laom": {
+   "swap": {
+    "https://www.tourismcambodia.com": {
+     "org": "Tourism Cambodia — Beung Yeak Loam (Rattanakiri)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/rattanakiri/what-to-see/216_beung-yeak-loam.htm"
+    }
+   },
+   "basis": "volcanic crater lake 800 m across; the page puts it 5 km south of Banlung where the card says east"
+  },
+  "kh-ext-phnom-penh-national-museum": {
+   "swap": {
+    "https://www.cambodiamuseum.info": {
+     "org": "National Museum of Cambodia — Information for visitors",
+     "url": "https://www.cambodiamuseum.info/en_information_visitors.html"
+    }
+   },
+   "basis": "the museum's own page: open 8:00 to 17:00, last tickets 16:30, foreigners aged 18 and over pay $10"
+  },
+  "kh-ext-bamboo-train": {
+   "add": [
+    {
+     "org": "Wikipedia — Norry",
+     "url": "https://en.wikipedia.org/wiki/Norry"
+    }
+   ],
+   "basis": "the bamboo train article: trains around Battambang, with a $5 tourist service on the outskirts"
+  },
+  "kh-ext-battambang-circus": {
+   "add": [
+    {
+     "org": "Wikipedia — Phare Ponleu Selpak",
+     "url": "https://en.wikipedia.org/wiki/Phare_Ponleu_Selpak"
+    }
+   ],
+   "basis": "the organisation's own article: arts association in Battambang since 1994 with a circus school"
+  },
+  "kh-ext-bokor-national-park": {
+   "add": [
+    {
+     "org": "Wikipedia — Preah Monivong National Park",
+     "url": "https://en.wikipedia.org/wiki/Preah_Monivong_National_Park"
+    }
+   ],
+   "basis": "the park's own article (Bokor is its highest peak); Tourism Cambodia has a page only for the Bokor Hill Station"
+  },
+  "kh-ext-kbal-spean": {
+   "add": [
+    {
+     "org": "Wikipedia — Kbal Spean",
+     "url": "https://en.wikipedia.org/wiki/Kbal_Spean"
+    }
+   ],
+   "basis": "the site's own article: river-bed carvings known as the River of a Thousand Lingas; Angkor Enterprise answers Cloudflare 403"
+  },
+  "kh-ext-kep-national-park": {
+   "add": [
+    {
+     "org": "Wikipedia — Kep National Park",
+     "url": "https://en.wikipedia.org/wiki/Kep_National_Park"
+    }
+   ],
+   "basis": "the park's own article"
+  },
+  "kh-ext-koh-ta-kiev": {
+   "add": [
+    {
+     "org": "Wikipedia — Koh Ta Kiev",
+     "url": "https://en.wikipedia.org/wiki/Koh_Ta_Kiev"
+    }
+   ],
+   "basis": "the island's own article: 4 km off Otres beach, no infrastructure beyond a navy base"
+  },
+  "kh-ext-phnom-chhngok": {
+   "add": [
+    {
+     "org": "Wikipedia — Phnom Chhnork",
+     "url": "https://en.wikipedia.org/wiki/Phnom_Chhnork"
+    }
+   ],
+   "basis": "the temple's own article: 7th-century Funan brick cave temple 8 km northeast of Kampot, reached by stone steps; Tourism Cambodia has only a location stub"
+  },
+  "kh-ext-virachey": {
+   "add": [
+    {
+     "org": "Wikipedia — Virachey National Park",
+     "url": "https://en.wikipedia.org/wiki/Virachey_National_Park"
+    }
+   ],
+   "basis": "the park's own article"
+  },
+  "kh-ext-wat-nokor-bachey": {
+   "add": [
+    {
+     "org": "Wikipedia — Banteay Prey Nokor (Wat Nokor Bachey)",
+     "url": "https://en.wikipedia.org/wiki/Banteay_Prey_Nokor"
+    }
+   ],
+   "basis": "the temple's own article: built in the last years of the reign of Jayavarman VII (crowned 1181, died 1218), Bayon-style, 2 km from Kampong Cham; corrects the blurb's 11th century"
+  },
+  "kh-ext-battambang-guesthouses-street-2-5": {
+   "add": [
+    {
+     "org": "Wikivoyage — Battambang (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Battambang#Sleep"
+    }
+   ],
+   "basis": "budget section names Street 2.5 (The Real Place Hostel) and guesthouses near the central market"
+  },
+  "kh-ext-battambang-riverside-boutique": {
+   "add": [
+    {
+     "org": "Wikivoyage — Battambang (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Battambang#Sleep"
+    }
+   ],
+   "basis": "splurge section: a pool guesthouse in a renovated 1930s French colonial villa just across the river from the central market"
+  },
+  "kh-ext-kampi-dolphins": {
+   "add": [
+    {
+     "org": "Tourism Cambodia — Kampi Resort (Kratie)",
+     "url": "https://www.tourismcambodia.com/travelguides/provinces/kratie/what-to-see/194_kampi-resort.htm"
+    },
+    {
+     "org": "Wikivoyage — Kratie (Do)",
+     "url": "https://en.wikivoyage.org/wiki/Kratie#Do"
+    }
+   ],
+   "basis": "Kampi Resort, 15 km north of Kratie on National Road 7, shelters the dolphins; Wikivoyage: best spot to watch them is Kampi village, boat US$9 a person. WWF-Cambodia's dolphin page does not name Kampi"
+  },
+  "kh-ext-kampot-night-market-stalls": {
+   "add": [
+    {
+     "org": "Wikivoyage — Kampot (Buy)",
+     "url": "https://en.wikivoyage.org/wiki/Kampot#Buy"
+    }
+   ],
+   "basis": "names Kampot Night Market near the Durian Roundabout (mostly clothes, a little food, which is less food than the card)"
+  },
+  "kh-ext-kampot-old-town-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Kampot (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Kampot#Sleep"
+    }
+   ],
+   "basis": "guesthouses along Guesthouse Street and the old French quarter"
+  },
+  "kh-ext-kampot-pepper-farm": {
+   "add": [
+    {
+     "org": "Wikivoyage — Kampot (See)",
+     "url": "https://en.wikivoyage.org/wiki/Kampot#See"
+    }
+   ],
+   "basis": "pepper farms north of the Kep hills: ask in town about visits"
+  },
+  "kh-ext-kampot-riverside-bungalows": {
+   "add": [
+    {
+     "org": "Wikivoyage — Kampot (Riverside)",
+     "url": "https://en.wikivoyage.org/wiki/Kampot#Riverside"
+    }
+   ],
+   "basis": "riverside budget subsection: bungalows in an orchard with river views, bar and restaurant, kayaks and free bicycles"
+  },
+  "kh-ext-kampot-salt-fields": {
+   "add": [
+    {
+     "org": "Wikivoyage — Kampot (See)",
+     "url": "https://en.wikivoyage.org/wiki/Kampot#See"
+    }
+   ],
+   "basis": "Salt Fields a kilometre out of town on the Kep road"
+  },
+  "kh-ext-koh-rong-koh-touch-food-stalls": {
+   "add": [
+    {
+     "org": "Wikivoyage — Koh Rong (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Koh_Rong#Eat"
+    }
+   ],
+   "basis": "Khmer restaurants in the village (mains US$2 to 3) and beach BBQ at night (US$4 to 6)"
+  },
+  "kh-ext-koh-rong-koh-touch-guesthouses": {
+   "add": [
+    {
+     "org": "Wikivoyage — Koh Rong (Koh Tuich)",
+     "url": "https://en.wikivoyage.org/wiki/Koh_Rong#Koh_Tuich"
+    }
+   ],
+   "basis": "Koh Tuich is the spelling for Koh Touch: dorms and guesthouses in the village from about US$5, bungalow resorts to the north"
+  },
+  "kh-ext-koh-rong-long-beach": {
+   "add": [
+    {
+     "org": "Wikivoyage — Koh Rong (Long Set Beach)",
+     "url": "https://en.wikivoyage.org/wiki/Koh_Rong#Long_Set_Beach"
+    },
+    {
+     "org": "Wikipedia — Koh Rong",
+     "url": "https://en.wikipedia.org/wiki/Koh_Rong"
+    }
+   ],
+   "basis": "Wikivoyage: Sok-San village is at the north end of the 7 km Long Set strand, with phosphorescence at night; Wikipedia: Sok San is a village in the west and Long Beach was ranked a top 10 beach in 2026"
+  },
+  "kh-ext-koh-rong-sanloem-mpai-bay-village-kitchens": {
+   "add": [
+    {
+     "org": "Wikivoyage — Koh Rung Sanloem (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Koh_Rung_Sanloem#Eat"
+    }
+   ],
+   "basis": "M'Pai Bai village has many local restaurants, cheaper than the hotel-only beaches"
+  },
+  "kh-ext-kompong-cham-bamboo-bridge": {
+   "add": [
+    {
+     "org": "Wikivoyage — Kampong Cham (See)",
+     "url": "https://en.wikivoyage.org/wiki/Kampong_Cham#See"
+    }
+   ],
+   "basis": "The Bamboo Bridge and Koh Paen: rebuilt every dry season, washed away as the river rises"
+  },
+  "kh-ext-chiphat-homestay": {
+   "add": [
+    {
+     "org": "Wikivoyage — Chi Phat (Sleep)",
+     "url": "https://en.wikivoyage.org/wiki/Chi_Phat#Sleep"
+    }
+   ],
+   "basis": "the community eco-tourism office proposes home stays, guesthouses or eco-lodges, in a rotation so every family earns"
+  },
+  "kh-ext-sea-forest-viewpoint": {
+   "add": [
+    {
+     "org": "Wikivoyage — Senmonorom (See)",
+     "url": "https://en.wikivoyage.org/wiki/Senmonorom#See"
+    }
+   ],
+   "basis": "Sea Forest: a bare mountain not far from Sen Monorom with wide views"
+  },
+  "kh-ext-sen-monorom-market-food-stalls": {
+   "add": [
+    {
+     "org": "Wikivoyage — Senmonorom (Eat)",
+     "url": "https://en.wikivoyage.org/wiki/Senmonorom#Eat"
+    }
+   ],
+   "basis": "the market alleyway: a few stalls do rice with pork, chicken or egg for US$1 to 1.5"
+  }
+ },
  "open": {
   "th-ext-nan-walking-street": "No checkable page (2026-10-18): TAT's only page for Kad Khuang Muang Nan is a 2023 one-off food fair at another site, and blogs disagree on the days (Saturday only vs Friday to Sunday).",
   "vi-ext-cannon-fort-cat-ba": "No checkable page (2026-10-18): no Wikipedia article; Wikivoyage Cat Ba and the 303 vietnam.travel pages read for D5 do not name the fort.",
@@ -1222,6 +1733,11 @@
   "vi-ext-hue-herbal-sauna": "No checkable page (2026-10-18): vietnam.travel's herbal-bath pages are about the Red Dao baths in Sa Pa and Hoang Su Phi; nothing names a Hue royal herbal bath.",
   "vi-ext-ninhbinh-cho-rong": "No checkable page (2026-10-18): Wikivoyage Ninh Binh mentions \"the main market across the bridge\" without naming it; vietnam.travel does not name it.",
   "vi-ext-tavan-cau-may": "No checkable page (2026-10-18): Vietnamese Wikipedia has only a red link for Cầu Mây (Sa Pa); Sapa O'Chau's treks mention a hanging bridge but not this one by name.",
-  "vi-ext-tavan-giang-ta-chai-waterfall": "No checkable page (2026-10-18): Sapa O'Chau's treks name the walk from Ta Van through bamboo to Giang Ta Chai but not the waterfall; no Wikipedia or Wikivoyage entry."
+  "vi-ext-tavan-giang-ta-chai-waterfall": "No checkable page (2026-10-18): Sapa O'Chau's treks name the walk from Ta Van through bamboo to Giang Ta Chai but not the waterfall; no Wikipedia or Wikivoyage entry.",
+  "kh-ext-koh-trong": "No checkable page (2026-10-19): no Wikipedia article; Wikivoyage Kratie does not name the island; Tourism Cambodia names Koh Trong Island only as the address of one hotel (Rajabori Villas) in its Kratie stay list.",
+  "kh-ext-koh-trong-homestays": "No checkable page (2026-10-19): Tourism Cambodia's Kratie stay list names Koh Trong Island only as a hotel address and its homestay page names no Kratie homestays; Wikivoyage Kratie does not name the island.",
+  "kh-ext-koh-rong-long-set-beach": "No checkable page (2026-10-19): Wikivoyage Koh Rong has a Long Set Beach section, but it is the 7 km west-coast strand ending at Sok San (the other Koh Rong beach card) and puts the beach on the sunset side where this card says east; no page names 4K Beach. The two cards may be one beach.",
+  "kh-ext-siem-reap-road60-night-market": "No checkable page (2026-10-19): Wikivoyage Siem Reap and Tourism Cambodia's Siem Reap pages do not name a Road 60 night market (Road 60 appears only in a hotel address).",
+  "kh-ext-battambang-riverside-stalls": "No checkable page (2026-10-19): Wikivoyage Battambang and Tourism Cambodia's Battambang eat page name no riverside evening stalls (Wikivoyage warns that streets go dark after 19:00)."
  }
 }

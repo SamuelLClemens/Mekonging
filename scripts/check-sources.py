@@ -58,8 +58,10 @@ ROUTE_FILES = sorted(glob.glob('js/data/routes.*.js'))
 # The route figure had drifted to 37 before D5 (S10's work), so the old 87 had gone slack.
 # D5 Vietnam (2026-10-18, mk-v0.641.0): 71 Vietnamese places got a page about the place and 14
 # Vietnamese routes got sources, so 184 -> 113 and 24 -> 10.
-BASELINE_HOMEPAGE_ONLY_PLACES = 113
-BASELINE_UNSOURCED_ROUTES = 10
+# D5 Cambodia (2026-10-19, mk-v0.642.0): 54 Cambodian places got a page about the place (5 are filed
+# open) and 4 Cambodian routes got sources, so 113 -> 59 and 10 -> 6.
+BASELINE_HOMEPAGE_ONLY_PLACES = 59
+BASELINE_UNSOURCED_ROUTES = 6
 
 ID_RE = re.compile(r'^\s*"?id"?:\s*["\']([^"\']+)["\']')
 # Anchored like check-place-fields.py's key_re: "sources" also appears as a SUBSTRING of
