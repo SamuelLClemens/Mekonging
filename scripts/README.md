@@ -110,6 +110,13 @@ runs both in verify mode.
 `derive-place-fit.py` and `verify-hospital-countries.py` are one-off derivations kept for
 the next refresh. `serve.py` is the static server used for every local check.
 
+`build-market-cities.py` builds the shared Market's city list (docs/EXCHANGE.md §3) from the place
+records' cities and the route endpoints, and writes it twice so the phone and the server agree:
+`js/data/market-cities.js` and the seed block in `supabase/migrations/001_accounts.sql` (plus the
+count the RLS test expects). A route endpoint that is not a place city must be named in its
+`ENDPOINTS` or `OUTSIDE` table, or the script stops. `--check` exits 1 when either output is stale.
+A migration runs once, so after 001 a new city reaches the database only through a new migration.
+
 `fetch-identify-photos.py` fills the identify guide's photos. `fetch-place-photos.py` fills place
 photos from each place's own Wikipedia article (plan slice D3), one country per session:
 `--suggest` lists candidate articles with their distance from the place, a person records the

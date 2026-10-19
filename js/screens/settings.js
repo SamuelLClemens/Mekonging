@@ -46,6 +46,7 @@ import {
 } from '../main.js';
 import { audioPacksCard } from '../audio-packs.js';
 import { offlineReadyCard } from '../offline-ready.js';
+import { signOut as marketSignOut } from '../market-api.js';
 
 // `active` lets Home show an INFERRED stage as pressed without persisting it; falls back to
 // the stored choice everywhere else. Tapping a button is what actually saves the phase.
@@ -690,7 +691,7 @@ export function settingsScreen() {
   // reset
   wrap.append(h('div', { class: 'card' }, [
     h('button', { class: 'btn ghost block', onclick: () => {
-      confirmAction({ title: 'Reset everything on this device?', body: 'This erases your journal, budget and saved places and cannot be undone. Consider downloading a backup first.', confirmLabel: 'Reset everything', danger: true }).then((ok) => { if (ok) { resetAll(); applyTheme(); go('#home'); } });
+      confirmAction({ title: 'Reset everything on this device?', body: 'This erases your journal, budget and saved places and cannot be undone. Consider downloading a backup first.', confirmLabel: 'Reset everything', danger: true }).then((ok) => { if (ok) { resetAll(); marketSignOut(); applyTheme(); go('#home'); } });   // the Market session lives outside the store (js/market-api.js): revoked if online, forgotten either way
     } }, 'Reset everything'),
     h('p', { class: 'disclaimer' }, 'Your data is kept safe across app updates — an update never erases your journal, budget or saved places. This button is the only in-app way to wipe them, and clearing your browser storage would also remove them.'),
   ]));

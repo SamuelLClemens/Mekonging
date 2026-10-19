@@ -38,6 +38,7 @@ import { DEFAULT_SKIN, SKIN_MODE, resolveSkin, modeFor } from './theme.js';
 import { homeScreen } from './screens/home.js';
 import { navGroup, groupHash, resolveHash, visibleItems, visibleGroups, navItems, itemLabel } from './nav-groups.js';
 import { marketRedirect } from './market-routes.js';
+import { takeSigninLink } from './market-link.js';
 import { recordVisit, contributeVisit, visitsEnabled } from './visits.js';
 import { noteTrail, trailEnabled, trailPoints, trailStats } from './trail.js';
 import { HOSP_TAG, EMERGENCIES, EMBASSY } from './data/emergency.js';
@@ -213,6 +214,7 @@ const SCREEN_LOADERS = {
   giveback: (b) => import('./screens/giveback.js' + b),
   circle: (b) => import('./screens/circle.js' + b),
   exchange: (b) => import('./screens/exchange.js' + b),
+  marketaccount: (b) => import('./screens/market-account.js' + b),
   produce: (b) => import('./screens/produce.js' + b),
   schedules: (b) => import('./screens/schedules.js' + b),
   trip: (b) => import('./screens/trip.js' + b),
@@ -259,7 +261,7 @@ const ROUTE_SCREENS = {
   export: ['export'],
   donate: ['giveback'],
   circle: ['circle'], add: ['circle'], in: ['circle'],
-  market: ['exchange'],   // #exchange and #swap redirect to it (js/market-routes.js)
+  market: ['exchange', 'marketaccount'],   // #exchange and #swap redirect to it (js/market-routes.js)
   inbox: ['circle'], thread: ['circle'], msg: ['circle'],
   produce: ['produce'], pantry: ['produce'], schedules: ['schedules'], bargain: ['bargain'],
   etiquette: ['etiquette'],
@@ -815,7 +817,7 @@ setActiveCountry(detectCountryId());   // current destination context (country i
 
 // Shown on the Help screen and stamped into feedback messages. Keep in sync with
 // CACHE_VERSION in sw.js on each release.
-export const APP_VERSION = 'mk-v0.644.0';
+export const APP_VERSION = 'mk-v0.645.0';
 
 // The personal-hub tab reads "YOU" until the traveller sets their own name — per direct
 // request, once set it shows the FULL name regardless of length: the tab bar's own CSS
@@ -7183,7 +7185,9 @@ export function render() {
       case 'region': return screenMod('explore').regionScreen(arg);
       case 'nearby': return screenMod('nearby').nearbyScreen();
       case 'currency': return currencyScreen();
-      case 'market': return screenMod('exchange').marketScreen(arg);   // arg is a kind from js/screens/exchange.js
+      case 'market': return (arg === 'signin' || arg === 'me')   // accounts: js/screens/market-account.js
+        ? screenMod('marketaccount').marketAccountScreen(arg)
+        : screenMod('exchange').marketScreen(arg);   // arg is a kind from js/screens/exchange.js
       case 'phrasebook': return screenMod('phrasebook').phrasebookScreen(arg);
       case 'dictionary': return screenMod('phrasebook').dictionaryScreen();
       case 'signtranslate': return screenMod('signtranslate').signTranslateScreen(arg);
@@ -7370,6 +7374,8 @@ bootMark('mk-eval-done');
 // renders asynchronously (it is waiting on a dictionary fetch), so a mark placed below would
 // record a screen that has not been built yet — and would do it only on the launches where the
 // figure is most interesting, a non-English one on a slow connection.
+// The Market's sign-in link (?signin=<token_hash>) leaves the address before the router runs.
+if (takeSigninLink()) lastHash = location.hash;
 const firstRender = () => { render(); bootMark('mk-first-render'); };
 if (uiStringsReady()) firstRender();
 else ensureUiStrings().then(firstRender, firstRender);
