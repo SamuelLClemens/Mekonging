@@ -6,7 +6,7 @@
     - Tables: `profiles` and `cities` (174, generated). The `private` schema holds `admins`, `testers`, `settings` (`market_open` and `cash_open` false, `terms_version` `beta-2026-10`) and `filter_terms` (the §8 list).
     - Functions: the helpers (`is_admin`, `is_tester`, `is_member`, `setting_on`, `normalise`, `text_hit`), `market_me`, `market_join`, `market_delete_account`, and the display-name trigger.
     - Rules: RLS on every table, nothing granted to anon, and each function's default EXECUTE revoked before exactly five are granted to `authenticated`.
-  - `supabase/tests/001_rls.sql`: 66 checks in one rolled-back block, then a summary line. Expected output: 66 PASS lines and `PASS summary: 66 checks, 0 failed, nothing kept`.
+  - `supabase/tests/001_rls.sql`: 65 checks in one rolled-back block, then a summary line (`PASS summary: 65 checks, 0 failed, nothing kept`). The session first said 66: a miscount, not a missing check.
   - `scripts/build-market-cities.py` writes `js/data/market-cities.js`, the migration's seed block and the test's expected count. `--check` exits 1 when either output is stale. It is documented in `scripts/README.md`.
   - Client modules:
     - `js/market-config.js` (public values only).
@@ -44,8 +44,16 @@ Headless Chrome over CDP, a fresh profile per theme, 127.0.0.1:8753 served from 
 - Not run here: the SQL. There is no Postgres on this machine, and the owner declined installing one. It was reviewed by reading only.
 
 ## Owner checks for M3b (status at handoff)
-- [ ] Migration 001 run in the SQL editor. **Production waits on this.** Until it runs, a sign-in on the live Market tab reaches "That did not work", because `market_me` does not exist yet. At 13:40 UTC the probe still answered 404 `PGRST202`.
-- [ ] `supabase/tests/001_rls.sql`: 66 PASS lines and the PASS summary. Copy the output into PR #125's thread.
+- [x] Migration 001 run in the SQL editor (after the merge). The API now answers a visitor with 401 "permission denied" on `market_me`, `market_join`, `market_delete_account`, `profiles` and `cities`.
+- [x] Its non-ASCII text arrived garbled, and was repaired by `supabase/migrations/001b_fix_text_encoding.sql`, which the owner ran successfully.
+  - The cause: the session put the SQL on the clipboard with a plain `pbcopy`, in a shell with no UTF-8 locale, so UTF-8 was read as Mac Roman.
+  - What was garbled: the 22 Thai, Vietnamese, Khmer and Lao filter terms, and the two Vietnamese "d" letters in `normalise()`'s look-alike map. Those shifted the map, so "ADM1N" passed.
+  - ASCII (tables, policies, grants, settings, the 174 cities) was intact.
+  - 001b is pure ASCII (`U&'...'` and `chr()`), re-runnable, and its 22 terms decode back identical to 001's.
+  - A read-only diagnostic found it: the database is PostgreSQL 17.11 with the ICU provider (`en-US`), and lowercasing turned Thai ก into ฌ, the signature of Mac Roman mojibake.
+- [x] `supabase/tests/001_rls.sql`, after 001b: 65 of 65 PASS, `PASS summary: 65 checks, 0 failed, nothing kept`. The output is on PR #125's thread.
+  - The first run, before 001b, stopped at 30 lines with 7 FAIL. Three were Supabase's own `rls_auto_enable` event-trigger function, which the test now skips because an event trigger cannot be called through the API. Four came from the garbling.
+  - The test is now pure ASCII.
 - [ ] Security Advisor: no errors. WARN rows for the three `security definer` RPCs callable by `authenticated` are expected; they are definer by design (§4).
 - [ ] The owner signs in on the iPhone Home Screen app by code. Then their user id goes into `private.admins` and `private.testers`.
   - Look the id up in Authentication, Users. One line of SQL inserts it into each table.
