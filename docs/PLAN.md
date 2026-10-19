@@ -104,6 +104,37 @@ Other gaps:
 - Use genuine sources only. The `afterDark` contract in `js/data/places.th.js` says to omit a field rather than infer it.
 - Expect low yield. This has the lowest value per credit, so it runs last.
 
+## Bangkok build-out (owner, 2026-10-19)
+Runs after D5 Cambodia and D5 Laos and before D6. Releasing slices stack, so one B slice at a time, each from the merged tip.
+
+### Where Bangkok stands (measured 2026-10-19 at 5f5cb6c, parsing `places.th.js` and `places.th.ext.js`)
+- 40 Bangkok place records of 293 for Thailand: 12 food, 9 stay, 7 culture, 3 nightlife, 3 transport, 2 market, 1 nature and 3 practical (money, health, sim).
+- Of the 40: photo 18, `localName` 17, `access` 15, `afterDark` 16, `kidFriendly` 36, `recognition` 23, `rating` 31. Every record has `whyItFits`, `tips`, `mapQuery`, `coords`, `hours`, `priceRange` and `sources`.
+- Day-trip cities are separate and already have records: Ayutthaya 9, Kanchanaburi 8, Koh Kret 2, Bang Krachao 2, Amphawa 1, Samut Songkhram 1, Nakhon Pathom 1. This build-out is Bangkok itself.
+
+### Owner rulings, 2026-10-19
+- **Size:** first phase about 150 Bangkok records (about 110 new). Then reassess for 300 or more.
+- **Shape:** one district per session, each releasing on its own. B1 is Old City and Rattanakosin. The later order is open; the proposal is B2 Chinatown and Yaowarat, B3 Siam, Pratunam and Ratchathewi, B4 Sukhumvit, B5 Silom, Sathorn and Bang Rak, B6 Riverside and Thonburi, B7 north (Ari, Chatuchak, Ladprao) and the outskirts, then B8 a gap sweep and the 300 reassessment.
+- **Scope per district, every category:** temples, palaces, museums, parks, markets, viewpoints, food, stays, bars and rooftops, transport, plus:
+  - shopping malls and department stores;
+  - adult nightlife districts (Patpong, Nana, Soi Cowboy) as factual area entries only: location, hours and the scam warnings that have a source. No safety verdicts; the `afterDark` contract applies;
+  - spas and Thai massage;
+  - classes, tours and activities (operator pages, price tier only, no booking);
+  - health (pharmacies, clinics, international hospitals), errands (SIM, money exchange, ATMs worth knowing, laundry, post), daily shopping (supermarkets, convenience chains, vegan and halal shops, electronics, tailors, bookshops), and visa and living (immigration, embassies, visa services, coworking).
+- **Held out: dispensaries.** Cannabis rules in Thailand have changed repeatedly and the iOS wrapper (`Mekonging Xcode`) adds App Store exposure. Do not add a dispensary record until Omer Hanegbi or Omri Siri has answered; if cleared it becomes a later slice. Owner action: put that question to them.
+- **Named venues:** named restaurants and hotels are allowed, alongside areas and markets.
+  - Prefer the venue's own page or its Wikipedia article.
+  - Fallback is a guide-site write-up, and then two independent pages are required.
+  - Show a price tier and a verified date, never a quoted rate. No `externalPrices` (they go stale).
+- **Complete at creation:** each new record ships with its Thai-script `localName`, page-level `sources`, `hours`, a price tier, `coords` and `tips`. A photo only where the place has its own Wikipedia article (the D3 rule). Checked at 375 px before release.
+- **D5 rulings, same day:** a Vietnamese, Khmer or Lao Wikipedia article is an acceptable citation where the place has no English article. A URL-less source may be replaced by another checkable page. The 7 Vietnamese `open` records stay homepage-only. Older "native · romanisation" `localName` values stay. A Meetups-free Market is acceptable until M4.
+
+### How a B slice runs
+- New records go in a new file per district, `js/data/places.th.bkk.<district>.js`, never into the existing files (lazy modules take new exports in a new file). B1 adds the loader line next to `PLACES_TH` and `PLACES_TH_EXT` in `js/data/regions.js`; later slices only add a file and a line. Ids are `th-bkk-<slug>`.
+- Run `check-place-dupes` first: Bangkok already has 40 records, and a name collision silently deletes travellers' saved data.
+- A slice that adds photos also runs `build-pack-sizes.py --write`. The offline pack grows with every district, so report the pack size before and after.
+- Done when: Bangkok records for the district are counted by category before and after; every new record passes `check-place-fields.py --assert`; 10 sample cards show correctly at 375 px in headless Chrome over CDP; all guards and `jsc -m scripts/validate-jsc.mjs` pass; the PR is open into `feat/scaffold-bangkok-slice`.
+
 ## Traveller exchange (marketplace and meetups)
 Today's board (`#exchange`, `#swap`, `#market`, `#circle`) has no backend. A post stays on the phone until its link is shared, so two strangers cannot find each other.
 
