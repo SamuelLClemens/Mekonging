@@ -210,7 +210,7 @@ Every table below sits in the `public` schema. RLS is on for each of them (§4).
 - RLS is on for every public table. Until M4a the `anon` role has no grant on any of them. From M4a (owner ruling 2026-10-19, §16), `anon` may read open, visible listings, and their photos from M4c, through the search and listing RPCs only. It is never granted a table, never sees `owner`, and cannot post, message, report or read profiles.
 - Policies read the caller once per statement with `(select auth.uid())`, Supabase's documented pattern.
 - Helper functions live in `private`. They are `security definer`, `stable`, and set `search_path = ''`.
-- **Other people's user ids stay on the server.** SELECT on `listings.owner` is never granted. A client therefore cannot read, filter or sort by it, so two listings by the same person cannot be linked. Policy expressions still use the column.
+- **Other people's user ids stay on the server.** SELECT on `listings.owner` is never granted. A client therefore cannot read, filter or sort by it, so two listings by the same person cannot be linked. Policy expressions reach the column only through definer helpers (`private.owns(id)`, `private.can_see(id)`), so no policy depends on whether an expression needs privilege on a column no role may select (the PostgreSQL documentation does not say). The cost: `INSERT ... RETURNING` is refused (the SELECT policy is checked against a row that does not exist yet), so a client picks the listing's `id` itself, inserts with `Prefer: return=minimal` and reads the row back with `market_listing(id)`.
 - Rows written by triggers (notifications, report weight, snapshots) come from security-definer functions. Clients have no INSERT grant on those tables.
 
 **Helpers**
@@ -252,7 +252,9 @@ Every table below sits in the `public` schema. RLS is on for each of them (§4).
 |---|---|
 | `market_join(display_name, avatar, terms_version, adult)` | Creates the profile; `adult` must be true |
 | `market_delete_account()` | Deletes the caller's auth user. Rows cascade, but reports keep their snapshot (§10) |
-| `market_my_listings()` | The caller's listings in any status; the client learns which cards are its own from this |
+| `market_my_listings()` | The caller's listings in any status but deleted; the client learns which cards are its own from this |
+| `market_search(q, kind, category, city, date_from, date_to, price_min, price_max, currency, free_only, sort, page, page_size)` | Open, unended listings from owners in good standing, not blocked either way: free text, filters, four sorts, at most 50 rows a page, each row with `total`. **`anon` may call it** (M4a, owner ruling 2026-10-19). Built in migration 002 |
+| `market_listing(listing_id)` | One listing for its page, with `status`, `mine` and `member_since` (the owner's month of joining), or null. **`anon` may call it.** Built in migration 002 |
 | `market_matches(listing_id)` | Open listings that match one of the caller's listings, without owner ids |
 | `market_start_thread(listing_id, body)` | Creates the thread and its first message atomically |
 | `market_block_owner(listing_id)` | Blocks a listing's owner without revealing who they are |
@@ -446,7 +448,9 @@ and not private.blocked(a.owner, b.owner)
 | Sex work | escort, happy ending, sexual service, sugar daddy | |
 | Display names only | mekonging, admin, moderator, support, official, staff | |
 
-- **Not yet checked by a native speaker.** The Thai, Vietnamese, Khmer and Lao entries come from general knowledge, not from a checked source. A native-speaker check is part of M4's done-when.
+- **Not yet checked by a native speaker.** The Thai, Vietnamese, Khmer and Lao entries come from general knowledge, not from a checked source. The owner recorded on 2026-10-19 that no native speaker is available for M4a, so they ship as written and stay marked unchecked here until one is found.
+- **"Kush" and "gun" no longer block display names** (owner ruling 2026-10-19): they are real given names and nicknames, and Gun is common in Thailand. They still block listings, and `private.filter_terms.in_names` is the switch.
+- **Messenger names refused in listings** go a little past the list above: `zalo`, `wechat`, `viber` and `kakaotalk` join `line id`, `whatsapp` and `telegram`. A phone number is 8 or more digits once spaces, dots, dashes and brackets are removed, with Thai, Lao and Khmer digits counted. Dates and prices are taken out first, so `2026-10-20`, `15.000.000 VND` and `1500-2000 baht per night` pass. A price is an amount that does not start with 0 and ends in a currency word or sign. A list of sizes such as `38 39 40 41` still reads as a number. A determined person can still write a number in words: the report path is the second line of defence.
 - **Slurs and sexual-harassment terms are not printed here.** M4 seeds them from a maintained open list (candidate: the LDNOOBW lists, CC BY 4.0) and records which of the four languages that list covers. These terms block in display names and flag in messages.
 
 ## 9. Rate limits
@@ -643,6 +647,11 @@ Every key and password stays in a dashboard or a password manager. None goes in 
    - Posting, messaging, reporting, blocking and the account still need sign-in. The sign-in gate moves from the Market's door to its actions.
    - The cost: scraping and stalking lose one control (§13). The privacy policy (§14, item 5) must say that listings are public.
 
+**Ruled by the owner, 2026-10-19 (during M4a):**
+1. **The closed beta stays closed to visitors.** Until `market_open` is true (M9), `market_search` and `market_listing` answer `market_closed` to visitors and to signed-in people who are not testers, and the screens show an honest "closed beta" state. The privacy policy must say that listings are public before visitors read them (§14, item 5).
+2. **"Kush" and "gun" are allowed in display names**, and still refused in listings (§8).
+3. **No native speaker is available** to check the Thai, Vietnamese, Khmer and Lao terms (§8). The terms ship unchecked.
+
 **Still open:**
 1. **The cash-swap amount cap**, and whether cash swap ships at all. This waits on legal (§14).
 
@@ -694,6 +703,13 @@ The original M4 done-when still holds across the three: the RLS tests show a str
   - Search: one RPC over open, visible listings, with free text plus kind, category, city, dates, price range and "free only", sorted by newest, soonest or price, 50 rows a page, never returning `owner`.
   - The client calls in a new module, with fixture data rich enough to design against (M4b).
 - **Done when:** the M4 RLS and SQL tests above print only PASS; search tests show hidden, ended and blocked listings never appear and `owner` is never returned, for visitors (`anon`) and for signed-in users alike; `anon` holds no table grant and cannot post, report or read a profile; the Security Advisor shows no errors.
+- **Built (2026-10-19, PR open as a draft until the owner's run passes).**
+  - `supabase/migrations/002_listings.sql`: the enums, `listings`, `reports`, `blocks` (table and policies only, no grant until M5), `private.name_changes`; the BEFORE triggers (kind, intent, field, price and window rules, the text check, the contact-detail check, `updated_at`, the rate limits and the name-change limit); the AFTER triggers (system flag reports, report weight and auto-hide); `private.today()`, `private.search_fold()`, `private.contact_hit()`; `market_search`, `market_listing` and `market_my_listings`.
+  - `supabase/tests/002_rls.sql`: one rolled-back block, PASS or FAIL lines and a summary line.
+  - `js/market-listings.js` (the calls), `js/market-fixture-listings.js` (47 visible fixture listings and a port of the search), and the validator checks.
+  - `scripts/check-market-sql.py`, a static guard for the SQL, because no Postgres runs here.
+  - An independent read of the SQL (2026-10-19) found six defects, all fixed: a variable in the test that clashed with a column alias, a race in the auto-hide count (now one lock per listing), query words split differently from the stored text, `NaN` accepted as a price, `@8am` read as a handle, and a cash filter test that could not fail. It also led to the owner-free policies above.
+  - Decisions are written at the top of the migration: definer RPCs for visitors; one list of public columns, `private.listing_json`; `private.by_client()` separates a request from the database owner and from triggers inside triggers; the search vector is a plain column the trigger fills; typo tolerance is per word through `pg_trgm` in `extensions`.
 
 #### M4b: The marketplace screens
 - **Scope.** The Market home with a search bar, kind tabs, category tiles and a picture-led card grid with category artwork; results with filters and sorting; the listing page (app links only, Report and Block, Message waiting for M5); a post form per kind with a live preview; My listings; and empty, loading and gated states. The on-phone board folds into "On this phone" (§11).

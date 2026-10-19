@@ -6,6 +6,11 @@
 -- Paste the whole file into the Supabase SQL editor and press Run. It prints one PASS or FAIL
 -- line per check, and a summary line last.
 --
+-- It describes the database as migration 001 left it. Once 002_listings.sql has run, the two
+-- catalogue checks about which functions anon and authenticated may execute are 002's to prove:
+-- run supabase/tests/002_rls.sql instead, which repeats the catalogue checks for the whole
+-- schema. A FAIL on those two lines after 002 is expected, not a bug.
+--
 -- It leaves nothing behind. Every fixture (four test users, their profiles, a tester row, a
 -- changed setting) is made inside one block that ends by raising an exception, which rolls the
 -- whole block back. The result lines survive because they are kept in a variable, not a table.
