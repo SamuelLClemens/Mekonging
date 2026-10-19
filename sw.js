@@ -52,7 +52,7 @@
 // The build id. No longer names a cache, but still the string a traveller reads in Settings and
 // quotes in a bug report (js/main.js APP_VERSION must match), still what the update toast turns
 // on, and still what scripts/check-cache-version.py checks moved when shipped code moved.
-const CACHE_VERSION = 'mk-v0.643.0';
+const CACHE_VERSION = 'mk-v0.644.0';
 const SHELL_CACHE = 'mk-shell';
 // Where reconcile() stores the manifest of the release currently on the device. Not a real file
 // and never served: nothing requests this path, and it is absent from PRECACHE.
@@ -363,7 +363,7 @@ const MANIFEST = {
   'css/style.css': '8a4ceee4',
   'icons/apple-touch-icon.png': '406984b1',
   'icons/icon.svg': 'e45df198',
-  'index.html': '996a10a2',
+  'index.html': 'c63e08de',
   'js/app-state.js': 'b3e4c4c8',
   'js/audio-control.js': '523b7fe4',
   'js/audio-packs.js': 'f2ff527f',
@@ -528,7 +528,7 @@ const MANIFEST = {
   'js/journey-share.js': 'd020ccad',
   'js/journey.js': '4504e265',
   'js/lazy-data.js': 'b606efdc',
-  'js/main.js': 'fff272f7',
+  'js/main.js': 'c3b721e9',
   'js/map-tiles.js': '3f500cc5',
   'js/map.js': 'ff3ecd14',
   'js/market-routes.js': '2b771207',
@@ -572,7 +572,7 @@ const MANIFEST = {
   'js/screens/search.js': '9dd5a15b',
   'js/screens/settings.js': 'c858daf5',
   'js/screens/share-journey.js': 'f3a2aeea',
-  'js/screens/signtranslate.js': '4494ce60',
+  'js/screens/signtranslate.js': '8a8449ba',
   'js/screens/streetfood.js': '0ca4e2ad',
   'js/screens/today.js': '67d1e3e4',
   'js/screens/transport.js': '88a31805',
@@ -604,6 +604,10 @@ const MANIFEST = {
   'lib/fonts/bevietnampro-800-vietnamese.woff2': '26b241d1',
   'lib/maplibre-gl.css': '576b085f',
   'lib/maplibre-gl.js': 'be9633c4',
+  'lib/tesseract/core/tesseract-core-lstm.wasm.js': '8f04aa0c',
+  'lib/tesseract/core/tesseract-core-simd-lstm.wasm.js': 'ce20eda9',
+  'lib/tesseract/tesseract.min.js': 'a8e29918',
+  'lib/tesseract/worker.min.js': 'aca12296',
   'manifest.webmanifest': '451c694a',
   'package.json': '01105bfb',
 };

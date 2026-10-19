@@ -10,8 +10,9 @@
 
 ### Release order (owner, 2026-10-19 status review)
 - **D5 Laos** merged as PR #122 (`mk-v0.643.0`).
-- **Next releasing slice:** M3, accounts and sign-in (closed beta). Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), is approved and can run alongside it.
-- **Approved, not yet placed in the order:** one small releasing data slice, "D5 tidy" (recommended right after M3):
+- **M3 is split in two.** M3a (the §16 CSP tightening, tesseract self-hosted under `lib/tesseract/`, the `check-secrets` guard) is PR #124, `mk-v0.644.0`, 2026-10-19.
+- **Next releasing slice:** M3b, accounts and sign-in (closed beta): migration 001, the RLS test, `market-config.js` and `market-api.js`, the sign-in screens, the §2 CSP additions and the owner checks. It stacks on M3a. Q2, the audit driver under `tools/audit-375/` (tools only, no version bump), is approved and can run alongside it.
+- **Approved, not yet placed in the order:** one small releasing data slice, "D5 tidy" (recommended right after M3b):
   - Relabel the 50 entries in 6 data files that cite tourismcambodia.com or tourismcambodia.org as "Ministry of Tourism" (34 in `places.kh.ext.js`, 6 in `places.kh.js`, 5 in `local.kh.js`, 3 in `itineraries.js`, 1 each in `info.kh.js` and `prices.kh.js`). They become "Tourism Cambodia". tourism.gov.kh is the ministry.
   - Check Long Beach (Sok San) and Long Set Beach (4K Beach) against coordinates. Merge them if they are one beach (a merge needs a `place-merges.js` line in the same commit) before the 4K card gets a citation.
 - The order after that is open. Q3 to Q7, the Bangkok districts and M4 onward are all releasing slices, so they run one at a time.
@@ -204,7 +205,7 @@ Sources: supabase.com/pricing, supabase.com/docs/guides/auth/auth-smtp, resend.c
 - The exchange becomes a sixth bottom tab, "Market".
 - The whole exchange is 18+.
 - The Supabase publishable key is committed in `js/market-config.js` (`docs/EXCHANGE.md` §16).
-- M3 tightens the CSP before sign-in tokens exist (`docs/EXCHANGE.md` §16).
+- M3 tightens the CSP before sign-in tokens exist (`docs/EXCHANGE.md` §16). Done in M3a (PR #124).
 
 ### M0 — Exchange planning session (documents only) — done 2026-10-12, `docs/EXCHANGE.md`
 Write `docs/EXCHANGE.md` with:

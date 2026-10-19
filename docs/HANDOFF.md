@@ -1,38 +1,40 @@
-# Handoff — 2026-10-19 (slice D5, citations: Laos)
+# Handoff — 2026-10-19 (slice M3a: CSP tightening, self-hosted tesseract, check-secrets)
 
 ## Shipped
-- D5 Laos: branch `data/d5-laos`, [PR #122](https://github.com/SamuelLClemens/Mekonging/pull/122), `mk-v0.643.0`. Stacked on PR #121 (D5 Cambodia, merged as 64d67a4). The four D5 country sessions are done; the only D5 leftover is 2 Thai records whose source has no URL.
-  - 38 of the 46 Lao homepage-only places now cite a page about the place, so homepage-only records fall from 59 to 21 (Laos alone: 46 to 8). Each page was opened and checked to name the place; every decision and what it supports is in `scripts/place-citations.json`.
-    - 16 swap a homepage for the cited organisation's own page: 10 Tourism Laos pages (the ministry's Vientiane Capital, Luang Prabang, Luang Namtha and Champasak province pages, which hold one section per attraction), 2 Discover Laos Today pages (Tad Katamtok, Tad Yuang), the Gibbon Experience Classic tour page, TAEC's visitor page, UNESCO's Town of Luang Prabang page and the Plain of Jars Wikivoyage section. Settha Palace also swaps its own site's hotel page. 12 of the 16 also add the place's Wikipedia article.
-    - 6 more add Wikipedia: 4 English articles (Tham Phu Kham for Blue Lagoon 1, Khong Island, Tham Jang, Champasak town) and 2 Lao articles where no English one exists (the Savannakhet Dinosaur Museum, That Ing Hang).
-    - 15 add a Wikivoyage section for stay and food clusters and for places with no article. The Thakhek Buddha Cave adds Tourism Laos's Caves page beside Wikivoyage.
-    - 8 are filed `open` in `scripts/place-citations.json`: the Nong Khiaw bridge food stalls, the Pakse riverside night market, the Bolaven lodges and homestays, Phosy Market, the Don Det sunset-strip kitchens, the Vang Vieng riverside food, the Wat Sok Pa Luang herbal sauna and the Vientiane khao piak sen shops.
-  - The 3 Lao records whose sources had no URL now cite real pages: Nam Song riverside bars (Travelfish Vang Vieng, Wikivoyage Drink), Utopia and the bowling alley (Travelfish Luang Prabang, which names both, and Wikivoyage Drink) and Bor Pen Nyang (its own Travelfish profile, Wikivoyage Vientiane Drink). The Lonely Planet and Travelfish entries without URLs were replaced (owner ruling 2026-10-19).
-  - The 6 unsourced Lao routes have `sources` (unsourced routes fall from 6 to 0): Luang Prabang to Nong Khiaw, Vientiane to Phonsavan, Vientiane to Thakhek, Vientiane to Savannakhet, Pakse to Savannakhet and Pakse to Thakhek. Each cites its 12Go route page and the Wikivoyage Get in section for the route. No operator page was reachable (see Not done).
-  - Two coordinates were fixed from OpenStreetMap (Nominatim answers from this machine):
-    - Nong Fa Crater Lake was 28.3 km west of its lake. It is now 15.1061, 107.4235 (OSM way 276269655; Wikipedia and Wikidata give 15.1075, 107.4244, 0.2 km away).
-    - That Sikhottabong's pin fell in Thailand (Nominatim reverses it to Ban Noi Tai, Nakhon Phanom). It moved 1.8 km to the Lao bank, 17.3502, 104.8071 (OSM node 2791090723, Ban Sikhottabong, 4.9 km south of Thakhek, matching the card's "about 6 km south"). The 10.5 km gap came from comparing the card with the Wikipedia and Wikidata coordinate (17.436, 104.740), which is itself in Nakhon Phanom: that coordinate is the wrong one.
-    - Both records now cite their OSM object as a source.
-  - `check-sources.py` baselines are now 21 and 0. `APP_VERSION` and `CACHE_VERSION` are `mk-v0.643.0`; the manifest was regenerated.
-- Earlier and already merged: D5 Thailand (#117), D5 Vietnam (#118), the Q1 375 px audit (#119, `docs/AUDIT_375.md`), the Bangkok build-out plan (#120) and D5 Cambodia (#121).
+- PR #123 (the release-order docs) was merged by owner approval at the start of this session, as feab64d.
+- M3 is split in two, because the owner steps (SQL, Security Advisor, iPhone) do not fit in one session alongside the rest. M3a: branch `feat/m3a-csp-secrets`, [PR #124](https://github.com/SamuelLClemens/Mekonging/pull/124), commit a749fd8, `mk-v0.644.0`. It ships before any sign-in token can exist on the origin (EXCHANGE §16, item 2).
+  - CSP (`index.html`): `script-src 'self' 'wasm-unsafe-eval'` (unpkg.com and cdn.jsdelivr.net removed); `worker-src 'self' blob:`; cdn.jsdelivr.net removed from `connect-src`. Nothing was added: the §2 Supabase and Turnstile entries go in M3b with the code that uses them.
+  - `lib/tesseract/` (14 MB): tesseract.js 5.1.1, tesseract.js-core 5.1.1 (only the two LSTM cores the worker can pick: SIMD and plain) and the tha, vie, khm and lao `4.0.0_best_int` traineddata. These are the exact files production loaded from unpkg and jsdelivr. Each npm tarball matched the registry's sha512 `dist.integrity`. `lib/tesseract/README.md` records the sources and how to update.
+  - `js/screens/signtranslate.js` passes `workerPath`, `corePath` and `langPath` into `lib/tesseract/`, resolved from `import.meta.url`.
+  - `scripts/check-secrets.py` (EXCHANGE §2): whole-key patterns, the publishable key allowed in `js/market-config.js` only. It scans tracked and untracked, non-ignored files, prints `file:line: kind` and never the value, and self-tests on 6 planted fakes and 4 near-misses before every scan. It is in `scripts/README.md`, `guards.yml` and the CLAUDE.md guard loop (17 guards).
+  - `docs/PLAN.md` release order now records the split.
 
 ## Verified
-Headless Chrome over CDP at 375 x 812 (device scale 2, mobile), fresh profile on `127.0.0.1`, served from the worktree (`mekong-d5la`, port 8749). `document.hidden` was false on every load.
-- 10 cards: That Sikhottabong, Nong Fa Crater Lake, Wat Xieng Thong, Tad Katamtok, Plain of Jars Site 2, Settha Palace, the Savannakhet Dinosaur Museum, TAEC, Bor Pen Nyang and Ban Anou night market.
-  - On each, the place's own Sources sheet (the last of the two `.src-note-btn` buttons) lists the new pages, linked to the recorded URLs. A Tripadvisor homepage renders as a search link, so that href differs from the data file.
-  - The sheet is 343 px wide, with 0 clipped items and 0 page errors. No element passes the 375 px edge except the 1 px `sr-only` helper at -1..0.
-  - The served coordinates of the two fixed cards were read back from the module (17.3502, 104.8071 and 15.1061, 107.4235).
-  - Two screenshots were looked at: Plain of Jars Site 2 (`.../scratchpad/shots-la/card-plain-of-jars-2.png`) and the Vientiane to Savannakhet route sheet (`.../scratchpad/shots-la/route-vte-savannakhet.png`).
-- On `#transport-la`, the six new route cards each show their two sources, linked to the recorded URLs, with 0 errors.
-- Of the 45 distinct new place URLs, 35 return HTTP 200 to curl. The other 10 (9 Tourism Laos pages and UNESCO's) were read in the in-app browser and each names its place. The 3 Travelfish pages were read there too. The six 12Go route pages were read there: each title names the route. The Wikivoyage anchors were checked against the API. The OSM node, the OSM way and the Nong Fa Lake article return 200.
-- `--install` rewrote 38 arrays and a second run changed nothing. The 3 URL-less records and the 2 coordinates were edited by hand.
-- Guards: js-syntax (240 files), imports, lazy-data, preloads, ui-strings, month-arrays, contrast, skins, spacing, place-dupes, undefined, net-gates, sources, place-fields, port-themes and cache-version all pass.
-  - Cache-version's changed-file list is `places.la.ext.js`, `routes.la.js`, `main.js` and `sw.js`.
-  - `jsc -m` parses all four edited JS files (`main.js` and `sw.js` stop at the expected `navigator` and `self` ReferenceErrors).
-  - `jsc -m scripts/validate-jsc.mjs`: 18,097 of 18,097 checks, EXIT 0.
+Headless Chrome over CDP, fresh profile per run, `127.0.0.1`, 375 x 812 at device scale 2. `document.hidden` was false throughout. The driver is `scratchpad/ocr/ocr_e2e.py` (not committed).
+- OCR end to end through the real screen in all four languages. A 640 x 480 JPEG of a two-line sign (exit and toilet) played as Chrome's fake camera (`--use-file-for-fake-video-capture=<file>.mjpeg`), `#signtranslate-<code>` was opened, and Capture was pressed.
+  - Times: vi 6.7 s and km 5.2 s, both read exactly; th 4.6 s, line 1 exact and line 2 without its tone marks; lo 7.3 s, one character off on line 1 and a tone mark lost on line 2. These are the same engine and data as before, so accuracy is unchanged.
+  - Per run: 240 to 254 requests, 0 off-origin, 0 errors or exceptions, 0 `securitypolicyviolation` events. The page and blob-worker sessions were both attached.
+  - Server log: each tesseract file came from `/lib/tesseract/` with HTTP 200.
+- The non-SIMD core, forced through `corePath`, read the Thai sign identically on the bumped tree.
+- Negative control: `Tesseract.recognize()` with tesseract's default jsdelivr paths. The blob worker logged a `script-src 'self' 'wasm-unsafe-eval'` violation and the call rejected with `NetworkError: Failed to execute 'importScripts'`. This proves a blob worker inherits the page's CSP.
+- `check-secrets`:
+  - It passes on the tree (348 text files) and passes `docs/EXCHANGE.md` on its own.
+  - A planted file holding a fake `sb_secret_` key failed (exit 1, `zz-planted-fake.js:3: Supabase secret key`); the file was removed.
+  - A deliberately broken pattern made the self-test refuse to scan (exit 1).
+- All 17 guards pass, as do `check-place-fields --assert`, `port-themes --check` and `check-cache-version`.
+  - The cache-version changed-file list is `index.html`, `js/main.js`, `js/screens/signtranslate.js`, the four `lib/tesseract` scripts and `sw.js`.
+  - `jsc -m` parses `signtranslate.js`, `main.js` and `sw.js`.
+  - `jsc -m scripts/validate-jsc.mjs`: 18,097 of 18,097 checks, exit 0.
+- CI on PR #124: the guards check was pending at handoff.
 
 ## Not done / known issues
-- New in D5 Laos:
+- New in M3a:
+  - M3b is the rest of M3; see its prompt below.
+  - iOS wrapper, unverified: `sync-web.sh` copies `lib/`, so the next wrapper build gains about 14 MB. Inside the wrapper, OCR now loads from `mekong://`. Whether WebKit routes a blob worker's `importScripts` and `fetch` through `WebSchemeHandler` has not been tested. Check Point & translate in the wrapper at its next rebuild.
+  - Offline OCR after first use is untested. The `/lib/` files are cached cache-first by `sw.js`, and tesseract keeps the language data in IndexedDB, but whether the blob worker's `importScripts` is served by the service worker offline was not proven. The screen's help text ("needs the internet for both steps") was left alone.
+  - The `.traineddata.gz` files are not in the service-worker manifest (it hashes code only). A release drops the service-worker copy; the IndexedDB copy stays.
+  - `check-js-syntax` skips `lib/` by design, so the vendored scripts are proven only by running them.
+- Carried from D5 Laos:
   - Homepage-only records: 21 (th 1, vi 7, kh 5, la 8, all filed `open`). Unsourced routes: 0. 2 place records still name a source with no URL: th (`th-ext-rca-royal-city-avenue`, `th-ext-nimmanhaemin-road-bar-scene`). Edit them by hand: `--install` refuses them.
   - Who tourismlaos.org is: its footer names the Tourism Marketing and Promotion Department of the Ministry of Culture and Tourism, so it is the ministry's own site. 46 leftover entries in 8 data files still carry the label "Lao National Tourism Administration" (and 4 say "Ministry of Information, Culture and Tourism"). See Open decision 13.
   - tourismlaos.org's robots.txt disallows every crawler except Googlebot. Nothing was crawled: pages were found through search and read once each in the in-app browser. Its province pages keep the per-attraction text in hidden "Read more" blocks, so read them with `document.body.textContent`, not `innerText`. Two Tourism Laos posts that look like pages about a place are reposts and were not cited as its own pages: the 2023 Patuxay post credits wearelao.com, and the 2025 Black Stupa post credits the Laotian Times.
@@ -86,29 +88,86 @@ Headless Chrome over CDP at 375 x 812 (device scale 2, mobile), fresh profile on
   - Tall portrait photos are uncapped (Phanom Rung is 548 px at 375 px wide).
   - Free places print "฿0 (≈ $0)" instead of "Free".
   - `js/main.js` is 7,558 lines; the ceiling is ~1,500.
-  - The main checkout is at 64d67a4, behind or level with origin. Start every session in a worktree from `origin/feat/scaffold-bangkok-slice`.
+  - The main checkout is at ddf57b9, behind origin. Start every session in a worktree from `origin/feat/scaffold-bangkok-slice`.
   - Pai stays deferred.
 
 ## Open decisions (need the user)
-Closed on 2026-10-19 by the owner (recorded in `docs/PLAN.md`, Bangkok build-out, Owner rulings): 1 (PR #118 is merged), and 2, 3, 4, 5 and 7 accepted. Closed later the same day in a status review (recorded in `docs/PLAN.md`, Release order): 9 (commit the audit driver, Q2), 11 (relabel the 50 "Ministry of Tourism" entries as "Tourism Cambodia") and 12 (the Long Beach coordinates check) accepted, and M3 follows D5 Laos. The numbers below keep their old values.
+Closed on 2026-10-19 by the owner (recorded in `docs/PLAN.md`, Bangkok build-out, Owner rulings): 1 (PR #118 is merged), and 2, 3, 4, 5 and 7 accepted. Closed later the same day in a status review (recorded in `docs/PLAN.md`, Release order): 9 (commit the audit driver, Q2), 11 (relabel the 50 "Ministry of Tourism" entries as "Tourism Cambodia") and 12 (the Long Beach coordinates check) accepted, and M3 follows D5 Laos. M3 was split into M3a (PR #124) and M3b in the M3a session. The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
-8. Legal, for Omer Hanegbi or Omri Siri: the questions in `docs/EXCHANGE.md` §14 (the terms and privacy policy gate M9, and cash swap gates M10) and the dispensary question in `docs/PLAN.md`, Bangkok build-out. The M3 owner actions are done (see the M3 prompt below).
+8. Legal, for Omer Hanegbi or Omri Siri: the questions in `docs/EXCHANGE.md` §14 (the terms and privacy policy gate M9, and cash swap gates M10) and the dispensary question in `docs/PLAN.md`, Bangkok build-out. The M3 owner actions are done (see the M3b prompt below).
 10. Topbar icon spacing: the title column has 102 px, so a 44 px pitch costs title width. Recommended: leave the topbar until Q3 to Q5 are done, then test a wider pitch against the nine longest titles.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos" (data text only; it bumps the version)? The site's footer names the Tourism Marketing and Promotion Department of the Ministry of Culture and Tourism. Recommended: yes, in one small data slice together with decision 11.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins and both were wrong (one 28 km, one in Thailand), and Nominatim resolves coordinates by name from this machine. Recommended: yes, one country per session, starting with Laos's remote sites (waterfalls, caves, lakes), flagging any record more than 2 km from its OSM object. It would also settle decision 12.
-15. Where "D5 tidy" (items 11 and 12) sits after M3, and whether it also takes item 13. Recommended: right after M3, with item 13 folded in, because all three are small data edits.
+15. Where "D5 tidy" (items 11 and 12) sits after M3b, and whether it also takes item 13. Recommended: right after M3b, with item 13 folded in, because all three are small data edits.
 
 ## Next session prompts
-PR #122 is merged (ddf57b9). The next releasing slice stacks on `mk-v0.643.0`. Order (owner, 2026-10-19): M3 next, with Q2 alongside (tools only). The order after M3 is open (decision 15): "D5 tidy" is recommended before Bangkok B1.
+PR #124 (M3a, `mk-v0.644.0`) is open. Order (owner, 2026-10-19): M3 next, now as M3b, stacked on M3a; Q2 can run alongside (tools only). The order after M3b is open (decision 15): "D5 tidy" is recommended before Bangkok B1.
 
-Bangkok B1, Old City and Rattanakosin (the next data slice, after M3; owner rulings are in docs/PLAN.md, Bangkok build-out):
+Exchange M3b, accounts and sign-in: backend and screens (next; stacked on M3a, PR #124). The owner actions were done on 2026-10-19:
+- Supabase Free in Singapore, project ref `xnruspjauhmcrqxmjmxg`.
+- Resend SMTP with the sender `signin@mekonging.com`; DKIM, SPF and DMARC (p=none) are live.
+- A Turnstile widget (Managed, hostname www.mekonging.com) whose secret is in Supabase Attack Protection.
+- Auth settings: the Site URL and the single Redirect URL are `https://www.mekonging.com`; OTP expiry is 900 s; the email rate limit is 30 an hour; both templates follow §5.
+- `/auth/v1/settings` showed email as the only provider, with anonymous sign-in off.
+
+Not verified from here: the Supabase MFA (owner-reported), the schema and RLS defaults chosen at project creation, and a real sign-in email (none sent yet). Every key and password stays in a dashboard or a password manager, never in the repo or in chat.
+
+> Read CLAUDE.md, docs/HANDOFF.md and docs/EXCHANGE.md §2 to §5, §8 (the display-name filter), §16 and §17 (M3). Run /slice for slice M3b: accounts and sign-in, backend and screens (closed beta).
+> **Start.**
+> - Run `git fetch` and `gh pr list --state all`. Confirm PR #124 (M3a) has merged and no PR is open; if #124 is still open, ask the owner whether to merge it first.
+> - Create a worktree from `origin/feat/scaffold-bangkok-slice` (`mk-v0.644.0` or later) on `feat/m3-signin`.
+> - The public values for `js/market-config.js` (project URL, publishable key, Turnstile site key) are in `/Users/zim/Library/Application Support/Claude/side-session-notes/local_45164220-ea74-40e6-851e-808583e5b9f4/m3-owner-setup-values.md`. If that file is missing, stop and ask.
+> - Supabase Free pauses a project after 7 idle days, and keep-awake arrives in M7. If the project is paused, ask the owner to restore it.
+> **Scope.**
+> 1. `supabase/migrations/001_*.sql`:
+>    - `profiles` and `cities`. The cities seed comes from a new `scripts/build-market-cities.py`, which also generates the new file `js/data/market-cities.js` (lazy-data rule).
+>    - The `private` schema: `admins`, `testers`, `settings` (`market_open=false`, `cash_open=false`) and `filter_terms`. Helpers are security definer, stable, with `search_path=''`.
+>    - `market_join`, `market_delete_account`, and the display-name filter terms.
+>    - RLS on every table, and no grants to `anon`. Revoke the default PUBLIC EXECUTE on every function, then grant each one deliberately.
+> 2. `supabase/tests/001_rls.sql`, run in the SQL editor. It impersonates roles with `set local role` and `request.jwt.claims` and prints only PASS or FAIL lines. Cover:
+>    - anon denial;
+>    - cross-user reads and updates;
+>    - the column-restricted UPDATE;
+>    - `market_join` rejecting `adult=false` and filtered names;
+>    - the delete cascade;
+>    - the tester gate while `market_open` is false.
+> 3. `js/market-config.js` and `js/market-api.js`:
+>    - plain fetch, no supabase-js;
+>    - session refresh and error-code mapping;
+>    - fixture mode honoured on 127.0.0.1 and localhost only, with a test proving production hosts ignore it.
+> 4. `#market-signin` and `#market-me` in a new lazy screen module; `main.js` gets registration lines only.
+> 5. The §2 CSP additions: `connect-src https://xnruspjauhmcrqxmjmxg.supabase.co`, plus `script-src` and `frame-src https://challenges.cloudflare.com`. Decide from evidence whether `wss://` is needed before Realtime (M5); M3a deliberately added nothing early.
+> 6. Use a closed-beta `terms_version` and say so in the PR: legal sign-off on the terms gates M9, not this slice.
+> **Pitfalls.**
+> - The iOS wrapper serves the app from `mekong://` (`Mekonging Xcode/Mekonging/Mekonging/ContentView.swift:45`). Neither Turnstile's www-only hostname nor the Supabase redirect can match that origin. Decide what Market sign-in does inside the wrapper (an honest gated state is acceptable), record the decision, and do not edit `Mekonging Xcode/`.
+> - Cloudflare's test sitekeys validate only against the test secret, so 127.0.0.1 cannot complete a real sign-in. Use fixture mode locally; the owner proves the live path on production.
+> - `?signin=<token_hash>`: only script may spend the token, because mail scanners pre-fetch links. Spend it once, then call `history.replaceState` before the router runs. `sw.js` already matches navigations with `ignoreSearch`.
+> - Confirm with the first test send that `{{ .Token }}` and `{{ .TokenHash }}` both render in one email. Read the project's OTP length before fixing the input at six digits.
+> - `mk-market-auth` lives in localStorage, outside `state.js`. Prove that backup, export and Travel circle sharing cannot include it, and define what "reset app data" does to it.
+> - A signed-in non-tester needs a defined, honest state while `market_open` is false.
+> - Every gated path still renders something offline or with the gate shut (`check-net-gates`).
+> - Release bookkeeping: bump `APP_VERSION` and `CACHE_VERSION` together, run `build-sw-manifest.py --write`, and put new exports in new files.
+> **Owner touchpoints** (the owner is not technical):
+> - The owner runs the SQL, reads the Security Advisor, adds their user id to `private.admins` and `private.testers`, and does the iPhone checks.
+> - Give one small step per message, open the exact dashboard page with `open <url>`, and give SQL ready to paste in one block.
+> - Verify each result yourself through the REST API where you can.
+> - Never ask for or accept the secret key, the database password, the Resend key or the Turnstile secret. If one is pasted, stop, say so, and have it rotated.
+> **Done when** (measured, not asserted):
+> - The RLS test prints only PASS in the SQL editor, and the Security Advisor shows no errors.
+> - At 375 px in headless Chrome over CDP (fresh profile, 127.0.0.1, `document.hidden` false), four states render in light and dark: signed out, code entry, signed in (fixture) and offline. The new screens show no horizontal overflow, no console errors and no controls under 44 px.
+> - The owner signs in on the iPhone home-screen app by code and in Safari by link, then deletes a test account. You confirm the deletion through the API.
+> - Every guard (including `check-secrets`), `jsc -m` on each edited JS file and `jsc -m scripts/validate-jsc.mjs` pass.
+> - The PR is open into `feat/scaffold-bangkok-slice` with no AI-attribution lines. Then run /handoff.
+> **Out of scope:** listings, messages, realtime, alerts, push, moderation tooling, cash swap, and the wrapper's code.
+
+Bangkok B1, Old City and Rattanakosin (the next data slice, after M3b; owner rulings are in docs/PLAN.md, Bangkok build-out):
 > Read CLAUDE.md, docs/HANDOFF.md and the "Bangkok build-out" section of docs/PLAN.md. Run /slice for slice B1: Old City and Rattanakosin.
 > Count Bangkok's records by category first (40 of 293 Thai places). Run `check-place-dupes.py` before adding: a name collision silently deletes travellers' saved data.
 > Add the district's records in a new file, `js/data/places.th.bkk.rattanakosin.js`, with one loader line in `js/data/regions.js` next to `PLACES_TH` and `PLACES_TH_EXT`. Ids are `th-bkk-<slug>`. Cover the categories in the plan that fit the district. Each record ships complete: Thai-script `localName`, page-level `sources` (the venue's own page or its Wikipedia article first), `hours`, a price tier, `coords` and `tips`; a photo only from the place's own Wikipedia article. Hold dispensaries out.
 > Done when: Bangkok records for the district are counted by category before and after; every new record passes `check-place-fields.py --assert`; 10 sample cards show correctly at 375 px in headless Chrome over CDP; all guards and `jsc -m scripts/validate-jsc.mjs` pass; the pack size is reported before and after if photos were added; the PR is open into `feat/scaffold-bangkok-slice`.
 > Out of scope: the other districts, dispensaries, D6 fields beyond the `afterDark` contract.
 
-Q2, commit the audit driver (approved; tools only, no version bump, so it can run alongside M3):
+Q2, commit the audit driver (approved; tools only, no version bump, so it can run alongside M3b):
 > Read CLAUDE.md, docs/HANDOFF.md and docs/AUDIT_375.md (Method and limits; Proposed fix slices). Run /slice for slice Q2: add the driver under `tools/audit-375/`.
 > The files are in `/Users/zim/Library/Application Support/Claude/side-session-notes/local_45164220-ea74-40e6-851e-808583e5b9f4/q1-audit-driver/`: `audit375.py`, `audit375-page.js`, `report375.py`, `listroutes.py`, `redirects.py`, `shot.py`. If that folder is gone, rebuild them from the Method section.
 > Make one command print the headline table and the per-route tables for both themes. It must refuse a load where `document.hidden` is true, and keep the display awake (`caffeinate -d`).
@@ -117,20 +176,7 @@ Q2, commit the audit driver (approved; tools only, no version bump, so it can ru
 
 Q3 to Q8 follow in the shape set out under Proposed fix slices in `docs/AUDIT_375.md`. Q3 to Q7 change shipped files, so they are stacked, one at a time.
 
-Exchange M3 (next; D5 Laos merged as PR #122). Steps 1 to 5 below were done by the owner on 2026-10-19. The public values for `js/market-config.js` (project URL, publishable key, Turnstile site key) are in `m3-owner-setup-values.md`, in the same shared notes folder as the Q2 driver. Not verified from here: the Supabase MFA (owner-reported) and a real sign-in email (none sent yet). Every key and password stays in a dashboard or a password manager, never in the repo or in chat:
-1. Create the Supabase project (Free, Singapore) and turn on MFA for the Supabase account.
-2. Create the Resend account. Verify mekonging.com with Resend's DNS records in Cloudflare. Enter the Resend SMTP details in Supabase Auth.
-3. Create a Turnstile widget for www.mekonging.com in Cloudflare. Enter its secret in Supabase's captcha settings.
-4. Apply the Auth settings and email templates in `docs/EXCHANGE.md` §5.
-5. Send the project URL, the publishable key and the Turnstile site key (all public) for `js/market-config.js`.
-6. Run each migration and RLS test in the SQL editor as the slice delivers them. Add the owner's own account to `private.admins` and `private.testers`.
-
-> Read CLAUDE.md, docs/HANDOFF.md and docs/EXCHANGE.md §3 to §5, §16 and §17 (M3). Run /slice for slice M3: accounts and sign-in (closed beta). Confirm the owner actions above are done first; if the project URL and publishable key are missing, stop and ask.
-> Scope: migration 001 (`profiles`, `cities` seeded, the `private` schema and helpers, `market_join`, `market_delete_account`, display-name filter terms); the `check-secrets` guard, `js/market-config.js` and `js/market-api.js` (with fixture mode); sign-in and account screens under `#market-signin` and `#market-me`; the CSP changes, Turnstile, and the CSP tightening in §16.
-> Done when: the RLS test prints only PASS and the Security Advisor shows no errors; at 375 px the signed-out, code-entry, signed-in and offline states render; the owner signs in on an iPhone home-screen app by code and in Safari by link, then deletes a test account; `check-secrets` fails on a planted fake secret key and passes on the tree, including `docs/EXCHANGE.md`.
-> Out of scope: listings, messages, alerts, moderation tooling, cash swap.
-
-D5 tidy, Cambodia source labels and the Long Beach check (approved 2026-10-19; a small releasing data slice, recommended right after M3):
+D5 tidy, Cambodia source labels and the Long Beach check (approved 2026-10-19; a small releasing data slice, recommended right after M3b):
 > Read CLAUDE.md, docs/HANDOFF.md and the Release order and D5 sections of docs/PLAN.md. Run /slice for slice D5 tidy.
 > Relabel the 50 entries in 6 data files that cite tourismcambodia.com or tourismcambodia.org as "Ministry of Tourism" to "Tourism Cambodia". Change no URL. Treat tourism.gov.kh as the ministry.
 > Compare the coordinates of Long Beach (Sok San) and Long Set Beach (4K Beach) with Wikivoyage's Koh Rong section and the island's map. If they are one beach, merge the records with a `js/data/place-merges.js` line in the same commit, and give the merged card a citation.
