@@ -114,6 +114,8 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - For route sweeps, import `scripts/route-sweep.js` (never paste it: the CSP forbids eval) and wait for a
   MutationObserver hit after each navigation before reading the DOM.
 - Route-graph work: test in a brand-new tab loaded directly at `#route` (the graph memoizes on first call).
+- Headless Chrome pages turn `document.hidden` when macOS display sleep starts mid-run, and a hidden pass undercounts controls (`#settings` read 11 against 111). Keep the display awake and assert `document.hidden === false` for every route (Q1, `docs/AUDIT_375.md`).
+- `html` and `body` set `overflow-x: hidden`, so `scrollWidth - clientWidth` is always 0. Measure overflow from box edges, not from scroll width. `route-sweep.js` reports false zero-size controls on `content-visibility` cards until they are scrolled into view.
 
 ## Docs map (most are history; read only what the task names)
 - `scripts/README.md`: the guards. `DESIGN_SYSTEM.md` and `VISUAL_DIRECTION_PROMPT.md`: theme, all four phases merged.

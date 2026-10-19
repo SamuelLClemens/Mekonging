@@ -65,6 +65,7 @@ Other gaps:
 - Load every route in `js/nav-groups.js` in headless Chrome. Use `launch` and `CDP` from `tools/style-tiles/capture.py`, in Mekong Retro light and dark.
 - For each route, record: horizontal overflow, controls under 44 × 44 px, console errors, contrast failures, and controls covered by overlays. The journey map's credits panel is a known case of the last one.
 - Write the results to `docs/AUDIT_375.md`.
+- **Status (2026-10-19):** done, documents only: `docs/AUDIT_375.md` covers 77 routes in Mekong Retro light and dark (154 cold loads). No horizontal overflow and no failed request. The findings are tap targets (66 routes with body controls under 44 px; topbar icons 30 to 36 px wide), contrast (27 routes in light, 6 in dark) and the map credits panel (open as loaded; covers 16.6% of the journey map and its first pin). Its last section proposes the follow-up slices Q2 (commit the audit driver, first) to Q8.
 
 ### D3 — Place photos (one session per country: th 247, vi 202, kh 131, la 163)
 - **Status, Thailand:** PR #109 (`mk-v0.632.0`): 47 photos, so Thailand has 93 of 293. Of the 247 gaps, 186 have no article of their own and 14 have an unusable lead image. Every decision is in `scripts/place-photo-articles.json`.
