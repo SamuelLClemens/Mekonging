@@ -258,7 +258,7 @@ begin
       when others then lines := lines || ('FAIL ' || 'anon: cities denied' || ' [' || sqlerrm || ']');
     end;
     begin
-      execute 'insert into public.listings (kind, intent, category, city, starts_on, ends_on, title) values (''item'', ''give'', ''toys'', ''th-bangkok'', private.today(), private.today() + 1, ''Anon toy'')';
+      execute 'insert into public.listings (kind, intent, category, city, starts_on, ends_on, title) values (''item'', ''give'', ''toys'', ''th-bangkok'', (now() at time zone ''Asia/Bangkok'')::date, (now() at time zone ''Asia/Bangkok'')::date + 1, ''Anon toy'')';
       lines := lines || ('FAIL ' || 'anon: cannot post a listing' || ' (allowed)');
     exception
       when insufficient_privilege then lines := lines || ('PASS ' || 'anon: cannot post a listing');
@@ -367,21 +367,21 @@ begin
       when others then lines := lines || ('FAIL ' || 'read: name_changes denied' || ' [' || sqlerrm || ']');
     end;
     begin
-      execute 'insert into public.listings (owner, kind, intent, category, city, starts_on, ends_on, title) values (gen_random_uuid(), ''item'', ''give'', ''toys'', ''th-bangkok'', private.today(), private.today() + 1, ''Spoofed owner'')';
+      execute 'insert into public.listings (owner, kind, intent, category, city, starts_on, ends_on, title) values (gen_random_uuid(), ''item'', ''give'', ''toys'', ''th-bangkok'', (now() at time zone ''Asia/Bangkok'')::date, (now() at time zone ''Asia/Bangkok'')::date + 1, ''Spoofed owner'')';
       lines := lines || ('FAIL ' || 'write: a client cannot set owner on insert' || ' (allowed)');
     exception
       when insufficient_privilege then lines := lines || ('PASS ' || 'write: a client cannot set owner on insert');
       when others then lines := lines || ('FAIL ' || 'write: a client cannot set owner on insert' || ' [' || sqlerrm || ']');
     end;
     begin
-      execute 'insert into public.listings (status, kind, intent, category, city, starts_on, ends_on, title) values (''hidden'', ''item'', ''give'', ''toys'', ''th-bangkok'', private.today(), private.today() + 1, ''Spoofed status'')';
+      execute 'insert into public.listings (status, kind, intent, category, city, starts_on, ends_on, title) values (''hidden'', ''item'', ''give'', ''toys'', ''th-bangkok'', (now() at time zone ''Asia/Bangkok'')::date, (now() at time zone ''Asia/Bangkok'')::date + 1, ''Spoofed status'')';
       lines := lines || ('FAIL ' || 'write: a client cannot set status on insert' || ' (allowed)');
     exception
       when insufficient_privilege then lines := lines || ('PASS ' || 'write: a client cannot set status on insert');
       when others then lines := lines || ('FAIL ' || 'write: a client cannot set status on insert' || ' [' || sqlerrm || ']');
     end;
     begin
-      execute 'insert into public.listings (report_weight, kind, intent, category, city, starts_on, ends_on, title) values (0, ''item'', ''give'', ''toys'', ''th-bangkok'', private.today(), private.today() + 1, ''Spoofed weight'')';
+      execute 'insert into public.listings (report_weight, kind, intent, category, city, starts_on, ends_on, title) values (0, ''item'', ''give'', ''toys'', ''th-bangkok'', (now() at time zone ''Asia/Bangkok'')::date, (now() at time zone ''Asia/Bangkok'')::date + 1, ''Spoofed weight'')';
       lines := lines || ('FAIL ' || 'write: a client cannot set report_weight on insert' || ' (allowed)');
     exception
       when insufficient_privilege then lines := lines || ('PASS ' || 'write: a client cannot set report_weight on insert');
@@ -438,175 +438,175 @@ begin
 
     -- Kind, intent, field, price, window and length rules. Each is refused with a plain code.
     begin
-      execute ins || $v$('item','offer','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',null,null,null,null,null)$v$;
+      execute ins || $v$('item','offer','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'kind: an item cannot be offered' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_intent' then 'PASS ' || 'kind: an item cannot be offered' else 'FAIL ' || 'kind: an item cannot be offered' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','give',null,'th-bangkok',null,private.today(),private.today()+1,'Lunch walk','',null,null,4,null,'food')$v$;
+      execute ins || $v$('meetup','give',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lunch walk','',null,null,4,null,'food')$v$;
       lines := lines || ('FAIL ' || 'kind: a meetup cannot be given' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_intent' then 'PASS ' || 'kind: a meetup cannot be given' else 'FAIL ' || 'kind: a meetup cannot be given' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','join',null,'th-bangkok','th-pai',private.today(),private.today()+1,'Lift north','',null,null,2,null,null)$v$;
+      execute ins || $v$('ride','join',null,'th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lift north','',null,null,2,null,null)$v$;
       lines := lines || ('FAIL ' || 'kind: a ride cannot be joined' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_intent' then 'PASS ' || 'kind: a ride cannot be joined' else 'FAIL ' || 'kind: a ride cannot be joined' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('room','sell',null,'th-bangkok',null,private.today(),private.today()+5,'Spare room','',null,null,null,'private',null)$v$;
+      execute ins || $v$('room','sell',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Spare room','',null,null,null,'private',null)$v$;
       lines := lines || ('FAIL ' || 'kind: a room cannot be sold' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_intent' then 'PASS ' || 'kind: a room cannot be sold' else 'FAIL ' || 'kind: a room cannot be sold' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok','th-pai',private.today(),private.today()+5,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'fields: an item with a second city' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_fields' then 'PASS ' || 'fields: an item with a second city' else 'FAIL ' || 'fields: an item with a second city' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',0,null,2,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',0,null,2,null,null)$v$;
       lines := lines || ('FAIL ' || 'fields: an item with seats' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_fields' then 'PASS ' || 'fields: an item with seats' else 'FAIL ' || 'fields: an item with seats' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join','toys','th-bangkok',null,private.today(),private.today()+1,'Lunch walk','',null,null,4,null,'food')$v$;
+      execute ins || $v$('meetup','join','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lunch walk','',null,null,4,null,'food')$v$;
       lines := lines || ('FAIL ' || 'fields: a meetup with a category' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_fields' then 'PASS ' || 'fields: a meetup with a category' else 'FAIL ' || 'fields: a meetup with a category' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('room','offer',null,'th-bangkok',null,private.today(),private.today()+5,'Spare room','',null,null,null,'private','food')$v$;
+      execute ins || $v$('room','offer',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Spare room','',null,null,null,'private','food')$v$;
       lines := lines || ('FAIL ' || 'fields: a room with an activity' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_fields' then 'PASS ' || 'fields: a room with an activity' else 'FAIL ' || 'fields: a room with an activity' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','offer','toys','th-bangkok','th-pai',private.today(),private.today()+1,'Lift north','',null,null,2,null,null)$v$;
+      execute ins || $v$('ride','offer','toys','th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lift north','',null,null,2,null,null)$v$;
       lines := lines || ('FAIL ' || 'fields: a ride with a category' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'kind_fields' then 'PASS ' || 'fields: a ride with a category' else 'FAIL ' || 'fields: a ride with a category' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give',null,'th-bangkok',null,private.today(),private.today()+5,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'category: an item needs one' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'category_invalid' then 'PASS ' || 'category: an item needs one' else 'FAIL ' || 'category: an item needs one' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','weapons','th-bangkok',null,private.today(),private.today()+5,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','weapons','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'category: an unknown one is refused' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm like '%"listings_category"%' then 'PASS ' || 'category: an unknown one is refused' else 'FAIL ' || 'category: an unknown one is refused' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+1,'Lunch walk','',null,null,4,null,null)$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lunch walk','',null,null,4,null,null)$v$;
       lines := lines || ('FAIL ' || 'activity: a meetup needs one' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'activity_invalid' then 'PASS ' || 'activity: a meetup needs one' else 'FAIL ' || 'activity: a meetup needs one' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+1,'Lunch walk','',null,null,1,null,'food')$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lunch walk','',null,null,1,null,'food')$v$;
       lines := lines || ('FAIL ' || 'seats: a meetup of one' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'seats_invalid' then 'PASS ' || 'seats: a meetup of one' else 'FAIL ' || 'seats: a meetup of one' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+1,'Lunch walk','',null,null,null,null,'food')$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lunch walk','',null,null,null,null,'food')$v$;
       lines := lines || ('FAIL ' || 'seats: a meetup without a group size' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'seats_invalid' then 'PASS ' || 'seats: a meetup without a group size' else 'FAIL ' || 'seats: a meetup without a group size' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','offer',null,'th-bangkok','th-pai',private.today(),private.today()+1,'Lift north','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','offer',null,'th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lift north','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'seats: a ride offer needs seats' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'seats_invalid' then 'PASS ' || 'seats: a ride offer needs seats' else 'FAIL ' || 'seats: a ride offer needs seats' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('room','offer',null,'th-bangkok',null,private.today(),private.today()+5,'Spare room','',null,null,null,null,null)$v$;
+      execute ins || $v$('room','offer',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Spare room','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'room: a room needs a type' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'room_type_invalid' then 'PASS ' || 'room: a room needs a type' else 'FAIL ' || 'room: a room needs a type' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','seek',null,'th-bangkok',null,private.today(),private.today()+1,'Lift north','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','seek',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lift north','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'ride: a ride needs a destination' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'to_city_invalid' then 'PASS ' || 'ride: a ride needs a destination' else 'FAIL ' || 'ride: a ride needs a destination' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','seek',null,'th-bangkok','th-bangkok',private.today(),private.today()+1,'Lift north','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','seek',null,'th-bangkok','th-bangkok',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lift north','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'ride: the destination cannot be the start' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'to_city_invalid' then 'PASS ' || 'ride: the destination cannot be the start' else 'FAIL ' || 'ride: the destination cannot be the start' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','seek',null,'th-bangkok','xx-nowhere',private.today(),private.today()+1,'Lift north','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','seek',null,'th-bangkok','xx-nowhere',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Lift north','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'ride: an unknown destination' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'to_city_invalid' then 'PASS ' || 'ride: an unknown destination' else 'FAIL ' || 'ride: an unknown destination' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','xx-nowhere',null,private.today(),private.today()+5,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','xx-nowhere',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'city: an unknown city' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'city_invalid' then 'PASS ' || 'city: an unknown city' else 'FAIL ' || 'city: an unknown city' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('cash','offer',null,'th-bangkok',null,private.today(),private.today()+5,'Swap baht','',null,null,null,null,null)$v$;
+      execute ins || $v$('cash','offer',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Swap baht','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'cash: closed until legal clears it' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'cash_closed' then 'PASS ' || 'cash: closed until legal clears it' else 'FAIL ' || 'cash: closed until legal clears it' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',null,null,null,null,null)$v$;
+      execute ins || $v$('item','sell','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: a sale needs a price' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'price_invalid' then 'PASS ' || 'price: a sale needs a price' else 'FAIL ' || 'price: a sale needs a price' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',0,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',0,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: a sale at zero' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'price_invalid' then 'PASS ' || 'price: a sale at zero' else 'FAIL ' || 'price: a sale at zero' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',100,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: a gift with a price' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'price_invalid' then 'PASS ' || 'price: a gift with a price' else 'FAIL ' || 'price: a gift with a price' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','','NaN'::numeric,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','','NaN'::numeric,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: NaN is not a price' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'price_invalid' then 'PASS ' || 'price: NaN is not a price' else 'FAIL ' || 'price: NaN is not a price' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',-5,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',-5,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: a negative price' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'price_invalid' then 'PASS ' || 'price: a negative price' else 'FAIL ' || 'price: a negative price' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',100,null,null,null,null)$v$;
+      execute ins || $v$('item','sell','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',100,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: an amount without a currency' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'currency_invalid' then 'PASS ' || 'price: an amount without a currency' else 'FAIL ' || 'price: an amount without a currency' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','',100,'XXX',null,null,null)$v$;
+      execute ins || $v$('item','sell','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','',100,'XXX',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'price: an unknown currency' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'currency_invalid' then 'PASS ' || 'price: an unknown currency' else 'FAIL ' || 'price: an unknown currency' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today()+5,private.today()+2,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date+5,(now() at time zone 'Asia/Bangkok')::date+2,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'window: ends before it starts' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'window_order' then 'PASS ' || 'window: ends before it starts' else 'FAIL ' || 'window: ends before it starts' || ' [got ' || sqlerrm || ']' end;
@@ -618,67 +618,67 @@ begin
       lines := lines || case when sqlerrm = 'dates_required' then 'PASS ' || 'window: no dates' else 'FAIL ' || 'window: no dates' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today()-5,private.today()-1,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date-5,(now() at time zone 'Asia/Bangkok')::date-1,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'window: already over' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'window_past' then 'PASS ' || 'window: already over' else 'FAIL ' || 'window: already over' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today()+91,private.today()+92,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date+91,(now() at time zone 'Asia/Bangkok')::date+92,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'window: starts more than 90 days out' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'starts_too_late' then 'PASS ' || 'window: starts more than 90 days out' else 'FAIL ' || 'window: starts more than 90 days out' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+30,'Toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+30,'Toy box','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'window: an item over 30 days' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'window_too_long' then 'PASS ' || 'window: an item over 30 days' else 'FAIL ' || 'window: an item over 30 days' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+7,'Lunch walk','',null,null,4,null,'food')$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+7,'Lunch walk','',null,null,4,null,'food')$v$;
       lines := lines || ('FAIL ' || 'window: a meetup over 7 days' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'window_too_long' then 'PASS ' || 'window: a meetup over 7 days' else 'FAIL ' || 'window: a meetup over 7 days' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('room','offer',null,'th-bangkok',null,private.today(),private.today()+30,'Spare room','',null,null,null,'private',null)$v$;
+      execute ins || $v$('room','offer',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+30,'Spare room','',null,null,null,'private',null)$v$;
       lines := lines || ('FAIL ' || 'window: a room over 30 days' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'window_too_long' then 'PASS ' || 'window: a room over 30 days' else 'FAIL ' || 'window: a room over 30 days' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','seek',null,'th-bangkok','th-pai',private.today(),private.today()+3,'Lift north','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','seek',null,'th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Lift north','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'window: a ride over 3 days' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'window_too_long' then 'PASS ' || 'window: a ride over 3 days' else 'FAIL ' || 'window: a ride over 3 days' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'ab','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'ab','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'text: a title of 2 characters' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'title_length' then 'PASS ' || 'text: a title of 2 characters' else 'FAIL ' || 'text: a title of 2 characters' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,repeat('a',81),'',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,repeat('a',81),'',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'text: a title of 81 characters' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'title_length' then 'PASS ' || 'text: a title of 81 characters' else 'FAIL ' || 'text: a title of 81 characters' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box',repeat('b',401),0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box',repeat('b',401),0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'text: a body of 401 characters' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'body_length' then 'PASS ' || 'text: a body of 401 characters' else 'FAIL ' || 'text: a body of 401 characters' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Bad' || chr(7) || 'title','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Bad' || chr(7) || 'title','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'text: a control character in a title' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'title_invalid' then 'PASS ' || 'text: a control character in a title' else 'FAIL ' || 'text: a control character in a title' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box','Bad' || chr(7) || 'body',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box','Bad' || chr(7) || 'body',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'text: a control character in a body' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'body_invalid' then 'PASS ' || 'text: a control character in a body' else 'FAIL ' || 'text: a control character in a body' || ' [got ' || sqlerrm || ']' end;
@@ -686,61 +686,61 @@ begin
 
     -- The edges that are allowed (each insert is rolled back at once).
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+29,'Edge toy thirty','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+29,'Edge toy thirty','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: an item window of exactly 30 days' else 'FAIL ' || 'edge: an item window of exactly 30 days' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+6,'Edge walk seven','',null,null,2,null,'sights')$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+6,'Edge walk seven','',null,null,2,null,'sights')$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a meetup window of exactly 7 days' else 'FAIL ' || 'edge: a meetup window of exactly 7 days' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','offer',null,'th-bangkok','th-pai',private.today(),private.today()+2,'Edge lift three','',300,'THB',3,null,null)$v$;
+      execute ins || $v$('ride','offer',null,'th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+2,'Edge lift three','',300,'THB',3,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a ride window of exactly 3 days' else 'FAIL ' || 'edge: a ride window of exactly 3 days' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('room','offer',null,'th-bangkok',null,private.today(),private.today()+29,'Edge room thirty','',9000,'THB',null,'private',null)$v$;
+      execute ins || $v$('room','offer',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+29,'Edge room thirty','',9000,'THB',null,'private',null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a room window of exactly 30 days' else 'FAIL ' || 'edge: a room window of exactly 30 days' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today()+90,private.today()+90,'Edge toy ninety','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date+90,(now() at time zone 'Asia/Bangkok')::date+90,'Edge toy ninety','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a start exactly 90 days out' else 'FAIL ' || 'edge: a start exactly 90 days out' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,repeat('t',80),repeat('b',400),0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,repeat('t',80),repeat('b',400),0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a title of 80 and a body of 400 characters' else 'FAIL ' || 'edge: a title of 80 and a body of 400 characters' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'abc','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'abc','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a title of 3 characters' else 'FAIL ' || 'edge: a title of 3 characters' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','trade','toys','th-bangkok',null,private.today(),private.today()+5,'Edge trade toy','',null,null,null,null,null)$v$;
+      execute ins || $v$('item','trade','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Edge trade toy','',null,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a trade without a price' else 'FAIL ' || 'edge: a trade without a price' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+1,'Edge walk eight','',null,null,8,null,'cowork')$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Edge walk eight','',null,null,8,null,'cowork')$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a meetup with a group size of 8' else 'FAIL ' || 'edge: a meetup with a group size of 8' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','seek',null,'th-bangkok','th-pai',private.today(),private.today()+1,'Edge lift seek','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','seek',null,'th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'Edge lift seek','',null,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'edge: a ride request without seats' else 'FAIL ' || 'edge: a ride request without seats' || ' [' || sqlerrm || ']' end;
@@ -759,20 +759,20 @@ begin
       'Find me @samtravel', 'My line id is sam', 'Message me on WhatsApp', 'Message me on Telegram', 'Message me on Whats App', 'Message me on Wh@tsapp', 'L1ne id: sam', 'Zalo me'];
     for i in 1 .. array_length(bodies, 1) loop
       begin
-        execute format(ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box',%L,0,null,null,null,null)$v$, bodies[i]);
+        execute format(ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box',%L,0,null,null,null,null)$v$, bodies[i]);
         lines := lines || ('FAIL ' || 'contact: ' || labels[i] || ' in a body' || ' (accepted)');
       exception when others then
         lines := lines || case when sqlerrm = 'contact_details' then 'PASS ' || 'contact: ' || labels[i] || ' in a body' else 'FAIL ' || 'contact: ' || labels[i] || ' in a body' || ' [got ' || sqlerrm || ']' end;
       end;
     end loop;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Call 0812345678 now','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Call 0812345678 now','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'contact: a phone number in a title' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'contact_details' then 'PASS ' || 'contact: a phone number in a title' else 'FAIL ' || 'contact: a phone number in a title' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Mail sam@example.com','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Mail sam@example.com','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'contact: an email in a title' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'contact_details' then 'PASS ' || 'contact: an email in a title' else 'FAIL ' || 'contact: an email in a title' || ' [got ' || sqlerrm || ']' end;
@@ -784,7 +784,7 @@ begin
       'Gunnar tent from Iceland', 'Pickup @8am, meet @ the pier', 'Tent for 3.5 persons'];
     for i in 1 .. array_length(bodies, 1) loop
       begin
-        execute format(ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Toy box',%L,0,null,null,null,null)$v$, bodies[i]);
+        execute format(ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Toy box',%L,0,null,null,null,null)$v$, bodies[i]);
         raise exception using message = 'ok_rollback';
       exception when others then
         lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'contact: an ordinary body passes (' || left(bodies[i], 40) || ')' else 'FAIL ' || 'contact: an ordinary body passes (' || left(bodies[i], 40) || ')' || ' [' || sqlerrm || ']' end;
@@ -795,7 +795,7 @@ begin
     n := 0; dbg := null;
     foreach t in array blockterms loop
       begin
-        execute format(ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,%L,'',0,null,null,null,null)$v$, 'Selling my ' || t || ' today');
+        execute format(ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,%L,'',0,null,null,null,null)$v$, 'Selling my ' || t || ' today');
         n := n + 1; dbg := left(coalesce(dbg || ', ', '') || t, 200);
         raise exception using message = 'ok_rollback';
       exception when others then
@@ -808,7 +808,7 @@ begin
     n := 0; dbg := null;
     foreach t in array blockterms loop
       begin
-        execute format(ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Nice thing',%L,0,null,null,null,null)$v$, 'I am selling my ' || t || ' and more');
+        execute format(ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Nice thing',%L,0,null,null,null,null)$v$, 'I am selling my ' || t || ' and more');
         n := n + 1; dbg := left(coalesce(dbg || ', ', '') || t, 200);
         raise exception using message = 'ok_rollback';
       exception when others then
@@ -824,20 +824,20 @@ begin
     bodies := array['WEED', 'W33d', 'we' || chr(8203) || 'ed', 'Weeeeed', U&'\0E23\0E49\0E32\0E19\0E01\0E31\0E0D\0E0A\0E32\0E14\0E35', U&'C\1EA6N SA', U&'b\1ED3 \0111\00E0'];
     for i in 1 .. array_length(bodies, 1) loop
       begin
-        execute format(ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,%L,'',0,null,null,null,null)$v$, 'Fresh ' || bodies[i]);
+        execute format(ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,%L,'',0,null,null,null,null)$v$, 'Fresh ' || bodies[i]);
         lines := lines || ('FAIL ' || 'text: an evasion is caught (' || labels[i] || ')' || ' (accepted)');
       exception when others then
         lines := lines || case when sqlerrm = 'text_rejected' then 'PASS ' || 'text: an evasion is caught (' || labels[i] || ')' else 'FAIL ' || 'text: an evasion is caught (' || labels[i] || ')' || ' [got ' || sqlerrm || ']' end;
       end;
     end loop;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Gunnar tent','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Gunnar tent','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'text: a name that holds a block term passes (Gunnar)' else 'FAIL ' || 'text: a name that holds a block term passes (Gunnar)' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Admin guide book','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Admin guide book','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'text: display-name-only terms are fine in a listing (admin)' else 'FAIL ' || 'text: display-name-only terms are fine in a listing (admin)' || ' [' || sqlerrm || ']' end;
@@ -968,7 +968,7 @@ begin
     -- ==== the gate for posting: a non-tester, a new account ====
     perform set_config('request.jwt.claims', json_build_object('sub', stranger, 'role', 'authenticated')::text, true); perform set_config('role', 'authenticated', true);
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Stranger toy','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Stranger toy','',0,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'gate: a non-tester cannot post while the market is closed' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'not_member' then 'PASS ' || 'gate: a non-tester cannot post while the market is closed' else 'FAIL ' || 'gate: a non-tester cannot post while the market is closed' || ' [got ' || sqlerrm || ']' end;
@@ -976,25 +976,25 @@ begin
     perform set_config('role', owner_role, true);
     perform set_config('request.jwt.claims', json_build_object('sub', newbie, 'role', 'authenticated')::text, true); perform set_config('role', 'authenticated', true);
     begin
-      execute ins || $v$('meetup','join',null,'th-bangkok',null,private.today(),private.today()+1,'New walk','',null,null,4,null,'food')$v$;
+      execute ins || $v$('meetup','join',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'New walk','',null,null,4,null,'food')$v$;
       lines := lines || ('FAIL ' || 'new account: no meetup in the first 24 hours' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'account_too_new' then 'PASS ' || 'new account: no meetup in the first 24 hours' else 'FAIL ' || 'new account: no meetup in the first 24 hours' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('room','offer',null,'th-bangkok',null,private.today(),private.today()+5,'New room','',null,null,null,'private',null)$v$;
+      execute ins || $v$('room','offer',null,'th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'New room','',null,null,null,'private',null)$v$;
       lines := lines || ('FAIL ' || 'new account: no room in the first 24 hours' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'account_too_new' then 'PASS ' || 'new account: no room in the first 24 hours' else 'FAIL ' || 'new account: no room in the first 24 hours' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('ride','seek',null,'th-bangkok','th-pai',private.today(),private.today()+1,'New lift','',null,null,null,null,null)$v$;
+      execute ins || $v$('ride','seek',null,'th-bangkok','th-pai',(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+1,'New lift','',null,null,null,null,null)$v$;
       lines := lines || ('FAIL ' || 'new account: no ride in the first 24 hours' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'account_too_new' then 'PASS ' || 'new account: no ride in the first 24 hours' else 'FAIL ' || 'new account: no ride in the first 24 hours' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'New toy box','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'New toy box','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'new account: an item is fine' else 'FAIL ' || 'new account: an item is fine' || ' [' || sqlerrm || ']' end;
@@ -1008,12 +1008,12 @@ begin
         insert into public.listings (kind, intent, category, city, starts_on, ends_on, title, price_amount, price_currency)
         values ('item', 'sell', 'books', 'th-bangkok', d0, d0 + 3, 'Rate old book ' || i, 100, 'THB');
       end loop;
-      lines := lines || 'PASS rate: an established account posts 5 in a day';
+      lines := lines || 'PASS rate: an established account posts 5 in a day'::text;
     exception when others then
       lines := lines || ('FAIL rate: an established account could not post 5 in a day [' || sqlerrm || ']');
     end;
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'Rate old book six','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Rate old book six','',100,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'rate: the 6th post in a day' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'rate_limited:post' then 'PASS ' || 'rate: the 6th post in a day' else 'FAIL ' || 'rate: the 6th post in a day' || ' [got ' || sqlerrm || ']' end;
@@ -1025,12 +1025,12 @@ begin
         insert into public.listings (kind, intent, category, city, starts_on, ends_on, title, price_amount, price_currency)
         values ('item', 'sell', 'books', 'th-bangkok', d0, d0 + 3, 'Rate new book ' || i, 100, 'THB');
       end loop;
-      lines := lines || 'PASS rate: a new account posts 2 in a day';
+      lines := lines || 'PASS rate: a new account posts 2 in a day'::text;
     exception when others then
       lines := lines || ('FAIL rate: a new account could not post 2 in a day [' || sqlerrm || ']');
     end;
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'Rate new book three','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Rate new book three','',100,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'rate: a new account''s 3rd post in a day' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'rate_limited:post' then 'PASS ' || 'rate: a new account''s 3rd post in a day' else 'FAIL ' || 'rate: a new account''s 3rd post in a day' || ' [got ' || sqlerrm || ']' end;
@@ -1044,7 +1044,7 @@ begin
     from generate_series(1, 2) as g;
     perform set_config('request.jwt.claims', json_build_object('sub', open_old, 'role', 'authenticated')::text, true); perform set_config('role', 'authenticated', true);
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'Open old ten','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Open old ten','',100,'THB',null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'open: the 10th open listing is accepted for an established account' else 'FAIL ' || 'open: the 10th open listing is accepted for an established account' || ' [' || sqlerrm || ']' end;
@@ -1052,7 +1052,7 @@ begin
     insert into public.listings (kind, intent, category, city, starts_on, ends_on, title, price_amount, price_currency)
     values ('item', 'sell', 'books', 'th-bangkok', d0, d0 + 3, 'Open old ten', 100, 'THB');
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'Open old eleven','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Open old eleven','',100,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'open: the 11th open listing is refused' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'rate_limited:open' then 'PASS ' || 'open: the 11th open listing is refused' else 'FAIL ' || 'open: the 11th open listing is refused' || ' [got ' || sqlerrm || ']' end;
@@ -1062,7 +1062,7 @@ begin
     insert into public.listings (kind, intent, category, city, starts_on, ends_on, title, price_amount, price_currency)
     values ('item', 'sell', 'books', 'th-bangkok', d0, d0 + 3, 'Open new three', 100, 'THB');
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'Open new four','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Open new four','',100,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'open: a new account''s 4th open listing is refused' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'rate_limited:open' then 'PASS ' || 'open: a new account''s 4th open listing is refused' else 'FAIL ' || 'open: a new account''s 4th open listing is refused' || ' [got ' || sqlerrm || ']' end;
@@ -1072,13 +1072,13 @@ begin
     insert into public.listings (kind, intent, category, city, starts_on, ends_on, title, price_amount, price_currency)
     values ('item', 'sell', 'books', 'th-bangkok', d0, d0 + 3, 'Same Title Test', 100, 'THB');
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'same title test','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'same title test','',100,'THB',null,null,null)$v$;
       lines := lines || ('FAIL ' || 'title: the same title within 24 hours (case aside)' || ' (accepted)');
     exception when others then
       lines := lines || case when sqlerrm = 'rate_limited:same_title' then 'PASS ' || 'title: the same title within 24 hours (case aside)' else 'FAIL ' || 'title: the same title within 24 hours (case aside)' || ' [got ' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','sell','books','th-bangkok',null,private.today(),private.today()+3,'Another title test','',100,'THB',null,null,null)$v$;
+      execute ins || $v$('item','sell','books','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+3,'Another title test','',100,'THB',null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'title: a different title is fine' else 'FAIL ' || 'title: a different title is fine' || ' [' || sqlerrm || ']' end;
@@ -1254,7 +1254,7 @@ begin
       for i in 1 .. 10 loop
         insert into public.reports (listing_id, reason) values (bulk_ids[10 + i], 'spam');
       end loop;
-      lines := lines || 'PASS report: an established account files 10 in a day';
+      lines := lines || 'PASS report: an established account files 10 in a day'::text;
     exception when others then
       lines := lines || ('FAIL report: an established account could not file 10 in a day [' || sqlerrm || ']');
     end;
@@ -1598,7 +1598,7 @@ begin
     select count(*) into n from (select public.market_listing(x) as r from unnest(array[h1, e1, c1, rm1, d1, u1]) as x) q where q.r is not null;
     lines := lines || case when (n = 0) then 'PASS ' || 'visitor: hidden, ended, closed, removed, deleted and under-review listings open as null' else 'FAIL ' || 'visitor: hidden, ended, closed, removed, deleted and under-review listings open as null' || coalesce(' [' || dbg || ']', '') end; dbg := null;
     begin
-      execute 'insert into public.listings (kind, intent, category, city, starts_on, ends_on, title) values (''item'', ''give'', ''toys'', ''th-bangkok'', private.today(), private.today() + 1, ''Anon toy'')';
+      execute 'insert into public.listings (kind, intent, category, city, starts_on, ends_on, title) values (''item'', ''give'', ''toys'', ''th-bangkok'', (now() at time zone ''Asia/Bangkok'')::date, (now() at time zone ''Asia/Bangkok'')::date + 1, ''Anon toy'')';
       lines := lines || ('FAIL ' || 'visitor: still cannot post once the market is open' || ' (allowed)');
     exception
       when insufficient_privilege then lines := lines || ('PASS ' || 'visitor: still cannot post once the market is open');
@@ -1620,7 +1620,7 @@ begin
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'open: a signed-in non-tester may search once the market is open' else 'FAIL ' || 'open: a signed-in non-tester may search once the market is open' || ' [' || sqlerrm || ']' end;
     end;
     begin
-      execute ins || $v$('item','give','toys','th-bangkok',null,private.today(),private.today()+5,'Stranger toy','',0,null,null,null,null)$v$;
+      execute ins || $v$('item','give','toys','th-bangkok',null,(now() at time zone 'Asia/Bangkok')::date,(now() at time zone 'Asia/Bangkok')::date+5,'Stranger toy','',0,null,null,null,null)$v$;
       raise exception using message = 'ok_rollback';
     exception when others then
       lines := lines || case when sqlerrm = 'ok_rollback' then 'PASS ' || 'open: once the market is open any active account may post an item' else 'FAIL ' || 'open: once the market is open any active account may post an item' || ' [' || sqlerrm || ']' end;
