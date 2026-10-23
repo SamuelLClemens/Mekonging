@@ -1,4 +1,14 @@
-# Handoff — 2026-10-23 (slice M4a: listings and search, server side)
+# Handoff — 2026-10-24 (M4a merged; M4b split in two)
+
+**Since the M4a handoff below:**
+- M4a merged as af2e9fe (PR #127, 2026-10-23 20:56 UTC). www.mekonging.com serves `mk-v0.646.0`.
+- On 2026-10-24 the owner split M4b in two (`docs/EXCHANGE.md` §16 and §17):
+  - **M4b-1, browse:** the artwork, the new home, search and filters, the listing page and the closed-beta preview.
+  - **M4b-2, post:** the post forms, My listings and the live owner-and-tester check.
+  - Each is one PR and one fresh session; the prompts are below.
+- Nothing was built for M4b yet. The branch name `feat/m4b-market-ui` was not used: the prompts name `feat/m4b1-market-browse` and `feat/m4b2-market-post`.
+
+## The M4a handoff (2026-10-23, slice M4a: listings and search, server side)
 
 ## Shipped
 - **Built and proven, awaiting the owner's merge:** M4a, branch `feat/m4a-listings`, [PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127) (`mk-v0.646.0`). The owner ran `002_listings.sql` and `supabase/tests/002_rls.sql` in the SQL editor, and the test's second run printed `PASS summary: 314 checks, 0 failed, nothing kept`; the output is in the PR ([comment](https://github.com/SamuelLClemens/Mekonging/pull/127#issuecomment-6374419083)). [PR #126](https://github.com/SamuelLClemens/Mekonging/pull/126) (docs and 001b) merged first, as 6742a29. The PR is marked ready once CI passes on the handoff commit.
@@ -42,7 +52,7 @@
 - [x] `002_listings.sql` run; the probe answers 400 `market_closed`.
 - [x] `002_rls.sql`: 314 of 314 PASS on the second run; the output is in PR #127.
 - [x] Security Advisor after 002: 0 Errors.
-- [ ] Mark #127 ready (the session, after CI passes on the handoff commit), then the owner merges.
+- [x] #127 marked ready and merged by the owner (af2e9fe, 2026-10-23).
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -141,57 +151,90 @@ The numbers below keep their old values.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
 
 ## Next session prompts
-Order (owner, 2026-10-19): **M4a is done (merge pending), then M4b, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
+Order (owner, 2026-10-19; M4b split on 2026-10-24): **M4a is merged; next M4b-1, then M4b-2, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
 
-### M4b: the marketplace redesign
-> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §2, §11, §13, §16 (the 2026-10-19 rulings) and §17 (M4 and M4b). Run /slice for slice M4b: the marketplace screens.
-> **Brief (owner, 2026-10-19).** The Market must look and feel like a modern marketplace: Facebook Marketplace, eBay, Amazon. It should be beautiful, modern, fun to look at and fun to use, with search, pictures and the app's own links. It is still a closed beta for testers.
-> **Start.** `git fetch`; `gh pr list --state all`. M4a must be merged with its test output recorded. Worktree on `feat/m4b-market-ui`.
+### M4b-1: the marketplace redesign, browse side
+> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §2, §11, §13, §16 (the 2026-10-19 and 2026-10-24 rulings) and §17 (M4 and M4b-1). Run /slice for slice M4b-1: the marketplace screens, browse side.
+> **Brief (owner, 2026-10-19).** The Market must look and feel like a modern marketplace: Facebook Marketplace, eBay, Amazon. It should be beautiful, modern, fun to look at and fun to use, with search, pictures and the app's own links. It is still a closed beta for testers. The post side (post forms, My listings) is M4b-2 (owner ruling 2026-10-24).
+> **Start.** `git fetch`; `gh pr list --state all`. PR #127 (M4a) and the `docs/m4b-split` PR must be merged, and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b1-market-browse`.
 > **Scope.**
-> 1. Market home (`#market`):
+> 1. Category artwork:
+>    - one illustration per kind (item, meetup, room, ride) and per item category (`ITEM_CATEGORIES`, 10), 14 in all, in the house style (DESIGN_SYSTEM.md, Mekong Retro), self-hosted;
+>    - an SVG loaded through `<img>` cannot read the skin's CSS variables, so build them as inline SVG in a new lazy module (for example `js/market-art.js`) whose fills are theme tokens, so all 11 skins read well;
+>    - no stock photos and no hotlinking. Report the total bytes.
+> 2. Market home (`#market`):
 >    - a sticky search bar, kind tabs (Items, Meetups, Rooms, Rides) and category tiles with artwork;
->    - city and date chips, and a prominent "Post" button;
->    - a two-column, picture-led card grid: the price through `money()`, "Free" instead of "฿0", a two-line title, the city and date window, the kind colour;
+>    - city and date chips, and a prominent "Post" button. Until M4b-2 ships, it opens an honest sheet: posting to the shared market arrives next, and the board on this phone works now;
+>    - a picture-led card grid, two columns at 375 px and more at 1280 px: artwork, the price through `money()`, "Free" instead of "฿0", a two-line title, the city and date window, the kind colour;
 >    - skeleton cards while loading;
 >    - the link-based board folded under "On this phone" (§11).
->    - Visitors browse without signing in (owner ruling 2026-10-19). Sign-in appears on actions (Post, Message, Report, Block, My listings), as a sheet that returns the traveller to what they were doing.
-> 2. Search:
->    - debounced live results, and a filters sheet (kind, category, city, dates, price range, free only);
->    - sorting, a result count, and active-filter chips that clear in one tap;
->    - an empty state with suggestions, and recent searches kept on the phone as a convenience.
-> 3. The listing page (`#market-l-<id>`):
->    - a hero image (artwork until M4c), the price, chips, the body, and the kind's safety line;
->    - "A traveller · member since …";
+>    - Three audiences, all designed:
+>      - a tester, who browses;
+>      - a visitor, or a signed-in non-tester, while the market is closed. The server answers `market_closed`, so show an inviting, honest closed-beta preview built from the artwork, with sign-in for testers;
+>      - anyone once the market opens (M9), when visitors browse without an account.
+>    - Sign-in appears on actions, as a sheet that returns the traveller to what they were doing.
+> 3. Search:
+>    - debounced live results;
+>    - a filters sheet: kind, category, city, dates, a price range with its currency, free only;
+>    - sorting: offer the price sorts only with a currency or a city, because the server compares amounts across currencies;
+>    - a result count, and active-filter chips that clear in one tap;
+>    - an empty state with suggestions;
+>    - recent searches kept on the phone, as a convenience outside the store. Never store anything another traveller wrote.
+> 4. The listing page (`#market-l-<id>`):
+>    - the hero artwork (photos come in M4c), the price, chips, the body, and the kind's safety line;
+>    - "A traveller · member since …", as the month only. M4a notes it is a weak fingerprint across one person's listings;
 >    - app links only: the city's guide, nearby places, and the scam and safety pages;
->    - Report and Block in a ⋯ menu, and "Message" shown with an honest line until M5.
-> 4. Post forms (`#market-new-<kind>`): a short stepper per kind with a live card preview. Client checks mirror the server's, and server errors map to plain copy.
-> 5. My listings (`#market-mine`): status chips, close and delete.
-> 6. Category artwork: a self-hosted SVG set in the house style, one per kind and per item category (about 16), under `img/market/`.
->    - Theme tokens, so every one of the 11 skins reads well.
->    - No stock photos and no hotlinking. Report the total bytes.
-> 7. Motion: tasteful press and transition feedback that respects `prefers-reduced-motion`.
+>    - Report in a ⋯ menu (`reportListing`, `REPORT_REASONS`, `listingErrorText`);
+>    - Block left out until M5, where its RPC lands: no dead controls;
+>    - "Message" shown with an honest line until M5.
+> 5. Motion: tasteful press and transition feedback that respects `prefers-reduced-motion`.
 > **Rules.**
-> - New lazy modules (for example `market-home.js`, `market-search.js`, `market-listing.js`, `market-post.js`), each under about 1,500 lines. `main.js` gets registration lines only.
+> - New lazy modules (for example `market-home.js`, `market-search.js`, `market-listing.js`, `market-art.js`), each under about 1,500 lines. `main.js` gets registration lines only.
 > - Tokens only (`check-spacing`, `check-contrast`), and 44 px targets.
 > - Remote text renders as text only. Personal values carry `data-no-i18n` and `data-no-mt`.
 > - Nothing another traveller wrote is stored on the phone (§2).
 > - Every gate still renders something (`check-net-gates`).
 > **Pitfalls.**
 > - The router renders a route twice at start-up: after every await, check `isConnected`, and share in-flight work.
-> - Use fixture mode, `?market=fixture` on 127.0.0.1, with M4a's fixture data (`js/market-fixture-listings.js`). The Market is closed in the fixture as on the server: add `&open=1` for everyone or `&tester=1` for the signed-in traveller.
-> - Make every listing call through `js/market-listings.js`. `postListing` picks the id itself and reads the row back (INSERT ... RETURNING is refused, `docs/EXCHANGE.md` §4); every read names its columns (`LISTING_COLUMNS`); print `listingErrorText(err)`, never a server message. Search price sorts compare amounts across currencies, so pair them with a city or a currency.
-> - Reuse the M3b CDP driver (see Verified) for real layout and screenshots.
+> - Fixture mode is `?market=fixture` on 127.0.0.1, with M4a's data (`js/market-fixture-listings.js`). The market is closed in the fixture as on the server: add `&open=1` for everyone, or `&tester=1` to make the signed-in traveller a tester.
+> - Make every listing call through `js/market-listings.js`: explicit columns (`LISTING_COLUMNS`), and print `listingErrorText(err)`, never a server message.
+> - Use the M3b CDP driver (`side-session-notes/local_45164220-ea74-40e6-851e-808583e5b9f4/m3b-cdp/`, a stdlib client) for real layout and screenshots. The Turnstile token is in `input[name=cf-turnstile-response]`.
+> - Anything the owner pastes goes through `LANG=en_US.UTF-8 pbcopy` and a byte compare. The Write tool decodes a typed backslash-u escape.
 > **Done when:**
-> - At 375 px and at 1280 px, in light and dark, on the default skin and one dark skin, these screens render: home, results with a query and with filters, the filters sheet, the listing page, a post form per kind, My listings, and the empty and offline states.
+> - At 375 px and at 1280 px, in light and dark, on the default skin and one dark skin, these screens render:
+>   - home: the closed preview, tester browsing, and the open-market visitor;
+>   - results with a query, and with filters;
+>   - the filters sheet, the listing page and the report sheet;
+>   - the empty and offline states.
 > - Each has 0 overflow, 0 console errors, 0 CSP violations and 0 body controls under 44 px, and `check-contrast` passes.
 > - Before and after screenshots of `#market` are in the PR.
-> - On production, the owner and a tester see each other's listings.
 > - Every guard and the validator pass, and the PR is open. Then run /handoff.
-> **Out of scope:** photo upload (M4c), messages (M5), matching (M6).
+> **Out of scope:** post forms and My listings (M4b-2), photos (M4c), messages and block (M5), matching (M6).
+
+### M4b-2: the marketplace redesign, post side
+> Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §3, §8, §9, §16 and §17 (M4 and M4b-2). Run /slice for slice M4b-2: the marketplace screens, post side.
+> **Start.** `git fetch`; `gh pr list --state all`. M4b-1 must be merged, and no PR open. Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4b2-market-post`.
+> **Scope.**
+> 1. Post forms (`#market-new-<kind>`), reached from the home's "Post" button (replace M4b-1's interim sheet):
+>    - a short stepper per kind (item, meetup, room, ride), with a live card preview built from M4b-1's card and artwork;
+>    - client checks that mirror the server's: the kind and intent pairs, the window caps, prices, seats, cities, and the contact-detail rule. Server errors map through `listingErrorText`;
+>    - the posting contract: `postListing` picks the id, inserts with `return=minimal` and reads the row back.
+> 2. My listings (`#market-mine`): status chips (open, closed, "under review" for hidden, ended), and close and delete through `confirmAction`.
+> 3. The live check needs the carried M3b owner checks first, walked through one small step per message:
+>    - the owner signs in on the iPhone Home Screen app;
+>    - their user id goes into `private.admins` and `private.testers`;
+>    - a second tester is available (EXCHANGE §16, from M4).
+> **Done when:**
+> - The post form for each kind, and My listings, render at 375 px and at 1280 px, in light and dark, on the default skin and one dark skin.
+>   - Each has 0 overflow, 0 console errors, 0 CSP violations and 0 body controls under 44 px.
+> - A fixture post of each kind round-trips into search and into My listings.
+> - On production, the owner and a tester each post one listing and see each other's.
+> - Every guard and the validator pass, and the PR is open. Then run /handoff.
+> **Out of scope:** photos (M4c), messages and block (M5), matching (M6).
 
 ### M4c: listing photos
 > Read CLAUDE.md, docs/HANDOFF.md, and docs/EXCHANGE.md §2 (photos), §10, §13, §14 (item 8) and §17 (M4c). Run /slice for slice M4c: listing photos.
-> **Start.** `git fetch`; `gh pr list --state all`. M4b must be merged. Read the current Supabase Free limits for Storage size and egress from supabase.com/pricing, and cap photos per account to fit them. Worktree on `feat/m4c-photos`.
+> **Start.** `git fetch`; `gh pr list --state all`. M4b-2 must be merged. Read the current Supabase Free limits for Storage size and egress from supabase.com/pricing, and cap photos per account to fit them. Worktree on `feat/m4c-photos`.
 > **Scope.**
 > 1. Migration 003 (renumber the later slices' migrations in §17):
 >    - a private bucket;
