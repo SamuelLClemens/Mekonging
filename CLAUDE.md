@@ -28,6 +28,8 @@ relevant section of the docs below, not the whole repo.
 - `sources` arrays come in five formats (one line, per entry, per key, trailing commas, single quotes): edit them with
   `scripts/fetch-place-citations.py --install`, which keeps each one's format, not with a regex.
 - Keep this project off `~/Desktop`, `~/Documents` and `~/Downloads` (macOS permission denials).
+- Headless Chrome here needs `--no-sandbox` (its network sandbox cannot open sockets, so a load of 127.0.0.1 hangs) and a
+  profile outside `/private/tmp`. The scratchpad is wiped when the app restarts: keep drivers in `~/Library/Caches/`.
 - No Postgres here (the owner declined a local install, 2026-10-19): Supabase SQL is reviewed by reading and run by the owner
   in the SQL editor. A PR whose code needs that SQL opens as a draft until the owner's run passes (PR #125 merged first).
 - Market SQL rules: no policy names `owner` (they call `private.owns` and `private.can_see`); a client picks a listing's id and reads it back, because `INSERT ... RETURNING` is refused; every read names its columns. `scripts/check-market-sql.py` reads the SQL.
@@ -83,6 +85,7 @@ python3 scripts/check-cache-version.py --base origin/feat/scaffold-bangkok-slice
 - `js/state.js` is the on-device store. Schema changes bump its version. Deleting or merging a place record also needs a
   line in `js/data/place-merges.js` in the same commit, or travellers' saved data is lost.
 - `js/theme.js` plus `DESIGN_SYSTEM.md` own colour and skins; the default is "Mekong Retro". `css/style.css` is the stylesheet.
+- The Market's rules are in `css/market.css`, loaded lazily by `js/screens/market-parts.js` (`check-contrast` reads it).
 - `Mekonging Xcode/` is a live iOS WKWebView wrapper (`sync-web.sh` copies the web app in). Never delete or edit it as
   a side effect; exclude it from greps.
 

@@ -13,7 +13,7 @@
 - **Owner ruling after M3b: Market first, one slice per session** (`docs/EXCHANGE.md` §16, 2026-10-19). Releasing slices stack, one at a time, each from the merged tip:
   1. **M4a**: listings and search, server side. Built on 2026-10-19; the owner's SQL run passed on 2026-10-23 (314 of 314) and the owner merged it on 2026-10-23 (af2e9fe, `mk-v0.646.0`) ([PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127), `mk-v0.646.0`; `docs/HANDOFF.md`).
   2. **M4b**: the marketplace redesign, split in two by the owner on 2026-10-24:
-     - **M4b-1**, browse: category artwork, the home, search and filters, the listing page, the closed-beta preview;
+     - **M4b-1**, browse: category artwork, the home, search and filters, the listing page, the closed-beta preview. Built on 2026-10-24 ([PR #129](https://github.com/SamuelLClemens/Mekonging/pull/129), `mk-v0.647.0`), awaiting the owner's merge;
      - **M4b-2**, post: the post forms, My listings and the live owner-and-tester check.
   3. **M4c**: listing photos.
   4. **M5**: messages, block and live alerts, right after M4c (owner, 2026-10-19): a marketplace that cannot message cannot complete a hand-off. M6 onward follow later.
