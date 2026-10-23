@@ -1,7 +1,7 @@
-# Handoff — 2026-10-20 (slice M4a: listings and search, server side)
+# Handoff — 2026-10-23 (slice M4a: listings and search, server side)
 
 ## Shipped
-- **Built, not merged:** M4a, branch `feat/m4a-listings`, commit 3e1c36a, [PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127) (a draft, `mk-v0.646.0`). It stays a draft until the owner's run of `supabase/tests/002_rls.sql` prints only PASS (PR #125 merged before its migration had run, and production waited on it). The branch is stacked on the docs branch of [PR #126](https://github.com/SamuelLClemens/Mekonging/pull/126), which is still a draft; merge #126 first.
+- **Built and proven, awaiting the owner's merge:** M4a, branch `feat/m4a-listings`, [PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127) (`mk-v0.646.0`). The owner ran `002_listings.sql` and `supabase/tests/002_rls.sql` in the SQL editor, and the test's second run printed `PASS summary: 314 checks, 0 failed, nothing kept`; the output is in the PR ([comment](https://github.com/SamuelLClemens/Mekonging/pull/127#issuecomment-6374419083)). [PR #126](https://github.com/SamuelLClemens/Mekonging/pull/126) (docs and 001b) merged first, as 6742a29. The PR is marked ready once CI passes on the handoff commit.
   - `supabase/migrations/002_listings.sql` (pure ASCII, one transaction, decisions in its header):
     - the enums, `listings`, `reports`, `blocks` (table and policies only, nothing granted until M5) and `private.name_changes`;
     - BEFORE triggers: the kind, intent, field, price and window rules (`NaN` refused), the §8 text check, the contact-detail check (phones of 8 or more digits with Thai, Lao and Khmer digits, emails, URLs, bare domains, `@handles`, messenger names), `updated_at`, the §9 rate limits (including a new account's lower limits) and the 3-a-day name-change limit;
@@ -19,7 +19,15 @@
 - Earlier and already merged: M3b (PR #125, `mk-v0.645.0`), M3a (#124), D5 Laos (#122).
 
 ## Verified
-- Not run here: **the SQL** (no Postgres on this machine; the owner declined a local install). What was checked instead:
+- **The SQL ran** (the owner, in the SQL editor of project `xnruspjauhmcrqxmjmxg`; no Postgres on this machine):
+  - `002_listings.sql`: "Success". `POST /rest/v1/rpc/market_search` and `market_listing` with only the publishable key now answer HTTP 400 `market_closed` (before: 404 `PGRST202`).
+  - `002_rls.sql`, first run (2026-10-20): 121 of 314 FAIL, every one a defect in the test, none in the migration.
+    - 116 came from the test's own inserts calling `private.today()` as role `authenticated`. 002 revokes that function from clients on purpose, and the test asserts the denial for `anon`.
+    - 5 came from three `lines || 'PASS ...'` appends. Postgres reads a bare literal after `||` on a `text[]` as an array literal ("malformed array literal"), which rolled back the rate-limit and report-limit loops, so the limit checks failed in turn.
+    - Fix (commit 21b2814, migration unchanged): the inserts use `(now() at time zone 'Asia/Bangkok')::date`, the three literals are cast to text.
+  - `002_rls.sql`, second run (2026-10-23): 314 of 314 PASS, 0 FAIL, nothing kept.
+  - Security Advisor after 002: the owner reports 0 Errors and only warnings. The warnings were not itemised; expected are the five from 001 plus `market_search`, `market_listing` (definer, `anon`, by design) and `market_my_listings`.
+- Checked by reading before the SQL ran:
   - `python3 scripts/check-market-sql.py`: PASS on 5 SQL files. It checks ASCII only (from 002 on), balanced quotes, dollar quotes and brackets, `begin`/`end;` pairs, `begin;` and `commit;`, RLS on every table, `search_path` pinned on every function, every function named in a `revoke execute`, no policy naming `owner`, and runs `contact_hit`'s patterns in Python (30 phrases that must be refused, 28 that must pass). Its negative controls: a deleted quote or bracket is caught about 4 times in 5 (the rest fall in comments or strings); a policy naming `owner`, a table without RLS, a function never revoked, dropping `whatsapp` from the list and allowing leading-zero amounts are each caught.
   - An independent read of both SQL files (a Sonnet reviewer, then each finding checked against the code) found six defects, all fixed: a variable in the test that clashed with a column alias (the run would have aborted at its last line); a race in the auto-hide count (now `pg_advisory_xact_lock` per listing); query words split differently from the stored text (now taken from the same parser); `NaN` accepted as a price; `@8am` read as a handle; a cash filter test that could not fail (a real cash row is now seeded).
   - It could not settle whether a policy expression needs privilege on a column no role may select (the PostgreSQL documentation is silent; the regression tests have no case). So the policies no longer name `owner`: they call `private.owns(id)` and `private.can_see(id)`, which led to the posting contract above.
@@ -29,15 +37,12 @@
 - Nothing on screen changed (M4a has no screens), so there is no 375 px proof.
 - From the owner's earlier session (M3b, recorded for the record): migration 001 and the repair 001b ran, `001_rls.sql` printed 65 of 65 PASS, and the Security Advisor showed 0 errors and 5 warnings on 2026-10-19: Supabase's own `rls_auto_enable` twice, and `market_delete_account`, `market_join` and `market_me` (definer by design).
 
-## Owner steps for M4a (in this order; one small step per message, `open` the page, `LANG=en_US.UTF-8 pbcopy` the file, check the clipboard with `cmp`)
-- [ ] Merge PR #126 (docs only). Then `git fetch` and check #127's diff shows only M4a.
-- [ ] Run `supabase/migrations/002_listings.sql` whole in the SQL editor. Success reads "Success. No rows returned". The session then probes it: `POST /rest/v1/rpc/market_search` with only the publishable key must answer HTTP 400 `market_closed` (before 002 it answers 404 `PGRST202`).
-  - If it fails, the first line of the error names the statement; fix the file, rerun `check-market-sql`, and ask for a rerun (the migration is one transaction, so a failed run changed nothing).
-- [ ] Run `supabase/tests/002_rls.sql`. Expect only PASS lines (about 300) and `PASS summary: N checks, 0 failed, nothing kept`. Copy the result grid (Export, then Copy as CSV), the session reads it with `pbpaste`, empties the clipboard, and puts the output in PR #127.
-  - A FAIL line names its check. Fix the migration or the test, whichever is wrong, and rerun.
-  - The run is about 500 statements and 400 subtransactions; if the SQL editor times out, split nothing: say so, and the session will propose a split.
-- [ ] Security Advisor after 002: no Errors. Expected new warnings: `market_search` and `market_listing` (definer, callable by `anon`, by design) and `market_my_listings` (by `authenticated`).
-- [ ] Mark #127 ready (`gh pr ready 127`) once the test output is in it, then the owner merges.
+## Owner steps for M4a (all done except the merge)
+- [x] PR #126 merged (6742a29); #127's own diff shows only M4a.
+- [x] `002_listings.sql` run; the probe answers 400 `market_closed`.
+- [x] `002_rls.sql`: 314 of 314 PASS on the second run; the output is in PR #127.
+- [x] Security Advisor after 002: 0 Errors.
+- [ ] Mark #127 ready (the session, after CI passes on the handoff commit), then the owner merges.
 
 ## Owner checks for M3b (carried; the first two are done)
 - [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
@@ -48,7 +53,8 @@
 
 ## Not done / known issues
 - New in M4a:
-  - The SQL has never run. Everything above is reading, a parser-free guard and a Python mirror of one function.
+  - The Advisor's warnings were not itemised (the owner reported 0 Errors). Whoever next opens `.../advisors/security` should confirm the expected list.
+  - Nothing has been posted on production and `market_open` is false, so no real listing has been read back. M4b's live check ("the owner and a tester see each other's listings") needs the carried M3b checks first: the owner's user id in `private.admins` and `private.testers`.
   - The Thai, Vietnamese, Khmer and Lao block terms are unchecked by a native speaker (none available, owner 2026-10-19).
   - `001_rls.sql` now fails two catalogue lines after 002 (which functions `anon` and `authenticated` may execute); its header says so, and `002_rls.sql` repeats the catalogue for the whole schema.
   - A list of four 2-digit sizes ("38 39 40 41") reads as a phone number and is refused; a person can still write a number in words. The report path is the second line of defence (`docs/EXCHANGE.md` §8).
@@ -135,15 +141,7 @@ The numbers below keep their old values.
 19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
 
 ## Next session prompts
-Order (owner, 2026-10-19): **finish M4a, then M4b, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
-
-### Finish M4a: the owner's SQL run (a short session)
-> Read CLAUDE.md, docs/HANDOFF.md and docs/EXCHANGE.md §4 and §17 (M4a). Continue slice M4a on [PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127) (a draft; branch `feat/m4a-listings`, commit 3e1c36a). The code and the docs are done and independently read; what is missing is the owner's run of the SQL.
-> **Start.** `git fetch`; `gh pr list --state all` (is #126 merged? is #127 still a draft?); worktree from `origin/feat/m4a-listings` (or the existing `.claude/worktrees/m4a`). Probe `POST /rest/v1/rpc/market_search` with only the publishable key from `js/market-config.js` (404 `PGRST202` means 002 has not run; 400 `market_closed` means it has).
-> **Then, with the owner,** in the M3b style (one small step per message; `open` the dashboard page; `LANG=en_US.UTF-8 pbcopy < file` and `cmp` it against the file; the owner copies the result grid with Export, then Copy as CSV; read it with `pbpaste`, then empty the clipboard; never ask for or accept a secret): the "Owner steps for M4a" list above, in order, then the carried M3b checks.
-> **If a run fails:** a migration error names the statement and leaves nothing changed; a FAIL line names its check. Decide whether the migration or the test is wrong, fix it, run `python3 scripts/check-market-sql.py` and the guards, commit (named files; the cache version moves only if a shipped file changes), push, and ask for one rerun. If a table read answers "permission denied", the policy-column question is settled the other way round: tell the owner and propose the smallest change.
-> **Done when:** the 002 test prints only PASS and its output is in PR #127; the Security Advisor shows no errors; the PR is ready and the owner merges it. Then run /handoff and start M4b in a new session.
-> **Out of scope:** screens (M4b), photos (M4c), messages and blocks (M5), the carried M3b owner checks if the owner has no time (they can follow), anything in `js/screens/`.
+Order (owner, 2026-10-19): **M4a is done (merge pending), then M4b, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
 
 ### M4b: the marketplace redesign
 > Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §2, §11, §13, §16 (the 2026-10-19 rulings) and §17 (M4 and M4b). Run /slice for slice M4b: the marketplace screens.
