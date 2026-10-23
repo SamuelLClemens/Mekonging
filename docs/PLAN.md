@@ -11,7 +11,7 @@
 ### Release order (owner, 2026-10-19; updated after M3b)
 - Merged on 2026-10-19: D5 Laos (PR #122, `mk-v0.643.0`), M3a (PR #124, `mk-v0.644.0`) and **M3b, accounts and sign-in** (PR #125, `mk-v0.645.0`). M3b's owner checks (migration 001, the RLS test, the Security Advisor, the iPhone sign-ins) are tracked in `docs/HANDOFF.md`.
 - **Owner ruling after M3b: Market first, one slice per session** (`docs/EXCHANGE.md` §16, 2026-10-19). Releasing slices stack, one at a time, each from the merged tip:
-  1. **M4a**: listings and search, server side.
+  1. **M4a**: listings and search, server side. Built on 2026-10-19; the owner's SQL run passed on 2026-10-23 (314 of 314) and it awaits the owner's merge ([PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127), `mk-v0.646.0`; `docs/HANDOFF.md`).
   2. **M4b**: the marketplace redesign (search, filters, picture-led cards with category artwork, listing pages, post forms).
   3. **M4c**: listing photos.
   4. **M5**: messages, block and live alerts, right after M4c (owner, 2026-10-19): a marketplace that cannot message cannot complete a hand-off. M6 onward follow later.

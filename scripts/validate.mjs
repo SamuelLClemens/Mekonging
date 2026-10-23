@@ -15,6 +15,13 @@ import { PHOTOS } from '../js/data/photos.js';
 import { MARKET_CITIES } from '../js/data/market-cities.js';
 import { fixtureAllowed, signInPlace } from '../js/market-api.js';
 import {
+  fixtureListings, fixtureSearch, fixtureListing, fixtureMine, fold, regionToday,
+} from '../js/market-fixture-listings.js';
+import {
+  searchBody, insertBody, listingErrorCode, listingErrorText, isListingId, newListingId, KINDS, ITEM_CATEGORIES, CURRENCIES,
+  LISTING_COLUMNS, MAX_PAGE_SIZE,
+} from '../js/market-listings.js';
+import {
   DIET_OPTIONS, DIET_EVALUABLE_BELIEFS, VERDICT_INERT_DIET, PHRASE_PENDING_ALLERGENS,
   PHRASE_RX, PHRASE_KEYS, ALCOHOL_TERMS,
   dietAvoidAllergens, dishMeatHits, dishHasAlcohol, dishDietReasons, dishDietVerdict,
@@ -332,6 +339,176 @@ for (const c of MARKET_CITIES) {
   ok(!_cityIds.has(c.id), `market city "${c.id}": duplicate id`);
   _cityIds.add(c.id);
 }
+
+// --- Market listings (docs/EXCHANGE.md section 17, slice M4a) ---------------------
+// The fixture is what M4b designs against, and fixtureSearch is a port of public.market_search, so
+// both are checked here: the rows obey the server's own rules, search returns the expected rows,
+// and nothing that must stay hidden (or any owner) ever comes back.
+const NOW = Date.UTC(2026, 9, 19, 5, 0, 0);          // a fixed clock: 2026-10-19, 12:00 in UTC+7
+const TODAY = regionToday(NOW);
+ok(TODAY === '2026-10-19', `market listings: regionToday gave ${TODAY}`);
+const FIX = fixtureListings(NOW);
+const OPEN = { open: true, rows: FIX, now: NOW };
+const seen = (fn) => FIX.filter((l) => l._status === 'open' && l.ends_on >= TODAY && l._owner !== 'review').filter(fn);
+const VIS = seen(() => true);
+const mcity = new Set(MARKET_CITIES.map((c) => c.id));
+const CAP = { item: 30, meetup: 7, room: 30, ride: 3 };
+const PAIRS = { item: ['give', 'sell', 'trade', 'request'], meetup: ['join'], room: ['offer', 'seek'], ride: ['offer', 'seek'] };
+const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1;
+
+ok(FIX.length === 51 && VIS.length === 47, `market fixture: expected 51 rows, 47 of them visible, got ${FIX.length} and ${VIS.length}`);
+ok(new Set(FIX.map((l) => l.id)).size === FIX.length && FIX.every((l) => /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(l.id)), 'market fixture: ids must be unique uuids');
+for (const k of KINDS) ok(VIS.some((l) => l.kind === k), `market fixture: no visible ${k}`);
+ok(VIS.filter((l) => l.kind === 'item').length === 19 && VIS.filter((l) => l.kind === 'meetup').length === 8
+  && VIS.filter((l) => l.kind === 'room').length === 12 && VIS.filter((l) => l.kind === 'ride').length === 8, 'market fixture: kind counts must be 19, 8, 12 and 8');
+ok(new Set(VIS.map((l) => l.city)).size >= 12, `market fixture: ${new Set(VIS.map((l) => l.city)).size} cities, need 12`);
+ok(VIS.some((l) => l.price_amount === 0) && VIS.some((l) => l.price_amount > 0) && VIS.some((l) => l.price_amount === null), 'market fixture: needs free, paid and no-price rows');
+ok(new Set(VIS.map((l) => l.price_currency).filter(Boolean)).size >= 4, 'market fixture: needs at least four currencies');
+ok(FIX.some((l) => l.title.length >= 70 && l.title.length <= 80), 'market fixture: needs a long title (70 to 80 characters)');
+ok(/[฀-๿]/.test(FIX.map((l) => l.title).join('')) && /[ក-៿]/.test(FIX.map((l) => l.title).join(''))
+  && /[຀-໿]/.test(FIX.map((l) => l.title).join('')) && /[Ạ-ỹ]/.test(FIX.map((l) => l.title).join('')), 'market fixture: needs Thai, Khmer, Lao and Vietnamese titles');
+ok(FIX.some((l) => l._status === 'hidden') && FIX.some((l) => l.ends_on < TODAY) && FIX.some((l) => l._status === 'closed') && FIX.some((l) => l._owner === 'review'),
+  'market fixture: needs a hidden, an ended, a closed and an under-review row');
+for (const l of FIX) {
+  const w = `market fixture "${l.title}"`;
+  ok(!('owner' in l) && !('report_weight' in l), `${w}: carries a private column`);
+  ok(l.title.length >= 3 && l.title.length <= 80 && l.body.length <= 400, `${w}: title or body length`);
+  ok(PAIRS[l.kind].includes(l.intent), `${w}: intent ${l.intent} is not allowed for ${l.kind}`);
+  ok(days(l.starts_on, l.ends_on) >= 1 && days(l.starts_on, l.ends_on) <= CAP[l.kind], `${w}: window of ${days(l.starts_on, l.ends_on)} days`);
+  ok(mcity.has(l.city) && (l.kind === 'ride' ? mcity.has(l.to_city) && l.to_city !== l.city : l.to_city === null), `${w}: city or to_city`);
+  ok(l.kind === 'item' ? ITEM_CATEGORIES.includes(l.category) : l.category === null, `${w}: category`);
+  ok(l.kind === 'room' ? ['private', 'shared', 'whole'].includes(l.room_type) : l.room_type === null, `${w}: room_type`);
+  ok(l.kind === 'meetup' ? l.activity && l.seats >= 2 && l.seats <= 8 : l.activity === null, `${w}: activity or seats`);
+  ok(l.kind === 'ride' && l.intent === 'offer' ? l.seats >= 1 && l.seats <= 8 : l.kind === 'meetup' || l.seats === null, `${w}: seats`);
+  ok(l.intent === 'give' ? l.price_amount === 0 : true, `${w}: a gift is free`);
+  ok(l.intent === 'sell' ? l.price_amount > 0 : true, `${w}: a sale has a price`);
+  ok(l.price_amount > 0 ? CURRENCIES.includes(l.price_currency) : l.price_currency === null, `${w}: currency`);
+  ok(!/\d{8}|@|https?:|www\./i.test(l.title + ' ' + l.body), `${w}: holds contact details`);
+}
+
+// The gate, then the unfiltered search.
+let gated = '';
+try { fixtureSearch({}, { open: false, rows: FIX, now: NOW }); } catch (e) { gated = e.code; }
+ok(gated === 'market_closed', `market search: a closed market must answer market_closed, got "${gated}"`);
+const all = fixtureSearch({ page_size: 50 }, OPEN);
+ok(all.length === 47 && all.every((r) => r.total === 47), `market search: expected 47 rows with total 47, got ${all.length}`);
+const never = FIX.filter((l) => !VIS.includes(l)).map((l) => l.id);
+ok(all.every((r) => !never.includes(r.id)), 'market search: an ended, hidden, closed or under-review row came back');
+ok(all.every((r) => !('owner' in r) && !('_owner' in r) && !('_status' in r) && !('report_weight' in r)), 'market search: a private column came back');
+ok(all.every((r) => Object.keys(r).length === 20), 'market search: a row must hold the 19 public columns plus total');
+ok(LISTING_COLUMNS.split(',').every((c) => c !== 'owner' && c !== 'report_weight' && c !== 'search'), 'market listings: LISTING_COLUMNS names a private column');
+
+// Paging.
+ok(fixtureSearch({ page_size: 10 }, OPEN).length === 10 && fixtureSearch({ page: 4, page_size: 10 }, OPEN).length === 7, 'market search: paging of 10 over 47 rows');
+ok(fixtureSearch({ page: 5, page_size: 10 }, OPEN).length === 0, 'market search: a page past the end must be empty');
+ok(fixtureSearch({ page_size: 1000 }, OPEN).length === Math.min(MAX_PAGE_SIZE, 47) && fixtureSearch({ page_size: 0 }, OPEN).length === 1, 'market search: the page size is clamped to 1..50');
+ok(new Set(fixtureSearch({ page_size: 10 }, OPEN).concat(fixtureSearch({ page: 1, page_size: 10 }, OPEN)).map((r) => r.id)).size === 20, 'market search: two pages must not overlap');
+for (const bad of [{ page: -1 }, { page: 200 }]) {
+  let c = ''; try { fixtureSearch(bad, OPEN); } catch (e) { c = e.code; }
+  ok(c === 'page_invalid', `market search: ${JSON.stringify(bad)} must answer page_invalid`);
+}
+{ let c = ''; try { fixtureSearch({ sort: 'bogus' }, OPEN); } catch (e) { c = e.code; } ok(c === 'sort_invalid', 'market search: an unknown sort'); }
+{ let c = ''; try { fixtureSearch({ price_max: 100 }, OPEN); } catch (e) { c = e.code; } ok(c === 'currency_required', 'market search: a price range needs a currency'); }
+
+// Filters, each against a count worked out from the table above.
+const idsOf = (rows) => rows.map((r) => r.id).sort().join();
+const want = (fn) => seen(fn).map((l) => l.id).sort().join();
+ok(fixtureSearch({ kind: 'item', page_size: 50 }, OPEN).length === 19, 'market search: kind item');
+ok(fixtureSearch({ kind: 'room', page_size: 50 }, OPEN).length === 12, 'market search: kind room');
+ok(fixtureSearch({ kind: 'ride', page_size: 50 }, OPEN).length === 8, 'market search: kind ride');
+ok(fixtureSearch({ kind: 'meetup', page_size: 50 }, OPEN).length === 8, 'market search: kind meetup');
+ok(fixtureSearch({ kind: 'cash' }, OPEN).length === 0, 'market search: cash is empty');
+ok(idsOf(fixtureSearch({ category: 'camping', page_size: 50 }, OPEN)) === want((l) => l.category === 'camping') && fixtureSearch({ category: 'camping' }, OPEN).length === 3, 'market search: category camping');
+ok(idsOf(fixtureSearch({ city: 'th-chiang-mai', page_size: 50 }, OPEN)) === want((l) => l.city === 'th-chiang-mai'), 'market search: city Chiang Mai (a ride by its departure city)');
+ok(fixtureSearch({ city: 'th-pai', page_size: 50 }, OPEN).every((r) => r.kind !== 'ride'), 'market search: a ride is not found by its destination');
+ok(fixtureSearch({ date_from: '2026-11-22', page_size: 50 }, OPEN).length === 3, 'market search: three windows reach 2026-11-22 or later');
+ok(fixtureSearch({ date_from: '2026-11-23', page_size: 50 }, OPEN).length === 1, 'market search: a window that ended the day before does not overlap');
+ok(fixtureSearch({ date_to: '2026-10-18', page_size: 50 }, OPEN).length === 0, 'market search: nothing starts before today');
+ok(idsOf(fixtureSearch({ date_to: TODAY, page_size: 50 }, OPEN)) === want((l) => l.starts_on <= TODAY), 'market search: a window starting on the last day overlaps');
+ok(fixtureSearch({ free_only: true, page_size: 50 }, OPEN).every((r) => r.price_amount === 0) && fixtureSearch({ free_only: true }, OPEN).length === 3, 'market search: free only');
+const thb = fixtureSearch({ price_max: 1000, currency: 'THB', page_size: 50 }, OPEN);
+ok(thb.every((r) => r.price_amount === 0 || (r.price_currency === 'THB' && r.price_amount <= 1000)), 'market search: up to 1000 baht holds free and baht rows only');
+ok(thb.some((r) => r.price_amount === 0) && !thb.some((r) => r.price_amount === null), 'market search: a price range keeps free rows and drops no-price rows');
+ok(fixtureSearch({ price_min: 1, price_max: 1000, currency: 'THB', page_size: 50 }, OPEN).every((r) => r.price_amount >= 1 && r.price_currency === 'THB'), 'market search: from 1 baht drops free rows');
+ok(fixtureSearch({ kind: 'item', city: 'th-bangkok', price_max: 2000, currency: 'THB', page_size: 50 }, OPEN).length === 3, 'market search: filters combine');
+
+// Sorts.
+const np = fixtureSearch({ sort: 'price_up', page_size: 50 }, OPEN);
+const priced = np.filter((r) => r.price_amount !== null);
+ok(np[0].price_amount === 0 && np[np.length - 1].price_amount === null && priced.every((r, i) => i === 0 || priced[i - 1].price_amount <= r.price_amount), 'market search: price up, free first, no price last');
+const pd = fixtureSearch({ sort: 'price_down', page_size: 50 }, OPEN).filter((r) => r.price_amount !== null);
+ok(pd.every((r, i) => i === 0 || pd[i - 1].price_amount >= r.price_amount), 'market search: price down');
+ok(all.every((r, i) => i === 0 || all[i - 1].created_at >= r.created_at), 'market search: newest first');
+const so = fixtureSearch({ sort: 'soonest', page_size: 50 }, OPEN);
+const start = (r) => (r.starts_on > TODAY ? r.starts_on : TODAY);
+ok(so.every((r, i) => i === 0 || start(so[i - 1]) <= start(r)) && idsOf(so) === idsOf(all) && so.map((r) => r.id).join() !== all.map((r) => r.id).join(), 'market search: soonest first, and it differs from newest');
+
+// Text: prefixes, every word, typos, accents and scripts without spaces.
+const titleOf = (id) => FIX.find((l) => l.id === id).title;
+const q = (s) => fixtureSearch({ q: s, page_size: 50 }, OPEN);
+ok(q('baby strol').length === 1 && /baby stroller/.test(titleOf(q('baby strol')[0].id)), 'market search: words match by prefix, all of them');
+ok(q('stroler').some((r) => /baby stroller/.test(r.title)), 'market search: a typo still finds the stroller');
+ok(q('BRITAX  group').length === 1 && q('britax zzzzqqqq').length === 0, 'market search: case and spacing do not matter, and every word must match');
+ok(q('phong rieng').length === 1 && /Ho/.test(q('phong rieng')[0].title.normalize('NFD').replace(/[̀-ͯ]/g, '')), 'market search: Vietnamese accents fold');
+ok(q('Phòng riêng').length === 1, 'market search: an accented query finds it too');
+ok(q('ห้องพัก').length === 1 && q('បន្ទប់').length === 1 && q('ຫ້ອງພັກ').length === 1, 'market search: Thai, Khmer and Lao queries match as substrings');
+ok(q('').length === 47 && q('   ').length === 47 && q('!!!').length === 47, 'market search: an empty query matches everything');
+ok(fold('Phòng đẹp') === 'phong dep', 'market search: fold maps accents and d-stroke');
+
+// One listing, and my listings.
+const byTitle = (re) => FIX.find((l) => re.test(l.title));
+const one = (re) => fixtureListing(byTitle(re).id, OPEN);
+ok(one(/Britax/) && one(/Britax/).mine === false && one(/Britax/).status === 'open' && !('owner' in one(/Britax/)) && !('_owner' in one(/Britax/)), 'market listing: a visible listing opens, not mine, without an owner');
+ok(one(/lightweight stroller/).mine === true, 'market listing: my own listing says mine');
+ok(one(/Ended:/) === null && one(/Owner under review/) === null, 'market listing: an ended listing and an under-review owner open as null');
+ok(one(/My closed/).status === 'closed' && one(/My hidden/).status === 'hidden', 'market listing: my own closed and hidden listings open for me');
+ok(fixtureListing('00000000-0000-4000-8000-999999999999', OPEN) === null, 'market listing: an unknown id is null');
+const mine = fixtureMine({ rows: FIX });
+ok(mine.length === 4 && mine.map((r) => r.status).sort().join() === 'closed,hidden,open,open' && mine.every((r) => !('owner' in r) && !('_owner' in r)), 'market mine: four rows, their statuses, no owner');
+ok(all.every((r) => !['My closed listing: rain jacket', 'My hidden listing: room with a reported photo'].includes(r.title)), 'market search: my closed and hidden listings never appear');
+
+// The pure helpers in js/market-listings.js.
+{
+  const a = newListingId(), b = newListingId();
+  ok(isListingId(a) && a !== b && a[14] === '4' && /[89ab]/.test(a[19]), 'market listings: newListingId makes distinct v4 uuids');
+}
+ok(listingErrorCode(400, { code: '22003', message: 'numeric field overflow' }) === 'price_invalid', 'market listings: a price too large to store is a price problem');
+ok(isListingId('00000000-0000-4000-8000-000000000001') && !isListingId('x') && !isListingId('1; drop table') && !isListingId(null), 'market listings: isListingId');
+{
+  const b = searchBody({ q: '  stroller  ', kind: 'item', category: 'toys', city: 'th-bangkok', dateFrom: '2026-10-20', dateTo: '2026-10-25',
+    priceMin: 100, priceMax: 900, currency: 'THB', freeOnly: true, sort: 'price_up', page: 2, pageSize: 20, owner: 'x', evil: 1 });
+  ok(b.q === 'stroller' && b.kind === 'item' && b.category === 'toys' && b.city === 'th-bangkok' && b.date_from === '2026-10-20' && b.date_to === '2026-10-25'
+    && b.price_min === 100 && b.price_max === 900 && b.currency === 'THB' && b.free_only === true && b.sort === 'price_up' && b.page === 2 && b.page_size === 20, 'market listings: searchBody maps every option');
+  ok(!('owner' in b) && !('evil' in b), 'market listings: searchBody drops unknown keys');
+  const d = searchBody({});
+  ok(d.sort === 'newest' && d.page === 0 && d.page_size === 24 && Object.keys(d).length === 3, 'market listings: searchBody defaults');
+  const c = searchBody({ page: 9999, pageSize: 9999, sort: 'bogus', kind: 'cash', category: 'weapons', city: 'xx-nowhere', dateFrom: 'tomorrow', priceMax: 500, freeOnly: 'yes' });
+  ok(c.page === 199 && c.page_size === 50 && c.sort === 'newest' && !('kind' in c) && !('category' in c) && !('city' in c) && !('date_from' in c)
+    && !('price_max' in c) && !('currency' in c) && !('free_only' in c), 'market listings: searchBody clamps and drops what the server would refuse');
+  ok(searchBody({ pageSize: -3, page: -4 }).page_size === 1 && searchBody({ page: -4 }).page === 0, 'market listings: searchBody clamps low values');
+  ok(searchBody({ q: 'x'.repeat(300) }).q.length === 100, 'market listings: searchBody caps the query');
+  ok(searchBody({ priceMin: 0, priceMax: 0, currency: 'THB' }).price_min === 0, 'market listings: a price of 0 is kept');
+}
+{
+  const f = insertBody({ kind: 'item', intent: 'give', category: 'toys', city: 'th-bangkok', starts_on: '2026-10-20', ends_on: '2026-10-25', title: 'Toy box',
+    body: '', price_amount: 0, owner: 'x', status: 'hidden', report_weight: 0, to_city: null, seats: undefined });
+  ok(f.price_amount === 0 && f.title === 'Toy box' && !('owner' in f) && !('status' in f) && !('report_weight' in f) && !('body' in f) && !('to_city' in f) && !('seats' in f), 'market listings: insertBody keeps allowed fields, drops private ones and empties');
+}
+ok(listingErrorCode(400, { code: 'P0001', message: 'text_rejected' }) === 'text_rejected' && listingErrorCode(400, { message: 'rate_limited:post' }) === 'rate_limited:post'
+  && listingErrorCode(400, { message: 'not_signed_in' }) === 'signed_out' && listingErrorCode(401, { message: 'JWT expired' }, true) === 'expired'
+  && listingErrorCode(401, null, false) === 'signed_out' && listingErrorCode(503, null, true) === 'server' && listingErrorCode(400, { message: 'something odd' }) === 'failed'
+  && listingErrorCode(400, { code: '23514', message: 'new row for relation "listings" violates check constraint "listings_category"' }) === 'category_invalid'
+  && listingErrorCode(409, { code: '23505', message: 'duplicate key value violates unique constraint "reports_once_per_listing"' }) === 'already_reported', 'market listings: listingErrorCode maps server messages');
+for (const code of ['market_closed', 'not_member', 'cash_closed', 'account_too_new', 'city_invalid', 'to_city_invalid', 'kind_intent', 'kind_fields',
+  'category_invalid', 'activity_invalid', 'room_type_invalid', 'seats_invalid', 'price_invalid', 'currency_invalid', 'dates_required', 'window_order',
+  'window_past', 'window_too_long', 'starts_too_late', 'title_length', 'title_invalid', 'body_length', 'body_invalid', 'text_rejected', 'contact_details',
+  'status_invalid', 'not_owner', 'gone', 'rate_limited:post', 'rate_limited:open', 'rate_limited:same_title', 'rate_limited:report', 'rate_limited:name',
+  'report_reason_invalid', 'report_target_invalid', 'own_listing', 'already_reported', 'note_length', 'sort_invalid', 'page_invalid', 'currency_required']) {
+  const text = listingErrorText({ code });
+  ok(typeof text === 'string' && text.length > 8 && text !== listingErrorText({ code: 'nothing-like-it' }), `market listings: the code "${code}" has its own plain copy`);
+}
+ok(listingErrorText({ code: 'text_rejected' }) === 'This breaks the market rules.' && listingErrorText({ code: 'contact_details' }) === 'Keep contact details for messages.', 'market listings: the two section 8 sentences are exact');
+ok(!/[a-z]_[a-z]/.test(listingErrorText({ code: 'rate_limited:post' })) && !/server|exception|postgres/i.test(Object.values({ a: listingErrorText({ code: 'failed' }) }).join()), 'market listings: copy never shows a code or a server word');
 
 // --- report ------------------------------------------------------------------
 if (warnings.length) {

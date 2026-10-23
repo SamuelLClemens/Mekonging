@@ -1,74 +1,73 @@
-# Handoff — 2026-10-19 (slice M3b: Market accounts and sign-in, closed beta)
+# Handoff — 2026-10-23 (slice M4a: listings and search, server side)
 
 ## Shipped
-- M3b: branch `feat/m3-signin`, [PR #125](https://github.com/SamuelLClemens/Mekonging/pull/125), commit 7dbf1de, merged by the owner as 4a7e48c at 13:32 UTC, `mk-v0.645.0`. The Pages deploy and the guards run both succeeded, and www.mekonging.com serves `mk-v0.645.0`.
-  - `supabase/migrations/001_accounts.sql`:
-    - Tables: `profiles` and `cities` (174, generated). The `private` schema holds `admins`, `testers`, `settings` (`market_open` and `cash_open` false, `terms_version` `beta-2026-10`) and `filter_terms` (the §8 list).
-    - Functions: the helpers (`is_admin`, `is_tester`, `is_member`, `setting_on`, `normalise`, `text_hit`), `market_me`, `market_join`, `market_delete_account`, and the display-name trigger.
-    - Rules: RLS on every table, nothing granted to anon, and each function's default EXECUTE revoked before exactly five are granted to `authenticated`.
-  - `supabase/tests/001_rls.sql`: 65 checks in one rolled-back block, then a summary line (`PASS summary: 65 checks, 0 failed, nothing kept`). The session first said 66: a miscount, not a missing check.
-  - `scripts/build-market-cities.py` writes `js/data/market-cities.js`, the migration's seed block and the test's expected count. `--check` exits 1 when either output is stale. It is documented in `scripts/README.md`.
-  - Client modules:
-    - `js/market-config.js` (public values only).
-    - `js/market-api.js` (plain fetch, refresh in one flight, error codes; `fixtureAllowed()` and `signInPlace()` are pure).
-    - `js/market-fixture.js` (127.0.0.1 and localhost only; the code 000000 is "wrong", the name "admin" is refused, `&tester=1` makes a tester).
-    - `js/market-link.js` (eager: `?signin=` leaves the address before the first render).
-    - `js/screens/market-account.js` (`#market-signin`, `#market-me`, Turnstile, the state line on `#market`).
-  - CSP: `connect-src` adds the Supabase project; `script-src` and a new `frame-src` add `challenges.cloudflare.com`. There is no `wss://`: 0 sockets were measured, and Realtime (M5) adds it.
-  - "Reset everything" in Settings also signs the Market session out.
-- This handoff's branch, `docs/m3b-handoff`, records the owner's rulings of 2026-10-19, made after M3b:
-  - Photos: category artwork on every card, and up to 3 traveller photos per listing.
-  - Links: the app's own links only.
-  - The Market is redesigned to work like a modern marketplace.
-  - Order: Market first, one slice per session.
-  - Where they are recorded: `docs/EXCHANGE.md` §2, §10, §14 (new item 8, photos, for legal), §16, and §17, where M4 is split into M4a, M4b and M4c. `docs/PLAN.md` holds the release order and the new "City depth" program.
+- **Built and proven, awaiting the owner's merge:** M4a, branch `feat/m4a-listings`, [PR #127](https://github.com/SamuelLClemens/Mekonging/pull/127) (`mk-v0.646.0`). The owner ran `002_listings.sql` and `supabase/tests/002_rls.sql` in the SQL editor, and the test's second run printed `PASS summary: 314 checks, 0 failed, nothing kept`; the output is in the PR ([comment](https://github.com/SamuelLClemens/Mekonging/pull/127#issuecomment-6374419083)). [PR #126](https://github.com/SamuelLClemens/Mekonging/pull/126) (docs and 001b) merged first, as 6742a29. The PR is marked ready once CI passes on the handoff commit.
+  - `supabase/migrations/002_listings.sql` (pure ASCII, one transaction, decisions in its header):
+    - the enums, `listings`, `reports`, `blocks` (table and policies only, nothing granted until M5) and `private.name_changes`;
+    - BEFORE triggers: the kind, intent, field, price and window rules (`NaN` refused), the §8 text check, the contact-detail check (phones of 8 or more digits with Thai, Lao and Khmer digits, emails, URLs, bare domains, `@handles`, messenger names), `updated_at`, the §9 rate limits (including a new account's lower limits) and the 3-a-day name-change limit;
+    - AFTER triggers: a flag term files a `filter` report; report weight counts distinct reporters whose accounts were 24 hours old plus system flags, one lock per listing, and the listing is hidden at 3;
+    - `private.today()`, `private.search_fold()` (a light fold for search: accents out, digits kept), `private.contact_hit()`, `private.listing_json()` (the one list of columns that leave the server: no `owner`), and the helpers `private.owns(id)`, `private.can_see(id)`, `private.can_post(kind)`, `private.owner_ok`, `private.blocked`;
+    - `market_search` and `market_listing` (callable by `anon`; they answer `market_closed` to visitors and non-testers until `market_open` is true) and `market_my_listings`;
+    - column grants that make `owner`, `report_weight`, `search` and `search_text` unreadable and unsettable by any role, and the §4 policies, which never name `owner`;
+    - "kush" and "gun" no longer block display names (`private.filter_terms.in_names`).
+  - `supabase/tests/002_rls.sql`: one rolled-back block, PASS or FAIL per check, then a summary line. About 300 checks (the summary line gives the exact number). Pure ASCII.
+  - `js/market-listings.js` (search, one listing, my listings, post, close, delete, report; imports only names `market-api.js` already exports, so an open app holding the old copy is safe) and `js/market-fixture-listings.js` (47 visible listings in 4 kinds and 17 cities, free, paid and no-price rows in 5 currencies, Thai, Vietnamese, Khmer and Lao titles, an 80-character title, and the rows that must never show: an ended listing, an under-review owner, and the traveller's own closed and hidden listings).
+  - `scripts/check-market-sql.py` (new guard; README row; `guards.yml`): see Verified.
+  - `docs/EXCHANGE.md`: §3 to §4 (the RPC table, the owner-free policies and the posting rule), §8 (the two names, the messenger list, the contact-detail rules), §16 (three rulings) and §17 (M4a built).
+- **Posting contract (it changes M4b):** `INSERT ... RETURNING` is refused, because PostgreSQL checks the SELECT policy against a row that does not exist yet and a policy that looks the row up cannot find it. `postListing` therefore picks the id (`newListingId()`), inserts with `Prefer: return=minimal` and reads the row back with `getListing(id)`. Every read must name its columns (`LISTING_COLUMNS`): `select=*` asks for `owner` and fails.
+- Owner rulings during M4a (2026-10-19, recorded in §16): the closed beta stays closed to visitors until M9; "kush" and "gun" are allowed in names and refused in listings; no native speaker is available to check the Thai, Vietnamese, Khmer and Lao terms (they ship unchecked).
+- Earlier and already merged: M3b (PR #125, `mk-v0.645.0`), M3a (#124), D5 Laos (#122).
 
 ## Verified
-Headless Chrome over CDP, a fresh profile per theme, 127.0.0.1:8753 served from the worktree, 375 x 812 at device scale 2, fixture mode, Cloudflare's always-pass test key and `caffeinate -d`. `document.hidden` was false for every state. The driver is `side-session-notes/local_45164220-ea74-40e6-851e-808583e5b9f4/m3b-cdp/` (`cdp.py`, a stdlib WebSocket client, and `states.py`).
-- The four done-when states in light and dark: signed out (18 controls), code entry with a 63-character email (15), signed in (14) and offline (14). Each had 0 overflow, 0 body controls under 44 px and 0 CSP violations.
-  - So did data switched off, "Finish joining" (a link opened in a fresh browser), the delete confirm and "Account deleted".
-  - On the `#market` state line, the only small control is the existing board's paste field (309 x 22). It is not new.
-- 0 console errors, 0 exceptions, 0 Turnstile warnings and 0 WebSockets.
-  - Off-origin requests went to `challenges.cloudflare.com` and to the app's existing `api.open-meteo.com` and `open.er-api.com`.
-  - Turnstile renders in a closed shadow root. Its token is read from `input[name=cf-turnstile-response]`.
-- The 25-character fixture token is in neither `JSON.stringify(store)` nor `exportData()`.
-  - Sign out, delete and "Reset everything" each left `mk-market-auth` null.
-  - The link sign-in left the address at `/?market=fixture#market-signin` with no token in it or in the Back-stack state.
-  - Back from Account landed on `#market`, with no bounce.
-- Two bugs were found by this run and fixed before the PR:
-  - The route renders twice at start-up, and the second render drew "signed out" over a successful link sign-in. The fix is one shared flight.
-  - Detached Turnstile widgets raised warnings. They are now removed.
-- `validate.mjs`: 18,470 of 18,470 checks. Negative control: with the fixture gate deliberately broken, it failed with 9 errors.
-- All 17 guards pass, as do `check-place-fields --assert`, `port-themes --check`, `check-cache-version` (12 files) and `build-market-cities --check`.
-  - `check-js-syntax` parses 246 files, and `jsc -m` parses every edited file.
-- Not run here: the SQL. There is no Postgres on this machine, and the owner declined installing one. It was reviewed by reading only.
+- **The SQL ran** (the owner, in the SQL editor of project `xnruspjauhmcrqxmjmxg`; no Postgres on this machine):
+  - `002_listings.sql`: "Success". `POST /rest/v1/rpc/market_search` and `market_listing` with only the publishable key now answer HTTP 400 `market_closed` (before: 404 `PGRST202`).
+  - `002_rls.sql`, first run (2026-10-20): 121 of 314 FAIL, every one a defect in the test, none in the migration.
+    - 116 came from the test's own inserts calling `private.today()` as role `authenticated`. 002 revokes that function from clients on purpose, and the test asserts the denial for `anon`.
+    - 5 came from three `lines || 'PASS ...'` appends. Postgres reads a bare literal after `||` on a `text[]` as an array literal ("malformed array literal"), which rolled back the rate-limit and report-limit loops, so the limit checks failed in turn.
+    - Fix (commit 21b2814, migration unchanged): the inserts use `(now() at time zone 'Asia/Bangkok')::date`, the three literals are cast to text.
+  - `002_rls.sql`, second run (2026-10-23): 314 of 314 PASS, 0 FAIL, nothing kept.
+  - Security Advisor after 002: the owner reports 0 Errors and only warnings. The warnings were not itemised; expected are the five from 001 plus `market_search`, `market_listing` (definer, `anon`, by design) and `market_my_listings`.
+- Checked by reading before the SQL ran:
+  - `python3 scripts/check-market-sql.py`: PASS on 5 SQL files. It checks ASCII only (from 002 on), balanced quotes, dollar quotes and brackets, `begin`/`end;` pairs, `begin;` and `commit;`, RLS on every table, `search_path` pinned on every function, every function named in a `revoke execute`, no policy naming `owner`, and runs `contact_hit`'s patterns in Python (30 phrases that must be refused, 28 that must pass). Its negative controls: a deleted quote or bracket is caught about 4 times in 5 (the rest fall in comments or strings); a policy naming `owner`, a table without RLS, a function never revoked, dropping `whatsapp` from the list and allowing leading-zero amounts are each caught.
+  - An independent read of both SQL files (a Sonnet reviewer, then each finding checked against the code) found six defects, all fixed: a variable in the test that clashed with a column alias (the run would have aborted at its last line); a race in the auto-hide count (now `pg_advisory_xact_lock` per listing); query words split differently from the stored text (now taken from the same parser); `NaN` accepted as a price; `@8am` read as a handle; a cash filter test that could not fail (a real cash row is now seeded).
+  - It could not settle whether a policy expression needs privilege on a column no role may select (the PostgreSQL documentation is silent; the regression tests have no case). So the policies no longer name `owner`: they call `private.owns(id)` and `private.can_see(id)`, which led to the posting contract above.
+  - The reviewer ran `contact_hit`'s regexes in Tcl's engine (the same Spencer engine as Postgres) and a 4,000-string fuzz: 3 outcomes differed from the Python mirror and in all 3 the mirror was stricter. The lookbehind constraints could not be run (Tcl 8.5 has none) and are verified by reading.
+- `jsc -m scripts/validate-jsc.mjs`: 19,252 of 19,252 checks, EXIT 0 (was 18,470). The new checks cover the fixture against the server's own rules (intent pairs, window caps, prices, seats, cities, no contact details), `fixtureSearch` (the gate, paging, every filter, every sort, typos, accents, scripts without spaces), `fixtureListing`, `fixtureMine`, and the pure helpers. Two deliberate breaks of the fixture search (ended rows visible; `owner` leaking) failed it with 10 and 4 errors.
+- All 17 guards pass (`js-syntax` 246 files, `imports`, `lazy-data`, `preloads`, `ui-strings`, `month-arrays`, `contrast`, `skins`, `spacing`, `place-dupes`, `undefined`, `net-gates`, `sources`, `secrets`, `market-sql`), as do `check-place-fields --assert`, `port-themes --check`, `check-cache-version` (manifest regenerated, 258 files) and `build-market-cities --check`. `jsc -m` parses every edited JS file (`main.js` and `sw.js` stop at the expected `navigator` and `self` ReferenceErrors).
+- Nothing on screen changed (M4a has no screens), so there is no 375 px proof.
+- From the owner's earlier session (M3b, recorded for the record): migration 001 and the repair 001b ran, `001_rls.sql` printed 65 of 65 PASS, and the Security Advisor showed 0 errors and 5 warnings on 2026-10-19: Supabase's own `rls_auto_enable` twice, and `market_delete_account`, `market_join` and `market_me` (definer by design).
 
-## Owner checks for M3b (status at handoff)
-- [x] Migration 001 run in the SQL editor (after the merge). The API now answers a visitor with 401 "permission denied" on `market_me`, `market_join`, `market_delete_account`, `profiles` and `cities`.
-- [x] Its non-ASCII text arrived garbled, and was repaired by `supabase/migrations/001b_fix_text_encoding.sql`, which the owner ran successfully.
-  - The cause: the session put the SQL on the clipboard with a plain `pbcopy`, in a shell with no UTF-8 locale, so UTF-8 was read as Mac Roman.
-  - What was garbled: the 22 Thai, Vietnamese, Khmer and Lao filter terms, and the two Vietnamese "d" letters in `normalise()`'s look-alike map. Those shifted the map, so "ADM1N" passed.
-  - ASCII (tables, policies, grants, settings, the 174 cities) was intact.
-  - 001b is pure ASCII (`U&'...'` and `chr()`), re-runnable, and its 22 terms decode back identical to 001's.
-  - A read-only diagnostic found it: the database is PostgreSQL 17.11 with the ICU provider (`en-US`), and lowercasing turned Thai ก into ฌ, the signature of Mac Roman mojibake.
-- [x] `supabase/tests/001_rls.sql`, after 001b: 65 of 65 PASS, `PASS summary: 65 checks, 0 failed, nothing kept`. The output is on PR #125's thread.
-  - The first run, before 001b, stopped at 30 lines with 7 FAIL. Three were Supabase's own `rls_auto_enable` event-trigger function, which the test now skips because an event trigger cannot be called through the API. Four came from the garbling.
-  - The test is now pure ASCII.
-- [ ] Security Advisor: no errors. WARN rows for the three `security definer` RPCs callable by `authenticated` are expected; they are definer by design (§4).
-- [ ] The owner signs in on the iPhone Home Screen app by code. Then their user id goes into `private.admins` and `private.testers`.
-  - Look the id up in Authentication, Users. One line of SQL inserts it into each table.
-- [ ] The owner signs in by link in Safari, then deletes a test account there.
-  - The app confirms the deletion only when Auth refuses the old token ("the server confirms it is gone").
-- [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has. The input takes 6 to 10.
+## Owner steps for M4a (all done except the merge)
+- [x] PR #126 merged (6742a29); #127's own diff shows only M4a.
+- [x] `002_listings.sql` run; the probe answers 400 `market_closed`.
+- [x] `002_rls.sql`: 314 of 314 PASS on the second run; the output is in PR #127.
+- [x] Security Advisor after 002: 0 Errors.
+- [ ] Mark #127 ready (the session, after CI passes on the handoff commit), then the owner merges.
+
+## Owner checks for M3b (carried; the first two are done)
+- [x] Migration 001 run, repaired by 001b (see the earlier handoff in git, `3f4d32f`), `001_rls.sql` 65 of 65 PASS.
+- [x] Security Advisor after 001: 0 errors.
+- [ ] The owner signs in on the iPhone Home Screen app by code. Then their user id goes into `private.admins` and `private.testers` (look the id up in Authentication, Users; one line of SQL inserts it into each table).
+- [ ] The owner signs in by link in Safari, then deletes a test account there (the app confirms deletion only when Auth refuses the old token).
+- [ ] From the first real email: whether `{{ .Token }}` and `{{ .TokenHash }}` both render, and how many digits the code has (the input takes 6 to 10).
 
 ## Not done / known issues
-- New in M3b:
-  - Every owner check above is still open.
-  - Name false positives in the §8 list: "kush" and "gun" are block terms and also real given names and nicknames. They are for M4a's native-speaker review.
-  - Renaming a profile waits for M4a's rate limits. The grant and the trigger exist and are tested.
+- New in M4a:
+  - The Advisor's warnings were not itemised (the owner reported 0 Errors). Whoever next opens `.../advisors/security` should confirm the expected list.
+  - Nothing has been posted on production and `market_open` is false, so no real listing has been read back. M4b's live check ("the owner and a tester see each other's listings") needs the carried M3b checks first: the owner's user id in `private.admins` and `private.testers`.
+  - The Thai, Vietnamese, Khmer and Lao block terms are unchecked by a native speaker (none available, owner 2026-10-19).
+  - `001_rls.sql` now fails two catalogue lines after 002 (which functions `anon` and `authenticated` may execute); its header says so, and `002_rls.sql` repeats the catalogue for the whole schema.
+  - A list of four 2-digit sizes ("38 39 40 41") reads as a phone number and is refused; a person can still write a number in words. The report path is the second line of defence (`docs/EXCHANGE.md` §8).
+  - `market_search` price sorts compare amounts across currencies (a dong price sorts above a baht price); pair them with a city or a currency in the screens.
+  - `market_listing` returns the owner's month of joining (`member_since`, "YYYY-MM"): M4b asked for "member since", and it is a weak fingerprint across one person's listings.
+  - `service_role` keeps Supabase's default table grants and can read `owner`. By design; the migration does not revoke it.
+  - Supabase's own `rls_auto_enable` shows as an Advisor warning. It is an event-trigger function, not callable through the API; the tests skip it and the migration leaves it alone.
+  - The fixture's typo match and word splitting approximate the server's (`pg_trgm`, the default text-search parser): a dotted token such as "3.5" is two words in the fixture and one on the server.
+  - The router renders a route twice at start-up (carried): M4b's async screens must check `isConnected`.
+- Carried from M3b:
+  - Renaming a profile now has its rate limit (3 a day), proven only once 002's test has run.
   - The Market's new strings are English only. "Send a new code" returns to the form, because each code needs a new robot check.
-  - Why the router renders a route twice at start-up was not traced. Screens with async work must check `isConnected` (CLAUDE.md).
-  - The iOS wrapper shows the honest gate ("open www.mekonging.com in Safari or the Home Screen app"). It was proven by `signInPlace('mekong:', …)` in `validate.mjs`, not on a device.
+  - The iOS wrapper shows the honest gate ("open www.mekonging.com in Safari or the Home Screen app"). It was proven by `signInPlace('mekong:', ...)` in `validate.mjs`, not on a device.
 - Carried from M3a:
   - In the iOS wrapper, OCR from `mekong://` (a blob worker's `importScripts` through `WebSchemeHandler`) is untested. Check Point & translate at the next wrapper build.
   - Offline OCR after first use is untested. The `.traineddata.gz` files are not in the service-worker manifest.
@@ -129,76 +128,20 @@ Headless Chrome over CDP, a fresh profile per theme, 127.0.0.1:8753 served from 
   - The main checkout is behind origin. Start every session in a worktree from `origin/feat/scaffold-bangkok-slice`.
   - Pai stays deferred.
 
+
 ## Open decisions (need the user)
-Closed on 2026-10-19: 9, 11 and 12 (earlier that day), and after M3b, 15 to 18:
-- 15: D5 tidy runs after M5.
-- 16: the city-depth order is the proposed one.
-- 17: M5 runs right after M4c.
-- 18: visitors may browse without an account, which supersedes the 2026-10-12 sign-in-to-read ruling (`docs/EXCHANGE.md` §16, ruling 5).
+Closed on 2026-10-19: 9, 11 and 12 (earlier that day), 15 to 18 (D5 tidy after M5; the city-depth order; M5 right after M4c; visitors may browse, which gates on M9), and during M4a: "kush" and "gun" allowed in names, no native speaker available, the closed beta stays closed to visitors.
 
 The numbers below keep their old values.
 6. Translation review of "Market", by a native speaker if one is available. Least sure: Korean, Polish, Turkish, Filipino, Chinese and Japanese (alternatives are in git history, `docs/HANDOFF.md` at ae4f0f5).
-8. Legal, for Omer Hanegbi or Omri Siri: the questions in `docs/EXCHANGE.md` §14, now including item 8 (photos uploaded by travellers), and the dispensary question in `docs/PLAN.md`, Bangkok build-out. The terms and privacy policy gate M9 (opening to everyone); cash swap gates M10.
+8. Legal, for Omer Hanegbi or Omri Siri: the questions in `docs/EXCHANGE.md` §14, including item 8 (photos uploaded by travellers) and item 5 (the privacy policy must say that listings are public before visitors read them), and the dispensary question in `docs/PLAN.md`, Bangkok build-out. The terms and privacy policy gate M9 (opening to everyone); cash swap gates M10.
 10. Topbar icon spacing: the title column has 102 px, so a 44 px pitch costs title width. Recommended: leave the topbar until Q3 to Q5 are done, then test a wider pitch against the nine longest titles.
 13. Relabel the 46 leftover "Lao National Tourism Administration" entries (and 4 "Ministry of Information, Culture and Tourism") on tourismlaos.org as "Tourism Laos"? This is data text only, and it bumps the version. Recommended: yes, inside D5 tidy.
 14. Add a coordinates check slice? D5 Laos checked 2 of 185 Lao pins, and both were wrong. Recommended: yes, one country per session, starting with Laos's remote sites, flagging any record more than 2 km from its OSM object.
+19. Install `pglast` (a PostgreSQL parser for Python, from PyPI, a few MB) so a future session can syntax-check SQL and PL/pgSQL before the owner pastes it? It parses only; it runs no database. Recommended: yes. It would have caught the type of mistake this slice's reviewer found by reading.
 
 ## Next session prompts
-Order (owner, 2026-10-19): **M4a, M4b, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
-
-**Before M4a:** the M3b owner checks above. If they are not all ticked when M4a starts, do them first, with the owner, in the M3b style:
-- one small step per message;
-- `open` the dashboard page and `pbcopy` the script;
-- the owner copies the result grid (Export, then Copy as CSV) and the session reads it with `pbpaste`, then empties the clipboard.
-- Never ask for or accept a secret.
-
-### M4a: listings and search, server side
-> Read CLAUDE.md, docs/HANDOFF.md, and docs/EXCHANGE.md §3 (listings and reports), §4, §8, §9, §10, §16 (the 2026-10-19 rulings) and §17 (M4 and M4a). Run /slice for slice M4a: listings and search, server side.
-> **Start.**
-> - `git fetch`; `gh pr list --state all`. Confirm the `docs/m3b-handoff` PR is merged and no PR is open.
-> - Confirm the M3b owner checks are ticked in docs/HANDOFF.md. Probe: `POST /rest/v1/rpc/market_me` with only the publishable key must answer 401 (permission denied), not 404 `PGRST202`. If a check is open, finish it with the owner first. Ask the owner to restore the project if Supabase paused it.
-> - Worktree from `origin/feat/scaffold-bangkok-slice` on `feat/m4a-listings`.
-> **Scope.**
-> 1. `supabase/migrations/002_listings.sql`:
->    - the §3 enums, `listings` and `reports`;
->    - BEFORE triggers:
->      - the §8 text check on title and body (reuse `private.normalise` and `private.text_hit`);
->      - the contact-detail and link rejection: phone numbers of 8 or more digits, emails, URLs, bare domains, @handles, and "line id", "whatsapp", "telegram", "wa.me", "t.me". The 2026-10-19 ruling is app links only;
->      - the kind, intent and window rules, and `updated_at`;
->      - the §9 rate limits, including the 3-a-day name change on `profiles`;
->    - AFTER triggers: report weight and auto-hide at 3 (distinct reporters whose accounts are at least 24 hours old, plus system flags); a flag term files a `filter` report;
->    - `market_my_listings()`, `private.today()`, and report snapshots set by trigger;
->    - column grants that make `owner` unselectable, and RLS exactly as the §4 table says.
->    - **Visitors browse without an account** (owner ruling 2026-10-19, §16 ruling 5, superseding sign-in-to-read). `anon` gets EXECUTE on the search RPC and a single-listing RPC only. Both return open, visible listings without `owner`. `anon` gets no table grant and cannot post, report, block or read a profile.
-> 2. Search, as one RPC over open, unexpired, visible and unblocked listings:
->    - free text over title and body: a generated `tsvector` (`simple` config, over normalised text) with a GIN index. Add `pg_trgm` for typo tolerance only if `pg_available_extensions` lists it, and install it into `extensions`, never `public`;
->    - filters: kind, category, city, date overlap, price range, free only;
->    - sorts: newest, soonest, price up, price down;
->    - pages of at most 50, with no `owner` in any row.
->    - Decide invoker or definer from the tests, and write the decision in the migration's header.
-> 3. `supabase/tests/002_rls.sql`, in the 001 pattern (one rolled-back block, PASS or FAIL lines, a summary line). It covers:
->    - the M4 done-when (§17);
->    - every seeded block term, plus a phone number, an email, a URL and a bare domain, rejected in a listing;
->    - each rate limit at its edge, including a new account's lower limits;
->    - auto-hide at exactly 3 eligible reports;
->    - search never showing hidden, ended or blocked listings and never returning `owner`, in every row shape, for `anon` and for a signed-in user;
->    - `anon` denied every table and every write.
-> 4. Client: a new module for the listing calls. Do not add exports to `js/market-api.js`, because an open app may hold the old copy (CLAUDE.md lazy-module rule). Add fixture data rich enough to design against in M4b: at least 40 listings across the four kinds and a dozen cities, mixed prices including free, long titles, and one hidden and one ended listing that must never show.
-> 5. The native-speaker check of the Thai, Vietnamese, Khmer and Lao terms (M4 done-when), and the owner's word on the two name false positives from M3b ("kush" and "gun").
-> **Pitfalls.**
-> - There is no Postgres here, and the owner declined a local install. Review the SQL by reading it.
-> - Open the PR as a **draft** and mark it ready only after the owner's 002 run prints only PASS. PR #125 was merged before migration 001 had run, and production waited on it.
-> - The Write and Edit tools decode a typed backslash-u escape into the raw character. Build SQL regex escapes from a script with `chr(92)`, then grep for invisible characters.
-> - Listing text is untrusted: render it with `textContent` only. Owner ids never leave the server (§4).
-> - Release bookkeeping: bump `APP_VERSION` and `CACHE_VERSION` together, run `build-sw-manifest.py --write`, and put new exports in new files.
-> **Done when:**
-> - the 002 test prints only PASS in the SQL editor, and the output is in the PR;
-> - the Security Advisor shows no errors;
-> - the native-speaker check is recorded, or the owner records that none is available;
-> - a validator test runs fixture search and gets the expected rows;
-> - every guard, `jsc -m` on each edited file and `jsc -m scripts/validate-jsc.mjs` pass;
-> - the PR is ready into `feat/scaffold-bangkok-slice`. Then run /handoff.
-> **Out of scope:** screens (M4b), photos (M4c), messages and blocks (M5), matching (M6), the review queue (M7).
+Order (owner, 2026-10-19): **M4a is done (merge pending), then M4b, M4c, M5**, then D5 tidy, then Bangkok B1 to B8, then city depth C1 onward (Chiang Mai, Hanoi, Ho Chi Minh City, Siem Reap, Phnom Penh, Luang Prabang, Da Nang and Hoi An, Vientiane). Each releasing slice stacks on the merged tip of the one before. Q2 (tools only) can run alongside any of them.
 
 ### M4b: the marketplace redesign
 > Read CLAUDE.md, docs/HANDOFF.md, DESIGN_SYSTEM.md, and docs/EXCHANGE.md §2, §11, §13, §16 (the 2026-10-19 rulings) and §17 (M4 and M4b). Run /slice for slice M4b: the marketplace screens.
@@ -235,7 +178,8 @@ Order (owner, 2026-10-19): **M4a, M4b, M4c, M5**, then D5 tidy, then Bangkok B1 
 > - Every gate still renders something (`check-net-gates`).
 > **Pitfalls.**
 > - The router renders a route twice at start-up: after every await, check `isConnected`, and share in-flight work.
-> - Use fixture mode, `?market=fixture` on 127.0.0.1, with M4a's fixture data.
+> - Use fixture mode, `?market=fixture` on 127.0.0.1, with M4a's fixture data (`js/market-fixture-listings.js`). The Market is closed in the fixture as on the server: add `&open=1` for everyone or `&tester=1` for the signed-in traveller.
+> - Make every listing call through `js/market-listings.js`. `postListing` picks the id itself and reads the row back (INSERT ... RETURNING is refused, `docs/EXCHANGE.md` §4); every read names its columns (`LISTING_COLUMNS`); print `listingErrorText(err)`, never a server message. Search price sorts compare amounts across currencies, so pair them with a city or a currency.
 > - Reuse the M3b CDP driver (see Verified) for real layout and screenshots.
 > **Done when:**
 > - At 375 px and at 1280 px, in light and dark, on the default skin and one dark skin, these screens render: home, results with a query and with filters, the filters sheet, the listing page, a post form per kind, My listings, and the empty and offline states.
