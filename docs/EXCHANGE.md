@@ -652,6 +652,11 @@ Every key and password stays in a dashboard or a password manager. None goes in 
 2. **"Kush" and "gun" are allowed in display names**, and still refused in listings (§8).
 3. **No native speaker is available** to check the Thai, Vietnamese, Khmer and Lao terms (§8). The terms ship unchecked.
 
+**Ruled by the owner, 2026-10-24 (before M4b):**
+1. **M4b is split in two**, one PR and one fresh session each:
+   - M4b-1, browse: the artwork, the home, search and filters, the listing page and the closed-beta preview;
+   - M4b-2, post: the post forms, My listings and the live owner-and-tester check.
+
 **Still open:**
 1. **The cash-swap amount cap**, and whether cash swap ships at all. This waits on legal (§14).
 
@@ -711,9 +716,24 @@ The original M4 done-when still holds across the three: the RLS tests show a str
   - An independent read of the SQL (2026-10-19) found six defects, all fixed: a variable in the test that clashed with a column alias, a race in the auto-hide count (now one lock per listing), query words split differently from the stored text, `NaN` accepted as a price, `@8am` read as a handle, and a cash filter test that could not fail. It also led to the owner-free policies above.
   - Decisions are written at the top of the migration: definer RPCs for visitors; one list of public columns, `private.listing_json`; `private.by_client()` separates a request from the database owner and from triggers inside triggers; the search vector is a plain column the trigger fills; typo tolerance is per word through `pg_trgm` in `extensions`.
 
-#### M4b: The marketplace screens
-- **Scope.** The Market home with a search bar, kind tabs, category tiles and a picture-led card grid with category artwork; results with filters and sorting; the listing page (app links only, Report and Block, Message waiting for M5); a post form per kind with a live preview; My listings; and empty, loading and gated states. The on-phone board folds into "On this phone" (§11).
-- **Done when:** every screen renders at 375 px in light and dark, on the default skin and one dark skin, with no overflow, no console errors, no CSP violations and no controls under 44 px; a before and after screenshot of `#market` is in the PR; the owner and a tester see each other's listings.
+#### M4b-1: The marketplace screens, browse side (M4b split in two, owner ruling 2026-10-24)
+- **Scope.**
+  - Category artwork as inline SVG on theme tokens: one illustration per kind and per item category.
+  - The Market home: a search bar, kind tabs, category tiles, and a picture-led card grid with skeletons. The on-phone board folds into "On this phone" (§11).
+  - Search with a filters sheet, sorting, result counts, active-filter chips, an empty state and recent searches on the phone.
+  - The listing page: app links only, Report in a ⋯ menu, Block waiting for M5, and Message waiting for M5.
+  - The closed-beta preview for visitors and non-testers, open browsing once the market opens, and sign-in as a sheet on actions.
+- **Done when:**
+  - The home (closed, tester, open), results with a query and with filters, the filters sheet, the listing page, the report sheet, and the empty and offline states render at 375 px and at 1280 px, in light and dark, on the default skin and one dark skin.
+  - Each has no overflow, no console errors, no CSP violations and no controls under 44 px.
+  - A before and after screenshot of `#market` is in the PR.
+
+#### M4b-2: The marketplace screens, post side
+- **Scope.** A post form per kind, as a stepper with a live card preview; client checks that mirror the server's; My listings with status chips, close and delete.
+- **Done when:**
+  - The forms and My listings render at 375 px and at 1280 px, in light and dark, with the same zero counts.
+  - A fixture post of each kind round-trips.
+  - On production, the owner and a tester see each other's listings.
 
 #### M4c: Listing photos
 - **Scope.** A private Storage bucket and its rules, tied to listing visibility (visitors may view the photos of a visible listing); up to 3 photos per listing, resized and re-encoded on the phone (which strips metadata) before upload; the gallery on the listing page and the photo on the card; reports hide photos with their listing; photos purged with the listing.
